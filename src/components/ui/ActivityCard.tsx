@@ -3,7 +3,7 @@ import { MapPinIcon, StarIcon } from "@/components/ui/icons";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
-export function ActivityCard({ activity }: { activity: Activity }) {
+export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
   return (
     <article className="w-full overflow-hidden rounded-xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
       <div className="relative h-48 w-full">

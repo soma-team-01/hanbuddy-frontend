@@ -24,8 +24,8 @@ body {
 
 @utility scrollbar-none {
   scrollbar-width: none;
+}
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

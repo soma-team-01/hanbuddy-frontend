@@ -12,7 +12,7 @@ const FILTERS: { key: "all" | ActivityCategory; label: string }[] = [
   { key: "food", label: "Food" },
 ];
 
-export function ActivityFeed({ activities }: { activities: Activity[] }) {
+export function ActivityFeed({ activities }: Readonly<{ activities: Activity[] }>) {
   const [filter, setFilter] = useState<"all" | ActivityCategory>("all");
 
   const visibleActivities =
@@ -22,7 +22,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="-mx-4 scrollbar-none flex gap-2 overflow-x-auto px-4">
+      <div className="-mx-4 flex scrollbar-none gap-2 overflow-x-auto px-4">
         {FILTERS.map(({ key, label }) => {
           const isActive = filter === key;
           return (

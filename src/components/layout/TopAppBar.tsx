@@ -7,7 +7,7 @@ interface TopAppBarProps {
   backHref?: string;
 }
 
-export function TopAppBar({ title = "HanBuddy", backHref }: TopAppBarProps) {
+export function TopAppBar({ title = "HanBuddy", backHref }: Readonly<TopAppBarProps>) {
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-line bg-cream px-4">
       {backHref ? (

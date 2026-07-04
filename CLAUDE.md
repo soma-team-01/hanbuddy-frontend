@@ -39,7 +39,12 @@ feature/*─ PR 단위 임시 Preview URL (리뷰용)
 ```
 - **흐름**: `feature/xxx`(develop에서 분기) → PR → `develop` → 배포 준비되면 PR → `main`.
 - **브랜치 네이밍**: `<type>/<설명>` — 커밋 prefix와 통일 (`feat/`, `fix/`, `docs/`…).
-- **병합**: PR 리뷰 후 **Squash merge**.
+- **병합 방식 (방향별)**:
+  - `feature → develop`: **Squash merge** (지저분한 중간 커밋을 기능당 커밋 1개로 압축).
+  - `develop → main`: **Merge commit** (long-lived 브랜치 간 이력 보존, squash 시 발생하는 히스토리 drift 방지).
+- **GitHub Ruleset (적용됨, enforcement=active)**: `main`·`develop` 모두 **브랜치 삭제 금지 · force push 금지 · PR 필수 · code_quality(errors)**. bypass actors 없음 → 관리자 포함 **직접 push 불가, 반드시 PR 경유**. 병합 방식은 위 방향별로 ruleset에 강제됨(main=merge만, develop=squash만).
+  - **필수 승인 수는 현재 0**(혼자 작업 중이라 self-merge 가능). **팀원 합류 시 1로 올릴 것.**
+  - 향후 CI(build/lint/test) 추가 시 required status checks에 넣기.
 - **Vercel**: Production Branch=`main`. 그 외 브랜치/PR은 자동 Preview 배포. 환경변수는 Production / Preview로 분리 관리(실 키는 Production 전용).
 
 ### Vercel 연동 현황 (확인 완료)

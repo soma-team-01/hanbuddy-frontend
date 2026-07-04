@@ -1,9 +1,47 @@
 # Hanbuddy Frontend — 에이전트 지침
 
+@AGENTS.md
+
 ## 프로젝트 개요
 - Hanbuddy: 관광객(Tourist)과 현지 버디(Buddy/호스트)를 연결하는 액티비티 예약 서비스의 프론트엔드.
 - Git remote: `origin` → `git@github.com:soma-team-01/hanbuddy-frontend.git`
-- 현재 저장소는 초기 상태(코드 미착수). 구현 시작 전 단계.
+- 프로젝트 뼈대 구축 완료. 화면 구현은 아직 시작 전.
+
+## 기술 스택
+- **Next.js 16** (App Router) · **React 19** · **TypeScript** · **Tailwind CSS v4** · **ESLint** · **npm**
+- `src/` 디렉토리 + `@/*` 임포트 별칭
+- 배포: **Vercel** (Production + Preview)
+- 개발 명령: `npm run dev` (Turbopack), 빌드: `npm run build`, 린트: `npm run lint`
+
+> **주의 (Next.js 16 / React 19 / Tailwind v4):** 이 버전들은 에이전트 학습 데이터보다 최신이라 API·관례가 다를 수 있다. 실제 Next.js 코드를 작성하기 전 `node_modules/next/dist/docs/`(특히 `01-app/`)를 참고할 것. 루트 `AGENTS.md`가 이 경고를 담고 있으며, `CLAUDE.md`가 이를 `@AGENTS.md`로 불러온다. Tailwind v4는 `tailwind.config.js` 대신 `src/app/globals.css`의 `@import "tailwindcss"` + PostCSS 기반 설정을 쓴다.
+
+## 폴더 구조
+```
+src/
+├── app/              # 라우팅 = 페이지 (Figma 프레임 ≈ 여기 1개)
+│   ├── (tourist)/    # Discovery, Detail, Booking...
+│   ├── (buddy)/      # Dashboard, Create Activity...
+│   └── admin/        # Payment Verification
+├── components/
+│   ├── ui/           # 버튼, 카드 등 최소 단위
+│   └── layout/       # TopAppBar, BottomNavBar
+├── lib/              # 서버 통신, 유틸
+├── types/            # 공통 타입
+└── styles/           # 전역 스타일/디자인 토큰
+```
+- `(tourist)`, `(buddy)`는 App Router의 **route group**(URL에 경로로 포함되지 않는 조직용 폴더).
+
+## 브랜치 & 배포 전략 (GitHub Flow + develop, Vercel 연동)
+```
+main     ─ Vercel Production Branch → 실서비스 (직접 push 금지, PR로만 병합)
+develop  ─ 고정 Preview URL = 통합 스테이징 (팀 QA·데모)
+feature/*─ PR 단위 임시 Preview URL (리뷰용)
+```
+- **흐름**: `feature/xxx`(develop에서 분기) → PR → `develop` → 배포 준비되면 PR → `main`.
+- **브랜치 네이밍**: `<type>/<설명>` — 커밋 prefix와 통일 (`feat/`, `fix/`, `docs/`…).
+- **병합**: PR 리뷰 후 **Squash merge**.
+- **Vercel**: Production Branch=`main`. 그 외 브랜치/PR은 자동 Preview 배포. 환경변수는 Production / Preview로 분리 관리(실 키는 Production 전용).
+- Vercel 계정 연결(대시보드 설정)은 별도로 진행 필요.
 
 ## 커밋 규칙
 - 커밋 메시지 형식: `<prefix>: <한국어 요약>`

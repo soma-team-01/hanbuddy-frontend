@@ -49,6 +49,12 @@ feature/*─ PR 단위 임시 Preview URL (리뷰용)
 - **Deployment Protection ON**: Preview/브랜치 URL은 Vercel 로그인 필요(팀원 초대 시 접근). 이 정책 유지하기로 결정.
 - Vercel 조작은 Vercel MCP로 가능(팀/프로젝트/배포 조회 등).
 
+### Vercel 팀 전환 (예정)
+- **현재는 개인(Hobby) 팀 `minbros-projects`에 프로젝트가 있음. 팀 협업을 위해 별도 Vercel Team(Pro, 유료) 생성 예정.**
+- 계획: SOMA 팀 명의 Vercel Team 생성 → GitHub 앱이 `soma-team-01` org 접근 확인 → 현재 프로젝트를 **Transfer**(배포·도메인·env 유지) → 팀원 초대 → GitHub 연동 재확인.
+- **전환 완료 후 위 team/project ID 값을 갱신할 것** (teamId·projectId가 바뀜).
+- 비용/크레딧은 팀 차원에서 확인 필요(Hobby는 비상업·멤버 추가 불가).
+
 ## 커밋 규칙
 - 커밋 메시지 형식: `<prefix>: <한국어 요약>`
   - 예: `feat: 액티비티 상세 화면 구현`, `docs: 에이전트 지침 추가`

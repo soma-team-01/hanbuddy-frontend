@@ -41,7 +41,13 @@ feature/*─ PR 단위 임시 Preview URL (리뷰용)
 - **브랜치 네이밍**: `<type>/<설명>` — 커밋 prefix와 통일 (`feat/`, `fix/`, `docs/`…).
 - **병합**: PR 리뷰 후 **Squash merge**.
 - **Vercel**: Production Branch=`main`. 그 외 브랜치/PR은 자동 Preview 배포. 환경변수는 Production / Preview로 분리 관리(실 키는 Production 전용).
-- Vercel 계정 연결(대시보드 설정)은 별도로 진행 필요.
+
+### Vercel 연동 현황 (확인 완료)
+- 프로젝트: `hanbuddy-frontend` (team `minbros-projects` / `team_5xpcSletzWjNA6mWCYKBd4qG`, project `prj_N2tGWFSGPTsLxlZz2XnsSjzBKOiM`).
+- GitHub 저장소 연결됨 → **`main` push 시 프로덕션 자동 배포** 동작 확인.
+- 프로덕션 URL: https://hanbuddy-frontend.vercel.app (공개, 정상 서빙).
+- **Deployment Protection ON**: Preview/브랜치 URL은 Vercel 로그인 필요(팀원 초대 시 접근). 이 정책 유지하기로 결정.
+- Vercel 조작은 Vercel MCP로 가능(팀/프로젝트/배포 조회 등).
 
 ## 커밋 규칙
 - 커밋 메시지 형식: `<prefix>: <한국어 요약>`

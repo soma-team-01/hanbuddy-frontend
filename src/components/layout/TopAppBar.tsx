@@ -1,34 +1,42 @@
 import Link from "next/link";
-import { ArrowLeftIcon, BellIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, XIcon } from "@/components/ui/icons";
 
 interface TopAppBarProps {
   title?: string;
-  /** 지정하면 왼쪽에 뒤로가기 버튼이 노출된다. */
+  /** 지정하면 왼쪽에 뒤로가기(화살표) 버튼이 노출된다. */
   backHref?: string;
+  /** 지정하면 왼쪽에 닫기(X) 버튼이 노출된다. backHref가 우선. */
+  closeHref?: string;
+  /** 오른쪽 슬롯 (예: Save 버튼) */
+  action?: React.ReactNode;
 }
 
-export function TopAppBar({ title = "HanBuddy", backHref }: Readonly<TopAppBarProps>) {
+export function TopAppBar({
+  title = "HanBuddy",
+  backHref,
+  closeHref,
+  action,
+}: Readonly<TopAppBarProps>) {
+  const leftHref = backHref ?? closeHref;
+  const LeftIcon = backHref ? ArrowLeftIcon : XIcon;
+
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-line bg-cream px-4">
-      {backHref ? (
+      {leftHref ? (
         <Link
-          href={backHref}
-          aria-label="Go back"
-          className="flex size-10 items-center justify-center rounded-full text-forest hover:bg-chip"
+          href={leftHref}
+          aria-label={backHref ? "Go back" : "Close"}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-forest hover:bg-chip"
         >
-          <ArrowLeftIcon className="size-5" />
+          <LeftIcon className="size-5" />
         </Link>
       ) : (
-        <span className="size-10" aria-hidden />
+        <span className="size-10 shrink-0" aria-hidden />
       )}
-      <h1 className="font-display text-[28px] font-semibold tracking-tight text-forest">{title}</h1>
-      <button
-        type="button"
-        aria-label="Notifications"
-        className="flex size-10 items-center justify-center rounded-full text-forest hover:bg-chip"
-      >
-        <BellIcon className="size-5" />
-      </button>
+      <h1 className="truncate font-display text-[28px] font-semibold tracking-tight text-forest">
+        {title}
+      </h1>
+      <div className="flex min-w-10 shrink-0 items-center justify-end">{action}</div>
     </header>
   );
 }

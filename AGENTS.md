@@ -86,6 +86,7 @@ feature/*- PR 단위 임시 Preview URL (리뷰용)
 - 파일: **Hanbuddy** - fileKey `wzlRJND1GMNskVuydcWpns`
 - URL: https://www.figma.com/design/wzlRJND1GMNskVuydcWpns/Hanbuddy
 - **구현 기준 페이지: `GUI` (canvas nodeId `2038:269`)** - 섹션별로 정리된 최신 화면.
+  - 페이지 직링크: https://www.figma.com/design/wzlRJND1GMNskVuydcWpns/Hanbuddy?node-id=2038-269
 - `prototype` 페이지(nodeId `0:1`)는 초기 플로우 초안이므로 참고용으로만 사용한다.
 - GUI 페이지 안에서도 화면별 디자인 구성(폰트 등)이 일부 제각각이라, 구현 시 아래 Shared UI Patterns의 토큰 체계로 통일한다.
 - 디자인은 상세 스펙이 아니라 "이런 식으로 화면을 구성한다"는 초안 수준. 픽셀 단위 정밀 재현보다 화면 구성/요소 배치/흐름을 참고할 것.
@@ -134,5 +135,7 @@ Figma MCP `get_screenshot` / `get_design_context`에 아래 nodeId를 직접 넘
 
 ## Figma MCP Notes
 
-- `get_metadata`를 nodeId 없이 페이지 전체(`0:1`)로 호출하면 응답이 너무 커서(≈194k자) 실패한다. 프레임 단위 nodeId로 좁혀서 호출할 것.
-- `get_screenshot`은 기본적으로 단기 URL을 반환 -> `curl`로 받아 이미지로 확인.
+- **주의: `get_metadata`를 nodeId 없이 호출하면 페이지 목록이 나오는데, `prototype`(0:1)만 잡히고 `GUI` 페이지는 목록에 안 나온다.** GUI 페이지는 nodeId `2038:269`를 직접 지정해서 접근할 것.
+- `get_metadata`를 페이지 전체(`0:1`, `2038:269`)로 호출하면 응답이 커서(190k~350k자) 파일로 저장된다. 저장된 XML에서 들여쓰기 얕은 라인만 추출하면 프레임 목록을 얻을 수 있고, 가능하면 프레임 단위 nodeId로 좁혀서 호출할 것.
+- `get_screenshot`은 기본적으로 단기 URL(7일 만료)을 반환 -> `curl`로 받아 이미지로 확인. 세로로 긴 프레임은 기본 maxDimension(1024)에서 뭉개지므로 `maxDimension`을 2400 정도로 올려 재요청.
+- 디자인 속 사진/지도 에셋은 `get_design_context` 응답 상단의 asset URL 상수로 얻어 `public/images/`에 저장해서 사용 (URL이 만료되므로 반드시 로컬 저장).

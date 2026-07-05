@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
-import { BottomActionBar } from "@/components/ui/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import {
   ArrowRightIcon,
   CameraIcon,

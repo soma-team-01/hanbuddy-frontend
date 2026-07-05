@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
-import { BottomActionBar } from "@/components/ui/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CheckIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
 import { findActivity, mockActivities } from "@/lib/mock-activities";
 import { formatKrw } from "@/lib/format";

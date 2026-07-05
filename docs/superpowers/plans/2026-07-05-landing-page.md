@@ -429,7 +429,3 @@ git commit -m "feat: 데스크탑 반응형 랜딩페이지 구현"
   - 검증(test/typecheck/lint/build + 반응형) → 각 Task 검증 단계. ✓
 - **Placeholder scan:** 모든 코드 단계에 실제 코드 포함. Task 1의 임시 `page.tsx`는 의도된 플레이스홀더(Task 3에서 교체 명시). ✓
 - **Type consistency:** `experiences` 필드(`img`/`title`/`tag`) 렌더 일치. 테스트의 링크명/이미지 alt가 페이지 구현과 일치(Log in, Get started, Browse experiences, 3개 title). ✓
-
-```
-
-```

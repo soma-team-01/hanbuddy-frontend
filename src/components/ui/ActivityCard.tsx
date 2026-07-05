@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, StarIcon } from "@/components/ui/icons";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
@@ -32,17 +33,8 @@ export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
         <div className="h-px w-full bg-line" aria-hidden />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image
-              src={activity.host.avatarUrl}
-              alt={activity.host.name}
-              width={32}
-              height={32}
-              className="size-8 rounded-full border border-line-strong object-cover"
-            />
-            <div>
-              <p className="font-display text-sm font-semibold text-ink">{activity.host.name}</p>
-              <p className="text-xs font-medium text-ink-soft">{activity.host.role}</p>
-            </div>
+            <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={32} />
+            <p className="font-display text-sm font-semibold text-ink">{activity.host.name}</p>
           </div>
           <p className="font-display text-xl font-semibold text-forest">
             {formatKrw(activity.price)}

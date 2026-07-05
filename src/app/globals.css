@@ -11,6 +11,13 @@
   --color-line: #e4e2dd;
   --color-line-strong: #c3c8c3;
   --color-chip: #f5f3ee;
+  --color-sand: #f0eee9;
+  --color-earth: #8a6c33;
+  --color-success: #3f6b46;
+  --color-success-soft: #dcead9;
+  --color-warning: #7a5210;
+  --color-warning-soft: #f6e3c2;
+  --color-danger: #cf3d33;
 
   --font-sans: var(--font-be-vietnam-pro), sans-serif;
   --font-display: var(--font-manrope), sans-serif;

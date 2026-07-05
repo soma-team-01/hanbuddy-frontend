@@ -20,15 +20,18 @@
 ## 목표 / 비목표
 
 **목표**
+
 - `/`(루트)에 데스크탑·모바일 반응형 랜딩페이지 신규 구현 (영어 카피).
 - 랜딩 → 로그인(`/login`)으로 이어지는 진입 흐름 구성.
 - 기존 앱 화면들은 모바일 프레임(`max-w-md`)을 유지하며 URL·동작 불변.
 
 **비목표**
+
 - 앱 내부 화면(Explore/Detail/Booking/Dashboard 등)의 데스크탑 반응형화. (하지 않음)
 - 백엔드/인증 로직 변경. (로그인 화면은 경로만 이동, 내용 불변)
 
 **테스트 (사용자 요청으로 추가)**
+
 - 저장소에 테스트 셋업이 없어 **Vitest + React Testing Library(+ jest-dom)** 를 신규 도입한다.
 - `npm test` 스크립트 추가. 랜딩 컴포넌트에 대한 단위 테스트를 작성한다(헤드라인 렌더,
   Log in·Get started → `/login`, Browse experiences → `/explore`, 경험 3개 렌더, 이미지 alt).
@@ -103,10 +106,11 @@ Be Vietnam Pro=`font-sans`) 재사용.
 ```
 
 카피 초안 (구현 시 다듬을 수 있음):
+
 - eyebrow: `MATCH WITH A LOCAL BUDDY`
 - 헤드라인: `Experience Korea like a local.`
 - 서브카피: `From KBO nights to traditional markets, connect with a local buddy for
-  authentic cultural experiences — not just sightseeing.`
+authentic cultural experiences — not just sightseeing.`
 - 주 CTA: `Get started` → `/login`
 - 보조 링크: `Browse experiences →` → `/explore`
 
@@ -134,4 +138,7 @@ Be Vietnam Pro=`font-sans`) 재사용.
   기존 `page.tsx`→`login`)를 `(app)/`로.
 - 수정: `src/app/layout.tsx`(프레임 제거), 신규 `(app)/layout.tsx`, 신규 `src/app/page.tsx`(랜딩).
 - 로그인 진입 링크(`/`→`/login`) 참조 교정.
+
+```
+
 ```

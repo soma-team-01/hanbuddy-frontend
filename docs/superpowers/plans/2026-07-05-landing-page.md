@@ -26,6 +26,7 @@
 앱 라우트 전부를 `(app)` 그룹으로 이동하고, 루트 프레임을 제거하고, `(app)` 그룹 레이아웃에서만 모바일 프레임을 입힌다. `/`가 깨지지 않도록 최소 랜딩 플레이스홀더를 둔다(Task 3에서 실제 랜딩으로 교체).
 
 **Files:**
+
 - Create: `src/app/(app)/layout.tsx`
 - Modify: `src/app/layout.tsx`
 - Move: `src/app/page.tsx` → `src/app/(app)/login/page.tsx`
@@ -36,6 +37,7 @@
 - Create (임시): `src/app/page.tsx` (플레이스홀더 랜딩)
 
 **Interfaces:**
+
 - Produces: `/login` 라우트(기존 구글 로그인 화면, 내부 `href="/onboarding"` 유지). `(app)/layout.tsx`가 모바일 프레임 제공. 루트 `layout.tsx`는 html/body/폰트만 제공(프레임 없음).
 
 - [ ] **Step 1: `git mv`로 앱 라우트를 `(app)` 그룹으로 이동**
@@ -69,15 +71,15 @@ export default function AppFrameLayout({
 Modify `src/app/layout.tsx` — `<body>` 내부 래퍼 제거. 변경 전:
 
 ```tsx
-      <body className="flex min-h-full flex-col">
-        <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{children}</div>
-      </body>
+<body className="flex min-h-full flex-col">
+  <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{children}</div>
+</body>
 ```
 
 변경 후:
 
 ```tsx
-      <body className="flex min-h-full flex-col">{children}</body>
+<body className="flex min-h-full flex-col">{children}</body>
 ```
 
 (폰트 변수·`metadata`·`import "./globals.css"` 등 나머지는 그대로 유지.)
@@ -115,6 +117,7 @@ Expected: 모두 성공. `npm run build` 라우트 목록에 `/`, `/login`, `/ex
 - [ ] **Step 6: 수동 반응형/라우팅 확인**
 
 `npm run dev` 후 브라우저:
+
 - `/` → 풀폭 크림 배경 중앙에 "HanBuddy" + Get started (448px 프레임에 안 갇힘).
 - `/login` → 기존 구글 로그인 화면 모바일 프레임 정상, 클릭 시 `/onboarding` 이동.
 - `/explore`, `/dashboard` → 하단 네비 포함 모바일 프레임 정상(데스크탑 중앙 448px 유지).
@@ -134,12 +137,14 @@ git commit -m "refactor: 앱 라우트를 (app) 그룹으로 이동하고 로그
 Vitest + RTL + jest-dom을 도입하고 `npm test`를 추가한다. 인프라가 동작함을 증명하는 최소 테스트를 현재 플레이스홀더 랜딩(Get started → `/login`)에 대해 작성한다(Task 3에서 확장).
 
 **Files:**
+
 - Modify: `package.json` (devDeps + `test`/`test:watch` 스크립트)
 - Create: `vitest.config.ts`
 - Create: `vitest.setup.ts`
 - Create: `src/app/page.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `src/app/page.tsx`(Task 1 플레이스홀더).
 - Produces: `npm test` 명령. `vitest.config.ts`의 `@` alias → `./src`. jsdom 환경. jest-dom 매처.
 
@@ -229,11 +234,13 @@ git commit -m "test: Vitest + React Testing Library 테스트 인프라 도입"
 플레이스홀더 `src/app/page.tsx`를 실제 랜딩(레이아웃 C: 중앙 히어로 + 경험 스트립 3장 + 미니 푸터, 반응형)으로 교체하고, 랜딩 테스트를 확장한다.
 
 **Files:**
+
 - Modify (전체 교체): `src/app/page.tsx`
 - Modify (확장): `src/app/page.test.tsx`
 - 사용 자산(기존): `public/images/activities/gwangjang-market.jpg`, `.../hanok-hero.jpg`, `.../tea-ceremony.jpg`
 
 **Interfaces:**
+
 - Consumes: `/login`(Task 1), `/explore`(기존). `next/image`, `next/link`.
 
 - [ ] **Step 1: 랜딩 페이지 전체 교체**
@@ -379,6 +386,7 @@ npm test && npm run typecheck && npm run lint && npm run build
 ```
 
 Expected: Vitest 4 passed. typecheck·lint·build 모두 성공. (만약 `next/image`가 jsdom에서 렌더 문제를 일으키면, `src/app/page.test.tsx` 상단에 `next/image` mock을 추가한다:
+
 ```tsx
 import { vi } from "vitest";
 vi.mock("next/image", () => ({
@@ -388,11 +396,13 @@ vi.mock("next/image", () => ({
   ),
 }));
 ```
+
 )
 
 - [ ] **Step 4: 수동 반응형 확인**
 
 `npm run dev` 후 브라우저 `/`:
+
 - **데스크탑 폭**: 중앙 정렬(~1024px) 히어로, 큰 타이포, 경험 스트립 3칸 그리드.
 - **390px 모바일 폭**: 단일 컬럼, 타이포 축소, 경험 스트립 가로 스크롤(스크롤바 숨김), CTA 세로 정렬.
 - 상단바 **Log in** & 히어로 **Get started** → `/login`. **Browse experiences** → `/explore`.
@@ -419,4 +429,7 @@ git commit -m "feat: 데스크탑 반응형 랜딩페이지 구현"
   - 검증(test/typecheck/lint/build + 반응형) → 각 Task 검증 단계. ✓
 - **Placeholder scan:** 모든 코드 단계에 실제 코드 포함. Task 1의 임시 `page.tsx`는 의도된 플레이스홀더(Task 3에서 교체 명시). ✓
 - **Type consistency:** `experiences` 필드(`img`/`title`/`tag`) 렌더 일치. 테스트의 링크명/이미지 alt가 페이지 구현과 일치(Log in, Get started, Browse experiences, 3개 title). ✓
+
+```
+
 ```

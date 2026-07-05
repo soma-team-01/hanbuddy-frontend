@@ -53,7 +53,7 @@ export default function LandingPage() {
 
       {/* Experience strip */}
       <section className="mx-auto w-full max-w-5xl px-6 pb-16">
-        <div className="flex gap-4 overflow-x-auto scrollbar-none md:grid md:grid-cols-3 md:overflow-visible">
+        <div className="flex scrollbar-none gap-4 overflow-x-auto md:grid md:grid-cols-3 md:overflow-visible">
           {experiences.map((e) => (
             <article
               key={e.title}

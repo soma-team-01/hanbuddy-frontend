@@ -82,7 +82,7 @@ export default function LandingPage() {
       <footer className="mx-auto mt-auto w-full max-w-5xl px-6 py-8 text-sm text-ink-soft">
         <span className="font-display font-semibold text-forest">HanBuddy</span>
         <span className="mx-2 text-line-strong">·</span>
-        Authentic Korea, together.
+        <span>Authentic Korea, together.</span>
       </footer>
     </main>
   );

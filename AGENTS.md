@@ -85,49 +85,57 @@ feature/*- PR 단위 임시 Preview URL (리뷰용)
 
 - 파일: **Hanbuddy** - fileKey `wzlRJND1GMNskVuydcWpns`
 - URL: https://www.figma.com/design/wzlRJND1GMNskVuydcWpns/Hanbuddy
-- 페이지: `prototype` (nodeId `0:1`) - 페이지 하나에 모든 화면 프레임이 배치됨.
-- **중요: prototype의 인터랙션/플로우 연결은 무시하고, 각 프레임(GUI = 실제 화면 디자인)을 구현 기준으로 삼는다.**
+- **구현 기준 페이지: `GUI` (canvas nodeId `2038:269`)** - 섹션별로 정리된 최신 화면.
+  - 페이지 직링크: https://www.figma.com/design/wzlRJND1GMNskVuydcWpns/Hanbuddy?node-id=2038-269
+- `prototype` 페이지(nodeId `0:1`)는 초기 플로우 초안이므로 참고용으로만 사용한다.
+- GUI 페이지 안에서도 화면별 디자인 구성(폰트 등)이 일부 제각각이라, 구현 시 아래 Shared UI Patterns의 토큰 체계로 통일한다.
 - 디자인은 상세 스펙이 아니라 "이런 식으로 화면을 구성한다"는 초안 수준. 픽셀 단위 정밀 재현보다 화면 구성/요소 배치/흐름을 참고할 것.
 - 모든 전체 화면 프레임은 모바일 **390px 폭** 기준.
 
-### Screen Inventory
+### Screen Inventory (GUI 페이지, 구현 라우트 포함)
 
-Figma MCP `get_screenshot` / `get_design_context`에 아래 nodeId를 직접 넘겨 화면별로 확인·구현한다.
+Figma MCP `get_screenshot` / `get_design_context`에 아래 nodeId를 직접 넘겨 화면별로 확인한다.
 
-**온보딩/공통**
+**공통: 로그인/회원가입** (section `2054:437`)
 
-- Onboarding - Welcome - `2016:4`
-- Shared: My Page - `2016:1186`
-- Shared: Payment & Refund Info - `2016:1288`
-- 마이페이지 수정 - `2038:188`
+- Onboarding: Google Login - `2054:3154` -> `/`
+- Onboarding: Profile Setup - `2054:3184` -> `/onboarding` (Tourist/Buddy 역할 선택 후 각 홈으로 이동)
 
-**Tourist(관광객) 플로우**
+**공통: 마이페이지** (section `2054:2807`)
 
-- Activity Discovery - `2016:86`
-- Activity Detail - `2016:191`
-- Booking Flow - `2016:295`
-- My Applications - `2016:428`
-- Cancellation Flow - `2016:524`
+- Shared: My Page - `2054:2965` -> `/my-page`
+- Shared: Edit Profile - `2054:3041` -> `/my-page/edit`
 
-**Buddy(호스트) 플로우**
+**투어리스트** (section `2054:1106`)
 
-- Dashboard - `2016:601`
-- Create Activity - `2016:734`
-- My Activities - `2016:819`
-- Applicant Management - `2016:951`
+- Activity Discovery - `2054:1264` -> `/explore`
+- Activity Detail - `2054:1335` -> `/activities/[id]`
+- Booking Flow - `2054:1448` -> `/activities/[id]/book`
+- My Applications - `2054:1567` -> `/applications`
+- Cancellation Confirmation - `2054:1661` -> `/applications` 내 모달
 
-**Admin**
+**버디** (section `2054:1796`)
 
-- Payment Verification - `2016:1052`
+- Dashboard - `2054:2325` -> `/dashboard`
+- My Activities - `2054:2440` -> `/my-activities`
+- Create Activity - `2054:2570` -> `/my-activities/create`
+- Applicant Management - `2054:2708` -> `/my-activities/[id]/applicants`
+
+> Admin: Payment Verification과 Shared: Payment & Refund Info는 prototype 페이지에만 있고 GUI 페이지에는 없어 구현 대상에서 제외됨.
 
 ### Shared UI Patterns
 
-- 상단 `HanBuddy` TopAppBar (뒤로가기/타이틀/알림 아이콘).
-- 하단 BottomNavBar: 관광객은 Explore / History / My Page, 버디는 대시보드 기반.
-- 액티비티 카드: 이미지 + 평점(별점) + 제목 + 위치 + 호스트(이름/역할) + 가격(₩).
-- 통화 표기는 원화(₩).
+- 디자인 토큰: `src/app/globals.css`의 `@theme` (cream/ink/forest/sage/line/chip/sand/earth/success/warning/danger) + Manrope(`font-display`)·Be Vietnam Pro(`font-sans`).
+- 상단 `TopAppBar`: 뒤로가기(`backHref`) 또는 닫기(`closeHref`) + 타이틀 + 우측 action 슬롯.
+- 하단 `BottomNavBar`: 역할 공통 탭 **Home / Activity / My Page** (tourist: `/explore`·`/applications`·`/my-page`, buddy: `/dashboard`·`/my-activities`·`/my-page`). 활성 탭은 다크 그린 pill.
+- 트랜잭션 화면(Detail/Booking/Create/Onboarding)은 하단 네비 대신 `BottomActionBar`(고정 액션 바)를 사용 - route group `(with-nav)` 밖에 배치.
+- 액티비티 카드: 이미지 + 평점 배지 + 제목 + 위치 + 호스트(아바타/이름) + 가격(₩).
+- 통화 표기는 원화(₩) - 디자인에 USD가 있어도 ₩로 통일 (`formatKrw`).
+- 사람 아바타는 `Avatar` 컴포넌트(사진 없으면 이니셜 원형)로 통일.
 
 ## Figma MCP Notes
 
-- `get_metadata`를 nodeId 없이 페이지 전체(`0:1`)로 호출하면 응답이 너무 커서(≈194k자) 실패한다. 프레임 단위 nodeId로 좁혀서 호출할 것.
-- `get_screenshot`은 기본적으로 단기 URL을 반환 -> `curl`로 받아 이미지로 확인.
+- **주의: `get_metadata`를 nodeId 없이 호출하면 페이지 목록이 나오는데, `prototype`(0:1)만 잡히고 `GUI` 페이지는 목록에 안 나온다.** GUI 페이지는 nodeId `2038:269`를 직접 지정해서 접근할 것.
+- `get_metadata`를 페이지 전체(`0:1`, `2038:269`)로 호출하면 응답이 커서(190k~350k자) 파일로 저장된다. 저장된 XML에서 들여쓰기 얕은 라인만 추출하면 프레임 목록을 얻을 수 있고, 가능하면 프레임 단위 nodeId로 좁혀서 호출할 것.
+- `get_screenshot`은 기본적으로 단기 URL(7일 만료)을 반환 -> `curl`로 받아 이미지로 확인. 세로로 긴 프레임은 기본 maxDimension(1024)에서 뭉개지므로 `maxDimension`을 2400 정도로 올려 재요청.
+- 디자인 속 사진/지도 에셋은 `get_design_context` 응답 상단의 asset URL 상수로 얻어 `public/images/`에 저장해서 사용 (URL이 만료되므로 반드시 로컬 저장).

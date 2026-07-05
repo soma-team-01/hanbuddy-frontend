@@ -138,7 +138,3 @@ authentic cultural experiences — not just sightseeing.`
   기존 `page.tsx`→`login`)를 `(app)/`로.
 - 수정: `src/app/layout.tsx`(프레임 제거), 신규 `(app)/layout.tsx`, 신규 `src/app/page.tsx`(랜딩).
 - 로그인 진입 링크(`/`→`/login`) 참조 교정.
-
-```
-
-```

@@ -6,7 +6,7 @@ import { mockActivities } from "@/lib/mock-activities";
 export default function ExplorePage() {
   return (
     <>
-      <TopAppBar backHref="/" />
+      <TopAppBar />
       <main className="flex flex-1 flex-col gap-6 px-4 py-6">
         {mockActivities.map((activity) => (
           <Link key={activity.id} href={`/activities/${activity.id}`}>

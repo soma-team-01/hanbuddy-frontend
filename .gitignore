@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Claude Code 로컬 설정 (개인/머신 전용)
 .claude/settings.local.json
+
+# Superpowers 브레인스토밍 비주얼 컴패니언 (로컬 목업)
+.superpowers/

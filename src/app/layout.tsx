@@ -25,9 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${manrope.variable} ${beVietnamPro.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">
-        <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{children}</div>
-      </body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

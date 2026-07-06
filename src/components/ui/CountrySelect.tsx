@@ -36,10 +36,11 @@ export function CountrySelect({
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.code.toLowerCase() === q ||
-        c.dialCode.includes(q.startsWith("+") ? q : `+${q}`) ||
-        c.dialCode.slice(1).startsWith(q),
+        (display === "dialCode" &&
+          (c.dialCode.includes(q.startsWith("+") ? q : `+${q}`) ||
+            c.dialCode.slice(1).startsWith(q))),
     );
-  }, [query]);
+  }, [query, display]);
 
   useEffect(() => {
     if (isOpen) searchRef.current?.focus();
@@ -149,7 +150,9 @@ export function CountrySelect({
                       <span className="min-w-0 flex-1 truncate text-base text-ink">
                         {country.name}
                       </span>
-                      <span className="shrink-0 text-sm text-ink-soft">{country.dialCode}</span>
+                      {display === "dialCode" && (
+                        <span className="shrink-0 text-sm text-ink-soft">{country.dialCode}</span>
+                      )}
                       {isSelected && <CheckIcon className="size-4 shrink-0 text-forest" />}
                     </button>
                   </li>

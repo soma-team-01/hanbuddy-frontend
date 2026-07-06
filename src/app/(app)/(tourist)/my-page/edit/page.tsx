@@ -66,7 +66,6 @@ export default function EditProfilePage() {
               <PencilIcon className="size-4" />
             </span>
           </div>
-          <p className="text-ink">Tap to update photo</p>
         </section>
 
         <section className="flex flex-col gap-4">
@@ -133,10 +132,7 @@ export default function EditProfilePage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <div>
-            <h3 className="text-sm font-medium text-ink">Preferred Messaging Apps</h3>
-            <p className="mt-1 text-ink-soft">Select the apps you use to communicate.</p>
-          </div>
+          <h3 className="text-sm font-medium text-ink">Preferred Messaging Apps</h3>
           <div className="flex flex-wrap gap-3">
             {MESSAGING_APPS.map((app) => {
               const isSelected = selectedApps.has(app);

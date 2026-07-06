@@ -57,7 +57,6 @@ export default function ProfileSetupPage() {
               <CameraIcon className="size-4" />
             </span>
           </div>
-          <p className="text-ink-soft">Upload Photo (Optional)</p>
         </section>
 
         <section className="flex flex-col gap-3">
@@ -107,10 +106,7 @@ export default function ProfileSetupPage() {
         <div className="h-px w-full bg-line" aria-hidden />
 
         <section className="flex flex-col gap-4">
-          <div>
-            <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
-            <p className="mt-1 text-sm text-ink-soft">How would you like buddies to contact you?</p>
-          </div>
+          <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-ink-soft">Korean Phone Number</span>

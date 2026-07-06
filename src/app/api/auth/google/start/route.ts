@@ -24,7 +24,7 @@ export function GET() {
 }
 
 function getGoogleClientId() {
-  const value = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const value = process.env.GOOGLE_CLIENT_ID;
   if (!value?.trim()) {
     throw new Error("Missing required environment variable: GOOGLE_CLIENT_ID");
   }
@@ -32,7 +32,7 @@ function getGoogleClientId() {
 }
 
 function getGoogleRedirectUri() {
-  const value = process.env.GOOGLE_REDIRECT_URI || process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+  const value = process.env.GOOGLE_REDIRECT_URI;
   if (!value?.trim()) {
     throw new Error("Missing required environment variable: GOOGLE_REDIRECT_URI");
   }

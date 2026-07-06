@@ -6,7 +6,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
-describe("ProfileSetupPage", () => {
+describe("OnboardingForm", () => {
   it("does not render the Korean Phone Number field", () => {
     render(<OnboardingForm />);
     expect(screen.queryByText("Korean Phone Number")).not.toBeInTheDocument();

@@ -40,6 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# IDE 설정 (개인/머신 전용)
+.idea/
+
 # Claude Code 로컬 설정 (개인/머신 전용)
 .claude/settings.local.json
 

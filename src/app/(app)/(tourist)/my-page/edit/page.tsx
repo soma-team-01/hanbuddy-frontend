@@ -11,8 +11,15 @@ import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 export default function EditProfilePage() {
   const [messagingApp, setMessagingApp] = useState<string>("whatsapp");
+  const [messagingContact, setMessagingContact] = useState("");
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("US");
+
+  function handleMessagingAppChange(key: string) {
+    setMessagingApp(key);
+    // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
+    setMessagingContact("");
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -65,23 +72,15 @@ export default function EditProfilePage() {
 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-xl font-semibold text-ink">Contact Details</h2>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-ink">
-              Korean Phone Number <span className="font-normal text-ink-soft">(Optional)</span>
-            </span>
-            <input
-              type="tel"
-              placeholder="010-XXXX-XXXX"
-              className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-            />
-          </label>
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-ink">Preferred Messaging App</span>
             <MessagingAppField
               app={messagingApp}
-              onAppChange={setMessagingApp}
+              onAppChange={handleMessagingAppChange}
               country={messagingCountry}
               onCountryChange={handleMessagingCountryChange}
+              contactValue={messagingContact}
+              onContactChange={setMessagingContact}
             />
           </div>
         </section>

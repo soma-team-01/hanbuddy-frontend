@@ -18,8 +18,21 @@ export default function ProfileSetupPage() {
   const router = useRouter();
   const [role, setRole] = useState<"tourist" | "buddy">("tourist");
   const [messagingApp, setMessagingApp] = useState<string>("line");
+  const [messagingContact, setMessagingContact] = useState("");
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("");
+
+  function handleRoleChange(key: "tourist" | "buddy") {
+    setRole(key);
+    // 국가별 번호 <-> 한국 로컬 번호로 값 의미가 달라지므로 역할 전환 시 연락처를 비운다
+    setMessagingContact("");
+  }
+
+  function handleMessagingAppChange(key: string) {
+    setMessagingApp(key);
+    // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
+    setMessagingContact("");
+  }
 
   return (
     <div className="flex flex-1 flex-col pb-28">
@@ -46,7 +59,7 @@ export default function ProfileSetupPage() {
                   key={key}
                   type="button"
                   aria-pressed={isSelected}
-                  onClick={() => setRole(key)}
+                  onClick={() => handleRoleChange(key)}
                   className={`h-12 flex-1 font-display text-sm font-semibold ${
                     isSelected ? "bg-forest text-cream" : "bg-white text-ink"
                   }`}
@@ -85,24 +98,15 @@ export default function ProfileSetupPage() {
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
           <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-ink-soft">Korean Phone Number</span>
-              <span className="text-xs text-ink-soft/70">Optional</span>
-            </div>
-            <input
-              type="tel"
-              placeholder="010-XXXX-XXXX"
-              aria-label="Korean phone number"
-              className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Preferred Messaging App</span>
             <MessagingAppField
               app={messagingApp}
-              onAppChange={setMessagingApp}
+              onAppChange={handleMessagingAppChange}
               country={messagingCountry}
               onCountryChange={handleMessagingCountryChange}
+              contactValue={messagingContact}
+              onContactChange={setMessagingContact}
+              koreanOnly={role === "buddy"}
             />
           </div>
         </section>

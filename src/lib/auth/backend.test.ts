@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   appendBackendSetCookies,
+  BACKEND_REQUEST_TIMEOUT_MS,
   getBackendApiBaseUrl,
   getSetCookieHeaders,
   postBackend,
@@ -89,7 +90,7 @@ describe("postBackend", () => {
     );
 
     const backendResponse = postBackend<undefined, string>("/auth/logout");
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(BACKEND_REQUEST_TIMEOUT_MS);
 
     await expect(backendResponse).resolves.toMatchObject({
       status: 504,

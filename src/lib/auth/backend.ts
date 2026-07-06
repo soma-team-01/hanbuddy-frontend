@@ -1,7 +1,7 @@
 import type { NextResponse } from "next/server";
 import type { ApiResponse, ErrorApiResponse } from "./types";
 
-const BACKEND_REQUEST_TIMEOUT_MS = 10_000;
+export const BACKEND_REQUEST_TIMEOUT_MS = 10_000;
 
 interface BackendPostOptions {
   bearerToken?: string;

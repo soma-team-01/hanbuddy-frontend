@@ -16,6 +16,8 @@ export function LogoutButton() {
         method: "POST",
         credentials: "same-origin",
       });
+    } catch {
+      // Logout is best-effort; still return the user to the signed-out screen.
     } finally {
       router.replace("/login");
       router.refresh();

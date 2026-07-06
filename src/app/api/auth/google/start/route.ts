@@ -5,6 +5,8 @@ import { buildGoogleAuthorizationUrl, createOAuthState } from "@/lib/auth/google
 
 export const dynamic = "force-dynamic";
 
+class GoogleAuthStartConfigError extends Error {}
+
 export function GET() {
   try {
     const state = createOAuthState();
@@ -18,7 +20,10 @@ export function GET() {
     response.cookies.set(AUTH_COOKIES.oauthState, state, OAUTH_STATE_COOKIE_OPTIONS);
     return response;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Google 로그인을 시작할 수 없습니다.";
+    const message =
+      error instanceof GoogleAuthStartConfigError
+        ? error.message
+        : "Google 로그인을 시작할 수 없습니다.";
     return NextResponse.json(createProxyErrorResponse(message), { status: 500 });
   }
 }
@@ -26,7 +31,7 @@ export function GET() {
 function getGoogleClientId() {
   const value = process.env.GOOGLE_CLIENT_ID;
   if (!value?.trim()) {
-    throw new Error("Missing required environment variable: GOOGLE_CLIENT_ID");
+    throw new GoogleAuthStartConfigError("Missing required environment variable: GOOGLE_CLIENT_ID");
   }
   return value.trim();
 }
@@ -34,7 +39,9 @@ function getGoogleClientId() {
 function getGoogleRedirectUri() {
   const value = process.env.GOOGLE_REDIRECT_URI;
   if (!value?.trim()) {
-    throw new Error("Missing required environment variable: GOOGLE_REDIRECT_URI");
+    throw new GoogleAuthStartConfigError(
+      "Missing required environment variable: GOOGLE_REDIRECT_URI",
+    );
   }
   return value.trim();
 }

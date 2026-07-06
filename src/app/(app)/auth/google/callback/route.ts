@@ -48,11 +48,21 @@ export async function GET(request: NextRequest) {
       : createOnboardingRedirect(request, result);
 
     response.cookies.delete(AUTH_COOKIES.oauthState);
-    appendBackendSetCookies(response, backend.setCookies);
+    if (hasUsableGoogleLoginResult(result)) {
+      appendBackendSetCookies(response, backend.setCookies);
+    }
     return response;
   } catch {
     return redirectToLoginWithError(request, "인증 서버에 연결할 수 없습니다.");
   }
+}
+
+function hasUsableGoogleLoginResult(result: GoogleLoginResponse) {
+  if (result.registered) {
+    return Boolean(result.accessToken && result.userType);
+  }
+
+  return Boolean(result.signupToken);
 }
 
 function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginResponse) {

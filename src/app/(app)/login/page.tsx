@@ -14,6 +14,7 @@ export default function LoginPage() {
           </p>
           <Link
             href="/api/auth/google/start"
+            prefetch={false}
             className="mt-10 flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line-strong bg-white font-display text-sm font-semibold text-ink"
           >
             <GoogleIcon className="size-5" />

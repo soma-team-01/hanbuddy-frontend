@@ -38,4 +38,16 @@ describe("LogoutButton", () => {
     expect(replace).toHaveBeenCalledWith("/login");
     expect(refresh).toHaveBeenCalled();
   });
+
+  it("still returns the user to login when the logout request fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network unavailable")));
+    render(<LogoutButton />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith("/login");
+    });
+    expect(refresh).toHaveBeenCalled();
+  });
 });

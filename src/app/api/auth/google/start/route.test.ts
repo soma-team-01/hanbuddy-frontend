@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
 const originalGoogleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -46,6 +46,29 @@ describe("GET /api/auth/google/start", () => {
     expect(authorizationUrl.searchParams.get("redirect_uri")).toBe(
       "http://localhost:3000/auth/google/callback",
     );
+  });
+
+  it("does not expose unexpected internal error messages", async () => {
+    vi.resetModules();
+    vi.doMock("@/lib/auth/google", () => ({
+      createOAuthState: () => {
+        throw new Error("crypto internals exploded");
+      },
+      buildGoogleAuthorizationUrl: vi.fn(),
+    }));
+    process.env.GOOGLE_CLIENT_ID = "server-client-id";
+    process.env.GOOGLE_REDIRECT_URI = "http://localhost:3000/auth/google/callback";
+
+    const { GET: getWithFailingState } = await import("./route");
+    const response = getWithFailingState();
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toMatchObject({
+      code: "AUTH_PROXY_ERROR",
+      message: "Google 로그인을 시작할 수 없습니다.",
+    });
+
+    vi.doUnmock("@/lib/auth/google");
   });
 });
 

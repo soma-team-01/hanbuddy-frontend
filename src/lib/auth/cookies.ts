@@ -58,7 +58,12 @@ export function clearSignupCookies(response: NextResponse) {
 }
 
 export function encodeGoogleProfile(profile: GoogleProfile) {
-  return Buffer.from(JSON.stringify(profile), "utf8").toString("base64url");
+  const profileForCookie = {
+    name: profile.name,
+    picture: profile.picture,
+  } satisfies GoogleProfile;
+
+  return Buffer.from(JSON.stringify(profileForCookie), "utf8").toString("base64url");
 }
 
 export function decodeGoogleProfile(value?: string) {

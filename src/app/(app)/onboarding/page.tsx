@@ -5,24 +5,12 @@ import { useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
-import {
-  ArrowRightIcon,
-  CameraIcon,
-  MessageSquareIcon,
-  PhoneIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { MessagingAppField } from "@/components/ui/MessagingAppField";
+import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
 
 const ROLES = [
   { key: "tourist", label: "Tourist" },
   { key: "buddy", label: "Buddy" },
-] as const;
-
-const MESSAGING_APPS = [
-  { key: "whatsapp", label: "WhatsApp", Icon: MessageSquareIcon },
-  { key: "line", label: "Line", Icon: MessageSquareIcon },
-  { key: "wechat", label: "WeChat", Icon: MessageSquareIcon },
-  { key: "phone", label: "Phone Number", Icon: PhoneIcon },
 ] as const;
 
 export default function ProfileSetupPage() {
@@ -121,60 +109,12 @@ export default function ProfileSetupPage() {
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Preferred Messaging App</span>
-            <div className="flex flex-col rounded-xl border border-line bg-white">
-              {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
-                const isSelected = messagingApp === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => setMessagingApp(key)}
-                    className={`flex items-center gap-3 px-4 py-3.5 text-left ${
-                      index > 0 ? "border-t border-line" : ""
-                    }`}
-                  >
-                    <span
-                      aria-hidden
-                      className={`flex size-4 items-center justify-center rounded-full border ${
-                        isSelected ? "border-forest" : "border-line-strong"
-                      }`}
-                    >
-                      {isSelected && <span className="size-2 rounded-full bg-forest" />}
-                    </span>
-                    <Icon className="size-5 text-success" />
-                    <span className="text-base text-ink">{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {/* WhatsApp·전화번호는 번호 기반, LINE·WeChat은 ID 기반으로 연락처를 교환한다 */}
-            {messagingApp === "whatsapp" || messagingApp === "phone" ? (
-              <div className="mt-1 flex gap-2">
-                <div className="shrink-0">
-                  <CountrySelect
-                    value={messagingCountry}
-                    onChange={handleMessagingCountryChange}
-                    display="dialCode"
-                    ariaLabel="Messaging country code"
-                    triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink"
-                  />
-                </div>
-                <input
-                  type="tel"
-                  placeholder="Phone number"
-                  aria-label="Messaging phone number"
-                  className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-                />
-              </div>
-            ) : (
-              <input
-                type="text"
-                placeholder={`${MESSAGING_APPS.find((app) => app.key === messagingApp)?.label} ID`}
-                aria-label="Messaging app ID"
-                className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-              />
-            )}
+            <MessagingAppField
+              app={messagingApp}
+              onAppChange={setMessagingApp}
+              country={messagingCountry}
+              onCountryChange={handleMessagingCountryChange}
+            />
           </div>
         </section>
       </main>

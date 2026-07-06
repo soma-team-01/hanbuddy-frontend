@@ -157,6 +157,8 @@ export function CountrySelect({
                   >
                     <button
                       type="button"
+                      // aria-activedescendant 패턴: 포커스는 검색 input이 유지하고 옵션은 탭 순서에서 제외
+                      tabIndex={-1}
                       onClick={() => select(country.code)}
                       onMouseMove={() => setActiveIndex(index)}
                       className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${

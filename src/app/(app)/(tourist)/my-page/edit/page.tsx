@@ -7,12 +7,21 @@ import { Avatar } from "@/components/ui/Avatar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessagingAppField } from "@/components/ui/MessagingAppField";
 import { PencilIcon } from "@/components/ui/icons";
+import { formatKoreanPhone, toDigits } from "@/lib/phone";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 export default function EditProfilePage() {
   const [messagingApp, setMessagingApp] = useState<string>("whatsapp");
+  const [koreanPhone, setKoreanPhone] = useState("");
+  const [messagingContact, setMessagingContact] = useState("");
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("US");
+
+  function handleMessagingAppChange(key: string) {
+    setMessagingApp(key);
+    // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
+    setMessagingContact("");
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -71,6 +80,8 @@ export default function EditProfilePage() {
             </span>
             <input
               type="tel"
+              value={formatKoreanPhone(koreanPhone)}
+              onChange={(e) => setKoreanPhone(toDigits(e.target.value))}
               placeholder="010-XXXX-XXXX"
               className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
             />
@@ -79,9 +90,11 @@ export default function EditProfilePage() {
             <span className="text-sm font-medium text-ink">Preferred Messaging App</span>
             <MessagingAppField
               app={messagingApp}
-              onAppChange={setMessagingApp}
+              onAppChange={handleMessagingAppChange}
               country={messagingCountry}
               onCountryChange={handleMessagingCountryChange}
+              contactValue={messagingContact}
+              onContactChange={setMessagingContact}
             />
           </div>
         </section>

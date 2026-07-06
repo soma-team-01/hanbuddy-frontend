@@ -7,6 +7,7 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessagingAppField } from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
+import { formatKoreanPhone, toDigits } from "@/lib/phone";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 const ROLES = [
@@ -18,8 +19,16 @@ export default function ProfileSetupPage() {
   const router = useRouter();
   const [role, setRole] = useState<"tourist" | "buddy">("tourist");
   const [messagingApp, setMessagingApp] = useState<string>("line");
+  const [koreanPhone, setKoreanPhone] = useState("");
+  const [messagingContact, setMessagingContact] = useState("");
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("");
+
+  function handleMessagingAppChange(key: string) {
+    setMessagingApp(key);
+    // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
+    setMessagingContact("");
+  }
 
   return (
     <div className="flex flex-1 flex-col pb-28">
@@ -91,6 +100,8 @@ export default function ProfileSetupPage() {
             </div>
             <input
               type="tel"
+              value={formatKoreanPhone(koreanPhone)}
+              onChange={(e) => setKoreanPhone(toDigits(e.target.value))}
               placeholder="010-XXXX-XXXX"
               aria-label="Korean phone number"
               className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
@@ -100,9 +111,11 @@ export default function ProfileSetupPage() {
             <span className="text-sm text-ink-soft">Preferred Messaging App</span>
             <MessagingAppField
               app={messagingApp}
-              onAppChange={setMessagingApp}
+              onAppChange={handleMessagingAppChange}
               country={messagingCountry}
               onCountryChange={handleMessagingCountryChange}
+              contactValue={messagingContact}
+              onContactChange={setMessagingContact}
             />
           </div>
         </section>

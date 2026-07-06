@@ -2,6 +2,7 @@
 
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessageSquareIcon, PhoneIcon } from "@/components/ui/icons";
+import { toDigits } from "@/lib/phone";
 
 export const MESSAGING_APPS = [
   { key: "whatsapp", label: "WhatsApp", Icon: MessageSquareIcon },
@@ -16,6 +17,9 @@ interface MessagingAppFieldProps {
   /** 전화번호 입력 시 사용할 국가(ISO alpha-2) */
   country: string;
   onCountryChange: (code: string) => void;
+  /** 연락처 값 - 전화번호형 앱은 숫자만, ID형 앱은 자유 텍스트 */
+  contactValue: string;
+  onContactChange: (value: string) => void;
 }
 
 /** 메시징 앱 단일 선택 + 앱 특성에 맞는 연락처 입력(온보딩·프로필 수정 공용) */
@@ -24,6 +28,8 @@ export function MessagingAppField({
   onAppChange,
   country,
   onCountryChange,
+  contactValue,
+  onContactChange,
 }: Readonly<MessagingAppFieldProps>) {
   return (
     <>
@@ -68,6 +74,8 @@ export function MessagingAppField({
           </div>
           <input
             type="tel"
+            value={contactValue}
+            onChange={(e) => onContactChange(toDigits(e.target.value))}
             placeholder="Phone number"
             aria-label="Messaging phone number"
             className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
@@ -76,6 +84,8 @@ export function MessagingAppField({
       ) : (
         <input
           type="text"
+          value={contactValue}
+          onChange={(e) => onContactChange(e.target.value)}
           placeholder={`${MESSAGING_APPS.find((item) => item.key === app)?.label} ID`}
           aria-label="Messaging app ID"
           className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"

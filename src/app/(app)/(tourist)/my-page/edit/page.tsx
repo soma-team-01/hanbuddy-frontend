@@ -5,17 +5,17 @@ import { useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
-import { MessagingAppField } from "@/components/ui/MessagingAppField";
+import { MessagingAppField, type MessagingAppKey } from "@/components/ui/MessagingAppField";
 import { PencilIcon } from "@/components/ui/icons";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 export default function EditProfilePage() {
-  const [messagingApp, setMessagingApp] = useState<string>("whatsapp");
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("whatsapp");
   const [messagingContact, setMessagingContact] = useState("");
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("US");
 
-  function handleMessagingAppChange(key: string) {
+  function handleMessagingAppChange(key: MessagingAppKey) {
     setMessagingApp(key);
     // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
     setMessagingContact("");

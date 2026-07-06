@@ -11,15 +11,19 @@ export const MESSAGING_APPS = [
   { key: "phone", label: "Phone Number", Icon: PhoneIcon },
 ] as const;
 
+export type MessagingAppKey = (typeof MESSAGING_APPS)[number]["key"];
+
 interface MessagingAppFieldProps {
-  app: string;
-  onAppChange: (key: string) => void;
+  app: MessagingAppKey;
+  onAppChange: (key: MessagingAppKey) => void;
   /** 전화번호 입력 시 사용할 국가(ISO alpha-2) */
   country: string;
   onCountryChange: (code: string) => void;
   /** 연락처 값 - 전화번호형 앱은 숫자만, ID형 앱은 자유 텍스트 */
   contactValue: string;
   onContactChange: (value: string) => void;
+  inputName?: string;
+  inputRequired?: boolean;
   /** true면 국가 선택 대신 +82를 고정 표시한다 (버디 - 한국 번호 전제) */
   koreanOnly?: boolean;
 }
@@ -32,6 +36,8 @@ export function MessagingAppField({
   onCountryChange,
   contactValue,
   onContactChange,
+  inputName,
+  inputRequired = false,
   koreanOnly = false,
 }: Readonly<MessagingAppFieldProps>) {
   return (
@@ -82,7 +88,9 @@ export function MessagingAppField({
             </div>
           )}
           <input
+            name={inputName}
             type="tel"
+            required={inputRequired}
             value={koreanOnly ? formatKoreanPhone(contactValue) : contactValue}
             onChange={(e) => {
               const digits = toDigits(e.target.value);
@@ -95,7 +103,9 @@ export function MessagingAppField({
         </div>
       ) : (
         <input
+          name={inputName}
           type="text"
+          required={inputRequired}
           value={contactValue}
           onChange={(e) => onContactChange(e.target.value)}
           placeholder={`${MESSAGING_APPS.find((item) => item.key === app)?.label} ID`}

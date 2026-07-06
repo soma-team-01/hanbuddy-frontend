@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
-import {
-  ChevronRightIcon,
-  CircleHelpIcon,
-  GlobeIcon,
-  LogOutIcon,
-  UserMinusIcon,
-} from "@/components/ui/icons";
+import { ChevronRightIcon, CircleHelpIcon, GlobeIcon, UserMinusIcon } from "@/components/ui/icons";
+import { LogoutButton } from "./LogoutButton";
 
 const MENU_ITEMS = [
   { label: "Language", Icon: GlobeIcon, value: "English" },
@@ -48,13 +43,7 @@ export default function MyPage() {
           ))}
         </section>
 
-        <button
-          type="button"
-          className="mx-auto mt-6 flex items-center gap-2 text-base font-medium text-danger"
-        >
-          <LogOutIcon className="size-4" />
-          Log Out
-        </button>
+        <LogoutButton />
       </main>
     </>
   );

@@ -13,7 +13,7 @@ export default function LoginPage() {
             Tell us about yourself to find the perfect local experience.
           </p>
           <Link
-            href="/onboarding"
+            href="/api/auth/google/start"
             className="mt-10 flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line-strong bg-white font-display text-sm font-semibold text-ink"
           >
             <GoogleIcon className="size-5" />

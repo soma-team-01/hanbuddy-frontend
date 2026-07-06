@@ -7,12 +7,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessagingAppField } from "@/components/ui/MessagingAppField";
 import { PencilIcon } from "@/components/ui/icons";
-import { formatKoreanPhone, toDigits } from "@/lib/phone";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 export default function EditProfilePage() {
   const [messagingApp, setMessagingApp] = useState<string>("whatsapp");
-  const [koreanPhone, setKoreanPhone] = useState("");
   const [messagingContact, setMessagingContact] = useState("");
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("US");
@@ -74,18 +72,6 @@ export default function EditProfilePage() {
 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-xl font-semibold text-ink">Contact Details</h2>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-ink">
-              Korean Phone Number <span className="font-normal text-ink-soft">(Optional)</span>
-            </span>
-            <input
-              type="tel"
-              value={formatKoreanPhone(koreanPhone)}
-              onChange={(e) => setKoreanPhone(toDigits(e.target.value))}
-              placeholder="010-XXXX-XXXX"
-              className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-            />
-          </label>
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-ink">Preferred Messaging App</span>
             <MessagingAppField

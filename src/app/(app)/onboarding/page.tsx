@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessagingAppField } from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
+import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 const ROLES = [
   { key: "tourist", label: "Tourist" },
@@ -16,21 +17,9 @@ const ROLES = [
 export default function ProfileSetupPage() {
   const router = useRouter();
   const [role, setRole] = useState<"tourist" | "buddy">("tourist");
-  const [nationality, setNationality] = useState("");
   const [messagingApp, setMessagingApp] = useState<string>("line");
-  const [messagingCountry, setMessagingCountry] = useState("US");
-  // 사용자가 국가번호를 직접 고르기 전까지만 국적 선택을 기본값으로 따라간다
-  const messagingCountryTouched = useRef(false);
-
-  function handleNationalityChange(code: string) {
-    setNationality(code);
-    if (!messagingCountryTouched.current) setMessagingCountry(code);
-  }
-
-  function handleMessagingCountryChange(code: string) {
-    messagingCountryTouched.current = true;
-    setMessagingCountry(code);
-  }
+  const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
+    useMessagingCountrySync("");
 
   return (
     <div className="flex flex-1 flex-col pb-28">

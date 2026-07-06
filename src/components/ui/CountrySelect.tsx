@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { COUNTRIES, findCountry } from "@/lib/countries";
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "@/components/ui/icons";
 
@@ -24,8 +24,10 @@ export function CountrySelect({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const activeOptionRef = useRef<HTMLLIElement>(null);
+  const listboxId = useId();
 
   const selected = findCountry(value);
 
@@ -56,9 +58,15 @@ export function CountrySelect({
     setIsOpen(true);
   }
 
+  function close() {
+    setIsOpen(false);
+    // 패널이 닫히면 검색 input이 언마운트되므로 포커스를 트리거로 복귀시킨다
+    triggerRef.current?.focus();
+  }
+
   function select(code: string) {
     onChange(code);
-    setIsOpen(false);
+    close();
   }
 
   function handleSearchKeyDown(e: React.KeyboardEvent) {
@@ -72,17 +80,19 @@ export function CountrySelect({
       e.preventDefault();
       if (filtered[activeIndex]) select(filtered[activeIndex].code);
     } else if (e.key === "Escape") {
-      setIsOpen(false);
+      close();
     }
   }
 
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-label={ariaLabel}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        aria-controls={isOpen ? listboxId : undefined}
         onClick={() => (isOpen ? setIsOpen(false) : open())}
         className={
           triggerClassName ??
@@ -119,6 +129,12 @@ export function CountrySelect({
                 value={query}
                 placeholder="Search country"
                 aria-label="Search country"
+                role="combobox"
+                aria-expanded="true"
+                aria-controls={listboxId}
+                aria-activedescendant={
+                  filtered[activeIndex] ? `${listboxId}-${filtered[activeIndex].code}` : undefined
+                }
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setActiveIndex(0);
@@ -127,13 +143,14 @@ export function CountrySelect({
                 className="w-full bg-transparent text-base text-ink outline-none placeholder:text-ink-soft/60"
               />
             </div>
-            <ul role="listbox" aria-label={ariaLabel} className="overflow-y-auto">
+            <ul id={listboxId} role="listbox" aria-label={ariaLabel} className="overflow-y-auto">
               {filtered.map((country, index) => {
                 const isSelected = country.code === value;
                 const isActive = index === activeIndex;
                 return (
                   <li
                     key={country.code}
+                    id={`${listboxId}-${country.code}`}
                     ref={isActive ? activeOptionRef : undefined}
                     role="option"
                     aria-selected={isSelected}

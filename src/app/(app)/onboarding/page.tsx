@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
@@ -31,6 +31,18 @@ export default function ProfileSetupPage() {
   const [nationality, setNationality] = useState("");
   const [messagingApp, setMessagingApp] = useState<string>("line");
   const [messagingCountry, setMessagingCountry] = useState("US");
+  // 사용자가 국가번호를 직접 고르기 전까지만 국적 선택을 기본값으로 따라간다
+  const messagingCountryTouched = useRef(false);
+
+  function handleNationalityChange(code: string) {
+    setNationality(code);
+    if (!messagingCountryTouched.current) setMessagingCountry(code);
+  }
+
+  function handleMessagingCountryChange(code: string) {
+    messagingCountryTouched.current = true;
+    setMessagingCountry(code);
+  }
 
   return (
     <div className="flex flex-1 flex-col pb-28">
@@ -76,7 +88,11 @@ export default function ProfileSetupPage() {
           <h2 className="font-display text-xl font-semibold text-ink">Personal Information</h2>
           <div className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Nationality</span>
-            <CountrySelect value={nationality} onChange={setNationality} ariaLabel="Nationality" />
+            <CountrySelect
+              value={nationality}
+              onChange={handleNationalityChange}
+              ariaLabel="Nationality"
+            />
           </div>
           <label className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Age</span>
@@ -136,23 +152,33 @@ export default function ProfileSetupPage() {
                 );
               })}
             </div>
-            <div className="mt-1 flex gap-2">
-              <div className="shrink-0">
-                <CountrySelect
-                  value={messagingCountry}
-                  onChange={setMessagingCountry}
-                  display="dialCode"
-                  ariaLabel="Messaging country code"
-                  triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink"
+            {/* WhatsApp·전화번호는 번호 기반, LINE·WeChat은 ID 기반으로 연락처를 교환한다 */}
+            {messagingApp === "whatsapp" || messagingApp === "phone" ? (
+              <div className="mt-1 flex gap-2">
+                <div className="shrink-0">
+                  <CountrySelect
+                    value={messagingCountry}
+                    onChange={handleMessagingCountryChange}
+                    display="dialCode"
+                    ariaLabel="Messaging country code"
+                    triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink"
+                  />
+                </div>
+                <input
+                  type="tel"
+                  placeholder="Phone number"
+                  aria-label="Messaging phone number"
+                  className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
                 />
               </div>
+            ) : (
               <input
                 type="text"
-                placeholder="Enter ID / Number for selected app"
-                aria-label="Messaging app ID or number"
-                className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
+                placeholder={`${MESSAGING_APPS.find((app) => app.key === messagingApp)?.label} ID`}
+                aria-label="Messaging app ID"
+                className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
               />
-            </div>
+            )}
           </div>
         </section>
       </main>

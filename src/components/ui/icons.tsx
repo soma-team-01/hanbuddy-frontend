@@ -353,6 +353,15 @@ export function MapIcon(props: IconProps) {
   );
 }
 
+export function SearchIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </IconBase>
+  );
+}
+
 export function GoogleIcon(props: IconProps) {
   return (
     <svg

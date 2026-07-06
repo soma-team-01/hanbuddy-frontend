@@ -55,7 +55,10 @@ feature/*- PR 단위 임시 Preview URL (리뷰용)
   - `develop -> main`: **Merge commit** (long-lived 브랜치 간 이력 보존, squash 시 발생하는 히스토리 drift 방지).
 - **GitHub Ruleset (적용됨, enforcement=active)**: `main`·`develop` 모두 **브랜치 삭제 금지 · force push 금지 · PR 필수 · code_quality(errors)**. bypass actors 없음 -> 관리자 포함 **직접 push 불가, 반드시 PR 경유**. 병합 방식은 위 방향별로 ruleset에 강제됨(main=merge만, develop=squash만).
 - **필수 승인 수는 현재 0**(혼자 작업 중이라 self-merge 가능). **팀원 합류 시 1로 올릴 것.**
-- 향후 CI(build/lint/test) 추가 시 required status checks에 넣기.
+- **CI (`.github/workflows/ci.yml`)**: PR마다 `format:check → lint → typecheck → test → build` 5단계 실행. **PR 올리기 전 로컬에서 같은 5단계를 전부 통과시킬 것** - lint·typecheck·build만 돌리면 `format:check`(Prettier)와 `test`를 놓친다. 특히 스크립트로 자동 생성한 파일은 커밋 전 `npx prettier --write`를 거칠 것.
+  ```bash
+  npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
+  ```
 - **Vercel**: Production Branch=`main`. 그 외 브랜치/PR은 자동 Preview 배포. 환경변수는 Production / Preview로 분리 관리(실 키는 Production 전용).
 
 ### Vercel Status

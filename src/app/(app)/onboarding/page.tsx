@@ -4,40 +4,22 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import {
-  ArrowRightIcon,
-  CameraIcon,
-  ChevronDownIcon,
-  MessageSquareIcon,
-  PhoneIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { MessagingAppField } from "@/components/ui/MessagingAppField";
+import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
+import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 const ROLES = [
   { key: "tourist", label: "Tourist" },
   { key: "buddy", label: "Buddy" },
 ] as const;
 
-const COUNTRIES = [
-  "United States",
-  "France",
-  "Japan",
-  "Singapore",
-  "Canada",
-  "South Korea",
-] as const;
-
-const MESSAGING_APPS = [
-  { key: "whatsapp", label: "WhatsApp", Icon: MessageSquareIcon },
-  { key: "line", label: "Line", Icon: MessageSquareIcon },
-  { key: "wechat", label: "WeChat", Icon: MessageSquareIcon },
-  { key: "phone", label: "Phone Number", Icon: PhoneIcon },
-] as const;
-
 export default function ProfileSetupPage() {
   const router = useRouter();
   const [role, setRole] = useState<"tourist" | "buddy">("tourist");
   const [messagingApp, setMessagingApp] = useState<string>("line");
+  const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
+    useMessagingCountrySync("");
 
   return (
     <div className="flex flex-1 flex-col pb-28">
@@ -52,7 +34,6 @@ export default function ProfileSetupPage() {
               <CameraIcon className="size-4" />
             </span>
           </div>
-          <p className="text-ink-soft">Upload Photo (Optional)</p>
         </section>
 
         <section className="flex flex-col gap-3">
@@ -81,25 +62,14 @@ export default function ProfileSetupPage() {
 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-xl font-semibold text-ink">Personal Information</h2>
-          <label className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Nationality</span>
-            <span className="relative">
-              <select
-                defaultValue=""
-                className="w-full appearance-none rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
-              >
-                <option value="" disabled>
-                  Select country
-                </option>
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
-            </span>
-          </label>
+            <CountrySelect
+              value={nationality}
+              onChange={handleNationalityChange}
+              ariaLabel="Nationality"
+            />
+          </div>
           <label className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Age</span>
             <input
@@ -113,68 +83,27 @@ export default function ProfileSetupPage() {
         <div className="h-px w-full bg-line" aria-hidden />
 
         <section className="flex flex-col gap-4">
-          <div>
-            <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
-            <p className="mt-1 text-sm text-ink-soft">How would you like buddies to contact you?</p>
-          </div>
+          <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-ink-soft">Korean Phone Number</span>
               <span className="text-xs text-ink-soft/70">Optional</span>
             </div>
-            <div className="flex gap-2">
-              <span className="flex items-center rounded-xl border border-line bg-chip px-4 py-3.5 text-base text-ink">
-                +82
-              </span>
-              <input
-                type="tel"
-                placeholder="010-XXXX-XXXX"
-                aria-label="Korean phone number"
-                className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-              />
-            </div>
+            <input
+              type="tel"
+              placeholder="010-XXXX-XXXX"
+              aria-label="Korean phone number"
+              className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Preferred Messaging App</span>
-            <div className="flex flex-col rounded-xl border border-line bg-white">
-              {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
-                const isSelected = messagingApp === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => setMessagingApp(key)}
-                    className={`flex items-center gap-3 px-4 py-3.5 text-left ${
-                      index > 0 ? "border-t border-line" : ""
-                    }`}
-                  >
-                    <span
-                      aria-hidden
-                      className={`flex size-4 items-center justify-center rounded-full border ${
-                        isSelected ? "border-forest" : "border-line-strong"
-                      }`}
-                    >
-                      {isSelected && <span className="size-2 rounded-full bg-forest" />}
-                    </span>
-                    <Icon className="size-5 text-success" />
-                    <span className="text-base text-ink">{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-1 flex gap-2">
-              <span className="flex items-center gap-1 rounded-xl border border-line bg-chip px-4 py-3.5 text-base text-ink">
-                +1
-                <ChevronDownIcon className="size-3.5" />
-              </span>
-              <input
-                type="text"
-                placeholder="Enter ID / Number for selected app"
-                aria-label="Messaging app ID or number"
-                className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-              />
-            </div>
+            <MessagingAppField
+              app={messagingApp}
+              onAppChange={setMessagingApp}
+              country={messagingCountry}
+              onCountryChange={handleMessagingCountryChange}
+            />
           </div>
         </section>
       </main>

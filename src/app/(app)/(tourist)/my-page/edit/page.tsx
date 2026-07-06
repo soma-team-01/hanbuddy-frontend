@@ -4,27 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
-import { ChevronDownIcon, PencilIcon } from "@/components/ui/icons";
-
-const COUNTRY_CODES = ["+1 (US)", "+33 (FR)", "+65 (SG)", "+82 (KR)"] as const;
-const MESSAGING_APPS = ["WhatsApp", "Line", "WeChat", "KakaoTalk"] as const;
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { MessagingAppField } from "@/components/ui/MessagingAppField";
+import { PencilIcon } from "@/components/ui/icons";
+import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 
 export default function EditProfilePage() {
-  const [selectedApps, setSelectedApps] = useState<ReadonlySet<string>>(
-    new Set(["WhatsApp", "WeChat"]),
-  );
-
-  function toggleApp(app: string) {
-    setSelectedApps((prev) => {
-      const next = new Set(prev);
-      if (next.has(app)) {
-        next.delete(app);
-      } else {
-        next.add(app);
-      }
-      return next;
-    });
-  }
+  const [messagingApp, setMessagingApp] = useState<string>("whatsapp");
+  const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
+    useMessagingCountrySync("US");
 
   return (
     <div className="flex flex-1 flex-col">
@@ -44,7 +32,6 @@ export default function EditProfilePage() {
               <PencilIcon className="size-4" />
             </span>
           </div>
-          <p className="text-ink">Tap to update photo</p>
         </section>
 
         <section className="flex flex-col gap-4">
@@ -57,22 +44,14 @@ export default function EditProfilePage() {
             />
           </label>
           <div className="grid grid-cols-5 gap-3">
-            <label className="col-span-3 flex flex-col gap-2">
+            <div className="col-span-3 flex flex-col gap-2">
               <span className="text-sm font-medium text-ink">Nationality</span>
-              <span className="relative">
-                <select
-                  defaultValue="United States"
-                  className="w-full appearance-none rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
-                >
-                  <option>United States</option>
-                  <option>France</option>
-                  <option>Japan</option>
-                  <option>Singapore</option>
-                  <option>South Korea</option>
-                </select>
-                <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
-              </span>
-            </label>
+              <CountrySelect
+                value={nationality}
+                onChange={handleNationalityChange}
+                ariaLabel="Nationality"
+              />
+            </div>
             <label className="col-span-2 flex flex-col gap-2">
               <span className="text-sm font-medium text-ink">Age</span>
               <input
@@ -86,29 +65,6 @@ export default function EditProfilePage() {
 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-xl font-semibold text-ink">Contact Details</h2>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-ink">Global Phone Number</span>
-            <div className="flex gap-2">
-              <span className="relative shrink-0">
-                <select
-                  defaultValue={COUNTRY_CODES[0]}
-                  aria-label="Country code"
-                  className="appearance-none rounded-xl border border-line bg-chip py-3.5 pr-9 pl-4 text-base text-ink"
-                >
-                  {COUNTRY_CODES.map((code) => (
-                    <option key={code}>{code}</option>
-                  ))}
-                </select>
-                <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2 text-ink" />
-              </span>
-              <input
-                type="tel"
-                defaultValue="555-0198"
-                aria-label="Global phone number"
-                className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
-              />
-            </div>
-          </div>
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium text-ink">
               Korean Phone Number <span className="font-normal text-ink-soft">(Optional)</span>
@@ -119,32 +75,14 @@ export default function EditProfilePage() {
               className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
             />
           </label>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <div>
-            <h3 className="text-sm font-medium text-ink">Preferred Messaging Apps</h3>
-            <p className="mt-1 text-ink-soft">Select the apps you use to communicate.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {MESSAGING_APPS.map((app) => {
-              const isSelected = selectedApps.has(app);
-              return (
-                <button
-                  key={app}
-                  type="button"
-                  aria-pressed={isSelected}
-                  onClick={() => toggleApp(app)}
-                  className={`rounded-full px-4 py-2.5 font-display text-sm font-semibold ${
-                    isSelected
-                      ? "bg-forest-soft text-cream"
-                      : "border border-line-strong bg-white text-ink-soft"
-                  }`}
-                >
-                  {app}
-                </button>
-              );
-            })}
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-ink">Preferred Messaging App</span>
+            <MessagingAppField
+              app={messagingApp}
+              onAppChange={setMessagingApp}
+              country={messagingCountry}
+              onCountryChange={handleMessagingCountryChange}
+            />
           </div>
         </section>
       </main>

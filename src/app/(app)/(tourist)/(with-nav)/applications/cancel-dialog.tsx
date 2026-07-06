@@ -24,7 +24,8 @@ export function CancelDialog({ onClose }: Readonly<{ onClose: () => void }>) {
       aria-labelledby="cancel-dialog-title"
       onCancel={onClose}
       onClose={onClose}
-      className="w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
+      // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
     >
       <h2 id="cancel-dialog-title" className="font-display text-xl font-semibold text-forest">
         Cancel Application?

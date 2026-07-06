@@ -84,7 +84,10 @@ export function MessagingAppField({
           <input
             type="tel"
             value={koreanOnly ? formatKoreanPhone(contactValue) : contactValue}
-            onChange={(e) => onContactChange(toDigits(e.target.value))}
+            onChange={(e) => {
+              const digits = toDigits(e.target.value);
+              onContactChange(koreanOnly ? digits.slice(0, 11) : digits);
+            }}
             placeholder={koreanOnly ? "010-XXXX-XXXX" : "Phone number"}
             aria-label="Messaging phone number"
             className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"

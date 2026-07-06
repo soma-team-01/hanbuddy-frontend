@@ -46,6 +46,14 @@ describe("MessagingAppField", () => {
     expect(props.onContactChange).toHaveBeenCalledWith("0101234");
   });
 
+  it("caps koreanOnly phone input to 11 digits", () => {
+    const props = renderField({ koreanOnly: true });
+    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+      target: { value: "010-1234-5678-99" },
+    });
+    expect(props.onContactChange).toHaveBeenCalledWith("01012345678");
+  });
+
   it("keeps the ID input for ID-based apps regardless of koreanOnly", () => {
     renderField({ app: "line", koreanOnly: true });
     expect(screen.getByPlaceholderText("Line ID")).toBeInTheDocument();

@@ -191,7 +191,12 @@ export const COUNTRIES: readonly Country[] = [
   { name: "Rwanda", code: "RW", dialCode: "+250", flag: "🇷🇼" },
   { name: "Réunion", code: "RE", dialCode: "+262", flag: "🇷🇪" },
   { name: "Saint Barthélemy", code: "BL", dialCode: "+590", flag: "🇧🇱" },
-  { name: "Saint Helena, Ascension and Tristan da Cunha", code: "SH", dialCode: "+290", flag: "🇸🇭" },
+  {
+    name: "Saint Helena, Ascension and Tristan da Cunha",
+    code: "SH",
+    dialCode: "+290",
+    flag: "🇸🇭",
+  },
   { name: "Saint Kitts and Nevis", code: "KN", dialCode: "+1869", flag: "🇰🇳" },
   { name: "Saint Lucia", code: "LC", dialCode: "+1758", flag: "🇱🇨" },
   { name: "Saint Martin", code: "MF", dialCode: "+590", flag: "🇲🇫" },

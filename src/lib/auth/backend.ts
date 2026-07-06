@@ -1,8 +1,6 @@
 import type { NextResponse } from "next/server";
 import type { ApiResponse, ErrorApiResponse } from "./types";
 
-const DEFAULT_API_BASE_URL = "http://43.200.28.162/api/v1";
-
 interface BackendPostOptions {
   bearerToken?: string;
   cookieHeader?: string | null;
@@ -15,7 +13,7 @@ export interface BackendResponse<T> {
 }
 
 export function getBackendApiBaseUrl() {
-  return (process.env.HANBUDDY_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, "");
+  return getRequiredServerEnv("HANBUDDY_API_BASE_URL").replace(/\/$/, "");
 }
 
 export function getRequiredServerEnv(name: string) {

@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
   ArrowRightIcon,
   CameraIcon,
-  ChevronDownIcon,
   MessageSquareIcon,
   PhoneIcon,
   UserIcon,
@@ -16,15 +16,6 @@ import {
 const ROLES = [
   { key: "tourist", label: "Tourist" },
   { key: "buddy", label: "Buddy" },
-] as const;
-
-const COUNTRIES = [
-  "United States",
-  "France",
-  "Japan",
-  "Singapore",
-  "Canada",
-  "South Korea",
 ] as const;
 
 const MESSAGING_APPS = [
@@ -37,7 +28,9 @@ const MESSAGING_APPS = [
 export default function ProfileSetupPage() {
   const router = useRouter();
   const [role, setRole] = useState<"tourist" | "buddy">("tourist");
+  const [nationality, setNationality] = useState("");
   const [messagingApp, setMessagingApp] = useState<string>("line");
+  const [messagingCountry, setMessagingCountry] = useState("US");
 
   return (
     <div className="flex flex-1 flex-col pb-28">
@@ -81,25 +74,10 @@ export default function ProfileSetupPage() {
 
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-xl font-semibold text-ink">Personal Information</h2>
-          <label className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Nationality</span>
-            <span className="relative">
-              <select
-                defaultValue=""
-                className="w-full appearance-none rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
-              >
-                <option value="" disabled>
-                  Select country
-                </option>
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
-            </span>
-          </label>
+            <CountrySelect value={nationality} onChange={setNationality} ariaLabel="Nationality" />
+          </div>
           <label className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Age</span>
             <input
@@ -122,17 +100,12 @@ export default function ProfileSetupPage() {
               <span className="text-sm text-ink-soft">Korean Phone Number</span>
               <span className="text-xs text-ink-soft/70">Optional</span>
             </div>
-            <div className="flex gap-2">
-              <span className="flex items-center rounded-xl border border-line bg-chip px-4 py-3.5 text-base text-ink">
-                +82
-              </span>
-              <input
-                type="tel"
-                placeholder="010-XXXX-XXXX"
-                aria-label="Korean phone number"
-                className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-              />
-            </div>
+            <input
+              type="tel"
+              placeholder="010-XXXX-XXXX"
+              aria-label="Korean phone number"
+              className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Preferred Messaging App</span>
@@ -164,10 +137,15 @@ export default function ProfileSetupPage() {
               })}
             </div>
             <div className="mt-1 flex gap-2">
-              <span className="flex items-center gap-1 rounded-xl border border-line bg-chip px-4 py-3.5 text-base text-ink">
-                +1
-                <ChevronDownIcon className="size-3.5" />
-              </span>
+              <div className="shrink-0">
+                <CountrySelect
+                  value={messagingCountry}
+                  onChange={setMessagingCountry}
+                  display="dialCode"
+                  ariaLabel="Messaging country code"
+                  triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink"
+                />
+              </div>
               <input
                 type="text"
                 placeholder="Enter ID / Number for selected app"

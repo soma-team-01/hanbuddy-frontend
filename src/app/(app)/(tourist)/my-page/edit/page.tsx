@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
-import { ChevronDownIcon, PencilIcon } from "@/components/ui/icons";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { PencilIcon } from "@/components/ui/icons";
 
-const COUNTRY_CODES = ["+1 (US)", "+33 (FR)", "+65 (SG)", "+82 (KR)"] as const;
 const MESSAGING_APPS = ["WhatsApp", "Line", "WeChat", "KakaoTalk"] as const;
 
 export default function EditProfilePage() {
+  const [nationality, setNationality] = useState("US");
+  const [phoneCountry, setPhoneCountry] = useState("US");
   const [selectedApps, setSelectedApps] = useState<ReadonlySet<string>>(
     new Set(["WhatsApp", "WeChat"]),
   );
@@ -57,22 +59,14 @@ export default function EditProfilePage() {
             />
           </label>
           <div className="grid grid-cols-5 gap-3">
-            <label className="col-span-3 flex flex-col gap-2">
+            <div className="col-span-3 flex flex-col gap-2">
               <span className="text-sm font-medium text-ink">Nationality</span>
-              <span className="relative">
-                <select
-                  defaultValue="United States"
-                  className="w-full appearance-none rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
-                >
-                  <option>United States</option>
-                  <option>France</option>
-                  <option>Japan</option>
-                  <option>Singapore</option>
-                  <option>South Korea</option>
-                </select>
-                <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
-              </span>
-            </label>
+              <CountrySelect
+                value={nationality}
+                onChange={setNationality}
+                ariaLabel="Nationality"
+              />
+            </div>
             <label className="col-span-2 flex flex-col gap-2">
               <span className="text-sm font-medium text-ink">Age</span>
               <input
@@ -89,18 +83,15 @@ export default function EditProfilePage() {
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-ink">Global Phone Number</span>
             <div className="flex gap-2">
-              <span className="relative shrink-0">
-                <select
-                  defaultValue={COUNTRY_CODES[0]}
-                  aria-label="Country code"
-                  className="appearance-none rounded-xl border border-line bg-chip py-3.5 pr-9 pl-4 text-base text-ink"
-                >
-                  {COUNTRY_CODES.map((code) => (
-                    <option key={code}>{code}</option>
-                  ))}
-                </select>
-                <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2 text-ink" />
-              </span>
+              <div className="shrink-0">
+                <CountrySelect
+                  value={phoneCountry}
+                  onChange={setPhoneCountry}
+                  display="dialCode"
+                  ariaLabel="Country code"
+                  triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink"
+                />
+              </div>
               <input
                 type="tel"
                 defaultValue="555-0198"
@@ -135,10 +126,10 @@ export default function EditProfilePage() {
                   type="button"
                   aria-pressed={isSelected}
                   onClick={() => toggleApp(app)}
-                  className={`rounded-full px-4 py-2.5 font-display text-sm font-semibold ${
+                  className={`rounded-full border px-4 py-2.5 font-display text-sm font-semibold ${
                     isSelected
-                      ? "bg-forest-soft text-cream"
-                      : "border border-line-strong bg-white text-ink-soft"
+                      ? "border-transparent bg-forest-soft text-cream"
+                      : "border-line-strong bg-white text-ink-soft"
                   }`}
                 >
                   {app}

@@ -24,10 +24,12 @@
 ### Task 1: MessagingAppField에 `koreanOnly` prop 추가
 
 **Files:**
+
 - Modify: `src/components/ui/MessagingAppField.tsx`
 - Test: `src/components/ui/MessagingAppField.test.tsx` (신규)
 
 **Interfaces:**
+
 - Consumes: `formatKoreanPhone(digits: string): string`, `toDigits(value: string): string` (`@/lib/phone`, 기존 그대로)
 - Produces: `MessagingAppFieldProps`에 `koreanOnly?: boolean` 추가. `true`이고 `app`이 `"whatsapp" | "phone"`이면 국가 선택(`CountrySelect`) 대신 정적 `+82` 칩을 렌더하고, 입력 value에 `formatKoreanPhone`을 적용하며 placeholder는 `010-XXXX-XXXX`. 미지정(기본 `false`) 시 현행 동작과 동일. Task 2가 `koreanOnly={role === "buddy"}`로 사용한다.
 
@@ -185,10 +187,12 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ### Task 2: 온보딩 페이지 - 한국 번호 필드 제거 및 버디 +82 적용
 
 **Files:**
+
 - Modify: `src/app/(app)/onboarding/page.tsx`
 - Test: `src/app/(app)/onboarding/page.test.tsx` (신규)
 
 **Interfaces:**
+
 - Consumes: Task 1의 `koreanOnly?: boolean` prop.
 - Produces: 없음 (페이지 말단).
 
@@ -267,11 +271,11 @@ Expected: FAIL - "does not render the Korean Phone Number field", "fixes +82 ...
 3. 역할 전환 핸들러 추가 (`handleMessagingAppChange` 위):
 
 ```tsx
-  function handleRoleChange(key: "tourist" | "buddy") {
-    setRole(key);
-    // 국가별 번호 <-> 한국 로컬 번호로 값 의미가 달라지므로 역할 전환 시 연락처를 비운다
-    setMessagingContact("");
-  }
+function handleRoleChange(key: "tourist" | "buddy") {
+  setRole(key);
+  // 국가별 번호 <-> 한국 로컬 번호로 값 의미가 달라지므로 역할 전환 시 연락처를 비운다
+  setMessagingContact("");
+}
 ```
 
 4. ROLES 버튼의 onClick 교체:
@@ -283,21 +287,21 @@ Expected: FAIL - "does not render the Korean Phone Number field", "fixes +82 ...
 5. Contact Methods 섹션에서 Korean Phone Number 블록(`<div className="flex flex-col gap-2">`부터 해당 `</div>`까지, 기존 96-109행)을 삭제하고 `MessagingAppField`에 `koreanOnly` 전달:
 
 ```tsx
-        <section className="flex flex-col gap-4">
-          <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm text-ink-soft">Preferred Messaging App</span>
-            <MessagingAppField
-              app={messagingApp}
-              onAppChange={handleMessagingAppChange}
-              country={messagingCountry}
-              onCountryChange={handleMessagingCountryChange}
-              contactValue={messagingContact}
-              onContactChange={setMessagingContact}
-              koreanOnly={role === "buddy"}
-            />
-          </div>
-        </section>
+<section className="flex flex-col gap-4">
+  <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
+  <div className="flex flex-col gap-2">
+    <span className="text-sm text-ink-soft">Preferred Messaging App</span>
+    <MessagingAppField
+      app={messagingApp}
+      onAppChange={handleMessagingAppChange}
+      country={messagingCountry}
+      onCountryChange={handleMessagingCountryChange}
+      contactValue={messagingContact}
+      onContactChange={setMessagingContact}
+      koreanOnly={role === "buddy"}
+    />
+  </div>
+</section>
 ```
 
 - [ ] **Step 4: 테스트 통과 확인**
@@ -320,10 +324,12 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ### Task 3: 프로필 수정 페이지 - 한국 번호 필드 제거
 
 **Files:**
+
 - Modify: `src/app/(app)/(tourist)/my-page/edit/page.tsx`
 - Test: `src/app/(app)/(tourist)/my-page/edit/page.test.tsx` (신규)
 
 **Interfaces:**
+
 - Consumes: 없음 (`MessagingAppField`는 기본 모드 그대로 사용 - `koreanOnly` 전달하지 않음).
 - Produces: 없음 (페이지 말단).
 
@@ -374,20 +380,20 @@ Expected: FAIL - "does not render the Korean Phone Number field" 실패 (필드�
 3. Contact Details 섹션에서 Korean Phone Number `<label>` 블록(기존 77-88행) 삭제. 섹션은 다음만 남는다:
 
 ```tsx
-        <section className="flex flex-col gap-4">
-          <h2 className="font-display text-xl font-semibold text-ink">Contact Details</h2>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-ink">Preferred Messaging App</span>
-            <MessagingAppField
-              app={messagingApp}
-              onAppChange={handleMessagingAppChange}
-              country={messagingCountry}
-              onCountryChange={handleMessagingCountryChange}
-              contactValue={messagingContact}
-              onContactChange={setMessagingContact}
-            />
-          </div>
-        </section>
+<section className="flex flex-col gap-4">
+  <h2 className="font-display text-xl font-semibold text-ink">Contact Details</h2>
+  <div className="flex flex-col gap-2">
+    <span className="text-sm font-medium text-ink">Preferred Messaging App</span>
+    <MessagingAppField
+      app={messagingApp}
+      onAppChange={handleMessagingAppChange}
+      country={messagingCountry}
+      onCountryChange={handleMessagingCountryChange}
+      contactValue={messagingContact}
+      onContactChange={setMessagingContact}
+    />
+  </div>
+</section>
 ```
 
 - [ ] **Step 4: 테스트 통과 확인**
@@ -410,9 +416,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ### Task 4: CI 5단계 전체 검증
 
 **Files:**
+
 - Modify: 없음 (검증 전용 - 실패 시 원인 파일 수정)
 
 **Interfaces:**
+
 - Consumes: Task 1-3의 모든 변경.
 - Produces: CI 통과 가능 상태의 브랜치.
 

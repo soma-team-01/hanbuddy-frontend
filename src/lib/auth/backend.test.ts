@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   appendBackendSetCookies,
   BACKEND_REQUEST_TIMEOUT_MS,
+  getBackend,
   getBackendApiBaseUrl,
   getSetCookieHeaders,
   postBackend,
@@ -101,6 +102,47 @@ describe("postBackend", () => {
       },
       setCookies: [],
     });
+  });
+});
+
+describe("getBackend", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    if (originalApiBaseUrl === undefined) {
+      delete process.env.HANBUDDY_API_BASE_URL;
+      return;
+    }
+
+    process.env.HANBUDDY_API_BASE_URL = originalApiBaseUrl;
+  });
+
+  it("sends a GET request without body and forwards the bearer token", async () => {
+    process.env.HANBUDDY_API_BASE_URL = "https://api.hanbuddy.test/api/v1";
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ isSuccess: true, code: "200", message: "ok", result: { userId: 1 } }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      getBackend<{ userId: number }>("/users/me", { bearerToken: "access-token" }),
+    ).resolves.toMatchObject({
+      status: 200,
+      payload: { isSuccess: true, result: { userId: 1 } },
+      setCookies: [],
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.hanbuddy.test/api/v1/users/me",
+      expect.objectContaining({ method: "GET", signal: expect.any(AbortSignal) }),
+    );
+    const [, init] = fetch.mock.calls[0] as [string, RequestInit];
+    expect(init.body).toBeUndefined();
+    expect(new Headers(init.headers).get("authorization")).toBe("Bearer access-token");
   });
 });
 

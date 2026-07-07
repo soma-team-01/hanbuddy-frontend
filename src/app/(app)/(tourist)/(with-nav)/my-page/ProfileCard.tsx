@@ -1,0 +1,61 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { ChevronRightIcon } from "@/components/ui/icons";
+import { getMyProfile, type MyProfileResult } from "@/lib/api/users";
+
+export function ProfileCard() {
+  const router = useRouter();
+  const [result, setResult] = useState<MyProfileResult | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getMyProfile().then((profileResult) => {
+      if (cancelled) return;
+
+      if (profileResult.status === "unauthenticated") {
+        router.replace("/login");
+        return;
+      }
+
+      setResult(profileResult);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  return (
+    <section className="flex items-center gap-5 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
+      {result === null || result.status === "unauthenticated" ? (
+        <>
+          <span aria-hidden className="size-[72px] shrink-0 animate-pulse rounded-full bg-sand" />
+          <div aria-hidden className="flex flex-col gap-2">
+            <span className="h-6 w-36 animate-pulse rounded bg-sand" />
+            <span className="h-4 w-24 animate-pulse rounded bg-sand" />
+          </div>
+        </>
+      ) : result.status === "error" ? (
+        <p role="alert" className="text-sm text-danger">
+          {result.message}
+        </p>
+      ) : (
+        <>
+          <Avatar name={result.profile.name} src={result.profile.profileImageUrl} size={72} />
+          <div>
+            <h1 className="font-display text-xl font-semibold text-ink">{result.profile.name}</h1>
+            <Link href="/my-page/edit" className="mt-1 flex items-center gap-1 text-sm text-earth">
+              Edit Profile
+              <ChevronRightIcon className="size-3.5" />
+            </Link>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}

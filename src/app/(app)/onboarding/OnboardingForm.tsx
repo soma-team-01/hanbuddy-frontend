@@ -88,6 +88,17 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     setMessagingContact("");
   }
 
+  async function resolveProfileImageKey(): Promise<string | undefined> {
+    if (!profileImageFile) return undefined;
+    if (uploadedProfileImageRef.current?.file === profileImageFile) {
+      return uploadedProfileImageRef.current.imageKey;
+    }
+
+    const uploaded = await uploadProfileImage(profileImageFile);
+    uploadedProfileImageRef.current = { file: profileImageFile, imageKey: uploaded.imageKey };
+    return uploaded.imageKey;
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
@@ -112,24 +123,13 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     setIsSubmitting(true);
     try {
       let profileImageKey: string | undefined;
-      if (profileImageFile) {
-        try {
-          if (uploadedProfileImageRef.current?.file === profileImageFile) {
-            profileImageKey = uploadedProfileImageRef.current.imageKey;
-          } else {
-            const uploaded = await uploadProfileImage(profileImageFile);
-            uploadedProfileImageRef.current = {
-              file: profileImageFile,
-              imageKey: uploaded.imageKey,
-            };
-            profileImageKey = uploaded.imageKey;
-          }
-        } catch (error) {
-          setErrorMessage(
-            error instanceof Error ? error.message : "프로필 이미지 업로드에 실패했습니다.",
-          );
-          return;
-        }
+      try {
+        profileImageKey = await resolveProfileImageKey();
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "프로필 이미지 업로드에 실패했습니다.",
+        );
+        return;
       }
 
       const payload: GoogleSignupRequest = {
@@ -167,6 +167,34 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     }
   }
 
+  let profilePhoto = (
+    <div className="flex size-24 items-center justify-center rounded-2xl border border-line bg-sand">
+      <UserIcon className="size-9 text-ink-soft" />
+    </div>
+  );
+  if (profileImagePreview) {
+    profilePhoto = (
+      <Image
+        src={profileImagePreview}
+        alt="Selected profile photo preview"
+        width={96}
+        height={96}
+        unoptimized
+        className="size-24 rounded-2xl border border-line object-cover"
+      />
+    );
+  } else if (googleProfile?.picture) {
+    profilePhoto = (
+      <Image
+        src={googleProfile.picture}
+        alt={googleProfile.name ? `${googleProfile.name} profile` : "Google profile"}
+        width={96}
+        height={96}
+        className="size-24 rounded-2xl border border-line object-cover"
+      />
+    );
+  }
+
   return (
     <div className="flex flex-1 flex-col pb-28">
       <TopAppBar closeHref="/login" />
@@ -174,28 +202,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         <main className="flex flex-1 flex-col gap-8 px-4 py-8">
           <section className="flex flex-col items-center gap-3">
             <div className="relative">
-              {profileImagePreview ? (
-                <Image
-                  src={profileImagePreview}
-                  alt="Selected profile photo preview"
-                  width={96}
-                  height={96}
-                  unoptimized
-                  className="size-24 rounded-2xl border border-line object-cover"
-                />
-              ) : googleProfile?.picture ? (
-                <Image
-                  src={googleProfile.picture}
-                  alt={googleProfile.name ? `${googleProfile.name} profile` : "Google profile"}
-                  width={96}
-                  height={96}
-                  className="size-24 rounded-2xl border border-line object-cover"
-                />
-              ) : (
-                <div className="flex size-24 items-center justify-center rounded-2xl border border-line bg-sand">
-                  <UserIcon className="size-9 text-ink-soft" />
-                </div>
-              )}
+              {profilePhoto}
               <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream">
                 <CameraIcon className="size-4" />
                 <span className="sr-only">Add profile photo</span>

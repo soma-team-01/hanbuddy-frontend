@@ -1,27 +1,27 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import ProfileSetupPage from "./page";
+import { OnboardingForm } from "./OnboardingForm";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn() }),
 }));
 
-describe("ProfileSetupPage", () => {
+describe("OnboardingForm", () => {
   it("does not render the Korean Phone Number field", () => {
-    render(<ProfileSetupPage />);
+    render(<OnboardingForm />);
     expect(screen.queryByText("Korean Phone Number")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Korean phone number")).not.toBeInTheDocument();
   });
 
   it("keeps the country selector for tourists on phone-based apps", () => {
-    render(<ProfileSetupPage />);
+    render(<OnboardingForm />);
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
     expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
   });
 
   it("fixes +82 without a country selector for buddies", () => {
-    render(<ProfileSetupPage />);
+    render(<OnboardingForm />);
     fireEvent.click(screen.getByRole("button", { name: "Buddy" }));
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
     expect(screen.queryByLabelText("Messaging country code")).not.toBeInTheDocument();
@@ -30,7 +30,7 @@ describe("ProfileSetupPage", () => {
   });
 
   it("clears the contact input when the role changes", () => {
-    render(<ProfileSetupPage />);
+    render(<OnboardingForm />);
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
     fireEvent.change(screen.getByLabelText("Messaging phone number"), {
       target: { value: "5551234" },

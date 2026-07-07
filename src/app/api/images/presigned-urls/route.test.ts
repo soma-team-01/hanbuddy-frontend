@@ -129,12 +129,32 @@ describe("POST /api/images/presigned-urls", () => {
     const response = await POST(
       createRequest({
         cookie: "hanbuddy_signup_token=signup-token",
-        body: { purpose: "PROFILE", contentType: "image/gif", imageCount: 1 },
+        body: presignedRequestBody,
       }),
     );
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual(backendErrorBody);
+  });
+
+  it.each([
+    ["unsupported contentType", { purpose: "PROFILE", contentType: "image/gif", imageCount: 1 }],
+    ["imageCount other than 1", { purpose: "PROFILE", contentType: "image/webp", imageCount: 2 }],
+    ["unknown purpose", { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 1 }],
+  ])("rejects %s with 400 before reaching the backend", async (_label, body) => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      createRequest({ cookie: "hanbuddy_signup_token=signup-token", body }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      isSuccess: false,
+      message: "잘못된 이미지 업로드 요청입니다.",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("returns 502 with an image-upload-specific message when the backend is unreachable", async () => {

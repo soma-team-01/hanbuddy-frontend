@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendBackendSetCookies, createProxyErrorResponse, postBackend } from "@/lib/auth/backend";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
-import type {
-  PresignedImageUploadRequest,
-  PresignedImageUploadResult,
+import {
+  isSupportedProfileImageType,
+  type PresignedImageUploadRequest,
+  type PresignedImageUploadResult,
 } from "@/lib/images/presigned";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,17 @@ export async function POST(request: NextRequest) {
     body = (await request.json()) as PresignedImageUploadRequest;
   } catch {
     return NextResponse.json(createProxyErrorResponse("이미지 업로드 요청을 읽을 수 없습니다."), {
+      status: 400,
+    });
+  }
+
+  // 백엔드가 최종 검증하지만, 프록시를 직접 호출하는 잘못된 요청은 여기서 걸러낸다
+  if (
+    body?.purpose !== "PROFILE" ||
+    !isSupportedProfileImageType(body.contentType) ||
+    body.imageCount !== 1
+  ) {
+    return NextResponse.json(createProxyErrorResponse("잘못된 이미지 업로드 요청입니다."), {
       status: 400,
     });
   }

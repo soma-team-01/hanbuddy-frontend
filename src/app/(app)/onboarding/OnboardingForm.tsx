@@ -10,7 +10,9 @@ import { MessagingAppField, type MessagingAppKey } from "@/components/ui/Messagi
 import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
 import { findCountry } from "@/lib/countries";
 import {
+  MAX_PROFILE_IMAGE_BYTES,
   PROFILE_IMAGE_CONTENT_TYPES,
+  PROFILE_IMAGE_SIZE_ERROR_MESSAGE,
   isSupportedProfileImageType,
   uploadProfileImage,
 } from "@/lib/images/presigned";
@@ -67,6 +69,11 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
 
     if (!isSupportedProfileImageType(file.type)) {
       setErrorMessage("JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      setErrorMessage(PROFILE_IMAGE_SIZE_ERROR_MESSAGE);
       event.target.value = "";
       return;
     }

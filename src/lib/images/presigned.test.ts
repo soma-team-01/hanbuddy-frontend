@@ -59,6 +59,48 @@ describe("uploadProfileImage", () => {
     expect(s3Init.body).toBe(file);
   });
 
+  it("passes an abort signal to both requests so they cannot hang forever", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createJsonResponse(presignedSuccessBody))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const file = new File([new Uint8Array([1, 2, 3])], "me.png", { type: "image/png" });
+    await uploadProfileImage(file);
+
+    expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+    expect(fetchMock.mock.calls[1][1].signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("maps request timeouts to a user-friendly error message", async () => {
+    const timeoutError = Object.assign(new Error("The operation timed out."), {
+      name: "TimeoutError",
+    });
+    const fetchMock = vi.fn().mockRejectedValueOnce(timeoutError);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const file = new File([new Uint8Array([1])], "me.png", { type: "image/png" });
+
+    await expect(uploadProfileImage(file)).rejects.toThrow(
+      "프로필 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.",
+    );
+  });
+
+  it("rejects files over the size limit without calling the network", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const oversized = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.png", {
+      type: "image/png",
+    });
+
+    await expect(uploadProfileImage(oversized)).rejects.toThrow(
+      "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("rejects unsupported file types without calling the network", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

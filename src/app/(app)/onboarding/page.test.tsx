@@ -171,6 +171,68 @@ describe("OnboardingForm profile image", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("does not re-upload the same file when resubmitting after a signup failure", async () => {
+    vi.mocked(uploadProfileImage).mockResolvedValue({
+      uploadUrl: "https://bucket.s3.amazonaws.com/profiles/2026/07/07/uuid.png?signed",
+      imageKey: "profiles/2026/07/07/uuid.png",
+      imageUrl: "https://static.hanbuddy.com/profiles/2026/07/07/uuid.png",
+      expiresInSeconds: 300,
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ isSuccess: false, code: "COMMON500", message: "서버 오류입니다." }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            isSuccess: true,
+            code: "201",
+            message: "요청이 성공했습니다.",
+            result: { registered: true, userType: "TOURIST" },
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OnboardingForm />);
+    fillRequiredFields();
+    fireEvent.change(screen.getByLabelText("Add profile photo"), {
+      target: { files: [createImageFile()] },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("서버 오류입니다."));
+
+    fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    expect(uploadProfileImage).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({
+      profileImageKey: "profiles/2026/07/07/uuid.png",
+    });
+  });
+
+  it("rejects images over the size limit at selection time", () => {
+    render(<OnboardingForm />);
+
+    const oversized = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.png", {
+      type: "image/png",
+    });
+    fireEvent.change(screen.getByLabelText("Add profile photo"), {
+      target: { files: [oversized] },
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.",
+    );
+    expect(screen.queryByAltText("Selected profile photo preview")).not.toBeInTheDocument();
+  });
+
   it("rejects unsupported image types at selection time", () => {
     render(<OnboardingForm />);
 

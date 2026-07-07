@@ -34,7 +34,12 @@ export function TopAppBar({
         <span className="size-10 shrink-0" aria-hidden />
       )}
       <h1 className="truncate font-display text-[28px] font-semibold tracking-tight text-forest">
-        {title}
+        {title === "HanBuddy" ? (
+          // 브랜드 워드마크 클릭 시 역할별 홈(/explore | /dashboard)으로 이동
+          <Link href="/home">{title}</Link>
+        ) : (
+          title
+        )}
       </h1>
       <div className="flex min-w-10 shrink-0 items-center justify-end">{action}</div>
     </header>

@@ -26,6 +26,7 @@ const presignedSuccessBody = {
 
 describe("uploadProfileImage", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -71,6 +72,33 @@ describe("uploadProfileImage", () => {
 
     expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
     expect(fetchMock.mock.calls[1][1].signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("caps the S3 upload timeout at 30 seconds even when the presigned URL lasts longer", async () => {
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ...presignedSuccessBody,
+          result: {
+            images: [
+              {
+                ...presignedSuccessBody.result.images[0],
+                expiresInSeconds: 3600,
+              },
+            ],
+          },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const file = new File([new Uint8Array([1, 2, 3])], "me.png", { type: "image/png" });
+    await uploadProfileImage(file);
+
+    expect(timeoutSpy).toHaveBeenNthCalledWith(1, 10_000);
+    expect(timeoutSpy).toHaveBeenNthCalledWith(2, 30_000);
   });
 
   it("maps request timeouts to a user-friendly error message", async () => {

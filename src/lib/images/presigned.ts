@@ -8,6 +8,7 @@ export const PROFILE_IMAGE_SIZE_ERROR_MESSAGE = "프로필 이미지는 5MB 이�
 
 const PRESIGNED_REQUEST_TIMEOUT_MS = 10_000;
 const DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS = 300;
+const MAX_S3_UPLOAD_TIMEOUT_SECONDS = 30;
 const UPLOAD_TIMEOUT_ERROR_MESSAGE =
   "프로필 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.";
 
@@ -85,8 +86,11 @@ export async function uploadProfileImage(file: File): Promise<PresignedImageItem
   }
 
   // S3 PUT은 발급 시 전달한 contentType과 동일한 Content-Type 헤더를 요구한다.
-  // 업로드 제한 시간은 Presigned URL 유효 시간에 맞춘다.
-  const s3TimeoutSeconds = uploadTarget.expiresInSeconds || DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS;
+  // Presigned URL 유효 시간을 넘기지 않되, 클라이언트 대기 시간은 30초로 제한한다.
+  const s3TimeoutSeconds = Math.min(
+    uploadTarget.expiresInSeconds || DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS,
+    MAX_S3_UPLOAD_TIMEOUT_SECONDS,
+  );
   const s3Response = await fetchWithTimeoutMessage(uploadTarget.uploadUrl, {
     method: "PUT",
     headers: { "Content-Type": file.type },

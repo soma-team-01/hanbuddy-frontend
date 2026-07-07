@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
         pathname: "/profiles/**",
         search: "",
       },
+      {
+        protocol: "https",
+        hostname: "hanbuddy-bucket-526958954481-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com",
+        pathname: "/activities/**",
+        search: "",
+      },
     ],
   },
 };

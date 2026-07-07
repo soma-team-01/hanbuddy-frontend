@@ -43,3 +43,40 @@ export interface Activity {
   sessions: Session[];
   meetingPoint: MeetingPoint;
 }
+
+export interface ActivityImageResponse {
+  imageUrl: string;
+  imageOrder: number;
+}
+
+export type TouristActivityScheduleStatus = "OPEN" | "CLOSED";
+
+export interface TouristActivitySchedule {
+  activityScheduleId: number;
+  activityDate: string;
+  startTime: string;
+  remainingCapacity: number;
+  status: TouristActivityScheduleStatus;
+}
+
+export interface TouristActivitySummary {
+  activityId: number;
+  title: string;
+  description: string;
+  thumbnailImageUrl: string;
+  buddyName: string;
+  buddyProfileImageUrl: string | null;
+  meetingPointName: string;
+  price: number;
+  currency: string;
+}
+
+export interface TouristActivityDetail extends TouristActivitySummary {
+  buddyId: number;
+  includedItems: string[];
+  restrictionNotes: string[];
+  meetingPointAddress: string;
+  meetingPlaceId: string;
+  images: ActivityImageResponse[];
+  schedules: TouristActivitySchedule[];
+}

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ChevronRightIcon, CircleHelpIcon, GlobeIcon, UserMinusIcon } from "@/components/ui/icons";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
-import { getUserTypeHomePath } from "@/lib/auth/routes";
+import { getUserTypeHomePath, parseUserType } from "@/lib/auth/routes";
 import { LogoutButton } from "./LogoutButton";
 import { ProfileCard } from "./ProfileCard";
 
@@ -14,7 +14,9 @@ const MENU_ITEMS = [
 
 export default async function MyPage() {
   const cookieStore = await cookies();
-  const backHref = getUserTypeHomePath(cookieStore.get(AUTH_COOKIES.userType)?.value);
+  const backHref = getUserTypeHomePath(
+    parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value),
+  );
 
   return (
     <>

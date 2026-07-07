@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
 import { postBackend } from "@/lib/auth/backend";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
 import { GET } from "./route";
@@ -123,7 +123,17 @@ describe("GET /auth/google/callback", () => {
     expect(response.headers.get("location")).toBe("http://localhost/onboarding");
     expect(setCookie).toContain(`${AUTH_COOKIES.signupToken}=signup-token`);
     expect(setCookie).toContain("refresh_token=backend");
-    expect(setCookie).not.toContain("traveler@example.com");
+
+    const profileCookieValue = setCookie.match(
+      new RegExp(`${AUTH_COOKIES.googleProfile}=([^;,]+)`),
+    )?.[1];
+    const decodedProfile = decodeGoogleProfile(profileCookieValue);
+
+    expect(decodedProfile).toEqual({
+      name: "Traveler",
+      picture: "https://lh3.googleusercontent.com/profile",
+    });
+    expect(decodedProfile).not.toHaveProperty("email");
   });
 
   it("redirects to login when the backend login request fails", async () => {

@@ -1,4 +1,4 @@
-export type ApplicationStatus = "pending_payment" | "confirmed" | "completed";
+export type ApplicationStatus = "pending_payment" | "confirmed" | "cancelled" | "completed";
 export type BackendApplicationStatus = "PENDING_PAYMENT" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 export type ApplicationCancellationReason =
   "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER";

@@ -61,6 +61,7 @@ function ApplicationCard({
   onCancel,
 }: Readonly<{ application: Application; onCancel: () => void }>) {
   const isCompleted = application.status === "completed";
+  const isCancelled = application.status === "cancelled";
 
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
@@ -77,11 +78,11 @@ function ApplicationCard({
         />
         <div className="min-w-0">
           <p
-            className={`font-display text-sm font-semibold ${isCompleted ? "text-ink-soft" : "text-ink"}`}
+            className={`font-display text-sm font-semibold ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}
           >
             {application.hostName}
           </p>
-          <p className={`text-base ${isCompleted ? "text-ink-soft" : "text-ink"}`}>
+          <p className={`text-base ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}>
             {application.activityTitle}
           </p>
         </div>
@@ -121,7 +122,9 @@ export function ApplicationList({ applications }: Readonly<{ applications: Appli
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
 
   const visibleApplications = applications.filter((application) =>
-    tab === "upcoming" ? application.status !== "completed" : application.status === "completed",
+    tab === "upcoming"
+      ? application.status === "pending_payment" || application.status === "confirmed"
+      : application.status === "completed" || application.status === "cancelled",
   );
 
   return (

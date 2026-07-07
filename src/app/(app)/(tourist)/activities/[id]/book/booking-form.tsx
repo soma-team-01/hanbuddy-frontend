@@ -12,6 +12,7 @@ import {
   StarIcon,
   UserIcon,
 } from "@/components/ui/icons";
+import { createApplication } from "@/lib/api/applications";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
@@ -23,10 +24,40 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const [sessionId, setSessionId] = useState(activity.sessions[0]?.id ?? "");
   const [guests, setGuests] = useState(2);
   const [agreed, setAgreed] = useState(false);
+  const [specialRequest, setSpecialRequest] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = activity.price * guests;
   const serviceFee = Math.round(subtotal * SERVICE_FEE_RATE);
   const total = subtotal + serviceFee;
+
+  async function handleSubmit() {
+    if (!sessionId) {
+      setErrorMessage("신청 가능한 일정을 선택해 주세요.");
+      return;
+    }
+
+    setErrorMessage("");
+    setIsSubmitting(true);
+    const result = await createApplication({
+      activityScheduleId: Number(sessionId),
+      guestCount: guests,
+      specialRequest: specialRequest.trim() || undefined,
+    });
+    setIsSubmitting(false);
+
+    if (result.status === "unauthenticated") {
+      router.replace("/login");
+      return;
+    }
+    if (result.status === "error") {
+      setErrorMessage(result.message);
+      return;
+    }
+
+    router.replace("/applications");
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-8 px-4 py-6">
@@ -118,6 +149,8 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           <textarea
             rows={3}
             placeholder="Let your guide know..."
+            value={specialRequest}
+            onChange={(event) => setSpecialRequest(event.target.value)}
             className="w-full resize-none rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
           />
         </label>
@@ -155,14 +188,23 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
         </label>
       </section>
 
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          {errorMessage}
+        </p>
+      )}
+
       <BottomActionBar>
         <button
           type="button"
-          disabled={!agreed}
-          onClick={() => router.push("/applications")}
+          disabled={!agreed || isSubmitting}
+          onClick={handleSubmit}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-forest font-display text-base font-semibold text-cream disabled:opacity-40"
         >
-          Proceed to Payment
+          {isSubmitting ? "Submitting..." : "Submit Application"}
           <ArrowRightIcon className="size-4" />
         </button>
       </BottomActionBar>

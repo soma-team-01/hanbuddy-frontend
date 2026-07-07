@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   appendBackendSetCookies,
   createProxyErrorResponse,
+  deleteBackend,
   getBackend,
   patchBackend,
   postBackend,
@@ -87,6 +88,22 @@ export async function proxyAuthenticatedPatch<TBody, TResult>(
     const backend = await patchBackend<TBody, TResult>(backendPath, body, {
       bearerToken: accessToken,
     });
+    return createBackendJsonResponse(backend);
+  } catch {
+    return backendUnavailableResponse(unavailableMessage);
+  }
+}
+
+export async function proxyAuthenticatedDelete<TResult>(
+  request: NextRequest,
+  backendPath: string,
+  unavailableMessage: string,
+) {
+  const accessToken = getAccessToken(request);
+  if (!accessToken) return unauthorizedResponse();
+
+  try {
+    const backend = await deleteBackend<TResult>(backendPath, { bearerToken: accessToken });
     return createBackendJsonResponse(backend);
   } catch {
     return backendUnavailableResponse(unavailableMessage);

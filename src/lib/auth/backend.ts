@@ -47,8 +47,15 @@ export async function patchBackend<TBody, TResult>(
   return requestBackend("PATCH", path, body, options);
 }
 
+export async function deleteBackend<TResult>(
+  path: string,
+  options: BackendRequestOptions = {},
+): Promise<BackendResponse<TResult>> {
+  return requestBackend("DELETE", path, undefined, options);
+}
+
 async function requestBackend<TBody, TResult>(
-  method: "GET" | "POST" | "PATCH",
+  method: "DELETE" | "GET" | "POST" | "PATCH",
   path: string,
   body?: TBody,
   options: BackendRequestOptions = {},

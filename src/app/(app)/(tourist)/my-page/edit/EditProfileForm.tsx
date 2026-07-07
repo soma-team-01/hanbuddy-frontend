@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
@@ -11,9 +12,16 @@ import {
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
-import { PencilIcon } from "@/components/ui/icons";
+import { CameraIcon } from "@/components/ui/icons";
 import { updateMyProfile } from "@/lib/api/users";
 import { COUNTRIES, findCountry } from "@/lib/countries";
+import {
+  MAX_PROFILE_IMAGE_BYTES,
+  PROFILE_IMAGE_CONTENT_TYPES,
+  PROFILE_IMAGE_SIZE_ERROR_MESSAGE,
+  isSupportedProfileImageType,
+  uploadProfileImage,
+} from "@/lib/images/presigned";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 import type { MyProfile } from "@/types/user";
 
@@ -41,15 +49,56 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const [messagingContact, setMessagingContact] = useState(profile.contactIdentifier);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState("");
+  // 같은 파일로 재제출할 때(프로필 저장 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
+  const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync(profile.nationalityCode, toMessagingCountry(profile));
 
   const isBuddy = profile.userType === "BUDDY";
 
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    };
+  }, [profileImagePreview]);
+
+  function handleProfileImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!isSupportedProfileImageType(file.type)) {
+      setErrorMessage("JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      setErrorMessage(PROFILE_IMAGE_SIZE_ERROR_MESSAGE);
+      event.target.value = "";
+      return;
+    }
+
+    setErrorMessage("");
+    setProfileImageFile(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+  }
+
   function handleMessagingAppChange(key: MessagingAppKey) {
     setMessagingApp(key);
     // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
     setMessagingContact("");
+  }
+
+  async function resolveProfileImageKey(): Promise<string | null> {
+    if (!profileImageFile) return profile.profileImageKey;
+    if (uploadedProfileImageRef.current?.file === profileImageFile) {
+      return uploadedProfileImageRef.current.imageKey;
+    }
+
+    const uploaded = await uploadProfileImage(profileImageFile);
+    uploadedProfileImageRef.current = { file: profileImageFile, imageKey: uploaded.imageKey };
+    return uploaded.imageKey;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -82,9 +131,19 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
 
     setIsSaving(true);
     try {
+      let profileImageKey: string | null;
+      try {
+        profileImageKey = await resolveProfileImageKey();
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "프로필 이미지 업로드에 실패했습니다.",
+        );
+        return;
+      }
+
       const result = await updateMyProfile({
         name,
-        profileImageKey: profile.profileImageKey,
+        profileImageKey,
         nationalityCode: nationality,
         age,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
@@ -110,6 +169,19 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     }
   }
 
+  const profilePhoto = profileImagePreview ? (
+    <Image
+      src={profileImagePreview}
+      alt="Selected profile photo preview"
+      width={112}
+      height={112}
+      unoptimized
+      className="size-28 shrink-0 rounded-full border border-line-strong object-cover"
+    />
+  ) : (
+    <Avatar name={profile.name} src={profile.profileImageUrl} size={112} />
+  );
+
   return (
     <div className="flex flex-1 flex-col">
       <TopAppBar
@@ -129,10 +201,17 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
         <main className="flex flex-1 flex-col gap-8 px-4 py-8">
           <section className="flex flex-col items-center gap-3">
             <div className="relative">
-              <Avatar name={profile.name} src={profile.profileImageUrl} size={112} />
-              <span className="absolute right-0 bottom-0 flex size-9 items-center justify-center rounded-full bg-forest text-cream">
-                <PencilIcon className="size-4" />
-              </span>
+              {profilePhoto}
+              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream">
+                <CameraIcon className="size-4" />
+                <span className="sr-only">Add profile photo</span>
+                <input
+                  type="file"
+                  accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
+                  className="sr-only"
+                  onChange={handleProfileImageChange}
+                />
+              </label>
             </div>
           </section>
 

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
+import { uploadProfileImage } from "@/lib/images/presigned";
 import { createMockProfile } from "@/test/factories";
 import EditProfilePage from "./page";
 
@@ -17,6 +18,11 @@ vi.mock("@/lib/api/users", () => ({
   updateMyProfile: vi.fn(),
 }));
 
+vi.mock("@/lib/images/presigned", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/images/presigned")>()),
+  uploadProfileImage: vi.fn(),
+}));
+
 const mockedGetMyProfile = vi.mocked(getMyProfile);
 const mockedUpdateMyProfile = vi.mocked(updateMyProfile);
 
@@ -25,10 +31,23 @@ const profile = createMockProfile({
 });
 
 describe("EditProfilePage", () => {
+  beforeAll(() => {
+    Object.defineProperty(URL, "createObjectURL", {
+      value: vi.fn(() => "blob:profile-preview"),
+      writable: true,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", { value: vi.fn(), writable: true });
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(uploadProfileImage).mockReset();
     mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
   });
+
+  function createImageFile(name = "me.png", type = "image/png") {
+    return new File([new Uint8Array([1, 2, 3])], name, { type });
+  }
 
   it("populates the form with the loaded profile", async () => {
     render(<EditProfilePage />);
@@ -74,7 +93,76 @@ describe("EditProfilePage", () => {
         contactIdentifier: "555-0198",
       });
     });
+    expect(uploadProfileImage).not.toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith("/my-page");
+  });
+
+  it("shows a local preview after selecting a profile image", async () => {
+    render(<EditProfilePage />);
+
+    fireEvent.change(await screen.findByLabelText("Add profile photo"), {
+      target: { files: [createImageFile()] },
+    });
+
+    expect(screen.getByAltText("Selected profile photo preview")).toBeInTheDocument();
+  });
+
+  it("uploads the selected image and submits its key as profileImageKey", async () => {
+    vi.mocked(uploadProfileImage).mockResolvedValue({
+      uploadUrl: "https://bucket.s3.amazonaws.com/profiles/2026/07/07/uuid.png?signed",
+      imageKey: "profiles/2026/07/07/uuid.png",
+      imageUrl: "https://static.hanbuddy.com/profiles/2026/07/07/uuid.png",
+      expiresInSeconds: 300,
+    });
+    mockedUpdateMyProfile.mockResolvedValue({
+      status: "success",
+      profile: { ...profile, profileImageKey: "profiles/2026/07/07/uuid.png" },
+    });
+    const file = createImageFile();
+
+    render(<EditProfilePage />);
+    fireEvent.change(await screen.findByLabelText("Add profile photo"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(uploadProfileImage).toHaveBeenCalledWith(file));
+    expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        profileImageKey: "profiles/2026/07/07/uuid.png",
+      }),
+    );
+    expect(replace).toHaveBeenCalledWith("/my-page");
+  });
+
+  it("shows the upload error and skips saving when the image upload fails", async () => {
+    vi.mocked(uploadProfileImage).mockRejectedValue(
+      new Error("프로필 이미지 업로드에 실패했습니다."),
+    );
+
+    render(<EditProfilePage />);
+    fireEvent.change(await screen.findByLabelText("Add profile photo"), {
+      target: { files: [createImageFile()] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("프로필 이미지 업로드에 실패했습니다."),
+    );
+    expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported image types at selection time", async () => {
+    render(<EditProfilePage />);
+
+    fireEvent.change(await screen.findByLabelText("Add profile photo"), {
+      target: { files: [createImageFile("me.gif", "image/gif")] },
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.",
+    );
+    expect(screen.queryByAltText("Selected profile photo preview")).not.toBeInTheDocument();
   });
 
   it("shows the backend message when saving fails", async () => {

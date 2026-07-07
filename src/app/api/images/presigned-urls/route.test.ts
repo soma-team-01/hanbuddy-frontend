@@ -112,6 +112,29 @@ describe("POST /api/images/presigned-urls", () => {
     expect(new Headers(backendInit.headers).get("authorization")).toBe("Bearer access-token");
   });
 
+  it("forwards activity image requests with the access token", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(backendSuccessBody), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const body = { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 3 };
+    const response = await POST(
+      createRequest({
+        cookie: "hanbuddy_access_token=access-token",
+        body,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const [, backendInit] = fetchMock.mock.calls[0];
+    expect(new Headers(backendInit.headers).get("authorization")).toBe("Bearer access-token");
+    expect(JSON.parse(backendInit.body)).toEqual(body);
+  });
+
   it("passes backend error responses through as-is", async () => {
     const backendErrorBody = {
       isSuccess: false,
@@ -140,7 +163,11 @@ describe("POST /api/images/presigned-urls", () => {
   it.each([
     ["unsupported contentType", { purpose: "PROFILE", contentType: "image/gif", imageCount: 1 }],
     ["imageCount other than 1", { purpose: "PROFILE", contentType: "image/webp", imageCount: 2 }],
-    ["unknown purpose", { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 1 }],
+    [
+      "activity imageCount over 8",
+      { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 9 },
+    ],
+    ["unknown purpose", { purpose: "OTHER", contentType: "image/webp", imageCount: 1 }],
   ])("rejects %s with 400 before reaching the backend", async (_label, body) => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

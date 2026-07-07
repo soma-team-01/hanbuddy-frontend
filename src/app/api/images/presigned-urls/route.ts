@@ -31,10 +31,16 @@ export async function POST(request: NextRequest) {
   }
 
   // 백엔드가 최종 검증하지만, 프록시를 직접 호출하는 잘못된 요청은 여기서 걸러낸다
+  const isValidProfileRequest = body?.purpose === "PROFILE" && body.imageCount === 1;
+  const isValidActivityRequest =
+    body?.purpose === "ACTIVITY" &&
+    Number.isInteger(body.imageCount) &&
+    body.imageCount >= 1 &&
+    body.imageCount <= 8;
+
   if (
-    body?.purpose !== "PROFILE" ||
     !isSupportedProfileImageType(body.contentType) ||
-    body.imageCount !== 1
+    (!isValidProfileRequest && !isValidActivityRequest)
   ) {
     return NextResponse.json(createProxyErrorResponse("잘못된 이미지 업로드 요청입니다."), {
       status: 400,

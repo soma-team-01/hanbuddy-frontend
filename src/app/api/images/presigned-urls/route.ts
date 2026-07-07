@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     appendBackendSetCookies(response, backend.setCookies);
     return response;
   } catch {
-    return NextResponse.json(createProxyErrorResponse("인증 서버에 연결할 수 없습니다."), {
+    return NextResponse.json(createProxyErrorResponse("이미지 업로드 서버에 연결할 수 없습니다."), {
       status: 502,
     });
   }

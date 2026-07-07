@@ -137,6 +137,24 @@ describe("POST /api/images/presigned-urls", () => {
     await expect(response.json()).resolves.toEqual(backendErrorBody);
   });
 
+  it("returns 502 with an image-upload-specific message when the backend is unreachable", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      createRequest({
+        cookie: "hanbuddy_signup_token=signup-token",
+        body: presignedRequestBody,
+      }),
+    );
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toMatchObject({
+      isSuccess: false,
+      message: "이미지 업로드 서버에 연결할 수 없습니다.",
+    });
+  });
+
   it("returns 400 when the request body is not valid JSON", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

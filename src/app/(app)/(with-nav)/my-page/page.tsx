@@ -1,8 +1,10 @@
-import Link from "next/link";
+import { cookies } from "next/headers";
 import { TopAppBar } from "@/components/layout/TopAppBar";
-import { Avatar } from "@/components/ui/Avatar";
 import { ChevronRightIcon, CircleHelpIcon, GlobeIcon, UserMinusIcon } from "@/components/ui/icons";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { getUserTypeHomePath, parseUserType } from "@/lib/auth/routes";
 import { LogoutButton } from "./LogoutButton";
+import { ProfileCard } from "./ProfileCard";
 
 const MENU_ITEMS = [
   { label: "Language", Icon: GlobeIcon, value: "English" },
@@ -10,21 +12,17 @@ const MENU_ITEMS = [
   { label: "Delete Account", Icon: UserMinusIcon },
 ] as const;
 
-export default function MyPage() {
+export default async function MyPage() {
+  const cookieStore = await cookies();
+  const backHref = getUserTypeHomePath(
+    parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value),
+  );
+
   return (
     <>
-      <TopAppBar backHref="/explore" />
+      <TopAppBar backHref={backHref} />
       <main className="flex flex-1 flex-col gap-6 px-4 py-6">
-        <section className="flex items-center gap-5 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
-          <Avatar name="Sarah Jenkins" size={72} />
-          <div>
-            <h1 className="font-display text-xl font-semibold text-ink">Sarah Jenkins</h1>
-            <Link href="/my-page/edit" className="mt-1 flex items-center gap-1 text-sm text-earth">
-              Edit Profile
-              <ChevronRightIcon className="size-3.5" />
-            </Link>
-          </div>
-        </section>
+        <ProfileCard />
 
         <section className="flex flex-col rounded-2xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
           {MENU_ITEMS.map(({ label, Icon, ...item }, index) => (

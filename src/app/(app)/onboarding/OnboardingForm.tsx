@@ -6,7 +6,11 @@ import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
-import { MessagingAppField, type MessagingAppKey } from "@/components/ui/MessagingAppField";
+import {
+  CONTACT_METHOD_BY_APP,
+  MessagingAppField,
+  type MessagingAppKey,
+} from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
 import { findCountry } from "@/lib/countries";
 import {
@@ -19,7 +23,6 @@ import {
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 import type {
   ApiResponse,
-  ContactMethod,
   ErrorApiResponse,
   GoogleLoginResponse,
   GoogleProfile,
@@ -31,13 +34,6 @@ const ROLES = [
   { key: "TOURIST", label: "Tourist" },
   { key: "BUDDY", label: "Buddy" },
 ] as const;
-
-const CONTACT_METHOD_BY_APP: Record<MessagingAppKey, ContactMethod> = {
-  whatsapp: "WHATSAPP",
-  line: "LINE",
-  wechat: "WECHAT",
-  phone: "PHONE",
-};
 
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;

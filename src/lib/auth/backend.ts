@@ -3,7 +3,7 @@ import type { ApiResponse, ErrorApiResponse } from "./types";
 
 export const BACKEND_REQUEST_TIMEOUT_MS = 10_000;
 
-interface BackendPostOptions {
+interface BackendRequestOptions {
   bearerToken?: string;
   cookieHeader?: string | null;
 }
@@ -27,7 +27,31 @@ export function getRequiredServerEnv(name: string) {
 export async function postBackend<TBody, TResult>(
   path: string,
   body?: TBody,
-  options: BackendPostOptions = {},
+  options: BackendRequestOptions = {},
+): Promise<BackendResponse<TResult>> {
+  return requestBackend("POST", path, body, options);
+}
+
+export async function getBackend<TResult>(
+  path: string,
+  options: BackendRequestOptions = {},
+): Promise<BackendResponse<TResult>> {
+  return requestBackend("GET", path, undefined, options);
+}
+
+export async function patchBackend<TBody, TResult>(
+  path: string,
+  body?: TBody,
+  options: BackendRequestOptions = {},
+): Promise<BackendResponse<TResult>> {
+  return requestBackend("PATCH", path, body, options);
+}
+
+async function requestBackend<TBody, TResult>(
+  method: "GET" | "POST" | "PATCH",
+  path: string,
+  body?: TBody,
+  options: BackendRequestOptions = {},
 ): Promise<BackendResponse<TResult>> {
   const headers = new Headers({ "Content-Type": "application/json" });
   if (options.bearerToken) headers.set("Authorization", `Bearer ${options.bearerToken}`);
@@ -38,7 +62,7 @@ export async function postBackend<TBody, TResult>(
   let response: Response;
   try {
     response = await fetch(`${getBackendApiBaseUrl()}${path}`, {
-      method: "POST",
+      method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",

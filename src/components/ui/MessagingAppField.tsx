@@ -2,6 +2,7 @@
 
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessageSquareIcon, PhoneIcon } from "@/components/ui/icons";
+import type { ContactMethod } from "@/lib/auth/types";
 import { formatKoreanPhone, toDigits } from "@/lib/phone";
 
 export const MESSAGING_APPS = [
@@ -12,6 +13,20 @@ export const MESSAGING_APPS = [
 ] as const;
 
 export type MessagingAppKey = (typeof MESSAGING_APPS)[number]["key"];
+
+export const CONTACT_METHOD_BY_APP: Record<MessagingAppKey, ContactMethod> = {
+  whatsapp: "WHATSAPP",
+  line: "LINE",
+  wechat: "WECHAT",
+  phone: "PHONE",
+};
+
+export const APP_BY_CONTACT_METHOD: Record<ContactMethod, MessagingAppKey> = {
+  WHATSAPP: "whatsapp",
+  LINE: "line",
+  WECHAT: "wechat",
+  PHONE: "phone",
+};
 
 interface MessagingAppFieldProps {
   app: MessagingAppKey;

@@ -1,5 +1,5 @@
 import type { ApiResponse, ErrorApiResponse } from "@/lib/auth/types";
-import type { MyProfile } from "@/types/user";
+import type { MyProfile, MyProfileUpdateRequest } from "@/types/user";
 import { fetchWithAuthRetry } from "./client";
 
 export type MyProfileResult =
@@ -10,9 +10,21 @@ export type MyProfileResult =
 const DEFAULT_PROFILE_ERROR_MESSAGE = "프로필을 불러오지 못했습니다.";
 
 export async function getMyProfile(): Promise<MyProfileResult> {
+  return requestMyProfile("/api/users/me");
+}
+
+export async function updateMyProfile(request: MyProfileUpdateRequest): Promise<MyProfileResult> {
+  return requestMyProfile("/api/users/me", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+async function requestMyProfile(path: string, init?: RequestInit): Promise<MyProfileResult> {
   let response: Response;
   try {
-    response = await fetchWithAuthRetry("/api/users/me");
+    response = await fetchWithAuthRetry(path, init);
   } catch {
     return { status: "error", message: DEFAULT_PROFILE_ERROR_MESSAGE };
   }

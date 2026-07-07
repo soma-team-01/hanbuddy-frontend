@@ -6,6 +6,7 @@ import {
   getBackend,
   getBackendApiBaseUrl,
   getSetCookieHeaders,
+  patchBackend,
   postBackend,
 } from "./backend";
 
@@ -142,6 +143,49 @@ describe("getBackend", () => {
     );
     const [, init] = fetch.mock.calls[0] as [string, RequestInit];
     expect(init.body).toBeUndefined();
+    expect(new Headers(init.headers).get("authorization")).toBe("Bearer access-token");
+  });
+});
+
+describe("patchBackend", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    if (originalApiBaseUrl === undefined) {
+      delete process.env.HANBUDDY_API_BASE_URL;
+      return;
+    }
+
+    process.env.HANBUDDY_API_BASE_URL = originalApiBaseUrl;
+  });
+
+  it("sends a PATCH request with a JSON body and the bearer token", async () => {
+    process.env.HANBUDDY_API_BASE_URL = "https://api.hanbuddy.test/api/v1";
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ isSuccess: true, code: "200", message: "ok", result: { name: "Kim" } }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      patchBackend<{ name: string }, { name: string }>(
+        "/users/me",
+        { name: "Kim" },
+        { bearerToken: "access-token" },
+      ),
+    ).resolves.toMatchObject({
+      status: 200,
+      payload: { isSuccess: true, result: { name: "Kim" } },
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.hanbuddy.test/api/v1/users/me",
+      expect.objectContaining({ method: "PATCH", body: JSON.stringify({ name: "Kim" }) }),
+    );
+    const [, init] = fetch.mock.calls[0] as [string, RequestInit];
     expect(new Headers(init.headers).get("authorization")).toBe("Bearer access-token");
   });
 });

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MyProfile } from "@/types/user";
-import { getMyProfile } from "./users";
+import { getMyProfile, updateMyProfile } from "./users";
 
 const profile: MyProfile = {
   userId: 1,
@@ -73,5 +73,79 @@ describe("getMyProfile", () => {
     const result = await getMyProfile();
 
     expect(result.status).toBe("error");
+  });
+});
+
+describe("updateMyProfile", () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const updateRequest = {
+    name: "Sarah J.",
+    profileImageKey: null,
+    nationalityCode: "US",
+    age: 29,
+    contactMethod: "WHATSAPP",
+    contactCountryCode: "+1",
+    contactIdentifier: "555-0199",
+  } as const;
+
+  it("sends a PATCH request and returns the updated profile", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "200",
+          message: "ok",
+          result: { ...profile, name: "Sarah J." },
+        }),
+        { status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(updateMyProfile(updateRequest)).resolves.toEqual({
+      status: "success",
+      profile: { ...profile, name: "Sarah J." },
+    });
+
+    const [url, init] = fetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/api/users/me");
+    expect(init.method).toBe("PATCH");
+    expect(init.body).toBe(JSON.stringify(updateRequest));
+    expect(new Headers(init.headers).get("content-type")).toBe("application/json");
+  });
+
+  it("returns unauthenticated when the update keeps failing with 401", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify({ isSuccess: false }), { status: 401 })),
+    );
+
+    await expect(updateMyProfile(updateRequest)).resolves.toEqual({ status: "unauthenticated" });
+  });
+
+  it("returns the backend message when validation fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            isSuccess: false,
+            code: "VALIDATION",
+            message: "국적 코드는 영문 대문자 2자리여야 합니다",
+          }),
+          { status: 400 },
+        ),
+      ),
+    );
+
+    await expect(updateMyProfile(updateRequest)).resolves.toEqual({
+      status: "error",
+      message: "국적 코드는 영문 대문자 2자리여야 합니다",
+    });
   });
 });

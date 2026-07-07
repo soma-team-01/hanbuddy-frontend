@@ -39,8 +39,16 @@ export async function getBackend<TResult>(
   return requestBackend("GET", path, undefined, options);
 }
 
+export async function patchBackend<TBody, TResult>(
+  path: string,
+  body?: TBody,
+  options: BackendRequestOptions = {},
+): Promise<BackendResponse<TResult>> {
+  return requestBackend("PATCH", path, body, options);
+}
+
 async function requestBackend<TBody, TResult>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PATCH",
   path: string,
   body?: TBody,
   options: BackendRequestOptions = {},

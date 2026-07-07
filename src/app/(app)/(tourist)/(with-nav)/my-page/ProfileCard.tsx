@@ -1,34 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ChevronRightIcon } from "@/components/ui/icons";
-import { getMyProfile, type MyProfileResult } from "@/lib/api/users";
+import { useMyProfile } from "@/lib/api/useMyProfile";
 
 export function ProfileCard() {
-  const router = useRouter();
-  const [result, setResult] = useState<MyProfileResult | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getMyProfile().then((profileResult) => {
-      if (cancelled) return;
-
-      if (profileResult.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-
-      setResult(profileResult);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [router]);
+  const result = useMyProfile();
 
   return (
     <section className="flex items-center gap-5 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">

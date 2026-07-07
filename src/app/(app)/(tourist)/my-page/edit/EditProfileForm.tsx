@@ -57,8 +57,10 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     setErrorMessage("");
 
     const formData = new FormData(event.currentTarget);
-    const name = String(formData.get("name") ?? "").trim();
-    const age = Number(formData.get("age"));
+    const nameEntry = formData.get("name");
+    const ageEntry = formData.get("age");
+    const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
+    const age = typeof ageEntry === "string" ? Number(ageEntry) : Number.NaN;
     const contactIdentifier = messagingContact.trim();
 
     if (!name) {

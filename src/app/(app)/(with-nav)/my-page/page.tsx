@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ChevronRightIcon, CircleHelpIcon, GlobeIcon, UserMinusIcon } from "@/components/ui/icons";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { getUserTypeHomePath } from "@/lib/auth/routes";
 import { LogoutButton } from "./LogoutButton";
 import { ProfileCard } from "./ProfileCard";
 
@@ -9,10 +12,13 @@ const MENU_ITEMS = [
   { label: "Delete Account", Icon: UserMinusIcon },
 ] as const;
 
-export default function MyPage() {
+export default async function MyPage() {
+  const cookieStore = await cookies();
+  const backHref = getUserTypeHomePath(cookieStore.get(AUTH_COOKIES.userType)?.value);
+
   return (
     <>
-      <TopAppBar backHref="/explore" />
+      <TopAppBar backHref={backHref} />
       <main className="flex flex-1 flex-col gap-6 px-4 py-6">
         <ProfileCard />
 

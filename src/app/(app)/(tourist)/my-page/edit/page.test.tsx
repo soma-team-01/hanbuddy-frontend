@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
-import type { MyProfile } from "@/types/user";
+import { createMockProfile } from "@/test/factories";
 import EditProfilePage from "./page";
 
 const replace = vi.fn();
@@ -20,19 +20,9 @@ vi.mock("@/lib/api/users", () => ({
 const mockedGetMyProfile = vi.mocked(getMyProfile);
 const mockedUpdateMyProfile = vi.mocked(updateMyProfile);
 
-const profile: MyProfile = {
-  userId: 1,
-  email: "user@example.com",
-  name: "Sarah Jenkins",
-  userType: "TOURIST",
-  profileImageKey: "profiles/2026/07/06/uuid.webp",
-  profileImageUrl: "https://bucket.s3.ap-northeast-2.amazonaws.com/profiles/2026/07/06/uuid.webp",
-  nationalityCode: "US",
-  age: 28,
+const profile = createMockProfile({
   contactMethod: "WHATSAPP",
-  contactCountryCode: "+1",
-  contactIdentifier: "555-0198",
-};
+});
 
 describe("EditProfilePage", () => {
   beforeEach(() => {

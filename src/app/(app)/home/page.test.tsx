@@ -27,35 +27,16 @@ describe("HomePage", () => {
     vi.clearAllMocks();
   });
 
-  it("redirects tourists to explore", async () => {
-    stubUserTypeCookie("TOURIST");
+  it.each<[string | undefined, string]>([
+    ["TOURIST", "/explore"],
+    ["BUDDY", "/dashboard"],
+    [undefined, "/login"],
+    ["ADMIN", "/login"],
+  ])("redirects %s to %s", async (userType, expectedPath) => {
+    stubUserTypeCookie(userType);
 
     await HomePage();
 
-    expect(mockedRedirect).toHaveBeenCalledWith("/explore");
-  });
-
-  it("redirects buddies to the dashboard", async () => {
-    stubUserTypeCookie("BUDDY");
-
-    await HomePage();
-
-    expect(mockedRedirect).toHaveBeenCalledWith("/dashboard");
-  });
-
-  it("redirects to login when the user type cookie is missing", async () => {
-    stubUserTypeCookie(undefined);
-
-    await HomePage();
-
-    expect(mockedRedirect).toHaveBeenCalledWith("/login");
-  });
-
-  it("redirects to login when the user type cookie has an unknown value", async () => {
-    stubUserTypeCookie("ADMIN");
-
-    await HomePage();
-
-    expect(mockedRedirect).toHaveBeenCalledWith("/login");
+    expect(mockedRedirect).toHaveBeenCalledWith(expectedPath);
   });
 });

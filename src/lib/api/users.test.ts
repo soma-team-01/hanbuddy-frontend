@@ -1,20 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { MyProfile } from "@/types/user";
+import { createMockProfile } from "@/test/factories";
 import { getMyProfile, updateMyProfile } from "./users";
 
-const profile: MyProfile = {
-  userId: 1,
-  email: "user@example.com",
-  name: "Sarah Jenkins",
-  userType: "TOURIST",
-  profileImageKey: null,
-  profileImageUrl: "https://cdn.hanbuddy.test/profile.webp",
-  nationalityCode: "US",
-  age: 28,
-  contactMethod: "LINE",
-  contactCountryCode: "+1",
-  contactIdentifier: "555-0198",
-};
+const profile = createMockProfile({ profileImageKey: null });
 
 describe("getMyProfile", () => {
   beforeEach(() => {
@@ -146,6 +134,15 @@ describe("updateMyProfile", () => {
     await expect(updateMyProfile(updateRequest)).resolves.toEqual({
       status: "error",
       message: "국적 코드는 영문 대문자 2자리여야 합니다",
+    });
+  });
+
+  it("returns a save-specific error when the update request throws", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+
+    await expect(updateMyProfile(updateRequest)).resolves.toEqual({
+      status: "error",
+      message: "프로필을 저장하지 못했습니다.",
     });
   });
 });

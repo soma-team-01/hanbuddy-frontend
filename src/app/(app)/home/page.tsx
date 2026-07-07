@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { getUserTypeHomePath } from "@/lib/auth/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,5 @@ export default async function HomePage() {
   const cookieStore = await cookies();
   const userType = cookieStore.get(AUTH_COOKIES.userType)?.value;
 
-  if (userType === "TOURIST") redirect("/explore");
-  if (userType === "BUDDY") redirect("/dashboard");
-  redirect("/login");
+  redirect(getUserTypeHomePath(userType));
 }

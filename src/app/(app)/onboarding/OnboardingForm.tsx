@@ -2,13 +2,18 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessagingAppField, type MessagingAppKey } from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
 import { findCountry } from "@/lib/countries";
+import {
+  PROFILE_IMAGE_CONTENT_TYPES,
+  isSupportedProfileImageType,
+  uploadProfileImage,
+} from "@/lib/images/presigned";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 import type {
   ApiResponse,
@@ -43,8 +48,33 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   const [messagingContact, setMessagingContact] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState("");
+  // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
+  const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("");
+
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    };
+  }, [profileImagePreview]);
+
+  function handleProfileImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!isSupportedProfileImageType(file.type)) {
+      setErrorMessage("JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.");
+      event.target.value = "";
+      return;
+    }
+
+    setErrorMessage("");
+    setProfileImageFile(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+  }
 
   function handleRoleChange(nextRole: UserType) {
     setRole(nextRole);
@@ -79,20 +109,42 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       return;
     }
 
-    const payload: GoogleSignupRequest = {
-      userType: role,
-      nationalityCode: nationality,
-      age,
-      contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-      contactCountryCode:
-        role === "BUDDY" && (messagingApp === "whatsapp" || messagingApp === "phone")
-          ? "+82"
-          : (findCountry(messagingCountry)?.dialCode ?? ""),
-      contactIdentifier,
-    };
-
     setIsSubmitting(true);
     try {
+      let profileImageKey: string | undefined;
+      if (profileImageFile) {
+        try {
+          if (uploadedProfileImageRef.current?.file === profileImageFile) {
+            profileImageKey = uploadedProfileImageRef.current.imageKey;
+          } else {
+            const uploaded = await uploadProfileImage(profileImageFile);
+            uploadedProfileImageRef.current = {
+              file: profileImageFile,
+              imageKey: uploaded.imageKey,
+            };
+            profileImageKey = uploaded.imageKey;
+          }
+        } catch (error) {
+          setErrorMessage(
+            error instanceof Error ? error.message : "프로필 이미지 업로드에 실패했습니다.",
+          );
+          return;
+        }
+      }
+
+      const payload: GoogleSignupRequest = {
+        userType: role,
+        ...(profileImageKey ? { profileImageKey } : {}),
+        nationalityCode: nationality,
+        age,
+        contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
+        contactCountryCode:
+          role === "BUDDY" && (messagingApp === "whatsapp" || messagingApp === "phone")
+            ? "+82"
+            : (findCountry(messagingCountry)?.dialCode ?? ""),
+        contactIdentifier,
+      };
+
       const response = await fetch("/api/auth/google/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,7 +174,16 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         <main className="flex flex-1 flex-col gap-8 px-4 py-8">
           <section className="flex flex-col items-center gap-3">
             <div className="relative">
-              {googleProfile?.picture ? (
+              {profileImagePreview ? (
+                <Image
+                  src={profileImagePreview}
+                  alt="Selected profile photo preview"
+                  width={96}
+                  height={96}
+                  unoptimized
+                  className="size-24 rounded-2xl border border-line object-cover"
+                />
+              ) : googleProfile?.picture ? (
                 <Image
                   src={googleProfile.picture}
                   alt={googleProfile.name ? `${googleProfile.name} profile` : "Google profile"}
@@ -135,9 +196,16 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                   <UserIcon className="size-9 text-ink-soft" />
                 </div>
               )}
-              <span className="absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full bg-forest text-cream">
+              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream">
                 <CameraIcon className="size-4" />
-              </span>
+                <span className="sr-only">Add profile photo</span>
+                <input
+                  type="file"
+                  accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
+                  className="sr-only"
+                  onChange={handleProfileImageChange}
+                />
+              </label>
             </div>
             {(googleProfile?.name || googleProfile?.email) && (
               <div className="text-center">

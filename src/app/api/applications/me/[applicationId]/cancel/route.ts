@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { proxyAuthenticatedPatch, readJsonBody } from "@/app/api/_utils/authenticated-backend";
+import {
+  badRequestResponse,
+  proxyAuthenticatedPatch,
+  readJsonBody,
+} from "@/app/api/_utils/authenticated-backend";
 import type { ApplicationResponse, CancelApplicationRequest } from "@/types/application";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +20,10 @@ export async function PATCH(request: NextRequest, context: CancelApplicationRout
   if (!parsed.ok) return parsed.response;
 
   const { applicationId } = await context.params;
+  if (!/^\d+$/.test(applicationId)) {
+    return badRequestResponse("잘못된 신청 ID입니다.");
+  }
+
   return proxyAuthenticatedPatch<CancelApplicationRequest, ApplicationResponse>(
     request,
     `/applications/me/${applicationId}/cancel`,

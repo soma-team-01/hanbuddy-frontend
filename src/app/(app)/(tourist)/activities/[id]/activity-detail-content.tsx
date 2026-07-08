@@ -89,7 +89,9 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
             </h1>
             <p className="text-ink-soft">{activity.description}</p>
             <p className="pt-1 text-xs font-medium text-ink-soft">
-              {activity.district} · {activity.categoryLabel}
+              {activity.categoryLabel
+                ? `${activity.district} · ${activity.categoryLabel}`
+                : activity.district}
             </p>
           </section>
 
@@ -167,15 +169,21 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
               {activity.meetingPoint.name}
             </p>
             <p className="text-xs text-ink-soft">{activity.meetingPoint.area}</p>
-            <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
-              <Image
-                src={activity.meetingPoint.mapImageUrl}
-                alt={`Map of ${activity.meetingPoint.name}`}
-                fill
-                sizes="(max-width: 448px) 100vw, 448px"
-                className="object-cover"
-              />
-            </div>
+            {activity.meetingPoint.mapImageUrl ? (
+              <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
+                <Image
+                  src={activity.meetingPoint.mapImageUrl}
+                  alt={`Map of ${activity.meetingPoint.name}`}
+                  fill
+                  sizes="(max-width: 448px) 100vw, 448px"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="mt-3 flex h-[204px] w-full items-center justify-center rounded-xl bg-line/60 text-sm text-ink-soft">
+                Map unavailable
+              </div>
+            )}
           </section>
         </div>
       </main>

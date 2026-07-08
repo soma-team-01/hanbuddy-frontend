@@ -6,10 +6,6 @@ import type {
   TouristActivitySummary,
 } from "@/types/activity";
 
-const DEFAULT_ACTIVITY_RATING = 5;
-const DEFAULT_ACTIVITY_REVIEW_COUNT = 0;
-const DEFAULT_MAP_IMAGE_URL = "/images/map-bukchon.jpg";
-
 export function mapTouristActivitySummaryToActivity(summary: TouristActivitySummary): Activity {
   return {
     id: String(summary.activityId),
@@ -17,11 +13,8 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     description: summary.description,
     location: summary.meetingPointName,
     district: summary.meetingPointName,
-    categoryLabel: "HanBuddy activity",
     imageUrl: summary.thumbnailImageUrl,
     heroImageUrl: summary.thumbnailImageUrl,
-    rating: DEFAULT_ACTIVITY_RATING,
-    reviewCount: DEFAULT_ACTIVITY_REVIEW_COUNT,
     price: summary.price,
     host: {
       name: summary.buddyName,
@@ -34,7 +27,6 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     meetingPoint: {
       name: summary.meetingPointName,
       area: summary.meetingPointName,
-      mapImageUrl: DEFAULT_MAP_IMAGE_URL,
     },
   };
 }
@@ -58,7 +50,6 @@ export function mapTouristActivityDetailToActivity(detail: TouristActivityDetail
     meetingPoint: {
       name: detail.meetingPointName,
       area: detail.meetingPointAddress,
-      mapImageUrl: DEFAULT_MAP_IMAGE_URL,
     },
   };
 }

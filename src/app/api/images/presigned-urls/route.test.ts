@@ -211,4 +211,20 @@ describe("POST /api/images/presigned-urls", () => {
     expect(response.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("returns 400 when the request body is JSON null", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      createRequest({ cookie: "hanbuddy_signup_token=signup-token", body: null }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      isSuccess: false,
+      message: "잘못된 이미지 업로드 요청입니다.",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

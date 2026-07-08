@@ -58,4 +58,20 @@ describe("DashboardContent", () => {
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
     expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");
   });
+
+  it("keeps date selection available when applicant loading fails", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ date: "2026-07-20" }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "error",
+      message: "신청자 목록을 불러오지 못했습니다.",
+    });
+
+    render(<DashboardContent />);
+
+    expect(await screen.findByText("신청자 목록을 불러오지 못했습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { pressed: true })).toBeInTheDocument();
+  });
 });

@@ -19,7 +19,7 @@ export interface Session {
 export interface MeetingPoint {
   name: string;
   area: string;
-  mapImageUrl: string;
+  mapImageUrl?: string;
 }
 
 export interface Activity {
@@ -28,11 +28,11 @@ export interface Activity {
   description: string;
   location: string;
   district: string;
-  categoryLabel: string;
+  categoryLabel?: string;
   imageUrl: string;
   heroImageUrl: string;
-  rating: number;
-  reviewCount: number;
+  rating?: number;
+  reviewCount?: number;
   /** 원화(₩) 기준 1인당 가격 */
   price: number;
   /** 할인 전 가격 (있을 때만 취소선으로 노출) */

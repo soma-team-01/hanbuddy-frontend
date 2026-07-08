@@ -7,7 +7,13 @@ import { useEffect, useState } from "react";
 import { TrashIcon, UsersIcon } from "@/components/ui/icons";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
 import { getActivityThumbnail, getMyActivityStatusLabel } from "@/lib/api/buddy-view";
-import type { MyActivitySummaryResponse } from "@/types/buddy";
+import type { MyActivityStatus, MyActivitySummaryResponse } from "@/types/buddy";
+
+const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
+  ACTIVE: "bg-success-soft text-success",
+  DRAFT: "bg-chip text-ink-soft",
+  INACTIVE: "bg-warning-soft text-warning",
+};
 
 export function MyActivitiesContent() {
   const router = useRouter();
@@ -41,6 +47,8 @@ export function MyActivitiesContent() {
   }, [router]);
 
   async function handleDelete(activityId: number) {
+    if (!window.confirm("Delete this activity? This action cannot be undone.")) return;
+
     setDeletingActivityId(activityId);
     setErrorMessage("");
     const previousActivities = activities;
@@ -100,7 +108,11 @@ export function MyActivitiesContent() {
             />
           </Link>
           <div className="flex items-center justify-between">
-            <span className="rounded-full bg-success-soft px-3 py-1 font-display text-xs font-semibold text-success">
+            <span
+              className={`rounded-full px-3 py-1 font-display text-xs font-semibold ${
+                STATUS_BADGE_CLASS[activity.status]
+              }`}
+            >
               {getMyActivityStatusLabel(activity.status)}
             </span>
             <button

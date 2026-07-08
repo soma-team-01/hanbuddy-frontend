@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
 import { MyActivitiesContent } from "./my-activities-content";
 
@@ -18,6 +18,20 @@ const mockedDeleteMyActivity = vi.mocked(deleteMyActivity);
 const mockedGetMyActivities = vi.mocked(getMyActivities);
 
 describe("MyActivitiesContent", () => {
+  beforeEach(() => {
+    routerMock.replace.mockReset();
+    mockedDeleteMyActivity.mockReset();
+    mockedGetMyActivities.mockReset();
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("renders buddy activities loaded from the API", async () => {
     mockedGetMyActivities.mockResolvedValue({
       status: "success",
@@ -68,5 +82,34 @@ describe("MyActivitiesContent", () => {
     await waitFor(() => {
       expect(screen.queryByText("Traditional Tea Tasting")).not.toBeInTheDocument();
     });
+  });
+
+  it("does not delete when the confirmation is cancelled", async () => {
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => false),
+    );
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Traditional Tea Tasting",
+          description: "Learn Korean tea etiquette.",
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+        },
+      ],
+    });
+
+    render(<MyActivitiesContent />);
+
+    const deleteButton = await screen.findByRole("button", {
+      name: "Delete Traditional Tea Tasting",
+    });
+    fireEvent.click(deleteButton);
+
+    expect(mockedDeleteMyActivity).not.toHaveBeenCalled();
+    expect(screen.getByText("Traditional Tea Tasting")).toBeInTheDocument();
   });
 });

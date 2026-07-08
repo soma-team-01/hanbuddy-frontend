@@ -52,4 +52,18 @@ describe("PATCH /api/applications/me/[applicationId]/cancel", () => {
     });
     expect(response.status).toBe(200);
   });
+
+  it("rejects non-numeric application ids before proxying", async () => {
+    const response = await PATCH(
+      new NextRequest("http://localhost/api/applications/me/not-a-number/cancel", {
+        method: "PATCH",
+        body: JSON.stringify(cancelRequest),
+        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+      }),
+      { params: Promise.resolve({ applicationId: "not-a-number" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPatchBackend).not.toHaveBeenCalled();
+  });
 });

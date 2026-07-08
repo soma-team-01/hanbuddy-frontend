@@ -256,4 +256,18 @@ describe("uploadActivityImages", () => {
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("maps activity request timeouts to an activity-specific error message", async () => {
+    const timeoutError = Object.assign(new Error("The operation timed out."), {
+      name: "TimeoutError",
+    });
+    const fetchMock = vi.fn().mockRejectedValueOnce(timeoutError);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const files = [new File([new Uint8Array([1])], "one.webp", { type: "image/webp" })];
+
+    await expect(uploadActivityImages(files)).rejects.toThrow(
+      "활동 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.",
+    );
+  });
 });

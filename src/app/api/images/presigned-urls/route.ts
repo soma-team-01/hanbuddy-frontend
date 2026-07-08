@@ -21,25 +21,36 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  let body: PresignedImageUploadRequest;
+  let body: unknown;
   try {
-    body = (await request.json()) as PresignedImageUploadRequest;
+    body = await request.json();
   } catch {
     return NextResponse.json(createProxyErrorResponse("이미지 업로드 요청을 읽을 수 없습니다."), {
       status: 400,
     });
   }
 
+  if (!body || typeof body !== "object") {
+    return NextResponse.json(createProxyErrorResponse("잘못된 이미지 업로드 요청입니다."), {
+      status: 400,
+    });
+  }
+
+  const uploadRequest = body as PresignedImageUploadRequest;
+  const contentType =
+    typeof uploadRequest.contentType === "string" ? uploadRequest.contentType : "";
+
   // 백엔드가 최종 검증하지만, 프록시를 직접 호출하는 잘못된 요청은 여기서 걸러낸다
-  const isValidProfileRequest = body?.purpose === "PROFILE" && body.imageCount === 1;
+  const isValidProfileRequest =
+    uploadRequest.purpose === "PROFILE" && uploadRequest.imageCount === 1;
   const isValidActivityRequest =
-    body?.purpose === "ACTIVITY" &&
-    Number.isInteger(body.imageCount) &&
-    body.imageCount >= 1 &&
-    body.imageCount <= 8;
+    uploadRequest.purpose === "ACTIVITY" &&
+    Number.isInteger(uploadRequest.imageCount) &&
+    uploadRequest.imageCount >= 1 &&
+    uploadRequest.imageCount <= 8;
 
   if (
-    !isSupportedProfileImageType(body.contentType) ||
+    !isSupportedProfileImageType(contentType) ||
     (!isValidProfileRequest && !isValidActivityRequest)
   ) {
     return NextResponse.json(createProxyErrorResponse("잘못된 이미지 업로드 요청입니다."), {
@@ -50,7 +61,7 @@ export async function POST(request: NextRequest) {
   try {
     const backend = await postBackend<PresignedImageUploadRequest, PresignedImageUploadResult>(
       "/images/presigned-urls",
-      body,
+      uploadRequest,
       { bearerToken },
     );
 

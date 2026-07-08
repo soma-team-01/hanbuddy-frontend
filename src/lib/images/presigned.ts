@@ -10,8 +10,10 @@ export const MAX_ACTIVITY_IMAGE_COUNT = 8;
 const PRESIGNED_REQUEST_TIMEOUT_MS = 10_000;
 const DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS = 300;
 const MAX_S3_UPLOAD_TIMEOUT_SECONDS = 30;
-const UPLOAD_TIMEOUT_ERROR_MESSAGE =
+const PROFILE_UPLOAD_TIMEOUT_ERROR_MESSAGE =
   "프로필 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.";
+const ACTIVITY_UPLOAD_TIMEOUT_ERROR_MESSAGE =
+  "활동 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.";
 
 export type ImageUploadPurpose = "PROFILE" | "ACTIVITY";
 
@@ -45,12 +47,12 @@ function isRequestTimeoutError(error: unknown) {
   );
 }
 
-async function fetchWithTimeoutMessage(input: string, init: RequestInit) {
+async function fetchWithTimeoutMessage(input: string, init: RequestInit, timeoutMessage: string) {
   try {
     return await fetch(input, init);
   } catch (error) {
     if (isRequestTimeoutError(error)) {
-      throw new Error(UPLOAD_TIMEOUT_ERROR_MESSAGE);
+      throw new Error(timeoutMessage);
     }
     throw error;
   }
@@ -64,16 +66,20 @@ export async function uploadProfileImage(file: File): Promise<PresignedImageItem
     throw new Error(PROFILE_IMAGE_SIZE_ERROR_MESSAGE);
   }
 
-  const presignedResponse = await fetchWithTimeoutMessage("/api/images/presigned-urls", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(PRESIGNED_REQUEST_TIMEOUT_MS),
-    body: JSON.stringify({
-      purpose: "PROFILE",
-      contentType: file.type,
-      imageCount: 1,
-    } satisfies PresignedImageUploadRequest),
-  });
+  const presignedResponse = await fetchWithTimeoutMessage(
+    "/api/images/presigned-urls",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(PRESIGNED_REQUEST_TIMEOUT_MS),
+      body: JSON.stringify({
+        purpose: "PROFILE",
+        contentType: file.type,
+        imageCount: 1,
+      } satisfies PresignedImageUploadRequest),
+    },
+    PROFILE_UPLOAD_TIMEOUT_ERROR_MESSAGE,
+  );
   const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
     ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
 
@@ -92,12 +98,16 @@ export async function uploadProfileImage(file: File): Promise<PresignedImageItem
     uploadTarget.expiresInSeconds || DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS,
     MAX_S3_UPLOAD_TIMEOUT_SECONDS,
   );
-  const s3Response = await fetchWithTimeoutMessage(uploadTarget.uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": file.type },
-    signal: AbortSignal.timeout(s3TimeoutSeconds * 1000),
-    body: file,
-  });
+  const s3Response = await fetchWithTimeoutMessage(
+    uploadTarget.uploadUrl,
+    {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      signal: AbortSignal.timeout(s3TimeoutSeconds * 1000),
+      body: file,
+    },
+    PROFILE_UPLOAD_TIMEOUT_ERROR_MESSAGE,
+  );
 
   if (!s3Response.ok) {
     throw new Error("프로필 이미지 업로드에 실패했습니다.");
@@ -111,7 +121,7 @@ export async function uploadActivityImages(files: File[]): Promise<PresignedImag
     throw new Error("활동 이미지를 선택해 주세요.");
   }
   if (files.length > MAX_ACTIVITY_IMAGE_COUNT) {
-    throw new Error("활동 이미지는 최대 8장까지 업로드할 수 있습니다.");
+    throw new Error(`활동 이미지는 최대 ${MAX_ACTIVITY_IMAGE_COUNT}장까지 업로드할 수 있습니다.`);
   }
 
   const contentType = files[0]?.type ?? "";
@@ -122,16 +132,20 @@ export async function uploadActivityImages(files: File[]): Promise<PresignedImag
     throw new Error("한 번에 업로드하는 활동 이미지는 같은 파일 형식이어야 합니다.");
   }
 
-  const presignedResponse = await fetchWithTimeoutMessage("/api/images/presigned-urls", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(PRESIGNED_REQUEST_TIMEOUT_MS),
-    body: JSON.stringify({
-      purpose: "ACTIVITY",
-      contentType,
-      imageCount: files.length,
-    } satisfies PresignedImageUploadRequest),
-  });
+  const presignedResponse = await fetchWithTimeoutMessage(
+    "/api/images/presigned-urls",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(PRESIGNED_REQUEST_TIMEOUT_MS),
+      body: JSON.stringify({
+        purpose: "ACTIVITY",
+        contentType,
+        imageCount: files.length,
+      } satisfies PresignedImageUploadRequest),
+    },
+    ACTIVITY_UPLOAD_TIMEOUT_ERROR_MESSAGE,
+  );
   const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
     ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
 
@@ -151,12 +165,16 @@ export async function uploadActivityImages(files: File[]): Promise<PresignedImag
         uploadTarget.expiresInSeconds || DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS,
         MAX_S3_UPLOAD_TIMEOUT_SECONDS,
       );
-      const s3Response = await fetchWithTimeoutMessage(uploadTarget.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        signal: AbortSignal.timeout(s3TimeoutSeconds * 1000),
-        body: file,
-      });
+      const s3Response = await fetchWithTimeoutMessage(
+        uploadTarget.uploadUrl,
+        {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          signal: AbortSignal.timeout(s3TimeoutSeconds * 1000),
+          body: file,
+        },
+        ACTIVITY_UPLOAD_TIMEOUT_ERROR_MESSAGE,
+      );
 
       if (!s3Response.ok) {
         throw new Error("활동 이미지 업로드에 실패했습니다.");

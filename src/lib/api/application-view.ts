@@ -1,5 +1,9 @@
-import type { Application, ApplicationStatus } from "@/types/application";
-import type { ApplicationResponse, BackendApplicationStatus } from "@/types/application";
+import type {
+  Application,
+  ApplicationResponse,
+  ApplicationStatus,
+  BackendApplicationStatus,
+} from "@/types/application";
 
 const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStatus> = {
   PENDING_PAYMENT: "pending_payment",

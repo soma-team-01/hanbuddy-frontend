@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, context: ActivityRouteContext) {
   const { activityId } = await context.params;
   return proxyAuthenticatedGet<TouristActivityDetail>(
     request,
-    `/activities/${activityId}`,
+    `/activities/${encodeURIComponent(activityId)}`,
     "활동 상세 서버에 연결할 수 없습니다.",
   );
 }

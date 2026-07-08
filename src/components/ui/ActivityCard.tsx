@@ -15,10 +15,12 @@ export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
           sizes="(max-width: 448px) 100vw, 448px"
           className="object-cover"
         />
-        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1 text-ink shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] backdrop-blur-[2px]">
-          <StarIcon className="size-3.5" />
-          <span className="font-display text-sm font-semibold">{activity.rating.toFixed(1)}</span>
-        </div>
+        {activity.rating !== undefined ? (
+          <div className="absolute top-3 right-3 flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1 text-ink shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] backdrop-blur-[2px]">
+            <StarIcon className="size-3.5" />
+            <span className="font-display text-sm font-semibold">{activity.rating.toFixed(1)}</span>
+          </div>
+        ) : null}
       </div>
       <div className="flex flex-col gap-3 p-4">
         <div className="flex flex-col gap-1">

@@ -32,20 +32,31 @@ export function createBackendJsonResponse<TResult>(backend: BackendResponse<TRes
   return response;
 }
 
-export async function proxyAuthenticatedGet<TResult>(
+async function proxyAuthenticated<TResult>(
   request: NextRequest,
-  backendPath: string,
   unavailableMessage: string,
+  callBackend: (accessToken: string) => Promise<BackendResponse<TResult>>,
 ) {
   const accessToken = getAccessToken(request);
   if (!accessToken) return unauthorizedResponse();
 
   try {
-    const backend = await getBackend<TResult>(backendPath, { bearerToken: accessToken });
+    const backend = await callBackend(accessToken);
     return createBackendJsonResponse(backend);
-  } catch {
+  } catch (error) {
+    console.error(unavailableMessage, error);
     return backendUnavailableResponse(unavailableMessage);
   }
+}
+
+export async function proxyAuthenticatedGet<TResult>(
+  request: NextRequest,
+  backendPath: string,
+  unavailableMessage: string,
+) {
+  return proxyAuthenticated<TResult>(request, unavailableMessage, (accessToken) =>
+    getBackend<TResult>(backendPath, { bearerToken: accessToken }),
+  );
 }
 
 export async function readJsonBody<TBody>(request: NextRequest, invalidMessage: string) {
@@ -62,17 +73,11 @@ export async function proxyAuthenticatedPost<TBody, TResult>(
   body: TBody,
   unavailableMessage: string,
 ) {
-  const accessToken = getAccessToken(request);
-  if (!accessToken) return unauthorizedResponse();
-
-  try {
-    const backend = await postBackend<TBody, TResult>(backendPath, body, {
+  return proxyAuthenticated<TResult>(request, unavailableMessage, (accessToken) =>
+    postBackend<TBody, TResult>(backendPath, body, {
       bearerToken: accessToken,
-    });
-    return createBackendJsonResponse(backend);
-  } catch {
-    return backendUnavailableResponse(unavailableMessage);
-  }
+    }),
+  );
 }
 
 export async function proxyAuthenticatedPatch<TBody, TResult>(
@@ -81,17 +86,11 @@ export async function proxyAuthenticatedPatch<TBody, TResult>(
   body: TBody,
   unavailableMessage: string,
 ) {
-  const accessToken = getAccessToken(request);
-  if (!accessToken) return unauthorizedResponse();
-
-  try {
-    const backend = await patchBackend<TBody, TResult>(backendPath, body, {
+  return proxyAuthenticated<TResult>(request, unavailableMessage, (accessToken) =>
+    patchBackend<TBody, TResult>(backendPath, body, {
       bearerToken: accessToken,
-    });
-    return createBackendJsonResponse(backend);
-  } catch {
-    return backendUnavailableResponse(unavailableMessage);
-  }
+    }),
+  );
 }
 
 export async function proxyAuthenticatedDelete<TResult>(
@@ -99,13 +98,7 @@ export async function proxyAuthenticatedDelete<TResult>(
   backendPath: string,
   unavailableMessage: string,
 ) {
-  const accessToken = getAccessToken(request);
-  if (!accessToken) return unauthorizedResponse();
-
-  try {
-    const backend = await deleteBackend<TResult>(backendPath, { bearerToken: accessToken });
-    return createBackendJsonResponse(backend);
-  } catch {
-    return backendUnavailableResponse(unavailableMessage);
-  }
+  return proxyAuthenticated<TResult>(request, unavailableMessage, (accessToken) =>
+    deleteBackend<TResult>(backendPath, { bearerToken: accessToken }),
+  );
 }

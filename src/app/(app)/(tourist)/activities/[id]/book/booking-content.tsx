@@ -16,21 +16,27 @@ export function BookingContent({ activityId }: Readonly<{ activityId: string }>)
   useEffect(() => {
     let isMounted = true;
 
-    getTouristActivity(activityId).then((result) => {
-      if (!isMounted) return;
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        setIsLoading(false);
-        return;
-      }
+    getTouristActivity(activityId)
+      .then((result) => {
+        if (!isMounted) return;
+        if (result.status === "unauthenticated") {
+          router.replace("/login");
+          return;
+        }
+        if (result.status === "error") {
+          setErrorMessage(result.message);
+          setIsLoading(false);
+          return;
+        }
 
-      setActivity(mapTouristActivityDetailToActivity(result.activity));
-      setIsLoading(false);
-    });
+        setActivity(mapTouristActivityDetailToActivity(result.activity));
+        setIsLoading(false);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setErrorMessage("예약 정보를 불러오지 못했습니다.");
+        setIsLoading(false);
+      });
 
     return () => {
       isMounted = false;

@@ -33,6 +33,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const total = subtotal + serviceFee;
 
   async function handleSubmit() {
+    if (isSubmitting) return;
     if (!sessionId) {
       setErrorMessage("신청 가능한 일정을 선택해 주세요.");
       return;
@@ -40,23 +41,28 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
 
     setErrorMessage("");
     setIsSubmitting(true);
-    const result = await createApplication({
-      activityScheduleId: Number(sessionId),
-      guestCount: guests,
-      specialRequest: specialRequest.trim() || undefined,
-    });
-    setIsSubmitting(false);
+    try {
+      const result = await createApplication({
+        activityScheduleId: Number(sessionId),
+        guestCount: guests,
+        specialRequest: specialRequest.trim() || undefined,
+      });
 
-    if (result.status === "unauthenticated") {
-      router.replace("/login");
-      return;
-    }
-    if (result.status === "error") {
-      setErrorMessage(result.message);
-      return;
-    }
+      if (result.status === "unauthenticated") {
+        router.replace("/login");
+        return;
+      }
+      if (result.status === "error") {
+        setErrorMessage(result.message);
+        return;
+      }
 
-    router.replace("/applications");
+      router.replace("/applications");
+    } catch {
+      setErrorMessage("신청을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -76,11 +82,15 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           <UserIcon className="size-4" />
           with {activity.host.name}
         </p>
-        <p className="mt-3 flex items-center gap-1.5 text-sm text-ink">
-          <StarIcon className="size-4" />
-          <span className="font-display font-semibold">{activity.rating.toFixed(1)}</span>
-          <span className="text-ink-soft">({activity.reviewCount} reviews)</span>
-        </p>
+        {activity.rating !== undefined ? (
+          <p className="mt-3 flex items-center gap-1.5 text-sm text-ink">
+            <StarIcon className="size-4" />
+            <span className="font-display font-semibold">{activity.rating.toFixed(1)}</span>
+            {activity.reviewCount !== undefined ? (
+              <span className="text-ink-soft">({activity.reviewCount} reviews)</span>
+            ) : null}
+          </p>
+        ) : null}
       </section>
 
       <section className="flex flex-col gap-3">

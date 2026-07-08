@@ -43,4 +43,24 @@ describe("GET /api/activities/[activityId]", () => {
     });
     expect(response.status).toBe(200);
   });
+
+  it("encodes the activity id as a backend path segment", async () => {
+    mockedGetBackend.mockResolvedValue({
+      status: 200,
+      payload: { isSuccess: true, code: "200", message: "ok", result: { activityId: 42 } },
+      setCookies: [],
+    });
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/activities/42%3Fdebug=true", {
+        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+      }),
+      { params: Promise.resolve({ activityId: "42?debug=true" }) },
+    );
+
+    expect(mockedGetBackend).toHaveBeenCalledWith("/activities/42%3Fdebug%3Dtrue", {
+      bearerToken: "access-token",
+    });
+    expect(response.status).toBe(200);
+  });
 });

@@ -4,18 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
-import { ChevronDownIcon, ImagePlusIcon, MapIcon, UsersIcon } from "@/components/ui/icons";
+import { ImagePlusIcon, MapIcon, UsersIcon } from "@/components/ui/icons";
 import { createMyActivity } from "@/lib/api/buddy";
 import { uploadActivityImages } from "@/lib/images/presigned";
 import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
-
-const CATEGORIES = [
-  "Culture & History",
-  "Food Tour",
-  "Art One-day Class",
-  "Nature",
-  "Nightlife",
-] as const;
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return <span className="text-sm font-medium text-ink">{children}</span>;
@@ -25,19 +17,24 @@ const INPUT_CLASS =
   "border-line text-ink placeholder:text-ink-soft/60 w-full rounded-xl border bg-white px-4 py-3.5 text-base";
 
 function getString(formData: FormData, name: string) {
-  return String(formData.get(name) ?? "").trim();
+  const value = formData.get(name);
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function getStringList(formData: FormData, name: string) {
   return formData
     .getAll(name)
-    .map((value) => String(value).trim())
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
     .filter(Boolean);
 }
 
 function buildSchedules(formData: FormData) {
-  const dates = getStringList(formData, "activityDate");
-  const times = getStringList(formData, "startTime");
+  const dates = formData
+    .getAll("activityDate")
+    .map((value) => (typeof value === "string" ? value.trim() : ""));
+  const times = formData
+    .getAll("startTime")
+    .map((value) => (typeof value === "string" ? value.trim() : ""));
 
   return dates
     .map((activityDate, index) => ({
@@ -65,6 +62,11 @@ export function CreateActivityForm() {
     const meetingPointAddress = getString(formData, "meetingPointAddress");
 
     setErrorMessage("");
+    if (selectedFiles.length === 0) {
+      setErrorMessage("Please select at least one activity photo.");
+      return;
+    }
+
     setSubmittingStatus(status);
 
     try {
@@ -98,7 +100,7 @@ export function CreateActivityForm() {
 
       router.push("/my-activities");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "활동을 저장하지 못했습니다.");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to save the activity.");
       setSubmittingStatus(null);
     }
   }
@@ -157,23 +159,6 @@ export function CreateActivityForm() {
             placeholder="e.g., Traditional Tea Ceremony Experience"
             className={INPUT_CLASS}
           />
-        </label>
-
-        <label className="flex flex-col gap-2">
-          <FieldLabel>Category</FieldLabel>
-          <span className="relative">
-            <select defaultValue="" className={`${INPUT_CLASS} appearance-none`}>
-              <option value="" disabled>
-                Select a category
-              </option>
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
-          </span>
         </label>
 
         <label className="flex flex-col gap-2">

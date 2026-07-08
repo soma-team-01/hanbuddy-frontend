@@ -1,0 +1,174 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Avatar } from "@/components/ui/Avatar";
+import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
+import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
+import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
+import type { BuddyActivityApplicationsResponse } from "@/types/buddy";
+
+interface ApplicantsContentProps {
+  activityId: string;
+  initialDate?: string;
+}
+
+function toActivityId(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : value;
+}
+
+function formatApplicationStatus(status: string) {
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function formatAppliedDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+export function ApplicantsContent({ activityId, initialDate }: Readonly<ApplicantsContentProps>) {
+  const router = useRouter();
+  const [applications, setApplications] = useState<BuddyActivityApplicationsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    const resolvedActivityId = toActivityId(activityId);
+
+    async function loadApplications() {
+      let date = initialDate;
+
+      if (!date) {
+        const activityResult = await getMyActivity(resolvedActivityId);
+        if (!isMounted) return;
+        if (activityResult.status === "unauthenticated") {
+          router.replace("/login");
+          return;
+        }
+        if (activityResult.status === "error") {
+          setErrorMessage(activityResult.message);
+          setIsLoading(false);
+          return;
+        }
+
+        date = activityResult.activity.schedules[0]?.activityDate;
+        if (!date) {
+          setErrorMessage("등록된 일정이 없습니다.");
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const applicationsResult = await getBuddyActivityApplications(resolvedActivityId, date);
+      if (!isMounted) return;
+      if (applicationsResult.status === "unauthenticated") {
+        router.replace("/login");
+        return;
+      }
+      if (applicationsResult.status === "error") {
+        setErrorMessage(applicationsResult.message);
+        setIsLoading(false);
+        return;
+      }
+
+      setApplications(applicationsResult.applications);
+      setIsLoading(false);
+    }
+
+    void loadApplications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activityId, initialDate, router]);
+
+  if (isLoading) {
+    return <p className="py-10 text-center text-ink-soft">Loading applicants...</p>;
+  }
+
+  if (errorMessage) {
+    return (
+      <p
+        role="alert"
+        className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+      >
+        {errorMessage}
+      </p>
+    );
+  }
+
+  if (!applications) return null;
+
+  const confirmedCount =
+    applications.statusCounts.CONFIRMED ??
+    applications.applicants.filter((applicant) => applicant.status === "CONFIRMED").length;
+
+  return (
+    <>
+      <div>
+        <h1 className="font-display text-2xl leading-8 font-semibold text-forest">
+          {applications.activityTitle}
+        </h1>
+        <p className="mt-2 text-ink-soft">Applicant Status • {confirmedCount} confirmed</p>
+      </div>
+
+      {applications.applicants.length === 0 ? (
+        <p className="rounded-2xl border border-line bg-white px-4 py-8 text-center text-ink-soft">
+          No applicants for this date yet.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-5">
+          {applications.applicants.map((applicant) => (
+            <article
+              key={applicant.applicationId}
+              className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]"
+            >
+              <div className="flex items-center gap-4">
+                <Avatar
+                  name={applicant.applicantName}
+                  src={applicant.applicantProfileImageUrl}
+                  size={48}
+                />
+                <div className="min-w-0 text-sm">
+                  <p className="font-display text-lg font-semibold text-ink">
+                    {applicant.applicantName}
+                  </p>
+                  <p className="flex items-center gap-1 text-ink-soft">
+                    <MapPinIcon className="size-3.5" />
+                    {formatNationalityCode(applicant.applicantNationalityCode)}
+                  </p>
+                  <p className="flex items-center gap-1 text-ink-soft">
+                    <MessageSquareIcon className="size-3.5" />
+                    {formatApplicantContact(applicant)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-ink-soft">
+                <span>Applied for: {formatAppliedDate(applicant.appliedAt)}</span>
+                <span>• {applicant.guestCount} guests</span>
+                <span>• {formatApplicationStatus(applicant.status)}</span>
+              </div>
+              {applicant.specialRequest ? (
+                <p className="rounded-xl bg-sand p-4 text-sm text-ink">
+                  {applicant.specialRequest}
+                </p>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}

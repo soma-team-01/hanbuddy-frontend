@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { uploadProfileImage } from "./presigned";
+import { uploadActivityImages, uploadProfileImage } from "./presigned";
 
 function createJsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -185,6 +185,89 @@ describe("uploadProfileImage", () => {
 
     await expect(uploadProfileImage(file)).rejects.toThrow(
       "프로필 이미지 업로드 URL을 발급받지 못했습니다.",
+    );
+  });
+});
+
+describe("uploadActivityImages", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("issues activity presigned URLs and PUTs each file to S3", async () => {
+    const activityPresignedBody = {
+      isSuccess: true,
+      code: "200",
+      message: "요청이 성공했습니다.",
+      result: {
+        images: [
+          {
+            uploadUrl: "https://bucket.s3.amazonaws.com/activities/1.webp?signed",
+            imageKey: "activities/2026/07/07/1.webp",
+            imageUrl: "https://static.hanbuddy.com/activities/2026/07/07/1.webp",
+            expiresInSeconds: 300,
+          },
+          {
+            uploadUrl: "https://bucket.s3.amazonaws.com/activities/2.webp?signed",
+            imageKey: "activities/2026/07/07/2.webp",
+            imageUrl: "https://static.hanbuddy.com/activities/2026/07/07/2.webp",
+            expiresInSeconds: 300,
+          },
+        ],
+      },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createJsonResponse(activityPresignedBody))
+      .mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const files = [
+      new File([new Uint8Array([1])], "one.webp", { type: "image/webp" }),
+      new File([new Uint8Array([2])], "two.webp", { type: "image/webp" }),
+    ];
+
+    await expect(uploadActivityImages(files)).resolves.toEqual(activityPresignedBody.result.images);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      purpose: "ACTIVITY",
+      contentType: "image/webp",
+      imageCount: 2,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      "https://bucket.s3.amazonaws.com/activities/1.webp?signed",
+    );
+    expect(fetchMock.mock.calls[2][0]).toBe(
+      "https://bucket.s3.amazonaws.com/activities/2.webp?signed",
+    );
+  });
+
+  it("rejects more than 8 activity images without calling the network", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const files = Array.from(
+      { length: 9 },
+      (_, index) => new File([new Uint8Array([index])], `${index}.webp`, { type: "image/webp" }),
+    );
+
+    await expect(uploadActivityImages(files)).rejects.toThrow(
+      "활동 이미지는 최대 8장까지 업로드할 수 있습니다.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("maps activity request timeouts to an activity-specific error message", async () => {
+    const timeoutError = Object.assign(new Error("The operation timed out."), {
+      name: "TimeoutError",
+    });
+    const fetchMock = vi.fn().mockRejectedValueOnce(timeoutError);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const files = [new File([new Uint8Array([1])], "one.webp", { type: "image/webp" })];
+
+    await expect(uploadActivityImages(files)).rejects.toThrow(
+      "활동 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.",
     );
   });
 });

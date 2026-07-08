@@ -1,0 +1,326 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { TopAppBar } from "@/components/layout/TopAppBar";
+import { ImagePlusIcon, MapIcon, UsersIcon } from "@/components/ui/icons";
+import { createMyActivity } from "@/lib/api/buddy";
+import { uploadActivityImages } from "@/lib/images/presigned";
+import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
+
+function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <span className="text-sm font-medium text-ink">{children}</span>;
+}
+
+const INPUT_CLASS =
+  "border-line text-ink placeholder:text-ink-soft/60 w-full rounded-xl border bg-white px-4 py-3.5 text-base";
+
+function getString(formData: FormData, name: string) {
+  const value = formData.get(name);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getStringList(formData: FormData, name: string) {
+  return formData
+    .getAll(name)
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter(Boolean);
+}
+
+function buildSchedules(formData: FormData) {
+  const dates = formData
+    .getAll("activityDate")
+    .map((value) => (typeof value === "string" ? value.trim() : ""));
+  const times = formData
+    .getAll("startTime")
+    .map((value) => (typeof value === "string" ? value.trim() : ""));
+
+  return dates
+    .map((activityDate, index) => ({
+      activityDate,
+      startTime: times[index] ?? "",
+    }))
+    .filter((schedule) => schedule.activityDate && schedule.startTime);
+}
+
+export function CreateActivityForm() {
+  const router = useRouter();
+  const [includedItems, setIncludedItems] = useState<number[]>([0]);
+  const [timeSlots, setTimeSlots] = useState<number[]>([0]);
+  const [restrictions, setRestrictions] = useState<number[]>([0]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [submittingStatus, setSubmittingStatus] = useState<MyActivityStatus | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const status: MyActivityStatus = submitter?.value === "DRAFT" ? "DRAFT" : "ACTIVE";
+    const formData = new FormData(event.currentTarget);
+    const meetingPointName = getString(formData, "meetingPointName");
+    const meetingPointAddress = getString(formData, "meetingPointAddress");
+
+    setErrorMessage("");
+    if (selectedFiles.length === 0) {
+      setErrorMessage("Please select at least one activity photo.");
+      return;
+    }
+
+    setSubmittingStatus(status);
+
+    try {
+      const uploadedImages = await uploadActivityImages(selectedFiles);
+      const request: ActivityUpsertRequest = {
+        title: getString(formData, "title"),
+        description: getString(formData, "description"),
+        imageKeys: uploadedImages.map((image) => image.imageKey),
+        includedItems: getStringList(formData, "includedItems"),
+        restrictionNotes: getStringList(formData, "restrictionNotes"),
+        maxCapacity: Number(getString(formData, "maxCapacity")),
+        price: Number(getString(formData, "price")),
+        currency: "KRW",
+        meetingPointName,
+        meetingPointAddress,
+        meetingPlaceId: meetingPointAddress || meetingPointName,
+        status,
+        schedules: buildSchedules(formData),
+      };
+      const result = await createMyActivity(request);
+
+      if (result.status === "unauthenticated") {
+        router.replace("/login");
+        return;
+      }
+      if (result.status === "error") {
+        setErrorMessage(result.message);
+        setSubmittingStatus(null);
+        return;
+      }
+
+      router.push("/my-activities");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Failed to save the activity.");
+      setSubmittingStatus(null);
+    }
+  }
+
+  const isSubmitting = submittingStatus !== null;
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-1 flex-col pb-28">
+      <TopAppBar backHref="/my-activities" />
+      <main className="flex flex-1 flex-col gap-6 px-4 py-8">
+        <div>
+          <p className="font-display text-xs font-semibold tracking-widest text-earth uppercase">
+            Step 1 of 3
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-semibold text-forest">Activity Basics</h1>
+          <p className="mt-2 text-ink-soft">
+            Start by providing the fundamental details of your cultural experience.
+          </p>
+        </div>
+
+        {errorMessage ? (
+          <p
+            role="alert"
+            className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+          >
+            {errorMessage}
+          </p>
+        ) : null}
+
+        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-white/60 px-6 py-14 text-ink-soft">
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            aria-label="Activity photos"
+            className="sr-only"
+            onChange={(event) => setSelectedFiles(Array.from(event.currentTarget.files ?? []))}
+          />
+          <ImagePlusIcon className="size-8" />
+          <span className="font-display text-sm font-semibold text-ink">
+            Click to upload cover photo
+          </span>
+          <span className="text-xs">
+            {selectedFiles.length > 0
+              ? `${selectedFiles.length} selected`
+              : "PNG, JPG, WebP up to 8 files"}
+          </span>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>Activity Title</FieldLabel>
+          <input
+            type="text"
+            name="title"
+            required
+            placeholder="e.g., Traditional Tea Ceremony Experience"
+            className={INPUT_CLASS}
+          />
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>Description</FieldLabel>
+          <textarea
+            name="description"
+            required
+            rows={4}
+            placeholder="Describe what participants will do and learn..."
+            className={`${INPUT_CLASS} resize-none`}
+          />
+        </label>
+
+        <div className="flex flex-col gap-2">
+          <FieldLabel>What&apos;s included</FieldLabel>
+          {includedItems.map((key) => (
+            <input
+              key={key}
+              name="includedItems"
+              type="text"
+              required={key === 0}
+              placeholder="e.g., 2 types of traditional tea & refreshments"
+              aria-label="Included item"
+              className={INPUT_CLASS}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => setIncludedItems((items) => [...items, items.length])}
+            className="self-start text-sm font-semibold text-earth"
+          >
+            + Add item
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <FieldLabel>Availability</FieldLabel>
+          {timeSlots.map((key) => (
+            <div key={key} className="grid grid-cols-2 gap-3">
+              <input
+                name="activityDate"
+                type="date"
+                required={key === 0}
+                aria-label="Available date"
+                className={INPUT_CLASS}
+              />
+              <input
+                name="startTime"
+                type="time"
+                required={key === 0}
+                aria-label="Available time"
+                className={INPUT_CLASS}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setTimeSlots((slots) => [...slots, slots.length])}
+            className="self-start text-sm font-semibold text-earth"
+          >
+            + Add time slot
+          </button>
+        </div>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>Max Capacity</FieldLabel>
+          <span className="relative">
+            <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-soft" />
+            <input
+              name="maxCapacity"
+              type="number"
+              min={1}
+              required
+              placeholder="e.g., 4"
+              className={`${INPUT_CLASS} pl-11`}
+            />
+          </span>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <FieldLabel>Price per person</FieldLabel>
+          <span className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-ink-soft">
+              ₩
+            </span>
+            <input
+              name="price"
+              type="number"
+              min={0}
+              required
+              aria-label="Price per person"
+              placeholder="e.g., 50000"
+              className={`${INPUT_CLASS} pl-11`}
+            />
+          </span>
+        </label>
+
+        <div className="flex flex-col gap-2">
+          <FieldLabel>Meeting Point</FieldLabel>
+          <input
+            name="meetingPointName"
+            type="text"
+            required
+            placeholder="Enter place name"
+            aria-label="Meeting place name"
+            className={INPUT_CLASS}
+          />
+          <input
+            name="meetingPointAddress"
+            type="text"
+            required
+            placeholder="Enter address (e.g., Bukchon Hanok Village)"
+            aria-label="Meeting place address"
+            className={INPUT_CLASS}
+          />
+          <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
+            <MapIcon className="size-6" />
+            <span className="text-sm">Map preview will appear here</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <FieldLabel>Who cannot join</FieldLabel>
+          {restrictions.map((key) => (
+            <input
+              key={key}
+              name="restrictionNotes"
+              type="text"
+              placeholder="e.g., People with mobility difficulties"
+              aria-label="Restriction"
+              className={INPUT_CLASS}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => setRestrictions((items) => [...items, items.length])}
+            className="self-start text-sm font-semibold text-earth"
+          >
+            + Add restriction
+          </button>
+        </div>
+      </main>
+      <BottomActionBar>
+        <button
+          type="submit"
+          name="status"
+          value="DRAFT"
+          disabled={isSubmitting}
+          className="h-12 flex-1 rounded-xl border border-line bg-chip font-display text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Save Draft
+        </button>
+        <button
+          type="submit"
+          name="status"
+          value="ACTIVE"
+          disabled={isSubmitting}
+          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Publish Activity
+        </button>
+      </BottomActionBar>
+    </form>
+  );
+}

@@ -22,6 +22,13 @@ This version has breaking changes - APIs, conventions, and file structure may al
 
 > **주의 (Next.js 16 / React 19 / Tailwind v4):** 이 버전들은 에이전트 학습 데이터보다 최신이라 API·관례가 다를 수 있다. 실제 Next.js 코드를 작성하기 전 `node_modules/next/dist/docs/`(특히 `01-app/`)를 참고할 것. Tailwind v4는 `tailwind.config.js` 대신 `src/app/globals.css`의 `@import "tailwindcss"` + PostCSS 기반 설정을 쓴다.
 
+## Backend API
+
+- 임시 Swagger UI: http://43.200.28.162/api/v1/swagger-ui/index.html#/
+- 임시 API base URL: `http://43.200.28.162/api/v1`
+- 프론트는 브라우저에서 백엔드를 직접 호출하지 않고, same-origin `/api/*` Route Handler를 거쳐 백엔드로 프록시하는 BFF 패턴을 유지한다.
+- API 명세 반영 시 Swagger/OpenAPI 응답 shape를 먼저 확인하고, 타입·프록시 route·클라이언트 함수·계약 테스트를 함께 맞춘다.
+
 ## Folder Structure
 
 ```text

@@ -15,6 +15,11 @@ const STYLES: Record<
     className: "bg-success-soft text-success",
     Icon: CheckCircleIcon,
   },
+  cancelled: {
+    label: "Cancelled",
+    className: "bg-danger/10 text-danger",
+    Icon: ClockIcon,
+  },
   completed: {
     label: "Completed",
     className: "bg-line text-ink-soft",

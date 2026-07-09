@@ -57,7 +57,7 @@ export function MessagingAppField({
 }: Readonly<MessagingAppFieldProps>) {
   return (
     <>
-      <div className="flex flex-col rounded-xl border border-line bg-white">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-line bg-white">
         {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
           const isSelected = app === key;
           return (
@@ -66,7 +66,7 @@ export function MessagingAppField({
               type="button"
               aria-pressed={isSelected}
               onClick={() => onAppChange(key)}
-              className={`flex items-center gap-3 px-4 py-3.5 text-left ${
+              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-chip/60 ${
                 index > 0 ? "border-t border-line" : ""
               }`}
             >
@@ -98,7 +98,7 @@ export function MessagingAppField({
                 onChange={onCountryChange}
                 display="dialCode"
                 ariaLabel="Messaging country code"
-                triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink"
+                triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong"
               />
             </div>
           )}

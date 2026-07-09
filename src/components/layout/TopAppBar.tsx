@@ -53,7 +53,9 @@ export function TopAppBar({
       <h1 className="truncate font-display text-[28px] font-semibold tracking-tight text-forest">
         {title === "HanBuddy" ? (
           // 브랜드 워드마크 클릭 시 역할별 홈(/explore | /dashboard)으로 이동
-          <Link href="/home">{title}</Link>
+          <Link href="/home" className="transition-opacity hover:opacity-80">
+            {title}
+          </Link>
         ) : (
           title
         )}

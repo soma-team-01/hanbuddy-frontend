@@ -32,7 +32,10 @@ export function ProfileCard() {
         <Avatar name={result.profile.name} src={result.profile.profileImageUrl} size={72} />
         <div>
           <h1 className="font-display text-xl font-semibold text-ink">{result.profile.name}</h1>
-          <Link href="/my-page/edit" className="mt-1 flex items-center gap-1 text-sm text-earth">
+          <Link
+            href="/my-page/edit"
+            className="mt-1 flex items-center gap-1 text-sm text-earth hover:underline"
+          >
             Edit Profile
             <ChevronRightIcon className="size-3.5" />
           </Link>

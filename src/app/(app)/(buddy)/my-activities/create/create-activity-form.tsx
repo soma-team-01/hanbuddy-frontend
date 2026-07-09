@@ -700,7 +700,7 @@ export function CreateActivityForm() {
           type="button"
           onClick={currentStep === 1 ? handleBack : goToPreviousStep}
           disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl border border-line bg-chip font-display text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl border border-line bg-chip font-display text-sm font-semibold text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-line disabled:cursor-not-allowed disabled:opacity-60"
         >
           {currentStep === 1 ? "Cancel" : "Previous Step"}
         </button>
@@ -708,7 +708,7 @@ export function CreateActivityForm() {
           type="button"
           onClick={currentStep === 3 ? handleRegisterClick : goToNextStep}
           disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:cursor-not-allowed disabled:opacity-60"
         >
           {currentStep === 3 ? "Register Activity" : "Next Step"}
         </button>

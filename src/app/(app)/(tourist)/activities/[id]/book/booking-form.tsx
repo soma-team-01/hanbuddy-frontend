@@ -136,7 +136,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
               aria-label="Decrease guests"
               disabled={guests <= 1}
               onClick={() => setGuests((count) => Math.max(1, count - 1))}
-              className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink disabled:opacity-40"
+              className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-chip disabled:opacity-40"
             >
               <MinusIcon className="size-4" />
             </button>
@@ -148,7 +148,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
               aria-label="Increase guests"
               disabled={guests >= MAX_GUESTS}
               onClick={() => setGuests((count) => Math.min(MAX_GUESTS, count + 1))}
-              className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink disabled:opacity-40"
+              className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-chip disabled:opacity-40"
             >
               <PlusIcon className="size-4" />
             </button>
@@ -220,7 +220,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           type="button"
           disabled={!agreed || isSubmitting}
           onClick={handleSubmitClick}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-forest font-display text-base font-semibold text-cream disabled:opacity-40"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-forest font-display text-base font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-40"
         >
           {isSubmitting ? "Submitting..." : "Submit Application"}
           <ArrowRightIcon className="size-4" />

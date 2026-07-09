@@ -52,7 +52,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-chip disabled:opacity-60"
         >
           {cancelLabel}
         </button>
@@ -60,8 +60,10 @@ export function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={isPending}
-          className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-cream disabled:opacity-60 ${
-            tone === "danger" ? "bg-danger" : "bg-forest"
+          className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-cream transition-colors disabled:opacity-60 ${
+            tone === "danger"
+              ? "bg-danger enabled:hover:bg-danger/90"
+              : "bg-forest enabled:hover:bg-forest-soft"
           }`}
         >
           {isPending ? `${confirmLabel}...` : confirmLabel}

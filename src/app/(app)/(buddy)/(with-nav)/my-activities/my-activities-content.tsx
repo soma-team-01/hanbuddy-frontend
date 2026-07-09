@@ -97,7 +97,7 @@ export function MyActivitiesContent() {
         >
           <Link
             href={`/my-activities/${activity.activityId}/applicants`}
-            className="relative block h-44 w-full overflow-hidden rounded-xl"
+            className="relative block h-44 w-full overflow-hidden rounded-xl transition-opacity hover:opacity-90"
           >
             <Image
               src={getActivityThumbnail(activity.thumbnailImageUrl)}
@@ -125,7 +125,10 @@ export function MyActivitiesContent() {
               <TrashIcon className="size-4" />
             </button>
           </div>
-          <Link href={`/my-activities/${activity.activityId}/applicants`}>
+          <Link
+            href={`/my-activities/${activity.activityId}/applicants`}
+            className="hover:underline"
+          >
             <h2 className="font-display text-xl leading-7 font-semibold text-ink">
               {activity.title}
             </h2>
@@ -133,7 +136,7 @@ export function MyActivitiesContent() {
           <p className="line-clamp-2 text-base text-ink-soft">{activity.description}</p>
           <Link
             href={`/my-activities/${activity.activityId}/applicants`}
-            className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-earth"
+            className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-earth hover:underline"
           >
             <UsersIcon className="size-3.5" />
             View applicants

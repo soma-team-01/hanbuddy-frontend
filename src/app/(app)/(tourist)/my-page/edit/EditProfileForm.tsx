@@ -191,7 +191,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             form="edit-profile-form"
             type="submit"
             disabled={isSaving}
-            className="font-display text-sm font-semibold text-forest disabled:opacity-60"
+            className="font-display text-sm font-semibold text-forest enabled:hover:underline disabled:opacity-60"
           >
             {isSaving ? "Saving..." : "Save"}
           </button>
@@ -202,7 +202,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
           <section className="flex flex-col items-center gap-3">
             <div className="relative">
               {profilePhoto}
-              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream">
+              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-forest-soft">
                 <CameraIcon className="size-4" />
                 <span className="sr-only">Add profile photo</span>
                 <input

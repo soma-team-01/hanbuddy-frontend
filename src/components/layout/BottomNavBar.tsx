@@ -33,8 +33,8 @@ export function BottomNavBar({ role = "tourist" }: Readonly<{ role?: "tourist" |
             key={href}
             href={href}
             aria-current={isActive ? "page" : undefined}
-            className={`flex w-20 flex-col items-center gap-1 rounded-xl px-4 py-1 font-display text-sm font-semibold ${
-              isActive ? "bg-forest-soft text-sage" : "text-ink-soft"
+            className={`flex w-20 flex-col items-center gap-1 rounded-xl px-4 py-1 font-display text-sm font-semibold transition-colors ${
+              isActive ? "bg-forest-soft text-sage" : "text-ink-soft hover:bg-chip hover:text-ink"
             }`}
           >
             <Icon className="size-5" />

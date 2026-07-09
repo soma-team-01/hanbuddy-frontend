@@ -24,12 +24,12 @@ export default async function MyPage() {
       <main className="flex flex-1 flex-col gap-6 px-4 py-6">
         <ProfileCard />
 
-        <section className="flex flex-col rounded-2xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
+        <section className="flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
           {MENU_ITEMS.map(({ label, Icon, ...item }, index) => (
             <button
               key={label}
               type="button"
-              className={`flex items-center gap-4 px-5 py-4 text-left ${
+              className={`flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-chip/60 ${
                 index > 0 ? "border-t border-line" : ""
               }`}
             >

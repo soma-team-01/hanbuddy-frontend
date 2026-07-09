@@ -16,7 +16,7 @@ export default function DashboardPage() {
           <h2 className="font-display text-xl font-semibold text-ink">Quick Actions</h2>
           <Link
             href="/my-activities/create"
-            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-forest-soft font-display text-sm font-semibold text-sage"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-forest-soft font-display text-sm font-semibold text-sage transition-colors hover:bg-forest"
           >
             <PlusIcon className="size-4" />
             Create Activity

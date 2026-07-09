@@ -253,7 +253,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
         </div>
         <Link
           href={`/activities/${activity.id}/book`}
-          className="flex h-11 items-center justify-center rounded-xl bg-forest px-8 font-display text-sm font-semibold text-cream"
+          className="flex h-11 items-center justify-center rounded-xl bg-forest px-8 font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
         >
           Apply Now
         </Link>

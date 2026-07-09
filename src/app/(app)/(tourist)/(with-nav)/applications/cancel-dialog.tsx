@@ -34,12 +34,18 @@ export function CancelDialog({
     setIsSubmitting(true);
     setErrorMessage("");
 
-    const outcome = await onConfirm(reason);
-    if (!outcome.ok) {
-      setErrorMessage(outcome.message);
+    // onConfirm이 계약을 어기고 reject하면 두 버튼이 잠긴 채 복구 불가가 되므로 여기서 방어한다
+    try {
+      const outcome = await onConfirm(reason);
+      if (!outcome.ok) {
+        setErrorMessage(outcome.message);
+        setIsSubmitting(false);
+      }
+      // 성공 시에는 부모가 다이얼로그를 언마운트하므로 여기서 상태를 만지지 않는다.
+    } catch {
+      setErrorMessage("Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
-    // 성공 시에는 부모가 다이얼로그를 언마운트하므로 여기서 상태를 만지지 않는다.
   }
 
   return (

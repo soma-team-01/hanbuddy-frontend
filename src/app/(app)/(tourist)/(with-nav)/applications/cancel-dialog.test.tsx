@@ -23,6 +23,19 @@ describe("CancelDialog", () => {
     await waitFor(() => expect(onConfirm).toHaveBeenCalledWith("FOUND_OTHER"));
   });
 
+  it("recovers with an error message when onConfirm rejects unexpectedly", async () => {
+    const onConfirm = vi.fn().mockRejectedValue(new Error("network down"));
+    render(<CancelDialog onClose={vi.fn()} onConfirm={onConfirm} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong. Please try again.",
+    );
+    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
+  });
+
   it("shows an error and keeps the dialog open when cancellation fails", async () => {
     const onConfirm = vi.fn().mockResolvedValue({
       ok: false,

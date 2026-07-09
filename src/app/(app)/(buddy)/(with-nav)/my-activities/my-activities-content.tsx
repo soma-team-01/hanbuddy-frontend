@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TrashIcon, UsersIcon } from "@/components/ui/icons";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
 import { getActivityThumbnail, getMyActivityStatusLabel } from "@/lib/api/buddy-view";
@@ -18,6 +19,7 @@ const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
 export function MyActivitiesContent() {
   const router = useRouter();
   const [activities, setActivities] = useState<MyActivitySummaryResponse[]>([]);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deletingActivityId, setDeletingActivityId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -47,8 +49,6 @@ export function MyActivitiesContent() {
   }, [router]);
 
   async function handleDelete(activityId: number) {
-    if (!window.confirm("Delete this activity? This action cannot be undone.")) return;
-
     setDeletingActivityId(activityId);
     setErrorMessage("");
     const previousActivities = activities;
@@ -118,7 +118,7 @@ export function MyActivitiesContent() {
             <button
               type="button"
               aria-label={`Delete ${activity.title}`}
-              onClick={() => void handleDelete(activity.activityId)}
+              onClick={() => setDeleteTargetId(activity.activityId)}
               disabled={deletingActivityId === activity.activityId}
               className="flex size-9 items-center justify-center rounded-full text-ink-soft hover:bg-chip disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -140,6 +140,20 @@ export function MyActivitiesContent() {
           </Link>
         </article>
       ))}
+      {deleteTargetId !== null && (
+        <ConfirmDialog
+          title="Delete this activity?"
+          description="This action cannot be undone."
+          confirmLabel="Delete"
+          tone="danger"
+          onConfirm={() => {
+            const activityId = deleteTargetId;
+            setDeleteTargetId(null);
+            void handleDelete(activityId);
+          }}
+          onClose={() => setDeleteTargetId(null)}
+        />
+      )}
     </div>
   );
 }

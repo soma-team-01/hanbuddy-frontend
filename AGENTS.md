@@ -70,19 +70,15 @@ feature/*- PR 단위 임시 Preview URL (리뷰용)
 
 ### Vercel Status
 
-- 프로젝트: `hanbuddy-frontend` (team `minbros-projects` / `team_5xpcSletzWjNA6mWCYKBd4qG`, project `prj_N2tGWFSGPTsLxlZz2XnsSjzBKOiM`).
-- GitHub 저장소 연결됨 -> **`main` push 시 프로덕션 자동 배포** 동작 확인.
-- 프로덕션 URL: https://hanbuddy-frontend.vercel.app (공개, 정상 서빙).
+- 프로젝트: `hanbuddy-frontend` (team `soma-zeroone` / `team_2lOTZrUA6WOT5y80kaL9bfa9`, project `prj_N2tGWFSGPTsLxlZz2XnsSjzBKOiM`).
+- 배포는 SOMA 팀 Vercel Team `soma-zeroone` 소속으로 동작 중(PR #14~#20 배포에서 확인, 2026-07-09 Vercel MCP로 프로젝트 accountId 일치 확인). 과거에는 개인(Hobby) 팀 `minbros-projects`(`team_5xpcSletzWjNA6mWCYKBd4qG`) 소속이었고, 팀이 바뀐 뒤에도 projectId는 동일하다.
+- Vercel API/MCP 호출 시에는 teamId 대신 team slug(`soma-zeroone`)로도 조회 가능.
+- GitHub 저장소 연결 유지 -> **`main` push 시 프로덕션 자동 배포**, PR별 Preview 배포 정상 동작.
+- 프로덕션 URL: https://hanbuddy-frontend.vercel.app (공개, 정상 서빙 - 2026-07-09 확인).
 - **Deployment Protection ON**: Preview/브랜치 URL은 Vercel 로그인 필요(팀원 초대 시 접근). 이 정책 유지하기로 결정.
-- Vercel 조작은 Vercel MCP로 가능(팀/프로젝트/배포 조회 등).
+- Vercel 조작은 Vercel MCP로 가능(팀/프로젝트/배포 조회 등). 단, 공식 `vercel` 플러그인이 머신에 설치·인증되어 있어야 하며, 세션에 따라 없을 수 있다.
 - Vercel CLI는 설치되어 있지 않을 수 있다. 로컬에서 `vercel env pull`, `vercel deploy`, `vercel logs`가 필요하면 `npm i -g vercel` 설치가 필요하다.
-
-### Planned Vercel Team Transfer
-
-- **현재는 개인(Hobby) 팀 `minbros-projects`에 프로젝트가 있음. 팀 협업을 위해 별도 Vercel Team(Pro, 유료) 생성 예정.**
-- 계획: SOMA 팀 명의 Vercel Team 생성 -> GitHub 앱이 `soma-team-01` org 접근 확인 -> 현재 프로젝트를 **Transfer**(배포·도메인·env 유지) -> 팀원 초대 -> GitHub 연동 재확인.
-- **전환 완료 후 위 team/project ID 값을 갱신할 것** (teamId·projectId가 바뀜).
-- 비용/크레딧은 팀 차원에서 확인 필요(Hobby는 비상업·멤버 추가 불가).
+- 팀 전환 관련 확인 필요 항목: 팀원 초대 상태, 팀 플랜 비용/크레딧.
 
 ## Commit Rules
 

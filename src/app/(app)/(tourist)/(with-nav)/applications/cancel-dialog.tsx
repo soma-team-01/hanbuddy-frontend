@@ -73,8 +73,8 @@ export function CancelDialog({
               type="button"
               aria-pressed={isSelected}
               onClick={() => setReason(value)}
-              className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left ${
-                isSelected ? "border-forest" : "border-line-strong"
+              className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left transition-colors ${
+                isSelected ? "border-forest" : "border-line-strong hover:border-forest/50"
               }`}
             >
               <span
@@ -105,7 +105,7 @@ export function CancelDialog({
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-chip disabled:opacity-60"
         >
           No, Keep It
         </button>
@@ -113,7 +113,7 @@ export function CancelDialog({
           type="button"
           onClick={handleConfirm}
           disabled={!reason || isSubmitting}
-          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-60"
         >
           {isSubmitting ? "Cancelling..." : "Yes, Cancel"}
         </button>

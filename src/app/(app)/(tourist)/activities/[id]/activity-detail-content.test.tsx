@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
+import { fetchGooglePlaceDetails } from "@/lib/google/places";
 import { ActivityDetailContent } from "./activity-detail-content";
 
 vi.mock("next/navigation", () => ({
@@ -11,10 +12,23 @@ vi.mock("@/lib/api/activities", () => ({
   getTouristActivity: vi.fn(),
 }));
 
+vi.mock("@/lib/google/places", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/google/places")>("@/lib/google/places");
+  return {
+    ...actual,
+    fetchGooglePlaceDetails: vi.fn(),
+    getGoogleMapsApiKey: () => "test-google-key",
+  };
+});
+
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
+const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetails);
 
 describe("ActivityDetailContent", () => {
   it("renders activity detail loaded from the API", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
       activity: {
@@ -51,5 +65,11 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
     expect(screen.getByText("Local guide")).toBeInTheDocument();
     expect(screen.getByText("4 spots left")).toBeInTheDocument();
+    expect(await screen.findAllByText("123 Anguk-ro, Jongno-gu, Seoul")).toHaveLength(2);
+    expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith("ChIJ-bukchon", "test-google-key");
+    expect(screen.getByTitle("Map of Anguk Station Exit 2")).toHaveAttribute(
+      "src",
+      "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-bukchon",
+    );
   });
 });

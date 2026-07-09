@@ -131,7 +131,7 @@ export function DashboardContent() {
           >
             <Link
               href={`/my-activities/${activity.activityId}/applicants?date=${selectedDate}`}
-              className="flex items-center gap-4"
+              className="-m-2 flex items-center gap-4 rounded-xl p-2 transition-colors hover:bg-chip/60"
             >
               <div className="relative size-14 shrink-0 overflow-hidden rounded-lg">
                 <Image
@@ -213,8 +213,10 @@ export function DashboardContent() {
                 type="button"
                 aria-pressed={active}
                 onClick={() => handleDateSelect(date)}
-                className={`flex w-16 shrink-0 flex-col items-center gap-1 rounded-xl py-3 ${
-                  active ? "bg-forest text-cream" : "border border-line bg-white text-ink"
+                className={`flex w-16 shrink-0 flex-col items-center gap-1 rounded-xl py-3 transition-colors ${
+                  active
+                    ? "bg-forest text-cream"
+                    : "border border-line bg-white text-ink hover:border-line-strong hover:bg-chip"
                 }`}
               >
                 <span className="font-display text-lg font-bold">{chip.day}</span>

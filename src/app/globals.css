@@ -34,6 +34,12 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Tailwind v4 preflight는 버튼 커서를 default로 두므로 클릭 가능한 버튼에 포인터를 복원 */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
 }

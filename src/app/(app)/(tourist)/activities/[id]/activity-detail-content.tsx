@@ -11,11 +11,18 @@ import { CheckIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
 import { getTouristActivity } from "@/lib/api/activities";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { formatKrw } from "@/lib/format";
+import {
+  buildGoogleMapsEmbedUrl,
+  fetchGooglePlaceDetails,
+  getGoogleMapsApiKey,
+  GOOGLE_PLACE_COMPAT_ADDRESS,
+} from "@/lib/google/places";
 import type { Activity } from "@/types/activity";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
   const router = useRouter();
   const [activity, setActivity] = useState<Activity | null>(null);
+  const [googleMeetingAddress, setGoogleMeetingAddress] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -34,6 +41,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
         return;
       }
 
+      setGoogleMeetingAddress("");
       setActivity(mapTouristActivityDetailToActivity(result.activity));
       setIsLoading(false);
     });
@@ -42,6 +50,28 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
       isMounted = false;
     };
   }, [activityId, router]);
+
+  useEffect(() => {
+    const placeId = activity?.meetingPoint.placeId;
+    const apiKey = getGoogleMapsApiKey();
+    if (!placeId || !apiKey) return;
+
+    let isMounted = true;
+
+    fetchGooglePlaceDetails(placeId, apiKey)
+      .then((place) => {
+        if (!isMounted) return;
+        setGoogleMeetingAddress(place.formattedAddress);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setGoogleMeetingAddress("");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activity?.meetingPoint.placeId]);
 
   if (isLoading) {
     return (
@@ -64,6 +94,47 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
             {errorMessage || "활동 상세를 불러오지 못했습니다."}
           </p>
         </main>
+      </div>
+    );
+  }
+
+  const fallbackMeetingAddress =
+    activity.meetingPoint.area &&
+    activity.meetingPoint.area !== activity.meetingPoint.name &&
+    activity.meetingPoint.area !== GOOGLE_PLACE_COMPAT_ADDRESS
+      ? activity.meetingPoint.area
+      : "";
+  const meetingAddress = googleMeetingAddress || fallbackMeetingAddress;
+  const googleMapsUrl = activity.meetingPoint.placeId
+    ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, getGoogleMapsApiKey())
+    : "";
+
+  let meetingMapMedia: React.ReactNode = (
+    <div className="mt-3 flex h-[204px] w-full items-center justify-center rounded-xl bg-line/60 text-sm text-ink-soft">
+      Map unavailable
+    </div>
+  );
+  if (googleMapsUrl) {
+    meetingMapMedia = (
+      <iframe
+        title={`Map of ${activity.meetingPoint.name}`}
+        src={googleMapsUrl}
+        className="mt-3 h-[204px] w-full rounded-xl border-0"
+        loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+      />
+    );
+  } else if (activity.meetingPoint.mapImageUrl) {
+    meetingMapMedia = (
+      <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
+        <Image
+          src={activity.meetingPoint.mapImageUrl}
+          alt={`Map of ${activity.meetingPoint.name}`}
+          fill
+          sizes="(max-width: 448px) 100vw, 448px"
+          className="object-cover"
+        />
       </div>
     );
   }
@@ -113,7 +184,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
                 <h3 className="font-display text-sm font-semibold text-forest">
                   {activity.meetingPoint.name}
                 </h3>
-                <p className="text-xs text-ink-soft">{activity.meetingPoint.area}</p>
+                {meetingAddress ? <p className="text-xs text-ink-soft">{meetingAddress}</p> : null}
               </div>
             </div>
           </section>
@@ -168,22 +239,8 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
             <p className="mt-3 font-display text-sm font-semibold text-forest">
               {activity.meetingPoint.name}
             </p>
-            <p className="text-xs text-ink-soft">{activity.meetingPoint.area}</p>
-            {activity.meetingPoint.mapImageUrl ? (
-              <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
-                <Image
-                  src={activity.meetingPoint.mapImageUrl}
-                  alt={`Map of ${activity.meetingPoint.name}`}
-                  fill
-                  sizes="(max-width: 448px) 100vw, 448px"
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="mt-3 flex h-[204px] w-full items-center justify-center rounded-xl bg-line/60 text-sm text-ink-soft">
-                Map unavailable
-              </div>
-            )}
+            {meetingAddress ? <p className="text-xs text-ink-soft">{meetingAddress}</p> : null}
+            {meetingMapMedia}
           </section>
         </div>
       </main>
@@ -203,7 +260,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
         </div>
         <Link
           href={`/activities/${activity.id}/book`}
-          className="flex h-11 items-center justify-center rounded-xl bg-forest px-8 font-display text-sm font-semibold text-cream"
+          className="flex h-11 items-center justify-center rounded-xl bg-forest px-8 font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
         >
           Apply Now
         </Link>

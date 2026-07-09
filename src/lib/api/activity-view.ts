@@ -49,7 +49,8 @@ export function mapTouristActivityDetailToActivity(detail: TouristActivityDetail
     })),
     meetingPoint: {
       name: detail.meetingPointName,
-      area: detail.meetingPointAddress,
+      area: detail.meetingPointAddress ?? detail.meetingPointName,
+      placeId: detail.meetingPlaceId,
     },
   };
 }

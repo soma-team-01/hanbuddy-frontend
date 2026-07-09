@@ -206,7 +206,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
           <section className="flex flex-col items-center gap-3">
             <div className="relative">
               {profilePhoto}
-              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream">
+              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-forest-soft">
                 <CameraIcon className="size-4" />
                 <span className="sr-only">Add profile photo</span>
                 <input
@@ -242,8 +242,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                     type="button"
                     aria-pressed={isSelected}
                     onClick={() => handleRoleChange(key)}
-                    className={`h-12 flex-1 font-display text-sm font-semibold ${
-                      isSelected ? "bg-forest text-cream" : "bg-white text-ink"
+                    className={`h-12 flex-1 font-display text-sm font-semibold transition-colors ${
+                      isSelected ? "bg-forest text-cream" : "bg-white text-ink hover:bg-chip"
                     }`}
                   >
                     {label}
@@ -314,7 +314,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
           form="google-onboarding-form"
           type="submit"
           disabled={isSubmitting}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-forest font-display text-base font-semibold text-cream disabled:opacity-60"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-forest font-display text-base font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-60"
         >
           {isSubmitting ? "Completing..." : "Complete Registration"}
           <ArrowRightIcon className="size-4" />

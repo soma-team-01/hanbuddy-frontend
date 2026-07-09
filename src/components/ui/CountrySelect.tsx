@@ -96,7 +96,7 @@ export function CountrySelect({
         onClick={() => (isOpen ? setIsOpen(false) : open())}
         className={
           triggerClassName ??
-          "flex w-full items-center justify-between gap-2 rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
+          "flex w-full items-center justify-between gap-2 rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong"
         }
       >
         {selected ? (

@@ -60,7 +60,11 @@ export function ActivityFeed() {
   return (
     <>
       {activities.map((activity) => (
-        <Link key={activity.id} href={`/activities/${activity.id}`}>
+        <Link
+          key={activity.id}
+          href={`/activities/${activity.id}`}
+          className="block rounded-xl transition-shadow hover:shadow-md"
+        >
           <ActivityCard activity={activity} />
         </Link>
       ))}

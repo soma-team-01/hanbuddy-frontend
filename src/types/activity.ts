@@ -19,6 +19,7 @@ export interface Session {
 export interface MeetingPoint {
   name: string;
   area: string;
+  placeId?: string;
   mapImageUrl?: string;
 }
 
@@ -75,7 +76,7 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   buddyId: number;
   includedItems: string[];
   restrictionNotes: string[];
-  meetingPointAddress: string;
+  meetingPointAddress?: string;
   meetingPlaceId: string;
   images: ActivityImageResponse[];
   schedules: TouristActivitySchedule[];

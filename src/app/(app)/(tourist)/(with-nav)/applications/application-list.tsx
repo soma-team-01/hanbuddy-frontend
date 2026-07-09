@@ -29,7 +29,7 @@ function PriceBreakdown({ application }: Readonly<{ application: Application }>)
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-sm text-ink-soft"
+        className="flex w-full items-center justify-between text-sm text-ink-soft transition-colors hover:text-ink"
       >
         Price Breakdown
         <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -91,7 +91,7 @@ function ApplicationCard({
       {application.status === "pending_payment" && (
         <button
           type="button"
-          className="h-11 w-full rounded-lg bg-forest font-display text-sm font-semibold text-cream"
+          className="h-11 w-full rounded-lg bg-forest font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
         >
           Pay Now
         </button>
@@ -100,7 +100,7 @@ function ApplicationCard({
         <button
           type="button"
           onClick={onCancel}
-          className="h-11 w-full rounded-lg bg-forest font-display text-sm font-semibold text-cream"
+          className="h-11 w-full rounded-lg bg-forest font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
         >
           Cancel
         </button>
@@ -108,7 +108,7 @@ function ApplicationCard({
       {isCompleted && (
         <button
           type="button"
-          className="h-11 w-full rounded-lg border border-line bg-chip font-display text-sm font-semibold text-ink-soft"
+          className="h-11 w-full rounded-lg border border-line bg-chip font-display text-sm font-semibold text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
         >
           Leave Review
         </button>
@@ -148,8 +148,10 @@ export function ApplicationList({
               role="tab"
               aria-selected={isActive}
               onClick={() => setTab(key)}
-              className={`-mb-px border-b-2 pb-3 font-display text-sm font-semibold ${
-                isActive ? "border-forest text-forest" : "border-transparent text-ink-soft"
+              className={`-mb-px border-b-2 pb-3 font-display text-sm font-semibold transition-colors ${
+                isActive
+                  ? "border-forest text-forest"
+                  : "border-transparent text-ink-soft hover:text-ink"
               }`}
             >
               {label}

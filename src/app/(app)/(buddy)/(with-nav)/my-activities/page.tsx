@@ -15,7 +15,7 @@ export default function MyActivitiesPage() {
 
         <Link
           href="/my-activities/create"
-          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-forest font-display text-sm font-semibold text-cream"
+          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
         >
           <PlusIcon className="size-4" />
           Create Activity

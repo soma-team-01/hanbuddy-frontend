@@ -587,27 +587,25 @@ export function CreateActivityForm() {
             </label>
             <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
             {placePredictions.length > 0 ? (
-              <div
-                role="listbox"
+              <ul
                 aria-label="Google place results"
                 className="overflow-hidden rounded-xl border border-line bg-white"
               >
                 {placePredictions.map((prediction) => (
-                  <button
-                    key={prediction.placeId}
-                    type="button"
-                    role="option"
-                    aria-selected={prediction.placeId === meetingPlaceId}
-                    onClick={() => handlePlaceSelect(prediction)}
-                    className="flex w-full flex-col items-start px-4 py-3 text-left hover:bg-chip"
-                  >
-                    <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
-                    {prediction.secondaryText ? (
-                      <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
-                    ) : null}
-                  </button>
+                  <li key={prediction.placeId}>
+                    <button
+                      type="button"
+                      onClick={() => handlePlaceSelect(prediction)}
+                      className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-chip"
+                    >
+                      <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
+                      {prediction.secondaryText ? (
+                        <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
+                      ) : null}
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             ) : null}
             {isSearchingPlaces ? (
               <p className="px-1 text-xs text-ink-soft">Searching places...</p>

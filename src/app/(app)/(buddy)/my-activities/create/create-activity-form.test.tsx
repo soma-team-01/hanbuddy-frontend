@@ -47,7 +47,7 @@ async function selectGooglePlace() {
   fireEvent.change(screen.getByLabelText("Search Google place"), {
     target: { value: "Anguk" },
   });
-  fireEvent.click(await screen.findByRole("option", { name: /Anguk Station/ }));
+  fireEvent.click(await screen.findByRole("button", { name: /Anguk Station/ }));
 }
 
 function uploadActivityPhoto(

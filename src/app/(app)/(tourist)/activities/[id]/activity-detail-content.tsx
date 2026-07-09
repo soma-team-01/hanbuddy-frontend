@@ -109,6 +109,36 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, getGoogleMapsApiKey())
     : "";
 
+  let meetingMapMedia: React.ReactNode = (
+    <div className="mt-3 flex h-[204px] w-full items-center justify-center rounded-xl bg-line/60 text-sm text-ink-soft">
+      Map unavailable
+    </div>
+  );
+  if (googleMapsUrl) {
+    meetingMapMedia = (
+      <iframe
+        title={`Map of ${activity.meetingPoint.name}`}
+        src={googleMapsUrl}
+        className="mt-3 h-[204px] w-full rounded-xl border-0"
+        loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+      />
+    );
+  } else if (activity.meetingPoint.mapImageUrl) {
+    meetingMapMedia = (
+      <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
+        <Image
+          src={activity.meetingPoint.mapImageUrl}
+          alt={`Map of ${activity.meetingPoint.name}`}
+          fill
+          sizes="(max-width: 448px) 100vw, 448px"
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-1 flex-col pb-28">
       <TopAppBar backHref="/explore" />
@@ -210,30 +240,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
               {activity.meetingPoint.name}
             </p>
             {meetingAddress ? <p className="text-xs text-ink-soft">{meetingAddress}</p> : null}
-            {googleMapsUrl ? (
-              <iframe
-                title={`Map of ${activity.meetingPoint.name}`}
-                src={googleMapsUrl}
-                className="mt-3 h-[204px] w-full rounded-xl border-0"
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            ) : activity.meetingPoint.mapImageUrl ? (
-              <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
-                <Image
-                  src={activity.meetingPoint.mapImageUrl}
-                  alt={`Map of ${activity.meetingPoint.name}`}
-                  fill
-                  sizes="(max-width: 448px) 100vw, 448px"
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="mt-3 flex h-[204px] w-full items-center justify-center rounded-xl bg-line/60 text-sm text-ink-soft">
-                Map unavailable
-              </div>
-            )}
+            {meetingMapMedia}
           </section>
         </div>
       </main>

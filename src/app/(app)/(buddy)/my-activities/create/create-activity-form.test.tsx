@@ -38,9 +38,9 @@ const createObjectUrlMock = vi.fn((file: Blob) =>
 );
 const revokeObjectUrlMock = vi.fn();
 
-function confirmPublishInDialog() {
+function confirmRegisterInDialog() {
   const dialog = screen.getByRole("dialog");
-  fireEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Register" }));
 }
 
 async function selectGooglePlace() {
@@ -50,17 +50,28 @@ async function selectGooglePlace() {
   fireEvent.click(await screen.findByRole("option", { name: /Anguk Station/ }));
 }
 
-async function fillRequiredTextFields() {
+function uploadActivityPhoto(
+  file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" }),
+) {
+  fireEvent.change(screen.getByLabelText("Activity photos"), {
+    target: { files: [file] },
+  });
+  return file;
+}
+
+function fillStepOneFields(file?: File) {
+  const selectedFile = uploadActivityPhoto(file);
   fireEvent.change(screen.getByLabelText("Activity Title"), {
     target: { value: "Traditional Tea Tasting" },
   });
   fireEvent.change(screen.getByLabelText("Description"), {
     target: { value: "Learn Korean tea etiquette." },
   });
-  fireEvent.change(screen.getByLabelText("Included item"), {
-    target: { value: "Tea" },
-  });
-  fireEvent.change(screen.getByLabelText("Available schedule"), {
+  return selectedFile;
+}
+
+function fillStepTwoFields() {
+  fireEvent.change(screen.getAllByLabelText("Available schedule")[0], {
     target: { value: "2026-07-20T10:00" },
   });
   fireEvent.change(screen.getByLabelText("Max Capacity"), {
@@ -69,18 +80,36 @@ async function fillRequiredTextFields() {
   fireEvent.change(screen.getByLabelText("Price per person"), {
     target: { value: "50000" },
   });
+}
+
+async function fillStepThreeFields() {
+  fireEvent.change(screen.getByLabelText("Included item"), {
+    target: { value: "Tea" },
+  });
   fireEvent.change(screen.getByLabelText("Meeting place name"), {
     target: { value: "Anguk Station" },
   });
   await selectGooglePlace();
 }
 
+function goToStepTwo(file?: File) {
+  const selectedFile = fillStepOneFields(file);
+  fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+  expect(screen.getByRole("heading", { name: "Schedule & Pricing" })).toBeInTheDocument();
+  return selectedFile;
+}
+
+function goToStepThree(file?: File) {
+  const selectedFile = goToStepTwo(file);
+  fillStepTwoFields();
+  fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+  expect(screen.getByRole("heading", { name: "Meeting Details" })).toBeInTheDocument();
+  return selectedFile;
+}
+
 async function fillRequiredFields() {
-  const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
-  fireEvent.change(screen.getByLabelText("Activity photos"), {
-    target: { files: [file] },
-  });
-  await fillRequiredTextFields();
+  const file = goToStepThree();
+  await fillStepThreeFields();
   return file;
 }
 
@@ -115,6 +144,8 @@ describe("CreateActivityForm", () => {
   it("puts the searchable Google place field before the guide meeting point name", () => {
     render(<CreateActivityForm />);
 
+    goToStepThree();
+
     const googlePlaceSearch = screen.getByRole("textbox", { name: "Search Google place" });
     const meetingPlaceName = screen.getByRole("textbox", { name: "Meeting place name" });
 
@@ -127,6 +158,7 @@ describe("CreateActivityForm", () => {
   it("shows the selected Google place name in the search field and address below it", async () => {
     render(<CreateActivityForm />);
 
+    goToStepThree();
     await selectGooglePlace();
 
     expect(screen.getByRole("textbox", { name: "Search Google place" })).toHaveValue(
@@ -134,6 +166,40 @@ describe("CreateActivityForm", () => {
     );
     expect(screen.getByText("Seoul, South Korea")).toBeInTheDocument();
     expect(screen.queryByText("Anguk Station, Seoul, South Korea")).not.toBeInTheDocument();
+  });
+
+  it("uses three registration steps and removes the draft action", () => {
+    render(<CreateActivityForm />);
+
+    expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Activity Basics" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next Step" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save Draft" })).not.toBeInTheDocument();
+
+    goToStepTwo();
+
+    expect(screen.getByText("Step 2 of 3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous Step" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next Step" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save Draft" })).not.toBeInTheDocument();
+
+    fillStepTwoFields();
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+
+    expect(screen.getByText("Step 3 of 3")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Meeting Details" })).toBeInTheDocument();
+    expect(screen.queryByText("Search Google place")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous Step" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Register Activity" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save Draft" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous Step" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous Step" }));
+
+    expect(screen.getByRole("textbox", { name: "Activity Title" })).toHaveValue(
+      "Traditional Tea Tasting",
+    );
   });
 
   it("uploads activity images and creates a published activity", async () => {
@@ -173,8 +239,8 @@ describe("CreateActivityForm", () => {
       target: { value: "No caffeine sensitivity" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
-    confirmPublishInDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
 
     await waitFor(() => expect(mockedUploadActivityImages).toHaveBeenCalledWith([file]));
     expect(mockedCreateMyActivity).toHaveBeenCalledWith({
@@ -247,15 +313,24 @@ describe("CreateActivityForm", () => {
     expect(screen.getByText("1 selected")).toBeInTheDocument();
     expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:tea.webp");
 
-    await fillRequiredTextFields();
+    fireEvent.change(screen.getByLabelText("Activity Title"), {
+      target: { value: "Traditional Tea Tasting" },
+    });
+    fireEvent.change(screen.getByLabelText("Description"), {
+      target: { value: "Learn Korean tea etiquette." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+    fillStepTwoFields();
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+    await fillStepThreeFields();
 
-    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
-    confirmPublishInDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
 
     await waitFor(() => expect(mockedUploadActivityImages).toHaveBeenCalledWith([marketFile]));
   });
 
-  it("blocks submission until at least one activity photo is selected", async () => {
+  it("blocks moving past the first step until at least one activity photo is selected", async () => {
     render(<CreateActivityForm />);
 
     fireEvent.change(screen.getByLabelText("Activity Title"), {
@@ -264,27 +339,13 @@ describe("CreateActivityForm", () => {
     fireEvent.change(screen.getByLabelText("Description"), {
       target: { value: "Learn Korean tea etiquette." },
     });
-    fireEvent.change(screen.getByLabelText("Included item"), {
-      target: { value: "Tea" },
-    });
-    fireEvent.change(screen.getByLabelText("Available schedule"), {
-      target: { value: "2026-07-20T10:00" },
-    });
-    fireEvent.change(screen.getByLabelText("Max Capacity"), {
-      target: { value: "4" },
-    });
-    fireEvent.change(screen.getByLabelText("Price per person"), {
-      target: { value: "50000" },
-    });
-    fireEvent.change(screen.getByLabelText("Meeting place name"), {
-      target: { value: "Anguk Station" },
-    });
 
-    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Please select at least one activity photo.",
     );
+    expect(screen.getByRole("heading", { name: "Activity Basics" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(mockedUploadActivityImages).not.toHaveBeenCalled();
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
@@ -295,56 +356,12 @@ describe("CreateActivityForm", () => {
 
     await fillRequiredFields();
 
-    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(mockedUploadActivityImages).not.toHaveBeenCalled();
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("saves a draft without asking for confirmation", async () => {
-    mockedUploadActivityImages.mockResolvedValue([
-      {
-        uploadUrl: "https://bucket.s3.amazonaws.com/activities/tea.webp?signed",
-        imageKey: "activities/2026/07/07/tea.webp",
-        imageUrl: "https://static.hanbuddy.com/activities/tea.webp",
-        expiresInSeconds: 300,
-      },
-    ]);
-    mockedCreateMyActivity.mockResolvedValue({
-      status: "success",
-      activity: {
-        activityId: 42,
-        title: "Traditional Tea Tasting",
-        description: "Learn Korean tea etiquette.",
-        thumbnailImageUrl: null,
-        status: "DRAFT",
-        includedItems: [],
-        restrictionNotes: [],
-        maxCapacity: 4,
-        price: 50000,
-        currency: "KRW",
-        meetingPointName: "Anguk Station",
-        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
-        meetingPlaceId: "ChIJ-anguk",
-        images: [],
-        schedules: [],
-      },
-    });
-
-    render(<CreateActivityForm />);
-
-    await fillRequiredFields();
-
-    fireEvent.click(screen.getByRole("button", { name: "Save Draft" }));
-
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    await waitFor(() =>
-      expect(mockedCreateMyActivity).toHaveBeenCalledWith(
-        expect.objectContaining({ status: "DRAFT" }),
-      ),
-    );
   });
 
   it("leaves immediately when going back with an untouched form", () => {
@@ -379,7 +396,7 @@ describe("CreateActivityForm", () => {
       target: { value: "Traditional Tea Tasting" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Go back" }));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
 
     expect(routerMock.push).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Activity Title")).toHaveValue("Traditional Tea Tasting");
@@ -391,8 +408,8 @@ describe("CreateActivityForm", () => {
     render(<CreateActivityForm />);
 
     await fillRequiredFields();
-    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
-    confirmPublishInDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
 
     fireEvent.click(screen.getByRole("button", { name: "Go back" }));
 
@@ -448,19 +465,7 @@ describe("CreateActivityForm", () => {
 
     render(<CreateActivityForm />);
 
-    const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
-    fireEvent.change(screen.getByLabelText("Activity photos"), {
-      target: { files: [file] },
-    });
-    fireEvent.change(screen.getByLabelText("Activity Title"), {
-      target: { value: "Traditional Tea Tasting" },
-    });
-    fireEvent.change(screen.getByLabelText("Description"), {
-      target: { value: "Learn Korean tea etiquette." },
-    });
-    fireEvent.change(screen.getByLabelText("Included item"), {
-      target: { value: "Tea" },
-    });
+    goToStepTwo();
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
 
@@ -473,13 +478,11 @@ describe("CreateActivityForm", () => {
     fireEvent.change(screen.getByLabelText("Price per person"), {
       target: { value: "50000" },
     });
-    fireEvent.change(screen.getByLabelText("Meeting place name"), {
-      target: { value: "Anguk Station" },
-    });
-    await selectGooglePlace();
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+    await fillStepThreeFields();
 
-    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
-    confirmPublishInDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
 
     await waitFor(() =>
       expect(mockedCreateMyActivity).toHaveBeenCalledWith(
@@ -525,14 +528,20 @@ describe("CreateActivityForm", () => {
 
     render(<CreateActivityForm />);
 
-    await fillRequiredFields();
-    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
-    fireEvent.change(screen.getAllByLabelText("Included item")[1], {
-      target: { value: "Extra snack" },
-    });
+    goToStepTwo();
+    fillStepTwoFields();
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
     fireEvent.change(screen.getAllByLabelText("Available schedule")[1], {
       target: { value: "2026-07-21T11:00" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Remove time slot 2" }));
+    expect(screen.getAllByLabelText("Available schedule")).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+    await fillStepThreeFields();
+    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
+    fireEvent.change(screen.getAllByLabelText("Included item")[1], {
+      target: { value: "Extra snack" },
     });
     fireEvent.click(screen.getByRole("button", { name: "+ Add restriction" }));
     fireEvent.change(screen.getAllByLabelText("Restriction")[1], {
@@ -540,15 +549,13 @@ describe("CreateActivityForm", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Remove included item 2" }));
-    fireEvent.click(screen.getByRole("button", { name: "Remove time slot 2" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove restriction 2" }));
 
     expect(screen.getAllByLabelText("Included item")).toHaveLength(1);
-    expect(screen.getAllByLabelText("Available schedule")).toHaveLength(1);
     expect(screen.getAllByLabelText("Restriction")).toHaveLength(1);
 
-    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
-    confirmPublishInDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
 
     await waitFor(() =>
       expect(mockedCreateMyActivity).toHaveBeenCalledWith(
@@ -564,10 +571,14 @@ describe("CreateActivityForm", () => {
   it("shows hover background feedback on add row buttons", () => {
     render(<CreateActivityForm />);
 
-    expect(screen.getByRole("button", { name: "+ Add item" })).toHaveClass("hover:bg-earth/10");
+    goToStepTwo();
     expect(screen.getByRole("button", { name: "+ Add time slot" })).toHaveClass(
       "hover:bg-earth/10",
     );
+    fillStepTwoFields();
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+
+    expect(screen.getByRole("button", { name: "+ Add item" })).toHaveClass("hover:bg-earth/10");
     expect(screen.getByRole("button", { name: "+ Add restriction" })).toHaveClass(
       "hover:bg-earth/10",
     );
@@ -576,16 +587,25 @@ describe("CreateActivityForm", () => {
   it("puts remove buttons inside rows from the second dynamic row onward", () => {
     render(<CreateActivityForm />);
 
-    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
+    goToStepTwo();
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
+    expect(screen.queryByRole("button", { name: "Remove time slot 1" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove time slot 2" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove time slot 2" })).toHaveClass(
+      "absolute",
+      "right-2",
+    );
+    expect(screen.getAllByLabelText("Available schedule")).toHaveLength(2);
+
+    fillStepTwoFields();
+    fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
     fireEvent.click(screen.getByRole("button", { name: "+ Add restriction" }));
 
     expect(
       screen.queryByRole("button", { name: "Remove included item 1" }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove included item 2" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Remove time slot 1" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Remove time slot 2" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove restriction 1" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove restriction 2" })).toBeInTheDocument();
 
@@ -593,14 +613,9 @@ describe("CreateActivityForm", () => {
       "absolute",
       "right-2",
     );
-    expect(screen.getByRole("button", { name: "Remove time slot 2" })).toHaveClass(
-      "absolute",
-      "right-2",
-    );
     expect(screen.getByRole("button", { name: "Remove restriction 2" })).toHaveClass(
       "absolute",
       "right-2",
     );
-    expect(screen.getAllByLabelText("Available schedule")).toHaveLength(2);
   });
 });

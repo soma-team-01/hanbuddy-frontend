@@ -36,6 +36,56 @@ interface SelectedActivityPhoto {
   previewUrl: string;
 }
 
+type CreateActivityStep = 1 | 2 | 3;
+
+interface StepContent {
+  eyebrow: string;
+  title: string;
+  description: string;
+}
+
+type ValidatableControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+const STEP_CONTENT: Record<CreateActivityStep, StepContent> = {
+  1: {
+    eyebrow: "Step 1 of 3",
+    title: "Activity Basics",
+    description: "Add photos and describe the experience guests will discover.",
+  },
+  2: {
+    eyebrow: "Step 2 of 3",
+    title: "Schedule & Pricing",
+    description: "Set when guests can join, how many can attend, and what it costs.",
+  },
+  3: {
+    eyebrow: "Step 3 of 3",
+    title: "Meeting Details",
+    description: "Share the meeting place, included items, and participation limits.",
+  },
+};
+
+const STEP_FIELD_NAMES: Record<CreateActivityStep, string[]> = {
+  1: ["title", "description"],
+  2: ["scheduleDateTime", "maxCapacity", "price"],
+  3: ["meetingPointName", "includedItems"],
+};
+
+function getNextStep(step: CreateActivityStep): CreateActivityStep {
+  return step === 1 ? 2 : 3;
+}
+
+function getPreviousStep(step: CreateActivityStep): CreateActivityStep {
+  return step === 3 ? 2 : 1;
+}
+
+function isValidatableControl(element: Element): element is ValidatableControl {
+  return (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement ||
+    element instanceof HTMLSelectElement
+  );
+}
+
 function getNextRowKey(rows: number[]) {
   return rows.length === 0 ? 0 : Math.max(...rows) + 1;
 }
@@ -86,6 +136,8 @@ function buildSchedules(formData: FormData) {
 
 export function CreateActivityForm() {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
   const [includedItems, setIncludedItems] = useState<number[]>([0]);
   const [timeSlots, setTimeSlots] = useState<number[]>([0]);
   const [restrictions, setRestrictions] = useState<number[]>([0]);
@@ -153,6 +205,7 @@ export function CreateActivityForm() {
   }, [meetingPlaceQuery, selectedMeetingPlaceLabel]);
 
   const selectedFiles = selectedPhotos.map((photo) => photo.file);
+  const stepContent = STEP_CONTENT[currentStep];
 
   function handleBack() {
     // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
@@ -164,27 +217,62 @@ export function CreateActivityForm() {
     router.push("/my-activities");
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
-    const status: MyActivityStatus = submitter?.value === "DRAFT" ? "DRAFT" : "ACTIVE";
-    const formData = new FormData(event.currentTarget);
+  function validateNamedControls(fieldNames: string[]) {
+    const form = formRef.current;
+    if (!form) return false;
 
+    const controls = Array.from(form.elements).filter(isValidatableControl);
+    for (const fieldName of fieldNames) {
+      for (const control of controls.filter((element) => element.name === fieldName)) {
+        if (!control.checkValidity()) {
+          control.reportValidity();
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function validateStep(step: CreateActivityStep) {
     setErrorMessage("");
-    if (selectedFiles.length === 0) {
+    if (step === 1 && selectedFiles.length === 0) {
       setErrorMessage("Please select at least one activity photo.");
-      return;
+      return false;
     }
-    if (!getString(formData, "meetingPlaceId")) {
+    if (!validateNamedControls(STEP_FIELD_NAMES[step])) {
+      return false;
+    }
+    if (step === 3 && !meetingPlaceId) {
       setErrorMessage("Please select a Google place from the results.");
-      return;
+      return false;
     }
+    return true;
+  }
 
-    if (status === "ACTIVE") {
-      setPendingPublish(formData);
+  function goToNextStep() {
+    if (!validateStep(currentStep)) return;
+    setCurrentStep(getNextStep(currentStep));
+  }
+
+  function goToPreviousStep() {
+    setErrorMessage("");
+    setCurrentStep(getPreviousStep(currentStep));
+  }
+
+  function handleRegisterClick() {
+    if (!validateStep(3)) return;
+    const form = formRef.current;
+    if (!form) return;
+    setPendingPublish(new FormData(form));
+  }
+
+  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (currentStep === 3) {
+      handleRegisterClick();
       return;
     }
-    await submitActivity(status, formData);
+    goToNextStep();
   }
 
   async function submitActivity(status: MyActivityStatus, formData: FormData) {
@@ -225,7 +313,7 @@ export function CreateActivityForm() {
 
       router.push("/my-activities");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to save the activity.");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to register the activity.");
       setSubmittingStatus(null);
     }
   }
@@ -320,7 +408,9 @@ export function CreateActivityForm() {
 
   return (
     <form
-      onSubmit={handleSubmit}
+      ref={formRef}
+      noValidate
+      onSubmit={handleFormSubmit}
       onChange={() => setIsDirty(true)}
       className="flex flex-1 flex-col pb-28"
     >
@@ -328,12 +418,12 @@ export function CreateActivityForm() {
       <main className="flex flex-1 flex-col gap-6 px-4 py-8">
         <div>
           <p className="font-display text-xs font-semibold tracking-widest text-earth uppercase">
-            Step 1 of 3
+            {stepContent.eyebrow}
           </p>
-          <h1 className="mt-2 font-display text-3xl font-semibold text-forest">Activity Basics</h1>
-          <p className="mt-2 text-ink-soft">
-            Start by providing the fundamental details of your cultural experience.
-          </p>
+          <h1 className="mt-2 font-display text-3xl font-semibold text-forest">
+            {stepContent.title}
+          </h1>
+          <p className="mt-2 text-ink-soft">{stepContent.description}</p>
         </div>
 
         {errorMessage ? (
@@ -345,286 +435,289 @@ export function CreateActivityForm() {
           </p>
         ) : null}
 
-        <div className="flex flex-col gap-3">
-          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-white/60 px-6 py-14 text-ink-soft">
+        <section hidden={currentStep !== 1} className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
+            <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-white/60 px-6 py-14 text-ink-soft">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                aria-label="Activity photos"
+                className="sr-only"
+                onChange={handlePhotoSelection}
+              />
+              <ImagePlusIcon className="size-8" />
+              <span className="font-display text-sm font-semibold text-ink">
+                Click to upload activity photos
+              </span>
+              <span className="text-xs">
+                {selectedFiles.length > 0
+                  ? `${selectedFiles.length} selected`
+                  : "PNG, JPG, WebP up to 8 files"}
+              </span>
+            </label>
+
+            {selectedPhotos.length > 0 ? (
+              <ul aria-label="Selected activity photos" className="grid grid-cols-4 gap-2">
+                {selectedPhotos.map((photo) => (
+                  <li
+                    key={photo.id}
+                    className="relative aspect-square overflow-hidden rounded-xl border border-line bg-white"
+                  >
+                    <Image
+                      src={photo.previewUrl}
+                      alt={photo.file.name}
+                      fill
+                      sizes="72px"
+                      unoptimized
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`Remove photo ${photo.file.name}`}
+                      onClick={() => removeSelectedPhoto(photo.id)}
+                      className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-cream transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                    >
+                      <TrashIcon className="size-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          <label className="flex flex-col gap-2">
+            <FieldLabel>Activity Title</FieldLabel>
             <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              aria-label="Activity photos"
-              className="sr-only"
-              onChange={handlePhotoSelection}
+              type="text"
+              name="title"
+              required
+              placeholder="e.g., Traditional Tea Ceremony Experience"
+              className={INPUT_CLASS}
             />
-            <ImagePlusIcon className="size-8" />
-            <span className="font-display text-sm font-semibold text-ink">
-              Click to upload activity photos
-            </span>
-            <span className="text-xs">
-              {selectedFiles.length > 0
-                ? `${selectedFiles.length} selected`
-                : "PNG, JPG, WebP up to 8 files"}
-            </span>
           </label>
 
-          {selectedPhotos.length > 0 ? (
-            <ul aria-label="Selected activity photos" className="grid grid-cols-4 gap-2">
-              {selectedPhotos.map((photo) => (
-                <li
-                  key={photo.id}
-                  className="relative aspect-square overflow-hidden rounded-xl border border-line bg-white"
-                >
-                  <Image
-                    src={photo.previewUrl}
-                    alt={photo.file.name}
-                    fill
-                    sizes="72px"
-                    unoptimized
-                    className="object-cover"
-                  />
-                  <button
-                    type="button"
-                    aria-label={`Remove photo ${photo.file.name}`}
-                    onClick={() => removeSelectedPhoto(photo.id)}
-                    className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-cream transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
-                  >
-                    <TrashIcon className="size-3.5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-
-        <label className="flex flex-col gap-2">
-          <FieldLabel>Activity Title</FieldLabel>
-          <input
-            type="text"
-            name="title"
-            required
-            placeholder="e.g., Traditional Tea Ceremony Experience"
-            className={INPUT_CLASS}
-          />
-        </label>
-
-        <label className="flex flex-col gap-2">
-          <FieldLabel>Description</FieldLabel>
-          <textarea
-            name="description"
-            required
-            rows={4}
-            placeholder="Describe what participants will do and learn..."
-            className={`${INPUT_CLASS} resize-none`}
-          />
-        </label>
-
-        <div className="flex flex-col gap-2">
-          <FieldLabel>What&apos;s included</FieldLabel>
-          {includedItems.map((key, index) => (
-            <div key={key} className="relative">
-              <input
-                name="includedItems"
-                type="text"
-                required={index === 0}
-                placeholder="e.g., 2 types of traditional tea & refreshments"
-                aria-label="Included item"
-                className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-              />
-              {index > 0 ? (
-                <InlineRemoveButton
-                  ariaLabel={`Remove included item ${index + 1}`}
-                  title="Remove item"
-                  onClick={() => removeIncludedItem(key)}
-                />
-              ) : null}
-            </div>
-          ))}
-          <button type="button" onClick={addIncludedItem} className={ADD_ROW_BUTTON_CLASS}>
-            + Add item
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <FieldLabel>Availability</FieldLabel>
-          {timeSlots.map((key, index) => (
-            <div key={key} className="relative">
-              <input
-                name="scheduleDateTime"
-                type="datetime-local"
-                required={index === 0}
-                aria-label="Available schedule"
-                className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-              />
-              {index > 0 ? (
-                <InlineRemoveButton
-                  ariaLabel={`Remove time slot ${index + 1}`}
-                  title="Remove time slot"
-                  onClick={() => removeTimeSlot(key)}
-                />
-              ) : null}
-            </div>
-          ))}
-          <button type="button" onClick={addTimeSlot} className={ADD_ROW_BUTTON_CLASS}>
-            + Add time slot
-          </button>
-        </div>
-
-        <label className="flex flex-col gap-2">
-          <FieldLabel>Max Capacity</FieldLabel>
-          <span className="relative">
-            <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-soft" />
-            <input
-              name="maxCapacity"
-              type="number"
-              min={1}
-              required
-              placeholder="e.g., 4"
-              className={`${INPUT_CLASS} pl-11`}
-            />
-          </span>
-        </label>
-
-        <label className="flex flex-col gap-2">
-          <FieldLabel>Price per person</FieldLabel>
-          <span className="relative">
-            <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-ink-soft">
-              ₩
-            </span>
-            <input
-              name="price"
-              type="number"
-              min={0}
-              required
-              aria-label="Price per person"
-              placeholder="e.g., 50000"
-              className={`${INPUT_CLASS} pl-11`}
-            />
-          </span>
-        </label>
-
-        <div className="flex flex-col gap-2">
-          <FieldLabel>Meeting Point</FieldLabel>
           <label className="flex flex-col gap-2">
-            <FieldLabel>Search Google place</FieldLabel>
+            <FieldLabel>Description</FieldLabel>
+            <textarea
+              name="description"
+              required
+              rows={4}
+              placeholder="Describe what participants will do and learn..."
+              className={`${INPUT_CLASS} resize-none`}
+            />
+          </label>
+        </section>
+
+        <section hidden={currentStep !== 2} className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <FieldLabel>Availability</FieldLabel>
+            {timeSlots.map((key, index) => (
+              <div key={key} className="relative">
+                <input
+                  name="scheduleDateTime"
+                  type="datetime-local"
+                  required={index === 0}
+                  aria-label="Available schedule"
+                  className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                />
+                {index > 0 ? (
+                  <InlineRemoveButton
+                    ariaLabel={`Remove time slot ${index + 1}`}
+                    title="Remove time slot"
+                    onClick={() => removeTimeSlot(key)}
+                  />
+                ) : null}
+              </div>
+            ))}
+            <button type="button" onClick={addTimeSlot} className={ADD_ROW_BUTTON_CLASS}>
+              + Add time slot
+            </button>
+          </div>
+
+          <label className="flex flex-col gap-2">
+            <FieldLabel>Max Capacity</FieldLabel>
             <span className="relative">
-              <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-soft" />
+              <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-soft" />
               <input
-                type="text"
-                value={meetingPlaceQuery}
-                onChange={handlePlaceQueryChange}
-                placeholder="e.g., Anguk Station"
-                aria-label="Search Google place"
+                name="maxCapacity"
+                type="number"
+                min={1}
+                required
+                placeholder="e.g., 4"
                 className={`${INPUT_CLASS} pl-11`}
               />
             </span>
           </label>
-          <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
-          {placePredictions.length > 0 ? (
-            <div
-              role="listbox"
-              aria-label="Google place results"
-              className="overflow-hidden rounded-xl border border-line bg-white"
-            >
-              {placePredictions.map((prediction) => (
-                <button
-                  key={prediction.placeId}
-                  type="button"
-                  role="option"
-                  aria-selected={prediction.placeId === meetingPlaceId}
-                  onClick={() => handlePlaceSelect(prediction)}
-                  className="flex w-full flex-col items-start px-4 py-3 text-left hover:bg-chip"
-                >
-                  <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
-                  {prediction.secondaryText ? (
-                    <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          {isSearchingPlaces ? (
-            <p className="px-1 text-xs text-ink-soft">Searching places...</p>
-          ) : null}
-          {selectedMeetingPlaceAddress ? (
-            <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress}</p>
-          ) : null}
-          {meetingMapUrl ? (
-            <iframe
-              title="Meeting place map preview"
-              src={meetingMapUrl}
-              className="h-40 w-full rounded-xl border-0"
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
-          ) : (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
-              <MapIcon className="size-6" />
-              <span className="text-sm">Map preview will appear here</span>
-            </div>
-          )}
-          <label className="mt-2 flex flex-col gap-2">
-            <FieldLabel>Meeting point name</FieldLabel>
-            <input
-              name="meetingPointName"
-              type="text"
-              required
-              placeholder="e.g., Main ticket booth by Gate 1"
-              aria-label="Meeting place name"
-              className={INPUT_CLASS}
-            />
-          </label>
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <FieldLabel>Who cannot join</FieldLabel>
-          {restrictions.map((key, index) => (
-            <div key={key} className="relative">
+          <label className="flex flex-col gap-2">
+            <FieldLabel>Price per person</FieldLabel>
+            <span className="relative">
+              <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-ink-soft">
+                ₩
+              </span>
               <input
-                name="restrictionNotes"
-                type="text"
-                placeholder="e.g., People with mobility difficulties"
-                aria-label="Restriction"
-                className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                name="price"
+                type="number"
+                min={0}
+                required
+                aria-label="Price per person"
+                placeholder="e.g., 50000"
+                className={`${INPUT_CLASS} pl-11`}
               />
-              {index > 0 ? (
-                <InlineRemoveButton
-                  ariaLabel={`Remove restriction ${index + 1}`}
-                  title="Remove restriction"
-                  onClick={() => removeRestriction(key)}
+            </span>
+          </label>
+        </section>
+
+        <section hidden={currentStep !== 3} className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <FieldLabel>Meeting Point</FieldLabel>
+            <label className="flex flex-col">
+              <span className="relative">
+                <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-soft" />
+                <input
+                  type="text"
+                  value={meetingPlaceQuery}
+                  onChange={handlePlaceQueryChange}
+                  placeholder="e.g., Anguk Station"
+                  aria-label="Search Google place"
+                  className={`${INPUT_CLASS} pl-11`}
                 />
-              ) : null}
-            </div>
-          ))}
-          <button type="button" onClick={addRestriction} className={ADD_ROW_BUTTON_CLASS}>
-            + Add restriction
-          </button>
-        </div>
+              </span>
+            </label>
+            <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
+            {placePredictions.length > 0 ? (
+              <div
+                role="listbox"
+                aria-label="Google place results"
+                className="overflow-hidden rounded-xl border border-line bg-white"
+              >
+                {placePredictions.map((prediction) => (
+                  <button
+                    key={prediction.placeId}
+                    type="button"
+                    role="option"
+                    aria-selected={prediction.placeId === meetingPlaceId}
+                    onClick={() => handlePlaceSelect(prediction)}
+                    className="flex w-full flex-col items-start px-4 py-3 text-left hover:bg-chip"
+                  >
+                    <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
+                    {prediction.secondaryText ? (
+                      <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {isSearchingPlaces ? (
+              <p className="px-1 text-xs text-ink-soft">Searching places...</p>
+            ) : null}
+            {selectedMeetingPlaceAddress ? (
+              <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress}</p>
+            ) : null}
+            {meetingMapUrl ? (
+              <iframe
+                title="Meeting place map preview"
+                src={meetingMapUrl}
+                className="h-40 w-full rounded-xl border-0"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            ) : (
+              <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
+                <MapIcon className="size-6" />
+                <span className="text-sm">Map preview will appear here</span>
+              </div>
+            )}
+            <label className="mt-2 flex flex-col gap-2">
+              <FieldLabel>Meeting point name</FieldLabel>
+              <input
+                name="meetingPointName"
+                type="text"
+                required
+                placeholder="e.g., Main ticket booth by Gate 1"
+                aria-label="Meeting place name"
+                className={INPUT_CLASS}
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <FieldLabel>What&apos;s included</FieldLabel>
+            {includedItems.map((key, index) => (
+              <div key={key} className="relative">
+                <input
+                  name="includedItems"
+                  type="text"
+                  required={index === 0}
+                  placeholder="e.g., 2 types of traditional tea & refreshments"
+                  aria-label="Included item"
+                  className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                />
+                {index > 0 ? (
+                  <InlineRemoveButton
+                    ariaLabel={`Remove included item ${index + 1}`}
+                    title="Remove item"
+                    onClick={() => removeIncludedItem(key)}
+                  />
+                ) : null}
+              </div>
+            ))}
+            <button type="button" onClick={addIncludedItem} className={ADD_ROW_BUTTON_CLASS}>
+              + Add item
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <FieldLabel>Who cannot join</FieldLabel>
+            {restrictions.map((key, index) => (
+              <div key={key} className="relative">
+                <input
+                  name="restrictionNotes"
+                  type="text"
+                  placeholder="e.g., People with mobility difficulties"
+                  aria-label="Restriction"
+                  className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                />
+                {index > 0 ? (
+                  <InlineRemoveButton
+                    ariaLabel={`Remove restriction ${index + 1}`}
+                    title="Remove restriction"
+                    onClick={() => removeRestriction(key)}
+                  />
+                ) : null}
+              </div>
+            ))}
+            <button type="button" onClick={addRestriction} className={ADD_ROW_BUTTON_CLASS}>
+              + Add restriction
+            </button>
+          </div>
+        </section>
       </main>
       <BottomActionBar>
         <button
-          type="submit"
-          name="status"
-          value="DRAFT"
+          type="button"
+          onClick={currentStep === 1 ? handleBack : goToPreviousStep}
           disabled={isSubmitting}
           className="h-12 flex-1 rounded-xl border border-line bg-chip font-display text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Save Draft
+          {currentStep === 1 ? "Cancel" : "Previous Step"}
         </button>
         <button
-          type="submit"
-          name="status"
-          value="ACTIVE"
+          type="button"
+          onClick={currentStep === 3 ? handleRegisterClick : goToNextStep}
           disabled={isSubmitting}
           className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Publish Activity
+          {currentStep === 3 ? "Register Activity" : "Next Step"}
         </button>
       </BottomActionBar>
       {pendingPublish && (
         <ConfirmDialog
-          title="Publish this activity?"
+          title="Register this activity?"
           description="You can't edit an activity after publishing."
-          confirmLabel="Publish"
+          confirmLabel="Register"
           onConfirm={() => {
             const formData = pendingPublish;
             setPendingPublish(null);

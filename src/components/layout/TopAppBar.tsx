@@ -7,6 +7,8 @@ interface TopAppBarProps {
   backHref?: string;
   /** 지정하면 왼쪽에 닫기(X) 버튼이 노출된다. backHref가 우선. */
   closeHref?: string;
+  /** 지정하면 뒤로가기를 링크 대신 버튼으로 렌더한다(이탈 가드용). backHref/closeHref보다 우선. */
+  onLeftClick?: () => void;
   /** 오른쪽 슬롯 (예: Save 버튼) */
   action?: React.ReactNode;
 }
@@ -15,6 +17,7 @@ export function TopAppBar({
   title = "HanBuddy",
   backHref,
   closeHref,
+  onLeftClick,
   action,
 }: Readonly<TopAppBarProps>) {
   const leftHref = backHref ?? closeHref;
@@ -22,7 +25,16 @@ export function TopAppBar({
 
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-line bg-cream px-4">
-      {leftHref ? (
+      {onLeftClick ? (
+        <button
+          type="button"
+          aria-label="Go back"
+          onClick={onLeftClick}
+          className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-forest hover:bg-chip"
+        >
+          <ArrowLeftIcon className="size-5" />
+        </button>
+      ) : leftHref ? (
         <Link
           href={leftHref}
           aria-label={backHref ? "Go back" : "Close"}

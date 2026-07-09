@@ -259,6 +259,60 @@ describe("CreateActivityForm", () => {
     );
   });
 
+  it("leaves immediately when going back with an untouched form", () => {
+    render(<CreateActivityForm />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+  });
+
+  it("asks for confirmation before discarding entered input", () => {
+    render(<CreateActivityForm />);
+
+    fireEvent.change(screen.getByLabelText("Activity Title"), {
+      target: { value: "Traditional Tea Tasting" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(routerMock.push).not.toHaveBeenCalled();
+    expect(screen.getByText("Your changes will be lost.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+
+    expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+  });
+
+  it("keeps the form when the discard confirmation is cancelled", () => {
+    render(<CreateActivityForm />);
+
+    fireEvent.change(screen.getByLabelText("Activity Title"), {
+      target: { value: "Traditional Tea Tasting" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(routerMock.push).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Activity Title")).toHaveValue("Traditional Tea Tasting");
+  });
+
+  it("warns on page unload only while the form is dirty", () => {
+    render(<CreateActivityForm />);
+
+    const cleanEvent = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(cleanEvent);
+    expect(cleanEvent.defaultPrevented).toBe(false);
+
+    fireEvent.change(screen.getByLabelText("Activity Title"), {
+      target: { value: "Traditional Tea Tasting" },
+    });
+
+    const dirtyEvent = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(dirtyEvent);
+    expect(dirtyEvent.defaultPrevented).toBe(true);
+  });
+
   it("keeps schedule date and time values paired by row", async () => {
     mockedUploadActivityImages.mockResolvedValue([
       {

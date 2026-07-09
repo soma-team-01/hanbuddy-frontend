@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -54,6 +54,26 @@ export function CreateActivityForm() {
   const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
   const [submittingStatus, setSubmittingStatus] = useState<MyActivityStatus | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  function handleBack() {
+    if (isDirty) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    router.push("/my-activities");
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,8 +140,12 @@ export function CreateActivityForm() {
   const isSubmitting = submittingStatus !== null;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-1 flex-col pb-28">
-      <TopAppBar backHref="/my-activities" />
+    <form
+      onSubmit={handleSubmit}
+      onChange={() => setIsDirty(true)}
+      className="flex flex-1 flex-col pb-28"
+    >
+      <TopAppBar onLeftClick={handleBack} />
       <main className="flex flex-1 flex-col gap-6 px-4 py-8">
         <div>
           <p className="font-display text-xs font-semibold tracking-widest text-earth uppercase">
@@ -344,6 +368,16 @@ export function CreateActivityForm() {
             void submitActivity("ACTIVE", formData);
           }}
           onClose={() => setPendingPublish(null)}
+        />
+      )}
+      {showDiscardConfirm && (
+        <ConfirmDialog
+          title="Discard this activity?"
+          description="Your changes will be lost."
+          confirmLabel="Discard"
+          tone="danger"
+          onConfirm={() => router.push("/my-activities")}
+          onClose={() => setShowDiscardConfirm(false)}
         />
       )}
     </form>

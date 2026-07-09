@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImagePlusIcon, MapIcon, UsersIcon } from "@/components/ui/icons";
 import { createMyActivity } from "@/lib/api/buddy";
 import { uploadActivityImages } from "@/lib/images/presigned";
@@ -50,6 +51,7 @@ export function CreateActivityForm() {
   const [timeSlots, setTimeSlots] = useState<number[]>([0]);
   const [restrictions, setRestrictions] = useState<number[]>([0]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
   const [submittingStatus, setSubmittingStatus] = useState<MyActivityStatus | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -58,8 +60,6 @@ export function CreateActivityForm() {
     const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
     const status: MyActivityStatus = submitter?.value === "DRAFT" ? "DRAFT" : "ACTIVE";
     const formData = new FormData(event.currentTarget);
-    const meetingPointName = getString(formData, "meetingPointName");
-    const meetingPointAddress = getString(formData, "meetingPointAddress");
 
     setErrorMessage("");
     if (selectedFiles.length === 0) {
@@ -67,6 +67,18 @@ export function CreateActivityForm() {
       return;
     }
 
+    if (status === "ACTIVE") {
+      setPendingPublish(formData);
+      return;
+    }
+    await submitActivity(status, formData);
+  }
+
+  async function submitActivity(status: MyActivityStatus, formData: FormData) {
+    const meetingPointName = getString(formData, "meetingPointName");
+    const meetingPointAddress = getString(formData, "meetingPointAddress");
+
+    setErrorMessage("");
     setSubmittingStatus(status);
 
     try {
@@ -321,6 +333,19 @@ export function CreateActivityForm() {
           Publish Activity
         </button>
       </BottomActionBar>
+      {pendingPublish && (
+        <ConfirmDialog
+          title="Publish this activity?"
+          description="You can't edit an activity after publishing."
+          confirmLabel="Publish"
+          onConfirm={() => {
+            const formData = pendingPublish;
+            setPendingPublish(null);
+            void submitActivity("ACTIVE", formData);
+          }}
+          onClose={() => setPendingPublish(null)}
+        />
+      )}
     </form>
   );
 }

@@ -29,6 +29,7 @@ const ADD_ROW_BUTTON_CLASS =
 const INLINE_REMOVE_BUTTON_CLASS =
   "absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
 const MAX_ACTIVITY_PHOTOS = 8;
+const PLACE_SEARCH_DEBOUNCE_MS = 300;
 
 interface SelectedActivityPhoto {
   id: number;
@@ -185,22 +186,26 @@ export function CreateActivityForm() {
 
     let isMounted = true;
 
-    searchGooglePlacePredictions(query, apiKey)
-      .then((predictions) => {
-        if (!isMounted) return;
-        setPlacePredictions(predictions);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setPlacePredictions([]);
-      })
-      .finally(() => {
-        if (!isMounted) return;
-        setIsSearchingPlaces(false);
-      });
+    // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
+    const timeoutId = window.setTimeout(() => {
+      searchGooglePlacePredictions(query, apiKey)
+        .then((predictions) => {
+          if (!isMounted) return;
+          setPlacePredictions(predictions);
+        })
+        .catch(() => {
+          if (!isMounted) return;
+          setPlacePredictions([]);
+        })
+        .finally(() => {
+          if (!isMounted) return;
+          setIsSearchingPlaces(false);
+        });
+    }, PLACE_SEARCH_DEBOUNCE_MS);
 
     return () => {
       isMounted = false;
+      window.clearTimeout(timeoutId);
     };
   }, [meetingPlaceQuery, selectedMeetingPlaceLabel]);
 
@@ -294,7 +299,7 @@ export function CreateActivityForm() {
         price: Number(getString(formData, "price")),
         currency: "KRW",
         meetingPointName,
-        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPointAddress: selectedMeetingPlaceAddress || GOOGLE_PLACE_COMPAT_ADDRESS,
         meetingPlaceId: selectedMeetingPlaceId,
         status,
         schedules: buildSchedules(formData),
@@ -344,30 +349,23 @@ export function CreateActivityForm() {
     event.currentTarget.value = "";
     if (files.length === 0) return;
 
-    setSelectedPhotos((photos) => {
-      const remainingSlots = Math.max(MAX_ACTIVITY_PHOTOS - photos.length, 0);
-      const acceptedFiles = files.slice(0, remainingSlots);
-      const nextPhotos = acceptedFiles.map((file) => ({
-        id: nextPhotoIdRef.current++,
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }));
-      const updatedPhotos = [...photos, ...nextPhotos];
-      selectedPhotosRef.current = updatedPhotos;
-      return updatedPhotos;
-    });
+    // Strict Mode가 updater를 이중 호출해도 blob URL이 누수되지 않도록 부수효과는 updater 밖에서 수행한다
+    const remainingSlots = Math.max(MAX_ACTIVITY_PHOTOS - selectedPhotos.length, 0);
+    const acceptedFiles = files.slice(0, remainingSlots);
+    const nextPhotos = acceptedFiles.map((file) => ({
+      id: nextPhotoIdRef.current++,
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setSelectedPhotos((photos) => [...photos, ...nextPhotos]);
   }
 
   function removeSelectedPhoto(photoId: number) {
-    setSelectedPhotos((photos) => {
-      const removedPhoto = photos.find((photo) => photo.id === photoId);
-      if (!removedPhoto) return photos;
+    const removedPhoto = selectedPhotos.find((photo) => photo.id === photoId);
+    if (!removedPhoto) return;
 
-      URL.revokeObjectURL(removedPhoto.previewUrl);
-      const updatedPhotos = photos.filter((photo) => photo.id !== photoId);
-      selectedPhotosRef.current = updatedPhotos;
-      return updatedPhotos;
-    });
+    URL.revokeObjectURL(removedPhoto.previewUrl);
+    setSelectedPhotos((photos) => photos.filter((photo) => photo.id !== photoId));
     setIsDirty(true);
   }
 

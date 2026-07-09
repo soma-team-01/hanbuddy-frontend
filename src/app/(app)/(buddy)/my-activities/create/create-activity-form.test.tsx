@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity } from "@/lib/api/buddy";
-import { GOOGLE_PLACE_COMPAT_ADDRESS, searchGooglePlacePredictions } from "@/lib/google/places";
+import { searchGooglePlacePredictions } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
 import { CreateActivityForm } from "./create-activity-form";
 
@@ -225,7 +225,7 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
@@ -253,7 +253,7 @@ describe("CreateActivityForm", () => {
       price: 50000,
       currency: "KRW",
       meetingPointName: "Anguk Station",
-      meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+      meetingPointAddress: "Seoul, South Korea",
       meetingPlaceId: "ChIJ-anguk",
       status: "ACTIVE",
       schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
@@ -285,7 +285,7 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
@@ -456,7 +456,7 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
@@ -519,7 +519,7 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],

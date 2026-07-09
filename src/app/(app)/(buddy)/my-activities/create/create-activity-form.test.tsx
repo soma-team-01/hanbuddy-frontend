@@ -60,11 +60,8 @@ async function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText("Included item"), {
     target: { value: "Tea" },
   });
-  fireEvent.change(screen.getByLabelText("Available date"), {
-    target: { value: "2026-07-20" },
-  });
-  fireEvent.change(screen.getByLabelText("Available time"), {
-    target: { value: "10:00" },
+  fireEvent.change(screen.getByLabelText("Available schedule"), {
+    target: { value: "2026-07-20T10:00" },
   });
   fireEvent.change(screen.getByLabelText("Max Capacity"), {
     target: { value: "4" },
@@ -192,11 +189,8 @@ describe("CreateActivityForm", () => {
     fireEvent.change(screen.getByLabelText("Included item"), {
       target: { value: "Tea" },
     });
-    fireEvent.change(screen.getByLabelText("Available date"), {
-      target: { value: "2026-07-20" },
-    });
-    fireEvent.change(screen.getByLabelText("Available time"), {
-      target: { value: "10:00" },
+    fireEvent.change(screen.getByLabelText("Available schedule"), {
+      target: { value: "2026-07-20T10:00" },
     });
     fireEvent.change(screen.getByLabelText("Max Capacity"), {
       target: { value: "4" },
@@ -344,7 +338,7 @@ describe("CreateActivityForm", () => {
     expect(dirtyEvent.defaultPrevented).toBe(true);
   });
 
-  it("keeps schedule date and time values paired by row", async () => {
+  it("builds schedules from datetime rows and skips empty rows", async () => {
     mockedUploadActivityImages.mockResolvedValue([
       {
         uploadUrl: "https://bucket.s3.amazonaws.com/activities/tea.webp?signed",
@@ -392,13 +386,9 @@ describe("CreateActivityForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
 
-    const dateInputs = screen.getAllByLabelText("Available date");
-    const timeInputs = screen.getAllByLabelText("Available time");
-    fireEvent.change(dateInputs[0], { target: { value: "2026-07-20" } });
-    fireEvent.change(timeInputs[0], { target: { value: "10:00" } });
-    fireEvent.change(dateInputs[1], { target: { value: "2026-07-21" } });
-    fireEvent.change(dateInputs[2], { target: { value: "2026-07-22" } });
-    fireEvent.change(timeInputs[2], { target: { value: "14:00" } });
+    const scheduleInputs = screen.getAllByLabelText("Available schedule");
+    fireEvent.change(scheduleInputs[0], { target: { value: "2026-07-20T10:00" } });
+    fireEvent.change(scheduleInputs[2], { target: { value: "2026-07-22T14:00" } });
     fireEvent.change(screen.getByLabelText("Max Capacity"), {
       target: { value: "4" },
     });
@@ -423,5 +413,116 @@ describe("CreateActivityForm", () => {
         }),
       ),
     );
+  });
+
+  it("removes added list rows before submitting", async () => {
+    mockedUploadActivityImages.mockResolvedValue([
+      {
+        uploadUrl: "https://bucket.s3.amazonaws.com/activities/tea.webp?signed",
+        imageKey: "activities/2026/07/07/tea.webp",
+        imageUrl: "https://static.hanbuddy.com/activities/tea.webp",
+        expiresInSeconds: 300,
+      },
+    ]);
+    mockedCreateMyActivity.mockResolvedValue({
+      status: "success",
+      activity: {
+        activityId: 42,
+        title: "Traditional Tea Tasting",
+        description: "Learn Korean tea etiquette.",
+        thumbnailImageUrl: null,
+        status: "ACTIVE",
+        includedItems: ["Tea"],
+        restrictionNotes: [],
+        maxCapacity: 4,
+        price: 50000,
+        currency: "KRW",
+        meetingPointName: "Anguk Station",
+        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPlaceId: "ChIJ-anguk",
+        images: [],
+        schedules: [],
+      },
+    });
+
+    render(<CreateActivityForm />);
+
+    await fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
+    fireEvent.change(screen.getAllByLabelText("Included item")[1], {
+      target: { value: "Extra snack" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
+    fireEvent.change(screen.getAllByLabelText("Available schedule")[1], {
+      target: { value: "2026-07-21T11:00" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "+ Add restriction" }));
+    fireEvent.change(screen.getAllByLabelText("Restriction")[1], {
+      target: { value: "No nut allergies" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove included item 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove time slot 2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove restriction 2" }));
+
+    expect(screen.getAllByLabelText("Included item")).toHaveLength(1);
+    expect(screen.getAllByLabelText("Available schedule")).toHaveLength(1);
+    expect(screen.getAllByLabelText("Restriction")).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    confirmPublishInDialog();
+
+    await waitFor(() =>
+      expect(mockedCreateMyActivity).toHaveBeenCalledWith(
+        expect.objectContaining({
+          includedItems: ["Tea"],
+          restrictionNotes: [],
+          schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
+        }),
+      ),
+    );
+  });
+
+  it("shows hover background feedback on add row buttons", () => {
+    render(<CreateActivityForm />);
+
+    expect(screen.getByRole("button", { name: "+ Add item" })).toHaveClass("hover:bg-earth/10");
+    expect(screen.getByRole("button", { name: "+ Add time slot" })).toHaveClass(
+      "hover:bg-earth/10",
+    );
+    expect(screen.getByRole("button", { name: "+ Add restriction" })).toHaveClass(
+      "hover:bg-earth/10",
+    );
+  });
+
+  it("puts remove buttons inside rows from the second dynamic row onward", () => {
+    render(<CreateActivityForm />);
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Add restriction" }));
+
+    expect(
+      screen.queryByRole("button", { name: "Remove included item 1" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove included item 2" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove time slot 1" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove time slot 2" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove restriction 1" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove restriction 2" })).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "Remove included item 2" })).toHaveClass(
+      "absolute",
+      "right-2",
+    );
+    expect(screen.getByRole("button", { name: "Remove time slot 2" })).toHaveClass(
+      "absolute",
+      "right-2",
+    );
+    expect(screen.getByRole("button", { name: "Remove restriction 2" })).toHaveClass(
+      "absolute",
+      "right-2",
+    );
+    expect(screen.getAllByLabelText("Available schedule")).toHaveLength(2);
   });
 });

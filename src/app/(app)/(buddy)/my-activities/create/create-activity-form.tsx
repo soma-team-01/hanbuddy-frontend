@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ImagePlusIcon, MapIcon, SearchIcon, UsersIcon } from "@/components/ui/icons";
+import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
 import { createMyActivity } from "@/lib/api/buddy";
 import {
   buildGoogleMapsEmbedUrl,
@@ -23,6 +23,32 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
 
 const INPUT_CLASS =
   "border-line text-ink placeholder:text-ink-soft/60 w-full rounded-xl border bg-white px-4 py-3.5 text-base";
+const ADD_ROW_BUTTON_CLASS =
+  "self-start rounded-full px-3 py-2 text-sm font-semibold text-earth transition-colors hover:bg-earth/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth";
+const INLINE_REMOVE_BUTTON_CLASS =
+  "absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
+
+function getNextRowKey(rows: number[]) {
+  return rows.length === 0 ? 0 : Math.max(...rows) + 1;
+}
+
+function InlineRemoveButton({
+  ariaLabel,
+  title,
+  onClick,
+}: Readonly<{ ariaLabel: string; title: string; onClick: () => void }>) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      title={title}
+      onClick={onClick}
+      className={INLINE_REMOVE_BUTTON_CLASS}
+    >
+      <TrashIcon className="size-4" />
+    </button>
+  );
+}
 
 function getString(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -37,18 +63,16 @@ function getStringList(formData: FormData, name: string) {
 }
 
 function buildSchedules(formData: FormData) {
-  const dates = formData
-    .getAll("activityDate")
-    .map((value) => (typeof value === "string" ? value.trim() : ""));
-  const times = formData
-    .getAll("startTime")
-    .map((value) => (typeof value === "string" ? value.trim() : ""));
-
-  return dates
-    .map((activityDate, index) => ({
-      activityDate,
-      startTime: times[index] ?? "",
-    }))
+  return formData
+    .getAll("scheduleDateTime")
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .map((scheduleDateTime) => {
+      const [activityDate, startTime = ""] = scheduleDateTime.split("T");
+      return {
+        activityDate,
+        startTime: startTime.slice(0, 5),
+      };
+    })
     .filter((schedule) => schedule.activityDate && schedule.startTime);
 }
 
@@ -205,6 +229,36 @@ export function CreateActivityForm() {
     setPlacePredictions([]);
   }
 
+  function addIncludedItem() {
+    setIncludedItems((items) => [...items, getNextRowKey(items)]);
+    setIsDirty(true);
+  }
+
+  function removeIncludedItem(key: number) {
+    setIncludedItems((items) => items.filter((item) => item !== key));
+    setIsDirty(true);
+  }
+
+  function addTimeSlot() {
+    setTimeSlots((slots) => [...slots, getNextRowKey(slots)]);
+    setIsDirty(true);
+  }
+
+  function removeTimeSlot(key: number) {
+    setTimeSlots((slots) => slots.filter((slot) => slot !== key));
+    setIsDirty(true);
+  }
+
+  function addRestriction() {
+    setRestrictions((items) => [...items, getNextRowKey(items)]);
+    setIsDirty(true);
+  }
+
+  function removeRestriction(key: number) {
+    setRestrictions((items) => items.filter((item) => item !== key));
+    setIsDirty(true);
+  }
+
   const isSubmitting = submittingStatus !== null;
   const meetingMapUrl = meetingPlaceId
     ? buildGoogleMapsEmbedUrl(meetingPlaceId, getGoogleMapsApiKey())
@@ -281,51 +335,51 @@ export function CreateActivityForm() {
 
         <div className="flex flex-col gap-2">
           <FieldLabel>What&apos;s included</FieldLabel>
-          {includedItems.map((key) => (
-            <input
-              key={key}
-              name="includedItems"
-              type="text"
-              required={key === 0}
-              placeholder="e.g., 2 types of traditional tea & refreshments"
-              aria-label="Included item"
-              className={INPUT_CLASS}
-            />
+          {includedItems.map((key, index) => (
+            <div key={key} className="relative">
+              <input
+                name="includedItems"
+                type="text"
+                required={index === 0}
+                placeholder="e.g., 2 types of traditional tea & refreshments"
+                aria-label="Included item"
+                className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+              />
+              {index > 0 ? (
+                <InlineRemoveButton
+                  ariaLabel={`Remove included item ${index + 1}`}
+                  title="Remove item"
+                  onClick={() => removeIncludedItem(key)}
+                />
+              ) : null}
+            </div>
           ))}
-          <button
-            type="button"
-            onClick={() => setIncludedItems((items) => [...items, items.length])}
-            className="self-start text-sm font-semibold text-earth"
-          >
+          <button type="button" onClick={addIncludedItem} className={ADD_ROW_BUTTON_CLASS}>
             + Add item
           </button>
         </div>
 
         <div className="flex flex-col gap-2">
           <FieldLabel>Availability</FieldLabel>
-          {timeSlots.map((key) => (
-            <div key={key} className="grid grid-cols-2 gap-3">
+          {timeSlots.map((key, index) => (
+            <div key={key} className="relative">
               <input
-                name="activityDate"
-                type="date"
-                required={key === 0}
-                aria-label="Available date"
-                className={INPUT_CLASS}
+                name="scheduleDateTime"
+                type="datetime-local"
+                required={index === 0}
+                aria-label="Available schedule"
+                className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
               />
-              <input
-                name="startTime"
-                type="time"
-                required={key === 0}
-                aria-label="Available time"
-                className={INPUT_CLASS}
-              />
+              {index > 0 ? (
+                <InlineRemoveButton
+                  ariaLabel={`Remove time slot ${index + 1}`}
+                  title="Remove time slot"
+                  onClick={() => removeTimeSlot(key)}
+                />
+              ) : null}
             </div>
           ))}
-          <button
-            type="button"
-            onClick={() => setTimeSlots((slots) => [...slots, slots.length])}
-            className="self-start text-sm font-semibold text-earth"
-          >
+          <button type="button" onClick={addTimeSlot} className={ADD_ROW_BUTTON_CLASS}>
             + Add time slot
           </button>
         </div>
@@ -439,21 +493,25 @@ export function CreateActivityForm() {
 
         <div className="flex flex-col gap-2">
           <FieldLabel>Who cannot join</FieldLabel>
-          {restrictions.map((key) => (
-            <input
-              key={key}
-              name="restrictionNotes"
-              type="text"
-              placeholder="e.g., People with mobility difficulties"
-              aria-label="Restriction"
-              className={INPUT_CLASS}
-            />
+          {restrictions.map((key, index) => (
+            <div key={key} className="relative">
+              <input
+                name="restrictionNotes"
+                type="text"
+                placeholder="e.g., People with mobility difficulties"
+                aria-label="Restriction"
+                className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+              />
+              {index > 0 ? (
+                <InlineRemoveButton
+                  ariaLabel={`Remove restriction ${index + 1}`}
+                  title="Remove restriction"
+                  onClick={() => removeRestriction(key)}
+                />
+              ) : null}
+            </div>
           ))}
-          <button
-            type="button"
-            onClick={() => setRestrictions((items) => [...items, items.length])}
-            className="self-start text-sm font-semibold text-earth"
-          >
+          <button type="button" onClick={addRestriction} className={ADD_ROW_BUTTON_CLASS}>
             + Add restriction
           </button>
         </div>

@@ -11,11 +11,18 @@ import { CheckIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
 import { getTouristActivity } from "@/lib/api/activities";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { formatKrw } from "@/lib/format";
+import {
+  buildGoogleMapsEmbedUrl,
+  fetchGooglePlaceDetails,
+  getGoogleMapsApiKey,
+  GOOGLE_PLACE_COMPAT_ADDRESS,
+} from "@/lib/google/places";
 import type { Activity } from "@/types/activity";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
   const router = useRouter();
   const [activity, setActivity] = useState<Activity | null>(null);
+  const [googleMeetingAddress, setGoogleMeetingAddress] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -34,6 +41,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
         return;
       }
 
+      setGoogleMeetingAddress("");
       setActivity(mapTouristActivityDetailToActivity(result.activity));
       setIsLoading(false);
     });
@@ -42,6 +50,28 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
       isMounted = false;
     };
   }, [activityId, router]);
+
+  useEffect(() => {
+    const placeId = activity?.meetingPoint.placeId;
+    const apiKey = getGoogleMapsApiKey();
+    if (!placeId || !apiKey) return;
+
+    let isMounted = true;
+
+    fetchGooglePlaceDetails(placeId, apiKey)
+      .then((place) => {
+        if (!isMounted) return;
+        setGoogleMeetingAddress(place.formattedAddress);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setGoogleMeetingAddress("");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activity?.meetingPoint.placeId]);
 
   if (isLoading) {
     return (
@@ -67,6 +97,17 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
       </div>
     );
   }
+
+  const fallbackMeetingAddress =
+    activity.meetingPoint.area &&
+    activity.meetingPoint.area !== activity.meetingPoint.name &&
+    activity.meetingPoint.area !== GOOGLE_PLACE_COMPAT_ADDRESS
+      ? activity.meetingPoint.area
+      : "";
+  const meetingAddress = googleMeetingAddress || fallbackMeetingAddress;
+  const googleMapsUrl = activity.meetingPoint.placeId
+    ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, getGoogleMapsApiKey())
+    : "";
 
   return (
     <div className="flex flex-1 flex-col pb-28">
@@ -113,7 +154,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
                 <h3 className="font-display text-sm font-semibold text-forest">
                   {activity.meetingPoint.name}
                 </h3>
-                <p className="text-xs text-ink-soft">{activity.meetingPoint.area}</p>
+                {meetingAddress ? <p className="text-xs text-ink-soft">{meetingAddress}</p> : null}
               </div>
             </div>
           </section>
@@ -168,8 +209,17 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
             <p className="mt-3 font-display text-sm font-semibold text-forest">
               {activity.meetingPoint.name}
             </p>
-            <p className="text-xs text-ink-soft">{activity.meetingPoint.area}</p>
-            {activity.meetingPoint.mapImageUrl ? (
+            {meetingAddress ? <p className="text-xs text-ink-soft">{meetingAddress}</p> : null}
+            {googleMapsUrl ? (
+              <iframe
+                title={`Map of ${activity.meetingPoint.name}`}
+                src={googleMapsUrl}
+                className="mt-3 h-[204px] w-full rounded-xl border-0"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            ) : activity.meetingPoint.mapImageUrl ? (
               <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
                 <Image
                   src={activity.meetingPoint.mapImageUrl}

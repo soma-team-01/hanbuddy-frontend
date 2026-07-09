@@ -76,5 +76,10 @@ describe("activity view adapters", () => {
         spotsLeft: 4,
       },
     ]);
+    expect(activity.meetingPoint).toMatchObject({
+      name: "Anguk Station Exit 2",
+      area: "Anguk-dong, Jongno-gu, Seoul",
+      placeId: "ChIJ-bukchon",
+    });
   });
 });

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity } from "@/lib/api/buddy";
+import { GOOGLE_PLACE_COMPAT_ADDRESS, searchGooglePlacePredictions } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
 import { CreateActivityForm } from "./create-activity-form";
 
@@ -21,15 +22,31 @@ vi.mock("@/lib/images/presigned", () => ({
   uploadActivityImages: vi.fn(),
 }));
 
+vi.mock("@/lib/google/places", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/google/places")>("@/lib/google/places");
+  return {
+    ...actual,
+    searchGooglePlacePredictions: vi.fn(),
+  };
+});
+
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
 const mockedUploadActivityImages = vi.mocked(uploadActivityImages);
+const mockedSearchGooglePlacePredictions = vi.mocked(searchGooglePlacePredictions);
 
 function confirmPublishInDialog() {
   const dialog = screen.getByRole("dialog");
   fireEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
 }
 
-function fillRequiredFields() {
+async function selectGooglePlace() {
+  fireEvent.change(screen.getByLabelText("Search Google place"), {
+    target: { value: "Anguk" },
+  });
+  fireEvent.click(await screen.findByRole("option", { name: /Anguk Station/ }));
+}
+
+async function fillRequiredFields() {
   const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
   fireEvent.change(screen.getByLabelText("Activity photos"), {
     target: { files: [file] },
@@ -58,9 +75,7 @@ function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText("Meeting place name"), {
     target: { value: "Anguk Station" },
   });
-  fireEvent.change(screen.getByLabelText("Meeting place address"), {
-    target: { value: "Jongno-gu, Seoul" },
-  });
+  await selectGooglePlace();
   return file;
 }
 
@@ -70,6 +85,40 @@ describe("CreateActivityForm", () => {
     routerMock.replace.mockReset();
     mockedCreateMyActivity.mockReset();
     mockedUploadActivityImages.mockReset();
+    mockedSearchGooglePlacePredictions.mockReset();
+    mockedSearchGooglePlacePredictions.mockResolvedValue([
+      {
+        placeId: "ChIJ-anguk",
+        mainText: "Anguk Station",
+        secondaryText: "Seoul, South Korea",
+        text: "Anguk Station, Seoul, South Korea",
+      },
+    ]);
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "test-google-key";
+  });
+
+  it("puts the searchable Google place field before the guide meeting point name", () => {
+    render(<CreateActivityForm />);
+
+    const googlePlaceSearch = screen.getByRole("textbox", { name: "Search Google place" });
+    const meetingPlaceName = screen.getByRole("textbox", { name: "Meeting place name" });
+
+    expect(
+      googlePlaceSearch.compareDocumentPosition(meetingPlaceName) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("shows the selected Google place name in the search field and address below it", async () => {
+    render(<CreateActivityForm />);
+
+    await selectGooglePlace();
+
+    expect(screen.getByRole("textbox", { name: "Search Google place" })).toHaveValue(
+      "Anguk Station",
+    );
+    expect(screen.getByText("Seoul, South Korea")).toBeInTheDocument();
+    expect(screen.queryByText("Anguk Station, Seoul, South Korea")).not.toBeInTheDocument();
   });
 
   it("uploads activity images and creates a published activity", async () => {
@@ -95,8 +144,8 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Jongno-gu, Seoul",
-        meetingPlaceId: "Jongno-gu, Seoul",
+        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
       },
@@ -104,37 +153,7 @@ describe("CreateActivityForm", () => {
 
     render(<CreateActivityForm />);
 
-    const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
-    fireEvent.change(screen.getByLabelText("Activity photos"), {
-      target: { files: [file] },
-    });
-    fireEvent.change(screen.getByLabelText("Activity Title"), {
-      target: { value: "Traditional Tea Tasting" },
-    });
-    fireEvent.change(screen.getByLabelText("Description"), {
-      target: { value: "Learn Korean tea etiquette." },
-    });
-    fireEvent.change(screen.getByLabelText("Included item"), {
-      target: { value: "Tea" },
-    });
-    fireEvent.change(screen.getByLabelText("Available date"), {
-      target: { value: "2026-07-20" },
-    });
-    fireEvent.change(screen.getByLabelText("Available time"), {
-      target: { value: "10:00" },
-    });
-    fireEvent.change(screen.getByLabelText("Max Capacity"), {
-      target: { value: "4" },
-    });
-    fireEvent.change(screen.getByLabelText("Price per person"), {
-      target: { value: "50000" },
-    });
-    fireEvent.change(screen.getByLabelText("Meeting place name"), {
-      target: { value: "Anguk Station" },
-    });
-    fireEvent.change(screen.getByLabelText("Meeting place address"), {
-      target: { value: "Jongno-gu, Seoul" },
-    });
+    const file = await fillRequiredFields();
     fireEvent.change(screen.getByLabelText("Restriction"), {
       target: { value: "No caffeine sensitivity" },
     });
@@ -153,8 +172,8 @@ describe("CreateActivityForm", () => {
       price: 50000,
       currency: "KRW",
       meetingPointName: "Anguk Station",
-      meetingPointAddress: "Jongno-gu, Seoul",
-      meetingPlaceId: "Jongno-gu, Seoul",
+      meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+      meetingPlaceId: "ChIJ-anguk",
       status: "ACTIVE",
       schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
     });
@@ -188,9 +207,6 @@ describe("CreateActivityForm", () => {
     fireEvent.change(screen.getByLabelText("Meeting place name"), {
       target: { value: "Anguk Station" },
     });
-    fireEvent.change(screen.getByLabelText("Meeting place address"), {
-      target: { value: "Jongno-gu, Seoul" },
-    });
 
     fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
 
@@ -202,10 +218,10 @@ describe("CreateActivityForm", () => {
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
   });
 
-  it("does not publish when the confirmation is cancelled", () => {
+  it("does not publish when the confirmation is cancelled", async () => {
     render(<CreateActivityForm />);
 
-    fillRequiredFields();
+    await fillRequiredFields();
 
     fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
@@ -238,8 +254,8 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Jongno-gu, Seoul",
-        meetingPlaceId: "Jongno-gu, Seoul",
+        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
       },
@@ -247,7 +263,7 @@ describe("CreateActivityForm", () => {
 
     render(<CreateActivityForm />);
 
-    fillRequiredFields();
+    await fillRequiredFields();
 
     fireEvent.click(screen.getByRole("button", { name: "Save Draft" }));
 
@@ -297,12 +313,12 @@ describe("CreateActivityForm", () => {
     expect(screen.getByLabelText("Activity Title")).toHaveValue("Traditional Tea Tasting");
   });
 
-  it("ignores the back button while a submission is in progress", () => {
+  it("ignores the back button while a submission is in progress", async () => {
     mockedUploadActivityImages.mockReturnValue(new Promise(() => {}));
 
     render(<CreateActivityForm />);
 
-    fillRequiredFields();
+    await fillRequiredFields();
     fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
     confirmPublishInDialog();
 
@@ -351,8 +367,8 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Jongno-gu, Seoul",
-        meetingPlaceId: "Jongno-gu, Seoul",
+        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
       },
@@ -392,9 +408,7 @@ describe("CreateActivityForm", () => {
     fireEvent.change(screen.getByLabelText("Meeting place name"), {
       target: { value: "Anguk Station" },
     });
-    fireEvent.change(screen.getByLabelText("Meeting place address"), {
-      target: { value: "Jongno-gu, Seoul" },
-    });
+    await selectGooglePlace();
 
     fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
     confirmPublishInDialog();

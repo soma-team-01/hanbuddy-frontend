@@ -5,8 +5,15 @@ import { useEffect, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ImagePlusIcon, MapIcon, UsersIcon } from "@/components/ui/icons";
+import { ImagePlusIcon, MapIcon, SearchIcon, UsersIcon } from "@/components/ui/icons";
 import { createMyActivity } from "@/lib/api/buddy";
+import {
+  buildGoogleMapsEmbedUrl,
+  getGoogleMapsApiKey,
+  GOOGLE_PLACE_COMPAT_ADDRESS,
+  type GooglePlacePrediction,
+  searchGooglePlacePredictions,
+} from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
 import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
 
@@ -51,6 +58,12 @@ export function CreateActivityForm() {
   const [timeSlots, setTimeSlots] = useState<number[]>([0]);
   const [restrictions, setRestrictions] = useState<number[]>([0]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
+  const [meetingPlaceId, setMeetingPlaceId] = useState("");
+  const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
+  const [selectedMeetingPlaceAddress, setSelectedMeetingPlaceAddress] = useState("");
+  const [placePredictions, setPlacePredictions] = useState<GooglePlacePrediction[]>([]);
+  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
   const [submittingStatus, setSubmittingStatus] = useState<MyActivityStatus | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -66,6 +79,34 @@ export function CreateActivityForm() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
+
+  useEffect(() => {
+    const apiKey = getGoogleMapsApiKey();
+    const query = meetingPlaceQuery.trim();
+    if (query.length < 3 || !apiKey || query === selectedMeetingPlaceLabel) {
+      return;
+    }
+
+    let isMounted = true;
+
+    searchGooglePlacePredictions(query, apiKey)
+      .then((predictions) => {
+        if (!isMounted) return;
+        setPlacePredictions(predictions);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setPlacePredictions([]);
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsSearchingPlaces(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [meetingPlaceQuery, selectedMeetingPlaceLabel]);
 
   function handleBack() {
     // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
@@ -88,6 +129,10 @@ export function CreateActivityForm() {
       setErrorMessage("Please select at least one activity photo.");
       return;
     }
+    if (!getString(formData, "meetingPlaceId")) {
+      setErrorMessage("Please select a Google place from the results.");
+      return;
+    }
 
     if (status === "ACTIVE") {
       setPendingPublish(formData);
@@ -98,7 +143,7 @@ export function CreateActivityForm() {
 
   async function submitActivity(status: MyActivityStatus, formData: FormData) {
     const meetingPointName = getString(formData, "meetingPointName");
-    const meetingPointAddress = getString(formData, "meetingPointAddress");
+    const selectedMeetingPlaceId = getString(formData, "meetingPlaceId");
 
     setErrorMessage("");
     setSubmittingStatus(status);
@@ -115,8 +160,8 @@ export function CreateActivityForm() {
         price: Number(getString(formData, "price")),
         currency: "KRW",
         meetingPointName,
-        meetingPointAddress,
-        meetingPlaceId: meetingPointAddress || meetingPointName,
+        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPlaceId: selectedMeetingPlaceId,
         status,
         schedules: buildSchedules(formData),
       };
@@ -139,7 +184,31 @@ export function CreateActivityForm() {
     }
   }
 
+  function handlePlaceQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+    setMeetingPlaceQuery(value);
+    setMeetingPlaceId("");
+    setSelectedMeetingPlaceLabel("");
+    setSelectedMeetingPlaceAddress("");
+    setPlacePredictions([]);
+    setIsSearchingPlaces(value.trim().length >= 3 && Boolean(getGoogleMapsApiKey()));
+  }
+
+  function handlePlaceSelect(prediction: GooglePlacePrediction) {
+    const address =
+      prediction.secondaryText || (prediction.text !== prediction.mainText ? prediction.text : "");
+
+    setMeetingPlaceId(prediction.placeId);
+    setMeetingPlaceQuery(prediction.mainText);
+    setSelectedMeetingPlaceLabel(prediction.mainText);
+    setSelectedMeetingPlaceAddress(address);
+    setPlacePredictions([]);
+  }
+
   const isSubmitting = submittingStatus !== null;
+  const meetingMapUrl = meetingPlaceId
+    ? buildGoogleMapsEmbedUrl(meetingPlaceId, getGoogleMapsApiKey())
+    : "";
 
   return (
     <form
@@ -296,26 +365,76 @@ export function CreateActivityForm() {
 
         <div className="flex flex-col gap-2">
           <FieldLabel>Meeting Point</FieldLabel>
-          <input
-            name="meetingPointName"
-            type="text"
-            required
-            placeholder="Enter place name"
-            aria-label="Meeting place name"
-            className={INPUT_CLASS}
-          />
-          <input
-            name="meetingPointAddress"
-            type="text"
-            required
-            placeholder="Enter address (e.g., Bukchon Hanok Village)"
-            aria-label="Meeting place address"
-            className={INPUT_CLASS}
-          />
-          <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
-            <MapIcon className="size-6" />
-            <span className="text-sm">Map preview will appear here</span>
-          </div>
+          <label className="flex flex-col gap-2">
+            <FieldLabel>Search Google place</FieldLabel>
+            <span className="relative">
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-soft" />
+              <input
+                type="text"
+                value={meetingPlaceQuery}
+                onChange={handlePlaceQueryChange}
+                placeholder="e.g., Anguk Station"
+                aria-label="Search Google place"
+                className={`${INPUT_CLASS} pl-11`}
+              />
+            </span>
+          </label>
+          <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
+          {placePredictions.length > 0 ? (
+            <div
+              role="listbox"
+              aria-label="Google place results"
+              className="overflow-hidden rounded-xl border border-line bg-white"
+            >
+              {placePredictions.map((prediction) => (
+                <button
+                  key={prediction.placeId}
+                  type="button"
+                  role="option"
+                  aria-selected={prediction.placeId === meetingPlaceId}
+                  onClick={() => handlePlaceSelect(prediction)}
+                  className="flex w-full flex-col items-start px-4 py-3 text-left hover:bg-chip"
+                >
+                  <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
+                  {prediction.secondaryText ? (
+                    <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {isSearchingPlaces ? (
+            <p className="px-1 text-xs text-ink-soft">Searching places...</p>
+          ) : null}
+          {selectedMeetingPlaceAddress ? (
+            <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress}</p>
+          ) : null}
+          {meetingMapUrl ? (
+            <iframe
+              title="Meeting place map preview"
+              src={meetingMapUrl}
+              className="h-40 w-full rounded-xl border-0"
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          ) : (
+            <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
+              <MapIcon className="size-6" />
+              <span className="text-sm">Map preview will appear here</span>
+            </div>
+          )}
+          <label className="mt-2 flex flex-col gap-2">
+            <FieldLabel>Meeting point name</FieldLabel>
+            <input
+              name="meetingPointName"
+              type="text"
+              required
+              placeholder="e.g., Main ticket booth by Gate 1"
+              aria-label="Meeting place name"
+              className={INPUT_CLASS}
+            />
+          </label>
         </div>
 
         <div className="flex flex-col gap-2">

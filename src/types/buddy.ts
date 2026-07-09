@@ -50,7 +50,7 @@ export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
   price: number;
   currency: string;
   meetingPointName: string;
-  meetingPointAddress: string;
+  meetingPointAddress?: string;
   meetingPlaceId: string;
   images: ActivityImageResponse[];
   schedules: ActivityScheduleResponse[];

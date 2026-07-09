@@ -68,6 +68,8 @@ export function CreateActivityForm() {
   }, [isDirty]);
 
   function handleBack() {
+    // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
+    if (submittingStatus !== null) return;
     if (isDirty) {
       setShowDiscardConfirm(true);
       return;

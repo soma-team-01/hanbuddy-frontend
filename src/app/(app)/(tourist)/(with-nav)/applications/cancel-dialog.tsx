@@ -46,7 +46,7 @@ export function CancelDialog({
     <dialog
       ref={dialogRef}
       aria-labelledby="cancel-dialog-title"
-      onCancel={onClose}
+      // Escape는 cancel → 기본 close 순으로 이어지므로 close 이벤트에서만 onClose를 부른다 (이중 호출 방지)
       onClose={onClose}
       // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
       className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
@@ -83,15 +83,8 @@ export function CancelDialog({
             </button>
           );
         })}
-        {reason === "OTHER" && (
-          // 상세 사유는 백엔드 CancelApplicationRequest.cancellationDetail 타입 오류(boolean)가
-          // 고쳐지기 전까지 전송하지 않는다.
-          <textarea
-            rows={3}
-            placeholder="Please specify (optional)"
-            className="w-full resize-none rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-          />
-        )}
+        {/* OTHER 상세 사유 입력란은 백엔드 CancelApplicationRequest.cancellationDetail 타입 오류(boolean)가
+            고쳐져 실제로 전송할 수 있게 되면 다시 추가한다. 입력을 받고 버리는 UI는 두지 않는다. */}
       </div>
       {errorMessage && (
         <p

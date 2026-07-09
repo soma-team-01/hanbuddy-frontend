@@ -297,6 +297,21 @@ describe("CreateActivityForm", () => {
     expect(screen.getByLabelText("Activity Title")).toHaveValue("Traditional Tea Tasting");
   });
 
+  it("ignores the back button while a submission is in progress", () => {
+    mockedUploadActivityImages.mockReturnValue(new Promise(() => {}));
+
+    render(<CreateActivityForm />);
+
+    fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    confirmPublishInDialog();
+
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
   it("warns on page unload only while the form is dirty", () => {
     render(<CreateActivityForm />);
 

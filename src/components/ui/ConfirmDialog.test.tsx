@@ -40,6 +40,25 @@ describe("ConfirmDialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("calls onClose only once when dismissed via Escape", () => {
+    const onClose = vi.fn();
+    render(
+      <ConfirmDialog
+        title="Log out?"
+        confirmLabel="Log Out"
+        onConfirm={vi.fn()}
+        onClose={onClose}
+      />,
+    );
+
+    // 브라우저에서 Escape는 cancel 이벤트 후 기본 동작으로 close 이벤트를 연달아 발생시킨다
+    const dialog = screen.getByRole("dialog");
+    fireEvent(dialog, new Event("cancel"));
+    fireEvent(dialog, new Event("close"));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("locks both buttons while pending", () => {
     render(
       <ConfirmDialog

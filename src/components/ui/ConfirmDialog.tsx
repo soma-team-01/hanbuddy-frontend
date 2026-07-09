@@ -37,7 +37,7 @@ export function ConfirmDialog({
     <dialog
       ref={dialogRef}
       aria-labelledby="confirm-dialog-title"
-      onCancel={onClose}
+      // Escape는 cancel → 기본 close 순으로 이어지므로 close 이벤트에서만 onClose를 부른다 (이중 호출 방지)
       onClose={onClose}
       // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
       className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"

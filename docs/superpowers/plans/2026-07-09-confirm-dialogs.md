@@ -22,10 +22,12 @@
 ### Task 1: 공용 ConfirmDialog 컴포넌트
 
 **Files:**
+
 - Create: `src/components/ui/ConfirmDialog.tsx`
 - Test: `src/components/ui/ConfirmDialog.test.tsx`
 
 **Interfaces:**
+
 - Produces: `ConfirmDialog({ title, description?, confirmLabel, cancelLabel = "Cancel", tone = "default", isPending = false, onConfirm, onClose, children? })`
   - `tone: "default" | "danger"` — danger면 확인 버튼 `bg-danger`, 아니면 `bg-forest`
   - `isPending: boolean` — true면 두 버튼 disabled, 확인 라벨 뒤에 "..." 부착
@@ -61,7 +63,12 @@ describe("ConfirmDialog", () => {
     const onConfirm = vi.fn();
     const onClose = vi.fn();
     render(
-      <ConfirmDialog title="Log out?" confirmLabel="Log Out" onConfirm={onConfirm} onClose={onClose} />,
+      <ConfirmDialog
+        title="Log out?"
+        confirmLabel="Log Out"
+        onConfirm={onConfirm}
+        onClose={onClose}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
@@ -187,10 +194,12 @@ export function ConfirmDialog({
 ### Task 2: 활동 삭제 확인을 ConfirmDialog로 교체
 
 **Files:**
+
 - Modify: `src/app/(app)/(buddy)/(with-nav)/my-activities/my-activities-content.tsx` (handleDelete의 `window.confirm` 제거, `deleteTargetId` 상태 추가)
 - Test: `src/app/(app)/(buddy)/(with-nav)/my-activities/my-activities-content.test.tsx` (`vi.stubGlobal("confirm", ...)` 제거)
 
 **Interfaces:**
+
 - Consumes: Task 1의 `ConfirmDialog` (tone="danger")
 
 - [ ] **Step 1: 기존 테스트를 다이얼로그 플로우로 수정 (RED)** — beforeEach/afterEach의 `confirm` stub 제거. 삭제 테스트를 "휴지통 클릭 → 다이얼로그 → Delete 클릭 → API 호출·목록에서 제거"로 변경:
@@ -208,20 +217,22 @@ await waitFor(() => expect(mockedDeleteMyActivity).toHaveBeenCalledWith(1));
 - [ ] **Step 3: 구현** — `deleteTargetId: number | null` 상태 추가, 휴지통 클릭은 `setDeleteTargetId(activityId)`만 수행. `handleDelete`에서 `window.confirm` 줄 삭제. 렌더 하단에:
 
 ```tsx
-{deleteTargetId !== null && (
-  <ConfirmDialog
-    title="Delete this activity?"
-    description="This action cannot be undone."
-    confirmLabel="Delete"
-    tone="danger"
-    onConfirm={() => {
-      const activityId = deleteTargetId;
-      setDeleteTargetId(null);
-      void handleDelete(activityId);
-    }}
-    onClose={() => setDeleteTargetId(null)}
-  />
-)}
+{
+  deleteTargetId !== null && (
+    <ConfirmDialog
+      title="Delete this activity?"
+      description="This action cannot be undone."
+      confirmLabel="Delete"
+      tone="danger"
+      onConfirm={() => {
+        const activityId = deleteTargetId;
+        setDeleteTargetId(null);
+        void handleDelete(activityId);
+      }}
+      onClose={() => setDeleteTargetId(null)}
+    />
+  );
+}
 ```
 
 - [ ] **Step 4: GREEN 확인** — 같은 명령 PASS
@@ -232,10 +243,12 @@ await waitFor(() => expect(mockedDeleteMyActivity).toHaveBeenCalledWith(1));
 ### Task 3: Log Out 확인 모달
 
 **Files:**
+
 - Modify: `src/app/(app)/(with-nav)/my-page/LogoutButton.tsx`
 - Test: `src/app/(app)/(with-nav)/my-page/LogoutButton.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1의 `ConfirmDialog` (tone 기본값)
 
 - [ ] **Step 1: 테스트 수정 (RED)** — 기존 "클릭 → fetch 호출" 테스트를 "Log Out 클릭 → 다이얼로그 → 확인 클릭 → fetch 호출"로 변경. 다이얼로그의 확인 버튼도 "Log Out"이므로 역할 구분: 트리거 클릭 후 `screen.getByRole("dialog")` 안에서 `within(...).getByRole("button", { name: "Log Out" })` 사용. 취소 경로(Cancel 클릭 → fetch 미호출) 추가.
@@ -243,16 +256,18 @@ await waitFor(() => expect(mockedDeleteMyActivity).toHaveBeenCalledWith(1));
 - [ ] **Step 3: 구현** — `showConfirm` 상태 추가. 트리거 버튼 onClick → `setShowConfirm(true)`. 하단에:
 
 ```tsx
-{showConfirm && (
-  <ConfirmDialog
-    title="Log out?"
-    description="You can log back in anytime."
-    confirmLabel="Log Out"
-    isPending={isLoggingOut}
-    onConfirm={() => void handleLogout()}
-    onClose={() => setShowConfirm(false)}
-  />
-)}
+{
+  showConfirm && (
+    <ConfirmDialog
+      title="Log out?"
+      description="You can log back in anytime."
+      confirmLabel="Log Out"
+      isPending={isLoggingOut}
+      onConfirm={() => void handleLogout()}
+      onClose={() => setShowConfirm(false)}
+    />
+  );
+}
 ```
 
 (로그아웃은 best-effort로 항상 `/login`으로 이동하므로 다이얼로그는 닫지 않고 pending 잠금만 한다.)
@@ -265,10 +280,12 @@ await waitFor(() => expect(mockedDeleteMyActivity).toHaveBeenCalledWith(1));
 ### Task 4: Booking Submit 확인 모달 (신청 요약 포함)
 
 **Files:**
+
 - Modify: `src/app/(app)/(tourist)/activities/[id]/book/booking-form.tsx`
 - Test: `src/app/(app)/(tourist)/activities/[id]/book/booking-form.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1의 `ConfirmDialog` (children으로 요약 렌더)
 
 - [ ] **Step 1: 테스트 수정 (RED)** — 기존 제출 테스트를 "약관 동의 → Submit Application 클릭 → 다이얼로그(요약: 활동명·세션·게스트 수·총액) → Submit 클릭 → `createApplication` 호출"로 변경. 취소 경로(Cancel → 미호출) 추가. 요약 검증 예:
@@ -297,36 +314,40 @@ function handleSubmitClick() {
 `handleSubmit`은 그대로 두되 다이얼로그 확인에서 호출. 렌더 하단에:
 
 ```tsx
-{showConfirm && (
-  <ConfirmDialog
-    title="Submit this application?"
-    confirmLabel="Submit"
-    onConfirm={() => {
-      setShowConfirm(false);
-      void handleSubmit();
-    }}
-    onClose={() => setShowConfirm(false)}
-  >
-    <dl className="flex flex-col gap-2 rounded-xl bg-chip p-4 text-sm text-ink">
-      <div className="flex justify-between">
-        <dt className="text-ink-soft">Activity</dt>
-        <dd className="font-medium">{activity.title}</dd>
-      </div>
-      <div className="flex justify-between">
-        <dt className="text-ink-soft">When</dt>
-        <dd>{selectedSession ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}` : "-"}</dd>
-      </div>
-      <div className="flex justify-between">
-        <dt className="text-ink-soft">Guests</dt>
-        <dd>{guests} guests</dd>
-      </div>
-      <div className="flex justify-between font-display font-semibold">
-        <dt>Total</dt>
-        <dd>{formatKrw(total)}</dd>
-      </div>
-    </dl>
-  </ConfirmDialog>
-)}
+{
+  showConfirm && (
+    <ConfirmDialog
+      title="Submit this application?"
+      confirmLabel="Submit"
+      onConfirm={() => {
+        setShowConfirm(false);
+        void handleSubmit();
+      }}
+      onClose={() => setShowConfirm(false)}
+    >
+      <dl className="flex flex-col gap-2 rounded-xl bg-chip p-4 text-sm text-ink">
+        <div className="flex justify-between">
+          <dt className="text-ink-soft">Activity</dt>
+          <dd className="font-medium">{activity.title}</dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-ink-soft">When</dt>
+          <dd>
+            {selectedSession ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}` : "-"}
+          </dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-ink-soft">Guests</dt>
+          <dd>{guests} guests</dd>
+        </div>
+        <div className="flex justify-between font-display font-semibold">
+          <dt>Total</dt>
+          <dd>{formatKrw(total)}</dd>
+        </div>
+      </dl>
+    </ConfirmDialog>
+  );
+}
 ```
 
 `const selectedSession = activity.sessions.find((session) => session.id === sessionId);` 를 컴포넌트 본문에 추가. 에러 시에는 다이얼로그가 이미 닫혀 있고 기존 폼 에러가 표시된다.
@@ -339,10 +360,12 @@ function handleSubmitClick() {
 ### Task 5: Create Activity Publish 확인 모달
 
 **Files:**
+
 - Modify: `src/app/(app)/(buddy)/my-activities/create/create-activity-form.tsx`
 - Test: `src/app/(app)/(buddy)/my-activities/create/create-activity-form.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1의 `ConfirmDialog`
 - Produces: `submitActivity(status: MyActivityStatus, formData: FormData)` — handleSubmit에서 추출한 제출 코어 (Task 6에서 폼 구조 재사용)
 
@@ -372,19 +395,21 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 렌더 하단(BottomActionBar 위)에:
 
 ```tsx
-{pendingPublish && (
-  <ConfirmDialog
-    title="Publish this activity?"
-    description="You can't edit an activity after publishing."
-    confirmLabel="Publish"
-    onConfirm={() => {
-      const formData = pendingPublish;
-      setPendingPublish(null);
-      void submitActivity("ACTIVE", formData);
-    }}
-    onClose={() => setPendingPublish(null)}
-  />
-)}
+{
+  pendingPublish && (
+    <ConfirmDialog
+      title="Publish this activity?"
+      description="You can't edit an activity after publishing."
+      confirmLabel="Publish"
+      onConfirm={() => {
+        const formData = pendingPublish;
+        setPendingPublish(null);
+        void submitActivity("ACTIVE", formData);
+      }}
+      onClose={() => setPendingPublish(null)}
+    />
+  );
+}
 ```
 
 사진 미선택 검증(`selectedFiles.length === 0`)은 `submitActivity` 시작부가 아니라 `handleSubmit`의 분기 전에 그대로 두어 다이얼로그가 뜨기 전에 걸리게 한다.
@@ -397,11 +422,13 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 ### Task 6: TopAppBar onLeftClick + Create Activity 이탈 가드
 
 **Files:**
+
 - Modify: `src/components/layout/TopAppBar.tsx` (`onLeftClick` prop 추가)
 - Modify: `src/app/(app)/(buddy)/my-activities/create/create-activity-form.tsx` (dirty 추적, 이탈 다이얼로그, beforeunload)
 - Test: `src/components/layout/TopAppBar.test.tsx`, `src/app/(app)/(buddy)/my-activities/create/create-activity-form.test.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1의 `ConfirmDialog`, Task 5의 폼 구조
 - Produces: `TopAppBar`에 `onLeftClick?: () => void` — 지정 시 back 화살표를 `Link` 대신 `button`(aria-label "Go back")으로 렌더. `backHref`/`closeHref`보다 우선.
 
@@ -469,16 +496,18 @@ function handleBack() {
 - 렌더 하단에:
 
 ```tsx
-{showDiscardConfirm && (
-  <ConfirmDialog
-    title="Discard this activity?"
-    description="Your changes will be lost."
-    confirmLabel="Discard"
-    tone="danger"
-    onConfirm={() => router.push("/my-activities")}
-    onClose={() => setShowDiscardConfirm(false)}
-  />
-)}
+{
+  showDiscardConfirm && (
+    <ConfirmDialog
+      title="Discard this activity?"
+      description="Your changes will be lost."
+      confirmLabel="Discard"
+      tone="danger"
+      onConfirm={() => router.push("/my-activities")}
+      onClose={() => setShowDiscardConfirm(false)}
+    />
+  );
+}
 ```
 
 - 제출 성공 라우팅(`router.push("/my-activities")`)은 SPA 이동이라 beforeunload와 충돌하지 않는다.

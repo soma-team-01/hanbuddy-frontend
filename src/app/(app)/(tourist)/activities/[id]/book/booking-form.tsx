@@ -245,7 +245,9 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
             <div className="flex justify-between gap-4">
               <dt className="shrink-0 text-ink-soft">When</dt>
               <dd>
-                {selectedSession ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}` : "-"}
+                {selectedSession
+                  ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}`
+                  : "-"}
               </dd>
             </div>
             <div className="flex justify-between gap-4">

@@ -46,12 +46,12 @@ interface ConfirmDialogProps {
 
 ## 적용 지점
 
-| 지점 | 문구 | tone | 확인 후 동작 |
-| --- | --- | --- | --- |
+| 지점           | 문구                                                                        | tone    | 확인 후 동작                                             |
+| -------------- | --------------------------------------------------------------------------- | ------- | -------------------------------------------------------- |
 | Booking Submit | "Submit this application?" + children 요약(활동명·세션 일시·게스트 수·총액) | default | 기존 `handleSubmit`. 에러 시 모달 닫고 기존 폼 에러 표시 |
-| 활동 삭제 | "Delete this activity?" / "This action cannot be undone." | danger | 기존 optimistic 삭제 + 롤백. `window.confirm` 제거 |
-| Log Out | "Log out?" / "You can log back in anytime." | default | 기존 best-effort 로그아웃 |
-| 활동 등록 | "Publish this activity?" / "You can't edit an activity after publishing." | default | 기존 `createMyActivity` |
+| 활동 삭제      | "Delete this activity?" / "This action cannot be undone."                   | danger  | 기존 optimistic 삭제 + 롤백. `window.confirm` 제거       |
+| Log Out        | "Log out?" / "You can log back in anytime."                                 | default | 기존 best-effort 로그아웃                                |
+| 활동 등록      | "Publish this activity?" / "You can't edit an activity after publishing."   | default | 기존 `createMyActivity`                                  |
 
 ## Create Activity 이탈 가드
 

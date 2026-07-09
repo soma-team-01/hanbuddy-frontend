@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -27,6 +28,13 @@ const ADD_ROW_BUTTON_CLASS =
   "self-start rounded-full px-3 py-2 text-sm font-semibold text-earth transition-colors hover:bg-earth/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth";
 const INLINE_REMOVE_BUTTON_CLASS =
   "absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
+const MAX_ACTIVITY_PHOTOS = 8;
+
+interface SelectedActivityPhoto {
+  id: number;
+  file: File;
+  previewUrl: string;
+}
 
 function getNextRowKey(rows: number[]) {
   return rows.length === 0 ? 0 : Math.max(...rows) + 1;
@@ -81,7 +89,9 @@ export function CreateActivityForm() {
   const [includedItems, setIncludedItems] = useState<number[]>([0]);
   const [timeSlots, setTimeSlots] = useState<number[]>([0]);
   const [restrictions, setRestrictions] = useState<number[]>([0]);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedPhotos, setSelectedPhotos] = useState<SelectedActivityPhoto[]>([]);
+  const selectedPhotosRef = useRef<SelectedActivityPhoto[]>([]);
+  const nextPhotoIdRef = useRef(0);
   const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
   const [meetingPlaceId, setMeetingPlaceId] = useState("");
   const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
@@ -103,6 +113,16 @@ export function CreateActivityForm() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
+
+  useEffect(() => {
+    selectedPhotosRef.current = selectedPhotos;
+  }, [selectedPhotos]);
+
+  useEffect(() => {
+    return () => {
+      selectedPhotosRef.current.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+    };
+  }, []);
 
   useEffect(() => {
     const apiKey = getGoogleMapsApiKey();
@@ -131,6 +151,8 @@ export function CreateActivityForm() {
       isMounted = false;
     };
   }, [meetingPlaceQuery, selectedMeetingPlaceLabel]);
+
+  const selectedFiles = selectedPhotos.map((photo) => photo.file);
 
   function handleBack() {
     // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
@@ -229,6 +251,38 @@ export function CreateActivityForm() {
     setPlacePredictions([]);
   }
 
+  function handlePhotoSelection(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = "";
+    if (files.length === 0) return;
+
+    setSelectedPhotos((photos) => {
+      const remainingSlots = Math.max(MAX_ACTIVITY_PHOTOS - photos.length, 0);
+      const acceptedFiles = files.slice(0, remainingSlots);
+      const nextPhotos = acceptedFiles.map((file) => ({
+        id: nextPhotoIdRef.current++,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+      const updatedPhotos = [...photos, ...nextPhotos];
+      selectedPhotosRef.current = updatedPhotos;
+      return updatedPhotos;
+    });
+  }
+
+  function removeSelectedPhoto(photoId: number) {
+    setSelectedPhotos((photos) => {
+      const removedPhoto = photos.find((photo) => photo.id === photoId);
+      if (!removedPhoto) return photos;
+
+      URL.revokeObjectURL(removedPhoto.previewUrl);
+      const updatedPhotos = photos.filter((photo) => photo.id !== photoId);
+      selectedPhotosRef.current = updatedPhotos;
+      return updatedPhotos;
+    });
+    setIsDirty(true);
+  }
+
   function addIncludedItem() {
     setIncludedItems((items) => [...items, getNextRowKey(items)]);
     setIsDirty(true);
@@ -291,25 +345,55 @@ export function CreateActivityForm() {
           </p>
         ) : null}
 
-        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-white/60 px-6 py-14 text-ink-soft">
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            aria-label="Activity photos"
-            className="sr-only"
-            onChange={(event) => setSelectedFiles(Array.from(event.currentTarget.files ?? []))}
-          />
-          <ImagePlusIcon className="size-8" />
-          <span className="font-display text-sm font-semibold text-ink">
-            Click to upload cover photo
-          </span>
-          <span className="text-xs">
-            {selectedFiles.length > 0
-              ? `${selectedFiles.length} selected`
-              : "PNG, JPG, WebP up to 8 files"}
-          </span>
-        </label>
+        <div className="flex flex-col gap-3">
+          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-white/60 px-6 py-14 text-ink-soft">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              aria-label="Activity photos"
+              className="sr-only"
+              onChange={handlePhotoSelection}
+            />
+            <ImagePlusIcon className="size-8" />
+            <span className="font-display text-sm font-semibold text-ink">
+              Click to upload activity photos
+            </span>
+            <span className="text-xs">
+              {selectedFiles.length > 0
+                ? `${selectedFiles.length} selected`
+                : "PNG, JPG, WebP up to 8 files"}
+            </span>
+          </label>
+
+          {selectedPhotos.length > 0 ? (
+            <ul aria-label="Selected activity photos" className="grid grid-cols-4 gap-2">
+              {selectedPhotos.map((photo) => (
+                <li
+                  key={photo.id}
+                  className="relative aspect-square overflow-hidden rounded-xl border border-line bg-white"
+                >
+                  <Image
+                    src={photo.previewUrl}
+                    alt={photo.file.name}
+                    fill
+                    sizes="72px"
+                    unoptimized
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    aria-label={`Remove photo ${photo.file.name}`}
+                    onClick={() => removeSelectedPhoto(photo.id)}
+                    className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-cream transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                  >
+                    <TrashIcon className="size-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
 
         <label className="flex flex-col gap-2">
           <FieldLabel>Activity Title</FieldLabel>

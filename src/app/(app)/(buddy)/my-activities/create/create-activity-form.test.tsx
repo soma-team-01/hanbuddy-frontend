@@ -33,6 +33,10 @@ vi.mock("@/lib/google/places", async () => {
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
 const mockedUploadActivityImages = vi.mocked(uploadActivityImages);
 const mockedSearchGooglePlacePredictions = vi.mocked(searchGooglePlacePredictions);
+const createObjectUrlMock = vi.fn((file: Blob) =>
+  file instanceof File ? `blob:${file.name}` : "blob:preview",
+);
+const revokeObjectUrlMock = vi.fn();
 
 function confirmPublishInDialog() {
   const dialog = screen.getByRole("dialog");
@@ -46,11 +50,7 @@ async function selectGooglePlace() {
   fireEvent.click(await screen.findByRole("option", { name: /Anguk Station/ }));
 }
 
-async function fillRequiredFields() {
-  const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
-  fireEvent.change(screen.getByLabelText("Activity photos"), {
-    target: { files: [file] },
-  });
+async function fillRequiredTextFields() {
   fireEvent.change(screen.getByLabelText("Activity Title"), {
     target: { value: "Traditional Tea Tasting" },
   });
@@ -73,11 +73,29 @@ async function fillRequiredFields() {
     target: { value: "Anguk Station" },
   });
   await selectGooglePlace();
+}
+
+async function fillRequiredFields() {
+  const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
+  fireEvent.change(screen.getByLabelText("Activity photos"), {
+    target: { files: [file] },
+  });
+  await fillRequiredTextFields();
   return file;
 }
 
 describe("CreateActivityForm", () => {
   beforeEach(() => {
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectUrlMock,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectUrlMock,
+    });
+    createObjectUrlMock.mockClear();
+    revokeObjectUrlMock.mockClear();
     routerMock.push.mockReset();
     routerMock.replace.mockReset();
     mockedCreateMyActivity.mockReset();
@@ -175,6 +193,66 @@ describe("CreateActivityForm", () => {
       schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
     });
     expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+  });
+
+  it("previews selected activity photos and removes deleted photos before uploading", async () => {
+    const marketFile = new File([new Uint8Array([2])], "market.webp", { type: "image/webp" });
+    mockedUploadActivityImages.mockResolvedValue([
+      {
+        uploadUrl: "https://bucket.s3.amazonaws.com/activities/market.webp?signed",
+        imageKey: "activities/2026/07/07/market.webp",
+        imageUrl: "https://static.hanbuddy.com/activities/market.webp",
+        expiresInSeconds: 300,
+      },
+    ]);
+    mockedCreateMyActivity.mockResolvedValue({
+      status: "success",
+      activity: {
+        activityId: 42,
+        title: "Traditional Tea Tasting",
+        description: "Learn Korean tea etiquette.",
+        thumbnailImageUrl: null,
+        status: "ACTIVE",
+        includedItems: ["Tea"],
+        restrictionNotes: [],
+        maxCapacity: 4,
+        price: 50000,
+        currency: "KRW",
+        meetingPointName: "Anguk Station",
+        meetingPointAddress: GOOGLE_PLACE_COMPAT_ADDRESS,
+        meetingPlaceId: "ChIJ-anguk",
+        images: [],
+        schedules: [],
+      },
+    });
+
+    render(<CreateActivityForm />);
+
+    const teaFile = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
+    const fileInput = screen.getByLabelText("Activity photos");
+    fireEvent.change(fileInput, { target: { files: [teaFile] } });
+    fireEvent.change(fileInput, { target: { files: [marketFile] } });
+
+    expect(screen.getByRole("img", { name: "tea.webp" })).toHaveAttribute("src", "blob:tea.webp");
+    expect(screen.getByRole("img", { name: "market.webp" })).toHaveAttribute(
+      "src",
+      "blob:market.webp",
+    );
+    expect(screen.getByText("2 selected")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove photo tea.webp" }));
+
+    expect(screen.queryByRole("img", { name: "tea.webp" })).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "market.webp" })).toBeInTheDocument();
+    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:tea.webp");
+
+    await fillRequiredTextFields();
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    confirmPublishInDialog();
+
+    await waitFor(() => expect(mockedUploadActivityImages).toHaveBeenCalledWith([marketFile]));
   });
 
   it("blocks submission until at least one activity photo is selected", async () => {

@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getMyApplications } from "@/lib/api/applications";
+import { cancelMyApplication, getMyApplications } from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
-import type { Application } from "@/types/application";
+import type { Application, ApplicationCancellationReason } from "@/types/application";
 import { ApplicationList } from "./application-list";
+import type { CancelDialogOutcome } from "./cancel-dialog";
 
 export function ApplicationsContent() {
   const router = useRouter();
@@ -37,6 +38,29 @@ export function ApplicationsContent() {
     };
   }, [router]);
 
+  async function handleCancelApplication(
+    applicationId: string,
+    reason: ApplicationCancellationReason,
+  ): Promise<CancelDialogOutcome> {
+    const result = await cancelMyApplication(applicationId, reason);
+    if (result.status === "unauthenticated") {
+      router.replace("/login");
+      return { ok: true };
+    }
+    if (result.status === "error") {
+      return { ok: false, message: result.message };
+    }
+
+    setApplications((current) =>
+      current.map((application) =>
+        application.id === applicationId
+          ? mapApplicationResponseToApplication(result.application)
+          : application,
+      ),
+    );
+    return { ok: true };
+  }
+
   if (isLoading) {
     return <p className="py-10 text-center text-ink-soft">Loading applications...</p>;
   }
@@ -52,5 +76,7 @@ export function ApplicationsContent() {
     );
   }
 
-  return <ApplicationList applications={applications} />;
+  return (
+    <ApplicationList applications={applications} onCancelApplication={handleCancelApplication} />
+  );
 }

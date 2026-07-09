@@ -1,22 +1,46 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { ApplicationCancellationReason } from "@/types/application";
 
 const REASONS = [
-  "Schedule conflict",
-  "Illness or unexpected emergency",
-  "Found another option",
-  "Other reason",
-] as const;
+  { value: "SCHEDULE_CONFLICT", label: "Schedule conflict" },
+  { value: "ILLNESS", label: "Illness or unexpected emergency" },
+  { value: "FOUND_OTHER", label: "Found another option" },
+  { value: "OTHER", label: "Other reason" },
+] as const satisfies ReadonlyArray<{ value: ApplicationCancellationReason; label: string }>;
 
-export function CancelDialog({ onClose }: Readonly<{ onClose: () => void }>) {
-  const [reason, setReason] = useState<string | null>(null);
+export type CancelDialogOutcome = { ok: true } | { ok: false; message: string };
+
+export function CancelDialog({
+  onClose,
+  onConfirm,
+}: Readonly<{
+  onClose: () => void;
+  onConfirm: (reason: ApplicationCancellationReason) => Promise<CancelDialogOutcome>;
+}>) {
+  const [reason, setReason] = useState<ApplicationCancellationReason | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
+
+  async function handleConfirm() {
+    if (!reason || isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    const outcome = await onConfirm(reason);
+    if (!outcome.ok) {
+      setErrorMessage(outcome.message);
+      setIsSubmitting(false);
+    }
+    // 성공 시에는 부모가 다이얼로그를 언마운트하므로 여기서 상태를 만지지 않는다.
+  }
 
   return (
     <dialog
@@ -35,14 +59,14 @@ export function CancelDialog({ onClose }: Readonly<{ onClose: () => void }>) {
       </p>
       <p className="mt-5 font-display text-sm font-semibold text-ink">Why are you cancelling?</p>
       <div className="mt-3 flex flex-col gap-3">
-        {REASONS.map((option) => {
-          const isSelected = reason === option;
+        {REASONS.map(({ value, label }) => {
+          const isSelected = reason === value;
           return (
             <button
-              key={option}
+              key={value}
               type="button"
               aria-pressed={isSelected}
-              onClick={() => setReason(option)}
+              onClick={() => setReason(value)}
               className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left ${
                 isSelected ? "border-forest" : "border-line-strong"
               }`}
@@ -55,11 +79,13 @@ export function CancelDialog({ onClose }: Readonly<{ onClose: () => void }>) {
               >
                 {isSelected && <span className="size-2 rounded-full bg-forest" />}
               </span>
-              <span className="text-base text-ink">{option}</span>
+              <span className="text-base text-ink">{label}</span>
             </button>
           );
         })}
-        {reason === "Other reason" && (
+        {reason === "OTHER" && (
+          // 상세 사유는 백엔드 CancelApplicationRequest.cancellationDetail 타입 오류(boolean)가
+          // 고쳐지기 전까지 전송하지 않는다.
           <textarea
             rows={3}
             placeholder="Please specify (optional)"
@@ -67,20 +93,30 @@ export function CancelDialog({ onClose }: Readonly<{ onClose: () => void }>) {
           />
         )}
       </div>
+      {errorMessage && (
+        <p
+          role="alert"
+          className="mt-4 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          {errorMessage}
+        </p>
+      )}
       <div className="mt-6 flex gap-3">
         <button
           type="button"
           onClick={onClose}
-          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink"
+          disabled={isSubmitting}
+          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink disabled:opacity-60"
         >
           No, Keep It
         </button>
         <button
           type="button"
-          onClick={onClose}
-          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream"
+          onClick={handleConfirm}
+          disabled={!reason || isSubmitting}
+          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream disabled:opacity-60"
         >
-          Yes, Cancel
+          {isSubmitting ? "Cancelling..." : "Yes, Cancel"}
         </button>
       </div>
     </dialog>

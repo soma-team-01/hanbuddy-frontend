@@ -23,28 +23,33 @@ export function TopAppBar({
   const leftHref = backHref ?? closeHref;
   const LeftIcon = backHref ? ArrowLeftIcon : XIcon;
 
+  let leftSlot: React.ReactNode = <span className="size-10 shrink-0" aria-hidden />;
+  if (onLeftClick) {
+    leftSlot = (
+      <button
+        type="button"
+        aria-label="Go back"
+        onClick={onLeftClick}
+        className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-forest hover:bg-chip"
+      >
+        <ArrowLeftIcon className="size-5" />
+      </button>
+    );
+  } else if (leftHref) {
+    leftSlot = (
+      <Link
+        href={leftHref}
+        aria-label={backHref ? "Go back" : "Close"}
+        className="flex size-10 shrink-0 items-center justify-center rounded-full text-forest hover:bg-chip"
+      >
+        <LeftIcon className="size-5" />
+      </Link>
+    );
+  }
+
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-line bg-cream px-4">
-      {onLeftClick ? (
-        <button
-          type="button"
-          aria-label="Go back"
-          onClick={onLeftClick}
-          className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-forest hover:bg-chip"
-        >
-          <ArrowLeftIcon className="size-5" />
-        </button>
-      ) : leftHref ? (
-        <Link
-          href={leftHref}
-          aria-label={backHref ? "Go back" : "Close"}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-forest hover:bg-chip"
-        >
-          <LeftIcon className="size-5" />
-        </Link>
-      ) : (
-        <span className="size-10 shrink-0" aria-hidden />
-      )}
+      {leftSlot}
       <h1 className="truncate font-display text-[28px] font-semibold tracking-tight text-forest">
         {title === "HanBuddy" ? (
           // 브랜드 워드마크 클릭 시 역할별 홈(/explore | /dashboard)으로 이동

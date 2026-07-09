@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity } from "@/lib/api/buddy";
 import { uploadActivityImages } from "@/lib/images/presigned";
@@ -23,6 +23,46 @@ vi.mock("@/lib/images/presigned", () => ({
 
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
 const mockedUploadActivityImages = vi.mocked(uploadActivityImages);
+
+function confirmPublishInDialog() {
+  const dialog = screen.getByRole("dialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Publish" }));
+}
+
+function fillRequiredFields() {
+  const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
+  fireEvent.change(screen.getByLabelText("Activity photos"), {
+    target: { files: [file] },
+  });
+  fireEvent.change(screen.getByLabelText("Activity Title"), {
+    target: { value: "Traditional Tea Tasting" },
+  });
+  fireEvent.change(screen.getByLabelText("Description"), {
+    target: { value: "Learn Korean tea etiquette." },
+  });
+  fireEvent.change(screen.getByLabelText("Included item"), {
+    target: { value: "Tea" },
+  });
+  fireEvent.change(screen.getByLabelText("Available date"), {
+    target: { value: "2026-07-20" },
+  });
+  fireEvent.change(screen.getByLabelText("Available time"), {
+    target: { value: "10:00" },
+  });
+  fireEvent.change(screen.getByLabelText("Max Capacity"), {
+    target: { value: "4" },
+  });
+  fireEvent.change(screen.getByLabelText("Price per person"), {
+    target: { value: "50000" },
+  });
+  fireEvent.change(screen.getByLabelText("Meeting place name"), {
+    target: { value: "Anguk Station" },
+  });
+  fireEvent.change(screen.getByLabelText("Meeting place address"), {
+    target: { value: "Jongno-gu, Seoul" },
+  });
+  return file;
+}
 
 describe("CreateActivityForm", () => {
   beforeEach(() => {
@@ -100,6 +140,7 @@ describe("CreateActivityForm", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    confirmPublishInDialog();
 
     await waitFor(() => expect(mockedUploadActivityImages).toHaveBeenCalledWith([file]));
     expect(mockedCreateMyActivity).toHaveBeenCalledWith({
@@ -156,8 +197,135 @@ describe("CreateActivityForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Please select at least one activity photo.",
     );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(mockedUploadActivityImages).not.toHaveBeenCalled();
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+  });
+
+  it("does not publish when the confirmation is cancelled", () => {
+    render(<CreateActivityForm />);
+
+    fillRequiredFields();
+
+    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(mockedUploadActivityImages).not.toHaveBeenCalled();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("saves a draft without asking for confirmation", async () => {
+    mockedUploadActivityImages.mockResolvedValue([
+      {
+        uploadUrl: "https://bucket.s3.amazonaws.com/activities/tea.webp?signed",
+        imageKey: "activities/2026/07/07/tea.webp",
+        imageUrl: "https://static.hanbuddy.com/activities/tea.webp",
+        expiresInSeconds: 300,
+      },
+    ]);
+    mockedCreateMyActivity.mockResolvedValue({
+      status: "success",
+      activity: {
+        activityId: 42,
+        title: "Traditional Tea Tasting",
+        description: "Learn Korean tea etiquette.",
+        thumbnailImageUrl: null,
+        status: "DRAFT",
+        includedItems: [],
+        restrictionNotes: [],
+        maxCapacity: 4,
+        price: 50000,
+        currency: "KRW",
+        meetingPointName: "Anguk Station",
+        meetingPointAddress: "Jongno-gu, Seoul",
+        meetingPlaceId: "Jongno-gu, Seoul",
+        images: [],
+        schedules: [],
+      },
+    });
+
+    render(<CreateActivityForm />);
+
+    fillRequiredFields();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Draft" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(mockedCreateMyActivity).toHaveBeenCalledWith(
+        expect.objectContaining({ status: "DRAFT" }),
+      ),
+    );
+  });
+
+  it("leaves immediately when going back with an untouched form", () => {
+    render(<CreateActivityForm />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+  });
+
+  it("asks for confirmation before discarding entered input", () => {
+    render(<CreateActivityForm />);
+
+    fireEvent.change(screen.getByLabelText("Activity Title"), {
+      target: { value: "Traditional Tea Tasting" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(routerMock.push).not.toHaveBeenCalled();
+    expect(screen.getByText("Your changes will be lost.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+
+    expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+  });
+
+  it("keeps the form when the discard confirmation is cancelled", () => {
+    render(<CreateActivityForm />);
+
+    fireEvent.change(screen.getByLabelText("Activity Title"), {
+      target: { value: "Traditional Tea Tasting" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(routerMock.push).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Activity Title")).toHaveValue("Traditional Tea Tasting");
+  });
+
+  it("ignores the back button while a submission is in progress", () => {
+    mockedUploadActivityImages.mockReturnValue(new Promise(() => {}));
+
+    render(<CreateActivityForm />);
+
+    fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    confirmPublishInDialog();
+
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
+  it("warns on page unload only while the form is dirty", () => {
+    render(<CreateActivityForm />);
+
+    const cleanEvent = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(cleanEvent);
+    expect(cleanEvent.defaultPrevented).toBe(false);
+
+    fireEvent.change(screen.getByLabelText("Activity Title"), {
+      target: { value: "Traditional Tea Tasting" },
+    });
+
+    const dirtyEvent = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(dirtyEvent);
+    expect(dirtyEvent.defaultPrevented).toBe(true);
   });
 
   it("keeps schedule date and time values paired by row", async () => {
@@ -229,6 +397,7 @@ describe("CreateActivityForm", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Publish Activity" }));
+    confirmPublishInDialog();
 
     await waitFor(() =>
       expect(mockedCreateMyActivity).toHaveBeenCalledWith(

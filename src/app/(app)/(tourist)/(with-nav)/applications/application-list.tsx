@@ -5,8 +5,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { formatKrw } from "@/lib/format";
-import type { Application } from "@/types/application";
-import { CancelDialog } from "./cancel-dialog";
+import type { Application, ApplicationCancellationReason } from "@/types/application";
+import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 
 const TABS = [
   { key: "upcoming", label: "Upcoming" },
@@ -117,7 +117,16 @@ function ApplicationCard({
   );
 }
 
-export function ApplicationList({ applications }: Readonly<{ applications: Application[] }>) {
+export function ApplicationList({
+  applications,
+  onCancelApplication,
+}: Readonly<{
+  applications: Application[];
+  onCancelApplication: (
+    applicationId: string,
+    reason: ApplicationCancellationReason,
+  ) => Promise<CancelDialogOutcome>;
+}>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
 
@@ -160,7 +169,16 @@ export function ApplicationList({ applications }: Readonly<{ applications: Appli
           <p className="py-10 text-center text-ink-soft">No applications here yet.</p>
         )}
       </div>
-      {cancelTargetId && <CancelDialog onClose={() => setCancelTargetId(null)} />}
+      {cancelTargetId && (
+        <CancelDialog
+          onClose={() => setCancelTargetId(null)}
+          onConfirm={async (reason) => {
+            const outcome = await onCancelApplication(cancelTargetId, reason);
+            if (outcome.ok) setCancelTargetId(null);
+            return outcome;
+          }}
+        />
+      )}
     </div>
   );
 }

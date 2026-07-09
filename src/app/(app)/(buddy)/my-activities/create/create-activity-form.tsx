@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImagePlusIcon, MapIcon, UsersIcon } from "@/components/ui/icons";
 import { createMyActivity } from "@/lib/api/buddy";
 import { uploadActivityImages } from "@/lib/images/presigned";
@@ -50,16 +51,37 @@ export function CreateActivityForm() {
   const [timeSlots, setTimeSlots] = useState<number[]>([0]);
   const [restrictions, setRestrictions] = useState<number[]>([0]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
   const [submittingStatus, setSubmittingStatus] = useState<MyActivityStatus | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  function handleBack() {
+    // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
+    if (submittingStatus !== null) return;
+    if (isDirty) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    router.push("/my-activities");
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
     const status: MyActivityStatus = submitter?.value === "DRAFT" ? "DRAFT" : "ACTIVE";
     const formData = new FormData(event.currentTarget);
-    const meetingPointName = getString(formData, "meetingPointName");
-    const meetingPointAddress = getString(formData, "meetingPointAddress");
 
     setErrorMessage("");
     if (selectedFiles.length === 0) {
@@ -67,6 +89,18 @@ export function CreateActivityForm() {
       return;
     }
 
+    if (status === "ACTIVE") {
+      setPendingPublish(formData);
+      return;
+    }
+    await submitActivity(status, formData);
+  }
+
+  async function submitActivity(status: MyActivityStatus, formData: FormData) {
+    const meetingPointName = getString(formData, "meetingPointName");
+    const meetingPointAddress = getString(formData, "meetingPointAddress");
+
+    setErrorMessage("");
     setSubmittingStatus(status);
 
     try {
@@ -108,8 +142,12 @@ export function CreateActivityForm() {
   const isSubmitting = submittingStatus !== null;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-1 flex-col pb-28">
-      <TopAppBar backHref="/my-activities" />
+    <form
+      onSubmit={handleSubmit}
+      onChange={() => setIsDirty(true)}
+      className="flex flex-1 flex-col pb-28"
+    >
+      <TopAppBar onLeftClick={handleBack} />
       <main className="flex flex-1 flex-col gap-6 px-4 py-8">
         <div>
           <p className="font-display text-xs font-semibold tracking-widest text-earth uppercase">
@@ -321,6 +359,29 @@ export function CreateActivityForm() {
           Publish Activity
         </button>
       </BottomActionBar>
+      {pendingPublish && (
+        <ConfirmDialog
+          title="Publish this activity?"
+          description="You can't edit an activity after publishing."
+          confirmLabel="Publish"
+          onConfirm={() => {
+            const formData = pendingPublish;
+            setPendingPublish(null);
+            void submitActivity("ACTIVE", formData);
+          }}
+          onClose={() => setPendingPublish(null)}
+        />
+      )}
+      {showDiscardConfirm && (
+        <ConfirmDialog
+          title="Discard this activity?"
+          description="Your changes will be lost."
+          confirmLabel="Discard"
+          tone="danger"
+          onConfirm={() => router.push("/my-activities")}
+          onClose={() => setShowDiscardConfirm(false)}
+        />
+      )}
     </form>
   );
 }

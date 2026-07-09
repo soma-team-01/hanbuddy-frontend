@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
 import { MyActivitiesContent } from "./my-activities-content";
 
@@ -22,14 +22,6 @@ describe("MyActivitiesContent", () => {
     routerMock.replace.mockReset();
     mockedDeleteMyActivity.mockReset();
     mockedGetMyActivities.mockReset();
-    vi.stubGlobal(
-      "confirm",
-      vi.fn(() => true),
-    );
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it("renders buddy activities loaded from the API", async () => {
@@ -78,6 +70,8 @@ describe("MyActivitiesContent", () => {
     });
     fireEvent.click(deleteButton);
 
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
     await waitFor(() => expect(mockedDeleteMyActivity).toHaveBeenCalledWith(42));
     await waitFor(() => {
       expect(screen.queryByText("Traditional Tea Tasting")).not.toBeInTheDocument();
@@ -85,10 +79,6 @@ describe("MyActivitiesContent", () => {
   });
 
   it("does not delete when the confirmation is cancelled", async () => {
-    vi.stubGlobal(
-      "confirm",
-      vi.fn(() => false),
-    );
     mockedGetMyActivities.mockResolvedValue({
       status: "success",
       activities: [
@@ -108,6 +98,10 @@ describe("MyActivitiesContent", () => {
       name: "Delete Traditional Tea Tasting",
     });
     fireEvent.click(deleteButton);
+
+    expect(screen.getByText("This action cannot be undone.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(mockedDeleteMyActivity).not.toHaveBeenCalled();
     expect(screen.getByText("Traditional Tea Tasting")).toBeInTheDocument();

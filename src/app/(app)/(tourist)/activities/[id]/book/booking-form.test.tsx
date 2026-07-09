@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApplication } from "@/lib/api/applications";
 import type { Activity } from "@/types/activity";
 import { BookingForm } from "./booking-form";
@@ -51,7 +51,11 @@ const activity: Activity = {
 };
 
 describe("BookingForm", () => {
-  it("creates an application for the selected schedule", async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("creates an application for the selected schedule after confirming the summary", async () => {
     mockedCreateApplication.mockResolvedValue({
       status: "success",
       application: {
@@ -83,6 +87,14 @@ describe("BookingForm", () => {
     fireEvent.click(screen.getByLabelText("I agree to the terms above."));
     fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
 
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(within(dialog).getByText("2026-07-20 10:00")).toBeInTheDocument();
+    expect(within(dialog).getByText("2 guests")).toBeInTheDocument();
+    expect(within(dialog).getByText("₩99,000")).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Submit" }));
+
     await waitFor(() => {
       expect(mockedCreateApplication).toHaveBeenCalledWith({
         activityScheduleId: 101,
@@ -91,5 +103,16 @@ describe("BookingForm", () => {
       });
     });
     expect(replace).toHaveBeenCalledWith("/applications");
+  });
+
+  it("does not create an application when the confirmation is cancelled", () => {
+    render(<BookingForm activity={activity} />);
+    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
+    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
   });
 });

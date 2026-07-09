@@ -12,6 +12,7 @@ import {
   StarIcon,
   UserIcon,
 } from "@/components/ui/icons";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { createApplication } from "@/lib/api/applications";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
@@ -26,18 +27,25 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const [agreed, setAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = activity.price * guests;
   const serviceFee = Math.round(subtotal * SERVICE_FEE_RATE);
   const total = subtotal + serviceFee;
+  const selectedSession = activity.sessions.find((session) => session.id === sessionId);
 
-  async function handleSubmit() {
-    if (isSubmitting) return;
+  function handleSubmitClick() {
     if (!sessionId) {
       setErrorMessage("신청 가능한 일정을 선택해 주세요.");
       return;
     }
+    setErrorMessage("");
+    setShowConfirm(true);
+  }
+
+  async function handleSubmit() {
+    if (isSubmitting) return;
 
     setErrorMessage("");
     setIsSubmitting(true);
@@ -211,13 +219,46 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
         <button
           type="button"
           disabled={!agreed || isSubmitting}
-          onClick={handleSubmit}
+          onClick={handleSubmitClick}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-forest font-display text-base font-semibold text-cream disabled:opacity-40"
         >
           {isSubmitting ? "Submitting..." : "Submit Application"}
           <ArrowRightIcon className="size-4" />
         </button>
       </BottomActionBar>
+
+      {showConfirm && (
+        <ConfirmDialog
+          title="Submit this application?"
+          confirmLabel="Submit"
+          onConfirm={() => {
+            setShowConfirm(false);
+            void handleSubmit();
+          }}
+          onClose={() => setShowConfirm(false)}
+        >
+          <dl className="flex flex-col gap-2 rounded-xl bg-chip p-4 text-sm text-ink">
+            <div className="flex justify-between gap-4">
+              <dt className="shrink-0 text-ink-soft">Activity</dt>
+              <dd className="truncate font-medium">{activity.title}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="shrink-0 text-ink-soft">When</dt>
+              <dd>
+                {selectedSession ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}` : "-"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="shrink-0 text-ink-soft">Guests</dt>
+              <dd>{guests} guests</dd>
+            </div>
+            <div className="flex justify-between gap-4 font-display font-semibold">
+              <dt>Total</dt>
+              <dd>{formatKrw(total)}</dd>
+            </div>
+          </dl>
+        </ConfirmDialog>
+      )}
     </main>
   );
 }

@@ -1,3 +1,4 @@
+import { splitStartAt } from "@/lib/format";
 import type {
   Application,
   ApplicationResponse,
@@ -14,10 +15,11 @@ const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStat
 
 export function mapApplicationResponseToApplication(response: ApplicationResponse): Application {
   const subtotal = response.price * response.guestCount;
+  const { date, time } = splitStartAt(response.startAt);
   return {
     id: String(response.applicationId),
     status: STATUS_BY_BACKEND_STATUS[response.status],
-    dateLabel: `${response.activityDate} ${response.startTime}`,
+    dateLabel: `${date} ${time}`,
     hostName: response.buddyName,
     hostAvatarUrl: null,
     activityTitle: response.activityTitle,

@@ -31,18 +31,25 @@ describe("DashboardContent", () => {
           activityTitle: "Traditional Tea Tasting",
           thumbnailImageUrl:
             "https://hanbuddy-bucket-526958954481-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/activities/tea.webp",
-          applicantCount: 1,
-          applicants: [
+          totalApplicantCount: 1,
+          schedules: [
             {
-              applicationId: 11,
-              applicantUserId: 3,
-              applicantName: "Sophie Martin",
-              applicantProfileImageUrl: null,
-              applicantNationalityCode: "FR",
-              guestCount: 2,
-              applicantContactMethod: "WHATSAPP",
-              applicantContactCountryCode: "+33",
-              applicantContactIdentifier: "612345678",
+              activityScheduleId: 99,
+              startAt: "2026-07-20T10:00:00+09:00",
+              applicantCount: 1,
+              applicants: [
+                {
+                  applicationId: 11,
+                  applicantUserId: 3,
+                  applicantName: "Sophie Martin",
+                  applicantProfileImageUrl: null,
+                  applicantNationalityCode: "FR",
+                  guestCount: 2,
+                  applicantContactMethod: "WHATSAPP",
+                  applicantContactCountryCode: "+33",
+                  applicantContactIdentifier: "612345678",
+                },
+              ],
             },
           ],
         },
@@ -52,7 +59,8 @@ describe("DashboardContent", () => {
     render(<DashboardContent />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByText("1 Applicant")).toBeInTheDocument();
+    expect(screen.getAllByText("1 Applicant").length).toBeGreaterThan(0);
+    expect(screen.getByText("10:00")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();

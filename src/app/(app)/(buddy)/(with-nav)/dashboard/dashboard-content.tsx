@@ -13,6 +13,7 @@ import {
   formatNationalityCode,
   getActivityThumbnail,
 } from "@/lib/api/buddy-view";
+import { splitStartAt } from "@/lib/format";
 import type {
   BuddyDateActivityApplicationsResponse,
   BuddyScheduleDateResponse,
@@ -130,7 +131,7 @@ export function DashboardContent() {
             className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]"
           >
             <Link
-              href={`/my-activities/${activity.activityId}/applicants?date=${selectedDate}`}
+              href={`/my-activities/${activity.activityId}/applicants`}
               className="-m-2 flex items-center gap-4 rounded-xl p-2 transition-colors hover:bg-chip/60"
             >
               <div className="relative size-14 shrink-0 overflow-hidden rounded-lg">
@@ -147,32 +148,51 @@ export function DashboardContent() {
                   {activity.activityTitle}
                 </h3>
                 <span className="mt-1 inline-block rounded-full bg-success-soft px-2.5 py-0.5 font-display text-xs font-semibold text-success">
-                  {applicantCountLabel(activity.applicantCount)}
+                  {applicantCountLabel(activity.totalApplicantCount)}
                 </span>
               </div>
             </Link>
-            <ul className="ml-3 flex flex-col gap-5 border-l border-line pl-5">
-              {activity.applicants.map((applicant) => (
-                <li key={applicant.applicationId} className="flex items-center gap-3">
-                  <Avatar
-                    name={applicant.applicantName}
-                    src={applicant.applicantProfileImageUrl}
-                    size={40}
-                  />
-                  <div className="min-w-0 text-sm">
-                    <p className="font-display font-semibold text-ink">{applicant.applicantName}</p>
-                    <p className="flex items-center gap-1 text-ink-soft">
-                      <MapPinIcon className="size-3.5" />
-                      {formatNationalityCode(applicant.applicantNationalityCode)}
-                    </p>
-                    <p className="flex items-center gap-1 text-ink-soft">
-                      <MessageSquareIcon className="size-3.5" />
-                      {formatApplicantContact(applicant)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {activity.schedules.map((schedule) => (
+              <section key={schedule.activityScheduleId} className="flex flex-col gap-4">
+                <Link
+                  href={`/my-activities/${activity.activityId}/applicants?scheduleId=${schedule.activityScheduleId}`}
+                  className="flex items-center justify-between rounded-xl bg-chip/60 px-3 py-2 transition-colors hover:bg-chip"
+                >
+                  <span className="font-display text-sm font-semibold text-ink">
+                    {splitStartAt(schedule.startAt).time}
+                  </span>
+                  <span className="text-xs text-ink-soft">
+                    {applicantCountLabel(schedule.applicantCount)}
+                  </span>
+                </Link>
+                {schedule.applicants.length > 0 ? (
+                  <ul className="ml-3 flex flex-col gap-5 border-l border-line pl-5">
+                    {schedule.applicants.map((applicant) => (
+                      <li key={applicant.applicationId} className="flex items-center gap-3">
+                        <Avatar
+                          name={applicant.applicantName}
+                          src={applicant.applicantProfileImageUrl}
+                          size={40}
+                        />
+                        <div className="min-w-0 text-sm">
+                          <p className="font-display font-semibold text-ink">
+                            {applicant.applicantName}
+                          </p>
+                          <p className="flex items-center gap-1 text-ink-soft">
+                            <MapPinIcon className="size-3.5" />
+                            {formatNationalityCode(applicant.applicantNationalityCode)}
+                          </p>
+                          <p className="flex items-center gap-1 text-ink-soft">
+                            <MessageSquareIcon className="size-3.5" />
+                            {formatApplicantContact(applicant)}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+            ))}
           </article>
         ))}
       </div>

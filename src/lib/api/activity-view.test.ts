@@ -40,7 +40,6 @@ describe("activity view adapters", () => {
       buddyId: 7,
       includedItems: ["Local guide", "Tea tasting"],
       restrictionNotes: ["Not recommended for wheelchairs"],
-      meetingPointAddress: "Anguk-dong, Jongno-gu, Seoul",
       meetingPlaceId: "ChIJ-bukchon",
       images: [
         {
@@ -55,8 +54,7 @@ describe("activity view adapters", () => {
       schedules: [
         {
           activityScheduleId: 101,
-          activityDate: "2026-07-20",
-          startTime: "10:00",
+          startAt: "2026-07-20T10:00:00+09:00",
           remainingCapacity: 4,
           status: "OPEN",
         },
@@ -78,7 +76,7 @@ describe("activity view adapters", () => {
     ]);
     expect(activity.meetingPoint).toMatchObject({
       name: "Anguk Station Exit 2",
-      area: "Anguk-dong, Jongno-gu, Seoul",
+      area: "Anguk Station Exit 2",
       placeId: "ChIJ-bukchon",
     });
   });

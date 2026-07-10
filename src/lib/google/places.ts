@@ -1,8 +1,6 @@
 const GOOGLE_PLACES_API_BASE_URL = "https://places.googleapis.com/v1";
 const GOOGLE_MAPS_EMBED_BASE_URL = "https://www.google.com/maps/embed/v1/place";
 
-export const GOOGLE_PLACE_COMPAT_ADDRESS = "Address resolved from Google place_id";
-
 export interface GooglePlaceDetails {
   formattedAddress: string;
 }

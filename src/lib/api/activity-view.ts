@@ -1,3 +1,4 @@
+import { splitStartAt } from "@/lib/format";
 import type {
   Activity,
   IncludedItem,
@@ -41,15 +42,18 @@ export function mapTouristActivityDetailToActivity(detail: TouristActivityDetail
     heroImageUrl,
     included: detail.includedItems.map(toIncludedItem),
     restrictions: detail.restrictionNotes,
-    sessions: detail.schedules.map<Session>((schedule) => ({
-      id: String(schedule.activityScheduleId),
-      dateLabel: schedule.activityDate,
-      timeLabel: schedule.startTime,
-      spotsLeft: schedule.remainingCapacity,
-    })),
+    sessions: detail.schedules.map<Session>((schedule) => {
+      const { date, time } = splitStartAt(schedule.startAt);
+      return {
+        id: String(schedule.activityScheduleId),
+        dateLabel: date,
+        timeLabel: time,
+        spotsLeft: schedule.remainingCapacity,
+      };
+    }),
     meetingPoint: {
       name: detail.meetingPointName,
-      area: detail.meetingPointAddress ?? detail.meetingPointName,
+      area: detail.meetingPointName,
       placeId: detail.meetingPlaceId,
     },
   };

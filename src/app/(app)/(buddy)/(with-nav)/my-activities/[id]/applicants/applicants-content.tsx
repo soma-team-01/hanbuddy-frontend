@@ -6,11 +6,12 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
 import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
 import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
+import { splitStartAt } from "@/lib/format";
 import type { BuddyActivityApplicationsResponse } from "@/types/buddy";
 
 interface ApplicantsContentProps {
   activityId: string;
-  initialDate?: string;
+  initialScheduleId?: string;
 }
 
 function toActivityId(value: string) {
@@ -37,7 +38,10 @@ function formatAppliedDate(value: string) {
   }).format(date);
 }
 
-export function ApplicantsContent({ activityId, initialDate }: Readonly<ApplicantsContentProps>) {
+export function ApplicantsContent({
+  activityId,
+  initialScheduleId,
+}: Readonly<ApplicantsContentProps>) {
   const router = useRouter();
   const [applications, setApplications] = useState<BuddyActivityApplicationsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,13 +49,12 @@ export function ApplicantsContent({ activityId, initialDate }: Readonly<Applican
 
   useEffect(() => {
     let isMounted = true;
-    const resolvedActivityId = toActivityId(activityId);
 
     async function loadApplications() {
-      let date = initialDate;
+      let scheduleId: number | string | undefined = initialScheduleId;
 
-      if (!date) {
-        const activityResult = await getMyActivity(resolvedActivityId);
+      if (!scheduleId) {
+        const activityResult = await getMyActivity(toActivityId(activityId));
         if (!isMounted) return;
         if (activityResult.status === "unauthenticated") {
           router.replace("/login");
@@ -63,15 +66,15 @@ export function ApplicantsContent({ activityId, initialDate }: Readonly<Applican
           return;
         }
 
-        date = activityResult.activity.schedules[0]?.activityDate;
-        if (!date) {
+        scheduleId = activityResult.activity.schedules[0]?.scheduleId;
+        if (!scheduleId) {
           setErrorMessage("등록된 일정이 없습니다.");
           setIsLoading(false);
           return;
         }
       }
 
-      const applicationsResult = await getBuddyActivityApplications(resolvedActivityId, date);
+      const applicationsResult = await getBuddyActivityApplications(scheduleId);
       if (!isMounted) return;
       if (applicationsResult.status === "unauthenticated") {
         router.replace("/login");
@@ -92,7 +95,7 @@ export function ApplicantsContent({ activityId, initialDate }: Readonly<Applican
     return () => {
       isMounted = false;
     };
-  }, [activityId, initialDate, router]);
+  }, [activityId, initialScheduleId, router]);
 
   if (isLoading) {
     return <p className="py-10 text-center text-ink-soft">Loading applicants...</p>;
@@ -114,6 +117,7 @@ export function ApplicantsContent({ activityId, initialDate }: Readonly<Applican
   const confirmedCount =
     applications.statusCounts.CONFIRMED ??
     applications.applicants.filter((applicant) => applicant.status === "CONFIRMED").length;
+  const schedule = splitStartAt(applications.startAt);
 
   return (
     <>
@@ -121,12 +125,14 @@ export function ApplicantsContent({ activityId, initialDate }: Readonly<Applican
         <h1 className="font-display text-2xl leading-8 font-semibold text-forest">
           {applications.activityTitle}
         </h1>
-        <p className="mt-2 text-ink-soft">Applicant Status • {confirmedCount} confirmed</p>
+        <p className="mt-2 text-ink-soft">
+          {schedule.date} {schedule.time} • {confirmedCount} confirmed
+        </p>
       </div>
 
       {applications.applicants.length === 0 ? (
         <p className="rounded-2xl border border-line bg-white px-4 py-8 text-center text-ink-soft">
-          No applicants for this date yet.
+          No applicants for this schedule yet.
         </p>
       ) : (
         <div className="flex flex-col gap-5">

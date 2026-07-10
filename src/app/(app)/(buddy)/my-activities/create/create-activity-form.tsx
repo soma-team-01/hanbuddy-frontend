@@ -11,7 +11,6 @@ import { createMyActivity } from "@/lib/api/buddy";
 import {
   buildGoogleMapsEmbedUrl,
   getGoogleMapsApiKey,
-  GOOGLE_PLACE_COMPAT_ADDRESS,
   type GooglePlacePrediction,
   searchGooglePlacePredictions,
 } from "@/lib/google/places";
@@ -127,12 +126,11 @@ function buildSchedules(formData: FormData) {
     .map((value) => (typeof value === "string" ? value.trim() : ""))
     .map((scheduleDateTime) => {
       const [activityDate, startTime = ""] = scheduleDateTime.split("T");
-      return {
-        activityDate,
-        startTime: startTime.slice(0, 5),
-      };
+      if (!activityDate || !startTime) return null;
+      // datetime-local 값(YYYY-MM-DDTHH:mm)을 Asia/Seoul 오프셋을 명시한 startAt으로 변환한다.
+      return { startAt: `${activityDate}T${startTime.slice(0, 5)}:00+09:00` };
     })
-    .filter((schedule) => schedule.activityDate && schedule.startTime);
+    .filter((schedule): schedule is { startAt: string } => schedule !== null);
 }
 
 export function CreateActivityForm() {
@@ -299,7 +297,6 @@ export function CreateActivityForm() {
         price: Number(getString(formData, "price")),
         currency: "KRW",
         meetingPointName,
-        meetingPointAddress: selectedMeetingPlaceAddress || GOOGLE_PLACE_COMPAT_ADDRESS,
         meetingPlaceId: selectedMeetingPlaceId,
         status,
         schedules: buildSchedules(formData),

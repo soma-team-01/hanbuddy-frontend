@@ -38,8 +38,8 @@ export interface ApplicationResponse {
   buddyName: string;
   guestCount: number;
   specialRequest: string | null;
-  activityDate: string;
-  startTime: string;
+  /** Asia/Seoul 오프셋을 포함한 date-time */
+  startAt: string;
   price: number;
   totalPrice: number;
   currency: string;

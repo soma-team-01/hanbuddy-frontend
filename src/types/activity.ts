@@ -54,8 +54,8 @@ export type TouristActivityScheduleStatus = "OPEN" | "CLOSED";
 
 export interface TouristActivitySchedule {
   activityScheduleId: number;
-  activityDate: string;
-  startTime: string;
+  /** Asia/Seoul 오프셋을 포함한 date-time */
+  startAt: string;
   remainingCapacity: number;
   status: TouristActivityScheduleStatus;
 }
@@ -76,7 +76,6 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   buddyId: number;
   includedItems: string[];
   restrictionNotes: string[];
-  meetingPointAddress?: string;
   meetingPlaceId: string;
   images: ActivityImageResponse[];
   schedules: TouristActivitySchedule[];

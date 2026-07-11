@@ -27,14 +27,12 @@ const activityDetail = {
   price: 50000,
   currency: "KRW",
   meetingPointName: "Anguk Station",
-  meetingPointAddress: "Jongno-gu, Seoul",
   meetingPlaceId: "place-1",
   images: [{ imageUrl: "https://static.hanbuddy.com/activities/tea.webp", imageOrder: 0 }],
   schedules: [
     {
       scheduleId: 99,
-      activityDate: "2026-07-20",
-      startTime: "10:00",
+      startAt: "2026-07-20T10:00:00+09:00",
       bookedCount: 2,
       status: "OPEN",
     },
@@ -51,10 +49,9 @@ const activityRequest: ActivityUpsertRequest = {
   price: 50000,
   currency: "KRW",
   meetingPointName: "Anguk Station",
-  meetingPointAddress: "Jongno-gu, Seoul",
   meetingPlaceId: "place-1",
   status: "ACTIVE",
-  schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
+  schedules: [{ startAt: "2026-07-20T10:00:00+09:00" }],
 };
 
 const applicantSummary = {
@@ -203,8 +200,15 @@ describe("buddy API client", () => {
       activityId: 7,
       activityTitle: "Traditional Tea Tasting",
       thumbnailImageUrl: "https://static.hanbuddy.com/activities/tea.webp",
-      applicantCount: 2,
-      applicants: [applicantSummary],
+      totalApplicantCount: 2,
+      schedules: [
+        {
+          activityScheduleId: 99,
+          startAt: "2026-07-20T10:00:00+09:00",
+          applicantCount: 2,
+          applicants: [applicantSummary],
+        },
+      ],
     };
     const fetchMock = vi
       .fn()
@@ -222,11 +226,12 @@ describe("buddy API client", () => {
     });
   });
 
-  it("loads buddy activity applicant details through the internal API", async () => {
+  it("loads buddy schedule applicant details through the internal API", async () => {
     const response = {
       activityId: 7,
+      activityScheduleId: 99,
       activityTitle: "Traditional Tea Tasting",
-      activityDate: "2026-07-20",
+      startAt: "2026-07-20T10:00:00+09:00",
       applicantCount: 2,
       statusCounts: { CONFIRMED: 2 },
       applicants: [
@@ -245,11 +250,11 @@ describe("buddy API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getBuddyActivityApplications(7, "2026-07-20")).resolves.toEqual({
+    await expect(getBuddyActivityApplications(99)).resolves.toEqual({
       status: "success",
       applications: response,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/activities/7?date=2026-07-20", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedules/99", {
       credentials: "same-origin",
     });
   });

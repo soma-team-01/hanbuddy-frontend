@@ -105,11 +105,10 @@ export async function getBuddyApplications(date: string): Promise<BuddyApplicati
 }
 
 export async function getBuddyActivityApplications(
-  activityId: number | string,
-  date: string,
+  activityScheduleId: number | string,
 ): Promise<BuddyActivityApplicationsResult> {
   return requestApiResult<BuddyActivityApplicationsResponse, "applications">(
-    `/api/applications/buddy/activities/${activityId}?date=${encodeURIComponent(date)}`,
+    `/api/applications/buddy/schedules/${activityScheduleId}`,
     "applications",
     undefined,
     DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE,

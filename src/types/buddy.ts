@@ -2,8 +2,8 @@ export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
 export type ActivityScheduleStatus = "OPEN" | "CLOSED";
 
 export interface ActivityScheduleRequest {
-  activityDate: string;
-  startTime: string;
+  /** Asia/Seoul 오프셋을 포함한 date-time (예: 2026-07-19T13:00:00+09:00) */
+  startAt: string;
 }
 
 export interface ActivityUpsertRequest {
@@ -16,7 +16,6 @@ export interface ActivityUpsertRequest {
   price: number;
   currency: string;
   meetingPointName: string;
-  meetingPointAddress: string;
   meetingPlaceId: string;
   status: MyActivityStatus;
   schedules: ActivityScheduleRequest[];
@@ -29,8 +28,8 @@ export interface ActivityImageResponse {
 
 export interface ActivityScheduleResponse {
   scheduleId: number;
-  activityDate: string;
-  startTime: string;
+  /** Asia/Seoul 오프셋을 포함한 date-time */
+  startAt: string;
   bookedCount: number;
   status: ActivityScheduleStatus;
 }
@@ -50,7 +49,6 @@ export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
   price: number;
   currency: string;
   meetingPointName: string;
-  meetingPointAddress?: string;
   meetingPlaceId: string;
   images: ActivityImageResponse[];
   schedules: ActivityScheduleResponse[];
@@ -72,12 +70,20 @@ export interface BuddyApplicationApplicantSummaryResponse {
   applicantContactIdentifier: string;
 }
 
+export interface BuddyDateScheduleApplicationsResponse {
+  activityScheduleId: number;
+  /** Asia/Seoul 오프셋을 포함한 date-time */
+  startAt: string;
+  applicantCount: number;
+  applicants: BuddyApplicationApplicantSummaryResponse[];
+}
+
 export interface BuddyDateActivityApplicationsResponse {
   activityId: number;
   activityTitle: string;
   thumbnailImageUrl: string | null;
-  applicantCount: number;
-  applicants: BuddyApplicationApplicantSummaryResponse[];
+  totalApplicantCount: number;
+  schedules: BuddyDateScheduleApplicationsResponse[];
 }
 
 export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicationApplicantSummaryResponse {
@@ -88,8 +94,10 @@ export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicatio
 
 export interface BuddyActivityApplicationsResponse {
   activityId: number;
+  activityScheduleId: number;
   activityTitle: string;
-  activityDate: string;
+  /** Asia/Seoul 오프셋을 포함한 date-time */
+  startAt: string;
   applicantCount: number;
   statusCounts: Record<string, number>;
   applicants: BuddyApplicationApplicantDetailResponse[];

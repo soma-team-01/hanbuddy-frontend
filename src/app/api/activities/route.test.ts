@@ -21,10 +21,9 @@ const activityRequest = {
   price: 50000,
   currency: "KRW",
   meetingPointName: "Anguk Station",
-  meetingPointAddress: "Jongno-gu, Seoul",
   meetingPlaceId: "place-1",
   status: "ACTIVE",
-  schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
+  schedules: [{ startAt: "2026-07-20T10:00:00+09:00" }],
 };
 
 describe("GET /api/activities", () => {

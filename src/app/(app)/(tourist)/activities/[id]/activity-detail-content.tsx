@@ -15,7 +15,6 @@ import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetails,
   getGoogleMapsApiKey,
-  GOOGLE_PLACE_COMPAT_ADDRESS,
 } from "@/lib/google/places";
 import type { Activity } from "@/types/activity";
 
@@ -98,13 +97,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     );
   }
 
-  const fallbackMeetingAddress =
-    activity.meetingPoint.area &&
-    activity.meetingPoint.area !== activity.meetingPoint.name &&
-    activity.meetingPoint.area !== GOOGLE_PLACE_COMPAT_ADDRESS
-      ? activity.meetingPoint.area
-      : "";
-  const meetingAddress = googleMeetingAddress || fallbackMeetingAddress;
+  const meetingAddress = googleMeetingAddress;
   const googleMapsUrl = activity.meetingPoint.placeId
     ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, getGoogleMapsApiKey())
     : "";

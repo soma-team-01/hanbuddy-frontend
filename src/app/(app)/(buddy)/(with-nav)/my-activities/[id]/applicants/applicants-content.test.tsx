@@ -18,13 +18,14 @@ const mockedGetBuddyActivityApplications = vi.mocked(getBuddyActivityApplication
 const mockedGetMyActivity = vi.mocked(getMyActivity);
 
 describe("ApplicantsContent", () => {
-  it("renders applicants loaded from the API for the selected date", async () => {
+  it("renders applicants loaded from the API for the selected schedule", async () => {
     mockedGetBuddyActivityApplications.mockResolvedValue({
       status: "success",
       applications: {
         activityId: 42,
+        activityScheduleId: 99,
         activityTitle: "Traditional Tea Tasting",
-        activityDate: "2026-07-20",
+        startAt: "2026-07-20T10:00:00+09:00",
         applicantCount: 1,
         statusCounts: { CONFIRMED: 1 },
         applicants: [
@@ -46,19 +47,19 @@ describe("ApplicantsContent", () => {
       },
     });
 
-    render(<ApplicantsContent activityId="42" initialDate="2026-07-20" />);
+    render(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByText("Applicant Status • 1 confirmed")).toBeInTheDocument();
+    expect(screen.getByText("2026-07-20 10:00 • 1 confirmed")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
     expect(screen.getByText("No pork")).toBeInTheDocument();
-    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith(42, "2026-07-20");
+    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith("99");
     expect(mockedGetMyActivity).not.toHaveBeenCalled();
   });
 
-  it("falls back to the first activity schedule when no date query is provided", async () => {
+  it("falls back to the first activity schedule when no schedule query is provided", async () => {
     mockedGetMyActivity.mockResolvedValue({
       status: "success",
       activity: {
@@ -73,14 +74,12 @@ describe("ApplicantsContent", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Jongno-gu, Seoul",
         meetingPlaceId: "place-1",
         images: [],
         schedules: [
           {
             scheduleId: 99,
-            activityDate: "2026-07-20",
-            startTime: "10:00",
+            startAt: "2026-07-20T10:00:00+09:00",
             bookedCount: 0,
             status: "OPEN",
           },
@@ -91,8 +90,9 @@ describe("ApplicantsContent", () => {
       status: "success",
       applications: {
         activityId: 42,
+        activityScheduleId: 99,
         activityTitle: "Traditional Tea Tasting",
-        activityDate: "2026-07-20",
+        startAt: "2026-07-20T10:00:00+09:00",
         applicantCount: 0,
         statusCounts: {},
         applicants: [],
@@ -101,8 +101,8 @@ describe("ApplicantsContent", () => {
 
     render(<ApplicantsContent activityId="42" />);
 
-    expect(await screen.findByText("No applicants for this date yet.")).toBeInTheDocument();
+    expect(await screen.findByText("No applicants for this schedule yet.")).toBeInTheDocument();
     expect(mockedGetMyActivity).toHaveBeenCalledWith(42);
-    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith(42, "2026-07-20");
+    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith(99);
   });
 });

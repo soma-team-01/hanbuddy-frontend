@@ -225,7 +225,6 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
@@ -253,10 +252,9 @@ describe("CreateActivityForm", () => {
       price: 50000,
       currency: "KRW",
       meetingPointName: "Anguk Station",
-      meetingPointAddress: "Seoul, South Korea",
       meetingPlaceId: "ChIJ-anguk",
       status: "ACTIVE",
-      schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
+      schedules: [{ startAt: "2026-07-20T10:00:00+09:00" }],
     });
     expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
   });
@@ -285,7 +283,6 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
@@ -456,7 +453,6 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
@@ -488,8 +484,8 @@ describe("CreateActivityForm", () => {
       expect(mockedCreateMyActivity).toHaveBeenCalledWith(
         expect.objectContaining({
           schedules: [
-            { activityDate: "2026-07-20", startTime: "10:00" },
-            { activityDate: "2026-07-22", startTime: "14:00" },
+            { startAt: "2026-07-20T10:00:00+09:00" },
+            { startAt: "2026-07-22T14:00:00+09:00" },
           ],
         }),
       ),
@@ -519,7 +515,6 @@ describe("CreateActivityForm", () => {
         price: 50000,
         currency: "KRW",
         meetingPointName: "Anguk Station",
-        meetingPointAddress: "Seoul, South Korea",
         meetingPlaceId: "ChIJ-anguk",
         images: [],
         schedules: [],
@@ -562,7 +557,7 @@ describe("CreateActivityForm", () => {
         expect.objectContaining({
           includedItems: ["Tea"],
           restrictionNotes: [],
-          schedules: [{ activityDate: "2026-07-20", startTime: "10:00" }],
+          schedules: [{ startAt: "2026-07-20T10:00:00+09:00" }],
         }),
       ),
     );

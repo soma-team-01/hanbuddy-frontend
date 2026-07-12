@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ApiResult } from "@/lib/api/result";
-import {
-  ApiQueryError,
-  UnauthenticatedQueryError,
-  unwrapApiResult,
-} from "./result";
+import { ApiQueryError, UnauthenticatedQueryError, unwrapApiResult } from "./result";
 
 describe("unwrapApiResult", () => {
   it("returns the successful result field", () => {

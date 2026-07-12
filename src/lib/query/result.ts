@@ -13,9 +13,7 @@ export class UnauthenticatedQueryError extends Error {
 }
 
 type QueryResult =
-  | { status: "success" }
-  | { status: "unauthenticated" }
-  | { status: "error"; message: string };
+  { status: "success" } | { status: "unauthenticated" } | { status: "error"; message: string };
 
 type SuccessResult<TResult> = Extract<TResult, { status: "success" }>;
 

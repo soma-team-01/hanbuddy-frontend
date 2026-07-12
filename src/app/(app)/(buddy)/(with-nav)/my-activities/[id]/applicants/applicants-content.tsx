@@ -5,10 +5,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
 import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
 import { splitStartAt } from "@/lib/format";
-import {
-  buddyActivityApplicationsQueryOptions,
-  myActivityQueryOptions,
-} from "@/lib/query/buddy";
+import { buddyActivityApplicationsQueryOptions, myActivityQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 interface ApplicantsContentProps {
@@ -58,7 +55,8 @@ export function ApplicantsContent({
     applicationsQuery.error?.message ||
     (!initialScheduleId && activityQuery.isSuccess && !scheduleId ? "등록된 일정이 없습니다." : "");
   const isLoading =
-    (!initialScheduleId && activityQuery.isPending) || (Boolean(scheduleId) && applicationsQuery.isPending);
+    (!initialScheduleId && activityQuery.isPending) ||
+    (Boolean(scheduleId) && applicationsQuery.isPending);
 
   if (isLoading) {
     return <p className="py-10 text-center text-ink-soft">Loading applicants...</p>;

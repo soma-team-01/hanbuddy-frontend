@@ -13,10 +13,7 @@ import {
   getActivityThumbnail,
 } from "@/lib/api/buddy-view";
 import { splitStartAt } from "@/lib/format";
-import {
-  buddyApplicationsQueryOptions,
-  buddyScheduleDatesQueryOptions,
-} from "@/lib/query/buddy";
+import { buddyApplicationsQueryOptions, buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 function formatDateChip(date: string) {

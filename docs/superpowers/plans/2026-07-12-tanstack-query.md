@@ -21,12 +21,14 @@
 ### Task 1: Query foundation and test harness
 
 **Files:**
+
 - Modify: `package.json`, `package-lock.json`, `src/app/layout.tsx`
 - Create: `src/app/query-provider.tsx`
 - Create: `src/lib/query/client.ts`, `src/lib/query/result.ts`, `src/lib/query/use-auth-query-redirect.ts`
 - Create: `src/lib/query/result.test.ts`, `src/test/render-with-query-client.tsx`
 
 **Interfaces:**
+
 - Produces: `createQueryClient(): QueryClient`
 - Produces: `unwrapApiResult(result, key): T`
 - Produces: `ApiQueryError`, `UnauthenticatedQueryError`
@@ -41,10 +43,12 @@
 ### Task 2: Domain query options
 
 **Files:**
+
 - Create: `src/lib/query/activities.ts`, `src/lib/query/applications.ts`, `src/lib/query/buddy.ts`, `src/lib/query/users.ts`
 - Create: `src/lib/query/options.test.ts`
 
 **Interfaces:**
+
 - Produces: `activityKeys`, `touristActivitiesQueryOptions`, `touristActivityQueryOptions`
 - Produces: `applicationKeys`, `myApplicationsQueryOptions`
 - Produces: `buddyKeys`, `myActivitiesQueryOptions`, `myActivityQueryOptions`, `buddyScheduleDatesQueryOptions`, `buddyApplicationsQueryOptions`, `buddyActivityApplicationsQueryOptions`
@@ -58,6 +62,7 @@
 ### Task 3: Tourist activity and application flows
 
 **Files:**
+
 - Modify: `src/app/(app)/(tourist)/(with-nav)/explore/activity-feed.tsx`
 - Modify: `src/app/(app)/(tourist)/activities/[id]/activity-detail-content.tsx`
 - Modify: `src/app/(app)/(tourist)/activities/[id]/book/booking-content.tsx`
@@ -66,6 +71,7 @@
 - Modify corresponding component tests
 
 **Interfaces:**
+
 - Consumes: activity/application option factories, auth redirect hook, QueryClient
 - Produces: cached activity detail shared by detail and booking; synchronized application cache
 
@@ -77,11 +83,13 @@
 ### Task 4: Profile query and mutation
 
 **Files:**
+
 - Modify: `src/lib/api/useMyProfile.ts`
 - Modify: `src/app/(app)/(tourist)/my-page/edit/EditProfileForm.tsx`
 - Modify profile/edit tests
 
 **Interfaces:**
+
 - Consumes: `myProfileQueryOptions`, `userKeys`
 - Produces: shared profile cache and mutation response cache update
 
@@ -93,6 +101,7 @@
 ### Task 5: Buddy query and mutation flows
 
 **Files:**
+
 - Modify: `src/app/(app)/(buddy)/(with-nav)/dashboard/dashboard-content.tsx`
 - Modify: `src/app/(app)/(buddy)/(with-nav)/my-activities/my-activities-content.tsx`
 - Modify: `src/app/(app)/(buddy)/(with-nav)/my-activities/[id]/applicants/applicants-content.tsx`
@@ -100,6 +109,7 @@
 - Modify corresponding component tests
 
 **Interfaces:**
+
 - Consumes: buddy option factories, activity/application keys, QueryClient
 - Produces: date-filtered query caching, applicant dependent queries, optimistic activity deletion
 
@@ -111,10 +121,12 @@
 ### Task 6: Logout cache isolation
 
 **Files:**
+
 - Modify: `src/app/(app)/(with-nav)/my-page/LogoutButton.tsx`
 - Modify: `src/app/(app)/(with-nav)/my-page/LogoutButton.test.tsx`
 
 **Interfaces:**
+
 - Consumes: current QueryClient
 - Produces: cleared authenticated cache before login navigation
 
@@ -126,9 +138,11 @@
 ### Task 7: Quality review and full verification
 
 **Files:**
+
 - Modify only files required by lint, type, format, or React performance findings.
 
 **Interfaces:**
+
 - Consumes: all prior tasks
 - Produces: CI-ready branch
 

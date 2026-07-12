@@ -169,9 +169,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       });
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      setErrorMessage(
-        error instanceof Error ? error.message : "프로필을 저장하지 못했습니다.",
-      );
+      setErrorMessage(error instanceof Error ? error.message : "프로필을 저장하지 못했습니다.");
     } finally {
       setIsSaving(false);
     }

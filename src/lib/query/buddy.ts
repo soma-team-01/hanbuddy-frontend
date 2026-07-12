@@ -16,8 +16,7 @@ export const buddyKeys = {
     [...buddyKeys.activities(), "detail", activityId] as const,
   applications: () => [...buddyKeys.all(), "applications"] as const,
   scheduleDates: () => [...buddyKeys.applications(), "schedule-dates"] as const,
-  applicationsByDate: (date: string) =>
-    [...buddyKeys.applications(), "date", date] as const,
+  applicationsByDate: (date: string) => [...buddyKeys.applications(), "date", date] as const,
   applicationsBySchedule: (activityScheduleId: number | string) =>
     [...buddyKeys.applications(), "schedule", activityScheduleId] as const,
 };

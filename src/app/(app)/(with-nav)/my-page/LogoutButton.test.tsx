@@ -1,5 +1,8 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { userKeys } from "@/lib/query/users";
+import { createMockProfile } from "@/test/factories";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { LogoutButton } from "./LogoutButton";
 
 const replace = vi.fn();
@@ -27,7 +30,8 @@ describe("LogoutButton", () => {
   });
 
   it("posts to logout and returns the user to login after confirming", async () => {
-    render(<LogoutButton />);
+    const { queryClient } = renderWithQueryClient(<LogoutButton />);
+    queryClient.setQueryData(userKeys.me(), createMockProfile());
 
     const logoutButton = screen.getByRole("button", { name: "Log Out" });
     expect(logoutButton).toHaveClass("cursor-pointer");
@@ -43,10 +47,11 @@ describe("LogoutButton", () => {
     });
     expect(replace).toHaveBeenCalledWith("/login");
     expect(refresh).toHaveBeenCalled();
+    expect(queryClient.getQueryData(userKeys.me())).toBeUndefined();
   });
 
   it("does not log out when the confirmation is cancelled", () => {
-    render(<LogoutButton />);
+    renderWithQueryClient(<LogoutButton />);
 
     fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
@@ -57,7 +62,7 @@ describe("LogoutButton", () => {
 
   it("still returns the user to login when the logout request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network unavailable")));
-    render(<LogoutButton />);
+    renderWithQueryClient(<LogoutButton />);
 
     fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
     confirmLogoutInDialog();

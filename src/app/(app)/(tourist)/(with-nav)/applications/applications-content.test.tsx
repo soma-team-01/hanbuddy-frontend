@@ -1,6 +1,8 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cancelMyApplication, getMyApplications } from "@/lib/api/applications";
+import { applicationKeys } from "@/lib/query/applications";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ApplicationResponse } from "@/types/application";
 import { ApplicationsContent } from "./applications-content";
 
@@ -50,7 +52,7 @@ describe("ApplicationsContent", () => {
       applications: [confirmedApplication],
     });
 
-    render(<ApplicationsContent />);
+    renderWithQueryClient(<ApplicationsContent />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
@@ -72,7 +74,7 @@ describe("ApplicationsContent", () => {
       },
     });
 
-    render(<ApplicationsContent />);
+    const { queryClient } = renderWithQueryClient(<ApplicationsContent />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
@@ -87,5 +89,8 @@ describe("ApplicationsContent", () => {
 
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Cancelled")).toBeInTheDocument();
+    expect(queryClient.getQueryData(applicationKeys.mine())).toEqual([
+      expect.objectContaining({ applicationId: 11, status: "CANCELLED" }),
+    ]);
   });
 });

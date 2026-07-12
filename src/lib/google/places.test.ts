@@ -19,12 +19,14 @@ describe("Google Places helpers", () => {
       }),
     );
 
-    await expect(fetchGooglePlaceDetails("ChIJ-bukchon", "test-key", fetcher)).resolves.toEqual({
+    await expect(
+      fetchGooglePlaceDetails("ChIJ-bukchon", "test-key", fetcher, "session-token"),
+    ).resolves.toEqual({
       formattedAddress: "Jongno-gu, Seoul",
     });
 
     expect(fetcher).toHaveBeenCalledWith(
-      "https://places.googleapis.com/v1/places/ChIJ-bukchon",
+      "https://places.googleapis.com/v1/places/ChIJ-bukchon?sessionToken=session-token",
       expect.objectContaining({
         headers: {
           "X-Goog-Api-Key": "test-key",
@@ -55,7 +57,9 @@ describe("Google Places helpers", () => {
       ),
     );
 
-    await expect(searchGooglePlacePredictions("anguk", "test-key", fetcher)).resolves.toEqual([
+    await expect(
+      searchGooglePlacePredictions("anguk", "test-key", fetcher, "session-token"),
+    ).resolves.toEqual([
       {
         placeId: "ChIJ-anguk",
         mainText: "Anguk Station",
@@ -78,6 +82,7 @@ describe("Google Places helpers", () => {
           input: "anguk",
           includedRegionCodes: ["kr"],
           languageCode: "en",
+          sessionToken: "session-token",
         }),
       }),
     );

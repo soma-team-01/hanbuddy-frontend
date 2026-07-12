@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
@@ -10,11 +11,16 @@ import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/comp
 import { createMyActivity } from "@/lib/api/buddy";
 import {
   buildGoogleMapsEmbedUrl,
+  fetchGooglePlaceDetails,
   getGoogleMapsApiKey,
   type GooglePlacePrediction,
   searchGooglePlacePredictions,
 } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
+import { activityKeys } from "@/lib/query/activities";
+import { buddyKeys } from "@/lib/query/buddy";
+import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -135,6 +141,7 @@ function buildSchedules(formData: FormData) {
 
 export function CreateActivityForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
   const [includedItems, setIncludedItems] = useState<number[]>([0]);
@@ -143,6 +150,8 @@ export function CreateActivityForm() {
   const [selectedPhotos, setSelectedPhotos] = useState<SelectedActivityPhoto[]>([]);
   const selectedPhotosRef = useRef<SelectedActivityPhoto[]>([]);
   const nextPhotoIdRef = useRef(0);
+  const placeSessionTokenRef = useRef<string | null>(null);
+  const placeSelectionVersionRef = useRef(0);
   const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
   const [meetingPlaceId, setMeetingPlaceId] = useState("");
   const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
@@ -154,6 +163,19 @@ export function CreateActivityForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isDirty, setIsDirty] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const createActivityMutation = useMutation({
+    mutationFn: async (request: ActivityUpsertRequest) =>
+      unwrapApiResult(await createMyActivity(request), "activity"),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
+        queryClient.invalidateQueries({ queryKey: buddyKeys.scheduleDates() }),
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
+      router.push("/my-activities");
+    },
+  });
+  useAuthQueryRedirect(createActivityMutation.error);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -186,7 +208,8 @@ export function CreateActivityForm() {
 
     // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
     const timeoutId = window.setTimeout(() => {
-      searchGooglePlacePredictions(query, apiKey)
+      placeSessionTokenRef.current ??= globalThis.crypto.randomUUID();
+      searchGooglePlacePredictions(query, apiKey, fetch, placeSessionTokenRef.current)
         .then((predictions) => {
           if (!isMounted) return;
           setPlacePredictions(predictions);
@@ -301,20 +324,9 @@ export function CreateActivityForm() {
         status,
         schedules: buildSchedules(formData),
       };
-      const result = await createMyActivity(request);
-
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        setSubmittingStatus(null);
-        return;
-      }
-
-      router.push("/my-activities");
+      await createActivityMutation.mutateAsync(request);
     } catch (error) {
+      if (error instanceof UnauthenticatedQueryError) return;
       setErrorMessage(error instanceof Error ? error.message : "Failed to register the activity.");
       setSubmittingStatus(null);
     }
@@ -322,6 +334,10 @@ export function CreateActivityForm() {
 
   function handlePlaceQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;
+    placeSelectionVersionRef.current += 1;
+    if (value.trim().length < 3) {
+      placeSessionTokenRef.current = null;
+    }
     setMeetingPlaceQuery(value);
     setMeetingPlaceId("");
     setSelectedMeetingPlaceLabel("");
@@ -330,15 +346,30 @@ export function CreateActivityForm() {
     setIsSearchingPlaces(value.trim().length >= 3 && Boolean(getGoogleMapsApiKey()));
   }
 
-  function handlePlaceSelect(prediction: GooglePlacePrediction) {
-    const address =
+  async function handlePlaceSelect(prediction: GooglePlacePrediction) {
+    const fallbackAddress =
       prediction.secondaryText || (prediction.text !== prediction.mainText ? prediction.text : "");
+    const apiKey = getGoogleMapsApiKey();
+    const sessionToken = placeSessionTokenRef.current;
+    const selectionVersion = ++placeSelectionVersionRef.current;
+    placeSessionTokenRef.current = null;
 
     setMeetingPlaceId(prediction.placeId);
     setMeetingPlaceQuery(prediction.mainText);
     setSelectedMeetingPlaceLabel(prediction.mainText);
-    setSelectedMeetingPlaceAddress(address);
+    setSelectedMeetingPlaceAddress(fallbackAddress);
     setPlacePredictions([]);
+
+    if (!apiKey || !sessionToken) return;
+
+    try {
+      const place = await fetchGooglePlaceDetails(prediction.placeId, apiKey, fetch, sessionToken);
+      if (placeSelectionVersionRef.current === selectionVersion && place.formattedAddress) {
+        setSelectedMeetingPlaceAddress(place.formattedAddress);
+      }
+    } catch {
+      // Keep the Autocomplete address when session-terminating Place Details fails.
+    }
   }
 
   function handlePhotoSelection(event: React.ChangeEvent<HTMLInputElement>) {

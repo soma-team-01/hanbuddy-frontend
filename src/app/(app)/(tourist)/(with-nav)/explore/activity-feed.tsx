@@ -1,54 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ActivityCard } from "@/components/ui/ActivityCard";
-import { getTouristActivities } from "@/lib/api/activities";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
-import type { Activity } from "@/types/activity";
+import { touristActivitiesQueryOptions } from "@/lib/query/activities";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityFeed() {
-  const router = useRouter();
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const activitiesQuery = useQuery(touristActivitiesQueryOptions());
+  useAuthQueryRedirect(activitiesQuery.error);
 
-  useEffect(() => {
-    let isMounted = true;
+  const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 
-    getTouristActivities().then((result) => {
-      if (!isMounted) return;
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        setIsLoading(false);
-        return;
-      }
-
-      setActivities(result.activities.map(mapTouristActivitySummaryToActivity));
-      setIsLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
-
-  if (isLoading) {
+  if (activitiesQuery.isPending) {
     return <p className="py-10 text-center text-ink-soft">Loading activities...</p>;
   }
 
-  if (errorMessage) {
+  if (activitiesQuery.error) {
     return (
       <p
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {errorMessage}
+        {activitiesQuery.error.message}
       </p>
     );
   }

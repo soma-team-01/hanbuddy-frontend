@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
@@ -22,6 +23,9 @@ import {
   isSupportedProfileImageType,
   uploadProfileImage,
 } from "@/lib/images/presigned";
+import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import { userKeys } from "@/lib/query/users";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 import type { MyProfile } from "@/types/user";
 
@@ -37,12 +41,23 @@ function toMessagingCountry(profile: MyProfile) {
   );
 }
 
+function resolveContactCountryCode(
+  isBuddy: boolean,
+  messagingApp: MessagingAppKey,
+  messagingCountry: string,
+) {
+  const usesKoreanPhoneNumber =
+    isBuddy && (messagingApp === "whatsapp" || messagingApp === "phone");
+  return usesKoreanPhoneNumber ? "+82" : (findCountry(messagingCountry)?.dialCode ?? "");
+}
+
 interface EditProfileFormProps {
   profile: MyProfile;
 }
 
 export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
     APP_BY_CONTACT_METHOD[profile.contactMethod],
   );
@@ -57,6 +72,15 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     useMessagingCountrySync(profile.nationalityCode, toMessagingCountry(profile));
 
   const isBuddy = profile.userType === "BUDDY";
+  const updateProfileMutation = useMutation({
+    mutationFn: async (request: Parameters<typeof updateMyProfile>[0]) =>
+      unwrapApiResult(await updateMyProfile(request), "profile"),
+    onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(userKeys.me(), updatedProfile);
+      router.replace("/my-page");
+    },
+  });
+  useAuthQueryRedirect(updateProfileMutation.error);
 
   useEffect(() => {
     return () => {
@@ -141,29 +165,18 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
         return;
       }
 
-      const result = await updateMyProfile({
+      await updateProfileMutation.mutateAsync({
         name,
         profileImageKey,
         nationalityCode: nationality,
         age,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-        contactCountryCode:
-          isBuddy && (messagingApp === "whatsapp" || messagingApp === "phone")
-            ? "+82"
-            : (findCountry(messagingCountry)?.dialCode ?? ""),
+        contactCountryCode: resolveContactCountryCode(isBuddy, messagingApp, messagingCountry),
         contactIdentifier,
       });
-
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        return;
-      }
-
-      router.replace("/my-page");
+    } catch (error) {
+      if (error instanceof UnauthenticatedQueryError) return;
+      setErrorMessage(error instanceof Error ? error.message : "프로필을 저장하지 못했습니다.");
     } finally {
       setIsSaving(false);
     }

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import {
@@ -15,6 +16,10 @@ import {
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { createApplication } from "@/lib/api/applications";
 import { formatKrw } from "@/lib/format";
+import { applicationKeys } from "@/lib/query/applications";
+import { buddyKeys } from "@/lib/query/buddy";
+import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { Activity } from "@/types/activity";
 
 const MAX_GUESTS = 8;
@@ -22,13 +27,27 @@ const SERVICE_FEE_RATE = 0.1;
 
 export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [sessionId, setSessionId] = useState(activity.sessions[0]?.id ?? "");
   const [guests, setGuests] = useState(2);
   const [agreed, setAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createApplicationMutation = useMutation({
+    mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
+      unwrapApiResult(await createApplication(request), "application"),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+        queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
+      ]);
+      router.replace("/applications");
+    },
+  });
+  useAuthQueryRedirect(createApplicationMutation.error);
+
+  const isSubmitting = createApplicationMutation.isPending;
 
   const subtotal = activity.price * guests;
   const serviceFee = Math.round(subtotal * SERVICE_FEE_RATE);
@@ -48,28 +67,19 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     if (isSubmitting) return;
 
     setErrorMessage("");
-    setIsSubmitting(true);
     try {
-      const result = await createApplication({
+      await createApplicationMutation.mutateAsync({
         activityScheduleId: Number(sessionId),
         guestCount: guests,
         specialRequest: specialRequest.trim() || undefined,
       });
-
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        return;
-      }
-
-      router.replace("/applications");
-    } catch {
-      setErrorMessage("신청을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      if (error instanceof UnauthenticatedQueryError) return;
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "신청을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
     }
   }
 

@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
 import { fetchGooglePlaceDetails } from "@/lib/google/places";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ActivityDetailContent } from "./activity-detail-content";
 
 vi.mock("next/navigation", () => ({
@@ -57,7 +58,7 @@ describe("ActivityDetailContent", () => {
       },
     });
 
-    render(<ActivityDetailContent activityId="42" />);
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();

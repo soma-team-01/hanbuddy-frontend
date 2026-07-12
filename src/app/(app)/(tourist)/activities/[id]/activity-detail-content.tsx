@@ -2,13 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { CheckIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
-import { getTouristActivity } from "@/lib/api/activities";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { formatKrw } from "@/lib/format";
 import {
@@ -16,39 +15,17 @@ import {
   fetchGooglePlaceDetails,
   getGoogleMapsApiKey,
 } from "@/lib/google/places";
-import type { Activity } from "@/types/activity";
+import { touristActivityQueryOptions } from "@/lib/query/activities";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
-  const router = useRouter();
-  const [activity, setActivity] = useState<Activity | null>(null);
+  const activityQuery = useQuery(touristActivityQueryOptions(activityId));
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  useAuthQueryRedirect(activityQuery.error);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    getTouristActivity(activityId).then((result) => {
-      if (!isMounted) return;
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        setIsLoading(false);
-        return;
-      }
-
-      setGoogleMeetingAddress("");
-      setActivity(mapTouristActivityDetailToActivity(result.activity));
-      setIsLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activityId, router]);
+  const activity = activityQuery.data
+    ? mapTouristActivityDetailToActivity(activityQuery.data)
+    : null;
 
   useEffect(() => {
     const placeId = activity?.meetingPoint.placeId;
@@ -72,7 +49,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     };
   }, [activity?.meetingPoint.placeId]);
 
-  if (isLoading) {
+  if (activityQuery.isPending) {
     return (
       <div className="flex flex-1 flex-col">
         <TopAppBar backHref="/explore" />
@@ -81,7 +58,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     );
   }
 
-  if (errorMessage || !activity) {
+  if (activityQuery.error || !activity) {
     return (
       <div className="flex flex-1 flex-col">
         <TopAppBar backHref="/explore" />
@@ -90,7 +67,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {errorMessage || "활동 상세를 불러오지 못했습니다."}
+            {activityQuery.error?.message || "활동 상세를 불러오지 못했습니다."}
           </p>
         </main>
       </div>

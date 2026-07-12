@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ActivityFeed } from "./activity-feed";
 
 vi.mock("next/navigation", () => ({
@@ -32,7 +33,7 @@ describe("ActivityFeed", () => {
       ],
     });
 
-    render(<ActivityFeed />);
+    renderWithQueryClient(<ActivityFeed />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Anguk Station Exit 2")).toBeInTheDocument();

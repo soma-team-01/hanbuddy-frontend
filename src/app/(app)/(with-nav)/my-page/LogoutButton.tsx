@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LogOutIcon } from "@/components/ui/icons";
 
 export function LogoutButton() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -21,6 +23,7 @@ export function LogoutButton() {
     } catch {
       // Logout is best-effort; still return the user to the signed-out screen.
     } finally {
+      queryClient.clear();
       router.replace("/login");
       router.refresh();
     }

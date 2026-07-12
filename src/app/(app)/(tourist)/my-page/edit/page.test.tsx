@@ -186,6 +186,18 @@ describe("EditProfilePage", () => {
     expect(replace).not.toHaveBeenCalledWith("/my-page");
   });
 
+  it("redirects to login when the save request is unauthenticated", async () => {
+    mockedUpdateMyProfile.mockResolvedValue({ status: "unauthenticated" });
+    renderWithQueryClient(<EditProfilePage />);
+
+    await screen.findByLabelText("Full Name");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith("/login");
+    });
+  });
+
   it("redirects to login when the profile load is unauthenticated", async () => {
     mockedGetMyProfile.mockResolvedValue({ status: "unauthenticated" });
     renderWithQueryClient(<EditProfilePage />);

@@ -9,5 +9,8 @@ describe("createQueryClient", () => {
       retry: false,
       staleTime: 30_000,
     });
+    expect(queryClient.getDefaultOptions().mutations).toMatchObject({
+      retry: false,
+    });
   });
 });

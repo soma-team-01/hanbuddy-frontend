@@ -41,6 +41,16 @@ function toMessagingCountry(profile: MyProfile) {
   );
 }
 
+function resolveContactCountryCode(
+  isBuddy: boolean,
+  messagingApp: MessagingAppKey,
+  messagingCountry: string,
+) {
+  const usesKoreanPhoneNumber =
+    isBuddy && (messagingApp === "whatsapp" || messagingApp === "phone");
+  return usesKoreanPhoneNumber ? "+82" : (findCountry(messagingCountry)?.dialCode ?? "");
+}
+
 interface EditProfileFormProps {
   profile: MyProfile;
 }
@@ -161,10 +171,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
         nationalityCode: nationality,
         age,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-        contactCountryCode:
-          isBuddy && (messagingApp === "whatsapp" || messagingApp === "phone")
-            ? "+82"
-            : (findCountry(messagingCountry)?.dialCode ?? ""),
+        contactCountryCode: resolveContactCountryCode(isBuddy, messagingApp, messagingCountry),
         contactIdentifier,
       });
     } catch (error) {

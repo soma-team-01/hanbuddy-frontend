@@ -22,13 +22,13 @@ export function ApplicationsContent() {
       applicationId: string;
       reason: ApplicationCancellationReason;
     }) => unwrapApiResult(await cancelMyApplication(applicationId, reason), "application"),
-    onSuccess: (application) => {
+    onSuccess: async (application) => {
       queryClient.setQueryData<ApplicationResponse[]>(applicationKeys.mine(), (current = []) =>
         current.map((item) =>
           item.applicationId === application.applicationId ? application : item,
         ),
       );
-      void queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
+      await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
     },
   });
   useAuthQueryRedirect(applicationsQuery.error ?? cancelApplicationMutation.error);

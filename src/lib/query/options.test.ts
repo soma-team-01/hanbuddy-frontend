@@ -14,6 +14,7 @@ describe("domain query options", () => {
     expect(activityKeys.list()).toEqual(["activities", "list"]);
     expect(activityKeys.detail("42")).toEqual(["activities", "detail", "42"]);
     expect(touristActivityQueryOptions("42").queryKey).toEqual(activityKeys.detail("42"));
+    expect(activityKeys.detail(42)).toEqual(activityKeys.detail("42"));
   });
 
   it("builds stable application keys", () => {
@@ -22,6 +23,8 @@ describe("domain query options", () => {
   });
 
   it("includes buddy filters and identifiers in keys", () => {
+    expect(buddyKeys.activityDetail(42)).toEqual(buddyKeys.activityDetail("42"));
+    expect(buddyKeys.applicationsBySchedule(99)).toEqual(buddyKeys.applicationsBySchedule("99"));
     expect(buddyKeys.applicationsByDate("2026-07-20")).toEqual([
       "buddy",
       "applications",
@@ -31,12 +34,12 @@ describe("domain query options", () => {
     expect(buddyApplicationsQueryOptions("2026-07-20").queryKey).toEqual(
       buddyKeys.applicationsByDate("2026-07-20"),
     );
-    expect(myActivityQueryOptions(7).queryKey).toEqual(["buddy", "activities", "detail", 7]);
+    expect(myActivityQueryOptions(7).queryKey).toEqual(["buddy", "activities", "detail", "7"]);
     expect(buddyActivityApplicationsQueryOptions(101).queryKey).toEqual([
       "buddy",
       "applications",
       "schedule",
-      101,
+      "101",
     ]);
   });
 

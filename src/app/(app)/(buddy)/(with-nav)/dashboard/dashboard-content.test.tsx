@@ -1,6 +1,7 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBuddyApplications, getBuddyScheduleDates } from "@/lib/api/buddy";
+import { buddyKeys } from "@/lib/query/buddy";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { DashboardContent } from "./dashboard-content";
 
@@ -103,6 +104,32 @@ describe("DashboardContent", () => {
     await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21"));
     fireEvent.click(screen.getByText("20").closest("button")!);
 
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.getByText("20").closest("button")).toHaveAttribute("aria-pressed", "true"),
+    );
+    expect(mockedGetBuddyApplications).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back when the selected date disappears from refreshed schedules", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ date: "2026-07-20" }, { date: "2026-07-21" }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
+
+    const { queryClient } = renderWithQueryClient(<DashboardContent />);
+
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20"));
+    fireEvent.click(screen.getByText("21").closest("button")!);
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21"));
+
+    act(() => {
+      queryClient.setQueryData(buddyKeys.scheduleDates(), [{ date: "2026-07-22" }]);
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText("22").closest("button")).toHaveAttribute("aria-pressed", "true"),
+    );
+    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-22");
   });
 });

@@ -47,9 +47,6 @@ export function MyActivitiesContent() {
   useAuthQueryRedirect(activitiesQuery.error ?? deleteActivityMutation.error);
 
   const activities = activitiesQuery.data ?? [];
-  const deletingActivityId = deleteActivityMutation.isPending
-    ? deleteActivityMutation.variables
-    : null;
 
   async function handleDelete(activityId: number) {
     await deleteActivityMutation.mutateAsync(activityId).catch(() => undefined);
@@ -59,13 +56,13 @@ export function MyActivitiesContent() {
     return <p className="py-10 text-center text-ink-soft">Loading activities...</p>;
   }
 
-  if (activitiesQuery.error || deleteActivityMutation.error) {
+  if (activitiesQuery.error) {
     return (
       <p
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {(activitiesQuery.error ?? deleteActivityMutation.error)?.message}
+        {activitiesQuery.error.message}
       </p>
     );
   }
@@ -76,6 +73,14 @@ export function MyActivitiesContent() {
 
   return (
     <div className="flex flex-col gap-6">
+      {deleteActivityMutation.error ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          {deleteActivityMutation.error.message}
+        </p>
+      ) : null}
       {activities.map((activity) => (
         <article
           key={activity.activityId}
@@ -105,7 +110,7 @@ export function MyActivitiesContent() {
               type="button"
               aria-label={`Delete ${activity.title}`}
               onClick={() => setDeleteTargetId(activity.activityId)}
-              disabled={deletingActivityId === activity.activityId}
+              disabled={deleteActivityMutation.isPending}
               className="flex size-9 items-center justify-center rounded-full text-ink-soft hover:bg-chip disabled:cursor-not-allowed disabled:opacity-50"
             >
               <TrashIcon className="size-4" />

@@ -13,12 +13,12 @@ export const buddyKeys = {
   activities: () => [...buddyKeys.all(), "activities"] as const,
   myActivities: () => [...buddyKeys.activities(), "me"] as const,
   activityDetail: (activityId: number | string) =>
-    [...buddyKeys.activities(), "detail", activityId] as const,
+    [...buddyKeys.activities(), "detail", String(activityId)] as const,
   applications: () => [...buddyKeys.all(), "applications"] as const,
   scheduleDates: () => [...buddyKeys.applications(), "schedule-dates"] as const,
   applicationsByDate: (date: string) => [...buddyKeys.applications(), "date", date] as const,
   applicationsBySchedule: (activityScheduleId: number | string) =>
-    [...buddyKeys.applications(), "schedule", activityScheduleId] as const,
+    [...buddyKeys.applications(), "schedule", String(activityScheduleId)] as const,
 };
 
 export function myActivitiesQueryOptions() {

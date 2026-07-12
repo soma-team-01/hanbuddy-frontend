@@ -34,7 +34,8 @@ export function DashboardContent() {
   const [selectedDate, setSelectedDate] = useState("");
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
   const dates = scheduleDatesQuery.data ?? [];
-  const activeDate = selectedDate || dates[0]?.date || "";
+  const selectedDateExists = dates.some(({ date }) => date === selectedDate);
+  const activeDate = selectedDateExists ? selectedDate : (dates[0]?.date ?? "");
   const applicationsQuery = useQuery(buddyApplicationsQueryOptions(activeDate));
   const activities = applicationsQuery.data ?? [];
   useAuthQueryRedirect(scheduleDatesQuery.error ?? applicationsQuery.error);

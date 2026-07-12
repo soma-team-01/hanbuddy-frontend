@@ -47,11 +47,12 @@ export function ApplicantsContent({
   });
   const scheduleId = initialScheduleId ?? activityQuery.data?.schedules[0]?.scheduleId ?? "";
   const applicationsQuery = useQuery(buddyActivityApplicationsQueryOptions(scheduleId));
-  useAuthQueryRedirect(activityQuery.error ?? applicationsQuery.error);
+  const relevantActivityError = initialScheduleId ? null : activityQuery.error;
+  useAuthQueryRedirect(relevantActivityError ?? applicationsQuery.error);
 
   const applications = applicationsQuery.data ?? null;
   const errorMessage =
-    activityQuery.error?.message ||
+    relevantActivityError?.message ||
     applicationsQuery.error?.message ||
     (!initialScheduleId && activityQuery.isSuccess && !scheduleId ? "등록된 일정이 없습니다." : "");
   const isLoading =

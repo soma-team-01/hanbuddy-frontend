@@ -5,7 +5,8 @@ import { unwrapApiResult } from "./result";
 export const activityKeys = {
   all: () => ["activities"] as const,
   list: () => [...activityKeys.all(), "list"] as const,
-  detail: (activityId: number | string) => [...activityKeys.all(), "detail", activityId] as const,
+  detail: (activityId: number | string) =>
+    [...activityKeys.all(), "detail", String(activityId)] as const,
 };
 
 export function touristActivitiesQueryOptions() {

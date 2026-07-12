@@ -1,6 +1,8 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
+import { buddyKeys } from "@/lib/query/buddy";
+import { createQueryClient } from "@/lib/query/client";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ApplicantsContent } from "./applicants-content";
 
@@ -105,5 +107,34 @@ describe("ApplicantsContent", () => {
     expect(await screen.findByText("No applicants for this schedule yet.")).toBeInTheDocument();
     expect(mockedGetMyActivity).toHaveBeenCalledWith(42);
     expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith(99);
+  });
+
+  it("ignores a cached activity error when a schedule is provided", async () => {
+    const queryClient = createQueryClient();
+    await queryClient.prefetchQuery({
+      queryKey: buddyKeys.activityDetail(42),
+      queryFn: async () => {
+        throw new Error("이전 활동 조회 오류");
+      },
+    });
+    mockedGetBuddyActivityApplications.mockResolvedValue({
+      status: "success",
+      applications: {
+        activityId: 42,
+        activityScheduleId: 99,
+        activityTitle: "Traditional Tea Tasting",
+        startAt: "2026-07-20T10:00:00+09:00",
+        applicantCount: 0,
+        statusCounts: {},
+        applicants: [],
+      },
+    });
+
+    renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />, {
+      queryClient,
+    });
+
+    expect(await screen.findByText("No applicants for this schedule yet.")).toBeInTheDocument();
+    expect(screen.queryByText("이전 활동 조회 오류")).not.toBeInTheDocument();
   });
 });

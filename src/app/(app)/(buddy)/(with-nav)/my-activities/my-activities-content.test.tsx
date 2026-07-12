@@ -111,4 +111,61 @@ describe("MyActivitiesContent", () => {
     expect(mockedDeleteMyActivity).not.toHaveBeenCalled();
     expect(screen.getByText("Traditional Tea Tasting")).toBeInTheDocument();
   });
+
+  it("keeps the activity list visible when deletion fails", async () => {
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Traditional Tea Tasting",
+          description: "Learn Korean tea etiquette.",
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+        },
+      ],
+    });
+    mockedDeleteMyActivity.mockResolvedValue({
+      status: "error",
+      message: "활동을 삭제하지 못했습니다.",
+    });
+
+    renderWithQueryClient(<MyActivitiesContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("활동을 삭제하지 못했습니다.");
+    expect(screen.getByText("Traditional Tea Tasting")).toBeInTheDocument();
+  });
+
+  it("disables every delete button while a deletion is pending", async () => {
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Traditional Tea Tasting",
+          description: "Learn Korean tea etiquette.",
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+        },
+        {
+          activityId: 43,
+          title: "Bukchon Walking Tour",
+          description: "Explore Bukchon.",
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+        },
+      ],
+    });
+    mockedDeleteMyActivity.mockReturnValue(new Promise(() => undefined));
+
+    renderWithQueryClient(<MyActivitiesContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Delete Bukchon Walking Tour" })).toBeDisabled(),
+    );
+  });
 });

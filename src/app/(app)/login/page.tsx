@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { GoogleIcon } from "@/components/ui/icons";
 
-export default function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ error?: string | string[] }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { error } = await searchParams;
+  const errorMessage = Array.isArray(error) ? error[0] : error;
+
   return (
     <main className="flex flex-1 flex-col">
       <div className="flex flex-1 items-center justify-center px-6">
@@ -12,10 +19,18 @@ export default function LoginPage() {
           <p className="mt-4 text-ink-soft">
             Tell us about yourself to find the perfect local experience.
           </p>
+          {errorMessage ? (
+            <p
+              role="alert"
+              className="mt-6 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-left text-sm text-danger"
+            >
+              {errorMessage}
+            </p>
+          ) : null}
           <Link
             href="/api/auth/google/start"
             prefetch={false}
-            className="mt-10 flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors hover:bg-chip"
+            className={`${errorMessage ? "mt-6" : "mt-10"} flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors hover:bg-chip`}
           >
             <GoogleIcon className="size-5" />
             Continue with Google

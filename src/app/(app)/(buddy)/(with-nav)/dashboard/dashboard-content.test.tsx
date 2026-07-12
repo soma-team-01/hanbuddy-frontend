@@ -130,6 +130,6 @@ describe("DashboardContent", () => {
     await waitFor(() =>
       expect(screen.getByText("22").closest("button")).toHaveAttribute("aria-pressed", "true"),
     );
-    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-22");
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-22"));
   });
 });

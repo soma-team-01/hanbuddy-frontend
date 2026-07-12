@@ -59,11 +59,12 @@ export function ActivityFeed() {
 
   return (
     <>
-      {activities.map((activity) => (
+      {activities.map((activity, index) => (
         <Link
           key={activity.id}
           href={`/activities/${activity.id}`}
-          className="block rounded-xl transition-shadow hover:shadow-md"
+          className="motion-reveal motion-press block rounded-xl hover:shadow-md"
+          style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
         >
           <ActivityCard activity={activity} />
         </Link>

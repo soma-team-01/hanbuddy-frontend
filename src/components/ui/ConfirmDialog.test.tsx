@@ -21,6 +21,19 @@ describe("ConfirmDialog", () => {
     expect(screen.getByText("2 guests")).toBeInTheDocument();
   });
 
+  it("uses the shared dialog entrance motion", () => {
+    render(
+      <ConfirmDialog
+        title="Submit this application?"
+        confirmLabel="Submit"
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("dialog")).toHaveClass("motion-dialog");
+  });
+
   it("calls onConfirm and onClose from the action buttons", () => {
     const onConfirm = vi.fn();
     const onClose = vi.fn();

@@ -23,6 +23,14 @@
   --font-display: var(--font-manrope), sans-serif;
 }
 
+:root {
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 180ms;
+  --motion-duration-slow: 240ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 html {
   /* 스크롤바 유무와 무관하게 자리를 예약해 페이지 간 중앙 정렬 쏠림 방지 */
   scrollbar-gutter: stable;
@@ -46,4 +54,88 @@ button:not(:disabled),
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+@keyframes motion-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-backdrop-in {
+  from {
+    background-color: rgb(0 0 0 / 0%);
+    backdrop-filter: blur(0);
+  }
+}
+
+.motion-reveal {
+  animation: motion-reveal var(--motion-duration-slow) var(--motion-ease-out) both;
+}
+
+.motion-press {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+.motion-press:active {
+  transform: scale(0.985);
+}
+
+.motion-nav-indicator {
+  transition: transform var(--motion-duration-slow) var(--motion-ease-out);
+}
+
+.motion-nav-icon {
+  transition: transform var(--motion-duration-base) var(--motion-ease-out);
+}
+
+.motion-nav-icon[data-active="true"] {
+  transform: translateY(-1px) scale(1.05);
+}
+
+dialog.motion-dialog[open] {
+  transform-origin: center bottom;
+  animation: motion-dialog-in var(--motion-duration-base) var(--motion-ease-out) both;
+}
+
+dialog.motion-dialog[open]::backdrop {
+  animation: motion-backdrop-in var(--motion-duration-base) var(--motion-ease-standard) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-reveal,
+  dialog.motion-dialog[open],
+  dialog.motion-dialog[open]::backdrop {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .motion-press,
+  .motion-nav-indicator,
+  .motion-nav-icon {
+    transition-duration: 0.01ms;
+  }
+
+  .motion-press:active {
+    transform: none;
+  }
 }

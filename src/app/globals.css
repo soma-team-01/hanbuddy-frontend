@@ -91,12 +91,12 @@ button:not(:disabled),
 
 .motion-press {
   transition:
-    transform var(--motion-duration-fast) var(--motion-ease-standard),
+    scale var(--motion-duration-fast) var(--motion-ease-standard),
     box-shadow var(--motion-duration-base) var(--motion-ease-standard);
 }
 
 .motion-press:active {
-  transform: scale(0.985);
+  scale: 0.985;
 }
 
 .motion-nav-indicator {
@@ -136,6 +136,6 @@ dialog.motion-dialog[open]::backdrop {
   }
 
   .motion-press:active {
-    transform: none;
+    scale: none;
   }
 }

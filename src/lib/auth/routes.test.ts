@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getUserTypeHomePath, getUserTypeNavRole, parseUserType } from "./routes";
+import {
+  getRouteAccessRedirect,
+  getUserTypeHomePath,
+  getUserTypeNavRole,
+  parseUserType,
+} from "./routes";
 
 describe("user type routes", () => {
   it.each([
@@ -27,5 +32,77 @@ describe("user type routes", () => {
     ["ADMIN", "tourist"],
   ] as const)("maps %s to the %s bottom nav", (userType, expectedRole) => {
     expect(getUserTypeNavRole(parseUserType(userType))).toBe(expectedRole);
+  });
+});
+
+describe("route access redirects", () => {
+  it.each([
+    "/home",
+    "/home/settings",
+    "/explore",
+    "/activities/1",
+    "/activities/1/book",
+    "/applications",
+    "/dashboard",
+    "/my-activities",
+    "/my-activities/create",
+    "/my-activities/1/applicants",
+    "/my-page",
+    "/my-page/edit",
+  ])("redirects unauthenticated access to %s", (pathname) => {
+    expect(getRouteAccessRedirect({ pathname })).toBe("/login");
+  });
+
+  it("fails closed when only part of the authenticated session is present", () => {
+    expect(getRouteAccessRedirect({ pathname: "/dashboard", accessToken: "token" })).toBe("/login");
+    expect(getRouteAccessRedirect({ pathname: "/explore", userType: "TOURIST" })).toBe("/login");
+  });
+
+  it.each([
+    ["TOURIST", "/dashboard", "/explore"],
+    ["TOURIST", "/my-activities/create", "/explore"],
+    ["BUDDY", "/explore", "/dashboard"],
+    ["BUDDY", "/activities/1", "/dashboard"],
+  ] as const)("redirects %s away from %s", (userType, pathname, expectedPath) => {
+    expect(getRouteAccessRedirect({ pathname, accessToken: "token", userType })).toBe(expectedPath);
+  });
+
+  it.each([
+    ["TOURIST", "/explore"],
+    ["TOURIST", "/activities/1/book"],
+    ["BUDDY", "/dashboard"],
+    ["BUDDY", "/my-activities/create"],
+    ["TOURIST", "/my-page/edit"],
+    ["BUDDY", "/my-page"],
+  ] as const)("allows %s to access %s", (userType, pathname) => {
+    expect(getRouteAccessRedirect({ pathname, accessToken: "token", userType })).toBeNull();
+  });
+
+  it("requires a signup session for onboarding", () => {
+    expect(getRouteAccessRedirect({ pathname: "/onboarding" })).toBe("/login");
+    expect(
+      getRouteAccessRedirect({ pathname: "/onboarding", signupToken: "signup-token" }),
+    ).toBeNull();
+  });
+
+  it.each([
+    ["TOURIST", "/explore"],
+    ["BUDDY", "/dashboard"],
+  ] as const)("redirects an authenticated %s away from public auth pages", (userType, home) => {
+    expect(getRouteAccessRedirect({ pathname: "/login", accessToken: "token", userType })).toBe(
+      home,
+    );
+    expect(
+      getRouteAccessRedirect({
+        pathname: "/onboarding",
+        accessToken: "token",
+        signupToken: "signup-token",
+        userType,
+      }),
+    ).toBe(home);
+  });
+
+  it("leaves the public landing page alone", () => {
+    expect(getRouteAccessRedirect({ pathname: "/" })).toBeNull();
   });
 });

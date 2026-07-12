@@ -38,5 +38,9 @@ describe("ActivityFeed", () => {
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Anguk Station Exit 2")).toBeInTheDocument();
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
+
+    const activityLink = screen.getByRole("link", { name: /Bukchon Hidden Gems/ });
+    expect(activityLink).toHaveClass("motion-reveal", "motion-press");
+    expect(activityLink).toHaveStyle({ animationDelay: "0ms" });
   });
 });

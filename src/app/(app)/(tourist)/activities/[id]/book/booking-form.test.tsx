@@ -1,6 +1,8 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApplication } from "@/lib/api/applications";
+import { applicationKeys } from "@/lib/query/applications";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Activity } from "@/types/activity";
 import { BookingForm } from "./booking-form";
 
@@ -79,7 +81,8 @@ describe("BookingForm", () => {
       },
     });
 
-    render(<BookingForm activity={activity} />);
+    const { queryClient } = renderWithQueryClient(<BookingForm activity={activity} />);
+    queryClient.setQueryData(applicationKeys.mine(), []);
     fireEvent.change(screen.getByPlaceholderText("Let your guide know..."), {
       target: { value: "Vegetarian snacks, please." },
     });
@@ -102,10 +105,11 @@ describe("BookingForm", () => {
       });
     });
     expect(replace).toHaveBeenCalledWith("/applications");
+    expect(queryClient.getQueryState(applicationKeys.mine())?.isInvalidated).toBe(true);
   });
 
   it("does not create an application when the confirmation is cancelled", () => {
-    render(<BookingForm activity={activity} />);
+    renderWithQueryClient(<BookingForm activity={activity} />);
     fireEvent.click(screen.getByLabelText("I agree to the terms above."));
     fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
 

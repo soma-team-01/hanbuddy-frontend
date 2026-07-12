@@ -1,5 +1,3 @@
-import type { ApiResult } from "@/lib/api/result";
-
 export class ApiQueryError extends Error {
   constructor(message: string) {
     super(message);
@@ -14,15 +12,22 @@ export class UnauthenticatedQueryError extends Error {
   }
 }
 
-export function unwrapApiResult<T, TKey extends string>(
-  result: ApiResult<T, TKey>,
-  key: TKey,
-): T {
+type QueryResult =
+  | { status: "success" }
+  | { status: "unauthenticated" }
+  | { status: "error"; message: string };
+
+type SuccessResult<TResult> = Extract<TResult, { status: "success" }>;
+
+export function unwrapApiResult<
+  TResult extends QueryResult,
+  TKey extends Exclude<keyof SuccessResult<TResult>, "status">,
+>(result: TResult, key: TKey): SuccessResult<TResult>[TKey] {
   if (result.status === "unauthenticated") {
     throw new UnauthenticatedQueryError();
   }
   if (result.status === "error") {
     throw new ApiQueryError(result.message);
   }
-  return result[key];
+  return (result as SuccessResult<TResult>)[key];
 }

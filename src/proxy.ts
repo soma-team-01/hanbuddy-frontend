@@ -22,7 +22,7 @@ export const config = {
   matcher: [
     "/login",
     "/onboarding",
-    "/home",
+    "/home/:path*",
     "/explore/:path*",
     "/activities/:path*",
     "/applications/:path*",

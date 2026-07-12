@@ -85,6 +85,7 @@ describe("route access proxy", () => {
     "/login",
     "/onboarding",
     "/home",
+    "/home/settings",
     "/explore",
     "/activities/1",
     "/activities/1/book",

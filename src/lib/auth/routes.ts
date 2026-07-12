@@ -37,15 +37,28 @@ export function getRouteAccessRedirect({
   const authenticated = Boolean(accessToken && userType);
   const homePath = getUserTypeHomePath(userType);
 
-  if (pathname === "/login") {
-    return authenticated ? homePath : null;
+  if (pathname === "/login" || pathname === "/onboarding") {
+    return getAuthEntryRedirect({ pathname, signupToken }, authenticated, homePath);
   }
 
-  if (pathname === "/onboarding") {
-    if (authenticated) return homePath;
-    return signupToken ? null : "/login";
-  }
+  return getProtectedRouteRedirect({ pathname, userType }, authenticated, homePath);
+}
 
+function getAuthEntryRedirect(
+  { pathname, signupToken }: Pick<RouteAccessInput, "pathname" | "signupToken">,
+  authenticated: boolean,
+  homePath: string,
+) {
+  if (authenticated) return homePath;
+  if (pathname === "/onboarding" && !signupToken) return "/login";
+  return null;
+}
+
+function getProtectedRouteRedirect(
+  { pathname, userType }: Pick<RouteAccessInput, "pathname" | "userType">,
+  authenticated: boolean,
+  homePath: string,
+) {
   const isSharedProtectedRoute = SHARED_PROTECTED_ROUTES.some((route) =>
     isRouteOrDescendant(pathname, route),
   );

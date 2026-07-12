@@ -1,22 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { UserType } from "./types";
-import * as authRoutes from "./routes";
-import { getUserTypeHomePath, getUserTypeNavRole, parseUserType } from "./routes";
-
-interface RouteAccessInput {
-  pathname: string;
-  accessToken?: string;
-  signupToken?: string;
-  userType?: UserType;
-}
-
-function getRouteAccessRedirect(input: RouteAccessInput) {
-  return (
-    authRoutes as typeof authRoutes & {
-      getRouteAccessRedirect?: (value: RouteAccessInput) => string | null;
-    }
-  ).getRouteAccessRedirect?.(input);
-}
+import {
+  getRouteAccessRedirect,
+  getUserTypeHomePath,
+  getUserTypeNavRole,
+  parseUserType,
+} from "./routes";
 
 describe("user type routes", () => {
   it.each([
@@ -50,6 +38,7 @@ describe("user type routes", () => {
 describe("route access redirects", () => {
   it.each([
     "/home",
+    "/home/settings",
     "/explore",
     "/activities/1",
     "/activities/1/book",

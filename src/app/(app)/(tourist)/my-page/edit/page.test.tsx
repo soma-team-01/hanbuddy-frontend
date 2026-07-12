@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { uploadProfileImage } from "@/lib/images/presigned";
+import { userKeys } from "@/lib/query/users";
 import { createMockProfile } from "@/test/factories";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import EditProfilePage from "./page";
 
 const replace = vi.fn();
@@ -50,7 +52,7 @@ describe("EditProfilePage", () => {
   }
 
   it("populates the form with the loaded profile", async () => {
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
 
     expect(await screen.findByLabelText("Full Name")).toHaveValue("Sarah Jenkins");
     expect(screen.getByLabelText("Age")).toHaveValue(28);
@@ -58,14 +60,14 @@ describe("EditProfilePage", () => {
   });
 
   it("does not render the Korean Phone Number field", async () => {
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
 
     await screen.findByLabelText("Full Name");
     expect(screen.queryByText(/Korean Phone Number/)).not.toBeInTheDocument();
   });
 
   it("keeps the country selector for phone-based messaging apps", async () => {
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
 
     // 프로필의 연락 수단이 WHATSAPP이므로 국가 선택이 바로 렌더된다
     expect(await screen.findByLabelText("Messaging country code")).toBeInTheDocument();
@@ -76,7 +78,7 @@ describe("EditProfilePage", () => {
       status: "success",
       profile: { ...profile, name: "Sarah J." },
     });
-    render(<EditProfilePage />);
+    const { queryClient } = renderWithQueryClient(<EditProfilePage />);
 
     const nameInput = await screen.findByLabelText("Full Name");
     fireEvent.change(nameInput, { target: { value: "Sarah J." } });
@@ -95,10 +97,13 @@ describe("EditProfilePage", () => {
     });
     expect(uploadProfileImage).not.toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith("/my-page");
+    expect(queryClient.getQueryData(userKeys.me())).toEqual(
+      expect.objectContaining({ name: "Sarah J." }),
+    );
   });
 
   it("shows a local preview after selecting a profile image", async () => {
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
 
     fireEvent.change(await screen.findByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
@@ -120,7 +125,7 @@ describe("EditProfilePage", () => {
     });
     const file = createImageFile();
 
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
     fireEvent.change(await screen.findByLabelText("Add profile photo"), {
       target: { files: [file] },
     });
@@ -140,7 +145,7 @@ describe("EditProfilePage", () => {
       new Error("프로필 이미지 업로드에 실패했습니다."),
     );
 
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
     fireEvent.change(await screen.findByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
     });
@@ -153,7 +158,7 @@ describe("EditProfilePage", () => {
   });
 
   it("rejects unsupported image types at selection time", async () => {
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
 
     fireEvent.change(await screen.findByLabelText("Add profile photo"), {
       target: { files: [createImageFile("me.gif", "image/gif")] },
@@ -170,7 +175,7 @@ describe("EditProfilePage", () => {
       status: "error",
       message: "국적 코드는 영문 대문자 2자리여야 합니다",
     });
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
 
     await screen.findByLabelText("Full Name");
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -183,7 +188,7 @@ describe("EditProfilePage", () => {
 
   it("redirects to login when the profile load is unauthenticated", async () => {
     mockedGetMyProfile.mockResolvedValue({ status: "unauthenticated" });
-    render(<EditProfilePage />);
+    renderWithQueryClient(<EditProfilePage />);
 
     await waitFor(() => {
       expect(replace).toHaveBeenCalledWith("/login");

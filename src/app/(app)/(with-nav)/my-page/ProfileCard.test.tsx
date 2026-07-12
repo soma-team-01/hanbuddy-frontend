@@ -1,7 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyProfile } from "@/lib/api/users";
+import { createQueryClient } from "@/lib/query/client";
 import { createMockProfile } from "@/test/factories";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ProfileCard } from "./ProfileCard";
 
 const replace = vi.fn();
@@ -28,7 +30,7 @@ describe("ProfileCard", () => {
   it("renders the profile name and image after loading", async () => {
     mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
 
-    render(<ProfileCard />);
+    renderWithQueryClient(<ProfileCard />);
 
     expect(await screen.findByText("Sarah Jenkins")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Edit Profile/ })).toHaveAttribute(
@@ -42,7 +44,7 @@ describe("ProfileCard", () => {
   it("redirects to login when the session is unauthenticated", async () => {
     mockedGetMyProfile.mockResolvedValue({ status: "unauthenticated" });
 
-    render(<ProfileCard />);
+    renderWithQueryClient(<ProfileCard />);
 
     await waitFor(() => {
       expect(replace).toHaveBeenCalledWith("/login");
@@ -52,9 +54,22 @@ describe("ProfileCard", () => {
   it("shows the error message when the profile fails to load", async () => {
     mockedGetMyProfile.mockResolvedValue({ status: "error", message: "서버 오류입니다." });
 
-    render(<ProfileCard />);
+    renderWithQueryClient(<ProfileCard />);
 
     expect(await screen.findByText("서버 오류입니다.")).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("reuses the cached profile after remounting", async () => {
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
+    const queryClient = createQueryClient();
+    const firstRender = renderWithQueryClient(<ProfileCard />, { queryClient });
+
+    expect(await screen.findByText("Sarah Jenkins")).toBeInTheDocument();
+    firstRender.unmount();
+    renderWithQueryClient(<ProfileCard />, { queryClient });
+
+    expect(await screen.findByText("Sarah Jenkins")).toBeInTheDocument();
+    expect(mockedGetMyProfile).toHaveBeenCalledTimes(1);
   });
 });

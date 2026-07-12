@@ -11,6 +11,7 @@ import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/comp
 import { createMyActivity } from "@/lib/api/buddy";
 import {
   buildGoogleMapsEmbedUrl,
+  fetchGooglePlaceDetails,
   getGoogleMapsApiKey,
   type GooglePlacePrediction,
   searchGooglePlacePredictions,
@@ -149,6 +150,8 @@ export function CreateActivityForm() {
   const [selectedPhotos, setSelectedPhotos] = useState<SelectedActivityPhoto[]>([]);
   const selectedPhotosRef = useRef<SelectedActivityPhoto[]>([]);
   const nextPhotoIdRef = useRef(0);
+  const placeSessionTokenRef = useRef<string | null>(null);
+  const placeSelectionVersionRef = useRef(0);
   const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
   const [meetingPlaceId, setMeetingPlaceId] = useState("");
   const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
@@ -205,7 +208,8 @@ export function CreateActivityForm() {
 
     // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
     const timeoutId = window.setTimeout(() => {
-      searchGooglePlacePredictions(query, apiKey)
+      placeSessionTokenRef.current ??= globalThis.crypto.randomUUID();
+      searchGooglePlacePredictions(query, apiKey, fetch, placeSessionTokenRef.current)
         .then((predictions) => {
           if (!isMounted) return;
           setPlacePredictions(predictions);
@@ -330,6 +334,10 @@ export function CreateActivityForm() {
 
   function handlePlaceQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;
+    placeSelectionVersionRef.current += 1;
+    if (value.trim().length < 3) {
+      placeSessionTokenRef.current = null;
+    }
     setMeetingPlaceQuery(value);
     setMeetingPlaceId("");
     setSelectedMeetingPlaceLabel("");
@@ -338,15 +346,30 @@ export function CreateActivityForm() {
     setIsSearchingPlaces(value.trim().length >= 3 && Boolean(getGoogleMapsApiKey()));
   }
 
-  function handlePlaceSelect(prediction: GooglePlacePrediction) {
-    const address =
+  async function handlePlaceSelect(prediction: GooglePlacePrediction) {
+    const fallbackAddress =
       prediction.secondaryText || (prediction.text !== prediction.mainText ? prediction.text : "");
+    const apiKey = getGoogleMapsApiKey();
+    const sessionToken = placeSessionTokenRef.current;
+    const selectionVersion = ++placeSelectionVersionRef.current;
+    placeSessionTokenRef.current = null;
 
     setMeetingPlaceId(prediction.placeId);
     setMeetingPlaceQuery(prediction.mainText);
     setSelectedMeetingPlaceLabel(prediction.mainText);
-    setSelectedMeetingPlaceAddress(address);
+    setSelectedMeetingPlaceAddress(fallbackAddress);
     setPlacePredictions([]);
+
+    if (!apiKey || !sessionToken) return;
+
+    try {
+      const place = await fetchGooglePlaceDetails(prediction.placeId, apiKey, fetch, sessionToken);
+      if (placeSelectionVersionRef.current === selectionVersion && place.formattedAddress) {
+        setSelectedMeetingPlaceAddress(place.formattedAddress);
+      }
+    } catch {
+      // Keep the Autocomplete address when session-terminating Place Details fails.
+    }
   }
 
   function handlePhotoSelection(event: React.ChangeEvent<HTMLInputElement>) {

@@ -65,15 +65,20 @@ export async function fetchGooglePlaceDetails(
   placeId: string,
   apiKey: string,
   fetcher: Fetcher = fetch,
+  sessionToken?: string,
 ): Promise<GooglePlaceDetails> {
   const normalizedPlaceId = normalizeGooglePlaceId(placeId);
   const trimmedApiKey = apiKey.trim();
+  const trimmedSessionToken = sessionToken?.trim();
 
   if (!normalizedPlaceId || !trimmedApiKey) {
     throw new Error("Google place id and API key are required.");
   }
 
-  const response = await fetcher(`${GOOGLE_PLACES_API_BASE_URL}/places/${normalizedPlaceId}`, {
+  const placeDetailsUrl = `${GOOGLE_PLACES_API_BASE_URL}/places/${normalizedPlaceId}${
+    trimmedSessionToken ? `?sessionToken=${encodeURIComponent(trimmedSessionToken)}` : ""
+  }`;
+  const response = await fetcher(placeDetailsUrl, {
     headers: {
       "X-Goog-Api-Key": trimmedApiKey,
       "X-Goog-FieldMask": "formattedAddress",
@@ -94,9 +99,11 @@ export async function searchGooglePlacePredictions(
   input: string,
   apiKey: string,
   fetcher: Fetcher = fetch,
+  sessionToken?: string,
 ): Promise<GooglePlacePrediction[]> {
   const trimmedInput = input.trim();
   const trimmedApiKey = apiKey.trim();
+  const trimmedSessionToken = sessionToken?.trim();
 
   if (trimmedInput.length < 3 || !trimmedApiKey) {
     return [];
@@ -114,6 +121,7 @@ export async function searchGooglePlacePredictions(
       input: trimmedInput,
       includedRegionCodes: ["kr"],
       languageCode: "en",
+      ...(trimmedSessionToken ? { sessionToken: trimmedSessionToken } : {}),
     }),
   });
 

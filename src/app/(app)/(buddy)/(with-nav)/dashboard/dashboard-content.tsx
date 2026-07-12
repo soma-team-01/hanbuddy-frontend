@@ -2,22 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
-import { getBuddyApplications, getBuddyScheduleDates } from "@/lib/api/buddy";
 import {
   formatApplicantContact,
   formatNationalityCode,
   getActivityThumbnail,
 } from "@/lib/api/buddy-view";
 import { splitStartAt } from "@/lib/format";
-import type {
-  BuddyDateActivityApplicationsResponse,
-  BuddyScheduleDateResponse,
-} from "@/types/buddy";
+import {
+  buddyApplicationsQueryOptions,
+  buddyScheduleDatesQueryOptions,
+} from "@/lib/query/buddy";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 function formatDateChip(date: string) {
   const parsed = new Date(`${date}T00:00:00`);
@@ -34,87 +34,30 @@ function applicantCountLabel(count: number) {
 }
 
 export function DashboardContent() {
-  const router = useRouter();
-  const [dates, setDates] = useState<BuddyScheduleDateResponse[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
-  const [activities, setActivities] = useState<BuddyDateActivityApplicationsResponse[]>([]);
-  const [isLoadingDates, setIsLoadingDates] = useState(true);
-  const [isLoadingApplications, setIsLoadingApplications] = useState(false);
-  const [datesErrorMessage, setDatesErrorMessage] = useState("");
-  const [applicationsErrorMessage, setApplicationsErrorMessage] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    getBuddyScheduleDates().then((result) => {
-      if (!isMounted) return;
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setDatesErrorMessage(result.message);
-        setIsLoadingDates(false);
-        return;
-      }
-
-      setDates(result.dates);
-      setIsLoadingApplications(result.dates.length > 0);
-      setSelectedDate(result.dates[0]?.date ?? "");
-      setIsLoadingDates(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
-
-  useEffect(() => {
-    if (!selectedDate) return;
-
-    let isMounted = true;
-
-    getBuddyApplications(selectedDate).then((result) => {
-      if (!isMounted) return;
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setApplicationsErrorMessage(result.message);
-        setActivities([]);
-        setIsLoadingApplications(false);
-        return;
-      }
-
-      setApplicationsErrorMessage("");
-      setActivities(result.activities);
-      setIsLoadingApplications(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router, selectedDate]);
+  const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
+  const dates = scheduleDatesQuery.data ?? [];
+  const activeDate = selectedDate || dates[0]?.date || "";
+  const applicationsQuery = useQuery(buddyApplicationsQueryOptions(activeDate));
+  const activities = applicationsQuery.data ?? [];
+  useAuthQueryRedirect(scheduleDatesQuery.error ?? applicationsQuery.error);
 
   function handleDateSelect(date: string) {
-    if (date === selectedDate) return;
-    setApplicationsErrorMessage("");
-    setIsLoadingApplications(true);
+    if (date === activeDate) return;
     setSelectedDate(date);
   }
 
   let applicationsContent: ReactNode;
-  if (applicationsErrorMessage) {
+  if (applicationsQuery.error) {
     applicationsContent = (
       <p
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {applicationsErrorMessage}
+        {applicationsQuery.error.message}
       </p>
     );
-  } else if (isLoadingApplications) {
+  } else if (applicationsQuery.isPending) {
     applicationsContent = <p className="py-8 text-center text-ink-soft">Loading applicants...</p>;
   } else if (activities.length === 0) {
     applicationsContent = (
@@ -206,17 +149,17 @@ export function DashboardContent() {
     );
   }
 
-  if (isLoadingDates) {
+  if (scheduleDatesQuery.isPending) {
     return <p className="py-10 text-center text-ink-soft">Loading schedule...</p>;
   }
 
-  if (datesErrorMessage) {
+  if (scheduleDatesQuery.error) {
     return (
       <p
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {datesErrorMessage}
+        {scheduleDatesQuery.error.message}
       </p>
     );
   }
@@ -232,7 +175,7 @@ export function DashboardContent() {
         <div className="flex scrollbar-none gap-3 overflow-x-auto">
           {dates.map(({ date }) => {
             const chip = formatDateChip(date);
-            const active = date === selectedDate;
+            const active = date === activeDate;
 
             return (
               <button

@@ -1,13 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
-import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
 import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
 import { splitStartAt } from "@/lib/format";
-import type { BuddyActivityApplicationsResponse } from "@/types/buddy";
+import {
+  buddyActivityApplicationsQueryOptions,
+  myActivityQueryOptions,
+} from "@/lib/query/buddy";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 interface ApplicantsContentProps {
   activityId: string;
@@ -42,60 +44,21 @@ export function ApplicantsContent({
   activityId,
   initialScheduleId,
 }: Readonly<ApplicantsContentProps>) {
-  const router = useRouter();
-  const [applications, setApplications] = useState<BuddyActivityApplicationsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const activityQuery = useQuery({
+    ...myActivityQueryOptions(toActivityId(activityId)),
+    enabled: !initialScheduleId,
+  });
+  const scheduleId = initialScheduleId ?? activityQuery.data?.schedules[0]?.scheduleId ?? "";
+  const applicationsQuery = useQuery(buddyActivityApplicationsQueryOptions(scheduleId));
+  useAuthQueryRedirect(activityQuery.error ?? applicationsQuery.error);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadApplications() {
-      let scheduleId: number | string | undefined = initialScheduleId;
-
-      if (!scheduleId) {
-        const activityResult = await getMyActivity(toActivityId(activityId));
-        if (!isMounted) return;
-        if (activityResult.status === "unauthenticated") {
-          router.replace("/login");
-          return;
-        }
-        if (activityResult.status === "error") {
-          setErrorMessage(activityResult.message);
-          setIsLoading(false);
-          return;
-        }
-
-        scheduleId = activityResult.activity.schedules[0]?.scheduleId;
-        if (!scheduleId) {
-          setErrorMessage("등록된 일정이 없습니다.");
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const applicationsResult = await getBuddyActivityApplications(scheduleId);
-      if (!isMounted) return;
-      if (applicationsResult.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (applicationsResult.status === "error") {
-        setErrorMessage(applicationsResult.message);
-        setIsLoading(false);
-        return;
-      }
-
-      setApplications(applicationsResult.applications);
-      setIsLoading(false);
-    }
-
-    void loadApplications();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activityId, initialScheduleId, router]);
+  const applications = applicationsQuery.data ?? null;
+  const errorMessage =
+    activityQuery.error?.message ||
+    applicationsQuery.error?.message ||
+    (!initialScheduleId && activityQuery.isSuccess && !scheduleId ? "등록된 일정이 없습니다." : "");
+  const isLoading =
+    (!initialScheduleId && activityQuery.isPending) || (Boolean(scheduleId) && applicationsQuery.isPending);
 
   if (isLoading) {
     return <p className="py-10 text-center text-ink-soft">Loading applicants...</p>;

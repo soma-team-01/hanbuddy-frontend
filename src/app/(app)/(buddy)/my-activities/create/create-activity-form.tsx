@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
@@ -15,6 +16,10 @@ import {
   searchGooglePlacePredictions,
 } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
+import { activityKeys } from "@/lib/query/activities";
+import { buddyKeys } from "@/lib/query/buddy";
+import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -135,6 +140,7 @@ function buildSchedules(formData: FormData) {
 
 export function CreateActivityForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
   const [includedItems, setIncludedItems] = useState<number[]>([0]);
@@ -154,6 +160,19 @@ export function CreateActivityForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isDirty, setIsDirty] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const createActivityMutation = useMutation({
+    mutationFn: async (request: ActivityUpsertRequest) =>
+      unwrapApiResult(await createMyActivity(request), "activity"),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
+        queryClient.invalidateQueries({ queryKey: buddyKeys.scheduleDates() }),
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
+      router.push("/my-activities");
+    },
+  });
+  useAuthQueryRedirect(createActivityMutation.error);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -301,20 +320,9 @@ export function CreateActivityForm() {
         status,
         schedules: buildSchedules(formData),
       };
-      const result = await createMyActivity(request);
-
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
-      }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        setSubmittingStatus(null);
-        return;
-      }
-
-      router.push("/my-activities");
+      await createActivityMutation.mutateAsync(request);
     } catch (error) {
+      if (error instanceof UnauthenticatedQueryError) return;
       setErrorMessage(error instanceof Error ? error.message : "Failed to register the activity.");
       setSubmittingStatus(null);
     }

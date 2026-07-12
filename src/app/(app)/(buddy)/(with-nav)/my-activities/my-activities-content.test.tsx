@@ -1,6 +1,8 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
+import { buddyKeys } from "@/lib/query/buddy";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { MyActivitiesContent } from "./my-activities-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -38,7 +40,7 @@ describe("MyActivitiesContent", () => {
       ],
     });
 
-    render(<MyActivitiesContent />);
+    renderWithQueryClient(<MyActivitiesContent />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getByText("Learn Korean tea etiquette.")).toBeInTheDocument();
@@ -46,7 +48,7 @@ describe("MyActivitiesContent", () => {
   });
 
   it("removes an activity after a successful delete request", async () => {
-    mockedGetMyActivities.mockResolvedValue({
+    mockedGetMyActivities.mockResolvedValueOnce({
       status: "success",
       activities: [
         {
@@ -58,12 +60,13 @@ describe("MyActivitiesContent", () => {
         },
       ],
     });
+    mockedGetMyActivities.mockResolvedValue({ status: "success", activities: [] });
     mockedDeleteMyActivity.mockResolvedValue({
       status: "success",
       message: "삭제되었습니다.",
     });
 
-    render(<MyActivitiesContent />);
+    const { queryClient } = renderWithQueryClient(<MyActivitiesContent />);
 
     const deleteButton = await screen.findByRole("button", {
       name: "Delete Traditional Tea Tasting",
@@ -76,6 +79,8 @@ describe("MyActivitiesContent", () => {
     await waitFor(() => {
       expect(screen.queryByText("Traditional Tea Tasting")).not.toBeInTheDocument();
     });
+    await waitFor(() => expect(mockedGetMyActivities).toHaveBeenCalledTimes(2));
+    expect(queryClient.getQueryData(buddyKeys.myActivities())).toEqual([]);
   });
 
   it("does not delete when the confirmation is cancelled", async () => {
@@ -92,7 +97,7 @@ describe("MyActivitiesContent", () => {
       ],
     });
 
-    render(<MyActivitiesContent />);
+    renderWithQueryClient(<MyActivitiesContent />);
 
     const deleteButton = await screen.findByRole("button", {
       name: "Delete Traditional Tea Tasting",

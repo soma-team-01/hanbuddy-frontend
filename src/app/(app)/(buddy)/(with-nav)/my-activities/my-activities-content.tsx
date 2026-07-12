@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TrashIcon, UsersIcon } from "@/components/ui/icons";
-import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
+import { deleteMyActivity } from "@/lib/api/buddy";
 import { getActivityThumbnail, getMyActivityStatusLabel } from "@/lib/api/buddy-view";
+import { buddyKeys, myActivitiesQueryOptions } from "@/lib/query/buddy";
+import { unwrapApiResult } from "@/lib/query/result";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { MyActivityStatus, MyActivitySummaryResponse } from "@/types/buddy";
 
 const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
@@ -17,69 +20,52 @@ const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
 };
 
 export function MyActivitiesContent() {
-  const router = useRouter();
-  const [activities, setActivities] = useState<MyActivitySummaryResponse[]>([]);
+  const queryClient = useQueryClient();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [deletingActivityId, setDeletingActivityId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    getMyActivities().then((result) => {
-      if (!isMounted) return;
-      if (result.status === "unauthenticated") {
-        router.replace("/login");
-        return;
+  const activitiesQuery = useQuery(myActivitiesQueryOptions());
+  const deleteActivityMutation = useMutation({
+    mutationFn: async (activityId: number) =>
+      unwrapApiResult(await deleteMyActivity(activityId), "message"),
+    onMutate: async (activityId) => {
+      await queryClient.cancelQueries({ queryKey: buddyKeys.myActivities() });
+      const previousActivities = queryClient.getQueryData<MyActivitySummaryResponse[]>(
+        buddyKeys.myActivities(),
+      );
+      queryClient.setQueryData<MyActivitySummaryResponse[]>(
+        buddyKeys.myActivities(),
+        (current = []) => current.filter((activity) => activity.activityId !== activityId),
+      );
+      return { previousActivities };
+    },
+    onError: (_error, _activityId, context) => {
+      if (context?.previousActivities) {
+        queryClient.setQueryData(buddyKeys.myActivities(), context.previousActivities);
       }
-      if (result.status === "error") {
-        setErrorMessage(result.message);
-        setIsLoading(false);
-        return;
-      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
+  });
+  useAuthQueryRedirect(activitiesQuery.error ?? deleteActivityMutation.error);
 
-      setActivities(result.activities);
-      setIsLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
+  const activities = activitiesQuery.data ?? [];
+  const deletingActivityId = deleteActivityMutation.isPending
+    ? deleteActivityMutation.variables
+    : null;
 
   async function handleDelete(activityId: number) {
-    setDeletingActivityId(activityId);
-    setErrorMessage("");
-    const previousActivities = activities;
-    setActivities((current) => current.filter((activity) => activity.activityId !== activityId));
-
-    const result = await deleteMyActivity(activityId);
-    if (result.status === "unauthenticated") {
-      router.replace("/login");
-      return;
-    }
-    if (result.status === "error") {
-      setErrorMessage(result.message);
-      setActivities(previousActivities);
-      setDeletingActivityId(null);
-      return;
-    }
-
-    setDeletingActivityId(null);
+    await deleteActivityMutation.mutateAsync(activityId).catch(() => undefined);
   }
 
-  if (isLoading) {
+  if (activitiesQuery.isPending) {
     return <p className="py-10 text-center text-ink-soft">Loading activities...</p>;
   }
 
-  if (errorMessage) {
+  if (activitiesQuery.error || deleteActivityMutation.error) {
     return (
       <p
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {errorMessage}
+        {(activitiesQuery.error ?? deleteActivityMutation.error)?.message}
       </p>
     );
   }

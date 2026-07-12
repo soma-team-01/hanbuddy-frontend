@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ApplicantsContent } from "./applicants-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -47,7 +48,7 @@ describe("ApplicantsContent", () => {
       },
     });
 
-    render(<ApplicantsContent activityId="42" initialScheduleId="99" />);
+    renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getByText("2026-07-20 10:00 • 1 confirmed")).toBeInTheDocument();
@@ -99,7 +100,7 @@ describe("ApplicantsContent", () => {
       },
     });
 
-    render(<ApplicantsContent activityId="42" />);
+    renderWithQueryClient(<ApplicantsContent activityId="42" />);
 
     expect(await screen.findByText("No applicants for this schedule yet.")).toBeInTheDocument();
     expect(mockedGetMyActivity).toHaveBeenCalledWith(42);

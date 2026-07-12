@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBuddyApplications, getBuddyScheduleDates } from "@/lib/api/buddy";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { DashboardContent } from "./dashboard-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -18,6 +19,11 @@ const mockedGetBuddyApplications = vi.mocked(getBuddyApplications);
 const mockedGetBuddyScheduleDates = vi.mocked(getBuddyScheduleDates);
 
 describe("DashboardContent", () => {
+  beforeEach(() => {
+    mockedGetBuddyApplications.mockReset();
+    mockedGetBuddyScheduleDates.mockReset();
+  });
+
   it("renders upcoming activities and applicants loaded from the API", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
@@ -56,7 +62,7 @@ describe("DashboardContent", () => {
       ],
     });
 
-    render(<DashboardContent />);
+    renderWithQueryClient(<DashboardContent />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getAllByText("1 Applicant").length).toBeGreaterThan(0);
@@ -77,9 +83,26 @@ describe("DashboardContent", () => {
       message: "신청자 목록을 불러오지 못했습니다.",
     });
 
-    render(<DashboardContent />);
+    renderWithQueryClient(<DashboardContent />);
 
     expect(await screen.findByText("신청자 목록을 불러오지 못했습니다.")).toBeInTheDocument();
     expect(screen.getByRole("button", { pressed: true })).toBeInTheDocument();
+  });
+
+  it("reuses cached applicants when returning to a previously selected date", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ date: "2026-07-20" }, { date: "2026-07-21" }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20"));
+    fireEvent.click(screen.getByText("21").closest("button")!);
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21"));
+    fireEvent.click(screen.getByText("20").closest("button")!);
+
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledTimes(2));
   });
 });

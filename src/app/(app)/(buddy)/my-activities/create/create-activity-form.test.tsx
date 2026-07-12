@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity } from "@/lib/api/buddy";
 import { searchGooglePlacePredictions } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
+import { buddyKeys } from "@/lib/query/buddy";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { CreateActivityForm } from "./create-activity-form";
 
 const routerMock = vi.hoisted(() => ({
@@ -142,7 +144,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("puts the searchable Google place field before the guide meeting point name", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     goToStepThree();
 
@@ -156,7 +158,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("shows the selected Google place name in the search field and address below it", async () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     goToStepThree();
     await selectGooglePlace();
@@ -169,7 +171,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("uses three registration steps and removes the draft action", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Activity Basics" })).toBeInTheDocument();
@@ -231,7 +233,8 @@ describe("CreateActivityForm", () => {
       },
     });
 
-    render(<CreateActivityForm />);
+    const { queryClient } = renderWithQueryClient(<CreateActivityForm />);
+    queryClient.setQueryData(buddyKeys.myActivities(), []);
 
     const file = await fillRequiredFields();
     fireEvent.change(screen.getByLabelText("Restriction"), {
@@ -257,6 +260,7 @@ describe("CreateActivityForm", () => {
       schedules: [{ startAt: "2026-07-20T10:00:00+09:00" }],
     });
     expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+    expect(queryClient.getQueryState(buddyKeys.myActivities())?.isInvalidated).toBe(true);
   });
 
   it("previews selected activity photos and removes deleted photos before uploading", async () => {
@@ -289,7 +293,7 @@ describe("CreateActivityForm", () => {
       },
     });
 
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     const teaFile = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
     const fileInput = screen.getByLabelText("Activity photos");
@@ -328,7 +332,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("blocks moving past the first step until at least one activity photo is selected", async () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     fireEvent.change(screen.getByLabelText("Activity Title"), {
       target: { value: "Traditional Tea Tasting" },
@@ -349,7 +353,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("does not publish when the confirmation is cancelled", async () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     await fillRequiredFields();
 
@@ -362,7 +366,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("leaves immediately when going back with an untouched form", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     fireEvent.click(screen.getByRole("button", { name: "Go back" }));
 
@@ -371,7 +375,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("asks for confirmation before discarding entered input", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     fireEvent.change(screen.getByLabelText("Activity Title"), {
       target: { value: "Traditional Tea Tasting" },
@@ -387,7 +391,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("keeps the form when the discard confirmation is cancelled", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     fireEvent.change(screen.getByLabelText("Activity Title"), {
       target: { value: "Traditional Tea Tasting" },
@@ -402,7 +406,7 @@ describe("CreateActivityForm", () => {
   it("ignores the back button while a submission is in progress", async () => {
     mockedUploadActivityImages.mockReturnValue(new Promise(() => {}));
 
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     await fillRequiredFields();
     fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
@@ -415,7 +419,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("warns on page unload only while the form is dirty", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     const cleanEvent = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(cleanEvent);
@@ -459,7 +463,7 @@ describe("CreateActivityForm", () => {
       },
     });
 
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
@@ -521,7 +525,7 @@ describe("CreateActivityForm", () => {
       },
     });
 
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
     fillStepTwoFields();
@@ -564,7 +568,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("shows hover background feedback on add row buttons", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
     expect(screen.getByRole("button", { name: "+ Add time slot" })).toHaveClass(
@@ -580,7 +584,7 @@ describe("CreateActivityForm", () => {
   });
 
   it("puts remove buttons inside rows from the second dynamic row onward", () => {
-    render(<CreateActivityForm />);
+    renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
     fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));

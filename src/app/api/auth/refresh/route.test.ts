@@ -11,6 +11,12 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 
 const mockedPostBackend = vi.mocked(postBackend);
 
+function expectAuthenticatedSessionCookiesCleared(setCookie: string) {
+  for (const cookieName of [AUTH_COOKIES.accessToken, AUTH_COOKIES.userId, AUTH_COOKIES.userType]) {
+    expect(setCookie).toContain(`${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`);
+  }
+}
+
 describe("POST /api/auth/refresh", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
@@ -33,9 +39,7 @@ describe("POST /api/auth/refresh", () => {
     const setCookie = response.headers.get("set-cookie") ?? "";
 
     expect(response.status).toBe(401);
-    expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=`);
-    expect(setCookie).toContain(`${AUTH_COOKIES.userId}=`);
-    expect(setCookie).toContain(`${AUTH_COOKIES.userType}=`);
+    expectAuthenticatedSessionCookiesCleared(setCookie);
   });
 
   it("clears authenticated session cookies when refresh is forbidden", async () => {
@@ -55,9 +59,7 @@ describe("POST /api/auth/refresh", () => {
     const setCookie = response.headers.get("set-cookie") ?? "";
 
     expect(response.status).toBe(403);
-    expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=`);
-    expect(setCookie).toContain(`${AUTH_COOKIES.userId}=`);
-    expect(setCookie).toContain(`${AUTH_COOKIES.userType}=`);
+    expectAuthenticatedSessionCookiesCleared(setCookie);
   });
 
   it("sets the renewed access token cookie when refresh succeeds", async () => {

@@ -1,11 +1,14 @@
-import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
+import { UnauthenticatedQueryError } from "@/lib/query/result";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ActivityFeed } from "./activity-feed";
 
+const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => routerMock,
 }));
 
 vi.mock("@/lib/api/activities", () => ({
@@ -15,6 +18,53 @@ vi.mock("@/lib/api/activities", () => ({
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 
 describe("ActivityFeed", () => {
+  beforeEach(() => {
+    routerMock.replace.mockReset();
+    mockedGetTouristActivities.mockReset();
+  });
+
+  it("renders a loading state while activities are pending", async () => {
+    let resolveActivities!: (value: Awaited<ReturnType<typeof getTouristActivities>>) => void;
+    mockedGetTouristActivities.mockReturnValue(
+      new Promise((resolve) => {
+        resolveActivities = resolve;
+      }),
+    );
+
+    renderWithQueryClient(<ActivityFeed />);
+
+    expect(screen.getByText("Loading activities...")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveActivities({ status: "success", activities: [] });
+    });
+    await screen.findByText("No activities available yet.");
+  });
+
+  it("renders an empty state when no activities are returned", async () => {
+    mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
+
+    renderWithQueryClient(<ActivityFeed />);
+
+    expect(await screen.findByText("No activities available yet.")).toBeInTheDocument();
+  });
+
+  it("shows an error message when loading activities fails", async () => {
+    mockedGetTouristActivities.mockRejectedValue(new Error("Something went wrong"));
+
+    renderWithQueryClient(<ActivityFeed />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+  });
+
+  it("redirects to login when the activities query is unauthenticated", async () => {
+    mockedGetTouristActivities.mockRejectedValue(new UnauthenticatedQueryError());
+
+    renderWithQueryClient(<ActivityFeed />);
+
+    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/login"));
+  });
+
   it("renders activities loaded from the API", async () => {
     mockedGetTouristActivities.mockResolvedValue({
       status: "success",

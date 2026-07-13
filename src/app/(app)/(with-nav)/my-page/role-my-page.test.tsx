@@ -33,4 +33,13 @@ describe("role-specific My Page", () => {
 
     expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/dashboard");
   });
+
+  it("disables menu actions whose product flows are not available yet", () => {
+    renderRoleMyPage(<TouristMyPage />, "TOURIST");
+
+    expect(screen.getByRole("button", { name: /Language/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Help Center/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Delete Account/ })).toBeDisabled();
+    expect(screen.getAllByText("Coming soon")).toHaveLength(3);
+  });
 });

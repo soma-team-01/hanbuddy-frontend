@@ -38,7 +38,7 @@ describe("ApplicantsContent", () => {
             applicantName: "Sophie Martin",
             applicantProfileImageUrl: null,
             applicantNationalityCode: "FR",
-            guestCount: 2,
+            guestCount: 1,
             applicantContactMethod: "WHATSAPP",
             applicantContactCountryCode: "+33",
             applicantContactIdentifier: "612345678",
@@ -57,6 +57,8 @@ describe("ApplicantsContent", () => {
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
+    expect(screen.getByText("• 1 guest")).toBeInTheDocument();
+    expect(screen.queryByText("• 1 guests")).not.toBeInTheDocument();
     expect(screen.getByText("No pork")).toBeInTheDocument();
     expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith("99");
     expect(mockedGetMyActivity).not.toHaveBeenCalled();

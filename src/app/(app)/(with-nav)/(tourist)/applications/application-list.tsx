@@ -91,9 +91,10 @@ function ApplicationCard({
       {application.status === "pending_payment" && (
         <button
           type="button"
-          className="h-11 w-full rounded-lg bg-forest font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
+          disabled
+          className="h-11 w-full cursor-not-allowed rounded-lg bg-forest font-display text-sm font-semibold text-cream opacity-60"
         >
-          Pay Now
+          Pay Now · Coming soon
         </button>
       )}
       {application.status === "confirmed" && (
@@ -108,9 +109,10 @@ function ApplicationCard({
       {isCompleted && (
         <button
           type="button"
-          className="h-11 w-full rounded-lg border border-line bg-chip font-display text-sm font-semibold text-ink-soft transition-colors hover:border-line-strong hover:text-ink"
+          disabled
+          className="h-11 w-full cursor-not-allowed rounded-lg border border-line bg-chip font-display text-sm font-semibold text-ink-soft opacity-60"
         >
-          Leave Review
+          Leave Review · Coming soon
         </button>
       )}
     </article>

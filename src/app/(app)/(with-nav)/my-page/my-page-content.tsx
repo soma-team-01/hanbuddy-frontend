@@ -25,13 +25,15 @@ export function MyPageContent({ backHref }: Readonly<MyPageContentProps>) {
             <button
               key={label}
               type="button"
-              className={`flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-chip/60 ${
+              disabled
+              className={`flex cursor-not-allowed items-center gap-4 px-5 py-4 text-left opacity-60 ${
                 index > 0 ? "border-t border-line" : ""
               }`}
             >
               <Icon className="size-5 text-ink" />
               <span className="flex-1 text-base text-ink">{label}</span>
               {"value" in item && <span className="text-sm text-ink-soft">{item.value}</span>}
+              <span className="text-xs text-ink-soft">Coming soon</span>
               <ChevronRightIcon className="size-4 text-ink-soft" />
             </button>
           ))}

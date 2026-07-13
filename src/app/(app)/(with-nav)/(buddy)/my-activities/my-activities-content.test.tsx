@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -158,7 +158,12 @@ describe("MyActivitiesContent", () => {
         },
       ],
     });
-    mockedDeleteMyActivity.mockReturnValue(new Promise(() => undefined));
+    let resolveDelete!: (value: Awaited<ReturnType<typeof deleteMyActivity>>) => void;
+    mockedDeleteMyActivity.mockReturnValue(
+      new Promise((resolve) => {
+        resolveDelete = resolve;
+      }),
+    );
 
     renderWithQueryClient(<MyActivitiesContent />);
     fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
@@ -166,6 +171,13 @@ describe("MyActivitiesContent", () => {
 
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Delete Bukchon Walking Tour" })).toBeDisabled(),
+    );
+
+    await act(async () => {
+      resolveDelete({ status: "success", message: "삭제되었습니다." });
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Delete Bukchon Walking Tour" })).toBeEnabled(),
     );
   });
 });

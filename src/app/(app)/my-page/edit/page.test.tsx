@@ -59,11 +59,12 @@ describe("EditProfilePage", () => {
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });
 
-  it("does not render the Korean Phone Number field", async () => {
+  it("does not apply the Korean-only phone input to tourists", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
     await screen.findByLabelText("Full Name");
-    expect(screen.queryByText(/Korean Phone Number/)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("010-XXXX-XXXX")).not.toBeInTheDocument();
+    expect(screen.queryByText("+82")).not.toBeInTheDocument();
   });
 
   it("keeps the country selector for phone-based messaging apps", async () => {

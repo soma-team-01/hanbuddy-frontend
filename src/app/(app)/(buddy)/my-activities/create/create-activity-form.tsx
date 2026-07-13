@@ -20,6 +20,7 @@ import { uploadActivityImages } from "@/lib/images/presigned";
 import { activityKeys } from "@/lib/query/activities";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
+import { useAuthSessionCheck } from "@/lib/query/use-auth-session-check";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
 
@@ -142,6 +143,7 @@ function buildSchedules(formData: FormData) {
 export function CreateActivityForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  useAuthSessionCheck();
   const formRef = useRef<HTMLFormElement>(null);
   const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
   const [includedItems, setIncludedItems] = useState<number[]>([0]);

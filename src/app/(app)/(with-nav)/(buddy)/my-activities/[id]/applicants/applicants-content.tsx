@@ -125,7 +125,9 @@ export function ApplicantsContent({
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-ink-soft">
                 <span>Applied for: {formatAppliedDate(applicant.appliedAt)}</span>
-                <span>• {applicant.guestCount} guests</span>
+                <span>
+                  • {applicant.guestCount} guest{applicant.guestCount === 1 ? "" : "s"}
+                </span>
                 <span>• {formatApplicationStatus(applicant.status)}</span>
               </div>
               {applicant.specialRequest ? (

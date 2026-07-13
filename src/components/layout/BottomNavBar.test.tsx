@@ -40,4 +40,17 @@ describe("BottomNavBar", () => {
     expect(container.querySelector(".motion-nav-indicator")).toBeNull();
     expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
   });
+
+  it("updates the same indicator node when the pathname changes", () => {
+    mockedUsePathname.mockReturnValue("/explore");
+
+    const { container, rerender } = render(<BottomNavBar />);
+    const indicator = container.querySelector(".motion-nav-indicator");
+
+    mockedUsePathname.mockReturnValue("/my-page");
+    rerender(<BottomNavBar />);
+
+    expect(container.querySelector(".motion-nav-indicator")).toBe(indicator);
+    expect(indicator).toHaveStyle({ transform: "translateX(200%)" });
+  });
 });

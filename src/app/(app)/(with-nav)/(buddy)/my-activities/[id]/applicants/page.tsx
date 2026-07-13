@@ -1,5 +1,6 @@
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ApplicantsContent } from "./applicants-content";
+import { normalizeScheduleId } from "./schedule-id";
 
 type ApplicantsPageSearchParams = Promise<{ scheduleId?: string | string[] }>;
 
@@ -9,7 +10,7 @@ export default async function ApplicantsPage({
 }: Readonly<{ params: Promise<{ id: string }>; searchParams: ApplicantsPageSearchParams }>) {
   const { id } = await params;
   const { scheduleId } = await searchParams;
-  const initialScheduleId = Array.isArray(scheduleId) ? scheduleId[0] : scheduleId;
+  const initialScheduleId = normalizeScheduleId(scheduleId);
 
   return (
     <>

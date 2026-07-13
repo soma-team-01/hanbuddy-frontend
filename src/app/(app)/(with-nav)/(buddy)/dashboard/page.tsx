@@ -8,8 +8,6 @@ export default function DashboardPage() {
     <>
       <TopAppBar />
       <main className="flex flex-1 flex-col gap-8 px-4 py-6">
-        <h1 className="font-display text-2xl font-semibold text-forest">Hello, Ji-hun 👋</h1>
-
         <DashboardContent />
 
         <section className="flex flex-col gap-4 rounded-2xl bg-chip p-5">

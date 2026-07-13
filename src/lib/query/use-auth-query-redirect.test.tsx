@@ -28,6 +28,9 @@ describe("useAuthQueryRedirect", () => {
   it("clears cached server state before redirecting an expired session", async () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(["private-profile"], { name: "Previous user" });
+    routerMock.replace.mockImplementation(() => {
+      expect(queryClient.getQueryData(["private-profile"])).toBeUndefined();
+    });
 
     renderWithQueryClient(<AuthRedirectHarness error={new UnauthenticatedQueryError()} />, {
       queryClient,

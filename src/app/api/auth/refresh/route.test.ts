@@ -38,6 +38,49 @@ describe("POST /api/auth/refresh", () => {
     expect(setCookie).toContain(`${AUTH_COOKIES.userType}=`);
   });
 
+  it("clears authenticated session cookies when refresh is forbidden", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 403,
+      payload: {
+        isSuccess: false,
+        code: "TOKEN403",
+        message: "토큰이 거부되었습니다.",
+      },
+      setCookies: [],
+    });
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/auth/refresh", { method: "POST" }),
+    );
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.status).toBe(403);
+    expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.userId}=`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.userType}=`);
+  });
+
+  it("sets the renewed access token cookie when refresh succeeds", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      payload: {
+        isSuccess: true,
+        code: "SUCCESS",
+        message: "요청에 성공했습니다.",
+        result: { accessToken: "renewed-access-token" },
+      },
+      setCookies: [],
+    });
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/auth/refresh", { method: "POST" }),
+    );
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.status).toBe(200);
+    expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=renewed-access-token`);
+  });
+
   it("preserves authenticated session cookies when the backend returns a server error", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 500,

@@ -18,6 +18,12 @@ const REPLACED_ROLE_LAYOUTS = [
   ["buddy", resolve(LAYOUT_DIRECTORY, "../(buddy)/(with-nav)/layout.tsx")],
 ] as const;
 
+const SHARED_EDIT_PROFILE_PAGE = resolve(LAYOUT_DIRECTORY, "../my-page/edit/page.tsx");
+const TOURIST_SCOPED_EDIT_PROFILE_PAGE = resolve(
+  LAYOUT_DIRECTORY,
+  "../(tourist)/my-page/edit/page.tsx",
+);
+
 describe("shared bottom navigation route structure", () => {
   it.each(SHARED_NAV_PAGES)("keeps %s under the shared layout", (_, pagePath) => {
     expect(existsSync(pagePath)).toBe(true);
@@ -25,5 +31,13 @@ describe("shared bottom navigation route structure", () => {
 
   it.each(REPLACED_ROLE_LAYOUTS)("removes the %s-specific nav layout", (_, layoutPath) => {
     expect(existsSync(layoutPath)).toBe(false);
+  });
+
+  it("keeps Edit Profile in the role-neutral app route", () => {
+    expect(existsSync(SHARED_EDIT_PROFILE_PAGE)).toBe(true);
+  });
+
+  it("removes the Tourist-scoped Edit Profile route", () => {
+    expect(existsSync(TOURIST_SCOPED_EDIT_PROFILE_PAGE)).toBe(false);
   });
 });

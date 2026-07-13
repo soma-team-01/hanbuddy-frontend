@@ -59,9 +59,9 @@ src/app/(app)/
 │       ├── tourist-my-page.tsx
 │       ├── buddy-my-page.tsx
 │       └── my-page-content.tsx     # 현재 공통 화면 구성
+├── my-page/edit/                   # 역할 공통, BottomNav가 없는 프로필 수정 화면
 ├── (tourist)/                      # BottomNav가 없는 Tourist 화면
-│   ├── activities/
-│   └── my-page/edit/
+│   └── activities/
 └── (buddy)/                        # BottomNav가 없는 Buddy 화면
     └── my-activities/create/
 ```
@@ -96,6 +96,7 @@ Route group은 URL에 포함되지 않으므로 기존 `/explore`, `/application
 
 - `BottomNavBar` 컴포넌트 테스트에서 pathname 변경 후 동일 indicator DOM 노드의 transform이 갱신되는지 확인한다.
 - My Page 라우트 테스트에서 Tourist와 Buddy 쿠키가 각각 올바른 역할별 화면을 선택하는지 확인한다.
+- 역할별 My Page 화면 테스트에서 실제 TopAppBar의 `backHref`가 Tourist는 `/explore`, Buddy는 `/dashboard`인지 확인한다.
 - 공통 nav 레이아웃 테스트에서 역할별 `BottomNavBar` prop이 유지되는지 확인한다.
 - 전체 CI 명령(`format:check`, `lint`, `typecheck`, `test`, `build`)을 실행한다.
 - 390px 모바일 뷰포트에서 Home ↔ Activity, Home ↔ My Page, Activity ↔ My Page를 양방향으로 브라우저 검증한다.
@@ -104,6 +105,6 @@ Route group은 URL에 포함되지 않으므로 기존 `/explore`, `/application
 ## 비목표
 
 - My Page의 실제 역할별 메뉴나 기능을 새로 추가하지 않는다.
-- `/my-page/edit` 화면을 역할별로 분리하지 않는다.
+- `/my-page/edit` 화면 자체를 역할별로 분리하지 않는다. 공통 화면은 역할 중립적인 `(app)/my-page/edit/`에서 유지한다.
 - 인증 또는 proxy 정책을 변경하지 않는다.
 - View Transition API나 별도 animation 라이브러리를 도입하지 않는다.

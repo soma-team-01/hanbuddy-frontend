@@ -8,9 +8,11 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import EditProfilePage from "./page";
 
 const replace = vi.fn();
+const refresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
+    refresh,
     replace,
   }),
 }));

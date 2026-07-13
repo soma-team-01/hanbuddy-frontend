@@ -1,14 +1,19 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity } from "@/lib/api/buddy";
+import { getMyProfile } from "@/lib/api/users";
 import { fetchGooglePlaceDetails, searchGooglePlacePredictions } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
 import { buddyKeys } from "@/lib/query/buddy";
+import { createQueryClient } from "@/lib/query/client";
+import { userKeys } from "@/lib/query/users";
+import { createMockProfile } from "@/test/factories";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { CreateActivityForm } from "./create-activity-form";
 
 const routerMock = vi.hoisted(() => ({
   push: vi.fn(),
+  refresh: vi.fn(),
   replace: vi.fn(),
 }));
 
@@ -18,6 +23,10 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/api/buddy", () => ({
   createMyActivity: vi.fn(),
+}));
+
+vi.mock("@/lib/api/users", () => ({
+  getMyProfile: vi.fn(),
 }));
 
 vi.mock("@/lib/images/presigned", () => ({
@@ -34,6 +43,7 @@ vi.mock("@/lib/google/places", async () => {
 });
 
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
+const mockedGetMyProfile = vi.mocked(getMyProfile);
 const mockedUploadActivityImages = vi.mocked(uploadActivityImages);
 const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetails);
 const mockedSearchGooglePlacePredictions = vi.mocked(searchGooglePlacePredictions);
@@ -41,6 +51,7 @@ const createObjectUrlMock = vi.fn((file: Blob) =>
   file instanceof File ? `blob:${file.name}` : "blob:preview",
 );
 const revokeObjectUrlMock = vi.fn();
+const profile = createMockProfile({ userType: "BUDDY" });
 
 function confirmRegisterInDialog() {
   const dialog = screen.getByRole("dialog");
@@ -130,8 +141,11 @@ describe("CreateActivityForm", () => {
     createObjectUrlMock.mockClear();
     revokeObjectUrlMock.mockClear();
     routerMock.push.mockReset();
+    routerMock.refresh.mockReset();
     routerMock.replace.mockReset();
     mockedCreateMyActivity.mockReset();
+    mockedGetMyProfile.mockReset();
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
     mockedUploadActivityImages.mockReset();
     mockedFetchGooglePlaceDetails.mockReset();
     mockedSearchGooglePlacePredictions.mockReset();
@@ -147,6 +161,14 @@ describe("CreateActivityForm", () => {
       formattedAddress: "Jongno-gu, Seoul, South Korea",
     });
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "test-google-key";
+  });
+
+  it("checks the authenticated session when the form opens", async () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(userKeys.me(), profile);
+    renderWithQueryClient(<CreateActivityForm />, { queryClient });
+
+    await waitFor(() => expect(mockedGetMyProfile).toHaveBeenCalledOnce());
   });
 
   it("puts the searchable Google place field before the guide meeting point name", () => {

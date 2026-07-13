@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
-    exclude: [...configDefaults.exclude, ".claude/**", ".serena/**"],
+    exclude: [...configDefaults.exclude, ".worktrees/**", ".claude/**", ".serena/**"],
     setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {

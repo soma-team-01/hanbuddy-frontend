@@ -5,7 +5,7 @@ import { UnauthenticatedQueryError } from "@/lib/query/result";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ActivityFeed } from "./activity-feed";
 
-const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
+const routerMock = vi.hoisted(() => ({ refresh: vi.fn(), replace: vi.fn() }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
@@ -19,6 +19,7 @@ const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 
 describe("ActivityFeed", () => {
   beforeEach(() => {
+    routerMock.refresh.mockReset();
     routerMock.replace.mockReset();
     mockedGetTouristActivities.mockReset();
   });

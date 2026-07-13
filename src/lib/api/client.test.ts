@@ -47,4 +47,26 @@ describe("fetchWithAuthRetry", () => {
     expect(response.status).toBe(401);
     expect(fetch).toHaveBeenCalledTimes(2);
   });
+
+  it("returns the refresh error when the authentication server is unavailable", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("{}", { status: 401 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            isSuccess: false,
+            code: "BFF_ERROR",
+            message: "인증 서버에 연결할 수 없습니다.",
+          }),
+          { status: 502 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetch);
+
+    const response = await fetchWithAuthRetry("/api/users/me");
+
+    expect(response.status).toBe(502);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
 });

@@ -11,7 +11,8 @@ export async function fetchWithAuthRetry(input: string, init?: RequestInit): Pro
     method: "POST",
     credentials: "same-origin",
   });
-  if (!refresh.ok) return response;
+  if (refresh.status === 401 || refresh.status === 403) return response;
+  if (!refresh.ok) return refresh;
 
   return fetch(input, requestInit);
 }

@@ -41,7 +41,7 @@ export function PayPalPaymentProvider({ children }: Readonly<{ children: React.R
 }
 
 /**
- * PayPal 계정 결제 + 게스트 카드 결제 버튼 묶음. 두 버튼 모두 같은 order 생성/캡처 흐름을 쓴다.
+ * 게스트 카드 결제와 PayPal 계정 결제 버튼을 함께 보여준다. 두 수단 모두 같은 order 생성/캡처 흐름을 쓴다.
  * client ID 미설정 시 비활성 안내 버튼을 대신 보여준다.
  */
 export function PayPalPaymentButtons({
@@ -69,14 +69,14 @@ export function PayPalPaymentButtons({
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <PayPalOneTimePaymentButton
+      <PayPalGuestPaymentButton
         createOrder={createOrder}
         onApprove={approve}
         onCancel={onCancel}
         onError={onError}
         disabled={disabled}
       />
-      <PayPalGuestPaymentButton
+      <PayPalOneTimePaymentButton
         createOrder={createOrder}
         onApprove={approve}
         onCancel={onCancel}

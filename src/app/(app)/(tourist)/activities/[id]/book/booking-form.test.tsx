@@ -238,7 +238,7 @@ describe("BookingForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
 
     const dialog = screen.getByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close dialog" }));
 
     expect(mockedCreateApplication).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();

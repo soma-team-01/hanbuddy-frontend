@@ -87,17 +87,40 @@ describe("ConfirmDialog", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
   });
 
-  it("renders the confirm slot in place of the confirm button when provided", () => {
+  it("renders a custom confirm slot at full width without the bottom cancel button", () => {
     render(
       <ConfirmDialog
         title="Pay for this application?"
         onClose={vi.fn()}
+        confirmSlot={
+          <>
+            <button type="button">Debit or Credit Card</button>
+            <button type="button">PayPal</button>
+          </>
+        }
+      />,
+    );
+
+    const paymentButton = screen.getByRole("button", { name: "PayPal" });
+    expect(paymentButton).toBeInTheDocument();
+    expect(paymentButton.parentElement).toHaveClass("w-full");
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Close dialog" })).toBeInTheDocument();
+  });
+
+  it("calls onClose from the custom slot dialog close button", () => {
+    const onClose = vi.fn();
+    render(
+      <ConfirmDialog
+        title="Pay for this application?"
+        onClose={onClose}
         confirmSlot={<button type="button">PayPal</button>}
       />,
     );
 
-    expect(screen.getByRole("button", { name: "PayPal" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("uses the danger style for the confirm button when tone is danger", () => {

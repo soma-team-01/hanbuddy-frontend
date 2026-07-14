@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBuddyApplications, getBuddyScheduleDates } from "@/lib/api/buddy";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -77,6 +77,42 @@ describe("DashboardContent", () => {
     expect(screen.getByText("19").closest("button")).not.toHaveAccessibleName(/has activity/i);
     expect(screen.getByText("20").closest("button")).toHaveAccessibleName(/has activity/i);
     expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");
+  });
+
+  it("paginates schedule dates in groups of five", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: Array.from({ length: 11 }, (_, index) => ({
+        dateStartAt: `2026-07-${String(index + 20).padStart(2, "0")}T00:00:00+09:00`,
+        hasActivity: index === 0,
+      })),
+    });
+    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    const dateGroup = await screen.findByRole("group", { name: "Schedule dates" });
+    expect(within(dateGroup).getAllByRole("button")).toHaveLength(5);
+    expect(within(dateGroup).getByText("20")).toBeInTheDocument();
+    expect(within(dateGroup).getByText("24")).toBeInTheDocument();
+    expect(within(dateGroup).queryByText("25")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous 5 dates" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next 5 dates" }));
+
+    expect(within(dateGroup).getAllByRole("button")).toHaveLength(5);
+    expect(within(dateGroup).getByText("25")).toBeInTheDocument();
+    expect(within(dateGroup).getByText("29")).toBeInTheDocument();
+    expect(within(dateGroup).queryByText("24")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next 5 dates" }));
+
+    expect(within(dateGroup).getAllByRole("button")).toHaveLength(1);
+    expect(within(dateGroup).getByText("30")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next 5 dates" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous 5 dates" }));
+    expect(within(dateGroup).getByText("25")).toBeInTheDocument();
   });
 
   it("keeps date selection available when applicant loading fails", async () => {

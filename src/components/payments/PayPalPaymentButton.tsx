@@ -68,21 +68,25 @@ export function PayPalPaymentButtons({
   };
 
   return (
-    <div className="flex w-full flex-col gap-2">
-      <PayPalGuestPaymentButton
-        createOrder={createOrder}
-        onApprove={approve}
-        onCancel={onCancel}
-        onError={onError}
-        disabled={disabled}
-      />
-      <PayPalOneTimePaymentButton
-        createOrder={createOrder}
-        onApprove={approve}
-        onCancel={onCancel}
-        onError={onError}
-        disabled={disabled}
-      />
+    <div className="flex w-full flex-row gap-2">
+      <div className="min-w-0 flex-1 [&>*]:w-full">
+        <PayPalGuestPaymentButton
+          createOrder={createOrder}
+          onApprove={approve}
+          onCancel={onCancel}
+          onError={onError}
+          disabled={disabled}
+        />
+      </div>
+      <div className="min-w-0 flex-1 [&>*]:w-full">
+        <PayPalOneTimePaymentButton
+          createOrder={createOrder}
+          onApprove={approve}
+          onCancel={onCancel}
+          onError={onError}
+          disabled={disabled}
+        />
+      </div>
     </div>
   );
 }

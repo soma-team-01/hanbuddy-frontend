@@ -178,7 +178,7 @@ describe("BookingForm", () => {
     await waitFor(() => {
       expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
     });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/applications"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/payments/success?applicationId=11"));
     expect(queryClient.getQueryState(applicationKeys.mine())?.isInvalidated).toBe(true);
   });
 
@@ -199,7 +199,7 @@ describe("BookingForm", () => {
     await waitFor(() => {
       expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
     });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/applications"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/payments/success?applicationId=11"));
   });
 
   it("continues the existing payment when retrying after a capture failure", async () => {
@@ -235,7 +235,7 @@ describe("BookingForm", () => {
       expect(mockedCaptureApplicationPayment).toHaveBeenLastCalledWith(11, "NEW_ORDER_ID");
     });
     expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/applications"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/payments/success?applicationId=11"));
   });
 
   it("keeps the pending application available when the payment dialog is closed", async () => {

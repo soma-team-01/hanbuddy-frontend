@@ -81,6 +81,7 @@ const confirmedApplication: ApplicationResponse = {
 
 describe("ApplicationsContent", () => {
   beforeEach(() => {
+    routerMock.replace.mockReset();
     mockedCancelMyApplication.mockReset();
     mockedCaptureApplicationPayment.mockReset();
     mockedContinueApplicationPayment.mockReset();
@@ -133,6 +134,7 @@ describe("ApplicationsContent", () => {
     expect(queryClient.getQueryData(applicationKeys.mine())).toEqual([
       expect.objectContaining({ applicationId: 11, status: "CONFIRMED" }),
     ]);
+    expect(routerMock.replace).toHaveBeenCalledWith("/payments/success?applicationId=11");
   });
 
   it("renders applications loaded from the API", async () => {

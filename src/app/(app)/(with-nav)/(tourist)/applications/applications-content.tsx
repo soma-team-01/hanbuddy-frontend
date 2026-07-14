@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PayPalPaymentProvider } from "@/components/payments/PayPalPaymentButton";
 import {
@@ -17,6 +18,7 @@ import { ApplicationList } from "./application-list";
 import type { CancelDialogOutcome } from "./cancel-dialog";
 
 export function ApplicationsContent() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const applicationsQuery = useQuery(myApplicationsQueryOptions());
   const cancelApplicationMutation = useMutation({
@@ -56,6 +58,7 @@ export function ApplicationsContent() {
         ),
       );
       await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
+      router.replace(`/payments/success?applicationId=${application.applicationId}`);
     },
   });
   useAuthQueryRedirect(

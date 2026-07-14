@@ -71,12 +71,12 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
       paypalOrderId: string;
     }) =>
       unwrapApiResult(await captureApplicationPayment(applicationId, paypalOrderId), "application"),
-    onSuccess: async () => {
+    onSuccess: async (application) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
         queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
       ]);
-      router.replace("/applications");
+      router.replace(`/payments/success?applicationId=${application.applicationId}`);
     },
   });
   useAuthQueryRedirect(

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PayPalPaymentButtons, PayPalPaymentProvider } from "./PayPalPaymentButton";
 
@@ -62,5 +62,22 @@ describe("PayPalPaymentButtons", () => {
     expect(paypalCell).toHaveClass("min-w-0", "flex-1", "[&>*]:w-full");
     expect(cardCell?.parentElement).toBe(paypalCell?.parentElement);
     expect(cardCell?.parentElement).toHaveClass("flex-row");
+  });
+
+  it("expands the card checkout to the full payment width after the card button is clicked", () => {
+    vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "test-client-id");
+
+    renderButtons();
+
+    const cardButton = screen.getByRole("button", { name: "Debit or Credit Card" });
+    const paypalButton = screen.getByRole("button", { name: "PayPal" });
+    const cardCell = cardButton.parentElement;
+    const paypalCell = paypalButton.parentElement;
+
+    fireEvent.click(cardButton);
+
+    expect(cardCell).toHaveClass("w-full");
+    expect(cardCell).not.toHaveClass("flex-1");
+    expect(paypalCell).toHaveClass("hidden");
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   PayPalGuestPaymentButton,
   PayPalOneTimePaymentButton,
@@ -51,6 +52,8 @@ export function PayPalPaymentButtons({
   onError,
   disabled = false,
 }: Readonly<PayPalPaymentButtonsProps>) {
+  const [isCardCheckoutOpen, setIsCardCheckoutOpen] = useState(false);
+
   if (!getPayPalClientId()) {
     return (
       <button
@@ -67,23 +70,40 @@ export function PayPalPaymentButtons({
     await onApprove(data);
   };
 
+  const cancel = () => {
+    setIsCardCheckoutOpen(false);
+    onCancel?.();
+  };
+
+  const handleError = (error: unknown) => {
+    setIsCardCheckoutOpen(false);
+    onError?.(error);
+  };
+
   return (
     <div className="flex w-full flex-row gap-2">
-      <div className="min-w-0 flex-1 [&>*]:w-full">
+      <div
+        className={
+          isCardCheckoutOpen ? "w-full min-w-0 [&>*]:w-full" : "min-w-0 flex-1 [&>*]:w-full"
+        }
+        onClickCapture={() => {
+          if (!disabled) setIsCardCheckoutOpen(true);
+        }}
+      >
         <PayPalGuestPaymentButton
           createOrder={createOrder}
           onApprove={approve}
-          onCancel={onCancel}
-          onError={onError}
+          onCancel={cancel}
+          onError={handleError}
           disabled={disabled}
         />
       </div>
-      <div className="min-w-0 flex-1 [&>*]:w-full">
+      <div className={isCardCheckoutOpen ? "hidden" : "min-w-0 flex-1 [&>*]:w-full"}>
         <PayPalOneTimePaymentButton
           createOrder={createOrder}
           onApprove={approve}
-          onCancel={onCancel}
-          onError={onError}
+          onCancel={cancel}
+          onError={handleError}
           disabled={disabled}
         />
       </div>

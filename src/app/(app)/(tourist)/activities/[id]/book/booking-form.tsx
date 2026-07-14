@@ -23,7 +23,7 @@ import {
   continueApplicationPayment,
   createApplication,
 } from "@/lib/api/applications";
-import { formatKrw } from "@/lib/format";
+import { formatCurrency, formatKrw } from "@/lib/format";
 import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
@@ -31,7 +31,6 @@ import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { Activity } from "@/types/activity";
 
 const MAX_GUESTS = 8;
-const SERVICE_FEE_RATE = 0.1;
 
 export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const router = useRouter();
@@ -42,6 +41,10 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [paymentCharge, setPaymentCharge] = useState<{
+    amount: number;
+    currency: string;
+  } | null>(null);
   // PayPal 결제 재시도 시 신청을 중복 생성하지 않도록 첫 신청의 ID를 기억한다
   const applicationIdRef = useRef<number | null>(null);
   const createApplicationMutation = useMutation({
@@ -87,8 +90,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     capturePaymentMutation.isPending;
 
   const subtotal = activity.price * guests;
-  const serviceFee = Math.round(subtotal * SERVICE_FEE_RATE);
-  const total = subtotal + serviceFee;
+  const total = subtotal;
   const selectedSession = activity.sessions.find((session) => session.id === sessionId);
 
   function handleSubmitClick() {
@@ -105,6 +107,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     const applicationId = applicationIdRef.current;
     if (applicationId !== null) {
       const payment = await continuePaymentMutation.mutateAsync(applicationId);
+      setPaymentCharge({ amount: payment.paymentAmount, currency: payment.paymentCurrency });
       return { orderId: payment.paypalOrderId };
     }
     const payment = await createApplicationMutation.mutateAsync({
@@ -113,6 +116,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
       specialRequest: specialRequest.trim() || undefined,
     });
     applicationIdRef.current = payment.application.applicationId;
+    setPaymentCharge({ amount: payment.paymentAmount, currency: payment.paymentCurrency });
     return { orderId: payment.paypalOrderId };
   }
 
@@ -260,10 +264,6 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
             </span>
             <span>{formatKrw(subtotal)}</span>
           </div>
-          <div className="flex items-center justify-between text-sm text-ink">
-            <span>Service fee</span>
-            <span>{formatKrw(serviceFee)}</span>
-          </div>
           <div className="h-px w-full bg-line" aria-hidden />
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-ink">Total (KRW)</span>
@@ -341,6 +341,12 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
                 <dt>Total</dt>
                 <dd>{formatKrw(total)}</dd>
               </div>
+              {paymentCharge ? (
+                <div className="flex justify-between gap-4 text-forest">
+                  <dt>PayPal charge</dt>
+                  <dd>{formatCurrency(paymentCharge.amount, paymentCharge.currency)}</dd>
+                </div>
+              ) : null}
             </dl>
             {errorMessage && (
               <p

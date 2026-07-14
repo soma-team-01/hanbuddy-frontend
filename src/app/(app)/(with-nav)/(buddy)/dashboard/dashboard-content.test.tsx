@@ -28,7 +28,10 @@ describe("DashboardContent", () => {
   it("renders upcoming activities and applicants loaded from the API", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
-      dates: [{ date: "2026-07-20" }],
+      dates: [
+        { dateStartAt: "2026-07-19T00:00:00+09:00", hasActivity: false },
+        { dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true },
+      ],
     });
     mockedGetBuddyApplications.mockResolvedValue({
       status: "success",
@@ -71,13 +74,15 @@ describe("DashboardContent", () => {
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
+    expect(screen.getByText("19").closest("button")).not.toHaveAccessibleName(/has activity/i);
+    expect(screen.getByText("20").closest("button")).toHaveAccessibleName(/has activity/i);
     expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");
   });
 
   it("keeps date selection available when applicant loading fails", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
-      dates: [{ date: "2026-07-20" }],
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
     });
     mockedGetBuddyApplications.mockResolvedValue({
       status: "error",
@@ -93,7 +98,10 @@ describe("DashboardContent", () => {
   it("reuses cached applicants when returning to a previously selected date", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
-      dates: [{ date: "2026-07-20" }, { date: "2026-07-21" }],
+      dates: [
+        { dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true },
+        { dateStartAt: "2026-07-21T00:00:00+09:00", hasActivity: true },
+      ],
     });
     mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
 
@@ -113,7 +121,10 @@ describe("DashboardContent", () => {
   it("falls back when the selected date disappears from refreshed schedules", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
-      dates: [{ date: "2026-07-20" }, { date: "2026-07-21" }],
+      dates: [
+        { dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true },
+        { dateStartAt: "2026-07-21T00:00:00+09:00", hasActivity: true },
+      ],
     });
     mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
 
@@ -124,7 +135,9 @@ describe("DashboardContent", () => {
     await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21"));
 
     act(() => {
-      queryClient.setQueryData(buddyKeys.scheduleDates(), [{ date: "2026-07-22" }]);
+      queryClient.setQueryData(buddyKeys.scheduleDates(), [
+        { dateStartAt: "2026-07-22T00:00:00+09:00", hasActivity: true },
+      ]);
     });
 
     await waitFor(() =>

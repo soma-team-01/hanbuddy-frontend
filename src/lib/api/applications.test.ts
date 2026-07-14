@@ -33,6 +33,8 @@ const paymentReady = {
   paypalOrderId: "5O190127TN364715T",
   approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
   paymentStatus: "CREATED",
+  paymentAmount: 68.97,
+  paymentCurrency: "USD",
   orderExpiresAt: "2026-07-14T13:00:00+09:00",
 };
 

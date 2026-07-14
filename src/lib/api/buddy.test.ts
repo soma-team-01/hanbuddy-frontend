@@ -7,6 +7,7 @@ import {
   getBuddyScheduleDates,
   getMyActivities,
   getMyActivity,
+  previewActivityPrice,
   updateMyActivity,
 } from "./buddy";
 import type { ActivityUpsertRequest } from "@/types/buddy";
@@ -134,6 +135,33 @@ describe("buddy API client", () => {
     });
   });
 
+  it("previews the buddy payout through the internal API", async () => {
+    const preview = {
+      unitPriceKrw: 50000,
+      currency: "KRW",
+      commissionRate: 0.1,
+      platformCommissionAmountKrw: 5000,
+      estimatedGuidePayoutAmountKrw: 45000,
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ isSuccess: true, code: "200", message: "ok", result: preview }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(previewActivityPrice({ price: 50000, currency: "KRW" })).resolves.toEqual({
+      status: "success",
+      preview,
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/price-preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ price: 50000, currency: "KRW" }),
+      credentials: "same-origin",
+    });
+  });
+
   it("updates a buddy activity through the internal API", async () => {
     const fetchMock = vi
       .fn()
@@ -181,14 +209,14 @@ describe("buddy API client", () => {
         isSuccess: true,
         code: "200",
         message: "ok",
-        result: [{ date: "2026-07-20" }],
+        result: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
       }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getBuddyScheduleDates()).resolves.toEqual({
       status: "success",
-      dates: [{ date: "2026-07-20" }],
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
     });
     expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedule-dates", {
       credentials: "same-origin",

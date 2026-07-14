@@ -68,6 +68,7 @@ export interface TouristActivitySummary {
   buddyName: string;
   buddyProfileImageUrl: string | null;
   meetingPointName: string;
+  meetingPlaceId: string;
   price: number;
   currency: string;
 }
@@ -76,7 +77,6 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   buddyId: number;
   includedItems: string[];
   restrictionNotes: string[];
-  meetingPlaceId: string;
   images: ActivityImageResponse[];
   schedules: TouristActivitySchedule[];
 }

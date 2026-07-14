@@ -66,7 +66,9 @@ function renderList(overrides: Partial<React.ComponentProps<typeof ApplicationLi
     <ApplicationList
       applications={applications}
       onCancelApplication={vi.fn()}
-      onContinuePayment={vi.fn().mockResolvedValue({ orderId: "ORDER123" })}
+      onContinuePayment={vi
+        .fn()
+        .mockResolvedValue({ orderId: "ORDER123", paymentAmount: 68.97, paymentCurrency: "USD" })}
       onCapturePayment={vi.fn()}
       {...overrides}
     />,
@@ -83,7 +85,9 @@ describe("ApplicationList", () => {
   });
 
   it("pays a pending application through the PayPal button", async () => {
-    const onContinuePayment = vi.fn().mockResolvedValue({ orderId: "ORDER123" });
+    const onContinuePayment = vi
+      .fn()
+      .mockResolvedValue({ orderId: "ORDER123", paymentAmount: 68.97, paymentCurrency: "USD" });
     const onCapturePayment = vi.fn().mockResolvedValue(undefined);
     renderList({ onContinuePayment, onCapturePayment });
 
@@ -93,10 +97,13 @@ describe("ApplicationList", () => {
       expect(onCapturePayment).toHaveBeenCalledWith("1", "ORDER123");
     });
     expect(onContinuePayment).toHaveBeenCalledWith("1");
+    expect(screen.getByText("PayPal charge: $68.97")).toBeInTheDocument();
   });
 
   it("pays a pending application as a guest with a card", async () => {
-    const onContinuePayment = vi.fn().mockResolvedValue({ orderId: "ORDER123" });
+    const onContinuePayment = vi
+      .fn()
+      .mockResolvedValue({ orderId: "ORDER123", paymentAmount: 68.97, paymentCurrency: "USD" });
     const onCapturePayment = vi.fn().mockResolvedValue(undefined);
     renderList({ onContinuePayment, onCapturePayment });
 

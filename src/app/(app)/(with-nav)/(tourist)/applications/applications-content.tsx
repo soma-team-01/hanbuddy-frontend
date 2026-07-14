@@ -84,7 +84,11 @@ export function ApplicationsContent() {
 
   async function handleContinuePayment(applicationId: string) {
     const payment = await continuePaymentMutation.mutateAsync(applicationId);
-    return { orderId: payment.paypalOrderId };
+    return {
+      orderId: payment.paypalOrderId,
+      paymentAmount: payment.paymentAmount,
+      paymentCurrency: payment.paymentCurrency,
+    };
   }
 
   async function handleCapturePayment(applicationId: string, paypalOrderId: string) {

@@ -126,6 +126,8 @@ const paymentReady: PaymentReadyResponse = {
   paypalOrderId: "5O190127TN364715T",
   approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
   paymentStatus: "CREATED",
+  paymentAmount: 68.97,
+  paymentCurrency: "USD",
   orderExpiresAt: "2026-07-14T13:00:00+09:00",
 };
 
@@ -158,10 +160,13 @@ describe("BookingForm", () => {
     expect(within(dialog).getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(within(dialog).getByText("2026-07-20 10:00")).toBeInTheDocument();
     expect(within(dialog).getByText("2 guests")).toBeInTheDocument();
-    expect(within(dialog).getByText("₩99,000")).toBeInTheDocument();
+    expect(within(dialog).getByText("₩90,000")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Service fee")).not.toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
 
+    expect(await within(dialog).findByText("PayPal charge")).toBeInTheDocument();
+    expect(within(dialog).getByText("$68.97")).toBeInTheDocument();
     await waitFor(() => {
       expect(mockedCreateApplication).toHaveBeenCalledWith({
         activityScheduleId: 101,

@@ -33,9 +33,13 @@ function applicantCountLabel(count: number) {
 export function DashboardContent() {
   const [selectedDate, setSelectedDate] = useState("");
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
-  const dates = scheduleDatesQuery.data ?? [];
+  const dates = (scheduleDatesQuery.data ?? []).map(({ dateStartAt, hasActivity }) => ({
+    date: splitStartAt(dateStartAt).date,
+    hasActivity,
+  }));
   const selectedDateExists = dates.some(({ date }) => date === selectedDate);
-  const activeDate = selectedDateExists ? selectedDate : (dates[0]?.date ?? "");
+  const defaultDate = dates.find(({ hasActivity }) => hasActivity)?.date ?? dates[0]?.date ?? "";
+  const activeDate = selectedDateExists ? selectedDate : defaultDate;
   const applicationsQuery = useQuery(buddyApplicationsQueryOptions(activeDate));
   const activities = applicationsQuery.data ?? [];
   useAuthQueryRedirect(scheduleDatesQuery.error ?? applicationsQuery.error);
@@ -171,7 +175,7 @@ export function DashboardContent() {
       <h2 className="font-display text-2xl font-semibold text-forest">Upcoming</h2>
       <div className="rounded-2xl bg-chip p-3">
         <div className="flex scrollbar-none gap-3 overflow-x-auto">
-          {dates.map(({ date }) => {
+          {dates.map(({ date, hasActivity }) => {
             const chip = formatDateChip(date);
             const active = date === activeDate;
 
@@ -180,6 +184,7 @@ export function DashboardContent() {
                 key={date}
                 type="button"
                 aria-pressed={active}
+                aria-label={`${chip.label} ${chip.day}${hasActivity ? ", has activity" : ""}`}
                 onClick={() => handleDateSelect(date)}
                 className={`flex w-16 shrink-0 flex-col items-center gap-1 rounded-xl py-3 transition-colors ${
                   active
@@ -191,6 +196,12 @@ export function DashboardContent() {
                 <span className={`text-xs ${active ? "text-sage" : "text-ink-soft"}`}>
                   {chip.label}
                 </span>
+                <span
+                  aria-hidden
+                  className={`size-1.5 rounded-full ${
+                    hasActivity ? (active ? "bg-cream" : "bg-forest") : "bg-transparent"
+                  }`}
+                />
               </button>
             );
           })}

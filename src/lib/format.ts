@@ -2,6 +2,13 @@ export function formatKrw(amount: number): string {
   return `₩${amount.toLocaleString("en-US")}`;
 }
 
+export function formatCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(amount);
+}
+
 /**
  * 백엔드 startAt(Asia/Seoul 오프셋 포함 date-time)을 표기용 날짜/시각으로 분리한다.
  * 오프셋이 이미 서울 현지 시각이므로 타임존 변환 없이 문자열을 그대로 자른다.

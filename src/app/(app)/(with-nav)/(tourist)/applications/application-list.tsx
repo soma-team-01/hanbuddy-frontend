@@ -5,7 +5,7 @@ import { PayPalPaymentButtons } from "@/components/payments/PayPalPaymentButton"
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
-import { formatKrw } from "@/lib/format";
+import { formatCurrency, formatKrw } from "@/lib/format";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
@@ -14,6 +14,12 @@ const TABS = [
   { key: "upcoming", label: "Upcoming" },
   { key: "past", label: "Past" },
 ] as const;
+
+interface PaymentOrderDetails {
+  orderId: string;
+  paymentAmount: number;
+  paymentCurrency: string;
+}
 
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -66,10 +72,14 @@ function ApplicationCard({
 }: Readonly<{
   application: Application;
   onCancel: () => void;
-  onContinuePayment: (applicationId: string) => Promise<{ orderId: string }>;
+  onContinuePayment: (applicationId: string) => Promise<PaymentOrderDetails>;
   onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
 }>) {
   const [paymentError, setPaymentError] = useState("");
+  const [paymentCharge, setPaymentCharge] = useState<{
+    amount: number;
+    currency: string;
+  } | null>(null);
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
 
@@ -108,9 +118,14 @@ function ApplicationCard({
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
           <PayPalPaymentButtons
-            createOrder={() => {
+            createOrder={async () => {
               setPaymentError("");
-              return onContinuePayment(application.id);
+              const payment = await onContinuePayment(application.id);
+              setPaymentCharge({
+                amount: payment.paymentAmount,
+                currency: payment.paymentCurrency,
+              });
+              return { orderId: payment.orderId };
             }}
             onApprove={async ({ orderId }) => {
               try {
@@ -121,6 +136,11 @@ function ApplicationCard({
             }}
             onError={showPaymentError}
           />
+          {paymentCharge ? (
+            <p className="text-xs text-ink-soft">
+              PayPal charge: {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
+            </p>
+          ) : null}
           {paymentError && (
             <p
               role="alert"
@@ -164,7 +184,7 @@ export function ApplicationList({
     applicationId: string,
     reason: ApplicationCancellationReason,
   ) => Promise<CancelDialogOutcome>;
-  onContinuePayment: (applicationId: string) => Promise<{ orderId: string }>;
+  onContinuePayment: (applicationId: string) => Promise<PaymentOrderDetails>;
   onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");

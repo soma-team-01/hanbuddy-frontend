@@ -6,6 +6,19 @@ export interface ActivityScheduleRequest {
   startAt: string;
 }
 
+export interface ActivityPricePreviewRequest {
+  price: number;
+  currency: string;
+}
+
+export interface ActivityPricePreviewResponse {
+  unitPriceKrw: number;
+  currency: string;
+  commissionRate: number;
+  platformCommissionAmountKrw: number;
+  estimatedGuidePayoutAmountKrw: number;
+}
+
 export interface ActivityUpsertRequest {
   title: string;
   description: string;
@@ -55,7 +68,9 @@ export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
 }
 
 export interface BuddyScheduleDateResponse {
-  date: string;
+  /** Asia/Seoul 오프셋을 포함한 날짜 시작 일시 */
+  dateStartAt: string;
+  hasActivity: boolean;
 }
 
 export interface BuddyApplicationApplicantSummaryResponse {

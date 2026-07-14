@@ -8,7 +8,8 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
-import { createMyActivity } from "@/lib/api/buddy";
+import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
+import { formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetails,
@@ -177,7 +178,26 @@ export function CreateActivityForm() {
       router.push("/my-activities");
     },
   });
-  useAuthQueryRedirect(createActivityMutation.error);
+  const pricePreviewMutation = useMutation({
+    mutationFn: async (request: { price: number; currency: string }) =>
+      unwrapApiResult(await previewActivityPrice(request), "preview"),
+  });
+  useAuthQueryRedirect(createActivityMutation.error ?? pricePreviewMutation.error);
+
+  function handlePriceChange() {
+    pricePreviewMutation.reset();
+  }
+
+  function handlePriceBlur(event: React.FocusEvent<HTMLInputElement>) {
+    const price = Number(event.currentTarget.value);
+
+    if (!Number.isInteger(price) || price <= 0) {
+      pricePreviewMutation.reset();
+      return;
+    }
+
+    pricePreviewMutation.mutate({ price, currency: "KRW" });
+  }
 
   useEffect(() => {
     if (!isDirty) return;
@@ -587,13 +607,43 @@ export function CreateActivityForm() {
               <input
                 name="price"
                 type="number"
-                min={0}
+                min={1}
+                step={1}
                 required
                 aria-label="Price per person"
                 placeholder="e.g., 50000"
                 className={`${INPUT_CLASS} pl-11`}
+                onChange={handlePriceChange}
+                onBlur={handlePriceBlur}
               />
             </span>
+            {pricePreviewMutation.isPending ? (
+              <span role="status" className="text-xs text-ink-soft">
+                Calculating estimated payout...
+              </span>
+            ) : null}
+            {pricePreviewMutation.error ? (
+              <span role="alert" aria-label="Price preview error" className="text-xs text-danger">
+                {pricePreviewMutation.error.message}
+              </span>
+            ) : null}
+            {pricePreviewMutation.data ? (
+              <dl
+                aria-label="Estimated payout"
+                className="flex flex-col gap-2 rounded-xl bg-chip px-4 py-3 text-sm"
+              >
+                <div className="flex items-center justify-between text-ink-soft">
+                  <dt>
+                    Platform fee ({Math.round(pricePreviewMutation.data.commissionRate * 100)}%)
+                  </dt>
+                  <dd>{formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw)}</dd>
+                </div>
+                <div className="flex items-center justify-between font-semibold text-forest">
+                  <dt>Estimated payout</dt>
+                  <dd>{formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw)}</dd>
+                </div>
+              </dl>
+            ) : null}
           </label>
         </section>
 

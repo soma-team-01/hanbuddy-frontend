@@ -107,6 +107,8 @@ describe("ApplicationsContent", () => {
         paypalOrderId: "ORDER123",
         approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=ORDER123",
         paymentStatus: "CREATED",
+        paymentAmount: 68.97,
+        paymentCurrency: "USD",
         orderExpiresAt: "2026-07-14T13:00:00+09:00",
       },
     });

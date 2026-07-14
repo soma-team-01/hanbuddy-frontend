@@ -54,7 +54,13 @@ export function ApplicationsContent() {
     onSuccess: async (application) => {
       queryClient.setQueryData<ApplicationResponse[]>(applicationKeys.mine(), (current = []) =>
         current.map((item) =>
-          item.applicationId === application.applicationId ? application : item,
+          item.applicationId === application.applicationId
+            ? {
+                ...application,
+                paymentAmount: application.paymentAmount ?? item.paymentAmount,
+                paymentCurrency: application.paymentCurrency ?? item.paymentCurrency,
+              }
+            : item,
         ),
       );
       await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });

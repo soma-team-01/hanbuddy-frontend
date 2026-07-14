@@ -23,7 +23,13 @@ interface PaymentOrderDetails {
 
 type TabKey = (typeof TABS)[number]["key"];
 
-function PriceBreakdown({ application }: Readonly<{ application: Application }>) {
+function PriceBreakdown({
+  application,
+  paymentCharge,
+}: Readonly<{
+  application: Application;
+  paymentCharge: { amount: number; currency: string } | null;
+}>) {
   const [open, setOpen] = useState(false);
   const breakdown = application.breakdown;
   if (!breakdown) return null;
@@ -50,10 +56,14 @@ function PriceBreakdown({ application }: Readonly<{ application: Application }>)
             </span>
             <span>{formatKrw(subtotal)}</span>
           </div>
-          <div className="flex justify-between">
-            <span>Service fee</span>
-            <span>{formatKrw(breakdown.serviceFee)}</span>
-          </div>
+          {paymentCharge ? (
+            <div className="flex justify-between">
+              <span>Paid with PayPal</span>
+              <span className="font-display font-semibold text-forest">
+                {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
+              </span>
+            </div>
+          ) : null}
           <div className="flex justify-between font-display font-semibold">
             <span>Total</span>
             <span>{formatKrw(total)}</span>
@@ -130,7 +140,7 @@ function ApplicationCard({
         {totalKrw !== null ? (
           <div className="shrink-0 text-right">
             <p className="font-display text-sm font-semibold text-ink">{formatKrw(totalKrw)}</p>
-            {application.status === "pending_payment" && paymentCharge ? (
+            {!isCancelled && paymentCharge ? (
               <p className="mt-0.5 text-xs text-forest">
                 PayPal{" "}
                 <span className="font-display font-semibold">
@@ -141,7 +151,9 @@ function ApplicationCard({
           </div>
         ) : null}
       </div>
-      {application.status === "confirmed" && <PriceBreakdown application={application} />}
+      {application.status === "confirmed" && (
+        <PriceBreakdown application={application} paymentCharge={paymentCharge} />
+      )}
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
           <PayPalPaymentButtons

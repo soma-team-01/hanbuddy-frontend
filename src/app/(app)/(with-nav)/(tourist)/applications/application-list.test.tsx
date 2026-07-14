@@ -105,6 +105,26 @@ describe("ApplicationList", () => {
     expect(onCapturePayment).not.toHaveBeenCalled();
   });
 
+  it("shows the PayPal charge instead of a service fee after payment", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          id: "3",
+          status: "confirmed",
+        },
+      ],
+    });
+
+    expect(screen.getByText("$68.97")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Price Breakdown" }));
+
+    expect(screen.getByText("Paid with PayPal")).toBeInTheDocument();
+    expect(screen.getAllByText("$68.97")).toHaveLength(2);
+    expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
+  });
+
   it("pays a pending application through the PayPal button", async () => {
     const onContinuePayment = vi
       .fn()

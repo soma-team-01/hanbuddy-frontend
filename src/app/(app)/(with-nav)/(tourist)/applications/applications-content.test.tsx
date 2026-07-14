@@ -117,7 +117,11 @@ describe("ApplicationsContent", () => {
     });
     mockedCaptureApplicationPayment.mockResolvedValue({
       status: "success",
-      application: confirmedApplication,
+      application: {
+        ...confirmedApplication,
+        paymentAmount: null,
+        paymentCurrency: null,
+      },
     });
 
     const { queryClient } = renderWithQueryClient(<ApplicationsContent />);
@@ -132,7 +136,12 @@ describe("ApplicationsContent", () => {
     expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11");
     expect(await screen.findByText("Confirmed")).toBeInTheDocument();
     expect(queryClient.getQueryData(applicationKeys.mine())).toEqual([
-      expect.objectContaining({ applicationId: 11, status: "CONFIRMED" }),
+      expect.objectContaining({
+        applicationId: 11,
+        status: "CONFIRMED",
+        paymentAmount: 68.97,
+        paymentCurrency: "USD",
+      }),
     ]);
     expect(routerMock.replace).toHaveBeenCalledWith("/payments/success?applicationId=11");
   });

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { PayPalPaymentButton } from "@/components/payments/PayPalPaymentButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { formatKrw } from "@/lib/format";
+import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 
@@ -59,9 +61,24 @@ function PriceBreakdown({ application }: Readonly<{ application: Application }>)
 function ApplicationCard({
   application,
   onCancel,
-}: Readonly<{ application: Application; onCancel: () => void }>) {
+  onContinuePayment,
+  onCapturePayment,
+}: Readonly<{
+  application: Application;
+  onCancel: () => void;
+  onContinuePayment: (applicationId: string) => Promise<{ orderId: string }>;
+  onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
+}>) {
+  const [paymentError, setPaymentError] = useState("");
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
+
+  function showPaymentError(error: unknown) {
+    if (error instanceof UnauthenticatedQueryError) return;
+    setPaymentError(
+      error instanceof Error && error.message ? error.message : "결제를 완료하지 못했습니다.",
+    );
+  }
 
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
@@ -89,13 +106,30 @@ function ApplicationCard({
       </div>
       {application.status === "confirmed" && <PriceBreakdown application={application} />}
       {application.status === "pending_payment" && (
-        <button
-          type="button"
-          disabled
-          className="h-11 w-full cursor-not-allowed rounded-lg bg-forest font-display text-sm font-semibold text-cream opacity-60"
-        >
-          Pay Now · Coming soon
-        </button>
+        <div className="flex flex-col gap-2">
+          <PayPalPaymentButton
+            createOrder={() => {
+              setPaymentError("");
+              return onContinuePayment(application.id);
+            }}
+            onApprove={async ({ orderId }) => {
+              try {
+                await onCapturePayment(application.id, orderId);
+              } catch (error) {
+                showPaymentError(error);
+              }
+            }}
+            onError={showPaymentError}
+          />
+          {paymentError && (
+            <p
+              role="alert"
+              className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+            >
+              {paymentError}
+            </p>
+          )}
+        </div>
       )}
       {application.status === "confirmed" && (
         <button
@@ -122,12 +156,16 @@ function ApplicationCard({
 export function ApplicationList({
   applications,
   onCancelApplication,
+  onContinuePayment,
+  onCapturePayment,
 }: Readonly<{
   applications: Application[];
   onCancelApplication: (
     applicationId: string,
     reason: ApplicationCancellationReason,
   ) => Promise<CancelDialogOutcome>;
+  onContinuePayment: (applicationId: string) => Promise<{ orderId: string }>;
+  onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
@@ -167,6 +205,8 @@ export function ApplicationList({
             key={application.id}
             application={application}
             onCancel={() => setCancelTargetId(application.id)}
+            onContinuePayment={onContinuePayment}
+            onCapturePayment={onCapturePayment}
           />
         ))}
         {visibleApplications.length === 0 && (

@@ -5,12 +5,14 @@ import { useEffect, useRef } from "react";
 interface ConfirmDialogProps {
   title: string;
   description?: string;
-  confirmLabel: string;
+  confirmLabel?: string;
   cancelLabel?: string;
   tone?: "default" | "danger";
   isPending?: boolean;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   onClose: () => void;
+  /** 확인 버튼 대신 렌더링할 커스텀 액션 (예: PayPal 결제 버튼) */
+  confirmSlot?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -24,6 +26,7 @@ export function ConfirmDialog({
   isPending = false,
   onConfirm,
   onClose,
+  confirmSlot,
   children,
 }: Readonly<ConfirmDialogProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -56,18 +59,22 @@ export function ConfirmDialog({
         >
           {cancelLabel}
         </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={isPending}
-          className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-cream transition-colors disabled:opacity-60 ${
-            tone === "danger"
-              ? "bg-danger enabled:hover:bg-danger/90"
-              : "bg-forest enabled:hover:bg-forest-soft"
-          }`}
-        >
-          {isPending ? `${confirmLabel}...` : confirmLabel}
-        </button>
+        {confirmSlot ? (
+          <div className="min-w-0 flex-1">{confirmSlot}</div>
+        ) : (
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isPending}
+            className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-cream transition-colors disabled:opacity-60 ${
+              tone === "danger"
+                ? "bg-danger enabled:hover:bg-danger/90"
+                : "bg-forest enabled:hover:bg-forest-soft"
+            }`}
+          >
+            {isPending ? `${confirmLabel}...` : confirmLabel}
+          </button>
+        )}
       </div>
     </dialog>
   );

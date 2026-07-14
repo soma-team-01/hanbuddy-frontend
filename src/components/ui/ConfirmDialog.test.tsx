@@ -87,6 +87,19 @@ describe("ConfirmDialog", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
   });
 
+  it("renders the confirm slot in place of the confirm button when provided", () => {
+    render(
+      <ConfirmDialog
+        title="Pay for this application?"
+        onClose={vi.fn()}
+        confirmSlot={<button type="button">PayPal</button>}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "PayPal" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+  });
+
   it("uses the danger style for the confirm button when tone is danger", () => {
     render(
       <ConfirmDialog

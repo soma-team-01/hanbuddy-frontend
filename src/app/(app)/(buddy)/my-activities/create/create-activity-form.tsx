@@ -23,7 +23,11 @@ import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthSessionCheck } from "@/lib/query/use-auth-session-check";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
+import type {
+  ActivityPricePreviewRequest,
+  ActivityUpsertRequest,
+  MyActivityStatus,
+} from "@/types/buddy";
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return <span className="text-sm font-medium text-ink">{children}</span>;
@@ -179,7 +183,7 @@ export function CreateActivityForm() {
     },
   });
   const pricePreviewMutation = useMutation({
-    mutationFn: async (request: { price: number; currency: string }) =>
+    mutationFn: async (request: ActivityPricePreviewRequest) =>
       unwrapApiResult(await previewActivityPrice(request), "preview"),
   });
   useAuthQueryRedirect(createActivityMutation.error ?? pricePreviewMutation.error);
@@ -618,9 +622,7 @@ export function CreateActivityForm() {
               />
             </span>
             {pricePreviewMutation.isPending ? (
-              <span role="status" className="text-xs text-ink-soft">
-                Calculating estimated payout...
-              </span>
+              <output className="text-xs text-ink-soft">Calculating estimated payout...</output>
             ) : null}
             {pricePreviewMutation.error ? (
               <span role="alert" aria-label="Price preview error" className="text-xs text-danger">

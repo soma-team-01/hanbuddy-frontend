@@ -8,12 +8,14 @@ vi.mock("@paypal/react-paypal-js/sdk-v6", () => {
     createOrder: () => Promise<{ orderId: string }>;
     onApprove: (data: { orderId: string }) => Promise<void> | void;
     onError?: (error: unknown) => void;
+    disabled?: boolean;
   }
   function MockPaymentButton({
     label,
     createOrder,
     onApprove,
     onError,
+    disabled,
   }: MockButtonProps & { label: string }) {
     return (
       <button
@@ -26,6 +28,7 @@ vi.mock("@paypal/react-paypal-js/sdk-v6", () => {
             onError?.(error);
           }
         }}
+        disabled={disabled}
       >
         {label}
       </button>
@@ -77,6 +80,7 @@ function renderList(overrides: Partial<React.ComponentProps<typeof ApplicationLi
         .fn()
         .mockResolvedValue({ orderId: "ORDER123", paymentAmount: 68.97, paymentCurrency: "USD" })}
       onCapturePayment={vi.fn()}
+      isPaymentPending={false}
       {...overrides}
     />,
   );
@@ -171,6 +175,13 @@ describe("ApplicationList", () => {
     renderList();
 
     expect(screen.getByRole("button", { name: "Payment unavailable" })).toBeDisabled();
+  });
+
+  it("disables payment methods while a payment request is pending", () => {
+    renderList({ isPaymentPending: true });
+
+    expect(screen.getByRole("button", { name: "PayPal" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Debit or Credit Card" })).toBeDisabled();
   });
 
   it("keeps the review action disabled until its flow is available", () => {

@@ -208,6 +208,8 @@ export function DashboardContent() {
             {visibleDates.map(({ date, hasActivity }) => {
               const chip = formatDateChip(date);
               const active = date === activeDate;
+              let activityDotClass = "bg-transparent";
+              if (hasActivity) activityDotClass = active ? "bg-cream" : "bg-forest";
 
               return (
                 <button
@@ -226,12 +228,7 @@ export function DashboardContent() {
                   <span className={`text-xs ${active ? "text-sage" : "text-ink-soft"}`}>
                     {chip.label}
                   </span>
-                  <span
-                    aria-hidden
-                    className={`size-1.5 rounded-full ${
-                      hasActivity ? (active ? "bg-cream" : "bg-forest") : "bg-transparent"
-                    }`}
-                  />
+                  <span aria-hidden className={`size-1.5 rounded-full ${activityDotClass}`} />
                 </button>
               );
             })}

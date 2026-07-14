@@ -79,11 +79,13 @@ function ApplicationCard({
   onCancel,
   onContinuePayment,
   onCapturePayment,
+  isPaymentPending,
 }: Readonly<{
   application: Application;
   onCancel: () => void;
   onContinuePayment: (applicationId: string) => Promise<PaymentOrderDetails>;
   onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
+  isPaymentPending: boolean;
 }>) {
   const [paymentError, setPaymentError] = useState("");
   const [paymentCharge, setPaymentCharge] = useState<{
@@ -157,6 +159,7 @@ function ApplicationCard({
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
           <PayPalPaymentButtons
+            disabled={isPaymentPending}
             createOrder={async () => {
               setPaymentError("");
               const payment = await onContinuePayment(application.id);
@@ -212,6 +215,7 @@ export function ApplicationList({
   onCancelApplication,
   onContinuePayment,
   onCapturePayment,
+  isPaymentPending,
 }: Readonly<{
   applications: Application[];
   onCancelApplication: (
@@ -220,6 +224,7 @@ export function ApplicationList({
   ) => Promise<CancelDialogOutcome>;
   onContinuePayment: (applicationId: string) => Promise<PaymentOrderDetails>;
   onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
+  isPaymentPending: boolean;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
@@ -261,6 +266,7 @@ export function ApplicationList({
             onCancel={() => setCancelTargetId(application.id)}
             onContinuePayment={onContinuePayment}
             onCapturePayment={onCapturePayment}
+            isPaymentPending={isPaymentPending}
           />
         ))}
         {visibleApplications.length === 0 && (

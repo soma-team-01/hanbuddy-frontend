@@ -24,6 +24,11 @@ export async function POST(request: NextRequest, context: PaymentRouteContext) {
     return badRequestResponse("잘못된 신청 ID입니다.");
   }
 
+  const paypalOrderId = parsed.body.paypalOrderId;
+  if (typeof paypalOrderId !== "string" || paypalOrderId.trim().length === 0) {
+    return badRequestResponse("paypalOrderId가 필요합니다.");
+  }
+
   return proxyAuthenticatedPost<CapturePaymentRequest, ApplicationResponse>(
     request,
     `/applications/me/${applicationId}/payment/capture`,

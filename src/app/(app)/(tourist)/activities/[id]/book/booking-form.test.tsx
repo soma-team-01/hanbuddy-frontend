@@ -249,6 +249,7 @@ describe("BookingForm", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Close dialog" }));
 
     expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
+    expect(mockedCaptureApplicationPayment).not.toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith("/applications");
   });
 });

@@ -87,4 +87,33 @@ describe("POST /api/applications/me/[applicationId]/payment/capture", () => {
     expect(response.status).toBe(400);
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["missing", {}],
+    ["non-string", { paypalOrderId: 123 }],
+    ["blank", { paypalOrderId: "   " }],
+  ])("rejects a %s PayPal order id before proxying", async (_case, body) => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      payload: {
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: { applicationId: 11, status: "CONFIRMED" },
+      },
+      setCookies: [],
+    });
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/applications/me/11/payment/capture", {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+      }),
+      context,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  });
 });

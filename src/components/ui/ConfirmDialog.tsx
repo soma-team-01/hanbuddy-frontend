@@ -3,19 +3,30 @@
 import { useEffect, useRef } from "react";
 import { XIcon } from "./icons";
 
-interface ConfirmDialogProps {
+interface ConfirmDialogBaseProps {
   title: string;
   description?: string;
-  confirmLabel?: string;
   cancelLabel?: string;
   tone?: "default" | "danger";
   isPending?: boolean;
-  onConfirm?: () => void;
   onClose: () => void;
-  /** 확인 버튼 대신 렌더링할 커스텀 액션 (예: PayPal 결제 버튼) */
-  confirmSlot?: React.ReactNode;
   children?: React.ReactNode;
 }
+
+type ConfirmDialogProps = ConfirmDialogBaseProps &
+  (
+    | {
+        /** 확인 버튼 대신 렌더링할 커스텀 액션 (예: PayPal 결제 버튼) */
+        confirmSlot: React.ReactNode;
+        confirmLabel?: never;
+        onConfirm?: never;
+      }
+    | {
+        confirmSlot?: never;
+        confirmLabel: string;
+        onConfirm: () => void;
+      }
+  );
 
 /** 실행 전 확인을 받는 공용 모달. API 호출·에러 표시는 호출부 책임이다. */
 export function ConfirmDialog({
@@ -43,6 +54,9 @@ export function ConfirmDialog({
       aria-labelledby="confirm-dialog-title"
       // Escape는 cancel → 기본 close 순으로 이어지므로 close 이벤트에서만 onClose를 부른다 (이중 호출 방지)
       onClose={onClose}
+      onCancel={(event) => {
+        if (isPending) event.preventDefault();
+      }}
       // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
       className="motion-dialog m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
     >

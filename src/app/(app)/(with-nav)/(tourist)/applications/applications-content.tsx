@@ -126,6 +126,7 @@ export function ApplicationsContent() {
         onCancelApplication={handleCancelApplication}
         onContinuePayment={handleContinuePayment}
         onCapturePayment={handleCapturePayment}
+        isPaymentPending={continuePaymentMutation.isPending || capturePaymentMutation.isPending}
       />
     </PayPalPaymentProvider>
   );

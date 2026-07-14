@@ -87,6 +87,22 @@ describe("ConfirmDialog", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
   });
 
+  it("prevents Escape dismissal while pending", () => {
+    render(
+      <ConfirmDialog
+        title="Pay for this application?"
+        confirmSlot={<button type="button">PayPal</button>}
+        isPending
+        onClose={vi.fn()}
+      />,
+    );
+
+    const cancelEvent = new Event("cancel", { cancelable: true });
+    fireEvent(screen.getByRole("dialog"), cancelEvent);
+
+    expect(cancelEvent.defaultPrevented).toBe(true);
+  });
+
   it("renders a custom confirm slot at full width without the bottom cancel button", () => {
     render(
       <ConfirmDialog

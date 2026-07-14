@@ -14,6 +14,7 @@ const summary = {
   buddyProfileImageUrl:
     "https://hanbuddy-bucket-526958954481-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/profiles/2026/07/07/jihoon.webp",
   meetingPointName: "Anguk Station Exit 2",
+  meetingPlaceId: "ChIJ-bukchon",
   price: 45000,
   currency: "KRW",
 };
@@ -30,6 +31,9 @@ describe("activity view adapters", () => {
         name: "Jihoon Kim",
         avatarUrl: summary.buddyProfileImageUrl,
       },
+      meetingPoint: {
+        placeId: "ChIJ-bukchon",
+      },
       price: 45000,
     });
   });
@@ -40,7 +44,6 @@ describe("activity view adapters", () => {
       buddyId: 7,
       includedItems: ["Local guide", "Tea tasting"],
       restrictionNotes: ["Not recommended for wheelchairs"],
-      meetingPlaceId: "ChIJ-bukchon",
       images: [
         {
           imageUrl: "https://static.hanbuddy.com/activities/bukchon-1.webp",

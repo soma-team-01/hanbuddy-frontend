@@ -77,6 +77,7 @@ describe("ActivityFeed", () => {
           thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
+          meetingPlaceId: "ChIJtest-place-id",
           meetingPointName: "Anguk Station Exit 2",
           price: 45000,
           currency: "KRW",

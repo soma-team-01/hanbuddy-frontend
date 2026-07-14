@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { proxyAuthenticatedPost, readJsonBody } from "@/app/api/_utils/authenticated-backend";
-import type { ApplicationResponse, CreateApplicationRequest } from "@/types/application";
+import type { CreateApplicationRequest, PaymentReadyResponse } from "@/types/application";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   );
   if (!parsed.ok) return parsed.response;
 
-  return proxyAuthenticatedPost<CreateApplicationRequest, ApplicationResponse>(
+  return proxyAuthenticatedPost<CreateApplicationRequest, PaymentReadyResponse>(
     request,
     "/applications",
     parsed.body,

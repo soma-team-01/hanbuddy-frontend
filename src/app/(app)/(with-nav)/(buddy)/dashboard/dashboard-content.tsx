@@ -6,7 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
-import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  MapPinIcon,
+  MessageSquareIcon,
+} from "@/components/ui/icons";
 import {
   formatApplicantContact,
   formatNationalityCode,
@@ -15,6 +20,8 @@ import {
 import { splitStartAt } from "@/lib/format";
 import { buddyApplicationsQueryOptions, buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+
+const DATE_PAGE_SIZE = 5;
 
 function formatDateChip(date: string) {
   const parsed = new Date(`${date}T00:00:00`);
@@ -32,10 +39,23 @@ function applicantCountLabel(count: number) {
 
 export function DashboardContent() {
   const [selectedDate, setSelectedDate] = useState("");
+  const [requestedDatePage, setRequestedDatePage] = useState<number | null>(null);
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
-  const dates = scheduleDatesQuery.data ?? [];
+  const dates = (scheduleDatesQuery.data ?? []).map(({ dateStartAt, hasActivity }) => ({
+    date: splitStartAt(dateStartAt).date,
+    hasActivity,
+  }));
   const selectedDateExists = dates.some(({ date }) => date === selectedDate);
-  const activeDate = selectedDateExists ? selectedDate : (dates[0]?.date ?? "");
+  const defaultDate = dates.find(({ hasActivity }) => hasActivity)?.date ?? dates[0]?.date ?? "";
+  const activeDate = selectedDateExists ? selectedDate : defaultDate;
+  const activeDateIndex = dates.findIndex(({ date }) => date === activeDate);
+  const defaultDatePage = Math.max(0, Math.floor(activeDateIndex / DATE_PAGE_SIZE));
+  const lastDatePage = Math.max(0, Math.ceil(dates.length / DATE_PAGE_SIZE) - 1);
+  const currentDatePage = Math.max(0, Math.min(requestedDatePage ?? defaultDatePage, lastDatePage));
+  const visibleDates = dates.slice(
+    currentDatePage * DATE_PAGE_SIZE,
+    (currentDatePage + 1) * DATE_PAGE_SIZE,
+  );
   const applicationsQuery = useQuery(buddyApplicationsQueryOptions(activeDate));
   const activities = applicationsQuery.data ?? [];
   useAuthQueryRedirect(scheduleDatesQuery.error ?? applicationsQuery.error);
@@ -170,30 +190,58 @@ export function DashboardContent() {
     <section className="flex flex-col gap-4">
       <h2 className="font-display text-2xl font-semibold text-forest">Upcoming</h2>
       <div className="rounded-2xl bg-chip p-3">
-        <div className="flex scrollbar-none gap-3 overflow-x-auto">
-          {dates.map(({ date }) => {
-            const chip = formatDateChip(date);
-            const active = date === activeDate;
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Previous 5 dates"
+            disabled={currentDatePage === 0}
+            onClick={() => setRequestedDatePage(currentDatePage - 1)}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-chip disabled:opacity-30"
+          >
+            <ArrowLeftIcon className="size-4" />
+          </button>
+          <div
+            role="group"
+            aria-label="Schedule dates"
+            className="grid min-w-0 flex-1 grid-cols-5 gap-2"
+          >
+            {visibleDates.map(({ date, hasActivity }) => {
+              const chip = formatDateChip(date);
+              const active = date === activeDate;
+              let activityDotClass = "bg-transparent";
+              if (hasActivity) activityDotClass = active ? "bg-cream" : "bg-forest";
 
-            return (
-              <button
-                key={date}
-                type="button"
-                aria-pressed={active}
-                onClick={() => handleDateSelect(date)}
-                className={`flex w-16 shrink-0 flex-col items-center gap-1 rounded-xl py-3 transition-colors ${
-                  active
-                    ? "bg-forest text-cream"
-                    : "border border-line bg-white text-ink hover:border-line-strong hover:bg-chip"
-                }`}
-              >
-                <span className="font-display text-lg font-bold">{chip.day}</span>
-                <span className={`text-xs ${active ? "text-sage" : "text-ink-soft"}`}>
-                  {chip.label}
-                </span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={date}
+                  type="button"
+                  aria-pressed={active}
+                  aria-label={`${chip.label} ${chip.day}${hasActivity ? ", has activity" : ""}`}
+                  onClick={() => handleDateSelect(date)}
+                  className={`flex min-w-0 flex-col items-center gap-1 rounded-xl py-3 transition-colors ${
+                    active
+                      ? "bg-forest text-cream"
+                      : "border border-line bg-white text-ink hover:border-line-strong hover:bg-chip"
+                  }`}
+                >
+                  <span className="font-display text-lg font-bold">{chip.day}</span>
+                  <span className={`text-xs ${active ? "text-sage" : "text-ink-soft"}`}>
+                    {chip.label}
+                  </span>
+                  <span aria-hidden className={`size-1.5 rounded-full ${activityDotClass}`} />
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            aria-label="Next 5 dates"
+            disabled={currentDatePage === lastDatePage}
+            onClick={() => setRequestedDatePage(currentDatePage + 1)}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-chip disabled:opacity-30"
+          >
+            <ArrowRightIcon className="size-4" />
+          </button>
         </div>
       </div>
 

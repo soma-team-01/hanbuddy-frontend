@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMyActivity } from "@/lib/api/buddy";
+import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
 import { getMyProfile } from "@/lib/api/users";
 import { fetchGooglePlaceDetails, searchGooglePlacePredictions } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
@@ -23,6 +23,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/api/buddy", () => ({
   createMyActivity: vi.fn(),
+  previewActivityPrice: vi.fn(),
 }));
 
 vi.mock("@/lib/api/users", () => ({
@@ -43,6 +44,7 @@ vi.mock("@/lib/google/places", async () => {
 });
 
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
+const mockedPreviewActivityPrice = vi.mocked(previewActivityPrice);
 const mockedGetMyProfile = vi.mocked(getMyProfile);
 const mockedUploadActivityImages = vi.mocked(uploadActivityImages);
 const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetails);
@@ -144,6 +146,7 @@ describe("CreateActivityForm", () => {
     routerMock.refresh.mockReset();
     routerMock.replace.mockReset();
     mockedCreateMyActivity.mockReset();
+    mockedPreviewActivityPrice.mockReset();
     mockedGetMyProfile.mockReset();
     mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
     mockedUploadActivityImages.mockReset();
@@ -275,6 +278,49 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("textbox", { name: "Activity Title" })).toHaveValue(
       "Traditional Tea Tasting",
     );
+  });
+
+  it("shows the server-calculated commission and payout after the price input loses focus", async () => {
+    mockedPreviewActivityPrice.mockResolvedValue({
+      status: "success",
+      preview: {
+        unitPriceKrw: 50000,
+        currency: "KRW",
+        commissionRate: 0.1,
+        platformCommissionAmountKrw: 5000,
+        estimatedGuidePayoutAmountKrw: 45000,
+      },
+    });
+    renderWithQueryClient(<CreateActivityForm />);
+    goToStepTwo();
+
+    const priceInput = screen.getByLabelText("Price per person");
+    fireEvent.change(priceInput, { target: { value: "50000" } });
+    fireEvent.blur(priceInput);
+
+    expect(await screen.findByText("Platform fee (10%)")).toBeInTheDocument();
+    expect(mockedPreviewActivityPrice).toHaveBeenCalledWith({ price: 50000, currency: "KRW" });
+    expect(screen.getByText("₩5,000")).toBeInTheDocument();
+    expect(screen.getByText("Estimated payout")).toBeInTheDocument();
+    expect(screen.getByText("₩45,000")).toBeInTheDocument();
+  });
+
+  it("shows the price preview API error without leaving the pricing step", async () => {
+    mockedPreviewActivityPrice.mockResolvedValue({
+      status: "error",
+      message: "버디 프로필 설정이 올바르지 않습니다.",
+    });
+    renderWithQueryClient(<CreateActivityForm />);
+    goToStepTwo();
+
+    const priceInput = screen.getByLabelText("Price per person");
+    fireEvent.change(priceInput, { target: { value: "50000" } });
+    fireEvent.blur(priceInput);
+
+    expect(await screen.findByRole("alert", { name: "Price preview error" })).toHaveTextContent(
+      "버디 프로필 설정이 올바르지 않습니다.",
+    );
+    expect(screen.getByRole("heading", { name: "Schedule & Pricing" })).toBeInTheDocument();
   });
 
   it("uploads activity images and creates a published activity", async () => {

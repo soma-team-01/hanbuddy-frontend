@@ -1,7 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { cancelMyApplication } from "@/lib/api/applications";
+import { PayPalPaymentProvider } from "@/components/payments/PayPalPaymentButton";
+import {
+  cancelMyApplication,
+  captureApplicationPayment,
+  continueApplicationPayment,
+} from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -12,6 +18,7 @@ import { ApplicationList } from "./application-list";
 import type { CancelDialogOutcome } from "./cancel-dialog";
 
 export function ApplicationsContent() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const applicationsQuery = useQuery(myApplicationsQueryOptions());
   const cancelApplicationMutation = useMutation({
@@ -31,7 +38,41 @@ export function ApplicationsContent() {
       await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
     },
   });
-  useAuthQueryRedirect(applicationsQuery.error ?? cancelApplicationMutation.error);
+  const continuePaymentMutation = useMutation({
+    mutationFn: async (applicationId: string) =>
+      unwrapApiResult(await continueApplicationPayment(applicationId), "payment"),
+  });
+  const capturePaymentMutation = useMutation({
+    mutationFn: async ({
+      applicationId,
+      paypalOrderId,
+    }: {
+      applicationId: string;
+      paypalOrderId: string;
+    }) =>
+      unwrapApiResult(await captureApplicationPayment(applicationId, paypalOrderId), "application"),
+    onSuccess: async (application) => {
+      queryClient.setQueryData<ApplicationResponse[]>(applicationKeys.mine(), (current = []) =>
+        current.map((item) =>
+          item.applicationId === application.applicationId
+            ? {
+                ...application,
+                paymentAmount: application.paymentAmount ?? item.paymentAmount,
+                paymentCurrency: application.paymentCurrency ?? item.paymentCurrency,
+              }
+            : item,
+        ),
+      );
+      await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
+      router.replace(`/payments/success?applicationId=${application.applicationId}`);
+    },
+  });
+  useAuthQueryRedirect(
+    applicationsQuery.error ??
+      cancelApplicationMutation.error ??
+      continuePaymentMutation.error ??
+      capturePaymentMutation.error,
+  );
 
   const applications = (applicationsQuery.data ?? []).map(mapApplicationResponseToApplication);
 
@@ -50,6 +91,19 @@ export function ApplicationsContent() {
     }
   }
 
+  async function handleContinuePayment(applicationId: string) {
+    const payment = await continuePaymentMutation.mutateAsync(applicationId);
+    return {
+      orderId: payment.paypalOrderId,
+      paymentAmount: payment.paymentAmount,
+      paymentCurrency: payment.paymentCurrency,
+    };
+  }
+
+  async function handleCapturePayment(applicationId: string, paypalOrderId: string) {
+    await capturePaymentMutation.mutateAsync({ applicationId, paypalOrderId });
+  }
+
   if (applicationsQuery.isPending) {
     return <p className="py-10 text-center text-ink-soft">Loading applications...</p>;
   }
@@ -66,6 +120,14 @@ export function ApplicationsContent() {
   }
 
   return (
-    <ApplicationList applications={applications} onCancelApplication={handleCancelApplication} />
+    <PayPalPaymentProvider>
+      <ApplicationList
+        applications={applications}
+        onCancelApplication={handleCancelApplication}
+        onContinuePayment={handleContinuePayment}
+        onCapturePayment={handleCapturePayment}
+        isPaymentPending={continuePaymentMutation.isPending || capturePaymentMutation.isPending}
+      />
+    </PayPalPaymentProvider>
   );
 }

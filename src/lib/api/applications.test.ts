@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cancelMyApplication, createApplication, getMyApplications } from "./applications";
+import {
+  cancelMyApplication,
+  captureApplicationPayment,
+  continueApplicationPayment,
+  createApplication,
+  getMyApplications,
+} from "./applications";
 
 const application = {
   applicationId: 11,
@@ -21,6 +27,17 @@ const application = {
   createdAt: "2026-07-07T10:00:00Z",
 };
 
+const paymentReady = {
+  application: { ...application, status: "PENDING_PAYMENT" },
+  paymentId: 7,
+  paypalOrderId: "5O190127TN364715T",
+  approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
+  paymentStatus: "CREATED",
+  paymentAmount: 68.97,
+  paymentCurrency: "USD",
+  orderExpiresAt: "2026-07-14T13:00:00+09:00",
+};
+
 function createJsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -33,14 +50,14 @@ describe("application API client", () => {
     vi.unstubAllGlobals();
   });
 
-  it("creates an application through the internal API", async () => {
+  it("creates an application and returns the PayPal payment info", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse(
         {
           isSuccess: true,
           code: "201",
           message: "created",
-          result: application,
+          result: paymentReady,
         },
         201,
       ),
@@ -53,7 +70,7 @@ describe("application API client", () => {
         guestCount: 2,
         specialRequest: "Vegetarian snacks, please.",
       }),
-    ).resolves.toEqual({ status: "success", application });
+    ).resolves.toEqual({ status: "success", payment: paymentReady });
 
     expect(fetchMock).toHaveBeenCalledWith("/api/applications", {
       method: "POST",
@@ -63,6 +80,53 @@ describe("application API client", () => {
         guestCount: 2,
         specialRequest: "Vegetarian snacks, please.",
       }),
+      credentials: "same-origin",
+    });
+  });
+
+  it("continues a pending payment through the internal API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: paymentReady,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(continueApplicationPayment(11)).resolves.toEqual({
+      status: "success",
+      payment: paymentReady,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/continue", {
+      method: "POST",
+      credentials: "same-origin",
+    });
+  });
+
+  it("captures an approved payment through the internal API", async () => {
+    const confirmed = { ...application, status: "CONFIRMED" };
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: confirmed,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(captureApplicationPayment(11, "5O190127TN364715T")).resolves.toEqual({
+      status: "success",
+      application: confirmed,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/capture", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paypalOrderId: "5O190127TN364715T" }),
       credentials: "same-origin",
     });
   });
@@ -132,6 +196,25 @@ describe("application API client", () => {
     await expect(createApplication({ activityScheduleId: 101, guestCount: 9 })).resolves.toEqual({
       status: "error",
       message: "남은 자리가 부족합니다.",
+    });
+  });
+
+  it("returns the backend error message when the payment capture fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse(
+        {
+          isSuccess: false,
+          code: "PAYMENT400_ORDER",
+          message: "요청한 PayPal order id가 신청의 결제 정보와 일치하지 않습니다.",
+        },
+        400,
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(captureApplicationPayment(11, "WRONG_ORDER_ID")).resolves.toEqual({
+      status: "error",
+      message: "요청한 PayPal order id가 신청의 결제 정보와 일치하지 않습니다.",
     });
   });
 });

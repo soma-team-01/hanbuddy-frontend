@@ -1,4 +1,6 @@
 import type {
+  ActivityPricePreviewRequest,
+  ActivityPricePreviewResponse,
   ActivityUpsertRequest,
   BuddyActivityApplicationsResponse,
   BuddyDateActivityApplicationsResponse,
@@ -10,6 +12,7 @@ import { requestApiResult, type ApiResult } from "./result";
 
 export type MyActivitiesResult = ApiResult<MyActivitySummaryResponse[], "activities">;
 export type MyActivityResult = ApiResult<MyActivityDetailResponse, "activity">;
+export type ActivityPricePreviewResult = ApiResult<ActivityPricePreviewResponse, "preview">;
 export type DeleteMyActivityResult = ApiResult<string, "message">;
 export type BuddyScheduleDatesResult = ApiResult<BuddyScheduleDateResponse[], "dates">;
 export type BuddyApplicationsResult = ApiResult<
@@ -24,6 +27,7 @@ export type BuddyActivityApplicationsResult = ApiResult<
 const DEFAULT_MY_ACTIVITIES_ERROR_MESSAGE = "내 활동 목록을 불러오지 못했습니다.";
 const DEFAULT_MY_ACTIVITY_ERROR_MESSAGE = "활동 정보를 불러오지 못했습니다.";
 const DEFAULT_MY_ACTIVITY_SAVE_ERROR_MESSAGE = "활동을 저장하지 못했습니다.";
+const DEFAULT_ACTIVITY_PRICE_PREVIEW_ERROR_MESSAGE = "예상 정산액을 계산하지 못했습니다.";
 const DEFAULT_MY_ACTIVITY_DELETE_ERROR_MESSAGE = "활동을 삭제하지 못했습니다.";
 const DEFAULT_BUDDY_SCHEDULE_DATES_ERROR_MESSAGE = "활동 일정 날짜를 불러오지 못했습니다.";
 const DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE = "신청자 목록을 불러오지 못했습니다.";
@@ -56,6 +60,21 @@ export async function createMyActivity(request: ActivityUpsertRequest): Promise<
       body: JSON.stringify(request),
     },
     DEFAULT_MY_ACTIVITY_SAVE_ERROR_MESSAGE,
+  );
+}
+
+export async function previewActivityPrice(
+  request: ActivityPricePreviewRequest,
+): Promise<ActivityPricePreviewResult> {
+  return requestApiResult<ActivityPricePreviewResponse, "preview">(
+    "/api/activities/price-preview",
+    "preview",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    },
+    DEFAULT_ACTIVITY_PRICE_PREVIEW_ERROR_MESSAGE,
   );
 }
 

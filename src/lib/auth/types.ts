@@ -25,7 +25,6 @@ export interface GoogleLoginResponse {
   registered: boolean;
   userId?: number;
   userType?: UserType;
-  profileImageUrl?: string;
   accessToken?: string;
   signupToken?: string;
   googleProfile?: GoogleProfile;

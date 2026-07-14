@@ -10,18 +10,18 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 });
 
 const mockedPostBackend = vi.mocked(postBackend);
-const createRequest = { activityScheduleId: 101, guestCount: 2, specialRequest: "No pork" };
+const previewRequest = { price: 50000, currency: "KRW" };
 
-describe("POST /api/applications", () => {
+describe("POST /api/activities/price-preview", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
   });
 
   it("returns 401 without calling the backend when the access token cookie is missing", async () => {
     const response = await POST(
-      new NextRequest("http://localhost/api/applications", {
+      new NextRequest("http://localhost/api/activities/price-preview", {
         method: "POST",
-        body: JSON.stringify(createRequest),
+        body: JSON.stringify(previewRequest),
       }),
     );
 
@@ -29,29 +29,35 @@ describe("POST /api/applications", () => {
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
-  it("proxies the application creation with the access token as bearer", async () => {
+  it("proxies the price preview request with the access token as bearer", async () => {
     mockedPostBackend.mockResolvedValue({
-      status: 201,
+      status: 200,
       payload: {
         isSuccess: true,
-        code: "201",
-        message: "created",
-        result: { paymentId: 7, paypalOrderId: "5O190127TN364715T" },
+        code: "200",
+        message: "ok",
+        result: {
+          unitPriceKrw: 50000,
+          currency: "KRW",
+          commissionRate: 0.1,
+          platformCommissionAmountKrw: 5000,
+          estimatedGuidePayoutAmountKrw: 45000,
+        },
       },
       setCookies: [],
     });
 
     const response = await POST(
-      new NextRequest("http://localhost/api/applications", {
+      new NextRequest("http://localhost/api/activities/price-preview", {
         method: "POST",
-        body: JSON.stringify(createRequest),
+        body: JSON.stringify(previewRequest),
         headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
       }),
     );
 
-    expect(mockedPostBackend).toHaveBeenCalledWith("/applications", createRequest, {
+    expect(mockedPostBackend).toHaveBeenCalledWith("/activities/price-preview", previewRequest, {
       bearerToken: "access-token",
     });
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
   });
 });

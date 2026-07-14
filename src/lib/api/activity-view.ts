@@ -28,6 +28,7 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     meetingPoint: {
       name: summary.meetingPointName,
       area: summary.meetingPointName,
+      placeId: summary.meetingPlaceId,
     },
   };
 }

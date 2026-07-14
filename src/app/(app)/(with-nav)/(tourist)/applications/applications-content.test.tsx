@@ -70,6 +70,8 @@ const confirmedApplication: ApplicationResponse = {
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
+  paymentAmount: 68.97,
+  paymentCurrency: "USD",
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
@@ -119,7 +121,9 @@ describe("ApplicationsContent", () => {
 
     const { queryClient } = renderWithQueryClient(<ApplicationsContent />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "PayPal" }));
+    expect(await screen.findByText("$68.97")).toBeInTheDocument();
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
     await waitFor(() => {
       expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith("11", "ORDER123");

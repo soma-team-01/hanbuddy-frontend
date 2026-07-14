@@ -17,6 +17,8 @@ export interface Application {
   hostAvatarUrl: string | null;
   activityTitle: string;
   breakdown?: PriceBreakdown;
+  paymentAmount?: number | null;
+  paymentCurrency?: string | null;
 }
 
 export interface CreateApplicationRequest {
@@ -50,6 +52,8 @@ export interface ApplicationResponse {
   price: number;
   totalPrice: number;
   currency: string;
+  paymentAmount?: number | null;
+  paymentCurrency?: string | null;
   status: BackendApplicationStatus;
   cancellationReason: ApplicationCancellationReason | null;
   cancellationDetail: string | null;

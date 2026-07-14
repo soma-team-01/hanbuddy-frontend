@@ -156,24 +156,25 @@ describe("BookingForm", () => {
     fireEvent.click(screen.getByLabelText("I agree to the terms above."));
     fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
 
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(within(dialog).getByText("2026-07-20 10:00")).toBeInTheDocument();
-    expect(within(dialog).getByText("2 guests")).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
+    expect(
+      within(dialog).getByText("Bukchon Hidden Gems · 2026-07-20 10:00 · 2 guests"),
+    ).toBeInTheDocument();
     expect(within(dialog).getByText("₩90,000")).toBeInTheDocument();
-    expect(within(dialog).queryByText("Service fee")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("$68.97")).toBeInTheDocument();
+    expect(within(dialog).getByText("PayPal payments are processed in USD.")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Activity")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("When")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Guests")).not.toBeInTheDocument();
+
+    expect(mockedCreateApplication).toHaveBeenCalledWith({
+      activityScheduleId: 101,
+      guestCount: 2,
+      specialRequest: "Vegetarian snacks, please.",
+    });
 
     fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
 
-    expect(await within(dialog).findByText("PayPal charge")).toBeInTheDocument();
-    expect(within(dialog).getByText("$68.97")).toBeInTheDocument();
-    await waitFor(() => {
-      expect(mockedCreateApplication).toHaveBeenCalledWith({
-        activityScheduleId: 101,
-        guestCount: 2,
-        specialRequest: "Vegetarian snacks, please.",
-      });
-    });
     await waitFor(() => {
       expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
     });
@@ -192,7 +193,7 @@ describe("BookingForm", () => {
     fireEvent.click(screen.getByLabelText("I agree to the terms above."));
     fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
 
-    const dialog = screen.getByRole("dialog");
+    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
     fireEvent.click(within(dialog).getByRole("button", { name: "Debit or Credit Card" }));
 
     await waitFor(() => {
@@ -218,7 +219,7 @@ describe("BookingForm", () => {
     fireEvent.click(screen.getByLabelText("I agree to the terms above."));
     fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
 
-    const dialog = screen.getByRole("dialog");
+    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
     fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -237,15 +238,17 @@ describe("BookingForm", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/applications"));
   });
 
-  it("does not create an application when the confirmation is cancelled", () => {
+  it("keeps the pending application available when the payment dialog is closed", async () => {
+    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
+
     renderWithQueryClient(<BookingForm activity={activity} />);
     fireEvent.click(screen.getByLabelText("I agree to the terms above."));
     fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
 
-    const dialog = screen.getByRole("dialog");
+    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
     fireEvent.click(within(dialog).getByRole("button", { name: "Close dialog" }));
 
-    expect(mockedCreateApplication).not.toHaveBeenCalled();
-    expect(replace).not.toHaveBeenCalled();
+    expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith("/applications");
   });
 });

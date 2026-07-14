@@ -50,6 +50,13 @@ const applications: Application[] = [
     hostName: "Jihoon Kim",
     hostAvatarUrl: null,
     activityTitle: "Bukchon Hidden Gems",
+    breakdown: {
+      unitPrice: 45000,
+      guests: 2,
+      serviceFee: 0,
+    },
+    paymentAmount: 68.97,
+    paymentCurrency: "USD",
   },
   {
     id: "2",
@@ -84,6 +91,20 @@ describe("ApplicationList", () => {
     vi.unstubAllEnvs();
   });
 
+  it("shows the KRW total and PayPal charge before a payment method is selected", () => {
+    const onContinuePayment = vi
+      .fn()
+      .mockResolvedValue({ orderId: "ORDER123", paymentAmount: 68.97, paymentCurrency: "USD" });
+    const onCapturePayment = vi.fn();
+
+    renderList({ onContinuePayment, onCapturePayment });
+
+    expect(screen.getByText("$68.97")).toBeInTheDocument();
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    expect(onCapturePayment).not.toHaveBeenCalled();
+  });
+
   it("pays a pending application through the PayPal button", async () => {
     const onContinuePayment = vi
       .fn()
@@ -91,13 +112,13 @@ describe("ApplicationList", () => {
     const onCapturePayment = vi.fn().mockResolvedValue(undefined);
     renderList({ onContinuePayment, onCapturePayment });
 
+    expect(screen.getByText("$68.97")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
     await waitFor(() => {
       expect(onCapturePayment).toHaveBeenCalledWith("1", "ORDER123");
     });
     expect(onContinuePayment).toHaveBeenCalledWith("1");
-    expect(screen.getByText("PayPal charge: $68.97")).toBeInTheDocument();
   });
 
   it("pays a pending application as a guest with a card", async () => {

@@ -79,9 +79,19 @@ function ApplicationCard({
   const [paymentCharge, setPaymentCharge] = useState<{
     amount: number;
     currency: string;
-  } | null>(null);
+  } | null>(
+    application.paymentAmount !== null &&
+      application.paymentAmount !== undefined &&
+      application.paymentCurrency
+      ? { amount: application.paymentAmount, currency: application.paymentCurrency }
+      : null,
+  );
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
+  const totalKrw = application.breakdown
+    ? application.breakdown.unitPrice * application.breakdown.guests +
+      application.breakdown.serviceFee
+    : null;
 
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
@@ -96,23 +106,40 @@ function ApplicationCard({
         <StatusBadge status={application.status} />
         <span className="text-xs text-ink-soft">{application.dateLabel}</span>
       </div>
-      <div className="flex items-center gap-4">
-        <Avatar
-          name={application.hostName}
-          src={application.hostAvatarUrl}
-          size={48}
-          className={isCompleted ? "opacity-70" : ""}
-        />
-        <div className="min-w-0">
-          <p
-            className={`font-display text-sm font-semibold ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}
-          >
-            {application.hostName}
-          </p>
-          <p className={`text-base ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}>
-            {application.activityTitle}
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <Avatar
+            name={application.hostName}
+            src={application.hostAvatarUrl}
+            size={48}
+            className={isCompleted ? "opacity-70" : ""}
+          />
+          <div className="min-w-0">
+            <p
+              className={`font-display text-sm font-semibold ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}
+            >
+              {application.hostName}
+            </p>
+            <p
+              className={`truncate text-base ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}
+            >
+              {application.activityTitle}
+            </p>
+          </div>
         </div>
+        {totalKrw !== null ? (
+          <div className="shrink-0 text-right">
+            <p className="font-display text-sm font-semibold text-ink">{formatKrw(totalKrw)}</p>
+            {application.status === "pending_payment" && paymentCharge ? (
+              <p className="mt-0.5 text-xs text-forest">
+                PayPal{" "}
+                <span className="font-display font-semibold">
+                  {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
+                </span>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {application.status === "confirmed" && <PriceBreakdown application={application} />}
       {application.status === "pending_payment" && (
@@ -136,11 +163,6 @@ function ApplicationCard({
             }}
             onError={showPaymentError}
           />
-          {paymentCharge ? (
-            <p className="text-xs text-ink-soft">
-              PayPal charge: {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
-            </p>
-          ) : null}
           {paymentError && (
             <p
               role="alert"

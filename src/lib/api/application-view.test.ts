@@ -14,6 +14,8 @@ const application = {
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
+  paymentAmount: 68.97,
+  paymentCurrency: "USD",
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
@@ -35,6 +37,8 @@ describe("application view adapters", () => {
         guests: 2,
         serviceFee: 0,
       },
+      paymentAmount: 68.97,
+      paymentCurrency: "USD",
     });
   });
 

@@ -28,5 +28,7 @@ export function mapApplicationResponseToApplication(response: ApplicationRespons
       guests: response.guestCount,
       serviceFee: Math.max(0, response.totalPrice - subtotal),
     },
+    paymentAmount: response.paymentAmount,
+    paymentCurrency: response.paymentCurrency,
   };
 }

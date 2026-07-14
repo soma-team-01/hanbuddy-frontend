@@ -45,6 +45,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     amount: number;
     currency: string;
   } | null>(null);
+  const [preparedOrderId, setPreparedOrderId] = useState<string | null>(null);
   // PayPal 결제 재시도 시 신청을 중복 생성하지 않도록 첫 신청의 ID를 기억한다
   const applicationIdRef = useRef<number | null>(null);
   const createApplicationMutation = useMutation({
@@ -93,29 +94,38 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const total = subtotal;
   const selectedSession = activity.sessions.find((session) => session.id === sessionId);
 
-  function handleSubmitClick() {
+  async function handleSubmitClick() {
     if (!sessionId) {
       setErrorMessage("신청 가능한 일정을 선택해 주세요.");
       return;
     }
     setErrorMessage("");
-    setShowConfirm(true);
+    try {
+      const payment = await createApplicationMutation.mutateAsync({
+        activityScheduleId: Number(sessionId),
+        guestCount: guests,
+        specialRequest: specialRequest.trim() || undefined,
+      });
+      applicationIdRef.current = payment.application.applicationId;
+      setPreparedOrderId(payment.paypalOrderId);
+      setPaymentCharge({ amount: payment.paymentAmount, currency: payment.paymentCurrency });
+      setShowConfirm(true);
+    } catch (error) {
+      handlePayPalError(error);
+    }
   }
 
   async function startPayPalOrder(): Promise<{ orderId: string }> {
     setErrorMessage("");
-    const applicationId = applicationIdRef.current;
-    if (applicationId !== null) {
-      const payment = await continuePaymentMutation.mutateAsync(applicationId);
-      setPaymentCharge({ amount: payment.paymentAmount, currency: payment.paymentCurrency });
-      return { orderId: payment.paypalOrderId };
+    if (preparedOrderId) {
+      return { orderId: preparedOrderId };
     }
-    const payment = await createApplicationMutation.mutateAsync({
-      activityScheduleId: Number(sessionId),
-      guestCount: guests,
-      specialRequest: specialRequest.trim() || undefined,
-    });
-    applicationIdRef.current = payment.application.applicationId;
+    const applicationId = applicationIdRef.current;
+    if (applicationId === null) {
+      throw new Error("결제할 신청 정보를 찾지 못했습니다.");
+    }
+    const payment = await continuePaymentMutation.mutateAsync(applicationId);
+    setPreparedOrderId(payment.paypalOrderId);
     setPaymentCharge({ amount: payment.paymentAmount, currency: payment.paymentCurrency });
     return { orderId: payment.paypalOrderId };
   }
@@ -126,6 +136,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     try {
       await capturePaymentMutation.mutateAsync({ applicationId, paypalOrderId: orderId });
     } catch (error) {
+      setPreparedOrderId(null);
       if (error instanceof UnauthenticatedQueryError) return;
       setErrorMessage(
         error instanceof Error && error.message ? error.message : "결제를 완료하지 못했습니다.",
@@ -307,7 +318,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
 
         {showConfirm && (
           <ConfirmDialog
-            title="Submit this application?"
+            title="Choose a payment method"
             isPending={isSubmitting}
             onClose={handleDialogClose}
             confirmSlot={
@@ -320,34 +331,26 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
               />
             }
           >
-            <dl className="flex flex-col gap-2 rounded-xl bg-chip p-4 text-sm text-ink">
-              <div className="flex justify-between gap-4">
-                <dt className="shrink-0 text-ink-soft">Activity</dt>
-                <dd className="truncate font-medium">{activity.title}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="shrink-0 text-ink-soft">When</dt>
-                <dd>
-                  {selectedSession
-                    ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}`
-                    : "-"}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="shrink-0 text-ink-soft">Guests</dt>
-                <dd>{guests} guests</dd>
-              </div>
-              <div className="flex justify-between gap-4 font-display font-semibold">
-                <dt>Total</dt>
-                <dd>{formatKrw(total)}</dd>
+            <p className="truncate text-sm text-ink-soft">
+              {activity.title} ·{" "}
+              {selectedSession ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}` : "-"}{" "}
+              · {guests} guests
+            </p>
+            <dl className="mt-3 flex flex-col gap-3 rounded-xl bg-chip p-4 text-sm text-ink">
+              <div className="flex items-center justify-between gap-4">
+                <dt className="text-ink-soft">Total application amount</dt>
+                <dd className="font-display font-semibold">{formatKrw(total)}</dd>
               </div>
               {paymentCharge ? (
-                <div className="flex justify-between gap-4 text-forest">
+                <div className="flex items-center justify-between gap-4 text-forest">
                   <dt>PayPal charge</dt>
-                  <dd>{formatCurrency(paymentCharge.amount, paymentCharge.currency)}</dd>
+                  <dd className="font-display text-base font-semibold">
+                    {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
+                  </dd>
                 </div>
               ) : null}
             </dl>
+            <p className="mt-3 text-xs text-ink-soft">PayPal payments are processed in USD.</p>
             {errorMessage && (
               <p
                 role="alert"

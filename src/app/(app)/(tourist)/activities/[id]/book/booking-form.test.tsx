@@ -23,32 +23,44 @@ vi.mock("@/lib/api/applications", () => ({
   captureApplicationPayment: vi.fn(),
 }));
 
-vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
-  PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
-  PayPalOneTimePaymentButton: ({
-    createOrder,
-    onApprove,
-    onError,
-  }: {
+vi.mock("@paypal/react-paypal-js/sdk-v6", () => {
+  interface MockButtonProps {
     createOrder: () => Promise<{ orderId: string }>;
     onApprove: (data: { orderId: string }) => Promise<void> | void;
     onError?: (error: unknown) => void;
-  }) => (
-    <button
-      type="button"
-      onClick={async () => {
-        try {
-          const { orderId } = await createOrder();
-          await onApprove({ orderId });
-        } catch (error) {
-          onError?.(error);
-        }
-      }}
-    >
-      PayPal
-    </button>
-  ),
-}));
+  }
+  function MockPaymentButton({
+    label,
+    createOrder,
+    onApprove,
+    onError,
+  }: MockButtonProps & { label: string }) {
+    return (
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            const { orderId } = await createOrder();
+            await onApprove({ orderId });
+          } catch (error) {
+            onError?.(error);
+          }
+        }}
+      >
+        {label}
+      </button>
+    );
+  }
+  return {
+    PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
+    PayPalOneTimePaymentButton: (props: MockButtonProps) => (
+      <MockPaymentButton label="PayPal" {...props} />
+    ),
+    PayPalGuestPaymentButton: (props: MockButtonProps) => (
+      <MockPaymentButton label="Debit or Credit Card" {...props} />
+    ),
+  };
+});
 
 const mockedCreateApplication = vi.mocked(createApplication);
 const mockedContinueApplicationPayment = vi.mocked(continueApplicationPayment);
@@ -162,6 +174,26 @@ describe("BookingForm", () => {
     });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/applications"));
     expect(queryClient.getQueryState(applicationKeys.mine())?.isInvalidated).toBe(true);
+  });
+
+  it("pays as a guest with a card through the same application flow", async () => {
+    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
+    mockedCaptureApplicationPayment.mockResolvedValue({
+      status: "success",
+      application: { ...pendingApplication, status: "CONFIRMED" },
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
+    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Debit or Credit Card" }));
+
+    await waitFor(() => {
+      expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
+    });
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/applications"));
   });
 
   it("continues the existing payment when retrying after a capture failure", async () => {

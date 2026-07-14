@@ -49,6 +49,7 @@ vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
       PayPal
     </button>
   ),
+  PayPalGuestPaymentButton: () => <button type="button">Debit or Credit Card</button>,
 }));
 
 const mockedCancelMyApplication = vi.mocked(cancelMyApplication);

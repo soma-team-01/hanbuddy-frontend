@@ -1,16 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PayPalPaymentButton, PayPalPaymentProvider } from "./PayPalPaymentButton";
+import { PayPalPaymentButtons, PayPalPaymentProvider } from "./PayPalPaymentButton";
 
 vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
   PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
   PayPalOneTimePaymentButton: () => <button type="button">PayPal</button>,
+  PayPalGuestPaymentButton: () => <button type="button">Debit or Credit Card</button>,
 }));
 
-function renderButton() {
+function renderButtons() {
   return render(
     <PayPalPaymentProvider>
-      <PayPalPaymentButton
+      <PayPalPaymentButtons
         createOrder={vi.fn().mockResolvedValue({ orderId: "ORDER123" })}
         onApprove={vi.fn()}
       />
@@ -18,7 +19,7 @@ function renderButton() {
   );
 }
 
-describe("PayPalPaymentButton", () => {
+describe("PayPalPaymentButtons", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
@@ -26,16 +27,19 @@ describe("PayPalPaymentButton", () => {
   it("renders a disabled fallback when the PayPal client id is missing", () => {
     vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "");
 
-    renderButton();
+    renderButtons();
 
     expect(screen.getByRole("button", { name: "Payment unavailable" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "PayPal" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Debit or Credit Card" })).not.toBeInTheDocument();
   });
 
-  it("renders the PayPal button when the client id is configured", () => {
+  it("renders the PayPal and guest card buttons when the client id is configured", () => {
     vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "test-client-id");
 
-    renderButton();
+    renderButtons();
 
     expect(screen.getByRole("button", { name: "PayPal" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Debit or Credit Card" })).toBeInTheDocument();
   });
 });

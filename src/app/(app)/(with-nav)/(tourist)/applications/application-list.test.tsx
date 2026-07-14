@@ -3,32 +3,44 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
-vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
-  PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
-  PayPalOneTimePaymentButton: ({
-    createOrder,
-    onApprove,
-    onError,
-  }: {
+vi.mock("@paypal/react-paypal-js/sdk-v6", () => {
+  interface MockButtonProps {
     createOrder: () => Promise<{ orderId: string }>;
     onApprove: (data: { orderId: string }) => Promise<void> | void;
     onError?: (error: unknown) => void;
-  }) => (
-    <button
-      type="button"
-      onClick={async () => {
-        try {
-          const { orderId } = await createOrder();
-          await onApprove({ orderId });
-        } catch (error) {
-          onError?.(error);
-        }
-      }}
-    >
-      PayPal
-    </button>
-  ),
-}));
+  }
+  function MockPaymentButton({
+    label,
+    createOrder,
+    onApprove,
+    onError,
+  }: MockButtonProps & { label: string }) {
+    return (
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            const { orderId } = await createOrder();
+            await onApprove({ orderId });
+          } catch (error) {
+            onError?.(error);
+          }
+        }}
+      >
+        {label}
+      </button>
+    );
+  }
+  return {
+    PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
+    PayPalOneTimePaymentButton: (props: MockButtonProps) => (
+      <MockPaymentButton label="PayPal" {...props} />
+    ),
+    PayPalGuestPaymentButton: (props: MockButtonProps) => (
+      <MockPaymentButton label="Debit or Credit Card" {...props} />
+    ),
+  };
+});
 
 const applications: Application[] = [
   {
@@ -76,6 +88,19 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment, onCapturePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
+
+    await waitFor(() => {
+      expect(onCapturePayment).toHaveBeenCalledWith("1", "ORDER123");
+    });
+    expect(onContinuePayment).toHaveBeenCalledWith("1");
+  });
+
+  it("pays a pending application as a guest with a card", async () => {
+    const onContinuePayment = vi.fn().mockResolvedValue({ orderId: "ORDER123" });
+    const onCapturePayment = vi.fn().mockResolvedValue(undefined);
+    renderList({ onContinuePayment, onCapturePayment });
+
+    fireEvent.click(screen.getByRole("button", { name: "Debit or Credit Card" }));
 
     await waitFor(() => {
       expect(onCapturePayment).toHaveBeenCalledWith("1", "ORDER123");

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/icons";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
-  PayPalPaymentButton,
+  PayPalPaymentButtons,
   PayPalPaymentProvider,
 } from "@/components/payments/PayPalPaymentButton";
 import {
@@ -311,7 +311,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
             isPending={isSubmitting}
             onClose={handleDialogClose}
             confirmSlot={
-              <PayPalPaymentButton
+              <PayPalPaymentButtons
                 createOrder={startPayPalOrder}
                 onApprove={approvePayPalOrder}
                 onCancel={handlePayPalCancel}

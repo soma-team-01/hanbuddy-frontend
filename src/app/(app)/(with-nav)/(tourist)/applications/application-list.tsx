@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PayPalPaymentButton } from "@/components/payments/PayPalPaymentButton";
+import { PayPalPaymentButtons } from "@/components/payments/PayPalPaymentButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
@@ -107,7 +107,7 @@ function ApplicationCard({
       {application.status === "confirmed" && <PriceBreakdown application={application} />}
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
-          <PayPalPaymentButton
+          <PayPalPaymentButtons
             createOrder={() => {
               setPaymentError("");
               return onContinuePayment(application.id);

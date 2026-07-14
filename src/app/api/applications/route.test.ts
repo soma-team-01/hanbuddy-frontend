@@ -32,7 +32,12 @@ describe("POST /api/applications", () => {
   it("proxies the application creation with the access token as bearer", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 201,
-      payload: { isSuccess: true, code: "201", message: "created", result: { applicationId: 11 } },
+      payload: {
+        isSuccess: true,
+        code: "201",
+        message: "created",
+        result: { paymentId: 7, paypalOrderId: "5O190127TN364715T" },
+      },
       setCookies: [],
     });
 

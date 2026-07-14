@@ -29,6 +29,12 @@ export interface CancelApplicationRequest {
   cancellationReason: ApplicationCancellationReason;
 }
 
+export type PaymentStatus = "CREATED" | "CAPTURED" | "FAILED" | "CANCELLED" | "EXPIRED";
+
+export interface CapturePaymentRequest {
+  paypalOrderId: string;
+}
+
 export interface ApplicationResponse {
   applicationId: number;
   activityId: number;
@@ -48,4 +54,14 @@ export interface ApplicationResponse {
   cancellationDetail: string | null;
   cancelledAt: string | null;
   createdAt: string;
+}
+
+export interface PaymentReadyResponse {
+  application: ApplicationResponse;
+  paymentId: number;
+  paypalOrderId: string;
+  approvalUrl: string;
+  paymentStatus: PaymentStatus;
+  /** 현재 PayPal order를 재사용할 수 있는 백엔드 기준 만료 시각 (Asia/Seoul 오프셋 포함) */
+  orderExpiresAt: string;
 }

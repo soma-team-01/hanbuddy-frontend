@@ -36,7 +36,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const [showConfirm, setShowConfirm] = useState(false);
   const createApplicationMutation = useMutation({
     mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
-      unwrapApiResult(await createApplication(request), "application"),
+      unwrapApiResult(await createApplication(request), "payment"),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),

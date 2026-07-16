@@ -7,7 +7,8 @@ import { ActivityFeed } from "./activity-feed";
 
 const routerMock = vi.hoisted(() => ({ refresh: vi.fn(), replace: vi.fn() }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => routerMock,
 }));
 
@@ -63,7 +64,7 @@ describe("ActivityFeed", () => {
 
     renderWithQueryClient(<ActivityFeed />);
 
-    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/login"));
+    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/en/login"));
   });
 
   it("renders activities loaded from the API", async () => {

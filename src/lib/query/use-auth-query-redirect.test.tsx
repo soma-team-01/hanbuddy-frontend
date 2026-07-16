@@ -10,7 +10,8 @@ const routerMock = vi.hoisted(() => ({
   replace: vi.fn(),
 }));
 
-vi.mock("next-intl", () => ({
+vi.mock("next-intl", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next-intl")>()),
   useLocale: () => "ko",
 }));
 

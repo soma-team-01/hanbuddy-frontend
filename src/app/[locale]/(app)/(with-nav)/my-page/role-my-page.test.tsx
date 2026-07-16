@@ -7,7 +7,8 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { BuddyMyPage } from "./buddy-my-page";
 import { TouristMyPage } from "./tourist-my-page";
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({
     replace: vi.fn(),
     refresh: vi.fn(),
@@ -25,13 +26,13 @@ describe("role-specific My Page", () => {
   it("returns tourists to Explore", () => {
     renderRoleMyPage(<TouristMyPage />, "TOURIST");
 
-    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/explore");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/en/explore");
   });
 
   it("returns buddies to Dashboard", () => {
     renderRoleMyPage(<BuddyMyPage />, "BUDDY");
 
-    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/dashboard");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/en/dashboard");
   });
 
   it("disables menu actions whose product flows are not available yet", () => {

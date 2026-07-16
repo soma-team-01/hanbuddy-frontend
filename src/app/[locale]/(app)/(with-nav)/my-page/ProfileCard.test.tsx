@@ -9,7 +9,8 @@ import { ProfileCard } from "./ProfileCard";
 const replace = vi.fn();
 const refresh = vi.fn();
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({
     refresh,
     replace,
@@ -49,7 +50,7 @@ describe("ProfileCard", () => {
     renderWithQueryClient(<ProfileCard />);
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith("/login");
+      expect(replace).toHaveBeenCalledWith("/en/login");
     });
   });
 

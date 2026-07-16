@@ -5,7 +5,8 @@ import { fetchGooglePlaceDetails } from "@/lib/google/places";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ActivityDetailContent } from "./activity-detail-content";
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({ replace: vi.fn() }),
 }));
 

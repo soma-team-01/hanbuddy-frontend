@@ -1,15 +1,17 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { cookies } from "next/headers";
 import { usePathname } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { renderWithIntl } from "@/test/render-with-intl";
 import SharedNavLayout from "./layout";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   usePathname: vi.fn(),
 }));
 
@@ -30,17 +32,17 @@ describe("SharedNavLayout", () => {
   });
 
   it.each([
-    ["TOURIST", "/explore", "/applications"],
-    ["BUDDY", "/dashboard", "/my-activities"],
-    [undefined, "/explore", "/applications"],
+    ["TOURIST", "/en/explore", "/en/applications"],
+    ["BUDDY", "/en/dashboard", "/en/my-activities"],
+    [undefined, "/en/explore", "/en/applications"],
   ])("renders %s navigation", async (userType, homeHref, activityHref) => {
     stubUserTypeCookie(userType);
 
-    render(await SharedNavLayout({ children: <main>Page content</main> }));
+    renderWithIntl(await SharedNavLayout({ children: <main>Page content</main> }));
 
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", homeHref);
     expect(screen.getByRole("link", { name: "Activity" })).toHaveAttribute("href", activityHref);
-    expect(screen.getByRole("link", { name: "My Page" })).toHaveAttribute("href", "/my-page");
+    expect(screen.getByRole("link", { name: "My Page" })).toHaveAttribute("href", "/en/my-page");
     expect(screen.getByText("Page content")).toBeInTheDocument();
   });
 });

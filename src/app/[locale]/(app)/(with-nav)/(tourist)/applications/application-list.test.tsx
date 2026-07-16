@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithIntl } from "@/test/render-with-intl";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
@@ -72,7 +73,7 @@ const applications: Application[] = [
 ];
 
 function renderList(overrides: Partial<React.ComponentProps<typeof ApplicationList>> = {}) {
-  return render(
+  return renderWithIntl(
     <ApplicationList
       applications={applications}
       onCancelApplication={vi.fn()}

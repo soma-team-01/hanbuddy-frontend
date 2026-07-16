@@ -1,9 +1,11 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
-import { OnboardingForm } from "./OnboardingForm";
 import { uploadProfileImage } from "@/lib/images/presigned";
+import { renderWithIntl } from "@/test/render-with-intl";
+import { OnboardingForm } from "./OnboardingForm";
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
@@ -14,20 +16,20 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
 
 describe("OnboardingForm", () => {
   it("does not render the Korean Phone Number field", () => {
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     expect(screen.queryByText("Korean Phone Number")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Korean phone number")).not.toBeInTheDocument();
   });
 
   it("keeps the country selector for tourists on phone-based apps", () => {
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
     expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
   });
 
   it("fixes +82 without a country selector for buddies", () => {
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     fireEvent.click(screen.getByRole("button", { name: "Buddy" }));
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
     expect(screen.queryByLabelText("Messaging country code")).not.toBeInTheDocument();
@@ -36,7 +38,7 @@ describe("OnboardingForm", () => {
   });
 
   it("clears the contact input when the role changes", () => {
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
     fireEvent.change(screen.getByLabelText("Messaging phone number"), {
       target: { value: "5551234" },
@@ -80,7 +82,7 @@ describe("OnboardingForm profile image", () => {
   }
 
   it("shows a local preview after selecting a profile image", () => {
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
 
     fireEvent.change(screen.getByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
@@ -109,7 +111,7 @@ describe("OnboardingForm profile image", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
     const file = createImageFile();
     fireEvent.change(screen.getByLabelText("Add profile photo"), { target: { files: [file] } });
@@ -139,7 +141,7 @@ describe("OnboardingForm profile image", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
 
     fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
@@ -157,7 +159,7 @@ describe("OnboardingForm profile image", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
     fireEvent.change(screen.getByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
@@ -199,7 +201,7 @@ describe("OnboardingForm profile image", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
     fireEvent.change(screen.getByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
@@ -218,7 +220,7 @@ describe("OnboardingForm profile image", () => {
   });
 
   it("rejects images over the size limit at selection time", () => {
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
 
     const oversized = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.png", {
       type: "image/png",
@@ -234,7 +236,7 @@ describe("OnboardingForm profile image", () => {
   });
 
   it("rejects unsupported image types at selection time", () => {
-    render(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm />);
 
     fireEvent.change(screen.getByLabelText("Add profile photo"), {
       target: { files: [createImageFile("me.gif", "image/gif")] },

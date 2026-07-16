@@ -10,7 +10,8 @@ import EditProfilePage from "./page";
 const replace = vi.fn();
 const refresh = vi.fn();
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({
     refresh,
     replace,
@@ -197,7 +198,7 @@ describe("EditProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith("/login");
+      expect(replace).toHaveBeenCalledWith("/en/login");
     });
   });
 
@@ -206,7 +207,7 @@ describe("EditProfilePage", () => {
     renderWithQueryClient(<EditProfilePage />);
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith("/login");
+      expect(replace).toHaveBeenCalledWith("/en/login");
     });
   });
 });

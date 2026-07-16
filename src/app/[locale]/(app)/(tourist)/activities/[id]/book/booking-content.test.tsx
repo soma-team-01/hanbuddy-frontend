@@ -7,7 +7,8 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { TouristActivityDetail } from "@/types/activity";
 import { BookingContent } from "./booking-content";
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 

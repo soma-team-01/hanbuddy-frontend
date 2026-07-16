@@ -7,7 +7,8 @@ import { PaymentSuccessContent } from "./payment-success-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => routerMock,
 }));
 

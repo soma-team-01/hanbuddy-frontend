@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
+import type { Locale } from "@/i18n/routing";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
@@ -72,7 +73,10 @@ const applications: Application[] = [
   },
 ];
 
-function renderList(overrides: Partial<React.ComponentProps<typeof ApplicationList>> = {}) {
+function renderList(
+  overrides: Partial<React.ComponentProps<typeof ApplicationList>> = {},
+  locale: Locale = "en",
+) {
   return renderWithIntl(
     <ApplicationList
       applications={applications}
@@ -84,6 +88,7 @@ function renderList(overrides: Partial<React.ComponentProps<typeof ApplicationLi
       isPaymentPending={false}
       {...overrides}
     />,
+    { locale },
   );
 }
 
@@ -104,7 +109,7 @@ describe("ApplicationList", () => {
 
     renderList({ onContinuePayment, onCapturePayment });
 
-    expect(screen.getByText("$68.97")).toBeInTheDocument();
+    expect(screen.getByText("Paid with PayPal: $68.97")).toBeInTheDocument();
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
     expect(onCapturePayment).not.toHaveBeenCalled();
@@ -121,12 +126,11 @@ describe("ApplicationList", () => {
       ],
     });
 
-    expect(screen.getByText("$68.97")).toBeInTheDocument();
+    expect(screen.getByText("Paid with PayPal: $68.97")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Price Breakdown" }));
 
-    expect(screen.getByText("Paid with PayPal")).toBeInTheDocument();
-    expect(screen.getAllByText("$68.97")).toHaveLength(2);
+    expect(screen.getAllByText("Paid with PayPal: $68.97")).toHaveLength(2);
     expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
   });
 
@@ -137,7 +141,7 @@ describe("ApplicationList", () => {
     const onCapturePayment = vi.fn().mockResolvedValue(undefined);
     renderList({ onContinuePayment, onCapturePayment });
 
-    expect(screen.getByText("$68.97")).toBeInTheDocument();
+    expect(screen.getByText("Paid with PayPal: $68.97")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
     await waitFor(() => {
@@ -167,7 +171,8 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("결제를 완료하지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
+    expect(screen.queryByText("결제를 완료하지 못했습니다.")).not.toBeInTheDocument();
   });
 
   it("disables the payment action when PayPal is not configured", () => {
@@ -191,5 +196,47 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
 
     expect(screen.getByRole("button", { name: "Leave Review · Coming soon" })).toBeDisabled();
+  });
+
+  it("localizes Korean tabs, actions, payment labels, totals, and empty state", () => {
+    renderList(
+      {
+        applications: [
+          {
+            ...applications[0],
+            id: "3",
+            status: "confirmed",
+          },
+        ],
+      },
+      "ko",
+    );
+
+    expect(screen.getByRole("tab", { name: "예정" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "지난 내역" })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
+    expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getByText("PayPal로 결제: US$68.97")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "가격 상세" }));
+
+    expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
+    expect(screen.getAllByText("PayPal로 결제: US$68.97")).toHaveLength(2);
+    expect(screen.getByText("총액: ₩90,000")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "지난 내역" }));
+    expect(screen.getByText("아직 신청 내역이 없습니다.")).toBeInTheDocument();
+  });
+
+  it("labels the HanBuddy-owned pending payment action in Korean", () => {
+    renderList({}, "ko");
+
+    expect(screen.getByText("결제 이어서 하기")).toBeInTheDocument();
+    expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
   });
 });

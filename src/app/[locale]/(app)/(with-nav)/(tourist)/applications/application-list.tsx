@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { PayPalPaymentButtons } from "@/components/payments/PayPalPaymentButton";
 import { Avatar } from "@/components/ui/Avatar";
@@ -11,10 +11,7 @@ import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 
-const TABS = [
-  { key: "upcoming", label: "Upcoming" },
-  { key: "past", label: "Past" },
-] as const;
+const TABS = ["upcoming", "past"] as const;
 
 interface PaymentOrderDetails {
   orderId: string;
@@ -22,7 +19,7 @@ interface PaymentOrderDetails {
   paymentCurrency: string;
 }
 
-type TabKey = (typeof TABS)[number]["key"];
+type TabKey = (typeof TABS)[number];
 
 function PriceBreakdown({
   application,
@@ -33,6 +30,7 @@ function PriceBreakdown({
 }>) {
   const [open, setOpen] = useState(false);
   const locale = useLocale();
+  const t = useTranslations("Applications");
   const breakdown = application.breakdown;
   if (!breakdown) return null;
 
@@ -47,28 +45,29 @@ function PriceBreakdown({
         onClick={() => setOpen((prev) => !prev)}
         className="flex w-full items-center justify-between text-sm text-ink-soft transition-colors hover:text-ink"
       >
-        Price Breakdown
+        {t("priceBreakdown")}
         <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="mt-3 flex flex-col gap-2 text-sm text-ink">
           <div className="flex justify-between">
             <span>
-              {formatKrw(breakdown.unitPrice, locale)} x {breakdown.guests} guests
+              {t("subtotal", {
+                price: formatKrw(breakdown.unitPrice, locale),
+                count: breakdown.guests,
+              })}
             </span>
             <span>{formatKrw(subtotal, locale)}</span>
           </div>
           {paymentCharge ? (
-            <div className="flex justify-between">
-              <span>Paid with PayPal</span>
-              <span className="font-display font-semibold text-forest">
-                {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
-              </span>
+            <div className="font-display font-semibold text-forest">
+              {t("paidWithPayPal", {
+                amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
+              })}
             </div>
           ) : null}
-          <div className="flex justify-between font-display font-semibold">
-            <span>Total</span>
-            <span>{formatKrw(total, locale)}</span>
+          <div className="font-display font-semibold">
+            {t("total", { amount: formatKrw(total, locale) })}
           </div>
         </div>
       )}
@@ -91,6 +90,7 @@ function ApplicationCard({
 }>) {
   const [paymentError, setPaymentError] = useState("");
   const locale = useLocale();
+  const t = useTranslations("Applications");
   const [paymentCharge, setPaymentCharge] = useState<{
     amount: number;
     currency: string;
@@ -110,9 +110,7 @@ function ApplicationCard({
 
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
-    setPaymentError(
-      error instanceof Error && error.message ? error.message : "결제를 완료하지 못했습니다.",
-    );
+    setPaymentError(t("paymentFailed"));
   }
 
   return (
@@ -149,10 +147,9 @@ function ApplicationCard({
             </p>
             {!isCancelled && paymentCharge ? (
               <p className="mt-0.5 text-xs text-forest">
-                PayPal{" "}
-                <span className="font-display font-semibold">
-                  {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
-                </span>
+                {t("paidWithPayPal", {
+                  amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
+                })}
               </p>
             ) : null}
           </div>
@@ -163,6 +160,7 @@ function ApplicationCard({
       )}
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
+          <p className="font-display text-sm font-semibold text-forest">{t("continuePayment")}</p>
           <PayPalPaymentButtons
             disabled={isPaymentPending}
             createOrder={async () => {
@@ -199,7 +197,7 @@ function ApplicationCard({
           onClick={onCancel}
           className="h-11 w-full rounded-lg bg-forest font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
         >
-          Cancel
+          {t("cancel")}
         </button>
       )}
       {isCompleted && (
@@ -208,7 +206,7 @@ function ApplicationCard({
           disabled
           className="h-11 w-full cursor-not-allowed rounded-lg border border-line bg-chip font-display text-sm font-semibold text-ink-soft opacity-60"
         >
-          Leave Review · Coming soon
+          {t("leaveReviewComingSoon")}
         </button>
       )}
     </article>
@@ -233,6 +231,7 @@ export function ApplicationList({
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
+  const t = useTranslations("Applications");
 
   const visibleApplications = applications.filter((application) =>
     tab === "upcoming"
@@ -243,7 +242,7 @@ export function ApplicationList({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex gap-6 border-b border-line" role="tablist">
-        {TABS.map(({ key, label }) => {
+        {TABS.map((key) => {
           const isActive = tab === key;
           return (
             <button
@@ -258,7 +257,7 @@ export function ApplicationList({
                   : "border-transparent text-ink-soft hover:text-ink"
               }`}
             >
-              {label}
+              {t(key)}
             </button>
           );
         })}
@@ -275,7 +274,7 @@ export function ApplicationList({
           />
         ))}
         {visibleApplications.length === 0 && (
-          <p className="py-10 text-center text-ink-soft">No applications here yet.</p>
+          <p className="py-10 text-center text-ink-soft">{t("empty")}</p>
         )}
       </div>
       {cancelTargetId && (

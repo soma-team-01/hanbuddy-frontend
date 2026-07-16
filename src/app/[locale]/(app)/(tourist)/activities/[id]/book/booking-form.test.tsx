@@ -151,7 +151,7 @@ describe("BookingForm", () => {
 
     const { queryClient } = renderWithQueryClient(<BookingForm activity={activity} />);
     queryClient.setQueryData(applicationKeys.mine(), []);
-    fireEvent.change(screen.getByPlaceholderText("Let your guide know..."), {
+    fireEvent.change(screen.getByPlaceholderText("Let your buddy know..."), {
       target: { value: "Vegetarian snacks, please." },
     });
     fireEvent.click(screen.getByLabelText("I agree to the terms above."));
@@ -161,8 +161,8 @@ describe("BookingForm", () => {
     expect(
       within(dialog).getByText("Bukchon Hidden Gems · 2026-07-20 10:00 · 2 guests"),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText("₩90,000")).toBeInTheDocument();
-    expect(within(dialog).getByText("$68.97")).toBeInTheDocument();
+    expect(within(dialog).getByText("Total application amount: ₩90,000")).toBeInTheDocument();
+    expect(within(dialog).getByText("PayPal charge: $68.97")).toBeInTheDocument();
     expect(within(dialog).getByText("PayPal payments are processed in USD.")).toBeInTheDocument();
     expect(within(dialog).queryByText("Activity")).not.toBeInTheDocument();
     expect(within(dialog).queryByText("When")).not.toBeInTheDocument();
@@ -179,7 +179,9 @@ describe("BookingForm", () => {
     await waitFor(() => {
       expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
     });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/payments/success?applicationId=11"));
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+    );
     expect(queryClient.getQueryState(applicationKeys.mine())?.isInvalidated).toBe(true);
   });
 
@@ -200,7 +202,9 @@ describe("BookingForm", () => {
     await waitFor(() => {
       expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
     });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/payments/success?applicationId=11"));
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+    );
   });
 
   it("continues the existing payment when retrying after a capture failure", async () => {
@@ -224,8 +228,9 @@ describe("BookingForm", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-      "PayPal 결제 캡처에 실패했습니다.",
+      "Could not complete the payment.",
     );
+    expect(within(dialog).queryByText("PayPal 결제 캡처에 실패했습니다.")).not.toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
 
@@ -236,7 +241,9 @@ describe("BookingForm", () => {
       expect(mockedCaptureApplicationPayment).toHaveBeenLastCalledWith(11, "NEW_ORDER_ID");
     });
     expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/payments/success?applicationId=11"));
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+    );
   });
 
   it("keeps the pending application available when the payment dialog is closed", async () => {
@@ -251,6 +258,65 @@ describe("BookingForm", () => {
 
     expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
     expect(mockedCaptureApplicationPayment).not.toHaveBeenCalled();
-    expect(replace).toHaveBeenCalledWith("/applications");
+    expect(replace).toHaveBeenCalledWith("/en/applications");
+  });
+
+  it("localizes Korean booking controls and HanBuddy-owned PayPal copy", async () => {
+    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
+
+    renderWithQueryClient(<BookingForm activity={activity} />, { locale: "ko" });
+
+    expect(screen.getByText("Jihoon Kim 버디와 함께")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "날짜 및 시간" })).toBeInTheDocument();
+    expect(screen.getByText("날짜와 시간")).toBeInTheDocument();
+    expect(screen.getByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "인원" })).toBeInTheDocument();
+    expect(screen.getByText("게스트 수")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "인원 줄이기" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "인원 늘리기" })).toBeEnabled();
+    expect(screen.getByRole("heading", { name: "특별 요청" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("버디에게 요청 사항을 알려 주세요...")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "가격 상세" })).toBeInTheDocument();
+    expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
+    expect(screen.getByText("총액(KRW): ₩90,000")).toBeInTheDocument();
+    expect(screen.getByText("환불은 이용일 하루 전까지만 가능합니다.")).toBeInTheDocument();
+    expect(screen.getByLabelText("위 약관에 동의합니다.")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText("버디에게 요청 사항을 알려 주세요..."), {
+      target: { value: "Vegetarian snacks, please." },
+    });
+    fireEvent.click(screen.getByLabelText("위 약관에 동의합니다."));
+    fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "결제 수단 선택" });
+    expect(
+      within(dialog).getByText("Bukchon Hidden Gems · 2026-07-20 10:00 · 2명"),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText("신청 총액: ₩90,000")).toBeInTheDocument();
+    expect(within(dialog).getByText("PayPal 결제 금액: US$68.97")).toBeInTheDocument();
+    expect(within(dialog).getByText("PayPal 결제는 USD로 처리됩니다.")).toBeInTheDocument();
+    expect(mockedCreateApplication).toHaveBeenCalledWith({
+      activityScheduleId: 101,
+      guestCount: 2,
+      specialRequest: "Vegetarian snacks, please.",
+    });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "대화상자 닫기" }));
+    expect(replace).toHaveBeenCalledWith("/ko/applications");
+  });
+
+  it.each([
+    ["en", "Please select an available schedule."],
+    ["ko", "신청 가능한 일정을 선택해 주세요."],
+  ] as const)("translates the stable schedule validation key in %s", (locale, message) => {
+    renderWithQueryClient(<BookingForm activity={{ ...activity, sessions: [] }} />, { locale });
+
+    const agreement = locale === "ko" ? "위 약관에 동의합니다." : "I agree to the terms above.";
+    const submit = locale === "ko" ? "신청하기" : "Submit Application";
+    fireEvent.click(screen.getByLabelText(agreement));
+    fireEvent.click(screen.getByRole("button", { name: submit }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(message);
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
   });
 });

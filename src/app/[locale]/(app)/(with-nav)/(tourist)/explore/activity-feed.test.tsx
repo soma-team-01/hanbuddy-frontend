@@ -18,6 +18,19 @@ vi.mock("@/lib/api/activities", () => ({
 
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 
+const touristActivity = {
+  activityId: 42,
+  title: "Bukchon Hidden Gems",
+  description: "Walk through quiet alleys with a local buddy.",
+  thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+  buddyName: "Jihoon Kim",
+  buddyProfileImageUrl: null,
+  meetingPlaceId: "ChIJtest-place-id",
+  meetingPointName: "Anguk Station Exit 2",
+  price: 45000,
+  currency: "KRW",
+} as const;
+
 describe("ActivityFeed", () => {
   beforeEach(() => {
     routerMock.refresh.mockReset();
@@ -56,7 +69,8 @@ describe("ActivityFeed", () => {
 
     renderWithQueryClient(<ActivityFeed />);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not load activities.");
+    expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
   });
 
   it("redirects to login when the activities query is unauthenticated", async () => {
@@ -70,20 +84,7 @@ describe("ActivityFeed", () => {
   it("renders activities loaded from the API", async () => {
     mockedGetTouristActivities.mockResolvedValue({
       status: "success",
-      activities: [
-        {
-          activityId: 42,
-          title: "Bukchon Hidden Gems",
-          description: "Walk through quiet alleys with a local buddy.",
-          thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
-          buddyName: "Jihoon Kim",
-          buddyProfileImageUrl: null,
-          meetingPlaceId: "ChIJtest-place-id",
-          meetingPointName: "Anguk Station Exit 2",
-          price: 45000,
-          currency: "KRW",
-        },
-      ],
+      activities: [touristActivity],
     });
 
     renderWithQueryClient(<ActivityFeed />);
@@ -95,5 +96,50 @@ describe("ActivityFeed", () => {
     const activityLink = screen.getByRole("link", { name: /Bukchon Hidden Gems/ });
     expect(activityLink).toHaveClass("motion-reveal", "motion-press");
     expect(activityLink).toHaveStyle({ animationDelay: "0ms" });
+  });
+
+  it("localizes Korean loading and empty states", async () => {
+    let resolveActivities!: (value: Awaited<ReturnType<typeof getTouristActivities>>) => void;
+    mockedGetTouristActivities.mockReturnValue(
+      new Promise((resolve) => {
+        resolveActivities = resolve;
+      }),
+    );
+
+    renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
+
+    expect(screen.getByText("액티비티를 불러오는 중...")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveActivities({ status: "success", activities: [] });
+    });
+    expect(await screen.findByText("아직 등록된 액티비티가 없습니다.")).toBeInTheDocument();
+  });
+
+  it("shows a localized safe Korean error instead of raw server text", async () => {
+    mockedGetTouristActivities.mockRejectedValue(new Error("raw server detail"));
+
+    renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 불러오지 못했습니다.");
+    expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
+  });
+
+  it("keeps user-authored activity content unchanged in Korean and uses locale navigation", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [touristActivity],
+    });
+
+    renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
+
+    expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(screen.getByText("Anguk Station Exit 2")).toBeInTheDocument();
+    expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getByText("₩45,000 / 1인")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute(
+      "href",
+      "/ko/activities/42",
+    );
   });
 });

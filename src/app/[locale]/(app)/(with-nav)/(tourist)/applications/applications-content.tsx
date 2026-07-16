@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { PayPalPaymentProvider } from "@/components/payments/PayPalPaymentButton";
+import { useRouter } from "@/i18n/navigation";
 import {
   cancelMyApplication,
   captureApplicationPayment,
@@ -21,6 +21,8 @@ import type { CancelDialogOutcome } from "./cancel-dialog";
 export function ApplicationsContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const locale = useLocale();
+  const t = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
   const applicationsQuery = useQuery(myApplicationsQueryOptions());
   const cancelApplicationMutation = useMutation({
@@ -77,7 +79,7 @@ export function ApplicationsContent() {
   );
 
   const applications = (applicationsQuery.data ?? []).map((application) =>
-    mapApplicationResponseToApplication(application, tErrors("dateTimeUnavailable")),
+    mapApplicationResponseToApplication(application, tErrors("dateTimeUnavailable"), locale),
   );
 
   async function handleCancelApplication(
@@ -87,10 +89,10 @@ export function ApplicationsContent() {
     try {
       await cancelApplicationMutation.mutateAsync({ applicationId, reason });
       return { ok: true };
-    } catch (error) {
+    } catch {
       return {
         ok: false,
-        message: error instanceof Error ? error.message : "신청을 취소하지 못했습니다.",
+        message: t("cancelFailed"),
       };
     }
   }
@@ -109,7 +111,7 @@ export function ApplicationsContent() {
   }
 
   if (applicationsQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">Loading applications...</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
   }
 
   if (applicationsQuery.error) {
@@ -118,7 +120,7 @@ export function ApplicationsContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {applicationsQuery.error.message}
+        {t("loadError")}
       </p>
     );
   }

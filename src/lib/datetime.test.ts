@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatSeoulDate,
   formatSeoulDateTime,
+  formatSeoulTime,
   getSeoulDateTimeParts,
   SERVICE_TIME_ZONE,
   toSeoulStartAt,
@@ -50,5 +52,9 @@ describe("Seoul date-time boundary", () => {
   it("formats the same Seoul instant in English and Korean", () => {
     expect(formatSeoulDateTime(SEOUL_BOUNDARY_INSTANT, "en")).toBe("Jul 19, 2026, 1:30 AM");
     expect(formatSeoulDateTime(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("2026. 7. 19. 오전 1:30");
+    expect(formatSeoulDate(SEOUL_BOUNDARY_INSTANT, "en")).toBe("Jul 19, 2026");
+    expect(formatSeoulDate(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("2026. 7. 19.");
+    expect(formatSeoulTime(SEOUL_BOUNDARY_INSTANT, "en")).toBe("1:30 AM");
+    expect(formatSeoulTime(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("오전 1:30");
   });
 });

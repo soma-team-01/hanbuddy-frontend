@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
 import { activityKeys } from "@/lib/query/activities";
@@ -61,7 +61,7 @@ describe("BookingContent", () => {
     renderWithQueryClient(<BookingContent activityId="42" />);
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "2026-07-20 10:00" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Jul 20, 2026 10:00 AM" })).toBeInTheDocument();
     expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
   });
 
@@ -84,5 +84,27 @@ describe("BookingContent", () => {
     renderWithQueryClient(<BookingContent activityId="42" />, { locale: "ko" });
 
     expect(await screen.findByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "2026. 7. 20. 오전 10:00" })).toBeInTheDocument();
+  });
+
+  it("localizes Korean booking loading and safe error states", async () => {
+    let rejectActivity!: (error: Error) => void;
+    mockedGetTouristActivity.mockReturnValue(
+      new Promise((_, reject) => {
+        rejectActivity = reject;
+      }),
+    );
+
+    renderWithQueryClient(<BookingContent activityId="42" />, { locale: "ko" });
+
+    expect(screen.getByText("예약 정보를 불러오는 중...")).toBeInTheDocument();
+
+    await act(async () => {
+      rejectActivity(new Error("raw server detail"));
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("예약 정보를 불러오지 못했습니다.");
+    expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });

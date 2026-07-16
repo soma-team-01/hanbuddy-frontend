@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   cancelMyApplication,
@@ -127,7 +127,7 @@ describe("ApplicationsContent", () => {
 
     const { queryClient } = renderWithQueryClient(<ApplicationsContent />);
 
-    expect(await screen.findByText("$68.97")).toBeInTheDocument();
+    expect(await screen.findByText("Paid with PayPal: $68.97")).toBeInTheDocument();
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
@@ -144,7 +144,7 @@ describe("ApplicationsContent", () => {
         paymentCurrency: "USD",
       }),
     ]);
-    expect(routerMock.replace).toHaveBeenCalledWith("/payments/success?applicationId=11");
+    expect(routerMock.replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11");
   });
 
   it("renders applications loaded from the API", async () => {
@@ -193,5 +193,25 @@ describe("ApplicationsContent", () => {
     expect(queryClient.getQueryData(applicationKeys.mine())).toEqual([
       expect.objectContaining({ applicationId: 11, status: "CANCELLED" }),
     ]);
+  });
+
+  it("localizes Korean loading and safe error states", async () => {
+    let rejectApplications!: (error: Error) => void;
+    mockedGetMyApplications.mockReturnValue(
+      new Promise((_, reject) => {
+        rejectApplications = reject;
+      }),
+    );
+
+    renderWithQueryClient(<ApplicationsContent />, { locale: "ko" });
+
+    expect(screen.getByText("신청 내역을 불러오는 중...")).toBeInTheDocument();
+
+    await act(async () => {
+      rejectApplications(new Error("raw server detail"));
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("신청 내역을 불러오지 못했습니다.");
+    expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -9,6 +8,7 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { Avatar } from "@/components/ui/Avatar";
 import { CheckIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
+import { Link } from "@/i18n/navigation";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { formatKrw } from "@/lib/format";
 import {
@@ -22,13 +22,18 @@ import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
   const activityQuery = useQuery(touristActivityQueryOptions(activityId));
   const locale = useLocale();
-  const tDateTime = useTranslations("DateTime");
+  const t = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState("");
   useAuthQueryRedirect(activityQuery.error);
 
   const activity = activityQuery.data
-    ? mapTouristActivityDetailToActivity(activityQuery.data, tErrors("dateTimeUnavailable"))
+    ? mapTouristActivityDetailToActivity(
+        activityQuery.data,
+        tErrors("dateTimeUnavailable"),
+        locale,
+        t("localHost"),
+      )
     : null;
 
   useEffect(() => {
@@ -57,7 +62,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     return (
       <div className="flex flex-1 flex-col">
         <TopAppBar backHref="/explore" />
-        <p className="px-4 py-10 text-center text-ink-soft">Loading activity...</p>
+        <p className="px-4 py-10 text-center text-ink-soft">{t("loading")}</p>
       </div>
     );
   }
@@ -71,7 +76,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {activityQuery.error?.message || "활동 상세를 불러오지 못했습니다."}
+            {activityQuery.error ? t("loadError") : t("notFound")}
           </p>
         </main>
       </div>
@@ -85,13 +90,13 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
 
   let meetingMapMedia: React.ReactNode = (
     <div className="mt-3 flex h-[204px] w-full items-center justify-center rounded-xl bg-line/60 text-sm text-ink-soft">
-      Map unavailable
+      {t("mapUnavailable")}
     </div>
   );
   if (googleMapsUrl) {
     meetingMapMedia = (
       <iframe
-        title={`Map of ${activity.meetingPoint.name}`}
+        title={t("mapTitle", { place: activity.meetingPoint.name })}
         src={googleMapsUrl}
         className="mt-3 h-[204px] w-full rounded-xl border-0"
         loading="lazy"
@@ -104,7 +109,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
       <div className="relative mt-3 h-[204px] w-full overflow-hidden rounded-xl">
         <Image
           src={activity.meetingPoint.mapImageUrl}
-          alt={`Map of ${activity.meetingPoint.name}`}
+          alt={t("mapTitle", { place: activity.meetingPoint.name })}
           fill
           sizes="(max-width: 448px) 100vw, 448px"
           className="object-cover"
@@ -145,7 +150,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
               <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={48} />
               <div>
                 <h3 className="font-display text-sm font-semibold text-forest">
-                  Host: {activity.host.name}
+                  {t("host", { name: activity.host.name })}
                 </h3>
                 <p className="text-xs text-ink-soft">{activity.host.bio}</p>
               </div>
@@ -164,7 +169,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
           </section>
 
           <section className="flex flex-col gap-4 border-t border-line pt-6">
-            <h3 className="font-display text-sm font-semibold text-forest">What&apos;s included</h3>
+            <h3 className="font-display text-sm font-semibold text-forest">{t("included")}</h3>
             <ul className="flex flex-col gap-2">
               {activity.included.map(({ label, provided }) => (
                 <li key={label} className="flex items-start gap-2 text-xs font-medium">
@@ -180,7 +185,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
           </section>
 
           <section className="flex flex-col gap-4 border-t border-line pt-6">
-            <h3 className="font-display text-sm font-semibold text-forest">Who cannot join</h3>
+            <h3 className="font-display text-sm font-semibold text-forest">{t("cannotJoin")}</h3>
             <ul className="flex list-inside list-disc flex-col gap-2 text-xs font-medium text-ink">
               {activity.restrictions.map((restriction) => (
                 <li key={restriction}>{restriction}</li>
@@ -189,8 +194,8 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
           </section>
 
           <section className="flex flex-col gap-4 border-t border-line pt-6">
-            <h2 className="font-display text-xl font-semibold text-forest">Availability</h2>
-            <p className="text-xs text-ink-soft">{tDateTime("kstNotice")}</p>
+            <h2 className="font-display text-xl font-semibold text-forest">{t("availability")}</h2>
+            <p className="text-xs text-ink-soft">{t("kstNotice")}</p>
             <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 pb-2">
               {activity.sessions.map((session) => (
                 <div
@@ -202,7 +207,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
                   </p>
                   <p className="mt-1 text-xs text-ink-soft">{session.timeLabel}</p>
                   <p className="mt-3 text-xs font-medium text-ink">
-                    {session.spotsLeft} spots left
+                    {t("remaining", { count: session.spotsLeft })}
                   </p>
                 </div>
               ))}
@@ -210,7 +215,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
           </section>
 
           <section className="flex flex-col gap-1 border-t border-line pt-6">
-            <h2 className="font-display text-xl font-semibold text-forest">Meeting Point</h2>
+            <h2 className="font-display text-xl font-semibold text-forest">{t("meetingPoint")}</h2>
             <p className="mt-3 font-display text-sm font-semibold text-forest">
               {activity.meetingPoint.name}
             </p>
@@ -226,18 +231,15 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
               {formatKrw(activity.originalPrice, locale)}
             </span>
           )}
-          <span className="text-base text-ink-soft">
-            <span className="font-display text-xl font-bold text-forest">
-              {formatKrw(activity.price, locale)}
-            </span>{" "}
-            / person
+          <span className="font-display text-xl font-bold text-forest">
+            {t("perPerson", { price: formatKrw(activity.price, locale) })}
           </span>
         </div>
         <Link
           href={`/activities/${activity.id}/book`}
           className="flex h-11 items-center justify-center rounded-xl bg-forest px-8 font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
         >
-          Apply Now
+          {t("bookNow")}
         </Link>
       </BottomActionBar>
     </div>

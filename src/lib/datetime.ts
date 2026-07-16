@@ -111,3 +111,26 @@ export function formatSeoulDateTime(value: string, locale: Locale): string | nul
     minute: "2-digit",
   }).format(date);
 }
+
+export function formatSeoulDate(value: string, locale: Locale): string | null {
+  const date = getOffsetfulDate(value);
+  if (!date) return null;
+
+  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    timeZone: SERVICE_TIME_ZONE,
+    year: "numeric",
+    month: locale === "ko" ? "numeric" : "short",
+    day: "numeric",
+  }).format(date);
+}
+
+export function formatSeoulTime(value: string, locale: Locale): string | null {
+  const date = getOffsetfulDate(value);
+  if (!date) return null;
+
+  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    timeZone: SERVICE_TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}

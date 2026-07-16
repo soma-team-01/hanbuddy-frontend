@@ -1,14 +1,15 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { ApplicationCancellationReason } from "@/types/application";
 
 const REASONS = [
-  { value: "SCHEDULE_CONFLICT", label: "Schedule conflict" },
-  { value: "ILLNESS", label: "Illness or unexpected emergency" },
-  { value: "FOUND_OTHER", label: "Found another option" },
-  { value: "OTHER", label: "Other reason" },
-] as const satisfies ReadonlyArray<{ value: ApplicationCancellationReason; label: string }>;
+  { value: "SCHEDULE_CONFLICT", key: "scheduleConflict" },
+  { value: "ILLNESS", key: "illness" },
+  { value: "FOUND_OTHER", key: "foundOther" },
+  { value: "OTHER", key: "other" },
+] as const satisfies ReadonlyArray<{ value: ApplicationCancellationReason; key: string }>;
 
 export type CancelDialogOutcome = { ok: true } | { ok: false; message: string };
 
@@ -19,6 +20,8 @@ export function CancelDialog({
   onClose: () => void;
   onConfirm: (reason: ApplicationCancellationReason) => Promise<CancelDialogOutcome>;
 }>) {
+  const t = useTranslations("Applications");
+  const tErrors = useTranslations("Errors");
   const [reason, setReason] = useState<ApplicationCancellationReason | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -43,7 +46,7 @@ export function CancelDialog({
       }
       // 성공 시에는 부모가 다이얼로그를 언마운트하므로 여기서 상태를 만지지 않는다.
     } catch {
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage(tErrors("generic"));
       setIsSubmitting(false);
     }
   }
@@ -61,14 +64,14 @@ export function CancelDialog({
       className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
     >
       <h2 id="cancel-dialog-title" className="font-display text-xl font-semibold text-forest">
-        Cancel Application?
+        {t("cancellationTitle")}
       </h2>
-      <p className="mt-2 text-ink-soft">
-        Are you sure you want to cancel this booking? This action cannot be undone.
+      <p className="mt-2 text-ink-soft">{t("cancellationPrompt")}</p>
+      <p className="mt-5 font-display text-sm font-semibold text-ink">
+        {t("cancellationQuestion")}
       </p>
-      <p className="mt-5 font-display text-sm font-semibold text-ink">Why are you cancelling?</p>
       <div className="mt-3 flex flex-col gap-3">
-        {REASONS.map(({ value, label }) => {
+        {REASONS.map(({ value, key }) => {
           const isSelected = reason === value;
           return (
             <button
@@ -88,7 +91,7 @@ export function CancelDialog({
               >
                 {isSelected && <span className="size-2 rounded-full bg-forest" />}
               </span>
-              <span className="text-base text-ink">{label}</span>
+              <span className="text-base text-ink">{t(`cancellationReasons.${key}`)}</span>
             </button>
           );
         })}
@@ -110,7 +113,7 @@ export function CancelDialog({
           disabled={isSubmitting}
           className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-chip disabled:opacity-60"
         >
-          No, Keep It
+          {t("keepApplication")}
         </button>
         <button
           type="button"
@@ -118,7 +121,7 @@ export function CancelDialog({
           disabled={!reason || isSubmitting}
           className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-60"
         >
-          {isSubmitting ? "Cancelling..." : "Yes, Cancel"}
+          {isSubmitting ? t("cancelling") : t("confirmCancellation")}
         </button>
       </div>
     </dialog>

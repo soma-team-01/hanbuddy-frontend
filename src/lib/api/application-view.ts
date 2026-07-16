@@ -1,4 +1,5 @@
-import { getSeoulDateTimeParts } from "@/lib/datetime";
+import type { Locale } from "@/i18n/routing";
+import { formatSeoulDateTime } from "@/lib/datetime";
 import type {
   Application,
   ApplicationResponse,
@@ -16,13 +17,13 @@ const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStat
 export function mapApplicationResponseToApplication(
   response: ApplicationResponse,
   dateTimeUnavailable: string,
+  locale: Locale = "en",
 ): Application {
   const subtotal = response.price * response.guestCount;
-  const parts = getSeoulDateTimeParts(response.startAt);
   return {
     id: String(response.applicationId),
     status: STATUS_BY_BACKEND_STATUS[response.status],
-    dateLabel: parts ? `${parts.date} ${parts.time}` : dateTimeUnavailable,
+    dateLabel: formatSeoulDateTime(response.startAt, locale) ?? dateTimeUnavailable,
     hostName: response.buddyName,
     hostAvatarUrl: null,
     activityTitle: response.activityTitle,

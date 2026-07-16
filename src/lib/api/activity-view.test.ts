@@ -65,6 +65,7 @@ describe("activity view adapters", () => {
         ],
       },
       "Time unavailable.",
+      "en",
     );
 
     expect(activity.heroImageUrl).toBe("https://static.hanbuddy.com/activities/bukchon-0.webp");
@@ -75,8 +76,8 @@ describe("activity view adapters", () => {
     expect(activity.sessions).toEqual([
       {
         id: "101",
-        dateLabel: "2026-07-19",
-        timeLabel: "01:30",
+        dateLabel: "Jul 19, 2026",
+        timeLabel: "1:30 AM",
         spotsLeft: 4,
       },
     ]);
@@ -111,5 +112,36 @@ describe("activity view adapters", () => {
       dateLabel: "Time unavailable.",
       timeLabel: "",
     });
+  });
+
+  it("localizes schedule labels without changing activity-authored content", () => {
+    const activity = mapTouristActivityDetailToActivity(
+      {
+        ...summary,
+        buddyId: 7,
+        includedItems: ["Local guide"],
+        restrictionNotes: ["Comfortable shoes recommended"],
+        images: [],
+        schedules: [
+          {
+            activityScheduleId: 101,
+            startAt: "2026-07-18T16:30:00Z",
+            remainingCapacity: 4,
+            status: "OPEN",
+          },
+        ],
+      },
+      "시간 정보를 확인할 수 없습니다.",
+      "ko",
+    );
+
+    expect(activity.sessions[0]).toMatchObject({
+      dateLabel: "2026. 7. 19.",
+      timeLabel: "오전 1:30",
+    });
+    expect(activity.title).toBe("Bukchon Hidden Gems");
+    expect(activity.host.name).toBe("Jihoon Kim");
+    expect(activity.included[0]?.label).toBe("Local guide");
+    expect(activity.restrictions[0]).toBe("Comfortable shoes recommended");
   });
 });

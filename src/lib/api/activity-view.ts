@@ -1,4 +1,5 @@
-import { getSeoulDateTimeParts } from "@/lib/datetime";
+import type { Locale } from "@/i18n/routing";
+import { formatSeoulDate, formatSeoulTime } from "@/lib/datetime";
 import type {
   Activity,
   IncludedItem,
@@ -36,6 +37,8 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
 export function mapTouristActivityDetailToActivity(
   detail: TouristActivityDetail,
   dateTimeUnavailable: string,
+  locale: Locale = "en",
+  hostBio = "Local HanBuddy host",
 ): Activity {
   const images = [...detail.images].sort((left, right) => left.imageOrder - right.imageOrder);
   const heroImageUrl = images[0]?.imageUrl ?? detail.thumbnailImageUrl;
@@ -44,14 +47,18 @@ export function mapTouristActivityDetailToActivity(
     ...mapTouristActivitySummaryToActivity(detail),
     imageUrl: detail.thumbnailImageUrl || heroImageUrl,
     heroImageUrl,
+    host: {
+      name: detail.buddyName,
+      bio: hostBio,
+      avatarUrl: detail.buddyProfileImageUrl,
+    },
     included: detail.includedItems.map(toIncludedItem),
     restrictions: detail.restrictionNotes,
     sessions: detail.schedules.map<Session>((schedule) => {
-      const parts = getSeoulDateTimeParts(schedule.startAt);
       return {
         id: String(schedule.activityScheduleId),
-        dateLabel: parts?.date ?? dateTimeUnavailable,
-        timeLabel: parts?.time ?? "",
+        dateLabel: formatSeoulDate(schedule.startAt, locale) ?? dateTimeUnavailable,
+        timeLabel: formatSeoulTime(schedule.startAt, locale) ?? "",
         spotsLeft: schedule.remainingCapacity,
       };
     }),

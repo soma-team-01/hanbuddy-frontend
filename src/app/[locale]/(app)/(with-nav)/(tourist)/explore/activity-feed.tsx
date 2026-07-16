@@ -1,20 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { ActivityCard } from "@/components/ui/ActivityCard";
+import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityFeed() {
+  const t = useTranslations("Explore");
   const activitiesQuery = useQuery(touristActivitiesQueryOptions());
   useAuthQueryRedirect(activitiesQuery.error);
 
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 
   if (activitiesQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">Loading activities...</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
   }
 
   if (activitiesQuery.error) {
@@ -23,13 +25,13 @@ export function ActivityFeed() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {activitiesQuery.error.message}
+        {t("loadError")}
       </p>
     );
   }
 
   if (activities.length === 0) {
-    return <p className="py-10 text-center text-ink-soft">No activities available yet.</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("empty")}</p>;
   }
 
   return (

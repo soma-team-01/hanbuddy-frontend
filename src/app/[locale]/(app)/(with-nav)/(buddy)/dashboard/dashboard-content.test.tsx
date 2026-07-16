@@ -121,8 +121,34 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Time unavailable.");
+    expect(screen.getByRole("button", { name: "Time unavailable., has activity" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
     expect(screen.queryByText("Loading applicants...")).not.toBeInTheDocument();
     expect(mockedGetBuddyApplications).not.toHaveBeenCalled();
+  });
+
+  it("chooses a valid default when invalid and valid schedule dates are mixed", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [
+        { dateStartAt: "2026-07-19T01:30", hasActivity: true },
+        { dateStartAt: "2026-07-18T16:30:00Z", hasActivity: true },
+      ],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    expect(await screen.findByRole("button", { name: "Sun 19, has activity" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Time unavailable., has activity" })).toBeDisabled();
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-19"));
+    expect(screen.getByText("No applicants for this date yet.")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("paginates schedule dates in groups of five", async () => {

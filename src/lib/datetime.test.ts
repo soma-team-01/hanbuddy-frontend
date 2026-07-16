@@ -20,6 +20,13 @@ describe("Seoul date-time boundary", () => {
     });
   });
 
+  it("uses 00:00 for an instant at exact Seoul midnight", () => {
+    expect(getSeoulDateTimeParts("2026-07-18T15:00:00Z")).toEqual({
+      date: "2026-07-19",
+      time: "00:00",
+    });
+  });
+
   it.each([
     ["an offset-less value", "2026-07-19T01:30"],
     ["an impossible calendar date", "2026-02-30T01:30:00+09:00"],

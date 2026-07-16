@@ -53,8 +53,12 @@ export function DashboardContent() {
     dateStartAt,
     hasActivity,
   }));
-  const selectedDateExists = dates.some(({ date }) => date === selectedDate);
-  const defaultDate = dates.find(({ hasActivity }) => hasActivity)?.date ?? dates[0]?.date ?? "";
+  const selectedDateExists =
+    selectedDate.length > 0 && dates.some(({ date }) => date === selectedDate);
+  const defaultDate =
+    dates.find(({ date, hasActivity }) => date && hasActivity)?.date ??
+    dates.find(({ date }) => date)?.date ??
+    "";
   const activeDate = selectedDateExists ? selectedDate : defaultDate;
   const activeDateIndex = dates.findIndex(({ date }) => date === activeDate);
   const defaultDatePage = Math.max(0, Math.floor(activeDateIndex / DATE_PAGE_SIZE));
@@ -225,7 +229,10 @@ export function DashboardContent() {
           >
             {visibleDates.map(({ date, dateStartAt, hasActivity }) => {
               const chip = formatDateChip(dateStartAt, locale, tErrors("dateTimeUnavailable"));
-              const active = date === activeDate;
+              const active = date.length > 0 && date === activeDate;
+              const dateAriaLabel = `${[chip.label, chip.day].filter(Boolean).join(" ")}${
+                hasActivity ? ", has activity" : ""
+              }`;
               let activityDotClass = "bg-transparent";
               if (hasActivity) activityDotClass = active ? "bg-cream" : "bg-forest";
 
@@ -234,9 +241,10 @@ export function DashboardContent() {
                   key={dateStartAt}
                   type="button"
                   aria-pressed={active}
-                  aria-label={`${chip.label} ${chip.day}${hasActivity ? ", has activity" : ""}`}
+                  aria-label={dateAriaLabel}
+                  disabled={!date}
                   onClick={() => handleDateSelect(date)}
-                  className={`flex min-w-0 flex-col items-center gap-1 rounded-xl py-3 transition-colors ${
+                  className={`flex min-w-0 flex-col items-center gap-1 rounded-xl py-3 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     active
                       ? "bg-forest text-cream"
                       : "border border-line bg-white text-ink hover:border-line-strong hover:bg-chip"

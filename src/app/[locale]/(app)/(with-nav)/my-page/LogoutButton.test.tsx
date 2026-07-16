@@ -61,6 +61,20 @@ describe("LogoutButton", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
+  it("shows the localized pending label while logout is in progress", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
+    renderWithQueryClient(<LogoutButton />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
+    confirmLogoutInDialog();
+
+    expect(
+      await within(screen.getByRole("dialog")).findByRole("button", {
+        name: "Logging out...",
+      }),
+    ).toBeDisabled();
+  });
+
   it.each([
     ["en", "Log Out", "Log out?", "You can log back in anytime.", "Cancel"],
     ["ko", "로그아웃", "로그아웃할까요?", "언제든 다시 로그인할 수 있습니다.", "취소"],

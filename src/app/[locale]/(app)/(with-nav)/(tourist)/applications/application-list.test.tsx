@@ -1,6 +1,6 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/i18n/routing";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
@@ -173,6 +173,30 @@ describe("ApplicationList", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
     expect(screen.queryByText("결제를 완료하지 못했습니다.")).not.toBeInTheDocument();
+  });
+
+  it("relocalizes a stored payment error when the locale changes", async () => {
+    const onCapturePayment = vi.fn().mockRejectedValue(new Error("raw payment failure"));
+    const applicationList = (
+      <ApplicationList
+        applications={applications}
+        onCancelApplication={vi.fn()}
+        onContinuePayment={vi
+          .fn()
+          .mockResolvedValue({ orderId: "ORDER123", paymentAmount: 68.97, paymentCurrency: "USD" })}
+        onCapturePayment={onCapturePayment}
+        isPaymentPending={false}
+      />
+    );
+    const { rerender } = render(<IntlTestProvider locale="en">{applicationList}</IntlTestProvider>);
+
+    fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
+
+    rerender(<IntlTestProvider locale="ko">{applicationList}</IntlTestProvider>);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("결제를 완료하지 못했습니다.");
+    expect(screen.queryByText("raw payment failure")).not.toBeInTheDocument();
   });
 
   it("disables the payment action when PayPal is not configured", () => {

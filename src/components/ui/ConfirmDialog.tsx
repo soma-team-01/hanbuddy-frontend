@@ -20,11 +20,13 @@ type ConfirmDialogProps = ConfirmDialogBaseProps &
         /** 확인 버튼 대신 렌더링할 커스텀 액션 (예: PayPal 결제 버튼) */
         confirmSlot: React.ReactNode;
         confirmLabel?: never;
+        pendingLabel?: never;
         onConfirm?: never;
       }
     | {
         confirmSlot?: never;
         confirmLabel: string;
+        pendingLabel?: string;
         onConfirm: () => void;
       }
   );
@@ -34,6 +36,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  pendingLabel,
   cancelLabel,
   tone = "default",
   isPending = false,
@@ -104,7 +107,7 @@ export function ConfirmDialog({
                   : "bg-forest enabled:hover:bg-forest-soft"
               }`}
             >
-              {isPending ? `${confirmLabel}...` : confirmLabel}
+              {isPending ? (pendingLabel ?? confirmLabel) : confirmLabel}
             </button>
           </>
         )}

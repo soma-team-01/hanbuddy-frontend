@@ -47,6 +47,7 @@ export function LogoutButton() {
           title={t("logoutTitle")}
           description={t("logoutDescription")}
           confirmLabel={t("logOut")}
+          pendingLabel={t("loggingOut")}
           isPending={isLoggingOut}
           onConfirm={() => void handleLogout()}
           onClose={() => setShowConfirm(false)}

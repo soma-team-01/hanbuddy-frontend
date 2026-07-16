@@ -92,7 +92,7 @@ export function ApplicationsContent() {
     } catch {
       return {
         ok: false,
-        message: t("cancelFailed"),
+        errorKey: "cancelFailed",
       };
     }
   }

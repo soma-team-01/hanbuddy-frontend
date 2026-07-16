@@ -19,7 +19,7 @@ import {
   getActivityThumbnail,
 } from "@/lib/api/buddy-view";
 import type { Locale } from "@/i18n/routing";
-import { formatSeoulTime, getSeoulDateTimeParts, SERVICE_TIME_ZONE } from "@/lib/datetime";
+import { formatSeoulTime, formatSeoulWeekday, getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyApplicationsQueryOptions, buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
@@ -31,10 +31,7 @@ function formatDateChip(value: string, locale: Locale, dateTimeUnavailable: stri
 
   return {
     day: String(Number(parts.date.slice(-2))),
-    label: new Intl.DateTimeFormat(locale, {
-      weekday: "short",
-      timeZone: SERVICE_TIME_ZONE,
-    }).format(new Date(value)),
+    label: formatSeoulWeekday(value, locale) ?? "",
   };
 }
 

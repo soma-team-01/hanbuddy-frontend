@@ -1,4 +1,4 @@
-import { parse } from "@formatjs/icu-messageformat-parser";
+import { isStructurallySame, parse } from "@formatjs/icu-messageformat-parser";
 import { describe, expect, it } from "vitest";
 import en from "./en.json";
 import ko from "./ko.json";
@@ -28,6 +28,17 @@ describe("locale messages", () => {
     for (const [key, message] of Object.entries(messages)) {
       expect(message.trim(), key).not.toBe("");
       expect(() => parse(message), key).not.toThrow();
+    }
+  });
+
+  it("keeps ICU argument names and types identical across locales", () => {
+    const english = flatten(en);
+    const korean = flatten(ko);
+
+    for (const [key, englishMessage] of Object.entries(english)) {
+      const comparison = isStructurallySame(parse(englishMessage), parse(korean[key]));
+      const detail = comparison.error?.message ?? "ICU mismatch";
+      expect(comparison.success, `${key}: ${detail}`).toBe(true);
     }
   });
 

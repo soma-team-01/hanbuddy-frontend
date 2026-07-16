@@ -3,6 +3,7 @@ import {
   formatSeoulDate,
   formatSeoulDateTime,
   formatSeoulTime,
+  formatSeoulWeekday,
   getSeoulDateTimeParts,
   SERVICE_TIME_ZONE,
   toSeoulStartAt,
@@ -56,5 +57,7 @@ describe("Seoul date-time boundary", () => {
     expect(formatSeoulDate(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("2026. 7. 19.");
     expect(formatSeoulTime(SEOUL_BOUNDARY_INSTANT, "en")).toBe("1:30 AM");
     expect(formatSeoulTime(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("오전 1:30");
+    expect(formatSeoulWeekday(SEOUL_BOUNDARY_INSTANT, "en")).toBe("Sun");
+    expect(formatSeoulWeekday(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("일");
   });
 });

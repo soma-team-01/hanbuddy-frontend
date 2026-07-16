@@ -88,7 +88,7 @@ function ApplicationCard({
   onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
   isPaymentPending: boolean;
 }>) {
-  const [paymentError, setPaymentError] = useState("");
+  const [hasPaymentError, setHasPaymentError] = useState(false);
   const locale = useLocale();
   const t = useTranslations("Applications");
   const [paymentCharge, setPaymentCharge] = useState<{
@@ -110,7 +110,7 @@ function ApplicationCard({
 
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
-    setPaymentError(t("paymentFailed"));
+    setHasPaymentError(true);
   }
 
   return (
@@ -164,7 +164,7 @@ function ApplicationCard({
           <PayPalPaymentButtons
             disabled={isPaymentPending}
             createOrder={async () => {
-              setPaymentError("");
+              setHasPaymentError(false);
               const payment = await onContinuePayment(application.id);
               setPaymentCharge({
                 amount: payment.paymentAmount,
@@ -181,12 +181,12 @@ function ApplicationCard({
             }}
             onError={showPaymentError}
           />
-          {paymentError && (
+          {hasPaymentError && (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              {paymentError}
+              {t("paymentFailed")}
             </p>
           )}
         </div>

@@ -134,3 +134,13 @@ export function formatSeoulTime(value: string, locale: Locale): string | null {
     minute: "2-digit",
   }).format(date);
 }
+
+export function formatSeoulWeekday(value: string, locale: Locale): string | null {
+  const date = getOffsetfulDate(value);
+  if (!date) return null;
+
+  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    timeZone: SERVICE_TIME_ZONE,
+    weekday: "short",
+  }).format(date);
+}

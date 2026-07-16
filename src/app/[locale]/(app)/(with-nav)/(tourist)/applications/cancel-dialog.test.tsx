@@ -1,6 +1,6 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 
 describe("CancelDialog", () => {
@@ -47,7 +47,7 @@ describe("CancelDialog", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      resolveConfirm({ ok: false, message: "Failed to cancel the application." });
+      resolveConfirm({ ok: false, errorKey: "cancelFailed" });
     });
     await screen.findByRole("alert");
   });
@@ -68,15 +68,32 @@ describe("CancelDialog", () => {
   it("shows an error and keeps the dialog open when cancellation fails", async () => {
     const onConfirm = vi.fn().mockResolvedValue({
       ok: false,
-      message: "Failed to cancel the application.",
+      errorKey: "cancelFailed",
     });
     renderWithIntl(<CancelDialog onClose={vi.fn()} onConfirm={onConfirm} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Illness or unexpected emergency" }));
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Failed to cancel the application.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not cancel the application.");
     expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
+  });
+
+  it("relocalizes a stored cancellation error when the locale changes", async () => {
+    const onConfirm = vi.fn().mockResolvedValue({
+      ok: false,
+      errorKey: "cancelFailed",
+    } as const);
+    const cancelDialog = <CancelDialog onClose={vi.fn()} onConfirm={onConfirm} />;
+    const { rerender } = render(<IntlTestProvider locale="en">{cancelDialog}</IntlTestProvider>);
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not cancel the application.");
+
+    rerender(<IntlTestProvider locale="ko">{cancelDialog}</IntlTestProvider>);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("신청을 취소하지 못했습니다.");
   });
 
   it("localizes the complete Korean cancellation dialog", () => {

@@ -73,18 +73,19 @@ describe("ConfirmDialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("locks both buttons while pending", () => {
+  it("locks both buttons and uses the caller-provided localized label while pending", () => {
     renderWithIntl(
       <ConfirmDialog
         title="Delete this activity?"
         confirmLabel="Delete"
+        pendingLabel="Deleting..."
         isPending
         onConfirm={vi.fn()}
         onClose={vi.fn()}
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Delete..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
   });
 

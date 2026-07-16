@@ -121,6 +121,27 @@ describe("GET /auth/google/callback", () => {
     expect(response.headers.get("set-cookie") ?? "").toContain("refresh_token=backend");
   });
 
+  it("redirects a registered tourist without a locale cookie to the default locale", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          accessToken: "access-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest());
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/explore");
+  });
+
   it("redirects registered buddies to the localized dashboard", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,
@@ -179,6 +200,26 @@ describe("GET /auth/google/callback", () => {
       picture: "https://lh3.googleusercontent.com/profile",
     });
     expect(decodedProfile).not.toHaveProperty("email");
+  });
+
+  it("uses the default locale for onboarding when the locale cookie is invalid", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          signupToken: "signup-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("fr"));
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/onboarding");
   });
 
   it("uses a finite code when an unregistered login response has no signup token", async () => {

@@ -29,10 +29,22 @@ vi.mock("next/navigation", async (importOriginal) => ({
   useSearchParams: () => new URLSearchParams(navigation.query),
 }));
 
-function openLanguageSheet() {
-  const trigger = screen.getByRole("button", { name: /Language/ });
+function openLanguageSheet(sheetName = "Language") {
+  const trigger = screen.getByRole("button", { name: new RegExp(sheetName) });
   fireEvent.click(trigger);
-  return { dialog: screen.getByRole("dialog", { name: "Language" }), trigger };
+  return { dialog: screen.getByRole("dialog", { name: sheetName }), trigger };
+}
+
+function renderOpenPendingSheet() {
+  const view = renderWithIntl(<LanguagePreference />);
+  openLanguageSheet();
+  transition.isPending = true;
+  view.rerender(<LanguagePreference />);
+
+  return {
+    dialog: screen.getByRole("dialog", { name: "Language" }),
+    trigger: screen.getByRole("button", { name: /Language/ }),
+  };
 }
 
 describe("LanguagePreference", () => {
@@ -71,6 +83,41 @@ describe("LanguagePreference", () => {
       "false",
     );
   });
+
+  it.each([
+    ["en", "Language", "English"],
+    ["ko", "언어", "한국어"],
+  ] as const)("focuses the selected option when the %s sheet opens", (locale, title, option) => {
+    renderWithIntl(<LanguagePreference />, { locale });
+
+    const { dialog } = openLanguageSheet(title);
+
+    expect(within(dialog).getByRole("radio", { name: option })).toHaveFocus();
+  });
+
+  it.each([
+    ["ArrowDown", "en", "Language", "English", "한국어", "ko"],
+    ["ArrowRight", "en", "Language", "English", "한국어", "ko"],
+    ["ArrowUp", "ko", "언어", "한국어", "English", "en"],
+    ["ArrowLeft", "ko", "언어", "한국어", "English", "en"],
+  ] as const)(
+    "uses roving focus and selects with %s in the %s locale",
+    (key, locale, title, selectedLabel, nextLabel, nextLocale) => {
+      renderWithIntl(<LanguagePreference />, { locale });
+
+      const { dialog } = openLanguageSheet(title);
+      const selectedOption = within(dialog).getByRole("radio", { name: selectedLabel });
+      const nextOption = within(dialog).getByRole("radio", { name: nextLabel });
+
+      expect(selectedOption).toHaveAttribute("tabindex", "0");
+      expect(nextOption).toHaveAttribute("tabindex", "-1");
+
+      fireEvent.keyDown(selectedOption, { key });
+
+      expect(navigation.replace).toHaveBeenCalledWith("/my-page", { locale: nextLocale });
+      expect(navigation.replace).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it("preserves the pathname, query, and hash when switching to Korean", () => {
     navigation.query = "from=dashboard";
@@ -130,6 +177,30 @@ describe("LanguagePreference", () => {
     expect(korean).toBeDisabled();
     fireEvent.click(korean);
     fireEvent.click(korean);
+    expect(navigation.replace).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      "Escape",
+      (dialog: HTMLElement) => fireEvent(dialog, new Event("cancel", { cancelable: true })),
+    ],
+    ["backdrop", (dialog: HTMLElement) => fireEvent.click(dialog)],
+    [
+      "close button",
+      (dialog: HTMLElement) => {
+        const closeButton = within(dialog).getByRole("button", { name: "Close dialog" });
+        expect(closeButton).toBeEnabled();
+        fireEvent.click(closeButton);
+      },
+    ],
+  ])("allows %s dismissal and restores focus while a transition is pending", async (_, dismiss) => {
+    const { dialog, trigger } = renderOpenPendingSheet();
+
+    dismiss(dialog);
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
     expect(navigation.replace).not.toHaveBeenCalled();
   });
 });

@@ -235,7 +235,11 @@ export function CreateActivityForm() {
     // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
     const timeoutId = window.setTimeout(() => {
       placeSessionTokenRef.current ??= globalThis.crypto.randomUUID();
-      searchGooglePlacePredictions(query, apiKey, fetch, placeSessionTokenRef.current)
+      searchGooglePlacePredictions(query, apiKey, {
+        locale,
+        fetcher: fetch,
+        sessionToken: placeSessionTokenRef.current,
+      })
         .then((predictions) => {
           if (!isMounted) return;
           setPlacePredictions(predictions);
@@ -254,7 +258,7 @@ export function CreateActivityForm() {
       isMounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [meetingPlaceQuery, selectedMeetingPlaceLabel]);
+  }, [locale, meetingPlaceQuery, selectedMeetingPlaceLabel]);
 
   const selectedFiles = selectedPhotos.map((photo) => photo.file);
   const stepContent = STEP_CONTENT[currentStep];
@@ -389,7 +393,11 @@ export function CreateActivityForm() {
     if (!apiKey || !sessionToken) return;
 
     try {
-      const place = await fetchGooglePlaceDetails(prediction.placeId, apiKey, fetch, sessionToken);
+      const place = await fetchGooglePlaceDetails(prediction.placeId, apiKey, {
+        locale,
+        fetcher: fetch,
+        sessionToken,
+      });
       if (placeSelectionVersionRef.current === selectionVersion && place.formattedAddress) {
         setSelectedMeetingPlaceAddress(place.formattedAddress);
       }
@@ -455,7 +463,7 @@ export function CreateActivityForm() {
 
   const isSubmitting = submittingStatus !== null;
   const meetingMapUrl = meetingPlaceId
-    ? buildGoogleMapsEmbedUrl(meetingPlaceId, getGoogleMapsApiKey())
+    ? buildGoogleMapsEmbedUrl(meetingPlaceId, getGoogleMapsApiKey(), locale)
     : "";
 
   return (

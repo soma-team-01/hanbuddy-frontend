@@ -38,7 +38,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
 
     let isMounted = true;
 
-    fetchGooglePlaceDetails(placeId, apiKey)
+    fetchGooglePlaceDetails(placeId, apiKey, { locale })
       .then((place) => {
         if (!isMounted) return;
         setGoogleMeetingAddress(place.formattedAddress);
@@ -51,7 +51,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     return () => {
       isMounted = false;
     };
-  }, [activity?.meetingPoint.placeId]);
+  }, [activity?.meetingPoint.placeId, locale]);
 
   if (activityQuery.isPending) {
     return (
@@ -80,7 +80,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
 
   const meetingAddress = googleMeetingAddress;
   const googleMapsUrl = activity.meetingPoint.placeId
-    ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, getGoogleMapsApiKey())
+    ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, getGoogleMapsApiKey(), locale)
     : "";
 
   let meetingMapMedia: React.ReactNode = (

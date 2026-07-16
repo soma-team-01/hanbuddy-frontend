@@ -202,6 +202,44 @@ describe("CreateActivityForm", () => {
     expect(screen.queryByText("Anguk Station, Seoul, South Korea")).not.toBeInTheDocument();
   });
 
+  it("uses the app locale for Google place search, details, and the map", async () => {
+    renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
+
+    goToStepThree();
+    const searchInput = screen.getByRole("textbox", { name: "Search Google place" });
+    fireEvent.change(searchInput, { target: { value: "Anguk" } });
+
+    await waitFor(() =>
+      expect(mockedSearchGooglePlacePredictions).toHaveBeenCalledWith(
+        "Anguk",
+        "test-google-key",
+        expect.objectContaining({
+          locale: "ko",
+          fetcher: expect.any(Function),
+          sessionToken: expect.any(String),
+        }),
+      ),
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: /Anguk Station/ }));
+
+    await waitFor(() =>
+      expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith(
+        "ChIJ-anguk",
+        "test-google-key",
+        expect.objectContaining({
+          locale: "ko",
+          fetcher: expect.any(Function),
+          sessionToken: expect.any(String),
+        }),
+      ),
+    );
+    expect(screen.getByTitle("Meeting place map preview")).toHaveAttribute(
+      "src",
+      "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",
+    );
+  });
+
   it("reuses one session token for autocomplete and terminates it after selection", async () => {
     const randomUUID = vi.spyOn(globalThis.crypto, "randomUUID");
     renderWithQueryClient(<CreateActivityForm />);
@@ -213,8 +251,8 @@ describe("CreateActivityForm", () => {
     fireEvent.change(searchInput, { target: { value: "Anguk" } });
     await waitFor(() => expect(mockedSearchGooglePlacePredictions).toHaveBeenCalledTimes(2));
 
-    const firstSessionToken = mockedSearchGooglePlacePredictions.mock.calls[0][3];
-    const secondSessionToken = mockedSearchGooglePlacePredictions.mock.calls[1][3];
+    const firstSessionToken = mockedSearchGooglePlacePredictions.mock.calls[0][2].sessionToken;
+    const secondSessionToken = mockedSearchGooglePlacePredictions.mock.calls[1][2].sessionToken;
     expect(firstSessionToken).toEqual(expect.any(String));
     expect(secondSessionToken).toBe(firstSessionToken);
 
@@ -224,8 +262,11 @@ describe("CreateActivityForm", () => {
       expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith(
         "ChIJ-anguk",
         "test-google-key",
-        expect.any(Function),
-        firstSessionToken,
+        expect.objectContaining({
+          locale: "en",
+          fetcher: expect.any(Function),
+          sessionToken: firstSessionToken,
+        }),
       ),
     );
     expect(randomUUID).toHaveBeenCalledTimes(1);
@@ -238,13 +279,15 @@ describe("CreateActivityForm", () => {
     const searchInput = screen.getByRole("textbox", { name: "Search Google place" });
     fireEvent.change(searchInput, { target: { value: "Ang" } });
     await waitFor(() => expect(mockedSearchGooglePlacePredictions).toHaveBeenCalledTimes(1));
-    const abandonedSessionToken = mockedSearchGooglePlacePredictions.mock.calls[0][3];
+    const abandonedSessionToken = mockedSearchGooglePlacePredictions.mock.calls[0][2].sessionToken;
 
     fireEvent.change(searchInput, { target: { value: "" } });
     fireEvent.change(searchInput, { target: { value: "Anguk" } });
     await waitFor(() => expect(mockedSearchGooglePlacePredictions).toHaveBeenCalledTimes(2));
 
-    expect(mockedSearchGooglePlacePredictions.mock.calls[1][3]).not.toBe(abandonedSessionToken);
+    expect(mockedSearchGooglePlacePredictions.mock.calls[1][2].sessionToken).not.toBe(
+      abandonedSessionToken,
+    );
   });
 
   it("uses three registration steps and removes the draft action", () => {

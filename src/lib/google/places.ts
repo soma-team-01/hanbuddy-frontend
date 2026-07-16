@@ -1,3 +1,6 @@
+import { getExternalLocales } from "@/i18n/external-locales";
+import type { Locale } from "@/i18n/routing";
+
 const GOOGLE_PLACES_API_BASE_URL = "https://places.googleapis.com/v1";
 const GOOGLE_MAPS_EMBED_BASE_URL = "https://www.google.com/maps/embed/v1/place";
 
@@ -13,6 +16,12 @@ export interface GooglePlacePrediction {
 }
 
 type Fetcher = typeof fetch;
+
+interface GooglePlacesOptions {
+  locale: Locale;
+  fetcher?: Fetcher;
+  sessionToken?: string;
+}
 
 interface GooglePlaceDetailsResponse {
   formattedAddress?: string;
@@ -45,7 +54,7 @@ export function normalizeGooglePlaceId(placeId: string) {
   return placeId.trim().replace(/^places\//, "");
 }
 
-export function buildGoogleMapsEmbedUrl(placeId: string, apiKey: string) {
+export function buildGoogleMapsEmbedUrl(placeId: string, apiKey: string, locale: Locale): string {
   const normalizedPlaceId = normalizeGooglePlaceId(placeId);
   const trimmedApiKey = apiKey.trim();
 
@@ -53,9 +62,12 @@ export function buildGoogleMapsEmbedUrl(placeId: string, apiKey: string) {
     return "";
   }
 
+  const { googleLanguage, googleRegion } = getExternalLocales(locale);
   const params = new URLSearchParams({
     key: trimmedApiKey,
     q: `place_id:${normalizedPlaceId}`,
+    language: googleLanguage,
+    region: googleRegion,
   });
 
   return `${GOOGLE_MAPS_EMBED_BASE_URL}?${params.toString()}`;
@@ -64,9 +76,9 @@ export function buildGoogleMapsEmbedUrl(placeId: string, apiKey: string) {
 export async function fetchGooglePlaceDetails(
   placeId: string,
   apiKey: string,
-  fetcher: Fetcher = fetch,
-  sessionToken?: string,
+  options: GooglePlacesOptions,
 ): Promise<GooglePlaceDetails> {
+  const { locale, fetcher = fetch, sessionToken } = options;
   const normalizedPlaceId = normalizeGooglePlaceId(placeId);
   const trimmedApiKey = apiKey.trim();
   const trimmedSessionToken = sessionToken?.trim();
@@ -75,9 +87,15 @@ export async function fetchGooglePlaceDetails(
     throw new Error("Google place id and API key are required.");
   }
 
-  const placeDetailsUrl = `${GOOGLE_PLACES_API_BASE_URL}/places/${normalizedPlaceId}${
-    trimmedSessionToken ? `?sessionToken=${encodeURIComponent(trimmedSessionToken)}` : ""
-  }`;
+  const { googleLanguage, googleRegion } = getExternalLocales(locale);
+  const params = new URLSearchParams({
+    languageCode: googleLanguage,
+    regionCode: googleRegion,
+  });
+  if (trimmedSessionToken) {
+    params.set("sessionToken", trimmedSessionToken);
+  }
+  const placeDetailsUrl = `${GOOGLE_PLACES_API_BASE_URL}/places/${normalizedPlaceId}?${params.toString()}`;
   const response = await fetcher(placeDetailsUrl, {
     headers: {
       "X-Goog-Api-Key": trimmedApiKey,
@@ -98,9 +116,9 @@ export async function fetchGooglePlaceDetails(
 export async function searchGooglePlacePredictions(
   input: string,
   apiKey: string,
-  fetcher: Fetcher = fetch,
-  sessionToken?: string,
+  options: GooglePlacesOptions,
 ): Promise<GooglePlacePrediction[]> {
+  const { locale, fetcher = fetch, sessionToken } = options;
   const trimmedInput = input.trim();
   const trimmedApiKey = apiKey.trim();
   const trimmedSessionToken = sessionToken?.trim();
@@ -109,6 +127,7 @@ export async function searchGooglePlacePredictions(
     return [];
   }
 
+  const { googleLanguage, googleRegion } = getExternalLocales(locale);
   const response = await fetcher(`${GOOGLE_PLACES_API_BASE_URL}/places:autocomplete`, {
     method: "POST",
     headers: {
@@ -120,7 +139,8 @@ export async function searchGooglePlacePredictions(
     body: JSON.stringify({
       input: trimmedInput,
       includedRegionCodes: ["kr"],
-      languageCode: "en",
+      languageCode: googleLanguage,
+      regionCode: googleRegion,
       ...(trimmedSessionToken ? { sessionToken: trimmedSessionToken } : {}),
     }),
   });

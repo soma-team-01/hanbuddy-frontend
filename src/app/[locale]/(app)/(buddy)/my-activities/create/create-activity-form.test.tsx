@@ -15,7 +15,11 @@ import { userKeys } from "@/lib/query/users";
 import { createMockProfile } from "@/test/factories";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
-import { CreateActivityForm } from "./create-activity-form";
+import {
+  CreateActivityForm,
+  type CreateActivityErrorKey,
+  validateCreateActivityStep,
+} from "./create-activity-form";
 
 const routerMock = vi.hoisted(() => ({
   push: vi.fn(),
@@ -61,6 +65,21 @@ const createObjectUrlMock = vi.fn((file: Blob) =>
 );
 const revokeObjectUrlMock = vi.fn();
 const profile = createMockProfile({ userType: "BUDDY" });
+type CreateActivityValidationInput = Parameters<typeof validateCreateActivityStep>[0];
+
+const CREATE_ACTIVITY_VALIDATION_CASES: Array<
+  [CreateActivityErrorKey, Partial<CreateActivityValidationInput>]
+> = [
+  ["photosRequired", { step: 1, selectedPhotoCount: 0, title: "Tea", description: "Tea tasting" }],
+  ["titleRequired", { step: 1, selectedPhotoCount: 1, title: " ", description: "Tea tasting" }],
+  ["descriptionRequired", { step: 1, selectedPhotoCount: 1, title: "Tea", description: " " }],
+  ["scheduleRequired", { step: 2, scheduleDateTimes: [""] }],
+  ["capacityInvalid", { step: 2, maxCapacity: "0" }],
+  ["priceInvalid", { step: 2, price: "50000.5" }],
+  ["meetingPlaceRequired", { step: 3, meetingPlaceId: "" }],
+  ["meetingPointNameRequired", { step: 3, meetingPointName: " " }],
+  ["includedItemRequired", { step: 3, includedItems: [""] }],
+];
 
 function createDeferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
@@ -75,8 +94,8 @@ function confirmRegisterInDialog() {
   fireEvent.click(within(dialog).getByRole("button", { name: "Register" }));
 }
 
-async function selectGooglePlace() {
-  fireEvent.change(screen.getByLabelText("Search Google place"), {
+async function selectGooglePlace(label = "Search Google place") {
+  fireEvent.change(screen.getByLabelText(label), {
     target: { value: "Anguk" },
   });
   fireEvent.click(await screen.findByRole("button", { name: /Anguk Station/ }));
@@ -142,6 +161,36 @@ function goToStepThree(file?: File) {
 async function fillRequiredFields() {
   const file = goToStepThree();
   await fillStepThreeFields();
+  return file;
+}
+
+function goToKoreanStepTwo() {
+  const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
+  fireEvent.change(screen.getByLabelText("액티비티 사진"), {
+    target: { files: [file] },
+  });
+  fireEvent.change(screen.getByLabelText("액티비티 제목"), {
+    target: { value: "Traditional Tea Tasting" },
+  });
+  fireEvent.change(screen.getByLabelText("설명"), {
+    target: { value: "Learn Korean tea etiquette." },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+  return file;
+}
+
+function goToKoreanStepThree() {
+  const file = goToKoreanStepTwo();
+  fireEvent.change(screen.getAllByLabelText("가능한 일정")[0], {
+    target: { value: "2026-07-20T10:00" },
+  });
+  fireEvent.change(screen.getByLabelText("최대 인원"), {
+    target: { value: "4" },
+  });
+  fireEvent.change(screen.getByLabelText("1인당 가격"), {
+    target: { value: "50000" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
   return file;
 }
 
@@ -219,8 +268,8 @@ describe("CreateActivityForm", () => {
   it("uses the app locale for Google place search, details, and the map", async () => {
     renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
 
-    goToStepThree();
-    const searchInput = screen.getByRole("textbox", { name: "Search Google place" });
+    goToKoreanStepThree();
+    const searchInput = screen.getByRole("textbox", { name: "Google 장소 검색" });
     fireEvent.change(searchInput, { target: { value: "Anguk" } });
 
     await waitFor(() =>
@@ -248,7 +297,7 @@ describe("CreateActivityForm", () => {
         }),
       ),
     );
-    expect(screen.getByTitle("Meeting place map preview")).toHaveAttribute(
+    expect(screen.getByTitle("만나는 장소 지도 미리보기")).toHaveAttribute(
       "src",
       "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",
     );
@@ -302,7 +351,7 @@ describe("CreateActivityForm", () => {
     });
 
     expect(await screen.findByText("서울특별시 종로구 안국동")).toBeInTheDocument();
-    expect(screen.getByTitle("Meeting place map preview")).toHaveAttribute(
+    expect(screen.getByTitle("만나는 장소 지도 미리보기")).toHaveAttribute(
       "src",
       "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",
     );
@@ -314,7 +363,7 @@ describe("CreateActivityForm", () => {
 
     expect(screen.queryByText("Jongno-gu, Seoul, South Korea")).not.toBeInTheDocument();
     expect(screen.getByText("서울특별시 종로구 안국동")).toBeInTheDocument();
-    expect(screen.getByTitle("Meeting place map preview")).toHaveAttribute(
+    expect(screen.getByTitle("만나는 장소 지도 미리보기")).toHaveAttribute(
       "src",
       "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",
     );
@@ -410,9 +459,163 @@ describe("CreateActivityForm", () => {
   ] as const)("shows the Seoul time-zone notice in %s", (locale, notice) => {
     renderWithQueryClient(<CreateActivityForm />, { locale });
 
-    goToStepTwo();
+    if (locale === "ko") goToKoreanStepTwo();
+    else goToStepTwo();
 
     expect(screen.getByText(notice)).toBeInTheDocument();
+  });
+
+  it("localizes every create activity field and control in Korean", async () => {
+    renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
+
+    expect(screen.getByText("3단계 중 1단계")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "액티비티 기본 정보" })).toBeInTheDocument();
+    expect(screen.getByLabelText("액티비티 사진")).toBeInTheDocument();
+    expect(screen.getByText("액티비티 사진 업로드")).toBeInTheDocument();
+    expect(
+      screen.getByText("PNG, JPG, WebP 파일을 최대 8장까지 올릴 수 있습니다."),
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("예: 전통 다도 체험")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("참여자가 무엇을 하고 배우는지 설명해 주세요..."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다음 단계" })).toBeInTheDocument();
+
+    goToKoreanStepTwo();
+
+    expect(screen.getByText("3단계 중 2단계")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "일정 및 가격" })).toBeInTheDocument();
+    expect(screen.getByText("예약 가능 일정")).toBeInTheDocument();
+    expect(screen.getByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
+    expect(screen.getByLabelText("가능한 일정")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "일정 추가" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("예: 4명")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("예: 50000")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "일정 추가" }));
+    expect(screen.getByRole("button", { name: "2번째 일정 삭제" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getAllByLabelText("가능한 일정")[0], {
+      target: { value: "2026-07-20T10:00" },
+    });
+    fireEvent.change(screen.getByLabelText("최대 인원"), { target: { value: "4" } });
+    fireEvent.change(screen.getByLabelText("1인당 가격"), { target: { value: "50000" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+
+    expect(screen.getByText("3단계 중 3단계")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "만남 정보" })).toBeInTheDocument();
+    expect(screen.getByText("만나는 장소")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("예: 안국역")).toBeInTheDocument();
+    expect(screen.getByText("장소를 선택하면 지도가 표시됩니다.")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("예: 1번 출구 앞 메인 매표소")).toBeInTheDocument();
+    expect(screen.getByText("포함 사항")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("예: 전통차 2종과 다과")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "포함 사항 추가" })).toBeInTheDocument();
+    expect(screen.getByText("참여 제한")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("예: 거동이 불편한 분")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "참여 제한 추가" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "포함 사항 추가" }));
+    fireEvent.click(screen.getByRole("button", { name: "참여 제한 추가" }));
+    expect(screen.getByRole("button", { name: "2번째 포함 사항 삭제" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2번째 참여 제한 삭제" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "이전 단계" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "액티비티 등록" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Google 장소 검색"), {
+      target: { value: "Anguk" },
+    });
+    expect(screen.getByText("장소를 검색하는 중...")).toBeInTheDocument();
+    expect(await screen.findByRole("list", { name: "Google 장소 검색 결과" })).toBeInTheDocument();
+  });
+
+  it("localizes Google fallback and payout preview copy in Korean", async () => {
+    mockedPreviewActivityPrice.mockResolvedValue({
+      status: "success",
+      preview: {
+        unitPriceKrw: 50000,
+        currency: "KRW",
+        commissionRate: 0.1,
+        platformCommissionAmountKrw: 5000,
+        estimatedGuidePayoutAmountKrw: 45000,
+      },
+    });
+    renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
+    goToKoreanStepTwo();
+
+    const priceInput = screen.getByLabelText("1인당 가격");
+    fireEvent.change(priceInput, { target: { value: "50000" } });
+    fireEvent.blur(priceInput);
+
+    expect(await screen.findByText("플랫폼 수수료 (10%)")).toBeInTheDocument();
+    expect(screen.getByText("예상 정산액")).toBeInTheDocument();
+    expect(screen.getByLabelText("예상 정산액: ₩45,000")).toBeInTheDocument();
+
+    delete process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    fireEvent.change(screen.getAllByLabelText("가능한 일정")[0], {
+      target: { value: "2026-07-20T10:00" },
+    });
+    fireEvent.change(screen.getByLabelText("최대 인원"), { target: { value: "4" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+
+    expect(
+      screen.getByText("현재 Google 장소 검색을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+  });
+
+  it("presents stable create validation and dialog copy in Korean", async () => {
+    renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
+
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "액티비티 사진을 한 장 이상 선택해 주세요.",
+    );
+
+    const file = new File([new Uint8Array([1])], "tea.webp", { type: "image/webp" });
+    fireEvent.change(screen.getByLabelText("액티비티 사진"), { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText("설명"), { target: { value: "설명" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티 제목을 입력해 주세요.");
+
+    fireEvent.change(screen.getByLabelText("액티비티 제목"), { target: { value: "Tea" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+    fireEvent.change(screen.getByLabelText("최대 인원"), { target: { value: "4" } });
+    fireEvent.change(screen.getByLabelText("1인당 가격"), { target: { value: "50000" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("일정을 한 개 이상 추가해 주세요.");
+
+    fireEvent.change(screen.getByLabelText("가능한 일정"), {
+      target: { value: "2026-07-20T10:00" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+    fireEvent.change(screen.getByLabelText("만나는 장소 이름"), {
+      target: { value: "Anguk Station" },
+    });
+    fireEvent.change(screen.getByLabelText("포함 사항"), { target: { value: "Tea" } });
+    fireEvent.click(screen.getByRole("button", { name: "액티비티 등록" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "검색 결과에서 Google 장소를 선택해 주세요.",
+    );
+
+    await selectGooglePlace("Google 장소 검색");
+    fireEvent.click(screen.getByRole("button", { name: "액티비티 등록" }));
+    expect(screen.getByRole("heading", { name: "이 액티비티를 등록할까요?" })).toBeInTheDocument();
+    expect(screen.getByText("등록 후에는 액티비티를 수정할 수 없습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "등록" })).toBeInTheDocument();
+  });
+
+  it("localizes the discard dialog in Korean", () => {
+    renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
+
+    fireEvent.change(screen.getByLabelText("액티비티 제목"), { target: { value: "Tea" } });
+    fireEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
+
+    expect(
+      screen.getByRole("heading", { name: "이 액티비티 작성을 취소할까요?" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("입력한 내용이 모두 사라집니다.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "작성 취소" })).toBeInTheDocument();
   });
 
   it("shows the server-calculated commission and payout after the price input loses focus", async () => {
@@ -453,7 +656,7 @@ describe("CreateActivityForm", () => {
     fireEvent.blur(priceInput);
 
     expect(await screen.findByRole("alert", { name: "Price preview error" })).toHaveTextContent(
-      "버디 프로필 설정이 올바르지 않습니다.",
+      "Could not calculate the estimated payout.",
     );
     expect(screen.getByRole("heading", { name: "Schedule & Pricing" })).toBeInTheDocument();
   });
@@ -513,7 +716,7 @@ describe("CreateActivityForm", () => {
       status: "ACTIVE",
       schedules: [{ startAt: "2026-07-20T10:00:00+09:00" }],
     });
-    expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+    expect(routerMock.push).toHaveBeenCalledWith("/en/my-activities");
     expect(queryClient.getQueryState(buddyKeys.myActivities())?.isInvalidated).toBe(true);
   });
 
@@ -606,6 +809,47 @@ describe("CreateActivityForm", () => {
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
   });
 
+  it.each(CREATE_ACTIVITY_VALIDATION_CASES)(
+    "returns the stable %s validation key",
+    (expectedKey, overrides) => {
+      const input: CreateActivityValidationInput = {
+        step: 1,
+        selectedPhotoCount: 1,
+        title: "Tea",
+        description: "Tea tasting",
+        scheduleDateTimes: ["2026-07-20T10:00"],
+        maxCapacity: "4",
+        price: "50000",
+        meetingPlaceId: "ChIJ-anguk",
+        meetingPointName: "Anguk Station",
+        includedItems: ["Tea"],
+        ...overrides,
+      };
+
+      expect(validateCreateActivityStep(input)).toBe(expectedKey);
+    },
+  );
+
+  it("maps image upload failures to localized copy without exposing the thrown error", async () => {
+    mockedUploadActivityImages.mockRejectedValue(new Error("raw image service failure"));
+    renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
+
+    goToKoreanStepThree();
+    fireEvent.change(screen.getByLabelText("포함 사항"), { target: { value: "Tea" } });
+    fireEvent.change(screen.getByLabelText("만나는 장소 이름"), {
+      target: { value: "Anguk Station" },
+    });
+    await selectGooglePlace("Google 장소 검색");
+    fireEvent.click(screen.getByRole("button", { name: "액티비티 등록" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "등록" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "액티비티 사진을 업로드하지 못했습니다. 다시 시도해 주세요.",
+    );
+    expect(screen.queryByText("raw image service failure")).not.toBeInTheDocument();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+  });
+
   it("does not publish when the confirmation is cancelled", async () => {
     renderWithQueryClient(<CreateActivityForm />);
 
@@ -625,7 +869,7 @@ describe("CreateActivityForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Go back" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+    expect(routerMock.push).toHaveBeenCalledWith("/en/my-activities");
   });
 
   it("asks for confirmation before discarding entered input", () => {
@@ -641,7 +885,7 @@ describe("CreateActivityForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Discard" }));
 
-    expect(routerMock.push).toHaveBeenCalledWith("/my-activities");
+    expect(routerMock.push).toHaveBeenCalledWith("/en/my-activities");
   });
 
   it("keeps the form when the discard confirmation is cancelled", () => {
@@ -666,10 +910,30 @@ describe("CreateActivityForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
     confirmRegisterInDialog();
 
+    expect(screen.getByRole("button", { name: "Uploading photos..." })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Go back" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
+  it("shows the registration state after images finish uploading", async () => {
+    mockedUploadActivityImages.mockResolvedValue([
+      {
+        uploadUrl: "https://bucket.s3.amazonaws.com/activities/tea.webp?signed",
+        imageKey: "activities/2026/07/07/tea.webp",
+        imageUrl: "https://static.hanbuddy.com/activities/tea.webp",
+        expiresInSeconds: 300,
+      },
+    ]);
+    mockedCreateMyActivity.mockReturnValue(new Promise(() => {}));
+    renderWithQueryClient(<CreateActivityForm />);
+
+    await fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
+
+    expect(await screen.findByRole("button", { name: "Registering..." })).toBeDisabled();
   });
 
   it("warns on page unload only while the form is dirty", () => {
@@ -720,8 +984,8 @@ describe("CreateActivityForm", () => {
     renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
-    fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
-    fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add time slot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add time slot" }));
 
     const scheduleInputs = screen.getAllByLabelText("Available schedule");
     fireEvent.change(scheduleInputs[0], { target: { value: "2026-07-20T10:00" } });
@@ -783,7 +1047,7 @@ describe("CreateActivityForm", () => {
 
     goToStepTwo();
     fillStepTwoFields();
-    fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add time slot" }));
     fireEvent.change(screen.getAllByLabelText("Available schedule")[1], {
       target: { value: "2026-07-21T11:00" },
     });
@@ -792,11 +1056,11 @@ describe("CreateActivityForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
     await fillStepThreeFields();
-    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add item" }));
     fireEvent.change(screen.getAllByLabelText("Included item")[1], {
       target: { value: "Extra snack" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "+ Add restriction" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add restriction" }));
     fireEvent.change(screen.getAllByLabelText("Restriction")[1], {
       target: { value: "No nut allergies" },
     });
@@ -825,14 +1089,12 @@ describe("CreateActivityForm", () => {
     renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
-    expect(screen.getByRole("button", { name: "+ Add time slot" })).toHaveClass(
-      "hover:bg-earth/10",
-    );
+    expect(screen.getByRole("button", { name: "Add time slot" })).toHaveClass("hover:bg-earth/10");
     fillStepTwoFields();
     fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
 
-    expect(screen.getByRole("button", { name: "+ Add item" })).toHaveClass("hover:bg-earth/10");
-    expect(screen.getByRole("button", { name: "+ Add restriction" })).toHaveClass(
+    expect(screen.getByRole("button", { name: "Add item" })).toHaveClass("hover:bg-earth/10");
+    expect(screen.getByRole("button", { name: "Add restriction" })).toHaveClass(
       "hover:bg-earth/10",
     );
   });
@@ -841,7 +1103,7 @@ describe("CreateActivityForm", () => {
     renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
-    fireEvent.click(screen.getByRole("button", { name: "+ Add time slot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add time slot" }));
     expect(screen.queryByRole("button", { name: "Remove time slot 1" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove time slot 2" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove time slot 2" })).toHaveClass(
@@ -852,8 +1114,8 @@ describe("CreateActivityForm", () => {
 
     fillStepTwoFields();
     fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
-    fireEvent.click(screen.getByRole("button", { name: "+ Add item" }));
-    fireEvent.click(screen.getByRole("button", { name: "+ Add restriction" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add item" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add restriction" }));
 
     expect(
       screen.queryByRole("button", { name: "Remove included item 1" }),

@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
 import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
-import { formatSeoulDateTime, getSeoulDateTimeParts } from "@/lib/datetime";
+import { formatSeoulDateTime } from "@/lib/datetime";
 import { buddyActivityApplicationsQueryOptions, myActivityQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
@@ -19,19 +19,19 @@ function toActivityId(value: string) {
   return Number.isFinite(parsed) ? parsed : value;
 }
 
-function formatApplicationStatus(status: string) {
-  return status
-    .toLowerCase()
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
+const STATUS_MESSAGE_KEY = {
+  PENDING_PAYMENT: "pendingPayment",
+  CONFIRMED: "confirmed",
+  CANCELLED: "cancelled",
+  COMPLETED: "completed",
+} as const;
 
 export function ApplicantsContent({
   activityId,
   initialScheduleId,
 }: Readonly<ApplicantsContentProps>) {
   const locale = useLocale();
+  const t = useTranslations("Applicants");
   const tErrors = useTranslations("Errors");
   const activityQuery = useQuery({
     ...myActivityQueryOptions(toActivityId(activityId)),
@@ -46,13 +46,13 @@ export function ApplicantsContent({
   const errorMessage =
     relevantActivityError?.message ||
     applicationsQuery.error?.message ||
-    (!initialScheduleId && activityQuery.isSuccess && !scheduleId ? "등록된 일정이 없습니다." : "");
+    (!initialScheduleId && activityQuery.isSuccess && !scheduleId ? t("noSchedule") : "");
   const isLoading =
     (!initialScheduleId && activityQuery.isPending) ||
     (Boolean(scheduleId) && applicationsQuery.isPending);
 
   if (isLoading) {
-    return <p className="py-10 text-center text-ink-soft">Loading applicants...</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
   }
 
   if (errorMessage) {
@@ -61,7 +61,7 @@ export function ApplicantsContent({
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {errorMessage}
+        {relevantActivityError || applicationsQuery.error ? t("loadError") : errorMessage}
       </p>
     );
   }
@@ -71,10 +71,11 @@ export function ApplicantsContent({
   const confirmedCount =
     applications.statusCounts.CONFIRMED ??
     applications.applicants.filter((applicant) => applicant.status === "CONFIRMED").length;
-  const schedule = getSeoulDateTimeParts(applications.startAt);
-  const scheduleLabel = schedule
-    ? `${schedule.date} ${schedule.time}`
-    : tErrors("dateTimeUnavailable");
+  const pendingCount =
+    applications.statusCounts.PENDING_PAYMENT ??
+    applications.applicants.filter((applicant) => applicant.status === "PENDING_PAYMENT").length;
+  const scheduleLabel =
+    formatSeoulDateTime(applications.startAt, locale) ?? tErrors("dateTimeUnavailable");
 
   return (
     <>
@@ -82,14 +83,18 @@ export function ApplicantsContent({
         <h1 className="font-display text-2xl leading-8 font-semibold text-forest">
           {applications.activityTitle}
         </h1>
-        <p className="mt-2 text-ink-soft">
-          {scheduleLabel} • {confirmedCount} confirmed
+        <p className="mt-2 flex flex-wrap items-center gap-1 text-ink-soft">
+          <span>{scheduleLabel}</span>
+          <span aria-hidden>•</span>
+          <span>{t("confirmedCount", { count: confirmedCount })}</span>
+          <span aria-hidden>•</span>
+          <span>{t("pendingCount", { count: pendingCount })}</span>
         </p>
       </div>
 
       {applications.applicants.length === 0 ? (
         <p className="rounded-2xl border border-line bg-white px-4 py-8 text-center text-ink-soft">
-          No applicants for this schedule yet.
+          {t("empty")}
         </p>
       ) : (
         <div className="flex flex-col gap-5">
@@ -120,14 +125,14 @@ export function ApplicantsContent({
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-ink-soft">
                 <span>
-                  Applied for:{" "}
-                  {formatSeoulDateTime(applicant.appliedAt, locale) ??
-                    tErrors("dateTimeUnavailable")}
+                  {t("appliedOn", {
+                    date:
+                      formatSeoulDateTime(applicant.appliedAt, locale) ??
+                      tErrors("dateTimeUnavailable"),
+                  })}
                 </span>
-                <span>
-                  • {applicant.guestCount} guest{applicant.guestCount === 1 ? "" : "s"}
-                </span>
-                <span>• {formatApplicationStatus(applicant.status)}</span>
+                <span>• {t("guestCount", { count: applicant.guestCount })}</span>
+                <span>• {t(`status.${STATUS_MESSAGE_KEY[applicant.status]}`)}</span>
               </div>
               {applicant.specialRequest ? (
                 <p className="rounded-xl bg-sand p-4 text-sm text-ink">

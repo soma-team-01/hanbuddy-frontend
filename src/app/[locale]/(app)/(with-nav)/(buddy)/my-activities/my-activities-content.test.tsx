@@ -135,7 +135,7 @@ describe("MyActivitiesContent", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("활동을 삭제하지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not delete the activity.");
     expect(screen.getByText("Traditional Tea Tasting")).toBeInTheDocument();
   });
 
@@ -180,5 +180,64 @@ describe("MyActivitiesContent", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Delete Bukchon Walking Tour" })).toBeEnabled(),
     );
+  });
+
+  it("localizes status, actions, and the delete dialog in Korean", async () => {
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Traditional Tea Tasting",
+          description: "Learn Korean tea etiquette.",
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+        },
+      ],
+    });
+
+    renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
+
+    expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
+    expect(screen.getByText("Learn Korean tea etiquette.")).toBeInTheDocument();
+    expect(screen.getByText("게시 중")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "신청자 보기" })).toHaveAttribute(
+      "href",
+      "/ko/my-activities/42/applicants",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Traditional Tea Tasting 삭제" }));
+
+    expect(screen.getByRole("heading", { name: "이 액티비티를 삭제할까요?" })).toBeInTheDocument();
+    expect(screen.getByText("삭제한 액티비티는 복구할 수 없습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "삭제" })).toBeInTheDocument();
+  });
+
+  it("localizes the activity loading state in Korean", () => {
+    mockedGetMyActivities.mockReturnValue(new Promise(() => {}));
+
+    renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
+
+    expect(screen.getByText("액티비티를 불러오는 중...")).toBeInTheDocument();
+  });
+
+  it("localizes the empty activity state in Korean", async () => {
+    mockedGetMyActivities.mockResolvedValue({ status: "success", activities: [] });
+
+    renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
+
+    expect(await screen.findByText("아직 등록한 액티비티가 없습니다.")).toBeInTheDocument();
+  });
+
+  it("does not expose the activity API error in Korean", async () => {
+    mockedGetMyActivities.mockResolvedValue({
+      status: "error",
+      message: "raw activity service failure",
+    });
+
+    renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 불러오지 못했습니다.");
+    expect(screen.queryByText("raw activity service failure")).not.toBeInTheDocument();
   });
 });

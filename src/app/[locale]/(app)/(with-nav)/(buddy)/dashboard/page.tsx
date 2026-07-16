@@ -1,9 +1,16 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { PlusIcon } from "@/components/ui/icons";
+import { Link } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
 import { DashboardContent } from "./dashboard-content";
 
-export default function DashboardPage() {
+export default async function DashboardPage({
+  params,
+}: Readonly<{ params: Promise<{ locale: Locale }> }>) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "BuddyDashboard" });
+
   return (
     <>
       <TopAppBar />
@@ -11,13 +18,13 @@ export default function DashboardPage() {
         <DashboardContent />
 
         <section className="flex flex-col gap-4 rounded-2xl bg-chip p-5">
-          <h2 className="font-display text-xl font-semibold text-ink">Quick Actions</h2>
+          <h2 className="font-display text-xl font-semibold text-ink">{t("quickActions")}</h2>
           <Link
             href="/my-activities/create"
             className="flex h-12 items-center justify-center gap-2 rounded-xl bg-forest-soft font-display text-sm font-semibold text-sage transition-colors hover:bg-forest"
           >
             <PlusIcon className="size-4" />
-            Create Activity
+            {t("createActivity")}
           </Link>
         </section>
       </main>

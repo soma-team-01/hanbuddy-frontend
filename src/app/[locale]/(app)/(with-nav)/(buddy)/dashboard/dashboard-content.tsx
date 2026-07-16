@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -13,13 +12,14 @@ import {
   MapPinIcon,
   MessageSquareIcon,
 } from "@/components/ui/icons";
+import { Link } from "@/i18n/navigation";
 import {
   formatApplicantContact,
   formatNationalityCode,
   getActivityThumbnail,
 } from "@/lib/api/buddy-view";
 import type { Locale } from "@/i18n/routing";
-import { getSeoulDateTimeParts, SERVICE_TIME_ZONE } from "@/lib/datetime";
+import { formatSeoulTime, getSeoulDateTimeParts, SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { buddyApplicationsQueryOptions, buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
@@ -38,12 +38,9 @@ function formatDateChip(value: string, locale: Locale, dateTimeUnavailable: stri
   };
 }
 
-function applicantCountLabel(count: number) {
-  return `${count} Applicant${count === 1 ? "" : "s"}`;
-}
-
 export function DashboardContent() {
   const locale = useLocale();
+  const t = useTranslations("BuddyDashboard");
   const tErrors = useTranslations("Errors");
   const [selectedDate, setSelectedDate] = useState("");
   const [requestedDatePage, setRequestedDatePage] = useState<number | null>(null);
@@ -93,15 +90,17 @@ export function DashboardContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {applicationsQuery.error.message}
+        {t("applicantsLoadError")}
       </p>
     );
   } else if (applicationsQuery.isPending) {
-    applicationsContent = <p className="py-8 text-center text-ink-soft">Loading applicants...</p>;
+    applicationsContent = (
+      <p className="py-8 text-center text-ink-soft">{t("loadingApplicants")}</p>
+    );
   } else if (activities.length === 0) {
     applicationsContent = (
       <p className="rounded-2xl border border-line bg-white px-4 py-8 text-center text-ink-soft">
-        No applicants for this date yet.
+        {t("noApplicants")}
       </p>
     );
   } else {
@@ -136,7 +135,7 @@ export function DashboardContent() {
                     {activity.activityTitle}
                   </h3>
                   <span className="mt-1 inline-block rounded-full bg-success-soft px-2.5 py-0.5 font-display text-xs font-semibold text-success">
-                    {applicantCountLabel(activity.totalApplicantCount)}
+                    {t("applicantCount", { count: activity.totalApplicantCount })}
                   </span>
                 </div>
               </Link>
@@ -147,11 +146,10 @@ export function DashboardContent() {
                     className="flex items-center justify-between rounded-xl bg-chip/60 px-3 py-2 transition-colors hover:bg-chip"
                   >
                     <span className="font-display text-sm font-semibold text-ink">
-                      {getSeoulDateTimeParts(schedule.startAt)?.time ??
-                        tErrors("dateTimeUnavailable")}
+                      {formatSeoulTime(schedule.startAt, locale) ?? tErrors("dateTimeUnavailable")}
                     </span>
                     <span className="text-xs text-ink-soft">
-                      {applicantCountLabel(schedule.applicantCount)}
+                      {t("applicantCount", { count: schedule.applicantCount })}
                     </span>
                   </Link>
                   {schedule.applicants.length > 0 ? (
@@ -190,7 +188,7 @@ export function DashboardContent() {
   }
 
   if (scheduleDatesQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">Loading schedule...</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("loadingSchedule")}</p>;
   }
 
   if (scheduleDatesQuery.error) {
@@ -199,23 +197,23 @@ export function DashboardContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {scheduleDatesQuery.error.message}
+        {t("scheduleLoadError")}
       </p>
     );
   }
 
   if (dates.length === 0) {
-    return <p className="py-10 text-center text-ink-soft">No upcoming schedules yet.</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("noUpcoming")}</p>;
   }
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl font-semibold text-forest">Upcoming</h2>
+      <h2 className="font-display text-2xl font-semibold text-forest">{t("upcoming")}</h2>
       <div className="rounded-2xl bg-chip p-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
-            aria-label="Previous 5 dates"
+            aria-label={t("previousDates", { count: DATE_PAGE_SIZE })}
             disabled={currentDatePage === 0}
             onClick={() => setRequestedDatePage(currentDatePage - 1)}
             className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-chip disabled:opacity-30"
@@ -224,15 +222,16 @@ export function DashboardContent() {
           </button>
           <div
             role="group"
-            aria-label="Schedule dates"
+            aria-label={t("scheduleDates")}
             className="grid min-w-0 flex-1 grid-cols-5 gap-2"
           >
             {visibleDates.map(({ date, dateStartAt, hasActivity }) => {
               const chip = formatDateChip(dateStartAt, locale, tErrors("dateTimeUnavailable"));
               const active = date.length > 0 && date === activeDate;
-              const dateAriaLabel = `${[chip.label, chip.day].filter(Boolean).join(" ")}${
-                hasActivity ? ", has activity" : ""
-              }`;
+              const plainDateLabel = [chip.label, chip.day].filter(Boolean).join(" ");
+              const dateAriaLabel = hasActivity
+                ? t("dateWithActivity", { date: plainDateLabel })
+                : plainDateLabel;
               let activityDotClass = "bg-transparent";
               if (hasActivity) activityDotClass = active ? "bg-cream" : "bg-forest";
 
@@ -261,7 +260,7 @@ export function DashboardContent() {
           </div>
           <button
             type="button"
-            aria-label="Next 5 dates"
+            aria-label={t("nextDates", { count: DATE_PAGE_SIZE })}
             disabled={currentDatePage === lastDatePage}
             onClick={() => setRequestedDatePage(currentDatePage + 1)}
             className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-chip disabled:opacity-30"

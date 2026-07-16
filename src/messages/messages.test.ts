@@ -111,4 +111,112 @@ describe("locale messages", () => {
       expect(messages.Payment.paidWithPayPal).toContain("{amount}");
     }
   });
+
+  it("contains the complete Buddy message contract", () => {
+    const requiredKeys = [
+      "BuddyDashboard.quickActions",
+      "BuddyDashboard.createActivity",
+      "BuddyDashboard.upcoming",
+      "BuddyDashboard.loadingSchedule",
+      "BuddyDashboard.noUpcoming",
+      "BuddyDashboard.previousDates",
+      "BuddyDashboard.nextDates",
+      "BuddyDashboard.scheduleDates",
+      "BuddyDashboard.loadingApplicants",
+      "BuddyDashboard.applicantCount",
+      "MyActivities.title",
+      "MyActivities.description",
+      "MyActivities.loading",
+      "MyActivities.empty",
+      "MyActivities.edit",
+      "MyActivities.delete",
+      "MyActivities.deleteTitle",
+      "MyActivities.deleteDescription",
+      "MyActivities.deleting",
+      "Applicants.loading",
+      "Applicants.empty",
+      "Applicants.appliedOn",
+      "Applicants.confirmedCount",
+      "Applicants.pendingCount",
+      "Applicants.status.pendingPayment",
+      "Applicants.status.confirmed",
+      "Applicants.status.cancelled",
+      "Applicants.status.completed",
+      "CreateActivity.activityTitle",
+      "CreateActivity.titlePlaceholder",
+      "CreateActivity.description",
+      "CreateActivity.descriptionPlaceholder",
+      "CreateActivity.activityPhotos",
+      "CreateActivity.uploadPhotos",
+      "CreateActivity.selectedPhotos",
+      "CreateActivity.availability",
+      "CreateActivity.availableSchedule",
+      "CreateActivity.addTimeSlot",
+      "CreateActivity.removeTimeSlot",
+      "CreateActivity.maxCapacity",
+      "CreateActivity.capacityPlaceholder",
+      "CreateActivity.pricePerPerson",
+      "CreateActivity.pricePlaceholder",
+      "CreateActivity.payoutLoading",
+      "CreateActivity.payoutError",
+      "CreateActivity.payoutSummary",
+      "CreateActivity.meetingPoint",
+      "CreateActivity.placeSearch",
+      "CreateActivity.placeSearchPlaceholder",
+      "CreateActivity.placeResults",
+      "CreateActivity.placeSearchLoading",
+      "CreateActivity.placeSearchUnavailable",
+      "CreateActivity.mapFallback",
+      "CreateActivity.meetingPointName",
+      "CreateActivity.meetingPointNamePlaceholder",
+      "CreateActivity.included",
+      "CreateActivity.includedItemPlaceholder",
+      "CreateActivity.addIncludedItem",
+      "CreateActivity.removeIncludedItem",
+      "CreateActivity.restrictions",
+      "CreateActivity.restrictionPlaceholder",
+      "CreateActivity.addRestriction",
+      "CreateActivity.removeRestriction",
+      "CreateActivity.previous",
+      "CreateActivity.next",
+      "CreateActivity.registerActivity",
+      "CreateActivity.registerTitle",
+      "CreateActivity.registerDescription",
+      "CreateActivity.register",
+      "CreateActivity.discardTitle",
+      "CreateActivity.discardDescription",
+      "CreateActivity.discard",
+      "CreateActivity.uploadingPhotos",
+      "CreateActivity.registering",
+      "CreateActivity.kstNotice",
+      "CreateActivity.errors.titleRequired",
+      "CreateActivity.errors.scheduleRequired",
+      "CreateActivity.errors.capacityInvalid",
+      "CreateActivity.errors.priceInvalid",
+      "CreateActivity.errors.meetingPlaceRequired",
+      "CreateActivity.errors.imageUploadFailed",
+    ];
+
+    for (const [locale, messages] of [
+      ["en", flatten(en)],
+      ["ko", flatten(ko)],
+    ] as const) {
+      for (const key of requiredKeys) {
+        expect(messages[key], `${locale}:${key}`).toBeTypeOf("string");
+      }
+    }
+  });
+
+  it("uses ICU numbers and plurals for Buddy counts and payout values", () => {
+    for (const messages of [flatten(en), flatten(ko)]) {
+      expect(messages["BuddyDashboard.applicantCount"]).toContain("plural");
+      expect(messages["Applicants.confirmedCount"]).toContain("plural");
+      expect(messages["Applicants.pendingCount"]).toContain("plural");
+      expect(messages["CreateActivity.capacityPlaceholder"]).toContain("plural");
+      expect(messages["CreateActivity.selectedPhotos"]).toContain("plural");
+      expect(messages["CreateActivity.includedItemsCount"]).toContain("plural");
+      expect(messages["CreateActivity.restrictionsCount"]).toContain("plural");
+      expect(messages["CreateActivity.payoutSummary"]).toContain("number");
+    }
+  });
 });

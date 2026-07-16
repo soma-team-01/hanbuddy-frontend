@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TrashIcon, UsersIcon } from "@/components/ui/icons";
+import { Link } from "@/i18n/navigation";
 import { deleteMyActivity } from "@/lib/api/buddy";
-import { getActivityThumbnail, getMyActivityStatusLabel } from "@/lib/api/buddy-view";
+import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { buddyKeys, myActivitiesQueryOptions } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
@@ -19,7 +20,14 @@ const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
   INACTIVE: "bg-warning-soft text-warning",
 };
 
+const STATUS_MESSAGE_KEY: Record<MyActivityStatus, "active" | "draft" | "inactive"> = {
+  ACTIVE: "active",
+  DRAFT: "draft",
+  INACTIVE: "inactive",
+};
+
 export function MyActivitiesContent() {
+  const t = useTranslations("MyActivities");
   const queryClient = useQueryClient();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const activitiesQuery = useQuery(myActivitiesQueryOptions());
@@ -53,7 +61,7 @@ export function MyActivitiesContent() {
   }
 
   if (activitiesQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">Loading activities...</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
   }
 
   if (activitiesQuery.error) {
@@ -62,13 +70,13 @@ export function MyActivitiesContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {activitiesQuery.error.message}
+        {t("loadError")}
       </p>
     );
   }
 
   if (activities.length === 0) {
-    return <p className="py-10 text-center text-ink-soft">No activities yet.</p>;
+    return <p className="py-10 text-center text-ink-soft">{t("empty")}</p>;
   }
 
   return (
@@ -78,9 +86,12 @@ export function MyActivitiesContent() {
           role="alert"
           className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
         >
-          {deleteActivityMutation.error.message}
+          {t("deleteError")}
         </p>
       ) : null}
+      <p aria-live="polite" className="sr-only">
+        {deleteActivityMutation.isPending ? t("deleting") : ""}
+      </p>
       {activities.map((activity) => (
         <article
           key={activity.activityId}
@@ -104,11 +115,11 @@ export function MyActivitiesContent() {
                 STATUS_BADGE_CLASS[activity.status]
               }`}
             >
-              {getMyActivityStatusLabel(activity.status)}
+              {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
             </span>
             <button
               type="button"
-              aria-label={`Delete ${activity.title}`}
+              aria-label={t("deleteActivity", { title: activity.title })}
               onClick={() => setDeleteTargetId(activity.activityId)}
               disabled={deleteActivityMutation.isPending}
               className="flex size-9 items-center justify-center rounded-full text-ink-soft hover:bg-chip disabled:cursor-not-allowed disabled:opacity-50"
@@ -130,15 +141,15 @@ export function MyActivitiesContent() {
             className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-earth hover:underline"
           >
             <UsersIcon className="size-3.5" />
-            View applicants
+            {t("viewApplicants")}
           </Link>
         </article>
       ))}
       {deleteTargetId !== null && (
         <ConfirmDialog
-          title="Delete this activity?"
-          description="This action cannot be undone."
-          confirmLabel="Delete"
+          title={t("deleteTitle")}
+          description={t("deleteDescription")}
+          confirmLabel={t("delete")}
           tone="danger"
           onConfirm={() => {
             const activityId = deleteTargetId;

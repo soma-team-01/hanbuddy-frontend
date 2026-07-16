@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +8,7 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
+import { useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
 import { toSeoulStartAt } from "@/lib/datetime";
@@ -31,6 +31,7 @@ import type {
   ActivityUpsertRequest,
   MyActivityStatus,
 } from "@/types/buddy";
+import type messages from "@/messages/en.json";
 
 function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
   return <span className="text-sm font-medium text-ink">{children}</span>;
@@ -57,38 +58,77 @@ interface LocalizedMeetingPlaceAddress {
 }
 
 type CreateActivityStep = 1 | 2 | 3;
+type SubmissionPhase = "uploading" | "registering";
 
-interface StepContent {
-  eyebrow: string;
-  title: string;
-  description: string;
-}
-
-type ValidatableControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-
-const STEP_CONTENT: Record<CreateActivityStep, StepContent> = {
+const STEP_CONTENT = {
   1: {
-    eyebrow: "Step 1 of 3",
-    title: "Activity Basics",
-    description: "Add photos and describe the experience guests will discover.",
+    title: "steps.basicsTitle",
+    description: "steps.basicsDescription",
   },
   2: {
-    eyebrow: "Step 2 of 3",
-    title: "Schedule & Pricing",
-    description: "Set when guests can join, how many can attend, and what it costs.",
+    title: "steps.scheduleTitle",
+    description: "steps.scheduleDescription",
   },
   3: {
-    eyebrow: "Step 3 of 3",
-    title: "Meeting Details",
-    description: "Share the meeting place, included items, and participation limits.",
+    title: "steps.meetingTitle",
+    description: "steps.meetingDescription",
   },
-};
+} as const satisfies Record<CreateActivityStep, { title: string; description: string }>;
 
-const STEP_FIELD_NAMES: Record<CreateActivityStep, string[]> = {
-  1: ["title", "description"],
-  2: ["scheduleDateTime", "maxCapacity", "price"],
-  3: ["meetingPointName", "includedItems"],
-};
+export type CreateActivityErrorKey = keyof (typeof messages)["CreateActivity"]["errors"];
+
+interface CreateActivityValidationInput {
+  step: CreateActivityStep;
+  selectedPhotoCount: number;
+  title: string;
+  description: string;
+  scheduleDateTimes: string[];
+  maxCapacity: string;
+  price: string;
+  meetingPlaceId: string;
+  meetingPointName: string;
+  includedItems: string[];
+}
+
+function isPositiveInteger(value: string) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0;
+}
+
+export function validateCreateActivityStep({
+  step,
+  selectedPhotoCount,
+  title,
+  description,
+  scheduleDateTimes,
+  maxCapacity,
+  price,
+  meetingPlaceId,
+  meetingPointName,
+  includedItems,
+}: CreateActivityValidationInput): CreateActivityErrorKey | null {
+  if (step === 1) {
+    if (selectedPhotoCount === 0) return "photosRequired";
+    if (!title.trim()) return "titleRequired";
+    if (!description.trim()) return "descriptionRequired";
+  }
+
+  if (step === 2) {
+    if (!scheduleDateTimes.some((value) => toSeoulStartAt(value.trim()))) {
+      return "scheduleRequired";
+    }
+    if (!isPositiveInteger(maxCapacity)) return "capacityInvalid";
+    if (!isPositiveInteger(price)) return "priceInvalid";
+  }
+
+  if (step === 3) {
+    if (!meetingPlaceId.trim()) return "meetingPlaceRequired";
+    if (!meetingPointName.trim()) return "meetingPointNameRequired";
+    if (!includedItems.some((value) => value.trim())) return "includedItemRequired";
+  }
+
+  return null;
+}
 
 function getNextStep(step: CreateActivityStep): CreateActivityStep {
   return step === 1 ? 2 : 3;
@@ -96,14 +136,6 @@ function getNextStep(step: CreateActivityStep): CreateActivityStep {
 
 function getPreviousStep(step: CreateActivityStep): CreateActivityStep {
   return step === 3 ? 2 : 1;
-}
-
-function isValidatableControl(element: Element): element is ValidatableControl {
-  return (
-    element instanceof HTMLInputElement ||
-    element instanceof HTMLTextAreaElement ||
-    element instanceof HTMLSelectElement
-  );
 }
 
 function getNextRowKey(rows: number[]) {
@@ -149,11 +181,26 @@ function buildSchedules(formData: FormData) {
     .filter((schedule): schedule is { startAt: string } => schedule !== null);
 }
 
+async function uploadSelectedActivityImages(
+  files: File[],
+): Promise<
+  | { imageKeys: string[]; errorKey: null }
+  | { imageKeys: null; errorKey: Extract<CreateActivityErrorKey, "imageUploadFailed"> }
+> {
+  try {
+    const uploadedImages = await uploadActivityImages(files);
+    return { imageKeys: uploadedImages.map((image) => image.imageKey), errorKey: null };
+  } catch (error) {
+    if (error instanceof UnauthenticatedQueryError) throw error;
+    return { imageKeys: null, errorKey: "imageUploadFailed" };
+  }
+}
+
 export function CreateActivityForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const locale = useLocale();
-  const tDateTime = useTranslations("DateTime");
+  const t = useTranslations("CreateActivity");
   useAuthSessionCheck();
   const formRef = useRef<HTMLFormElement>(null);
   const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
@@ -176,8 +223,8 @@ export function CreateActivityForm() {
   const [placePredictions, setPlacePredictions] = useState<GooglePlacePrediction[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
-  const [submittingStatus, setSubmittingStatus] = useState<MyActivityStatus | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
+  const [errorKey, setErrorKey] = useState<CreateActivityErrorKey | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const createActivityMutation = useMutation({
@@ -197,6 +244,7 @@ export function CreateActivityForm() {
       unwrapApiResult(await previewActivityPrice(request), "preview"),
   });
   useAuthQueryRedirect(createActivityMutation.error ?? pricePreviewMutation.error);
+  const googleMapsApiKey = getGoogleMapsApiKey();
 
   function handlePriceChange() {
     pricePreviewMutation.reset();
@@ -234,9 +282,8 @@ export function CreateActivityForm() {
   }, []);
 
   useEffect(() => {
-    const apiKey = getGoogleMapsApiKey();
     const query = meetingPlaceQuery.trim();
-    if (query.length < 3 || !apiKey || query === selectedMeetingPlaceLabel) {
+    if (query.length < 3 || !googleMapsApiKey || query === selectedMeetingPlaceLabel) {
       return;
     }
 
@@ -245,7 +292,7 @@ export function CreateActivityForm() {
     // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
     const timeoutId = window.setTimeout(() => {
       placeSessionTokenRef.current ??= globalThis.crypto.randomUUID();
-      searchGooglePlacePredictions(query, apiKey, {
+      searchGooglePlacePredictions(query, googleMapsApiKey, {
         locale,
         fetcher: fetch,
         sessionToken: placeSessionTokenRef.current,
@@ -268,11 +315,10 @@ export function CreateActivityForm() {
       isMounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [locale, meetingPlaceQuery, selectedMeetingPlaceLabel]);
+  }, [googleMapsApiKey, locale, meetingPlaceQuery, selectedMeetingPlaceLabel]);
 
   useEffect(() => {
-    const apiKey = getGoogleMapsApiKey();
-    if (!meetingPlaceId || !apiKey) return;
+    if (!meetingPlaceId || !googleMapsApiKey) return;
 
     const pendingSession = selectedPlaceSessionTokenRef.current;
     const sessionToken =
@@ -284,7 +330,7 @@ export function CreateActivityForm() {
     const requestVersion = ++placeSelectionVersionRef.current;
     let isActive = true;
 
-    fetchGooglePlaceDetails(meetingPlaceId, apiKey, {
+    fetchGooglePlaceDetails(meetingPlaceId, googleMapsApiKey, {
       locale,
       fetcher: fetch,
       ...(sessionToken ? { sessionToken } : {}),
@@ -306,14 +352,14 @@ export function CreateActivityForm() {
     return () => {
       isActive = false;
     };
-  }, [locale, meetingPlaceId]);
+  }, [googleMapsApiKey, locale, meetingPlaceId]);
 
   const selectedFiles = selectedPhotos.map((photo) => photo.file);
   const stepContent = STEP_CONTENT[currentStep];
 
   function handleBack() {
     // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
-    if (submittingStatus !== null) return;
+    if (submissionPhase !== null) return;
     if (isDirty) {
       setShowDiscardConfirm(true);
       return;
@@ -321,36 +367,28 @@ export function CreateActivityForm() {
     router.push("/my-activities");
   }
 
-  function validateNamedControls(fieldNames: string[]) {
+  function validateStep(step: CreateActivityStep) {
     const form = formRef.current;
     if (!form) return false;
-
-    const controls = Array.from(form.elements).filter(isValidatableControl);
-    for (const fieldName of fieldNames) {
-      for (const control of controls.filter((element) => element.name === fieldName)) {
-        if (!control.checkValidity()) {
-          control.reportValidity();
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  function validateStep(step: CreateActivityStep) {
-    setErrorMessage("");
-    if (step === 1 && selectedFiles.length === 0) {
-      setErrorMessage("Please select at least one activity photo.");
-      return false;
-    }
-    if (!validateNamedControls(STEP_FIELD_NAMES[step])) {
-      return false;
-    }
-    if (step === 3 && !meetingPlaceId) {
-      setErrorMessage("Please select a Google place from the results.");
-      return false;
-    }
-    return true;
+    const formData = new FormData(form);
+    const validationError = validateCreateActivityStep({
+      step,
+      selectedPhotoCount: selectedFiles.length,
+      title: getString(formData, "title"),
+      description: getString(formData, "description"),
+      scheduleDateTimes: formData
+        .getAll("scheduleDateTime")
+        .map((value) => (typeof value === "string" ? value : "")),
+      maxCapacity: getString(formData, "maxCapacity"),
+      price: getString(formData, "price"),
+      meetingPlaceId,
+      meetingPointName: getString(formData, "meetingPointName"),
+      includedItems: formData
+        .getAll("includedItems")
+        .map((value) => (typeof value === "string" ? value : "")),
+    });
+    setErrorKey(validationError);
+    return validationError === null;
   }
 
   function goToNextStep() {
@@ -359,7 +397,7 @@ export function CreateActivityForm() {
   }
 
   function goToPreviousStep() {
-    setErrorMessage("");
+    setErrorKey(null);
     setCurrentStep(getPreviousStep(currentStep));
   }
 
@@ -383,15 +421,21 @@ export function CreateActivityForm() {
     const meetingPointName = getString(formData, "meetingPointName");
     const selectedMeetingPlaceId = getString(formData, "meetingPlaceId");
 
-    setErrorMessage("");
-    setSubmittingStatus(status);
+    setErrorKey(null);
+    setSubmissionPhase("uploading");
 
     try {
-      const uploadedImages = await uploadActivityImages(selectedFiles);
+      const uploadedImages = await uploadSelectedActivityImages(selectedFiles);
+      if (uploadedImages.errorKey) {
+        setErrorKey(uploadedImages.errorKey);
+        setSubmissionPhase(null);
+        return;
+      }
+      setSubmissionPhase("registering");
       const request: ActivityUpsertRequest = {
         title: getString(formData, "title"),
         description: getString(formData, "description"),
-        imageKeys: uploadedImages.map((image) => image.imageKey),
+        imageKeys: uploadedImages.imageKeys,
         includedItems: getStringList(formData, "includedItems"),
         restrictionNotes: getStringList(formData, "restrictionNotes"),
         maxCapacity: Number(getString(formData, "maxCapacity")),
@@ -405,8 +449,8 @@ export function CreateActivityForm() {
       await createActivityMutation.mutateAsync(request);
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      setErrorMessage(error instanceof Error ? error.message : "Failed to register the activity.");
-      setSubmittingStatus(null);
+      setErrorKey("submissionFailed");
+      setSubmissionPhase(null);
     }
   }
 
@@ -422,7 +466,7 @@ export function CreateActivityForm() {
     setSelectedMeetingPlaceLabel("");
     setSelectedMeetingPlaceAddress(null);
     setPlacePredictions([]);
-    setIsSearchingPlaces(value.trim().length >= 3 && Boolean(getGoogleMapsApiKey()));
+    setIsSearchingPlaces(value.trim().length >= 3 && Boolean(googleMapsApiKey));
   }
 
   function handlePlaceSelect(prediction: GooglePlacePrediction) {
@@ -497,9 +541,9 @@ export function CreateActivityForm() {
     setIsDirty(true);
   }
 
-  const isSubmitting = submittingStatus !== null;
+  const isSubmitting = submissionPhase !== null;
   const meetingMapUrl = meetingPlaceId
-    ? buildGoogleMapsEmbedUrl(meetingPlaceId, getGoogleMapsApiKey(), locale)
+    ? buildGoogleMapsEmbedUrl(meetingPlaceId, googleMapsApiKey, locale)
     : "";
 
   return (
@@ -514,20 +558,20 @@ export function CreateActivityForm() {
       <main className="flex flex-1 flex-col gap-6 px-4 py-8">
         <div>
           <p className="font-display text-xs font-semibold tracking-widest text-earth uppercase">
-            {stepContent.eyebrow}
+            {t("steps.progress", { current: currentStep, total: 3 })}
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold text-forest">
-            {stepContent.title}
+            {t(stepContent.title)}
           </h1>
-          <p className="mt-2 text-ink-soft">{stepContent.description}</p>
+          <p className="mt-2 text-ink-soft">{t(stepContent.description)}</p>
         </div>
 
-        {errorMessage ? (
+        {errorKey ? (
           <p
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {errorMessage}
+            {t(`errors.${errorKey}`)}
           </p>
         ) : null}
 
@@ -538,23 +582,23 @@ export function CreateActivityForm() {
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
-                aria-label="Activity photos"
+                aria-label={t("activityPhotos")}
                 className="sr-only"
                 onChange={handlePhotoSelection}
               />
               <ImagePlusIcon className="size-8" />
               <span className="font-display text-sm font-semibold text-ink">
-                Click to upload activity photos
+                {t("uploadPhotos")}
               </span>
               <span className="text-xs">
                 {selectedFiles.length > 0
-                  ? `${selectedFiles.length} selected`
-                  : "PNG, JPG, WebP up to 8 files"}
+                  ? t("selectedPhotos", { count: selectedFiles.length })
+                  : t("photoHint")}
               </span>
             </label>
 
             {selectedPhotos.length > 0 ? (
-              <ul aria-label="Selected activity photos" className="grid grid-cols-4 gap-2">
+              <ul aria-label={t("selectedPhotosList")} className="grid grid-cols-4 gap-2">
                 {selectedPhotos.map((photo) => (
                   <li
                     key={photo.id}
@@ -570,7 +614,7 @@ export function CreateActivityForm() {
                     />
                     <button
                       type="button"
-                      aria-label={`Remove photo ${photo.file.name}`}
+                      aria-label={t("removePhoto", { name: photo.file.name })}
                       onClick={() => removeSelectedPhoto(photo.id)}
                       className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-cream transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
                     >
@@ -583,23 +627,23 @@ export function CreateActivityForm() {
           </div>
 
           <label className="flex flex-col gap-2">
-            <FieldLabel>Activity Title</FieldLabel>
+            <FieldLabel>{t("activityTitle")}</FieldLabel>
             <input
               type="text"
               name="title"
               required
-              placeholder="e.g., Traditional Tea Ceremony Experience"
+              placeholder={t("titlePlaceholder")}
               className={INPUT_CLASS}
             />
           </label>
 
           <label className="flex flex-col gap-2">
-            <FieldLabel>Description</FieldLabel>
+            <FieldLabel>{t("description")}</FieldLabel>
             <textarea
               name="description"
               required
               rows={4}
-              placeholder="Describe what participants will do and learn..."
+              placeholder={t("descriptionPlaceholder")}
               className={`${INPUT_CLASS} resize-none`}
             />
           </label>
@@ -607,33 +651,38 @@ export function CreateActivityForm() {
 
         <section hidden={currentStep !== 2} className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <FieldLabel>Availability</FieldLabel>
-            <p className="text-xs text-ink-soft">{tDateTime("kstNotice")}</p>
+            <FieldLabel>{t("availability")}</FieldLabel>
+            <p className="text-xs text-ink-soft">{t("kstNotice")}</p>
             {timeSlots.map((key, index) => (
               <div key={key} className="relative">
                 <input
                   name="scheduleDateTime"
                   type="datetime-local"
                   required={index === 0}
-                  aria-label="Available schedule"
+                  aria-label={t("availableSchedule")}
                   className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
                 />
                 {index > 0 ? (
                   <InlineRemoveButton
-                    ariaLabel={`Remove time slot ${index + 1}`}
-                    title="Remove time slot"
+                    ariaLabel={t("removeTimeSlot", { index: index + 1 })}
+                    title={t("removeTimeSlotTitle")}
                     onClick={() => removeTimeSlot(key)}
                   />
                 ) : null}
               </div>
             ))}
-            <button type="button" onClick={addTimeSlot} className={ADD_ROW_BUTTON_CLASS}>
-              + Add time slot
+            <button
+              type="button"
+              aria-label={t("addTimeSlot")}
+              onClick={addTimeSlot}
+              className={ADD_ROW_BUTTON_CLASS}
+            >
+              + {t("addTimeSlot")}
             </button>
           </div>
 
           <label className="flex flex-col gap-2">
-            <FieldLabel>Max Capacity</FieldLabel>
+            <FieldLabel>{t("maxCapacity")}</FieldLabel>
             <span className="relative">
               <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-soft" />
               <input
@@ -641,14 +690,14 @@ export function CreateActivityForm() {
                 type="number"
                 min={1}
                 required
-                placeholder="e.g., 4"
+                placeholder={t("capacityPlaceholder", { count: 4 })}
                 className={`${INPUT_CLASS} pl-11`}
               />
             </span>
           </label>
 
           <label className="flex flex-col gap-2">
-            <FieldLabel>Price per person</FieldLabel>
+            <FieldLabel>{t("pricePerPerson")}</FieldLabel>
             <span className="relative">
               <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-ink-soft">
                 ₩
@@ -659,36 +708,36 @@ export function CreateActivityForm() {
                 min={1}
                 step={1}
                 required
-                aria-label="Price per person"
-                placeholder="e.g., 50000"
+                aria-label={t("pricePerPerson")}
+                placeholder={t("pricePlaceholder")}
                 className={`${INPUT_CLASS} pl-11`}
                 onChange={handlePriceChange}
                 onBlur={handlePriceBlur}
               />
             </span>
             {pricePreviewMutation.isPending ? (
-              <output className="text-xs text-ink-soft">Calculating estimated payout...</output>
+              <output className="text-xs text-ink-soft">{t("payoutLoading")}</output>
             ) : null}
             {pricePreviewMutation.error ? (
-              <span role="alert" aria-label="Price preview error" className="text-xs text-danger">
-                {pricePreviewMutation.error.message}
+              <span role="alert" aria-label={t("payoutErrorLabel")} className="text-xs text-danger">
+                {t("payoutError")}
               </span>
             ) : null}
             {pricePreviewMutation.data ? (
               <dl
-                aria-label="Estimated payout"
+                aria-label={t("payoutSummary", {
+                  amount: pricePreviewMutation.data.estimatedGuidePayoutAmountKrw,
+                })}
                 className="flex flex-col gap-2 rounded-xl bg-chip px-4 py-3 text-sm"
               >
                 <div className="flex items-center justify-between text-ink-soft">
-                  <dt>
-                    Platform fee ({Math.round(pricePreviewMutation.data.commissionRate * 100)}%)
-                  </dt>
+                  <dt>{t("platformFee", { rate: pricePreviewMutation.data.commissionRate })}</dt>
                   <dd>
                     {formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw, locale)}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between font-semibold text-forest">
-                  <dt>Estimated payout</dt>
+                  <dt>{t("estimatedPayout")}</dt>
                   <dd>
                     {formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw, locale)}
                   </dd>
@@ -700,7 +749,7 @@ export function CreateActivityForm() {
 
         <section hidden={currentStep !== 3} className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <FieldLabel>Meeting Point</FieldLabel>
+            <FieldLabel>{t("meetingPoint")}</FieldLabel>
             <label className="flex flex-col">
               <span className="relative">
                 <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-soft" />
@@ -708,16 +757,19 @@ export function CreateActivityForm() {
                   type="text"
                   value={meetingPlaceQuery}
                   onChange={handlePlaceQueryChange}
-                  placeholder="e.g., Anguk Station"
-                  aria-label="Search Google place"
+                  placeholder={t("placeSearchPlaceholder")}
+                  aria-label={t("placeSearch")}
                   className={`${INPUT_CLASS} pl-11`}
                 />
               </span>
             </label>
+            {!googleMapsApiKey ? (
+              <p className="px-1 text-xs text-ink-soft">{t("placeSearchUnavailable")}</p>
+            ) : null}
             <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
             {placePredictions.length > 0 ? (
               <ul
-                aria-label="Google place results"
+                aria-label={t("placeResults")}
                 className="overflow-hidden rounded-xl border border-line bg-white"
               >
                 {placePredictions.map((prediction) => (
@@ -737,14 +789,14 @@ export function CreateActivityForm() {
               </ul>
             ) : null}
             {isSearchingPlaces ? (
-              <p className="px-1 text-xs text-ink-soft">Searching places...</p>
+              <p className="px-1 text-xs text-ink-soft">{t("placeSearchLoading")}</p>
             ) : null}
             {selectedMeetingPlaceAddress?.locale === locale ? (
               <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress.value}</p>
             ) : null}
             {meetingMapUrl ? (
               <iframe
-                title="Meeting place map preview"
+                title={t("mapTitle")}
                 src={meetingMapUrl}
                 className="h-40 w-full rounded-xl border-0"
                 loading="lazy"
@@ -754,70 +806,88 @@ export function CreateActivityForm() {
             ) : (
               <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
                 <MapIcon className="size-6" />
-                <span className="text-sm">Map preview will appear here</span>
+                <span className="text-sm">{t("mapFallback")}</span>
               </div>
             )}
             <label className="mt-2 flex flex-col gap-2">
-              <FieldLabel>Meeting point name</FieldLabel>
+              <FieldLabel>{t("meetingPointName")}</FieldLabel>
               <input
                 name="meetingPointName"
                 type="text"
                 required
-                placeholder="e.g., Main ticket booth by Gate 1"
-                aria-label="Meeting place name"
+                placeholder={t("meetingPointNamePlaceholder")}
+                aria-label={t("meetingPointName")}
                 className={INPUT_CLASS}
               />
             </label>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <FieldLabel>What&apos;s included</FieldLabel>
+          <div
+            role="group"
+            aria-label={t("includedItemsCount", { count: includedItems.length })}
+            className="flex flex-col gap-2"
+          >
+            <FieldLabel>{t("included")}</FieldLabel>
             {includedItems.map((key, index) => (
               <div key={key} className="relative">
                 <input
                   name="includedItems"
                   type="text"
                   required={index === 0}
-                  placeholder="e.g., 2 types of traditional tea & refreshments"
-                  aria-label="Included item"
+                  placeholder={t("includedItemPlaceholder")}
+                  aria-label={t("includedItem")}
                   className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
                 />
                 {index > 0 ? (
                   <InlineRemoveButton
-                    ariaLabel={`Remove included item ${index + 1}`}
-                    title="Remove item"
+                    ariaLabel={t("removeIncludedItem", { index: index + 1 })}
+                    title={t("removeIncludedItemTitle")}
                     onClick={() => removeIncludedItem(key)}
                   />
                 ) : null}
               </div>
             ))}
-            <button type="button" onClick={addIncludedItem} className={ADD_ROW_BUTTON_CLASS}>
-              + Add item
+            <button
+              type="button"
+              aria-label={t("addIncludedItem")}
+              onClick={addIncludedItem}
+              className={ADD_ROW_BUTTON_CLASS}
+            >
+              + {t("addIncludedItem")}
             </button>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Who cannot join</FieldLabel>
+          <div
+            role="group"
+            aria-label={t("restrictionsCount", { count: restrictions.length })}
+            className="flex flex-col gap-2"
+          >
+            <FieldLabel>{t("restrictions")}</FieldLabel>
             {restrictions.map((key, index) => (
               <div key={key} className="relative">
                 <input
                   name="restrictionNotes"
                   type="text"
-                  placeholder="e.g., People with mobility difficulties"
-                  aria-label="Restriction"
+                  placeholder={t("restrictionPlaceholder")}
+                  aria-label={t("restriction")}
                   className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
                 />
                 {index > 0 ? (
                   <InlineRemoveButton
-                    ariaLabel={`Remove restriction ${index + 1}`}
-                    title="Remove restriction"
+                    ariaLabel={t("removeRestriction", { index: index + 1 })}
+                    title={t("removeRestrictionTitle")}
                     onClick={() => removeRestriction(key)}
                   />
                 ) : null}
               </div>
             ))}
-            <button type="button" onClick={addRestriction} className={ADD_ROW_BUTTON_CLASS}>
-              + Add restriction
+            <button
+              type="button"
+              aria-label={t("addRestriction")}
+              onClick={addRestriction}
+              className={ADD_ROW_BUTTON_CLASS}
+            >
+              + {t("addRestriction")}
             </button>
           </div>
         </section>
@@ -829,7 +899,7 @@ export function CreateActivityForm() {
           disabled={isSubmitting}
           className="h-12 flex-1 rounded-xl border border-line bg-chip font-display text-sm font-semibold text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-line disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {currentStep === 1 ? "Cancel" : "Previous Step"}
+          {currentStep === 1 ? t("cancel") : t("previous")}
         </button>
         <button
           type="button"
@@ -837,14 +907,20 @@ export function CreateActivityForm() {
           disabled={isSubmitting}
           className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {currentStep === 3 ? "Register Activity" : "Next Step"}
+          {submissionPhase === "uploading"
+            ? t("uploadingPhotos")
+            : submissionPhase === "registering"
+              ? t("registering")
+              : currentStep === 3
+                ? t("registerActivity")
+                : t("next")}
         </button>
       </BottomActionBar>
       {pendingPublish && (
         <ConfirmDialog
-          title="Register this activity?"
-          description="You can't edit an activity after publishing."
-          confirmLabel="Register"
+          title={t("registerTitle")}
+          description={t("registerDescription")}
+          confirmLabel={t("register")}
           onConfirm={() => {
             const formData = pendingPublish;
             setPendingPublish(null);
@@ -855,9 +931,9 @@ export function CreateActivityForm() {
       )}
       {showDiscardConfirm && (
         <ConfirmDialog
-          title="Discard this activity?"
-          description="Your changes will be lost."
-          confirmLabel="Discard"
+          title={t("discardTitle")}
+          description={t("discardDescription")}
+          confirmLabel={t("discard")}
           tone="danger"
           onConfirm={() => router.push("/my-activities")}
           onClose={() => setShowDiscardConfirm(false)}

@@ -135,7 +135,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     const nameEntry = formData.get("name");
     const ageEntry = formData.get("age");
     const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
-    const age = typeof ageEntry === "string" ? Number(ageEntry) : Number.NaN;
+    const age = typeof ageEntry === "string" && ageEntry.trim() ? Number(ageEntry) : Number.NaN;
     const contactIdentifier = messagingContact.trim();
 
     if (!name) {
@@ -210,7 +210,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
           </button>
         }
       />
-      <form id="edit-profile-form" onSubmit={handleSubmit} className="contents">
+      <form id="edit-profile-form" noValidate onSubmit={handleSubmit} className="contents">
         <main className="flex flex-1 flex-col gap-8 px-4 py-8">
           <section className="flex flex-col items-center gap-3">
             <div className="relative">

@@ -126,11 +126,52 @@ describe("EditProfilePage", () => {
     const nameInput = await screen.findByLabelText(name);
     fireEvent.change(nameInput, { target: { value: " " } });
 
-    fireEvent.submit(nameInput.closest("form")!);
+    fireEvent.click(screen.getByRole("button", { name: save }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
     expect(screen.getByRole("button", { name: save })).toBeInTheDocument();
   });
+
+  it.each([
+    ["en", "", "Age", "Save", "Enter an age from 0 to 150."],
+    ["en", "151", "Age", "Save", "Enter an age from 0 to 150."],
+    ["ko", "", "나이", "저장", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
+    ["ko", "151", "나이", "저장", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
+  ] as const)(
+    "shows localized age validation after a real %s submit with age %s",
+    async (locale, value, ageLabel, save, message) => {
+      renderWithQueryClient(<EditProfilePage />, { locale });
+      const ageInput = await screen.findByLabelText(ageLabel);
+      fireEvent.change(ageInput, { target: { value } });
+
+      fireEvent.click(screen.getByRole("button", { name: save }));
+
+      expect(screen.getByRole("alert")).toHaveTextContent(message);
+      expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    [
+      "en",
+      "Messaging phone number",
+      "Save",
+      "Enter a contact ID or number with at least 2 characters.",
+    ],
+    ["ko", "메신저 전화번호", "저장", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
+  ] as const)(
+    "shows localized contact validation after a real %s submit",
+    async (locale, contactLabel, save, message) => {
+      renderWithQueryClient(<EditProfilePage />, { locale });
+      const contactInput = await screen.findByLabelText(contactLabel);
+      fireEvent.change(contactInput, { target: { value: "" } });
+
+      fireEvent.click(screen.getByRole("button", { name: save }));
+
+      expect(screen.getByRole("alert")).toHaveTextContent(message);
+      expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not apply the Korean-only phone input to tourists", async () => {
     renderWithQueryClient(<EditProfilePage />);

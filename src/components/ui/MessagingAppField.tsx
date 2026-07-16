@@ -101,7 +101,7 @@ export function MessagingAppField({
                 value={country}
                 onChange={onCountryChange}
                 display="dialCode"
-                ariaLabel="Messaging country code"
+                ariaLabel={t("countryCode")}
                 triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong"
               />
             </div>
@@ -115,8 +115,8 @@ export function MessagingAppField({
               const digits = toDigits(e.target.value);
               onContactChange(koreanOnly ? digits.slice(0, 11) : digits);
             }}
-            placeholder={koreanOnly ? "010-XXXX-XXXX" : "Phone number"}
-            aria-label="Messaging phone number"
+            placeholder={koreanOnly ? t("koreanPhonePlaceholder") : t("phonePlaceholder")}
+            aria-label={t("phoneInputLabel")}
             className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
           />
         </div>
@@ -127,8 +127,10 @@ export function MessagingAppField({
           required={inputRequired}
           value={contactValue}
           onChange={(e) => onContactChange(e.target.value)}
-          placeholder={`${MESSAGING_APPS.find((item) => item.key === app)?.label} ID`}
-          aria-label="Messaging app ID"
+          placeholder={t("appIdPlaceholder", {
+            app: MESSAGING_APPS.find((item) => item.key === app)?.label ?? t("phoneNumber"),
+          })}
+          aria-label={t("appIdInputLabel")}
           className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
         />
       )}

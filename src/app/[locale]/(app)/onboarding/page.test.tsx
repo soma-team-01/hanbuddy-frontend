@@ -6,6 +6,10 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { OnboardingForm } from "./OnboardingForm";
 import { generateMetadata } from "./page";
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 vi.mock("next-intl/server", async () => {
   const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
     import("next-intl"),
@@ -94,11 +98,56 @@ describe("OnboardingForm", () => {
     ["en", "Please select a nationality."],
     ["ko", "국적을 선택해 주세요."],
   ] as const)("localizes validation for %s", (locale, message) => {
-    const { container } = renderWithIntl(<OnboardingForm />, { locale });
+    renderWithIntl(<OnboardingForm />, { locale });
 
-    fireEvent.submit(container.querySelector("form")!);
+    fireEvent.click(
+      screen.getByRole("button", { name: locale === "ko" ? "가입 완료" : "Complete Registration" }),
+    );
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
+  });
+
+  it.each([
+    ["en", "", "Enter an age from 0 to 150."],
+    ["en", "151", "Enter an age from 0 to 150."],
+    ["ko", "", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
+    ["ko", "151", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
+  ] as const)(
+    "shows localized age validation after a real %s submit with age %s",
+    (locale, age, message) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(<OnboardingForm />, { locale });
+      fillLocalizedOnboardingFields(locale, { age, contact: "line_user" });
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: locale === "ko" ? "가입 완료" : "Complete Registration",
+        }),
+      );
+
+      expect(screen.getByRole("alert")).toHaveTextContent(message);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["en", "Enter a contact ID or number with at least 2 characters."],
+    ["ko", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
+  ] as const)("shows localized contact validation after a real %s submit", (locale, message) => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm />, { locale });
+    fillLocalizedOnboardingFields(locale, { age: "25", contact: "" });
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: locale === "ko" ? "가입 완료" : "Complete Registration",
+      }),
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(message);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("does not render the Korean Phone Number field", () => {
@@ -134,6 +183,41 @@ describe("OnboardingForm", () => {
     expect(screen.getByLabelText("Messaging phone number")).toHaveValue("");
   });
 });
+
+function fillLocalizedOnboardingFields(
+  locale: "en" | "ko",
+  values: { age: string; contact: string },
+) {
+  Element.prototype.scrollIntoView = vi.fn();
+  const labels =
+    locale === "ko"
+      ? {
+          nationality: "국적",
+          searchCountry: "국가 검색",
+          country: "미국",
+          age: "나이",
+          appId: "메신저 앱 ID",
+        }
+      : {
+          nationality: "Nationality",
+          searchCountry: "Search country",
+          country: "United States",
+          age: "Age",
+          appId: "Messaging app ID",
+        };
+
+  fireEvent.click(screen.getByRole("button", { name: labels.nationality }));
+  fireEvent.change(screen.getByLabelText(labels.searchCountry), {
+    target: { value: labels.country },
+  });
+  fireEvent.click(screen.getByText(labels.country));
+  fireEvent.change(screen.getByLabelText(labels.age), { target: { value: values.age } });
+  if (values.contact) {
+    fireEvent.change(screen.getByLabelText(labels.appId), {
+      target: { value: values.contact },
+    });
+  }
+}
 
 describe("OnboardingForm profile image", () => {
   beforeAll(() => {

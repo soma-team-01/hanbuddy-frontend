@@ -69,6 +69,30 @@ describe("MessagingAppField", () => {
     expect(screen.getByRole("button", { name: "전화번호" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "WhatsApp" })).toBeInTheDocument();
   });
+
+  it.each([
+    ["whatsapp", "WhatsApp"],
+    ["phone", "전화번호"],
+  ] as const)("localizes the Korean phone field for the %s state", (app, selectedOption) => {
+    renderField({ app }, "ko");
+
+    expect(screen.getByRole("button", { name: selectedOption })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByLabelText("메신저 국가번호")).toBeInTheDocument();
+    expect(screen.getByLabelText("메신저 전화번호")).toHaveAttribute("placeholder", "전화번호");
+  });
+
+  it.each([
+    ["line", "Line"],
+    ["wechat", "WeChat"],
+  ] as const)("preserves the %s brand in the localized Korean ID field", (app, brand) => {
+    renderField({ app }, "ko");
+
+    expect(screen.getByRole("button", { name: brand })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("메신저 앱 ID")).toHaveAttribute("placeholder", `${brand} ID`);
+  });
 });
 
 describe("shared localized selectors and statuses", () => {

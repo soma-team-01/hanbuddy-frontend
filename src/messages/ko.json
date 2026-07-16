@@ -133,7 +133,13 @@
     "noResults": "검색 결과가 없습니다"
   },
   "Messaging": {
-    "phoneNumber": "전화번호"
+    "phoneNumber": "전화번호",
+    "countryCode": "메신저 국가번호",
+    "phonePlaceholder": "전화번호",
+    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "phoneInputLabel": "메신저 전화번호",
+    "appIdPlaceholder": "{app} ID",
+    "appIdInputLabel": "메신저 앱 ID"
   },
   "MyPage": {
     "language": "언어",

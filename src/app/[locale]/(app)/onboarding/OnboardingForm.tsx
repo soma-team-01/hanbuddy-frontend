@@ -105,7 +105,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     setErrorMessage("");
 
     const formData = new FormData(event.currentTarget);
-    const age = Number(formData.get("age"));
+    const ageEntry = formData.get("age");
+    const age = typeof ageEntry === "string" && ageEntry.trim() ? Number(ageEntry) : Number.NaN;
     const contactIdentifier = messagingContact.trim();
 
     if (!nationality) {
@@ -199,7 +200,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   return (
     <div className="flex flex-1 flex-col pb-28">
       <TopAppBar closeHref="/login" />
-      <form id="google-onboarding-form" onSubmit={handleSubmit} className="contents">
+      <form id="google-onboarding-form" noValidate onSubmit={handleSubmit} className="contents">
         <main className="flex flex-1 flex-col gap-8 px-4 py-8">
           <section className="flex flex-col items-center gap-3">
             <div className="relative">

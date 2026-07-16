@@ -133,7 +133,13 @@
     "noResults": "No countries found"
   },
   "Messaging": {
-    "phoneNumber": "Phone Number"
+    "phoneNumber": "Phone Number",
+    "countryCode": "Messaging country code",
+    "phonePlaceholder": "Phone number",
+    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "phoneInputLabel": "Messaging phone number",
+    "appIdPlaceholder": "{app} ID",
+    "appIdInputLabel": "Messaging app ID"
   },
   "MyPage": {
     "language": "Language",

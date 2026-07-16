@@ -30,6 +30,14 @@
   "Messaging": {
     "phoneNumber": "전화번호"
   },
+  "MyPage": {
+    "language": "언어",
+    "languageSheetTitle": "언어",
+    "english": "English",
+    "korean": "한국어",
+    "helpCenter": "고객센터",
+    "deleteAccount": "계정 삭제"
+  },
   "Errors": {
     "generic": "문제가 발생했습니다. 다시 시도해 주세요.",
     "dateTimeUnavailable": "시간 정보를 확인할 수 없습니다."

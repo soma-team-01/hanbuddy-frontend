@@ -7,19 +7,30 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { BuddyMyPage } from "./buddy-my-page";
 import { TouristMyPage } from "./tourist-my-page";
 
+vi.mock("@/i18n/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/i18n/navigation")>()),
+  usePathname: () => "/my-page",
+  useRouter: () => ({ replace: vi.fn() }),
+}));
+
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({
     replace: vi.fn(),
     refresh: vi.fn(),
   }),
 }));
 
-function renderRoleMyPage(ui: React.ReactElement, userType: "TOURIST" | "BUDDY") {
+function renderRoleMyPage(
+  ui: React.ReactElement,
+  userType: "TOURIST" | "BUDDY",
+  locale: "en" | "ko" = "en",
+) {
   const queryClient = createQueryClient();
   queryClient.setQueryData(userKeys.me(), createMockProfile({ userType }));
 
-  return renderWithQueryClient(ui, { queryClient });
+  return renderWithQueryClient(ui, { queryClient, locale });
 }
 
 describe("role-specific My Page", () => {
@@ -35,12 +46,21 @@ describe("role-specific My Page", () => {
     expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/en/dashboard");
   });
 
-  it("disables menu actions whose product flows are not available yet", () => {
+  it("enables Language while unfinished menu actions remain disabled", () => {
     renderRoleMyPage(<TouristMyPage />, "TOURIST");
 
-    expect(screen.getByRole("button", { name: /Language/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Language/ })).toBeEnabled();
     expect(screen.getByRole("button", { name: /Help Center/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Delete Account/ })).toBeDisabled();
-    expect(screen.getAllByText("Coming soon")).toHaveLength(3);
+    expect(screen.getAllByText("Coming soon")).toHaveLength(2);
+  });
+
+  it("translates the My Page menu in Korean", () => {
+    renderRoleMyPage(<TouristMyPage />, "TOURIST", "ko");
+
+    expect(screen.getByRole("button", { name: /언어/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /고객센터/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /계정 삭제/ })).toBeDisabled();
+    expect(screen.getAllByText("출시 예정")).toHaveLength(2);
   });
 });

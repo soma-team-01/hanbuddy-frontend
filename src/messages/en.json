@@ -30,6 +30,14 @@
   "Messaging": {
     "phoneNumber": "Phone Number"
   },
+  "MyPage": {
+    "language": "Language",
+    "languageSheetTitle": "Language",
+    "english": "English",
+    "korean": "한국어",
+    "helpCenter": "Help Center",
+    "deleteAccount": "Delete Account"
+  },
   "Errors": {
     "generic": "Something went wrong. Please try again.",
     "dateTimeUnavailable": "Time unavailable."

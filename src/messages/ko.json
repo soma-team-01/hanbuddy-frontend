@@ -16,6 +16,20 @@
     "close": "닫기",
     "closeDialog": "대화상자 닫기"
   },
+  "Status": {
+    "pendingPayment": "결제 대기",
+    "confirmed": "확정",
+    "cancelled": "취소됨",
+    "completed": "완료됨"
+  },
+  "Country": {
+    "select": "국가 선택",
+    "search": "국가 검색",
+    "noResults": "검색 결과가 없습니다"
+  },
+  "Messaging": {
+    "phoneNumber": "전화번호"
+  },
   "Errors": {
     "generic": "문제가 발생했습니다. 다시 시도해 주세요.",
     "dateTimeUnavailable": "시간 정보를 확인할 수 없습니다."

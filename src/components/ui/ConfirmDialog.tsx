@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { XIcon } from "./icons";
 
 interface ConfirmDialogBaseProps {
@@ -33,7 +34,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel,
   tone = "default",
   isPending = false,
   onConfirm,
@@ -41,6 +42,8 @@ export function ConfirmDialog({
   confirmSlot,
   children,
 }: Readonly<ConfirmDialogProps>) {
+  const tCommon = useTranslations("Common");
+  const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export function ConfirmDialog({
         {confirmSlot ? (
           <button
             type="button"
-            aria-label="Close dialog"
+            aria-label={tAccessibility("closeDialog")}
             onClick={onClose}
             disabled={isPending}
             className="-mt-2 -mr-2 flex size-10 shrink-0 items-center justify-center rounded-full text-ink-soft transition-colors enabled:hover:bg-chip enabled:hover:text-ink disabled:opacity-60"
@@ -89,7 +92,7 @@ export function ConfirmDialog({
               disabled={isPending}
               className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-chip disabled:opacity-60"
             >
-              {cancelLabel}
+              {cancelLabel ?? tCommon("cancel")}
             </button>
             <button
               type="button"

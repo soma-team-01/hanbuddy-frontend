@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 describe("ConfirmDialog", () => {
   it("renders title, description, and children", () => {
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Submit this application?"
         description="Check the details below."
@@ -22,7 +23,7 @@ describe("ConfirmDialog", () => {
   });
 
   it("uses the shared dialog entrance motion", () => {
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Submit this application?"
         confirmLabel="Submit"
@@ -37,7 +38,7 @@ describe("ConfirmDialog", () => {
   it("calls onConfirm and onClose from the action buttons", () => {
     const onConfirm = vi.fn();
     const onClose = vi.fn();
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Log out?"
         confirmLabel="Log Out"
@@ -55,7 +56,7 @@ describe("ConfirmDialog", () => {
 
   it("calls onClose only once when dismissed via Escape", () => {
     const onClose = vi.fn();
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Log out?"
         confirmLabel="Log Out"
@@ -73,7 +74,7 @@ describe("ConfirmDialog", () => {
   });
 
   it("locks both buttons while pending", () => {
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Delete this activity?"
         confirmLabel="Delete"
@@ -88,7 +89,7 @@ describe("ConfirmDialog", () => {
   });
 
   it("prevents Escape dismissal while pending", () => {
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Pay for this application?"
         confirmSlot={<button type="button">PayPal</button>}
@@ -104,7 +105,7 @@ describe("ConfirmDialog", () => {
   });
 
   it("renders a custom confirm slot at full width without the bottom cancel button", () => {
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Pay for this application?"
         onClose={vi.fn()}
@@ -126,7 +127,7 @@ describe("ConfirmDialog", () => {
 
   it("calls onClose from the custom slot dialog close button", () => {
     const onClose = vi.fn();
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Pay for this application?"
         onClose={onClose}
@@ -140,7 +141,7 @@ describe("ConfirmDialog", () => {
   });
 
   it("uses the danger style for the confirm button when tone is danger", () => {
-    render(
+    renderWithIntl(
       <ConfirmDialog
         title="Delete this activity?"
         confirmLabel="Delete"
@@ -151,5 +152,18 @@ describe("ConfirmDialog", () => {
     );
 
     expect(screen.getByRole("button", { name: "Delete" })).toHaveClass("bg-danger");
+  });
+
+  it("localizes the custom-slot close action in Korean", () => {
+    renderWithIntl(
+      <ConfirmDialog
+        title="결제하시겠어요?"
+        onClose={vi.fn()}
+        confirmSlot={<button type="button">PayPal</button>}
+      />,
+      { locale: "ko" },
+    );
+
+    expect(screen.getByRole("button", { name: "대화상자 닫기" })).toBeInTheDocument();
   });
 });

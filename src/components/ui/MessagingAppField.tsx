@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { MessageSquareIcon, PhoneIcon } from "@/components/ui/icons";
 import type { ContactMethod } from "@/lib/auth/types";
@@ -9,7 +10,7 @@ export const MESSAGING_APPS = [
   { key: "whatsapp", label: "WhatsApp", Icon: MessageSquareIcon },
   { key: "line", label: "Line", Icon: MessageSquareIcon },
   { key: "wechat", label: "WeChat", Icon: MessageSquareIcon },
-  { key: "phone", label: "Phone Number", Icon: PhoneIcon },
+  { key: "phone", label: null, Icon: PhoneIcon },
 ] as const;
 
 export type MessagingAppKey = (typeof MESSAGING_APPS)[number]["key"];
@@ -55,11 +56,14 @@ export function MessagingAppField({
   inputRequired = false,
   koreanOnly = false,
 }: Readonly<MessagingAppFieldProps>) {
+  const t = useTranslations("Messaging");
+
   return (
     <>
       <div className="flex flex-col overflow-hidden rounded-xl border border-line bg-white">
         {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
           const isSelected = app === key;
+          const displayLabel = label ?? t("phoneNumber");
           return (
             <button
               key={key}
@@ -79,7 +83,7 @@ export function MessagingAppField({
                 {isSelected && <span className="size-2 rounded-full bg-forest" />}
               </span>
               <Icon className="size-5 text-success" />
-              <span className="text-base text-ink">{label}</span>
+              <span className="text-base text-ink">{displayLabel}</span>
             </button>
           );
         })}

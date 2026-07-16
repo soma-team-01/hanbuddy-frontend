@@ -1,11 +1,14 @@
 import type { ComponentProps } from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { renderWithIntl } from "@/test/render-with-intl";
 import { MessagingAppField } from "./MessagingAppField";
 
 type FieldProps = ComponentProps<typeof MessagingAppField>;
 
-function renderField(overrides: Partial<FieldProps> = {}) {
+function renderField(overrides: Partial<FieldProps> = {}, locale: "en" | "ko" = "en") {
   const props: FieldProps = {
     app: "whatsapp",
     onAppChange: vi.fn(),
@@ -15,7 +18,7 @@ function renderField(overrides: Partial<FieldProps> = {}) {
     onContactChange: vi.fn(),
     ...overrides,
   };
-  render(<MessagingAppField {...props} />);
+  renderWithIntl(<MessagingAppField {...props} />, { locale });
   return props;
 }
 
@@ -58,5 +61,48 @@ describe("MessagingAppField", () => {
     renderField({ app: "line", koreanOnly: true });
     expect(screen.getByPlaceholderText("Line ID")).toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
+  });
+
+  it("localizes the phone number messaging option in Korean", () => {
+    renderField({}, "ko");
+
+    expect(screen.getByRole("button", { name: "전화번호" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "WhatsApp" })).toBeInTheDocument();
+  });
+});
+
+describe("shared localized selectors and statuses", () => {
+  it("localizes country selection, search, empty text, and region names in Korean", () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    renderWithIntl(<CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />, {
+      locale: "ko",
+    });
+
+    expect(screen.getByText("국가 선택")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
+    expect(screen.getByRole("combobox", { name: "국가 검색" })).toBeInTheDocument();
+    expect(screen.getByText("대한민국")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox", { name: "국가 검색" }), {
+      target: { value: "존재하지 않는 국가" },
+    });
+    expect(screen.getByText("검색 결과가 없습니다")).toBeInTheDocument();
+  });
+
+  it("localizes every application status in Korean", () => {
+    renderWithIntl(
+      <>
+        <StatusBadge status="pending_payment" />
+        <StatusBadge status="confirmed" />
+        <StatusBadge status="cancelled" />
+        <StatusBadge status="completed" />
+      </>,
+      { locale: "ko" },
+    );
+
+    expect(screen.getByText("결제 대기")).toBeInTheDocument();
+    expect(screen.getByText("확정")).toBeInTheDocument();
+    expect(screen.getByText("취소됨")).toBeInTheDocument();
+    expect(screen.getByText("완료됨")).toBeInTheDocument();
   });
 });

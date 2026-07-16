@@ -1,23 +1,24 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CompassIcon, HomeIcon, UserIcon } from "@/components/ui/icons";
+import { Link, usePathname } from "@/i18n/navigation";
 
 const TAB_SETS = {
   tourist: [
-    { href: "/explore", label: "Home", Icon: HomeIcon },
-    { href: "/applications", label: "Activity", Icon: CompassIcon },
-    { href: "/my-page", label: "My Page", Icon: UserIcon },
+    { href: "/explore", labelKey: "home", Icon: HomeIcon },
+    { href: "/applications", labelKey: "activity", Icon: CompassIcon },
+    { href: "/my-page", labelKey: "myPage", Icon: UserIcon },
   ],
   buddy: [
-    { href: "/dashboard", label: "Home", Icon: HomeIcon },
-    { href: "/my-activities", label: "Activity", Icon: CompassIcon },
-    { href: "/my-page", label: "My Page", Icon: UserIcon },
+    { href: "/dashboard", labelKey: "home", Icon: HomeIcon },
+    { href: "/my-activities", labelKey: "activity", Icon: CompassIcon },
+    { href: "/my-page", labelKey: "myPage", Icon: UserIcon },
   ],
 } as const;
 
 export function BottomNavBar({ role = "tourist" }: Readonly<{ role?: "tourist" | "buddy" }>) {
+  const t = useTranslations("Navigation");
   const pathname = usePathname();
   const tabs = TAB_SETS[role];
   const activeHref = [...tabs]
@@ -37,7 +38,7 @@ export function BottomNavBar({ role = "tourist" }: Readonly<{ role?: "tourist" |
             <span className="mx-auto block h-full w-20 rounded-xl bg-forest-soft" />
           </span>
         ) : null}
-        {tabs.map(({ href, label, Icon }) => {
+        {tabs.map(({ href, labelKey, Icon }) => {
           const isActive = href === activeHref;
           return (
             <Link
@@ -51,7 +52,7 @@ export function BottomNavBar({ role = "tourist" }: Readonly<{ role?: "tourist" |
               <span className="motion-nav-icon" data-active={isActive}>
                 <Icon className="size-5" />
               </span>
-              <span className="text-center leading-5 whitespace-nowrap">{label}</span>
+              <span className="text-center leading-5 whitespace-nowrap">{t(labelKey)}</span>
             </Link>
           );
         })}

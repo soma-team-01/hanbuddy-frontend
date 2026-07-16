@@ -16,6 +16,20 @@
     "close": "Close",
     "closeDialog": "Close dialog"
   },
+  "Status": {
+    "pendingPayment": "Pending Payment",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "completed": "Completed"
+  },
+  "Country": {
+    "select": "Select country",
+    "search": "Search country",
+    "noResults": "No countries found"
+  },
+  "Messaging": {
+    "phoneNumber": "Phone Number"
+  },
   "Errors": {
     "generic": "Something went wrong. Please try again.",
     "dateTimeUnavailable": "Time unavailable."

@@ -19,12 +19,21 @@ import {
 import { touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
+interface GoogleMeetingAddress {
+  locale: string;
+  placeId: string;
+  apiKey: string;
+  formattedAddress: string;
+}
+
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
   const activityQuery = useQuery(touristActivityQueryOptions(activityId));
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
-  const [googleMeetingAddress, setGoogleMeetingAddress] = useState("");
+  const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
+    null,
+  );
   useAuthQueryRedirect(activityQuery.error);
 
   const activity = activityQuery.data
@@ -35,28 +44,42 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
         t("localHost"),
       )
     : null;
+  const meetingPlaceId = activity?.meetingPoint.placeId ?? "";
+  const googleMapsApiKey = getGoogleMapsApiKey();
 
   useEffect(() => {
-    const placeId = activity?.meetingPoint.placeId;
-    const apiKey = getGoogleMapsApiKey();
-    if (!placeId || !apiKey) return;
+    if (!meetingPlaceId || !googleMapsApiKey) {
+      let isMounted = true;
+      queueMicrotask(() => {
+        if (isMounted) setGoogleMeetingAddress(null);
+      });
+
+      return () => {
+        isMounted = false;
+      };
+    }
 
     let isMounted = true;
 
-    fetchGooglePlaceDetails(placeId, apiKey, { locale })
+    fetchGooglePlaceDetails(meetingPlaceId, googleMapsApiKey, { locale })
       .then((place) => {
         if (!isMounted) return;
-        setGoogleMeetingAddress(place.formattedAddress);
+        setGoogleMeetingAddress({
+          locale,
+          placeId: meetingPlaceId,
+          apiKey: googleMapsApiKey,
+          formattedAddress: place.formattedAddress,
+        });
       })
       .catch(() => {
         if (!isMounted) return;
-        setGoogleMeetingAddress("");
+        setGoogleMeetingAddress(null);
       });
 
     return () => {
       isMounted = false;
     };
-  }, [activity?.meetingPoint.placeId, locale]);
+  }, [googleMapsApiKey, locale, meetingPlaceId]);
 
   if (activityQuery.isPending) {
     return (
@@ -83,9 +106,14 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     );
   }
 
-  const meetingAddress = googleMeetingAddress;
+  const meetingAddress =
+    googleMeetingAddress?.locale === locale &&
+    googleMeetingAddress.placeId === meetingPlaceId &&
+    googleMeetingAddress.apiKey === googleMapsApiKey
+      ? googleMeetingAddress.formattedAddress
+      : "";
   const googleMapsUrl = activity.meetingPoint.placeId
-    ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, getGoogleMapsApiKey(), locale)
+    ? buildGoogleMapsEmbedUrl(activity.meetingPoint.placeId, googleMapsApiKey, locale)
     : "";
 
   let meetingMapMedia: React.ReactNode = (

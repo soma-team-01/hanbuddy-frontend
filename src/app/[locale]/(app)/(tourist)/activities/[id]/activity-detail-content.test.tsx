@@ -1,8 +1,8 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
-import { fetchGooglePlaceDetails } from "@/lib/google/places";
+import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
@@ -22,14 +22,54 @@ vi.mock("@/lib/google/places", async () => {
   return {
     ...actual,
     fetchGooglePlaceDetails: vi.fn(),
-    getGoogleMapsApiKey: () => "test-google-key",
+    getGoogleMapsApiKey: vi.fn(() => "test-google-key"),
   };
 });
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
 const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetails);
+const mockedGetGoogleMapsApiKey = vi.mocked(getGoogleMapsApiKey);
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+
+  return { promise, resolve };
+}
+
+function mockActivityDetail() {
+  mockedGetTouristActivity.mockResolvedValue({
+    status: "success",
+    activity: {
+      activityId: 42,
+      title: "Bukchon Hidden Gems",
+      description: "Walk through quiet alleys with a local buddy.",
+      thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+      buddyId: 7,
+      buddyName: "Jihoon Kim",
+      buddyProfileImageUrl: null,
+      includedItems: [],
+      restrictionNotes: [],
+      price: 45000,
+      currency: "KRW",
+      meetingPointName: "Anguk Station Exit 2",
+      meetingPlaceId: "ChIJ-bukchon",
+      images: [],
+      schedules: [],
+    },
+  });
+}
 
 describe("ActivityDetailContent", () => {
+  beforeEach(() => {
+    mockedGetTouristActivity.mockReset();
+    mockedFetchGooglePlaceDetails.mockReset();
+    mockedGetGoogleMapsApiKey.mockReset();
+    mockedGetGoogleMapsApiKey.mockReturnValue("test-google-key");
+  });
+
   it("renders activity detail loaded from the API", async () => {
     mockedFetchGooglePlaceDetails.mockResolvedValue({
       formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
@@ -160,32 +200,13 @@ describe("ActivityDetailContent", () => {
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 
-  it("refetches the Google address when the app locale changes", async () => {
-    mockedFetchGooglePlaceDetails.mockClear();
-    mockedGetTouristActivity.mockClear();
-    mockedFetchGooglePlaceDetails
-      .mockResolvedValueOnce({ formattedAddress: "Anguk Station, Seoul" })
-      .mockResolvedValueOnce({ formattedAddress: "서울 안국역" });
-    mockedGetTouristActivity.mockResolvedValue({
-      status: "success",
-      activity: {
-        activityId: 42,
-        title: "Bukchon Hidden Gems",
-        description: "Walk through quiet alleys with a local buddy.",
-        thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
-        buddyId: 7,
-        buddyName: "Jihoon Kim",
-        buddyProfileImageUrl: null,
-        includedItems: [],
-        restrictionNotes: [],
-        price: 45000,
-        currency: "KRW",
-        meetingPointName: "Anguk Station Exit 2",
-        meetingPlaceId: "ChIJ-bukchon",
-        images: [],
-        schedules: [],
-      },
-    });
+  it("hides the previous Google address while a locale replacement is pending", async () => {
+    const englishRequest = createDeferred<{ formattedAddress: string }>();
+    const koreanRequest = createDeferred<{ formattedAddress: string }>();
+    mockedFetchGooglePlaceDetails.mockImplementation((_, __, options) =>
+      options.locale === "en" ? englishRequest.promise : koreanRequest.promise,
+    );
+    mockActivityDetail();
     const queryClient = createQueryClient();
     const renderContent = (locale: "en" | "ko") => (
       <QueryClientProvider client={queryClient}>
@@ -196,16 +217,85 @@ describe("ActivityDetailContent", () => {
     );
     const { rerender } = render(renderContent("en"));
 
+    await waitFor(() => expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      englishRequest.resolve({ formattedAddress: "Anguk Station, Seoul" });
+      await englishRequest.promise;
+    });
     expect(await screen.findAllByText("Anguk Station, Seoul")).toHaveLength(2);
 
     rerender(renderContent("ko"));
 
     await waitFor(() => expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText("Anguk Station, Seoul")).not.toBeInTheDocument();
+
+    await act(async () => {
+      koreanRequest.resolve({ formattedAddress: "서울 안국역" });
+      await koreanRequest.promise;
+    });
+    expect(await screen.findAllByText("서울 안국역")).toHaveLength(2);
     expect(mockedFetchGooglePlaceDetails.mock.calls.map((call) => call[2].locale)).toEqual([
       "en",
       "ko",
     ]);
-    expect(await screen.findAllByText("서울 안국역")).toHaveLength(2);
     expect(mockedGetTouristActivity).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignores a late Google address response from the previous locale", async () => {
+    const englishRequest = createDeferred<{ formattedAddress: string }>();
+    const koreanRequest = createDeferred<{ formattedAddress: string }>();
+    mockedFetchGooglePlaceDetails.mockImplementation((_, __, options) =>
+      options.locale === "en" ? englishRequest.promise : koreanRequest.promise,
+    );
+    mockActivityDetail();
+    const queryClient = createQueryClient();
+    const renderContent = (locale: "en" | "ko") => (
+      <QueryClientProvider client={queryClient}>
+        <IntlTestProvider locale={locale}>
+          <ActivityDetailContent activityId="42" />
+        </IntlTestProvider>
+      </QueryClientProvider>
+    );
+    const { rerender } = render(renderContent("en"));
+
+    await waitFor(() => expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(1));
+    rerender(renderContent("ko"));
+    await waitFor(() => expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(2));
+
+    await act(async () => {
+      englishRequest.resolve({ formattedAddress: "Anguk Station, Seoul" });
+      await englishRequest.promise;
+    });
+    expect(screen.queryByText("Anguk Station, Seoul")).not.toBeInTheDocument();
+
+    await act(async () => {
+      koreanRequest.resolve({ formattedAddress: "서울 안국역" });
+      await koreanRequest.promise;
+    });
+    expect(await screen.findAllByText("서울 안국역")).toHaveLength(2);
+  });
+
+  it("hides a resolved Google address when the API key disappears", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "Anguk Station, Seoul",
+    });
+    mockActivityDetail();
+    const queryClient = createQueryClient();
+    const renderContent = () => (
+      <QueryClientProvider client={queryClient}>
+        <IntlTestProvider locale="en">
+          <ActivityDetailContent activityId="42" />
+        </IntlTestProvider>
+      </QueryClientProvider>
+    );
+    const { rerender } = render(renderContent());
+
+    expect(await screen.findAllByText("Anguk Station, Seoul")).toHaveLength(2);
+
+    mockedGetGoogleMapsApiKey.mockReturnValue("");
+    rerender(renderContent());
+
+    expect(screen.queryByText("Anguk Station, Seoul")).not.toBeInTheDocument();
+    expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(1);
   });
 });

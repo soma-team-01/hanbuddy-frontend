@@ -251,8 +251,8 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
               >
                 <MinusIcon className="size-4" />
               </button>
-              <span className="w-5 text-center font-display text-base font-semibold text-ink">
-                {guests}
+              <span className="min-w-16 text-center font-display text-base font-semibold text-ink">
+                {t("guests", { count: guests })}
               </span>
               <button
                 type="button"

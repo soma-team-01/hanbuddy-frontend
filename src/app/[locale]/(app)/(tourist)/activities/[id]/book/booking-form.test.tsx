@@ -319,4 +319,21 @@ describe("BookingForm", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(message);
     expect(mockedCreateApplication).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["en", "2 guests", "1 guest", "Decrease guests"],
+    ["ko", "2명", "1명", "인원 줄이기"],
+  ] as const)(
+    "renders the localized guest-count plural in %s",
+    (locale, twoGuests, oneGuest, decreaseGuests) => {
+      renderWithQueryClient(<BookingForm activity={activity} />, { locale });
+
+      expect(screen.getByText(twoGuests)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: decreaseGuests }));
+
+      expect(screen.getByText(oneGuest)).toBeInTheDocument();
+      expect(screen.queryByText(twoGuests)).not.toBeInTheDocument();
+    },
+  );
 });

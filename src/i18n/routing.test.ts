@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isLocale, routing } from "./routing";
+import { getLocaleOrDefault, isLocale, routing } from "./routing";
 
 describe("i18n routing", () => {
   it("supports only English and Korean with English as the default", () => {
@@ -16,5 +16,15 @@ describe("i18n routing", () => {
     [undefined, false],
   ])("validates %s", (value, expected) => {
     expect(isLocale(value)).toBe(expected);
+  });
+
+  it.each([
+    ["en", "en"],
+    ["ko", "ko"],
+    ["fr", "en"],
+    [null, "en"],
+    [undefined, "en"],
+  ])("normalizes cookie locale %s to %s", (value, expected) => {
+    expect(getLocaleOrDefault(value)).toBe(expected);
   });
 });

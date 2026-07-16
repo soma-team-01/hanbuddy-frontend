@@ -8,6 +8,8 @@ import {
   setAuthenticatedSessionCookies,
 } from "@/lib/auth/cookies";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
+import { localizePathname } from "@/i18n/pathname";
+import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +73,7 @@ function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginRe
   }
 
   const response = NextResponse.redirect(
-    new URL(result.userType === "BUDDY" ? "/dashboard" : "/explore", request.url),
+    createLocalizedUrl(request, result.userType === "BUDDY" ? "/dashboard" : "/explore"),
   );
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
@@ -83,7 +85,7 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
     return redirectToLoginWithError(request, "회원가입 토큰을 받을 수 없습니다.");
   }
 
-  const response = NextResponse.redirect(new URL("/onboarding", request.url));
+  const response = NextResponse.redirect(createLocalizedUrl(request, "/onboarding"));
   response.cookies.set(AUTH_COOKIES.signupToken, result.signupToken, SIGNUP_COOKIE_OPTIONS);
   if (result.googleProfile) {
     response.cookies.set(
@@ -96,10 +98,15 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
 }
 
 function redirectToLoginWithError(request: NextRequest, message: string) {
-  const loginUrl = new URL("/login", request.url);
+  const loginUrl = createLocalizedUrl(request, "/login");
   loginUrl.searchParams.set("error", message);
 
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);
   return response;
+}
+
+function createLocalizedUrl(request: NextRequest, pathname: string) {
+  const locale = getLocaleOrDefault(request.cookies.get(LOCALE_COOKIE_NAME)?.value);
+  return new URL(localizePathname(pathname, locale), request.url);
 }

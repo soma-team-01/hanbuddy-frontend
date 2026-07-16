@@ -19,3 +19,7 @@ export const routing = defineRouting({
     path: "/",
   },
 });
+
+export function getLocaleOrDefault(value: string | null | undefined): Locale {
+  return isLocale(value) ? value : routing.defaultLocale;
+}

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
 import { postBackend } from "@/lib/auth/backend";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
+import { LOCALE_COOKIE_NAME } from "@/i18n/routing";
 import { GET } from "./route";
 
 vi.mock("@/lib/auth/backend", async (importOriginal) => {
@@ -24,10 +25,15 @@ describe("GET /auth/google/callback", () => {
     const response = await GET(
       new NextRequest(
         "http://localhost/auth/google/callback?error=access_denied&error_description=denied",
+        {
+          headers: {
+            cookie: `${LOCALE_COOKIE_NAME}=ko`,
+          },
+        },
       ),
     );
 
-    expect(response.headers.get("location")).toBe("http://localhost/login?error=denied");
+    expect(response.headers.get("location")).toBe("http://localhost/ko/login?error=denied");
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -40,7 +46,7 @@ describe("GET /auth/google/callback", () => {
       }),
     );
 
-    expect(response.headers.get("location")).toContain("/login?error=Google");
+    expect(response.headers.get("location")).toContain("/en/login?error=Google");
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -53,7 +59,7 @@ describe("GET /auth/google/callback", () => {
       }),
     );
 
-    expect(response.headers.get("location")).toContain("/login?error=Google");
+    expect(response.headers.get("location")).toContain("/en/login?error=Google");
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -71,7 +77,9 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest());
 
-    expect(response.headers.get("location")).toContain("/login?error=%EB%A1%9C%EA%B7%B8%EC%9D%B8");
+    expect(response.headers.get("location")).toContain(
+      "/en/login?error=%EB%A1%9C%EA%B7%B8%EC%9D%B8",
+    );
     expect(response.headers.get("set-cookie") ?? "").not.toContain("refresh_token=backend");
   });
 
@@ -91,10 +99,31 @@ describe("GET /auth/google/callback", () => {
       },
     });
 
-    const response = await GET(createCallbackRequest());
+    const response = await GET(createCallbackRequest("ko"));
 
-    expect(response.headers.get("location")).toBe("http://localhost/explore");
+    expect(response.headers.get("location")).toBe("http://localhost/ko/explore");
     expect(response.headers.get("set-cookie") ?? "").toContain("refresh_token=backend");
+  });
+
+  it("redirects registered buddies to the localized dashboard", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          accessToken: "access-token",
+          userType: "BUDDY",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("ko"));
+
+    expect(response.headers.get("location")).toBe("http://localhost/ko/dashboard");
   });
 
   it("redirects unregistered users to onboarding with signup cookies", async () => {
@@ -117,10 +146,10 @@ describe("GET /auth/google/callback", () => {
       },
     });
 
-    const response = await GET(createCallbackRequest());
+    const response = await GET(createCallbackRequest("ko"));
     const setCookie = response.headers.get("set-cookie") ?? "";
 
-    expect(response.headers.get("location")).toBe("http://localhost/onboarding");
+    expect(response.headers.get("location")).toBe("http://localhost/ko/onboarding");
     expect(setCookie).toContain(`${AUTH_COOKIES.signupToken}=signup-token`);
     expect(setCookie).toContain("refresh_token=backend");
 
@@ -139,16 +168,19 @@ describe("GET /auth/google/callback", () => {
   it("redirects to login when the backend login request fails", async () => {
     mockedPostBackend.mockRejectedValue(new Error("network"));
 
-    const response = await GET(createCallbackRequest());
+    const response = await GET(createCallbackRequest("fr"));
 
-    expect(response.headers.get("location")).toContain("/login?error=%EC%9D%B8%EC%A6%9D");
+    expect(response.headers.get("location")).toContain("/en/login?error=%EC%9D%B8%EC%A6%9D");
   });
 });
 
-function createCallbackRequest() {
+function createCallbackRequest(locale?: string) {
+  const requestCookies = [`${AUTH_COOKIES.oauthState}=state`];
+  if (locale) requestCookies.push(`${LOCALE_COOKIE_NAME}=${locale}`);
+
   return new NextRequest("http://localhost/auth/google/callback?code=code&state=state", {
     headers: {
-      cookie: `${AUTH_COOKIES.oauthState}=state`,
+      cookie: requestCookies.join("; "),
     },
   });
 }

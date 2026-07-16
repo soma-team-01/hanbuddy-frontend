@@ -27,15 +27,16 @@ describe("HomePage", () => {
     vi.clearAllMocks();
   });
 
-  it.each<[string | undefined, string]>([
-    ["TOURIST", "/explore"],
-    ["BUDDY", "/dashboard"],
-    [undefined, "/login"],
-    ["ADMIN", "/login"],
-  ])("redirects %s to %s", async (userType, expectedPath) => {
+  it.each<[string, string | undefined, string]>([
+    ["ko", "TOURIST", "/ko/explore"],
+    ["en", "BUDDY", "/en/dashboard"],
+    ["ko", undefined, "/ko/login"],
+    ["en", "ADMIN", "/en/login"],
+    ["fr", "TOURIST", "/en/explore"],
+  ])("redirects %s %s to %s", async (locale, userType, expectedPath) => {
     stubUserTypeCookie(userType);
 
-    await HomePage();
+    await HomePage({ params: Promise.resolve({ locale }) });
 
     expect(mockedRedirect).toHaveBeenCalledWith(expectedPath);
   });

@@ -7,6 +7,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     exclude: [...configDefaults.exclude, ".worktrees/**", ".claude/**", ".serena/**"],
+    server: {
+      deps: {
+        inline: ["next-intl"],
+      },
+    },
     setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {

@@ -113,6 +113,20 @@ describe("shared localized selectors and statuses", () => {
     expect(screen.getByText("검색 결과가 없습니다")).toBeInTheDocument();
   });
 
+  it("restores focus to the country trigger after backdrop dismissal", () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    const { container } = renderWithIntl(
+      <CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />,
+    );
+    const trigger = screen.getByRole("button", { name: "Nationality" });
+    fireEvent.click(trigger);
+    expect(screen.getByRole("combobox", { name: "Search country" })).toHaveFocus();
+
+    fireEvent.click(container.querySelector(".fixed.inset-0.z-10")!);
+
+    expect(trigger).toHaveFocus();
+  });
+
   it("localizes every application status in Korean", () => {
     renderWithIntl(
       <>

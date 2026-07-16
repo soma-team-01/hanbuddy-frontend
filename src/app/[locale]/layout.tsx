@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { Be_Vietnam_Pro, Manrope } from "next/font/google";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
 import { SERVICE_TIME_ZONE } from "@/i18n/formats";
-import { isLocale, routing } from "@/i18n/routing";
+import { isLocale, routing, type Locale } from "@/i18n/routing";
 import "../globals.css";
 
 const manrope = Manrope({
@@ -19,10 +19,19 @@ const beVietnamPro = Be_Vietnam_Pro({
   weight: ["400", "500"],
 });
 
-export const metadata: Metadata = {
-  title: "HanBuddy",
-  description: "Connect with local buddies for authentic Korean experiences.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Landing" });
+
+  return {
+    title: "HanBuddy",
+    description: t("metadataDescription"),
+  };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

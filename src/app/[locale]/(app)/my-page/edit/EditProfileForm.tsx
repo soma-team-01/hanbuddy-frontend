@@ -28,7 +28,12 @@ import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import { userKeys } from "@/lib/query/users";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
+import type messages from "@/messages/en.json";
 import type { MyProfile } from "@/types/user";
+
+type ProfileValidationErrorKey = keyof (typeof messages)["Profile"]["validation"];
+type ProfileErrorKey =
+  `validation.${ProfileValidationErrorKey}` | "profileUploadFailed" | "saveFailed";
 
 /** 저장된 연락처 국가 번호(+1 등)를 국가 선택용 alpha-2 코드로 되돌린다 */
 function toMessagingCountry(profile: MyProfile) {
@@ -64,7 +69,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     APP_BY_CONTACT_METHOD[profile.contactMethod],
   );
   const [messagingContact, setMessagingContact] = useState(profile.contactIdentifier);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorKey, setErrorKey] = useState<ProfileErrorKey | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
@@ -95,17 +100,17 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     if (!file) return;
 
     if (!isSupportedProfileImageType(file.type)) {
-      setErrorMessage(t("validation.unsupportedImageType"));
+      setErrorKey("validation.unsupportedImageType");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROFILE_IMAGE_BYTES) {
-      setErrorMessage(t("validation.imageTooLarge"));
+      setErrorKey("validation.imageTooLarge");
       event.target.value = "";
       return;
     }
 
-    setErrorMessage("");
+    setErrorKey(null);
     setProfileImageFile(file);
     setProfileImagePreview(URL.createObjectURL(file));
   }
@@ -129,7 +134,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorMessage("");
+    setErrorKey(null);
 
     const formData = new FormData(event.currentTarget);
     const nameEntry = formData.get("name");
@@ -139,19 +144,19 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     const contactIdentifier = messagingContact.trim();
 
     if (!name) {
-      setErrorMessage(t("validation.nameRequired"));
+      setErrorKey("validation.nameRequired");
       return;
     }
     if (!nationality) {
-      setErrorMessage(t("validation.nationalityRequired"));
+      setErrorKey("validation.nationalityRequired");
       return;
     }
     if (!Number.isInteger(age) || age < 0 || age > 150) {
-      setErrorMessage(t("validation.ageInvalid"));
+      setErrorKey("validation.ageInvalid");
       return;
     }
     if (contactIdentifier.length < 2) {
-      setErrorMessage(t("validation.contactInvalid"));
+      setErrorKey("validation.contactInvalid");
       return;
     }
 
@@ -161,7 +166,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       try {
         profileImageKey = await resolveProfileImageKey();
       } catch {
-        setErrorMessage(t("profileUploadFailed"));
+        setErrorKey("profileUploadFailed");
         return;
       }
 
@@ -176,7 +181,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       });
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      setErrorMessage(t("saveFailed"));
+      setErrorKey("saveFailed");
     } finally {
       setIsSaving(false);
     }
@@ -280,12 +285,12 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             </div>
           </section>
 
-          {errorMessage && (
+          {errorKey && (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              {errorMessage}
+              {t(errorKey)}
             </p>
           )}
         </main>

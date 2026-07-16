@@ -21,6 +21,7 @@ import {
   uploadProfileImage,
 } from "@/lib/images/presigned";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
+import type messages from "@/messages/en.json";
 import type {
   ApiResponse,
   ErrorApiResponse,
@@ -32,6 +33,13 @@ import type {
 
 const ROLES = ["TOURIST", "BUDDY"] as const;
 
+type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
+type OnboardingErrorKey =
+  | `validation.${OnboardingValidationErrorKey}`
+  | "profileUploadFailed"
+  | "signupFailed"
+  | "serverUnavailable";
+
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
 }
@@ -42,7 +50,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   const [role, setRole] = useState<UserType>("TOURIST");
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
   const [messagingContact, setMessagingContact] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorKey, setErrorKey] = useState<OnboardingErrorKey | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
@@ -62,17 +70,17 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     if (!file) return;
 
     if (!isSupportedProfileImageType(file.type)) {
-      setErrorMessage(t("validation.unsupportedImageType"));
+      setErrorKey("validation.unsupportedImageType");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROFILE_IMAGE_BYTES) {
-      setErrorMessage(t("validation.imageTooLarge"));
+      setErrorKey("validation.imageTooLarge");
       event.target.value = "";
       return;
     }
 
-    setErrorMessage("");
+    setErrorKey(null);
     setProfileImageFile(file);
     setProfileImagePreview(URL.createObjectURL(file));
   }
@@ -102,7 +110,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorMessage("");
+    setErrorKey(null);
 
     const formData = new FormData(event.currentTarget);
     const ageEntry = formData.get("age");
@@ -110,15 +118,15 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     const contactIdentifier = messagingContact.trim();
 
     if (!nationality) {
-      setErrorMessage(t("validation.nationalityRequired"));
+      setErrorKey("validation.nationalityRequired");
       return;
     }
     if (!Number.isInteger(age) || age < 0 || age > 150) {
-      setErrorMessage(t("validation.ageInvalid"));
+      setErrorKey("validation.ageInvalid");
       return;
     }
     if (contactIdentifier.length < 2) {
-      setErrorMessage(t("validation.contactInvalid"));
+      setErrorKey("validation.contactInvalid");
       return;
     }
 
@@ -128,7 +136,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       try {
         profileImageKey = await resolveProfileImageKey();
       } catch {
-        setErrorMessage(t("profileUploadFailed"));
+        setErrorKey("profileUploadFailed");
         return;
       }
 
@@ -154,14 +162,14 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         ApiResponse<GoogleLoginResponse> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
-        setErrorMessage(t("signupFailed"));
+        setErrorKey("signupFailed");
         return;
       }
 
       const userType = body.result.userType ?? role;
       router.replace(userType === "BUDDY" ? "/dashboard" : "/explore");
     } catch {
-      setErrorMessage(t("serverUnavailable"));
+      setErrorKey("serverUnavailable");
     } finally {
       setIsSubmitting(false);
     }
@@ -300,12 +308,12 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
             </div>
           </section>
 
-          {errorMessage && (
+          {errorKey && (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              {errorMessage}
+              {t(errorKey)}
             </p>
           )}
         </main>

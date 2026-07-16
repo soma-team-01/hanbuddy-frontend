@@ -136,7 +136,7 @@ export function CountrySelect({
       {isOpen && (
         <>
           {/* 바깥 클릭 시 닫기용 투명 오버레이 */}
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} aria-hidden />
+          <div className="fixed inset-0 z-10" onClick={close} aria-hidden />
           <div
             className={`absolute left-0 z-20 mt-2 flex max-h-80 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-xl ${
               display === "dialCode" ? "w-72" : "w-full min-w-64"

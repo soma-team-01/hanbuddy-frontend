@@ -1,8 +1,8 @@
-import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { uploadProfileImage } from "@/lib/images/presigned";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import { OnboardingForm } from "./OnboardingForm";
 import { generateMetadata } from "./page";
 
@@ -105,6 +105,18 @@ describe("OnboardingForm", () => {
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
+  });
+
+  it("relocalizes a stored validation error when the locale changes", () => {
+    const onboardingForm = <OnboardingForm />;
+    const { rerender } = render(<IntlTestProvider locale="en">{onboardingForm}</IntlTestProvider>);
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Please select a nationality.");
+
+    rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("국적을 선택해 주세요.");
   });
 
   it.each([
@@ -343,6 +355,60 @@ describe("OnboardingForm profile image", () => {
       ),
     );
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("uses the current locale when an in-flight image upload fails", async () => {
+    let rejectUpload!: (error: Error) => void;
+    vi.mocked(uploadProfileImage).mockReturnValue(
+      new Promise((_, reject) => {
+        rejectUpload = reject;
+      }),
+    );
+    vi.stubGlobal("fetch", vi.fn());
+    const onboardingForm = <OnboardingForm />;
+    const { rerender } = render(<IntlTestProvider locale="en">{onboardingForm}</IntlTestProvider>);
+    fillRequiredFields();
+    fireEvent.change(screen.getByLabelText("Add profile photo"), {
+      target: { files: [createImageFile()] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+    await waitFor(() => expect(uploadProfileImage).toHaveBeenCalledTimes(1));
+
+    rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
+    await act(async () => rejectUpload(new Error("upload failed")));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "프로필 이미지를 업로드하지 못했습니다. 다시 시도해 주세요.",
+    );
+  });
+
+  it("uses the current locale when an in-flight signup fails", async () => {
+    let resolveSignup!: (response: Response) => void;
+    const fetchMock = vi.fn().mockReturnValue(
+      new Promise<Response>((resolve) => {
+        resolveSignup = resolve;
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const onboardingForm = <OnboardingForm />;
+    const { rerender } = render(<IntlTestProvider locale="en">{onboardingForm}</IntlTestProvider>);
+    fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
+    await act(async () => {
+      resolveSignup(
+        new Response(
+          JSON.stringify({ isSuccess: false, code: "COMMON500", message: "server error" }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "회원가입을 완료하지 못했습니다. 다시 시도해 주세요.",
+    );
   });
 
   it("does not re-upload the same file when resubmitting after a signup failure", async () => {

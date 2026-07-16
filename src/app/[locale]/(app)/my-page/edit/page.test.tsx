@@ -1,11 +1,15 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { uploadProfileImage } from "@/lib/images/presigned";
+import { createQueryClient } from "@/lib/query/client";
 import { userKeys } from "@/lib/query/users";
 import { createMockProfile } from "@/test/factories";
+import { IntlTestProvider } from "@/test/render-with-intl";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
+import { EditProfileForm } from "./EditProfileForm";
 import EditProfilePage, { generateMetadata } from "./page";
 
 vi.mock("next-intl/server", async () => {
@@ -66,6 +70,27 @@ describe("EditProfilePage", () => {
 
   function createImageFile(name = "me.png", type = "image/png") {
     return new File([new Uint8Array([1, 2, 3])], name, { type });
+  }
+
+  function renderFormForLocaleSwitch() {
+    const queryClient = createQueryClient();
+    const editProfileForm = <EditProfileForm profile={profile} />;
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <IntlTestProvider locale="en">{editProfileForm}</IntlTestProvider>
+      </QueryClientProvider>,
+    );
+
+    return {
+      ...view,
+      switchToKorean() {
+        view.rerender(
+          <QueryClientProvider client={queryClient}>
+            <IntlTestProvider locale="ko">{editProfileForm}</IntlTestProvider>
+          </QueryClientProvider>,
+        );
+      },
+    };
   }
 
   it("populates the form with the loaded profile", async () => {
@@ -130,6 +155,17 @@ describe("EditProfilePage", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
     expect(screen.getByRole("button", { name: save })).toBeInTheDocument();
+  });
+
+  it("relocalizes a stored validation error when the locale changes", () => {
+    const { switchToKorean } = renderFormForLocaleSwitch();
+    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: " " } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Please enter your name.");
+
+    switchToKorean();
+
+    expect(screen.getByRole("alert")).toHaveTextContent("이름을 입력해 주세요.");
   });
 
   it.each([
@@ -274,6 +310,28 @@ describe("EditProfilePage", () => {
     expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
   });
 
+  it("uses the current locale when an in-flight image upload fails", async () => {
+    let rejectUpload!: (error: Error) => void;
+    vi.mocked(uploadProfileImage).mockReturnValue(
+      new Promise((_, reject) => {
+        rejectUpload = reject;
+      }),
+    );
+    const { switchToKorean } = renderFormForLocaleSwitch();
+    fireEvent.change(screen.getByLabelText("Add profile photo"), {
+      target: { files: [createImageFile()] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(uploadProfileImage).toHaveBeenCalledTimes(1));
+
+    switchToKorean();
+    await act(async () => rejectUpload(new Error("upload failed")));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "프로필 이미지를 업로드하지 못했습니다. 다시 시도해 주세요.",
+    );
+  });
+
   it("rejects unsupported image types at selection time", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
@@ -301,6 +359,28 @@ describe("EditProfilePage", () => {
     expect(alert).toHaveTextContent("Could not save your profile. Please try again.");
     expect(alert).not.toHaveTextContent("국적 코드는 영문 대문자 2자리여야 합니다");
     expect(replace).not.toHaveBeenCalledWith("/en/my-page");
+  });
+
+  it("uses the current locale when an in-flight save fails", async () => {
+    let resolveSave!: (result: Awaited<ReturnType<typeof updateMyProfile>>) => void;
+    mockedUpdateMyProfile.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSave = resolve;
+      }),
+    );
+    const { switchToKorean } = renderFormForLocaleSwitch();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(mockedUpdateMyProfile).toHaveBeenCalledTimes(1));
+
+    switchToKorean();
+    await act(async () => {
+      resolveSave({ status: "error", message: "raw backend detail" });
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "프로필을 저장하지 못했습니다. 다시 시도해 주세요.",
+    );
+    expect(screen.queryByText("raw backend detail")).not.toBeInTheDocument();
   });
 
   it("redirects to login when the save request is unauthenticated", async () => {

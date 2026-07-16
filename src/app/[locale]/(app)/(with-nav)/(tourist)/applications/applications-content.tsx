@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { PayPalPaymentProvider } from "@/components/payments/PayPalPaymentButton";
 import {
   cancelMyApplication,
@@ -20,6 +21,7 @@ import type { CancelDialogOutcome } from "./cancel-dialog";
 export function ApplicationsContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const tErrors = useTranslations("Errors");
   const applicationsQuery = useQuery(myApplicationsQueryOptions());
   const cancelApplicationMutation = useMutation({
     mutationFn: async ({
@@ -74,7 +76,9 @@ export function ApplicationsContent() {
       capturePaymentMutation.error,
   );
 
-  const applications = (applicationsQuery.data ?? []).map(mapApplicationResponseToApplication);
+  const applications = (applicationsQuery.data ?? []).map((application) =>
+    mapApplicationResponseToApplication(application, tErrors("dateTimeUnavailable")),
+  );
 
   async function handleCancelApplication(
     applicationId: string,

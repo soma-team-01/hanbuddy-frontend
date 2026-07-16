@@ -29,7 +29,7 @@ describe("ApplicantsContent", () => {
         activityId: 42,
         activityScheduleId: 99,
         activityTitle: "Traditional Tea Tasting",
-        startAt: "2026-07-20T10:00:00+09:00",
+        startAt: "2026-07-18T16:30:00Z",
         applicantCount: 1,
         statusCounts: { CONFIRMED: 1 },
         applicants: [
@@ -45,7 +45,7 @@ describe("ApplicantsContent", () => {
             applicantContactIdentifier: "612345678",
             status: "CONFIRMED",
             specialRequest: "No pork",
-            appliedAt: "2026-07-07T10:00:00Z",
+            appliedAt: "2026-07-18T16:30:00Z",
           },
         ],
       },
@@ -54,11 +54,12 @@ describe("ApplicantsContent", () => {
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByText("2026-07-20 10:00 • 1 confirmed")).toBeInTheDocument();
+    expect(screen.getByText("2026-07-19 01:30 • 1 confirmed")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
     expect(screen.getByText("• 1 guest")).toBeInTheDocument();
+    expect(screen.getByText("Applied for: Jul 19, 2026, 1:30 AM")).toBeInTheDocument();
     expect(screen.queryByText("• 1 guests")).not.toBeInTheDocument();
     expect(screen.getByText("No pork")).toBeInTheDocument();
     expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith("99");

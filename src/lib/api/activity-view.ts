@@ -1,4 +1,4 @@
-import { splitStartAt } from "@/lib/format";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
 import type {
   Activity,
   IncludedItem,
@@ -33,7 +33,10 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
   };
 }
 
-export function mapTouristActivityDetailToActivity(detail: TouristActivityDetail): Activity {
+export function mapTouristActivityDetailToActivity(
+  detail: TouristActivityDetail,
+  dateTimeUnavailable: string,
+): Activity {
   const images = [...detail.images].sort((left, right) => left.imageOrder - right.imageOrder);
   const heroImageUrl = images[0]?.imageUrl ?? detail.thumbnailImageUrl;
 
@@ -44,11 +47,11 @@ export function mapTouristActivityDetailToActivity(detail: TouristActivityDetail
     included: detail.includedItems.map(toIncludedItem),
     restrictions: detail.restrictionNotes,
     sessions: detail.schedules.map<Session>((schedule) => {
-      const { date, time } = splitStartAt(schedule.startAt);
+      const parts = getSeoulDateTimeParts(schedule.startAt);
       return {
         id: String(schedule.activityScheduleId),
-        dateLabel: date,
-        timeLabel: time,
+        dateLabel: parts?.date ?? dateTimeUnavailable,
+        timeLabel: parts?.time ?? "",
         spotsLeft: schedule.remainingCapacity,
       };
     }),

@@ -62,6 +62,7 @@ describe("BookingContent", () => {
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "2026-07-20 10:00" })).toBeInTheDocument();
+    expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
   });
 
   it("reuses activity detail already cached by the detail screen", async () => {
@@ -72,5 +73,16 @@ describe("BookingContent", () => {
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(mockedGetTouristActivity).not.toHaveBeenCalled();
+  });
+
+  it("shows the Korean Seoul time-zone notice", async () => {
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: activityDetail,
+    });
+
+    renderWithQueryClient(<BookingContent activityId="42" />, { locale: "ko" });
+
+    expect(await screen.findByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
   });
 });

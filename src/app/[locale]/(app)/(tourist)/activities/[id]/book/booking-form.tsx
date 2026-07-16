@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import {
@@ -35,6 +36,8 @@ const MAX_GUESTS = 8;
 export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const locale = useLocale();
+  const tDateTime = useTranslations("DateTime");
   const [sessionId, setSessionId] = useState(activity.sessions[0]?.id ?? "");
   const [guests, setGuests] = useState(2);
   const [agreed, setAgreed] = useState(false);
@@ -200,6 +203,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           </h2>
           <label className="flex flex-col gap-2">
             <span className="text-sm text-ink-soft">Datetime</span>
+            <span className="text-xs text-ink-soft">{tDateTime("kstNotice")}</span>
             <span className="relative">
               <select
                 value={sessionId}
@@ -271,14 +275,16 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           <h2 className="text-base font-medium text-ink">Price details</h2>
           <div className="flex items-center justify-between text-sm text-ink">
             <span>
-              {formatKrw(activity.price)} x {guests} guests
+              {formatKrw(activity.price, locale)} x {guests} guests
             </span>
-            <span>{formatKrw(subtotal)}</span>
+            <span>{formatKrw(subtotal, locale)}</span>
           </div>
           <div className="h-px w-full bg-line" aria-hidden />
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-ink">Total (KRW)</span>
-            <span className="font-display text-2xl font-bold text-forest">{formatKrw(total)}</span>
+            <span className="font-display text-2xl font-bold text-forest">
+              {formatKrw(total, locale)}
+            </span>
           </div>
         </section>
 
@@ -339,13 +345,13 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
             <dl className="mt-3 flex flex-col gap-3 rounded-xl bg-chip p-4 text-sm text-ink">
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-ink-soft">Total application amount</dt>
-                <dd className="font-display font-semibold">{formatKrw(total)}</dd>
+                <dd className="font-display font-semibold">{formatKrw(total, locale)}</dd>
               </div>
               {paymentCharge ? (
                 <div className="flex items-center justify-between gap-4 text-forest">
                   <dt>PayPal charge</dt>
                   <dd className="font-display text-base font-semibold">
-                    {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
+                    {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
                   </dd>
                 </div>
               ) : null}

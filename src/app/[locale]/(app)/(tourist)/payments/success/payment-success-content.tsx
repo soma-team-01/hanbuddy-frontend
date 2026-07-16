@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CheckCircleIcon } from "@/components/ui/icons";
-import { formatCurrency, formatKrw, splitStartAt } from "@/lib/format";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
+import { formatCurrency, formatKrw } from "@/lib/format";
 import { myApplicationsQueryOptions } from "@/lib/query/applications";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
@@ -33,6 +35,8 @@ function RecoveryState({ message }: Readonly<{ message: string }>) {
 }
 
 export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccessContentProps>) {
+  const locale = useLocale();
+  const tErrors = useTranslations("Errors");
   const applicationsQuery = useQuery({
     ...myApplicationsQueryOptions(),
     enabled: applicationId.length > 0,
@@ -63,12 +67,15 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
     return <RecoveryState message="This application has not been paid yet." />;
   }
 
-  const { date, time } = splitStartAt(application.startAt);
+  const schedule = getSeoulDateTimeParts(application.startAt);
+  const scheduleLabel = schedule
+    ? `${schedule.date} ${schedule.time}`
+    : tErrors("dateTimeUnavailable");
   const paypalCharge =
     application.paymentAmount !== null &&
     application.paymentAmount !== undefined &&
     application.paymentCurrency
-      ? formatCurrency(application.paymentAmount, application.paymentCurrency)
+      ? formatCurrency(application.paymentAmount, application.paymentCurrency, locale)
       : "—";
 
   return (
@@ -89,15 +96,13 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
           <h2 className="mt-2 font-display text-xl font-semibold text-forest">
             {application.activityTitle}
           </h2>
-          <p className="mt-1 text-sm text-ink-soft">
-            {date} {time}
-          </p>
+          <p className="mt-1 text-sm text-ink-soft">{scheduleLabel}</p>
 
           <dl className="mt-5 divide-y divide-line border-y border-line">
             <div className="flex items-center justify-between gap-4 py-3">
               <dt className="text-sm text-ink-soft">Total application amount</dt>
               <dd className="font-display text-base font-semibold text-ink">
-                {formatKrw(application.totalPrice)}
+                {formatKrw(application.totalPrice, locale)}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-4 py-3">

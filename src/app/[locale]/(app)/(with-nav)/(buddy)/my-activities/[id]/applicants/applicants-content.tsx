@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
 import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
-import { splitStartAt } from "@/lib/format";
+import { formatSeoulDateTime, getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyActivityApplicationsQueryOptions, myActivityQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
@@ -26,21 +27,12 @@ function formatApplicationStatus(status: string) {
     .join(" ");
 }
 
-function formatAppliedDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
 export function ApplicantsContent({
   activityId,
   initialScheduleId,
 }: Readonly<ApplicantsContentProps>) {
+  const locale = useLocale();
+  const tErrors = useTranslations("Errors");
   const activityQuery = useQuery({
     ...myActivityQueryOptions(toActivityId(activityId)),
     enabled: !initialScheduleId,
@@ -79,7 +71,10 @@ export function ApplicantsContent({
   const confirmedCount =
     applications.statusCounts.CONFIRMED ??
     applications.applicants.filter((applicant) => applicant.status === "CONFIRMED").length;
-  const schedule = splitStartAt(applications.startAt);
+  const schedule = getSeoulDateTimeParts(applications.startAt);
+  const scheduleLabel = schedule
+    ? `${schedule.date} ${schedule.time}`
+    : tErrors("dateTimeUnavailable");
 
   return (
     <>
@@ -88,7 +83,7 @@ export function ApplicantsContent({
           {applications.activityTitle}
         </h1>
         <p className="mt-2 text-ink-soft">
-          {schedule.date} {schedule.time} • {confirmedCount} confirmed
+          {scheduleLabel} • {confirmedCount} confirmed
         </p>
       </div>
 
@@ -124,7 +119,11 @@ export function ApplicantsContent({
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-ink-soft">
-                <span>Applied for: {formatAppliedDate(applicant.appliedAt)}</span>
+                <span>
+                  Applied for:{" "}
+                  {formatSeoulDateTime(applicant.appliedAt, locale) ??
+                    tErrors("dateTimeUnavailable")}
+                </span>
                 <span>
                   • {applicant.guestCount} guest{applicant.guestCount === 1 ? "" : "s"}
                 </span>

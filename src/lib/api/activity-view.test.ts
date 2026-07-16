@@ -39,30 +39,33 @@ describe("activity view adapters", () => {
   });
 
   it("maps a tourist activity detail schedule ids for booking", () => {
-    const activity = mapTouristActivityDetailToActivity({
-      ...summary,
-      buddyId: 7,
-      includedItems: ["Local guide", "Tea tasting"],
-      restrictionNotes: ["Not recommended for wheelchairs"],
-      images: [
-        {
-          imageUrl: "https://static.hanbuddy.com/activities/bukchon-1.webp",
-          imageOrder: 1,
-        },
-        {
-          imageUrl: "https://static.hanbuddy.com/activities/bukchon-0.webp",
-          imageOrder: 0,
-        },
-      ],
-      schedules: [
-        {
-          activityScheduleId: 101,
-          startAt: "2026-07-20T10:00:00+09:00",
-          remainingCapacity: 4,
-          status: "OPEN",
-        },
-      ],
-    });
+    const activity = mapTouristActivityDetailToActivity(
+      {
+        ...summary,
+        buddyId: 7,
+        includedItems: ["Local guide", "Tea tasting"],
+        restrictionNotes: ["Not recommended for wheelchairs"],
+        images: [
+          {
+            imageUrl: "https://static.hanbuddy.com/activities/bukchon-1.webp",
+            imageOrder: 1,
+          },
+          {
+            imageUrl: "https://static.hanbuddy.com/activities/bukchon-0.webp",
+            imageOrder: 0,
+          },
+        ],
+        schedules: [
+          {
+            activityScheduleId: 101,
+            startAt: "2026-07-18T16:30:00Z",
+            remainingCapacity: 4,
+            status: "OPEN",
+          },
+        ],
+      },
+      "Time unavailable.",
+    );
 
     expect(activity.heroImageUrl).toBe("https://static.hanbuddy.com/activities/bukchon-0.webp");
     expect(activity.included).toEqual([
@@ -72,8 +75,8 @@ describe("activity view adapters", () => {
     expect(activity.sessions).toEqual([
       {
         id: "101",
-        dateLabel: "2026-07-20",
-        timeLabel: "10:00",
+        dateLabel: "2026-07-19",
+        timeLabel: "01:30",
         spotsLeft: 4,
       },
     ]);
@@ -81,6 +84,32 @@ describe("activity view adapters", () => {
       name: "Anguk Station Exit 2",
       area: "Anguk Station Exit 2",
       placeId: "ChIJ-bukchon",
+    });
+  });
+
+  it("uses the supplied fallback for an invalid schedule timestamp", () => {
+    const activity = mapTouristActivityDetailToActivity(
+      {
+        ...summary,
+        buddyId: 7,
+        includedItems: [],
+        restrictionNotes: [],
+        images: [],
+        schedules: [
+          {
+            activityScheduleId: 101,
+            startAt: "2026-07-20T10:00",
+            remainingCapacity: 4,
+            status: "OPEN",
+          },
+        ],
+      },
+      "Time unavailable.",
+    );
+
+    expect(activity.sessions[0]).toMatchObject({
+      dateLabel: "Time unavailable.",
+      timeLabel: "",
     });
   });
 });

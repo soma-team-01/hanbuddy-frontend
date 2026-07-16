@@ -1,4 +1,6 @@
-export const SERVICE_TIME_ZONE = "Asia/Seoul";
+import { SERVICE_TIME_ZONE } from "@/lib/datetime";
+
+export { SERVICE_TIME_ZONE };
 
 export const formats = {
   dateTime: {

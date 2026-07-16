@@ -1,4 +1,4 @@
-import { splitStartAt } from "@/lib/format";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
 import type {
   Application,
   ApplicationResponse,
@@ -13,13 +13,16 @@ const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStat
   COMPLETED: "completed",
 };
 
-export function mapApplicationResponseToApplication(response: ApplicationResponse): Application {
+export function mapApplicationResponseToApplication(
+  response: ApplicationResponse,
+  dateTimeUnavailable: string,
+): Application {
   const subtotal = response.price * response.guestCount;
-  const { date, time } = splitStartAt(response.startAt);
+  const parts = getSeoulDateTimeParts(response.startAt);
   return {
     id: String(response.applicationId),
     status: STATUS_BY_BACKEND_STATUS[response.status],
-    dateLabel: `${date} ${time}`,
+    dateLabel: parts ? `${parts.date} ${parts.time}` : dateTimeUnavailable,
     hostName: response.buddyName,
     hostAvatarUrl: null,
     activityTitle: response.activityTitle,

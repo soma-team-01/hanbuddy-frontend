@@ -10,7 +10,7 @@ const application = {
   buddyName: "Jihoon Kim",
   guestCount: 2,
   specialRequest: "Vegetarian snacks, please.",
-  startAt: "2026-07-20T10:00:00+09:00",
+  startAt: "2026-07-18T16:30:00Z",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
@@ -25,10 +25,10 @@ const application = {
 
 describe("application view adapters", () => {
   it("maps backend application fields to the existing card model", () => {
-    expect(mapApplicationResponseToApplication(application)).toEqual({
+    expect(mapApplicationResponseToApplication(application, "Time unavailable.")).toEqual({
       id: "11",
       status: "confirmed",
-      dateLabel: "2026-07-20 10:00",
+      dateLabel: "2026-07-19 01:30",
       hostName: "Jihoon Kim",
       hostAvatarUrl: null,
       activityTitle: "Bukchon Hidden Gems",
@@ -44,13 +44,25 @@ describe("application view adapters", () => {
 
   it("maps cancelled applications into a past-list status", () => {
     expect(
-      mapApplicationResponseToApplication({
-        ...application,
-        status: "CANCELLED",
-        cancellationReason: "SCHEDULE_CONFLICT",
-      }),
+      mapApplicationResponseToApplication(
+        {
+          ...application,
+          status: "CANCELLED",
+          cancellationReason: "SCHEDULE_CONFLICT",
+        },
+        "Time unavailable.",
+      ),
     ).toMatchObject({
       status: "cancelled",
     });
+  });
+
+  it("uses the supplied fallback for an invalid application timestamp", () => {
+    expect(
+      mapApplicationResponseToApplication(
+        { ...application, startAt: "2026-07-20T10:00" },
+        "Time unavailable.",
+      ),
+    ).toMatchObject({ dateLabel: "Time unavailable." });
   });
 });

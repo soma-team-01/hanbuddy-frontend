@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
@@ -20,11 +21,14 @@ import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
   const activityQuery = useQuery(touristActivityQueryOptions(activityId));
+  const locale = useLocale();
+  const tDateTime = useTranslations("DateTime");
+  const tErrors = useTranslations("Errors");
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState("");
   useAuthQueryRedirect(activityQuery.error);
 
   const activity = activityQuery.data
-    ? mapTouristActivityDetailToActivity(activityQuery.data)
+    ? mapTouristActivityDetailToActivity(activityQuery.data, tErrors("dateTimeUnavailable"))
     : null;
 
   useEffect(() => {
@@ -186,6 +190,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
 
           <section className="flex flex-col gap-4 border-t border-line pt-6">
             <h2 className="font-display text-xl font-semibold text-forest">Availability</h2>
+            <p className="text-xs text-ink-soft">{tDateTime("kstNotice")}</p>
             <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 pb-2">
               {activity.sessions.map((session) => (
                 <div
@@ -218,12 +223,12 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
         <div className="flex flex-1 flex-col">
           {activity.originalPrice && (
             <span className="text-sm text-ink-soft line-through">
-              {formatKrw(activity.originalPrice)}
+              {formatKrw(activity.originalPrice, locale)}
             </span>
           )}
           <span className="text-base text-ink-soft">
             <span className="font-display text-xl font-bold text-forest">
-              {formatKrw(activity.price)}
+              {formatKrw(activity.price, locale)}
             </span>{" "}
             / person
           </span>

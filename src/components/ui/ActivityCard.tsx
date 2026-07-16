@@ -1,10 +1,13 @@
 import Image from "next/image";
+import { useLocale } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, StarIcon } from "@/components/ui/icons";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
 export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
+  const locale = useLocale();
+
   return (
     <article className="w-full overflow-hidden rounded-xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
       <div className="relative h-48 w-full">
@@ -39,7 +42,7 @@ export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
             <p className="font-display text-sm font-semibold text-ink">{activity.host.name}</p>
           </div>
           <p className="font-display text-xl font-semibold text-forest">
-            {formatKrw(activity.price)}
+            {formatKrw(activity.price, locale)}
           </p>
         </div>
       </div>

@@ -65,11 +65,42 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
     expect(screen.getByText("Local guide")).toBeInTheDocument();
     expect(screen.getByText("4 spots left")).toBeInTheDocument();
+    expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
     expect(await screen.findAllByText("123 Anguk-ro, Jongno-gu, Seoul")).toHaveLength(2);
     expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith("ChIJ-bukchon", "test-google-key");
     expect(screen.getByTitle("Map of Anguk Station Exit 2")).toHaveAttribute(
       "src",
       "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-bukchon",
     );
+  });
+
+  it("shows the Korean Seoul time-zone notice", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: {
+        activityId: 42,
+        title: "Bukchon Hidden Gems",
+        description: "Walk through quiet alleys with a local buddy.",
+        thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+        buddyId: 7,
+        buddyName: "Jihoon Kim",
+        buddyProfileImageUrl: null,
+        includedItems: [],
+        restrictionNotes: [],
+        price: 45000,
+        currency: "KRW",
+        meetingPointName: "Anguk Station Exit 2",
+        meetingPlaceId: "ChIJ-bukchon",
+        images: [],
+        schedules: [],
+      },
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />, { locale: "ko" });
+
+    expect(await screen.findByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
   });
 });

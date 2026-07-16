@@ -41,5 +41,8 @@
   "Errors": {
     "generic": "Something went wrong. Please try again.",
     "dateTimeUnavailable": "Time unavailable."
+  },
+  "DateTime": {
+    "kstNotice": "All times are in Korea Standard Time (KST)."
   }
 }

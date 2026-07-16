@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
@@ -8,10 +9,11 @@ import { BookingForm } from "./booking-form";
 
 export function BookingContent({ activityId }: Readonly<{ activityId: string }>) {
   const activityQuery = useQuery(touristActivityQueryOptions(activityId));
+  const tErrors = useTranslations("Errors");
   useAuthQueryRedirect(activityQuery.error);
 
   const activity = activityQuery.data
-    ? mapTouristActivityDetailToActivity(activityQuery.data)
+    ? mapTouristActivityDetailToActivity(activityQuery.data, tErrors("dateTimeUnavailable"))
     : null;
 
   if (activityQuery.isPending) {

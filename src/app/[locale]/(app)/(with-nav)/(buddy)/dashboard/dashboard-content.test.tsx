@@ -80,6 +80,51 @@ describe("DashboardContent", () => {
     expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");
   });
 
+  it("keeps boundary instants on the Seoul date and localizes the weekday", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ dateStartAt: "2026-07-18T16:30:00Z", hasActivity: true }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          activityTitle: "Midnight Seoul Walk",
+          thumbnailImageUrl: null,
+          totalApplicantCount: 0,
+          schedules: [
+            {
+              activityScheduleId: 99,
+              startAt: "2026-07-18T16:30:00Z",
+              applicantCount: 0,
+              applicants: [],
+            },
+          ],
+        },
+      ],
+    });
+
+    renderWithQueryClient(<DashboardContent />, { locale: "en" });
+
+    expect(await screen.findByRole("button", { name: "Sun 19, has activity" })).toBeInTheDocument();
+    expect(await screen.findByText("01:30")).toBeInTheDocument();
+    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-19");
+  });
+
+  it("shows the localized date-time fallback when every schedule date is invalid", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ dateStartAt: "2026-07-19T01:30", hasActivity: true }],
+    });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Time unavailable.");
+    expect(screen.queryByText("Loading applicants...")).not.toBeInTheDocument();
+    expect(mockedGetBuddyApplications).not.toHaveBeenCalled();
+  });
+
   it("paginates schedule dates in groups of five", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",

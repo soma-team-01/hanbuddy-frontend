@@ -27,7 +27,7 @@ const confirmedApplication: ApplicationResponse = {
   buddyName: "Jihoon Kim",
   guestCount: 2,
   specialRequest: null,
-  startAt: "2026-07-20T10:00:00+09:00",
+  startAt: "2026-07-18T16:30:00Z",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
@@ -58,7 +58,7 @@ describe("PaymentSuccessContent", () => {
     expect(await screen.findByRole("heading", { name: "Payment complete" })).toBeInTheDocument();
     expect(screen.getByText("Your application is confirmed.")).toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(screen.getByText("2026-07-20 10:00")).toBeInTheDocument();
+    expect(screen.getByText("2026-07-19 01:30")).toBeInTheDocument();
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
     expect(screen.getByText("$68.97")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View My Applications" })).toHaveAttribute(
@@ -69,6 +69,17 @@ describe("PaymentSuccessContent", () => {
       "href",
       "/explore",
     );
+  });
+
+  it("renders the localized unavailable label for an invalid timestamp", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [{ ...confirmedApplication, startAt: "2026-07-20T10:00" }],
+    });
+
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" />, { locale: "ko" });
+
+    expect(await screen.findByText("시간 정보를 확인할 수 없습니다.")).toBeInTheDocument();
   });
 
   it("offers a recovery action when the payment cannot be found", async () => {

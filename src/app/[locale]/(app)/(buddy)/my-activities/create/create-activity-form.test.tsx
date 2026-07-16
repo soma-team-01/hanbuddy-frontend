@@ -281,6 +281,17 @@ describe("CreateActivityForm", () => {
     );
   });
 
+  it.each([
+    ["en", "All times are in Korea Standard Time (KST)."],
+    ["ko", "모든 시간은 한국 표준시(KST) 기준입니다."],
+  ] as const)("shows the Seoul time-zone notice in %s", (locale, notice) => {
+    renderWithQueryClient(<CreateActivityForm />, { locale });
+
+    goToStepTwo();
+
+    expect(screen.getByText(notice)).toBeInTheDocument();
+  });
+
   it("shows the server-calculated commission and payout after the price input loses focus", async () => {
     mockedPreviewActivityPrice.mockResolvedValue({
       status: "success",

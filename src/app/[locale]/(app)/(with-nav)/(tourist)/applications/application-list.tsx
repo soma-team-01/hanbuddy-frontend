@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { useState } from "react";
 import { PayPalPaymentButtons } from "@/components/payments/PayPalPaymentButton";
 import { Avatar } from "@/components/ui/Avatar";
@@ -31,6 +32,7 @@ function PriceBreakdown({
   paymentCharge: { amount: number; currency: string } | null;
 }>) {
   const [open, setOpen] = useState(false);
+  const locale = useLocale();
   const breakdown = application.breakdown;
   if (!breakdown) return null;
 
@@ -52,21 +54,21 @@ function PriceBreakdown({
         <div className="mt-3 flex flex-col gap-2 text-sm text-ink">
           <div className="flex justify-between">
             <span>
-              {formatKrw(breakdown.unitPrice)} x {breakdown.guests} guests
+              {formatKrw(breakdown.unitPrice, locale)} x {breakdown.guests} guests
             </span>
-            <span>{formatKrw(subtotal)}</span>
+            <span>{formatKrw(subtotal, locale)}</span>
           </div>
           {paymentCharge ? (
             <div className="flex justify-between">
               <span>Paid with PayPal</span>
               <span className="font-display font-semibold text-forest">
-                {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
+                {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
               </span>
             </div>
           ) : null}
           <div className="flex justify-between font-display font-semibold">
             <span>Total</span>
-            <span>{formatKrw(total)}</span>
+            <span>{formatKrw(total, locale)}</span>
           </div>
         </div>
       )}
@@ -88,6 +90,7 @@ function ApplicationCard({
   isPaymentPending: boolean;
 }>) {
   const [paymentError, setPaymentError] = useState("");
+  const locale = useLocale();
   const [paymentCharge, setPaymentCharge] = useState<{
     amount: number;
     currency: string;
@@ -141,12 +144,14 @@ function ApplicationCard({
         </div>
         {totalKrw !== null ? (
           <div className="shrink-0 text-right">
-            <p className="font-display text-sm font-semibold text-ink">{formatKrw(totalKrw)}</p>
+            <p className="font-display text-sm font-semibold text-ink">
+              {formatKrw(totalKrw, locale)}
+            </p>
             {!isCancelled && paymentCharge ? (
               <p className="mt-0.5 text-xs text-forest">
                 PayPal{" "}
                 <span className="font-display font-semibold">
-                  {formatCurrency(paymentCharge.amount, paymentCharge.currency)}
+                  {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
                 </span>
               </p>
             ) : null}

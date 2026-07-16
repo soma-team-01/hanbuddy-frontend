@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
@@ -17,19 +18,23 @@ import {
   formatNationalityCode,
   getActivityThumbnail,
 } from "@/lib/api/buddy-view";
-import { splitStartAt } from "@/lib/format";
+import type { Locale } from "@/i18n/routing";
+import { getSeoulDateTimeParts, SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { buddyApplicationsQueryOptions, buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 const DATE_PAGE_SIZE = 5;
 
-function formatDateChip(date: string) {
-  const parsed = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return { day: date, label: "" };
+function formatDateChip(value: string, locale: Locale, dateTimeUnavailable: string) {
+  const parts = getSeoulDateTimeParts(value);
+  if (!parts) return { day: dateTimeUnavailable, label: "" };
 
   return {
-    day: String(parsed.getDate()),
-    label: new Intl.DateTimeFormat("ko-KR", { weekday: "short" }).format(parsed),
+    day: String(Number(parts.date.slice(-2))),
+    label: new Intl.DateTimeFormat(locale, {
+      weekday: "short",
+      timeZone: SERVICE_TIME_ZONE,
+    }).format(new Date(value)),
   };
 }
 
@@ -38,11 +43,14 @@ function applicantCountLabel(count: number) {
 }
 
 export function DashboardContent() {
+  const locale = useLocale();
+  const tErrors = useTranslations("Errors");
   const [selectedDate, setSelectedDate] = useState("");
   const [requestedDatePage, setRequestedDatePage] = useState<number | null>(null);
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
   const dates = (scheduleDatesQuery.data ?? []).map(({ dateStartAt, hasActivity }) => ({
-    date: splitStartAt(dateStartAt).date,
+    date: getSeoulDateTimeParts(dateStartAt)?.date ?? "",
+    dateStartAt,
     hasActivity,
   }));
   const selectedDateExists = dates.some(({ date }) => date === selectedDate);
@@ -66,7 +74,16 @@ export function DashboardContent() {
   }
 
   let applicationsContent: ReactNode;
-  if (applicationsQuery.error) {
+  if (!activeDate) {
+    applicationsContent = (
+      <p
+        role="alert"
+        className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+      >
+        {tErrors("dateTimeUnavailable")}
+      </p>
+    );
+  } else if (applicationsQuery.error) {
     applicationsContent = (
       <p
         role="alert"
@@ -126,7 +143,8 @@ export function DashboardContent() {
                     className="flex items-center justify-between rounded-xl bg-chip/60 px-3 py-2 transition-colors hover:bg-chip"
                   >
                     <span className="font-display text-sm font-semibold text-ink">
-                      {splitStartAt(schedule.startAt).time}
+                      {getSeoulDateTimeParts(schedule.startAt)?.time ??
+                        tErrors("dateTimeUnavailable")}
                     </span>
                     <span className="text-xs text-ink-soft">
                       {applicantCountLabel(schedule.applicantCount)}
@@ -205,15 +223,15 @@ export function DashboardContent() {
             aria-label="Schedule dates"
             className="grid min-w-0 flex-1 grid-cols-5 gap-2"
           >
-            {visibleDates.map(({ date, hasActivity }) => {
-              const chip = formatDateChip(date);
+            {visibleDates.map(({ date, dateStartAt, hasActivity }) => {
+              const chip = formatDateChip(dateStartAt, locale, tErrors("dateTimeUnavailable"));
               const active = date === activeDate;
               let activityDotClass = "bg-transparent";
               if (hasActivity) activityDotClass = active ? "bg-cream" : "bg-forest";
 
               return (
                 <button
-                  key={date}
+                  key={dateStartAt}
                   type="button"
                   aria-pressed={active}
                   aria-label={`${chip.label} ${chip.day}${hasActivity ? ", has activity" : ""}`}

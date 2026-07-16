@@ -3,12 +3,14 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
 import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
+import { toSeoulStartAt } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
@@ -136,18 +138,16 @@ function buildSchedules(formData: FormData) {
   return formData
     .getAll("scheduleDateTime")
     .map((value) => (typeof value === "string" ? value.trim() : ""))
-    .map((scheduleDateTime) => {
-      const [activityDate, startTime = ""] = scheduleDateTime.split("T");
-      if (!activityDate || !startTime) return null;
-      // datetime-local 값(YYYY-MM-DDTHH:mm)을 Asia/Seoul 오프셋을 명시한 startAt으로 변환한다.
-      return { startAt: `${activityDate}T${startTime.slice(0, 5)}:00+09:00` };
-    })
+    .map((scheduleDateTime) => toSeoulStartAt(scheduleDateTime))
+    .map((startAt) => (startAt ? { startAt } : null))
     .filter((schedule): schedule is { startAt: string } => schedule !== null);
 }
 
 export function CreateActivityForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const locale = useLocale();
+  const tDateTime = useTranslations("DateTime");
   useAuthSessionCheck();
   const formRef = useRef<HTMLFormElement>(null);
   const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
@@ -564,6 +564,7 @@ export function CreateActivityForm() {
         <section hidden={currentStep !== 2} className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <FieldLabel>Availability</FieldLabel>
+            <p className="text-xs text-ink-soft">{tDateTime("kstNotice")}</p>
             {timeSlots.map((key, index) => (
               <div key={key} className="relative">
                 <input
@@ -638,11 +639,15 @@ export function CreateActivityForm() {
                   <dt>
                     Platform fee ({Math.round(pricePreviewMutation.data.commissionRate * 100)}%)
                   </dt>
-                  <dd>{formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw)}</dd>
+                  <dd>
+                    {formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw, locale)}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between font-semibold text-forest">
                   <dt>Estimated payout</dt>
-                  <dd>{formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw)}</dd>
+                  <dd>
+                    {formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw, locale)}
+                  </dd>
                 </div>
               </dl>
             ) : null}

@@ -275,7 +275,19 @@ describe("DashboardContent", () => {
               activityScheduleId: 99,
               startAt: "2026-07-20T10:00:00+09:00",
               applicantCount: 2,
-              applicants: [],
+              applicants: [
+                {
+                  applicationId: 11,
+                  applicantUserId: 3,
+                  applicantName: "Sophie Martin",
+                  applicantProfileImageUrl: null,
+                  applicantNationalityCode: "FR",
+                  guestCount: 1,
+                  applicantContactMethod: "PHONE",
+                  applicantContactCountryCode: "+33",
+                  applicantContactIdentifier: "612345678",
+                },
+              ],
             },
           ],
         },
@@ -291,6 +303,8 @@ describe("DashboardContent", () => {
     expect(screen.getByRole("button", { name: /월 20, 액티비티 있음/ })).toBeInTheDocument();
     expect((await screen.findAllByText("신청자 2명")).length).toBeGreaterThan(0);
     expect(screen.getByText("오전 10:00")).toBeInTheDocument();
+    expect(screen.getByText("프랑스")).toBeInTheDocument();
+    expect(screen.getByText("전화 +33 612345678")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Traditional Tea Tasting/ })).toHaveAttribute(
       "href",
       "/ko/my-activities/42/applicants?scheduleId=99",

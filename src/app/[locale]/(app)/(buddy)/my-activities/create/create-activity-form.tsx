@@ -200,6 +200,7 @@ export function CreateActivityForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const locale = useLocale();
+  const activeLocaleRef = useRef(locale);
   const t = useTranslations("CreateActivity");
   useAuthSessionCheck();
   const formRef = useRef<HTMLFormElement>(null);
@@ -215,18 +216,25 @@ export function CreateActivityForm() {
     null,
   );
   const placeSelectionVersionRef = useRef(0);
+  const placeSearchVersionRef = useRef(0);
   const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
   const [meetingPlaceId, setMeetingPlaceId] = useState("");
   const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
   const [selectedMeetingPlaceAddress, setSelectedMeetingPlaceAddress] =
     useState<LocalizedMeetingPlaceAddress | null>(null);
-  const [placePredictions, setPlacePredictions] = useState<GooglePlacePrediction[]>([]);
+  const [placePredictions, setPlacePredictions] = useState<{
+    locale: Locale;
+    values: GooglePlacePrediction[];
+  } | null>(null);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
   const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
   const [errorKey, setErrorKey] = useState<CreateActivityErrorKey | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  useEffect(() => {
+    activeLocaleRef.current = locale;
+  }, [locale]);
   const createActivityMutation = useMutation({
     mutationFn: async (request: ActivityUpsertRequest) =>
       unwrapApiResult(await createMyActivity(request), "activity"),
@@ -287,6 +295,7 @@ export function CreateActivityForm() {
       return;
     }
 
+    const requestVersion = ++placeSearchVersionRef.current;
     let isMounted = true;
 
     // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
@@ -298,15 +307,15 @@ export function CreateActivityForm() {
         sessionToken: placeSessionTokenRef.current,
       })
         .then((predictions) => {
-          if (!isMounted) return;
-          setPlacePredictions(predictions);
+          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
+          setPlacePredictions({ locale, values: predictions });
         })
         .catch(() => {
-          if (!isMounted) return;
-          setPlacePredictions([]);
+          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
+          setPlacePredictions({ locale, values: [] });
         })
         .finally(() => {
-          if (!isMounted) return;
+          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
           setIsSearchingPlaces(false);
         });
     }, PLACE_SEARCH_DEBOUNCE_MS);
@@ -457,6 +466,7 @@ export function CreateActivityForm() {
   function handlePlaceQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
     const value = event.target.value;
     placeSelectionVersionRef.current += 1;
+    placeSearchVersionRef.current += 1;
     if (value.trim().length < 3) {
       placeSessionTokenRef.current = null;
     }
@@ -465,11 +475,13 @@ export function CreateActivityForm() {
     setMeetingPlaceId("");
     setSelectedMeetingPlaceLabel("");
     setSelectedMeetingPlaceAddress(null);
-    setPlacePredictions([]);
+    setPlacePredictions(null);
     setIsSearchingPlaces(value.trim().length >= 3 && Boolean(googleMapsApiKey));
   }
 
-  function handlePlaceSelect(prediction: GooglePlacePrediction) {
+  function handlePlaceSelect(prediction: GooglePlacePrediction, predictionLocale: Locale) {
+    if (predictionLocale !== activeLocaleRef.current) return;
+
     const fallbackAddress =
       prediction.secondaryText || (prediction.text !== prediction.mainText ? prediction.text : "");
     const sessionToken = placeSessionTokenRef.current;
@@ -482,8 +494,10 @@ export function CreateActivityForm() {
     setMeetingPlaceId(prediction.placeId);
     setMeetingPlaceQuery(prediction.mainText);
     setSelectedMeetingPlaceLabel(prediction.mainText);
-    setSelectedMeetingPlaceAddress(fallbackAddress ? { locale, value: fallbackAddress } : null);
-    setPlacePredictions([]);
+    setSelectedMeetingPlaceAddress(
+      fallbackAddress ? { locale: predictionLocale, value: fallbackAddress } : null,
+    );
+    setPlacePredictions(null);
   }
 
   function handlePhotoSelection(event: React.ChangeEvent<HTMLInputElement>) {
@@ -767,16 +781,16 @@ export function CreateActivityForm() {
               <p className="px-1 text-xs text-ink-soft">{t("placeSearchUnavailable")}</p>
             ) : null}
             <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
-            {placePredictions.length > 0 ? (
+            {placePredictions?.locale === locale && placePredictions.values.length > 0 ? (
               <ul
                 aria-label={t("placeResults")}
                 className="overflow-hidden rounded-xl border border-line bg-white"
               >
-                {placePredictions.map((prediction) => (
+                {placePredictions.values.map((prediction) => (
                   <li key={prediction.placeId}>
                     <button
                       type="button"
-                      onClick={() => handlePlaceSelect(prediction)}
+                      onClick={() => handlePlaceSelect(prediction, placePredictions.locale)}
                       className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-chip"
                     >
                       <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>

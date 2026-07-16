@@ -6,6 +6,7 @@ import { getMyProfile } from "@/lib/api/users";
 import {
   fetchGooglePlaceDetails,
   type GooglePlaceDetails,
+  type GooglePlacePrediction,
   searchGooglePlacePredictions,
 } from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
@@ -367,6 +368,71 @@ describe("CreateActivityForm", () => {
       "src",
       "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",
     );
+  });
+
+  it("discards autocomplete predictions from a previous locale", async () => {
+    const englishPrediction: GooglePlacePrediction = {
+      placeId: "ChIJ-english",
+      mainText: "Anguk Station",
+      secondaryText: "Jongno-gu, Seoul, South Korea",
+      text: "Anguk Station, Jongno-gu, Seoul, South Korea",
+    };
+    const lateEnglishPredictions = createDeferred<GooglePlacePrediction[]>();
+    mockedSearchGooglePlacePredictions.mockImplementation((query, _apiKey, options) => {
+      if (options.locale === "en" && query === "Ang") {
+        return Promise.resolve([englishPrediction]);
+      }
+      if (options.locale === "en") return lateEnglishPredictions.promise;
+      return new Promise(() => {});
+    });
+    const queryClient = createQueryClient();
+    const renderForm = (locale: "en" | "ko") => (
+      <QueryClientProvider client={queryClient}>
+        <IntlTestProvider locale={locale}>
+          <CreateActivityForm />
+        </IntlTestProvider>
+      </QueryClientProvider>
+    );
+    const { rerender } = render(renderForm("en"));
+
+    goToStepThree();
+    fireEvent.change(screen.getByRole("textbox", { name: "Search Google place" }), {
+      target: { value: "Ang" },
+    });
+    const oldEnglishPrediction = await screen.findByRole("button", {
+      name: /Anguk Station.*Jongno-gu, Seoul, South Korea/,
+    });
+
+    rerender(renderForm("ko"));
+
+    expect(
+      screen.queryByRole("button", { name: /Anguk Station.*Jongno-gu, Seoul, South Korea/ }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(oldEnglishPrediction);
+    expect(screen.queryByText("Jongno-gu, Seoul, South Korea")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Google 장소 검색" })).toHaveValue("Ang");
+    expect(screen.queryByTitle("만나는 장소 지도 미리보기")).not.toBeInTheDocument();
+
+    rerender(renderForm("en"));
+    fireEvent.change(screen.getByRole("textbox", { name: "Search Google place" }), {
+      target: { value: "Anguk" },
+    });
+    await waitFor(() =>
+      expect(mockedSearchGooglePlacePredictions).toHaveBeenCalledWith(
+        "Anguk",
+        "test-google-key",
+        expect.objectContaining({ locale: "en" }),
+      ),
+    );
+
+    rerender(renderForm("ko"));
+    await act(async () => {
+      lateEnglishPredictions.resolve([englishPrediction]);
+      await lateEnglishPredictions.promise;
+    });
+
+    expect(screen.queryByText("Jongno-gu, Seoul, South Korea")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Anguk Station/ })).not.toBeInTheDocument();
   });
 
   it("reuses one session token for autocomplete and terminates it after selection", async () => {

@@ -115,11 +115,11 @@ export function ApplicantsContent({
                   </p>
                   <p className="flex items-center gap-1 text-ink-soft">
                     <MapPinIcon className="size-3.5" />
-                    {formatNationalityCode(applicant.applicantNationalityCode)}
+                    {formatNationalityCode(applicant.applicantNationalityCode, locale)}
                   </p>
                   <p className="flex items-center gap-1 text-ink-soft">
                     <MessageSquareIcon className="size-3.5" />
-                    {formatApplicantContact(applicant)}
+                    {formatApplicantContact(applicant, locale)}
                   </p>
                 </div>
               </div>

@@ -162,7 +162,7 @@ describe("ApplicantsContent", () => {
             applicantProfileImageUrl: null,
             applicantNationalityCode: "FR",
             guestCount: 1,
-            applicantContactMethod: "WHATSAPP",
+            applicantContactMethod: "PHONE",
             applicantContactCountryCode: "+33",
             applicantContactIdentifier: "612345678",
             status: "PENDING_PAYMENT",
@@ -185,6 +185,8 @@ describe("ApplicantsContent", () => {
     expect(screen.getByText("• 1명")).toBeInTheDocument();
     expect(screen.getByText("• 결제 대기")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
+    expect(screen.getByText("프랑스")).toBeInTheDocument();
+    expect(screen.getByText("전화 +33 612345678")).toBeInTheDocument();
     expect(screen.getByText("No pork")).toBeInTheDocument();
   });
 

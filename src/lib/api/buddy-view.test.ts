@@ -35,19 +35,36 @@ describe("buddy view helpers", () => {
   });
 
   it("formats applicant nationality and contact details", () => {
-    expect(formatNationalityCode("FR")).toBe("France");
-    expect(formatApplicantContact(applicant)).toBe("WhatsApp +33 612345678");
+    expect(formatNationalityCode("FR", "en")).toBe("France");
+    expect(formatApplicantContact(applicant, "en")).toBe("WhatsApp +33 612345678");
+  });
+
+  it("localizes region and phone labels without translating messaging brands", () => {
+    expect(formatNationalityCode("FR", "ko")).toBe("프랑스");
+    expect(
+      formatApplicantContact(
+        {
+          ...applicant,
+          applicantContactMethod: "PHONE",
+        },
+        "ko",
+      ),
+    ).toBe("전화 +33 612345678");
+    expect(formatApplicantContact(applicant, "ko")).toBe("WhatsApp +33 612345678");
   });
 
   it("falls back gracefully for unknown nationality and missing country code", () => {
-    expect(formatNationalityCode("XX")).toBe("XX");
+    expect(formatNationalityCode("XX", "en")).toBe("XX");
     expect(
-      formatApplicantContact({
-        ...applicant,
-        applicantContactMethod: "LINE",
-        applicantContactCountryCode: null,
-        applicantContactIdentifier: "sophie.line",
-      }),
+      formatApplicantContact(
+        {
+          ...applicant,
+          applicantContactMethod: "LINE",
+          applicantContactCountryCode: null,
+          applicantContactIdentifier: "sophie.line",
+        },
+        "en",
+      ),
     ).toBe("Line sophie.line");
   });
 });

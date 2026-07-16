@@ -9,6 +9,7 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
+import type { Locale } from "@/i18n/routing";
 import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
 import { toSeoulStartAt } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
@@ -48,6 +49,11 @@ interface SelectedActivityPhoto {
   id: number;
   file: File;
   previewUrl: string;
+}
+
+interface LocalizedMeetingPlaceAddress {
+  locale: Locale;
+  value: string;
 }
 
 type CreateActivityStep = 1 | 2 | 3;
@@ -158,11 +164,15 @@ export function CreateActivityForm() {
   const selectedPhotosRef = useRef<SelectedActivityPhoto[]>([]);
   const nextPhotoIdRef = useRef(0);
   const placeSessionTokenRef = useRef<string | null>(null);
+  const selectedPlaceSessionTokenRef = useRef<{ placeId: string; sessionToken: string } | null>(
+    null,
+  );
   const placeSelectionVersionRef = useRef(0);
   const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
   const [meetingPlaceId, setMeetingPlaceId] = useState("");
   const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
-  const [selectedMeetingPlaceAddress, setSelectedMeetingPlaceAddress] = useState("");
+  const [selectedMeetingPlaceAddress, setSelectedMeetingPlaceAddress] =
+    useState<LocalizedMeetingPlaceAddress | null>(null);
   const [placePredictions, setPlacePredictions] = useState<GooglePlacePrediction[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
@@ -259,6 +269,44 @@ export function CreateActivityForm() {
       window.clearTimeout(timeoutId);
     };
   }, [locale, meetingPlaceQuery, selectedMeetingPlaceLabel]);
+
+  useEffect(() => {
+    const apiKey = getGoogleMapsApiKey();
+    if (!meetingPlaceId || !apiKey) return;
+
+    const pendingSession = selectedPlaceSessionTokenRef.current;
+    const sessionToken =
+      pendingSession?.placeId === meetingPlaceId ? pendingSession.sessionToken : null;
+    if (sessionToken) {
+      selectedPlaceSessionTokenRef.current = null;
+    }
+
+    const requestVersion = ++placeSelectionVersionRef.current;
+    let isActive = true;
+
+    fetchGooglePlaceDetails(meetingPlaceId, apiKey, {
+      locale,
+      fetcher: fetch,
+      ...(sessionToken ? { sessionToken } : {}),
+    })
+      .then((place) => {
+        if (
+          !isActive ||
+          placeSelectionVersionRef.current !== requestVersion ||
+          !place.formattedAddress
+        ) {
+          return;
+        }
+        setSelectedMeetingPlaceAddress({ locale, value: place.formattedAddress });
+      })
+      .catch(() => {
+        // Initial selection keeps its current-locale Autocomplete fallback. Locale refetch stays empty.
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [locale, meetingPlaceId]);
 
   const selectedFiles = selectedPhotos.map((photo) => photo.file);
   const stepContent = STEP_CONTENT[currentStep];
@@ -368,42 +416,30 @@ export function CreateActivityForm() {
     if (value.trim().length < 3) {
       placeSessionTokenRef.current = null;
     }
+    selectedPlaceSessionTokenRef.current = null;
     setMeetingPlaceQuery(value);
     setMeetingPlaceId("");
     setSelectedMeetingPlaceLabel("");
-    setSelectedMeetingPlaceAddress("");
+    setSelectedMeetingPlaceAddress(null);
     setPlacePredictions([]);
     setIsSearchingPlaces(value.trim().length >= 3 && Boolean(getGoogleMapsApiKey()));
   }
 
-  async function handlePlaceSelect(prediction: GooglePlacePrediction) {
+  function handlePlaceSelect(prediction: GooglePlacePrediction) {
     const fallbackAddress =
       prediction.secondaryText || (prediction.text !== prediction.mainText ? prediction.text : "");
-    const apiKey = getGoogleMapsApiKey();
     const sessionToken = placeSessionTokenRef.current;
-    const selectionVersion = ++placeSelectionVersionRef.current;
+    placeSelectionVersionRef.current += 1;
     placeSessionTokenRef.current = null;
+    selectedPlaceSessionTokenRef.current = sessionToken
+      ? { placeId: prediction.placeId, sessionToken }
+      : null;
 
     setMeetingPlaceId(prediction.placeId);
     setMeetingPlaceQuery(prediction.mainText);
     setSelectedMeetingPlaceLabel(prediction.mainText);
-    setSelectedMeetingPlaceAddress(fallbackAddress);
+    setSelectedMeetingPlaceAddress(fallbackAddress ? { locale, value: fallbackAddress } : null);
     setPlacePredictions([]);
-
-    if (!apiKey || !sessionToken) return;
-
-    try {
-      const place = await fetchGooglePlaceDetails(prediction.placeId, apiKey, {
-        locale,
-        fetcher: fetch,
-        sessionToken,
-      });
-      if (placeSelectionVersionRef.current === selectionVersion && place.formattedAddress) {
-        setSelectedMeetingPlaceAddress(place.formattedAddress);
-      }
-    } catch {
-      // Keep the Autocomplete address when session-terminating Place Details fails.
-    }
   }
 
   function handlePhotoSelection(event: React.ChangeEvent<HTMLInputElement>) {
@@ -703,8 +739,8 @@ export function CreateActivityForm() {
             {isSearchingPlaces ? (
               <p className="px-1 text-xs text-ink-soft">Searching places...</p>
             ) : null}
-            {selectedMeetingPlaceAddress ? (
-              <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress}</p>
+            {selectedMeetingPlaceAddress?.locale === locale ? (
+              <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress.value}</p>
             ) : null}
             {meetingMapUrl ? (
               <iframe

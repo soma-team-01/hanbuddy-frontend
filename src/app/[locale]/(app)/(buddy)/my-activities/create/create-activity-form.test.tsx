@@ -1,14 +1,20 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
 import { getMyProfile } from "@/lib/api/users";
-import { fetchGooglePlaceDetails, searchGooglePlacePredictions } from "@/lib/google/places";
+import {
+  fetchGooglePlaceDetails,
+  type GooglePlaceDetails,
+  searchGooglePlacePredictions,
+} from "@/lib/google/places";
 import { uploadActivityImages } from "@/lib/images/presigned";
 import { buddyKeys } from "@/lib/query/buddy";
 import { createQueryClient } from "@/lib/query/client";
 import { userKeys } from "@/lib/query/users";
 import { createMockProfile } from "@/test/factories";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
+import { IntlTestProvider } from "@/test/render-with-intl";
 import { CreateActivityForm } from "./create-activity-form";
 
 const routerMock = vi.hoisted(() => ({
@@ -55,6 +61,14 @@ const createObjectUrlMock = vi.fn((file: Blob) =>
 );
 const revokeObjectUrlMock = vi.fn();
 const profile = createMockProfile({ userType: "BUDDY" });
+
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+}
 
 function confirmRegisterInDialog() {
   const dialog = screen.getByRole("dialog");
@@ -234,6 +248,72 @@ describe("CreateActivityForm", () => {
         }),
       ),
     );
+    expect(screen.getByTitle("Meeting place map preview")).toHaveAttribute(
+      "src",
+      "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",
+    );
+  });
+
+  it("keeps the latest localized place details authoritative after a locale change", async () => {
+    const englishDetails = createDeferred<GooglePlaceDetails>();
+    const koreanDetails = createDeferred<GooglePlaceDetails>();
+    mockedFetchGooglePlaceDetails.mockImplementation((_placeId, _apiKey, options) =>
+      options.locale === "en" ? englishDetails.promise : koreanDetails.promise,
+    );
+    const queryClient = createQueryClient();
+    const renderForm = (locale: "en" | "ko") => (
+      <QueryClientProvider client={queryClient}>
+        <IntlTestProvider locale={locale}>
+          <CreateActivityForm />
+        </IntlTestProvider>
+      </QueryClientProvider>
+    );
+    const { rerender } = render(renderForm("en"));
+
+    goToStepThree();
+    fireEvent.change(screen.getByRole("textbox", { name: "Search Google place" }), {
+      target: { value: "Anguk" },
+    });
+    fireEvent.click(await screen.findByRole("button", { name: /Anguk Station/ }));
+
+    await waitFor(() => expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(1));
+    const autocompleteSessionToken =
+      mockedSearchGooglePlacePredictions.mock.calls[0][2].sessionToken;
+    expect(mockedFetchGooglePlaceDetails.mock.calls[0][2]).toEqual(
+      expect.objectContaining({
+        locale: "en",
+        fetcher: expect.any(Function),
+        sessionToken: autocompleteSessionToken,
+      }),
+    );
+
+    rerender(renderForm("ko"));
+
+    await waitFor(() => expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(2));
+    expect(mockedFetchGooglePlaceDetails.mock.calls[1][2]).toEqual({
+      locale: "ko",
+      fetcher: expect.any(Function),
+    });
+    expect(screen.queryByText("Seoul, South Korea")).not.toBeInTheDocument();
+
+    await act(async () => {
+      koreanDetails.resolve({ formattedAddress: "서울특별시 종로구 안국동" });
+      await koreanDetails.promise;
+    });
+
+    expect(await screen.findByText("서울특별시 종로구 안국동")).toBeInTheDocument();
+    expect(screen.getByTitle("Meeting place map preview")).toHaveAttribute(
+      "src",
+      "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",
+    );
+
+    await act(async () => {
+      englishDetails.resolve({ formattedAddress: "Jongno-gu, Seoul, South Korea" });
+      await englishDetails.promise;
+    });
+
+    expect(screen.queryByText("Jongno-gu, Seoul, South Korea")).not.toBeInTheDocument();
+    expect(screen.getByText("서울특별시 종로구 안국동")).toBeInTheDocument();
     expect(screen.getByTitle("Meeting place map preview")).toHaveAttribute(
       "src",
       "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-anguk&language=ko&region=KR",

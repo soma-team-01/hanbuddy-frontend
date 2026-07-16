@@ -1,0 +1,23 @@
+{
+  "Common": {
+    "cancel": "취소",
+    "close": "닫기",
+    "comingSoon": "출시 예정",
+    "loading": "불러오는 중...",
+    "unavailable": "사용할 수 없음"
+  },
+  "Navigation": {
+    "home": "홈",
+    "activity": "액티비티",
+    "myPage": "마이페이지"
+  },
+  "Accessibility": {
+    "goBack": "뒤로 가기",
+    "close": "닫기",
+    "closeDialog": "대화상자 닫기"
+  },
+  "Errors": {
+    "generic": "문제가 발생했습니다. 다시 시도해 주세요.",
+    "dateTimeUnavailable": "시간 정보를 확인할 수 없습니다."
+  }
+}

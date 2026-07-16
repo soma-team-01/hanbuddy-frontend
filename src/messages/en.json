@@ -1,0 +1,23 @@
+{
+  "Common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "comingSoon": "Coming soon",
+    "loading": "Loading...",
+    "unavailable": "Unavailable"
+  },
+  "Navigation": {
+    "home": "Home",
+    "activity": "Activity",
+    "myPage": "My Page"
+  },
+  "Accessibility": {
+    "goBack": "Go back",
+    "close": "Close",
+    "closeDialog": "Close dialog"
+  },
+  "Errors": {
+    "generic": "Something went wrong. Please try again.",
+    "dateTimeUnavailable": "Time unavailable."
+  }
+}

@@ -1,11 +1,25 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Locale } from "@/i18n/routing";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { userKeys } from "@/lib/query/users";
 import { createMockProfile } from "@/test/factories";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import EditProfilePage from "./page";
+import EditProfilePage, { generateMetadata } from "./page";
+
+vi.mock("next-intl/server", async () => {
+  const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
+    import("next-intl"),
+    import("@/messages/en.json"),
+    import("@/messages/ko.json"),
+  ]);
+
+  return {
+    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: "Profile" }) =>
+      createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
+  };
+});
 
 const replace = vi.fn();
 const refresh = vi.fn();
@@ -62,6 +76,62 @@ describe("EditProfilePage", () => {
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });
 
+  it.each([
+    [
+      "en",
+      "Full Name",
+      "Nationality",
+      "Age",
+      "Contact Details",
+      "Preferred Messaging App",
+      "Add profile photo",
+      "Save",
+      "Go back",
+    ],
+    [
+      "ko",
+      "이름",
+      "국적",
+      "나이",
+      "연락처 정보",
+      "선호하는 메신저",
+      "프로필 사진 추가",
+      "저장",
+      "뒤로 가기",
+    ],
+  ] as const)(
+    "renders localized fields, actions, and accessibility names for %s",
+    async (locale, name, nationality, age, contactHeading, messagingApp, addPhoto, save, back) => {
+      renderWithQueryClient(<EditProfilePage />, { locale });
+
+      expect(await screen.findByLabelText(name)).toHaveValue("Sarah Jenkins");
+      expect(screen.getByText(nationality)).toBeInTheDocument();
+      expect(screen.getByLabelText(age)).toHaveValue(28);
+      expect(screen.getByRole("heading", { name: contactHeading })).toBeInTheDocument();
+      expect(screen.getByText(messagingApp)).toBeInTheDocument();
+      expect(screen.getByLabelText(addPhoto)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: save })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: back })).toHaveAttribute(
+        "href",
+        `/${locale}/my-page`,
+      );
+    },
+  );
+
+  it.each([
+    ["en", "Full Name", "Save", "Please enter your name."],
+    ["ko", "이름", "저장", "이름을 입력해 주세요."],
+  ] as const)("localizes profile validation for %s", async (locale, name, save, message) => {
+    renderWithQueryClient(<EditProfilePage />, { locale });
+    const nameInput = await screen.findByLabelText(name);
+    fireEvent.change(nameInput, { target: { value: " " } });
+
+    fireEvent.submit(nameInput.closest("form")!);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(message);
+    expect(screen.getByRole("button", { name: save })).toBeInTheDocument();
+  });
+
   it("does not apply the Korean-only phone input to tourists", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
@@ -100,7 +170,7 @@ describe("EditProfilePage", () => {
       });
     });
     expect(uploadProfileImage).not.toHaveBeenCalled();
-    expect(replace).toHaveBeenCalledWith("/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page");
     expect(queryClient.getQueryData(userKeys.me())).toEqual(
       expect.objectContaining({ name: "Sarah J." }),
     );
@@ -141,7 +211,7 @@ describe("EditProfilePage", () => {
         profileImageKey: "profiles/2026/07/07/uuid.png",
       }),
     );
-    expect(replace).toHaveBeenCalledWith("/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page");
   });
 
   it("shows the upload error and skips saving when the image upload fails", async () => {
@@ -156,7 +226,9 @@ describe("EditProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent("프로필 이미지 업로드에 실패했습니다."),
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Could not upload the profile photo. Please try again.",
+      ),
     );
     expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
   });
@@ -169,12 +241,12 @@ describe("EditProfilePage", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.",
+      "Only JPEG, PNG, or WebP images can be uploaded.",
     );
     expect(screen.queryByAltText("Selected profile photo preview")).not.toBeInTheDocument();
   });
 
-  it("shows the backend message when saving fails", async () => {
+  it("shows a localized safe message when saving fails", async () => {
     mockedUpdateMyProfile.mockResolvedValue({
       status: "error",
       message: "국적 코드는 영문 대문자 2자리여야 합니다",
@@ -184,10 +256,10 @@ describe("EditProfilePage", () => {
     await screen.findByLabelText("Full Name");
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "국적 코드는 영문 대문자 2자리여야 합니다",
-    );
-    expect(replace).not.toHaveBeenCalledWith("/my-page");
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Could not save your profile. Please try again.");
+    expect(alert).not.toHaveTextContent("국적 코드는 영문 대문자 2자리여야 합니다");
+    expect(replace).not.toHaveBeenCalledWith("/en/my-page");
   });
 
   it("redirects to login when the save request is unauthenticated", async () => {
@@ -208,6 +280,28 @@ describe("EditProfilePage", () => {
 
     await waitFor(() => {
       expect(replace).toHaveBeenCalledWith("/en/login");
+    });
+  });
+});
+
+describe("edit profile metadata", () => {
+  it.each([
+    ["en", "Edit profile | HanBuddy", "/en/my-page/edit"],
+    ["ko", "프로필 수정 | HanBuddy", "/ko/my-page/edit"],
+  ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: locale satisfies Locale }),
+    });
+
+    expect(metadata).toMatchObject({
+      title,
+      alternates: {
+        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        languages: {
+          en: "https://hanbuddy-frontend.vercel.app/en/my-page/edit",
+          ko: "https://hanbuddy-frontend.vercel.app/ko/my-page/edit",
+        },
+      },
     });
   });
 });

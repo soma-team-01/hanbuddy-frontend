@@ -8,7 +8,8 @@ import { LogoutButton } from "./LogoutButton";
 const replace = vi.fn();
 const refresh = vi.fn();
 
-vi.mock("next/navigation", () => ({
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({
     replace,
     refresh,
@@ -45,7 +46,7 @@ describe("LogoutButton", () => {
         credentials: "same-origin",
       });
     });
-    expect(replace).toHaveBeenCalledWith("/login");
+    expect(replace).toHaveBeenCalledWith("/en/login");
     expect(refresh).toHaveBeenCalled();
     expect(queryClient.getQueryData(userKeys.me())).toBeUndefined();
   });
@@ -60,6 +61,23 @@ describe("LogoutButton", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["en", "Log Out", "Log out?", "You can log back in anytime.", "Cancel"],
+    ["ko", "로그아웃", "로그아웃할까요?", "언제든 다시 로그인할 수 있습니다.", "취소"],
+  ] as const)(
+    "localizes the logout action and named confirmation dialog for %s",
+    (locale, action, title, description, cancel) => {
+      renderWithQueryClient(<LogoutButton />, { locale });
+
+      fireEvent.click(screen.getByRole("button", { name: action }));
+
+      const dialog = screen.getByRole("dialog", { name: title });
+      expect(within(dialog).getByText(description)).toBeInTheDocument();
+      expect(within(dialog).getByRole("button", { name: action })).toBeInTheDocument();
+      expect(within(dialog).getByRole("button", { name: cancel })).toBeInTheDocument();
+    },
+  );
+
   it("still returns the user to login when the logout request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network unavailable")));
     renderWithQueryClient(<LogoutButton />);
@@ -68,7 +86,7 @@ describe("LogoutButton", () => {
     confirmLogoutInDialog();
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith("/login");
+      expect(replace).toHaveBeenCalledWith("/en/login");
     });
     expect(refresh).toHaveBeenCalled();
   });

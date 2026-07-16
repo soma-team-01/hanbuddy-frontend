@@ -22,6 +22,108 @@
     "cancelled": "Cancelled",
     "completed": "Completed"
   },
+  "Landing": {
+    "metadataTitle": "HanBuddy | Experience Korea like a local",
+    "metadataDescription": "Connect with local buddies for authentic Korean experiences.",
+    "login": "Log in",
+    "eyebrow": "Match with a local buddy",
+    "headline": "Experience Korea like a local.",
+    "description": "From KBO nights to traditional markets, connect with a local buddy for authentic cultural experiences — not just sightseeing.",
+    "getStarted": "Get started",
+    "browseExperiences": "Browse experiences →",
+    "experiences": {
+      "gwangjangMarket": {
+        "title": "Gwangjang Market",
+        "tag": "Street food"
+      },
+      "bukchonHanok": {
+        "title": "Bukchon Hanok",
+        "tag": "Village walk"
+      },
+      "teaCeremony": {
+        "title": "Tea Ceremony",
+        "tag": "Korean culture"
+      }
+    },
+    "footerTagline": "Authentic Korea, together."
+  },
+  "Auth": {
+    "metadataTitle": "Log in | HanBuddy",
+    "metadataDescription": "Log in to HanBuddy and find authentic local experiences in Korea.",
+    "welcome": "Welcome to HanBuddy",
+    "introduction": "Tell us about yourself to find the perfect local experience.",
+    "continueWithGoogle": "Continue with Google",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "helpCenter": "Help Center",
+    "copyright": "© 2026 HanBuddy. All rights reserved.",
+    "errors": {
+      "googleCancelled": "Google sign-in was cancelled.",
+      "missingCode": "Google did not return an authorization code.",
+      "invalidState": "We couldn't verify your Google sign-in session.",
+      "backendRejected": "Google sign-in was rejected. Please try again.",
+      "invalidLoginResponse": "The login response was incomplete. Please try again.",
+      "missingSignupToken": "We couldn't start registration. Please try again.",
+      "serverUnavailable": "The authentication server is unavailable. Please try again.",
+      "configuration": "Google sign-in is temporarily unavailable.",
+      "unknown": "Something went wrong during sign-in. Please try again."
+    }
+  },
+  "Onboarding": {
+    "metadataTitle": "Complete your profile | HanBuddy",
+    "metadataDescription": "Choose your HanBuddy role and complete your profile.",
+    "roleHeading": "I am a...",
+    "roles": {
+      "tourist": "Tourist",
+      "buddy": "Buddy"
+    },
+    "personalInformation": "Personal Information",
+    "nationality": "Nationality",
+    "age": "Age",
+    "agePlaceholder": "e.g. 25",
+    "contactMethods": "Contact Methods",
+    "preferredMessagingApp": "Preferred Messaging App",
+    "addProfilePhoto": "Add profile photo",
+    "selectedProfilePhotoPreview": "Selected profile photo preview",
+    "googleProfile": "Google profile",
+    "profileFor": "{name} profile",
+    "validation": {
+      "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
+      "imageTooLarge": "Profile photos must be 5MB or smaller.",
+      "nationalityRequired": "Please select a nationality.",
+      "ageInvalid": "Enter an age from 0 to 150.",
+      "contactInvalid": "Enter a contact ID or number with at least 2 characters."
+    },
+    "profileUploadFailed": "Could not upload the profile photo. Please try again.",
+    "signupFailed": "Could not complete registration. Please try again.",
+    "serverUnavailable": "The authentication server is unavailable. Please try again.",
+    "completing": "Completing...",
+    "completeRegistration": "Complete Registration"
+  },
+  "Profile": {
+    "metadataTitle": "Edit profile | HanBuddy",
+    "metadataDescription": "Update your HanBuddy profile and contact details.",
+    "fullName": "Full Name",
+    "nationality": "Nationality",
+    "age": "Age",
+    "contactDetails": "Contact Details",
+    "preferredMessagingApp": "Preferred Messaging App",
+    "addProfilePhoto": "Add profile photo",
+    "selectedProfilePhotoPreview": "Selected profile photo preview",
+    "validation": {
+      "nameRequired": "Please enter your name.",
+      "nationalityRequired": "Please select a nationality.",
+      "ageInvalid": "Enter an age from 0 to 150.",
+      "contactInvalid": "Enter a contact ID or number with at least 2 characters.",
+      "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
+      "imageTooLarge": "Profile photos must be 5MB or smaller."
+    },
+    "profileUploadFailed": "Could not upload the profile photo. Please try again.",
+    "saveFailed": "Could not save your profile. Please try again.",
+    "loadFailed": "Could not load your profile.",
+    "save": "Save",
+    "saving": "Saving..."
+  },
   "Payment": {
     "unavailable": "Payment unavailable"
   },
@@ -39,7 +141,13 @@
     "english": "English",
     "korean": "한국어",
     "helpCenter": "Help Center",
-    "deleteAccount": "Delete Account"
+    "deleteAccount": "Delete Account",
+    "editProfile": "Edit Profile",
+    "profileLoadFailed": "Could not load your profile.",
+    "logOut": "Log Out",
+    "loggingOut": "Logging out...",
+    "logoutTitle": "Log out?",
+    "logoutDescription": "You can log back in anytime."
   },
   "Errors": {
     "generic": "Something went wrong. Please try again.",

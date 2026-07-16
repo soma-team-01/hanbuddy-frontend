@@ -8,6 +8,7 @@ import {
   setAuthenticatedSessionCookies,
 } from "@/lib/auth/cookies";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
+import type { AuthErrorCode } from "@/lib/auth/error-codes";
 import { localizePathname } from "@/i18n/pathname";
 import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 
@@ -23,16 +24,16 @@ export async function GET(request: NextRequest) {
   if (error) {
     return redirectToLoginWithError(
       request,
-      callbackUrl.searchParams.get("error_description") ?? error,
+      error === "access_denied" ? "googleCancelled" : "unknown",
     );
   }
 
   if (!code) {
-    return redirectToLoginWithError(request, "Google 인증 코드가 없습니다.");
+    return redirectToLoginWithError(request, "missingCode");
   }
 
   if (!state || !expectedState || state !== expectedState) {
-    return redirectToLoginWithError(request, "Google 로그인 상태 검증에 실패했습니다.");
+    return redirectToLoginWithError(request, "invalidState");
   }
 
   try {
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!backend.payload.isSuccess) {
-      return redirectToLoginWithError(request, backend.payload.message);
+      return redirectToLoginWithError(request, "backendRejected");
     }
 
     const result = backend.payload.result;
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
     return response;
   } catch {
-    return redirectToLoginWithError(request, "인증 서버에 연결할 수 없습니다.");
+    return redirectToLoginWithError(request, "serverUnavailable");
   }
 }
 
@@ -69,7 +70,7 @@ function hasUsableGoogleLoginResult(result: GoogleLoginResponse) {
 
 function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginResponse) {
   if (!result.accessToken || !result.userType) {
-    return redirectToLoginWithError(request, "로그인 응답에 필요한 사용자 정보가 없습니다.");
+    return redirectToLoginWithError(request, "invalidLoginResponse");
   }
 
   const response = NextResponse.redirect(
@@ -82,7 +83,7 @@ function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginRe
 
 function createOnboardingRedirect(request: NextRequest, result: GoogleLoginResponse) {
   if (!result.signupToken) {
-    return redirectToLoginWithError(request, "회원가입 토큰을 받을 수 없습니다.");
+    return redirectToLoginWithError(request, "missingSignupToken");
   }
 
   const response = NextResponse.redirect(createLocalizedUrl(request, "/onboarding"));
@@ -97,9 +98,9 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
   return response;
 }
 
-function redirectToLoginWithError(request: NextRequest, message: string) {
+function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
   const loginUrl = createLocalizedUrl(request, "/login");
-  loginUrl.searchParams.set("error", message);
+  loginUrl.searchParams.set("error", code);
 
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);

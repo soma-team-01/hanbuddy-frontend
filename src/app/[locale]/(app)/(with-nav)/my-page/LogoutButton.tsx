@@ -1,12 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LogOutIcon } from "@/components/ui/icons";
+import { useRouter } from "@/i18n/navigation";
 
 export function LogoutButton() {
+  const t = useTranslations("MyPage");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -38,13 +40,13 @@ export function LogoutButton() {
         className="mx-auto mt-6 flex cursor-pointer items-center gap-2 text-base font-medium text-danger enabled:hover:underline disabled:cursor-not-allowed disabled:opacity-60"
       >
         <LogOutIcon className="size-4" />
-        {isLoggingOut ? "Logging out..." : "Log Out"}
+        {isLoggingOut ? t("loggingOut") : t("logOut")}
       </button>
       {showConfirm && (
         <ConfirmDialog
-          title="Log out?"
-          description="You can log back in anytime."
-          confirmLabel="Log Out"
+          title={t("logoutTitle")}
+          description={t("logoutDescription")}
+          confirmLabel={t("logOut")}
           isPending={isLoggingOut}
           onConfirm={() => void handleLogout()}
           onClose={() => setShowConfirm(false)}

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
@@ -14,12 +14,13 @@ import {
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
 import { CameraIcon } from "@/components/ui/icons";
+import { useRouter } from "@/i18n/navigation";
+import { useMyProfile } from "@/lib/api/useMyProfile";
 import { updateMyProfile } from "@/lib/api/users";
 import { COUNTRIES, findCountry } from "@/lib/countries";
 import {
   MAX_PROFILE_IMAGE_BYTES,
   PROFILE_IMAGE_CONTENT_TYPES,
-  PROFILE_IMAGE_SIZE_ERROR_MESSAGE,
   isSupportedProfileImageType,
   uploadProfileImage,
 } from "@/lib/images/presigned";
@@ -56,6 +57,7 @@ interface EditProfileFormProps {
 }
 
 export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
+  const t = useTranslations("Profile");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
@@ -93,12 +95,12 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     if (!file) return;
 
     if (!isSupportedProfileImageType(file.type)) {
-      setErrorMessage("JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.");
+      setErrorMessage(t("validation.unsupportedImageType"));
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROFILE_IMAGE_BYTES) {
-      setErrorMessage(PROFILE_IMAGE_SIZE_ERROR_MESSAGE);
+      setErrorMessage(t("validation.imageTooLarge"));
       event.target.value = "";
       return;
     }
@@ -137,19 +139,19 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     const contactIdentifier = messagingContact.trim();
 
     if (!name) {
-      setErrorMessage("이름을 입력해 주세요.");
+      setErrorMessage(t("validation.nameRequired"));
       return;
     }
     if (!nationality) {
-      setErrorMessage("Nationality를 선택해 주세요.");
+      setErrorMessage(t("validation.nationalityRequired"));
       return;
     }
     if (!Number.isInteger(age) || age < 0 || age > 150) {
-      setErrorMessage("Age는 0에서 150 사이의 숫자로 입력해 주세요.");
+      setErrorMessage(t("validation.ageInvalid"));
       return;
     }
     if (contactIdentifier.length < 2) {
-      setErrorMessage("연락처 ID 또는 번호를 2자 이상 입력해 주세요.");
+      setErrorMessage(t("validation.contactInvalid"));
       return;
     }
 
@@ -158,10 +160,8 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       let profileImageKey: string | null;
       try {
         profileImageKey = await resolveProfileImageKey();
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "프로필 이미지 업로드에 실패했습니다.",
-        );
+      } catch {
+        setErrorMessage(t("profileUploadFailed"));
         return;
       }
 
@@ -176,7 +176,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       });
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      setErrorMessage(error instanceof Error ? error.message : "프로필을 저장하지 못했습니다.");
+      setErrorMessage(t("saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -185,7 +185,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const profilePhoto = profileImagePreview ? (
     <Image
       src={profileImagePreview}
-      alt="Selected profile photo preview"
+      alt={t("selectedProfilePhotoPreview")}
       width={112}
       height={112}
       unoptimized
@@ -206,7 +206,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             disabled={isSaving}
             className="font-display text-sm font-semibold text-forest enabled:hover:underline disabled:opacity-60"
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? t("saving") : t("save")}
           </button>
         }
       />
@@ -217,7 +217,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
               {profilePhoto}
               <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-forest-soft">
                 <CameraIcon className="size-4" />
-                <span className="sr-only">Add profile photo</span>
+                <span className="sr-only">{t("addProfilePhoto")}</span>
                 <input
                   type="file"
                   accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
@@ -230,7 +230,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
 
           <section className="flex flex-col gap-4">
             <label className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-ink">Full Name</span>
+              <span className="text-sm font-medium text-ink">{t("fullName")}</span>
               <input
                 name="name"
                 type="text"
@@ -241,15 +241,15 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             </label>
             <div className="grid grid-cols-5 gap-3">
               <div className="col-span-3 flex flex-col gap-2">
-                <span className="text-sm font-medium text-ink">Nationality</span>
+                <span className="text-sm font-medium text-ink">{t("nationality")}</span>
                 <CountrySelect
                   value={nationality}
                   onChange={handleNationalityChange}
-                  ariaLabel="Nationality"
+                  ariaLabel={t("nationality")}
                 />
               </div>
               <label className="col-span-2 flex flex-col gap-2">
-                <span className="text-sm font-medium text-ink">Age</span>
+                <span className="text-sm font-medium text-ink">{t("age")}</span>
                 <input
                   name="age"
                   type="number"
@@ -264,9 +264,9 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
           </section>
 
           <section className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">Contact Details</h2>
+            <h2 className="font-display text-xl font-semibold text-ink">{t("contactDetails")}</h2>
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-ink">Preferred Messaging App</span>
+              <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
               <MessagingAppField
                 app={messagingApp}
                 onAppChange={handleMessagingAppChange}
@@ -290,6 +290,33 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
           )}
         </main>
       </form>
+    </div>
+  );
+}
+
+export function EditProfilePageContent() {
+  const t = useTranslations("Profile");
+  const result = useMyProfile();
+
+  if (result?.status === "success") {
+    return <EditProfileForm profile={result.profile} />;
+  }
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <TopAppBar backHref="/my-page" />
+      <main className="flex flex-1 flex-col items-center gap-4 px-4 py-8">
+        {result?.status === "error" ? (
+          <p role="alert" className="text-sm text-danger">
+            {t("loadFailed")}
+          </p>
+        ) : (
+          <>
+            <span aria-hidden className="size-28 animate-pulse rounded-full bg-sand" />
+            <span aria-hidden className="h-6 w-40 animate-pulse rounded bg-sand" />
+          </>
+        )}
+      </main>
     </div>
   );
 }

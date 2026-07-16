@@ -1,4 +1,6 @@
+import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { LOCALE_COOKIE_NAME } from "@/i18n/routing";
 import { GET } from "./route";
 
 const originalGoogleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -20,13 +22,10 @@ describe("GET /api/auth/google/start", () => {
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = "public-client-id";
     process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI = "http://localhost:3000/auth/google/callback";
 
-    const response = GET();
+    const response = GET(createRequest("ko"));
 
-    expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toMatchObject({
-      code: "AUTH_PROXY_ERROR",
-      message: "Missing required environment variable: GOOGLE_CLIENT_ID",
-    });
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ko/login?error=configuration");
   });
 
   it("builds the Google authorization redirect from server-only environment variables", () => {
@@ -35,7 +34,7 @@ describe("GET /api/auth/google/start", () => {
     delete process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     delete process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
-    const response = GET();
+    const response = GET(createRequest());
     const location = response.headers.get("location");
 
     expect(response.status).toBe(307);
@@ -60,17 +59,20 @@ describe("GET /api/auth/google/start", () => {
     process.env.GOOGLE_REDIRECT_URI = "http://localhost:3000/auth/google/callback";
 
     const { GET: getWithFailingState } = await import("./route");
-    const response = getWithFailingState();
+    const response = getWithFailingState(createRequest("ko"));
 
-    expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toMatchObject({
-      code: "AUTH_PROXY_ERROR",
-      message: "Google 로그인을 시작할 수 없습니다.",
-    });
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ko/login?error=unknown");
 
     vi.doUnmock("@/lib/auth/google");
   });
 });
+
+function createRequest(locale?: string) {
+  return new NextRequest("http://localhost/api/auth/google/start", {
+    headers: locale ? { cookie: `${LOCALE_COOKIE_NAME}=${locale}` } : undefined,
+  });
+}
 
 function restoreEnv(name: string, value: string | undefined) {
   if (value === undefined) {

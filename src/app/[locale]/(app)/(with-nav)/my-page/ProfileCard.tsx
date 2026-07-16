@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ChevronRightIcon } from "@/components/ui/icons";
+import { Link } from "@/i18n/navigation";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 
 export function ProfileCard() {
+  const t = useTranslations("MyPage");
   const result = useMyProfile();
   let content: ReactNode;
 
@@ -23,7 +25,7 @@ export function ProfileCard() {
   } else if (result.status === "error") {
     content = (
       <p role="alert" className="text-sm text-danger">
-        {result.message}
+        {t("profileLoadFailed")}
       </p>
     );
   } else {
@@ -36,7 +38,7 @@ export function ProfileCard() {
             href="/my-page/edit"
             className="mt-1 flex items-center gap-1 text-sm text-earth hover:underline"
           >
-            Edit Profile
+            {t("editProfile")}
             <ChevronRightIcon className="size-3.5" />
           </Link>
         </div>

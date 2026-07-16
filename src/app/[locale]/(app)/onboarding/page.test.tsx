@@ -1,8 +1,23 @@
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
+import type { Locale } from "@/i18n/routing";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { OnboardingForm } from "./OnboardingForm";
+import { generateMetadata } from "./page";
+
+vi.mock("next-intl/server", async () => {
+  const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
+    import("next-intl"),
+    import("@/messages/en.json"),
+    import("@/messages/ko.json"),
+  ]);
+
+  return {
+    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: "Onboarding" }) =>
+      createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
+  };
+});
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -15,6 +30,77 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
 }));
 
 describe("OnboardingForm", () => {
+  it.each([
+    [
+      "en",
+      "I am a...",
+      "Tourist",
+      "Personal Information",
+      "Nationality",
+      "Age",
+      "e.g. 25",
+      "Contact Methods",
+      "Preferred Messaging App",
+      "Add profile photo",
+      "Complete Registration",
+      "Close",
+    ],
+    [
+      "ko",
+      "역할을 선택해 주세요",
+      "여행자",
+      "개인 정보",
+      "국적",
+      "나이",
+      "예: 25",
+      "연락 방법",
+      "선호하는 메신저",
+      "프로필 사진 추가",
+      "가입 완료",
+      "닫기",
+    ],
+  ] as const)(
+    "renders localized fields, actions, and accessibility names for %s",
+    (
+      locale,
+      roleHeading,
+      tourist,
+      personalHeading,
+      nationality,
+      age,
+      agePlaceholder,
+      contactHeading,
+      messagingApp,
+      addPhoto,
+      submit,
+      close,
+    ) => {
+      renderWithIntl(<OnboardingForm />, { locale });
+
+      expect(screen.getByRole("heading", { name: roleHeading })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: tourist })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
+      expect(screen.getByText(nationality)).toBeInTheDocument();
+      expect(screen.getByLabelText(age)).toHaveAttribute("placeholder", agePlaceholder);
+      expect(screen.getByRole("heading", { name: contactHeading })).toBeInTheDocument();
+      expect(screen.getByText(messagingApp)).toBeInTheDocument();
+      expect(screen.getByLabelText(addPhoto)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: submit })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: close })).toHaveAttribute("href", `/${locale}/login`);
+    },
+  );
+
+  it.each([
+    ["en", "Please select a nationality."],
+    ["ko", "국적을 선택해 주세요."],
+  ] as const)("localizes validation for %s", (locale, message) => {
+    const { container } = renderWithIntl(<OnboardingForm />, { locale });
+
+    fireEvent.submit(container.querySelector("form")!);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(message);
+  });
+
   it("does not render the Korean Phone Number field", () => {
     renderWithIntl(<OnboardingForm />);
     expect(screen.queryByText("Korean Phone Number")).not.toBeInTheDocument();
@@ -168,7 +254,9 @@ describe("OnboardingForm profile image", () => {
     fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
 
     await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent("프로필 이미지 업로드에 실패했습니다."),
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Could not upload the profile photo. Please try again.",
+      ),
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -208,7 +296,11 @@ describe("OnboardingForm profile image", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("서버 오류입니다."));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Could not complete registration. Please try again.",
+      ),
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
@@ -229,9 +321,7 @@ describe("OnboardingForm profile image", () => {
       target: { files: [oversized] },
     });
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.",
-    );
+    expect(screen.getByRole("alert")).toHaveTextContent("Profile photos must be 5MB or smaller.");
     expect(screen.queryByAltText("Selected profile photo preview")).not.toBeInTheDocument();
   });
 
@@ -243,8 +333,30 @@ describe("OnboardingForm profile image", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.",
+      "Only JPEG, PNG, or WebP images can be uploaded.",
     );
     expect(screen.queryByAltText("Selected profile photo preview")).not.toBeInTheDocument();
+  });
+});
+
+describe("onboarding metadata", () => {
+  it.each([
+    ["en", "Complete your profile | HanBuddy", "/en/onboarding"],
+    ["ko", "프로필 설정 | HanBuddy", "/ko/onboarding"],
+  ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: locale satisfies Locale }),
+    });
+
+    expect(metadata).toMatchObject({
+      title,
+      alternates: {
+        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        languages: {
+          en: "https://hanbuddy-frontend.vercel.app/en/onboarding",
+          ko: "https://hanbuddy-frontend.vercel.app/ko/onboarding",
+        },
+      },
+    });
   });
 });

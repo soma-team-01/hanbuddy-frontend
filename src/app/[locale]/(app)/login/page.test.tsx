@@ -1,7 +1,22 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import LoginPage from "./page";
+import type { Locale } from "@/i18n/routing";
+import { renderWithIntl } from "@/test/render-with-intl";
+import LoginPage, { generateMetadata } from "./page";
+
+vi.mock("next-intl/server", async () => {
+  const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
+    import("next-intl"),
+    import("@/messages/en.json"),
+    import("@/messages/ko.json"),
+  ]);
+
+  return {
+    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: "Auth" }) =>
+      createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
+  };
+});
 
 vi.mock("next/link", () => ({
   default: ({
@@ -21,22 +36,74 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-describe("LoginPage", () => {
-  it("starts Google OAuth through the same-origin auth route", async () => {
-    render(await LoginPage({ searchParams: Promise.resolve({}) }));
+async function renderLogin(locale: Locale, searchParams: { error?: string | string[] } = {}) {
+  renderWithIntl(
+    await LoginPage({
+      params: Promise.resolve({ locale }),
+      searchParams: Promise.resolve(searchParams),
+    }),
+    { locale },
+  );
+}
 
-    const googleLoginLink = screen.getByRole("link", { name: /continue with google/i });
-    expect(googleLoginLink).toHaveAttribute("href", "/api/auth/google/start");
-    expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");
+describe("LoginPage", () => {
+  it.each([
+    ["en", "Welcome to HanBuddy", "Continue with Google", "Privacy Policy"],
+    ["ko", "HanBuddy에 오신 것을 환영합니다", "Google로 계속하기", "개인정보 처리방침"],
+  ] as const)(
+    "renders localized authentication content for %s",
+    async (locale, heading, action, policy) => {
+      await renderLogin(locale);
+
+      expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
+      expect(screen.getByText(policy)).toBeInTheDocument();
+      const googleLoginLink = screen.getByRole("link", { name: action });
+      expect(googleLoginLink).toHaveAttribute("href", "/api/auth/google/start");
+      expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");
+    },
+  );
+
+  it.each([
+    ["en", "invalidState", "We couldn't verify your Google sign-in session."],
+    ["ko", "invalidState", "Google 로그인 상태를 확인할 수 없습니다."],
+  ] as const)("maps a finite OAuth error code for %s", async (locale, error, message) => {
+    await renderLogin(locale, { error });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(message);
   });
 
-  it("shows an OAuth error passed through the URL", async () => {
-    render(
-      await LoginPage({
-        searchParams: Promise.resolve({ error: "Google 로그인 상태 검증에 실패했습니다." }),
-      }),
-    );
+  it.each(["en", "ko"] as const)(
+    "does not reflect an arbitrary OAuth query value in %s",
+    async (locale) => {
+      const rawError = "<script>raw backend detail</script>";
+      await renderLogin(locale, { error: rawError });
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Google 로그인 상태 검증에 실패했습니다.");
+      const alert = screen.getByRole("alert");
+      expect(alert).not.toHaveTextContent(rawError);
+      expect(alert).not.toHaveTextContent("raw backend detail");
+      expect(alert).toHaveTextContent(
+        locale === "ko"
+          ? "로그인 중 문제가 발생했습니다. 다시 시도해 주세요."
+          : "Something went wrong during sign-in. Please try again.",
+      );
+    },
+  );
+
+  it.each([
+    ["en", "Log in | HanBuddy", "/en/login"],
+    ["ko", "로그인 | HanBuddy", "/ko/login"],
+  ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
+    const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
+
+    expect(metadata).toMatchObject({
+      title,
+      alternates: {
+        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        languages: {
+          en: "https://hanbuddy-frontend.vercel.app/en/login",
+          ko: "https://hanbuddy-frontend.vercel.app/ko/login",
+        },
+      },
+    });
   });
 });

@@ -33,7 +33,23 @@ describe("GET /auth/google/callback", () => {
       ),
     );
 
-    expect(response.headers.get("location")).toBe("http://localhost/ko/login?error=denied");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/ko/login?error=googleCancelled",
+    );
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  });
+
+  it("maps an arbitrary Google provider error to unknown without reflecting it", async () => {
+    const response = await GET(
+      new NextRequest(
+        "http://localhost/auth/google/callback?error=provider_secret&error_description=do-not-reflect",
+      ),
+    );
+    const location = response.headers.get("location") ?? "";
+
+    expect(location).toBe("http://localhost/en/login?error=unknown");
+    expect(location).not.toContain("provider_secret");
+    expect(location).not.toContain("do-not-reflect");
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -46,7 +62,7 @@ describe("GET /auth/google/callback", () => {
       }),
     );
 
-    expect(response.headers.get("location")).toContain("/en/login?error=Google");
+    expect(response.headers.get("location")).toBe("http://localhost/en/login?error=missingCode");
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -59,7 +75,7 @@ describe("GET /auth/google/callback", () => {
       }),
     );
 
-    expect(response.headers.get("location")).toContain("/en/login?error=Google");
+    expect(response.headers.get("location")).toBe("http://localhost/en/login?error=invalidState");
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -77,8 +93,8 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest());
 
-    expect(response.headers.get("location")).toContain(
-      "/en/login?error=%EB%A1%9C%EA%B7%B8%EC%9D%B8",
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/login?error=invalidLoginResponse",
     );
     expect(response.headers.get("set-cookie") ?? "").not.toContain("refresh_token=backend");
   });
@@ -165,12 +181,53 @@ describe("GET /auth/google/callback", () => {
     expect(decodedProfile).not.toHaveProperty("email");
   });
 
+  it("uses a finite code when an unregistered login response has no signup token", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: ["refresh_token=backend; Path=/; HttpOnly"],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: { registered: false },
+      },
+    });
+
+    const response = await GET(createCallbackRequest());
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/login?error=missingSignupToken",
+    );
+    expect(response.headers.get("set-cookie") ?? "").not.toContain("refresh_token=backend");
+  });
+
   it("redirects to login when the backend login request fails", async () => {
     mockedPostBackend.mockRejectedValue(new Error("network"));
 
     const response = await GET(createCallbackRequest("fr"));
 
-    expect(response.headers.get("location")).toContain("/en/login?error=%EC%9D%B8%EC%A6%9D");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/login?error=serverUnavailable",
+    );
+  });
+
+  it("never reflects an arbitrary backend rejection message in the login query", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 400,
+      setCookies: [],
+      payload: {
+        isSuccess: false,
+        code: "AUTH400",
+        message: "<script>backend secret exploded</script>",
+      },
+    });
+
+    const response = await GET(createCallbackRequest("ko"));
+    const location = response.headers.get("location") ?? "";
+
+    expect(location).toBe("http://localhost/ko/login?error=backendRejected");
+    expect(location).not.toContain("secret");
+    expect(location).not.toContain("script");
   });
 });
 

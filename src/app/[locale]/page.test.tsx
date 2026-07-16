@@ -1,33 +1,89 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
-import LandingPage from "./page";
+import { screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import type { Locale } from "@/i18n/routing";
+import { renderWithIntl } from "@/test/render-with-intl";
+import LandingPage, { generateMetadata } from "./page";
+
+vi.mock("next-intl/server", async () => {
+  const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
+    import("next-intl"),
+    import("@/messages/en.json"),
+    import("@/messages/ko.json"),
+  ]);
+
+  return {
+    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: "Landing" }) =>
+      createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
+  };
+});
+
+async function renderLanding(locale: Locale) {
+  renderWithIntl(await LandingPage({ params: Promise.resolve({ locale }) }), { locale });
+}
 
 describe("LandingPage", () => {
-  it("renders the hero headline", () => {
-    render(<LandingPage />);
-    expect(
-      screen.getByRole("heading", { level: 1, name: /experience korea like a local/i }),
-    ).toBeInTheDocument();
-  });
+  it.each([
+    [
+      "en",
+      "Experience Korea like a local.",
+      "Log in",
+      "Get started",
+      "Browse experiences →",
+      "Authentic Korea, together.",
+    ],
+    [
+      "ko",
+      "현지인처럼 한국을 경험하세요.",
+      "로그인",
+      "시작하기",
+      "액티비티 둘러보기 →",
+      "진짜 한국을 함께 경험하세요.",
+    ],
+  ] as const)(
+    "renders localized landing content and navigation for %s",
+    async (locale, headline, login, getStarted, browse, footer) => {
+      await renderLanding(locale);
 
-  it("routes Log in and Get started to /login", () => {
-    render(<LandingPage />);
-    expect(screen.getByRole("link", { name: /log in/i })).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("link", { name: /get started/i })).toHaveAttribute("href", "/login");
-  });
+      expect(screen.getByRole("heading", { level: 1, name: headline })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: login })).toHaveAttribute("href", `/${locale}/login`);
+      expect(screen.getByRole("link", { name: getStarted })).toHaveAttribute(
+        "href",
+        `/${locale}/login`,
+      );
+      expect(screen.getByRole("link", { name: browse })).toHaveAttribute(
+        "href",
+        `/${locale}/explore`,
+      );
+      expect(screen.getByText(footer)).toBeInTheDocument();
+    },
+  );
 
-  it("routes Browse experiences to /explore", () => {
-    render(<LandingPage />);
-    expect(screen.getByRole("link", { name: /browse experiences/i })).toHaveAttribute(
-      "href",
-      "/explore",
-    );
-  });
+  it.each([
+    ["en", "Gwangjang Market", "Bukchon Hanok", "Tea Ceremony"],
+    ["ko", "광장시장", "북촌 한옥", "다도 체험"],
+  ] as const)("localizes experience image alternatives for %s", async (locale, ...titles) => {
+    await renderLanding(locale);
 
-  it("renders the three experiences with images", () => {
-    render(<LandingPage />);
-    for (const title of ["Gwangjang Market", "Bukchon Hanok", "Tea Ceremony"]) {
+    for (const title of titles) {
       expect(screen.getByRole("img", { name: title })).toBeInTheDocument();
     }
+  });
+
+  it.each([
+    ["en", "HanBuddy | Experience Korea like a local", "/en"],
+    ["ko", "HanBuddy | 현지인처럼 한국을 경험하세요", "/ko"],
+  ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
+    const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
+
+    expect(metadata).toMatchObject({
+      title,
+      alternates: {
+        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        languages: {
+          en: "https://hanbuddy-frontend.vercel.app/en",
+          ko: "https://hanbuddy-frontend.vercel.app/ko",
+        },
+      },
+    });
   });
 });

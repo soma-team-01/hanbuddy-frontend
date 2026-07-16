@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
@@ -12,11 +12,11 @@ import {
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
+import { useRouter } from "@/i18n/navigation";
 import { findCountry } from "@/lib/countries";
 import {
   MAX_PROFILE_IMAGE_BYTES,
   PROFILE_IMAGE_CONTENT_TYPES,
-  PROFILE_IMAGE_SIZE_ERROR_MESSAGE,
   isSupportedProfileImageType,
   uploadProfileImage,
 } from "@/lib/images/presigned";
@@ -30,16 +30,14 @@ import type {
   UserType,
 } from "@/lib/auth/types";
 
-const ROLES = [
-  { key: "TOURIST", label: "Tourist" },
-  { key: "BUDDY", label: "Buddy" },
-] as const;
+const ROLES = ["TOURIST", "BUDDY"] as const;
 
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
 }
 
 export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>) {
+  const t = useTranslations("Onboarding");
   const router = useRouter();
   const [role, setRole] = useState<UserType>("TOURIST");
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
@@ -64,12 +62,12 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     if (!file) return;
 
     if (!isSupportedProfileImageType(file.type)) {
-      setErrorMessage("JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.");
+      setErrorMessage(t("validation.unsupportedImageType"));
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROFILE_IMAGE_BYTES) {
-      setErrorMessage(PROFILE_IMAGE_SIZE_ERROR_MESSAGE);
+      setErrorMessage(t("validation.imageTooLarge"));
       event.target.value = "";
       return;
     }
@@ -111,15 +109,15 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     const contactIdentifier = messagingContact.trim();
 
     if (!nationality) {
-      setErrorMessage("Nationality를 선택해 주세요.");
+      setErrorMessage(t("validation.nationalityRequired"));
       return;
     }
     if (!Number.isInteger(age) || age < 0 || age > 150) {
-      setErrorMessage("Age는 0에서 150 사이의 숫자로 입력해 주세요.");
+      setErrorMessage(t("validation.ageInvalid"));
       return;
     }
     if (contactIdentifier.length < 2) {
-      setErrorMessage("연락처 ID 또는 번호를 2자 이상 입력해 주세요.");
+      setErrorMessage(t("validation.contactInvalid"));
       return;
     }
 
@@ -128,10 +126,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       let profileImageKey: string | undefined;
       try {
         profileImageKey = await resolveProfileImageKey();
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "프로필 이미지 업로드에 실패했습니다.",
-        );
+      } catch {
+        setErrorMessage(t("profileUploadFailed"));
         return;
       }
 
@@ -157,14 +153,14 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         ApiResponse<GoogleLoginResponse> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
-        setErrorMessage(body?.message ?? "회원가입을 완료할 수 없습니다.");
+        setErrorMessage(t("signupFailed"));
         return;
       }
 
       const userType = body.result.userType ?? role;
       router.replace(userType === "BUDDY" ? "/dashboard" : "/explore");
     } catch {
-      setErrorMessage("인증 서버에 연결할 수 없습니다.");
+      setErrorMessage(t("serverUnavailable"));
     } finally {
       setIsSubmitting(false);
     }
@@ -179,7 +175,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     profilePhoto = (
       <Image
         src={profileImagePreview}
-        alt="Selected profile photo preview"
+        alt={t("selectedProfilePhotoPreview")}
         width={96}
         height={96}
         unoptimized
@@ -190,7 +186,9 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     profilePhoto = (
       <Image
         src={googleProfile.picture}
-        alt={googleProfile.name ? `${googleProfile.name} profile` : "Google profile"}
+        alt={
+          googleProfile.name ? t("profileFor", { name: googleProfile.name }) : t("googleProfile")
+        }
         width={96}
         height={96}
         className="size-24 rounded-2xl border border-line object-cover"
@@ -208,7 +206,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
               {profilePhoto}
               <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-forest-soft">
                 <CameraIcon className="size-4" />
-                <span className="sr-only">Add profile photo</span>
+                <span className="sr-only">{t("addProfilePhoto")}</span>
                 <input
                   type="file"
                   accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
@@ -232,9 +230,9 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="font-display text-xl font-semibold text-ink">I am a...</h2>
+            <h2 className="font-display text-xl font-semibold text-ink">{t("roleHeading")}</h2>
             <div className="flex overflow-hidden rounded-lg border border-line-strong">
-              {ROLES.map(({ key, label }) => {
+              {ROLES.map((key) => {
                 const isSelected = role === key;
                 return (
                   <button
@@ -246,7 +244,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                       isSelected ? "bg-forest text-cream" : "bg-white text-ink hover:bg-chip"
                     }`}
                   >
-                    {label}
+                    {t(key === "TOURIST" ? "roles.tourist" : "roles.buddy")}
                   </button>
                 );
               })}
@@ -256,24 +254,26 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
           <div className="h-px w-full bg-line" aria-hidden />
 
           <section className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">Personal Information</h2>
+            <h2 className="font-display text-xl font-semibold text-ink">
+              {t("personalInformation")}
+            </h2>
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-ink-soft">Nationality</span>
+              <span className="text-sm text-ink-soft">{t("nationality")}</span>
               <CountrySelect
                 value={nationality}
                 onChange={handleNationalityChange}
-                ariaLabel="Nationality"
+                ariaLabel={t("nationality")}
               />
             </div>
             <label className="flex flex-col gap-2">
-              <span className="text-sm text-ink-soft">Age</span>
+              <span className="text-sm text-ink-soft">{t("age")}</span>
               <input
                 name="age"
                 type="number"
                 min={0}
                 max={150}
                 required
-                placeholder="e.g. 25"
+                placeholder={t("agePlaceholder")}
                 className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
               />
             </label>
@@ -282,9 +282,9 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
           <div className="h-px w-full bg-line" aria-hidden />
 
           <section className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
+            <h2 className="font-display text-xl font-semibold text-ink">{t("contactMethods")}</h2>
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-ink-soft">Preferred Messaging App</span>
+              <span className="text-sm text-ink-soft">{t("preferredMessagingApp")}</span>
               <MessagingAppField
                 app={messagingApp}
                 onAppChange={handleMessagingAppChange}
@@ -316,7 +316,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
           disabled={isSubmitting}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-forest font-display text-base font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-60"
         >
-          {isSubmitting ? "Completing..." : "Complete Registration"}
+          {isSubmitting ? t("completing") : t("completeRegistration")}
           <ArrowRightIcon className="size-4" />
         </button>
       </BottomActionBar>

@@ -1,13 +1,15 @@
-import { NextResponse } from "next/server";
-import { createProxyErrorResponse } from "@/lib/auth/backend";
+import { type NextRequest, NextResponse } from "next/server";
+import { localizePathname } from "@/i18n/pathname";
+import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 import { AUTH_COOKIES, OAUTH_STATE_COOKIE_OPTIONS } from "@/lib/auth/cookies";
+import type { AuthErrorCode } from "@/lib/auth/error-codes";
 import { buildGoogleAuthorizationUrl, createOAuthState } from "@/lib/auth/google";
 
 export const dynamic = "force-dynamic";
 
 class GoogleAuthStartConfigError extends Error {}
 
-export function GET() {
+export function GET(request: NextRequest) {
   try {
     const state = createOAuthState();
     const authorizationUrl = buildGoogleAuthorizationUrl({
@@ -20,12 +22,18 @@ export function GET() {
     response.cookies.set(AUTH_COOKIES.oauthState, state, OAUTH_STATE_COOKIE_OPTIONS);
     return response;
   } catch (error) {
-    const message =
-      error instanceof GoogleAuthStartConfigError
-        ? error.message
-        : "Google 로그인을 시작할 수 없습니다.";
-    return NextResponse.json(createProxyErrorResponse(message), { status: 500 });
+    return redirectToLoginWithError(
+      request,
+      error instanceof GoogleAuthStartConfigError ? "configuration" : "unknown",
+    );
   }
+}
+
+function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
+  const locale = getLocaleOrDefault(request.cookies.get(LOCALE_COOKIE_NAME)?.value);
+  const loginUrl = new URL(localizePathname("/login", locale), request.url);
+  loginUrl.searchParams.set("error", code);
+  return NextResponse.redirect(loginUrl);
 }
 
 function getGoogleClientId() {

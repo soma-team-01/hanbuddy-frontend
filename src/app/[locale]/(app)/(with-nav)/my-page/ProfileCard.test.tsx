@@ -38,7 +38,7 @@ describe("ProfileCard", () => {
     expect(await screen.findByText("Sarah Jenkins")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Edit Profile/ })).toHaveAttribute(
       "href",
-      "/my-page/edit",
+      "/en/my-page/edit",
     );
     expect(screen.getByAltText("Sarah Jenkins")).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
@@ -54,13 +54,25 @@ describe("ProfileCard", () => {
     });
   });
 
-  it("shows the error message when the profile fails to load", async () => {
-    mockedGetMyProfile.mockResolvedValue({ status: "error", message: "서버 오류입니다." });
+  it("shows a localized safe message when the profile fails to load", async () => {
+    mockedGetMyProfile.mockResolvedValue({ status: "error", message: "raw server detail" });
 
     renderWithQueryClient(<ProfileCard />);
 
-    expect(await screen.findByText("서버 오류입니다.")).toBeInTheDocument();
+    expect(await screen.findByText("Could not load your profile.")).toBeInTheDocument();
+    expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("localizes the profile action in Korean", async () => {
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
+
+    renderWithQueryClient(<ProfileCard />, { locale: "ko" });
+
+    expect(await screen.findByRole("link", { name: "프로필 수정" })).toHaveAttribute(
+      "href",
+      "/ko/my-page/edit",
+    );
   });
 
   it("reuses the cached profile after remounting", async () => {

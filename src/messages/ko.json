@@ -22,6 +22,9 @@
     "cancelled": "취소됨",
     "completed": "완료됨"
   },
+  "Payment": {
+    "unavailable": "결제를 이용할 수 없습니다."
+  },
   "Country": {
     "select": "국가 선택",
     "search": "국가 검색",

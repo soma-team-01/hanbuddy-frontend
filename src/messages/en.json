@@ -22,6 +22,9 @@
     "cancelled": "Cancelled",
     "completed": "Completed"
   },
+  "Payment": {
+    "unavailable": "Payment unavailable"
+  },
   "Country": {
     "select": "Select country",
     "search": "Search country",

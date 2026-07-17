@@ -78,18 +78,18 @@ describe("PayPalPaymentButtons", () => {
       <IntlTestProvider locale="en">{paymentButtons()}</IntlTestProvider>,
     );
 
-    expect(paypalProviderRenderSpy).toHaveBeenLastCalledWith("en_US");
+    expect(paypalProviderRenderSpy).toHaveBeenLastCalledWith("en-US");
     expect(paypalProviderMountSpy).toHaveBeenCalledTimes(1);
-    expect(paypalProviderMountSpy).toHaveBeenLastCalledWith("en_US");
+    expect(paypalProviderMountSpy).toHaveBeenLastCalledWith("en-US");
     expect(paypalProviderUnmountSpy).not.toHaveBeenCalled();
 
     rerender(<IntlTestProvider locale="ko">{paymentButtons()}</IntlTestProvider>);
 
-    expect(paypalProviderRenderSpy).toHaveBeenLastCalledWith("ko_KR");
+    expect(paypalProviderRenderSpy).toHaveBeenLastCalledWith("ko-KR");
     expect(paypalProviderUnmountSpy).toHaveBeenCalledTimes(1);
-    expect(paypalProviderUnmountSpy).toHaveBeenLastCalledWith("en_US");
+    expect(paypalProviderUnmountSpy).toHaveBeenLastCalledWith("en-US");
     expect(paypalProviderMountSpy).toHaveBeenCalledTimes(2);
-    expect(paypalProviderMountSpy).toHaveBeenLastCalledWith("ko_KR");
+    expect(paypalProviderMountSpy).toHaveBeenLastCalledWith("ko-KR");
   });
 
   it("renders the card and PayPal SDK buttons without a selector in that order", () => {

@@ -256,10 +256,10 @@ describe("ApplicationList", () => {
     expect(screen.getByText("아직 신청 내역이 없습니다.")).toBeInTheDocument();
   });
 
-  it("labels the HanBuddy-owned pending payment action in Korean", () => {
+  it("omits the redundant pending payment heading in Korean", () => {
     renderList({}, "ko");
 
-    expect(screen.getByText("결제 이어서 하기")).toBeInTheDocument();
+    expect(screen.queryByText("결제 이어서 하기")).not.toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
   });

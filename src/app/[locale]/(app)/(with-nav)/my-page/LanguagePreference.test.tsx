@@ -29,20 +29,20 @@ vi.mock("next/navigation", async (importOriginal) => ({
   useSearchParams: () => new URLSearchParams(navigation.query),
 }));
 
-function openLanguageSheet(sheetName = "Language") {
-  const trigger = screen.getByRole("button", { name: new RegExp(sheetName) });
+function openLanguageDropdown(dropdownName = "Language") {
+  const trigger = screen.getByRole("button", { name: new RegExp(dropdownName) });
   fireEvent.click(trigger);
-  return { dialog: screen.getByRole("dialog", { name: sheetName }), trigger };
+  return { dropdown: screen.getByRole("listbox", { name: dropdownName }), trigger };
 }
 
-function renderOpenPendingSheet() {
+function renderOpenPendingDropdown() {
   const view = renderWithIntl(<LanguagePreference />);
-  openLanguageSheet();
+  openLanguageDropdown();
   transition.isPending = true;
   view.rerender(<LanguagePreference />);
 
   return {
-    dialog: screen.getByRole("dialog", { name: "Language" }),
+    dropdown: screen.getByRole("listbox", { name: "Language" }),
     trigger: screen.getByRole("button", { name: /Language/ }),
   };
 }
@@ -67,19 +67,20 @@ describe("LanguagePreference", () => {
     expect(within(trigger).getByText(value)).toBeInTheDocument();
   });
 
-  it("opens a named dialog with a named radiogroup and both language options", () => {
+  it("opens a compact named listbox with both language options", () => {
     renderWithIntl(<LanguagePreference />);
 
-    const { dialog } = openLanguageSheet();
-    const languageOptions = within(dialog).getByRole("radiogroup", { name: "Language" });
+    const { dropdown, trigger } = openLanguageDropdown();
 
-    expect(within(languageOptions).getAllByRole("radio")).toHaveLength(2);
-    expect(within(languageOptions).getByRole("radio", { name: "English" })).toHaveAttribute(
-      "aria-checked",
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(within(dropdown).getAllByRole("option")).toHaveLength(2);
+    expect(within(dropdown).getByRole("option", { name: "English" })).toHaveAttribute(
+      "aria-selected",
       "true",
     );
-    expect(within(languageOptions).getByRole("radio", { name: "한국어" })).toHaveAttribute(
-      "aria-checked",
+    expect(within(dropdown).getByRole("option", { name: "한국어" })).toHaveAttribute(
+      "aria-selected",
       "false",
     );
   });
@@ -87,12 +88,12 @@ describe("LanguagePreference", () => {
   it.each([
     ["en", "Language", "English"],
     ["ko", "언어", "한국어"],
-  ] as const)("focuses the selected option when the %s sheet opens", (locale, title, option) => {
+  ] as const)("focuses the selected option when the %s dropdown opens", (locale, title, option) => {
     renderWithIntl(<LanguagePreference />, { locale });
 
-    const { dialog } = openLanguageSheet(title);
+    const { dropdown } = openLanguageDropdown(title);
 
-    expect(within(dialog).getByRole("radio", { name: option })).toHaveFocus();
+    expect(within(dropdown).getByRole("option", { name: option })).toHaveFocus();
   });
 
   it.each([
@@ -105,9 +106,9 @@ describe("LanguagePreference", () => {
     (key, locale, title, selectedLabel, nextLabel, nextLocale) => {
       renderWithIntl(<LanguagePreference />, { locale });
 
-      const { dialog } = openLanguageSheet(title);
-      const selectedOption = within(dialog).getByRole("radio", { name: selectedLabel });
-      const nextOption = within(dialog).getByRole("radio", { name: nextLabel });
+      const { dropdown } = openLanguageDropdown(title);
+      const selectedOption = within(dropdown).getByRole("option", { name: selectedLabel });
+      const nextOption = within(dropdown).getByRole("option", { name: nextLabel });
 
       expect(selectedOption).toHaveAttribute("tabindex", "0");
       expect(nextOption).toHaveAttribute("tabindex", "-1");
@@ -124,8 +125,8 @@ describe("LanguagePreference", () => {
     window.history.replaceState(null, "", "/en/my-page?from=dashboard#settings");
     renderWithIntl(<LanguagePreference />);
 
-    const { dialog } = openLanguageSheet();
-    fireEvent.click(within(dialog).getByRole("radio", { name: "한국어" }));
+    const { dropdown } = openLanguageDropdown();
+    fireEvent.click(within(dropdown).getByRole("option", { name: "한국어" }));
 
     expect(navigation.replace).toHaveBeenCalledWith("/my-page?from=dashboard#settings", {
       locale: "ko",
@@ -136,32 +137,27 @@ describe("LanguagePreference", () => {
   it("closes without navigation when the current language is selected", async () => {
     renderWithIntl(<LanguagePreference />);
 
-    const { dialog, trigger } = openLanguageSheet();
-    fireEvent.click(within(dialog).getByRole("radio", { name: "English" }));
+    const { dropdown, trigger } = openLanguageDropdown();
+    fireEvent.click(within(dropdown).getByRole("option", { name: "English" }));
 
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
     expect(navigation.replace).not.toHaveBeenCalled();
     expect(trigger).toHaveFocus();
   });
 
   it.each([
+    ["Escape", (dropdown: HTMLElement) => fireEvent.keyDown(dropdown, { key: "Escape" })],
     [
-      "Escape",
-      (dialog: HTMLElement) => fireEvent(dialog, new Event("cancel", { cancelable: true })),
-    ],
-    ["backdrop", (dialog: HTMLElement) => fireEvent.click(dialog)],
-    [
-      "close button",
-      (dialog: HTMLElement) =>
-        fireEvent.click(within(dialog).getByRole("button", { name: "Close dialog" })),
+      "a repeated trigger click",
+      (_: HTMLElement, trigger: HTMLElement) => fireEvent.click(trigger),
     ],
   ])("restores focus to the trigger after closing with %s", async (_, dismiss) => {
     renderWithIntl(<LanguagePreference />);
 
-    const { dialog, trigger } = openLanguageSheet();
-    dismiss(dialog);
+    const { dropdown, trigger } = openLanguageDropdown();
+    dismiss(dropdown, trigger);
 
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
     expect(trigger).toHaveFocus();
   });
 
@@ -169,9 +165,9 @@ describe("LanguagePreference", () => {
     transition.isPending = true;
     renderWithIntl(<LanguagePreference />);
 
-    const { dialog } = openLanguageSheet();
-    const english = within(dialog).getByRole("radio", { name: "English" });
-    const korean = within(dialog).getByRole("radio", { name: "한국어" });
+    const { dropdown } = openLanguageDropdown();
+    const english = within(dropdown).getByRole("option", { name: "English" });
+    const korean = within(dropdown).getByRole("option", { name: "한국어" });
 
     expect(english).toBeDisabled();
     expect(korean).toBeDisabled();
@@ -180,26 +176,12 @@ describe("LanguagePreference", () => {
     expect(navigation.replace).not.toHaveBeenCalled();
   });
 
-  it.each([
-    [
-      "Escape",
-      (dialog: HTMLElement) => fireEvent(dialog, new Event("cancel", { cancelable: true })),
-    ],
-    ["backdrop", (dialog: HTMLElement) => fireEvent.click(dialog)],
-    [
-      "close button",
-      (dialog: HTMLElement) => {
-        const closeButton = within(dialog).getByRole("button", { name: "Close dialog" });
-        expect(closeButton).toBeEnabled();
-        fireEvent.click(closeButton);
-      },
-    ],
-  ])("allows %s dismissal and restores focus while a transition is pending", async (_, dismiss) => {
-    const { dialog, trigger } = renderOpenPendingSheet();
+  it("allows Escape dismissal and restores focus while a transition is pending", async () => {
+    const { dropdown, trigger } = renderOpenPendingDropdown();
 
-    dismiss(dialog);
+    fireEvent.keyDown(dropdown, { key: "Escape" });
 
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
     expect(trigger).toHaveFocus();
     expect(navigation.replace).not.toHaveBeenCalled();
   });

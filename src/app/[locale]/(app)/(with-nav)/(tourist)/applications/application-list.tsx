@@ -160,7 +160,6 @@ function ApplicationCard({
       )}
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
-          <p className="font-display text-sm font-semibold text-forest">{t("continuePayment")}</p>
           <PayPalPaymentButtons
             disabled={isPaymentPending}
             createOrder={async () => {

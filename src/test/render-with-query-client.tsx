@@ -1,7 +1,6 @@
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { render, type RenderOptions } from "@testing-library/react";
-import type { ReactElement, ReactNode } from "react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import type { NextIntlClientProvider } from "next-intl";
 import type { Locale } from "@/i18n/routing";
 import { createQueryClient } from "@/lib/query/client";

@@ -55,7 +55,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             </p>
           ) : null}
           <Link
-            href="/api/auth/google/start"
+            href={`/api/auth/google/start?locale=${locale}`}
             prefetch={false}
             className={`${errorCode ? "mt-6" : "mt-10"} flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors hover:bg-chip`}
           >

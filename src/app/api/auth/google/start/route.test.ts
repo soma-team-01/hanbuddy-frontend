@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LOCALE_COOKIE_NAME } from "@/i18n/routing";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { GET } from "./route";
 
 const originalGoogleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -45,6 +46,20 @@ describe("GET /api/auth/google/start", () => {
     expect(authorizationUrl.searchParams.get("redirect_uri")).toBe(
       "http://localhost:3000/auth/google/callback",
     );
+  });
+
+  it("stores the requested locale for the OAuth callback", () => {
+    process.env.GOOGLE_CLIENT_ID = "server-client-id";
+    process.env.GOOGLE_REDIRECT_URI = "http://localhost:3000/auth/google/callback";
+
+    const response = GET(new NextRequest("http://localhost/api/auth/google/start?locale=ko"));
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(setCookie).toContain(`${AUTH_COOKIES.oauthLocale}=ko`);
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).toContain("SameSite=lax");
+    expect(setCookie).toContain("Max-Age=600");
+    expect(setCookie).toContain("Path=/");
   });
 
   it("does not expose unexpected internal error messages", async () => {

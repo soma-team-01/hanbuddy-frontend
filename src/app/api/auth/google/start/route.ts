@@ -11,6 +11,9 @@ class GoogleAuthStartConfigError extends Error {}
 
 export function GET(request: NextRequest) {
   try {
+    const locale = getLocaleOrDefault(
+      request.nextUrl.searchParams.get("locale") ?? request.cookies.get(LOCALE_COOKIE_NAME)?.value,
+    );
     const state = createOAuthState();
     const authorizationUrl = buildGoogleAuthorizationUrl({
       clientId: getGoogleClientId(),
@@ -20,6 +23,7 @@ export function GET(request: NextRequest) {
 
     const response = NextResponse.redirect(authorizationUrl);
     response.cookies.set(AUTH_COOKIES.oauthState, state, OAUTH_STATE_COOKIE_OPTIONS);
+    response.cookies.set(AUTH_COOKIES.oauthLocale, locale, OAUTH_STATE_COOKIE_OPTIONS);
     return response;
   } catch (error) {
     return redirectToLoginWithError(

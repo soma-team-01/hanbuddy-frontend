@@ -58,7 +58,7 @@ describe("LoginPage", () => {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
       expect(screen.getByText(policy)).toBeInTheDocument();
       const googleLoginLink = screen.getByRole("link", { name: action });
-      expect(googleLoginLink).toHaveAttribute("href", "/api/auth/google/start");
+      expect(googleLoginLink).toHaveAttribute("href", `/api/auth/google/start?locale=${locale}`);
       expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");
     },
   );

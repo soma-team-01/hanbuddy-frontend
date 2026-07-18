@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       : createOnboardingRedirect(request, result);
 
     response.cookies.delete(AUTH_COOKIES.oauthState);
+    response.cookies.delete(AUTH_COOKIES.oauthLocale);
     if (hasUsableGoogleLoginResult(result)) {
       appendBackendSetCookies(response, backend.setCookies);
     }
@@ -104,10 +105,14 @@ function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
 
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);
+  response.cookies.delete(AUTH_COOKIES.oauthLocale);
   return response;
 }
 
 function createLocalizedUrl(request: NextRequest, pathname: string) {
-  const locale = getLocaleOrDefault(request.cookies.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = getLocaleOrDefault(
+    request.cookies.get(AUTH_COOKIES.oauthLocale)?.value ??
+      request.cookies.get(LOCALE_COOKIE_NAME)?.value,
+  );
   return new URL(localizePathname(pathname, locale), request.url);
 }

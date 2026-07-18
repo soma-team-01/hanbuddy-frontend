@@ -27,7 +27,7 @@ describe("GET /auth/google/callback", () => {
         "http://localhost/auth/google/callback?error=access_denied&error_description=denied",
         {
           headers: {
-            cookie: `${LOCALE_COOKIE_NAME}=ko`,
+            cookie: `${LOCALE_COOKIE_NAME}=en; ${AUTH_COOKIES.oauthLocale}=ko`,
           },
         },
       ),
@@ -36,6 +36,7 @@ describe("GET /auth/google/callback", () => {
     expect(response.headers.get("location")).toBe(
       "http://localhost/ko/login?error=googleCancelled",
     );
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.oauthLocale}=;`);
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -119,6 +120,29 @@ describe("GET /auth/google/callback", () => {
 
     expect(response.headers.get("location")).toBe("http://localhost/ko/explore");
     expect(response.headers.get("set-cookie") ?? "").toContain("refresh_token=backend");
+  });
+
+  it("uses and clears the OAuth locale after authentication", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          accessToken: "access-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("en", "ko"));
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.headers.get("location")).toBe("http://localhost/ko/explore");
+    expect(setCookie).toContain(`${AUTH_COOKIES.oauthLocale}=;`);
   });
 
   it("redirects a registered tourist without a locale cookie to the default locale", async () => {
@@ -272,9 +296,10 @@ describe("GET /auth/google/callback", () => {
   });
 });
 
-function createCallbackRequest(locale?: string) {
+function createCallbackRequest(locale?: string, oauthLocale?: string) {
   const requestCookies = [`${AUTH_COOKIES.oauthState}=state`];
   if (locale) requestCookies.push(`${LOCALE_COOKIE_NAME}=${locale}`);
+  if (oauthLocale) requestCookies.push(`${AUTH_COOKIES.oauthLocale}=${oauthLocale}`);
 
   return new NextRequest("http://localhost/auth/google/callback?code=code&state=state", {
     headers: {

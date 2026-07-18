@@ -30,5 +30,5 @@ export function localizePathname(pathname: string, locale: Locale): string {
 
 export function hasUnsupportedLanguageSegment(pathname: string): boolean {
   const match = LANGUAGE_SEGMENT.exec(pathname);
-  return Boolean(match && !isLocale(match[1]?.toLowerCase()));
+  return Boolean(match && !isLocale(match[1]));
 }

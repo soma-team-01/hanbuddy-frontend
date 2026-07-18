@@ -36,6 +36,8 @@ function PriceBreakdown({
 
   const subtotal = breakdown.unitPrice * breakdown.guests;
   const total = subtotal + breakdown.serviceFee;
+  const hasCompletedPayment =
+    application.status === "confirmed" || application.status === "completed";
 
   return (
     <div className="border-t border-line pt-3">
@@ -59,7 +61,7 @@ function PriceBreakdown({
             </span>
             <span>{formatKrw(subtotal, locale)}</span>
           </div>
-          {paymentCharge ? (
+          {hasCompletedPayment && paymentCharge ? (
             <div className="font-display font-semibold text-forest">
               {t("paidWithPayPal", {
                 amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
@@ -103,6 +105,7 @@ function ApplicationCard({
   );
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
+  const hasCompletedPayment = application.status === "confirmed" || isCompleted;
   const totalKrw = application.breakdown
     ? application.breakdown.unitPrice * application.breakdown.guests +
       application.breakdown.serviceFee
@@ -145,7 +148,7 @@ function ApplicationCard({
             <p className="font-display text-sm font-semibold text-ink">
               {formatKrw(totalKrw, locale)}
             </p>
-            {!isCancelled && paymentCharge ? (
+            {hasCompletedPayment && paymentCharge ? (
               <p className="mt-0.5 text-xs text-forest">
                 {t("paidWithPayPal", {
                   amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),

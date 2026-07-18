@@ -29,6 +29,16 @@ describe("GET /api/auth/google/start", () => {
     expect(response.headers.get("location")).toBe("http://localhost/ko/login?error=configuration");
   });
 
+  it("preserves the query locale on configuration errors without a locale cookie", () => {
+    delete process.env.GOOGLE_CLIENT_ID;
+    delete process.env.GOOGLE_REDIRECT_URI;
+
+    const response = GET(new NextRequest("http://localhost/api/auth/google/start?locale=ko"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ko/login?error=configuration");
+  });
+
   it("builds the Google authorization redirect from server-only environment variables", () => {
     process.env.GOOGLE_CLIENT_ID = "server-client-id";
     process.env.GOOGLE_REDIRECT_URI = "http://localhost:3000/auth/google/callback";

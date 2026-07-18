@@ -127,8 +127,8 @@ describe("ApplicationsContent", () => {
 
     const { queryClient } = renderWithQueryClient(<ApplicationsContent />);
 
-    expect(await screen.findByText("Paid with PayPal: $68.97")).toBeInTheDocument();
-    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    expect(await screen.findByText("₩90,000")).toBeInTheDocument();
+    expect(screen.queryByText("Paid with PayPal: $68.97")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
     await waitFor(() => {

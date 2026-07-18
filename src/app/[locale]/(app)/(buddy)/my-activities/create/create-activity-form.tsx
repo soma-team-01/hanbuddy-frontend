@@ -229,6 +229,9 @@ export function CreateActivityForm() {
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
   const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
+  const [submissionAuthError, setSubmissionAuthError] = useState<UnauthenticatedQueryError | null>(
+    null,
+  );
   const [errorKey, setErrorKey] = useState<CreateActivityErrorKey | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
@@ -251,7 +254,9 @@ export function CreateActivityForm() {
     mutationFn: async (request: ActivityPricePreviewRequest) =>
       unwrapApiResult(await previewActivityPrice(request), "preview"),
   });
-  useAuthQueryRedirect(createActivityMutation.error ?? pricePreviewMutation.error);
+  useAuthQueryRedirect(
+    submissionAuthError ?? createActivityMutation.error ?? pricePreviewMutation.error,
+  );
   const googleMapsApiKey = getGoogleMapsApiKey();
 
   function handlePriceChange() {
@@ -431,6 +436,7 @@ export function CreateActivityForm() {
     const selectedMeetingPlaceId = getString(formData, "meetingPlaceId");
 
     setErrorKey(null);
+    setSubmissionAuthError(null);
     setSubmissionPhase("uploading");
 
     try {
@@ -457,7 +463,11 @@ export function CreateActivityForm() {
       };
       await createActivityMutation.mutateAsync(request);
     } catch (error) {
-      if (error instanceof UnauthenticatedQueryError) return;
+      if (error instanceof UnauthenticatedQueryError) {
+        setSubmissionPhase(null);
+        setSubmissionAuthError(error);
+        return;
+      }
       setErrorKey("submissionFailed");
       setSubmissionPhase(null);
     }

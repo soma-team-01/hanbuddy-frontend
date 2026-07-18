@@ -12,6 +12,7 @@ import {
 import { uploadActivityImages } from "@/lib/images/presigned";
 import { buddyKeys } from "@/lib/query/buddy";
 import { createQueryClient } from "@/lib/query/client";
+import { UnauthenticatedQueryError } from "@/lib/query/result";
 import { userKeys } from "@/lib/query/users";
 import { createMockProfile } from "@/test/factories";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -934,6 +935,22 @@ describe("CreateActivityForm", () => {
       "액티비티 사진을 업로드하지 못했습니다. 다시 시도해 주세요.",
     );
     expect(screen.queryByText("raw image service failure")).not.toBeInTheDocument();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+  });
+
+  it("redirects to login and resets the upload state when image upload is unauthenticated", async () => {
+    mockedUploadActivityImages.mockRejectedValue(new UnauthenticatedQueryError());
+    renderWithQueryClient(<CreateActivityForm />);
+
+    await fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
+
+    await waitFor(() => {
+      expect(routerMock.replace).toHaveBeenCalledWith("/en/login");
+    });
+    expect(routerMock.refresh).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Register Activity" })).toBeEnabled();
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
   });
 

@@ -34,7 +34,9 @@ export function GET(request: NextRequest) {
 }
 
 function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
-  const locale = getLocaleOrDefault(request.cookies.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = getLocaleOrDefault(
+    request.nextUrl.searchParams.get("locale") ?? request.cookies.get(LOCALE_COOKIE_NAME)?.value,
+  );
   const loginUrl = new URL(localizePathname("/login", locale), request.url);
   loginUrl.searchParams.set("error", code);
   return NextResponse.redirect(loginUrl);

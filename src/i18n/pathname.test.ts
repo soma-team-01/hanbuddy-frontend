@@ -28,6 +28,7 @@ describe("locale pathname helpers", () => {
 
   it("detects unsupported language segments", () => {
     expect(hasUnsupportedLanguageSegment("/fr/explore")).toBe(true);
+    expect(hasUnsupportedLanguageSegment("/EN/explore")).toBe(true);
     expect(hasUnsupportedLanguageSegment("/my-page")).toBe(false);
   });
 });

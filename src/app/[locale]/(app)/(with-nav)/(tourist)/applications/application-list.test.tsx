@@ -101,7 +101,7 @@ describe("ApplicationList", () => {
     vi.unstubAllEnvs();
   });
 
-  it("shows the KRW total and PayPal charge before a payment method is selected", () => {
+  it("does not show a completed PayPal charge before capture succeeds", () => {
     const onContinuePayment = vi
       .fn()
       .mockResolvedValue({ orderId: "ORDER123", paymentAmount: 68.97, paymentCurrency: "USD" });
@@ -109,7 +109,7 @@ describe("ApplicationList", () => {
 
     renderList({ onContinuePayment, onCapturePayment });
 
-    expect(screen.getByText("Paid with PayPal: $68.97")).toBeInTheDocument();
+    expect(screen.queryByText("Paid with PayPal: $68.97")).not.toBeInTheDocument();
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
     expect(onCapturePayment).not.toHaveBeenCalled();
@@ -141,7 +141,7 @@ describe("ApplicationList", () => {
     const onCapturePayment = vi.fn().mockResolvedValue(undefined);
     renderList({ onContinuePayment, onCapturePayment });
 
-    expect(screen.getByText("Paid with PayPal: $68.97")).toBeInTheDocument();
+    expect(screen.queryByText("Paid with PayPal: $68.97")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
     await waitFor(() => {

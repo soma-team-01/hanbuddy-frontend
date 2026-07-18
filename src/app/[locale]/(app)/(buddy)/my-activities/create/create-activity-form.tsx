@@ -291,7 +291,7 @@ export function CreateActivityForm() {
 
   useEffect(() => {
     const query = meetingPlaceQuery.trim();
-    if (query.length < 3 || !googleMapsApiKey || query === selectedMeetingPlaceLabel) {
+    if (!query || !googleMapsApiKey || query === selectedMeetingPlaceLabel) {
       return;
     }
 
@@ -467,7 +467,7 @@ export function CreateActivityForm() {
     const value = event.target.value;
     placeSelectionVersionRef.current += 1;
     placeSearchVersionRef.current += 1;
-    if (value.trim().length < 3) {
+    if (!value.trim()) {
       placeSessionTokenRef.current = null;
     }
     selectedPlaceSessionTokenRef.current = null;
@@ -476,7 +476,7 @@ export function CreateActivityForm() {
     setSelectedMeetingPlaceLabel("");
     setSelectedMeetingPlaceAddress(null);
     setPlacePredictions(null);
-    setIsSearchingPlaces(value.trim().length >= 3 && Boolean(googleMapsApiKey));
+    setIsSearchingPlaces(Boolean(value.trim()) && Boolean(googleMapsApiKey));
   }
 
   function handlePlaceSelect(prediction: GooglePlacePrediction, predictionLocale: Locale) {

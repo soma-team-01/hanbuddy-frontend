@@ -253,6 +253,27 @@ describe("CreateActivityForm", () => {
     ).toBeTruthy();
   });
 
+  it("searches Google places from the first non-whitespace character", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+
+    goToStepThree();
+    fireEvent.change(screen.getByRole("textbox", { name: "Search Google place" }), {
+      target: { value: "A" },
+    });
+
+    await waitFor(() =>
+      expect(mockedSearchGooglePlacePredictions).toHaveBeenCalledWith(
+        "A",
+        "test-google-key",
+        expect.objectContaining({
+          locale: "en",
+          fetcher: expect.any(Function),
+          sessionToken: expect.any(String),
+        }),
+      ),
+    );
+  });
+
   it("shows the selected Google place name in the search field and address below it", async () => {
     renderWithQueryClient(<CreateActivityForm />);
 

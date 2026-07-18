@@ -69,7 +69,7 @@ describe("Google Places helpers", () => {
     );
 
     await expect(
-      searchGooglePlacePredictions("anguk", "test-key", {
+      searchGooglePlacePredictions("a", "test-key", {
         locale: "ko",
         fetcher,
         sessionToken: "session-token",
@@ -94,7 +94,7 @@ describe("Google Places helpers", () => {
             "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat",
         },
         body: JSON.stringify({
-          input: "anguk",
+          input: "a",
           includedRegionCodes: ["kr"],
           languageCode: "ko",
           regionCode: "KR",

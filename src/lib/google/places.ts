@@ -123,7 +123,7 @@ export async function searchGooglePlacePredictions(
   const trimmedApiKey = apiKey.trim();
   const trimmedSessionToken = sessionToken?.trim();
 
-  if (trimmedInput.length < 3 || !trimmedApiKey) {
+  if (!trimmedInput || !trimmedApiKey) {
     return [];
   }
 

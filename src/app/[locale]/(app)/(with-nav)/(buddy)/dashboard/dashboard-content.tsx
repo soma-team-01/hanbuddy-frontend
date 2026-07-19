@@ -217,10 +217,9 @@ export function DashboardContent() {
           >
             <ArrowLeftIcon className="size-4" />
           </button>
-          <div
-            role="group"
+          <fieldset
             aria-label={t("scheduleDates")}
-            className="grid min-w-0 flex-1 grid-cols-5 gap-2"
+            className="grid min-w-0 flex-1 grid-cols-5 gap-2 border-0 p-0"
           >
             {visibleDates.map(({ date, dateStartAt, hasActivity }) => {
               const chip = formatDateChip(dateStartAt, locale, tErrors("dateTimeUnavailable"));
@@ -254,7 +253,7 @@ export function DashboardContent() {
                 </button>
               );
             })}
-          </div>
+          </fieldset>
           <button
             type="button"
             aria-label={t("nextDates", { count: DATE_PAGE_SIZE })}

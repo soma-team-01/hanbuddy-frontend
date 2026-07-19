@@ -54,7 +54,7 @@ function isValidCalendarDateTime(match: RegExpMatchArray) {
 }
 
 function getOffsetfulDate(value: string) {
-  const match = value.match(OFFSETFUL_ISO_PATTERN);
+  const match = OFFSETFUL_ISO_PATTERN.exec(value);
   if (!match || !isValidCalendarDateTime(match)) return null;
 
   const offset = match[8];
@@ -88,7 +88,7 @@ export function getSeoulDateTimeParts(value: string): SeoulDateTimeParts | null 
 }
 
 export function toSeoulStartAt(localDateTime: string): string | null {
-  const match = localDateTime.match(DATETIME_LOCAL_PATTERN);
+  const match = DATETIME_LOCAL_PATTERN.exec(localDateTime);
   if (!match || !isValidCalendarDateTime(match)) return null;
 
   const startAt = `${localDateTime}:00${SEOUL_OFFSET}`;

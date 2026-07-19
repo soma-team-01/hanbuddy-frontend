@@ -24,7 +24,8 @@ export function stripLocaleFromPathname(pathname: string): string {
 }
 
 export function localizePathname(pathname: string, locale: Locale): string {
-  const canonical = pathname === "/" ? "" : pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (pathname === "/") return `/${locale}`;
+  const canonical = pathname.startsWith("/") ? pathname : `/${pathname}`;
   return `/${locale}${canonical}`;
 }
 

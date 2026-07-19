@@ -49,7 +49,7 @@ describe("role-specific My Page", () => {
   it("enables Language while unfinished menu actions remain disabled", () => {
     renderRoleMyPage(<TouristMyPage />, "TOURIST");
 
-    expect(screen.getByRole("button", { name: /Language/ })).toBeEnabled();
+    expect(screen.getByRole("combobox", { name: "Language" })).toBeEnabled();
     expect(screen.getByRole("button", { name: /Help Center/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Delete Account/ })).toBeDisabled();
     expect(screen.getAllByText("Coming soon")).toHaveLength(2);
@@ -58,7 +58,7 @@ describe("role-specific My Page", () => {
   it("translates the My Page menu in Korean", () => {
     renderRoleMyPage(<TouristMyPage />, "TOURIST", "ko");
 
-    expect(screen.getByRole("button", { name: /언어/ })).toBeEnabled();
+    expect(screen.getByRole("combobox", { name: "언어" })).toBeEnabled();
     expect(screen.getByRole("button", { name: /고객센터/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /계정 삭제/ })).toBeDisabled();
     expect(screen.getAllByText("출시 예정")).toHaveLength(2);

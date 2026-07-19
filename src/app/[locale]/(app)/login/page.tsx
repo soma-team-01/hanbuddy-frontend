@@ -8,8 +8,8 @@ import { parseAuthErrorCode } from "@/lib/auth/error-codes";
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface LoginPageProps {
-  params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ error?: string | string[] }>;
+  readonly params: Promise<{ locale: Locale }>;
+  readonly searchParams: Promise<{ error?: string | string[] }>;
 }
 
 export async function generateMetadata({

@@ -75,6 +75,7 @@ describe("DashboardContent", () => {
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Schedule dates" }).tagName).toBe("FIELDSET");
     expect(screen.getByText("19").closest("button")).not.toHaveAccessibleName(/has activity/i);
     expect(screen.getByText("20").closest("button")).toHaveAccessibleName(/has activity/i);
     expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");

@@ -13,7 +13,7 @@ const experiences = [
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface LandingPageProps {
-  params: Promise<{ locale: Locale }>;
+  readonly params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: LandingPageProps): Promise<Metadata> {

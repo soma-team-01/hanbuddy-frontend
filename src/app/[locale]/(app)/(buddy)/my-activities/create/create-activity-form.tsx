@@ -95,39 +95,54 @@ function isPositiveInteger(value: string) {
   return Number.isInteger(parsed) && parsed > 0;
 }
 
-export function validateCreateActivityStep({
-  step,
+function validateActivityBasics({
   selectedPhotoCount,
   title,
   description,
+}: CreateActivityValidationInput): CreateActivityErrorKey | null {
+  if (selectedPhotoCount === 0) return "photosRequired";
+  if (!title.trim()) return "titleRequired";
+  if (!description.trim()) return "descriptionRequired";
+  return null;
+}
+
+function validateScheduleAndPricing({
   scheduleDateTimes,
   maxCapacity,
   price,
+}: CreateActivityValidationInput): CreateActivityErrorKey | null {
+  if (!scheduleDateTimes.some((value) => toSeoulStartAt(value.trim()))) {
+    return "scheduleRequired";
+  }
+  if (!isPositiveInteger(maxCapacity)) return "capacityInvalid";
+  if (!isPositiveInteger(price)) return "priceInvalid";
+  return null;
+}
+
+function validateMeetingDetails({
   meetingPlaceId,
   meetingPointName,
   includedItems,
 }: CreateActivityValidationInput): CreateActivityErrorKey | null {
-  if (step === 1) {
-    if (selectedPhotoCount === 0) return "photosRequired";
-    if (!title.trim()) return "titleRequired";
-    if (!description.trim()) return "descriptionRequired";
-  }
-
-  if (step === 2) {
-    if (!scheduleDateTimes.some((value) => toSeoulStartAt(value.trim()))) {
-      return "scheduleRequired";
-    }
-    if (!isPositiveInteger(maxCapacity)) return "capacityInvalid";
-    if (!isPositiveInteger(price)) return "priceInvalid";
-  }
-
-  if (step === 3) {
-    if (!meetingPlaceId.trim()) return "meetingPlaceRequired";
-    if (!meetingPointName.trim()) return "meetingPointNameRequired";
-    if (!includedItems.some((value) => value.trim())) return "includedItemRequired";
-  }
-
+  if (!meetingPlaceId.trim()) return "meetingPlaceRequired";
+  if (!meetingPointName.trim()) return "meetingPointNameRequired";
+  if (!includedItems.some((value) => value.trim())) return "includedItemRequired";
   return null;
+}
+
+const CREATE_ACTIVITY_STEP_VALIDATORS = {
+  1: validateActivityBasics,
+  2: validateScheduleAndPricing,
+  3: validateMeetingDetails,
+} satisfies Record<
+  CreateActivityStep,
+  (input: CreateActivityValidationInput) => CreateActivityErrorKey | null
+>;
+
+export function validateCreateActivityStep(
+  input: CreateActivityValidationInput,
+): CreateActivityErrorKey | null {
+  return CREATE_ACTIVITY_STEP_VALIDATORS[input.step](input);
 }
 
 function getNextStep(step: CreateActivityStep): CreateActivityStep {
@@ -136,6 +151,15 @@ function getNextStep(step: CreateActivityStep): CreateActivityStep {
 
 function getPreviousStep(step: CreateActivityStep): CreateActivityStep {
   return step === 3 ? 2 : 1;
+}
+
+function getPrimaryActionLabelKey(
+  submissionPhase: SubmissionPhase | null,
+  currentStep: CreateActivityStep,
+) {
+  if (submissionPhase === "uploading") return "uploadingPhotos";
+  if (submissionPhase === "registering") return "registering";
+  return currentStep === 3 ? "registerActivity" : "next";
 }
 
 function getNextRowKey(rows: number[]) {
@@ -194,6 +218,77 @@ async function uploadSelectedActivityImages(
     if (error instanceof UnauthenticatedQueryError) throw error;
     return { imageKeys: null, errorKey: "imageUploadFailed" };
   }
+}
+
+type MeetingPlaceFeedbackProps = Readonly<{
+  googleMapsApiKey: string;
+  isSearchingPlaces: boolean;
+  meetingMapUrl: string;
+  onPlaceSelect: (prediction: GooglePlacePrediction, predictionLocale: Locale) => void;
+  placePredictions: { locale: Locale; values: GooglePlacePrediction[] } | null;
+  selectedMeetingPlaceAddress: LocalizedMeetingPlaceAddress | null;
+}>;
+
+function MeetingPlaceFeedback({
+  googleMapsApiKey,
+  isSearchingPlaces,
+  meetingMapUrl,
+  onPlaceSelect,
+  placePredictions,
+  selectedMeetingPlaceAddress,
+}: MeetingPlaceFeedbackProps) {
+  const locale = useLocale();
+  const t = useTranslations("CreateActivity");
+
+  return (
+    <>
+      {!googleMapsApiKey ? (
+        <p className="px-1 text-xs text-ink-soft">{t("placeSearchUnavailable")}</p>
+      ) : null}
+      {placePredictions?.locale === locale && placePredictions.values.length > 0 ? (
+        <ul
+          aria-label={t("placeResults")}
+          className="overflow-hidden rounded-xl border border-line bg-white"
+        >
+          {placePredictions.values.map((prediction) => (
+            <li key={prediction.placeId}>
+              <button
+                type="button"
+                onClick={() => onPlaceSelect(prediction, placePredictions.locale)}
+                className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-chip"
+              >
+                <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
+                {prediction.secondaryText ? (
+                  <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
+                ) : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {isSearchingPlaces ? (
+        <p className="px-1 text-xs text-ink-soft">{t("placeSearchLoading")}</p>
+      ) : null}
+      {selectedMeetingPlaceAddress?.locale === locale ? (
+        <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress.value}</p>
+      ) : null}
+      {meetingMapUrl ? (
+        <iframe
+          title={t("mapTitle")}
+          src={meetingMapUrl}
+          className="h-40 w-full rounded-xl border-0"
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+        />
+      ) : (
+        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
+          <MapIcon className="size-6" />
+          <span className="text-sm">{t("mapFallback")}</span>
+        </div>
+      )}
+    </>
+  );
 }
 
 export function CreateActivityForm() {
@@ -787,52 +882,15 @@ export function CreateActivityForm() {
                 />
               </span>
             </label>
-            {!googleMapsApiKey ? (
-              <p className="px-1 text-xs text-ink-soft">{t("placeSearchUnavailable")}</p>
-            ) : null}
             <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
-            {placePredictions?.locale === locale && placePredictions.values.length > 0 ? (
-              <ul
-                aria-label={t("placeResults")}
-                className="overflow-hidden rounded-xl border border-line bg-white"
-              >
-                {placePredictions.values.map((prediction) => (
-                  <li key={prediction.placeId}>
-                    <button
-                      type="button"
-                      onClick={() => handlePlaceSelect(prediction, placePredictions.locale)}
-                      className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-chip"
-                    >
-                      <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
-                      {prediction.secondaryText ? (
-                        <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
-                      ) : null}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {isSearchingPlaces ? (
-              <p className="px-1 text-xs text-ink-soft">{t("placeSearchLoading")}</p>
-            ) : null}
-            {selectedMeetingPlaceAddress?.locale === locale ? (
-              <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress.value}</p>
-            ) : null}
-            {meetingMapUrl ? (
-              <iframe
-                title={t("mapTitle")}
-                src={meetingMapUrl}
-                className="h-40 w-full rounded-xl border-0"
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            ) : (
-              <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
-                <MapIcon className="size-6" />
-                <span className="text-sm">{t("mapFallback")}</span>
-              </div>
-            )}
+            <MeetingPlaceFeedback
+              googleMapsApiKey={googleMapsApiKey}
+              isSearchingPlaces={isSearchingPlaces}
+              meetingMapUrl={meetingMapUrl}
+              onPlaceSelect={handlePlaceSelect}
+              placePredictions={placePredictions}
+              selectedMeetingPlaceAddress={selectedMeetingPlaceAddress}
+            />
             <label className="mt-2 flex flex-col gap-2">
               <FieldLabel>{t("meetingPointName")}</FieldLabel>
               <input
@@ -846,10 +904,9 @@ export function CreateActivityForm() {
             </label>
           </div>
 
-          <div
-            role="group"
+          <fieldset
             aria-label={t("includedItemsCount", { count: includedItems.length })}
-            className="flex flex-col gap-2"
+            className="flex min-w-0 flex-col gap-2 border-0 p-0"
           >
             <FieldLabel>{t("included")}</FieldLabel>
             {includedItems.map((key, index) => (
@@ -879,12 +936,11 @@ export function CreateActivityForm() {
             >
               + {t("addIncludedItem")}
             </button>
-          </div>
+          </fieldset>
 
-          <div
-            role="group"
+          <fieldset
             aria-label={t("restrictionsCount", { count: restrictions.length })}
-            className="flex flex-col gap-2"
+            className="flex min-w-0 flex-col gap-2 border-0 p-0"
           >
             <FieldLabel>{t("restrictions")}</FieldLabel>
             {restrictions.map((key, index) => (
@@ -913,7 +969,7 @@ export function CreateActivityForm() {
             >
               + {t("addRestriction")}
             </button>
-          </div>
+          </fieldset>
         </section>
       </main>
       <BottomActionBar>
@@ -931,13 +987,7 @@ export function CreateActivityForm() {
           disabled={isSubmitting}
           className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submissionPhase === "uploading"
-            ? t("uploadingPhotos")
-            : submissionPhase === "registering"
-              ? t("registering")
-              : currentStep === 3
-                ? t("registerActivity")
-                : t("next")}
+          {t(getPrimaryActionLabelKey(submissionPhase, currentStep))}
         </button>
       </BottomActionBar>
       {pendingPublish && (

@@ -529,6 +529,8 @@ describe("CreateActivityForm", () => {
     expect(screen.getByText("Step 3 of 3")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Meeting Details" })).toBeInTheDocument();
     expect(screen.queryByText("Search Google place")).not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "1 included item" }).tagName).toBe("FIELDSET");
+    expect(screen.getByRole("group", { name: "1 restriction" }).tagName).toBe("FIELDSET");
     expect(screen.getByRole("button", { name: "Previous Step" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Register Activity" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Save Draft" })).not.toBeInTheDocument();

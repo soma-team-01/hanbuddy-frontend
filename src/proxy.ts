@@ -37,5 +37,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/((?!api|auth/google/callback|_next|_vercel|.*\\..*).*)",
+  matcher: "/((?!api|auth/google/callback|_next|_vercel|.*[.].*).*)",
 };

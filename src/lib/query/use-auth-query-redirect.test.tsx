@@ -10,7 +10,12 @@ const routerMock = vi.hoisted(() => ({
   replace: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("next-intl", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next-intl")>()),
+  useLocale: () => "ko",
+}));
+
+vi.mock("@/i18n/navigation", () => ({
   useRouter: () => routerMock,
 }));
 
@@ -36,7 +41,9 @@ describe("useAuthQueryRedirect", () => {
       queryClient,
     });
 
-    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/login"));
+    await waitFor(() =>
+      expect(routerMock.replace).toHaveBeenCalledWith("/login", { locale: "ko" }),
+    );
     expect(queryClient.getQueryData(["private-profile"])).toBeUndefined();
     expect(routerMock.refresh).toHaveBeenCalledOnce();
   });

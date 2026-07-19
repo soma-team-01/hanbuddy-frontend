@@ -1,4 +1,5 @@
-import { splitStartAt } from "@/lib/format";
+import type { Locale } from "@/i18n/routing";
+import { formatSeoulDateTime } from "@/lib/datetime";
 import type {
   Application,
   ApplicationResponse,
@@ -13,13 +14,16 @@ const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStat
   COMPLETED: "completed",
 };
 
-export function mapApplicationResponseToApplication(response: ApplicationResponse): Application {
+export function mapApplicationResponseToApplication(
+  response: ApplicationResponse,
+  dateTimeUnavailable: string,
+  locale: Locale = "en",
+): Application {
   const subtotal = response.price * response.guestCount;
-  const { date, time } = splitStartAt(response.startAt);
   return {
     id: String(response.applicationId),
     status: STATUS_BY_BACKEND_STATUS[response.status],
-    dateLabel: `${date} ${time}`,
+    dateLabel: formatSeoulDateTime(response.startAt, locale) ?? dateTimeUnavailable,
     hostName: response.buddyName,
     hostAvatarUrl: null,
     activityTitle: response.activityTitle,

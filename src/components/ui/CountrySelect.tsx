@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { COUNTRIES, findCountry } from "@/lib/countries";
+import { useLocale, useTranslations } from "next-intl";
+import { COUNTRIES } from "@/lib/countries";
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "@/components/ui/icons";
 
 interface CountrySelectProps {
@@ -21,6 +22,8 @@ export function CountrySelect({
   ariaLabel,
   triggerClassName,
 }: Readonly<CountrySelectProps>) {
+  const locale = useLocale();
+  const t = useTranslations("Country");
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -29,20 +32,38 @@ export function CountrySelect({
   const activeOptionRef = useRef<HTMLLIElement>(null);
   const listboxId = useId();
 
-  const selected = findCountry(value);
+  const localizedCountries = useMemo(() => {
+    const displayNames = new Intl.DisplayNames(locale === "ko" ? "ko-KR" : "en-US", {
+      type: "region",
+    });
+
+    return COUNTRIES.map((country) => {
+      const localizedName = displayNames.of(country.code);
+      return {
+        ...country,
+        localizedName:
+          !localizedName || localizedName.toUpperCase() === country.code
+            ? country.name
+            : localizedName,
+      };
+    });
+  }, [locale]);
+
+  const selected = localizedCountries.find((country) => country.code === value.toUpperCase());
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return COUNTRIES;
-    return COUNTRIES.filter(
+    if (!q) return localizedCountries;
+    return localizedCountries.filter(
       (c) =>
+        c.localizedName.toLowerCase().includes(q) ||
         c.name.toLowerCase().includes(q) ||
         c.code.toLowerCase() === q ||
         (display === "dialCode" &&
           (c.dialCode.includes(q.startsWith("+") ? q : `+${q}`) ||
             c.dialCode.slice(1).startsWith(q))),
     );
-  }, [query, display]);
+  }, [query, display, localizedCountries]);
 
   useEffect(() => {
     if (isOpen) searchRef.current?.focus();
@@ -103,11 +124,11 @@ export function CountrySelect({
           <span className="flex min-w-0 items-center gap-2.5">
             <span aria-hidden>{selected.flag}</span>
             <span className="truncate">
-              {display === "dialCode" ? selected.dialCode : selected.name}
+              {display === "dialCode" ? selected.dialCode : selected.localizedName}
             </span>
           </span>
         ) : (
-          <span className="truncate">Select country</span>
+          <span className="truncate">{t("select")}</span>
         )}
         <ChevronDownIcon className="size-4 shrink-0 text-ink" />
       </button>
@@ -115,7 +136,7 @@ export function CountrySelect({
       {isOpen && (
         <>
           {/* 바깥 클릭 시 닫기용 투명 오버레이 */}
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} aria-hidden />
+          <div className="fixed inset-0 z-10" onClick={close} aria-hidden />
           <div
             className={`absolute left-0 z-20 mt-2 flex max-h-80 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-xl ${
               display === "dialCode" ? "w-72" : "w-full min-w-64"
@@ -127,8 +148,8 @@ export function CountrySelect({
                 ref={searchRef}
                 type="text"
                 value={query}
-                placeholder="Search country"
-                aria-label="Search country"
+                placeholder={t("search")}
+                aria-label={t("search")}
                 role="combobox"
                 aria-expanded="true"
                 aria-controls={listboxId}
@@ -167,7 +188,7 @@ export function CountrySelect({
                     >
                       <span aria-hidden>{country.flag}</span>
                       <span className="min-w-0 flex-1 truncate text-base text-ink">
-                        {country.name}
+                        {country.localizedName}
                       </span>
                       {display === "dialCode" && (
                         <span className="shrink-0 text-sm text-ink-soft">{country.dialCode}</span>
@@ -178,7 +199,7 @@ export function CountrySelect({
                 );
               })}
               {filtered.length === 0 && (
-                <li className="px-3 py-4 text-center text-sm text-ink-soft">No countries found</li>
+                <li className="px-3 py-4 text-center text-sm text-ink-soft">{t("noResults")}</li>
               )}
             </ul>
           </div>

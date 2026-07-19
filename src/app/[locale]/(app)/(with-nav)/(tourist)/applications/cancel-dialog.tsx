@@ -1,0 +1,131 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
+import type { ApplicationCancellationReason } from "@/types/application";
+
+const REASONS = [
+  { value: "SCHEDULE_CONFLICT", key: "scheduleConflict" },
+  { value: "ILLNESS", key: "illness" },
+  { value: "FOUND_OTHER", key: "foundOther" },
+  { value: "OTHER", key: "other" },
+] as const satisfies ReadonlyArray<{ value: ApplicationCancellationReason; key: string }>;
+
+type CancelDialogErrorKey = "cancelFailed";
+
+export type CancelDialogOutcome = { ok: true } | { ok: false; errorKey: CancelDialogErrorKey };
+
+export function CancelDialog({
+  onClose,
+  onConfirm,
+}: Readonly<{
+  onClose: () => void;
+  onConfirm: (reason: ApplicationCancellationReason) => Promise<CancelDialogOutcome>;
+}>) {
+  const t = useTranslations("Applications");
+  const tErrors = useTranslations("Errors");
+  const [reason, setReason] = useState<ApplicationCancellationReason | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorKey, setErrorKey] = useState<CancelDialogErrorKey | "generic" | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  async function handleConfirm() {
+    if (!reason || isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorKey(null);
+
+    // onConfirm이 계약을 어기고 reject하면 두 버튼이 잠긴 채 복구 불가가 되므로 여기서 방어한다
+    try {
+      const outcome = await onConfirm(reason);
+      if (!outcome.ok) {
+        setErrorKey(outcome.errorKey);
+        setIsSubmitting(false);
+      }
+      // 성공 시에는 부모가 다이얼로그를 언마운트하므로 여기서 상태를 만지지 않는다.
+    } catch {
+      setErrorKey("generic");
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="cancel-dialog-title"
+      // Escape는 cancel → 기본 close 순으로 이어지므로 close 이벤트에서만 onClose를 부른다 (이중 호출 방지)
+      onCancel={(event) => {
+        if (isSubmitting) event.preventDefault();
+      }}
+      onClose={onClose}
+      // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
+    >
+      <h2 id="cancel-dialog-title" className="font-display text-xl font-semibold text-forest">
+        {t("cancellationTitle")}
+      </h2>
+      <p className="mt-2 text-ink-soft">{t("cancellationPrompt")}</p>
+      <p className="mt-5 font-display text-sm font-semibold text-ink">
+        {t("cancellationQuestion")}
+      </p>
+      <div className="mt-3 flex flex-col gap-3">
+        {REASONS.map(({ value, key }) => {
+          const isSelected = reason === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => setReason(value)}
+              className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left transition-colors ${
+                isSelected ? "border-forest" : "border-line-strong hover:border-forest/50"
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                  isSelected ? "border-forest" : "border-line-strong"
+                }`}
+              >
+                {isSelected && <span className="size-2 rounded-full bg-forest" />}
+              </span>
+              <span className="text-base text-ink">{t(`cancellationReasons.${key}`)}</span>
+            </button>
+          );
+        })}
+        {/* OTHER 상세 사유 입력란은 백엔드 CancelApplicationRequest.cancellationDetail 타입 오류(boolean)가
+            고쳐져 실제로 전송할 수 있게 되면 다시 추가한다. 입력을 받고 버리는 UI는 두지 않는다. */}
+      </div>
+      {errorKey && (
+        <p
+          role="alert"
+          className="mt-4 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          {errorKey === "generic" ? tErrors(errorKey) : t(errorKey)}
+        </p>
+      )}
+      <div className="mt-6 flex gap-3">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={isSubmitting}
+          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-chip disabled:opacity-60"
+        >
+          {t("keepApplication")}
+        </button>
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={!reason || isSubmitting}
+          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-60"
+        >
+          {isSubmitting ? t("cancelling") : t("confirmCancellation")}
+        </button>
+      </div>
+    </dialog>
+  );
+}

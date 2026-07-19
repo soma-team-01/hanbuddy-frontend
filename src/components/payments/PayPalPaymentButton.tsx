@@ -6,6 +6,8 @@ import {
   PayPalOneTimePaymentButton,
   PayPalProvider,
 } from "@paypal/react-paypal-js/sdk-v6";
+import { useLocale, useTranslations } from "next-intl";
+import { getExternalLocales } from "@/i18n/external-locales";
 
 interface PayPalPaymentButtonsProps {
   createOrder: () => Promise<{ orderId: string }>;
@@ -21,11 +23,15 @@ function getPayPalClientId() {
 
 /** PayPal SDK 컨텍스트. client ID가 없으면 SDK를 로드하지 않고 자식만 렌더링한다. */
 export function PayPalPaymentProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = useLocale();
+  const paypalLocale = getExternalLocales(locale).paypal;
   const clientId = getPayPalClientId();
   if (!clientId) return children;
 
   return (
     <PayPalProvider
+      key={paypalLocale}
+      locale={paypalLocale}
       clientId={clientId}
       environment={
         process.env.NEXT_PUBLIC_PAYPAL_ENVIRONMENT === "live" ||
@@ -52,6 +58,7 @@ export function PayPalPaymentButtons({
   onError,
   disabled = false,
 }: Readonly<PayPalPaymentButtonsProps>) {
+  const tPayment = useTranslations("Payment");
   const [isCardCheckoutOpen, setIsCardCheckoutOpen] = useState(false);
 
   if (!getPayPalClientId()) {
@@ -61,7 +68,7 @@ export function PayPalPaymentButtons({
         disabled
         className="h-12 w-full cursor-not-allowed rounded-xl bg-forest font-display text-sm font-semibold text-cream opacity-40"
       >
-        Payment unavailable
+        {tPayment("unavailable")}
       </button>
     );
   }

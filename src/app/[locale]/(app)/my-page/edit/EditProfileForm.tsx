@@ -1,0 +1,327 @@
+"use client";
+
+import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { TopAppBar } from "@/components/layout/TopAppBar";
+import { Avatar } from "@/components/ui/Avatar";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import {
+  APP_BY_CONTACT_METHOD,
+  CONTACT_METHOD_BY_APP,
+  MessagingAppField,
+  type MessagingAppKey,
+} from "@/components/ui/MessagingAppField";
+import { CameraIcon } from "@/components/ui/icons";
+import { useRouter } from "@/i18n/navigation";
+import { useMyProfile } from "@/lib/api/useMyProfile";
+import { updateMyProfile } from "@/lib/api/users";
+import { COUNTRIES, findCountry } from "@/lib/countries";
+import {
+  MAX_PROFILE_IMAGE_BYTES,
+  PROFILE_IMAGE_CONTENT_TYPES,
+  isSupportedProfileImageType,
+  uploadProfileImage,
+} from "@/lib/images/presigned";
+import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import { userKeys } from "@/lib/query/users";
+import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
+import type messages from "@/messages/en.json";
+import type { MyProfile } from "@/types/user";
+
+type ProfileValidationErrorKey = keyof (typeof messages)["Profile"]["validation"];
+type ProfileErrorKey =
+  `validation.${ProfileValidationErrorKey}` | "profileUploadFailed" | "saveFailed";
+
+/** 저장된 연락처 국가 번호(+1 등)를 국가 선택용 alpha-2 코드로 되돌린다 */
+function toMessagingCountry(profile: MyProfile) {
+  const { nationalityCode, contactCountryCode } = profile;
+  if (!contactCountryCode) return nationalityCode || "US";
+  if (findCountry(nationalityCode)?.dialCode === contactCountryCode) return nationalityCode;
+  return (
+    COUNTRIES.find((country) => country.dialCode === contactCountryCode)?.code ||
+    nationalityCode ||
+    "US"
+  );
+}
+
+function resolveContactCountryCode(
+  isBuddy: boolean,
+  messagingApp: MessagingAppKey,
+  messagingCountry: string,
+) {
+  const usesKoreanPhoneNumber =
+    isBuddy && (messagingApp === "whatsapp" || messagingApp === "phone");
+  return usesKoreanPhoneNumber ? "+82" : (findCountry(messagingCountry)?.dialCode ?? "");
+}
+
+interface EditProfileFormProps {
+  profile: MyProfile;
+}
+
+export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
+  const t = useTranslations("Profile");
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
+    APP_BY_CONTACT_METHOD[profile.contactMethod],
+  );
+  const [messagingContact, setMessagingContact] = useState(profile.contactIdentifier);
+  const [errorKey, setErrorKey] = useState<ProfileErrorKey | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState("");
+  // 같은 파일로 재제출할 때(프로필 저장 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
+  const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
+  const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
+    useMessagingCountrySync(profile.nationalityCode, toMessagingCountry(profile));
+
+  const isBuddy = profile.userType === "BUDDY";
+  const updateProfileMutation = useMutation({
+    mutationFn: async (request: Parameters<typeof updateMyProfile>[0]) =>
+      unwrapApiResult(await updateMyProfile(request), "profile"),
+    onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(userKeys.me(), updatedProfile);
+      router.replace("/my-page");
+    },
+  });
+  useAuthQueryRedirect(updateProfileMutation.error);
+
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    };
+  }, [profileImagePreview]);
+
+  function handleProfileImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!isSupportedProfileImageType(file.type)) {
+      setErrorKey("validation.unsupportedImageType");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      setErrorKey("validation.imageTooLarge");
+      event.target.value = "";
+      return;
+    }
+
+    setErrorKey(null);
+    setProfileImageFile(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+  }
+
+  function handleMessagingAppChange(key: MessagingAppKey) {
+    setMessagingApp(key);
+    // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
+    setMessagingContact("");
+  }
+
+  async function resolveProfileImageKey(): Promise<string | null> {
+    if (!profileImageFile) return profile.profileImageKey;
+    if (uploadedProfileImageRef.current?.file === profileImageFile) {
+      return uploadedProfileImageRef.current.imageKey;
+    }
+
+    const uploaded = await uploadProfileImage(profileImageFile);
+    uploadedProfileImageRef.current = { file: profileImageFile, imageKey: uploaded.imageKey };
+    return uploaded.imageKey;
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorKey(null);
+
+    const formData = new FormData(event.currentTarget);
+    const nameEntry = formData.get("name");
+    const ageEntry = formData.get("age");
+    const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
+    const age = typeof ageEntry === "string" && ageEntry.trim() ? Number(ageEntry) : Number.NaN;
+    const contactIdentifier = messagingContact.trim();
+
+    if (!name) {
+      setErrorKey("validation.nameRequired");
+      return;
+    }
+    if (!nationality) {
+      setErrorKey("validation.nationalityRequired");
+      return;
+    }
+    if (!Number.isInteger(age) || age < 0 || age > 150) {
+      setErrorKey("validation.ageInvalid");
+      return;
+    }
+    if (contactIdentifier.length < 2) {
+      setErrorKey("validation.contactInvalid");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      let profileImageKey: string | null;
+      try {
+        profileImageKey = await resolveProfileImageKey();
+      } catch {
+        setErrorKey("profileUploadFailed");
+        return;
+      }
+
+      await updateProfileMutation.mutateAsync({
+        name,
+        profileImageKey,
+        nationalityCode: nationality,
+        age,
+        contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
+        contactCountryCode: resolveContactCountryCode(isBuddy, messagingApp, messagingCountry),
+        contactIdentifier,
+      });
+    } catch (error) {
+      if (error instanceof UnauthenticatedQueryError) return;
+      setErrorKey("saveFailed");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const profilePhoto = profileImagePreview ? (
+    <Image
+      src={profileImagePreview}
+      alt={t("selectedProfilePhotoPreview")}
+      width={112}
+      height={112}
+      unoptimized
+      className="size-28 shrink-0 rounded-full border border-line-strong object-cover"
+    />
+  ) : (
+    <Avatar name={profile.name} src={profile.profileImageUrl} size={112} />
+  );
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <TopAppBar
+        backHref="/my-page"
+        action={
+          <button
+            form="edit-profile-form"
+            type="submit"
+            disabled={isSaving}
+            className="font-display text-sm font-semibold text-forest enabled:hover:underline disabled:opacity-60"
+          >
+            {isSaving ? t("saving") : t("save")}
+          </button>
+        }
+      />
+      <form id="edit-profile-form" noValidate onSubmit={handleSubmit} className="contents">
+        <main className="flex flex-1 flex-col gap-8 px-4 py-8">
+          <section className="flex flex-col items-center gap-3">
+            <div className="relative">
+              {profilePhoto}
+              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-forest-soft">
+                <CameraIcon className="size-4" />
+                <span className="sr-only">{t("addProfilePhoto")}</span>
+                <input
+                  type="file"
+                  accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
+                  className="sr-only"
+                  onChange={handleProfileImageChange}
+                />
+              </label>
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <label className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-ink">{t("fullName")}</span>
+              <input
+                name="name"
+                type="text"
+                required
+                defaultValue={profile.name}
+                className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
+              />
+            </label>
+            <div className="grid grid-cols-5 gap-3">
+              <div className="col-span-3 flex flex-col gap-2">
+                <span className="text-sm font-medium text-ink">{t("nationality")}</span>
+                <CountrySelect
+                  value={nationality}
+                  onChange={handleNationalityChange}
+                  ariaLabel={t("nationality")}
+                />
+              </div>
+              <label className="col-span-2 flex flex-col gap-2">
+                <span className="text-sm font-medium text-ink">{t("age")}</span>
+                <input
+                  name="age"
+                  type="number"
+                  min={0}
+                  max={150}
+                  required
+                  defaultValue={profile.age}
+                  className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
+                />
+              </label>
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-xl font-semibold text-ink">{t("contactDetails")}</h2>
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
+              <MessagingAppField
+                app={messagingApp}
+                onAppChange={handleMessagingAppChange}
+                country={messagingCountry}
+                onCountryChange={handleMessagingCountryChange}
+                contactValue={messagingContact}
+                onContactChange={setMessagingContact}
+                inputRequired
+                koreanOnly={isBuddy}
+              />
+            </div>
+          </section>
+
+          {errorKey && (
+            <p
+              role="alert"
+              className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+            >
+              {t(errorKey)}
+            </p>
+          )}
+        </main>
+      </form>
+    </div>
+  );
+}
+
+export function EditProfilePageContent() {
+  const t = useTranslations("Profile");
+  const result = useMyProfile();
+
+  if (result?.status === "success") {
+    return <EditProfileForm profile={result.profile} />;
+  }
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <TopAppBar backHref="/my-page" />
+      <main className="flex flex-1 flex-col items-center gap-4 px-4 py-8">
+        {result?.status === "error" ? (
+          <p role="alert" className="text-sm text-danger">
+            {t("loadFailed")}
+          </p>
+        ) : (
+          <>
+            <span aria-hidden className="size-28 animate-pulse rounded-full bg-sand" />
+            <span aria-hidden className="h-6 w-40 animate-pulse rounded bg-sand" />
+          </>
+        )}
+      </main>
+    </div>
+  );
+}

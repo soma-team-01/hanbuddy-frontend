@@ -6,13 +6,13 @@ import {
 } from "./places";
 
 describe("Google Places helpers", () => {
-  it("builds an Embed API place URL from a place id", () => {
-    expect(buildGoogleMapsEmbedUrl("places/ChIJ-bukchon", "test-key")).toBe(
-      "https://www.google.com/maps/embed/v1/place?key=test-key&q=place_id%3AChIJ-bukchon",
+  it("builds a Korean-localized Embed API place URL from a place id", () => {
+    expect(buildGoogleMapsEmbedUrl("places/ChIJ-bukchon", "test-key", "ko")).toBe(
+      "https://www.google.com/maps/embed/v1/place?key=test-key&q=place_id%3AChIJ-bukchon&language=ko&region=KR",
     );
   });
 
-  it("fetches only the formatted address for a selected place", async () => {
+  it("fetches only the formatted address in the requested language and Korean region", async () => {
     const fetcher = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ formattedAddress: "Jongno-gu, Seoul" }), {
         status: 200,
@@ -20,13 +20,24 @@ describe("Google Places helpers", () => {
     );
 
     await expect(
-      fetchGooglePlaceDetails("ChIJ-bukchon", "test-key", fetcher, "session-token"),
+      fetchGooglePlaceDetails("ChIJ-bukchon", "test-key", {
+        locale: "ko",
+        fetcher,
+        sessionToken: "session-token",
+      }),
     ).resolves.toEqual({
       formattedAddress: "Jongno-gu, Seoul",
     });
 
-    expect(fetcher).toHaveBeenCalledWith(
-      "https://places.googleapis.com/v1/places/ChIJ-bukchon?sessionToken=session-token",
+    const [requestUrl, requestInit] = fetcher.mock.calls[0];
+    const url = new URL(requestUrl);
+    expect(url.origin + url.pathname).toBe("https://places.googleapis.com/v1/places/ChIJ-bukchon");
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      languageCode: "ko",
+      regionCode: "KR",
+      sessionToken: "session-token",
+    });
+    expect(requestInit).toEqual(
       expect.objectContaining({
         headers: {
           "X-Goog-Api-Key": "test-key",
@@ -36,7 +47,7 @@ describe("Google Places helpers", () => {
     );
   });
 
-  it("maps Autocomplete suggestions into place predictions", async () => {
+  it("maps localized Autocomplete suggestions into place predictions", async () => {
     const fetcher = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -58,7 +69,11 @@ describe("Google Places helpers", () => {
     );
 
     await expect(
-      searchGooglePlacePredictions("anguk", "test-key", fetcher, "session-token"),
+      searchGooglePlacePredictions("a", "test-key", {
+        locale: "ko",
+        fetcher,
+        sessionToken: "session-token",
+      }),
     ).resolves.toEqual([
       {
         placeId: "ChIJ-anguk",
@@ -79,9 +94,10 @@ describe("Google Places helpers", () => {
             "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat",
         },
         body: JSON.stringify({
-          input: "anguk",
+          input: "a",
           includedRegionCodes: ["kr"],
-          languageCode: "en",
+          languageCode: "ko",
+          regionCode: "KR",
           sessionToken: "session-token",
         }),
       }),

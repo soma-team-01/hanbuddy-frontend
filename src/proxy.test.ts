@@ -4,14 +4,21 @@ import { describe, expect, it } from "vitest";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { config, proxy } from "./proxy";
 
-async function runProxy(pathname: string, cookies: Record<string, string> = {}) {
+async function runProxy(
+  pathname: string,
+  cookies: Record<string, string> = {},
+  headers: Record<string, string> = {},
+) {
   const cookieHeader = Object.entries(cookies)
     .map(([name, value]) => `${name}=${value}`)
     .join("; ");
 
   return proxy(
     new NextRequest(`http://localhost${pathname}`, {
-      headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+      headers: {
+        ...headers,
+        ...(cookieHeader ? { cookie: cookieHeader } : {}),
+      },
     }),
   );
 }
@@ -23,7 +30,7 @@ describe("route access proxy", () => {
       const response = await runProxy(pathname);
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toBe("http://localhost/login");
+      expect(response.headers.get("location")).toBe("http://localhost/en/login");
     },
   );
 
@@ -31,7 +38,7 @@ describe("route access proxy", () => {
     const response = await runProxy("/onboarding");
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/login");
+    expect(response.headers.get("location")).toBe("http://localhost/en/login");
   });
 
   it.each([
@@ -44,7 +51,7 @@ describe("route access proxy", () => {
     });
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(`http://localhost${homePath}`);
+    expect(response.headers.get("location")).toBe(`http://localhost/en${homePath}`);
   });
 
   it("allows a tourist to enter tourist and shared routes", async () => {
@@ -53,8 +60,8 @@ describe("route access proxy", () => {
       [AUTH_COOKIES.userType]: "TOURIST",
     };
 
-    const exploreResponse = await runProxy("/explore", cookies);
-    const myPageResponse = await runProxy("/my-page", cookies);
+    const exploreResponse = await runProxy("/en/explore", cookies);
+    const myPageResponse = await runProxy("/en/my-page", cookies);
 
     expect(exploreResponse.status).toBe(200);
     expect(myPageResponse.status).toBe(200);
@@ -63,7 +70,7 @@ describe("route access proxy", () => {
   });
 
   it("allows onboarding with a signup token", async () => {
-    const response = await runProxy("/onboarding", {
+    const response = await runProxy("/en/onboarding", {
       [AUTH_COOKIES.signupToken]: "signup-token",
     });
 
@@ -72,13 +79,68 @@ describe("route access proxy", () => {
   });
 
   it("redirects authenticated users away from login", async () => {
-    const response = await runProxy("/login", {
+    const response = await runProxy("/en/login", {
       [AUTH_COOKIES.accessToken]: "access-token",
       [AUTH_COOKIES.userType]: "BUDDY",
     });
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/dashboard");
+    expect(response.headers.get("location")).toBe("http://localhost/en/dashboard");
+  });
+
+  it("redirects an unauthenticated Korean request directly to the localized login", async () => {
+    const response = await runProxy(
+      "/explore",
+      {},
+      {
+        "accept-language": "ko-KR,ko;q=0.9,en;q=0.8",
+      },
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ko/login");
+  });
+
+  it("keeps the explicit locale when redirecting to login", async () => {
+    const response = await runProxy("/en/explore");
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/en/login");
+  });
+
+  it.each([
+    ["TOURIST", "/ko/dashboard", "/ko/explore"],
+    ["BUDDY", "/en/activities/1", "/en/dashboard"],
+  ] as const)(
+    "preserves locale when redirecting %s away from %s",
+    async (userType, pathname, home) => {
+      const response = await runProxy(pathname, {
+        [AUTH_COOKIES.accessToken]: "access-token",
+        [AUTH_COOKIES.userType]: userType,
+      });
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(`http://localhost${home}`);
+    },
+  );
+
+  it("uses the locale cookie for an unprefixed authenticated route", async () => {
+    const response = await runProxy("/explore", {
+      NEXT_LOCALE: "ko",
+      [AUTH_COOKIES.accessToken]: "access-token",
+      [AUTH_COOKIES.userType]: "TOURIST",
+    });
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ko/explore");
+  });
+
+  it("lets an unsupported language segment reach the locale 404 boundary", async () => {
+    const response = await runProxy("/fr/explore");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
   });
 
   it.each([
@@ -100,8 +162,8 @@ describe("route access proxy", () => {
     expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(true);
   });
 
-  it.each(["/", "/auth/google/callback", "/api/users/me", "/_next/static/app.js", "/favicon.ico"])(
-    "does not match the public or infrastructure route %s",
+  it.each(["/api/users/me", "/auth/google/callback", "/_next/static/file.js", "/favicon.ico"])(
+    "does not match the fixed handler or infrastructure route %s",
     (url) => {
       expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(false);
     },

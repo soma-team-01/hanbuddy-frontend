@@ -1,5 +1,6 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowLeftIcon, XIcon } from "@/components/ui/icons";
+import { Link } from "@/i18n/navigation";
 
 interface TopAppBarProps {
   title?: string;
@@ -20,6 +21,7 @@ export function TopAppBar({
   onLeftClick,
   action,
 }: Readonly<TopAppBarProps>) {
+  const t = useTranslations("Accessibility");
   const leftHref = backHref ?? closeHref;
   const LeftIcon = backHref ? ArrowLeftIcon : XIcon;
 
@@ -28,7 +30,7 @@ export function TopAppBar({
     leftSlot = (
       <button
         type="button"
-        aria-label="Go back"
+        aria-label={t("goBack")}
         onClick={onLeftClick}
         className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-forest hover:bg-chip"
       >
@@ -39,7 +41,7 @@ export function TopAppBar({
     leftSlot = (
       <Link
         href={leftHref}
-        aria-label={backHref ? "Go back" : "Close"}
+        aria-label={backHref ? t("goBack") : t("close")}
         className="flex size-10 shrink-0 items-center justify-center rounded-full text-forest hover:bg-chip"
       >
         <LeftIcon className="size-5" />

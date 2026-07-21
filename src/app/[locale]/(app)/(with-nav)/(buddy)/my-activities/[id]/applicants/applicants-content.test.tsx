@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
 import { createQueryClient } from "@/lib/query/client";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -190,7 +191,7 @@ describe("ApplicantsContent", () => {
     expect(screen.getByText("No pork")).toBeInTheDocument();
   });
 
-  it("localizes applicant loading and API errors in Korean", async () => {
+  it("localizes applicant loading and maps the activity-owner error in Korean", async () => {
     mockedGetBuddyActivityApplications.mockReturnValueOnce(new Promise(() => {}));
     const firstRender = renderWithQueryClient(
       <ApplicantsContent activityId="42" initialScheduleId="99" />,
@@ -202,13 +203,20 @@ describe("ApplicantsContent", () => {
     firstRender.unmount();
     mockedGetBuddyActivityApplications.mockResolvedValue({
       status: "error",
-      message: "raw applicant service failure",
+      error: new ApiClientError({
+        code: "ACTIVITY403_OWNER",
+        status: 403,
+        details: null,
+        backendMessage: "raw applicant service failure",
+      }),
     });
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />, {
       locale: "ko",
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("신청자를 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "본인이 등록한 액티비티만 이용할 수 있습니다.",
+    );
     expect(screen.queryByText("raw applicant service failure")).not.toBeInTheDocument();
   });
 });

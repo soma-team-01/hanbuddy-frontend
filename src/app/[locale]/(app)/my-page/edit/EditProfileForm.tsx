@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/MessagingAppField";
 import { CameraIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import { updateMyProfile } from "@/lib/api/users";
 import { COUNTRIES, findCountry } from "@/lib/countries";
@@ -63,6 +64,7 @@ interface EditProfileFormProps {
 
 export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const t = useTranslations("Profile");
+  const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
@@ -70,6 +72,10 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   );
   const [messagingContact, setMessagingContact] = useState(profile.contactIdentifier);
   const [errorKey, setErrorKey] = useState<ProfileErrorKey | null>(null);
+  const [requestFailure, setRequestFailure] = useState<{
+    error: unknown;
+    fallbackKey: Extract<ProfileErrorKey, "profileUploadFailed" | "saveFailed">;
+  } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
@@ -87,7 +93,10 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       router.replace("/my-page");
     },
   });
-  useAuthQueryRedirect(updateProfileMutation.error);
+  useAuthQueryRedirect(
+    updateProfileMutation.error ??
+      (requestFailure?.error instanceof Error ? requestFailure.error : null),
+  );
 
   useEffect(() => {
     return () => {
@@ -100,17 +109,20 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     if (!file) return;
 
     if (!isSupportedProfileImageType(file.type)) {
+      setRequestFailure(null);
       setErrorKey("validation.unsupportedImageType");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      setRequestFailure(null);
       setErrorKey("validation.imageTooLarge");
       event.target.value = "";
       return;
     }
 
     setErrorKey(null);
+    setRequestFailure(null);
     setProfileImageFile(file);
     setProfileImagePreview(URL.createObjectURL(file));
   }
@@ -135,6 +147,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorKey(null);
+    setRequestFailure(null);
 
     const formData = new FormData(event.currentTarget);
     const nameEntry = formData.get("name");
@@ -165,8 +178,8 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       let profileImageKey: string | null;
       try {
         profileImageKey = await resolveProfileImageKey();
-      } catch {
-        setErrorKey("profileUploadFailed");
+      } catch (error) {
+        setRequestFailure({ error, fallbackKey: "profileUploadFailed" });
         return;
       }
 
@@ -181,7 +194,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       });
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      setErrorKey("saveFailed");
+      setRequestFailure({ error, fallbackKey: "saveFailed" });
     } finally {
       setIsSaving(false);
     }
@@ -199,6 +212,12 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   ) : (
     <Avatar name={profile.name} src={profile.profileImageUrl} size={112} />
   );
+  let errorMessage: string | null = null;
+  if (requestFailure) {
+    errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
+  } else if (errorKey) {
+    errorMessage = t(errorKey);
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -285,14 +304,14 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             </div>
           </section>
 
-          {errorKey && (
+          {errorMessage ? (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              {t(errorKey)}
+              {errorMessage}
             </p>
-          )}
+          ) : null}
         </main>
       </form>
     </div>
@@ -301,6 +320,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
 
 export function EditProfilePageContent() {
   const t = useTranslations("Profile");
+  const getApiErrorMessage = useApiErrorMessage();
   const result = useMyProfile();
 
   if (result?.status === "success") {
@@ -313,7 +333,7 @@ export function EditProfilePageContent() {
       <main className="flex flex-1 flex-col items-center gap-4 px-4 py-8">
         {result?.status === "error" ? (
           <p role="alert" className="text-sm text-danger">
-            {t("loadFailed")}
+            {getApiErrorMessage(result.error, t("loadFailed"))}
           </p>
         ) : (
           <>

@@ -141,20 +141,26 @@ describe("uploadProfileImage", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("throws the API error message when presigned URL issuance fails", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        createJsonResponse(
-          { isSuccess: false, code: "AUTH401", message: "토큰이 유효하지 않습니다." },
-          401,
-        ),
-      );
+  it("preserves API error metadata when presigned URL issuance fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      createJsonResponse(
+        {
+          isSuccess: false,
+          code: "IMAGE400_CONTENT_TYPE",
+          message: "raw backend message",
+        },
+        400,
+      ),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const file = new File([new Uint8Array([1])], "me.webp", { type: "image/webp" });
 
-    await expect(uploadProfileImage(file)).rejects.toThrow("토큰이 유효하지 않습니다.");
+    await expect(uploadProfileImage(file)).rejects.toMatchObject({
+      code: "IMAGE400_CONTENT_TYPE",
+      status: 400,
+      backendMessage: "raw backend message",
+    });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

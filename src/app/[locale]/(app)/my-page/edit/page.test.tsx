@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { createQueryClient } from "@/lib/query/client";
@@ -99,6 +100,23 @@ describe("EditProfilePage", () => {
     expect(await screen.findByLabelText("Full Name")).toHaveValue("Sarah Jenkins");
     expect(screen.getByLabelText("Age")).toHaveValue(28);
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
+  });
+
+  it("maps the user-not-found load error in Korean", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "USER404",
+        status: 404,
+        details: null,
+        backendMessage: "raw profile load detail",
+      }),
+    });
+
+    renderWithQueryClient(<EditProfilePage />, { locale: "ko" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("사용자 프로필을 찾을 수 없습니다.");
+    expect(screen.queryByText("raw profile load detail")).not.toBeInTheDocument();
   });
 
   it.each([
@@ -293,7 +311,13 @@ describe("EditProfilePage", () => {
 
   it("shows the upload error and skips saving when the image upload fails", async () => {
     vi.mocked(uploadProfileImage).mockRejectedValue(
-      new Error("프로필 이미지 업로드에 실패했습니다."),
+      new ApiClientError({
+        code: "IMAGE400_CONTENT_TYPE",
+        status: 400,
+        details: null,
+        backendMessage: "지원하지 않는 이미지 형식입니다.",
+        fallbackMessage: "프로필 이미지 업로드에 실패했습니다.",
+      }),
     );
 
     renderWithQueryClient(<EditProfilePage />);
@@ -304,9 +328,10 @@ describe("EditProfilePage", () => {
 
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "Could not upload the profile photo. Please try again.",
+        "Only JPEG, PNG, or WebP images can be uploaded.",
       ),
     );
+    expect(screen.queryByText("지원하지 않는 이미지 형식입니다.")).not.toBeInTheDocument();
     expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
   });
 
@@ -348,7 +373,13 @@ describe("EditProfilePage", () => {
   it("shows a localized safe message when saving fails", async () => {
     mockedUpdateMyProfile.mockResolvedValue({
       status: "error",
-      message: "국적 코드는 영문 대문자 2자리여야 합니다",
+      error: new ApiClientError({
+        code: "VALIDATION400_FORMAT",
+        status: 400,
+        details: { field: "nationality" },
+        backendMessage: "국적 코드는 영문 대문자 2자리여야 합니다",
+        fallbackMessage: "국적 코드는 영문 대문자 2자리여야 합니다",
+      }),
     });
     renderWithQueryClient(<EditProfilePage />);
 
@@ -356,7 +387,7 @@ describe("EditProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Could not save your profile. Please try again.");
+    expect(alert).toHaveTextContent("Check the format of the entered information.");
     expect(alert).not.toHaveTextContent("국적 코드는 영문 대문자 2자리여야 합니다");
     expect(replace).not.toHaveBeenCalledWith("/en/my-page");
   });
@@ -374,7 +405,16 @@ describe("EditProfilePage", () => {
 
     switchToKorean();
     await act(async () => {
-      resolveSave({ status: "error", message: "raw backend detail" });
+      resolveSave({
+        status: "error",
+        error: new ApiClientError({
+          code: null,
+          status: null,
+          details: null,
+          backendMessage: null,
+          fallbackMessage: "raw backend detail",
+        }),
+      });
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(

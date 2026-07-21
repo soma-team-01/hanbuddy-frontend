@@ -6,6 +6,7 @@ import {
   continueApplicationPayment,
   getMyApplications,
 } from "@/lib/api/applications";
+import { ApiClientError } from "@/lib/api/errors";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ApplicationResponse } from "@/types/application";
@@ -195,7 +196,34 @@ describe("ApplicationsContent", () => {
     ]);
   });
 
-  it("localizes Korean loading and safe error states", async () => {
+  it("passes a cancellation API error to the dialog for localized rendering", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [confirmedApplication],
+    });
+    mockedCancelMyApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "APPLICATION400_NOT_CANCELLABLE",
+        status: 400,
+        details: null,
+        backendMessage: "확정된 신청만 취소할 수 있습니다.",
+        fallbackMessage: "신청을 취소하지 못했습니다.",
+      }),
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This application can no longer be cancelled.",
+    );
+    expect(screen.queryByText("확정된 신청만 취소할 수 있습니다.")).not.toBeInTheDocument();
+  });
+
+  it("localizes Korean loading and maps a tourist-role error", async () => {
     let rejectApplications!: (error: Error) => void;
     mockedGetMyApplications.mockReturnValue(
       new Promise((_, reject) => {
@@ -208,10 +236,19 @@ describe("ApplicationsContent", () => {
     expect(screen.getByText("신청 내역을 불러오는 중...")).toBeInTheDocument();
 
     await act(async () => {
-      rejectApplications(new Error("raw server detail"));
+      rejectApplications(
+        new ApiClientError({
+          code: "USER403_TOURIST",
+          status: 403,
+          details: null,
+          backendMessage: "raw server detail",
+        }),
+      );
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("신청 내역을 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "투어리스트 사용자만 이용할 수 있는 기능입니다.",
+    );
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });

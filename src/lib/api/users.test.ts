@@ -36,7 +36,7 @@ describe("getMyProfile", () => {
     await expect(getMyProfile()).resolves.toEqual({ status: "unauthenticated" });
   });
 
-  it("returns an error with the backend message for other failures", async () => {
+  it("returns a structured error for backend failures", async () => {
     vi.stubGlobal(
       "fetch",
       vi
@@ -51,7 +51,11 @@ describe("getMyProfile", () => {
 
     await expect(getMyProfile()).resolves.toEqual({
       status: "error",
-      message: "서버 오류입니다.",
+      error: expect.objectContaining({
+        code: "SERVER_ERROR",
+        status: 500,
+        backendMessage: "서버 오류입니다.",
+      }),
     });
   });
 
@@ -116,14 +120,14 @@ describe("updateMyProfile", () => {
     await expect(updateMyProfile(updateRequest)).resolves.toEqual({ status: "unauthenticated" });
   });
 
-  it("returns the backend message when validation fails", async () => {
+  it("returns the validation code and backend metadata", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({
             isSuccess: false,
-            code: "VALIDATION",
+            code: "VALIDATION400_FORMAT",
             message: "국적 코드는 영문 대문자 2자리여야 합니다",
           }),
           { status: 400 },
@@ -133,7 +137,11 @@ describe("updateMyProfile", () => {
 
     await expect(updateMyProfile(updateRequest)).resolves.toEqual({
       status: "error",
-      message: "국적 코드는 영문 대문자 2자리여야 합니다",
+      error: expect.objectContaining({
+        code: "VALIDATION400_FORMAT",
+        status: 400,
+        backendMessage: "국적 코드는 영문 대문자 2자리여야 합니다",
+      }),
     });
   });
 
@@ -142,7 +150,12 @@ describe("updateMyProfile", () => {
 
     await expect(updateMyProfile(updateRequest)).resolves.toEqual({
       status: "error",
-      message: "프로필을 저장하지 못했습니다.",
+      error: expect.objectContaining({
+        code: null,
+        status: null,
+        backendMessage: null,
+        message: "프로필을 저장하지 못했습니다.",
+      }),
     });
   });
 });

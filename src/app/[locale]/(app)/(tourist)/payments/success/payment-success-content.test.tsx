@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyApplications } from "@/lib/api/applications";
+import { ApiClientError } from "@/lib/api/errors";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ApplicationResponse } from "@/types/application";
 import { PaymentSuccessContent } from "./payment-success-content";
@@ -95,6 +96,25 @@ describe("PaymentSuccessContent", () => {
       "href",
       "/en/applications",
     );
+  });
+
+  it("maps a payment gateway code without exposing its backend message", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "PAYMENT502_CAPTURE",
+        status: 502,
+        details: null,
+        backendMessage: "raw PayPal failure",
+      }),
+    });
+
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The payment service is temporarily unavailable. Please try again shortly.",
+    );
+    expect(screen.queryByText("raw PayPal failure")).not.toBeInTheDocument();
   });
 
   it("does not show a success confirmation for an unpaid application", async () => {

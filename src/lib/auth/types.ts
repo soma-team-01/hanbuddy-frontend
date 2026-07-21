@@ -12,7 +12,7 @@ export interface ErrorApiResponse {
   isSuccess: false;
   code: string;
   message: string;
-  result?: Record<string, string>;
+  result?: unknown;
 }
 
 export interface GoogleProfile {

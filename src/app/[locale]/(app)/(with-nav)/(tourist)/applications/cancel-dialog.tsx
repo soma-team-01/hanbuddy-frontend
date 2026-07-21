@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import type { ApplicationCancellationReason } from "@/types/application";
 
 const REASONS = [
@@ -11,9 +12,7 @@ const REASONS = [
   { value: "OTHER", key: "other" },
 ] as const satisfies ReadonlyArray<{ value: ApplicationCancellationReason; key: string }>;
 
-type CancelDialogErrorKey = "cancelFailed";
-
-export type CancelDialogOutcome = { ok: true } | { ok: false; errorKey: CancelDialogErrorKey };
+export type CancelDialogOutcome = { ok: true } | { ok: false; error: unknown };
 
 export function CancelDialog({
   onClose,
@@ -24,9 +23,13 @@ export function CancelDialog({
 }>) {
   const t = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
+  const getApiErrorMessage = useApiErrorMessage();
   const [reason, setReason] = useState<ApplicationCancellationReason | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorKey, setErrorKey] = useState<CancelDialogErrorKey | "generic" | null>(null);
+  const [failure, setFailure] = useState<{
+    error: unknown;
+    fallbackKey: "cancelFailed" | "generic";
+  } | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -37,18 +40,18 @@ export function CancelDialog({
   async function handleConfirm() {
     if (!reason || isSubmitting) return;
     setIsSubmitting(true);
-    setErrorKey(null);
+    setFailure(null);
 
     // onConfirm이 계약을 어기고 reject하면 두 버튼이 잠긴 채 복구 불가가 되므로 여기서 방어한다
     try {
       const outcome = await onConfirm(reason);
       if (!outcome.ok) {
-        setErrorKey(outcome.errorKey);
+        setFailure({ error: outcome.error, fallbackKey: "cancelFailed" });
         setIsSubmitting(false);
       }
       // 성공 시에는 부모가 다이얼로그를 언마운트하므로 여기서 상태를 만지지 않는다.
-    } catch {
-      setErrorKey("generic");
+    } catch (error) {
+      setFailure({ error, fallbackKey: "generic" });
       setIsSubmitting(false);
     }
   }
@@ -100,12 +103,15 @@ export function CancelDialog({
         {/* OTHER 상세 사유 입력란은 백엔드 CancelApplicationRequest.cancellationDetail 타입 오류(boolean)가
             고쳐져 실제로 전송할 수 있게 되면 다시 추가한다. 입력을 받고 버리는 UI는 두지 않는다. */}
       </div>
-      {errorKey && (
+      {failure && (
         <p
           role="alert"
           className="mt-4 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
         >
-          {errorKey === "generic" ? tErrors(errorKey) : t(errorKey)}
+          {getApiErrorMessage(
+            failure.error,
+            failure.fallbackKey === "generic" ? tErrors("generic") : t("cancelFailed"),
+          )}
         </p>
       )}
       <div className="mt-6 flex gap-3">

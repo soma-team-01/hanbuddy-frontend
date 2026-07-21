@@ -9,6 +9,7 @@ import { TrashIcon, UsersIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { deleteMyActivity } from "@/lib/api/buddy";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { buddyKeys, myActivitiesQueryOptions } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
@@ -28,6 +29,7 @@ const STATUS_MESSAGE_KEY: Record<MyActivityStatus, "active" | "draft" | "inactiv
 
 export function MyActivitiesContent() {
   const t = useTranslations("MyActivities");
+  const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const activitiesQuery = useQuery(myActivitiesQueryOptions());
@@ -70,7 +72,7 @@ export function MyActivitiesContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {t("loadError")}
+        {getApiErrorMessage(activitiesQuery.error, t("loadError"))}
       </p>
     );
   }
@@ -86,7 +88,7 @@ export function MyActivitiesContent() {
           role="alert"
           className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
         >
-          {t("deleteError")}
+          {getApiErrorMessage(deleteActivityMutation.error, t("deleteError"))}
         </p>
       ) : null}
       <p aria-live="polite" className="sr-only">

@@ -24,6 +24,7 @@ import {
   continueApplicationPayment,
   createApplication,
 } from "@/lib/api/applications";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -50,11 +51,16 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   const locale = useLocale();
   const t = useTranslations("Booking");
   const tPayment = useTranslations("Payment");
+  const getApiErrorMessage = useApiErrorMessage();
   const [sessionId, setSessionId] = useState(activity.sessions[0]?.id ?? "");
   const [guests, setGuests] = useState(2);
   const [agreed, setAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorKey, setErrorKey] = useState<BookingErrorKey | null>(null);
+  const [requestFailure, setRequestFailure] = useState<{
+    error: unknown;
+    fallbackKey: BookingErrorKey;
+  } | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [paymentCharge, setPaymentCharge] = useState<{
     amount: number;
@@ -112,10 +118,12 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
   async function handleSubmitClick() {
     const validationError = validateBookingSession(sessionId);
     if (validationError) {
+      setRequestFailure(null);
       setErrorKey(validationError);
       return;
     }
     setErrorKey(null);
+    setRequestFailure(null);
     try {
       const payment = await createApplicationMutation.mutateAsync({
         activityScheduleId: Number(sessionId),
@@ -133,6 +141,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
 
   async function startPayPalOrder(): Promise<{ orderId: string }> {
     setErrorKey(null);
+    setRequestFailure(null);
     if (preparedOrderId) {
       return { orderId: preparedOrderId };
     }
@@ -155,20 +164,21 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     } catch (error) {
       setPreparedOrderId(null);
       if (error instanceof UnauthenticatedQueryError) return;
-      setErrorKey("paymentFailed");
+      setRequestFailure({ error, fallbackKey: "paymentFailed" });
     }
   }
 
   function handlePayPalError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
-    setErrorKey(
-      error instanceof Error && error.message === "applicationMissing"
-        ? "applicationMissing"
-        : "paymentProcessFailed",
-    );
+    if (error instanceof Error && error.message === "applicationMissing") {
+      setErrorKey("applicationMissing");
+      return;
+    }
+    setRequestFailure({ error, fallbackKey: "paymentProcessFailed" });
   }
 
   function handlePayPalCancel() {
+    setRequestFailure(null);
     setErrorKey("paymentCancelled");
   }
 
@@ -178,6 +188,13 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     if (applicationIdRef.current !== null && !capturePaymentMutation.isSuccess) {
       router.replace("/applications");
     }
+  }
+
+  let errorMessage: string | null = null;
+  if (requestFailure) {
+    errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
+  } else if (errorKey) {
+    errorMessage = t(errorKey);
   }
 
   return (
@@ -310,14 +327,14 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           </label>
         </section>
 
-        {errorKey && (
+        {!showConfirm && errorMessage ? (
           <p
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {t(errorKey)}
+            {errorMessage}
           </p>
-        )}
+        ) : null}
 
         <BottomActionBar>
           <button
@@ -370,14 +387,14 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
               ) : null}
             </div>
             <p className="mt-3 text-xs text-ink-soft">{tPayment("paypalUsdNotice")}</p>
-            {errorKey && (
+            {errorMessage ? (
               <p
                 role="alert"
                 className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
               >
-                {t(errorKey)}
+                {errorMessage}
               </p>
-            )}
+            ) : null}
           </ConfirmDialog>
         )}
       </main>

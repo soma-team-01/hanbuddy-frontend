@@ -407,8 +407,31 @@ describe("OnboardingForm profile image", () => {
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "회원가입을 완료하지 못했습니다. 다시 시도해 주세요.",
+      "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     );
+  });
+
+  it("shows a localized duplicate-email error without exposing the backend message", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: false,
+          code: "AUTH409",
+          message: "이미 회원가입이 완료된 이메일입니다.",
+        }),
+        { status: 409, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm />);
+    fillRequiredFields();
+
+    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This email is already registered. Please sign in instead.",
+    );
+    expect(screen.queryByText("이미 회원가입이 완료된 이메일입니다.")).not.toBeInTheDocument();
   });
 
   it("does not re-upload the same file when resubmitting after a signup failure", async () => {
@@ -448,7 +471,7 @@ describe("OnboardingForm profile image", () => {
     fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "Could not complete registration. Please try again.",
+        "The service is temporarily unavailable. Please try again shortly.",
       ),
     );
 

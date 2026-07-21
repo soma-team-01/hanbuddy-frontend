@@ -5,10 +5,12 @@ import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 
 export function ProfileCard() {
   const t = useTranslations("MyPage");
+  const getApiErrorMessage = useApiErrorMessage();
   const result = useMyProfile();
   let content: ReactNode;
 
@@ -25,7 +27,7 @@ export function ProfileCard() {
   } else if (result.status === "error") {
     content = (
       <p role="alert" className="text-sm text-danger">
-        {t("profileLoadFailed")}
+        {getApiErrorMessage(result.error, t("profileLoadFailed"))}
       </p>
     );
   } else {

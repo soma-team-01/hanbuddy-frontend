@@ -1,5 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile } from "@/lib/api/users";
 import { createQueryClient } from "@/lib/query/client";
 import { createMockProfile } from "@/test/factories";
@@ -54,12 +55,20 @@ describe("ProfileCard", () => {
     });
   });
 
-  it("shows a localized safe message when the profile fails to load", async () => {
-    mockedGetMyProfile.mockResolvedValue({ status: "error", message: "raw server detail" });
+  it("maps the user-not-found profile error in Korean", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "USER404",
+        status: 404,
+        details: null,
+        backendMessage: "raw server detail",
+      }),
+    });
 
-    renderWithQueryClient(<ProfileCard />);
+    renderWithQueryClient(<ProfileCard />, { locale: "ko" });
 
-    expect(await screen.findByText("Could not load your profile.")).toBeInTheDocument();
+    expect(await screen.findByText("사용자 프로필을 찾을 수 없습니다.")).toBeInTheDocument();
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
   });

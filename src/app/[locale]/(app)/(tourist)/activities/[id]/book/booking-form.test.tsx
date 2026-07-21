@@ -5,6 +5,7 @@ import {
   continueApplicationPayment,
   createApplication,
 } from "@/lib/api/applications";
+import { ApiClientError } from "@/lib/api/errors";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Activity } from "@/types/activity";
@@ -185,6 +186,26 @@ describe("BookingForm", () => {
     expect(queryClient.getQueryState(applicationKeys.mine())?.isInvalidated).toBe(true);
   });
 
+  it("shows a localized capacity error when the selected schedule is full", async () => {
+    mockedCreateApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "APPLICATION400_CAPACITY_EXCEEDED",
+        status: 400,
+        details: null,
+        backendMessage: "신청 가능 인원을 초과했습니다.",
+        fallbackMessage: "신청을 생성하지 못했습니다.",
+      }),
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
+    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
+    expect(screen.queryByText("신청 가능 인원을 초과했습니다.")).not.toBeInTheDocument();
+  });
+
   it("pays as a guest with a card through the same application flow", async () => {
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
     mockedCaptureApplicationPayment.mockResolvedValue({
@@ -210,7 +231,16 @@ describe("BookingForm", () => {
   it("continues the existing payment when retrying after a capture failure", async () => {
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
     mockedCaptureApplicationPayment
-      .mockResolvedValueOnce({ status: "error", message: "PayPal 결제 캡처에 실패했습니다." })
+      .mockResolvedValueOnce({
+        status: "error",
+        error: new ApiClientError({
+          code: null,
+          status: null,
+          details: null,
+          backendMessage: null,
+          fallbackMessage: "PayPal 결제 캡처에 실패했습니다.",
+        }),
+      })
       .mockResolvedValueOnce({
         status: "success",
         application: { ...pendingApplication, status: "CONFIRMED" },
@@ -230,6 +260,7 @@ describe("BookingForm", () => {
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
       "Could not complete the payment.",
     );
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
     expect(within(dialog).queryByText("PayPal 결제 캡처에 실패했습니다.")).not.toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));

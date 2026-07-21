@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile } from "@/lib/api/users";
 import {
   fetchGooglePlaceDetails,
@@ -736,7 +737,13 @@ describe("CreateActivityForm", () => {
   it("shows the price preview API error without leaving the pricing step", async () => {
     mockedPreviewActivityPrice.mockResolvedValue({
       status: "error",
-      message: "버디 프로필 설정이 올바르지 않습니다.",
+      error: new ApiClientError({
+        code: "USER500_BUDDY_PROFILE",
+        status: 500,
+        details: null,
+        backendMessage: "버디 프로필 정보를 찾을 수 없습니다.",
+        fallbackMessage: "버디 프로필 설정이 올바르지 않습니다.",
+      }),
     });
     renderWithQueryClient(<CreateActivityForm />);
     goToStepTwo();
@@ -746,9 +753,41 @@ describe("CreateActivityForm", () => {
     fireEvent.blur(priceInput);
 
     expect(await screen.findByRole("alert", { name: "Price preview error" })).toHaveTextContent(
-      "Could not calculate the estimated payout.",
+      "Complete the required buddy profile settings before continuing.",
     );
+    expect(screen.queryByText("버디 프로필 정보를 찾을 수 없습니다.")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Schedule & Pricing" })).toBeInTheDocument();
+  });
+
+  it("shows a localized schedule error when activity registration fails", async () => {
+    mockedUploadActivityImages.mockResolvedValue([
+      {
+        uploadUrl: "https://bucket.s3.amazonaws.com/activities/tea.webp?signed",
+        imageKey: "activities/2026/07/07/tea.webp",
+        imageUrl: "https://static.hanbuddy.com/activities/tea.webp",
+        expiresInSeconds: 300,
+      },
+    ]);
+    mockedCreateMyActivity.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "ACTIVITY_SCHEDULE400_START_AT",
+        status: 400,
+        details: null,
+        backendMessage: "시작 시간은 현재 시간 이후여야 합니다.",
+        fallbackMessage: "액티비티를 등록하지 못했습니다.",
+      }),
+    });
+    renderWithQueryClient(<CreateActivityForm />);
+
+    await fillRequiredFields();
+    fireEvent.click(screen.getByRole("button", { name: "Register Activity" }));
+    confirmRegisterInDialog();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Activity schedules must start in the future.",
+    );
+    expect(screen.queryByText("시작 시간은 현재 시간 이후여야 합니다.")).not.toBeInTheDocument();
   });
 
   it("uploads activity images and creates a published activity", async () => {
@@ -921,7 +960,15 @@ describe("CreateActivityForm", () => {
   );
 
   it("maps image upload failures to localized copy without exposing the thrown error", async () => {
-    mockedUploadActivityImages.mockRejectedValue(new Error("raw image service failure"));
+    mockedUploadActivityImages.mockRejectedValue(
+      new ApiClientError({
+        code: "IMAGE400_COUNT",
+        status: 400,
+        details: null,
+        backendMessage: "이미지는 최대 8개까지 업로드할 수 있습니다.",
+        fallbackMessage: "액티비티 사진을 업로드하지 못했습니다.",
+      }),
+    );
     renderWithQueryClient(<CreateActivityForm />, { locale: "ko" });
 
     goToKoreanStepThree();
@@ -934,9 +981,11 @@ describe("CreateActivityForm", () => {
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "등록" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "액티비티 사진을 업로드하지 못했습니다. 다시 시도해 주세요.",
+      "업로드할 수 있는 이미지 개수를 초과했습니다.",
     );
-    expect(screen.queryByText("raw image service failure")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("이미지는 최대 8개까지 업로드할 수 있습니다."),
+    ).not.toBeInTheDocument();
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
   });
 

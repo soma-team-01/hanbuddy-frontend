@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { ApiClientError } from "@/lib/api/errors";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 
@@ -47,7 +48,7 @@ describe("CancelDialog", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      resolveConfirm({ ok: false, errorKey: "cancelFailed" });
+      resolveConfirm({ ok: false, error: new Error("raw cancellation failure") });
     });
     await screen.findByRole("alert");
   });
@@ -68,21 +69,30 @@ describe("CancelDialog", () => {
   it("shows an error and keeps the dialog open when cancellation fails", async () => {
     const onConfirm = vi.fn().mockResolvedValue({
       ok: false,
-      errorKey: "cancelFailed",
+      error: new ApiClientError({
+        code: "APPLICATION400_NOT_CANCELLABLE",
+        status: 400,
+        details: null,
+        backendMessage: "확정된 신청만 취소할 수 있습니다.",
+        fallbackMessage: "신청을 취소하지 못했습니다.",
+      }),
     });
     renderWithIntl(<CancelDialog onClose={vi.fn()} onConfirm={onConfirm} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Illness or unexpected emergency" }));
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not cancel the application.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This application can no longer be cancelled.",
+    );
+    expect(screen.queryByText("확정된 신청만 취소할 수 있습니다.")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
   });
 
   it("relocalizes a stored cancellation error when the locale changes", async () => {
     const onConfirm = vi.fn().mockResolvedValue({
       ok: false,
-      errorKey: "cancelFailed",
+      error: new Error("raw cancellation failure"),
     } as const);
     const cancelDialog = <CancelDialog onClose={vi.fn()} onConfirm={onConfirm} />;
     const { rerender } = render(<IntlTestProvider locale="en">{cancelDialog}</IntlTestProvider>);

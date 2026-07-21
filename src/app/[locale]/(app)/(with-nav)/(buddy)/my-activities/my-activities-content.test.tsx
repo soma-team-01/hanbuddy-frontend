@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { MyActivitiesContent } from "./my-activities-content";
@@ -128,14 +129,25 @@ describe("MyActivitiesContent", () => {
     });
     mockedDeleteMyActivity.mockResolvedValue({
       status: "error",
-      message: "활동을 삭제하지 못했습니다.",
+      error: new ApiClientError({
+        code: "ACTIVITY403_OWNER",
+        status: 403,
+        details: null,
+        backendMessage: "본인이 생성한 액티비티만 삭제할 수 있습니다.",
+        fallbackMessage: "활동을 삭제하지 못했습니다.",
+      }),
     });
 
     renderWithQueryClient(<MyActivitiesContent />);
     fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not delete the activity.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "You can only access activities you created.",
+    );
+    expect(
+      screen.queryByText("본인이 생성한 액티비티만 삭제할 수 있습니다."),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Traditional Tea Tasting")).toBeInTheDocument();
   });
 
@@ -229,15 +241,22 @@ describe("MyActivitiesContent", () => {
     expect(await screen.findByText("아직 등록한 액티비티가 없습니다.")).toBeInTheDocument();
   });
 
-  it("does not expose the activity API error in Korean", async () => {
+  it("maps the buddy-role activity error in Korean", async () => {
     mockedGetMyActivities.mockResolvedValue({
       status: "error",
-      message: "raw activity service failure",
+      error: new ApiClientError({
+        code: "USER403_BUDDY",
+        status: 403,
+        details: null,
+        backendMessage: "raw activity service failure",
+      }),
     });
 
     renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "버디 사용자만 이용할 수 있는 기능입니다.",
+    );
     expect(screen.queryByText("raw activity service failure")).not.toBeInTheDocument();
   });
 });

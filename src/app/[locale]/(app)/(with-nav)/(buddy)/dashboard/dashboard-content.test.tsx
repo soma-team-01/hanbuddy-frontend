@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBuddyApplications, getBuddyScheduleDates } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { DashboardContent } from "./dashboard-content";
@@ -195,7 +196,13 @@ describe("DashboardContent", () => {
     });
     mockedGetBuddyApplications.mockResolvedValue({
       status: "error",
-      message: "신청자 목록을 불러오지 못했습니다.",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "신청자 목록을 불러오지 못했습니다.",
+      }),
     });
 
     renderWithQueryClient(<DashboardContent />);
@@ -328,15 +335,22 @@ describe("DashboardContent", () => {
     expect(await screen.findByText("예정된 일정이 없습니다.")).toBeInTheDocument();
   });
 
-  it("does not expose the schedule API error in Korean", async () => {
+  it("maps the buddy-role schedule error in Korean", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "error",
-      message: "raw schedule service failure",
+      error: new ApiClientError({
+        code: "USER403_BUDDY",
+        status: 403,
+        details: null,
+        backendMessage: "raw schedule service failure",
+      }),
     });
 
     renderWithQueryClient(<DashboardContent />, { locale: "ko" });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("일정을 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "버디 사용자만 이용할 수 있는 기능입니다.",
+    );
     expect(screen.queryByText("raw schedule service failure")).not.toBeInTheDocument();
   });
 });

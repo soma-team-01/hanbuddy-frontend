@@ -91,7 +91,7 @@ function ApplicationCard({
   onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
   isPaymentPending: boolean;
 }>) {
-  const [paymentError, setPaymentError] = useState<unknown | null>(null);
+  const [paymentError, setPaymentError] = useState<unknown>(null);
   const locale = useLocale();
   const t = useTranslations("Applications");
   const getApiErrorMessage = useApiErrorMessage();

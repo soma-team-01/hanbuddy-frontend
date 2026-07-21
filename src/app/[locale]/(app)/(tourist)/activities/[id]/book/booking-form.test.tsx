@@ -186,6 +186,26 @@ describe("BookingForm", () => {
     expect(queryClient.getQueryState(applicationKeys.mine())?.isInvalidated).toBe(true);
   });
 
+  it("shows a localized capacity error when the selected schedule is full", async () => {
+    mockedCreateApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "APPLICATION400_CAPACITY_EXCEEDED",
+        status: 400,
+        details: null,
+        backendMessage: "신청 가능 인원을 초과했습니다.",
+        fallbackMessage: "신청을 생성하지 못했습니다.",
+      }),
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
+    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
+    expect(screen.queryByText("신청 가능 인원을 초과했습니다.")).not.toBeInTheDocument();
+  });
+
   it("pays as a guest with a card through the same application flow", async () => {
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
     mockedCaptureApplicationPayment.mockResolvedValue({

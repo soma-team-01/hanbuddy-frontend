@@ -88,7 +88,7 @@ export function MyActivitiesContent() {
           role="alert"
           className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
         >
-          {t("deleteError")}
+          {getApiErrorMessage(deleteActivityMutation.error, t("deleteError"))}
         </p>
       ) : null}
       <p aria-live="polite" className="sr-only">

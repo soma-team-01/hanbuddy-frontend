@@ -11,6 +11,7 @@ import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/comp
 import { useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { toSeoulStartAt } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
 import {
@@ -207,16 +208,13 @@ function buildSchedules(formData: FormData) {
 
 async function uploadSelectedActivityImages(
   files: File[],
-): Promise<
-  | { imageKeys: string[]; errorKey: null }
-  | { imageKeys: null; errorKey: Extract<CreateActivityErrorKey, "imageUploadFailed"> }
-> {
+): Promise<{ imageKeys: string[]; error: null } | { imageKeys: null; error: unknown }> {
   try {
     const uploadedImages = await uploadActivityImages(files);
-    return { imageKeys: uploadedImages.map((image) => image.imageKey), errorKey: null };
+    return { imageKeys: uploadedImages.map((image) => image.imageKey), error: null };
   } catch (error) {
     if (error instanceof UnauthenticatedQueryError) throw error;
-    return { imageKeys: null, errorKey: "imageUploadFailed" };
+    return { imageKeys: null, error };
   }
 }
 
@@ -297,6 +295,7 @@ export function CreateActivityForm() {
   const locale = useLocale();
   const activeLocaleRef = useRef(locale);
   const t = useTranslations("CreateActivity");
+  const getApiErrorMessage = useApiErrorMessage();
   useAuthSessionCheck();
   const formRef = useRef<HTMLFormElement>(null);
   const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
@@ -328,6 +327,10 @@ export function CreateActivityForm() {
     null,
   );
   const [errorKey, setErrorKey] = useState<CreateActivityErrorKey | null>(null);
+  const [requestFailure, setRequestFailure] = useState<{
+    error: unknown;
+    fallbackKey: Extract<CreateActivityErrorKey, "imageUploadFailed" | "submissionFailed">;
+  } | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   useEffect(() => {
@@ -350,7 +353,10 @@ export function CreateActivityForm() {
       unwrapApiResult(await previewActivityPrice(request), "preview"),
   });
   useAuthQueryRedirect(
-    submissionAuthError ?? createActivityMutation.error ?? pricePreviewMutation.error,
+    submissionAuthError ??
+      (requestFailure?.error instanceof Error ? requestFailure.error : null) ??
+      createActivityMutation.error ??
+      pricePreviewMutation.error,
   );
   const googleMapsApiKey = getGoogleMapsApiKey();
 
@@ -496,6 +502,7 @@ export function CreateActivityForm() {
         .getAll("includedItems")
         .map((value) => (typeof value === "string" ? value : "")),
     });
+    setRequestFailure(null);
     setErrorKey(validationError);
     return validationError === null;
   }
@@ -506,6 +513,7 @@ export function CreateActivityForm() {
   }
 
   function goToPreviousStep() {
+    setRequestFailure(null);
     setErrorKey(null);
     setCurrentStep(getPreviousStep(currentStep));
   }
@@ -531,13 +539,14 @@ export function CreateActivityForm() {
     const selectedMeetingPlaceId = getString(formData, "meetingPlaceId");
 
     setErrorKey(null);
+    setRequestFailure(null);
     setSubmissionAuthError(null);
     setSubmissionPhase("uploading");
 
     try {
       const uploadedImages = await uploadSelectedActivityImages(selectedFiles);
-      if (uploadedImages.errorKey) {
-        setErrorKey(uploadedImages.errorKey);
+      if (uploadedImages.imageKeys === null) {
+        setRequestFailure({ error: uploadedImages.error, fallbackKey: "imageUploadFailed" });
         setSubmissionPhase(null);
         return;
       }
@@ -563,7 +572,7 @@ export function CreateActivityForm() {
         setSubmissionAuthError(error);
         return;
       }
-      setErrorKey("submissionFailed");
+      setRequestFailure({ error, fallbackKey: "submissionFailed" });
       setSubmissionPhase(null);
     }
   }
@@ -685,12 +694,16 @@ export function CreateActivityForm() {
           <p className="mt-2 text-ink-soft">{t(stepContent.description)}</p>
         </div>
 
-        {errorKey ? (
+        {requestFailure || errorKey ? (
           <p
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {t(`errors.${errorKey}`)}
+            {requestFailure
+              ? getApiErrorMessage(requestFailure.error, t(`errors.${requestFailure.fallbackKey}`))
+              : errorKey
+                ? t(`errors.${errorKey}`)
+                : null}
           </p>
         ) : null}
 
@@ -839,7 +852,7 @@ export function CreateActivityForm() {
             ) : null}
             {pricePreviewMutation.error ? (
               <span role="alert" aria-label={t("payoutErrorLabel")} className="text-xs text-danger">
-                {t("payoutError")}
+                {getApiErrorMessage(pricePreviewMutation.error, t("payoutError"))}
               </span>
             ) : null}
             {pricePreviewMutation.data ? (

@@ -130,10 +130,10 @@ describe("MyActivitiesContent", () => {
     mockedDeleteMyActivity.mockResolvedValue({
       status: "error",
       error: new ApiClientError({
-        code: null,
-        status: null,
+        code: "ACTIVITY403_OWNER",
+        status: 403,
         details: null,
-        backendMessage: null,
+        backendMessage: "본인이 생성한 액티비티만 삭제할 수 있습니다.",
         fallbackMessage: "활동을 삭제하지 못했습니다.",
       }),
     });
@@ -142,7 +142,12 @@ describe("MyActivitiesContent", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not delete the activity.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "You can only access activities you created.",
+    );
+    expect(
+      screen.queryByText("본인이 생성한 액티비티만 삭제할 수 있습니다."),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Traditional Tea Tasting")).toBeInTheDocument();
   });
 

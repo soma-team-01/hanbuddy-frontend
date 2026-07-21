@@ -196,6 +196,33 @@ describe("ApplicationsContent", () => {
     ]);
   });
 
+  it("passes a cancellation API error to the dialog for localized rendering", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [confirmedApplication],
+    });
+    mockedCancelMyApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "APPLICATION400_NOT_CANCELLABLE",
+        status: 400,
+        details: null,
+        backendMessage: "확정된 신청만 취소할 수 있습니다.",
+        fallbackMessage: "신청을 취소하지 못했습니다.",
+      }),
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This application can no longer be cancelled.",
+    );
+    expect(screen.queryByText("확정된 신청만 취소할 수 있습니다.")).not.toBeInTheDocument();
+  });
+
   it("localizes Korean loading and maps a tourist-role error", async () => {
     let rejectApplications!: (error: Error) => void;
     mockedGetMyApplications.mockReturnValue(

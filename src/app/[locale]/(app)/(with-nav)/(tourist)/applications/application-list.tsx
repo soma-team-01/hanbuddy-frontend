@@ -6,6 +6,7 @@ import { PayPalPaymentButtons } from "@/components/payments/PayPalPaymentButton"
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
@@ -90,9 +91,10 @@ function ApplicationCard({
   onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
   isPaymentPending: boolean;
 }>) {
-  const [hasPaymentError, setHasPaymentError] = useState(false);
+  const [paymentError, setPaymentError] = useState<unknown | null>(null);
   const locale = useLocale();
   const t = useTranslations("Applications");
+  const getApiErrorMessage = useApiErrorMessage();
   const [paymentCharge, setPaymentCharge] = useState<{
     amount: number;
     currency: string;
@@ -113,7 +115,7 @@ function ApplicationCard({
 
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
-    setHasPaymentError(true);
+    setPaymentError(error);
   }
 
   return (
@@ -166,7 +168,7 @@ function ApplicationCard({
           <PayPalPaymentButtons
             disabled={isPaymentPending}
             createOrder={async () => {
-              setHasPaymentError(false);
+              setPaymentError(null);
               const payment = await onContinuePayment(application.id);
               setPaymentCharge({
                 amount: payment.paymentAmount,
@@ -183,12 +185,12 @@ function ApplicationCard({
             }}
             onError={showPaymentError}
           />
-          {hasPaymentError && (
+          {paymentError !== null && (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              {t("paymentFailed")}
+              {getApiErrorMessage(paymentError, t("paymentFailed"))}
             </p>
           )}
         </div>

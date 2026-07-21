@@ -91,10 +91,10 @@ export function ApplicationsContent() {
     try {
       await cancelApplicationMutation.mutateAsync({ applicationId, reason });
       return { ok: true };
-    } catch {
+    } catch (error) {
       return {
         ok: false,
-        errorKey: "cancelFailed",
+        error,
       };
     }
   }

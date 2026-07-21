@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
+import { createApiClientError } from "@/lib/api/errors";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { findCountry } from "@/lib/countries";
 import {
   MAX_PROFILE_IMAGE_BYTES,
@@ -46,11 +48,19 @@ interface OnboardingFormProps {
 
 export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
+  const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
   const [role, setRole] = useState<UserType>("TOURIST");
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
   const [messagingContact, setMessagingContact] = useState("");
   const [errorKey, setErrorKey] = useState<OnboardingErrorKey | null>(null);
+  const [requestFailure, setRequestFailure] = useState<{
+    error: unknown;
+    fallbackKey: Extract<
+      OnboardingErrorKey,
+      "profileUploadFailed" | "signupFailed" | "serverUnavailable"
+    >;
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
@@ -70,17 +80,20 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     if (!file) return;
 
     if (!isSupportedProfileImageType(file.type)) {
+      setRequestFailure(null);
       setErrorKey("validation.unsupportedImageType");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      setRequestFailure(null);
       setErrorKey("validation.imageTooLarge");
       event.target.value = "";
       return;
     }
 
     setErrorKey(null);
+    setRequestFailure(null);
     setProfileImageFile(file);
     setProfileImagePreview(URL.createObjectURL(file));
   }
@@ -111,6 +124,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorKey(null);
+    setRequestFailure(null);
 
     const formData = new FormData(event.currentTarget);
     const ageEntry = formData.get("age");
@@ -135,8 +149,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       let profileImageKey: string | undefined;
       try {
         profileImageKey = await resolveProfileImageKey();
-      } catch {
-        setErrorKey("profileUploadFailed");
+      } catch (error) {
+        setRequestFailure({ error, fallbackKey: "profileUploadFailed" });
         return;
       }
 
@@ -162,14 +176,17 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         ApiResponse<GoogleLoginResponse> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
-        setErrorKey("signupFailed");
+        setRequestFailure({
+          error: createApiClientError(response.status, body && !body.isSuccess ? body : undefined),
+          fallbackKey: "signupFailed",
+        });
         return;
       }
 
       const userType = body.result.userType ?? role;
       router.replace(userType === "BUDDY" ? "/dashboard" : "/explore");
-    } catch {
-      setErrorKey("serverUnavailable");
+    } catch (error) {
+      setRequestFailure({ error, fallbackKey: "serverUnavailable" });
     } finally {
       setIsSubmitting(false);
     }
@@ -308,12 +325,16 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
             </div>
           </section>
 
-          {errorKey && (
+          {(requestFailure || errorKey) && (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              {t(errorKey)}
+              {requestFailure
+                ? getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey))
+                : errorKey
+                  ? t(errorKey)
+                  : null}
             </p>
           )}
         </main>

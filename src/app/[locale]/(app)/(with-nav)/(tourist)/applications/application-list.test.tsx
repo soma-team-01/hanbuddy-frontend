@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiClientError } from "@/lib/api/errors";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/i18n/routing";
 import type { Application } from "@/types/application";
@@ -166,13 +167,23 @@ describe("ApplicationList", () => {
   });
 
   it("shows the payment error when the capture fails", async () => {
-    const onCapturePayment = vi.fn().mockRejectedValue(new Error("결제를 완료하지 못했습니다."));
+    const onCapturePayment = vi.fn().mockRejectedValue(
+      new ApiClientError({
+        code: "PAYMENT502_CAPTURE",
+        status: 502,
+        details: null,
+        backendMessage: "PayPal 캡처 요청에 실패했습니다.",
+        fallbackMessage: "결제를 완료하지 못했습니다.",
+      }),
+    );
     renderList({ onCapturePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
-    expect(screen.queryByText("결제를 완료하지 못했습니다.")).not.toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The payment service is temporarily unavailable. Please try again shortly.",
+    );
+    expect(screen.queryByText("PayPal 캡처 요청에 실패했습니다.")).not.toBeInTheDocument();
   });
 
   it("relocalizes a stored payment error when the locale changes", async () => {

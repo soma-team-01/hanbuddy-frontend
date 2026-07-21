@@ -311,7 +311,13 @@ describe("EditProfilePage", () => {
 
   it("shows the upload error and skips saving when the image upload fails", async () => {
     vi.mocked(uploadProfileImage).mockRejectedValue(
-      new Error("프로필 이미지 업로드에 실패했습니다."),
+      new ApiClientError({
+        code: "IMAGE400_CONTENT_TYPE",
+        status: 400,
+        details: null,
+        backendMessage: "지원하지 않는 이미지 형식입니다.",
+        fallbackMessage: "프로필 이미지 업로드에 실패했습니다.",
+      }),
     );
 
     renderWithQueryClient(<EditProfilePage />);
@@ -322,9 +328,10 @@ describe("EditProfilePage", () => {
 
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "Could not upload the profile photo. Please try again.",
+        "Only JPEG, PNG, or WebP images can be uploaded.",
       ),
     );
+    expect(screen.queryByText("지원하지 않는 이미지 형식입니다.")).not.toBeInTheDocument();
     expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
   });
 
@@ -367,10 +374,10 @@ describe("EditProfilePage", () => {
     mockedUpdateMyProfile.mockResolvedValue({
       status: "error",
       error: new ApiClientError({
-        code: null,
-        status: null,
-        details: null,
-        backendMessage: null,
+        code: "VALIDATION400_FORMAT",
+        status: 400,
+        details: { field: "nationality" },
+        backendMessage: "국적 코드는 영문 대문자 2자리여야 합니다",
         fallbackMessage: "국적 코드는 영문 대문자 2자리여야 합니다",
       }),
     });
@@ -380,7 +387,7 @@ describe("EditProfilePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Could not save your profile. Please try again.");
+    expect(alert).toHaveTextContent("Check the format of the entered information.");
     expect(alert).not.toHaveTextContent("국적 코드는 영문 대문자 2자리여야 합니다");
     expect(replace).not.toHaveBeenCalledWith("/en/my-page");
   });

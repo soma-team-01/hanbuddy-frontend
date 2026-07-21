@@ -191,7 +191,7 @@ describe("ApplicantsContent", () => {
     expect(screen.getByText("No pork")).toBeInTheDocument();
   });
 
-  it("localizes applicant loading and API errors in Korean", async () => {
+  it("localizes applicant loading and maps the activity-owner error in Korean", async () => {
     mockedGetBuddyActivityApplications.mockReturnValueOnce(new Promise(() => {}));
     const firstRender = renderWithQueryClient(
       <ApplicantsContent activityId="42" initialScheduleId="99" />,
@@ -204,18 +204,19 @@ describe("ApplicantsContent", () => {
     mockedGetBuddyActivityApplications.mockResolvedValue({
       status: "error",
       error: new ApiClientError({
-        code: null,
-        status: null,
+        code: "ACTIVITY403_OWNER",
+        status: 403,
         details: null,
-        backendMessage: null,
-        fallbackMessage: "raw applicant service failure",
+        backendMessage: "raw applicant service failure",
       }),
     });
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />, {
       locale: "ko",
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("신청자를 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "본인이 등록한 액티비티만 이용할 수 있습니다.",
+    );
     expect(screen.queryByText("raw applicant service failure")).not.toBeInTheDocument();
   });
 });

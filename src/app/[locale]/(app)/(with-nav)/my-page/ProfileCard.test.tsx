@@ -55,21 +55,20 @@ describe("ProfileCard", () => {
     });
   });
 
-  it("shows a localized safe message when the profile fails to load", async () => {
+  it("maps the user-not-found profile error in Korean", async () => {
     mockedGetMyProfile.mockResolvedValue({
       status: "error",
       error: new ApiClientError({
-        code: null,
-        status: null,
+        code: "USER404",
+        status: 404,
         details: null,
-        backendMessage: null,
-        fallbackMessage: "raw server detail",
+        backendMessage: "raw server detail",
       }),
     });
 
-    renderWithQueryClient(<ProfileCard />);
+    renderWithQueryClient(<ProfileCard />, { locale: "ko" });
 
-    expect(await screen.findByText("Could not load your profile.")).toBeInTheDocument();
+    expect(await screen.findByText("사용자 프로필을 찾을 수 없습니다.")).toBeInTheDocument();
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
   });

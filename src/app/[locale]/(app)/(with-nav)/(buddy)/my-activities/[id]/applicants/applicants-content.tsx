@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { MapPinIcon, MessageSquareIcon } from "@/components/ui/icons";
 import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDateTime } from "@/lib/datetime";
 import { buddyActivityApplicationsQueryOptions, myActivityQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
@@ -33,6 +34,7 @@ export function ApplicantsContent({
   const locale = useLocale();
   const t = useTranslations("Applicants");
   const tErrors = useTranslations("Errors");
+  const getApiErrorMessage = useApiErrorMessage();
   const activityQuery = useQuery({
     ...myActivityQueryOptions(toActivityId(activityId)),
     enabled: !initialScheduleId,
@@ -43,10 +45,8 @@ export function ApplicantsContent({
   useAuthQueryRedirect(relevantActivityError ?? applicationsQuery.error);
 
   const applications = applicationsQuery.data ?? null;
-  const errorMessage =
-    relevantActivityError?.message ||
-    applicationsQuery.error?.message ||
-    (!initialScheduleId && activityQuery.isSuccess && !scheduleId ? t("noSchedule") : "");
+  const requestError = relevantActivityError ?? applicationsQuery.error;
+  const hasNoSchedule = !initialScheduleId && activityQuery.isSuccess && !scheduleId;
   const isLoading =
     (!initialScheduleId && activityQuery.isPending) ||
     (Boolean(scheduleId) && applicationsQuery.isPending);
@@ -55,13 +55,13 @@ export function ApplicantsContent({
     return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
   }
 
-  if (errorMessage) {
+  if (requestError || hasNoSchedule) {
     return (
       <p
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {relevantActivityError || applicationsQuery.error ? t("loadError") : errorMessage}
+        {requestError ? getApiErrorMessage(requestError, t("loadError")) : t("noSchedule")}
       </p>
     );
   }

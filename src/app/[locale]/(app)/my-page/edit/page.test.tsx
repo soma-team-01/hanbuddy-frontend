@@ -102,6 +102,23 @@ describe("EditProfilePage", () => {
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });
 
+  it("maps the user-not-found load error in Korean", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "USER404",
+        status: 404,
+        details: null,
+        backendMessage: "raw profile load detail",
+      }),
+    });
+
+    renderWithQueryClient(<EditProfilePage />, { locale: "ko" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("사용자 프로필을 찾을 수 없습니다.");
+    expect(screen.queryByText("raw profile load detail")).not.toBeInTheDocument();
+  });
+
   it.each([
     [
       "en",

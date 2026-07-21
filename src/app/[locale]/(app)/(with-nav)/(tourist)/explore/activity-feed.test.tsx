@@ -1,6 +1,7 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
+import { ApiClientError } from "@/lib/api/errors";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ActivityFeed } from "./activity-feed";
@@ -116,12 +117,21 @@ describe("ActivityFeed", () => {
     expect(await screen.findByText("아직 등록된 액티비티가 없습니다.")).toBeInTheDocument();
   });
 
-  it("shows a localized safe Korean error instead of raw server text", async () => {
-    mockedGetTouristActivities.mockRejectedValue(new Error("raw server detail"));
+  it("maps a BFF proxy error to localized safe Korean copy", async () => {
+    mockedGetTouristActivities.mockRejectedValue(
+      new ApiClientError({
+        code: "AUTH_PROXY_ERROR",
+        status: 502,
+        details: null,
+        backendMessage: "raw server detail",
+      }),
+    );
 
     renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    );
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 

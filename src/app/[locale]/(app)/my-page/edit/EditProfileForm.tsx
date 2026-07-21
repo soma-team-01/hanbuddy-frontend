@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/MessagingAppField";
 import { CameraIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import { updateMyProfile } from "@/lib/api/users";
 import { COUNTRIES, findCountry } from "@/lib/countries";
@@ -301,6 +302,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
 
 export function EditProfilePageContent() {
   const t = useTranslations("Profile");
+  const getApiErrorMessage = useApiErrorMessage();
   const result = useMyProfile();
 
   if (result?.status === "success") {
@@ -313,7 +315,7 @@ export function EditProfilePageContent() {
       <main className="flex flex-1 flex-col items-center gap-4 px-4 py-8">
         {result?.status === "error" ? (
           <p role="alert" className="text-sm text-danger">
-            {t("loadFailed")}
+            {getApiErrorMessage(result.error, t("loadFailed"))}
           </p>
         ) : (
           <>

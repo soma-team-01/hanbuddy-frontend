@@ -5,11 +5,13 @@ import { useTranslations } from "next-intl";
 import { ActivityCard } from "@/components/ui/ActivityCard";
 import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityFeed() {
   const t = useTranslations("Explore");
+  const getApiErrorMessage = useApiErrorMessage();
   const activitiesQuery = useQuery(touristActivitiesQueryOptions());
   useAuthQueryRedirect(activitiesQuery.error);
 
@@ -25,7 +27,7 @@ export function ActivityFeed() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {t("loadError")}
+        {getApiErrorMessage(activitiesQuery.error, t("loadError"))}
       </p>
     );
   }

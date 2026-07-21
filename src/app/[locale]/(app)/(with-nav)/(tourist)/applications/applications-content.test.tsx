@@ -6,6 +6,7 @@ import {
   continueApplicationPayment,
   getMyApplications,
 } from "@/lib/api/applications";
+import { ApiClientError } from "@/lib/api/errors";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ApplicationResponse } from "@/types/application";
@@ -195,7 +196,7 @@ describe("ApplicationsContent", () => {
     ]);
   });
 
-  it("localizes Korean loading and safe error states", async () => {
+  it("localizes Korean loading and maps a tourist-role error", async () => {
     let rejectApplications!: (error: Error) => void;
     mockedGetMyApplications.mockReturnValue(
       new Promise((_, reject) => {
@@ -208,10 +209,19 @@ describe("ApplicationsContent", () => {
     expect(screen.getByText("신청 내역을 불러오는 중...")).toBeInTheDocument();
 
     await act(async () => {
-      rejectApplications(new Error("raw server detail"));
+      rejectApplications(
+        new ApiClientError({
+          code: "USER403_TOURIST",
+          status: 403,
+          details: null,
+          backendMessage: "raw server detail",
+        }),
+      );
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("신청 내역을 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "투어리스트 사용자만 이용할 수 있는 기능입니다.",
+    );
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });

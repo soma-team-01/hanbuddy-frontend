@@ -1,6 +1,7 @@
 import { act, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
+import { ApiClientError } from "@/lib/api/errors";
 import { activityKeys } from "@/lib/query/activities";
 import { createQueryClient } from "@/lib/query/client";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -88,7 +89,7 @@ describe("BookingContent", () => {
     expect(screen.getByRole("option", { name: "2026. 7. 20. 오전 10:00" })).toBeInTheDocument();
   });
 
-  it("localizes Korean booking loading and safe error states", async () => {
+  it("localizes Korean booking loading and maps the activity-not-found code", async () => {
     let rejectActivity!: (error: Error) => void;
     mockedGetTouristActivity.mockReturnValue(
       new Promise((_, reject) => {
@@ -101,10 +102,17 @@ describe("BookingContent", () => {
     expect(screen.getByText("예약 정보를 불러오는 중...")).toBeInTheDocument();
 
     await act(async () => {
-      rejectActivity(new Error("raw server detail"));
+      rejectActivity(
+        new ApiClientError({
+          code: "ACTIVITY404",
+          status: 404,
+          details: null,
+          backendMessage: "raw server detail",
+        }),
+      );
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("예약 정보를 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 찾을 수 없습니다.");
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });

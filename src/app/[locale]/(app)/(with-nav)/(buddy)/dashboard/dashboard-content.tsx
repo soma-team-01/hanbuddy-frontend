@@ -13,6 +13,7 @@ import {
   MessageSquareIcon,
 } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import {
   formatApplicantContact,
   formatNationalityCode,
@@ -39,6 +40,7 @@ export function DashboardContent() {
   const locale = useLocale();
   const t = useTranslations("BuddyDashboard");
   const tErrors = useTranslations("Errors");
+  const getApiErrorMessage = useApiErrorMessage();
   const [selectedDate, setSelectedDate] = useState("");
   const [requestedDatePage, setRequestedDatePage] = useState<number | null>(null);
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
@@ -87,7 +89,7 @@ export function DashboardContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {t("applicantsLoadError")}
+        {getApiErrorMessage(applicationsQuery.error, t("applicantsLoadError"))}
       </p>
     );
   } else if (applicationsQuery.isPending) {
@@ -194,7 +196,7 @@ export function DashboardContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {t("scheduleLoadError")}
+        {getApiErrorMessage(scheduleDatesQuery.error, t("scheduleLoadError"))}
       </p>
     );
   }

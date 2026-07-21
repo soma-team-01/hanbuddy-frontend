@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { CheckCircleIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDateTime } from "@/lib/datetime";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { myApplicationsQueryOptions } from "@/lib/query/applications";
@@ -40,6 +41,7 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
   const locale = useLocale();
   const t = useTranslations("Payment");
   const tErrors = useTranslations("Errors");
+  const getApiErrorMessage = useApiErrorMessage();
   const applicationsQuery = useQuery({
     ...myApplicationsQueryOptions(),
     enabled: applicationId.length > 0,
@@ -55,7 +57,7 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
   }
 
   if (applicationsQuery.error) {
-    return <RecoveryState message={t("loadError")} />;
+    return <RecoveryState message={getApiErrorMessage(applicationsQuery.error, t("loadError"))} />;
   }
 
   const application = applicationsQuery.data.find(

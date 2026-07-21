@@ -10,6 +10,7 @@ import {
   continueApplicationPayment,
 } from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
@@ -24,6 +25,7 @@ export function ApplicationsContent() {
   const locale = useLocale();
   const t = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
+  const getApiErrorMessage = useApiErrorMessage();
   const applicationsQuery = useQuery(myApplicationsQueryOptions());
   const cancelApplicationMutation = useMutation({
     mutationFn: async ({
@@ -120,7 +122,7 @@ export function ApplicationsContent() {
         role="alert"
         className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
       >
-        {t("loadError")}
+        {getApiErrorMessage(applicationsQuery.error, t("loadError"))}
       </p>
     );
   }

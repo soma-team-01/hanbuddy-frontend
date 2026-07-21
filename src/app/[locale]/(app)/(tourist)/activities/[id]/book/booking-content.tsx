@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import { BookingForm } from "./booking-form";
@@ -12,6 +13,7 @@ export function BookingContent({ activityId }: Readonly<{ activityId: string }>)
   const locale = useLocale();
   const t = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
+  const getApiErrorMessage = useApiErrorMessage();
   useAuthQueryRedirect(activityQuery.error);
 
   const activity = activityQuery.data
@@ -29,7 +31,9 @@ export function BookingContent({ activityId }: Readonly<{ activityId: string }>)
           role="alert"
           className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
         >
-          {activityQuery.error ? t("loadError") : t("notFound")}
+          {activityQuery.error
+            ? getApiErrorMessage(activityQuery.error, t("loadError"))
+            : t("notFound")}
         </p>
       </main>
     );

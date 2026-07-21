@@ -236,21 +236,22 @@ describe("MyActivitiesContent", () => {
     expect(await screen.findByText("아직 등록한 액티비티가 없습니다.")).toBeInTheDocument();
   });
 
-  it("does not expose the activity API error in Korean", async () => {
+  it("maps the buddy-role activity error in Korean", async () => {
     mockedGetMyActivities.mockResolvedValue({
       status: "error",
       error: new ApiClientError({
-        code: null,
-        status: null,
+        code: "USER403_BUDDY",
+        status: 403,
         details: null,
-        backendMessage: null,
-        fallbackMessage: "raw activity service failure",
+        backendMessage: "raw activity service failure",
       }),
     });
 
     renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 불러오지 못했습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "버디 사용자만 이용할 수 있는 기능입니다.",
+    );
     expect(screen.queryByText("raw activity service failure")).not.toBeInTheDocument();
   });
 });

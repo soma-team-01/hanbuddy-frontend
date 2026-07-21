@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { CheckIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
@@ -31,6 +32,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
+  const getApiErrorMessage = useApiErrorMessage();
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
     null,
   );
@@ -99,7 +101,9 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {activityQuery.error ? t("loadError") : t("notFound")}
+            {activityQuery.error
+              ? getApiErrorMessage(activityQuery.error, t("loadError"))
+              : t("notFound")}
           </p>
         </main>
       </div>

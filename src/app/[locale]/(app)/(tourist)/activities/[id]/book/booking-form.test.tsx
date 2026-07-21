@@ -260,6 +260,7 @@ describe("BookingForm", () => {
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
       "Could not complete the payment.",
     );
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
     expect(within(dialog).queryByText("PayPal 결제 캡처에 실패했습니다.")).not.toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));

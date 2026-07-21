@@ -190,6 +190,13 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
     }
   }
 
+  let errorMessage: string | null = null;
+  if (requestFailure) {
+    errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
+  } else if (errorKey) {
+    errorMessage = t(errorKey);
+  }
+
   return (
     <PayPalPaymentProvider>
       <main className="flex flex-1 flex-col gap-8 px-4 py-6">
@@ -320,18 +327,14 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           </label>
         </section>
 
-        {(requestFailure || errorKey) && (
+        {!showConfirm && errorMessage ? (
           <p
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {requestFailure
-              ? getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey))
-              : errorKey
-                ? t(errorKey)
-                : null}
+            {errorMessage}
           </p>
-        )}
+        ) : null}
 
         <BottomActionBar>
           <button
@@ -384,18 +387,14 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
               ) : null}
             </div>
             <p className="mt-3 text-xs text-ink-soft">{tPayment("paypalUsdNotice")}</p>
-            {(requestFailure || errorKey) && (
+            {errorMessage ? (
               <p
                 role="alert"
                 className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
               >
-                {requestFailure
-                  ? getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey))
-                  : errorKey
-                    ? t(errorKey)
-                    : null}
+                {errorMessage}
               </p>
-            )}
+            ) : null}
           </ConfirmDialog>
         )}
       </main>

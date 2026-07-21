@@ -673,6 +673,15 @@ export function CreateActivityForm() {
   const meetingMapUrl = meetingPlaceId
     ? buildGoogleMapsEmbedUrl(meetingPlaceId, googleMapsApiKey, locale)
     : "";
+  let errorMessage: string | null = null;
+  if (requestFailure) {
+    errorMessage = getApiErrorMessage(
+      requestFailure.error,
+      t(`errors.${requestFailure.fallbackKey}`),
+    );
+  } else if (errorKey) {
+    errorMessage = t(`errors.${errorKey}`);
+  }
 
   return (
     <form
@@ -694,16 +703,12 @@ export function CreateActivityForm() {
           <p className="mt-2 text-ink-soft">{t(stepContent.description)}</p>
         </div>
 
-        {requestFailure || errorKey ? (
+        {errorMessage ? (
           <p
             role="alert"
             className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
           >
-            {requestFailure
-              ? getApiErrorMessage(requestFailure.error, t(`errors.${requestFailure.fallbackKey}`))
-              : errorKey
-                ? t(`errors.${errorKey}`)
-                : null}
+            {errorMessage}
           </p>
         ) : null}
 

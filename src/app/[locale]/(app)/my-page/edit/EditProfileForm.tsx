@@ -212,6 +212,12 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   ) : (
     <Avatar name={profile.name} src={profile.profileImageUrl} size={112} />
   );
+  let errorMessage: string | null = null;
+  if (requestFailure) {
+    errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
+  } else if (errorKey) {
+    errorMessage = t(errorKey);
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -298,18 +304,14 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             </div>
           </section>
 
-          {(requestFailure || errorKey) && (
+          {errorMessage ? (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
-              {requestFailure
-                ? getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey))
-                : errorKey
-                  ? t(errorKey)
-                  : null}
+              {errorMessage}
             </p>
-          )}
+          ) : null}
         </main>
       </form>
     </div>

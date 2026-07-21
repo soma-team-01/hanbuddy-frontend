@@ -15,7 +15,7 @@ export class ApiClientError extends Error {
   readonly backendMessage: string | null;
 
   constructor({ code, status, details, backendMessage, fallbackMessage }: ApiClientErrorInit) {
-    super(backendMessage ?? fallbackMessage ?? "API request failed");
+    super(fallbackMessage ?? "API request failed");
     this.name = "ApiClientError";
     this.code = code;
     this.status = status;

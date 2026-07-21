@@ -180,7 +180,7 @@ describe("application API client", () => {
     });
   });
 
-  it("returns the backend error message when application creation fails", async () => {
+  it("returns structured backend metadata when application creation fails", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse(
         {
@@ -195,11 +195,15 @@ describe("application API client", () => {
 
     await expect(createApplication({ activityScheduleId: 101, guestCount: 9 })).resolves.toEqual({
       status: "error",
-      message: "남은 자리가 부족합니다.",
+      error: expect.objectContaining({
+        code: "APPLICATION400_CAPACITY_EXCEEDED",
+        status: 400,
+        backendMessage: "남은 자리가 부족합니다.",
+      }),
     });
   });
 
-  it("returns the backend error message when the payment capture fails", async () => {
+  it("returns structured backend metadata when payment capture fails", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse(
         {
@@ -214,7 +218,11 @@ describe("application API client", () => {
 
     await expect(captureApplicationPayment(11, "WRONG_ORDER_ID")).resolves.toEqual({
       status: "error",
-      message: "요청한 PayPal order id가 신청의 결제 정보와 일치하지 않습니다.",
+      error: expect.objectContaining({
+        code: "PAYMENT400_ORDER",
+        status: 400,
+        backendMessage: "요청한 PayPal order id가 신청의 결제 정보와 일치하지 않습니다.",
+      }),
     });
   });
 });

@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 import { useEffect } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { UnauthenticatedQueryError } from "./result";
+import { isUnauthenticatedError } from "@/lib/api/errors";
 
 export function useAuthQueryRedirect(error: Error | null) {
   const locale = useLocale();
@@ -12,7 +12,7 @@ export function useAuthQueryRedirect(error: Error | null) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (error instanceof UnauthenticatedQueryError) {
+    if (isUnauthenticatedError(error)) {
       queryClient.clear();
       router.replace("/login", { locale });
       router.refresh();

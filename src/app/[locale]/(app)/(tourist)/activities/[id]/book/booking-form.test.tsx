@@ -5,6 +5,7 @@ import {
   continueApplicationPayment,
   createApplication,
 } from "@/lib/api/applications";
+import { ApiClientError } from "@/lib/api/errors";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Activity } from "@/types/activity";
@@ -210,7 +211,16 @@ describe("BookingForm", () => {
   it("continues the existing payment when retrying after a capture failure", async () => {
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
     mockedCaptureApplicationPayment
-      .mockResolvedValueOnce({ status: "error", message: "PayPal 결제 캡처에 실패했습니다." })
+      .mockResolvedValueOnce({
+        status: "error",
+        error: new ApiClientError({
+          code: null,
+          status: null,
+          details: null,
+          backendMessage: null,
+          fallbackMessage: "PayPal 결제 캡처에 실패했습니다.",
+        }),
+      })
       .mockResolvedValueOnce({
         status: "success",
         application: { ...pendingApplication, status: "CONFIRMED" },

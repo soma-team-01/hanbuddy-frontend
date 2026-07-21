@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
 import { createQueryClient } from "@/lib/query/client";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -202,7 +203,13 @@ describe("ApplicantsContent", () => {
     firstRender.unmount();
     mockedGetBuddyActivityApplications.mockResolvedValue({
       status: "error",
-      message: "raw applicant service failure",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "raw applicant service failure",
+      }),
     });
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />, {
       locale: "ko",

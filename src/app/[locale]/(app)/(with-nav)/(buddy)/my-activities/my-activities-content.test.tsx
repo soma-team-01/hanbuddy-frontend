@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { MyActivitiesContent } from "./my-activities-content";
@@ -128,7 +129,13 @@ describe("MyActivitiesContent", () => {
     });
     mockedDeleteMyActivity.mockResolvedValue({
       status: "error",
-      message: "활동을 삭제하지 못했습니다.",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "활동을 삭제하지 못했습니다.",
+      }),
     });
 
     renderWithQueryClient(<MyActivitiesContent />);
@@ -232,7 +239,13 @@ describe("MyActivitiesContent", () => {
   it("does not expose the activity API error in Korean", async () => {
     mockedGetMyActivities.mockResolvedValue({
       status: "error",
-      message: "raw activity service failure",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "raw activity service failure",
+      }),
     });
 
     renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });

@@ -1,4 +1,5 @@
 import type { ApiResponse, ErrorApiResponse } from "@/lib/auth/types";
+import { createApiClientError } from "@/lib/api/errors";
 
 export const PROFILE_IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export type ProfileImageContentType = (typeof PROFILE_IMAGE_CONTENT_TYPES)[number];
@@ -84,7 +85,11 @@ export async function uploadProfileImage(file: File): Promise<PresignedImageItem
     ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
 
   if (!presignedResponse.ok || !presignedBody?.isSuccess) {
-    throw new Error(presignedBody?.message ?? "프로필 이미지 업로드 URL을 발급받지 못했습니다.");
+    throw createApiClientError(
+      presignedResponse.status,
+      presignedBody?.isSuccess === false ? presignedBody : null,
+      "프로필 이미지 업로드 URL을 발급받지 못했습니다.",
+    );
   }
 
   const uploadTarget = presignedBody.result.images.at(0);
@@ -150,7 +155,11 @@ export async function uploadActivityImages(files: File[]): Promise<PresignedImag
     ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
 
   if (!presignedResponse.ok || !presignedBody?.isSuccess) {
-    throw new Error(presignedBody?.message ?? "활동 이미지 업로드 URL을 발급받지 못했습니다.");
+    throw createApiClientError(
+      presignedResponse.status,
+      presignedBody?.isSuccess === false ? presignedBody : null,
+      "활동 이미지 업로드 URL을 발급받지 못했습니다.",
+    );
   }
 
   const uploadTargets = presignedBody.result.images;

@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBuddyApplications, getBuddyScheduleDates } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { DashboardContent } from "./dashboard-content";
@@ -195,7 +196,13 @@ describe("DashboardContent", () => {
     });
     mockedGetBuddyApplications.mockResolvedValue({
       status: "error",
-      message: "신청자 목록을 불러오지 못했습니다.",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "신청자 목록을 불러오지 못했습니다.",
+      }),
     });
 
     renderWithQueryClient(<DashboardContent />);
@@ -331,7 +338,13 @@ describe("DashboardContent", () => {
   it("does not expose the schedule API error in Korean", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "error",
-      message: "raw schedule service failure",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "raw schedule service failure",
+      }),
     });
 
     renderWithQueryClient(<DashboardContent />, { locale: "ko" });

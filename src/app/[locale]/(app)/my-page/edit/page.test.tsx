@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { createQueryClient } from "@/lib/query/client";
@@ -348,7 +349,13 @@ describe("EditProfilePage", () => {
   it("shows a localized safe message when saving fails", async () => {
     mockedUpdateMyProfile.mockResolvedValue({
       status: "error",
-      message: "국적 코드는 영문 대문자 2자리여야 합니다",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "국적 코드는 영문 대문자 2자리여야 합니다",
+      }),
     });
     renderWithQueryClient(<EditProfilePage />);
 
@@ -374,7 +381,16 @@ describe("EditProfilePage", () => {
 
     switchToKorean();
     await act(async () => {
-      resolveSave({ status: "error", message: "raw backend detail" });
+      resolveSave({
+        status: "error",
+        error: new ApiClientError({
+          code: null,
+          status: null,
+          details: null,
+          backendMessage: null,
+          fallbackMessage: "raw backend detail",
+        }),
+      });
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(

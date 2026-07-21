@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile } from "@/lib/api/users";
 import {
   fetchGooglePlaceDetails,
@@ -736,7 +737,13 @@ describe("CreateActivityForm", () => {
   it("shows the price preview API error without leaving the pricing step", async () => {
     mockedPreviewActivityPrice.mockResolvedValue({
       status: "error",
-      message: "버디 프로필 설정이 올바르지 않습니다.",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "버디 프로필 설정이 올바르지 않습니다.",
+      }),
     });
     renderWithQueryClient(<CreateActivityForm />);
     goToStepTwo();

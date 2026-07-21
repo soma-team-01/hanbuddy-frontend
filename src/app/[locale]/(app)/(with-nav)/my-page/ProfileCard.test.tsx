@@ -1,5 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile } from "@/lib/api/users";
 import { createQueryClient } from "@/lib/query/client";
 import { createMockProfile } from "@/test/factories";
@@ -55,7 +56,16 @@ describe("ProfileCard", () => {
   });
 
   it("shows a localized safe message when the profile fails to load", async () => {
-    mockedGetMyProfile.mockResolvedValue({ status: "error", message: "raw server detail" });
+    mockedGetMyProfile.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: null,
+        status: null,
+        details: null,
+        backendMessage: null,
+        fallbackMessage: "raw server detail",
+      }),
+    });
 
     renderWithQueryClient(<ProfileCard />);
 

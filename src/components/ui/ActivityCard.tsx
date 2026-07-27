@@ -10,17 +10,17 @@ export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
   const t = useTranslations("Explore");
 
   return (
-    <article className="w-full overflow-hidden rounded-xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
-      <div className="relative h-48 w-full">
+    <article className="group w-full overflow-hidden rounded-2xl border border-line-soft bg-panel shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-panel-raised">
         <Image
           src={activity.imageUrl}
           alt={activity.title}
           fill
-          sizes="(max-width: 448px) 100vw, 448px"
-          className="object-cover"
+          sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1535px) 33vw, 25vw"
+          className="object-cover transition duration-300 group-hover:scale-[1.02]"
         />
         {activity.rating !== undefined ? (
-          <div className="absolute top-3 right-3 flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1 text-ink shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] backdrop-blur-[2px]">
+          <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-panel/90 px-2.5 py-1 text-ink shadow-sm backdrop-blur-[2px]">
             <StarIcon className="size-3.5" />
             <span className="font-display text-sm font-semibold">{activity.rating.toFixed(1)}</span>
           </div>
@@ -31,18 +31,18 @@ export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
           <h2 className="truncate font-display text-xl leading-7 font-semibold text-ink">
             {activity.title}
           </h2>
-          <p className="flex items-center gap-1 text-base text-ink-soft">
+          <p className="flex items-center gap-1 text-base text-muted">
             <MapPinIcon className="size-4 shrink-0" />
-            <span className="truncate">{activity.location}</span>
+            <span className="truncate text-muted">{activity.location}</span>
           </p>
         </div>
-        <div className="h-px w-full bg-line" aria-hidden />
+        <div className="h-px w-full bg-line-soft" aria-hidden />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={32} />
             <p className="font-display text-sm font-semibold text-ink">{activity.host.name}</p>
           </div>
-          <p className="font-display text-xl font-semibold text-forest">
+          <p className="font-display text-lg font-bold text-primary-strong">
             {t("perPerson", { price: formatKrw(activity.price, locale) })}
           </p>
         </div>

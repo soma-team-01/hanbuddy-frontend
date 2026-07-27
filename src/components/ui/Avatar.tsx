@@ -32,7 +32,7 @@ export function Avatar({ name, src, size = 32, className = "" }: Readonly<Avatar
     <span
       aria-hidden
       style={{ width: size, height: size, fontSize: Math.round(size * 0.38) }}
-      className={`flex shrink-0 items-center justify-center rounded-full bg-forest-soft font-display font-semibold text-cream ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-primary-soft font-display font-semibold text-primary-strong ${className}`}
     >
       {initials}
     </span>

@@ -32,7 +32,11 @@ describe("ConfirmDialog", () => {
       />,
     );
 
-    expect(screen.getByRole("dialog")).toHaveClass("motion-dialog");
+    expect(screen.getByRole("dialog")).toHaveClass(
+      "motion-dialog",
+      "max-md:mt-auto",
+      "md:rounded-2xl",
+    );
   });
 
   it("calls onConfirm and onClose from the action buttons", () => {

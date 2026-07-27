@@ -26,7 +26,7 @@ const STYLES: Record<ApplicationStatus, { className: string; Icon: typeof ClockI
     Icon: ClockIcon,
   },
   completed: {
-    className: "bg-line text-ink-soft",
+    className: "bg-panel-raised text-muted",
     Icon: CheckCircleIcon,
   },
 };

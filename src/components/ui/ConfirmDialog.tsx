@@ -63,11 +63,10 @@ export function ConfirmDialog({
       onCancel={(event) => {
         if (isPending) event.preventDefault();
       }}
-      // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
-      className="motion-dialog m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
+      className="motion-dialog max-md:mt-auto m-0 w-full max-w-none rounded-t-2xl border-0 bg-canvas-soft p-5 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px] md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:p-6"
     >
       <div className="flex items-start justify-between gap-4">
-        <h2 id="confirm-dialog-title" className="font-display text-xl font-semibold text-forest">
+        <h2 id="confirm-dialog-title" className="font-display text-xl font-bold text-ink">
           {title}
         </h2>
         {confirmSlot ? (
@@ -76,13 +75,13 @@ export function ConfirmDialog({
             aria-label={tAccessibility("closeDialog")}
             onClick={onClose}
             disabled={isPending}
-            className="-mt-2 -mr-2 flex size-10 shrink-0 items-center justify-center rounded-full text-ink-soft transition-colors enabled:hover:bg-chip enabled:hover:text-ink disabled:opacity-60"
+            className="-mt-2 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:bg-primary-soft enabled:hover:text-ink disabled:opacity-60"
           >
             <XIcon className="size-5" />
           </button>
         ) : null}
       </div>
-      {description ? <p className="mt-2 text-ink-soft">{description}</p> : null}
+      {description ? <p className="mt-2 text-muted">{description}</p> : null}
       {children ? <div className="mt-4">{children}</div> : null}
       <div className={`mt-6 ${confirmSlot ? "" : "flex gap-3"}`}>
         {confirmSlot ? (
@@ -93,7 +92,7 @@ export function ConfirmDialog({
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-chip disabled:opacity-60"
+              className="h-12 flex-1 rounded-xl border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:opacity-60"
             >
               {cancelLabel ?? tCommon("cancel")}
             </button>
@@ -101,10 +100,10 @@ export function ConfirmDialog({
               type="button"
               onClick={onConfirm}
               disabled={isPending}
-              className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-cream transition-colors disabled:opacity-60 ${
+              className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-on-primary transition-colors disabled:opacity-60 ${
                 tone === "danger"
                   ? "bg-danger enabled:hover:bg-danger/90"
-                  : "bg-forest enabled:hover:bg-forest-soft"
+                  : "bg-primary enabled:hover:bg-primary-hover"
               }`}
             >
               {isPending ? (pendingLabel ?? confirmLabel) : confirmLabel}

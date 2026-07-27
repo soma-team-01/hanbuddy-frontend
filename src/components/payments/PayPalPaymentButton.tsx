@@ -66,7 +66,7 @@ export function PayPalPaymentButtons({
       <button
         type="button"
         disabled
-        className="h-12 w-full cursor-not-allowed rounded-xl bg-forest font-display text-sm font-semibold text-cream opacity-40"
+        className="h-12 w-full cursor-not-allowed rounded-xl bg-primary font-display text-sm font-semibold text-on-primary opacity-40"
       >
         {tPayment("unavailable")}
       </button>

@@ -117,7 +117,7 @@ export function CountrySelect({
         onClick={() => (isOpen ? setIsOpen(false) : open())}
         className={
           triggerClassName ??
-          "flex w-full items-center justify-between gap-2 rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong"
+          "flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong"
         }
       >
         {selected ? (
@@ -138,12 +138,12 @@ export function CountrySelect({
           {/* 바깥 클릭 시 닫기용 투명 오버레이 */}
           <div className="fixed inset-0 z-10" onClick={close} aria-hidden />
           <div
-            className={`absolute left-0 z-20 mt-2 flex max-h-80 flex-col overflow-hidden rounded-xl border border-line bg-white shadow-xl ${
+            className={`absolute left-0 z-20 mt-2 flex max-h-80 flex-col overflow-hidden rounded-xl border border-line-soft bg-panel shadow-xl ${
               display === "dialCode" ? "w-72" : "w-full min-w-64"
             }`}
           >
-            <div className="flex items-center gap-2 border-b border-line px-3 py-2.5">
-              <SearchIcon className="size-4 shrink-0 text-ink-soft" />
+            <div className="flex items-center gap-2 border-b border-line-soft px-3 py-2.5">
+              <SearchIcon className="size-4 shrink-0 text-muted" />
               <input
                 ref={searchRef}
                 type="text"
@@ -161,7 +161,7 @@ export function CountrySelect({
                   setActiveIndex(0);
                 }}
                 onKeyDown={handleSearchKeyDown}
-                className="w-full bg-transparent text-base text-ink outline-none placeholder:text-ink-soft/60"
+                className="w-full bg-transparent text-base text-ink outline-none placeholder:text-muted/70"
               />
             </div>
             <ul id={listboxId} role="listbox" aria-label={ariaLabel} className="overflow-y-auto">
@@ -183,7 +183,7 @@ export function CountrySelect({
                       onClick={() => select(country.code)}
                       onMouseMove={() => setActiveIndex(index)}
                       className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${
-                        isActive ? "bg-chip" : ""
+                        isActive ? "bg-primary-soft" : ""
                       }`}
                     >
                       <span aria-hidden>{country.flag}</span>
@@ -191,15 +191,15 @@ export function CountrySelect({
                         {country.localizedName}
                       </span>
                       {display === "dialCode" && (
-                        <span className="shrink-0 text-sm text-ink-soft">{country.dialCode}</span>
+                        <span className="shrink-0 text-sm text-muted">{country.dialCode}</span>
                       )}
-                      {isSelected && <CheckIcon className="size-4 shrink-0 text-forest" />}
+                      {isSelected && <CheckIcon className="size-4 shrink-0 text-primary-strong" />}
                     </button>
                   </li>
                 );
               })}
               {filtered.length === 0 && (
-                <li className="px-3 py-4 text-center text-sm text-ink-soft">{t("noResults")}</li>
+                <li className="px-3 py-4 text-center text-sm text-muted">{t("noResults")}</li>
               )}
             </ul>
           </div>

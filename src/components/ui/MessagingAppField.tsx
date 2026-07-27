@@ -60,7 +60,7 @@ export function MessagingAppField({
 
   return (
     <>
-      <div className="flex flex-col overflow-hidden rounded-xl border border-line bg-white">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel">
         {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
           const isSelected = app === key;
           const displayLabel = label ?? t("phoneNumber");
@@ -70,17 +70,17 @@ export function MessagingAppField({
               type="button"
               aria-pressed={isSelected}
               onClick={() => onAppChange(key)}
-              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-chip/60 ${
-                index > 0 ? "border-t border-line" : ""
+              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-primary-soft/60 ${
+                index > 0 ? "border-t border-line-soft" : ""
               }`}
             >
               <span
                 aria-hidden
                 className={`flex size-4 items-center justify-center rounded-full border ${
-                  isSelected ? "border-forest" : "border-line-strong"
+                  isSelected ? "border-primary-strong" : "border-line-strong"
                 }`}
               >
-                {isSelected && <span className="size-2 rounded-full bg-forest" />}
+                {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
               </span>
               <Icon className="size-5 text-success" />
               <span className="text-base text-ink">{displayLabel}</span>
@@ -92,7 +92,7 @@ export function MessagingAppField({
       {app === "whatsapp" || app === "phone" ? (
         <div className="mt-1 flex gap-2">
           {koreanOnly ? (
-            <span className="flex shrink-0 items-center rounded-xl border border-line bg-chip px-4 py-3.5 text-base text-ink">
+            <span className="flex shrink-0 items-center rounded-xl border border-line-soft bg-panel-raised px-4 py-3.5 text-base text-ink">
               +82
             </span>
           ) : (
@@ -102,7 +102,7 @@ export function MessagingAppField({
                 onChange={onCountryChange}
                 display="dialCode"
                 ariaLabel={t("countryCode")}
-                triggerClassName="flex items-center gap-2 rounded-xl border border-line bg-chip py-3.5 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong"
+                triggerClassName="flex items-center gap-2 rounded-xl border border-line-soft bg-panel-raised py-3.5 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong"
               />
             </div>
           )}
@@ -117,7 +117,7 @@ export function MessagingAppField({
             }}
             placeholder={koreanOnly ? t("koreanPhonePlaceholder") : t("phonePlaceholder")}
             aria-label={t("phoneInputLabel")}
-            className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
+            className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
           />
         </div>
       ) : (
@@ -131,7 +131,7 @@ export function MessagingAppField({
             app: MESSAGING_APPS.find((item) => item.key === app)?.label ?? t("phoneNumber"),
           })}
           aria-label={t("appIdInputLabel")}
-          className="mt-1 w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
+          className="mt-1 w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
         />
       )}
     </>

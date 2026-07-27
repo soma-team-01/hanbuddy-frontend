@@ -5,7 +5,10 @@ import { MapPinIcon, StarIcon } from "@/components/ui/icons";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
-export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
+export function ActivityCard({
+  activity,
+  eagerImage = false,
+}: Readonly<{ activity: Activity; eagerImage?: boolean }>) {
   const locale = useLocale();
   const t = useTranslations("Explore");
 
@@ -16,7 +19,8 @@ export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
           src={activity.imageUrl}
           alt={activity.title}
           fill
-          sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1535px) 33vw, 25vw"
+          loading={eagerImage ? "eager" : undefined}
+          sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw"
           className="object-cover transition duration-300 group-hover:scale-[1.02]"
         />
         {activity.rating !== undefined ? (

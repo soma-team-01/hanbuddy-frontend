@@ -68,6 +68,26 @@ describe("LandingPage", () => {
     }
   });
 
+  it("eagerly loads only the first above-the-fold experience image", async () => {
+    await renderLanding("en");
+
+    expect(screen.getByRole("img", { name: "Gwangjang Market" })).toHaveAttribute(
+      "loading",
+      "eager",
+    );
+    expect(screen.getByRole("img", { name: "Bukchon Hanok" })).not.toHaveAttribute(
+      "loading",
+      "eager",
+    );
+  });
+
+  it("allows both hero grid regions to shrink without widening the mobile viewport", async () => {
+    await renderLanding("en");
+
+    expect(screen.getByRole("heading", { level: 1 }).closest("section")).toHaveClass("min-w-0");
+    expect(screen.getByRole("region", { name: "Match with a local buddy" })).toHaveClass("min-w-0");
+  });
+
   it.each([
     ["en", "HanBuddy | Experience Korea like a local", "/en"],
     ["ko", "HanBuddy | 현지인처럼 한국을 경험하세요", "/ko"],

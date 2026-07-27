@@ -41,7 +41,7 @@ describe("ProfileCard", () => {
       "href",
       "/en/my-page/edit",
     );
-    expect(screen.getByAltText("Sarah Jenkins")).toBeInTheDocument();
+    expect(screen.getByAltText("Sarah Jenkins")).toHaveAttribute("loading", "eager");
     expect(replace).not.toHaveBeenCalled();
   });
 

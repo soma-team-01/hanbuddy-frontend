@@ -5,9 +5,16 @@ interface AvatarProps {
   src?: string | null;
   size?: number;
   className?: string;
+  eagerImage?: boolean;
 }
 
-export function Avatar({ name, src, size = 32, className = "" }: Readonly<AvatarProps>) {
+export function Avatar({
+  name,
+  src,
+  size = 32,
+  className = "",
+  eagerImage = false,
+}: Readonly<AvatarProps>) {
   if (src) {
     return (
       <Image
@@ -15,6 +22,7 @@ export function Avatar({ name, src, size = 32, className = "" }: Readonly<Avatar
         alt={name}
         width={size}
         height={size}
+        loading={eagerImage ? "eager" : undefined}
         style={{ width: size, height: size }}
         className={`shrink-0 rounded-full border border-line-strong object-cover ${className}`}
       />

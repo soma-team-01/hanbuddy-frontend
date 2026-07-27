@@ -103,7 +103,7 @@ export function DashboardContent() {
   } else {
     applicationsContent = (
       <div className="grid gap-4 xl:grid-cols-2">
-        {activities.map((activity) => {
+        {activities.map((activity, activityIndex) => {
           const headerScheduleId = activity.schedules[0]?.activityScheduleId;
           const headerHref = headerScheduleId
             ? `/my-activities/${activity.activityId}/applicants?scheduleId=${headerScheduleId}`
@@ -123,6 +123,7 @@ export function DashboardContent() {
                     src={getActivityThumbnail(activity.thumbnailImageUrl)}
                     alt={activity.activityTitle}
                     fill
+                    loading={activityIndex === 0 ? "eager" : undefined}
                     sizes="56px"
                     className="object-cover"
                   />

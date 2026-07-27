@@ -41,7 +41,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
       <PageContainer className="grid items-center gap-10 py-10 md:py-16 lg:grid-cols-[minmax(0,0.8fr)_minmax(520px,1.2fr)] lg:gap-14 lg:py-20">
-        <section className="max-w-2xl">
+        <section className="max-w-2xl min-w-0">
           <p className="mb-4 font-display text-xs font-bold tracking-[0.2em] text-primary-strong uppercase">
             {t("eyebrow")}
           </p>
@@ -67,9 +67,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
         </section>
 
-        <section aria-label={t("eyebrow")}>
+        <section aria-label={t("eyebrow")} className="min-w-0">
           <div className="flex snap-x scrollbar-none gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
-            {experiences.map((experience) => {
+            {experiences.map((experience, index) => {
               const title = t(`experiences.${experience.messageKey}.title`);
               return (
                 <article
@@ -80,6 +80,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                     src={experience.img}
                     alt={title}
                     fill
+                    loading={index === 0 ? "eager" : undefined}
                     sizes="(min-width: 768px) 30vw, 60vw"
                     className="object-cover"
                   />

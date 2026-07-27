@@ -71,6 +71,10 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Traditional Tea Tasting" })).toHaveAttribute(
+      "loading",
+      "eager",
+    );
     expect(screen.getAllByText("1 Applicant").length).toBeGreaterThan(0);
     expect(screen.getByText("10:00 AM")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();

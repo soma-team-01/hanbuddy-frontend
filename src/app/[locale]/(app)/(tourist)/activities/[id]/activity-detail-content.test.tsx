@@ -106,6 +106,10 @@ describe("ActivityDetailContent", () => {
     renderWithQueryClient(<ActivityDetailContent activityId="42" />);
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
+      "loading",
+      "eager",
+    );
     expect(screen.getByTestId("activity-detail-layout")).toHaveClass(
       "lg:grid-cols-[minmax(0,1fr)_360px]",
     );

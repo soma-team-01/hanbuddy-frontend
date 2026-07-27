@@ -95,7 +95,7 @@ export function MyActivitiesContent() {
         {deleteActivityMutation.isPending ? t("deleting") : ""}
       </p>
       <div data-testid="activity-records" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {activities.map((activity) => (
+        {activities.map((activity, index) => (
           <article
             key={activity.activityId}
             className="flex flex-col gap-3 rounded-2xl border border-line-soft bg-panel p-4 shadow-sm"
@@ -108,6 +108,7 @@ export function MyActivitiesContent() {
                 src={getActivityThumbnail(activity.thumbnailImageUrl)}
                 alt={activity.title}
                 fill
+                loading={index === 0 ? "eager" : undefined}
                 sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
                 className="object-cover"
               />

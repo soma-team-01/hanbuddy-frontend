@@ -166,9 +166,9 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
                 src={activity.heroImageUrl}
                 alt={activity.title}
                 fill
+                loading="eager"
                 sizes="(max-width: 1023px) 100vw, 800px"
                 className="object-cover"
-                priority
               />
             </div>
             <div className="flex flex-col gap-10 p-5 md:p-8">

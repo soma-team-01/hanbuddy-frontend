@@ -39,7 +39,7 @@ export function ActivityFeed() {
   return (
     <div
       data-testid="activity-grid"
-      className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+      className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
     >
       {activities.map((activity, index) => (
         <Link
@@ -48,7 +48,7 @@ export function ActivityFeed() {
           className="motion-reveal motion-press block rounded-2xl"
           style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
         >
-          <ActivityCard activity={activity} />
+          <ActivityCard activity={activity} eagerImage={index === 0} />
         </Link>
       ))}
     </div>

@@ -213,6 +213,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
                   src={activity.heroImageUrl}
                   alt={activity.title}
                   fill
+                  loading="eager"
                   sizes="(max-width: 1023px) 100vw, 760px"
                   className="object-cover"
                 />

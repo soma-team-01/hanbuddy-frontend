@@ -36,7 +36,12 @@ export function ProfileCard() {
   } else {
     content = (
       <>
-        <Avatar name={result.profile.name} src={result.profile.profileImageUrl} size={72} />
+        <Avatar
+          name={result.profile.name}
+          src={result.profile.profileImageUrl}
+          size={72}
+          eagerImage
+        />
         <div>
           <h1 className="font-display text-xl font-semibold text-ink">{result.profile.name}</h1>
           <Link

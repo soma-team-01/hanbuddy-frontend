@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SERVICE_TIME_ZONE } from "@/i18n/formats";
 import { isLocale, routing, type Locale } from "@/i18n/routing";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { parseUserType } from "@/lib/auth/routes";
 import "../globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -55,7 +59,12 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
 
   setRequestLocale(locale);
-  const messages = await getMessages();
+  const [messages, cookieStore] = await Promise.all([getMessages(), cookies()]);
+  const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
+  const authenticated = Boolean(
+    userType && cookieStore.get(AUTH_COOKIES.accessToken)?.value,
+  );
+  const role = userType === "BUDDY" ? "buddy" : userType === "TOURIST" ? "tourist" : null;
 
   return (
     <html
@@ -64,7 +73,10 @@ export default async function LocaleLayout({
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <SiteHeader role={role} authenticated={authenticated} />
+            <div className="flex flex-1 flex-col">{children}</div>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -44,9 +44,18 @@
     "serverUnavailable": "The service is temporarily unavailable. Please try again shortly."
   },
   "Navigation": {
-    "home": "Home",
-    "activity": "Activity",
-    "myPage": "My Page"
+    "primaryNavigation": "Primary navigation",
+    "navigationMenu": "Navigation menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "changeLanguageToKorean": "한국어로 변경",
+    "changeLanguageToEnglish": "Switch to English",
+    "explore": "Explore",
+    "applications": "My Applications",
+    "dashboard": "Dashboard",
+    "myActivities": "My Activities",
+    "myPage": "My Page",
+    "login": "Log in"
   },
   "Accessibility": {
     "goBack": "Go back",

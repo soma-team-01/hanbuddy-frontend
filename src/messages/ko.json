@@ -44,9 +44,18 @@
     "serverUnavailable": "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요."
   },
   "Navigation": {
-    "home": "홈",
-    "activity": "액티비티",
-    "myPage": "마이페이지"
+    "primaryNavigation": "주요 내비게이션",
+    "navigationMenu": "내비게이션 메뉴",
+    "openMenu": "메뉴 열기",
+    "closeMenu": "메뉴 닫기",
+    "changeLanguageToKorean": "한국어로 변경",
+    "changeLanguageToEnglish": "영어로 변경",
+    "explore": "탐색",
+    "applications": "내 신청",
+    "dashboard": "대시보드",
+    "myActivities": "내 액티비티",
+    "myPage": "마이페이지",
+    "login": "로그인"
   },
   "Accessibility": {
     "goBack": "뒤로 가기",

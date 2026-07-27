@@ -1,71 +1,99 @@
-import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import { usePathname } from "next/navigation";
+import { fireEvent, screen, within } from "@testing-library/react";
+import { usePathname, useRouter } from "next/navigation";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { BottomNavBar } from "./BottomNavBar";
+import { SiteHeader } from "./SiteHeader";
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
   usePathname: vi.fn(),
+  useRouter: vi.fn(),
 }));
 
 const mockedUsePathname = vi.mocked(usePathname);
+const mockedUseRouter = vi.mocked(useRouter);
+const replace = vi.fn();
 
-describe("BottomNavBar", () => {
-  it("shows the indicator at the first tab by default", () => {
+describe("SiteHeader", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
     mockedUsePathname.mockReturnValue("/explore");
-
-    const { container } = renderWithIntl(<BottomNavBar />);
-
-    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
-    expect(container.querySelector(".motion-nav-indicator")).toHaveStyle({
-      transform: "translateX(0%)",
-    });
+    mockedUseRouter.mockReturnValue({ replace } as unknown as ReturnType<typeof useRouter>);
+    document.body.style.overflow = "";
   });
 
-  it("moves the active pill to the current nested route", () => {
-    mockedUsePathname.mockReturnValue("/applications/42");
+  it("renders tourist destinations with a non-color active indicator", () => {
+    renderWithIntl(<SiteHeader role="tourist" />);
 
-    const { container } = renderWithIntl(<BottomNavBar />);
-
-    expect(screen.getByRole("link", { name: "Activity" })).toHaveAttribute("aria-current", "page");
-    expect(container.querySelector(".motion-nav-indicator")).toHaveStyle({
-      transform: "translateX(100%)",
-    });
+    const primaryNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
+    expect(within(primaryNavigation).getByRole("link", { name: "Explore" })).toHaveAttribute(
+      "href",
+      "/en/explore",
+    );
+    expect(screen.getByRole("link", { name: "My Applications" })).toHaveAttribute(
+      "href",
+      "/en/applications",
+    );
+    expect(screen.getByRole("link", { name: "My Page" })).toHaveAttribute("href", "/en/my-page");
+    expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("link", { name: "Explore" })).toHaveClass("border-b-2");
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
   });
 
-  it("hides the indicator when no tab matches the current route", () => {
-    mockedUsePathname.mockReturnValue("/unmatched-route");
+  it("renders buddy destinations", () => {
+    mockedUsePathname.mockReturnValue("/dashboard");
+    renderWithIntl(<SiteHeader role="buddy" />);
 
-    const { container } = renderWithIntl(<BottomNavBar />);
-
-    expect(container.querySelector(".motion-nav-indicator")).toBeNull();
-    expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "href",
+      "/en/dashboard",
+    );
+    expect(screen.getByRole("link", { name: "My Activities" })).toHaveAttribute(
+      "href",
+      "/en/my-activities",
+    );
   });
 
-  it("updates the same indicator node when the pathname changes", () => {
-    mockedUsePathname.mockReturnValue("/explore");
+  it("opens an accessible mobile drawer, restores focus, and unlocks scrolling on Escape", () => {
+    renderWithIntl(<SiteHeader role="tourist" />);
 
-    const { container, rerender } = renderWithIntl(<BottomNavBar />);
-    const indicator = container.querySelector(".motion-nav-indicator");
+    const trigger = screen.getByRole("button", { name: "Open menu" });
+    fireEvent.click(trigger);
 
-    mockedUsePathname.mockReturnValue("/my-page");
-    rerender(<BottomNavBar />);
+    const dialog = screen.getByRole("dialog", { name: "Navigation menu" });
+    expect(dialog).toHaveAttribute("open");
+    expect(screen.getByRole("button", { name: "Close menu" })).toHaveFocus();
+    expect(document.body.style.overflow).toBe("hidden");
 
-    expect(container.querySelector(".motion-nav-indicator")).toBe(indicator);
-    expect(indicator).toHaveStyle({ transform: "translateX(200%)" });
+    const cancelEvent = new Event("cancel", { cancelable: true });
+    fireEvent(dialog, cancelEvent);
+
+    expect(cancelEvent.defaultPrevented).toBe(true);
+    expect(dialog).not.toHaveAttribute("open");
+    expect(trigger).toHaveFocus();
+    expect(document.body.style.overflow).toBe("");
   });
 
-  it("localizes all navigation labels in Korean", () => {
-    mockedUsePathname.mockReturnValue("/explore");
+  it("changes locale while preserving the current pathname", () => {
+    mockedUsePathname.mockReturnValue("/applications");
+    renderWithIntl(<SiteHeader role="tourist" />);
 
-    renderWithIntl(<BottomNavBar />, { locale: "ko" });
+    fireEvent.click(screen.getByRole("button", { name: "한국어로 변경" }));
 
-    expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("href", "/ko/explore");
-    expect(screen.getByRole("link", { name: "액티비티" })).toHaveAttribute(
+    expect(replace).toHaveBeenCalledWith("/ko/applications");
+  });
+
+  it("localizes the site navigation and mobile menu in Korean", () => {
+    renderWithIntl(<SiteHeader role="tourist" />, { locale: "ko" });
+
+    expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/ko/explore");
+    expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(
       "href",
       "/ko/applications",
     );
-    expect(screen.getByRole("link", { name: "마이페이지" })).toHaveAttribute("href", "/ko/my-page");
+    expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
   });
 });

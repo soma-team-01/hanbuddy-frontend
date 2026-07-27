@@ -8,6 +8,7 @@ describe("CancelDialog", () => {
   it("disables Yes, Cancel until a reason is selected", () => {
     renderWithIntl(<CancelDialog onClose={vi.fn()} onConfirm={vi.fn()} />);
 
+    expect(screen.getByRole("dialog")).toHaveClass("max-md:mt-auto", "md:rounded-2xl");
     expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));

@@ -173,6 +173,8 @@
     "saving": "Saving..."
   },
   "Explore": {
+    "title": "Explore experiences",
+    "description": "Discover Korea with a local buddy by your side.",
     "loading": "Loading activities...",
     "empty": "No activities available yet.",
     "loadError": "Could not load activities.",
@@ -229,6 +231,7 @@
   },
   "Applications": {
     "title": "My Applications",
+    "description": "Review upcoming experiences, payments, and past applications.",
     "upcoming": "Upcoming",
     "past": "Past",
     "loading": "Loading applications...",

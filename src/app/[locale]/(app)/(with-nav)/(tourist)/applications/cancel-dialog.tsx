@@ -65,13 +65,12 @@ export function CancelDialog({
         if (isSubmitting) event.preventDefault();
       }}
       onClose={onClose}
-      // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
+      className="m-0 w-full max-w-none rounded-t-2xl border-0 bg-canvas-soft p-5 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:p-6"
     >
-      <h2 id="cancel-dialog-title" className="font-display text-xl font-semibold text-forest">
+      <h2 id="cancel-dialog-title" className="font-display text-xl font-bold text-ink">
         {t("cancellationTitle")}
       </h2>
-      <p className="mt-2 text-ink-soft">{t("cancellationPrompt")}</p>
+      <p className="mt-2 text-muted">{t("cancellationPrompt")}</p>
       <p className="mt-5 font-display text-sm font-semibold text-ink">
         {t("cancellationQuestion")}
       </p>
@@ -84,17 +83,19 @@ export function CancelDialog({
               type="button"
               aria-pressed={isSelected}
               onClick={() => setReason(value)}
-              className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left transition-colors ${
-                isSelected ? "border-forest" : "border-line-strong hover:border-forest/50"
+              className={`flex items-center gap-3 rounded-xl border bg-panel px-4 py-3.5 text-left transition-colors ${
+                isSelected
+                  ? "border-primary-strong bg-primary-soft"
+                  : "border-line-strong hover:border-primary/50"
               }`}
             >
               <span
                 aria-hidden
                 className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                  isSelected ? "border-forest" : "border-line-strong"
+                  isSelected ? "border-primary-strong" : "border-line-strong"
                 }`}
               >
-                {isSelected && <span className="size-2 rounded-full bg-forest" />}
+                {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
               </span>
               <span className="text-base text-ink">{t(`cancellationReasons.${key}`)}</span>
             </button>
@@ -119,7 +120,7 @@ export function CancelDialog({
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl border border-line-strong bg-white font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-chip disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:opacity-60"
         >
           {t("keepApplication")}
         </button>
@@ -127,7 +128,7 @@ export function CancelDialog({
           type="button"
           onClick={handleConfirm}
           disabled={!reason || isSubmitting}
-          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
         >
           {isSubmitting ? t("cancelling") : t("confirmCancellation")}
         </button>

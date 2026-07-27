@@ -18,7 +18,7 @@ export function ActivityFeed() {
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 
   if (activitiesQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
+    return <p className="py-10 text-center text-muted">{t("loading")}</p>;
   }
 
   if (activitiesQuery.error) {
@@ -33,21 +33,24 @@ export function ActivityFeed() {
   }
 
   if (activities.length === 0) {
-    return <p className="py-10 text-center text-ink-soft">{t("empty")}</p>;
+    return <p className="py-10 text-center text-muted">{t("empty")}</p>;
   }
 
   return (
-    <>
+    <div
+      data-testid="activity-grid"
+      className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+    >
       {activities.map((activity, index) => (
         <Link
           key={activity.id}
           href={`/activities/${activity.id}`}
-          className="motion-reveal motion-press block rounded-xl hover:shadow-md"
+          className="motion-reveal motion-press block rounded-2xl"
           style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
         >
           <ActivityCard activity={activity} />
         </Link>
       ))}
-    </>
+    </div>
   );
 }

@@ -93,18 +93,16 @@ export function DashboardContent() {
       </p>
     );
   } else if (applicationsQuery.isPending) {
-    applicationsContent = (
-      <p className="py-8 text-center text-ink-soft">{t("loadingApplicants")}</p>
-    );
+    applicationsContent = <p className="py-8 text-center text-muted">{t("loadingApplicants")}</p>;
   } else if (activities.length === 0) {
     applicationsContent = (
-      <p className="rounded-2xl border border-line bg-white px-4 py-8 text-center text-ink-soft">
+      <p className="rounded-2xl border border-line-soft bg-panel px-4 py-8 text-center text-muted">
         {t("noApplicants")}
       </p>
     );
   } else {
     applicationsContent = (
-      <div className="flex flex-col gap-4">
+      <div className="grid gap-4 xl:grid-cols-2">
         {activities.map((activity) => {
           const headerScheduleId = activity.schedules[0]?.activityScheduleId;
           const headerHref = headerScheduleId
@@ -114,11 +112,11 @@ export function DashboardContent() {
           return (
             <article
               key={activity.activityId}
-              className="flex flex-col gap-5 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]"
+              className="flex flex-col gap-5 rounded-2xl border border-line-soft bg-panel p-4 shadow-sm"
             >
               <Link
                 href={headerHref}
-                className="-m-2 flex items-center gap-4 rounded-xl p-2 transition-colors hover:bg-chip/60"
+                className="-m-2 flex items-center gap-4 rounded-xl p-2 transition-colors hover:bg-primary-soft/60"
               >
                 <div className="relative size-14 shrink-0 overflow-hidden rounded-lg">
                   <Image
@@ -142,17 +140,17 @@ export function DashboardContent() {
                 <section key={schedule.activityScheduleId} className="flex flex-col gap-4">
                   <Link
                     href={`/my-activities/${activity.activityId}/applicants?scheduleId=${schedule.activityScheduleId}`}
-                    className="flex items-center justify-between rounded-xl bg-chip/60 px-3 py-2 transition-colors hover:bg-chip"
+                    className="flex items-center justify-between rounded-xl bg-panel-raised px-3 py-2 transition-colors hover:bg-primary-soft"
                   >
                     <span className="font-display text-sm font-semibold text-ink">
                       {formatSeoulTime(schedule.startAt, locale) ?? tErrors("dateTimeUnavailable")}
                     </span>
-                    <span className="text-xs text-ink-soft">
+                    <span className="text-xs text-muted">
                       {t("applicantCount", { count: schedule.applicantCount })}
                     </span>
                   </Link>
                   {schedule.applicants.length > 0 ? (
-                    <ul className="ml-3 flex flex-col gap-5 border-l border-line pl-5">
+                    <ul className="ml-3 flex flex-col gap-5 border-l border-line-soft pl-5">
                       {schedule.applicants.map((applicant) => (
                         <li key={applicant.applicationId} className="flex items-center gap-3">
                           <Avatar
@@ -164,11 +162,11 @@ export function DashboardContent() {
                             <p className="font-display font-semibold text-ink">
                               {applicant.applicantName}
                             </p>
-                            <p className="flex items-center gap-1 text-ink-soft">
+                            <p className="flex items-center gap-1 text-muted">
                               <MapPinIcon className="size-3.5" />
                               {formatNationalityCode(applicant.applicantNationalityCode, locale)}
                             </p>
-                            <p className="flex items-center gap-1 text-ink-soft">
+                            <p className="flex items-center gap-1 text-muted">
                               <MessageSquareIcon className="size-3.5" />
                               {formatApplicantContact(applicant, locale)}
                             </p>
@@ -187,7 +185,7 @@ export function DashboardContent() {
   }
 
   if (scheduleDatesQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">{t("loadingSchedule")}</p>;
+    return <p className="py-10 text-center text-muted">{t("loadingSchedule")}</p>;
   }
 
   if (scheduleDatesQuery.error) {
@@ -202,20 +200,20 @@ export function DashboardContent() {
   }
 
   if (dates.length === 0) {
-    return <p className="py-10 text-center text-ink-soft">{t("noUpcoming")}</p>;
+    return <p className="py-10 text-center text-muted">{t("noUpcoming")}</p>;
   }
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl font-semibold text-forest">{t("upcoming")}</h2>
-      <div className="rounded-2xl bg-chip p-3">
+      <h2 className="font-display text-2xl font-bold text-ink">{t("upcoming")}</h2>
+      <div className="rounded-2xl bg-panel-raised p-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
             aria-label={t("previousDates", { count: DATE_PAGE_SIZE })}
             disabled={currentDatePage === 0}
             onClick={() => setRequestedDatePage(currentDatePage - 1)}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-chip disabled:opacity-30"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line-soft bg-panel text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-primary-soft disabled:opacity-30"
           >
             <ArrowLeftIcon className="size-4" />
           </button>
@@ -231,7 +229,7 @@ export function DashboardContent() {
                 ? t("dateWithActivity", { date: plainDateLabel })
                 : plainDateLabel;
               let activityDotClass = "bg-transparent";
-              if (hasActivity) activityDotClass = active ? "bg-cream" : "bg-forest";
+              if (hasActivity) activityDotClass = active ? "bg-on-primary" : "bg-primary";
 
               return (
                 <button
@@ -243,12 +241,12 @@ export function DashboardContent() {
                   onClick={() => handleDateSelect(date)}
                   className={`flex min-w-0 flex-col items-center gap-1 rounded-xl py-3 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     active
-                      ? "bg-forest text-cream"
-                      : "border border-line bg-white text-ink hover:border-line-strong hover:bg-chip"
+                      ? "bg-primary text-on-primary"
+                      : "border border-line-soft bg-panel text-ink hover:border-line-strong hover:bg-primary-soft"
                   }`}
                 >
                   <span className="font-display text-lg font-bold">{chip.day}</span>
-                  <span className={`text-xs ${active ? "text-sage" : "text-ink-soft"}`}>
+                  <span className={`text-xs ${active ? "text-on-primary" : "text-muted"}`}>
                     {chip.label}
                   </span>
                   <span aria-hidden className={`size-1.5 rounded-full ${activityDotClass}`} />
@@ -261,7 +259,7 @@ export function DashboardContent() {
             aria-label={t("nextDates", { count: DATE_PAGE_SIZE })}
             disabled={currentDatePage === lastDatePage}
             onClick={() => setRequestedDatePage(currentDatePage + 1)}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-chip disabled:opacity-30"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-line-soft bg-panel text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-primary-soft disabled:opacity-30"
           >
             <ArrowRightIcon className="size-4" />
           </button>

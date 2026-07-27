@@ -45,6 +45,7 @@ describe("MyActivitiesContent", () => {
     renderWithQueryClient(<MyActivitiesContent />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
+    expect(screen.getByTestId("activity-records")).toHaveClass("md:grid-cols-2", "xl:grid-cols-3");
     expect(screen.getByText("Learn Korean tea etiquette.")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
   });

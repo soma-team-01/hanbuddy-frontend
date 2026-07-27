@@ -313,6 +313,8 @@
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다."
   },
   "BuddyDashboard": {
+    "title": "버디 대시보드",
+    "description": "예정 일정과 게스트 신청 현황을 한눈에 확인하세요.",
     "quickActions": "빠른 작업",
     "createActivity": "액티비티 만들기",
     "upcoming": "예정 일정",
@@ -350,6 +352,7 @@
     }
   },
   "Applicants": {
+    "title": "신청자",
     "loading": "신청자를 불러오는 중...",
     "loadError": "신청자를 불러오지 못했습니다.",
     "noSchedule": "등록된 일정이 없습니다.",

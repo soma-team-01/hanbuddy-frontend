@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { TopAppBar } from "@/components/layout/TopAppBar";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { PlusIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -13,23 +14,25 @@ export default async function MyActivitiesPage({
 
   return (
     <>
-      <TopAppBar backHref="/dashboard" />
-      <main className="flex flex-1 flex-col gap-6 px-4 py-6">
-        <div>
-          <h1 className="font-display text-2xl font-semibold text-forest">{t("title")}</h1>
-          <p className="mt-1 text-ink-soft">{t("description")}</p>
-        </div>
-
-        <Link
-          href="/my-activities/create"
-          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
-        >
-          <PlusIcon className="size-4" />
-          {t("createActivity")}
-        </Link>
-
-        <MyActivitiesContent />
-      </main>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        backHref="/dashboard"
+        action={
+          <Link
+            href="/my-activities/create"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+          >
+            <PlusIcon className="size-4" />
+            <span className="hidden sm:inline">{t("createActivity")}</span>
+          </Link>
+        }
+      />
+      <PageContainer className="flex-1 py-6 md:py-10">
+        <main>
+          <MyActivitiesContent />
+        </main>
+      </PageContainer>
     </>
   );
 }

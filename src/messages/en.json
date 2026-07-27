@@ -313,6 +313,8 @@
     "kstNotice": "All times are in Korea Standard Time (KST)."
   },
   "BuddyDashboard": {
+    "title": "Buddy dashboard",
+    "description": "Stay on top of upcoming schedules and guest applications.",
     "quickActions": "Quick Actions",
     "createActivity": "Create Activity",
     "upcoming": "Upcoming",
@@ -350,6 +352,7 @@
     }
   },
   "Applicants": {
+    "title": "Applicants",
     "loading": "Loading applicants...",
     "loadError": "Could not load applicants.",
     "noSchedule": "No schedules are registered for this activity.",

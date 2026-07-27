@@ -55,6 +55,7 @@ describe("ApplicantsContent", () => {
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
+    expect(screen.getByTestId("applicant-records")).toHaveClass("md:divide-y");
     expect(screen.getByText("Jul 19, 2026, 1:30 AM")).toBeInTheDocument();
     expect(screen.getByText("1 confirmed")).toBeInTheDocument();
     expect(screen.getByText("0 pending payment")).toBeInTheDocument();

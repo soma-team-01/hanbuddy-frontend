@@ -52,7 +52,7 @@ export function ApplicantsContent({
     (Boolean(scheduleId) && applicationsQuery.isPending);
 
   if (isLoading) {
-    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
+    return <p className="py-10 text-center text-muted">{t("loading")}</p>;
   }
 
   if (requestError || hasNoSchedule) {
@@ -80,10 +80,10 @@ export function ApplicantsContent({
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl leading-8 font-semibold text-forest">
+        <h1 className="font-display text-2xl leading-8 font-bold text-ink md:text-3xl">
           {applications.activityTitle}
         </h1>
-        <p className="mt-2 flex flex-wrap items-center gap-1 text-ink-soft">
+        <p className="mt-2 flex flex-wrap items-center gap-1 text-muted">
           <span>{scheduleLabel}</span>
           <span aria-hidden>•</span>
           <span>{t("confirmedCount", { count: confirmedCount })}</span>
@@ -93,15 +93,18 @@ export function ApplicantsContent({
       </div>
 
       {applications.applicants.length === 0 ? (
-        <p className="rounded-2xl border border-line bg-white px-4 py-8 text-center text-ink-soft">
+        <p className="rounded-2xl border border-line-soft bg-panel px-4 py-8 text-center text-muted">
           {t("empty")}
         </p>
       ) : (
-        <div className="flex flex-col gap-5">
+        <div
+          data-testid="applicant-records"
+          className="mt-6 overflow-hidden rounded-2xl border border-line-soft bg-panel md:divide-y md:divide-line-soft"
+        >
           {applications.applicants.map((applicant) => (
             <article
               key={applicant.applicationId}
-              className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]"
+              className="flex flex-col gap-4 border-b border-line-soft p-4 last:border-b-0 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:border-b-0 md:p-5"
             >
               <div className="flex items-center gap-4">
                 <Avatar
@@ -113,17 +116,17 @@ export function ApplicantsContent({
                   <p className="font-display text-lg font-semibold text-ink">
                     {applicant.applicantName}
                   </p>
-                  <p className="flex items-center gap-1 text-ink-soft">
+                  <p className="flex items-center gap-1 text-muted">
                     <MapPinIcon className="size-3.5" />
                     {formatNationalityCode(applicant.applicantNationalityCode, locale)}
                   </p>
-                  <p className="flex items-center gap-1 text-ink-soft">
+                  <p className="flex items-center gap-1 text-muted">
                     <MessageSquareIcon className="size-3.5" />
                     {formatApplicantContact(applicant, locale)}
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs text-ink-soft">
+              <div className="flex flex-wrap gap-2 text-xs text-muted md:max-w-72 md:justify-end md:text-right">
                 <span>
                   {t("appliedOn", {
                     date:
@@ -135,7 +138,7 @@ export function ApplicantsContent({
                 <span>• {t(`status.${STATUS_MESSAGE_KEY[applicant.status]}`)}</span>
               </div>
               {applicant.specialRequest ? (
-                <p className="rounded-xl bg-sand p-4 text-sm text-ink">
+                <p className="rounded-xl bg-primary-soft p-4 text-sm text-ink md:col-span-2">
                   {applicant.specialRequest}
                 </p>
               ) : null}

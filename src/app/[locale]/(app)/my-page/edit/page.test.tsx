@@ -97,7 +97,8 @@ describe("EditProfilePage", () => {
   it("populates the form with the loaded profile", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
-    expect(await screen.findByLabelText("Full Name")).toHaveValue("Sarah Jenkins");
+    expect(await screen.findByRole("form")).toHaveClass("md:grid-cols-2", "max-w-[800px]");
+    expect(screen.getByLabelText("Full Name")).toHaveValue("Sarah Jenkins");
     expect(screen.getByLabelText("Age")).toHaveValue(28);
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });

@@ -116,6 +116,7 @@
     }
   },
   "Onboarding": {
+    "title": "Complete your profile",
     "metadataTitle": "Complete your profile | HanBuddy",
     "metadataDescription": "Choose your HanBuddy role and complete your profile.",
     "roleHeading": "I am a...",
@@ -147,6 +148,7 @@
     "completeRegistration": "Complete Registration"
   },
   "Profile": {
+    "title": "Edit profile",
     "metadataTitle": "Edit profile | HanBuddy",
     "metadataDescription": "Update your HanBuddy profile and contact details.",
     "fullName": "Full Name",
@@ -285,6 +287,7 @@
     "appIdInputLabel": "Messaging app ID"
   },
   "MyPage": {
+    "title": "My Page",
     "language": "Language",
     "languageSheetTitle": "Language",
     "english": "English",

@@ -116,6 +116,7 @@
     }
   },
   "Onboarding": {
+    "title": "프로필 완성하기",
     "metadataTitle": "프로필 설정 | HanBuddy",
     "metadataDescription": "HanBuddy 역할을 선택하고 프로필을 완성하세요.",
     "roleHeading": "역할을 선택해 주세요",
@@ -147,6 +148,7 @@
     "completeRegistration": "가입 완료"
   },
   "Profile": {
+    "title": "프로필 수정",
     "metadataTitle": "프로필 수정 | HanBuddy",
     "metadataDescription": "HanBuddy 프로필과 연락처 정보를 수정하세요.",
     "fullName": "이름",
@@ -285,6 +287,7 @@
     "appIdInputLabel": "메신저 앱 ID"
   },
   "MyPage": {
+    "title": "마이페이지",
     "language": "언어",
     "languageSheetTitle": "언어",
     "english": "English",

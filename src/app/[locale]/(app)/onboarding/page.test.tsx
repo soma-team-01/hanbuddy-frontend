@@ -81,6 +81,7 @@ describe("OnboardingForm", () => {
     ) => {
       renderWithIntl(<OnboardingForm />, { locale });
 
+      expect(screen.getByRole("form")).toHaveClass("md:grid-cols-2", "max-w-[800px]");
       expect(screen.getByRole("heading", { name: roleHeading })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: tourist })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();

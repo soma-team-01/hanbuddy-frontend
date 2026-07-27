@@ -38,6 +38,9 @@ describe("role-specific My Page", () => {
     renderRoleMyPage(<TouristMyPage />, "TOURIST");
 
     expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/en/explore");
+    expect(screen.getByTestId("my-page-layout")).toHaveClass(
+      "lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]",
+    );
   });
 
   it("returns buddies to Dashboard", () => {

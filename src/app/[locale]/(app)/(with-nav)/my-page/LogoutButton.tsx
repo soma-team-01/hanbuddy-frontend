@@ -37,7 +37,7 @@ export function LogoutButton() {
         type="button"
         onClick={() => setShowConfirm(true)}
         disabled={isLoggingOut}
-        className="mx-auto mt-6 flex cursor-pointer items-center gap-2 text-base font-medium text-danger enabled:hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-base font-semibold text-danger enabled:hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <LogOutIcon className="size-4" />
         {isLoggingOut ? t("loggingOut") : t("logOut")}

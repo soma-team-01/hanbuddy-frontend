@@ -26,7 +26,6 @@ describe("LandingPage", () => {
     [
       "en",
       "Experience Korea like a local.",
-      "Log in",
       "Get started",
       "Browse experiences →",
       "Authentic Korea, together.",
@@ -34,18 +33,18 @@ describe("LandingPage", () => {
     [
       "ko",
       "현지인처럼 한국을 경험하세요.",
-      "로그인",
       "시작하기",
       "액티비티 둘러보기 →",
       "진짜 한국을 함께 경험하세요.",
     ],
   ] as const)(
     "renders localized landing content and navigation for %s",
-    async (locale, headline, login, getStarted, browse, footer) => {
+    async (locale, headline, getStarted, browse, footer) => {
       await renderLanding(locale);
 
-      expect(screen.getByRole("heading", { level: 1, name: headline })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: login })).toHaveAttribute("href", `/${locale}/login`);
+      expect(screen.getByRole("main")).toHaveClass("w-full");
+      expect(screen.getByRole("heading", { level: 1, name: headline })).toHaveClass("font-display");
+      expect(screen.queryByRole("banner")).not.toBeInTheDocument();
       expect(screen.getByRole("link", { name: getStarted })).toHaveAttribute(
         "href",
         `/${locale}/login`,

@@ -22,7 +22,7 @@ function RecoveryState({ message }: Readonly<{ message: string }>) {
   return (
     <PageContainer className="flex flex-1 items-center justify-center py-10 pb-32 text-center md:py-16 lg:pb-16">
       <main className="w-full max-w-2xl rounded-2xl border border-line-soft bg-panel p-6 shadow-sm md:p-10">
-        <p role="alert" className="text-ink-soft text-base">
+        <p role="alert" className="text-base text-muted">
           {message}
         </p>
         <BottomActionBar>

@@ -123,7 +123,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
     : "";
 
   let meetingMapMedia: React.ReactNode = (
-    <div className="bg-line/60 text-ink-soft mt-3 flex h-[204px] w-full items-center justify-center rounded-xl text-sm">
+    <div className="mt-3 flex h-[204px] w-full items-center justify-center rounded-xl bg-line-soft/60 text-sm text-muted">
       {t("mapUnavailable")}
     </div>
   );

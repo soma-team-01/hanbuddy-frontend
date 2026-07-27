@@ -19,9 +19,7 @@ describe("PageHeader", () => {
   });
 
   it("renders supporting page context when a description is provided", () => {
-    renderWithIntl(
-      <PageHeader title="My Activities" description="Manage your experiences." />,
-    );
+    renderWithIntl(<PageHeader title="My Activities" description="Manage your experiences." />);
 
     expect(screen.getByText("Manage your experiences.")).toHaveClass("text-muted");
   });

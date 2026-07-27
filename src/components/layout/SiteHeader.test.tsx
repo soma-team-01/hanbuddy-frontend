@@ -35,10 +35,7 @@ describe("SiteHeader", () => {
       "/en/applications",
     );
     expect(screen.getByRole("link", { name: "My Page" })).toHaveAttribute("href", "/en/my-page");
-    expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Explore" })).toHaveClass("border-b-2");
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
   });

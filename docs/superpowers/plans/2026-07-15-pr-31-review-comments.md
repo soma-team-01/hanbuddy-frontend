@@ -208,7 +208,7 @@ import type {
 
 mutationFn: (async (request: ActivityPricePreviewRequest) =>
   unwrapApiResult(await previewActivityPrice(request), "preview"),
-  (<output className="text-xs text-ink-soft">Calculating estimated payout...</output>));
+  (<output className="text-ink-soft text-xs">Calculating estimated payout...</output>));
 ```
 
 - [ ] **Step 2: Replace the dashboard nested ternary**

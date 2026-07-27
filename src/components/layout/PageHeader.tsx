@@ -60,7 +60,9 @@ export function PageHeader({
               {title}
             </h1>
           ) : null}
-          {description ? <p className="mt-1 text-sm text-muted md:text-base">{description}</p> : null}
+          {description ? (
+            <p className="mt-1 text-sm text-muted md:text-base">{description}</p>
+          ) : null}
         </div>
         {action ? <div className="flex shrink-0 items-center justify-end">{action}</div> : null}
       </PageContainer>

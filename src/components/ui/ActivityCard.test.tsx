@@ -25,11 +25,7 @@ describe("ActivityCard", () => {
   it("renders a responsive marketplace card using the semantic surface tokens", () => {
     renderWithIntl(<ActivityCard activity={activity} />);
 
-    expect(screen.getByRole("article")).toHaveClass(
-      "rounded-2xl",
-      "border-line-soft",
-      "bg-panel",
-    );
+    expect(screen.getByRole("article")).toHaveClass("rounded-2xl", "border-line-soft", "bg-panel");
     expect(screen.getByRole("heading", { name: "Market walk" })).toHaveClass("text-ink");
     expect(screen.getByText("Seoul")).toHaveClass("text-muted");
   });

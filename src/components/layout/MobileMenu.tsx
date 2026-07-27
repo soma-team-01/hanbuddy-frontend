@@ -10,12 +10,7 @@ interface MobileMenuProps {
   children: React.ReactNode;
 }
 
-export function MobileMenu({
-  title,
-  openLabel,
-  closeLabel,
-  children,
-}: Readonly<MobileMenuProps>) {
+export function MobileMenu({ title, openLabel, closeLabel, children }: Readonly<MobileMenuProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);

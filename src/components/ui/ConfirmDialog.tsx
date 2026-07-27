@@ -63,7 +63,7 @@ export function ConfirmDialog({
       onCancel={(event) => {
         if (isPending) event.preventDefault();
       }}
-      className="motion-dialog max-md:mt-auto m-0 w-full max-w-none rounded-t-2xl border-0 bg-canvas-soft p-5 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px] md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:p-6"
+      className="motion-dialog m-0 w-full max-w-none rounded-t-2xl border-0 bg-canvas-soft p-5 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:p-6"
     >
       <div className="flex items-start justify-between gap-4">
         <h2 id="confirm-dialog-title" className="font-display text-xl font-bold text-ink">

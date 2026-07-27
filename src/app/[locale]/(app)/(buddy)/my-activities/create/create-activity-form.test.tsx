@@ -1252,9 +1252,7 @@ describe("CreateActivityForm", () => {
     fillStepTwoFields();
     fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
 
-    expect(screen.getByRole("button", { name: "Add item" })).toHaveClass(
-      "hover:bg-primary-soft",
-    );
+    expect(screen.getByRole("button", { name: "Add item" })).toHaveClass("hover:bg-primary-soft");
     expect(screen.getByRole("button", { name: "Add restriction" })).toHaveClass(
       "hover:bg-primary-soft",
     );

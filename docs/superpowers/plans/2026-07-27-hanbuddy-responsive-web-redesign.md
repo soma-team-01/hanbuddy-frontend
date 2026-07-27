@@ -569,7 +569,7 @@ Expected: FAIL on responsive panel/action assertions only.
 
 ```tsx
 <PageContainer className="flex flex-1 items-center justify-center py-10 md:py-16">
-  <section className="border-line-soft bg-canvas-soft w-full max-w-2xl rounded-2xl border p-6 md:p-10">
+  <section className="w-full max-w-2xl rounded-2xl border border-line-soft bg-canvas-soft p-6 md:p-10">
     ...
   </section>
 </PageContainer>
@@ -630,7 +630,7 @@ Expected: FAIL on new layout expectations while date/query/delete/applicant beha
     className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
   >
     <DashboardContent />
-    <aside className="border-line-soft bg-panel rounded-2xl border p-5 lg:sticky lg:top-24">
+    <aside className="rounded-2xl border border-line-soft bg-panel p-5 lg:sticky lg:top-24">
       ...
     </aside>
   </div>

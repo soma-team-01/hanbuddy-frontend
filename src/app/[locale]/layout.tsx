@@ -61,9 +61,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const [messages, cookieStore] = await Promise.all([getMessages(), cookies()]);
   const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
-  const authenticated = Boolean(
-    userType && cookieStore.get(AUTH_COOKIES.accessToken)?.value,
-  );
+  const authenticated = Boolean(userType && cookieStore.get(AUTH_COOKIES.accessToken)?.value);
   const role = userType === "BUDDY" ? "buddy" : userType === "TOURIST" ? "tourist" : null;
 
   return (

@@ -81,7 +81,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                     alt={title}
                     fill
                     loading={index === 0 ? "eager" : undefined}
-                    sizes="(min-width: 768px) 30vw, 60vw"
+                    sizes="(min-width: 1024px) 18vw, (min-width: 768px) 30vw, 256px"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />

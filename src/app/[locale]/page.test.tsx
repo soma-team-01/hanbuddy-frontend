@@ -71,9 +71,12 @@ describe("LandingPage", () => {
   it("eagerly loads only the first above-the-fold experience image", async () => {
     await renderLanding("en");
 
-    expect(screen.getByRole("img", { name: "Gwangjang Market" })).toHaveAttribute(
-      "loading",
-      "eager",
+    const firstImage = screen.getByRole("img", { name: "Gwangjang Market" });
+
+    expect(firstImage).toHaveAttribute("loading", "eager");
+    expect(firstImage).toHaveAttribute(
+      "sizes",
+      "(min-width: 1024px) 18vw, (min-width: 768px) 30vw, 256px",
     );
     expect(screen.getByRole("img", { name: "Bukchon Hanok" })).not.toHaveAttribute(
       "loading",

@@ -2,9 +2,18 @@ import { describe, expect, it, vi } from "vitest";
 import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 
+const fontMocks = vi.hoisted(() => ({
+  dmSans: vi.fn(() => ({ variable: "--font-dm-sans-class" })),
+  notoSansKr: vi.fn(() => ({ variable: "--font-noto-sans-kr-class" })),
+  plusJakartaSans: vi.fn(() => ({ variable: "--font-plus-jakarta-sans-class" })),
+}));
+
 vi.mock("next/font/google", () => ({
-  Be_Vietnam_Pro: () => ({ variable: "--font-be-vietnam-pro" }),
-  Manrope: () => ({ variable: "--font-manrope" }),
+  Be_Vietnam_Pro: vi.fn(() => ({ variable: "--font-be-vietnam-pro-class" })),
+  DM_Sans: fontMocks.dmSans,
+  Manrope: vi.fn(() => ({ variable: "--font-manrope-class" })),
+  Noto_Sans_KR: fontMocks.notoSansKr,
+  Plus_Jakarta_Sans: fontMocks.plusJakartaSans,
 }));
 
 vi.mock("next-intl/server", async () => {
@@ -42,6 +51,26 @@ describe("locale layout metadata", () => {
     await expect(generateMetadata({ params: Promise.resolve({ locale }) })).resolves.toMatchObject({
       title: "HanBuddy",
       description,
+    });
+  });
+});
+
+describe("locale layout fonts", () => {
+  it("loads the approved display, interface, and Korean font weights as CSS variables", () => {
+    expect(fontMocks.plusJakartaSans).toHaveBeenCalledWith({
+      subsets: ["latin"],
+      variable: "--font-plus-jakarta-sans",
+      weight: ["600", "700", "800"],
+    });
+    expect(fontMocks.dmSans).toHaveBeenCalledWith({
+      subsets: ["latin"],
+      variable: "--font-dm-sans",
+      weight: ["400", "500", "600", "700"],
+    });
+    expect(fontMocks.notoSansKr).toHaveBeenCalledWith({
+      subsets: ["latin"],
+      variable: "--font-noto-sans-kr",
+      weight: ["400", "500", "600", "700"],
     });
   });
 });

@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
-@theme {
-  /* Figma 디자인 토큰 (prototype 페이지 기준) */
-  --color-cream: #fbf9f4;
-  --color-ink: #1b1c19;
-  --color-ink-soft: #434844;
-  --color-forest: #182820;
-  --color-forest-soft: #2d3e35;
-  --color-sage: #96a99d;
-  --color-line: #e4e2dd;
-  --color-line-strong: #c3c8c3;
-  --color-chip: #f5f3ee;
-  --color-sand: #f0eee9;
-  --color-earth: #8a6c33;
+@theme inline {
+  --color-canvas: #fffaf7;
+  --color-canvas-soft: #ffffff;
+  --color-primary: #d13f32;
+  --color-primary-hover: #b9342b;
+  --color-primary-strong: #8f2f28;
+  --color-primary-soft: #fff0ec;
+  --color-ink: #261b18;
+  --color-muted: #675b56;
+  --color-line-strong: #d6c5bf;
+  --color-line-soft: #eee2dd;
+  --color-panel: #f8f3f0;
+  --color-panel-raised: #fcf8f6;
+  --color-on-primary: #ffffff;
+  --color-on-primary-strong: #ffffff;
   --color-success: #3f6b46;
   --color-success-soft: #dcead9;
   --color-warning: #7a5210;
   --color-warning-soft: #f6e3c2;
   --color-danger: #cf3d33;
 
-  --font-sans: var(--font-be-vietnam-pro), sans-serif;
-  --font-display: var(--font-manrope), sans-serif;
+  --font-sans: var(--font-dm-sans), var(--font-noto-sans-kr), system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta-sans), var(--font-noto-sans-kr), system-ui, sans-serif;
 }
 
 :root {
@@ -37,9 +39,14 @@ html {
 }
 
 body {
-  background-color: var(--color-cream);
+  background-color: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primary-strong);
+  outline-offset: 3px;
 }
 
 /* Tailwind v4 preflight는 버튼 커서를 default로 두므로 클릭 가능한 버튼에 포인터를 복원 */

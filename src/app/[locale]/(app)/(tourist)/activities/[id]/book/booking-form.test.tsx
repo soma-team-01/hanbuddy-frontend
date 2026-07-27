@@ -139,6 +139,14 @@ describe("BookingForm", () => {
     vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "test-client-id");
   });
 
+  it("uses one responsive form layout with a sticky desktop summary", () => {
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    expect(screen.getByTestId("booking-layout")).toHaveClass("lg:grid-cols-[minmax(0,1fr)_360px]");
+    expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
+    expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });

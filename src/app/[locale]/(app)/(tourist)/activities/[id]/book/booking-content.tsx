@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { touristActivityQueryOptions } from "@/lib/query/activities";
@@ -21,12 +22,12 @@ export function BookingContent({ activityId }: Readonly<{ activityId: string }>)
     : null;
 
   if (activityQuery.isPending) {
-    return <p className="px-4 py-10 text-center text-ink-soft">{t("loading")}</p>;
+    return <PageContainer className="py-10 text-center text-muted">{t("loading")}</PageContainer>;
   }
 
   if (activityQuery.error || !activity) {
     return (
-      <main className="px-4 py-6">
+      <PageContainer className="py-6 md:py-10">
         <p
           role="alert"
           className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
@@ -35,7 +36,7 @@ export function BookingContent({ activityId }: Readonly<{ activityId: string }>)
             ? getApiErrorMessage(activityQuery.error, t("loadError"))
             : t("notFound")}
         </p>
-      </main>
+      </PageContainer>
     );
   }
 

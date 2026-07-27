@@ -198,6 +198,7 @@
     "kstNotice": "All times are in Korea Standard Time (KST)."
   },
   "Booking": {
+    "title": "Book activity",
     "loading": "Loading booking...",
     "loadError": "Could not load booking details.",
     "notFound": "This activity is not available for booking.",

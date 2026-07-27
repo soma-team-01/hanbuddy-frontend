@@ -5,6 +5,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { BookingPanel } from "@/components/layout/BookingPanel";
+import { PageContainer } from "@/components/layout/PageContainer";
 import {
   ArrowRightIcon,
   ChevronDownIcon,
@@ -199,205 +201,219 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
 
   return (
     <PayPalPaymentProvider>
-      <main className="flex flex-1 flex-col gap-8 px-4 py-6">
-        <section className="overflow-hidden rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
-          <div className="relative h-48 w-full overflow-hidden rounded-xl">
-            <Image
-              src={activity.heroImageUrl}
-              alt={activity.title}
-              fill
-              sizes="(max-width: 448px) 100vw, 448px"
-              className="object-cover"
-            />
-          </div>
-          <h1 className="mt-4 font-display text-2xl font-semibold text-forest">{activity.title}</h1>
-          <p className="mt-1 flex items-center gap-1 text-sm text-ink-soft">
-            <UserIcon className="size-4" />
-            {t("hostedBy", { name: activity.host.name })}
-          </p>
-          {activity.rating !== undefined ? (
-            <p className="mt-3 flex items-center gap-1.5 text-sm text-ink">
-              <StarIcon className="size-4" />
-              <span className="font-display font-semibold">{activity.rating.toFixed(1)}</span>
-              {activity.reviewCount !== undefined ? (
-                <span className="text-ink-soft">
-                  {t("reviewCount", { count: activity.reviewCount })}
-                </span>
-              ) : null}
-            </p>
-          ) : null}
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <h2 className="border-b border-line pb-3 text-base font-medium text-ink">
-            {t("dateTimeHeading")}
-          </h2>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm text-ink-soft">{t("dateTime")}</span>
-            <span className="text-xs text-ink-soft">{t("kstNotice")}</span>
-            <span className="relative">
-              <select
-                value={sessionId}
-                onChange={(event) => setSessionId(event.target.value)}
-                className="w-full appearance-none rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink"
-              >
-                {activity.sessions.map((session) => (
-                  <option key={session.id} value={session.id}>
-                    {session.dateLabel} {session.timeLabel}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
-            </span>
-          </label>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <h2 className="border-b border-line pb-3 text-base font-medium text-ink">
-            {t("guestsHeading")}
-          </h2>
-          <div className="flex items-center justify-between rounded-xl border border-line bg-white px-4 py-3">
-            <span className="text-base text-ink">{t("guestCount")}</span>
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                aria-label={t("decreaseGuests")}
-                disabled={guests <= 1}
-                onClick={() => setGuests((count) => Math.max(1, count - 1))}
-                className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-chip disabled:opacity-40"
-              >
-                <MinusIcon className="size-4" />
-              </button>
-              <span className="min-w-16 text-center font-display text-base font-semibold text-ink">
-                {t("guests", { count: guests })}
-              </span>
-              <button
-                type="button"
-                aria-label={t("increaseGuests")}
-                disabled={guests >= MAX_GUESTS}
-                onClick={() => setGuests((count) => Math.min(MAX_GUESTS, count + 1))}
-                className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-chip disabled:opacity-40"
-              >
-                <PlusIcon className="size-4" />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <h2 className="border-b border-line pb-3 text-base font-medium text-ink">
-            {t("specialRequest")}
-          </h2>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm text-ink-soft">{t("specialRequestDescription")}</span>
-            <textarea
-              rows={3}
-              placeholder={t("specialRequestPlaceholder")}
-              value={specialRequest}
-              onChange={(event) => setSpecialRequest(event.target.value)}
-              className="w-full resize-none rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-            />
-          </label>
-        </section>
-
-        <section className="flex flex-col gap-3 rounded-2xl bg-chip p-5">
-          <h2 className="text-base font-medium text-ink">{t("priceDetails")}</h2>
-          <div className="flex items-center justify-between text-sm text-ink">
-            <span>
-              {t("subtotal", { price: formatKrw(activity.price, locale), count: guests })}
-            </span>
-            <span>{formatKrw(subtotal, locale)}</span>
-          </div>
-          <div className="h-px w-full bg-line" aria-hidden />
-          <div className="font-display text-2xl font-bold text-forest">
-            {t("totalKrw", { amount: formatKrw(total, locale) })}
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <p className="text-base text-ink">{t("refundPolicy")}</p>
-          <label className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(event) => setAgreed(event.target.checked)}
-              className="size-5 rounded accent-forest"
-            />
-            <span className="text-base text-ink">{t("agreement")}</span>
-          </label>
-        </section>
-
-        {!showConfirm && errorMessage ? (
-          <p
-            role="alert"
-            className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-          >
-            {errorMessage}
-          </p>
-        ) : null}
-
-        <BottomActionBar>
-          <button
-            type="button"
-            disabled={!agreed || isSubmitting}
-            onClick={handleSubmitClick}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-forest font-display text-base font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-40"
-          >
-            {isSubmitting ? t("processing") : t("submit")}
-            <ArrowRightIcon className="size-4" />
-          </button>
-        </BottomActionBar>
-
-        {showConfirm && (
-          <ConfirmDialog
-            title={t("choosePaymentMethod")}
-            isPending={isSubmitting}
-            onClose={handleDialogClose}
-            confirmSlot={
-              <PayPalPaymentButtons
-                createOrder={startPayPalOrder}
-                onApprove={approvePayPalOrder}
-                onCancel={handlePayPalCancel}
-                onError={handlePayPalError}
-                disabled={isSubmitting}
-              />
-            }
-          >
-            <p className="truncate text-sm text-ink-soft">
-              {t("paymentSummary", {
-                title: activity.title,
-                schedule: selectedSession
-                  ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}`
-                  : "—",
-                count: guests,
-              })}
-            </p>
-            <div className="mt-3 flex flex-col gap-3 rounded-xl bg-chip p-4 text-sm text-ink">
-              <div className="font-display font-semibold text-ink">
-                <p>{tPayment("totalApplicationAmount", { amount: formatKrw(total, locale) })}</p>
+      <PageContainer className="py-6 md:py-10">
+        <main
+          data-testid="booking-layout"
+          className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
+        >
+          <div className="space-y-8">
+            <section className="overflow-hidden rounded-2xl border border-line-soft bg-panel p-4 shadow-sm md:p-5">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl">
+                <Image
+                  src={activity.heroImageUrl}
+                  alt={activity.title}
+                  fill
+                  sizes="(max-width: 1023px) 100vw, 760px"
+                  className="object-cover"
+                />
               </div>
-              {paymentCharge ? (
-                <div className="font-display text-base font-semibold text-forest">
-                  <p>
-                    {tPayment("paypalCharge", {
-                      amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
-                    })}
-                  </p>
-                </div>
+              <h1 className="mt-4 font-display text-2xl font-bold text-ink md:text-3xl">
+                {activity.title}
+              </h1>
+              <p className="mt-1 flex items-center gap-1 text-sm text-muted">
+                <UserIcon className="size-4" />
+                {t("hostedBy", { name: activity.host.name })}
+              </p>
+              {activity.rating !== undefined ? (
+                <p className="mt-3 flex items-center gap-1.5 text-sm text-ink">
+                  <StarIcon className="size-4" />
+                  <span className="font-display font-semibold">{activity.rating.toFixed(1)}</span>
+                  {activity.reviewCount !== undefined ? (
+                    <span className="text-muted">
+                      {t("reviewCount", { count: activity.reviewCount })}
+                    </span>
+                  ) : null}
+                </p>
               ) : null}
-            </div>
-            <p className="mt-3 text-xs text-ink-soft">{tPayment("paypalUsdNotice")}</p>
-            {errorMessage ? (
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="border-b border-line-soft pb-3 text-base font-semibold text-ink">
+                {t("dateTimeHeading")}
+              </h2>
+              <label className="flex flex-col gap-2">
+                <span className="text-sm text-muted">{t("dateTime")}</span>
+                <span className="text-xs text-muted">{t("kstNotice")}</span>
+                <span className="relative">
+                  <select
+                    value={sessionId}
+                    onChange={(event) => setSessionId(event.target.value)}
+                    className="w-full appearance-none rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink"
+                  >
+                    {activity.sessions.map((session) => (
+                      <option key={session.id} value={session.id}>
+                        {session.dateLabel} {session.timeLabel}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
+                </span>
+              </label>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="border-b border-line-soft pb-3 text-base font-semibold text-ink">
+                {t("guestsHeading")}
+              </h2>
+              <div className="flex items-center justify-between rounded-xl border border-line-soft bg-panel px-4 py-3">
+                <span className="text-base text-ink">{t("guestCount")}</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    aria-label={t("decreaseGuests")}
+                    disabled={guests <= 1}
+                    onClick={() => setGuests((count) => Math.max(1, count - 1))}
+                    className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-primary-soft disabled:opacity-40"
+                  >
+                    <MinusIcon className="size-4" />
+                  </button>
+                  <span className="min-w-16 text-center font-display text-base font-semibold text-ink">
+                    {t("guests", { count: guests })}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={t("increaseGuests")}
+                    disabled={guests >= MAX_GUESTS}
+                    onClick={() => setGuests((count) => Math.min(MAX_GUESTS, count + 1))}
+                    className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-primary-soft disabled:opacity-40"
+                  >
+                    <PlusIcon className="size-4" />
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <h2 className="border-b border-line-soft pb-3 text-base font-semibold text-ink">
+                {t("specialRequest")}
+              </h2>
+              <label className="flex flex-col gap-2">
+                <span className="text-sm text-muted">{t("specialRequestDescription")}</span>
+                <textarea
+                  rows={3}
+                  placeholder={t("specialRequestPlaceholder")}
+                  value={specialRequest}
+                  onChange={(event) => setSpecialRequest(event.target.value)}
+                  className="w-full resize-none rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
+                />
+              </label>
+            </section>
+          </div>
+          <BookingPanel>
+            <section className="flex flex-col gap-3 rounded-xl bg-panel-raised p-4">
+              <h2 className="text-base font-medium text-ink">{t("priceDetails")}</h2>
+              <div className="flex items-center justify-between text-sm text-ink">
+                <span>
+                  {t("subtotal", { price: formatKrw(activity.price, locale), count: guests })}
+                </span>
+                <span>{formatKrw(subtotal, locale)}</span>
+              </div>
+              <div className="h-px w-full bg-line-soft" aria-hidden />
+              <div className="font-display text-2xl font-bold text-primary-strong">
+                {t("totalKrw", { amount: formatKrw(total, locale) })}
+              </div>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <p className="text-base text-ink">{t("refundPolicy")}</p>
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(event) => setAgreed(event.target.checked)}
+                  className="size-5 rounded accent-primary"
+                />
+                <span className="text-base text-ink">{t("agreement")}</span>
+              </label>
+            </section>
+
+            {!showConfirm && errorMessage ? (
               <p
                 role="alert"
-                className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
               >
                 {errorMessage}
               </p>
             ) : null}
-          </ConfirmDialog>
-        )}
-      </main>
+
+            <BottomActionBar>
+              <button
+                type="button"
+                disabled={!agreed || isSubmitting}
+                onClick={handleSubmitClick}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+              >
+                {isSubmitting ? t("processing") : t("submit")}
+                <ArrowRightIcon className="size-4" />
+              </button>
+            </BottomActionBar>
+          </BookingPanel>
+
+          {showConfirm && (
+            <ConfirmDialog
+              title={t("choosePaymentMethod")}
+              isPending={isSubmitting}
+              onClose={handleDialogClose}
+              confirmSlot={
+                <PayPalPaymentButtons
+                  createOrder={startPayPalOrder}
+                  onApprove={approvePayPalOrder}
+                  onCancel={handlePayPalCancel}
+                  onError={handlePayPalError}
+                  disabled={isSubmitting}
+                />
+              }
+            >
+              <p className="truncate text-sm text-muted">
+                {t("paymentSummary", {
+                  title: activity.title,
+                  schedule: selectedSession
+                    ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}`
+                    : "—",
+                  count: guests,
+                })}
+              </p>
+              <div className="mt-3 flex flex-col gap-3 rounded-xl bg-panel-raised p-4 text-sm text-ink">
+                <div className="font-display font-semibold text-ink">
+                  <p>{tPayment("totalApplicationAmount", { amount: formatKrw(total, locale) })}</p>
+                </div>
+                {paymentCharge ? (
+                  <div className="font-display text-base font-semibold text-primary-strong">
+                    <p>
+                      {tPayment("paypalCharge", {
+                        amount: formatCurrency(
+                          paymentCharge.amount,
+                          paymentCharge.currency,
+                          locale,
+                        ),
+                      })}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+              <p className="mt-3 text-xs text-muted">{tPayment("paypalUsdNotice")}</p>
+              {errorMessage ? (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+                >
+                  {errorMessage}
+                </p>
+              ) : null}
+            </ConfirmDialog>
+          )}
+        </main>
+      </PageContainer>
     </PayPalPaymentProvider>
   );
 }

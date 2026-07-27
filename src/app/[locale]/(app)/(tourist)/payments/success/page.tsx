@@ -1,4 +1,3 @@
-import { TopAppBar } from "@/components/layout/TopAppBar";
 import { PaymentSuccessContent } from "./payment-success-content";
 
 interface PaymentSuccessPageProps {
@@ -12,10 +11,5 @@ export default async function PaymentSuccessPage({
   const normalizedApplicationId =
     typeof applicationId === "string" && /^\d+$/.test(applicationId) ? applicationId : "";
 
-  return (
-    <div className="flex flex-1 flex-col">
-      <TopAppBar />
-      <PaymentSuccessContent applicationId={normalizedApplicationId} />
-    </div>
-  );
+  return <PaymentSuccessContent applicationId={normalizedApplicationId} />;
 }

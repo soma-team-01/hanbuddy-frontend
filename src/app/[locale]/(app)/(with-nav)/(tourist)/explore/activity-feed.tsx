@@ -21,7 +21,7 @@ export function ActivityFeed() {
     return (
       <div
         data-testid="activity-grid"
-        className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         <p className="sr-only">{t("loading")}</p>
         {Array.from({ length: 6 }, (_, index) => (

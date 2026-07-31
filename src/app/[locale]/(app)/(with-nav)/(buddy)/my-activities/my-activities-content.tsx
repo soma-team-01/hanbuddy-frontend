@@ -98,7 +98,7 @@ export function MyActivitiesContent() {
         {activities.map((activity, index) => (
           <article
             key={activity.activityId}
-            className="flex flex-col gap-3 rounded-2xl border border-line-soft bg-panel p-4 shadow-sm"
+            className="flex flex-col gap-3 rounded-3xl border border-line-soft bg-canvas-soft p-4 shadow-[0_8px_22px_rgba(61,45,43,0.06)]"
           >
             <Link
               href={`/my-activities/${activity.activityId}/applicants`}

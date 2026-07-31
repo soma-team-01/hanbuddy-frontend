@@ -80,7 +80,7 @@ export function ApplicantsContent({
   return (
     <>
       <div>
-        <h1 className="font-display text-2xl leading-8 font-bold text-ink md:text-3xl">
+        <h1 className="font-display text-3xl leading-8 font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
           {applications.activityTitle}
         </h1>
         <p className="mt-2 flex flex-wrap items-center gap-1 text-muted">
@@ -99,7 +99,7 @@ export function ApplicantsContent({
       ) : (
         <div
           data-testid="applicant-records"
-          className="mt-6 overflow-hidden rounded-2xl border border-line-soft bg-panel md:divide-y md:divide-line-soft"
+          className="mt-6 overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft md:divide-y md:divide-line-soft"
         >
           {applications.applicants.map((applicant) => (
             <article

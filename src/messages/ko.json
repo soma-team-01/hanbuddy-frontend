@@ -55,6 +55,8 @@
     "applications": "내 신청",
     "dashboard": "대시보드",
     "myActivities": "내 액티비티",
+    "applicants": "지원자",
+    "createActivity": "액티비티 만들기",
     "myPage": "마이페이지",
     "login": "로그인"
   },

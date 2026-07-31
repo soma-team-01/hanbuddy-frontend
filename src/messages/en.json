@@ -55,6 +55,8 @@
     "applications": "My Applications",
     "dashboard": "Dashboard",
     "myActivities": "My Activities",
+    "applicants": "Applicants",
+    "createActivity": "Create Activity",
     "myPage": "My Page",
     "login": "Log in"
   },

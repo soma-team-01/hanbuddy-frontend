@@ -112,7 +112,7 @@ export function DashboardContent() {
           return (
             <article
               key={activity.activityId}
-              className="flex flex-col gap-5 rounded-2xl border border-line-soft bg-panel p-4 shadow-sm"
+              className="flex flex-col gap-5 rounded-3xl border border-line-soft bg-canvas-soft p-5 shadow-[0_8px_22px_rgba(61,45,43,0.06)]"
             >
               <Link
                 href={headerHref}
@@ -206,7 +206,9 @@ export function DashboardContent() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl font-bold text-ink">{t("upcoming")}</h2>
+      <h2 className="font-display text-2xl font-extrabold tracking-[-0.03em] text-ink">
+        {t("upcoming")}
+      </h2>
       <div className="rounded-2xl bg-panel-raised p-3">
         <div className="flex items-center gap-2">
           <button

@@ -40,7 +40,7 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 const INPUT_CLASS =
-  "border-line-soft text-ink placeholder:text-muted/70 w-full rounded-xl border bg-panel px-4 py-3.5 text-base";
+  "border-line-soft text-ink placeholder:text-muted/70 w-full rounded-2xl border bg-canvas-soft px-4 py-4 text-base";
 const ADD_ROW_BUTTON_CLASS =
   "self-start rounded-full px-3 py-2 text-sm font-semibold text-primary-strong transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
 const INLINE_REMOVE_BUTTON_CLASS =
@@ -685,10 +685,34 @@ export function CreateActivityForm() {
   }
 
   return (
-    <div className="flex flex-1 flex-col pb-28 lg:pb-0">
+    <div className="flex flex-1 flex-col bg-canvas pb-28 lg:pb-0">
       <PageHeader onLeftClick={handleBack} />
       <main className="flex-1 py-6 md:py-10">
-        <PageContainer>
+        <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
+          <aside className="mb-8 hidden lg:block">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              Create activity
+            </p>
+            <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
+              Share your experience with travelers
+            </h2>
+            <ol className="mt-12 flex flex-col gap-4 text-sm">
+              {(["Basics", "Details & pricing", "Meeting point"] as const).map((step, index) => (
+                <li
+                  key={step}
+                  className={`flex items-center gap-3 ${currentStep === index + 1 ? "font-bold text-ink" : "text-muted"}`}
+                >
+                  <span
+                    className={`flex size-8 items-center justify-center rounded-full font-display ${currentStep === index + 1 ? "bg-primary text-white" : index + 1 < currentStep ? "bg-success text-white" : "border border-line-strong"}`}
+                  >
+                    {index + 1 < currentStep ? "✓" : index + 1}
+                  </span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+            <p className="mt-16 text-xs text-muted">● Draft saved just now</p>
+          </aside>
           <form
             ref={formRef}
             data-testid="create-activity-form"
@@ -701,7 +725,7 @@ export function CreateActivityForm() {
               <p className="font-display text-xs font-bold tracking-widest text-primary-strong uppercase">
                 {t("steps.progress", { current: currentStep, total: 3 })}
               </p>
-              <h1 className="mt-2 font-display text-3xl font-bold text-ink">
+              <h1 className="mt-2 font-display text-4xl font-extrabold tracking-[-0.04em] text-ink">
                 {t(stepContent.title)}
               </h1>
               <p className="mt-2 text-muted">{t(stepContent.description)}</p>

@@ -92,6 +92,20 @@
       "buddyDescription": "Meet people who know Korea best.",
       "confirmation": "Find your next Korean experience"
     },
+    "processSteps": {
+      "browse": {
+        "title": "Browse freely",
+        "description": "Every experience is open to view — no account needed to look around."
+      },
+      "apply": {
+        "title": "Pick a date & apply",
+        "description": "Choose a schedule, tell your buddy about you, and pay securely."
+      },
+      "meet": {
+        "title": "Meet your buddy",
+        "description": "Your buddy confirms and reaches you on your preferred messaging app."
+      }
+    },
     "experiences": {
       "gwangjangMarket": {
         "title": "Gwangjang Market",
@@ -390,6 +404,13 @@
     }
   },
   "CreateActivity": {
+    "sidebarEyebrow": "Create activity",
+    "sidebarTitle": "Share your experience with travelers",
+    "sidebarSteps": {
+      "basics": "Basics",
+      "details": "Details & pricing",
+      "meeting": "Meeting point"
+    },
     "steps": {
       "progress": "Step {current, number} of {total, number}",
       "basicsTitle": "Activity Basics",

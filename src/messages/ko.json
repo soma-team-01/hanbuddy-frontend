@@ -92,6 +92,20 @@
       "buddyDescription": "한국을 가장 잘 아는 사람을 만나보세요.",
       "confirmation": "다음 한국 경험을 찾아보세요"
     },
+    "processSteps": {
+      "browse": {
+        "title": "자유롭게 둘러보기",
+        "description": "회원가입 없이도 모든 경험을 살펴볼 수 있어요."
+      },
+      "apply": {
+        "title": "날짜를 고르고 신청하기",
+        "description": "일정을 선택하고 버디에게 자신을 소개한 뒤 안전하게 결제하세요."
+      },
+      "meet": {
+        "title": "버디 만나기",
+        "description": "버디가 신청을 확인하고 원하는 메신저로 연락드려요."
+      }
+    },
     "experiences": {
       "gwangjangMarket": {
         "title": "광장시장",
@@ -390,6 +404,13 @@
     }
   },
   "CreateActivity": {
+    "sidebarEyebrow": "액티비티 만들기",
+    "sidebarTitle": "여행자와 나의 경험을 나눠보세요",
+    "sidebarSteps": {
+      "basics": "기본 정보",
+      "details": "상세 정보 및 가격",
+      "meeting": "만나는 장소"
+    },
     "steps": {
       "progress": "{total, number}단계 중 {current, number}단계",
       "basicsTitle": "액티비티 기본 정보",

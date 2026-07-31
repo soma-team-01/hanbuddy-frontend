@@ -77,6 +77,8 @@ const STEP_CONTENT = {
   },
 } as const satisfies Record<CreateActivityStep, { title: string; description: string }>;
 
+const SIDEBAR_STEPS = ["basics", "details", "meeting"] as const;
+
 export type CreateActivityErrorKey = keyof (typeof messages)["CreateActivity"]["errors"];
 
 interface CreateActivityValidationInput {
@@ -691,13 +693,13 @@ export function CreateActivityForm() {
         <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
           <aside className="mb-8 hidden lg:block">
             <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-              Create activity
+              {t("sidebarEyebrow")}
             </p>
             <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
-              Share your experience with travelers
+              {t("sidebarTitle")}
             </h2>
             <ol className="mt-12 flex flex-col gap-4 text-sm">
-              {(["Basics", "Details & pricing", "Meeting point"] as const).map((step, index) => (
+              {SIDEBAR_STEPS.map((step, index) => (
                 <li
                   key={step}
                   className={`flex items-center gap-3 ${currentStep === index + 1 ? "font-bold text-ink" : "text-muted"}`}
@@ -707,7 +709,7 @@ export function CreateActivityForm() {
                   >
                     {index + 1 < currentStep ? "✓" : index + 1}
                   </span>
-                  {step}
+                  {t(`sidebarSteps.${step}`)}
                 </li>
               ))}
             </ol>

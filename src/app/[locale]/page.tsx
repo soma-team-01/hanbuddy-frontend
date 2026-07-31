@@ -11,6 +11,12 @@ const experiences = [
   { img: "/images/activities/tea-ceremony.jpg", messageKey: "teaCeremony" },
 ] as const;
 
+const processSteps = [
+  { titleKey: "processSteps.browse.title", descriptionKey: "processSteps.browse.description" },
+  { titleKey: "processSteps.apply.title", descriptionKey: "processSteps.apply.description" },
+  { titleKey: "processSteps.meet.title", descriptionKey: "processSteps.meet.description" },
+] as const;
+
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface LandingPageProps {
@@ -118,22 +124,16 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section className="bg-canvas-soft py-16 md:py-20">
         <PageContainer className="grid gap-5 md:grid-cols-3">
-          {["Browse freely", "Pick a date & apply", "Meet your buddy"].map((title, index) => (
+          {processSteps.map(({ titleKey, descriptionKey }, index) => (
             <article
-              key={title}
+              key={titleKey}
               className="rounded-2xl border border-line-soft bg-panel-raised p-7"
             >
               <span className="flex size-10 items-center justify-center rounded-xl bg-primary-soft font-display font-bold text-primary">
                 {index + 1}
               </span>
-              <h2 className="mt-5 font-display text-lg font-bold">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                {index === 0
-                  ? "Every experience is open to view — no account needed to look around."
-                  : index === 1
-                    ? "Choose a schedule, tell your buddy about you, and pay securely."
-                    : "Your buddy confirms and reaches you on your preferred messaging app."}
-              </p>
+              <h2 className="mt-5 font-display text-lg font-bold">{t(titleKey)}</h2>
+              <p className="mt-2 text-sm leading-6 text-muted">{t(descriptionKey)}</p>
             </article>
           ))}
         </PageContainer>

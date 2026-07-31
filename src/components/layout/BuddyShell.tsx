@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BuddySidebar } from "./BuddySidebar";
+import { BuddySidebar } from "@/components/layout/BuddySidebar";
 
 export function BuddyShell({ children }: Readonly<{ children: ReactNode }>) {
   return (

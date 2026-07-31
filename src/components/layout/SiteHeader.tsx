@@ -27,6 +27,12 @@ const DESTINATIONS = {
   ],
 } as const;
 
+const LOGO_DESTINATIONS = {
+  tourist: "/explore",
+  buddy: "/dashboard",
+  guest: "/",
+} as const;
+
 interface SiteHeaderProps {
   role?: SiteRole;
   authenticated?: boolean;
@@ -39,7 +45,7 @@ export function SiteHeader({
   const t = useTranslations("Navigation");
   const pathname = usePathname();
   const destinations = DESTINATIONS[role ?? "guest"];
-  const logoHref = role === "buddy" ? "/dashboard" : role === "tourist" ? "/explore" : "/";
+  const logoHref = LOGO_DESTINATIONS[role ?? "guest"];
 
   const navigationLinks = destinations.map(({ href, labelKey }) => {
     const isActive = pathname === href || pathname.startsWith(`${href}/`);

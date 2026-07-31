@@ -11,7 +11,6 @@ export type SiteRole = "tourist" | "buddy" | null;
 
 const DESTINATIONS = {
   tourist: [
-    { href: "/home", labelKey: "home" },
     { href: "/explore", labelKey: "explore" },
     { href: "/applications", labelKey: "applications" },
     { href: "/my-page", labelKey: "myPage" },

@@ -26,6 +26,7 @@ describe("SiteHeader", () => {
     renderWithIntl(<SiteHeader role="tourist" />);
 
     const primaryNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
+    expect(within(primaryNavigation).queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
     expect(within(primaryNavigation).getByRole("link", { name: "Explore" })).toHaveAttribute(
       "href",
       "/en/explore",

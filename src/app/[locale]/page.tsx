@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+
+const experiences = [
+  { img: "/images/activities/gwangjang-market.jpg", messageKey: "gwangjangMarket" },
+  { img: "/images/activities/hanok-hero.jpg", messageKey: "bukchonHanok" },
+  { img: "/images/activities/tea-ceremony.jpg", messageKey: "teaCeremony" },
+] as const;
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
@@ -121,6 +128,33 @@ export default async function LandingPage({ params }: LandingPageProps) {
               </p>
             </article>
           ))}
+        </PageContainer>
+      </section>
+
+      <section className="border-t border-line-soft py-12">
+        <PageContainer className="grid gap-5 sm:grid-cols-3">
+          {experiences.map((experience, index) => {
+            const title = t(`experiences.${experience.messageKey}.title`);
+            return (
+              <article
+                key={experience.messageKey}
+                className="relative aspect-[5/3] overflow-hidden rounded-2xl bg-panel"
+              >
+                <Image
+                  src={experience.img}
+                  alt={title}
+                  fill
+                  loading={index === 0 ? "eager" : undefined}
+                  sizes="(min-width: 1024px) 18vw, (min-width: 768px) 30vw, 256px"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
+                <p className="absolute right-4 bottom-4 font-display text-sm font-bold text-white">
+                  {title}
+                </p>
+              </article>
+            );
+          })}
         </PageContainer>
       </section>
 

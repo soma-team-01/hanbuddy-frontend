@@ -13,7 +13,7 @@ export function ActivityCard({
   const t = useTranslations("Explore");
 
   return (
-    <article className="group w-full overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft shadow-[0_4px_14px_rgba(61,45,43,0.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="group w-full overflow-hidden rounded-2xl border border-line-soft bg-panel shadow-[0_4px_14px_rgba(61,45,43,0.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-lg">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-panel-raised">
         <Image
           src={activity.imageUrl}

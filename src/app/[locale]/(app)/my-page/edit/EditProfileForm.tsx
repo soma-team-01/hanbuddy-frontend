@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Avatar } from "@/components/ui/Avatar";
@@ -230,7 +231,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             form="edit-profile-form"
             type="submit"
             disabled={isSaving}
-            className="rounded-lg px-3 py-2 font-display text-sm font-bold text-primary-strong enabled:hover:bg-primary-soft disabled:opacity-60"
+            className="hidden rounded-lg px-3 py-2 font-display text-sm font-bold text-primary-strong enabled:hover:bg-primary-soft disabled:opacity-60 lg:block"
           >
             {isSaving ? t("saving") : t("save")}
           </button>
@@ -322,6 +323,18 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
               </p>
             ) : null}
           </form>
+          <div className="mx-auto mt-6 w-full max-w-[800px] lg:hidden">
+            <BottomActionBar>
+              <button
+                form="edit-profile-form"
+                type="submit"
+                disabled={isSaving}
+                className="flex h-12 w-full items-center justify-center rounded-xl bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+              >
+                {isSaving ? t("saving") : t("save")}
+              </button>
+            </BottomActionBar>
+          </div>
         </PageContainer>
       </main>
     </div>

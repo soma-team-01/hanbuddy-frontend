@@ -199,6 +199,7 @@
     "saveFailed": "프로필을 저장하지 못했습니다. 다시 시도해 주세요.",
     "loadFailed": "프로필을 불러오지 못했습니다.",
     "save": "저장",
+    "saveOnMobile": "프로필 저장",
     "saving": "저장 중..."
   },
   "Explore": {

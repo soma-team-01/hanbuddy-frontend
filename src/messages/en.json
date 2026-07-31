@@ -199,6 +199,7 @@
     "saveFailed": "Could not save your profile. Please try again.",
     "loadFailed": "Could not load your profile.",
     "save": "Save",
+    "saveOnMobile": "Save profile",
     "saving": "Saving..."
   },
   "Explore": {

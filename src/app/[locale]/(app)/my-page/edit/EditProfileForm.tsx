@@ -329,6 +329,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                 form="edit-profile-form"
                 type="submit"
                 disabled={isSaving}
+                aria-label={t("saveOnMobile")}
                 className="flex h-12 w-full items-center justify-center rounded-xl bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
               >
                 {isSaving ? t("saving") : t("save")}

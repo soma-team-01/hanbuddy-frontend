@@ -80,9 +80,9 @@ export function ApplicantsContent({
   return (
     <>
       <div>
-        <h1 className="font-display text-3xl leading-8 font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
+        <h2 className="font-display text-3xl leading-8 font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
           {applications.activityTitle}
-        </h1>
+        </h2>
         <p className="mt-2 flex flex-wrap items-center gap-1 text-muted">
           <span>{scheduleLabel}</span>
           <span aria-hidden>•</span>

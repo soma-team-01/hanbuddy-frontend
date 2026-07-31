@@ -39,7 +39,7 @@ export function BuddySidebar() {
         <Link
           href="/my-activities/create"
           aria-label={t("createActivity")}
-          className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-bold text-white shadow-[0_10px_20px_rgba(209,63,50,0.2)] hover:bg-primary-hover"
+          className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-bold text-on-primary shadow-[0_10px_20px_rgba(209,63,50,0.2)] hover:bg-primary-hover"
         >
           <PlusIcon className="size-4" />
           {t("createActivity")}

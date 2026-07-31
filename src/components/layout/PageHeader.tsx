@@ -51,7 +51,7 @@ export function PageHeader({
   if (!title && !description && !leftSlot && !action) return null;
 
   return (
-    <header className="bg-canvas">
+    <div data-testid="page-header" className="bg-canvas">
       <PageContainer className="flex min-h-28 items-end gap-3 py-6 md:min-h-36 md:py-8">
         {leftSlot}
         <div className="min-w-0 flex-1">
@@ -66,6 +66,6 @@ export function PageHeader({
         </div>
         {action ? <div className="flex shrink-0 items-center justify-end">{action}</div> : null}
       </PageContainer>
-    </header>
+    </div>
   );
 }

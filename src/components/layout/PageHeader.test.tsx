@@ -7,7 +7,7 @@ describe("PageHeader", () => {
   it("renders page context without behaving as the sticky global header", () => {
     renderWithIntl(<PageHeader title="Applicants" />);
 
-    expect(screen.getByRole("banner")).not.toHaveClass("sticky", "top-0");
+    expect(screen.getByTestId("page-header")).not.toHaveClass("sticky", "top-0");
     expect(screen.getByRole("heading", { name: "Applicants" })).toHaveClass("text-ink");
   });
 

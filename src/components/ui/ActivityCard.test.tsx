@@ -29,4 +29,10 @@ describe("ActivityCard", () => {
     expect(screen.getByRole("heading", { name: "Market walk" })).toHaveClass("text-ink");
     expect(screen.getByText("Seoul")).toHaveClass("text-muted");
   });
+
+  it("loads the card image eagerly when requested", () => {
+    renderWithIntl(<ActivityCard activity={activity} eagerImage />);
+
+    expect(screen.getByRole("img", { name: "Market walk" })).toHaveAttribute("loading", "eager");
+  });
 });

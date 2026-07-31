@@ -23,8 +23,11 @@ export function LocaleSwitcher({
       onClick={() => router.replace(pathname, { locale: nextLocale })}
       className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-sm font-semibold text-ink transition-colors hover:bg-primary-soft ${className ?? ""}`}
     >
-      <GlobeIcon className="size-5" />
-      <span aria-hidden>{nextLocale.toUpperCase()}</span>
+      <GlobeIcon className="size-4" />
+      <span aria-hidden>{locale.toUpperCase()}</span>
+      <span aria-hidden className="text-muted">
+        {nextLocale.toUpperCase()}
+      </span>
     </button>
   );
 }

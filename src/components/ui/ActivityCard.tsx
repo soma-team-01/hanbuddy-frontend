@@ -13,7 +13,7 @@ export function ActivityCard({
   const t = useTranslations("Explore");
 
   return (
-    <article className="group w-full overflow-hidden rounded-2xl border border-line-soft bg-panel shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
+    <article className="group w-full overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft shadow-[0_4px_14px_rgba(61,45,43,0.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-lg">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-panel-raised">
         <Image
           src={activity.imageUrl}
@@ -30,12 +30,12 @@ export function ActivityCard({
           </div>
         ) : null}
       </div>
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 p-5">
         <div className="flex flex-col gap-1">
-          <h2 className="truncate font-display text-xl leading-7 font-semibold text-ink">
+          <h2 className="truncate font-display text-lg leading-6 font-bold text-ink">
             {activity.title}
           </h2>
-          <p className="flex items-center gap-1 text-base text-muted">
+          <p className="flex items-center gap-1 text-sm text-muted">
             <MapPinIcon className="size-4 shrink-0" />
             <span className="truncate text-muted">{activity.location}</span>
           </p>
@@ -46,7 +46,7 @@ export function ActivityCard({
             <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={32} />
             <p className="font-display text-sm font-semibold text-ink">{activity.host.name}</p>
           </div>
-          <p className="font-display text-lg font-bold text-primary-strong">
+          <p className="font-display text-lg font-bold text-ink">
             {t("perPerson", { price: formatKrw(activity.price, locale) })}
           </p>
         </div>

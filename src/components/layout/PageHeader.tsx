@@ -51,12 +51,12 @@ export function PageHeader({
   if (!title && !description && !leftSlot && !action) return null;
 
   return (
-    <header className="border-b border-line-soft bg-canvas">
-      <PageContainer className="flex min-h-20 items-center gap-3 py-4 md:min-h-24">
+    <header className="bg-canvas">
+      <PageContainer className="flex min-h-28 items-end gap-3 py-6 md:min-h-36 md:py-8">
         {leftSlot}
         <div className="min-w-0 flex-1">
           {title ? (
-            <h1 className="font-display text-2xl font-bold tracking-tight text-ink md:text-3xl">
+            <h1 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
               {title}
             </h1>
           ) : null}

@@ -11,16 +11,21 @@ export type SiteRole = "tourist" | "buddy" | null;
 
 const DESTINATIONS = {
   tourist: [
+    { href: "/home", labelKey: "home" },
     { href: "/explore", labelKey: "explore" },
     { href: "/applications", labelKey: "applications" },
     { href: "/my-page", labelKey: "myPage" },
   ],
   buddy: [
+    { href: "/home", labelKey: "home" },
     { href: "/dashboard", labelKey: "dashboard" },
     { href: "/my-activities", labelKey: "myActivities" },
     { href: "/my-page", labelKey: "myPage" },
   ],
-  guest: [{ href: "/explore", labelKey: "explore" }],
+  guest: [
+    { href: "/", labelKey: "home" },
+    { href: "/explore", labelKey: "explore" },
+  ],
 } as const;
 
 interface SiteHeaderProps {
@@ -46,7 +51,7 @@ export function SiteHeader({
         aria-current={isActive ? "page" : undefined}
         className={`border-b-2 px-1 py-3 text-sm font-semibold transition-colors ${
           isActive
-            ? "border-primary text-primary-strong"
+            ? "border-primary text-ink"
             : "border-transparent text-muted hover:border-primary-soft hover:text-ink"
         }`}
       >
@@ -57,7 +62,7 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft bg-canvas/95 backdrop-blur">
-      <PageContainer className="flex h-16 items-center justify-between gap-5 lg:h-18">
+      <PageContainer className="flex h-[76px] items-center justify-between gap-5">
         <Link href="/" aria-label="HanBuddy" className="flex shrink-0 items-center gap-2">
           <Image
             src="/images/brand/logo-borderless.webp"
@@ -67,21 +72,21 @@ export function SiteHeader({
             priority
             className="size-9"
           />
-          <span className="font-display text-xl font-extrabold tracking-[-0.04em] text-primary-strong">
+          <span className="font-display text-xl font-extrabold tracking-[-0.04em] text-ink">
             HanBuddy
           </span>
         </Link>
 
-        <nav aria-label={t("primaryNavigation")} className="hidden items-center gap-7 lg:flex">
+        <nav aria-label={t("primaryNavigation")} className="hidden items-center gap-8 lg:flex">
           {navigationLinks}
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <LocaleSwitcher />
+          <LocaleSwitcher className="bg-primary-soft px-4" />
           {!authenticated ? (
             <Link
               href="/login"
-              className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+              className="inline-flex min-h-11 items-center rounded-full border border-line-strong bg-canvas-soft px-6 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong"
             >
               {t("login")}
             </Link>

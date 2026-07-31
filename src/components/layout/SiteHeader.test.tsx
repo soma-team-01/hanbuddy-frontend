@@ -98,7 +98,7 @@ describe("SiteHeader", () => {
     mockedUsePathname.mockReturnValue("/applications");
     renderWithIntl(<SiteHeader role="tourist" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "한국어로 변경" }));
+    fireEvent.click(screen.getByRole("button", { name: "Switch to Korean" }));
 
     expect(replace).toHaveBeenCalledWith("/ko/applications");
   });

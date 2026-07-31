@@ -2,12 +2,11 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { HistoryIcon, HomeIcon, PlusIcon, UsersIcon, UserIcon } from "@/components/ui/icons";
+import { HistoryIcon, HomeIcon, PlusIcon, UserIcon } from "@/components/ui/icons";
 
 const LINKS = [
   { href: "/dashboard", labelKey: "dashboard", Icon: HomeIcon },
   { href: "/my-activities", labelKey: "myActivities", Icon: HistoryIcon },
-  { href: "/my-activities", labelKey: "applicants", Icon: UsersIcon },
   { href: "/my-page", labelKey: "myPage", Icon: UserIcon },
 ] as const;
 
@@ -23,10 +22,7 @@ export function BuddySidebar() {
         </p>
         <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-2">
           {LINKS.map(({ href, labelKey, Icon }) => {
-            const active =
-              labelKey === "applicants"
-                ? pathname.startsWith("/my-activities/")
-                : pathname === href || pathname.startsWith(`${href}/`);
+            const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
                 key={labelKey}

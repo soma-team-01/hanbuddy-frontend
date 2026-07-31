@@ -40,6 +40,7 @@ export function SiteHeader({
   const t = useTranslations("Navigation");
   const pathname = usePathname();
   const destinations = DESTINATIONS[role ?? "guest"];
+  const logoHref = role === "buddy" ? "/dashboard" : role === "tourist" ? "/explore" : "/";
 
   const navigationLinks = destinations.map(({ href, labelKey }) => {
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
@@ -63,7 +64,7 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft bg-canvas/95 backdrop-blur">
       <PageContainer className="flex h-[76px] items-center justify-between gap-5">
-        <Link href="/" aria-label="HanBuddy" className="flex shrink-0 items-center gap-2">
+        <Link href={logoHref} aria-label="HanBuddy" className="flex shrink-0 items-center gap-2">
           <Image
             src="/images/brand/logo-borderless.webp"
             alt=""

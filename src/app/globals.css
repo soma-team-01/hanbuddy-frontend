@@ -74,6 +74,29 @@ button:not(:disabled),
   }
 }
 
+@keyframes landing-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-reveal {
+  animation: landing-reveal 700ms var(--motion-ease-out) both;
+}
+
+.landing-reveal-delay-1 {
+  animation-delay: 100ms;
+}
+
+.landing-reveal-delay-2 {
+  animation-delay: 260ms;
+}
+
 @keyframes motion-dialog-in {
   from {
     opacity: 0;
@@ -129,6 +152,7 @@ dialog.motion-dialog[open]::backdrop {
 
 @media (prefers-reduced-motion: reduce) {
   .motion-reveal,
+  .landing-reveal,
   dialog.motion-dialog[open],
   dialog.motion-dialog[open]::backdrop {
     opacity: 1;

@@ -37,7 +37,7 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "My Page" })).toHaveAttribute("href", "/en/my-page");
     expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Explore" })).toHaveClass("border-b-2");
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/explore");
   });
 
   it("renders buddy destinations", () => {
@@ -59,6 +59,18 @@ describe("SiteHeader", () => {
       "href",
       "/en/my-activities",
     );
+  });
+
+  it("routes the buddy logo to the dashboard", () => {
+    renderWithIntl(<SiteHeader role="buddy" />);
+
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/dashboard");
+  });
+
+  it("keeps the landing route for guests", () => {
+    renderWithIntl(<SiteHeader />);
+
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
   });
 
   it("opens an accessible mobile drawer, restores focus, and unlocks scrolling on Escape", () => {

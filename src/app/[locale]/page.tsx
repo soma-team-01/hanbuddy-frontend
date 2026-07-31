@@ -40,11 +40,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
-      <section className="relative overflow-hidden bg-primary-soft/60">
+      <section className="landing-hero relative overflow-hidden bg-primary-soft/60">
         <div className="pointer-events-none absolute -top-40 right-[-8%] size-[520px] rounded-full bg-primary/10" />
         <div className="pointer-events-none absolute right-[18%] bottom-[-260px] size-[500px] rounded-full bg-primary/5" />
         <PageContainer className="grid min-h-[620px] items-center gap-12 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.9fr)] lg:gap-16 lg:py-20">
-          <section className="relative z-10 max-w-2xl min-w-0">
+          <section className="landing-reveal landing-reveal-delay-1 relative z-10 max-w-2xl min-w-0">
             <p className="mb-5 font-display text-xs font-bold tracking-[0.3em] text-primary uppercase">
               {t("eyebrow")}
             </p>
@@ -70,7 +70,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
             </div>
           </section>
 
-          <section aria-label={t("eyebrow")} className="relative min-h-[390px] min-w-0">
+          <section
+            aria-label={t("eyebrow")}
+            className="landing-reveal landing-reveal-delay-2 relative min-h-[390px] min-w-0"
+          >
             <div className="absolute top-5 right-0 w-[min(100%,300px)] rotate-[-2deg] rounded-2xl bg-canvas-soft p-5 shadow-[0_18px_40px_rgba(61,45,43,0.14)] sm:right-6">
               <div className="mb-5 flex gap-2 text-xl">
                 <span>🍵</span>

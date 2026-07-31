@@ -181,6 +181,7 @@
     "description": "Discover Korea with a local buddy by your side.",
     "loading": "Loading activities...",
     "empty": "No activities available yet.",
+    "emptyDescription": "Local buddies are preparing new experiences. Check back soon!",
     "loadError": "Could not load activities.",
     "perPerson": "{price} per person"
   },

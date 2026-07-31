@@ -160,20 +160,48 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
           data-testid="activity-detail-layout"
           className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
         >
-          <article className="overflow-hidden rounded-2xl border border-line-soft bg-panel shadow-sm">
-            <div className="relative aspect-[16/10] w-full md:aspect-[16/9]">
-              <Image
-                src={activity.heroImageUrl}
-                alt={activity.title}
-                fill
-                loading="eager"
-                sizes="(max-width: 1023px) 100vw, 800px"
-                className="object-cover"
-              />
+          <article className="min-w-0">
+            <div className="grid h-[320px] grid-cols-2 gap-2 overflow-hidden rounded-3xl md:h-[390px] md:grid-cols-[1.4fr_0.6fr]">
+              <div className="relative row-span-2 min-h-0">
+                <Image
+                  src={activity.heroImageUrl}
+                  alt={activity.title}
+                  fill
+                  loading="eager"
+                  sizes="(max-width: 1023px) 70vw, 560px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="relative hidden min-h-0 bg-panel md:block">
+                {activity.images?.[1] ? (
+                  <Image
+                    src={activity.images[1]}
+                    alt=""
+                    fill
+                    sizes="280px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="absolute inset-0 bg-panel-raised" />
+                )}
+              </div>
+              <div className="relative hidden min-h-0 bg-panel md:block">
+                {activity.images?.[2] ? (
+                  <Image
+                    src={activity.images[2]}
+                    alt=""
+                    fill
+                    sizes="280px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="absolute inset-0 bg-panel" />
+                )}
+              </div>
             </div>
-            <div className="flex flex-col gap-10 p-5 md:p-8">
+            <div className="flex flex-col gap-10 py-8 md:py-10">
               <section className="flex flex-col gap-2">
-                <h1 className="font-display text-3xl leading-tight font-bold tracking-tight text-ink md:text-4xl">
+                <h1 className="font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-5xl">
                   {activity.title}
                 </h1>
                 <p className="text-muted">{activity.description}</p>
@@ -185,7 +213,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
               </section>
 
               <section className="flex flex-col gap-4 border-t border-line-soft pt-6 md:grid md:grid-cols-2">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5">
                   <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={48} />
                   <div>
                     <h3 className="font-display text-sm font-bold text-ink">
@@ -194,7 +222,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
                     <p className="text-xs text-muted">{activity.host.bio}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5">
                   <span className="flex size-12 items-center justify-center rounded-lg bg-primary-soft">
                     <MapPinIcon className="size-5 text-primary-strong" />
                   </span>
@@ -239,7 +267,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
                   {activity.sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="w-64 shrink-0 rounded-xl border border-line-soft bg-panel-raised p-4"
+                      className="w-64 shrink-0 rounded-2xl border border-line-soft bg-canvas-soft p-4"
                     >
                       <p className="font-display text-sm font-bold text-ink">{session.dateLabel}</p>
                       <p className="mt-1 text-xs text-muted">{session.timeLabel}</p>
@@ -275,7 +303,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
               </div>
               <Link
                 href={`/activities/${activity.id}/book`}
-                className="flex h-11 items-center justify-center rounded-xl bg-primary px-8 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+                className="flex h-12 items-center justify-center rounded-full bg-primary px-8 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
               >
                 {t("bookNow")}
               </Link>

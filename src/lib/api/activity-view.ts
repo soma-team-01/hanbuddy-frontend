@@ -17,6 +17,7 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     district: summary.meetingPointName,
     imageUrl: summary.thumbnailImageUrl,
     heroImageUrl: summary.thumbnailImageUrl,
+    images: summary.thumbnailImageUrl ? [summary.thumbnailImageUrl] : [],
     price: summary.price,
     host: {
       name: summary.buddyName,
@@ -47,6 +48,7 @@ export function mapTouristActivityDetailToActivity(
     ...mapTouristActivitySummaryToActivity(detail),
     imageUrl: detail.thumbnailImageUrl || heroImageUrl,
     heroImageUrl,
+    images: images.map(({ imageUrl }) => imageUrl),
     host: {
       name: detail.buddyName,
       bio: hostBio,

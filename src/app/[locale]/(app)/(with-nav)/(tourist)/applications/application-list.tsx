@@ -119,7 +119,7 @@ function ApplicationCard({
   }
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-line-soft bg-panel p-4 shadow-sm md:p-5">
+    <article className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 shadow-[0_8px_22px_rgba(61,45,43,0.06)] md:p-6">
       <div className="flex items-center justify-between">
         <StatusBadge status={application.status} />
         <span className="text-xs text-muted">{application.dateLabel}</span>
@@ -266,7 +266,7 @@ export function ApplicationList({
           );
         })}
       </div>
-      <div data-testid="application-list" className="grid gap-5 lg:grid-cols-2">
+      <div data-testid="application-list" className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
         {visibleApplications.map((application) => (
           <ApplicationCard
             key={application.id}

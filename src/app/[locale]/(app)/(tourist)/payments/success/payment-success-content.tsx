@@ -21,7 +21,7 @@ function RecoveryState({ message }: Readonly<{ message: string }>) {
 
   return (
     <PageContainer className="flex flex-1 items-center justify-center py-10 pb-32 text-center md:py-16 lg:pb-16">
-      <main className="w-full max-w-2xl rounded-2xl border border-line-soft bg-panel p-6 shadow-sm md:p-10">
+      <main className="w-full max-w-2xl rounded-3xl border border-line-soft bg-canvas-soft p-6 shadow-[0_18px_45px_rgba(61,45,43,0.1)] md:p-10">
         <p role="alert" className="text-base text-muted">
           {message}
         </p>
@@ -84,10 +84,10 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
     <PageContainer className="flex flex-1 items-center justify-center py-10 pb-44 md:py-16 lg:pb-16">
       <main
         data-testid="payment-result"
-        className="w-full max-w-2xl rounded-2xl border border-line-soft bg-panel p-6 shadow-sm md:p-10"
+        className="w-full max-w-2xl rounded-2xl rounded-3xl border border-line-soft bg-canvas-soft p-6 shadow-[0_18px_45px_rgba(61,45,43,0.1)] md:p-10"
       >
         <section className="flex flex-col items-center text-center">
-          <span className="flex size-20 items-center justify-center rounded-full bg-success/15 text-success">
+          <span className="flex size-20 items-center justify-center rounded-full bg-success-soft text-success">
             <CheckCircleIcon className="size-10" aria-hidden />
           </span>
           <h1 className="mt-6 font-display text-3xl font-bold text-ink">{t("complete")}</h1>

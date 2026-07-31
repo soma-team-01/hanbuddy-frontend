@@ -207,7 +207,16 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
           className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
         >
           <div className="space-y-8">
-            <section className="overflow-hidden rounded-2xl border border-line-soft bg-panel p-4 shadow-sm md:p-5">
+            <div className="mb-2 flex items-center gap-3 text-sm font-semibold text-primary-strong">
+              <span className="flex size-8 items-center justify-center rounded-full bg-primary text-white">
+                1
+              </span>
+              <span className="h-px w-10 bg-line-strong" />
+              <span className="text-muted">2&nbsp; Payment</span>
+              <span className="h-px w-10 bg-line-strong" />
+              <span className="text-muted">3&nbsp; Confirmed</span>
+            </div>
+            <section className="overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft p-4 shadow-[0_12px_30px_rgba(61,45,43,0.06)] md:p-5">
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl">
                 <Image
                   src={activity.heroImageUrl}
@@ -249,7 +258,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
                   <select
                     value={sessionId}
                     onChange={(event) => setSessionId(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink"
+                    className="w-full appearance-none rounded-2xl border border-line-soft bg-canvas-soft px-4 py-4 text-base text-ink"
                   >
                     {activity.sessions.map((session) => (
                       <option key={session.id} value={session.id}>
@@ -266,7 +275,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
               <h2 className="border-b border-line-soft pb-3 text-base font-semibold text-ink">
                 {t("guestsHeading")}
               </h2>
-              <div className="flex items-center justify-between rounded-xl border border-line-soft bg-panel px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl border border-line-soft bg-canvas-soft px-4 py-4">
                 <span className="text-base text-ink">{t("guestCount")}</span>
                 <div className="flex items-center gap-4">
                   <button
@@ -305,13 +314,13 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
-                  className="w-full resize-none rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
+                  className="w-full resize-none rounded-2xl border border-line-soft bg-canvas-soft px-4 py-4 text-base text-ink placeholder:text-muted/70"
                 />
               </label>
             </section>
           </div>
           <BookingPanel>
-            <section className="flex flex-col gap-3 rounded-xl bg-panel-raised p-4">
+            <section className="flex flex-col gap-3 rounded-2xl border border-line-soft bg-canvas-soft p-5 shadow-[0_12px_30px_rgba(61,45,43,0.08)]">
               <h2 className="text-base font-medium text-ink">{t("priceDetails")}</h2>
               <div className="flex items-center justify-between text-sm text-ink">
                 <span>
@@ -352,7 +361,7 @@ export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
                 type="button"
                 disabled={!agreed || isSubmitting}
                 onClick={handleSubmitClick}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-base font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
               >
                 {isSubmitting ? t("processing") : t("submit")}
                 <ArrowRightIcon className="size-4" />

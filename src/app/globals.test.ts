@@ -6,7 +6,7 @@ const stylesheet = readFileSync(resolve("src/app/globals.css"), "utf8");
 
 describe("global responsive brand foundation", () => {
   it("defines the exact landing warm-red semantic tokens", () => {
-    expect(stylesheet).toContain("--color-canvas: #fffaf7");
+    expect(stylesheet).toContain("--color-canvas: #ffffff");
     expect(stylesheet).toContain("--color-canvas-soft: #ffffff");
     expect(stylesheet).toContain("--color-primary: #d13f32");
     expect(stylesheet).toContain("--color-primary-hover: #b9342b");

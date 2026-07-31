@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-canvas: #fffaf7;
+  --color-canvas: #ffffff;
   --color-canvas-soft: #ffffff;
   --color-primary: #d13f32;
   --color-primary-hover: #b9342b;

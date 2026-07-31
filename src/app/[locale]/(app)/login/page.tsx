@@ -40,7 +40,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   const errorCode = errorValue ? parseAuthErrorCode(errorValue) : null;
 
   return (
-    <main className="flex w-full flex-1 flex-col bg-primary-soft/35">
+    <main className="flex w-full flex-1 flex-col bg-canvas-soft">
       <PageContainer className="flex flex-1 items-center justify-center py-12 md:py-20">
         <div className="relative w-full max-w-[460px] rounded-3xl border border-line-soft bg-canvas-soft px-6 py-10 text-center shadow-[0_20px_50px_rgba(61,45,43,0.12)] md:px-11 md:py-12">
           <div className="mx-auto mb-6 flex size-14 items-center justify-center rounded-2xl bg-primary font-display text-2xl font-extrabold text-white">

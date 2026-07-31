@@ -411,7 +411,7 @@
     "sidebarSteps": {
       "basics": "기본 정보",
       "details": "상세 정보 및 가격",
-      "meeting": "만나는 장소"
+      "meeting": "만남 정보"
     },
     "steps": {
       "progress": "{total, number}단계 중 {current, number}단계",

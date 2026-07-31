@@ -70,7 +70,7 @@ export function MessagingAppField({
               type="button"
               aria-pressed={isSelected}
               onClick={() => onAppChange(key)}
-              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-primary-soft/60 ${
+              className={`flex items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong ${
                 index > 0 ? "border-t border-line-soft" : ""
               }`}
             >

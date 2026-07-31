@@ -711,7 +711,6 @@ export function CreateActivityForm() {
                 </li>
               ))}
             </ol>
-            <p className="mt-16 text-xs text-muted">● Draft saved just now</p>
           </aside>
           <form
             ref={formRef}

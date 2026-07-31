@@ -12,7 +12,15 @@ export default async function ExplorePage({
 
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        action={
+          <span className="hidden rounded-full border border-dashed border-line-strong px-4 py-2 text-xs text-muted md:inline-flex">
+            Search & filters — coming soon
+          </span>
+        }
+      />
       <PageContainer className="flex-1 py-6 md:py-10">
         <main>
           <ActivityFeed />

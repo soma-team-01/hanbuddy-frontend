@@ -231,10 +231,30 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   }
 
   return (
-    <div className="flex flex-1 flex-col pb-28 lg:pb-0">
+    <div className="flex flex-1 flex-col bg-canvas pb-28 lg:pb-0">
       <PageHeader title={t("title")} closeHref="/login" />
       <main className="flex-1 py-6 md:py-10">
-        <PageContainer>
+        <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
+          <aside className="mb-8 hidden lg:block">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              Getting started
+            </p>
+            <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
+              {t("title")}
+            </h2>
+            <ol className="mt-12 flex flex-col gap-5 text-sm text-muted">
+              {["Choose your role", "Personal info", "How buddies reach you"].map((step, index) => (
+                <li key={step} className="flex items-start gap-3">
+                  <span
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-full font-display font-bold ${index === 0 ? "bg-primary text-white" : "border border-line-strong"}`}
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="pt-1 font-semibold">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </aside>
           <form
             id="google-onboarding-form"
             aria-label={t("title")}
@@ -272,7 +292,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
 
             <section className="flex flex-col gap-3 md:col-span-2">
               <h2 className="font-display text-xl font-semibold text-ink">{t("roleHeading")}</h2>
-              <div className="flex overflow-hidden rounded-lg border border-line-strong">
+              <div className="grid gap-3 md:grid-cols-2">
                 {ROLES.map((key) => {
                   const isSelected = role === key;
                   return (
@@ -281,10 +301,10 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                       type="button"
                       aria-pressed={isSelected}
                       onClick={() => handleRoleChange(key)}
-                      className={`h-12 flex-1 font-display text-sm font-semibold transition-colors ${
+                      className={`h-24 rounded-2xl border px-5 text-left font-display text-sm font-semibold transition-colors ${
                         isSelected
-                          ? "bg-primary text-on-primary"
-                          : "bg-panel text-ink hover:bg-primary-soft"
+                          ? "border-primary bg-primary-soft text-primary-strong shadow-[0_8px_20px_rgba(209,63,50,0.12)]"
+                          : "border-line-soft bg-canvas-soft text-ink hover:border-primary-soft"
                       }`}
                     >
                       {t(key === "TOURIST" ? "roles.tourist" : "roles.buddy")}

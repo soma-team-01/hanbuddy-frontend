@@ -40,9 +40,12 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   const errorCode = errorValue ? parseAuthErrorCode(errorValue) : null;
 
   return (
-    <main className="flex w-full flex-1 flex-col bg-canvas">
-      <PageContainer className="flex flex-1 items-center justify-center py-10 md:py-16">
-        <div className="w-full max-w-lg rounded-2xl border border-line-soft bg-panel px-6 py-10 text-center shadow-sm md:px-10 md:py-12">
+    <main className="flex w-full flex-1 flex-col bg-primary-soft/35">
+      <PageContainer className="flex flex-1 items-center justify-center py-12 md:py-20">
+        <div className="relative w-full max-w-[460px] rounded-3xl border border-line-soft bg-canvas-soft px-6 py-10 text-center shadow-[0_20px_50px_rgba(61,45,43,0.12)] md:px-11 md:py-12">
+          <div className="mx-auto mb-6 flex size-14 items-center justify-center rounded-2xl bg-primary font-display text-2xl font-extrabold text-white">
+            H
+          </div>
           <h1 className="font-display text-3xl leading-tight font-bold text-ink md:text-4xl">
             {t("welcome")}
           </h1>
@@ -58,7 +61,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
           <Link
             href={`/api/auth/google/start?locale=${locale}`}
             prefetch={false}
-            className={`${errorCode ? "mt-6" : "mt-10"} flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-line-strong bg-panel font-display text-sm font-bold text-ink transition-colors hover:bg-panel-raised`}
+            className={`${errorCode ? "mt-6" : "mt-10"} flex h-14 w-full items-center justify-center gap-3 rounded-full border border-line-strong bg-canvas-soft font-display text-sm font-bold text-ink transition-colors hover:border-primary hover:bg-primary-soft`}
           >
             <GoogleIcon className="size-5" />
             {t("continueWithGoogle")}

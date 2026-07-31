@@ -18,14 +18,9 @@ export function BuddySidebar() {
   return (
     <aside className="hidden w-64 shrink-0 border-r border-line-soft bg-panel/45 lg:flex lg:flex-col">
       <div className="sticky top-[76px] flex min-h-[calc(100vh-76px)] flex-col p-5">
-        <div className="mb-8 flex items-center gap-3 px-2">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary font-display font-extrabold text-white">
-            H
-          </span>
-          <span className="font-display text-xl font-extrabold tracking-[-0.04em] text-ink">
-            HanBuddy
-          </span>
-        </div>
+        <p className="mb-4 px-4 text-xs font-bold tracking-[0.16em] text-primary-strong uppercase">
+          {t("buddyWorkspace")}
+        </p>
         <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-2">
           {LINKS.map(({ href, labelKey, Icon }) => {
             const active =
@@ -54,7 +49,7 @@ export function BuddySidebar() {
           {t("createActivity")}
         </Link>
         <div className="mt-auto border-t border-line-soft pt-5 text-xs text-muted">
-          HanBuddy buddy workspace
+          {t("buddyWorkspace")}
         </div>
       </div>
     </aside>

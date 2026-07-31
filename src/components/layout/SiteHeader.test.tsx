@@ -44,11 +44,18 @@ describe("SiteHeader", () => {
     mockedUsePathname.mockReturnValue("/dashboard");
     renderWithIntl(<SiteHeader role="buddy" />);
 
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+    expect(
+      screen.queryByRole("navigation", { name: "Primary navigation" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const mobileNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
+    expect(within(mobileNavigation).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
       "href",
       "/en/dashboard",
     );
-    expect(screen.getByRole("link", { name: "My Activities" })).toHaveAttribute(
+    expect(within(mobileNavigation).getByRole("link", { name: "My Activities" })).toHaveAttribute(
       "href",
       "/en/my-activities",
     );

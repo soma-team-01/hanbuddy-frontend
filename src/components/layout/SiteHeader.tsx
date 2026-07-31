@@ -77,9 +77,13 @@ export function SiteHeader({
           </span>
         </Link>
 
-        <nav aria-label={t("primaryNavigation")} className="hidden items-center gap-8 lg:flex">
-          {navigationLinks}
-        </nav>
+        {role !== "buddy" ? (
+          <nav aria-label={t("primaryNavigation")} className="hidden items-center gap-8 lg:flex">
+            {navigationLinks}
+          </nav>
+        ) : (
+          <span className="hidden flex-1 lg:block" aria-hidden />
+        )}
 
         <div className="hidden items-center gap-2 lg:flex">
           <LocaleSwitcher className="bg-primary-soft px-4" />

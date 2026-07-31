@@ -265,7 +265,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
             <section className="flex flex-col items-center gap-3 md:col-span-2">
               <div className="relative">
                 {profilePhoto}
-                <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors hover:bg-primary-hover">
+                <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors hover:bg-primary-hover focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2">
                   <CameraIcon className="size-4" />
                   <span className="sr-only">{t("addProfilePhoto")}</span>
                   <input

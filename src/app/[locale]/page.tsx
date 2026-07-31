@@ -80,12 +80,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 <span>🏘️</span>
                 <span>🌙</span>
               </div>
-              <p className="font-display text-lg font-bold">{t("experiences.teaCeremony.title")}</p>
-              <p className="mt-2 text-sm text-muted">📍 Bukchon · Sat 1:00 PM</p>
+              <p className="font-display text-lg font-bold">{t("heroPanels.experienceTitle")}</p>
+              <p className="mt-2 text-sm text-muted">{t("heroPanels.experienceDescription")}</p>
               <div className="mt-6 flex items-center justify-between">
-                <strong className="font-display text-xl">₩35,000</strong>
-                <span className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-white">
-                  Apply
+                <strong className="font-display text-xl text-primary-strong">
+                  {t("heroPanels.experienceBadge")}
+                </strong>
+                <span className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-on-primary">
+                  {t("heroPanels.experienceAction")}
                 </span>
               </div>
             </div>
@@ -94,8 +96,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 S
               </span>
               <span className="text-sm">
-                <strong className="block">Sarah · Tourist</strong>
-                <span className="text-muted">wants a tea ceremony</span>
+                <strong className="block">{t("heroPanels.touristTitle")}</strong>
+                <span className="text-muted">{t("heroPanels.touristDescription")}</span>
               </span>
             </div>
             <div className="absolute right-10 bottom-2 flex items-center gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-5 py-4 shadow-lg">
@@ -103,12 +105,12 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 J
               </span>
               <span className="text-sm">
-                <strong className="block">Jihoon · Local buddy</strong>
-                <span className="text-muted">hosts & confirms your booking</span>
+                <strong className="block">{t("heroPanels.buddyTitle")}</strong>
+                <span className="text-muted">{t("heroPanels.buddyDescription")}</span>
               </span>
             </div>
             <div className="absolute right-0 bottom-[-38px] rounded-full bg-ink px-7 py-3 text-sm font-bold text-white shadow-xl">
-              ✅ Booking confirmed — see you Saturday!
+              ✅ {t("heroPanels.confirmation")}
             </div>
           </section>
         </PageContainer>

@@ -81,6 +81,17 @@
     "description": "KBO 야구 관람부터 전통시장까지, 단순한 관광을 넘어 현지 버디와 함께 진짜 한국 문화를 경험해 보세요.",
     "getStarted": "시작하기",
     "browseExperiences": "액티비티 둘러보기 →",
+    "heroPanels": {
+      "experienceTitle": "나에게 꼭 맞는 로컬 경험",
+      "experienceDescription": "현지 버디가 공유하는 액티비티를 둘러보세요.",
+      "experienceBadge": "당신을 위한 경험",
+      "experienceAction": "둘러보기",
+      "touristTitle": "호기심으로 여행하기",
+      "touristDescription": "여행에 잘 맞는 경험을 찾아보세요.",
+      "buddyTitle": "현지 버디와 함께",
+      "buddyDescription": "한국을 가장 잘 아는 사람을 만나보세요.",
+      "confirmation": "다음 한국 경험을 찾아보세요"
+    },
     "experiences": {
       "gwangjangMarket": {
         "title": "광장시장",

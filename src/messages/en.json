@@ -81,6 +81,17 @@
     "description": "From KBO nights to traditional markets, connect with a local buddy for authentic cultural experiences — not just sightseeing.",
     "getStarted": "Get started",
     "browseExperiences": "Browse experiences →",
+    "heroPanels": {
+      "experienceTitle": "Local experiences, made personal",
+      "experienceDescription": "Explore activities shared by local buddies.",
+      "experienceBadge": "Made for you",
+      "experienceAction": "Explore",
+      "touristTitle": "Travel with curiosity",
+      "touristDescription": "Find an experience that fits your trip.",
+      "buddyTitle": "Hosted by local buddies",
+      "buddyDescription": "Meet people who know Korea best.",
+      "confirmation": "Find your next Korean experience"
+    },
     "experiences": {
       "gwangjangMarket": {
         "title": "Gwangjang Market",

@@ -52,9 +52,7 @@ export function MyPageContent({ backHref }: Readonly<MyPageContentProps>) {
               <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
                 {t("accountSettingsTitle")}
               </h2>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                {t("accountSettingsDescription")}
-              </p>
+              <p className="mt-2 text-sm leading-6 text-muted">{t("accountSettingsDescription")}</p>
             </div>
             <div className="mt-8">
               <LogoutButton />

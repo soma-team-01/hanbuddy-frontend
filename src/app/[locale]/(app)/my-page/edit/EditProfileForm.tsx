@@ -249,7 +249,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             <section className="flex flex-col items-center gap-3 md:col-span-2">
               <div className="relative">
                 {profilePhoto}
-                <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors hover:bg-primary-hover focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2">
+                <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
                   <CameraIcon className="size-4" />
                   <span className="sr-only">{t("addProfilePhoto")}</span>
                   <input

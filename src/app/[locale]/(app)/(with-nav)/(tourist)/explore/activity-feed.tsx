@@ -60,9 +60,7 @@ export function ActivityFeed() {
           🗺️
         </span>
         <h2 className="mt-5 font-display text-2xl font-bold">{t("empty")}</h2>
-        <p className="mt-2 max-w-sm text-muted">
-          {t("emptyDescription")}
-        </p>
+        <p className="mt-2 max-w-sm text-muted">{t("emptyDescription")}</p>
       </div>
     );
   }

@@ -34,8 +34,10 @@ This version has breaking changes - APIs, conventions, and file structure may al
 ```text
 src/
 ├── app/              # App Router 페이지와 Route Handler
-│   ├── (tourist)/    # Discovery, Detail, Booking...
-│   ├── (buddy)/      # Dashboard, Create Activity...
+│   ├── [locale]/     # 영어/한국어 locale 동적 세그먼트
+│   │   └── (app)/     # 앱 화면 공통 route group
+│   │       ├── (tourist)/ # Discovery, Detail, Booking...
+│   │       └── (buddy)/   # Dashboard, Create Activity...
 │   └── admin/        # Payment Verification
 ├── components/
 │   ├── ui/           # 버튼, 카드 등 최소 단위
@@ -45,7 +47,7 @@ src/
 └── styles/           # 전역 스타일/디자인 토큰
 ```
 
-- `(tourist)`, `(buddy)`는 App Router의 **route group**(URL에 경로로 포함되지 않는 조직용 폴더).
+- `[locale]`는 영어/한국어 URL 세그먼트이며, `(app)`, `(tourist)`, `(buddy)`는 App Router의 **route group**(URL에 경로로 포함되지 않는 조직용 폴더)이다.
 
 ## Branching And Deployment
 

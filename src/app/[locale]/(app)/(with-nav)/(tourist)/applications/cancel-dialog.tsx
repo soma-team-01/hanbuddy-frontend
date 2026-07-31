@@ -65,7 +65,7 @@ export function CancelDialog({
         if (isSubmitting) event.preventDefault();
       }}
       onClose={onClose}
-      className="m-0 w-full max-w-none rounded-t-2xl border-0 bg-canvas-soft p-5 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:p-6"
+      className="m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:rounded-3xl md:p-8"
     >
       <h2 id="cancel-dialog-title" className="font-display text-xl font-bold text-ink">
         {t("cancellationTitle")}
@@ -83,7 +83,7 @@ export function CancelDialog({
               type="button"
               aria-pressed={isSelected}
               onClick={() => setReason(value)}
-              className={`flex items-center gap-3 rounded-xl border bg-panel px-4 py-3.5 text-left transition-colors ${
+              className={`flex items-center gap-3 rounded-2xl border bg-panel px-4 py-4 text-left transition-colors ${
                 isSelected
                   ? "border-primary-strong bg-primary-soft"
                   : "border-line-strong hover:border-primary/50"
@@ -120,7 +120,7 @@ export function CancelDialog({
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:opacity-60"
+          className="h-12 flex-1 rounded-full border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:opacity-60"
         >
           {t("keepApplication")}
         </button>
@@ -128,7 +128,7 @@ export function CancelDialog({
           type="button"
           onClick={handleConfirm}
           disabled={!reason || isSubmitting}
-          className="h-12 flex-1 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+          className="h-12 flex-1 rounded-full bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
         >
           {isSubmitting ? t("cancelling") : t("confirmCancellation")}
         </button>

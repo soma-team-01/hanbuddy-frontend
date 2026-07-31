@@ -24,20 +24,20 @@ export function MyPageContent({ backHref }: Readonly<MyPageContentProps>) {
       <PageHeader title={t("title")} backHref={backHref} />
       <PageContainer
         data-testid="my-page-layout"
-        className="grid flex-1 gap-6 py-6 md:py-10 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start"
+        className="flex flex-1 flex-col gap-6 py-6 md:py-10 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]"
       >
-        <main className="contents">
+        <main className="flex flex-col gap-6">
           <ProfileCard />
 
-          <div className="space-y-6">
-            <section className="flex flex-col overflow-hidden rounded-2xl border border-line-soft bg-panel shadow-sm">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:items-start">
+            <section className="flex flex-col overflow-hidden rounded-3xl border border-line-soft bg-panel shadow-sm">
               <LanguagePreference />
               {UNAVAILABLE_MENU_ITEMS.map(({ messageKey, Icon }) => (
                 <button
                   key={messageKey}
                   type="button"
                   disabled
-                  className="flex cursor-not-allowed items-center gap-4 border-t border-line-soft px-5 py-4 text-left opacity-60"
+                  className="flex cursor-not-allowed items-center gap-4 border-t border-line-soft px-5 py-5 text-left opacity-60"
                 >
                   <Icon className="size-5 text-ink" />
                   <span className="flex-1 text-base text-ink">{t(messageKey)}</span>
@@ -46,7 +46,22 @@ export function MyPageContent({ backHref }: Readonly<MyPageContentProps>) {
                 </button>
               ))}
             </section>
-            <LogoutButton />
+            <div className="rounded-3xl border border-line-soft bg-canvas-soft p-6 md:p-8">
+              <div className="max-w-xl">
+                <p className="text-xs font-bold tracking-[0.16em] text-primary-strong uppercase">
+                  {t("accountSettings")}
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-ink">
+                  {t("accountSettingsTitle")}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  {t("accountSettingsDescription")}
+                </p>
+              </div>
+              <div className="mt-8">
+                <LogoutButton />
+              </div>
+            </div>
           </div>
         </main>
       </PageContainer>

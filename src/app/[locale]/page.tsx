@@ -39,10 +39,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const t = await getTranslations({ locale, namespace: "Landing" });
 
   return (
-    <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
-      <section className="landing-hero relative overflow-hidden bg-primary-soft/60">
-        <div className="pointer-events-none absolute -top-40 right-[-8%] size-[520px] rounded-full bg-primary/10" />
-        <div className="pointer-events-none absolute right-[18%] bottom-[-260px] size-[500px] rounded-full bg-primary/5" />
+    <main className="flex w-full flex-1 flex-col bg-canvas-soft text-ink">
+      <section className="landing-hero relative overflow-hidden border-b border-line-soft bg-canvas-soft">
+        <div className="pointer-events-none absolute -top-40 right-[-8%] size-[520px] rounded-full bg-primary-soft/50 blur-3xl" />
+        <div className="pointer-events-none absolute right-[18%] bottom-[-260px] size-[500px] rounded-full bg-primary/[0.04] blur-3xl" />
         <PageContainer className="grid min-h-[620px] items-center gap-12 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.9fr)] lg:gap-16 lg:py-20">
           <section className="landing-reveal landing-reveal-delay-1 relative z-10 max-w-2xl min-w-0">
             <p className="mb-5 font-display text-xs font-bold tracking-[0.3em] text-primary uppercase">
@@ -74,7 +74,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
             aria-label={t("eyebrow")}
             className="landing-reveal landing-reveal-delay-2 relative min-h-[390px] min-w-0"
           >
-            <div className="absolute top-5 right-0 w-[min(100%,300px)] rotate-[-2deg] rounded-2xl bg-canvas-soft p-5 shadow-[0_18px_40px_rgba(61,45,43,0.14)] sm:right-6">
+            <div className="absolute top-5 right-0 w-[min(100%,300px)] rotate-[-2deg] rounded-2xl border border-line-soft bg-canvas-soft p-5 shadow-[0_18px_40px_rgba(61,45,43,0.12)] sm:right-6">
               <div className="mb-5 flex gap-2 text-xl">
                 <span>🍵</span>
                 <span>🏘️</span>
@@ -89,7 +89,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 </span>
               </div>
             </div>
-            <div className="absolute top-[-18px] left-0 flex items-center gap-3 rounded-2xl bg-canvas-soft px-5 py-4 shadow-lg sm:left-8">
+            <div className="absolute top-[-18px] left-0 flex items-center gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-5 py-4 shadow-lg sm:left-8">
               <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft font-bold text-primary">
                 S
               </span>
@@ -98,7 +98,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 <span className="text-muted">wants a tea ceremony</span>
               </span>
             </div>
-            <div className="absolute right-10 bottom-2 flex items-center gap-3 rounded-2xl bg-canvas-soft px-5 py-4 shadow-lg">
+            <div className="absolute right-10 bottom-2 flex items-center gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-5 py-4 shadow-lg">
               <span className="flex size-10 items-center justify-center rounded-full bg-panel font-bold text-primary">
                 J
               </span>
@@ -114,10 +114,13 @@ export default async function LandingPage({ params }: LandingPageProps) {
         </PageContainer>
       </section>
 
-      <section className="py-16 md:py-20">
+      <section className="bg-canvas-soft py-16 md:py-20">
         <PageContainer className="grid gap-5 md:grid-cols-3">
           {["Browse freely", "Pick a date & apply", "Meet your buddy"].map((title, index) => (
-            <article key={title} className="rounded-2xl border border-line-soft bg-canvas-soft p-7">
+            <article
+              key={title}
+              className="rounded-2xl border border-line-soft bg-panel-raised p-7"
+            >
               <span className="flex size-10 items-center justify-center rounded-xl bg-primary-soft font-display font-bold text-primary">
                 {index + 1}
               </span>
@@ -134,7 +137,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
         </PageContainer>
       </section>
 
-      <section className="border-t border-line-soft py-12">
+      <section className="border-t border-line-soft bg-canvas-soft py-12">
         <PageContainer className="grid gap-5 sm:grid-cols-3">
           {experiences.map((experience, index) => {
             const title = t(`experiences.${experience.messageKey}.title`);
@@ -162,7 +165,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-line-soft py-7 text-sm text-muted">
+      <footer className="mt-auto border-t border-line-soft bg-canvas-soft py-7 text-sm text-muted">
         <PageContainer>
           <span className="font-display font-bold text-primary-strong">HanBuddy</span>
           <span className="mx-2 text-line-strong">·</span>

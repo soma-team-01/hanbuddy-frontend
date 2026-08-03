@@ -122,29 +122,35 @@
       "mainCaption": "Your Korea, made personal."
     },
     "reviews": {
-      "traveler": {
-        "initial": "S",
-        "author": "Sarah · Traveler",
-        "label": "Traveler story",
-        "quote": "I found a side of Korea I never would have found on my own."
+      "starLabel": "5 out of 5 stars",
+      "cheerTogether": {
+        "rating": "5.0",
+        "starLabel": "5 out of 5 stars",
+        "event": "KBO Baseball Night",
+        "meta": "Guest review · July 2026",
+        "quote": "It was fun to watch the game and cheer together!"
       },
-      "buddy": {
-        "initial": "J",
-        "author": "Jihoon · Local buddy",
-        "label": "Buddy story",
-        "quote": "The best part is sharing the places I love with someone new."
+      "localBuddy": {
+        "rating": "5.0",
+        "starLabel": "5 out of 5 stars",
+        "event": "KBO Baseball Night",
+        "meta": "Guest review · July 2026",
+        "quote": "Great experience to enjoy a baseball game with a local."
       },
-      "travelerTwo": {
-        "initial": "M",
-        "author": "Marco · Traveler",
-        "label": "Traveler story",
-        "quote": "It felt less like checking places off a list and more like being welcomed in."
+      "lookedAfter": {
+        "rating": "5.0",
+        "starLabel": "5 out of 5 stars",
+        "event": "KBO Baseball Night",
+        "meta": "Guest review · August 2026",
+        "quote": "Had such a great time at the baseball game with HanBuddy! We were looked after so well throughout the whole experience. They constantly checked in to make sure we were enjoying ourselves and had everything we needed, and they did a fantastic job of explaining what was happening during the game. It made the whole experience so much more enjoyable. Highly recommend!"
       }
     },
     "reviewsSection": {
       "eyebrow": "Stories from the community",
       "title": "The moments that stay with you.",
-      "description": "Real photos and reviews from HanBuddy travelers and buddies will live here. For now, these cards show the space we are designing for them."
+      "description": "A few words from guests who experienced Korea with HanBuddy.",
+      "ratingSummary": "4.8/5 overall rating",
+      "responseSummary": "Based on 4 guest responses"
     },
     "contact": {
       "eyebrow": "Stay in touch",

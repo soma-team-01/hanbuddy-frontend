@@ -42,6 +42,23 @@ describe("LandingPage", () => {
   );
 
   it.each([
+    ["en", "The moments that stay with you.", "4.8/5 overall rating", "5 out of 5 stars"],
+    ["ko", "오래 기억에 남는 순간.", "전체 평점 4.8/5", "별점 5점 만점에 5점"],
+  ] as const)(
+    "renders anonymous positive reviews with ratings for %s",
+    async (locale, title, summary, starLabel) => {
+      await renderLanding(locale);
+
+      const reviewRegion = screen.getByRole("region", { name: title });
+
+      expect(screen.getByText(summary)).toBeInTheDocument();
+      expect(reviewRegion.querySelectorAll('[role="img"]')).toHaveLength(4);
+      expect(screen.getAllByRole("img", { name: starLabel })).toHaveLength(4);
+      expect(screen.queryByText(/Sarah|Jihoon|Marco|사라|지훈|마르코/)).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([
     [
       "en",
       "Travel with people who know Korea.",

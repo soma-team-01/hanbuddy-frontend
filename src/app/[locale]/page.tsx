@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
@@ -26,7 +27,7 @@ const HERO_MEDIA = [
 
 const HERO_HIGHLIGHTS = ["localPerspective", "realConnection", "sharedMoments"] as const;
 const SERVICE_CARDS = ["traveler", "buddy", "together"] as const;
-const REVIEW_KEYS = ["traveler", "buddy", "travelerTwo"] as const;
+const REVIEW_KEYS = ["cheerTogether", "localBuddy", "lookedAfter"] as const;
 
 // Replace these mock values with the official contact details before launch.
 const CONTACT_DETAILS = {
@@ -161,40 +162,79 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="reviews-title"
-        className="border-t border-line-soft bg-primary-soft/45 py-20 md:py-28"
+        className="relative isolate overflow-hidden border-t border-line-soft bg-primary-soft/45 py-20 md:py-28"
       >
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <Image
+            src="/images/landing/2차-6.jpeg"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-primary-soft/85" />
+        </div>
         <PageContainer>
-          <div className="max-w-2xl">
-            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-              {t("reviewsSection.eyebrow")}
-            </p>
-            <h2
-              id="reviews-title"
-              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
-            >
-              {t("reviewsSection.title")}
-            </h2>
-            <p className="mt-5 text-base leading-7 text-muted">{t("reviewsSection.description")}</p>
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+                {t("reviewsSection.eyebrow")}
+              </p>
+              <h2
+                id="reviews-title"
+                className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+              >
+                {t("reviewsSection.title")}
+              </h2>
+              <p className="mt-5 text-base leading-7 text-muted">
+                {t("reviewsSection.description")}
+              </p>
+            </div>
+
+            <div className="w-fit rounded-2xl border border-line-soft bg-canvas-soft/90 px-5 py-4 shadow-sm backdrop-blur-sm">
+              <p className="font-display text-lg font-extrabold text-ink">
+                {t("reviewsSection.ratingSummary")}
+              </p>
+              <div className="mt-1 flex items-center gap-3 text-sm text-muted">
+                <span
+                  role="img"
+                  aria-label={t("reviews.starLabel")}
+                  className="tracking-[0.16em] text-primary"
+                >
+                  ★★★★★
+                </span>
+                <span>{t("reviewsSection.responseSummary")}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
             {REVIEW_KEYS.map((reviewKey) => (
               <article
                 key={reviewKey}
-                className="flex min-h-64 flex-col rounded-2xl border border-line-soft bg-canvas-soft p-6"
+                className="flex min-h-72 flex-col rounded-[2rem] border border-line-soft bg-canvas-soft/95 p-7 shadow-[0_18px_45px_rgba(61,45,43,0.08)] backdrop-blur-sm sm:p-8"
               >
                 <div className="flex items-center justify-between gap-4">
-                  <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft font-display font-bold text-primary">
-                    {t(`reviews.${reviewKey}.initial`)}
+                  <span
+                    role="img"
+                    aria-label={t(`reviews.${reviewKey}.starLabel`)}
+                    className="tracking-[0.16em] text-primary"
+                  >
+                    ★★★★★
                   </span>
-                  <span className="text-xs font-semibold text-primary-strong">
-                    {t(`reviews.${reviewKey}.label`)}
+                  <span className="font-display text-sm font-bold text-primary-strong">
+                    {t(`reviews.${reviewKey}.rating`)}
                   </span>
                 </div>
-                <blockquote className="mt-8 flex-1 font-display text-lg leading-7 font-semibold text-ink">
+                <blockquote className="mt-8 flex-1 font-display text-xl leading-8 font-semibold tracking-[-0.02em] text-ink">
                   “{t(`reviews.${reviewKey}.quote`)}”
                 </blockquote>
-                <p className="mt-6 text-sm text-muted">{t(`reviews.${reviewKey}.author`)}</p>
+                <div className="mt-8 border-t border-line-soft pt-5">
+                  <p className="font-display text-sm font-bold text-primary-strong">
+                    {t(`reviews.${reviewKey}.event`)}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">{t(`reviews.${reviewKey}.meta`)}</p>
+                </div>
               </article>
             ))}
           </div>

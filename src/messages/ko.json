@@ -122,29 +122,35 @@
       "mainCaption": "나만의 한국을 만나보세요."
     },
     "reviews": {
-      "traveler": {
-        "initial": "S",
-        "author": "Sarah · 여행자",
-        "label": "여행자 이야기",
-        "quote": "혼자였다면 절대 발견하지 못했을 한국의 모습을 만났어요."
+      "starLabel": "별점 5점 만점에 5점",
+      "cheerTogether": {
+        "rating": "5.0",
+        "starLabel": "별점 5점 만점에 5점",
+        "event": "KBO 야구 경기",
+        "meta": "참여자 후기 · 2026년 7월",
+        "quote": "경기를 보고 함께 응원하는 시간이 정말 즐거웠어요!"
       },
-      "buddy": {
-        "initial": "J",
-        "author": "지훈 · 로컬 버디",
-        "label": "버디 이야기",
-        "quote": "제가 좋아하는 장소를 새로운 사람과 나누는 일이 가장 즐거워요."
+      "localBuddy": {
+        "rating": "5.0",
+        "starLabel": "별점 5점 만점에 5점",
+        "event": "KBO 야구 경기",
+        "meta": "참여자 후기 · 2026년 7월",
+        "quote": "현지인과 함께 야구 경기를 즐길 수 있어서 정말 좋았어요."
       },
-      "travelerTwo": {
-        "initial": "M",
-        "author": "Marco · 여행자",
-        "label": "여행자 이야기",
-        "quote": "장소를 체크하는 여행보다, 진짜로 환영받는 기분이었어요."
+      "lookedAfter": {
+        "rating": "5.0",
+        "starLabel": "별점 5점 만점에 5점",
+        "event": "KBO 야구 경기",
+        "meta": "참여자 후기 · 2026년 8월",
+        "quote": "HanBuddy와 함께한 야구 경기가 정말 즐거웠어요! 경험 내내 세심하게 챙겨주고 필요한 것을 계속 확인해줘서 훨씬 편하고 즐겁게 경기를 볼 수 있었어요. 경기 중에 무슨 일이 일어나는지도 친절하게 설명해줘서 정말 추천하고 싶어요!"
       }
     },
     "reviewsSection": {
       "eyebrow": "커뮤니티의 이야기",
       "title": "오래 기억에 남는 순간.",
-      "description": "HanBuddy 여행자와 버디의 실제 사진과 리뷰가 이곳에 담길 예정입니다. 지금은 앞으로 채워갈 공간을 보여드리기 위한 목업 카드입니다."
+      "description": "HanBuddy와 함께 한국을 경험한 참여자들의 이야기입니다.",
+      "ratingSummary": "전체 평점 4.8/5",
+      "responseSummary": "참여자 4명의 응답 기준"
     },
     "contact": {
       "eyebrow": "계속 소통해요",

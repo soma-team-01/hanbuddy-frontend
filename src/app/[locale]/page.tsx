@@ -126,7 +126,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="booking-title"
-        className="border-t border-line-soft bg-panel-raised py-12 md:py-16"
+        className="border-t border-line-soft bg-primary-soft py-12 md:py-16"
       >
         <PageContainer>
           <div className="mx-auto max-w-3xl text-center">
@@ -151,7 +151,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 <span className="shrink-0 font-display text-xl font-extrabold text-primary sm:text-2xl">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <div className="md:mt-8">
+                <div className="md:mt-4">
                   <h3 className="font-display text-lg font-bold text-ink sm:text-xl">
                     {t(`booking.steps.${step}.title`)}
                   </h3>
@@ -236,7 +236,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="contact-title"
-        className="bg-canvas-soft pt-10 pb-20 md:pt-16 md:pb-28"
+        className="bg-canvas-soft pt-10 pb-4 md:pt-16 md:pb-6"
       >
         <PageContainer>
           <div className="rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-14 text-center shadow-[0_18px_45px_rgba(61,45,43,0.06)] sm:px-12 md:py-16">

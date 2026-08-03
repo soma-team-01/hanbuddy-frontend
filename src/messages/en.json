@@ -74,51 +74,43 @@
     "completed": "Completed"
   },
   "Landing": {
-    "metadataTitle": "HanBuddy | Experience Korea like a local",
+    "metadataTitle": "HanBuddy | Experience Korea like a local!",
     "metadataDescription": "Connect with local buddies for authentic Korean experiences.",
-    "login": "Log in",
-    "eyebrow": "Match with a local buddy",
-    "headline": "Experience Korea like a local.",
-    "description": "From KBO nights to traditional markets, connect with a local buddy for authentic cultural experiences — not just sightseeing.",
-    "getStarted": "Get started",
-    "browseExperiences": "Browse experiences →",
-    "heroPanels": {
-      "experienceTitle": "Local experiences, made personal",
-      "experienceDescription": "Explore activities shared by local buddies.",
-      "experienceBadge": "Made for you",
-      "experienceAction": "Explore",
-      "touristTitle": "Travel with curiosity",
-      "touristDescription": "Find an experience that fits your trip.",
-      "buddyTitle": "Hosted by local buddies",
-      "buddyDescription": "Meet people who know Korea best.",
-      "confirmation": "Find your next Korean experience"
-    },
-    "processSteps": {
-      "browse": {
-        "title": "Browse freely",
-        "description": "Every experience is open to view — no account needed to look around."
+    "eyebrow": "Seoul · hosted by local buddies",
+    "headline": "Experience Korea like a local!",
+    "description": "Go beyond the itinerary. Find the food, places, and small moments that feel more meaningful with someone who knows Korea by heart.",
+    "exploreExperiences": "Explore experiences",
+    "highlights": {
+      "localPerspective": {
+        "title": "Local perspective",
+        "description": "See Korea through a buddy's eyes."
       },
-      "apply": {
-        "title": "Pick a date & apply",
-        "description": "Choose a schedule, tell your buddy about you, and pay securely."
+      "realConnection": {
+        "title": "Real connection",
+        "description": "Meet people, not just places."
       },
-      "meet": {
-        "title": "Meet your buddy",
-        "description": "Your buddy confirms and reaches you on your preferred messaging app."
+      "sharedMoments": {
+        "title": "Shared moments",
+        "description": "Bring home a story worth telling."
       }
     },
-    "experiences": {
-      "gwangjangMarket": {
-        "title": "Gwangjang Market",
-        "tag": "Street food"
+    "visuals": {
+      "ariaLabel": "Local Korea experience preview",
+      "mainAlt": "A traditional Korean hanok street",
+      "marketAlt": "Colorful food at a Korean market",
+      "teaAlt": "A Korean tea ceremony setting",
+      "mainCaption": "Your Korea, made personal."
+    },
+    "reviews": {
+      "traveler": {
+        "author": "Sarah · Traveler",
+        "label": "Traveler story",
+        "quote": "I found a side of Korea I never would have found on my own."
       },
-      "bukchonHanok": {
-        "title": "Bukchon Hanok",
-        "tag": "Village walk"
-      },
-      "teaCeremony": {
-        "title": "Tea Ceremony",
-        "tag": "Korean culture"
+      "buddy": {
+        "author": "Jihoon · Local buddy",
+        "label": "Buddy story",
+        "quote": "The best part is sharing the places I love with someone new."
       }
     },
     "footerTagline": "Authentic Korea, together."

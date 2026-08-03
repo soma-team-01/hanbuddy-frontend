@@ -5,17 +5,22 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-const experiences = [
-  { img: "/images/activities/gwangjang-market.jpg", messageKey: "gwangjangMarket" },
-  { img: "/images/activities/hanok-hero.jpg", messageKey: "bukchonHanok" },
-  { img: "/images/activities/tea-ceremony.jpg", messageKey: "teaCeremony" },
-] as const;
+const HERO_IMAGES = {
+  main: {
+    src: "/images/activities/hanok-hero.jpg",
+    altKey: "visuals.mainAlt",
+  },
+  market: {
+    src: "/images/activities/gwangjang-market.jpg",
+    altKey: "visuals.marketAlt",
+  },
+  tea: {
+    src: "/images/activities/tea-ceremony.jpg",
+    altKey: "visuals.teaAlt",
+  },
+} as const;
 
-const processSteps = [
-  { titleKey: "processSteps.browse.title", descriptionKey: "processSteps.browse.description" },
-  { titleKey: "processSteps.apply.title", descriptionKey: "processSteps.apply.description" },
-  { titleKey: "processSteps.meet.title", descriptionKey: "processSteps.meet.description" },
-] as const;
+const HERO_HIGHLIGHTS = ["localPerspective", "realConnection", "sharedMoments"] as const;
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
@@ -45,131 +50,129 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const t = await getTranslations({ locale, namespace: "Landing" });
 
   return (
-    <main className="flex w-full flex-1 flex-col bg-canvas-soft text-ink">
-      <section className="landing-hero relative overflow-hidden border-b border-line-soft bg-canvas-soft">
-        <div className="pointer-events-none absolute -top-40 right-[-8%] size-[520px] rounded-full bg-primary-soft/50 blur-3xl" />
-        <div className="pointer-events-none absolute right-[18%] bottom-[-260px] size-[500px] rounded-full bg-primary/[0.04] blur-3xl" />
-        <PageContainer className="grid min-h-[620px] items-center gap-12 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.9fr)] lg:gap-16 lg:py-20">
-          <section className="landing-reveal landing-reveal-delay-1 relative z-10 max-w-2xl min-w-0">
-            <p className="mb-5 font-display text-xs font-bold tracking-[0.3em] text-primary uppercase">
+    <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <section className="relative overflow-hidden bg-primary-soft/65">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-48 right-[-12%] size-[620px] rounded-full bg-canvas-soft/55"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-[-300px] left-[42%] size-[560px] rounded-full bg-primary-soft"
+        />
+
+        <PageContainer className="grid min-h-[calc(100svh-76px)] items-center gap-12 py-14 sm:py-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(460px,1.1fr)] lg:gap-10 lg:py-16">
+          <div className="landing-reveal landing-reveal-delay-1 relative z-10 max-w-2xl min-w-0">
+            <p className="mb-6 font-display text-xs font-bold tracking-[0.28em] text-primary uppercase">
               {t("eyebrow")}
             </p>
-            <h1 className="max-w-xl font-display text-5xl leading-[1.04] font-extrabold tracking-[-0.06em] text-ink sm:text-6xl lg:text-[64px]">
+            <h1 className="max-w-xl font-display text-5xl leading-[1.02] font-extrabold tracking-[-0.06em] text-ink sm:text-6xl lg:text-[clamp(4rem,6vw,5.75rem)]">
               {t("headline")}
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-muted md:text-lg">
+            <p className="mt-7 max-w-xl text-base leading-7 text-muted sm:text-lg sm:leading-8">
               {t("description")}
             </p>
-            <div className="mt-9 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-              <Link
-                href="/login"
-                className="inline-flex min-h-14 min-w-48 items-center justify-center rounded-full bg-primary px-8 font-display font-bold text-on-primary shadow-[0_12px_24px_rgba(209,63,50,0.25)] transition-colors hover:bg-primary-hover"
-              >
-                {t("getStarted")}
-              </Link>
-              <Link
-                href="/explore"
-                className="font-display font-bold text-primary-strong underline-offset-4 hover:underline"
-              >
-                {t("browseExperiences")}
-              </Link>
+            <Link
+              href="/explore"
+              className="motion-press mt-9 inline-flex min-h-14 items-center justify-center rounded-full bg-primary px-8 font-display text-base font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.24)] transition-colors hover:bg-primary-hover"
+            >
+              {t("exploreExperiences")}
+              <span aria-hidden className="ml-3 text-lg leading-none">
+                →
+              </span>
+            </Link>
+
+            <div className="mt-12 grid max-w-2xl gap-5 border-t border-primary/20 pt-6 sm:grid-cols-3 sm:gap-4">
+              {HERO_HIGHLIGHTS.map((highlight) => (
+                <div key={highlight}>
+                  <p className="font-display text-sm font-bold text-primary-strong">
+                    {t(`highlights.${highlight}.title`)}
+                  </p>
+                  <p className="mt-1 text-sm leading-5 text-muted">
+                    {t(`highlights.${highlight}.description`)}
+                  </p>
+                </div>
+              ))}
             </div>
-          </section>
+          </div>
 
           <section
-            aria-label={t("eyebrow")}
-            className="landing-reveal landing-reveal-delay-2 relative min-h-[390px] min-w-0"
+            aria-label={t("visuals.ariaLabel")}
+            className="landing-reveal landing-reveal-delay-2 relative mx-auto min-h-[500px] w-full max-w-[620px] min-w-0 sm:min-h-[580px]"
           >
-            <div className="absolute top-5 right-0 w-[min(100%,300px)] rotate-[-2deg] rounded-2xl border border-line-soft bg-canvas-soft p-5 shadow-[0_18px_40px_rgba(61,45,43,0.12)] sm:right-6">
-              <div className="mb-5 flex gap-2 text-xl">
-                <span>🍵</span>
-                <span>🏘️</span>
-                <span>🌙</span>
+            <div className="absolute top-[8%] left-[13%] aspect-[4/5] w-[61%] rotate-[-4deg] overflow-hidden rounded-[2rem] border-8 border-canvas-soft shadow-[0_24px_50px_rgba(61,45,43,0.18)] sm:left-[16%] sm:w-[58%]">
+              <Image
+                src={HERO_IMAGES.main.src}
+                alt={t(HERO_IMAGES.main.altKey)}
+                fill
+                priority
+                loading="eager"
+                sizes="(min-width: 1024px) 34vw, (min-width: 640px) 48vw, 70vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ink/45 via-transparent to-transparent" />
+              <p className="absolute right-5 bottom-5 left-5 font-display text-sm font-bold text-on-primary sm:text-base">
+                {t("visuals.mainCaption")}
+              </p>
+            </div>
+
+            <div className="absolute top-[2%] right-[4%] aspect-square w-[27%] rotate-[7deg] overflow-hidden rounded-3xl border-4 border-canvas-soft shadow-[0_18px_34px_rgba(61,45,43,0.16)]">
+              <Image
+                src={HERO_IMAGES.market.src}
+                alt={t(HERO_IMAGES.market.altKey)}
+                fill
+                sizes="(min-width: 1024px) 16vw, 26vw"
+                className="object-cover"
+              />
+            </div>
+
+            <div className="absolute right-[2%] bottom-[14%] aspect-[4/3] w-[34%] rotate-[5deg] overflow-hidden rounded-3xl border-4 border-canvas-soft shadow-[0_18px_34px_rgba(61,45,43,0.16)]">
+              <Image
+                src={HERO_IMAGES.tea.src}
+                alt={t(HERO_IMAGES.tea.altKey)}
+                fill
+                sizes="(min-width: 1024px) 20vw, 32vw"
+                className="object-cover"
+              />
+            </div>
+
+            <article className="absolute bottom-[5%] left-0 w-[58%] -rotate-[3deg] rounded-2xl border border-line-soft bg-canvas-soft p-4 shadow-[0_16px_30px_rgba(61,45,43,0.14)] sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display font-bold text-primary">
+                  S
+                </span>
+                <div className="min-w-0">
+                  <p className="font-display text-sm font-bold text-ink">
+                    {t("reviews.traveler.author")}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-primary-strong">
+                    {t("reviews.traveler.label")}
+                  </p>
+                </div>
               </div>
-              <p className="font-display text-lg font-bold">{t("heroPanels.experienceTitle")}</p>
-              <p className="mt-2 text-sm text-muted">{t("heroPanels.experienceDescription")}</p>
-              <div className="mt-6 flex items-center justify-between">
-                <strong className="font-display text-xl text-primary-strong">
-                  {t("heroPanels.experienceBadge")}
-                </strong>
-                <Link
-                  href="/explore"
-                  className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-on-primary"
-                >
-                  {t("heroPanels.experienceAction")}
-                </Link>
+              <p className="mt-3 text-sm leading-5 text-muted">“{t("reviews.traveler.quote")}”</p>
+            </article>
+
+            <article className="absolute right-0 bottom-0 w-[56%] rotate-[3deg] rounded-2xl border border-line-soft bg-canvas-soft p-4 shadow-[0_16px_30px_rgba(61,45,43,0.14)] sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-panel font-display font-bold text-primary">
+                  J
+                </span>
+                <div className="min-w-0">
+                  <p className="font-display text-sm font-bold text-ink">
+                    {t("reviews.buddy.author")}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-primary-strong">
+                    {t("reviews.buddy.label")}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="absolute top-[-18px] left-0 flex items-center gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-5 py-4 shadow-lg sm:left-8">
-              <span className="flex size-10 items-center justify-center rounded-full bg-primary-soft font-bold text-primary">
-                S
-              </span>
-              <span className="text-sm">
-                <strong className="block">{t("heroPanels.touristTitle")}</strong>
-                <span className="text-muted">{t("heroPanels.touristDescription")}</span>
-              </span>
-            </div>
-            <div className="absolute right-10 bottom-2 flex items-center gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-5 py-4 shadow-lg">
-              <span className="flex size-10 items-center justify-center rounded-full bg-panel font-bold text-primary">
-                J
-              </span>
-              <span className="text-sm">
-                <strong className="block">{t("heroPanels.buddyTitle")}</strong>
-                <span className="text-muted">{t("heroPanels.buddyDescription")}</span>
-              </span>
-            </div>
-            <div className="absolute right-0 bottom-[-38px] rounded-full bg-ink px-7 py-3 text-sm font-bold text-white shadow-xl">
-              ✅ {t("heroPanels.confirmation")}
-            </div>
+              <p className="mt-3 text-sm leading-5 text-muted">“{t("reviews.buddy.quote")}”</p>
+            </article>
           </section>
         </PageContainer>
       </section>
 
-      <section className="bg-canvas-soft py-16 md:py-20">
-        <PageContainer className="grid gap-5 md:grid-cols-3">
-          {processSteps.map(({ titleKey, descriptionKey }, index) => (
-            <article
-              key={titleKey}
-              className="rounded-2xl border border-line-soft bg-panel-raised p-7"
-            >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-primary-soft font-display font-bold text-primary">
-                {index + 1}
-              </span>
-              <h2 className="mt-5 font-display text-lg font-bold">{t(titleKey)}</h2>
-              <p className="mt-2 text-sm leading-6 text-muted">{t(descriptionKey)}</p>
-            </article>
-          ))}
-        </PageContainer>
-      </section>
-
-      <section className="border-t border-line-soft bg-canvas-soft py-12">
-        <PageContainer className="grid gap-5 sm:grid-cols-3">
-          {experiences.map((experience, index) => {
-            const title = t(`experiences.${experience.messageKey}.title`);
-            return (
-              <article
-                key={experience.messageKey}
-                className="relative aspect-[5/3] overflow-hidden rounded-2xl bg-panel"
-              >
-                <Image
-                  src={experience.img}
-                  alt={title}
-                  fill
-                  loading={index === 0 ? "eager" : undefined}
-                  sizes="(min-width: 1024px) 18vw, (min-width: 768px) 30vw, 256px"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
-                <p className="absolute right-4 bottom-4 font-display text-sm font-bold text-white">
-                  {title}
-                </p>
-              </article>
-            );
-          })}
-        </PageContainer>
-      </section>
-
-      {/* Footer */}
       <footer className="mt-auto border-t border-line-soft bg-canvas-soft py-7 text-sm text-muted">
         <PageContainer>
           <span className="font-display font-bold text-primary-strong">HanBuddy</span>

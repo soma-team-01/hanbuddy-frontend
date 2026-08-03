@@ -74,51 +74,43 @@
     "completed": "완료됨"
   },
   "Landing": {
-    "metadataTitle": "HanBuddy | 현지인처럼 한국을 경험하세요",
+    "metadataTitle": "HanBuddy | 현지인처럼 한국을 경험하세요!",
     "metadataDescription": "현지 버디와 함께 진짜 한국을 경험해 보세요.",
-    "login": "로그인",
-    "eyebrow": "현지 버디와 매칭하세요",
-    "headline": "현지인처럼 한국을 경험하세요.",
-    "description": "KBO 야구 관람부터 전통시장까지, 단순한 관광을 넘어 현지 버디와 함께 진짜 한국 문화를 경험해 보세요.",
-    "getStarted": "시작하기",
-    "browseExperiences": "액티비티 둘러보기 →",
-    "heroPanels": {
-      "experienceTitle": "나에게 꼭 맞는 로컬 경험",
-      "experienceDescription": "현지 버디가 공유하는 액티비티를 둘러보세요.",
-      "experienceBadge": "당신을 위한 경험",
-      "experienceAction": "둘러보기",
-      "touristTitle": "호기심으로 여행하기",
-      "touristDescription": "여행에 잘 맞는 경험을 찾아보세요.",
-      "buddyTitle": "현지 버디와 함께",
-      "buddyDescription": "한국을 가장 잘 아는 사람을 만나보세요.",
-      "confirmation": "다음 한국 경험을 찾아보세요"
-    },
-    "processSteps": {
-      "browse": {
-        "title": "자유롭게 둘러보기",
-        "description": "회원가입 없이도 모든 경험을 살펴볼 수 있어요."
+    "eyebrow": "서울 · 현지 버디와 함께",
+    "headline": "현지인처럼 한국을 경험하세요!",
+    "description": "정해진 여행 코스를 넘어, 한국을 잘 아는 사람과 함께 더 의미 있는 음식과 장소, 순간을 만나보세요.",
+    "exploreExperiences": "액티비티 둘러보기",
+    "highlights": {
+      "localPerspective": {
+        "title": "현지인의 시선",
+        "description": "버디의 눈으로 한국을 만나보세요."
       },
-      "apply": {
-        "title": "날짜를 고르고 신청하기",
-        "description": "일정을 선택하고 버디에게 자신을 소개한 뒤 안전하게 결제하세요."
+      "realConnection": {
+        "title": "진짜 연결",
+        "description": "장소를 넘어 사람을 만나보세요."
       },
-      "meet": {
-        "title": "버디 만나기",
-        "description": "버디가 신청을 확인하고 원하는 메신저로 연락드려요."
+      "sharedMoments": {
+        "title": "함께 만드는 순간",
+        "description": "오래 이야기할 추억을 가져가세요."
       }
     },
-    "experiences": {
-      "gwangjangMarket": {
-        "title": "광장시장",
-        "tag": "길거리 음식"
+    "visuals": {
+      "ariaLabel": "현지 한국 경험 미리보기",
+      "mainAlt": "한국 전통 한옥 거리",
+      "marketAlt": "한국 시장의 다채로운 음식",
+      "teaAlt": "한국 다도 체험 공간",
+      "mainCaption": "나만의 한국을 만나보세요."
+    },
+    "reviews": {
+      "traveler": {
+        "author": "Sarah · 여행자",
+        "label": "여행자 이야기",
+        "quote": "혼자였다면 절대 발견하지 못했을 한국의 모습을 만났어요."
       },
-      "bukchonHanok": {
-        "title": "북촌 한옥",
-        "tag": "마을 산책"
-      },
-      "teaCeremony": {
-        "title": "다도 체험",
-        "tag": "한국 문화"
+      "buddy": {
+        "author": "지훈 · 로컬 버디",
+        "label": "버디 이야기",
+        "quote": "제가 좋아하는 장소를 새로운 사람과 나누는 일이 가장 즐거워요."
       }
     },
     "footerTagline": "진짜 한국을 함께 경험하세요."

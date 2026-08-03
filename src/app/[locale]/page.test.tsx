@@ -42,6 +42,25 @@ describe("LandingPage", () => {
   );
 
   it.each([
+    ["en", "Email HanBuddy", "Open HanBuddy on Instagram"],
+    ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Instagram 열기"],
+  ] as const)(
+    "connects the footer contact icons for %s",
+    async (locale, emailLabel, instagramLabel) => {
+      await renderLanding(locale);
+
+      expect(screen.getByRole("link", { name: emailLabel })).toHaveAttribute(
+        "href",
+        "mailto:zeroone.soma@gmail.com",
+      );
+      expect(screen.getByRole("link", { name: instagramLabel })).toHaveAttribute(
+        "href",
+        "https://www.instagram.com/hanbuddy_kr/",
+      );
+    },
+  );
+
+  it.each([
     ["en", "The moments that stay with you.", "5 out of 5 stars"],
     ["ko", "오래 기억에 남는 순간.", "별점 5점 만점에 5점"],
   ] as const)(
@@ -63,17 +82,17 @@ describe("LandingPage", () => {
       "en",
       "Travel with people who know Korea.",
       "The moments that stay with you.",
-      "Want to host an experience or just say hello?",
-      "Email us",
-      "mailto:hello@hanbuddy.kr",
+      "Still have questions?",
+      "Email us anything",
+      "mailto:zeroone.soma@gmail.com",
     ],
     [
       "ko",
       "한국을 잘 아는 사람과 여행하세요.",
       "오래 기억에 남는 순간.",
-      "버디로 함께하고 싶거나, 궁금한 점이 있나요?",
-      "이메일 보내기",
-      "mailto:hello@hanbuddy.kr",
+      "아직 궁금한 점이 있나요?",
+      "무엇이든 이메일로 물어보세요",
+      "mailto:zeroone.soma@gmail.com",
     ],
   ] as const)(
     "renders the service, review, and contact sections for %s",

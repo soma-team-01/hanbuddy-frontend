@@ -333,6 +333,35 @@ export function MessageSquareIcon(props: IconProps) {
   );
 }
 
+export function MailIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </IconBase>
+  );
+}
+
+export function InstagramIcon(props: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r=".5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function PhoneIcon(props: IconProps) {
   return (
     <IconBase {...props}>

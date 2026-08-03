@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
+import { InstagramIcon, MailIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -28,11 +30,10 @@ const HERO_HIGHLIGHTS = ["localPerspective", "realConnection", "sharedMoments"] 
 const SERVICE_CARDS = ["traveler", "buddy", "together"] as const;
 const REVIEW_KEYS = ["cheerTogether", "localBuddy", "lookedAfter"] as const;
 
-// Replace these mock values with the official contact details before launch.
 const CONTACT_DETAILS = {
-  email: "hello@hanbuddy.kr",
-  instagramLabel: "@hanbuddy",
-  instagramUrl: "https://www.instagram.com/hanbuddy",
+  email: "zeroone.soma@gmail.com",
+  instagramLabel: "@hanbuddy_kr",
+  instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
 } as const;
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
@@ -215,47 +216,70 @@ export default async function LandingPage({ params }: LandingPageProps) {
         </PageContainer>
       </section>
 
-      <section aria-labelledby="contact-title" className="bg-ink py-20 text-on-primary md:py-28">
-        <PageContainer className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary-soft uppercase">
+      <section aria-labelledby="contact-title" className="bg-canvas-soft py-20 md:py-28">
+        <PageContainer>
+          <div className="rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-14 text-center shadow-[0_18px_45px_rgba(61,45,43,0.06)] sm:px-12 md:py-16">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
               {t("contact.eyebrow")}
             </p>
             <h2
               id="contact-title"
-              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] sm:text-5xl"
+              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-5xl"
             >
               {t("contact.title")}
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-7 text-white/70">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
               {t("contact.description")}
             </p>
-          </div>
-
-          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center">
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
-              className="inline-flex min-h-12 items-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+              className="motion-press mt-8 inline-flex min-h-14 items-center gap-3 rounded-full bg-primary px-7 font-display text-base font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.22)] transition-colors hover:bg-primary-hover"
             >
+              <MailIcon className="size-5" />
               {t("contact.emailLabel")}
+            </a>
+            <p className="mt-4 text-sm text-muted">{t("contact.responseNote")}</p>
+          </div>
+
+          <p className="mt-10 text-center font-display text-sm font-semibold text-muted sm:text-base">
+            {t("contact.ps")}
+          </p>
+        </PageContainer>
+      </section>
+
+      <footer className="border-t border-line-soft bg-canvas-soft py-6 text-sm text-muted">
+        <PageContainer className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/" aria-label="HanBuddy" className="flex items-center gap-2">
+            <Image
+              src="/images/brand/logo-borderless.webp"
+              alt=""
+              width={28}
+              height={28}
+              className="size-7"
+            />
+            <span className="font-display font-bold text-primary-strong">HanBuddy</span>
+            <span className="text-line-strong">·</span>
+            <span>{t("footerTagline")}</span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <a
+              href={`mailto:${CONTACT_DETAILS.email}`}
+              aria-label={t("contact.emailIconLabel")}
+              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+            >
+              <MailIcon className="size-5" />
             </a>
             <a
               href={CONTACT_DETAILS.instagramUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-12 items-center rounded-full border border-white/30 px-6 font-display text-sm font-bold text-on-primary transition-colors hover:border-white hover:bg-white/10"
+              aria-label={t("contact.instagramIconLabel")}
+              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
             >
-              {t("contact.instagramLabel")} · {CONTACT_DETAILS.instagramLabel}
+              <InstagramIcon className="size-5" />
             </a>
           </div>
-        </PageContainer>
-      </section>
-
-      <footer className="mt-auto border-t border-line-soft bg-canvas-soft py-7 text-sm text-muted">
-        <PageContainer>
-          <span className="font-display font-bold text-primary-strong">HanBuddy</span>
-          <span className="mx-2 text-line-strong">·</span>
-          <span>{t("footerTagline")}</span>
         </PageContainer>
       </footer>
     </main>

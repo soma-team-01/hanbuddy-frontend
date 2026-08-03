@@ -114,6 +114,13 @@
       },
       "cta": "See available experiences"
     },
+    "recommended": {
+      "eyebrow": "Explore with HanBuddy",
+      "title": "Recommended experiences",
+      "description": "Find an activity that matches the way you want to experience Korea.",
+      "viewAll": "View all experiences",
+      "loading": "Loading recommended experiences..."
+    },
     "visuals": {
       "ariaLabel": "Real HanBuddy moments in Seoul",
       "mainAlt": "Friends enjoying a picnic by the Han River",

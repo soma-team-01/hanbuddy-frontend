@@ -1,8 +1,13 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getTouristActivities } from "@/lib/api/activities";
 import type { Locale } from "@/i18n/routing";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
+
+vi.mock("@/lib/api/activities", () => ({
+  getTouristActivities: vi.fn(),
+}));
 
 vi.mock("next-intl/server", async () => {
   const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
@@ -18,10 +23,17 @@ vi.mock("next-intl/server", async () => {
 });
 
 async function renderLanding(locale: Locale) {
-  renderWithIntl(await LandingPage({ params: Promise.resolve({ locale }) }), { locale });
+  renderWithQueryClient(await LandingPage({ params: Promise.resolve({ locale }) }), { locale });
 }
 
 describe("LandingPage", () => {
+  beforeEach(() => {
+    vi.mocked(getTouristActivities).mockResolvedValue({
+      status: "success",
+      activities: [],
+    });
+  });
+
   it.each([
     ["en", "Experience Korea like a local!", "Explore experiences"],
     ["ko", "현지인처럼 한국을 경험하세요!", "액티비티 둘러보기"],

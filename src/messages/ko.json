@@ -114,6 +114,13 @@
       },
       "cta": "가능한 액티비티 보기"
     },
+    "recommended": {
+      "eyebrow": "HanBuddy와 함께 둘러보기",
+      "title": "추천 액티비티",
+      "description": "내가 원하는 방식으로 한국을 경험할 수 있는 활동을 찾아보세요.",
+      "viewAll": "모든 액티비티 보기",
+      "loading": "추천 액티비티를 불러오는 중..."
+    },
     "visuals": {
       "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",
       "mainAlt": "한강에서 피크닉을 즐기는 친구들",

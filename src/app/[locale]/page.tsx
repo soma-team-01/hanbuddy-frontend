@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
 import { InstagramIcon, MailIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
@@ -121,9 +122,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
         </PageContainer>
       </section>
 
+      <RecommendedExperiences />
+
       <section
         aria-labelledby="booking-title"
-        className="border-t border-line-soft bg-panel-raised py-20 md:py-28"
+        className="border-t border-line-soft bg-panel-raised py-12 md:py-16"
       >
         <PageContainer>
           <div className="mx-auto max-w-3xl text-center">
@@ -139,16 +142,16 @@ export default async function LandingPage({ params }: LandingPageProps) {
             <p className="mt-5 text-base leading-7 text-muted">{t("booking.description")}</p>
           </div>
 
-          <div className="mx-auto mt-12 max-w-5xl space-y-4">
+          <div className="mx-auto mt-8 grid max-w-5xl gap-3 md:grid-cols-3">
             {BOOKING_STEPS.map((step, index) => (
               <article
                 key={step}
-                className="flex items-center gap-5 rounded-[1.5rem] border border-line-soft bg-canvas-soft px-6 py-6 sm:gap-8 sm:px-8 sm:py-7"
+                className="flex items-center gap-4 rounded-[1.5rem] border border-line-soft bg-canvas-soft px-5 py-5 sm:px-6 md:block"
               >
-                <span className="shrink-0 font-display text-2xl font-extrabold text-primary sm:text-3xl">
+                <span className="shrink-0 font-display text-xl font-extrabold text-primary sm:text-2xl">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <div>
+                <div className="md:mt-8">
                   <h3 className="font-display text-lg font-bold text-ink sm:text-xl">
                     {t(`booking.steps.${step}.title`)}
                   </h3>
@@ -160,7 +163,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
             ))}
           </div>
 
-          <div className="mt-10 text-center">
+          <div className="mt-7 text-center">
             <Link
               href="/explore"
               className="motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"

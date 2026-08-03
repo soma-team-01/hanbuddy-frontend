@@ -53,6 +53,9 @@ describe("LandingPage", () => {
         "href",
         `/${locale}/explore`,
       );
+      expect(
+        screen.getByRole("link", { name: locale === "ko" ? "둘러보기" : "Explore" }),
+      ).toHaveAttribute("href", `/${locale}/explore`);
       expect(screen.getByText(footer)).toBeInTheDocument();
     },
   );

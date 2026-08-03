@@ -92,9 +92,12 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 <strong className="font-display text-xl text-primary-strong">
                   {t("heroPanels.experienceBadge")}
                 </strong>
-                <span className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-on-primary">
+                <Link
+                  href="/explore"
+                  className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-on-primary"
+                >
                   {t("heroPanels.experienceAction")}
-                </span>
+                </Link>
               </div>
             </div>
             <div className="absolute top-[-18px] left-0 flex items-center gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-5 py-4 shadow-lg sm:left-8">

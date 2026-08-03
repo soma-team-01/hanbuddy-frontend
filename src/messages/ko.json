@@ -94,6 +94,25 @@
         "description": "오래 이야기할 추억을 가져가세요."
       }
     },
+    "service": {
+      "eyebrow": "HanBuddy는 어떤 서비스인가요?",
+      "title": "한국을 잘 아는 사람과 여행하세요.",
+      "description": "HanBuddy는 호기심 많은 여행자와 현지 버디를 연결해, 한국을 더 가깝고 개인적으로 느낄 수 있는 경험을 만듭니다.",
+      "cards": {
+        "traveler": {
+          "title": "여행자를 위해",
+          "description": "내 여행 방식에 꼭 맞는 현지인의 시선을 만나보세요."
+        },
+        "buddy": {
+          "title": "버디를 위해",
+          "description": "내가 사랑하는 한국의 장소와 취향, 이야기를 나눠보세요."
+        },
+        "together": {
+          "title": "함께하는 순간",
+          "description": "만나고, 탐험하고, 오래 기억할 나만의 추억을 만들어보세요."
+        }
+      }
+    },
     "visuals": {
       "ariaLabel": "현지 한국 경험 미리보기",
       "mainAlt": "한국 전통 한옥 거리",
@@ -103,15 +122,35 @@
     },
     "reviews": {
       "traveler": {
+        "initial": "S",
         "author": "Sarah · 여행자",
         "label": "여행자 이야기",
         "quote": "혼자였다면 절대 발견하지 못했을 한국의 모습을 만났어요."
       },
       "buddy": {
+        "initial": "J",
         "author": "지훈 · 로컬 버디",
         "label": "버디 이야기",
         "quote": "제가 좋아하는 장소를 새로운 사람과 나누는 일이 가장 즐거워요."
+      },
+      "travelerTwo": {
+        "initial": "M",
+        "author": "Marco · 여행자",
+        "label": "여행자 이야기",
+        "quote": "장소를 체크하는 여행보다, 진짜로 환영받는 기분이었어요."
       }
+    },
+    "reviewsSection": {
+      "eyebrow": "커뮤니티의 이야기",
+      "title": "오래 기억에 남는 순간.",
+      "description": "HanBuddy 여행자와 버디의 실제 사진과 리뷰가 이곳에 담길 예정입니다. 지금은 앞으로 채워갈 공간을 보여드리기 위한 목업 카드입니다."
+    },
+    "contact": {
+      "eyebrow": "계속 소통해요",
+      "title": "버디로 함께하고 싶거나, 궁금한 점이 있나요?",
+      "description": "HanBuddy에 대한 질문이나 아이디어, 호스팅에 관심이 있다면 편하게 알려주세요. 여러분의 이야기를 기다리고 있어요.",
+      "emailLabel": "이메일 보내기",
+      "instagramLabel": "Instagram"
     },
     "footerTagline": "진짜 한국을 함께 경험하세요."
   },

@@ -94,6 +94,25 @@
         "description": "Bring home a story worth telling."
       }
     },
+    "service": {
+      "eyebrow": "What is HanBuddy?",
+      "title": "Travel with people who know Korea.",
+      "description": "HanBuddy connects curious travelers with local buddies for small, personal experiences that make Korea feel closer.",
+      "cards": {
+        "traveler": {
+          "title": "For travelers",
+          "description": "Find a local perspective that fits the way you want to travel."
+        },
+        "buddy": {
+          "title": "For buddies",
+          "description": "Share the places, tastes, and stories that make Korea yours."
+        },
+        "together": {
+          "title": "For the moment",
+          "description": "Meet, explore, and leave with a memory that feels personal."
+        }
+      }
+    },
     "visuals": {
       "ariaLabel": "Local Korea experience preview",
       "mainAlt": "A traditional Korean hanok street",
@@ -103,15 +122,35 @@
     },
     "reviews": {
       "traveler": {
+        "initial": "S",
         "author": "Sarah · Traveler",
         "label": "Traveler story",
         "quote": "I found a side of Korea I never would have found on my own."
       },
       "buddy": {
+        "initial": "J",
         "author": "Jihoon · Local buddy",
         "label": "Buddy story",
         "quote": "The best part is sharing the places I love with someone new."
+      },
+      "travelerTwo": {
+        "initial": "M",
+        "author": "Marco · Traveler",
+        "label": "Traveler story",
+        "quote": "It felt less like checking places off a list and more like being welcomed in."
       }
+    },
+    "reviewsSection": {
+      "eyebrow": "Stories from the community",
+      "title": "The moments that stay with you.",
+      "description": "Real photos and reviews from HanBuddy travelers and buddies will live here. For now, these cards show the space we are designing for them."
+    },
+    "contact": {
+      "eyebrow": "Stay in touch",
+      "title": "Want to host an experience or just say hello?",
+      "description": "Have a question about HanBuddy, want to share an idea, or are you interested in hosting? We would love to hear from you.",
+      "emailLabel": "Email us",
+      "instagramLabel": "Instagram"
     },
     "footerTagline": "Authentic Korea, together."
   },

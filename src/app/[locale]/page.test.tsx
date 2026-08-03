@@ -44,6 +44,35 @@ describe("LandingPage", () => {
   it.each([
     [
       "en",
+      "Travel with people who know Korea.",
+      "The moments that stay with you.",
+      "Want to host an experience or just say hello?",
+      "Email us",
+      "mailto:hello@hanbuddy.kr",
+    ],
+    [
+      "ko",
+      "한국을 잘 아는 사람과 여행하세요.",
+      "오래 기억에 남는 순간.",
+      "버디로 함께하고 싶거나, 궁금한 점이 있나요?",
+      "이메일 보내기",
+      "mailto:hello@hanbuddy.kr",
+    ],
+  ] as const)(
+    "renders the service, review, and contact sections for %s",
+    async (locale, serviceTitle, reviewsTitle, contactTitle, emailLabel, emailHref) => {
+      await renderLanding(locale);
+
+      expect(screen.getByRole("heading", { level: 2, name: serviceTitle })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: reviewsTitle })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: contactTitle })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: emailLabel })).toHaveAttribute("href", emailHref);
+    },
+  );
+
+  it.each([
+    [
+      "en",
       "A traditional Korean hanok street",
       "Colorful food at a Korean market",
       "A Korean tea ceremony setting",

@@ -21,6 +21,15 @@ const HERO_IMAGES = {
 } as const;
 
 const HERO_HIGHLIGHTS = ["localPerspective", "realConnection", "sharedMoments"] as const;
+const SERVICE_CARDS = ["traveler", "buddy", "together"] as const;
+const REVIEW_KEYS = ["traveler", "buddy", "travelerTwo"] as const;
+
+// Replace these mock values with the official contact details before launch.
+const CONTACT_DETAILS = {
+  email: "hello@hanbuddy.kr",
+  instagramLabel: "@hanbuddy",
+  instagramUrl: "https://www.instagram.com/hanbuddy",
+} as const;
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
@@ -98,7 +107,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
           <section
             aria-label={t("visuals.ariaLabel")}
-            className="landing-reveal landing-reveal-delay-2 relative mx-auto min-h-[500px] w-full max-w-[620px] min-w-0 sm:min-h-[580px]"
+            className="landing-reveal landing-reveal-delay-2 hero-drift relative mx-auto min-h-[500px] w-full max-w-[620px] min-w-0 sm:min-h-[580px]"
           >
             <div className="absolute top-[8%] left-[13%] aspect-[4/5] w-[61%] rotate-[-4deg] overflow-hidden rounded-[2rem] border-8 border-canvas-soft shadow-[0_24px_50px_rgba(61,45,43,0.18)] sm:left-[16%] sm:w-[58%]">
               <Image
@@ -170,6 +179,123 @@ export default async function LandingPage({ params }: LandingPageProps) {
               <p className="mt-3 text-sm leading-5 text-muted">“{t("reviews.buddy.quote")}”</p>
             </article>
           </section>
+        </PageContainer>
+      </section>
+
+      <section
+        aria-labelledby="service-title"
+        className="border-t border-line-soft bg-canvas-soft py-20 md:py-28"
+      >
+        <PageContainer className="grid gap-12 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:items-start lg:gap-20">
+          <div className="max-w-xl">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              {t("service.eyebrow")}
+            </p>
+            <h2
+              id="service-title"
+              className="mt-4 max-w-md font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+            >
+              {t("service.title")}
+            </h2>
+            <p className="mt-5 text-base leading-7 text-muted">{t("service.description")}</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            {SERVICE_CARDS.map((card, index) => (
+              <article
+                key={card}
+                className="rounded-2xl border border-line-soft bg-panel-raised p-6 sm:min-h-64"
+              >
+                <span className="font-display text-sm font-bold text-primary">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-12 font-display text-lg font-bold text-ink">
+                  {t(`service.cards.${card}.title`)}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-muted">
+                  {t(`service.cards.${card}.description`)}
+                </p>
+              </article>
+            ))}
+          </div>
+        </PageContainer>
+      </section>
+
+      <section
+        aria-labelledby="reviews-title"
+        className="border-t border-line-soft bg-primary-soft/45 py-20 md:py-28"
+      >
+        <PageContainer>
+          <div className="max-w-2xl">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              {t("reviewsSection.eyebrow")}
+            </p>
+            <h2
+              id="reviews-title"
+              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+            >
+              {t("reviewsSection.title")}
+            </h2>
+            <p className="mt-5 text-base leading-7 text-muted">{t("reviewsSection.description")}</p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {REVIEW_KEYS.map((reviewKey) => (
+              <article
+                key={reviewKey}
+                className="flex min-h-64 flex-col rounded-2xl border border-line-soft bg-canvas-soft p-6"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-primary-soft font-display font-bold text-primary">
+                    {t(`reviews.${reviewKey}.initial`)}
+                  </span>
+                  <span className="text-xs font-semibold text-primary-strong">
+                    {t(`reviews.${reviewKey}.label`)}
+                  </span>
+                </div>
+                <blockquote className="mt-8 flex-1 font-display text-lg leading-7 font-semibold text-ink">
+                  “{t(`reviews.${reviewKey}.quote`)}”
+                </blockquote>
+                <p className="mt-6 text-sm text-muted">{t(`reviews.${reviewKey}.author`)}</p>
+              </article>
+            ))}
+          </div>
+        </PageContainer>
+      </section>
+
+      <section aria-labelledby="contact-title" className="bg-ink py-20 text-on-primary md:py-28">
+        <PageContainer className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary-soft uppercase">
+              {t("contact.eyebrow")}
+            </p>
+            <h2
+              id="contact-title"
+              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] sm:text-5xl"
+            >
+              {t("contact.title")}
+            </h2>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/70">
+              {t("contact.description")}
+            </p>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <a
+              href={`mailto:${CONTACT_DETAILS.email}`}
+              className="inline-flex min-h-12 items-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+            >
+              {t("contact.emailLabel")}
+            </a>
+            <a
+              href={CONTACT_DETAILS.instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-12 items-center rounded-full border border-white/30 px-6 font-display text-sm font-bold text-on-primary transition-colors hover:border-white hover:bg-white/10"
+            >
+              {t("contact.instagramLabel")} · {CONTACT_DETAILS.instagramLabel}
+            </a>
+          </div>
         </PageContainer>
       </section>
 

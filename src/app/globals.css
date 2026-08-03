@@ -97,6 +97,22 @@ button:not(:disabled),
   animation-delay: 260ms;
 }
 
+@keyframes hero-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.hero-drift {
+  animation:
+    landing-reveal 700ms var(--motion-ease-out) 260ms both,
+    hero-drift 8s ease-in-out 960ms infinite;
+}
+
 @keyframes motion-dialog-in {
   from {
     opacity: 0;
@@ -153,6 +169,7 @@ dialog.motion-dialog[open]::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .motion-reveal,
   .landing-reveal,
+  .hero-drift,
   dialog.motion-dialog[open],
   dialog.motion-dialog[open]::backdrop {
     opacity: 1;

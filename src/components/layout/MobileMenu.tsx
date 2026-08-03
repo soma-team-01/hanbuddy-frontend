@@ -40,6 +40,21 @@ export function MobileMenu({ title, openLabel, closeLabel, children }: Readonly<
     [],
   );
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    function handleDismissClick(event: MouseEvent) {
+      const target = event.target;
+      if (target instanceof Element && target.closest("a,[data-menu-dismiss]")) {
+        setIsOpen(false);
+      }
+    }
+
+    dialog.addEventListener("click", handleDismissClick);
+    return () => dialog.removeEventListener("click", handleDismissClick);
+  }, []);
+
   function closeMenu() {
     setIsOpen(false);
   }
@@ -68,27 +83,29 @@ export function MobileMenu({ title, openLabel, closeLabel, children }: Readonly<
           document.body.style.overflow = previousOverflow.current;
           triggerRef.current?.focus();
         }}
-        onClick={(event) => {
-          const target = event.target as Element;
-          if (event.target === event.currentTarget || target.closest("a,[data-menu-dismiss]")) {
-            closeMenu();
-          }
-        }}
-        className="fixed inset-y-0 right-0 left-auto m-0 h-dvh w-[min(88vw,360px)] max-w-none translate-x-0 overflow-y-auto border-l border-line-soft bg-panel p-0 text-ink shadow-2xl backdrop:bg-ink/45 open:flex open:flex-col lg:hidden"
+        className="fixed inset-0 m-0 h-dvh w-full max-w-none border-0 bg-transparent p-0 text-ink backdrop:bg-ink/45 open:flex open:flex-col lg:hidden"
       >
-        <div className="flex min-h-18 items-center justify-between border-b border-line-soft px-5">
-          <span className="font-display text-lg font-bold">{title}</span>
-          <button
-            ref={closeRef}
-            type="button"
-            aria-label={closeLabel}
-            onClick={closeMenu}
-            className="flex size-11 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-primary-soft"
-          >
-            <XIcon className="size-6" />
-          </button>
+        <button
+          type="button"
+          aria-label={title}
+          onClick={closeMenu}
+          className="absolute inset-0 cursor-default bg-transparent"
+        />
+        <div className="relative z-10 ml-auto flex h-full w-[min(88vw,360px)] flex-col overflow-y-auto border-l border-line-soft bg-panel shadow-2xl">
+          <div className="flex min-h-18 items-center justify-between border-b border-line-soft px-5">
+            <span className="font-display text-lg font-bold">{title}</span>
+            <button
+              ref={closeRef}
+              type="button"
+              aria-label={closeLabel}
+              onClick={closeMenu}
+              className="flex size-11 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-primary-soft"
+            >
+              <XIcon className="size-6" />
+            </button>
+          </div>
+          <div className="flex flex-1 flex-col p-5">{children}</div>
         </div>
-        <div className="flex flex-1 flex-col p-5">{children}</div>
       </dialog>
     </>
   );

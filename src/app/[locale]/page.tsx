@@ -189,23 +189,23 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 className="space-y-6 rounded-[2rem] border border-line-soft bg-canvas-soft p-7 shadow-[0_14px_35px_rgba(61,45,43,0.06)] sm:p-8"
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-x-2 text-sm leading-6">
+                    <p className="font-display font-bold text-primary">
+                      {t(`reviews.${reviewKey}.event`)}
+                    </p>
+                    <span aria-hidden className="text-primary/50">
+                      ·
+                    </span>
+                    <p className="text-muted">{t(`reviews.${reviewKey}.meta`)}</p>
+                  </div>
+
                   <span
                     role="img"
                     aria-label={t(`reviews.${reviewKey}.starLabel`)}
-                    className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1 font-display text-sm font-bold text-primary-strong"
+                    className="inline-flex items-center rounded-full bg-primary-soft px-3 py-1 font-display text-lg leading-none tracking-[0.12em] text-primary"
                   >
-                    <span aria-hidden>★</span>
-                    {t(`reviews.${reviewKey}.rating`)}
+                    <span aria-hidden>★★★★★</span>
                   </span>
-
-                  <div className="sm:text-right">
-                    <p className="font-display text-sm font-bold text-primary-strong">
-                      {t(`reviews.${reviewKey}.event`)}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-muted">
-                      {t(`reviews.${reviewKey}.meta`)}
-                    </p>
-                  </div>
                 </div>
 
                 <blockquote className="max-w-4xl font-display text-lg leading-8 font-normal tracking-[-0.02em] text-ink sm:text-xl">

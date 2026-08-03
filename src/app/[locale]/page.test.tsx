@@ -71,6 +71,8 @@ describe("LandingPage", () => {
 
       expect(reviewRegion.querySelectorAll('[role="img"]')).toHaveLength(3);
       expect(screen.getAllByRole("img", { name: starLabel })).toHaveLength(3);
+      expect(screen.queryByText("5.0")).not.toBeInTheDocument();
+      expect(screen.getAllByText("★★★★★")).toHaveLength(3);
       expect(screen.queryByText(/overall rating|전체 평점/)).not.toBeInTheDocument();
       expect(screen.queryByText(/Sarah|Jihoon|Marco|사라|지훈|마르코/)).not.toBeInTheDocument();
     },

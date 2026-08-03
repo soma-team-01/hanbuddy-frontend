@@ -234,32 +234,29 @@ export default async function LandingPage({ params }: LandingPageProps) {
         </PageContainer>
       </section>
 
-      <section
-        aria-labelledby="contact-title"
-        className="bg-canvas-soft pt-10 pb-4 md:pt-16 md:pb-6"
-      >
+      <section aria-labelledby="contact-title" className="bg-primary pt-10 pb-4 md:pt-16 md:pb-6">
         <PageContainer>
-          <div className="rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-14 text-center shadow-[0_18px_45px_rgba(61,45,43,0.06)] sm:px-12 md:py-16">
-            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+          <div className="px-6 py-14 text-center sm:px-12 md:py-16">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary-soft uppercase">
               {t("contact.eyebrow")}
             </p>
             <h2
               id="contact-title"
-              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-5xl"
+              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-on-primary sm:text-5xl"
             >
               {t("contact.title")}
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-on-primary/80 sm:text-lg">
               {t("contact.description")}
             </p>
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
-              className="motion-press mt-8 inline-flex min-h-14 items-center gap-3 rounded-full bg-primary px-7 font-display text-base font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.22)] transition-colors hover:bg-primary-hover"
+              className="motion-press mt-8 inline-flex min-h-14 items-center gap-3 rounded-full bg-canvas-soft px-7 font-display text-base font-bold text-primary shadow-[0_14px_28px_rgba(61,45,43,0.18)] transition-colors hover:bg-primary-soft"
             >
               <MailIcon className="size-5" />
               {t("contact.emailLabel")}
             </a>
-            <p className="mt-4 text-sm text-muted">{t("contact.responseNote")}</p>
+            <p className="mt-4 text-sm text-on-primary/80">{t("contact.responseNote")}</p>
           </div>
         </PageContainer>
       </section>

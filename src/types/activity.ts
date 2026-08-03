@@ -32,6 +32,7 @@ export interface Activity {
   categoryLabel?: string;
   imageUrl: string;
   heroImageUrl: string;
+  images?: string[];
   rating?: number;
   reviewCount?: number;
   /** 원화(₩) 기준 1인당 가격 */

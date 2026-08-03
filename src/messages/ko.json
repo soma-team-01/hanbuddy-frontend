@@ -44,9 +44,23 @@
     "serverUnavailable": "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요."
   },
   "Navigation": {
+    "primaryNavigation": "주요 내비게이션",
+    "navigationMenu": "내비게이션 메뉴",
+    "openMenu": "메뉴 열기",
+    "closeMenu": "메뉴 닫기",
+    "changeLanguageToKorean": "한국어로 변경",
+    "changeLanguageToEnglish": "영어로 변경",
     "home": "홈",
-    "activity": "액티비티",
-    "myPage": "마이페이지"
+    "explore": "탐색",
+    "applications": "내 신청",
+    "dashboard": "대시보드",
+    "buddyWorkspace": "버디 워크스페이스",
+    "myActivities": "내 액티비티",
+    "applicants": "지원자",
+    "createActivity": "액티비티 만들기",
+    "createActivityInSidebar": "사이드바에서 액티비티 만들기",
+    "myPage": "마이페이지",
+    "login": "로그인"
   },
   "Accessibility": {
     "goBack": "뒤로 가기",
@@ -68,6 +82,31 @@
     "description": "KBO 야구 관람부터 전통시장까지, 단순한 관광을 넘어 현지 버디와 함께 진짜 한국 문화를 경험해 보세요.",
     "getStarted": "시작하기",
     "browseExperiences": "액티비티 둘러보기 →",
+    "heroPanels": {
+      "experienceTitle": "나에게 꼭 맞는 로컬 경험",
+      "experienceDescription": "현지 버디가 공유하는 액티비티를 둘러보세요.",
+      "experienceBadge": "당신을 위한 경험",
+      "experienceAction": "둘러보기",
+      "touristTitle": "호기심으로 여행하기",
+      "touristDescription": "여행에 잘 맞는 경험을 찾아보세요.",
+      "buddyTitle": "현지 버디와 함께",
+      "buddyDescription": "한국을 가장 잘 아는 사람을 만나보세요.",
+      "confirmation": "다음 한국 경험을 찾아보세요"
+    },
+    "processSteps": {
+      "browse": {
+        "title": "자유롭게 둘러보기",
+        "description": "회원가입 없이도 모든 경험을 살펴볼 수 있어요."
+      },
+      "apply": {
+        "title": "날짜를 고르고 신청하기",
+        "description": "일정을 선택하고 버디에게 자신을 소개한 뒤 안전하게 결제하세요."
+      },
+      "meet": {
+        "title": "버디 만나기",
+        "description": "버디가 신청을 확인하고 원하는 메신저로 연락드려요."
+      }
+    },
     "experiences": {
       "gwangjangMarket": {
         "title": "광장시장",
@@ -107,6 +146,7 @@
     }
   },
   "Onboarding": {
+    "title": "프로필 완성하기",
     "metadataTitle": "프로필 설정 | HanBuddy",
     "metadataDescription": "HanBuddy 역할을 선택하고 프로필을 완성하세요.",
     "roleHeading": "역할을 선택해 주세요",
@@ -138,6 +178,7 @@
     "completeRegistration": "가입 완료"
   },
   "Profile": {
+    "title": "프로필 수정",
     "metadataTitle": "프로필 수정 | HanBuddy",
     "metadataDescription": "HanBuddy 프로필과 연락처 정보를 수정하세요.",
     "fullName": "이름",
@@ -159,11 +200,15 @@
     "saveFailed": "프로필을 저장하지 못했습니다. 다시 시도해 주세요.",
     "loadFailed": "프로필을 불러오지 못했습니다.",
     "save": "저장",
+    "saveOnMobile": "프로필 저장",
     "saving": "저장 중..."
   },
   "Explore": {
+    "title": "액티비티 탐색",
+    "description": "현지 버디와 함께할 한국의 특별한 경험을 찾아보세요.",
     "loading": "액티비티를 불러오는 중...",
     "empty": "아직 등록된 액티비티가 없습니다.",
+    "emptyDescription": "현지 버디들이 새로운 경험을 준비하고 있습니다. 곧 다시 확인해 주세요!",
     "loadError": "액티비티를 불러오지 못했습니다.",
     "perPerson": "{price} / 1인"
   },
@@ -185,6 +230,7 @@
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다."
   },
   "Booking": {
+    "title": "액티비티 예약",
     "loading": "예약 정보를 불러오는 중...",
     "loadError": "예약 정보를 불러오지 못했습니다.",
     "notFound": "예약할 수 있는 액티비티를 찾을 수 없습니다.",
@@ -218,6 +264,7 @@
   },
   "Applications": {
     "title": "내 신청",
+    "description": "예정된 경험과 결제, 지난 신청 내역을 확인하세요.",
     "upcoming": "예정",
     "past": "지난 내역",
     "loading": "신청 내역을 불러오는 중...",
@@ -276,6 +323,7 @@
     "appIdInputLabel": "메신저 앱 ID"
   },
   "MyPage": {
+    "title": "마이페이지",
     "language": "언어",
     "languageSheetTitle": "언어",
     "english": "English",
@@ -283,6 +331,11 @@
     "helpCenter": "고객센터",
     "deleteAccount": "계정 삭제",
     "editProfile": "프로필 수정",
+    "tourist": "여행자",
+    "buddy": "버디",
+    "accountSettings": "계정",
+    "accountSettingsTitle": "계정 정보를 관리하세요",
+    "accountSettingsDescription": "프로필과 언어 설정은 언제든지 다시 변경할 수 있습니다.",
     "profileLoadFailed": "프로필을 불러오지 못했습니다.",
     "logOut": "로그아웃",
     "loggingOut": "로그아웃 중...",
@@ -297,6 +350,8 @@
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다."
   },
   "BuddyDashboard": {
+    "title": "버디 대시보드",
+    "description": "예정 일정과 게스트 신청 현황을 한눈에 확인하세요.",
     "quickActions": "빠른 작업",
     "createActivity": "액티비티 만들기",
     "upcoming": "예정 일정",
@@ -334,6 +389,7 @@
     }
   },
   "Applicants": {
+    "title": "신청자",
     "loading": "신청자를 불러오는 중...",
     "loadError": "신청자를 불러오지 못했습니다.",
     "noSchedule": "등록된 일정이 없습니다.",
@@ -350,6 +406,13 @@
     }
   },
   "CreateActivity": {
+    "sidebarEyebrow": "액티비티 만들기",
+    "sidebarTitle": "여행자와 나의 경험을 나눠보세요",
+    "sidebarSteps": {
+      "basics": "기본 정보",
+      "details": "상세 정보 및 가격",
+      "meeting": "만남 정보"
+    },
     "steps": {
       "progress": "{total, number}단계 중 {current, number}단계",
       "basicsTitle": "액티비티 기본 정보",

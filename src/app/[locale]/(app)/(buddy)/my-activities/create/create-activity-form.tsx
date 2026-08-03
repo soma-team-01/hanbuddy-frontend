@@ -5,7 +5,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import { TopAppBar } from "@/components/layout/TopAppBar";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
@@ -39,11 +40,11 @@ function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 const INPUT_CLASS =
-  "border-line text-ink placeholder:text-ink-soft/60 w-full rounded-xl border bg-white px-4 py-3.5 text-base";
+  "border-line-soft text-ink placeholder:text-muted/70 w-full rounded-2xl border bg-canvas-soft px-4 py-4 text-base";
 const ADD_ROW_BUTTON_CLASS =
-  "self-start rounded-full px-3 py-2 text-sm font-semibold text-earth transition-colors hover:bg-earth/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-earth";
+  "self-start rounded-full px-3 py-2 text-sm font-semibold text-primary-strong transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
 const INLINE_REMOVE_BUTTON_CLASS =
-  "absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
+  "absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
 const MAX_ACTIVITY_PHOTOS = 8;
 const PLACE_SEARCH_DEBOUNCE_MS = 300;
 
@@ -75,6 +76,8 @@ const STEP_CONTENT = {
     description: "steps.meetingDescription",
   },
 } as const satisfies Record<CreateActivityStep, { title: string; description: string }>;
+
+const SIDEBAR_STEPS = ["basics", "details", "meeting"] as const;
 
 export type CreateActivityErrorKey = keyof (typeof messages)["CreateActivity"]["errors"];
 
@@ -241,23 +244,23 @@ function MeetingPlaceFeedback({
   return (
     <>
       {!googleMapsApiKey ? (
-        <p className="px-1 text-xs text-ink-soft">{t("placeSearchUnavailable")}</p>
+        <p className="px-1 text-xs text-muted">{t("placeSearchUnavailable")}</p>
       ) : null}
       {placePredictions?.locale === locale && placePredictions.values.length > 0 ? (
         <ul
           aria-label={t("placeResults")}
-          className="overflow-hidden rounded-xl border border-line bg-white"
+          className="overflow-hidden rounded-xl border border-line-soft bg-panel"
         >
           {placePredictions.values.map((prediction) => (
             <li key={prediction.placeId}>
               <button
                 type="button"
                 onClick={() => onPlaceSelect(prediction, placePredictions.locale)}
-                className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-chip"
+                className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-primary-soft"
               >
                 <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
                 {prediction.secondaryText ? (
-                  <span className="text-xs text-ink-soft">{prediction.secondaryText}</span>
+                  <span className="text-xs text-muted">{prediction.secondaryText}</span>
                 ) : null}
               </button>
             </li>
@@ -265,10 +268,10 @@ function MeetingPlaceFeedback({
         </ul>
       ) : null}
       {isSearchingPlaces ? (
-        <p className="px-1 text-xs text-ink-soft">{t("placeSearchLoading")}</p>
+        <p className="px-1 text-xs text-muted">{t("placeSearchLoading")}</p>
       ) : null}
       {selectedMeetingPlaceAddress?.locale === locale ? (
-        <p className="px-1 text-xs text-ink-soft">{selectedMeetingPlaceAddress.value}</p>
+        <p className="px-1 text-xs text-muted">{selectedMeetingPlaceAddress.value}</p>
       ) : null}
       {meetingMapUrl ? (
         <iframe
@@ -280,7 +283,7 @@ function MeetingPlaceFeedback({
           allowFullScreen
         />
       ) : (
-        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-line/60 text-ink-soft">
+        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-panel-raised text-muted">
           <MapIcon className="size-6" />
           <span className="text-sm">{t("mapFallback")}</span>
         </div>
@@ -684,330 +687,377 @@ export function CreateActivityForm() {
   }
 
   return (
-    <form
-      ref={formRef}
-      noValidate
-      onSubmit={handleFormSubmit}
-      onChange={() => setIsDirty(true)}
-      className="flex flex-1 flex-col pb-28"
-    >
-      <TopAppBar onLeftClick={handleBack} />
-      <main className="flex flex-1 flex-col gap-6 px-4 py-8">
-        <div>
-          <p className="font-display text-xs font-semibold tracking-widest text-earth uppercase">
-            {t("steps.progress", { current: currentStep, total: 3 })}
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-semibold text-forest">
-            {t(stepContent.title)}
-          </h1>
-          <p className="mt-2 text-ink-soft">{t(stepContent.description)}</p>
-        </div>
+    <div className="flex flex-1 flex-col bg-canvas pb-28 lg:pb-0">
+      <PageHeader onLeftClick={handleBack} />
+      <main className="flex-1 py-6 md:py-10">
+        <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
+          <aside className="mb-8 hidden lg:block">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              {t("sidebarEyebrow")}
+            </p>
+            <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
+              {t("sidebarTitle")}
+            </h2>
+            <ol className="mt-12 flex flex-col gap-4 text-sm">
+              {SIDEBAR_STEPS.map((step, index) => {
+                const stepNumber = index + 1;
+                const isCurrent = currentStep === stepNumber;
+                const isComplete = stepNumber < currentStep;
+                let stepClassName = "text-muted";
+                if (isCurrent) stepClassName = "font-bold text-ink";
 
-        {errorMessage ? (
-          <p
-            role="alert"
-            className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-          >
-            {errorMessage}
-          </p>
-        ) : null}
+                let indicatorClassName = "border border-line-strong";
+                if (isComplete) indicatorClassName = "bg-success text-white";
+                if (isCurrent) indicatorClassName = "bg-primary text-white";
 
-        <section hidden={currentStep !== 1} className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-white/60 px-6 py-14 text-ink-soft">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                aria-label={t("activityPhotos")}
-                className="sr-only"
-                onChange={handlePhotoSelection}
-              />
-              <ImagePlusIcon className="size-8" />
-              <span className="font-display text-sm font-semibold text-ink">
-                {t("uploadPhotos")}
-              </span>
-              <span className="text-xs">
-                {selectedFiles.length > 0
-                  ? t("selectedPhotos", { count: selectedFiles.length })
-                  : t("photoHint")}
-              </span>
-            </label>
-
-            {selectedPhotos.length > 0 ? (
-              <ul aria-label={t("selectedPhotosList")} className="grid grid-cols-4 gap-2">
-                {selectedPhotos.map((photo) => (
-                  <li
-                    key={photo.id}
-                    className="relative aspect-square overflow-hidden rounded-xl border border-line bg-white"
-                  >
-                    <Image
-                      src={photo.previewUrl}
-                      alt={photo.file.name}
-                      fill
-                      sizes="72px"
-                      unoptimized
-                      className="object-cover"
-                    />
-                    <button
-                      type="button"
-                      aria-label={t("removePhoto", { name: photo.file.name })}
-                      onClick={() => removeSelectedPhoto(photo.id)}
-                      className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-cream transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                return (
+                  <li key={step} className={`flex items-center gap-3 ${stepClassName}`}>
+                    <span
+                      className={`flex size-8 items-center justify-center rounded-full font-display ${indicatorClassName}`}
                     >
-                      <TrashIcon className="size-3.5" />
-                    </button>
+                      {isComplete ? "✓" : stepNumber}
+                    </span>
+                    {t(`sidebarSteps.${step}`)}
                   </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
+                );
+              })}
+            </ol>
+          </aside>
+          <form
+            ref={formRef}
+            data-testid="create-activity-form"
+            noValidate
+            onSubmit={handleFormSubmit}
+            onChange={() => setIsDirty(true)}
+            className="mx-auto w-full max-w-[800px] space-y-8"
+          >
+            <div>
+              <p className="font-display text-xs font-bold tracking-widest text-primary-strong uppercase">
+                {t("steps.progress", { current: currentStep, total: 3 })}
+              </p>
+              <h1 className="mt-2 font-display text-4xl font-extrabold tracking-[-0.04em] text-ink">
+                {t(stepContent.title)}
+              </h1>
+              <p className="mt-2 text-muted">{t(stepContent.description)}</p>
+            </div>
 
-          <label className="flex flex-col gap-2">
-            <FieldLabel>{t("activityTitle")}</FieldLabel>
-            <input
-              type="text"
-              name="title"
-              required
-              placeholder={t("titlePlaceholder")}
-              className={INPUT_CLASS}
-            />
-          </label>
-
-          <label className="flex flex-col gap-2">
-            <FieldLabel>{t("description")}</FieldLabel>
-            <textarea
-              name="description"
-              required
-              rows={4}
-              placeholder={t("descriptionPlaceholder")}
-              className={`${INPUT_CLASS} resize-none`}
-            />
-          </label>
-        </section>
-
-        <section hidden={currentStep !== 2} className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <FieldLabel>{t("availability")}</FieldLabel>
-            <p className="text-xs text-ink-soft">{t("kstNotice")}</p>
-            {timeSlots.map((key, index) => (
-              <div key={key} className="relative">
-                <input
-                  name="scheduleDateTime"
-                  type="datetime-local"
-                  required={index === 0}
-                  aria-label={t("availableSchedule")}
-                  className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                />
-                {index > 0 ? (
-                  <InlineRemoveButton
-                    ariaLabel={t("removeTimeSlot", { index: index + 1 })}
-                    title={t("removeTimeSlotTitle")}
-                    onClick={() => removeTimeSlot(key)}
-                  />
-                ) : null}
-              </div>
-            ))}
-            <button
-              type="button"
-              aria-label={t("addTimeSlot")}
-              onClick={addTimeSlot}
-              className={ADD_ROW_BUTTON_CLASS}
-            >
-              + {t("addTimeSlot")}
-            </button>
-          </div>
-
-          <label className="flex flex-col gap-2">
-            <FieldLabel>{t("maxCapacity")}</FieldLabel>
-            <span className="relative">
-              <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-soft" />
-              <input
-                name="maxCapacity"
-                type="number"
-                min={1}
-                required
-                placeholder={t("capacityPlaceholder", { count: 4 })}
-                className={`${INPUT_CLASS} pl-11`}
-              />
-            </span>
-          </label>
-
-          <label className="flex flex-col gap-2">
-            <FieldLabel>{t("pricePerPerson")}</FieldLabel>
-            <span className="relative">
-              <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-ink-soft">
-                ₩
-              </span>
-              <input
-                name="price"
-                type="number"
-                min={1}
-                step={1}
-                required
-                aria-label={t("pricePerPerson")}
-                placeholder={t("pricePlaceholder")}
-                className={`${INPUT_CLASS} pl-11`}
-                onChange={handlePriceChange}
-                onBlur={handlePriceBlur}
-              />
-            </span>
-            {pricePreviewMutation.isPending ? (
-              <output className="text-xs text-ink-soft">{t("payoutLoading")}</output>
-            ) : null}
-            {pricePreviewMutation.error ? (
-              <span role="alert" aria-label={t("payoutErrorLabel")} className="text-xs text-danger">
-                {getApiErrorMessage(pricePreviewMutation.error, t("payoutError"))}
-              </span>
-            ) : null}
-            {pricePreviewMutation.data ? (
-              <dl
-                aria-label={t("payoutSummary", {
-                  amount: pricePreviewMutation.data.estimatedGuidePayoutAmountKrw,
-                })}
-                className="flex flex-col gap-2 rounded-xl bg-chip px-4 py-3 text-sm"
+            {errorMessage ? (
+              <p
+                role="alert"
+                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
               >
-                <div className="flex items-center justify-between text-ink-soft">
-                  <dt>{t("platformFee", { rate: pricePreviewMutation.data.commissionRate })}</dt>
-                  <dd>
-                    {formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw, locale)}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between font-semibold text-forest">
-                  <dt>{t("estimatedPayout")}</dt>
-                  <dd>
-                    {formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw, locale)}
-                  </dd>
-                </div>
-              </dl>
+                {errorMessage}
+              </p>
             ) : null}
-          </label>
-        </section>
 
-        <section hidden={currentStep !== 3} className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <FieldLabel>{t("meetingPoint")}</FieldLabel>
-            <label className="flex flex-col">
-              <span className="relative">
-                <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-soft" />
-                <input
-                  type="text"
-                  value={meetingPlaceQuery}
-                  onChange={handlePlaceQueryChange}
-                  placeholder={t("placeSearchPlaceholder")}
-                  aria-label={t("placeSearch")}
-                  className={`${INPUT_CLASS} pl-11`}
-                />
-              </span>
-            </label>
-            <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
-            <MeetingPlaceFeedback
-              googleMapsApiKey={googleMapsApiKey}
-              isSearchingPlaces={isSearchingPlaces}
-              meetingMapUrl={meetingMapUrl}
-              onPlaceSelect={handlePlaceSelect}
-              placePredictions={placePredictions}
-              selectedMeetingPlaceAddress={selectedMeetingPlaceAddress}
-            />
-            <label className="mt-2 flex flex-col gap-2">
-              <FieldLabel>{t("meetingPointName")}</FieldLabel>
-              <input
-                name="meetingPointName"
-                type="text"
-                required
-                placeholder={t("meetingPointNamePlaceholder")}
-                aria-label={t("meetingPointName")}
-                className={INPUT_CLASS}
-              />
-            </label>
-          </div>
-
-          <fieldset
-            aria-label={t("includedItemsCount", { count: includedItems.length })}
-            className="flex min-w-0 flex-col gap-2 border-0 p-0"
-          >
-            <FieldLabel>{t("included")}</FieldLabel>
-            {includedItems.map((key, index) => (
-              <div key={key} className="relative">
-                <input
-                  name="includedItems"
-                  type="text"
-                  required={index === 0}
-                  placeholder={t("includedItemPlaceholder")}
-                  aria-label={t("includedItem")}
-                  className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                />
-                {index > 0 ? (
-                  <InlineRemoveButton
-                    ariaLabel={t("removeIncludedItem", { index: index + 1 })}
-                    title={t("removeIncludedItemTitle")}
-                    onClick={() => removeIncludedItem(key)}
+            <section hidden={currentStep !== 1} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-3">
+                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-panel/60 px-6 py-14 text-muted">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    aria-label={t("activityPhotos")}
+                    className="sr-only"
+                    onChange={handlePhotoSelection}
                   />
+                  <ImagePlusIcon className="size-8" />
+                  <span className="font-display text-sm font-semibold text-ink">
+                    {t("uploadPhotos")}
+                  </span>
+                  <span className="text-xs">
+                    {selectedFiles.length > 0
+                      ? t("selectedPhotos", { count: selectedFiles.length })
+                      : t("photoHint")}
+                  </span>
+                </label>
+
+                {selectedPhotos.length > 0 ? (
+                  <ul aria-label={t("selectedPhotosList")} className="grid grid-cols-4 gap-2">
+                    {selectedPhotos.map((photo) => (
+                      <li
+                        key={photo.id}
+                        className="relative aspect-square overflow-hidden rounded-xl border border-line-soft bg-panel"
+                      >
+                        <Image
+                          src={photo.previewUrl}
+                          alt={photo.file.name}
+                          fill
+                          sizes="72px"
+                          unoptimized
+                          className="object-cover"
+                        />
+                        <button
+                          type="button"
+                          aria-label={t("removePhoto", { name: photo.file.name })}
+                          onClick={() => removeSelectedPhoto(photo.id)}
+                          className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-on-primary transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                        >
+                          <TrashIcon className="size-3.5" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 ) : null}
               </div>
-            ))}
-            <button
-              type="button"
-              aria-label={t("addIncludedItem")}
-              onClick={addIncludedItem}
-              className={ADD_ROW_BUTTON_CLASS}
-            >
-              + {t("addIncludedItem")}
-            </button>
-          </fieldset>
 
-          <fieldset
-            aria-label={t("restrictionsCount", { count: restrictions.length })}
-            className="flex min-w-0 flex-col gap-2 border-0 p-0"
-          >
-            <FieldLabel>{t("restrictions")}</FieldLabel>
-            {restrictions.map((key, index) => (
-              <div key={key} className="relative">
+              <label className="flex flex-col gap-2">
+                <FieldLabel>{t("activityTitle")}</FieldLabel>
                 <input
-                  name="restrictionNotes"
                   type="text"
-                  placeholder={t("restrictionPlaceholder")}
-                  aria-label={t("restriction")}
-                  className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                  name="title"
+                  required
+                  placeholder={t("titlePlaceholder")}
+                  className={INPUT_CLASS}
                 />
-                {index > 0 ? (
-                  <InlineRemoveButton
-                    ariaLabel={t("removeRestriction", { index: index + 1 })}
-                    title={t("removeRestrictionTitle")}
-                    onClick={() => removeRestriction(key)}
-                  />
-                ) : null}
-              </div>
-            ))}
-            <button
-              type="button"
-              aria-label={t("addRestriction")}
-              onClick={addRestriction}
-              className={ADD_ROW_BUTTON_CLASS}
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <FieldLabel>{t("description")}</FieldLabel>
+                <textarea
+                  name="description"
+                  required
+                  rows={4}
+                  placeholder={t("descriptionPlaceholder")}
+                  className={`${INPUT_CLASS} resize-none`}
+                />
+              </label>
+            </section>
+
+            <section
+              hidden={currentStep !== 2}
+              data-testid="create-activity-primary-fields"
+              className="grid gap-6 md:grid-cols-2"
             >
-              + {t("addRestriction")}
-            </button>
-          </fieldset>
-        </section>
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <FieldLabel>{t("availability")}</FieldLabel>
+                <p className="text-xs text-muted">{t("kstNotice")}</p>
+                {timeSlots.map((key, index) => (
+                  <div key={key} className="relative">
+                    <input
+                      name="scheduleDateTime"
+                      type="datetime-local"
+                      required={index === 0}
+                      aria-label={t("availableSchedule")}
+                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                    />
+                    {index > 0 ? (
+                      <InlineRemoveButton
+                        ariaLabel={t("removeTimeSlot", { index: index + 1 })}
+                        title={t("removeTimeSlotTitle")}
+                        onClick={() => removeTimeSlot(key)}
+                      />
+                    ) : null}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  aria-label={t("addTimeSlot")}
+                  onClick={addTimeSlot}
+                  className={ADD_ROW_BUTTON_CLASS}
+                >
+                  + {t("addTimeSlot")}
+                </button>
+              </div>
+
+              <label className="flex flex-col gap-2">
+                <FieldLabel>{t("maxCapacity")}</FieldLabel>
+                <span className="relative">
+                  <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
+                  <input
+                    name="maxCapacity"
+                    type="number"
+                    min={1}
+                    required
+                    placeholder={t("capacityPlaceholder", { count: 4 })}
+                    className={`${INPUT_CLASS} pl-11`}
+                  />
+                </span>
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <FieldLabel>{t("pricePerPerson")}</FieldLabel>
+                <span className="relative">
+                  <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-muted">
+                    ₩
+                  </span>
+                  <input
+                    name="price"
+                    type="number"
+                    min={1}
+                    step={1}
+                    required
+                    aria-label={t("pricePerPerson")}
+                    placeholder={t("pricePlaceholder")}
+                    className={`${INPUT_CLASS} pl-11`}
+                    onChange={handlePriceChange}
+                    onBlur={handlePriceBlur}
+                  />
+                </span>
+                {pricePreviewMutation.isPending ? (
+                  <output className="text-xs text-muted">{t("payoutLoading")}</output>
+                ) : null}
+                {pricePreviewMutation.error ? (
+                  <span
+                    role="alert"
+                    aria-label={t("payoutErrorLabel")}
+                    className="text-xs text-danger"
+                  >
+                    {getApiErrorMessage(pricePreviewMutation.error, t("payoutError"))}
+                  </span>
+                ) : null}
+                {pricePreviewMutation.data ? (
+                  <dl
+                    aria-label={t("payoutSummary", {
+                      amount: pricePreviewMutation.data.estimatedGuidePayoutAmountKrw,
+                    })}
+                    className="flex flex-col gap-2 rounded-xl bg-panel-raised px-4 py-3 text-sm"
+                  >
+                    <div className="flex items-center justify-between text-muted">
+                      <dt>
+                        {t("platformFee", { rate: pricePreviewMutation.data.commissionRate })}
+                      </dt>
+                      <dd>
+                        {formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw, locale)}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between font-semibold text-primary-strong">
+                      <dt>{t("estimatedPayout")}</dt>
+                      <dd>
+                        {formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw, locale)}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : null}
+              </label>
+            </section>
+
+            <section hidden={currentStep !== 3} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <FieldLabel>{t("meetingPoint")}</FieldLabel>
+                <label className="flex flex-col">
+                  <span className="relative">
+                    <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
+                    <input
+                      type="text"
+                      value={meetingPlaceQuery}
+                      onChange={handlePlaceQueryChange}
+                      placeholder={t("placeSearchPlaceholder")}
+                      aria-label={t("placeSearch")}
+                      className={`${INPUT_CLASS} pl-11`}
+                    />
+                  </span>
+                </label>
+                <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
+                <MeetingPlaceFeedback
+                  googleMapsApiKey={googleMapsApiKey}
+                  isSearchingPlaces={isSearchingPlaces}
+                  meetingMapUrl={meetingMapUrl}
+                  onPlaceSelect={handlePlaceSelect}
+                  placePredictions={placePredictions}
+                  selectedMeetingPlaceAddress={selectedMeetingPlaceAddress}
+                />
+                <label className="mt-2 flex flex-col gap-2">
+                  <FieldLabel>{t("meetingPointName")}</FieldLabel>
+                  <input
+                    name="meetingPointName"
+                    type="text"
+                    required
+                    placeholder={t("meetingPointNamePlaceholder")}
+                    aria-label={t("meetingPointName")}
+                    className={INPUT_CLASS}
+                  />
+                </label>
+              </div>
+
+              <fieldset
+                aria-label={t("includedItemsCount", { count: includedItems.length })}
+                className="flex min-w-0 flex-col gap-2 border-0 p-0"
+              >
+                <FieldLabel>{t("included")}</FieldLabel>
+                {includedItems.map((key, index) => (
+                  <div key={key} className="relative">
+                    <input
+                      name="includedItems"
+                      type="text"
+                      required={index === 0}
+                      placeholder={t("includedItemPlaceholder")}
+                      aria-label={t("includedItem")}
+                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                    />
+                    {index > 0 ? (
+                      <InlineRemoveButton
+                        ariaLabel={t("removeIncludedItem", { index: index + 1 })}
+                        title={t("removeIncludedItemTitle")}
+                        onClick={() => removeIncludedItem(key)}
+                      />
+                    ) : null}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  aria-label={t("addIncludedItem")}
+                  onClick={addIncludedItem}
+                  className={ADD_ROW_BUTTON_CLASS}
+                >
+                  + {t("addIncludedItem")}
+                </button>
+              </fieldset>
+
+              <fieldset
+                aria-label={t("restrictionsCount", { count: restrictions.length })}
+                className="flex min-w-0 flex-col gap-2 border-0 p-0"
+              >
+                <FieldLabel>{t("restrictions")}</FieldLabel>
+                {restrictions.map((key, index) => (
+                  <div key={key} className="relative">
+                    <input
+                      name="restrictionNotes"
+                      type="text"
+                      placeholder={t("restrictionPlaceholder")}
+                      aria-label={t("restriction")}
+                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
+                    />
+                    {index > 0 ? (
+                      <InlineRemoveButton
+                        ariaLabel={t("removeRestriction", { index: index + 1 })}
+                        title={t("removeRestrictionTitle")}
+                        onClick={() => removeRestriction(key)}
+                      />
+                    ) : null}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  aria-label={t("addRestriction")}
+                  onClick={addRestriction}
+                  className={ADD_ROW_BUTTON_CLASS}
+                >
+                  + {t("addRestriction")}
+                </button>
+              </fieldset>
+            </section>
+            <BottomActionBar>
+              <button
+                type="button"
+                onClick={currentStep === 1 ? handleBack : goToPreviousStep}
+                disabled={isSubmitting}
+                className="h-12 flex-1 rounded-xl border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {currentStep === 1 ? t("cancel") : t("previous")}
+              </button>
+              <button
+                type="button"
+                onClick={currentStep === 3 ? handleRegisterClick : goToNextStep}
+                disabled={isSubmitting}
+                className="h-12 flex-1 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {t(getPrimaryActionLabelKey(submissionPhase, currentStep))}
+              </button>
+            </BottomActionBar>
+          </form>
+        </PageContainer>
       </main>
-      <BottomActionBar>
-        <button
-          type="button"
-          onClick={currentStep === 1 ? handleBack : goToPreviousStep}
-          disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl border border-line bg-chip font-display text-sm font-semibold text-ink transition-colors enabled:hover:border-line-strong enabled:hover:bg-line disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {currentStep === 1 ? t("cancel") : t("previous")}
-        </button>
-        <button
-          type="button"
-          onClick={currentStep === 3 ? handleRegisterClick : goToNextStep}
-          disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl bg-forest font-display text-sm font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {t(getPrimaryActionLabelKey(submissionPhase, currentStep))}
-        </button>
-      </BottomActionBar>
       {pendingPublish && (
         <ConfirmDialog
           title={t("registerTitle")}
@@ -1031,6 +1081,6 @@ export function CreateActivityForm() {
           onClose={() => setShowDiscardConfirm(false)}
         />
       )}
-    </form>
+    </div>
   );
 }

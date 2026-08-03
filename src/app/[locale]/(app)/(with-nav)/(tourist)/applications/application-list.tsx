@@ -41,12 +41,12 @@ function PriceBreakdown({
     application.status === "confirmed" || application.status === "completed";
 
   return (
-    <div className="border-t border-line pt-3">
+    <div className="border-t border-line-soft pt-3">
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-sm text-ink-soft transition-colors hover:text-ink"
+        className="flex w-full items-center justify-between text-sm text-muted transition-colors hover:text-ink"
       >
         {t("priceBreakdown")}
         <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -63,7 +63,7 @@ function PriceBreakdown({
             <span>{formatKrw(subtotal, locale)}</span>
           </div>
           {hasCompletedPayment && paymentCharge ? (
-            <div className="font-display font-semibold text-forest">
+            <div className="font-display font-semibold text-primary-strong">
               {t("paidWithPayPal", {
                 amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
               })}
@@ -119,10 +119,10 @@ function ApplicationCard({
   }
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
+    <article className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 shadow-[0_8px_22px_rgba(61,45,43,0.06)] md:p-6">
       <div className="flex items-center justify-between">
         <StatusBadge status={application.status} />
-        <span className="text-xs text-ink-soft">{application.dateLabel}</span>
+        <span className="text-xs text-muted">{application.dateLabel}</span>
       </div>
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
@@ -134,12 +134,12 @@ function ApplicationCard({
           />
           <div className="min-w-0">
             <p
-              className={`font-display text-sm font-semibold ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}
+              className={`font-display text-sm font-semibold ${isCompleted || isCancelled ? "text-muted" : "text-ink"}`}
             >
               {application.hostName}
             </p>
             <p
-              className={`truncate text-base ${isCompleted || isCancelled ? "text-ink-soft" : "text-ink"}`}
+              className={`truncate text-base ${isCompleted || isCancelled ? "text-muted" : "text-ink"}`}
             >
               {application.activityTitle}
             </p>
@@ -151,7 +151,7 @@ function ApplicationCard({
               {formatKrw(totalKrw, locale)}
             </p>
             {hasCompletedPayment && paymentCharge ? (
-              <p className="mt-0.5 text-xs text-forest">
+              <p className="mt-0.5 text-xs text-primary-strong">
                 {t("paidWithPayPal", {
                   amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
                 })}
@@ -199,7 +199,7 @@ function ApplicationCard({
         <button
           type="button"
           onClick={onCancel}
-          className="h-11 w-full rounded-lg bg-forest font-display text-sm font-semibold text-cream transition-colors hover:bg-forest-soft"
+          className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
         >
           {t("cancel")}
         </button>
@@ -208,7 +208,7 @@ function ApplicationCard({
         <button
           type="button"
           disabled
-          className="h-11 w-full cursor-not-allowed rounded-lg border border-line bg-chip font-display text-sm font-semibold text-ink-soft opacity-60"
+          className="h-11 w-full cursor-not-allowed rounded-lg border border-line-soft bg-panel-raised font-display text-sm font-semibold text-muted opacity-60"
         >
           {t("leaveReviewComingSoon")}
         </button>
@@ -245,7 +245,7 @@ export function ApplicationList({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-6 border-b border-line" role="tablist">
+      <div className="flex gap-6 border-b border-line-soft" role="tablist">
         {TABS.map((key) => {
           const isActive = tab === key;
           return (
@@ -257,8 +257,8 @@ export function ApplicationList({
               onClick={() => setTab(key)}
               className={`-mb-px border-b-2 pb-3 font-display text-sm font-semibold transition-colors ${
                 isActive
-                  ? "border-forest text-forest"
-                  : "border-transparent text-ink-soft hover:text-ink"
+                  ? "border-primary text-primary-strong"
+                  : "border-transparent text-muted hover:text-ink"
               }`}
             >
               {t(key)}
@@ -266,7 +266,7 @@ export function ApplicationList({
           );
         })}
       </div>
-      <div className="flex flex-col gap-5">
+      <div data-testid="application-list" className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
         {visibleApplications.map((application) => (
           <ApplicationCard
             key={application.id}
@@ -278,7 +278,7 @@ export function ApplicationList({
           />
         ))}
         {visibleApplications.length === 0 && (
-          <p className="py-10 text-center text-ink-soft">{t("empty")}</p>
+          <p className="py-10 text-center text-muted lg:col-span-2">{t("empty")}</p>
         )}
       </div>
       {cancelTargetId && (

@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
   CONTACT_METHOD_BY_APP,
@@ -193,8 +194,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   }
 
   let profilePhoto = (
-    <div className="flex size-24 items-center justify-center rounded-2xl border border-line bg-sand">
-      <UserIcon className="size-9 text-ink-soft" />
+    <div className="flex size-24 items-center justify-center rounded-2xl border border-line-soft bg-panel-raised">
+      <UserIcon className="size-9 text-muted" />
     </div>
   );
   if (profileImagePreview) {
@@ -205,7 +206,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         width={96}
         height={96}
         unoptimized
-        className="size-24 rounded-2xl border border-line object-cover"
+        className="size-24 rounded-2xl border border-line-soft object-cover"
       />
     );
   } else if (googleProfile?.picture) {
@@ -217,7 +218,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         }
         width={96}
         height={96}
-        className="size-24 rounded-2xl border border-line object-cover"
+        className="size-24 rounded-2xl border border-line-soft object-cover"
       />
     );
   }
@@ -230,129 +231,159 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   }
 
   return (
-    <div className="flex flex-1 flex-col pb-28">
-      <TopAppBar closeHref="/login" />
-      <form id="google-onboarding-form" noValidate onSubmit={handleSubmit} className="contents">
-        <main className="flex flex-1 flex-col gap-8 px-4 py-8">
-          <section className="flex flex-col items-center gap-3">
-            <div className="relative">
-              {profilePhoto}
-              <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-forest text-cream transition-colors hover:bg-forest-soft">
-                <CameraIcon className="size-4" />
-                <span className="sr-only">{t("addProfilePhoto")}</span>
-                <input
-                  type="file"
-                  accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
-                  className="sr-only"
-                  onChange={handleProfileImageChange}
-                />
-              </label>
-            </div>
-            {(googleProfile?.name || googleProfile?.email) && (
-              <div className="text-center">
-                {googleProfile.name && (
-                  <p className="font-display text-lg font-semibold text-ink">
-                    {googleProfile.name}
-                  </p>
-                )}
-                {googleProfile.email && (
-                  <p className="text-sm text-ink-soft">{googleProfile.email}</p>
-                )}
-              </div>
-            )}
-          </section>
-
-          <section className="flex flex-col gap-3">
-            <h2 className="font-display text-xl font-semibold text-ink">{t("roleHeading")}</h2>
-            <div className="flex overflow-hidden rounded-lg border border-line-strong">
-              {ROLES.map((key) => {
-                const isSelected = role === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => handleRoleChange(key)}
-                    className={`h-12 flex-1 font-display text-sm font-semibold transition-colors ${
-                      isSelected ? "bg-forest text-cream" : "bg-white text-ink hover:bg-chip"
-                    }`}
-                  >
-                    {t(key === "TOURIST" ? "roles.tourist" : "roles.buddy")}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          <div className="h-px w-full bg-line" aria-hidden />
-
-          <section className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">
-              {t("personalInformation")}
-            </h2>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm text-ink-soft">{t("nationality")}</span>
-              <CountrySelect
-                value={nationality}
-                onChange={handleNationalityChange}
-                ariaLabel={t("nationality")}
-              />
-            </div>
-            <label className="flex flex-col gap-2">
-              <span className="text-sm text-ink-soft">{t("age")}</span>
-              <input
-                name="age"
-                type="number"
-                min={0}
-                max={150}
-                required
-                placeholder={t("agePlaceholder")}
-                className="w-full rounded-xl border border-line bg-white px-4 py-3.5 text-base text-ink placeholder:text-ink-soft/60"
-              />
-            </label>
-          </section>
-
-          <div className="h-px w-full bg-line" aria-hidden />
-
-          <section className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">{t("contactMethods")}</h2>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm text-ink-soft">{t("preferredMessagingApp")}</span>
-              <MessagingAppField
-                app={messagingApp}
-                onAppChange={handleMessagingAppChange}
-                country={messagingCountry}
-                onCountryChange={handleMessagingCountryChange}
-                contactValue={messagingContact}
-                onContactChange={setMessagingContact}
-                inputName="contactIdentifier"
-                inputRequired
-                koreanOnly={role === "BUDDY"}
-              />
-            </div>
-          </section>
-
-          {errorMessage ? (
-            <p
-              role="alert"
-              className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-            >
-              {errorMessage}
+    <div className="flex flex-1 flex-col bg-canvas pb-28 lg:pb-0">
+      <PageHeader title={t("title")} closeHref="/login" />
+      <main className="flex-1 py-6 md:py-10">
+        <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
+          <aside className="mb-8 hidden lg:block">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              Getting started
             </p>
-          ) : null}
-        </main>
-      </form>
-      <BottomActionBar>
-        <button
-          form="google-onboarding-form"
-          type="submit"
-          disabled={isSubmitting}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-forest font-display text-base font-semibold text-cream transition-colors enabled:hover:bg-forest-soft disabled:opacity-60"
-        >
-          {isSubmitting ? t("completing") : t("completeRegistration")}
-          <ArrowRightIcon className="size-4" />
-        </button>
-      </BottomActionBar>
+            <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
+              {t("title")}
+            </h2>
+            <ol className="mt-12 flex flex-col gap-5 text-sm text-muted">
+              {["Choose your role", "Personal info", "How buddies reach you"].map((step, index) => (
+                <li key={step} className="flex items-start gap-3">
+                  <span
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-full font-display font-bold ${index === 0 ? "bg-primary text-white" : "border border-line-strong"}`}
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="pt-1 font-semibold">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </aside>
+          <form
+            id="google-onboarding-form"
+            aria-label={t("title")}
+            noValidate
+            onSubmit={handleSubmit}
+            className="mx-auto grid w-full max-w-[800px] gap-8 md:grid-cols-2"
+          >
+            <section className="flex flex-col items-center gap-3 md:col-span-2">
+              <div className="relative">
+                {profilePhoto}
+                <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
+                  <CameraIcon className="size-4" />
+                  <span className="sr-only">{t("addProfilePhoto")}</span>
+                  <input
+                    type="file"
+                    accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
+                    className="sr-only"
+                    onChange={handleProfileImageChange}
+                  />
+                </label>
+              </div>
+              {(googleProfile?.name || googleProfile?.email) && (
+                <div className="text-center">
+                  {googleProfile.name && (
+                    <p className="font-display text-lg font-semibold text-ink">
+                      {googleProfile.name}
+                    </p>
+                  )}
+                  {googleProfile.email && (
+                    <p className="text-sm text-muted">{googleProfile.email}</p>
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className="flex flex-col gap-3 md:col-span-2">
+              <h2 className="font-display text-xl font-semibold text-ink">{t("roleHeading")}</h2>
+              <div className="grid gap-3 md:grid-cols-2">
+                {ROLES.map((key) => {
+                  const isSelected = role === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => handleRoleChange(key)}
+                      className={`h-24 rounded-2xl border px-5 text-left font-display text-sm font-semibold transition-colors ${
+                        isSelected
+                          ? "border-primary bg-primary-soft text-primary-strong shadow-[0_8px_20px_rgba(209,63,50,0.12)]"
+                          : "border-line-soft bg-canvas-soft text-ink hover:border-primary-soft"
+                      }`}
+                    >
+                      {t(key === "TOURIST" ? "roles.tourist" : "roles.buddy")}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="flex flex-col gap-4 border-t border-line-soft pt-8 md:col-span-2">
+              <h2 className="font-display text-xl font-semibold text-ink">
+                {t("personalInformation")}
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm text-muted">{t("nationality")}</span>
+                  <CountrySelect
+                    value={nationality}
+                    onChange={handleNationalityChange}
+                    ariaLabel={t("nationality")}
+                  />
+                </div>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm text-muted">{t("age")}</span>
+                  <input
+                    name="age"
+                    type="number"
+                    min={0}
+                    max={150}
+                    required
+                    placeholder={t("agePlaceholder")}
+                    className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="flex flex-col gap-4 border-t border-line-soft pt-8 md:col-span-2">
+              <h2 className="font-display text-xl font-semibold text-ink">{t("contactMethods")}</h2>
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-muted">{t("preferredMessagingApp")}</span>
+                <MessagingAppField
+                  app={messagingApp}
+                  onAppChange={handleMessagingAppChange}
+                  country={messagingCountry}
+                  onCountryChange={handleMessagingCountryChange}
+                  contactValue={messagingContact}
+                  onContactChange={setMessagingContact}
+                  inputName="contactIdentifier"
+                  inputRequired
+                  koreanOnly={role === "BUDDY"}
+                />
+              </div>
+            </section>
+
+            {errorMessage ? (
+              <p
+                role="alert"
+                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger md:col-span-2"
+              >
+                {errorMessage}
+              </p>
+            ) : null}
+            <div className="md:col-span-2">
+              <BottomActionBar>
+                <button
+                  form="google-onboarding-form"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+                >
+                  {isSubmitting ? t("completing") : t("completeRegistration")}
+                  <ArrowRightIcon className="size-4" />
+                </button>
+              </BottomActionBar>
+            </div>
+          </form>
+        </PageContainer>
+      </main>
     </div>
   );
 }

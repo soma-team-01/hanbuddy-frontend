@@ -511,6 +511,8 @@ describe("CreateActivityForm", () => {
   it("uses three registration steps and removes the draft action", () => {
     renderWithQueryClient(<CreateActivityForm />);
 
+    expect(screen.getByTestId("create-activity-form")).toHaveClass("max-w-[800px]");
+    expect(screen.getByTestId("create-activity-primary-fields")).toHaveClass("md:grid-cols-2");
     expect(screen.getByText("Step 1 of 3")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Activity Basics" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
@@ -1244,13 +1246,15 @@ describe("CreateActivityForm", () => {
     renderWithQueryClient(<CreateActivityForm />);
 
     goToStepTwo();
-    expect(screen.getByRole("button", { name: "Add time slot" })).toHaveClass("hover:bg-earth/10");
+    expect(screen.getByRole("button", { name: "Add time slot" })).toHaveClass(
+      "hover:bg-primary-soft",
+    );
     fillStepTwoFields();
     fireEvent.click(screen.getByRole("button", { name: "Next Step" }));
 
-    expect(screen.getByRole("button", { name: "Add item" })).toHaveClass("hover:bg-earth/10");
+    expect(screen.getByRole("button", { name: "Add item" })).toHaveClass("hover:bg-primary-soft");
     expect(screen.getByRole("button", { name: "Add restriction" })).toHaveClass(
-      "hover:bg-earth/10",
+      "hover:bg-primary-soft",
     );
   });
 

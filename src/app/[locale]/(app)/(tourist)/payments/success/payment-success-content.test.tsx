@@ -57,6 +57,7 @@ describe("PaymentSuccessContent", () => {
     renderWithQueryClient(<PaymentSuccessContent applicationId="11" />);
 
     expect(await screen.findByRole("heading", { name: "Payment complete" })).toBeInTheDocument();
+    expect(screen.getByTestId("payment-result")).toHaveClass("max-w-2xl", "rounded-2xl");
     expect(screen.getByText("Your application is confirmed.")).toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Jul 19, 2026, 1:30 AM")).toBeInTheDocument();

@@ -1,6 +1,6 @@
 import type { UserType } from "./types";
 
-export type BottomNavRole = "tourist" | "buddy";
+export type SiteNavRole = "tourist" | "buddy";
 
 interface RouteAccessInput {
   pathname: string;
@@ -29,7 +29,7 @@ export function getUserTypeHomePath(userType?: UserType | null) {
   return "/login";
 }
 
-export function getUserTypeNavRole(userType?: UserType | null): BottomNavRole {
+export function getUserTypeNavRole(userType?: UserType | null): SiteNavRole {
   return userType === "BUDDY" ? "buddy" : "tourist";
 }
 

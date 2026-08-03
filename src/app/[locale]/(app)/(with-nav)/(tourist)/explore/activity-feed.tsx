@@ -18,7 +18,28 @@ export function ActivityFeed() {
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 
   if (activitiesQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
+    return (
+      <div
+        data-testid="activity-grid"
+        className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        <p className="sr-only">{t("loading")}</p>
+        {Array.from({ length: 6 }, (_, index) => (
+          <div
+            key={index}
+            className="overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft"
+          >
+            <div className="h-56 animate-pulse bg-panel-raised" />
+            <div className="space-y-3 p-5">
+              <div className="h-5 w-3/4 animate-pulse rounded-full bg-panel-raised" />
+              <div className="h-4 w-1/2 animate-pulse rounded-full bg-panel-raised" />
+              <div className="h-px bg-line-soft" />
+              <div className="h-4 w-1/3 animate-pulse rounded-full bg-panel-raised" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (activitiesQuery.error) {
@@ -33,21 +54,32 @@ export function ActivityFeed() {
   }
 
   if (activities.length === 0) {
-    return <p className="py-10 text-center text-ink-soft">{t("empty")}</p>;
+    return (
+      <div className="flex min-h-80 flex-col items-center justify-center text-center">
+        <span className="flex size-20 items-center justify-center rounded-full bg-primary-soft text-3xl">
+          🗺️
+        </span>
+        <h2 className="mt-5 font-display text-2xl font-bold">{t("empty")}</h2>
+        <p className="mt-2 max-w-sm text-muted">{t("emptyDescription")}</p>
+      </div>
+    );
   }
 
   return (
-    <>
+    <div
+      data-testid="activity-grid"
+      className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
       {activities.map((activity, index) => (
         <Link
           key={activity.id}
           href={`/activities/${activity.id}`}
-          className="motion-reveal motion-press block rounded-xl hover:shadow-md"
+          className="motion-reveal motion-press block rounded-2xl"
           style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
         >
-          <ActivityCard activity={activity} />
+          <ActivityCard activity={activity} eagerImage={index === 0} />
         </Link>
       ))}
-    </>
+    </div>
   );
 }

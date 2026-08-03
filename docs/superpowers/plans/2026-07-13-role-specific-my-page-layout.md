@@ -257,19 +257,19 @@ export function MyPageContent({ backHref }: Readonly<MyPageContentProps>) {
       <main className="flex flex-1 flex-col gap-6 px-4 py-6">
         <ProfileCard />
 
-        <section className="flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
+        <section className="border-line flex flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
           {MENU_ITEMS.map(({ label, Icon, ...item }, index) => (
             <button
               key={label}
               type="button"
-              className={`flex items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-chip/60 ${
-                index > 0 ? "border-t border-line" : ""
+              className={`hover:bg-chip/60 flex items-center gap-4 px-5 py-4 text-left transition-colors ${
+                index > 0 ? "border-line border-t" : ""
               }`}
             >
               <Icon className="size-5 text-ink" />
               <span className="flex-1 text-base text-ink">{label}</span>
-              {"value" in item && <span className="text-sm text-ink-soft">{item.value}</span>}
-              <ChevronRightIcon className="size-4 text-ink-soft" />
+              {"value" in item && <span className="text-ink-soft text-sm">{item.value}</span>}
+              <ChevronRightIcon className="text-ink-soft size-4" />
             </button>
           ))}
         </section>

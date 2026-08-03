@@ -44,9 +44,23 @@
     "serverUnavailable": "The service is temporarily unavailable. Please try again shortly."
   },
   "Navigation": {
+    "primaryNavigation": "Primary navigation",
+    "navigationMenu": "Navigation menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "changeLanguageToKorean": "Switch to Korean",
+    "changeLanguageToEnglish": "Switch to English",
     "home": "Home",
-    "activity": "Activity",
-    "myPage": "My Page"
+    "explore": "Explore",
+    "applications": "My Applications",
+    "dashboard": "Dashboard",
+    "buddyWorkspace": "Buddy workspace",
+    "myActivities": "My Activities",
+    "applicants": "Applicants",
+    "createActivity": "Create Activity",
+    "createActivityInSidebar": "Create Activity from sidebar",
+    "myPage": "My Page",
+    "login": "Log in"
   },
   "Accessibility": {
     "goBack": "Go back",
@@ -68,6 +82,31 @@
     "description": "From KBO nights to traditional markets, connect with a local buddy for authentic cultural experiences — not just sightseeing.",
     "getStarted": "Get started",
     "browseExperiences": "Browse experiences →",
+    "heroPanels": {
+      "experienceTitle": "Local experiences, made personal",
+      "experienceDescription": "Explore activities shared by local buddies.",
+      "experienceBadge": "Made for you",
+      "experienceAction": "Explore",
+      "touristTitle": "Travel with curiosity",
+      "touristDescription": "Find an experience that fits your trip.",
+      "buddyTitle": "Hosted by local buddies",
+      "buddyDescription": "Meet people who know Korea best.",
+      "confirmation": "Find your next Korean experience"
+    },
+    "processSteps": {
+      "browse": {
+        "title": "Browse freely",
+        "description": "Every experience is open to view — no account needed to look around."
+      },
+      "apply": {
+        "title": "Pick a date & apply",
+        "description": "Choose a schedule, tell your buddy about you, and pay securely."
+      },
+      "meet": {
+        "title": "Meet your buddy",
+        "description": "Your buddy confirms and reaches you on your preferred messaging app."
+      }
+    },
     "experiences": {
       "gwangjangMarket": {
         "title": "Gwangjang Market",
@@ -107,6 +146,7 @@
     }
   },
   "Onboarding": {
+    "title": "Complete your profile",
     "metadataTitle": "Complete your profile | HanBuddy",
     "metadataDescription": "Choose your HanBuddy role and complete your profile.",
     "roleHeading": "I am a...",
@@ -138,6 +178,7 @@
     "completeRegistration": "Complete Registration"
   },
   "Profile": {
+    "title": "Edit profile",
     "metadataTitle": "Edit profile | HanBuddy",
     "metadataDescription": "Update your HanBuddy profile and contact details.",
     "fullName": "Full Name",
@@ -159,11 +200,15 @@
     "saveFailed": "Could not save your profile. Please try again.",
     "loadFailed": "Could not load your profile.",
     "save": "Save",
+    "saveOnMobile": "Save profile",
     "saving": "Saving..."
   },
   "Explore": {
+    "title": "Explore experiences",
+    "description": "Discover Korea with a local buddy by your side.",
     "loading": "Loading activities...",
     "empty": "No activities available yet.",
+    "emptyDescription": "Local buddies are preparing new experiences. Check back soon!",
     "loadError": "Could not load activities.",
     "perPerson": "{price} per person"
   },
@@ -185,6 +230,7 @@
     "kstNotice": "All times are in Korea Standard Time (KST)."
   },
   "Booking": {
+    "title": "Book activity",
     "loading": "Loading booking...",
     "loadError": "Could not load booking details.",
     "notFound": "This activity is not available for booking.",
@@ -218,6 +264,7 @@
   },
   "Applications": {
     "title": "My Applications",
+    "description": "Review upcoming experiences, payments, and past applications.",
     "upcoming": "Upcoming",
     "past": "Past",
     "loading": "Loading applications...",
@@ -276,6 +323,7 @@
     "appIdInputLabel": "Messaging app ID"
   },
   "MyPage": {
+    "title": "My Page",
     "language": "Language",
     "languageSheetTitle": "Language",
     "english": "English",
@@ -283,6 +331,11 @@
     "helpCenter": "Help Center",
     "deleteAccount": "Delete Account",
     "editProfile": "Edit Profile",
+    "tourist": "Tourist",
+    "buddy": "Buddy",
+    "accountSettings": "Account",
+    "accountSettingsTitle": "Keep your account in sync",
+    "accountSettingsDescription": "Update your profile details and language preferences whenever you need to.",
     "profileLoadFailed": "Could not load your profile.",
     "logOut": "Log Out",
     "loggingOut": "Logging out...",
@@ -297,6 +350,8 @@
     "kstNotice": "All times are in Korea Standard Time (KST)."
   },
   "BuddyDashboard": {
+    "title": "Buddy dashboard",
+    "description": "Stay on top of upcoming schedules and guest applications.",
     "quickActions": "Quick Actions",
     "createActivity": "Create Activity",
     "upcoming": "Upcoming",
@@ -334,6 +389,7 @@
     }
   },
   "Applicants": {
+    "title": "Applicants",
     "loading": "Loading applicants...",
     "loadError": "Could not load applicants.",
     "noSchedule": "No schedules are registered for this activity.",
@@ -350,6 +406,13 @@
     }
   },
   "CreateActivity": {
+    "sidebarEyebrow": "Create activity",
+    "sidebarTitle": "Share your experience with travelers",
+    "sidebarSteps": {
+      "basics": "Basics",
+      "details": "Details & pricing",
+      "meeting": "Meeting point"
+    },
     "steps": {
       "progress": "Step {current, number} of {total, number}",
       "basicsTitle": "Activity Basics",

@@ -55,7 +55,8 @@ describe("LoginPage", () => {
     async (locale, heading, action, policy) => {
       await renderLogin(locale);
 
-      expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
+      expect(screen.getByRole("main")).toHaveClass("w-full");
+      expect(screen.getByRole("heading", { name: heading })).toHaveClass("font-display");
       expect(screen.getByText(policy)).toBeInTheDocument();
       const googleLoginLink = screen.getByRole("link", { name: action });
       expect(googleLoginLink).toHaveAttribute("href", `/api/auth/google/start?locale=${locale}`);

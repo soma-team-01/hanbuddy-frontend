@@ -113,7 +113,7 @@ export function ApplicationsContent() {
   }
 
   if (applicationsQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
+    return <p className="py-10 text-center text-muted">{t("loading")}</p>;
   }
 
   if (applicationsQuery.error) {

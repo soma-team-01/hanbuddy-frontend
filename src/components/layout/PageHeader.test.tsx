@@ -1,25 +1,32 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { TopAppBar } from "./TopAppBar";
+import { PageHeader } from "./PageHeader";
 
-describe("TopAppBar", () => {
-  it("links the HanBuddy wordmark to the role-aware home entry", () => {
-    renderWithIntl(<TopAppBar />);
+describe("PageHeader", () => {
+  it("renders page context without behaving as the sticky global header", () => {
+    renderWithIntl(<PageHeader title="Applicants" />);
 
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/home");
+    expect(screen.getByTestId("page-header")).not.toHaveClass("sticky", "top-0");
+    expect(screen.getByRole("heading", { name: "Applicants" })).toHaveClass("text-ink");
   });
 
   it("keeps custom titles as plain headings", () => {
-    renderWithIntl(<TopAppBar title="Applicants" />);
+    renderWithIntl(<PageHeader title="Applicants" />);
 
     expect(screen.getByRole("heading", { name: "Applicants" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Applicants" })).not.toBeInTheDocument();
   });
 
+  it("renders supporting page context when a description is provided", () => {
+    renderWithIntl(<PageHeader title="My Activities" description="Manage your experiences." />);
+
+    expect(screen.getByText("Manage your experiences.")).toHaveClass("text-muted");
+  });
+
   it("renders a back button instead of a link when onLeftClick is provided", () => {
     const onLeftClick = vi.fn();
-    renderWithIntl(<TopAppBar title="Create" onLeftClick={onLeftClick} />);
+    renderWithIntl(<PageHeader title="Create" onLeftClick={onLeftClick} />);
 
     const button = screen.getByRole("button", { name: "Go back" });
     fireEvent.click(button);
@@ -29,7 +36,7 @@ describe("TopAppBar", () => {
   });
 
   it("localizes the back action in Korean", () => {
-    renderWithIntl(<TopAppBar title="만들기" backHref="/my-activities" />, { locale: "ko" });
+    renderWithIntl(<PageHeader title="만들기" backHref="/my-activities" />, { locale: "ko" });
 
     expect(screen.getByRole("link", { name: "뒤로 가기" })).toHaveAttribute(
       "href",

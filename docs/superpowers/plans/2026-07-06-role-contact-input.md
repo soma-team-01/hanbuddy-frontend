@@ -290,7 +290,7 @@ function handleRoleChange(key: "tourist" | "buddy") {
 <section className="flex flex-col gap-4">
   <h2 className="font-display text-xl font-semibold text-ink">Contact Methods</h2>
   <div className="flex flex-col gap-2">
-    <span className="text-sm text-ink-soft">Preferred Messaging App</span>
+    <span className="text-ink-soft text-sm">Preferred Messaging App</span>
     <MessagingAppField
       app={messagingApp}
       onAppChange={handleMessagingAppChange}

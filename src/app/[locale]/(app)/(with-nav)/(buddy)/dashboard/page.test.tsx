@@ -41,5 +41,8 @@ describe("DashboardPage", () => {
       "href",
       `/${locale}/my-activities/create`,
     );
+    expect(screen.getByTestId("dashboard-layout")).toHaveClass(
+      "lg:grid-cols-[minmax(0,1fr)_320px]",
+    );
   });
 });

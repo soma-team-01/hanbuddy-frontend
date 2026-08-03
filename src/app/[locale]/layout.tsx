@@ -1,22 +1,33 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
-import { Be_Vietnam_Pro, Manrope } from "next/font/google";
+import { DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SERVICE_TIME_ZONE } from "@/i18n/formats";
 import { isLocale, routing, type Locale } from "@/i18n/routing";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { parseUserType } from "@/lib/auth/routes";
 import "../globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  variable: "--font-plus-jakarta-sans",
+  weight: ["600", "700", "800"],
 });
 
-const beVietnamPro = Be_Vietnam_Pro({
-  variable: "--font-be-vietnam-pro",
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  variable: "--font-dm-sans",
+  weight: ["400", "500", "600", "700"],
+});
+
+const notoSansKr = Noto_Sans_KR({
+  subsets: ["latin"],
+  variable: "--font-noto-sans-kr",
+  weight: ["400", "500", "600", "700"],
 });
 
 export async function generateMetadata({
@@ -48,16 +59,27 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
 
   setRequestLocale(locale);
-  const messages = await getMessages();
+  const [messages, cookieStore] = await Promise.all([getMessages(), cookies()]);
+  const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
+  const authenticated = Boolean(userType && cookieStore.get(AUTH_COOKIES.accessToken)?.value);
+  let role: "buddy" | "tourist" | null = null;
+  if (authenticated && userType === "BUDDY") {
+    role = "buddy";
+  } else if (authenticated && userType === "TOURIST") {
+    role = "tourist";
+  }
 
   return (
     <html
       lang={locale}
-      className={`${manrope.variable} ${beVietnamPro.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${notoSansKr.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <SiteHeader role={role} authenticated={authenticated} />
+            <div className="flex flex-1 flex-col">{children}</div>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

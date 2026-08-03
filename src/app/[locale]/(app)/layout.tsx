@@ -3,5 +3,5 @@ export default function AppFrameLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{children}</div>;
+  return <div className="flex w-full flex-1 flex-col">{children}</div>;
 }

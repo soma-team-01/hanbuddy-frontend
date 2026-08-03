@@ -26,7 +26,6 @@ describe("LandingPage", () => {
     [
       "en",
       "Experience Korea like a local.",
-      "Log in",
       "Get started",
       "Browse experiences →",
       "Authentic Korea, together.",
@@ -34,18 +33,18 @@ describe("LandingPage", () => {
     [
       "ko",
       "현지인처럼 한국을 경험하세요.",
-      "로그인",
       "시작하기",
       "액티비티 둘러보기 →",
       "진짜 한국을 함께 경험하세요.",
     ],
   ] as const)(
     "renders localized landing content and navigation for %s",
-    async (locale, headline, login, getStarted, browse, footer) => {
+    async (locale, headline, getStarted, browse, footer) => {
       await renderLanding(locale);
 
-      expect(screen.getByRole("heading", { level: 1, name: headline })).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: login })).toHaveAttribute("href", `/${locale}/login`);
+      expect(screen.getByRole("main")).toHaveClass("w-full");
+      expect(screen.getByRole("heading", { level: 1, name: headline })).toHaveClass("font-display");
+      expect(screen.queryByRole("banner")).not.toBeInTheDocument();
       expect(screen.getByRole("link", { name: getStarted })).toHaveAttribute(
         "href",
         `/${locale}/login`,
@@ -54,6 +53,9 @@ describe("LandingPage", () => {
         "href",
         `/${locale}/explore`,
       );
+      expect(
+        screen.getByRole("link", { name: locale === "ko" ? "둘러보기" : "Explore" }),
+      ).toHaveAttribute("href", `/${locale}/explore`);
       expect(screen.getByText(footer)).toBeInTheDocument();
     },
   );
@@ -67,6 +69,29 @@ describe("LandingPage", () => {
     for (const title of titles) {
       expect(screen.getByRole("img", { name: title })).toBeInTheDocument();
     }
+  });
+
+  it("eagerly loads only the first above-the-fold experience image", async () => {
+    await renderLanding("en");
+
+    const firstImage = screen.getByRole("img", { name: "Gwangjang Market" });
+
+    expect(firstImage).toHaveAttribute("loading", "eager");
+    expect(firstImage).toHaveAttribute(
+      "sizes",
+      "(min-width: 1024px) 18vw, (min-width: 768px) 30vw, 256px",
+    );
+    expect(screen.getByRole("img", { name: "Bukchon Hanok" })).not.toHaveAttribute(
+      "loading",
+      "eager",
+    );
+  });
+
+  it("allows both hero grid regions to shrink without widening the mobile viewport", async () => {
+    await renderLanding("en");
+
+    expect(screen.getByRole("heading", { level: 1 }).closest("section")).toHaveClass("min-w-0");
+    expect(screen.getByRole("region", { name: "Match with a local buddy" })).toHaveClass("min-w-0");
   });
 
   it.each([

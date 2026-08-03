@@ -110,6 +110,7 @@ describe("ApplicationList", () => {
 
     renderList({ onContinuePayment, onCapturePayment });
 
+    expect(screen.getByTestId("application-list")).toHaveClass("grid", "lg:grid-cols-2");
     expect(screen.queryByText("Paid with PayPal: $68.97")).not.toBeInTheDocument();
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();

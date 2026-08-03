@@ -154,12 +154,12 @@ export function ConfirmDialog({
       onCancel={onClose}
       onClose={onClose}
       // Tailwind preflight가 UA의 dialog margin:auto를 리셋하므로 m-auto로 중앙 정렬 복원
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-cream p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
+      className="bg-cream m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 p-6 text-ink shadow-xl backdrop:bg-black/30 backdrop:backdrop-blur-[2px]"
     >
-      <h2 id="confirm-dialog-title" className="font-display text-xl font-semibold text-forest">
+      <h2 id="confirm-dialog-title" className="text-forest font-display text-xl font-semibold">
         {title}
       </h2>
-      {description ? <p className="mt-2 text-ink-soft">{description}</p> : null}
+      {description ? <p className="text-ink-soft mt-2">{description}</p> : null}
       {children ? <div className="mt-4">{children}</div> : null}
       <div className="mt-6 flex gap-3">
         <button
@@ -174,7 +174,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={isPending}
-          className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-cream disabled:opacity-60 ${
+          className={`text-cream h-12 flex-1 rounded-xl font-display text-sm font-semibold disabled:opacity-60 ${
             tone === "danger" ? "bg-danger" : "bg-forest"
           }`}
         >
@@ -325,7 +325,7 @@ function handleSubmitClick() {
       }}
       onClose={() => setShowConfirm(false)}
     >
-      <dl className="flex flex-col gap-2 rounded-xl bg-chip p-4 text-sm text-ink">
+      <dl className="bg-chip flex flex-col gap-2 rounded-xl p-4 text-sm text-ink">
         <div className="flex justify-between">
           <dt className="text-ink-soft">Activity</dt>
           <dd className="font-medium">{activity.title}</dd>

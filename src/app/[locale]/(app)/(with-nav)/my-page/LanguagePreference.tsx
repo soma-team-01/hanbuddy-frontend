@@ -45,7 +45,7 @@ export function LanguagePreference() {
   }
 
   return (
-    <label className="flex w-full cursor-pointer items-center gap-4 px-5 py-4 transition-colors hover:bg-chip">
+    <label className="flex w-full cursor-pointer items-center gap-4 px-5 py-4 transition-colors hover:bg-primary-soft">
       <GlobeIcon className="size-5 text-ink" />
       <span className="flex-1 text-base text-ink">{t("language")}</span>
       <span className="relative flex items-center">
@@ -54,7 +54,7 @@ export function LanguagePreference() {
           value={locale}
           disabled={isPending}
           onChange={handleLocaleChange}
-          className="cursor-pointer appearance-none bg-transparent py-1 pr-6 text-sm text-ink-soft outline-none disabled:cursor-not-allowed disabled:opacity-60"
+          className="cursor-pointer appearance-none bg-transparent py-1 pr-6 text-sm text-muted outline-none disabled:cursor-not-allowed disabled:opacity-60"
         >
           {LANGUAGE_OPTIONS.map((option) => (
             <option key={option.locale} value={option.locale}>
@@ -62,7 +62,7 @@ export function LanguagePreference() {
             </option>
           ))}
         </select>
-        <ChevronRightIcon className="pointer-events-none absolute right-0 size-4 rotate-90 text-ink-soft" />
+        <ChevronRightIcon className="pointer-events-none absolute right-0 size-4 rotate-90 text-muted" />
       </span>
     </label>
   );

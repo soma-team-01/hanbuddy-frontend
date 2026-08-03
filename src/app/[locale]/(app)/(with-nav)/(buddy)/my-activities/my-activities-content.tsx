@@ -17,7 +17,7 @@ import type { MyActivityStatus, MyActivitySummaryResponse } from "@/types/buddy"
 
 const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
   ACTIVE: "bg-success-soft text-success",
-  DRAFT: "bg-chip text-ink-soft",
+  DRAFT: "bg-panel-raised text-muted",
   INACTIVE: "bg-warning-soft text-warning",
 };
 
@@ -63,7 +63,7 @@ export function MyActivitiesContent() {
   }
 
   if (activitiesQuery.isPending) {
-    return <p className="py-10 text-center text-ink-soft">{t("loading")}</p>;
+    return <p className="py-10 text-center text-muted">{t("loading")}</p>;
   }
 
   if (activitiesQuery.error) {
@@ -78,7 +78,7 @@ export function MyActivitiesContent() {
   }
 
   if (activities.length === 0) {
-    return <p className="py-10 text-center text-ink-soft">{t("empty")}</p>;
+    return <p className="py-10 text-center text-muted">{t("empty")}</p>;
   }
 
   return (
@@ -94,59 +94,62 @@ export function MyActivitiesContent() {
       <p aria-live="polite" className="sr-only">
         {deleteActivityMutation.isPending ? t("deleting") : ""}
       </p>
-      {activities.map((activity) => (
-        <article
-          key={activity.activityId}
-          className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]"
-        >
-          <Link
-            href={`/my-activities/${activity.activityId}/applicants`}
-            className="relative block h-44 w-full overflow-hidden rounded-xl transition-opacity hover:opacity-90"
+      <div data-testid="activity-records" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {activities.map((activity, index) => (
+          <article
+            key={activity.activityId}
+            className="flex flex-col gap-3 rounded-3xl border border-line-soft bg-canvas-soft p-4 shadow-[0_8px_22px_rgba(61,45,43,0.06)]"
           >
-            <Image
-              src={getActivityThumbnail(activity.thumbnailImageUrl)}
-              alt={activity.title}
-              fill
-              sizes="(max-width: 448px) 100vw, 448px"
-              className="object-cover"
-            />
-          </Link>
-          <div className="flex items-center justify-between">
-            <span
-              className={`rounded-full px-3 py-1 font-display text-xs font-semibold ${
-                STATUS_BADGE_CLASS[activity.status]
-              }`}
+            <Link
+              href={`/my-activities/${activity.activityId}/applicants`}
+              className="relative block aspect-[4/3] w-full overflow-hidden rounded-xl transition-opacity hover:opacity-90"
             >
-              {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
-            </span>
-            <button
-              type="button"
-              aria-label={t("deleteActivity", { title: activity.title })}
-              onClick={() => setDeleteTargetId(activity.activityId)}
-              disabled={deleteActivityMutation.isPending}
-              className="flex size-9 items-center justify-center rounded-full text-ink-soft hover:bg-chip disabled:cursor-not-allowed disabled:opacity-50"
+              <Image
+                src={getActivityThumbnail(activity.thumbnailImageUrl)}
+                alt={activity.title}
+                fill
+                loading={index === 0 ? "eager" : undefined}
+                sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                className="object-cover"
+              />
+            </Link>
+            <div className="flex items-center justify-between">
+              <span
+                className={`rounded-full px-3 py-1 font-display text-xs font-semibold ${
+                  STATUS_BADGE_CLASS[activity.status]
+                }`}
+              >
+                {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
+              </span>
+              <button
+                type="button"
+                aria-label={t("deleteActivity", { title: activity.title })}
+                onClick={() => setDeleteTargetId(activity.activityId)}
+                disabled={deleteActivityMutation.isPending}
+                className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <TrashIcon className="size-4" />
+              </button>
+            </div>
+            <Link
+              href={`/my-activities/${activity.activityId}/applicants`}
+              className="hover:underline"
             >
-              <TrashIcon className="size-4" />
-            </button>
-          </div>
-          <Link
-            href={`/my-activities/${activity.activityId}/applicants`}
-            className="hover:underline"
-          >
-            <h2 className="font-display text-xl leading-7 font-semibold text-ink">
-              {activity.title}
-            </h2>
-          </Link>
-          <p className="line-clamp-2 text-base text-ink-soft">{activity.description}</p>
-          <Link
-            href={`/my-activities/${activity.activityId}/applicants`}
-            className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-earth hover:underline"
-          >
-            <UsersIcon className="size-3.5" />
-            {t("viewApplicants")}
-          </Link>
-        </article>
-      ))}
+              <h2 className="font-display text-xl leading-7 font-semibold text-ink">
+                {activity.title}
+              </h2>
+            </Link>
+            <p className="line-clamp-2 text-base text-muted">{activity.description}</p>
+            <Link
+              href={`/my-activities/${activity.activityId}/applicants`}
+              className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-primary-strong hover:underline"
+            >
+              <UsersIcon className="size-3.5" />
+              {t("viewApplicants")}
+            </Link>
+          </article>
+        ))}
+      </div>
       {deleteTargetId !== null && (
         <ConfirmDialog
           title={t("deleteTitle")}

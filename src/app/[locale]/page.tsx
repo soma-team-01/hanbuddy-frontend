@@ -15,7 +15,7 @@ const HERO_MEDIA = [
     altKey: "visuals.marketAlt",
   },
   {
-    src: "/images/landing/2차-6.jpeg",
+    src: "/images/landing/kbo-0726-group.webp",
     altKey: "visuals.teaAlt",
   },
   {

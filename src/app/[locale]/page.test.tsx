@@ -105,7 +105,7 @@ describe("LandingPage", () => {
     expect(heroImages).toHaveLength(4);
     expect(heroImages[0]).toHaveAttribute("src", expect.stringContaining("hanriver-picnic"));
     expect(heroImages[1]).toHaveAttribute("src", expect.stringContaining("2%EC%B0%A8-4"));
-    expect(heroImages[2]).toHaveAttribute("src", expect.stringContaining("2%EC%B0%A8-6"));
+    expect(heroImages[2]).toHaveAttribute("src", expect.stringContaining("kbo-0726-group"));
     expect(heroImages[3]).toHaveAttribute("src", expect.stringContaining("hanriver-fountain"));
     expect(heroImages[0]).toHaveAttribute("loading", "eager");
     expect(heroImages[1]).toHaveAttribute("loading", "lazy");

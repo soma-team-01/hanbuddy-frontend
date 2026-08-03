@@ -162,7 +162,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="reviews-title"
-        className="border-t-4 border-primary/80 bg-canvas-soft py-20 md:py-28"
+        className="border-t-4 border-primary/80 bg-canvas-soft pt-20 pb-10 md:pt-28 md:pb-16"
       >
         <PageContainer>
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -217,7 +217,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
         </PageContainer>
       </section>
 
-      <section aria-labelledby="contact-title" className="bg-canvas-soft py-20 md:py-28">
+      <section
+        aria-labelledby="contact-title"
+        className="bg-canvas-soft pt-10 pb-20 md:pt-16 md:pb-28"
+      >
         <PageContainer>
           <div className="rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-14 text-center shadow-[0_18px_45px_rgba(61,45,43,0.06)] sm:px-12 md:py-16">
             <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">

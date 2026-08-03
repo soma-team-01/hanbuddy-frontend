@@ -699,19 +699,28 @@ export function CreateActivityForm() {
               {t("sidebarTitle")}
             </h2>
             <ol className="mt-12 flex flex-col gap-4 text-sm">
-              {SIDEBAR_STEPS.map((step, index) => (
-                <li
-                  key={step}
-                  className={`flex items-center gap-3 ${currentStep === index + 1 ? "font-bold text-ink" : "text-muted"}`}
-                >
-                  <span
-                    className={`flex size-8 items-center justify-center rounded-full font-display ${currentStep === index + 1 ? "bg-primary text-white" : index + 1 < currentStep ? "bg-success text-white" : "border border-line-strong"}`}
-                  >
-                    {index + 1 < currentStep ? "✓" : index + 1}
-                  </span>
-                  {t(`sidebarSteps.${step}`)}
-                </li>
-              ))}
+              {SIDEBAR_STEPS.map((step, index) => {
+                const stepNumber = index + 1;
+                const isCurrent = currentStep === stepNumber;
+                const isComplete = stepNumber < currentStep;
+                let stepClassName = "text-muted";
+                if (isCurrent) stepClassName = "font-bold text-ink";
+
+                let indicatorClassName = "border border-line-strong";
+                if (isComplete) indicatorClassName = "bg-success text-white";
+                if (isCurrent) indicatorClassName = "bg-primary text-white";
+
+                return (
+                  <li key={step} className={`flex items-center gap-3 ${stepClassName}`}>
+                    <span
+                      className={`flex size-8 items-center justify-center rounded-full font-display ${indicatorClassName}`}
+                    >
+                      {isComplete ? "✓" : stepNumber}
+                    </span>
+                    {t(`sidebarSteps.${step}`)}
+                  </li>
+                );
+              })}
             </ol>
           </aside>
           <form

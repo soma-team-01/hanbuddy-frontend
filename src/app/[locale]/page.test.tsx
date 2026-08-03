@@ -23,11 +23,11 @@ async function renderLanding(locale: Locale) {
 
 describe("LandingPage", () => {
   it.each([
-    ["en", "Experience Korea like a local!", "Explore experiences", "Authentic Korea, together."],
-    ["ko", "현지인처럼 한국을 경험하세요!", "액티비티 둘러보기", "진짜 한국을 함께 경험하세요."],
+    ["en", "Experience Korea like a local!", "Explore experiences"],
+    ["ko", "현지인처럼 한국을 경험하세요!", "액티비티 둘러보기"],
   ] as const)(
     "renders localized landing content and CTA for %s",
-    async (locale, headline, explore, footer) => {
+    async (locale, headline, explore) => {
       await renderLanding(locale);
 
       expect(screen.getByRole("main")).toHaveClass("w-full");
@@ -37,7 +37,6 @@ describe("LandingPage", () => {
         "href",
         `/${locale}/explore`,
       );
-      expect(screen.getByText(footer)).toBeInTheDocument();
     },
   );
 
@@ -82,7 +81,7 @@ describe("LandingPage", () => {
       "en",
       "Travel with people who know Korea.",
       "The moments that stay with you.",
-      "Still have questions?",
+      "Want to learn more about HanBuddy",
       "Email us anything",
       "mailto:zeroone.soma@gmail.com",
     ],
@@ -90,7 +89,7 @@ describe("LandingPage", () => {
       "ko",
       "한국을 잘 아는 사람과 여행하세요.",
       "오래 기억에 남는 순간.",
-      "아직 궁금한 점이 있나요?",
+      "HanBuddy에 대해 더 궁금하다면",
       "무엇이든 이메일로 물어보세요",
       "mailto:zeroone.soma@gmail.com",
     ],

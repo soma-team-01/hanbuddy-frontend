@@ -240,10 +240,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
             </a>
             <p className="mt-4 text-sm text-muted">{t("contact.responseNote")}</p>
           </div>
-
-          <p className="mt-10 text-center font-display text-sm font-semibold text-muted sm:text-base">
-            {t("contact.ps")}
-          </p>
         </PageContainer>
       </section>
 
@@ -257,9 +253,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
               height={28}
               className="size-7"
             />
-            <span className="font-display font-bold text-primary-strong">HanBuddy</span>
-            <span className="text-line-strong">·</span>
-            <span>{t("footerTagline")}</span>
+            <span className="font-display font-bold text-ink">HanBuddy</span>
           </Link>
 
           <div className="flex items-center gap-2">

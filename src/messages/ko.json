@@ -151,16 +151,14 @@
     },
     "contact": {
       "eyebrow": "계속 소통해요",
-      "title": "아직 궁금한 점이 있나요?",
+      "title": "HanBuddy에 대해 더 궁금하다면",
       "description": "활동 호스팅에 관심이 있거나 HanBuddy에 대해 궁금한 점, 나누고 싶은 아이디어가 있다면 편하게 메시지를 보내주세요.",
       "emailLabel": "무엇이든 이메일로 물어보세요",
       "instagramLabel": "Instagram",
       "responseNote": "여러분의 이야기를 기다리고 있어요.",
-      "ps": "HanBuddy의 모든 경험은 하나의 질문에서 시작돼요.",
       "emailIconLabel": "HanBuddy에 이메일 보내기",
       "instagramIconLabel": "HanBuddy Instagram 열기"
-    },
-    "footerTagline": "진짜 한국을 함께 경험하세요."
+    }
   },
   "Auth": {
     "metadataTitle": "로그인 | HanBuddy",

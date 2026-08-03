@@ -97,21 +97,6 @@ button:not(:disabled),
   animation-delay: 260ms;
 }
 
-@keyframes review-card-swap {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.review-card-swap {
-  animation: review-card-swap 420ms var(--motion-ease-out) both;
-}
-
 @keyframes hero-media-cycle {
   0%,
   20% {
@@ -204,7 +189,6 @@ dialog.motion-dialog[open]::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .motion-reveal,
   .landing-reveal,
-  .review-card-swap,
   .hero-media-frame,
   .hero-media-image,
   dialog.motion-dialog[open],

@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -42,38 +42,21 @@ describe("LandingPage", () => {
   );
 
   it.each([
-    ["en", "The moments that stay with you.", "4.8/5 overall rating", "5 out of 5 stars"],
-    ["ko", "오래 기억에 남는 순간.", "전체 평점 4.8/5", "별점 5점 만점에 5점"],
+    ["en", "The moments that stay with you.", "5 out of 5 stars"],
+    ["ko", "오래 기억에 남는 순간.", "별점 5점 만점에 5점"],
   ] as const)(
     "renders anonymous positive reviews with ratings for %s",
-    async (locale, title, summary, starLabel) => {
+    async (locale, title, starLabel) => {
       await renderLanding(locale);
 
       const reviewRegion = screen.getByRole("region", { name: title });
 
-      expect(screen.getByText(summary)).toBeInTheDocument();
-      expect(reviewRegion.querySelectorAll('[role="img"]')).toHaveLength(2);
-      expect(screen.getAllByRole("img", { name: starLabel })).toHaveLength(2);
+      expect(reviewRegion.querySelectorAll('[role="img"]')).toHaveLength(3);
+      expect(screen.getAllByRole("img", { name: starLabel })).toHaveLength(3);
+      expect(screen.queryByText(/overall rating|전체 평점/)).not.toBeInTheDocument();
       expect(screen.queryByText(/Sarah|Jihoon|Marco|사라|지훈|마르코/)).not.toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /next review|다음 후기 보기/ }),
-      ).toBeInTheDocument();
     },
   );
-
-  it("moves between anonymous reviews with the carousel controls", async () => {
-    await renderLanding("en");
-
-    expect(
-      screen.getByText(/It was fun to watch the game and cheer together!/),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Show next review" }));
-
-    expect(
-      screen.getByText(/Great experience to enjoy a baseball game with a local\./),
-    ).toBeInTheDocument();
-  });
 
   it.each([
     [

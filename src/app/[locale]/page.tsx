@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
-import { ReviewCarousel } from "@/components/landing/ReviewCarousel";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -180,37 +179,38 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 {t("reviewsSection.description")}
               </p>
             </div>
-
-            <div className="w-fit rounded-2xl border border-primary/20 bg-primary-soft/45 px-5 py-4">
-              <p className="font-display text-lg font-extrabold text-ink">
-                {t("reviewsSection.ratingSummary")}
-              </p>
-              <div className="mt-1 flex items-center gap-3 text-sm text-muted">
-                <span
-                  role="img"
-                  aria-label={t("reviews.starLabel")}
-                  className="tracking-[0.16em] text-primary"
-                >
-                  ★★★★★
-                </span>
-                <span>{t("reviewsSection.responseSummary")}</span>
-              </div>
-            </div>
           </div>
 
-          <div className="mt-10">
-            <ReviewCarousel
-              ariaLabel={t("reviewsSection.carouselLabel")}
-              nextLabel={t("reviewsSection.nextReview")}
-              previousLabel={t("reviewsSection.previousReview")}
-              reviews={REVIEW_KEYS.map((reviewKey) => ({
-                event: t(`reviews.${reviewKey}.event`),
-                meta: t(`reviews.${reviewKey}.meta`),
-                quote: t(`reviews.${reviewKey}.quote`),
-                rating: t(`reviews.${reviewKey}.rating`),
-                starLabel: t(`reviews.${reviewKey}.starLabel`),
-              }))}
-            />
+          <div className="mt-10 space-y-4">
+            {REVIEW_KEYS.map((reviewKey) => (
+              <article
+                key={reviewKey}
+                className="grid gap-7 rounded-[2rem] border border-line-soft bg-canvas-soft p-7 shadow-[0_14px_35px_rgba(61,45,43,0.06)] sm:grid-cols-[minmax(0,1fr)_220px] sm:items-end sm:p-8"
+              >
+                <div>
+                  <span
+                    role="img"
+                    aria-label={t(`reviews.${reviewKey}.starLabel`)}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1 font-display text-sm font-bold text-primary-strong"
+                  >
+                    <span aria-hidden>★</span>
+                    {t(`reviews.${reviewKey}.rating`)}
+                  </span>
+                  <blockquote className="mt-6 max-w-4xl font-display text-2xl leading-tight font-bold tracking-[-0.04em] text-ink sm:text-3xl">
+                    “{t(`reviews.${reviewKey}.quote`)}”
+                  </blockquote>
+                </div>
+
+                <div className="border-t border-line-soft pt-5 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-7">
+                  <p className="font-display text-sm font-bold text-primary-strong">
+                    {t(`reviews.${reviewKey}.event`)}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    {t(`reviews.${reviewKey}.meta`)}
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
         </PageContainer>
       </section>

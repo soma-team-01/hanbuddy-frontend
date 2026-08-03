@@ -122,7 +122,6 @@
       "mainCaption": "나만의 한국을 만나보세요."
     },
     "reviews": {
-      "starLabel": "별점 5점 만점에 5점",
       "cheerTogether": {
         "rating": "5.0",
         "starLabel": "별점 5점 만점에 5점",
@@ -142,18 +141,13 @@
         "starLabel": "별점 5점 만점에 5점",
         "event": "KBO 야구 경기",
         "meta": "참여자 후기 · 2026년 8월",
-        "quote": "HanBuddy와 함께한 야구 경기가 정말 즐거웠어요! 경험 내내 세심하게 챙겨주고 필요한 것을 계속 확인해줘서 훨씬 편하고 즐겁게 경기를 볼 수 있었어요. 경기 중에 무슨 일이 일어나는지도 친절하게 설명해줘서 정말 추천하고 싶어요!"
+        "quote": "HanBuddy와 함께한 야구 경기가 정말 즐거웠어요! 경험 내내 세심하게 챙겨줘서 편안하고 즐겁게 시간을 보낼 수 있었어요."
       }
     },
     "reviewsSection": {
       "eyebrow": "커뮤니티의 이야기",
       "title": "오래 기억에 남는 순간.",
-      "description": "HanBuddy와 함께 한국을 경험한 참여자들의 이야기입니다.",
-      "ratingSummary": "전체 평점 4.8/5",
-      "responseSummary": "참여자 4명의 응답 기준",
-      "carouselLabel": "참여자 후기 슬라이드",
-      "previousReview": "이전 후기 보기",
-      "nextReview": "다음 후기 보기"
+      "description": "HanBuddy와 함께 한국을 경험한 참여자들의 이야기입니다."
     },
     "contact": {
       "eyebrow": "계속 소통해요",

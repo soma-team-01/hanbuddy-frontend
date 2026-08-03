@@ -208,7 +208,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   </span>
                 </div>
 
-                <blockquote className="max-w-4xl font-display text-lg leading-8 font-normal tracking-[-0.02em] text-ink sm:text-xl">
+                <blockquote className="w-full font-display text-lg leading-8 font-normal tracking-[-0.02em] text-ink sm:text-xl">
                   “{t(`reviews.${reviewKey}.quote`)}”
                 </blockquote>
               </article>

@@ -236,7 +236,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="contact-title"
-        className="bg-primary-soft pt-10 pb-4 md:pt-16 md:pb-6"
+        className="bg-primary-warm pt-10 pb-4 md:pt-16 md:pb-6"
       >
         <PageContainer>
           <div className="px-6 py-14 text-center sm:px-12 md:py-16">

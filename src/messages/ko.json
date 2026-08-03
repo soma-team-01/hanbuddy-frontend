@@ -114,10 +114,11 @@
       }
     },
     "visuals": {
-      "ariaLabel": "현지 한국 경험 미리보기",
-      "mainAlt": "한국 전통 한옥 거리",
-      "marketAlt": "한국 시장의 다채로운 음식",
-      "teaAlt": "한국 다도 체험 공간",
+      "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",
+      "mainAlt": "한강에서 피크닉을 즐기는 친구들",
+      "marketAlt": "서울의 야간 야구 경기장",
+      "teaAlt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
+      "fountainAlt": "해 질 무렵 빛나는 한강 분수",
       "mainCaption": "나만의 한국을 만나보세요."
     },
     "reviews": {

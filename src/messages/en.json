@@ -114,10 +114,11 @@
       }
     },
     "visuals": {
-      "ariaLabel": "Local Korea experience preview",
-      "mainAlt": "A traditional Korean hanok street",
-      "marketAlt": "Colorful food at a Korean market",
-      "teaAlt": "A Korean tea ceremony setting",
+      "ariaLabel": "Real HanBuddy moments in Seoul",
+      "mainAlt": "Friends enjoying a picnic by the Han River",
+      "marketAlt": "A baseball game under the lights in Seoul",
+      "teaAlt": "Travelers and local buddies cheering together at a baseball game",
+      "fountainAlt": "The Han River fountain glowing at dusk",
       "mainCaption": "Your Korea, made personal."
     },
     "reviews": {

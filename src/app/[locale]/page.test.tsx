@@ -71,43 +71,38 @@ describe("LandingPage", () => {
   );
 
   it.each([
-    [
-      "en",
-      "A traditional Korean hanok street",
-      "Colorful food at a Korean market",
-      "A Korean tea ceremony setting",
-    ],
-    ["ko", "한국 전통 한옥 거리", "한국 시장의 다채로운 음식", "한국 다도 체험 공간"],
-  ] as const)("localizes experience image alternatives for %s", async (locale, ...titles) => {
+    ["en", "Real HanBuddy moments in Seoul"],
+    ["ko", "서울에서 만나는 HanBuddy의 실제 순간"],
+  ] as const)("localizes the hero experience context for %s", async (locale, ariaLabel) => {
     await renderLanding(locale);
 
-    for (const title of titles) {
-      expect(screen.getByRole("img", { name: title })).toBeInTheDocument();
-    }
+    expect(screen.getByRole("region", { name: ariaLabel })).toBeInTheDocument();
   });
 
-  it("eagerly loads only the first above-the-fold experience image", async () => {
+  it("uses the selected landing photos as a full-bleed hero sequence", async () => {
     await renderLanding("en");
 
-    const firstImage = screen.getByRole("img", { name: "A traditional Korean hanok street" });
+    const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
+    const heroImages = heroRegion.querySelectorAll(".hero-media-image");
 
-    expect(firstImage).toHaveAttribute("loading", "eager");
-    expect(firstImage).toHaveAttribute(
-      "sizes",
-      "(min-width: 1024px) 34vw, (min-width: 640px) 48vw, 70vw",
-    );
-    expect(
-      screen.getByRole("img", { name: "Colorful food at a Korean market" }),
-    ).not.toHaveAttribute("loading", "eager");
+    expect(heroImages).toHaveLength(4);
+    expect(heroImages[0]).toHaveAttribute("src", expect.stringContaining("hanriver-picnic"));
+    expect(heroImages[1]).toHaveAttribute("src", expect.stringContaining("2%EC%B0%A8-4"));
+    expect(heroImages[2]).toHaveAttribute("src", expect.stringContaining("2%EC%B0%A8-6"));
+    expect(heroImages[3]).toHaveAttribute("src", expect.stringContaining("hanriver-fountain"));
+    expect(heroImages[0]).toHaveAttribute("loading", "eager");
+    expect(heroImages[1]).toHaveAttribute("loading", "lazy");
   });
 
-  it("allows both hero grid regions to shrink without widening the mobile viewport", async () => {
+  it("keeps hero media behind the content without widening the mobile viewport", async () => {
     await renderLanding("en");
 
     expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass("min-w-0");
-    expect(screen.getByRole("region", { name: "Local Korea experience preview" })).toHaveClass(
-      "min-w-0",
-    );
+    expect(
+      screen
+        .getByRole("region", { name: "Real HanBuddy moments in Seoul" })
+        .querySelector(".hero-media"),
+    ).toHaveClass("absolute", "inset-0");
   });
 
   it.each([

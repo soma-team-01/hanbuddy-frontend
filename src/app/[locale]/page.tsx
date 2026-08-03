@@ -186,9 +186,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
             {REVIEW_KEYS.map((reviewKey) => (
               <article
                 key={reviewKey}
-                className="grid gap-7 rounded-[2rem] border border-line-soft bg-canvas-soft p-7 shadow-[0_14px_35px_rgba(61,45,43,0.06)] sm:grid-cols-[minmax(0,1fr)_220px] sm:items-end sm:p-8"
+                className="space-y-6 rounded-[2rem] border border-line-soft bg-canvas-soft p-7 shadow-[0_14px_35px_rgba(61,45,43,0.06)] sm:p-8"
               >
-                <div>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <span
                     role="img"
                     aria-label={t(`reviews.${reviewKey}.starLabel`)}
@@ -197,19 +197,20 @@ export default async function LandingPage({ params }: LandingPageProps) {
                     <span aria-hidden>★</span>
                     {t(`reviews.${reviewKey}.rating`)}
                   </span>
-                  <blockquote className="mt-6 max-w-4xl font-display text-2xl leading-tight font-bold tracking-[-0.04em] text-ink sm:text-3xl">
-                    “{t(`reviews.${reviewKey}.quote`)}”
-                  </blockquote>
+
+                  <div className="sm:text-right">
+                    <p className="font-display text-sm font-bold text-primary-strong">
+                      {t(`reviews.${reviewKey}.event`)}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-muted">
+                      {t(`reviews.${reviewKey}.meta`)}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="border-t border-line-soft pt-5 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-7">
-                  <p className="font-display text-sm font-bold text-primary-strong">
-                    {t(`reviews.${reviewKey}.event`)}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-muted">
-                    {t(`reviews.${reviewKey}.meta`)}
-                  </p>
-                </div>
+                <blockquote className="max-w-4xl font-display text-lg leading-8 font-normal tracking-[-0.02em] text-ink sm:text-xl">
+                  “{t(`reviews.${reviewKey}.quote`)}”
+                </blockquote>
               </article>
             ))}
           </div>

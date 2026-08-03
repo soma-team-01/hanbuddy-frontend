@@ -18,7 +18,7 @@ export function RecommendedExperiences() {
     return (
       <section
         aria-labelledby="recommended-title"
-        className="border-t border-line-soft bg-canvas-soft py-16 md:py-20"
+        className="border-t border-line-soft bg-canvas-soft py-12 md:py-16"
       >
         <PageContainer>
           <RecommendedHeading />
@@ -52,7 +52,7 @@ export function RecommendedExperiences() {
   return (
     <section
       aria-labelledby="recommended-title"
-      className="border-t border-line-soft bg-canvas-soft py-16 md:py-20"
+      className="border-t border-line-soft bg-canvas-soft py-12 md:py-16"
     >
       <PageContainer>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
@@ -95,11 +95,13 @@ function RecommendedHeading() {
       </p>
       <h2
         id="recommended-title"
-        className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+        className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
       >
         {t("recommended.title")}
       </h2>
-      <p className="mt-4 text-base leading-7 text-muted">{t("recommended.description")}</p>
+      <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
+        {t("recommended.description")}
+      </p>
     </div>
   );
 }

@@ -90,15 +90,15 @@ export default async function LandingPage({ params }: LandingPageProps) {
             <p className="mb-6 font-display text-xs font-bold tracking-[0.28em] text-primary-soft uppercase">
               {t("eyebrow")}
             </p>
-            <h1 className="max-w-3xl font-display text-5xl leading-[1.02] font-extrabold tracking-[-0.06em] text-on-primary sm:text-6xl lg:text-[clamp(4rem,6vw,6.25rem)]">
+            <h1 className="max-w-3xl font-display text-4xl leading-[1.04] font-extrabold tracking-[-0.06em] text-on-primary sm:text-5xl lg:text-[clamp(3.25rem,5vw,5.25rem)]">
               {t("headline")}
             </h1>
-            <p className="mt-7 max-w-2xl text-base leading-7 text-white/80 sm:text-lg sm:leading-8">
+            <p className="mt-6 max-w-2xl text-sm leading-6 text-white/80 sm:text-base sm:leading-7">
               {t("description")}
             </p>
             <Link
               href="/explore"
-              className="motion-press mt-9 inline-flex min-h-14 items-center justify-center rounded-full bg-primary px-8 font-display text-base font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.36)] transition-colors hover:bg-primary-hover"
+              className="motion-press mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.36)] transition-colors hover:bg-primary-hover"
             >
               {t("exploreExperiences")}
               <span aria-hidden className="ml-3 text-lg leading-none">
@@ -126,7 +126,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="booking-title"
-        className="border-t border-line-soft bg-primary-soft py-12 md:py-16"
+        className="border-t border-line-soft bg-canvas-soft py-10 md:py-12"
       >
         <PageContainer>
           <div className="mx-auto max-w-3xl text-center">
@@ -135,27 +135,29 @@ export default async function LandingPage({ params }: LandingPageProps) {
             </p>
             <h2
               id="booking-title"
-              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+              className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
             >
               {t("booking.title")}
             </h2>
-            <p className="mt-5 text-base leading-7 text-muted">{t("booking.description")}</p>
+            <p className="mt-4 text-sm leading-6 text-muted sm:text-base">
+              {t("booking.description")}
+            </p>
           </div>
 
-          <div className="mx-auto mt-8 grid max-w-5xl gap-3 md:grid-cols-3">
+          <div className="mx-auto mt-7 grid max-w-5xl gap-3 md:grid-cols-3">
             {BOOKING_STEPS.map((step, index) => (
               <article
                 key={step}
-                className="flex items-center gap-4 rounded-[1.5rem] border border-line-soft bg-canvas-soft px-5 py-5 sm:px-6 md:block"
+                className="flex items-center gap-4 rounded-[1.5rem] border border-line-soft bg-panel-raised px-5 py-5 sm:px-6 md:block"
               >
-                <span className="shrink-0 font-display text-xl font-extrabold text-primary sm:text-2xl">
+                <span className="shrink-0 font-display text-lg font-extrabold text-primary sm:text-xl">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <div className="md:mt-4">
-                  <h3 className="font-display text-lg font-bold text-ink sm:text-xl">
+                <div className="md:mt-3">
+                  <h3 className="font-display text-base font-bold text-ink sm:text-lg">
                     {t(`booking.steps.${step}.title`)}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted sm:text-base">
+                  <p className="mt-1 text-sm leading-6 text-muted sm:text-base">
                     {t(`booking.steps.${step}.description`)}
                   </p>
                 </div>
@@ -236,25 +238,25 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="contact-title"
-        className="bg-primary-warm pt-10 pb-4 md:pt-16 md:pb-6"
+        className="bg-canvas-soft pt-8 pb-4 md:pt-12 md:pb-5"
       >
         <PageContainer>
-          <div className="px-6 py-14 text-center sm:px-12 md:py-16">
+          <div className="rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-12 text-center shadow-[0_16px_36px_rgba(61,45,43,0.05)] sm:px-12 md:py-14">
             <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
               {t("contact.eyebrow")}
             </p>
             <h2
               id="contact-title"
-              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-5xl"
+              className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
             >
               {t("contact.title")}
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted sm:text-base">
               {t("contact.description")}
             </p>
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
-              className="motion-press mt-8 inline-flex min-h-14 items-center gap-3 rounded-full bg-primary px-7 font-display text-base font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.22)] transition-colors hover:bg-primary-hover"
+              className="motion-press mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_12px_24px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
             >
               <MailIcon className="size-5" />
               {t("contact.emailLabel")}

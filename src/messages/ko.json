@@ -94,24 +94,25 @@
         "description": "오래 이야기할 추억을 가져가세요."
       }
     },
-    "service": {
-      "eyebrow": "HanBuddy는 어떤 서비스인가요?",
-      "title": "한국을 잘 아는 사람과 여행하세요.",
-      "description": "HanBuddy는 호기심 많은 여행자와 현지 버디를 연결해, 한국을 더 가깝고 개인적으로 느낄 수 있는 경험을 만듭니다.",
-      "cards": {
-        "traveler": {
-          "title": "여행자를 위해",
-          "description": "내 여행 방식에 꼭 맞는 현지인의 시선을 만나보세요."
+    "booking": {
+      "eyebrow": "이용 방법",
+      "title": "세 단계로 간단하게 신청해 보세요.",
+      "description": "원하는 경험을 고르고, 일정을 선택한 뒤 현지 버디를 만나보세요.",
+      "steps": {
+        "experience": {
+          "title": "경험 고르기",
+          "description": "한국을 경험하고 싶은 방식에 맞는 액티비티를 둘러보세요."
         },
-        "buddy": {
-          "title": "버디를 위해",
-          "description": "내가 사랑하는 한국의 장소와 취향, 이야기를 나눠보세요."
+        "schedule": {
+          "title": "일정 선택하기",
+          "description": "참여 가능한 날짜와 인원을 선택하세요."
         },
-        "together": {
-          "title": "함께하는 순간",
-          "description": "만나고, 탐험하고, 오래 기억할 나만의 추억을 만들어보세요."
+        "payment": {
+          "title": "신청하고 결제하기",
+          "description": "신청을 보내고 결제를 완료하면 경험이 확정됩니다."
         }
-      }
+      },
+      "cta": "가능한 액티비티 보기"
     },
     "visuals": {
       "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",

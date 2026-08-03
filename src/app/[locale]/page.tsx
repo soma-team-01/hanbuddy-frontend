@@ -27,7 +27,7 @@ const HERO_MEDIA = [
 ] as const;
 
 const HERO_HIGHLIGHTS = ["localPerspective", "realConnection", "sharedMoments"] as const;
-const SERVICE_CARDS = ["traveler", "buddy", "together"] as const;
+const BOOKING_STEPS = ["experience", "schedule", "payment"] as const;
 const REVIEW_KEYS = ["cheerTogether", "localBuddy", "lookedAfter"] as const;
 
 const CONTACT_DETAILS = {
@@ -122,40 +122,54 @@ export default async function LandingPage({ params }: LandingPageProps) {
       </section>
 
       <section
-        aria-labelledby="service-title"
-        className="border-t border-line-soft bg-canvas-soft py-20 md:py-28"
+        aria-labelledby="booking-title"
+        className="border-t border-line-soft bg-panel-raised py-20 md:py-28"
       >
-        <PageContainer className="grid gap-12 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:items-start lg:gap-20">
-          <div className="max-w-xl">
+        <PageContainer>
+          <div className="mx-auto max-w-3xl text-center">
             <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-              {t("service.eyebrow")}
+              {t("booking.eyebrow")}
             </p>
             <h2
-              id="service-title"
-              className="mt-4 max-w-md font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+              id="booking-title"
+              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
             >
-              {t("service.title")}
+              {t("booking.title")}
             </h2>
-            <p className="mt-5 text-base leading-7 text-muted">{t("service.description")}</p>
+            <p className="mt-5 text-base leading-7 text-muted">{t("booking.description")}</p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            {SERVICE_CARDS.map((card, index) => (
+          <div className="mx-auto mt-12 max-w-5xl space-y-4">
+            {BOOKING_STEPS.map((step, index) => (
               <article
-                key={card}
-                className="rounded-2xl border border-line-soft bg-panel-raised p-6 sm:min-h-64"
+                key={step}
+                className="flex items-center gap-5 rounded-[1.5rem] border border-line-soft bg-canvas-soft px-6 py-6 sm:gap-8 sm:px-8 sm:py-7"
               >
-                <span className="font-display text-sm font-bold text-primary">
+                <span className="shrink-0 font-display text-2xl font-extrabold text-primary sm:text-3xl">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <h3 className="mt-12 font-display text-lg font-bold text-ink">
-                  {t(`service.cards.${card}.title`)}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-muted">
-                  {t(`service.cards.${card}.description`)}
-                </p>
+                <div>
+                  <h3 className="font-display text-lg font-bold text-ink sm:text-xl">
+                    {t(`booking.steps.${step}.title`)}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted sm:text-base">
+                    {t(`booking.steps.${step}.description`)}
+                  </p>
+                </div>
               </article>
             ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/explore"
+              className="motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
+            >
+              {t("booking.cta")}
+              <span aria-hidden className="ml-2 text-lg leading-none">
+                →
+              </span>
+            </Link>
           </div>
         </PageContainer>
       </section>

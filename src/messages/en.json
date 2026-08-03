@@ -94,24 +94,25 @@
         "description": "Bring home a story worth telling."
       }
     },
-    "service": {
-      "eyebrow": "What is HanBuddy?",
-      "title": "Travel with people who know Korea.",
-      "description": "HanBuddy connects curious travelers with local buddies for small, personal experiences that make Korea feel closer.",
-      "cards": {
-        "traveler": {
-          "title": "For travelers",
-          "description": "Find a local perspective that fits the way you want to travel."
+    "booking": {
+      "eyebrow": "How it works",
+      "title": "Book a Korean experience in three simple steps.",
+      "description": "Choose an experience, pick a schedule, and meet your local buddy.",
+      "steps": {
+        "experience": {
+          "title": "Choose an experience",
+          "description": "Explore activities that match the way you want to experience Korea."
         },
-        "buddy": {
-          "title": "For buddies",
-          "description": "Share the places, tastes, and stories that make Korea yours."
+        "schedule": {
+          "title": "Pick a schedule",
+          "description": "Select an available date and the number of guests."
         },
-        "together": {
-          "title": "For the moment",
-          "description": "Meet, explore, and leave with a memory that feels personal."
+        "payment": {
+          "title": "Apply and pay",
+          "description": "Send your application and complete payment to confirm your experience."
         }
-      }
+      },
+      "cta": "See available experiences"
     },
     "visuals": {
       "ariaLabel": "Real HanBuddy moments in Seoul",

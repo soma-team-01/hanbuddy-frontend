@@ -81,7 +81,7 @@ describe("LandingPage", () => {
   it.each([
     [
       "en",
-      "Travel with people who know Korea.",
+      "Book a Korean experience in three simple steps.",
       "The moments that stay with you.",
       "Want to learn more about HanBuddy",
       "Email us anything",
@@ -89,7 +89,7 @@ describe("LandingPage", () => {
     ],
     [
       "ko",
-      "한국을 잘 아는 사람과 여행하세요.",
+      "세 단계로 간단하게 신청해 보세요.",
       "오래 기억에 남는 순간.",
       "HanBuddy에 대해 더 궁금하다면",
       "무엇이든 이메일로 물어보세요",

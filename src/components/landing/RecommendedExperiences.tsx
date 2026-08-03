@@ -8,7 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 
-const RECOMMENDED_LIMIT = 3;
+const RECOMMENDED_LIMIT = 4;
 
 export function RecommendedExperiences() {
   const t = useTranslations("Landing");
@@ -23,7 +23,7 @@ export function RecommendedExperiences() {
         <PageContainer>
           <RecommendedHeading />
           <p className="sr-only">{t("recommended.loading")}</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: RECOMMENDED_LIMIT }, (_, index) => (
               <div
                 key={index}
@@ -68,7 +68,7 @@ export function RecommendedExperiences() {
           </Link>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {activities.map((activity, index) => (
             <Link
               key={activity.id}

@@ -10,7 +10,7 @@ interface RouteAccessInput {
 }
 
 const SHARED_PROTECTED_ROUTES = ["/home", "/my-page"] as const;
-const TOURIST_ROUTES = ["/explore", "/activities", "/applications"] as const;
+const TOURIST_ROUTES = ["/applications"] as const;
 const BUDDY_ROUTES = ["/dashboard", "/my-activities"] as const;
 
 export function parseUserType(value?: string | null): UserType | undefined {
@@ -68,11 +68,14 @@ function getProtectedRouteRedirect(
     isRouteOrDescendant(pathname, route),
   );
   const isTouristRoute = TOURIST_ROUTES.some((route) => isRouteOrDescendant(pathname, route));
+  const isTouristBookingRoute = /^\/activities\/[^/]+\/book(?:\/|$)/.test(pathname);
   const isBuddyRoute = BUDDY_ROUTES.some((route) => isRouteOrDescendant(pathname, route));
 
-  if (!isSharedProtectedRoute && !isTouristRoute && !isBuddyRoute) return null;
+  if (!isSharedProtectedRoute && !isTouristRoute && !isTouristBookingRoute && !isBuddyRoute) {
+    return null;
+  }
   if (!authenticated) return "/login";
-  if (isTouristRoute && userType !== "TOURIST") return homePath;
+  if ((isTouristRoute || isTouristBookingRoute) && userType !== "TOURIST") return homePath;
   if (isBuddyRoute && userType !== "BUDDY") return homePath;
 
   return null;

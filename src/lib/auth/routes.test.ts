@@ -39,8 +39,6 @@ describe("route access redirects", () => {
   it.each([
     "/home",
     "/home/settings",
-    "/explore",
-    "/activities/1",
     "/activities/1/book",
     "/applications",
     "/dashboard",
@@ -55,14 +53,15 @@ describe("route access redirects", () => {
 
   it("fails closed when only part of the authenticated session is present", () => {
     expect(getRouteAccessRedirect({ pathname: "/dashboard", accessToken: "token" })).toBe("/login");
-    expect(getRouteAccessRedirect({ pathname: "/explore", userType: "TOURIST" })).toBe("/login");
+    expect(getRouteAccessRedirect({ pathname: "/applications", userType: "TOURIST" })).toBe(
+      "/login",
+    );
   });
 
   it.each([
     ["TOURIST", "/dashboard", "/explore"],
     ["TOURIST", "/my-activities/create", "/explore"],
-    ["BUDDY", "/explore", "/dashboard"],
-    ["BUDDY", "/activities/1", "/dashboard"],
+    ["BUDDY", "/activities/1/book", "/dashboard"],
   ] as const)("redirects %s away from %s", (userType, pathname, expectedPath) => {
     expect(getRouteAccessRedirect({ pathname, accessToken: "token", userType })).toBe(expectedPath);
   });
@@ -77,6 +76,13 @@ describe("route access redirects", () => {
   ] as const)("allows %s to access %s", (userType, pathname) => {
     expect(getRouteAccessRedirect({ pathname, accessToken: "token", userType })).toBeNull();
   });
+
+  it.each(["/explore", "/activities/1"])(
+    "allows unauthenticated visitors to browse %s",
+    (pathname) => {
+      expect(getRouteAccessRedirect({ pathname })).toBeNull();
+    },
+  );
 
   it("requires a signup session for onboarding", () => {
     expect(getRouteAccessRedirect({ pathname: "/onboarding" })).toBe("/login");

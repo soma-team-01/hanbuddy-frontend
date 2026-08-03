@@ -165,7 +165,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
           <div className="mt-7 text-center">
             <Link
-              href="/explore"
+              href="/login"
               className="motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
             >
               {t("booking.cta")}
@@ -179,7 +179,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="reviews-title"
-        className="border-t-4 border-primary/80 bg-canvas-soft pt-20 pb-10 md:pt-28 md:pb-16"
+        className="bg-canvas-soft pt-20 pb-10 md:pt-28 md:pb-16"
       >
         <PageContainer>
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">

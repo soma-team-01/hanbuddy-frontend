@@ -30,7 +30,7 @@ describe("RecommendedExperiences", () => {
     mockedGetTouristActivities.mockReset();
   });
 
-  it("renders up to three activities from the tourist activity list", async () => {
+  it("renders up to four activities from the tourist activity list", async () => {
     mockedGetTouristActivities.mockResolvedValue({
       status: "success",
       activities: [1, 2, 3, 4].map(createActivity),
@@ -39,11 +39,11 @@ describe("RecommendedExperiences", () => {
     renderWithQueryClient(<RecommendedExperiences />);
 
     expect(await screen.findByText("HanBuddy activity 1")).toBeInTheDocument();
-    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(screen.getAllByRole("article")).toHaveLength(4);
     expect(screen.getByRole("link", { name: /HanBuddy activity 1/ })).toHaveAttribute(
       "href",
       "/en/activities/1",
     );
-    expect(screen.queryByText("HanBuddy activity 4")).not.toBeInTheDocument();
+    expect(screen.getByText("HanBuddy activity 4")).toBeInTheDocument();
   });
 });

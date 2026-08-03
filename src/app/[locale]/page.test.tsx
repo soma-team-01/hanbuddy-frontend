@@ -53,6 +53,15 @@ describe("LandingPage", () => {
   );
 
   it.each([
+    ["en", "Log in to book"],
+    ["ko", "예약하려면 로그인"],
+  ] as const)("links the booking CTA to login for %s", async (locale, cta) => {
+    await renderLanding(locale);
+
+    expect(screen.getByRole("link", { name: cta })).toHaveAttribute("href", `/${locale}/login`);
+  });
+
+  it.each([
     ["en", "Email HanBuddy", "Open HanBuddy on Instagram"],
     ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Instagram 열기"],
   ] as const)(

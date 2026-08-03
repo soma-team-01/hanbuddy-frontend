@@ -112,7 +112,7 @@
           "description": "신청을 보내고 결제를 완료하면 경험이 확정됩니다."
         }
       },
-      "cta": "가능한 액티비티 보기"
+      "cta": "예약하려면 로그인"
     },
     "recommended": {
       "eyebrow": "HanBuddy와 함께 둘러보기",

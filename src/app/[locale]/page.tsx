@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
+import { ReviewCarousel } from "@/components/landing/ReviewCarousel";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -162,18 +162,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <section
         aria-labelledby="reviews-title"
-        className="relative isolate overflow-hidden border-t border-line-soft bg-primary-soft/45 py-20 md:py-28"
+        className="border-t-4 border-primary/80 bg-canvas-soft py-20 md:py-28"
       >
-        <div aria-hidden className="absolute inset-0 -z-10">
-          <Image
-            src="/images/landing/2차-6.jpeg"
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-primary-soft/85" />
-        </div>
         <PageContainer>
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
@@ -191,7 +181,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
               </p>
             </div>
 
-            <div className="w-fit rounded-2xl border border-line-soft bg-canvas-soft/90 px-5 py-4 shadow-sm backdrop-blur-sm">
+            <div className="w-fit rounded-2xl border border-primary/20 bg-primary-soft/45 px-5 py-4">
               <p className="font-display text-lg font-extrabold text-ink">
                 {t("reviewsSection.ratingSummary")}
               </p>
@@ -208,35 +198,19 @@ export default async function LandingPage({ params }: LandingPageProps) {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {REVIEW_KEYS.map((reviewKey) => (
-              <article
-                key={reviewKey}
-                className="flex min-h-72 flex-col rounded-[2rem] border border-line-soft bg-canvas-soft/95 p-7 shadow-[0_18px_45px_rgba(61,45,43,0.08)] backdrop-blur-sm sm:p-8"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <span
-                    role="img"
-                    aria-label={t(`reviews.${reviewKey}.starLabel`)}
-                    className="tracking-[0.16em] text-primary"
-                  >
-                    ★★★★★
-                  </span>
-                  <span className="font-display text-sm font-bold text-primary-strong">
-                    {t(`reviews.${reviewKey}.rating`)}
-                  </span>
-                </div>
-                <blockquote className="mt-8 flex-1 font-display text-xl leading-8 font-semibold tracking-[-0.02em] text-ink">
-                  “{t(`reviews.${reviewKey}.quote`)}”
-                </blockquote>
-                <div className="mt-8 border-t border-line-soft pt-5">
-                  <p className="font-display text-sm font-bold text-primary-strong">
-                    {t(`reviews.${reviewKey}.event`)}
-                  </p>
-                  <p className="mt-1 text-sm text-muted">{t(`reviews.${reviewKey}.meta`)}</p>
-                </div>
-              </article>
-            ))}
+          <div className="mt-10">
+            <ReviewCarousel
+              ariaLabel={t("reviewsSection.carouselLabel")}
+              nextLabel={t("reviewsSection.nextReview")}
+              previousLabel={t("reviewsSection.previousReview")}
+              reviews={REVIEW_KEYS.map((reviewKey) => ({
+                event: t(`reviews.${reviewKey}.event`),
+                meta: t(`reviews.${reviewKey}.meta`),
+                quote: t(`reviews.${reviewKey}.quote`),
+                rating: t(`reviews.${reviewKey}.rating`),
+                starLabel: t(`reviews.${reviewKey}.starLabel`),
+              }))}
+            />
           </div>
         </PageContainer>
       </section>

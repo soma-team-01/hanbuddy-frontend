@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -52,11 +52,28 @@ describe("LandingPage", () => {
       const reviewRegion = screen.getByRole("region", { name: title });
 
       expect(screen.getByText(summary)).toBeInTheDocument();
-      expect(reviewRegion.querySelectorAll('[role="img"]')).toHaveLength(4);
-      expect(screen.getAllByRole("img", { name: starLabel })).toHaveLength(4);
+      expect(reviewRegion.querySelectorAll('[role="img"]')).toHaveLength(2);
+      expect(screen.getAllByRole("img", { name: starLabel })).toHaveLength(2);
       expect(screen.queryByText(/Sarah|Jihoon|Marco|사라|지훈|마르코/)).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /next review|다음 후기 보기/ }),
+      ).toBeInTheDocument();
     },
   );
+
+  it("moves between anonymous reviews with the carousel controls", async () => {
+    await renderLanding("en");
+
+    expect(
+      screen.getByText(/It was fun to watch the game and cheer together!/),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Show next review" }));
+
+    expect(
+      screen.getByText(/Great experience to enjoy a baseball game with a local\./),
+    ).toBeInTheDocument();
+  });
 
   it.each([
     [

@@ -150,7 +150,10 @@
       "title": "오래 기억에 남는 순간.",
       "description": "HanBuddy와 함께 한국을 경험한 참여자들의 이야기입니다.",
       "ratingSummary": "전체 평점 4.8/5",
-      "responseSummary": "참여자 4명의 응답 기준"
+      "responseSummary": "참여자 4명의 응답 기준",
+      "carouselLabel": "참여자 후기 슬라이드",
+      "previousReview": "이전 후기 보기",
+      "nextReview": "다음 후기 보기"
     },
     "contact": {
       "eyebrow": "계속 소통해요",

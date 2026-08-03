@@ -150,7 +150,10 @@
       "title": "The moments that stay with you.",
       "description": "A few words from guests who experienced Korea with HanBuddy.",
       "ratingSummary": "4.8/5 overall rating",
-      "responseSummary": "Based on 4 guest responses"
+      "responseSummary": "Based on 4 guest responses",
+      "carouselLabel": "Guest review carousel",
+      "previousReview": "Show previous review",
+      "nextReview": "Show next review"
     },
     "contact": {
       "eyebrow": "Stay in touch",

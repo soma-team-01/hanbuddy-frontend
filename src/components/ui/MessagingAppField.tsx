@@ -2,14 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import { CountrySelect } from "@/components/ui/CountrySelect";
-import { MessageSquareIcon, PhoneIcon } from "@/components/ui/icons";
+import { LineIcon, PhoneIcon, WeChatIcon, WhatsAppIcon } from "@/components/ui/icons";
 import type { ContactMethod } from "@/lib/auth/types";
 import { formatKoreanPhone, toDigits } from "@/lib/phone";
 
 export const MESSAGING_APPS = [
-  { key: "whatsapp", label: "WhatsApp", Icon: MessageSquareIcon },
-  { key: "line", label: "Line", Icon: MessageSquareIcon },
-  { key: "wechat", label: "WeChat", Icon: MessageSquareIcon },
+  { key: "whatsapp", label: "WhatsApp", Icon: WhatsAppIcon },
+  { key: "line", label: "Line", Icon: LineIcon },
+  { key: "wechat", label: "WeChat", Icon: WeChatIcon },
   { key: "phone", label: null, Icon: PhoneIcon },
 ] as const;
 
@@ -66,7 +66,7 @@ export function MessagingAppField({
       <div
         className={
           variant === "cards"
-            ? "grid grid-cols-2 gap-2 md:grid-cols-4"
+            ? "grid grid-cols-2 gap-2"
             : "flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel"
         }
       >
@@ -81,7 +81,7 @@ export function MessagingAppField({
               onClick={() => onAppChange(key)}
               className={`flex items-center gap-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong ${
                 variant === "cards"
-                  ? `min-h-16 rounded-xl border px-3 py-3 ${
+                  ? `min-h-14 gap-2 rounded-xl border px-3 py-2.5 ${
                       isSelected
                         ? "border-primary bg-primary-soft text-primary-strong"
                         : "border-line-soft bg-canvas-soft text-ink hover:border-line-strong"
@@ -93,16 +93,17 @@ export function MessagingAppField({
             >
               <span
                 aria-hidden
-                className={`flex size-4 items-center justify-center rounded-full border ${
+                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
                   isSelected ? "border-primary-strong" : "border-line-strong"
                 }`}
               >
                 {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
               </span>
-              <Icon className={`size-5 ${variant === "cards" ? "text-primary" : "text-success"}`} />
-              <span className="text-sm font-semibold text-inherit md:text-base">
-                {displayLabel}
-              </span>
+              <Icon
+                data-messaging-icon={key}
+                className={`size-5 shrink-0 ${variant === "cards" ? "text-primary" : "text-success"}`}
+              />
+              <span className="text-sm font-semibold text-inherit">{displayLabel}</span>
             </button>
           );
         })}
@@ -121,7 +122,9 @@ export function MessagingAppField({
                 onChange={onCountryChange}
                 display="dialCode"
                 ariaLabel={t("countryCode")}
-                triggerClassName="flex items-center gap-2 rounded-xl border border-line-soft bg-panel-raised py-3.5 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong"
+                triggerClassName={`flex items-center gap-2 rounded-xl border border-line-soft py-3 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong ${
+                  variant === "cards" ? "bg-canvas-soft" : "bg-panel-raised"
+                }`}
               />
             </div>
           )}
@@ -136,7 +139,9 @@ export function MessagingAppField({
             }}
             placeholder={koreanOnly ? t("koreanPhonePlaceholder") : t("phonePlaceholder")}
             aria-label={t("phoneInputLabel")}
-            className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
+            className={`w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 ${
+              variant === "cards" ? "bg-canvas-soft" : "bg-panel"
+            }`}
           />
         </div>
       ) : (
@@ -150,7 +155,9 @@ export function MessagingAppField({
             app: MESSAGING_APPS.find((item) => item.key === app)?.label ?? t("phoneNumber"),
           })}
           aria-label={t("appIdInputLabel")}
-          className="mt-1 w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
+          className={`mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 ${
+            variant === "cards" ? "bg-canvas-soft" : "bg-panel"
+          }`}
         />
       )}
     </>

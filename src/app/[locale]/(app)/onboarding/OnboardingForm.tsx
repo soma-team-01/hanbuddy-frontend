@@ -3,17 +3,15 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
   CONTACT_METHOD_BY_APP,
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
-import { ArrowRightIcon, CameraIcon, UserIcon } from "@/components/ui/icons";
-import { useRouter } from "@/i18n/navigation";
+import { ArrowRightIcon, CameraIcon, UserIcon, XIcon } from "@/components/ui/icons";
+import { Link, useRouter } from "@/i18n/navigation";
 import { createApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { findCountry } from "@/lib/countries";
@@ -51,6 +49,7 @@ function getLocalDateInputValue(date: Date) {
 
 export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
+  const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
@@ -189,8 +188,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   }
 
   let profilePhoto = (
-    <div className="flex size-24 items-center justify-center rounded-2xl border border-line-soft bg-panel-raised">
-      <UserIcon className="size-9 text-muted" />
+    <div className="flex size-16 items-center justify-center rounded-2xl border border-line-soft bg-canvas-soft ring-4 ring-primary-soft">
+      <UserIcon className="size-7 text-muted" />
     </div>
   );
   if (profileImagePreview) {
@@ -198,10 +197,10 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       <Image
         src={profileImagePreview}
         alt={t("selectedProfilePhotoPreview")}
-        width={96}
-        height={96}
+        width={64}
+        height={64}
         unoptimized
-        className="size-24 rounded-2xl border border-line-soft object-cover"
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
       />
     );
   } else if (googleProfile?.picture) {
@@ -211,9 +210,9 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         alt={
           googleProfile.name ? t("profileFor", { name: googleProfile.name }) : t("googleProfile")
         }
-        width={96}
-        height={96}
-        className="size-24 rounded-2xl border border-line-soft object-cover"
+        width={64}
+        height={64}
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
       />
     );
   }
@@ -226,18 +225,27 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-canvas-soft pb-28 lg:pb-0">
-      <PageHeader closeHref="/login" />
-      <main className="flex-1 pb-10 md:pb-16">
+    <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
+      <main className="flex-1 py-3 md:py-4">
         <PageContainer>
-          <header className="mx-auto max-w-2xl text-center">
+          <div className="flex h-10 items-center">
+            <Link
+              href="/login"
+              aria-label={accessibilityT("close")}
+              className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              <XIcon className="size-5" />
+            </Link>
+          </div>
+
+          <header className="mx-auto mt-1 max-w-none text-center lg:-mt-7">
             <p className="font-display text-xs font-bold tracking-[0.24em] text-primary uppercase">
               {t("eyebrow")}
             </p>
-            <h1 className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.045em] text-ink md:text-4xl">
+            <h1 className="mt-2 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-3xl lg:whitespace-nowrap">
               {t("headline")}
             </h1>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-muted md:text-base">
+            <p className="mx-auto mt-2 max-w-none text-sm leading-6 text-muted md:text-base lg:whitespace-nowrap">
               {t("description")}
             </p>
           </header>
@@ -247,12 +255,12 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
             aria-label={t("title")}
             noValidate
             onSubmit={handleSubmit}
-            className="mx-auto mt-8 flex w-full max-w-[800px] flex-col overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft shadow-[0_20px_60px_rgba(61,45,43,0.08)] md:mt-10"
+            className="mx-auto mt-5 flex w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-t-[3px] border-line-soft border-t-primary bg-canvas-soft shadow-[0_16px_48px_rgba(61,45,43,0.07)]"
           >
-            <section className="flex items-center gap-4 bg-panel-raised px-5 py-5 md:gap-5 md:px-8 md:py-6">
+            <section className="flex items-center gap-4 px-5 py-4 md:px-6">
               <div className="relative">
                 {profilePhoto}
-                <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
+                <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
                   <CameraIcon className="size-4" />
                   <span className="sr-only">{t("addProfilePhoto")}</span>
                   <input
@@ -264,66 +272,70 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                 </label>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-base font-bold text-ink md:text-lg">
+                <p className="font-display text-base font-bold text-ink">
                   {googleProfile?.name ?? t("profilePhotoHint")}
                 </p>
-                <p className="mt-1 truncate text-sm text-muted">
-                  {googleProfile?.email ?? t("profilePhotoOptional")}
-                </p>
+                {googleProfile?.email ? (
+                  <p className="mt-0.5 text-xs text-muted">{googleProfile.email}</p>
+                ) : null}
+                <p className="mt-0.5 text-xs leading-5 text-muted">{t("profilePhotoOptional")}</p>
               </div>
             </section>
 
-            <section className="flex flex-col gap-5 border-t border-line-soft px-5 py-7 md:px-8 md:py-8">
-              <h2 className="font-display text-xl font-bold text-ink">
-                {t("personalInformation")}
-              </h2>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-ink">{t("nationality")}</span>
-                  <CountrySelect
-                    value={nationality}
-                    onChange={handleNationalityChange}
-                    ariaLabel={t("nationality")}
+            <div className="grid border-t border-line-soft lg:grid-cols-2">
+              <section className="flex flex-col gap-3 px-5 py-5 md:px-6 lg:border-r lg:border-line-soft">
+                <h2 className="font-display text-lg font-bold text-ink">
+                  {t("personalInformation")}
+                </h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-sm font-medium text-ink">{t("nationality")}</span>
+                    <CountrySelect
+                      value={nationality}
+                      onChange={handleNationalityChange}
+                      ariaLabel={t("nationality")}
+                      triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong"
+                    />
+                  </div>
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
+                    <input
+                      name="birthDate"
+                      type="date"
+                      max={getLocalDateInputValue(new Date())}
+                      required
+                      aria-label={t("birthDate")}
+                      aria-describedby="birth-date-hint"
+                      className="w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                    />
+                    <span id="birth-date-hint" className="text-xs text-muted">
+                      {t("birthDateHint")}
+                    </span>
+                  </label>
+                </div>
+              </section>
+
+              <section className="flex flex-col gap-3 border-t border-line-soft px-5 py-5 md:px-6 lg:border-t-0">
+                <div>
+                  <h2 className="font-display text-lg font-bold text-ink">{t("contactMethods")}</h2>
+                  <p className="mt-0.5 text-sm text-muted">{t("contactDescription")}</p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
+                  <MessagingAppField
+                    app={messagingApp}
+                    onAppChange={handleMessagingAppChange}
+                    country={messagingCountry}
+                    onCountryChange={handleMessagingCountryChange}
+                    contactValue={messagingContact}
+                    onContactChange={setMessagingContact}
+                    inputName="contactIdentifier"
+                    inputRequired
+                    variant="cards"
                   />
                 </div>
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
-                  <input
-                    name="birthDate"
-                    type="date"
-                    max={getLocalDateInputValue(new Date())}
-                    required
-                    aria-label={t("birthDate")}
-                    aria-describedby="birth-date-hint"
-                    className="w-full rounded-xl border border-line-soft bg-panel-raised px-4 py-3.5 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
-                  />
-                  <span id="birth-date-hint" className="text-xs text-muted">
-                    {t("birthDateHint")}
-                  </span>
-                </label>
-              </div>
-            </section>
-
-            <section className="flex flex-col gap-5 border-t border-line-soft px-5 py-7 md:px-8 md:py-8">
-              <div>
-                <h2 className="font-display text-xl font-bold text-ink">{t("contactMethods")}</h2>
-                <p className="mt-1 text-sm text-muted">{t("contactDescription")}</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
-                <MessagingAppField
-                  app={messagingApp}
-                  onAppChange={handleMessagingAppChange}
-                  country={messagingCountry}
-                  onCountryChange={handleMessagingCountryChange}
-                  contactValue={messagingContact}
-                  onContactChange={setMessagingContact}
-                  inputName="contactIdentifier"
-                  inputRequired
-                  variant="cards"
-                />
-              </div>
-            </section>
+              </section>
+            </div>
 
             {errorMessage ? (
               <p
@@ -333,8 +345,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                 {errorMessage}
               </p>
             ) : null}
-            <div className="border-t border-line-soft lg:px-8 lg:py-6">
-              <BottomActionBar>
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-canvas-soft px-4 py-3 shadow-[0_-8px_24px_rgba(61,45,43,0.08)] lg:static lg:flex lg:justify-end lg:px-6 lg:py-4 lg:shadow-none">
+              <div className="w-full lg:w-72">
                 <button
                   form="google-onboarding-form"
                   type="submit"
@@ -344,7 +356,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                   {isSubmitting ? t("completing") : t("completeRegistration")}
                   <ArrowRightIcon className="size-4" />
                 </button>
-              </BottomActionBar>
+              </div>
             </div>
           </form>
         </PageContainer>

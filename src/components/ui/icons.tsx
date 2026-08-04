@@ -333,6 +333,38 @@ export function MessageSquareIcon(props: IconProps) {
   );
 }
 
+export function WhatsAppIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M20.5 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20l1.2-4.6A8.5 8.5 0 1 1 20.5 11.5Z" />
+      <path d="M8.2 7.7c.4-.4.9-.2 1.1.2l.8 1.8c.1.3.1.6-.2.8l-.7.6c.8 1.6 2.1 2.9 3.7 3.7l.6-.7c.2-.2.5-.3.8-.2l1.8.8c.4.2.6.7.2 1.1-.6.7-1.5 1-2.4.8-3.2-.8-5.8-3.4-6.6-6.6-.2-.9.2-1.8.9-2.3Z" />
+    </IconBase>
+  );
+}
+
+export function LineIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M21 11c0 4.4-4 8-9 8-.8 0-1.6-.1-2.3-.3L5 21l1.2-4C4.2 15.5 3 13.4 3 11c0-4.4 4-8 9-8s9 3.6 9 8Z" />
+      <path d="M7.5 9.5h9" />
+      <path d="M7.5 12.5h6.5" />
+    </IconBase>
+  );
+}
+
+export function WeChatIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M14.5 12.5c0-3.3-3-6-6.7-6S1 9.2 1 12.5c0 1.8.9 3.4 2.4 4.5L2.7 20l3-1.5c.7.2 1.4.3 2.1.3 3.7 0 6.7-2.7 6.7-6.3Z" />
+      <path d="M10.5 17.8c1 1.8 3.1 3 5.5 3 .7 0 1.3-.1 1.9-.3l2.6 1.3-.6-2.6c1.3-1 2.1-2.4 2.1-3.9 0-2.9-2.7-5.3-6-5.3-.6 0-1.1.1-1.6.2" />
+      <circle cx="5.8" cy="11.3" r=".7" fill="currentColor" stroke="none" />
+      <circle cx="9.8" cy="11.3" r=".7" fill="currentColor" stroke="none" />
+      <circle cx="14.4" cy="14.4" r=".65" fill="currentColor" stroke="none" />
+      <circle cx="18" cy="14.4" r=".65" fill="currentColor" stroke="none" />
+    </IconBase>
+  );
+}
+
 export function MailIcon(props: IconProps) {
   return (
     <IconBase {...props}>

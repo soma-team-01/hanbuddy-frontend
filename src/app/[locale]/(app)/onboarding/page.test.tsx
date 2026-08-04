@@ -39,6 +39,8 @@ describe("OnboardingForm", () => {
       "en",
       "Welcome, traveler",
       "A few details, then Korea is yours to explore.",
+      "Help local buddies welcome you well and reach you when an experience is confirmed.",
+      "Choose a clear face photo so your buddy can recognize you when you meet.",
       "About you",
       "Nationality",
       "Date of birth",
@@ -52,6 +54,8 @@ describe("OnboardingForm", () => {
       "ko",
       "여행자님, 반가워요",
       "몇 가지만 알려주면, 한버디 여행 준비가 끝나요.",
+      "활동이 확정되었을 때 버디가 여행자님을 잘 맞이하고 연락할 수 있도록 사용해요.",
+      "만날 때 버디가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
       "기본 정보",
       "국적",
       "생년월일",
@@ -67,6 +71,8 @@ describe("OnboardingForm", () => {
       locale,
       eyebrow,
       headline,
+      description,
+      profilePhotoHint,
       personalHeading,
       nationality,
       birthDate,
@@ -78,9 +84,11 @@ describe("OnboardingForm", () => {
     ) => {
       renderWithIntl(<OnboardingForm />, { locale });
 
-      expect(screen.getByRole("form")).toHaveClass("max-w-[800px]");
+      expect(screen.getByRole("form")).toHaveClass("max-w-[1120px]");
       expect(screen.getByText(eyebrow)).toBeInTheDocument();
-      expect(screen.getByRole("heading", { name: headline })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: headline })).toHaveClass("lg:whitespace-nowrap");
+      expect(screen.getByText(description)).toHaveClass("lg:whitespace-nowrap");
+      expect(screen.getByText(profilePhotoHint)).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Tourist" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();

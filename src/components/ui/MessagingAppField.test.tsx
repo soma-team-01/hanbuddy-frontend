@@ -72,6 +72,19 @@ describe("MessagingAppField", () => {
 
   it.each([
     ["whatsapp", "WhatsApp"],
+    ["line", "Line"],
+    ["wechat", "WeChat"],
+    ["phone", "Phone Number"],
+  ] as const)("renders the dedicated %s contact icon", (icon, label) => {
+    renderField({ variant: "cards" });
+
+    expect(
+      screen.getByRole("button", { name: label }).querySelector(`[data-messaging-icon="${icon}"]`),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ["whatsapp", "WhatsApp"],
     ["phone", "전화번호"],
   ] as const)("localizes the Korean phone field for the %s state", (app, selectedOption) => {
     renderField({ app }, "ko");

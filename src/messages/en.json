@@ -308,7 +308,7 @@
     "preferredMessagingApp": "Preferred Messaging App",
     "addProfilePhoto": "Add profile photo",
     "profilePhotoHint": "Profile photo",
-    "profilePhotoOptional": "Optional · You can change this later",
+    "profilePhotoOptional": "Choose a clear face photo so your buddy can recognize you when you meet.",
     "selectedProfilePhotoPreview": "Selected profile photo preview",
     "googleProfile": "Google profile",
     "profileFor": "{name} profile",

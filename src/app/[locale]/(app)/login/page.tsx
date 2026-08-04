@@ -46,7 +46,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
           <p className="font-display text-xs font-bold tracking-[0.28em] text-primary uppercase">
             {t("eyebrow")}
           </p>
-          <h1 className="mt-5 font-display text-4xl leading-tight font-bold tracking-[-0.04em] text-ink md:text-6xl">
+          <h1 className="mt-5 font-display text-4xl leading-tight font-bold tracking-[-0.04em] text-ink md:text-5xl">
             {t("welcome")}
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted md:text-lg">

@@ -35,12 +35,10 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
             <span className="font-display font-bold text-ink">HanBuddy</span>
           </Link>
 
-          <div className="flex flex-col items-center gap-2 text-center sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-2">
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted">
-              <span className="underline">{authT("privacyPolicy")}</span>
-              <span className="underline">{authT("termsOfService")}</span>
-            </div>
-            <p className="text-xs text-muted">{authT("copyright")}</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-xs text-muted sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
+            <p>{authT("copyright")}</p>
+            <span className="underline">{authT("privacyPolicy")}</span>
+            <span className="underline">{authT("termsOfService")}</span>
           </div>
 
           <div className="flex items-center gap-2 sm:ml-auto">

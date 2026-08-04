@@ -31,10 +31,7 @@ import type {
   GoogleLoginResponse,
   GoogleProfile,
   GoogleSignupRequest,
-  UserType,
 } from "@/lib/auth/types";
-
-const ROLES = ["TOURIST", "BUDDY"] as const;
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
 type OnboardingErrorKey =
@@ -47,11 +44,15 @@ interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
 }
 
+function getLocalDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 10);
+}
+
 export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
-  const [role, setRole] = useState<UserType>("TOURIST");
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
   const [messagingContact, setMessagingContact] = useState("");
   const [errorKey, setErrorKey] = useState<OnboardingErrorKey | null>(null);
@@ -99,12 +100,6 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     setProfileImagePreview(URL.createObjectURL(file));
   }
 
-  function handleRoleChange(nextRole: UserType) {
-    setRole(nextRole);
-    // 국가별 번호 <-> 한국 로컬 번호로 값 의미가 달라지므로 역할 전환 시 연락처를 비운다
-    setMessagingContact("");
-  }
-
   function handleMessagingAppChange(nextApp: MessagingAppKey) {
     setMessagingApp(nextApp);
     // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
@@ -128,16 +123,17 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     setRequestFailure(null);
 
     const formData = new FormData(event.currentTarget);
-    const ageEntry = formData.get("age");
-    const age = typeof ageEntry === "string" && ageEntry.trim() ? Number(ageEntry) : Number.NaN;
+    const birthDateEntry = formData.get("birthDate");
+    const birthDate = typeof birthDateEntry === "string" ? birthDateEntry.trim() : "";
     const contactIdentifier = messagingContact.trim();
+    const today = getLocalDateInputValue(new Date());
 
     if (!nationality) {
       setErrorKey("validation.nationalityRequired");
       return;
     }
-    if (!Number.isInteger(age) || age < 0 || age > 150) {
-      setErrorKey("validation.ageInvalid");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || birthDate > today) {
+      setErrorKey("validation.birthDateInvalid");
       return;
     }
     if (contactIdentifier.length < 2) {
@@ -156,15 +152,15 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       }
 
       const payload: GoogleSignupRequest = {
-        userType: role,
+        userType: "TOURIST",
         ...(profileImageKey ? { profileImageKey } : {}),
         nationalityCode: nationality,
-        age,
+        birthDate,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
         contactCountryCode:
-          role === "BUDDY" && (messagingApp === "whatsapp" || messagingApp === "phone")
-            ? "+82"
-            : (findCountry(messagingCountry)?.dialCode ?? ""),
+          messagingApp === "whatsapp" || messagingApp === "phone"
+            ? (findCountry(messagingCountry)?.dialCode ?? "")
+            : "",
         contactIdentifier,
       };
 
@@ -184,8 +180,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         return;
       }
 
-      const userType = body.result.userType ?? role;
-      router.replace(userType === "BUDDY" ? "/dashboard" : "/explore");
+      router.replace("/explore");
     } catch (error) {
       setRequestFailure({ error, fallbackKey: "serverUnavailable" });
     } finally {
@@ -231,38 +226,30 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-canvas pb-28 lg:pb-0">
-      <PageHeader title={t("title")} closeHref="/login" />
-      <main className="flex-1 py-6 md:py-10">
-        <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
-          <aside className="mb-8 hidden lg:block">
-            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-              Getting started
+    <div className="flex flex-1 flex-col bg-canvas-soft pb-28 lg:pb-0">
+      <PageHeader closeHref="/login" />
+      <main className="flex-1 pb-10 md:pb-16">
+        <PageContainer>
+          <header className="mx-auto max-w-2xl text-center">
+            <p className="font-display text-xs font-bold tracking-[0.24em] text-primary uppercase">
+              {t("eyebrow")}
             </p>
-            <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
-              {t("title")}
-            </h2>
-            <ol className="mt-12 flex flex-col gap-5 text-sm text-muted">
-              {["Choose your role", "Personal info", "How buddies reach you"].map((step, index) => (
-                <li key={step} className="flex items-start gap-3">
-                  <span
-                    className={`flex size-8 shrink-0 items-center justify-center rounded-full font-display font-bold ${index === 0 ? "bg-primary text-white" : "border border-line-strong"}`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="pt-1 font-semibold">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </aside>
+            <h1 className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.045em] text-ink md:text-4xl">
+              {t("headline")}
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-muted md:text-base">
+              {t("description")}
+            </p>
+          </header>
+
           <form
             id="google-onboarding-form"
             aria-label={t("title")}
             noValidate
             onSubmit={handleSubmit}
-            className="mx-auto grid w-full max-w-[800px] gap-8 md:grid-cols-2"
+            className="mx-auto mt-8 flex w-full max-w-[800px] flex-col overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft shadow-[0_20px_60px_rgba(61,45,43,0.08)] md:mt-10"
           >
-            <section className="flex flex-col items-center gap-3 md:col-span-2">
+            <section className="flex items-center gap-4 bg-panel-raised px-5 py-5 md:gap-5 md:px-8 md:py-6">
               <div className="relative">
                 {profilePhoto}
                 <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
@@ -276,51 +263,23 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                   />
                 </label>
               </div>
-              {(googleProfile?.name || googleProfile?.email) && (
-                <div className="text-center">
-                  {googleProfile.name && (
-                    <p className="font-display text-lg font-semibold text-ink">
-                      {googleProfile.name}
-                    </p>
-                  )}
-                  {googleProfile.email && (
-                    <p className="text-sm text-muted">{googleProfile.email}</p>
-                  )}
-                </div>
-              )}
-            </section>
-
-            <section className="flex flex-col gap-3 md:col-span-2">
-              <h2 className="font-display text-xl font-semibold text-ink">{t("roleHeading")}</h2>
-              <div className="grid gap-3 md:grid-cols-2">
-                {ROLES.map((key) => {
-                  const isSelected = role === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      aria-pressed={isSelected}
-                      onClick={() => handleRoleChange(key)}
-                      className={`h-24 rounded-2xl border px-5 text-left font-display text-sm font-semibold transition-colors ${
-                        isSelected
-                          ? "border-primary bg-primary-soft text-primary-strong shadow-[0_8px_20px_rgba(209,63,50,0.12)]"
-                          : "border-line-soft bg-canvas-soft text-ink hover:border-primary-soft"
-                      }`}
-                    >
-                      {t(key === "TOURIST" ? "roles.tourist" : "roles.buddy")}
-                    </button>
-                  );
-                })}
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-base font-bold text-ink md:text-lg">
+                  {googleProfile?.name ?? t("profilePhotoHint")}
+                </p>
+                <p className="mt-1 truncate text-sm text-muted">
+                  {googleProfile?.email ?? t("profilePhotoOptional")}
+                </p>
               </div>
             </section>
 
-            <section className="flex flex-col gap-4 border-t border-line-soft pt-8 md:col-span-2">
-              <h2 className="font-display text-xl font-semibold text-ink">
+            <section className="flex flex-col gap-5 border-t border-line-soft px-5 py-7 md:px-8 md:py-8">
+              <h2 className="font-display text-xl font-bold text-ink">
                 {t("personalInformation")}
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm text-muted">{t("nationality")}</span>
+                  <span className="text-sm font-medium text-ink">{t("nationality")}</span>
                   <CountrySelect
                     value={nationality}
                     onChange={handleNationalityChange}
@@ -328,24 +287,30 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                   />
                 </div>
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm text-muted">{t("age")}</span>
+                  <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
                   <input
-                    name="age"
-                    type="number"
-                    min={0}
-                    max={150}
+                    name="birthDate"
+                    type="date"
+                    max={getLocalDateInputValue(new Date())}
                     required
-                    placeholder={t("agePlaceholder")}
-                    className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink placeholder:text-muted/70"
+                    aria-label={t("birthDate")}
+                    aria-describedby="birth-date-hint"
+                    className="w-full rounded-xl border border-line-soft bg-panel-raised px-4 py-3.5 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                   />
+                  <span id="birth-date-hint" className="text-xs text-muted">
+                    {t("birthDateHint")}
+                  </span>
                 </label>
               </div>
             </section>
 
-            <section className="flex flex-col gap-4 border-t border-line-soft pt-8 md:col-span-2">
-              <h2 className="font-display text-xl font-semibold text-ink">{t("contactMethods")}</h2>
+            <section className="flex flex-col gap-5 border-t border-line-soft px-5 py-7 md:px-8 md:py-8">
+              <div>
+                <h2 className="font-display text-xl font-bold text-ink">{t("contactMethods")}</h2>
+                <p className="mt-1 text-sm text-muted">{t("contactDescription")}</p>
+              </div>
               <div className="flex flex-col gap-2">
-                <span className="text-sm text-muted">{t("preferredMessagingApp")}</span>
+                <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
                 <MessagingAppField
                   app={messagingApp}
                   onAppChange={handleMessagingAppChange}
@@ -355,7 +320,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                   onContactChange={setMessagingContact}
                   inputName="contactIdentifier"
                   inputRequired
-                  koreanOnly={role === "BUDDY"}
+                  variant="cards"
                 />
               </div>
             </section>
@@ -363,18 +328,18 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
             {errorMessage ? (
               <p
                 role="alert"
-                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger md:col-span-2"
+                className="mx-5 mb-5 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger md:mx-8 md:mb-8"
               >
                 {errorMessage}
               </p>
             ) : null}
-            <div className="md:col-span-2">
+            <div className="border-t border-line-soft lg:px-8 lg:py-6">
               <BottomActionBar>
                 <button
                   form="google-onboarding-form"
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
                 >
                   {isSubmitting ? t("completing") : t("completeRegistration")}
                   <ArrowRightIcon className="size-4" />

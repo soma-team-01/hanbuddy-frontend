@@ -34,7 +34,7 @@ export interface GoogleSignupRequest {
   userType: UserType;
   profileImageKey?: string;
   nationalityCode: string;
-  age: number;
+  birthDate: string;
   contactMethod: ContactMethod;
   contactCountryCode?: string;
   contactIdentifier: string;

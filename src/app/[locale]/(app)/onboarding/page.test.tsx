@@ -37,42 +37,39 @@ describe("OnboardingForm", () => {
   it.each([
     [
       "en",
-      "I am a...",
-      "Tourist",
-      "Personal Information",
+      "Welcome, traveler",
+      "A few details, then Korea is yours to explore.",
+      "About you",
       "Nationality",
-      "Age",
-      "e.g. 25",
-      "Contact Methods",
+      "Date of birth",
+      "How should buddies reach you?",
       "Preferred Messaging App",
       "Add profile photo",
-      "Complete Registration",
+      "Start exploring",
       "Close",
     ],
     [
       "ko",
-      "역할을 선택해 주세요",
-      "여행자",
-      "개인 정보",
+      "여행자님, 반가워요",
+      "몇 가지만 알려주면, 한버디 여행 준비가 끝나요.",
+      "기본 정보",
       "국적",
-      "나이",
-      "예: 25",
-      "연락 방법",
+      "생년월일",
+      "버디가 어떻게 연락하면 될까요?",
       "선호하는 메신저",
       "프로필 사진 추가",
-      "가입 완료",
+      "활동 둘러보기",
       "닫기",
     ],
   ] as const)(
     "renders localized fields, actions, and accessibility names for %s",
     (
       locale,
-      roleHeading,
-      tourist,
+      eyebrow,
+      headline,
       personalHeading,
       nationality,
-      age,
-      agePlaceholder,
+      birthDate,
       contactHeading,
       messagingApp,
       addPhoto,
@@ -81,12 +78,14 @@ describe("OnboardingForm", () => {
     ) => {
       renderWithIntl(<OnboardingForm />, { locale });
 
-      expect(screen.getByRole("form")).toHaveClass("md:grid-cols-2", "max-w-[800px]");
-      expect(screen.getByRole("heading", { name: roleHeading })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: tourist })).toBeInTheDocument();
+      expect(screen.getByRole("form")).toHaveClass("max-w-[800px]");
+      expect(screen.getByText(eyebrow)).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: headline })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Tourist" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
       expect(screen.getByText(nationality)).toBeInTheDocument();
-      expect(screen.getByLabelText(age)).toHaveAttribute("placeholder", agePlaceholder);
+      expect(screen.getByLabelText(birthDate)).toHaveAttribute("type", "date");
       expect(screen.getByRole("heading", { name: contactHeading })).toBeInTheDocument();
       expect(screen.getByText(messagingApp)).toBeInTheDocument();
       expect(screen.getByLabelText(addPhoto)).toBeInTheDocument();
@@ -102,7 +101,7 @@ describe("OnboardingForm", () => {
     renderWithIntl(<OnboardingForm />, { locale });
 
     fireEvent.click(
-      screen.getByRole("button", { name: locale === "ko" ? "가입 완료" : "Complete Registration" }),
+      screen.getByRole("button", { name: locale === "ko" ? "활동 둘러보기" : "Start exploring" }),
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
@@ -112,7 +111,7 @@ describe("OnboardingForm", () => {
     const onboardingForm = <OnboardingForm />;
     const { rerender } = render(<IntlTestProvider locale="en">{onboardingForm}</IntlTestProvider>);
 
-    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Please select a nationality.");
 
     rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
@@ -121,21 +120,21 @@ describe("OnboardingForm", () => {
   });
 
   it.each([
-    ["en", "", "Enter an age from 0 to 150."],
-    ["en", "151", "Enter an age from 0 to 150."],
-    ["ko", "", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
-    ["ko", "151", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
+    ["en", "", "Please enter a valid date of birth."],
+    ["en", "2100-01-01", "Please enter a valid date of birth."],
+    ["ko", "", "올바른 생년월일을 입력해 주세요."],
+    ["ko", "2100-01-01", "올바른 생년월일을 입력해 주세요."],
   ] as const)(
-    "shows localized age validation after a real %s submit with age %s",
-    (locale, age, message) => {
+    "shows localized birth date validation after a real %s submit with birth date %s",
+    (locale, birthDate, message) => {
       const fetchMock = vi.fn();
       vi.stubGlobal("fetch", fetchMock);
       renderWithIntl(<OnboardingForm />, { locale });
-      fillLocalizedOnboardingFields(locale, { age, contact: "line_user" });
+      fillLocalizedOnboardingFields(locale, { birthDate, contact: "line_user" });
 
       fireEvent.click(
         screen.getByRole("button", {
-          name: locale === "ko" ? "가입 완료" : "Complete Registration",
+          name: locale === "ko" ? "활동 둘러보기" : "Start exploring",
         }),
       );
 
@@ -151,11 +150,11 @@ describe("OnboardingForm", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     renderWithIntl(<OnboardingForm />, { locale });
-    fillLocalizedOnboardingFields(locale, { age: "25", contact: "" });
+    fillLocalizedOnboardingFields(locale, { birthDate: "1998-04-12", contact: "" });
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: locale === "ko" ? "가입 완료" : "Complete Registration",
+        name: locale === "ko" ? "활동 둘러보기" : "Start exploring",
       }),
     );
 
@@ -175,31 +174,11 @@ describe("OnboardingForm", () => {
     expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
   });
-
-  it("fixes +82 without a country selector for buddies", () => {
-    renderWithIntl(<OnboardingForm />);
-    fireEvent.click(screen.getByRole("button", { name: "Buddy" }));
-    fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    expect(screen.queryByLabelText("Messaging country code")).not.toBeInTheDocument();
-    expect(screen.getByText("+82")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("010-XXXX-XXXX")).toBeInTheDocument();
-  });
-
-  it("clears the contact input when the role changes", () => {
-    renderWithIntl(<OnboardingForm />);
-    fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
-      target: { value: "5551234" },
-    });
-    expect(screen.getByLabelText("Messaging phone number")).toHaveValue("5551234");
-    fireEvent.click(screen.getByRole("button", { name: "Buddy" }));
-    expect(screen.getByLabelText("Messaging phone number")).toHaveValue("");
-  });
 });
 
 function fillLocalizedOnboardingFields(
   locale: "en" | "ko",
-  values: { age: string; contact: string },
+  values: { birthDate: string; contact: string },
 ) {
   Element.prototype.scrollIntoView = vi.fn();
   const labels =
@@ -208,14 +187,14 @@ function fillLocalizedOnboardingFields(
           nationality: "국적",
           searchCountry: "국가 검색",
           country: "미국",
-          age: "나이",
+          birthDate: "생년월일",
           appId: "메신저 앱 ID",
         }
       : {
           nationality: "Nationality",
           searchCountry: "Search country",
           country: "United States",
-          age: "Age",
+          birthDate: "Date of birth",
           appId: "Messaging app ID",
         };
 
@@ -224,7 +203,9 @@ function fillLocalizedOnboardingFields(
     target: { value: labels.country },
   });
   fireEvent.click(screen.getByText(labels.country));
-  fireEvent.change(screen.getByLabelText(labels.age), { target: { value: values.age } });
+  fireEvent.change(screen.getByLabelText(labels.birthDate), {
+    target: { value: values.birthDate },
+  });
   if (values.contact) {
     fireEvent.change(screen.getByLabelText(labels.appId), {
       target: { value: values.contact },
@@ -258,7 +239,9 @@ describe("OnboardingForm profile image", () => {
       target: { value: "United States" },
     });
     fireEvent.click(screen.getByText("United States"));
-    fireEvent.change(screen.getByPlaceholderText("e.g. 25"), { target: { value: "25" } });
+    fireEvent.change(screen.getByLabelText("Date of birth"), {
+      target: { value: "1998-04-12" },
+    });
     fireEvent.change(screen.getByLabelText("Messaging app ID"), {
       target: { value: "line_user" },
     });
@@ -299,15 +282,21 @@ describe("OnboardingForm profile image", () => {
     const file = createImageFile();
     fireEvent.change(screen.getByLabelText("Add profile photo"), { target: { files: [file] } });
 
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(uploadProfileImage).toHaveBeenCalledWith(file);
     const [signupUrl, signupInit] = fetchMock.mock.calls[0];
     expect(signupUrl).toBe("/api/auth/google/signup");
     expect(JSON.parse(signupInit.body)).toMatchObject({
+      userType: "TOURIST",
+      nationalityCode: "US",
+      birthDate: "1998-04-12",
+      contactMethod: "LINE",
+      contactIdentifier: "line_user",
       profileImageKey: "profiles/2026/07/07/uuid.png",
     });
+    expect(JSON.parse(signupInit.body)).not.toHaveProperty("age");
   });
 
   it("submits without profileImageKey when no image is selected", async () => {
@@ -327,7 +316,7 @@ describe("OnboardingForm profile image", () => {
     renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
 
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(uploadProfileImage).not.toHaveBeenCalled();
@@ -348,7 +337,7 @@ describe("OnboardingForm profile image", () => {
       target: { files: [createImageFile()] },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
 
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
@@ -372,7 +361,7 @@ describe("OnboardingForm profile image", () => {
     fireEvent.change(screen.getByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
     await waitFor(() => expect(uploadProfileImage).toHaveBeenCalledTimes(1));
 
     rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
@@ -394,7 +383,7 @@ describe("OnboardingForm profile image", () => {
     const onboardingForm = <OnboardingForm />;
     const { rerender } = render(<IntlTestProvider locale="en">{onboardingForm}</IntlTestProvider>);
     fillRequiredFields();
-    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
     rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
@@ -427,7 +416,7 @@ describe("OnboardingForm profile image", () => {
     renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
 
-    fireEvent.click(screen.getByRole("button", { name: "Complete Registration" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "This email is already registered. Please sign in instead.",
@@ -469,14 +458,14 @@ describe("OnboardingForm profile image", () => {
       target: { files: [createImageFile()] },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
         "The service is temporarily unavailable. Please try again shortly.",
       ),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Complete Registration/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
     expect(uploadProfileImage).toHaveBeenCalledTimes(1);

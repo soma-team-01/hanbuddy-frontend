@@ -293,21 +293,22 @@
     }
   },
   "Onboarding": {
-    "title": "프로필 완성하기",
+    "title": "여행자 프로필 완성하기",
     "metadataTitle": "프로필 설정 | HanBuddy",
-    "metadataDescription": "HanBuddy 역할을 선택하고 프로필을 완성하세요.",
-    "roleHeading": "역할을 선택해 주세요",
-    "roles": {
-      "tourist": "여행자",
-      "buddy": "버디"
-    },
-    "personalInformation": "개인 정보",
+    "metadataDescription": "여행자 프로필을 완성하고 HanBuddy와 함께 한국을 둘러보세요.",
+    "eyebrow": "여행자님, 반가워요",
+    "headline": "몇 가지만 알려주면, 한버디 여행 준비가 끝나요.",
+    "description": "활동이 확정되었을 때 버디가 여행자님을 잘 맞이하고 연락할 수 있도록 사용해요.",
+    "personalInformation": "기본 정보",
     "nationality": "국적",
-    "age": "나이",
-    "agePlaceholder": "예: 25",
-    "contactMethods": "연락 방법",
+    "birthDate": "생년월일",
+    "birthDateHint": "연령 확인을 위해서만 사용해요.",
+    "contactMethods": "버디가 어떻게 연락하면 될까요?",
+    "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",
     "preferredMessagingApp": "선호하는 메신저",
     "addProfilePhoto": "프로필 사진 추가",
+    "profilePhotoHint": "프로필 사진",
+    "profilePhotoOptional": "선택 사항 · 나중에 변경할 수 있어요",
     "selectedProfilePhotoPreview": "선택한 프로필 사진 미리보기",
     "googleProfile": "Google 프로필",
     "profileFor": "{name} 프로필",
@@ -315,14 +316,14 @@
       "unsupportedImageType": "JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.",
       "imageTooLarge": "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.",
       "nationalityRequired": "국적을 선택해 주세요.",
-      "ageInvalid": "나이는 0에서 150 사이의 숫자로 입력해 주세요.",
+      "birthDateInvalid": "올바른 생년월일을 입력해 주세요.",
       "contactInvalid": "연락처 ID 또는 번호를 2자 이상 입력해 주세요."
     },
     "profileUploadFailed": "프로필 이미지를 업로드하지 못했습니다. 다시 시도해 주세요.",
     "signupFailed": "회원가입을 완료하지 못했습니다. 다시 시도해 주세요.",
     "serverUnavailable": "인증 서버에 연결할 수 없습니다. 다시 시도해 주세요.",
     "completing": "가입 처리 중...",
-    "completeRegistration": "가입 완료"
+    "completeRegistration": "활동 둘러보기"
   },
   "Profile": {
     "title": "프로필 수정",

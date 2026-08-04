@@ -120,7 +120,12 @@
       "title": "Recommended experiences",
       "description": "Find an activity that matches the way you want to experience Korea.",
       "viewAll": "View all experiences",
-      "loading": "Loading recommended experiences..."
+      "loading": "Loading recommended experiences...",
+      "emptyTitle": "No experiences available yet.",
+      "emptyDescription": "Local buddies are preparing something special. Check back soon!",
+      "errorTitle": "We couldn't load experiences right now.",
+      "errorDescription": "There was a temporary connection problem. Please try again.",
+      "retry": "Try again"
     },
     "visuals": {
       "ariaLabel": "Real HanBuddy moments in Seoul",

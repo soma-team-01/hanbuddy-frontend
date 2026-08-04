@@ -120,7 +120,12 @@
       "title": "추천 액티비티",
       "description": "내가 원하는 방식으로 한국을 경험할 수 있는 활동을 찾아보세요.",
       "viewAll": "모든 액티비티 보기",
-      "loading": "추천 액티비티를 불러오는 중..."
+      "loading": "추천 액티비티를 불러오는 중...",
+      "emptyTitle": "아직 준비된 액티비티가 없어요.",
+      "emptyDescription": "로컬 버디들이 특별한 경험을 준비하고 있어요. 조금만 기다려 주세요!",
+      "errorTitle": "지금은 액티비티를 불러올 수 없어요.",
+      "errorDescription": "일시적인 연결 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+      "retry": "다시 시도"
     },
     "visuals": {
       "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",

@@ -59,6 +59,20 @@ export async function proxyAuthenticatedGet<TResult>(
   );
 }
 
+export async function proxyPublicGet<TResult>(
+  _request: NextRequest,
+  backendPath: string,
+  unavailableMessage: string,
+) {
+  try {
+    const backend = await getBackend<TResult>(backendPath);
+    return createBackendJsonResponse(backend);
+  } catch (error) {
+    console.error(unavailableMessage, error);
+    return backendUnavailableResponse(unavailableMessage);
+  }
+}
+
 export async function readJsonBody<TBody>(request: NextRequest, invalidMessage: string) {
   try {
     return { ok: true as const, body: (await request.json()) as TBody };

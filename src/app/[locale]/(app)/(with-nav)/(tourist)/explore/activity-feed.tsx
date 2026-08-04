@@ -7,13 +7,11 @@ import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
-import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityFeed() {
   const t = useTranslations("Explore");
   const getApiErrorMessage = useApiErrorMessage();
   const activitiesQuery = useQuery(touristActivitiesQueryOptions());
-  useAuthQueryRedirect(activitiesQuery.error);
 
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 

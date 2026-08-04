@@ -32,14 +32,20 @@ describe("GET /api/activities", () => {
     mockedPostBackend.mockReset();
   });
 
-  it("returns 401 without calling the backend when the access token cookie is missing", async () => {
+  it("proxies the public tourist activity list without an access token", async () => {
+    mockedGetBackend.mockResolvedValue({
+      status: 200,
+      payload: { isSuccess: true, code: "200", message: "ok", result: [] },
+      setCookies: [],
+    });
+
     const response = await GET(new NextRequest("http://localhost/api/activities"));
 
-    expect(response.status).toBe(401);
-    expect(mockedGetBackend).not.toHaveBeenCalled();
+    expect(mockedGetBackend).toHaveBeenCalledWith("/activities");
+    expect(response.status).toBe(200);
   });
 
-  it("proxies the tourist activity list with the access token as bearer", async () => {
+  it("keeps the public tourist activity list available with an authenticated request", async () => {
     mockedGetBackend.mockResolvedValue({
       status: 200,
       payload: { isSuccess: true, code: "200", message: "ok", result: [] },
@@ -52,9 +58,7 @@ describe("GET /api/activities", () => {
       }),
     );
 
-    expect(mockedGetBackend).toHaveBeenCalledWith("/activities", {
-      bearerToken: "access-token",
-    });
+    expect(mockedGetBackend).toHaveBeenCalledWith("/activities");
     expect(response.status).toBe(200);
   });
 });

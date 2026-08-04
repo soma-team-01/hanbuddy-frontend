@@ -97,6 +97,42 @@ button:not(:disabled),
   animation-delay: 260ms;
 }
 
+@keyframes hero-media-cycle {
+  0%,
+  20% {
+    opacity: 1;
+  }
+  25%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hero-media-zoom {
+  0%,
+  100% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.hero-media-frame {
+  animation: hero-media-cycle 20s linear infinite;
+  animation-delay: var(--hero-media-delay);
+  opacity: 0;
+}
+
+.hero-media-frame:first-child {
+  opacity: 1;
+}
+
+.hero-media-image {
+  animation: hero-media-zoom 20s ease-in-out infinite;
+  animation-delay: var(--hero-media-delay);
+}
+
 @keyframes motion-dialog-in {
   from {
     opacity: 0;
@@ -153,11 +189,17 @@ dialog.motion-dialog[open]::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .motion-reveal,
   .landing-reveal,
+  .hero-media-frame,
+  .hero-media-image,
   dialog.motion-dialog[open],
   dialog.motion-dialog[open]::backdrop {
     opacity: 1;
     transform: none;
     animation: none;
+  }
+
+  .hero-media-frame:not(:first-child) {
+    opacity: 0;
   }
 
   .motion-press,

@@ -74,54 +74,99 @@
     "completed": "완료됨"
   },
   "Landing": {
-    "metadataTitle": "HanBuddy | 현지인처럼 한국을 경험하세요",
+    "metadataTitle": "HanBuddy | 현지인처럼 한국을 경험하세요!",
     "metadataDescription": "현지 버디와 함께 진짜 한국을 경험해 보세요.",
-    "login": "로그인",
-    "eyebrow": "현지 버디와 매칭하세요",
-    "headline": "현지인처럼 한국을 경험하세요.",
-    "description": "KBO 야구 관람부터 전통시장까지, 단순한 관광을 넘어 현지 버디와 함께 진짜 한국 문화를 경험해 보세요.",
-    "getStarted": "시작하기",
-    "browseExperiences": "액티비티 둘러보기 →",
-    "heroPanels": {
-      "experienceTitle": "나에게 꼭 맞는 로컬 경험",
-      "experienceDescription": "현지 버디가 공유하는 액티비티를 둘러보세요.",
-      "experienceBadge": "당신을 위한 경험",
-      "experienceAction": "둘러보기",
-      "touristTitle": "호기심으로 여행하기",
-      "touristDescription": "여행에 잘 맞는 경험을 찾아보세요.",
-      "buddyTitle": "현지 버디와 함께",
-      "buddyDescription": "한국을 가장 잘 아는 사람을 만나보세요.",
-      "confirmation": "다음 한국 경험을 찾아보세요"
-    },
-    "processSteps": {
-      "browse": {
-        "title": "자유롭게 둘러보기",
-        "description": "회원가입 없이도 모든 경험을 살펴볼 수 있어요."
+    "eyebrow": "서울 · 현지 버디와 함께",
+    "headline": "현지인처럼 한국을 경험하세요!",
+    "description": "정해진 여행 코스를 넘어, 한국을 잘 아는 사람과 함께 더 의미 있는 음식과 장소, 순간을 만나보세요.",
+    "exploreExperiences": "액티비티 둘러보기",
+    "highlights": {
+      "localPerspective": {
+        "title": "현지인의 시선",
+        "description": "버디의 눈으로 한국을 만나보세요."
       },
-      "apply": {
-        "title": "날짜를 고르고 신청하기",
-        "description": "일정을 선택하고 버디에게 자신을 소개한 뒤 안전하게 결제하세요."
+      "realConnection": {
+        "title": "진짜 연결",
+        "description": "장소를 넘어 사람을 만나보세요."
       },
-      "meet": {
-        "title": "버디 만나기",
-        "description": "버디가 신청을 확인하고 원하는 메신저로 연락드려요."
+      "sharedMoments": {
+        "title": "함께 만드는 순간",
+        "description": "오래 이야기할 추억을 가져가세요."
       }
     },
-    "experiences": {
-      "gwangjangMarket": {
-        "title": "광장시장",
-        "tag": "길거리 음식"
+    "booking": {
+      "eyebrow": "이용 방법",
+      "title": "세 단계로 간단하게 신청해 보세요.",
+      "description": "원하는 경험을 고르고, 일정을 선택한 뒤 현지 버디를 만나보세요.",
+      "steps": {
+        "experience": {
+          "title": "경험 고르기",
+          "description": "한국을 경험하고 싶은 방식에 맞는 액티비티를 둘러보세요."
+        },
+        "schedule": {
+          "title": "일정 선택하기",
+          "description": "참여 가능한 날짜와 인원을 선택하세요."
+        },
+        "payment": {
+          "title": "신청하고 결제하기",
+          "description": "신청을 보내고 결제를 완료하면 경험이 확정됩니다."
+        }
       },
-      "bukchonHanok": {
-        "title": "북촌 한옥",
-        "tag": "마을 산책"
+      "cta": "예약하려면 로그인"
+    },
+    "recommended": {
+      "eyebrow": "HanBuddy와 함께 둘러보기",
+      "title": "추천 액티비티",
+      "description": "내가 원하는 방식으로 한국을 경험할 수 있는 활동을 찾아보세요.",
+      "viewAll": "모든 액티비티 보기",
+      "loading": "추천 액티비티를 불러오는 중..."
+    },
+    "visuals": {
+      "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",
+      "mainAlt": "한강에서 피크닉을 즐기는 친구들",
+      "marketAlt": "서울의 야간 야구 경기장",
+      "teaAlt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
+      "fountainAlt": "해 질 무렵 빛나는 한강 분수",
+      "mainCaption": "나만의 한국을 만나보세요."
+    },
+    "reviews": {
+      "cheerTogether": {
+        "rating": "5.0",
+        "starLabel": "별점 5점 만점에 5점",
+        "event": "KBO 야구 경기",
+        "meta": "참여자 후기 · 2026년 7월",
+        "quote": "경기를 보고 함께 응원하는 시간이 정말 즐거웠어요!"
       },
-      "teaCeremony": {
-        "title": "다도 체험",
-        "tag": "한국 문화"
+      "localBuddy": {
+        "rating": "5.0",
+        "starLabel": "별점 5점 만점에 5점",
+        "event": "KBO 야구 경기",
+        "meta": "참여자 후기 · 2026년 7월",
+        "quote": "현지인과 함께 야구 경기를 즐길 수 있어서 정말 좋았어요."
+      },
+      "lookedAfter": {
+        "rating": "5.0",
+        "starLabel": "별점 5점 만점에 5점",
+        "event": "KBO 야구 경기",
+        "meta": "참여자 후기 · 2026년 8월",
+        "quote": "HanBuddy와 함께한 야구 경기가 정말 즐거웠어요! 경험 내내 세심하게 챙겨줘서 편안하고 즐겁게 시간을 보낼 수 있었어요."
       }
     },
-    "footerTagline": "진짜 한국을 함께 경험하세요."
+    "reviewsSection": {
+      "eyebrow": "커뮤니티의 이야기",
+      "title": "오래 기억에 남는 순간.",
+      "description": "HanBuddy와 함께 한국을 경험한 참여자들의 이야기입니다."
+    },
+    "contact": {
+      "eyebrow": "계속 소통해요",
+      "title": "HanBuddy에 대해 더 궁금하다면",
+      "description": "활동 호스팅에 관심이 있거나 HanBuddy에 대해 궁금한 점, 나누고 싶은 아이디어가 있다면 편하게 메시지를 보내주세요.",
+      "emailLabel": "무엇이든 이메일로 물어보세요",
+      "instagramLabel": "Instagram",
+      "responseNote": "여러분의 이야기를 기다리고 있어요.",
+      "emailIconLabel": "HanBuddy에 이메일 보내기",
+      "instagramIconLabel": "HanBuddy Instagram 열기"
+    }
   },
   "Auth": {
     "metadataTitle": "로그인 | HanBuddy",

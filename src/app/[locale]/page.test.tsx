@@ -1,8 +1,13 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getTouristActivities } from "@/lib/api/activities";
 import type { Locale } from "@/i18n/routing";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
+
+vi.mock("@/lib/api/activities", () => ({
+  getTouristActivities: vi.fn(),
+}));
 
 vi.mock("next-intl/server", async () => {
   const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
@@ -18,85 +23,149 @@ vi.mock("next-intl/server", async () => {
 });
 
 async function renderLanding(locale: Locale) {
-  renderWithIntl(await LandingPage({ params: Promise.resolve({ locale }) }), { locale });
+  renderWithQueryClient(await LandingPage({ params: Promise.resolve({ locale }) }), { locale });
 }
 
 describe("LandingPage", () => {
+  beforeEach(() => {
+    vi.mocked(getTouristActivities).mockResolvedValue({
+      status: "success",
+      activities: [],
+    });
+  });
+
   it.each([
-    [
-      "en",
-      "Experience Korea like a local.",
-      "Get started",
-      "Browse experiences →",
-      "Authentic Korea, together.",
-    ],
-    [
-      "ko",
-      "현지인처럼 한국을 경험하세요.",
-      "시작하기",
-      "액티비티 둘러보기 →",
-      "진짜 한국을 함께 경험하세요.",
-    ],
+    ["en", "Experience Korea like a local!", "Explore experiences"],
+    ["ko", "현지인처럼 한국을 경험하세요!", "액티비티 둘러보기"],
   ] as const)(
-    "renders localized landing content and navigation for %s",
-    async (locale, headline, getStarted, browse, footer) => {
+    "renders localized landing content and CTA for %s",
+    async (locale, headline, explore) => {
       await renderLanding(locale);
 
       expect(screen.getByRole("main")).toHaveClass("w-full");
       expect(screen.getByRole("heading", { level: 1, name: headline })).toHaveClass("font-display");
       expect(screen.queryByRole("banner")).not.toBeInTheDocument();
-      expect(screen.getByRole("link", { name: getStarted })).toHaveAttribute(
-        "href",
-        `/${locale}/login`,
-      );
-      expect(screen.getByRole("link", { name: browse })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: explore })).toHaveAttribute(
         "href",
         `/${locale}/explore`,
       );
-      expect(
-        screen.getByRole("link", { name: locale === "ko" ? "둘러보기" : "Explore" }),
-      ).toHaveAttribute("href", `/${locale}/explore`);
-      expect(screen.getByText(footer)).toBeInTheDocument();
     },
   );
 
   it.each([
-    ["en", "Gwangjang Market", "Bukchon Hanok", "Tea Ceremony"],
-    ["ko", "광장시장", "북촌 한옥", "다도 체험"],
-  ] as const)("localizes experience image alternatives for %s", async (locale, ...titles) => {
+    ["en", "Log in to book"],
+    ["ko", "예약하려면 로그인"],
+  ] as const)("links the booking CTA to login for %s", async (locale, cta) => {
     await renderLanding(locale);
 
-    for (const title of titles) {
-      expect(screen.getByRole("img", { name: title })).toBeInTheDocument();
-    }
-  });
-
-  it("eagerly loads only the first above-the-fold experience image", async () => {
-    await renderLanding("en");
-
-    const firstImage = screen.getByRole("img", { name: "Gwangjang Market" });
-
-    expect(firstImage).toHaveAttribute("loading", "eager");
-    expect(firstImage).toHaveAttribute(
-      "sizes",
-      "(min-width: 1024px) 18vw, (min-width: 768px) 30vw, 256px",
-    );
-    expect(screen.getByRole("img", { name: "Bukchon Hanok" })).not.toHaveAttribute(
-      "loading",
-      "eager",
-    );
-  });
-
-  it("allows both hero grid regions to shrink without widening the mobile viewport", async () => {
-    await renderLanding("en");
-
-    expect(screen.getByRole("heading", { level: 1 }).closest("section")).toHaveClass("min-w-0");
-    expect(screen.getByRole("region", { name: "Match with a local buddy" })).toHaveClass("min-w-0");
+    expect(screen.getByRole("link", { name: cta })).toHaveAttribute("href", `/${locale}/login`);
   });
 
   it.each([
-    ["en", "HanBuddy | Experience Korea like a local", "/en"],
-    ["ko", "HanBuddy | 현지인처럼 한국을 경험하세요", "/ko"],
+    ["en", "Email HanBuddy", "Open HanBuddy on Instagram"],
+    ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Instagram 열기"],
+  ] as const)(
+    "connects the footer contact icons for %s",
+    async (locale, emailLabel, instagramLabel) => {
+      await renderLanding(locale);
+
+      expect(screen.getByRole("link", { name: emailLabel })).toHaveAttribute(
+        "href",
+        "mailto:zeroone.soma@gmail.com",
+      );
+      expect(screen.getByRole("link", { name: instagramLabel })).toHaveAttribute(
+        "href",
+        "https://www.instagram.com/hanbuddy_kr/",
+      );
+    },
+  );
+
+  it.each([
+    ["en", "The moments that stay with you.", "5 out of 5 stars"],
+    ["ko", "오래 기억에 남는 순간.", "별점 5점 만점에 5점"],
+  ] as const)(
+    "renders anonymous positive reviews with ratings for %s",
+    async (locale, title, starLabel) => {
+      await renderLanding(locale);
+
+      const reviewRegion = screen.getByRole("region", { name: title });
+
+      expect(reviewRegion.querySelectorAll('[role="img"]')).toHaveLength(3);
+      expect(screen.getAllByRole("img", { name: starLabel })).toHaveLength(3);
+      expect(screen.queryByText("5.0")).not.toBeInTheDocument();
+      expect(screen.getAllByText("★★★★★")).toHaveLength(3);
+      expect(screen.queryByText(/overall rating|전체 평점/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Sarah|Jihoon|Marco|사라|지훈|마르코/)).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    [
+      "en",
+      "Book a Korean experience in three simple steps.",
+      "The moments that stay with you.",
+      "Want to learn more about HanBuddy",
+      "Email us anything",
+      "mailto:zeroone.soma@gmail.com",
+    ],
+    [
+      "ko",
+      "세 단계로 간단하게 신청해 보세요.",
+      "오래 기억에 남는 순간.",
+      "HanBuddy에 대해 더 궁금하다면",
+      "무엇이든 이메일로 물어보세요",
+      "mailto:zeroone.soma@gmail.com",
+    ],
+  ] as const)(
+    "renders the service, review, and contact sections for %s",
+    async (locale, serviceTitle, reviewsTitle, contactTitle, emailLabel, emailHref) => {
+      await renderLanding(locale);
+
+      expect(screen.getByRole("heading", { level: 2, name: serviceTitle })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: reviewsTitle })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: contactTitle })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: emailLabel })).toHaveAttribute("href", emailHref);
+    },
+  );
+
+  it.each([
+    ["en", "Real HanBuddy moments in Seoul"],
+    ["ko", "서울에서 만나는 HanBuddy의 실제 순간"],
+  ] as const)("localizes the hero experience context for %s", async (locale, ariaLabel) => {
+    await renderLanding(locale);
+
+    expect(screen.getByRole("region", { name: ariaLabel })).toBeInTheDocument();
+  });
+
+  it("uses the selected landing photos as a full-bleed hero sequence", async () => {
+    await renderLanding("en");
+
+    const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
+    const heroImages = heroRegion.querySelectorAll(".hero-media-image");
+
+    expect(heroImages).toHaveLength(4);
+    expect(heroImages[0]).toHaveAttribute("src", expect.stringContaining("hanriver-picnic"));
+    expect(heroImages[1]).toHaveAttribute("src", expect.stringContaining("2%EC%B0%A8-4"));
+    expect(heroImages[2]).toHaveAttribute("src", expect.stringContaining("kbo-0726-group"));
+    expect(heroImages[3]).toHaveAttribute("src", expect.stringContaining("hanriver-fountain"));
+    expect(heroImages[0]).toHaveAttribute("loading", "eager");
+    expect(heroImages[1]).toHaveAttribute("loading", "lazy");
+  });
+
+  it("keeps hero media behind the content without widening the mobile viewport", async () => {
+    await renderLanding("en");
+
+    expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass("min-w-0");
+    expect(
+      screen
+        .getByRole("region", { name: "Real HanBuddy moments in Seoul" })
+        .querySelector(".hero-media"),
+    ).toHaveClass("absolute", "inset-0");
+  });
+
+  it.each([
+    ["en", "HanBuddy | Experience Korea like a local!", "/en"],
+    ["ko", "HanBuddy | 현지인처럼 한국을 경험하세요!", "/ko"],
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 

@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBackend } from "@/lib/auth/backend";
-import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { GET } from "./route";
 
 vi.mock("@/lib/auth/backend", async (importOriginal) => {
@@ -17,30 +16,29 @@ describe("GET /api/activities/[activityId]", () => {
     mockedGetBackend.mockReset();
   });
 
-  it("returns 401 without calling the backend when the access token cookie is missing", async () => {
-    const response = await GET(new NextRequest("http://localhost/api/activities/42"), context);
-
-    expect(response.status).toBe(401);
-    expect(mockedGetBackend).not.toHaveBeenCalled();
-  });
-
-  it("proxies the tourist activity detail with the access token as bearer", async () => {
+  it("proxies the public tourist activity detail without an access token", async () => {
     mockedGetBackend.mockResolvedValue({
       status: 200,
       payload: { isSuccess: true, code: "200", message: "ok", result: { activityId: 42 } },
       setCookies: [],
     });
 
-    const response = await GET(
-      new NextRequest("http://localhost/api/activities/42", {
-        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
-      }),
-      context,
-    );
+    const response = await GET(new NextRequest("http://localhost/api/activities/42"), context);
 
-    expect(mockedGetBackend).toHaveBeenCalledWith("/activities/42", {
-      bearerToken: "access-token",
+    expect(mockedGetBackend).toHaveBeenCalledWith("/activities/42");
+    expect(response.status).toBe(200);
+  });
+
+  it("keeps the public tourist activity detail available with an authenticated request", async () => {
+    mockedGetBackend.mockResolvedValue({
+      status: 200,
+      payload: { isSuccess: true, code: "200", message: "ok", result: { activityId: 42 } },
+      setCookies: [],
     });
+
+    const response = await GET(new NextRequest("http://localhost/api/activities/42"), context);
+
+    expect(mockedGetBackend).toHaveBeenCalledWith("/activities/42");
     expect(response.status).toBe(200);
   });
 
@@ -51,16 +49,11 @@ describe("GET /api/activities/[activityId]", () => {
       setCookies: [],
     });
 
-    const response = await GET(
-      new NextRequest("http://localhost/api/activities/42%3Fdebug=true", {
-        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
-      }),
-      { params: Promise.resolve({ activityId: "42?debug=true" }) },
-    );
-
-    expect(mockedGetBackend).toHaveBeenCalledWith("/activities/42%3Fdebug%3Dtrue", {
-      bearerToken: "access-token",
+    const response = await GET(new NextRequest("http://localhost/api/activities/42%3Fdebug=true"), {
+      params: Promise.resolve({ activityId: "42?debug=true" }),
     });
+
+    expect(mockedGetBackend).toHaveBeenCalledWith("/activities/42%3Fdebug%3Dtrue");
     expect(response.status).toBe(200);
   });
 });

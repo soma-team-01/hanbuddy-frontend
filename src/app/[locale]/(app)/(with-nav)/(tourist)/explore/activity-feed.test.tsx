@@ -1,17 +1,9 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
-import { UnauthenticatedQueryError } from "@/lib/query/result";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ActivityFeed } from "./activity-feed";
-
-const routerMock = vi.hoisted(() => ({ refresh: vi.fn(), replace: vi.fn() }));
-
-vi.mock("next/navigation", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => routerMock,
-}));
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
@@ -34,8 +26,6 @@ const touristActivity = {
 
 describe("ActivityFeed", () => {
   beforeEach(() => {
-    routerMock.refresh.mockReset();
-    routerMock.replace.mockReset();
     mockedGetTouristActivities.mockReset();
   });
 
@@ -72,14 +62,6 @@ describe("ActivityFeed", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not load activities.");
     expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
-  });
-
-  it("redirects to login when the activities query is unauthenticated", async () => {
-    mockedGetTouristActivities.mockRejectedValue(new UnauthenticatedQueryError());
-
-    renderWithQueryClient(<ActivityFeed />);
-
-    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/en/login"));
   });
 
   it("renders activities loaded from the API", async () => {

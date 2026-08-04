@@ -74,6 +74,19 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
   });
 
+  it("shows only the brand and locale switcher on authentication pages", () => {
+    mockedUsePathname.mockReturnValue("/login");
+    renderWithIntl(<SiteHeader />);
+
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
+    expect(screen.getByRole("button", { name: "Switch to Korean" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "Primary navigation" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+  });
+
   it("opens an accessible mobile drawer, restores focus, and unlocks scrolling on Escape", () => {
     renderWithIntl(<SiteHeader role="tourist" />);
 

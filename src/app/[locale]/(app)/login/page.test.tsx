@@ -48,8 +48,8 @@ async function renderLogin(locale: Locale, searchParams: { error?: string | stri
 
 describe("LoginPage", () => {
   it.each([
-    ["en", "Welcome to HanBuddy", "Continue with Google", "Privacy Policy"],
-    ["ko", "HanBuddy에 오신 것을 환영합니다", "Google로 계속하기", "개인정보 처리방침"],
+    ["en", "Experience Korea like a local.", "Continue with Google", "Privacy Policy"],
+    ["ko", "현지인처럼 한국을 경험해 보세요.", "Google로 계속하기", "개인정보 처리방침"],
   ] as const)(
     "renders localized authentication content for %s",
     async (locale, heading, action, policy) => {

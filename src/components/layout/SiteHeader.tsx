@@ -44,6 +44,7 @@ export function SiteHeader({
 }: Readonly<SiteHeaderProps>) {
   const t = useTranslations("Navigation");
   const pathname = usePathname();
+  const isAuthPage = pathname === "/login" || pathname === "/onboarding";
   const destinations = DESTINATIONS[role ?? "guest"];
   const logoHref = LOGO_DESTINATIONS[role ?? "guest"];
 
@@ -83,17 +84,17 @@ export function SiteHeader({
           </span>
         </Link>
 
-        {role !== "buddy" ? (
+        {!isAuthPage && role !== "buddy" ? (
           <nav aria-label={t("primaryNavigation")} className="hidden items-center gap-8 lg:flex">
             {navigationLinks}
           </nav>
-        ) : (
+        ) : !isAuthPage ? (
           <span className="hidden flex-1 lg:block" aria-hidden />
-        )}
+        ) : null}
 
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className={`${isAuthPage ? "flex" : "hidden lg:flex"} items-center gap-2`}>
           <LocaleSwitcher className="bg-primary-soft px-4" />
-          {!authenticated ? (
+          {!isAuthPage && !authenticated ? (
             <Link
               href="/login"
               className="inline-flex min-h-11 items-center rounded-full border border-line-strong bg-canvas-soft px-6 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong"
@@ -103,26 +104,28 @@ export function SiteHeader({
           ) : null}
         </div>
 
-        <MobileMenu
-          title={t("navigationMenu")}
-          openLabel={t("openMenu")}
-          closeLabel={t("closeMenu")}
-        >
-          <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
-            {navigationLinks}
-          </nav>
-          <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
-            <LocaleSwitcher dismissMenu className="justify-start px-1" />
-            {!authenticated ? (
-              <Link
-                href="/login"
-                className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
-              >
-                {t("login")}
-              </Link>
-            ) : null}
-          </div>
-        </MobileMenu>
+        {!isAuthPage ? (
+          <MobileMenu
+            title={t("navigationMenu")}
+            openLabel={t("openMenu")}
+            closeLabel={t("closeMenu")}
+          >
+            <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
+              {navigationLinks}
+            </nav>
+            <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
+              <LocaleSwitcher dismissMenu className="justify-start px-1" />
+              {!authenticated ? (
+                <Link
+                  href="/login"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+                >
+                  {t("login")}
+                </Link>
+              ) : null}
+            </div>
+          </MobileMenu>
+        ) : null}
       </PageContainer>
     </header>
   );

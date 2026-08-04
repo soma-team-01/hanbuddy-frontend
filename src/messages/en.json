@@ -170,9 +170,10 @@
   },
   "Auth": {
     "metadataTitle": "Log in | HanBuddy",
-    "metadataDescription": "Log in to HanBuddy and find authentic local experiences in Korea.",
-    "welcome": "Welcome to HanBuddy",
-    "introduction": "Tell us about yourself to find the perfect local experience.",
+    "metadataDescription": "Meet local buddies and experience Korea beyond the itinerary.",
+    "eyebrow": "Welcome to HanBuddy",
+    "welcome": "Experience Korea like a local.",
+    "introduction": "Meet local buddies and discover the moments that make Korea feel like yours.",
     "continueWithGoogle": "Continue with Google",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",

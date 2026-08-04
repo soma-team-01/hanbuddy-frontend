@@ -15,7 +15,7 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
     <div aria-hidden="true" className="hero-media absolute inset-0 overflow-hidden">
       {images.map((image, index) => {
         const style = {
-          "--hero-media-delay": `-${index * 5}s`,
+          "--hero-media-delay": `${index * 5}s`,
         } as CSSProperties;
 
         return (

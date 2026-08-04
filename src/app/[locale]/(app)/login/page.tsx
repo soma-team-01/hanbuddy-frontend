@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GoogleIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import { parseAuthErrorCode } from "@/lib/auth/error-codes";
@@ -68,15 +69,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
           </Link>
         </div>
       </PageContainer>
-      <footer className="flex flex-col items-center gap-3 border-t border-line-soft px-6 py-8 text-center">
-        <p className="font-display text-sm font-bold text-primary-strong">HanBuddy</p>
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted">
-          <span className="underline">{t("privacyPolicy")}</span>
-          <span className="underline">{t("termsOfService")}</span>
-          <span className="underline">{t("helpCenter")}</span>
-        </div>
-        <p className="text-xs text-muted">{t("copyright")}</p>
-      </footer>
+      <SiteFooter locale={locale} />
     </main>
   );
 }

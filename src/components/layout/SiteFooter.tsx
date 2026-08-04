@@ -35,9 +35,12 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
             <span className="font-display font-bold text-ink">HanBuddy</span>
           </Link>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted sm:absolute sm:left-1/2 sm:-translate-x-1/2">
-            <span className="underline">{authT("privacyPolicy")}</span>
-            <span className="underline">{authT("termsOfService")}</span>
+          <div className="flex flex-col items-center gap-1 text-center sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted">
+              <span className="underline">{authT("privacyPolicy")}</span>
+              <span className="underline">{authT("termsOfService")}</span>
+            </div>
+            <p className="text-xs text-muted">{authT("copyright")}</p>
           </div>
 
           <div className="flex items-center gap-2 sm:ml-auto">
@@ -59,7 +62,6 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
             </a>
           </div>
         </div>
-        <p className="text-center text-xs text-muted">{authT("copyright")}</p>
       </PageContainer>
     </footer>
   );

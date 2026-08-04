@@ -189,7 +189,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
             >
               {t("ideas.title")}
             </h2>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted sm:ml-auto sm:text-right sm:text-base">
+            <p className="mt-4 text-left text-sm leading-6 text-muted sm:text-base">
               {t("ideas.description")}
             </p>
           </div>

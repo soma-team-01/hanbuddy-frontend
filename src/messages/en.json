@@ -307,7 +307,6 @@
     "personalInformation": "About you",
     "nationality": "Nationality",
     "birthDate": "Date of birth",
-    "birthDateHint": "Used only to confirm your age.",
     "contactMethods": "How should buddies reach you?",
     "contactDescription": "Choose the messenger you check most often.",
     "preferredMessagingApp": "Preferred Messaging App",
@@ -328,7 +327,7 @@
     "signupFailed": "Could not complete registration. Please try again.",
     "serverUnavailable": "The authentication server is unavailable. Please try again.",
     "completing": "Completing...",
-    "completeRegistration": "Start exploring"
+    "completeRegistration": "Sign up"
   },
   "Profile": {
     "title": "Edit profile",

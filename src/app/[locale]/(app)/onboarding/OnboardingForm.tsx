@@ -287,7 +287,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                 <h2 className="font-display text-lg font-bold text-ink">
                   {t("personalInformation")}
                 </h2>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div data-testid="onboarding-personal-fields" className="grid gap-3">
                   <div className="flex flex-col gap-1.5">
                     <span className="text-sm font-medium text-ink">{t("nationality")}</span>
                     <CountrySelect
@@ -305,12 +305,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                       max={getLocalDateInputValue(new Date())}
                       required
                       aria-label={t("birthDate")}
-                      aria-describedby="birth-date-hint"
                       className="w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                     />
-                    <span id="birth-date-hint" className="text-xs text-muted">
-                      {t("birthDateHint")}
-                    </span>
                   </label>
                 </div>
               </section>

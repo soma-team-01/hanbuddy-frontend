@@ -47,7 +47,7 @@ describe("OnboardingForm", () => {
       "How should buddies reach you?",
       "Preferred Messaging App",
       "Add profile photo",
-      "Start exploring",
+      "Sign up",
       "Close",
     ],
     [
@@ -62,7 +62,7 @@ describe("OnboardingForm", () => {
       "버디가 어떻게 연락하면 될까요?",
       "선호하는 메신저",
       "프로필 사진 추가",
-      "활동 둘러보기",
+      "회원가입",
       "닫기",
     ],
   ] as const)(
@@ -94,6 +94,12 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
       expect(screen.getByText(nationality)).toBeInTheDocument();
       expect(screen.getByLabelText(birthDate)).toHaveAttribute("type", "date");
+      expect(screen.getByTestId("onboarding-personal-fields")).not.toHaveClass("sm:grid-cols-2");
+      expect(
+        screen.queryByText(
+          locale === "ko" ? "연령 확인을 위해서만 사용해요." : "Used only to confirm your age.",
+        ),
+      ).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: contactHeading })).toBeInTheDocument();
       expect(screen.getByText(messagingApp)).toBeInTheDocument();
       expect(screen.getByLabelText(addPhoto)).toBeInTheDocument();
@@ -108,9 +114,7 @@ describe("OnboardingForm", () => {
   ] as const)("localizes validation for %s", (locale, message) => {
     renderWithIntl(<OnboardingForm />, { locale });
 
-    fireEvent.click(
-      screen.getByRole("button", { name: locale === "ko" ? "활동 둘러보기" : "Start exploring" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: locale === "ko" ? "회원가입" : "Sign up" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
   });
@@ -119,7 +123,7 @@ describe("OnboardingForm", () => {
     const onboardingForm = <OnboardingForm />;
     const { rerender } = render(<IntlTestProvider locale="en">{onboardingForm}</IntlTestProvider>);
 
-    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Please select a nationality.");
 
     rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
@@ -142,7 +146,7 @@ describe("OnboardingForm", () => {
 
       fireEvent.click(
         screen.getByRole("button", {
-          name: locale === "ko" ? "활동 둘러보기" : "Start exploring",
+          name: locale === "ko" ? "회원가입" : "Sign up",
         }),
       );
 
@@ -162,7 +166,7 @@ describe("OnboardingForm", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: locale === "ko" ? "활동 둘러보기" : "Start exploring",
+        name: locale === "ko" ? "회원가입" : "Sign up",
       }),
     );
 
@@ -290,7 +294,7 @@ describe("OnboardingForm profile image", () => {
     const file = createImageFile();
     fireEvent.change(screen.getByLabelText("Add profile photo"), { target: { files: [file] } });
 
-    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(uploadProfileImage).toHaveBeenCalledWith(file);
@@ -324,7 +328,7 @@ describe("OnboardingForm profile image", () => {
     renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
 
-    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(uploadProfileImage).not.toHaveBeenCalled();
@@ -345,7 +349,7 @@ describe("OnboardingForm profile image", () => {
       target: { files: [createImageFile()] },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
 
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
@@ -369,7 +373,7 @@ describe("OnboardingForm profile image", () => {
     fireEvent.change(screen.getByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
     await waitFor(() => expect(uploadProfileImage).toHaveBeenCalledTimes(1));
 
     rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
@@ -391,7 +395,7 @@ describe("OnboardingForm profile image", () => {
     const onboardingForm = <OnboardingForm />;
     const { rerender } = render(<IntlTestProvider locale="en">{onboardingForm}</IntlTestProvider>);
     fillRequiredFields();
-    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
     rerender(<IntlTestProvider locale="ko">{onboardingForm}</IntlTestProvider>);
@@ -424,7 +428,7 @@ describe("OnboardingForm profile image", () => {
     renderWithIntl(<OnboardingForm />);
     fillRequiredFields();
 
-    fireEvent.click(screen.getByRole("button", { name: "Start exploring" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "This email is already registered. Please sign in instead.",
@@ -466,14 +470,14 @@ describe("OnboardingForm profile image", () => {
       target: { files: [createImageFile()] },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
         "The service is temporarily unavailable. Please try again shortly.",
       ),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Start exploring/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
     expect(uploadProfileImage).toHaveBeenCalledTimes(1);

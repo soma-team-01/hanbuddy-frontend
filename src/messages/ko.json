@@ -307,7 +307,6 @@
     "personalInformation": "기본 정보",
     "nationality": "국적",
     "birthDate": "생년월일",
-    "birthDateHint": "연령 확인을 위해서만 사용해요.",
     "contactMethods": "버디가 어떻게 연락하면 될까요?",
     "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",
     "preferredMessagingApp": "선호하는 메신저",
@@ -328,7 +327,7 @@
     "signupFailed": "회원가입을 완료하지 못했습니다. 다시 시도해 주세요.",
     "serverUnavailable": "인증 서버에 연결할 수 없습니다. 다시 시도해 주세요.",
     "completing": "가입 처리 중...",
-    "completeRegistration": "활동 둘러보기"
+    "completeRegistration": "회원가입"
   },
   "Profile": {
     "title": "프로필 수정",

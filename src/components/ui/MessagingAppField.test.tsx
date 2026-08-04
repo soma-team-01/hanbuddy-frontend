@@ -128,16 +128,30 @@ describe("shared localized selectors and statuses", () => {
 
   it("restores focus to the country trigger after backdrop dismissal", () => {
     Element.prototype.scrollIntoView = vi.fn();
-    const { container } = renderWithIntl(
-      <CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />,
-    );
+    renderWithIntl(<CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />);
     const trigger = screen.getByRole("button", { name: "Nationality" });
     fireEvent.click(trigger);
     expect(screen.getByRole("combobox", { name: "Search country" })).toHaveFocus();
 
-    fireEvent.click(container.querySelector(".fixed.inset-0.z-10")!);
+    fireEvent.click(screen.getByTestId("country-select-backdrop"));
 
     expect(trigger).toHaveFocus();
+  });
+
+  it("renders the country panel in a body portal above clipping containers", () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    const { container } = renderWithIntl(
+      <div className="overflow-hidden">
+        <CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />
+      </div>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
+
+    const panel = screen.getByTestId("country-select-panel");
+    expect(panel.parentElement).toBe(document.body);
+    expect(panel).toHaveClass("fixed", "z-[100]");
+    expect(container).not.toContainElement(panel);
   });
 
   it("localizes every application status in Korean", () => {

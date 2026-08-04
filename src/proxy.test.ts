@@ -115,7 +115,12 @@ describe("route access proxy", () => {
     const response = await runProxy("/en/explore");
 
     expect([200, 307]).toContain(response.status);
-    expect(response.headers.get("location") ?? "").not.toContain("/login");
+    const location = response.headers.get("location");
+    expect(location ?? "").not.toContain("/login");
+
+    if (response.status === 307) {
+      expect(new URL(location ?? "http://localhost").pathname).toMatch(/^\/en(?:\/|$)/);
+    }
   });
 
   it.each([

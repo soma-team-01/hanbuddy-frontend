@@ -69,9 +69,21 @@ describe("SiteHeader", () => {
   });
 
   it("keeps the landing route for guests", () => {
+    mockedUsePathname.mockReturnValue("/");
     renderWithIntl(<SiteHeader />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
+    expect(screen.getAllByRole("link", { name: "Host an experience" })[0]).toHaveAttribute(
+      "href",
+      "/en/buddy",
+    );
+  });
+
+  it("does not offer role switching to authenticated accounts", () => {
+    mockedUsePathname.mockReturnValue("/");
+    renderWithIntl(<SiteHeader role="tourist" authenticated />);
+
+    expect(screen.queryByRole("link", { name: "Host an experience" })).not.toBeInTheDocument();
   });
 
   it("shows only the brand and locale switcher on authentication pages", () => {
@@ -80,6 +92,19 @@ describe("SiteHeader", () => {
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
     expect(screen.getByRole("button", { name: "Switch to Korean" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "Primary navigation" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+  });
+
+  it("shows only the brand and locale switcher on the buddy hosting landing page", () => {
+    mockedUsePathname.mockReturnValue("/buddy");
+    renderWithIntl(<SiteHeader />);
+
+    expect(screen.getByRole("button", { name: "Switch to Korean" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
     expect(
       screen.queryByRole("navigation", { name: "Primary navigation" }),
     ).not.toBeInTheDocument();

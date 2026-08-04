@@ -45,6 +45,9 @@ export function SiteHeader({
   const t = useTranslations("Navigation");
   const pathname = usePathname();
   const isAuthPage = pathname === "/login" || pathname === "/onboarding";
+  const isBuddyHostingPage = pathname === "/buddy";
+  const isMinimalHeader = isAuthPage || isBuddyHostingPage;
+  const isGuestLandingPage = pathname === "/" && !authenticated;
   const destinations = DESTINATIONS[role ?? "guest"];
   const logoHref = LOGO_DESTINATIONS[role ?? "guest"];
 
@@ -84,17 +87,25 @@ export function SiteHeader({
           </span>
         </Link>
 
-        {!isAuthPage && role !== "buddy" ? (
+        {!isMinimalHeader && role !== "buddy" ? (
           <nav aria-label={t("primaryNavigation")} className="hidden items-center gap-8 lg:flex">
             {navigationLinks}
           </nav>
-        ) : !isAuthPage ? (
+        ) : !isMinimalHeader ? (
           <span className="hidden flex-1 lg:block" aria-hidden />
         ) : null}
 
-        <div className={`${isAuthPage ? "flex" : "hidden lg:flex"} items-center gap-2`}>
+        <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
+          {isGuestLandingPage ? (
+            <Link
+              href="/buddy"
+              className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-bold text-ink transition-colors hover:bg-primary-soft hover:text-primary-strong"
+            >
+              {t("hostAnExperience")}
+            </Link>
+          ) : null}
           <LocaleSwitcher className="bg-primary-soft px-4" />
-          {!isAuthPage && !authenticated ? (
+          {!isMinimalHeader && !authenticated ? (
             <Link
               href="/login"
               className="inline-flex min-h-11 items-center rounded-full border border-line-strong bg-canvas-soft px-6 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong"
@@ -104,7 +115,7 @@ export function SiteHeader({
           ) : null}
         </div>
 
-        {!isAuthPage ? (
+        {!isMinimalHeader ? (
           <MobileMenu
             title={t("navigationMenu")}
             openLabel={t("openMenu")}
@@ -114,6 +125,14 @@ export function SiteHeader({
               {navigationLinks}
             </nav>
             <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
+              {isGuestLandingPage ? (
+                <Link
+                  href="/buddy"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-line-strong bg-canvas-soft px-5 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong"
+                >
+                  {t("hostAnExperience")}
+                </Link>
+              ) : null}
               <LocaleSwitcher dismissMenu className="justify-start px-1" />
               {!authenticated ? (
                 <Link

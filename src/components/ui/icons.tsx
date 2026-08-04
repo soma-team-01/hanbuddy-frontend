@@ -429,3 +429,48 @@ export function GoogleIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function CalendarDaysIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M8 14h.01" />
+      <path d="M12 14h.01" />
+      <path d="M16 14h.01" />
+      <path d="M8 18h.01" />
+      <path d="M12 18h.01" />
+    </IconBase>
+  );
+}
+
+export function HeartHandshakeIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 0 1 12 6a5 5 0 0 1 7.5 6.6Z" />
+      <path d="m8.5 12 2 2 5-5" />
+    </IconBase>
+  );
+}
+
+export function LightbulbIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.9.7-1.5 1.8-1.5 3H10c0-1.2-.6-2.3-1.5-3Z" />
+    </IconBase>
+  );
+}
+
+export function SparklesIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="m12 3-1.4 3.6L7 8l3.6 1.4L12 13l1.4-3.6L17 8l-3.6-1.4L12 3Z" />
+      <path d="m5 14-.9 2.1L2 17l2.1.9L5 20l.9-2.1L8 17l-2.1-.9L5 14Z" />
+      <path d="m19 13-.7 1.3-1.3.7 1.3.7.7 1.3.7-1.3 1.3-.7-1.3-.7L19 13Z" />
+    </IconBase>
+  );
+}

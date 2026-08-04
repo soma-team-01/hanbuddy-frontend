@@ -73,7 +73,7 @@ describe("BuddyHostingPage", () => {
       screen.getByRole("img", {
         name: "A local buddy sharing Korean market food with travelers",
       }),
-    ).toHaveAttribute("src", expect.stringContaining("hosting-hero.jpg"));
+    ).toHaveAttribute("src", expect.stringContaining("market-food-experience.jpg"));
   });
 
   it.each([

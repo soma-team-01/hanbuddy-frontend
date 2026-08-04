@@ -35,8 +35,8 @@ const EXPERIENCE_IDEAS = [
   },
   {
     key: "food",
-    image: "/images/buddy/hosting-hero.jpg",
-    imageClassName: "object-[68%_center]",
+    image: "/images/buddy/market-food-experience.jpg",
+    imageClassName: "object-center",
   },
 ] as const;
 

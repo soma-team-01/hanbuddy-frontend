@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
 import { MailIcon } from "@/components/ui/icons";
@@ -265,16 +264,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
         </PageContainer>
       </section>
-
-      <SiteFooter
-        locale={locale}
-        showSocial
-        showHelpCenter={false}
-        email={CONTACT_DETAILS.email}
-        emailLabel={t("contact.emailIconLabel")}
-        instagramUrl={CONTACT_DETAILS.instagramUrl}
-        instagramLabel={t("contact.instagramIconLabel")}
-      />
     </main>
   );
 }

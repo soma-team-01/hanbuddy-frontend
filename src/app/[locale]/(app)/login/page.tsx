@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GoogleIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import { parseAuthErrorCode } from "@/lib/auth/error-codes";
@@ -69,7 +68,6 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
           </Link>
         </div>
       </PageContainer>
-      <SiteFooter locale={locale} />
     </main>
   );
 }

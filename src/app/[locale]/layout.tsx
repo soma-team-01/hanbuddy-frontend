@@ -6,6 +6,7 @@ import { DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SERVICE_TIME_ZONE } from "@/i18n/formats";
 import { isLocale, routing, type Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
@@ -79,6 +80,7 @@ export default async function LocaleLayout({
           <QueryProvider>
             <SiteHeader role={role} authenticated={authenticated} />
             <div className="flex flex-1 flex-col">{children}</div>
+            <SiteFooter locale={locale} />
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

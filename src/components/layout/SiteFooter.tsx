@@ -7,29 +7,23 @@ import type { Locale } from "@/i18n/routing";
 
 interface SiteFooterProps {
   readonly locale: Locale;
-  readonly showSocial?: boolean;
-  readonly showHelpCenter?: boolean;
-  readonly email?: string;
-  readonly emailLabel?: string;
-  readonly instagramUrl?: string;
-  readonly instagramLabel?: string;
 }
 
-export async function SiteFooter({
-  locale,
-  showSocial = false,
-  showHelpCenter = true,
-  email,
-  emailLabel,
-  instagramUrl,
-  instagramLabel,
-}: SiteFooterProps) {
-  const t = await getTranslations({ locale, namespace: "Auth" });
+const CONTACT_DETAILS = {
+  email: "zeroone.soma@gmail.com",
+  instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
+} as const;
+
+export async function SiteFooter({ locale }: SiteFooterProps) {
+  const [authT, landingT] = await Promise.all([
+    getTranslations({ locale, namespace: "Auth" }),
+    getTranslations({ locale, namespace: "Landing" }),
+  ]);
 
   return (
     <footer className="border-t border-line-soft bg-canvas-soft py-6 text-sm text-muted">
-      <PageContainer className="flex flex-col items-center gap-4 text-center">
-        <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
+      <PageContainer className="flex flex-col gap-4">
+        <div className="relative flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
           <Link href="/" aria-label="HanBuddy" className="flex items-center gap-2">
             <Image
               src="/images/brand/logo-borderless.webp"
@@ -41,34 +35,31 @@ export async function SiteFooter({
             <span className="font-display font-bold text-ink">HanBuddy</span>
           </Link>
 
-          {showSocial && email && instagramUrl && emailLabel && instagramLabel ? (
-            <div className="flex items-center gap-2">
-              <a
-                href={`mailto:${email}`}
-                aria-label={emailLabel}
-                className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
-              >
-                <MailIcon className="size-5" />
-              </a>
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={instagramLabel}
-                className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
-              >
-                <InstagramIcon className="size-5" />
-              </a>
-            </div>
-          ) : null}
-        </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+            <span className="underline">{authT("privacyPolicy")}</span>
+            <span className="underline">{authT("termsOfService")}</span>
+          </div>
 
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted">
-          <span className="underline">{t("privacyPolicy")}</span>
-          <span className="underline">{t("termsOfService")}</span>
-          {showHelpCenter ? <span className="underline">{t("helpCenter")}</span> : null}
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <a
+              href={`mailto:${CONTACT_DETAILS.email}`}
+              aria-label={landingT("contact.emailIconLabel")}
+              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+            >
+              <MailIcon className="size-5" />
+            </a>
+            <a
+              href={CONTACT_DETAILS.instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={landingT("contact.instagramIconLabel")}
+              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+            >
+              <InstagramIcon className="size-5" />
+            </a>
+          </div>
         </div>
-        <p className="text-xs text-muted">{t("copyright")}</p>
+        <p className="text-center text-xs text-muted">{authT("copyright")}</p>
       </PageContainer>
     </footer>
   );

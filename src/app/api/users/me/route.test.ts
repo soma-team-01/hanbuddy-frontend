@@ -21,11 +21,12 @@ const profile: MyProfile = {
   userId: 1,
   email: "user@example.com",
   name: "Sarah Jenkins",
+  displayName: "Sarah",
   userType: "TOURIST",
   profileImageKey: null,
   profileImageUrl: null,
   nationalityCode: "US",
-  age: 28,
+  birthDate: "1998-04-12",
   contactMethod: "LINE",
   contactCountryCode: "+1",
   contactIdentifier: "555-0198",
@@ -97,10 +98,10 @@ describe("GET /api/users/me", () => {
 });
 
 const updateRequest: MyProfileUpdateRequest = {
-  name: "Sarah J.",
+  displayName: "Sarah J.",
   profileImageKey: null,
   nationalityCode: "US",
-  age: 29,
+  birthDate: "1997-04-12",
   contactMethod: "WHATSAPP",
   contactCountryCode: "+1",
   contactIdentifier: "555-0199",
@@ -143,7 +144,7 @@ describe("PATCH /api/users/me", () => {
         isSuccess: true,
         code: "200",
         message: "ok",
-        result: { ...profile, name: "Sarah J." },
+        result: { ...profile, displayName: "Sarah J." },
       },
       setCookies: [],
     });
@@ -162,7 +163,7 @@ describe("PATCH /api/users/me", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       isSuccess: true,
-      result: { name: "Sarah J." },
+      result: { displayName: "Sarah J." },
     });
   });
 

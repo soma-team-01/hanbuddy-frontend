@@ -98,8 +98,8 @@ describe("EditProfilePage", () => {
     renderWithQueryClient(<EditProfilePage />);
 
     expect(await screen.findByRole("form")).toHaveClass("md:grid-cols-2", "max-w-[800px]");
-    expect(screen.getByLabelText("Full Name")).toHaveValue("Sarah Jenkins");
-    expect(screen.getByLabelText("Age")).toHaveValue(28);
+    expect(screen.getByLabelText("Nickname")).toHaveValue("Sarah");
+    expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });
 
@@ -123,9 +123,9 @@ describe("EditProfilePage", () => {
   it.each([
     [
       "en",
-      "Full Name",
+      "Nickname",
       "Nationality",
-      "Age",
+      "Date of birth",
       "Contact Details",
       "Preferred Messaging App",
       "Add profile photo",
@@ -134,9 +134,9 @@ describe("EditProfilePage", () => {
     ],
     [
       "ko",
-      "이름",
+      "닉네임",
       "국적",
-      "나이",
+      "생년월일",
       "연락처 정보",
       "선호하는 메신저",
       "프로필 사진 추가",
@@ -148,9 +148,9 @@ describe("EditProfilePage", () => {
     async (locale, name, nationality, age, contactHeading, messagingApp, addPhoto, save, back) => {
       renderWithQueryClient(<EditProfilePage />, { locale });
 
-      expect(await screen.findByLabelText(name)).toHaveValue("Sarah Jenkins");
+      expect(await screen.findByLabelText(name)).toHaveValue("Sarah");
       expect(screen.getByText(nationality)).toBeInTheDocument();
-      expect(screen.getByLabelText(age)).toHaveValue(28);
+      expect(screen.getByLabelText(age)).toHaveValue("1998-04-12");
       expect(screen.getByRole("heading", { name: contactHeading })).toBeInTheDocument();
       expect(screen.getByText(messagingApp)).toBeInTheDocument();
       expect(screen.getByLabelText(addPhoto)).toBeInTheDocument();
@@ -163,8 +163,13 @@ describe("EditProfilePage", () => {
   );
 
   it.each([
-    ["en", "Full Name", "Save", "Please enter your name."],
-    ["ko", "이름", "저장", "이름을 입력해 주세요."],
+    [
+      "en",
+      "Nickname",
+      "Save",
+      "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+    ],
+    ["ko", "닉네임", "저장", "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요."],
   ] as const)("localizes profile validation for %s", async (locale, name, save, message) => {
     renderWithQueryClient(<EditProfilePage />, { locale });
     const nameInput = await screen.findByLabelText(name);
@@ -178,22 +183,26 @@ describe("EditProfilePage", () => {
 
   it("relocalizes a stored validation error when the locale changes", () => {
     const { switchToKorean } = renderFormForLocaleSwitch();
-    fireEvent.change(screen.getByLabelText("Full Name"), { target: { value: " " } });
+    fireEvent.change(screen.getByLabelText("Nickname"), { target: { value: " " } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("Please enter your name.");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+    );
 
     switchToKorean();
 
-    expect(screen.getByRole("alert")).toHaveTextContent("이름을 입력해 주세요.");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요.",
+    );
   });
 
   it.each([
-    ["en", "", "Age", "Save", "Enter an age from 0 to 150."],
-    ["en", "151", "Age", "Save", "Enter an age from 0 to 150."],
-    ["ko", "", "나이", "저장", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
-    ["ko", "151", "나이", "저장", "나이는 0에서 150 사이의 숫자로 입력해 주세요."],
+    ["en", "", "Date of birth", "Save", "Please enter a valid date of birth."],
+    ["en", "2100-01-01", "Date of birth", "Save", "Please enter a valid date of birth."],
+    ["ko", "", "생년월일", "저장", "올바른 생년월일을 입력해 주세요."],
+    ["ko", "2100-01-01", "생년월일", "저장", "올바른 생년월일을 입력해 주세요."],
   ] as const)(
-    "shows localized age validation after a real %s submit with age %s",
+    "shows localized birth date validation after a real %s submit with value %s",
     async (locale, value, ageLabel, save, message) => {
       renderWithQueryClient(<EditProfilePage />, { locale });
       const ageInput = await screen.findByLabelText(ageLabel);
@@ -231,7 +240,7 @@ describe("EditProfilePage", () => {
   it("does not apply the Korean-only phone input to tourists", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
-    await screen.findByLabelText("Full Name");
+    await screen.findByLabelText("Nickname");
     expect(screen.queryByPlaceholderText("010-XXXX-XXXX")).not.toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
   });
@@ -246,20 +255,20 @@ describe("EditProfilePage", () => {
   it("submits the updated profile and returns to my page", async () => {
     mockedUpdateMyProfile.mockResolvedValue({
       status: "success",
-      profile: { ...profile, name: "Sarah J." },
+      profile: { ...profile, displayName: "Sarah J." },
     });
     const { queryClient } = renderWithQueryClient(<EditProfilePage />);
 
-    const nameInput = await screen.findByLabelText("Full Name");
+    const nameInput = await screen.findByLabelText("Nickname");
     fireEvent.change(nameInput, { target: { value: "Sarah J." } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {
       expect(mockedUpdateMyProfile).toHaveBeenCalledWith({
-        name: "Sarah J.",
+        displayName: "Sarah J.",
         profileImageKey: "profiles/2026/07/06/uuid.webp",
         nationalityCode: "US",
-        age: 28,
+        birthDate: "1998-04-12",
         contactMethod: "WHATSAPP",
         contactCountryCode: "+1",
         contactIdentifier: "555-0198",
@@ -268,7 +277,7 @@ describe("EditProfilePage", () => {
     expect(uploadProfileImage).not.toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith("/en/my-page");
     expect(queryClient.getQueryData(userKeys.me())).toEqual(
-      expect.objectContaining({ name: "Sarah J." }),
+      expect.objectContaining({ displayName: "Sarah J." }),
     );
   });
 
@@ -384,7 +393,7 @@ describe("EditProfilePage", () => {
     });
     renderWithQueryClient(<EditProfilePage />);
 
-    await screen.findByLabelText("Full Name");
+    await screen.findByLabelText("Nickname");
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     const alert = await screen.findByRole("alert");
@@ -428,7 +437,7 @@ describe("EditProfilePage", () => {
     mockedUpdateMyProfile.mockResolvedValue({ status: "unauthenticated" });
     renderWithQueryClient(<EditProfilePage />);
 
-    await screen.findByLabelText("Full Name");
+    await screen.findByLabelText("Nickname");
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {

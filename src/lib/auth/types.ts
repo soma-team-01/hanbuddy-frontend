@@ -32,6 +32,7 @@ export interface GoogleLoginResponse {
 
 export interface GoogleSignupRequest {
   userType: UserType;
+  displayName: string;
   profileImageKey?: string;
   nationalityCode: string;
   birthDate: string;

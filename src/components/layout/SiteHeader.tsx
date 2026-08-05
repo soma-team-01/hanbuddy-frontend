@@ -44,7 +44,8 @@ export function SiteHeader({
 }: Readonly<SiteHeaderProps>) {
   const t = useTranslations("Navigation");
   const pathname = usePathname();
-  const isAuthPage = pathname === "/login" || pathname === "/onboarding";
+  const isAuthPage =
+    pathname === "/login" || pathname === "/onboarding" || pathname === "/buddy/onboarding";
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
   const isGuestLandingPage = pathname === "/" && !authenticated;

@@ -42,7 +42,7 @@ export function getRouteAccessRedirect({
   const authenticated = Boolean(accessToken && userType);
   const homePath = getUserTypeHomePath(userType);
 
-  if (pathname === "/login" || pathname === "/onboarding") {
+  if (pathname === "/login" || pathname === "/onboarding" || pathname === "/buddy/onboarding") {
     return getAuthEntryRedirect({ pathname, signupToken }, authenticated, homePath);
   }
 
@@ -55,7 +55,9 @@ function getAuthEntryRedirect(
   homePath: string,
 ) {
   if (authenticated) return homePath;
-  if (pathname === "/onboarding" && !signupToken) return "/login";
+  if ((pathname === "/onboarding" || pathname === "/buddy/onboarding") && !signupToken) {
+    return "/login";
+  }
   return null;
 }
 

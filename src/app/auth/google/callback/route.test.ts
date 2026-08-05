@@ -226,6 +226,28 @@ describe("GET /auth/google/callback", () => {
     expect(decodedProfile).not.toHaveProperty("email");
   });
 
+  it("redirects an unregistered buddy signup to buddy onboarding", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          signupToken: "signup-token",
+          googleProfile: { name: "Future Buddy" },
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("en", undefined, "buddy"));
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/buddy/onboarding");
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.oauthIntent}=;`);
+  });
+
   it("uses the default locale for onboarding when the locale cookie is invalid", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,
@@ -296,10 +318,11 @@ describe("GET /auth/google/callback", () => {
   });
 });
 
-function createCallbackRequest(locale?: string, oauthLocale?: string) {
+function createCallbackRequest(locale?: string, oauthLocale?: string, oauthIntent?: string) {
   const requestCookies = [`${AUTH_COOKIES.oauthState}=state`];
   if (locale) requestCookies.push(`${LOCALE_COOKIE_NAME}=${locale}`);
   if (oauthLocale) requestCookies.push(`${AUTH_COOKIES.oauthLocale}=${oauthLocale}`);
+  if (oauthIntent) requestCookies.push(`${AUTH_COOKIES.oauthIntent}=${oauthIntent}`);
 
   return new NextRequest("http://localhost/auth/google/callback?code=code&state=state", {
     headers: {

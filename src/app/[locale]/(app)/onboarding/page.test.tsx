@@ -82,13 +82,16 @@ describe("OnboardingForm", () => {
       submit,
       close,
     ) => {
-      renderWithIntl(<OnboardingForm />, { locale });
+      renderWithIntl(<OnboardingForm googleProfile={{ name: "Google Traveler" }} />, { locale });
 
       expect(screen.getByRole("form")).toHaveClass("max-w-[1120px]");
       expect(screen.getByText(eyebrow)).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: headline })).toHaveClass("lg:whitespace-nowrap");
       expect(screen.getByText(description)).toHaveClass("lg:whitespace-nowrap");
       expect(screen.getByText(profilePhotoHint)).toBeInTheDocument();
+      expect(
+        screen.getByRole("textbox", { name: locale === "ko" ? "닉네임" : "Nickname" }),
+      ).toHaveValue("Google Traveler");
       expect(screen.queryByRole("button", { name: "Tourist" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
@@ -117,6 +120,36 @@ describe("OnboardingForm", () => {
     fireEvent.click(screen.getByRole("button", { name: locale === "ko" ? "회원가입" : "Sign up" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
+  });
+
+  it("renders buddy-specific copy and submits the buddy role", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "201",
+          message: "OK",
+          result: { registered: true, userType: "BUDDY" },
+        }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm userType="BUDDY" googleProfile={{ name: "Google Buddy" }} />);
+
+    expect(screen.getByText("Welcome, future buddy")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Google Buddy");
+    fillLocalizedOnboardingFields("en", {
+      birthDate: "1998-04-12",
+      contact: "line_user",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Sign up as a buddy" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      userType: "BUDDY",
+      displayName: "Google Buddy",
+    });
   });
 
   it("relocalizes a stored validation error when the locale changes", () => {
@@ -246,6 +279,10 @@ describe("OnboardingForm profile image", () => {
   }
 
   function fillRequiredFields() {
+    const displayName = screen.getByRole("textbox", { name: "Nickname" });
+    if (!displayName.getAttribute("value") && !(displayName as HTMLInputElement).value) {
+      fireEvent.change(displayName, { target: { value: "Traveler" } });
+    }
     fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
     fireEvent.change(screen.getByLabelText("Search country"), {
       target: { value: "United States" },
@@ -260,7 +297,7 @@ describe("OnboardingForm profile image", () => {
   }
 
   it("shows a local preview after selecting a profile image", () => {
-    renderWithIntl(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
 
     fireEvent.change(screen.getByLabelText("Add profile photo"), {
       target: { files: [createImageFile()] },
@@ -302,6 +339,7 @@ describe("OnboardingForm profile image", () => {
     expect(signupUrl).toBe("/api/auth/google/signup");
     expect(JSON.parse(signupInit.body)).toMatchObject({
       userType: "TOURIST",
+      displayName: "Traveler",
       nationalityCode: "US",
       birthDate: "1998-04-12",
       contactMethod: "LINE",
@@ -325,7 +363,7 @@ describe("OnboardingForm profile image", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    renderWithIntl(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
     fillRequiredFields();
 
     fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));

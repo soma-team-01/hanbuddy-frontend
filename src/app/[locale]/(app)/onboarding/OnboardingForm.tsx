@@ -29,6 +29,7 @@ import type {
   GoogleLoginResponse,
   GoogleProfile,
   GoogleSignupRequest,
+  UserType,
 } from "@/lib/auth/types";
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
@@ -40,6 +41,7 @@ type OnboardingErrorKey =
 
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
+  userType?: UserType;
 }
 
 function getLocalDateInputValue(date: Date) {
@@ -47,8 +49,12 @@ function getLocalDateInputValue(date: Date) {
   return localDate.toISOString().slice(0, 10);
 }
 
-export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>) {
+export function OnboardingForm({
+  googleProfile,
+  userType = "TOURIST",
+}: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
+  const buddyT = useTranslations("BuddyOnboarding");
   const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
@@ -122,6 +128,9 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     setRequestFailure(null);
 
     const formData = new FormData(event.currentTarget);
+    const displayNameEntry = formData.get("displayName");
+    const rawDisplayName = typeof displayNameEntry === "string" ? displayNameEntry : "";
+    const displayName = rawDisplayName.trim();
     const birthDateEntry = formData.get("birthDate");
     const birthDate = typeof birthDateEntry === "string" ? birthDateEntry.trim() : "";
     const contactIdentifier = messagingContact.trim();
@@ -139,6 +148,10 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       setErrorKey("validation.contactInvalid");
       return;
     }
+    if (displayName.length < 2 || displayName.length > 30 || displayName !== rawDisplayName) {
+      setErrorKey("validation.displayNameInvalid");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -151,7 +164,8 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
       }
 
       const payload: GoogleSignupRequest = {
-        userType: "TOURIST",
+        userType,
+        displayName,
         ...(profileImageKey ? { profileImageKey } : {}),
         nationalityCode: nationality,
         birthDate,
@@ -179,7 +193,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
         return;
       }
 
-      router.replace("/explore");
+      router.replace(userType === "BUDDY" ? "/dashboard" : "/explore");
     } catch (error) {
       setRequestFailure({ error, fallbackKey: "serverUnavailable" });
     } finally {
@@ -224,13 +238,24 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
     errorMessage = t(errorKey);
   }
 
+  const roleCopy = {
+    title: userType === "BUDDY" ? buddyT("title") : t("title"),
+    eyebrow: userType === "BUDDY" ? buddyT("eyebrow") : t("eyebrow"),
+    headline: userType === "BUDDY" ? buddyT("headline") : t("headline"),
+    description: userType === "BUDDY" ? buddyT("description") : t("description"),
+    photoGuidance:
+      userType === "BUDDY" ? buddyT("profilePhotoOptional") : t("profilePhotoOptional"),
+    submit: userType === "BUDDY" ? buddyT("completeRegistration") : t("completeRegistration"),
+    submitting: userType === "BUDDY" ? buddyT("completing") : t("completing"),
+  };
+
   return (
     <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
       <main className="flex-1 py-3 md:py-4">
         <PageContainer>
           <div className="flex h-10 items-center">
             <Link
-              href="/login"
+              href={userType === "BUDDY" ? "/buddy" : "/login"}
               aria-label={accessibilityT("close")}
               className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
@@ -240,19 +265,19 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
 
           <header className="mx-auto mt-1 max-w-none text-center lg:-mt-7">
             <p className="font-display text-xs font-bold tracking-[0.24em] text-primary uppercase">
-              {t("eyebrow")}
+              {roleCopy.eyebrow}
             </p>
             <h1 className="mt-2 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-3xl lg:whitespace-nowrap">
-              {t("headline")}
+              {roleCopy.headline}
             </h1>
             <p className="mx-auto mt-2 max-w-none text-sm leading-6 text-muted md:text-base lg:whitespace-nowrap">
-              {t("description")}
+              {roleCopy.description}
             </p>
           </header>
 
           <form
             id="google-onboarding-form"
-            aria-label={t("title")}
+            aria-label={roleCopy.title}
             noValidate
             onSubmit={handleSubmit}
             className="mx-auto mt-5 flex w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-t-[3px] border-line-soft border-t-primary bg-canvas-soft shadow-[0_16px_48px_rgba(61,45,43,0.07)]"
@@ -271,14 +296,24 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                   />
                 </label>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-display text-base font-bold text-ink">
-                  {googleProfile?.name ?? t("profilePhotoHint")}
-                </p>
-                {googleProfile?.email ? (
-                  <p className="mt-0.5 text-xs text-muted">{googleProfile.email}</p>
-                ) : null}
-                <p className="mt-0.5 text-xs leading-5 text-muted">{t("profilePhotoOptional")}</p>
+              <div className="grid min-w-0 flex-1 gap-1.5 sm:grid-cols-[minmax(0,260px)_1fr] sm:items-end sm:gap-5">
+                <label className="flex min-w-0 flex-col gap-1">
+                  <span className="text-xs font-semibold text-ink">{t("displayName")}</span>
+                  <input
+                    name="displayName"
+                    type="text"
+                    required
+                    minLength={2}
+                    maxLength={30}
+                    defaultValue={googleProfile?.name ?? ""}
+                    aria-label={t("displayName")}
+                    className="h-10 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                  />
+                </label>
+                <div className="min-w-0 pb-0.5">
+                  <p className="text-xs leading-5 text-muted">{t("displayNameDescription")}</p>
+                  <p className="text-xs leading-5 text-muted">{roleCopy.photoGuidance}</p>
+                </div>
               </div>
             </section>
 
@@ -349,7 +384,7 @@ export function OnboardingForm({ googleProfile }: Readonly<OnboardingFormProps>)
                   disabled={isSubmitting}
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
                 >
-                  {isSubmitting ? t("completing") : t("completeRegistration")}
+                  {isSubmitting ? roleCopy.submitting : roleCopy.submit}
                   <ArrowRightIcon className="size-4" />
                 </button>
               </div>

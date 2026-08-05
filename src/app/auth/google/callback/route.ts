@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
 
     response.cookies.delete(AUTH_COOKIES.oauthState);
     response.cookies.delete(AUTH_COOKIES.oauthLocale);
+    response.cookies.delete(AUTH_COOKIES.oauthIntent);
     if (hasUsableGoogleLoginResult(result)) {
       appendBackendSetCookies(response, backend.setCookies);
     }
@@ -87,7 +88,11 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
     return redirectToLoginWithError(request, "missingSignupToken");
   }
 
-  const response = NextResponse.redirect(createLocalizedUrl(request, "/onboarding"));
+  const onboardingPath =
+    request.cookies.get(AUTH_COOKIES.oauthIntent)?.value === "buddy"
+      ? "/buddy/onboarding"
+      : "/onboarding";
+  const response = NextResponse.redirect(createLocalizedUrl(request, onboardingPath));
   response.cookies.set(AUTH_COOKIES.signupToken, result.signupToken, SIGNUP_COOKIE_OPTIONS);
   if (result.googleProfile) {
     response.cookies.set(
@@ -106,6 +111,7 @@ function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);
   response.cookies.delete(AUTH_COOKIES.oauthLocale);
+  response.cookies.delete(AUTH_COOKIES.oauthIntent);
   return response;
 }
 

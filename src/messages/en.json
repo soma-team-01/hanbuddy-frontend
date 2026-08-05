@@ -297,6 +297,14 @@
       "unknown": "Something went wrong during sign-in. Please try again."
     }
   },
+  "BuddyAuth": {
+    "trigger": "Start as a buddy",
+    "close": "Close buddy sign in",
+    "eyebrow": "Host with HanBuddy",
+    "title": "Start your buddy journey",
+    "description": "Use Google to create your buddy account and turn the Korea you love into a welcoming local experience.",
+    "continueWithGoogle": "Continue as a buddy with Google"
+  },
   "Onboarding": {
     "title": "Complete your traveler profile",
     "metadataTitle": "Complete your profile | HanBuddy",
@@ -304,6 +312,8 @@
     "eyebrow": "Welcome, traveler",
     "headline": "A few details, then Korea is yours to explore.",
     "description": "Help local buddies welcome you well and reach you when an experience is confirmed.",
+    "displayName": "Nickname",
+    "displayNameDescription": "This is the name buddies will see. You can edit the name from Google.",
     "personalInformation": "About you",
     "nationality": "Nationality",
     "birthDate": "Date of birth",
@@ -319,6 +329,7 @@
     "validation": {
       "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
       "imageTooLarge": "Profile photos must be 5MB or smaller.",
+      "displayNameInvalid": "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
       "nationalityRequired": "Please select a nationality.",
       "birthDateInvalid": "Please enter a valid date of birth.",
       "contactInvalid": "Enter a contact ID or number with at least 2 characters."
@@ -328,6 +339,17 @@
     "serverUnavailable": "The authentication server is unavailable. Please try again.",
     "completing": "Completing...",
     "completeRegistration": "Sign up"
+  },
+  "BuddyOnboarding": {
+    "title": "Complete your buddy profile",
+    "metadataTitle": "Create your buddy profile | HanBuddy",
+    "metadataDescription": "Complete your buddy profile and begin hosting local experiences with HanBuddy.",
+    "eyebrow": "Welcome, future buddy",
+    "headline": "A few details, then your local story can begin.",
+    "description": "For now, tell us how guests can recognize and reach you. You can add hosting details later.",
+    "profilePhotoOptional": "Choose a clear face photo so guests can recognize their buddy when you meet.",
+    "completing": "Creating buddy account...",
+    "completeRegistration": "Sign up as a buddy"
   },
   "Profile": {
     "title": "Edit profile",

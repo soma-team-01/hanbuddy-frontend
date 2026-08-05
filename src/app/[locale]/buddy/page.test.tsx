@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -41,10 +41,12 @@ describe("BuddyHostingPage", () => {
       await renderBuddyHosting(locale);
 
       expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
-      expect(screen.getAllByRole("link", { name: cta })).toHaveLength(2);
-      expect(screen.getAllByRole("link", { name: cta })[0]).toHaveAttribute(
+      expect(screen.getAllByRole("button", { name: cta })).toHaveLength(2);
+      fireEvent.click(screen.getAllByRole("button", { name: cta })[0]);
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /Google|구글/ })).toHaveAttribute(
         "href",
-        `/${locale}/login?intent=buddy`,
+        `/api/auth/google/start?locale=${locale}&intent=buddy`,
       );
       expect(screen.getByText(why)).toBeInTheDocument();
       expect(

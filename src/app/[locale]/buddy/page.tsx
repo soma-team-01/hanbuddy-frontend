@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import {
-  ArrowRightIcon,
   CalendarDaysIcon,
   HeartHandshakeIcon,
   LightbulbIcon,
@@ -11,7 +11,6 @@ import {
   SparklesIcon,
   UsersIcon,
 } from "@/components/ui/icons";
-import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
@@ -105,13 +104,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
                 {t("hero.description")}
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Link
-                  href="/login?intent=buddy"
-                  className="motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_14px_30px_rgba(209,63,50,0.35)] transition-colors hover:bg-primary-hover"
-                >
-                  {t("hero.primaryCta")}
-                  <ArrowRightIcon className="ml-2 size-4" />
-                </Link>
+                <BuddyGoogleAuthDialog />
                 <a
                   href="#how-it-works"
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/45 px-7 font-display text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/10"
@@ -324,13 +317,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/[0.82]">
               {t("finalCta.description")}
             </p>
-            <Link
-              href="/login?intent=buddy"
-              className="motion-press mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 font-display text-sm font-bold text-primary-strong shadow-[0_12px_28px_rgba(84,24,18,0.2)] transition-colors hover:bg-primary-soft"
-            >
-              {t("finalCta.button")}
-              <ArrowRightIcon className="ml-2 size-4" />
-            </Link>
+            <BuddyGoogleAuthDialog variant="inverse" />
           </div>
         </PageContainer>
       </section>

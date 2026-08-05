@@ -1,36 +1,36 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
+import { OnboardingForm } from "@/app/[locale]/(app)/onboarding/OnboardingForm";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
-import { OnboardingForm } from "./OnboardingForm";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
-interface OnboardingPageProps {
+interface BuddyOnboardingPageProps {
   params: Promise<{ locale: Locale }>;
 }
 
-export async function generateMetadata({ params }: OnboardingPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: BuddyOnboardingPageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Onboarding" });
+  const t = await getTranslations({ locale, namespace: "BuddyOnboarding" });
 
   return {
     title: t("metadataTitle"),
     description: t("metadataDescription"),
     alternates: {
-      canonical: `${APP_ORIGIN}/${locale}/onboarding`,
+      canonical: `${APP_ORIGIN}/${locale}/buddy/onboarding`,
       languages: {
-        en: `${APP_ORIGIN}/en/onboarding`,
-        ko: `${APP_ORIGIN}/ko/onboarding`,
+        en: `${APP_ORIGIN}/en/buddy/onboarding`,
+        ko: `${APP_ORIGIN}/ko/buddy/onboarding`,
       },
     },
   };
 }
 
-export default async function ProfileSetupPage() {
+export default async function BuddyOnboardingPage() {
   const cookieStore = await cookies();
   const googleProfile = decodeGoogleProfile(cookieStore.get(AUTH_COOKIES.googleProfile)?.value);
 
-  return <OnboardingForm userType="TOURIST" googleProfile={googleProfile} />;
+  return <OnboardingForm userType="BUDDY" googleProfile={googleProfile} />;
 }

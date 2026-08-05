@@ -72,6 +72,17 @@ describe("GET /api/auth/google/start", () => {
     expect(setCookie).toContain("Path=/");
   });
 
+  it("stores the buddy signup intent for the OAuth callback", () => {
+    process.env.GOOGLE_CLIENT_ID = "server-client-id";
+    process.env.GOOGLE_REDIRECT_URI = "http://localhost:3000/auth/google/callback";
+
+    const response = GET(
+      new NextRequest("http://localhost/api/auth/google/start?locale=en&intent=buddy"),
+    );
+
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.oauthIntent}=buddy`);
+  });
+
   it("does not expose unexpected internal error messages", async () => {
     vi.resetModules();
     vi.doMock("@/lib/auth/google", () => ({

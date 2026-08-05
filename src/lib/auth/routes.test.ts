@@ -86,8 +86,12 @@ describe("route access redirects", () => {
 
   it("requires a signup session for onboarding", () => {
     expect(getRouteAccessRedirect({ pathname: "/onboarding" })).toBe("/login");
+    expect(getRouteAccessRedirect({ pathname: "/buddy/onboarding" })).toBe("/login");
     expect(
       getRouteAccessRedirect({ pathname: "/onboarding", signupToken: "signup-token" }),
+    ).toBeNull();
+    expect(
+      getRouteAccessRedirect({ pathname: "/buddy/onboarding", signupToken: "signup-token" }),
     ).toBeNull();
   });
 

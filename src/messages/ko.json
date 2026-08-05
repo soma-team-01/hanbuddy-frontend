@@ -347,7 +347,10 @@
     "eyebrow": "예비 버디님, 반가워요",
     "headline": "몇 가지만 알려주면, 나만의 로컬 이야기를 시작할 수 있어요.",
     "description": "지금은 게스트가 버디를 알아보고 연락할 수 있는 기본 정보만 알려주세요. 호스팅 정보는 나중에 추가할 수 있어요.",
-    "profilePhotoOptional": "게스트가 만날 버디를 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
+    "displayNameDescription": "게스트에게 보이는 이름이에요. Google에서 받은 이름을 자유롭게 수정할 수 있어요.",
+    "profilePhotoOptional": "만날 때 게스트가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
+    "contactMethods": "게스트가 어떻게 연락하면 될까요?",
+    "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",
     "completing": "버디 계정 생성 중...",
     "completeRegistration": "버디로 회원가입"
   },

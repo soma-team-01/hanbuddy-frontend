@@ -139,6 +139,15 @@ describe("OnboardingForm", () => {
 
     expect(screen.getByText("Welcome, future buddy")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Google Buddy");
+    expect(
+      screen.getByText("This is the name guests will see. You can edit the name from Google."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Choose a clear face photo so guests can recognize you when you meet."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "How should guests reach you?" }),
+    ).toBeInTheDocument();
     fillLocalizedOnboardingFields("en", {
       birthDate: "1998-04-12",
       contact: "line_user",

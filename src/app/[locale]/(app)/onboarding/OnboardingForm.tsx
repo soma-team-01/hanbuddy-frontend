@@ -243,8 +243,13 @@ export function OnboardingForm({
     eyebrow: userType === "BUDDY" ? buddyT("eyebrow") : t("eyebrow"),
     headline: userType === "BUDDY" ? buddyT("headline") : t("headline"),
     description: userType === "BUDDY" ? buddyT("description") : t("description"),
+    displayNameDescription:
+      userType === "BUDDY" ? buddyT("displayNameDescription") : t("displayNameDescription"),
     photoGuidance:
       userType === "BUDDY" ? buddyT("profilePhotoOptional") : t("profilePhotoOptional"),
+    contactMethods: userType === "BUDDY" ? buddyT("contactMethods") : t("contactMethods"),
+    contactDescription:
+      userType === "BUDDY" ? buddyT("contactDescription") : t("contactDescription"),
     submit: userType === "BUDDY" ? buddyT("completeRegistration") : t("completeRegistration"),
     submitting: userType === "BUDDY" ? buddyT("completing") : t("completing"),
   };
@@ -311,7 +316,7 @@ export function OnboardingForm({
                   />
                 </label>
                 <div className="min-w-0 pb-0.5">
-                  <p className="text-xs leading-5 text-muted">{t("displayNameDescription")}</p>
+                  <p className="text-xs leading-5 text-muted">{roleCopy.displayNameDescription}</p>
                   <p className="text-xs leading-5 text-muted">{roleCopy.photoGuidance}</p>
                 </div>
               </div>
@@ -348,8 +353,10 @@ export function OnboardingForm({
 
               <section className="flex flex-col gap-3 border-t border-line-soft px-5 py-5 md:px-6 lg:border-t-0">
                 <div>
-                  <h2 className="font-display text-lg font-bold text-ink">{t("contactMethods")}</h2>
-                  <p className="mt-0.5 text-sm text-muted">{t("contactDescription")}</p>
+                  <h2 className="font-display text-lg font-bold text-ink">
+                    {roleCopy.contactMethods}
+                  </h2>
+                  <p className="mt-0.5 text-sm text-muted">{roleCopy.contactDescription}</p>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>

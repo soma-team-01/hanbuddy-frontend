@@ -347,7 +347,10 @@
     "eyebrow": "Welcome, future buddy",
     "headline": "A few details, then your local story can begin.",
     "description": "For now, tell us how guests can recognize and reach you. You can add hosting details later.",
-    "profilePhotoOptional": "Choose a clear face photo so guests can recognize their buddy when you meet.",
+    "displayNameDescription": "This is the name guests will see. You can edit the name from Google.",
+    "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
+    "contactMethods": "How should guests reach you?",
+    "contactDescription": "Choose the messenger you check most often.",
     "completing": "Creating buddy account...",
     "completeRegistration": "Sign up as a buddy"
   },

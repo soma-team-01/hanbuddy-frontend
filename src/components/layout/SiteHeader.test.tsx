@@ -106,9 +106,7 @@ describe("SiteHeader", () => {
   });
 
   it("replaces a stale account indicator with login when the session is cleared", async () => {
-    const { rerender } = renderWithIntl(
-      <SiteHeader role="tourist" authenticated mayHaveSession />,
-    );
+    const { rerender } = renderWithIntl(<SiteHeader role="tourist" authenticated mayHaveSession />);
 
     expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
 

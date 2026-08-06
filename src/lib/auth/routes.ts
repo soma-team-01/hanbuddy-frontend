@@ -20,9 +20,7 @@ export function parseUserType(value?: string | null): UserType | undefined {
 
 export function getUserTypeHomePath(userType: "TOURIST"): "/";
 export function getUserTypeHomePath(userType: "BUDDY"): "/dashboard";
-export function getUserTypeHomePath(
-  userType?: UserType | null,
-): "/login" | "/" | "/dashboard";
+export function getUserTypeHomePath(userType?: UserType | null): "/login" | "/" | "/dashboard";
 export function getUserTypeHomePath(userType?: UserType | null) {
   if (userType === "TOURIST") return "/";
   if (userType === "BUDDY") return "/dashboard";

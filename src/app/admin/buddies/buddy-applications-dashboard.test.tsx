@@ -51,7 +51,7 @@ describe("BuddyApplicationsDashboard", () => {
           name: "김버디",
           nationalityCode: "KR",
           accountStatus: "PENDING_APPROVAL",
-          appliedAt: "2026-08-06T10:00:00+09:00",
+          appliedAt: "2026-08-05T15:30:00Z",
         },
       ],
     });
@@ -60,6 +60,7 @@ describe("BuddyApplicationsDashboard", () => {
 
     expect(await screen.findByText("김버디")).toBeInTheDocument();
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
+    expect(screen.getByText("2026년 8월 6일")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "프로필 보기" })).toHaveAttribute(
       "href",
       "/admin/buddies/42",

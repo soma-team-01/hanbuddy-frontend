@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { isUnauthenticatedError } from "@/lib/api/errors";
+import { SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { adminBuddyApplicationsQueryOptions } from "@/lib/query/admin";
 
 const STATUS_LABELS = {
@@ -148,9 +149,12 @@ function formatDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? "-"
-    : new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "short", day: "numeric" }).format(
-        date,
-      );
+    : new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: SERVICE_TIME_ZONE,
+      }).format(date);
 }
 function State({
   title,

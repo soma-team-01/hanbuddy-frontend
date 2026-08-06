@@ -45,7 +45,7 @@ describe("BuddyApplicationReview", () => {
         contactCountryCode: "+82",
         contactIdentifier: "buddy-id",
         accountStatus: "PENDING_APPROVAL",
-        appliedAt: "2026-08-06T10:00:00+09:00",
+        appliedAt: "2026-08-05T15:30:00Z",
         reviewedAt: null,
         reviewedByUserId: null,
         reviewedByName: null,
@@ -69,6 +69,7 @@ describe("BuddyApplicationReview", () => {
 
     expect(await screen.findByRole("heading", { name: "김버디" })).toBeInTheDocument();
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
+    expect(screen.getByText(/^2026년 8월 6일 .*12:30$/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "버디 승인" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "거절" })).toBeInTheDocument();
   });

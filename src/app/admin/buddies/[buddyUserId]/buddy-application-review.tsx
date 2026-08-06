@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { approveBuddyApplication, rejectBuddyApplication } from "@/lib/api/admin";
 import { isUnauthenticatedError } from "@/lib/api/errors";
+import { SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { adminBuddyApplicationQueryOptions, adminKeys } from "@/lib/query/admin";
 import { unwrapApiResult } from "@/lib/query/result";
 
@@ -181,7 +182,11 @@ function formatDateTime(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? "-"
-    : new Intl.DateTimeFormat("ko-KR", { dateStyle: "long", timeStyle: "short" }).format(date);
+    : new Intl.DateTimeFormat("ko-KR", {
+        dateStyle: "long",
+        timeStyle: "short",
+        timeZone: SERVICE_TIME_ZONE,
+      }).format(date);
 }
 
 function ReviewDialog({

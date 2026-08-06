@@ -1,1086 +1,746 @@
 "use client";
 
 import Image from "next/image";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
-import { useRouter } from "@/i18n/navigation";
-import type { Locale } from "@/i18n/routing";
-import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
-import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { toSeoulStartAt } from "@/lib/datetime";
-import { formatKrw } from "@/lib/format";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  buildGoogleMapsEmbedUrl,
-  fetchGooglePlaceDetails,
-  getGoogleMapsApiKey,
-  type GooglePlacePrediction,
-  searchGooglePlacePredictions,
-} from "@/lib/google/places";
-import { uploadActivityImages } from "@/lib/images/presigned";
-import { activityKeys } from "@/lib/query/activities";
-import { buddyKeys } from "@/lib/query/buddy";
-import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
-import { useAuthSessionCheck } from "@/lib/query/use-auth-session-check";
-import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type {
-  ActivityPricePreviewRequest,
-  ActivityUpsertRequest,
-  MyActivityStatus,
-} from "@/types/buddy";
-import type messages from "@/messages/en.json";
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CameraIcon,
+  CheckIcon,
+  ClockIcon,
+  ImagePlusIcon,
+  MapPinIcon,
+  PlusIcon,
+  TrashIcon,
+  UsersIcon,
+} from "@/components/ui/icons";
+import {
+  ACTIVITY_CREATE_STEPS,
+  EMPTY_ACTIVITY_DRAFT,
+  getNextActivityCreateStep,
+  getPreviousActivityCreateStep,
+  getStepIndex,
+  type ActivityCreateDraft,
+  type ActivityCreateErrorKey,
+  type ActivityCreateStep,
+  type ItineraryDraft,
+  type PhotoDraft,
+  validateActivityCreateStep,
+} from "./activity-create-wizard";
 
-function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <span className="text-sm font-medium text-ink">{children}</span>;
-}
+const CATEGORY_OPTIONS = ["food", "culture", "sports", "nature", "nightlife", "wellness"] as const;
+const MAX_EXPERIENCE_PHOTOS = 10;
 
 const INPUT_CLASS =
-  "border-line-soft text-ink placeholder:text-muted/70 w-full rounded-2xl border bg-canvas-soft px-4 py-4 text-base";
-const ADD_ROW_BUTTON_CLASS =
-  "self-start rounded-full px-3 py-2 text-sm font-semibold text-primary-strong transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
-const INLINE_REMOVE_BUTTON_CLASS =
-  "absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
-const MAX_ACTIVITY_PHOTOS = 8;
-const PLACE_SEARCH_DEBOUNCE_MS = 300;
+  "w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink outline-none transition focus:border-primary focus:ring-3 focus:ring-primary-soft placeholder:text-muted/60";
+const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-36 resize-y leading-7`;
 
-interface SelectedActivityPhoto {
-  id: number;
-  file: File;
-  previewUrl: string;
+type DraftTextField = Exclude<keyof ActivityCreateDraft, "photos" | "itinerary">;
+
+function makeId(prefix: string, sequence: number) {
+  return `${prefix}-${Date.now()}-${sequence}`;
 }
 
-interface LocalizedMeetingPlaceAddress {
-  locale: Locale;
-  value: string;
+function createPhotoDraft(file: File, id: string): PhotoDraft {
+  return { id, file, previewUrl: URL.createObjectURL(file) };
 }
 
-type CreateActivityStep = 1 | 2 | 3;
-type SubmissionPhase = "uploading" | "registering";
+function ProgressRail({
+  currentStep,
+  getTitle,
+  label,
+}: Readonly<{
+  currentStep: ActivityCreateStep;
+  getTitle: (step: ActivityCreateStep) => string;
+  label: string;
+}>) {
+  const currentIndex = getStepIndex(currentStep);
 
-const STEP_CONTENT = {
-  1: {
-    title: "steps.basicsTitle",
-    description: "steps.basicsDescription",
-  },
-  2: {
-    title: "steps.scheduleTitle",
-    description: "steps.scheduleDescription",
-  },
-  3: {
-    title: "steps.meetingTitle",
-    description: "steps.meetingDescription",
-  },
-} as const satisfies Record<CreateActivityStep, { title: string; description: string }>;
-
-const SIDEBAR_STEPS = ["basics", "details", "meeting"] as const;
-
-export type CreateActivityErrorKey = keyof (typeof messages)["CreateActivity"]["errors"];
-
-interface CreateActivityValidationInput {
-  step: CreateActivityStep;
-  selectedPhotoCount: number;
-  title: string;
-  description: string;
-  scheduleDateTimes: string[];
-  maxCapacity: string;
-  price: string;
-  meetingPlaceId: string;
-  meetingPointName: string;
-  includedItems: string[];
-}
-
-function isPositiveInteger(value: string) {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0;
-}
-
-function validateActivityBasics({
-  selectedPhotoCount,
-  title,
-  description,
-}: CreateActivityValidationInput): CreateActivityErrorKey | null {
-  if (selectedPhotoCount === 0) return "photosRequired";
-  if (!title.trim()) return "titleRequired";
-  if (!description.trim()) return "descriptionRequired";
-  return null;
-}
-
-function validateScheduleAndPricing({
-  scheduleDateTimes,
-  maxCapacity,
-  price,
-}: CreateActivityValidationInput): CreateActivityErrorKey | null {
-  if (!scheduleDateTimes.some((value) => toSeoulStartAt(value.trim()))) {
-    return "scheduleRequired";
-  }
-  if (!isPositiveInteger(maxCapacity)) return "capacityInvalid";
-  if (!isPositiveInteger(price)) return "priceInvalid";
-  return null;
-}
-
-function validateMeetingDetails({
-  meetingPlaceId,
-  meetingPointName,
-  includedItems,
-}: CreateActivityValidationInput): CreateActivityErrorKey | null {
-  if (!meetingPlaceId.trim()) return "meetingPlaceRequired";
-  if (!meetingPointName.trim()) return "meetingPointNameRequired";
-  if (!includedItems.some((value) => value.trim())) return "includedItemRequired";
-  return null;
-}
-
-const CREATE_ACTIVITY_STEP_VALIDATORS = {
-  1: validateActivityBasics,
-  2: validateScheduleAndPricing,
-  3: validateMeetingDetails,
-} satisfies Record<
-  CreateActivityStep,
-  (input: CreateActivityValidationInput) => CreateActivityErrorKey | null
->;
-
-export function validateCreateActivityStep(
-  input: CreateActivityValidationInput,
-): CreateActivityErrorKey | null {
-  return CREATE_ACTIVITY_STEP_VALIDATORS[input.step](input);
-}
-
-function getNextStep(step: CreateActivityStep): CreateActivityStep {
-  return step === 1 ? 2 : 3;
-}
-
-function getPreviousStep(step: CreateActivityStep): CreateActivityStep {
-  return step === 3 ? 2 : 1;
-}
-
-function getPrimaryActionLabelKey(
-  submissionPhase: SubmissionPhase | null,
-  currentStep: CreateActivityStep,
-) {
-  if (submissionPhase === "uploading") return "uploadingPhotos";
-  if (submissionPhase === "registering") return "registering";
-  return currentStep === 3 ? "registerActivity" : "next";
-}
-
-function getNextRowKey(rows: number[]) {
-  return rows.length === 0 ? 0 : Math.max(...rows) + 1;
-}
-
-function InlineRemoveButton({
-  ariaLabel,
-  title,
-  onClick,
-}: Readonly<{ ariaLabel: string; title: string; onClick: () => void }>) {
   return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      title={title}
-      onClick={onClick}
-      className={INLINE_REMOVE_BUTTON_CLASS}
-    >
-      <TrashIcon className="size-4" />
-    </button>
+    <aside className="hidden w-72 shrink-0 border-r border-line-soft px-8 py-10 xl:block">
+      <p className="text-xs font-bold tracking-[0.18em] text-primary uppercase">
+        {currentIndex + 1} / {ACTIVITY_CREATE_STEPS.length}
+      </p>
+      <ol className="mt-8 space-y-1" aria-label={label}>
+        {ACTIVITY_CREATE_STEPS.map((step, index) => {
+          const isCurrent = step === currentStep;
+          const isComplete = index < currentIndex;
+          return (
+            <li
+              key={step}
+              aria-current={isCurrent ? "step" : undefined}
+              className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold ${
+                isCurrent ? "bg-primary-soft text-primary-strong" : "text-muted"
+              }`}
+            >
+              <span
+                className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs ${
+                  isComplete || isCurrent
+                    ? "border-primary bg-primary text-white"
+                    : "border-line-strong bg-white"
+                }`}
+              >
+                {isComplete ? <CheckIcon className="size-3.5" /> : index + 1}
+              </span>
+              {getTitle(step)}
+            </li>
+          );
+        })}
+      </ol>
+    </aside>
   );
 }
 
-function getString(formData: FormData, name: string) {
-  const value = formData.get(name);
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function getStringList(formData: FormData, name: string) {
-  return formData
-    .getAll(name)
-    .map((value) => (typeof value === "string" ? value.trim() : ""))
-    .filter(Boolean);
-}
-
-function buildSchedules(formData: FormData) {
-  return formData
-    .getAll("scheduleDateTime")
-    .map((value) => (typeof value === "string" ? value.trim() : ""))
-    .map((scheduleDateTime) => toSeoulStartAt(scheduleDateTime))
-    .map((startAt) => (startAt ? { startAt } : null))
-    .filter((schedule): schedule is { startAt: string } => schedule !== null);
-}
-
-async function uploadSelectedActivityImages(
-  files: File[],
-): Promise<{ imageKeys: string[]; error: null } | { imageKeys: null; error: unknown }> {
-  try {
-    const uploadedImages = await uploadActivityImages(files);
-    return { imageKeys: uploadedImages.map((image) => image.imageKey), error: null };
-  } catch (error) {
-    if (error instanceof UnauthenticatedQueryError) throw error;
-    return { imageKeys: null, error };
-  }
-}
-
-type MeetingPlaceFeedbackProps = Readonly<{
-  googleMapsApiKey: string;
-  isSearchingPlaces: boolean;
-  meetingMapUrl: string;
-  onPlaceSelect: (prediction: GooglePlacePrediction, predictionLocale: Locale) => void;
-  placePredictions: { locale: Locale; values: GooglePlacePrediction[] } | null;
-  selectedMeetingPlaceAddress: LocalizedMeetingPlaceAddress | null;
-}>;
-
-function MeetingPlaceFeedback({
-  googleMapsApiKey,
-  isSearchingPlaces,
-  meetingMapUrl,
-  onPlaceSelect,
-  placePredictions,
-  selectedMeetingPlaceAddress,
-}: MeetingPlaceFeedbackProps) {
-  const locale = useLocale();
-  const t = useTranslations("CreateActivity");
-
+function Field({
+  label,
+  children,
+  hint,
+}: Readonly<{ label: string; children: ReactNode; hint?: string }>) {
   return (
-    <>
-      {!googleMapsApiKey ? (
-        <p className="px-1 text-xs text-muted">{t("placeSearchUnavailable")}</p>
-      ) : null}
-      {placePredictions?.locale === locale && placePredictions.values.length > 0 ? (
-        <ul
-          aria-label={t("placeResults")}
-          className="overflow-hidden rounded-xl border border-line-soft bg-panel"
+    <label className="grid gap-2 text-sm font-semibold text-ink">
+      {label}
+      {children}
+      {hint ? <span className="leading-5 font-normal text-muted">{hint}</span> : null}
+    </label>
+  );
+}
+
+function CategoryStep({
+  value,
+  onChange,
+  t,
+}: Readonly<{
+  value: string;
+  onChange: (value: string) => void;
+  t: ReturnType<typeof useTranslations<"CreateActivity">>;
+}>) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {CATEGORY_OPTIONS.map((category) => (
+        <button
+          key={category}
+          type="button"
+          aria-pressed={value === category}
+          onClick={() => onChange(category)}
+          className={`min-h-24 rounded-2xl border p-5 text-left transition ${
+            value === category
+              ? "border-primary bg-primary-soft text-primary-strong shadow-[0_8px_24px_rgba(209,63,50,0.1)]"
+              : "border-line-strong bg-white text-ink hover:border-primary/60"
+          }`}
         >
-          {placePredictions.values.map((prediction) => (
-            <li key={prediction.placeId}>
+          <span className="font-display text-lg font-bold">{t(`categories.${category}`)}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PhotoStep({
+  photos,
+  onAdd,
+  onRemove,
+  t,
+}: Readonly<{
+  photos: PhotoDraft[];
+  onAdd: (files: FileList | null) => void;
+  onRemove: (id: string) => void;
+  t: ReturnType<typeof useTranslations<"CreateActivity">>;
+}>) {
+  return (
+    <div className="space-y-5">
+      <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-primary/45 bg-primary-soft/35 px-6 text-center transition hover:bg-primary-soft/60">
+        <ImagePlusIcon className="size-8 text-primary" />
+        <span className="mt-3 font-bold text-ink">{t("photos.upload")}</span>
+        <span className="mt-1 text-sm text-muted">{t("photos.hint")}</span>
+        <input
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          aria-label={t("photos.label")}
+          onChange={(event) => {
+            onAdd(event.target.files);
+            event.target.value = "";
+          }}
+        />
+      </label>
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-semibold text-ink">
+          {t("photos.count", { count: photos.length })}
+        </span>
+        <span className="text-muted">{t("photos.minimum")}</span>
+      </div>
+      {photos.length > 0 ? (
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {photos.map((photo, index) => (
+            <li
+              key={photo.id}
+              className="group relative aspect-square overflow-hidden rounded-xl bg-panel"
+            >
+              <Image
+                src={photo.previewUrl}
+                alt={t("photos.preview", { index: index + 1 })}
+                fill
+                unoptimized
+                className="object-cover"
+              />
               <button
                 type="button"
-                onClick={() => onPlaceSelect(prediction, placePredictions.locale)}
-                className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-primary-soft"
+                onClick={() => onRemove(photo.id)}
+                aria-label={t("photos.remove", { index: index + 1 })}
+                className="absolute top-2 right-2 flex size-9 items-center justify-center rounded-full bg-white/95 text-ink shadow-sm hover:text-primary"
               >
-                <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
-                {prediction.secondaryText ? (
-                  <span className="text-xs text-muted">{prediction.secondaryText}</span>
-                ) : null}
+                <TrashIcon className="size-4" />
               </button>
             </li>
           ))}
         </ul>
       ) : null}
-      {isSearchingPlaces ? (
-        <p className="px-1 text-xs text-muted">{t("placeSearchLoading")}</p>
-      ) : null}
-      {selectedMeetingPlaceAddress?.locale === locale ? (
-        <p className="px-1 text-xs text-muted">{selectedMeetingPlaceAddress.value}</p>
-      ) : null}
-      {meetingMapUrl ? (
-        <iframe
-          title={t("mapTitle")}
-          src={meetingMapUrl}
-          className="h-40 w-full rounded-xl border-0"
-          loading="lazy"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-        />
-      ) : (
-        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-panel-raised text-muted">
-          <MapIcon className="size-6" />
-          <span className="text-sm">{t("mapFallback")}</span>
-        </div>
-      )}
-    </>
+    </div>
+  );
+}
+
+function ItineraryStep({
+  items,
+  onAdd,
+  onRemove,
+  onChange,
+  onPhotoChange,
+  t,
+}: Readonly<{
+  items: ItineraryDraft[];
+  onAdd: () => void;
+  onRemove: (id: string) => void;
+  onChange: (id: string, field: "title" | "description" | "durationMinutes", value: string) => void;
+  onPhotoChange: (id: string, files: FileList | null) => void;
+  t: ReturnType<typeof useTranslations<"CreateActivity">>;
+}>) {
+  return (
+    <div className="space-y-5">
+      {items.map((item, index) => (
+        <section key={item.id} className="rounded-2xl border border-line-soft p-5 sm:p-6">
+          <div className="mb-5 flex items-center justify-between">
+            <h3 className="font-display text-lg font-bold text-ink">
+              {t("itinerary.item", { index: index + 1 })}
+            </h3>
+            {items.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => onRemove(item.id)}
+                aria-label={t("itinerary.remove", { index: index + 1 })}
+                className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft hover:text-primary"
+              >
+                <TrashIcon className="size-4" />
+              </button>
+            ) : null}
+          </div>
+          <div className="grid gap-5">
+            <Field label={t("fields.itineraryTitle")}>
+              <input
+                className={INPUT_CLASS}
+                value={item.title}
+                onChange={(event) => onChange(item.id, "title", event.target.value)}
+                placeholder={t("placeholders.itineraryTitle")}
+              />
+            </Field>
+            <Field
+              label={t("fields.itineraryDescription")}
+              hint={t("itinerary.descriptionCount", { count: item.description.trim().length })}
+            >
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={item.description}
+                onChange={(event) => onChange(item.id, "description", event.target.value)}
+                placeholder={t("placeholders.itineraryDescription")}
+              />
+            </Field>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label={t("fields.duration")}>
+                <div className="relative">
+                  <ClockIcon className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
+                  <input
+                    type="number"
+                    min="1"
+                    className={`${INPUT_CLASS} pl-12`}
+                    value={item.durationMinutes}
+                    onChange={(event) => onChange(item.id, "durationMinutes", event.target.value)}
+                    placeholder={t("placeholders.duration")}
+                  />
+                </div>
+              </Field>
+              <label className="grid gap-2 text-sm font-semibold text-ink">
+                {t("fields.itineraryPhoto")}
+                <span className="flex min-h-[54px] cursor-pointer items-center gap-3 rounded-xl border border-line-strong px-4 text-muted hover:border-primary">
+                  <CameraIcon className="size-5 text-primary" />
+                  {item.photo ? item.photo.file.name : t("itinerary.addPhoto")}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={(event) => onPhotoChange(item.id, event.target.files)}
+                  />
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+      ))}
+      <button
+        type="button"
+        onClick={onAdd}
+        className="flex min-h-12 items-center gap-2 rounded-full border border-line-strong px-5 text-sm font-bold text-ink hover:border-primary hover:text-primary"
+      >
+        <PlusIcon className="size-4" />
+        {t("itinerary.add")}
+      </button>
+    </div>
+  );
+}
+
+function ReviewStep({
+  draft,
+  t,
+}: Readonly<{
+  draft: ActivityCreateDraft;
+  t: ReturnType<typeof useTranslations<"CreateActivity">>;
+}>) {
+  const rows = [
+    [t("review.category"), t(`categories.${draft.category as (typeof CATEGORY_OPTIONS)[number]}`)],
+    [t("review.concept"), draft.conceptTitle],
+    [t("review.host"), draft.hostIntroduction],
+    [t("review.photos"), t("photos.count", { count: draft.photos.length })],
+    [t("review.name"), draft.experienceName],
+    [t("review.meeting"), draft.meetingPlace],
+    [t("review.itinerary"), t("review.itineraryCount", { count: draft.itinerary.length })],
+    [t("review.guests"), t("review.guestCount", { count: Number(draft.maxGuests) })],
+    [t("review.price"), t("review.priceValue", { price: Number(draft.pricePerPerson) })],
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-primary/25 bg-primary-soft/45 p-5 text-sm leading-6 text-primary-strong">
+        {t("review.apiNotice")}
+      </div>
+      <dl className="divide-y divide-line-soft border-y border-line-soft">
+        {rows.map(([label, value]) => (
+          <div key={label} className="grid gap-1 py-4 sm:grid-cols-[180px_1fr] sm:gap-5">
+            <dt className="text-sm font-semibold text-muted">{label}</dt>
+            <dd className="line-clamp-2 font-medium text-ink">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 
 export function CreateActivityForm() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const locale = useLocale();
-  const activeLocaleRef = useRef(locale);
   const t = useTranslations("CreateActivity");
-  const getApiErrorMessage = useApiErrorMessage();
-  useAuthSessionCheck();
-  const formRef = useRef<HTMLFormElement>(null);
-  const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
-  const [includedItems, setIncludedItems] = useState<number[]>([0]);
-  const [timeSlots, setTimeSlots] = useState<number[]>([0]);
-  const [restrictions, setRestrictions] = useState<number[]>([0]);
-  const [selectedPhotos, setSelectedPhotos] = useState<SelectedActivityPhoto[]>([]);
-  const selectedPhotosRef = useRef<SelectedActivityPhoto[]>([]);
-  const nextPhotoIdRef = useRef(0);
-  const placeSessionTokenRef = useRef<string | null>(null);
-  const selectedPlaceSessionTokenRef = useRef<{ placeId: string; sessionToken: string } | null>(
-    null,
-  );
-  const placeSelectionVersionRef = useRef(0);
-  const placeSearchVersionRef = useRef(0);
-  const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
-  const [meetingPlaceId, setMeetingPlaceId] = useState("");
-  const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
-  const [selectedMeetingPlaceAddress, setSelectedMeetingPlaceAddress] =
-    useState<LocalizedMeetingPlaceAddress | null>(null);
-  const [placePredictions, setPlacePredictions] = useState<{
-    locale: Locale;
-    values: GooglePlacePrediction[];
-  } | null>(null);
-  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
-  const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
-  const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
-  const [submissionAuthError, setSubmissionAuthError] = useState<UnauthenticatedQueryError | null>(
-    null,
-  );
-  const [errorKey, setErrorKey] = useState<CreateActivityErrorKey | null>(null);
-  const [requestFailure, setRequestFailure] = useState<{
-    error: unknown;
-    fallbackKey: Extract<CreateActivityErrorKey, "imageUploadFailed" | "submissionFailed">;
-  } | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
-  useEffect(() => {
-    activeLocaleRef.current = locale;
-  }, [locale]);
-  const createActivityMutation = useMutation({
-    mutationFn: async (request: ActivityUpsertRequest) =>
-      unwrapApiResult(await createMyActivity(request), "activity"),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
-        queryClient.invalidateQueries({ queryKey: buddyKeys.scheduleDates() }),
-        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
-      ]);
-      router.push("/my-activities");
-    },
-  });
-  const pricePreviewMutation = useMutation({
-    mutationFn: async (request: ActivityPricePreviewRequest) =>
-      unwrapApiResult(await previewActivityPrice(request), "preview"),
-  });
-  useAuthQueryRedirect(
-    submissionAuthError ??
-      (requestFailure?.error instanceof Error ? requestFailure.error : null) ??
-      createActivityMutation.error ??
-      pricePreviewMutation.error,
-  );
-  const googleMapsApiKey = getGoogleMapsApiKey();
-
-  function handlePriceChange() {
-    pricePreviewMutation.reset();
-  }
-
-  function handlePriceBlur(event: React.FocusEvent<HTMLInputElement>) {
-    const price = Number(event.currentTarget.value);
-
-    if (!Number.isInteger(price) || price <= 0) {
-      pricePreviewMutation.reset();
-      return;
-    }
-
-    pricePreviewMutation.mutate({ price, currency: "KRW" });
-  }
+  const [currentStep, setCurrentStep] = useState<ActivityCreateStep>("category");
+  const [draft, setDraft] = useState<ActivityCreateDraft>(EMPTY_ACTIVITY_DRAFT);
+  const [errorKey, setErrorKey] = useState<ActivityCreateErrorKey | null>(null);
+  const [previewComplete, setPreviewComplete] = useState(false);
+  const fileSequence = useRef(0);
+  const objectUrls = useRef(new Set<string>());
+  const currentIndex = getStepIndex(currentStep);
 
   useEffect(() => {
-    if (!isDirty) return;
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
-
-  useEffect(() => {
-    selectedPhotosRef.current = selectedPhotos;
-  }, [selectedPhotos]);
-
-  useEffect(() => {
+    const urls = objectUrls.current;
     return () => {
-      selectedPhotosRef.current.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+      urls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
-  useEffect(() => {
-    const query = meetingPlaceQuery.trim();
-    if (!query || !googleMapsApiKey || query === selectedMeetingPlaceLabel) {
-      return;
-    }
+  function updateField(field: DraftTextField, value: string) {
+    setDraft((current) => ({ ...current, [field]: value }));
+    setErrorKey(null);
+  }
 
-    const requestVersion = ++placeSearchVersionRef.current;
-    let isMounted = true;
-
-    // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
-    const timeoutId = window.setTimeout(() => {
-      placeSessionTokenRef.current ??= globalThis.crypto.randomUUID();
-      searchGooglePlacePredictions(query, googleMapsApiKey, {
-        locale,
-        fetcher: fetch,
-        sessionToken: placeSessionTokenRef.current,
-      })
-        .then((predictions) => {
-          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
-          setPlacePredictions({ locale, values: predictions });
-        })
-        .catch(() => {
-          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
-          setPlacePredictions({ locale, values: [] });
-        })
-        .finally(() => {
-          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
-          setIsSearchingPlaces(false);
-        });
-    }, PLACE_SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      isMounted = false;
-      window.clearTimeout(timeoutId);
-    };
-  }, [googleMapsApiKey, locale, meetingPlaceQuery, selectedMeetingPlaceLabel]);
-
-  useEffect(() => {
-    if (!meetingPlaceId || !googleMapsApiKey) return;
-
-    const pendingSession = selectedPlaceSessionTokenRef.current;
-    const sessionToken =
-      pendingSession?.placeId === meetingPlaceId ? pendingSession.sessionToken : null;
-    if (sessionToken) {
-      selectedPlaceSessionTokenRef.current = null;
-    }
-
-    const requestVersion = ++placeSelectionVersionRef.current;
-    let isActive = true;
-
-    fetchGooglePlaceDetails(meetingPlaceId, googleMapsApiKey, {
-      locale,
-      fetcher: fetch,
-      ...(sessionToken ? { sessionToken } : {}),
-    })
-      .then((place) => {
-        if (
-          !isActive ||
-          placeSelectionVersionRef.current !== requestVersion ||
-          !place.formattedAddress
-        ) {
-          return;
-        }
-        setSelectedMeetingPlaceAddress({ locale, value: place.formattedAddress });
-      })
-      .catch(() => {
-        // Initial selection keeps its current-locale Autocomplete fallback. Locale refetch stays empty.
+  function addPhotoFiles(files: FileList | null) {
+    if (!files) return;
+    const remaining = MAX_EXPERIENCE_PHOTOS - draft.photos.length;
+    const additions = Array.from(files)
+      .slice(0, remaining)
+      .map((file) => {
+        fileSequence.current += 1;
+        const photo = createPhotoDraft(file, makeId("experience-photo", fileSequence.current));
+        objectUrls.current.add(photo.previewUrl);
+        return photo;
       });
-
-    return () => {
-      isActive = false;
-    };
-  }, [googleMapsApiKey, locale, meetingPlaceId]);
-
-  const selectedFiles = selectedPhotos.map((photo) => photo.file);
-  const stepContent = STEP_CONTENT[currentStep];
-
-  function handleBack() {
-    // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
-    if (submissionPhase !== null) return;
-    if (isDirty) {
-      setShowDiscardConfirm(true);
-      return;
-    }
-    router.push("/my-activities");
+    setDraft((current) => ({ ...current, photos: [...current.photos, ...additions] }));
+    setErrorKey(null);
   }
 
-  function validateStep(step: CreateActivityStep) {
-    const form = formRef.current;
-    if (!form) return false;
-    const formData = new FormData(form);
-    const validationError = validateCreateActivityStep({
-      step,
-      selectedPhotoCount: selectedFiles.length,
-      title: getString(formData, "title"),
-      description: getString(formData, "description"),
-      scheduleDateTimes: formData
-        .getAll("scheduleDateTime")
-        .map((value) => (typeof value === "string" ? value : "")),
-      maxCapacity: getString(formData, "maxCapacity"),
-      price: getString(formData, "price"),
-      meetingPlaceId,
-      meetingPointName: getString(formData, "meetingPointName"),
-      includedItems: formData
-        .getAll("includedItems")
-        .map((value) => (typeof value === "string" ? value : "")),
+  function removePhoto(id: string) {
+    setDraft((current) => {
+      const photo = current.photos.find((candidate) => candidate.id === id);
+      if (photo) {
+        URL.revokeObjectURL(photo.previewUrl);
+        objectUrls.current.delete(photo.previewUrl);
+      }
+      return { ...current, photos: current.photos.filter((candidate) => candidate.id !== id) };
     });
-    setRequestFailure(null);
-    setErrorKey(validationError);
-    return validationError === null;
   }
 
-  function goToNextStep() {
-    if (!validateStep(currentStep)) return;
-    setCurrentStep(getNextStep(currentStep));
+  function addItineraryItem() {
+    fileSequence.current += 1;
+    const item: ItineraryDraft = {
+      id: makeId("itinerary", fileSequence.current),
+      title: "",
+      description: "",
+      durationMinutes: "",
+      photo: null,
+    };
+    setDraft((current) => ({ ...current, itinerary: [...current.itinerary, item] }));
   }
 
-  function goToPreviousStep() {
-    setRequestFailure(null);
+  function removeItineraryItem(id: string) {
+    setDraft((current) => {
+      const item = current.itinerary.find((candidate) => candidate.id === id);
+      if (item?.photo) {
+        URL.revokeObjectURL(item.photo.previewUrl);
+        objectUrls.current.delete(item.photo.previewUrl);
+      }
+      return {
+        ...current,
+        itinerary: current.itinerary.filter((candidate) => candidate.id !== id),
+      };
+    });
+  }
+
+  function updateItineraryItem(
+    id: string,
+    field: "title" | "description" | "durationMinutes",
+    value: string,
+  ) {
+    setDraft((current) => ({
+      ...current,
+      itinerary: current.itinerary.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
+    }));
     setErrorKey(null);
-    setCurrentStep(getPreviousStep(currentStep));
   }
 
-  function handleRegisterClick() {
-    if (!validateStep(3)) return;
-    const form = formRef.current;
-    if (!form) return;
-    setPendingPublish(new FormData(form));
+  function updateItineraryPhoto(id: string, files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    fileSequence.current += 1;
+    const photo = createPhotoDraft(file, makeId("itinerary-photo", fileSequence.current));
+    objectUrls.current.add(photo.previewUrl);
+    setDraft((current) => ({
+      ...current,
+      itinerary: current.itinerary.map((item) => {
+        if (item.id !== id) return item;
+        if (item.photo) {
+          URL.revokeObjectURL(item.photo.previewUrl);
+          objectUrls.current.delete(item.photo.previewUrl);
+        }
+        return { ...item, photo };
+      }),
+    }));
+    setErrorKey(null);
   }
 
-  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (currentStep === 3) {
-      handleRegisterClick();
+  function goNext() {
+    const validationError = validateActivityCreateStep(currentStep, draft);
+    if (validationError) {
+      setErrorKey(validationError);
       return;
     }
-    goToNextStep();
-  }
-
-  async function submitActivity(status: MyActivityStatus, formData: FormData) {
-    const meetingPointName = getString(formData, "meetingPointName");
-    const selectedMeetingPlaceId = getString(formData, "meetingPlaceId");
-
+    if (currentStep === "review") {
+      setPreviewComplete(true);
+      return;
+    }
+    const nextStep = getNextActivityCreateStep(currentStep);
+    setCurrentStep(nextStep);
+    if (nextStep === "itinerary" && draft.itinerary.length === 0) addItineraryItem();
     setErrorKey(null);
-    setRequestFailure(null);
-    setSubmissionAuthError(null);
-    setSubmissionPhase("uploading");
-
-    try {
-      const uploadedImages = await uploadSelectedActivityImages(selectedFiles);
-      if (uploadedImages.imageKeys === null) {
-        setRequestFailure({ error: uploadedImages.error, fallbackKey: "imageUploadFailed" });
-        setSubmissionPhase(null);
-        return;
-      }
-      setSubmissionPhase("registering");
-      const request: ActivityUpsertRequest = {
-        title: getString(formData, "title"),
-        description: getString(formData, "description"),
-        imageKeys: uploadedImages.imageKeys,
-        includedItems: getStringList(formData, "includedItems"),
-        restrictionNotes: getStringList(formData, "restrictionNotes"),
-        maxCapacity: Number(getString(formData, "maxCapacity")),
-        price: Number(getString(formData, "price")),
-        currency: "KRW",
-        meetingPointName,
-        meetingPlaceId: selectedMeetingPlaceId,
-        status,
-        schedules: buildSchedules(formData),
-      };
-      await createActivityMutation.mutateAsync(request);
-    } catch (error) {
-      if (error instanceof UnauthenticatedQueryError) {
-        setSubmissionPhase(null);
-        setSubmissionAuthError(error);
-        return;
-      }
-      setRequestFailure({ error, fallbackKey: "submissionFailed" });
-      setSubmissionPhase(null);
-    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function handlePlaceQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    placeSelectionVersionRef.current += 1;
-    placeSearchVersionRef.current += 1;
-    if (!value.trim()) {
-      placeSessionTokenRef.current = null;
-    }
-    selectedPlaceSessionTokenRef.current = null;
-    setMeetingPlaceQuery(value);
-    setMeetingPlaceId("");
-    setSelectedMeetingPlaceLabel("");
-    setSelectedMeetingPlaceAddress(null);
-    setPlacePredictions(null);
-    setIsSearchingPlaces(Boolean(value.trim()) && Boolean(googleMapsApiKey));
+  function goBack() {
+    if (currentIndex === 0) return;
+    setCurrentStep(getPreviousActivityCreateStep(currentStep));
+    setErrorKey(null);
+    setPreviewComplete(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function handlePlaceSelect(prediction: GooglePlacePrediction, predictionLocale: Locale) {
-    if (predictionLocale !== activeLocaleRef.current) return;
-
-    const fallbackAddress =
-      prediction.secondaryText || (prediction.text !== prediction.mainText ? prediction.text : "");
-    const sessionToken = placeSessionTokenRef.current;
-    placeSelectionVersionRef.current += 1;
-    placeSessionTokenRef.current = null;
-    selectedPlaceSessionTokenRef.current = sessionToken
-      ? { placeId: prediction.placeId, sessionToken }
-      : null;
-
-    setMeetingPlaceId(prediction.placeId);
-    setMeetingPlaceQuery(prediction.mainText);
-    setSelectedMeetingPlaceLabel(prediction.mainText);
-    setSelectedMeetingPlaceAddress(
-      fallbackAddress ? { locale: predictionLocale, value: fallbackAddress } : null,
-    );
-    setPlacePredictions(null);
+  function getStepTitle(step: ActivityCreateStep) {
+    return t(`steps.${step}.title`);
   }
 
-  function handlePhotoSelection(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.currentTarget.files ?? []);
-    event.currentTarget.value = "";
-    if (files.length === 0) return;
-
-    // Strict Mode가 updater를 이중 호출해도 blob URL이 누수되지 않도록 부수효과는 updater 밖에서 수행한다
-    const remainingSlots = Math.max(MAX_ACTIVITY_PHOTOS - selectedPhotos.length, 0);
-    const acceptedFiles = files.slice(0, remainingSlots);
-    const nextPhotos = acceptedFiles.map((file) => ({
-      id: nextPhotoIdRef.current++,
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-    setSelectedPhotos((photos) => [...photos, ...nextPhotos]);
-  }
-
-  function removeSelectedPhoto(photoId: number) {
-    const removedPhoto = selectedPhotos.find((photo) => photo.id === photoId);
-    if (!removedPhoto) return;
-
-    URL.revokeObjectURL(removedPhoto.previewUrl);
-    setSelectedPhotos((photos) => photos.filter((photo) => photo.id !== photoId));
-    setIsDirty(true);
-  }
-
-  function addIncludedItem() {
-    setIncludedItems((items) => [...items, getNextRowKey(items)]);
-    setIsDirty(true);
-  }
-
-  function removeIncludedItem(key: number) {
-    setIncludedItems((items) => items.filter((item) => item !== key));
-    setIsDirty(true);
-  }
-
-  function addTimeSlot() {
-    setTimeSlots((slots) => [...slots, getNextRowKey(slots)]);
-    setIsDirty(true);
-  }
-
-  function removeTimeSlot(key: number) {
-    setTimeSlots((slots) => slots.filter((slot) => slot !== key));
-    setIsDirty(true);
-  }
-
-  function addRestriction() {
-    setRestrictions((items) => [...items, getNextRowKey(items)]);
-    setIsDirty(true);
-  }
-
-  function removeRestriction(key: number) {
-    setRestrictions((items) => items.filter((item) => item !== key));
-    setIsDirty(true);
-  }
-
-  const isSubmitting = submissionPhase !== null;
-  const meetingMapUrl = meetingPlaceId
-    ? buildGoogleMapsEmbedUrl(meetingPlaceId, googleMapsApiKey, locale)
-    : "";
-  let errorMessage: string | null = null;
-  if (requestFailure) {
-    errorMessage = getApiErrorMessage(
-      requestFailure.error,
-      t(`errors.${requestFailure.fallbackKey}`),
-    );
-  } else if (errorKey) {
-    errorMessage = t(`errors.${errorKey}`);
-  }
-
-  return (
-    <div className="flex flex-1 flex-col bg-canvas pb-28 lg:pb-0">
-      <PageHeader onLeftClick={handleBack} />
-      <main className="flex-1 py-6 md:py-10">
-        <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
-          <aside className="mb-8 hidden lg:block">
-            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-              {t("sidebarEyebrow")}
-            </p>
-            <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
-              {t("sidebarTitle")}
-            </h2>
-            <ol className="mt-12 flex flex-col gap-4 text-sm">
-              {SIDEBAR_STEPS.map((step, index) => {
-                const stepNumber = index + 1;
-                const isCurrent = currentStep === stepNumber;
-                const isComplete = stepNumber < currentStep;
-                let stepClassName = "text-muted";
-                if (isCurrent) stepClassName = "font-bold text-ink";
-
-                let indicatorClassName = "border border-line-strong";
-                if (isComplete) indicatorClassName = "bg-success text-white";
-                if (isCurrent) indicatorClassName = "bg-primary text-white";
-
-                return (
-                  <li key={step} className={`flex items-center gap-3 ${stepClassName}`}>
-                    <span
-                      className={`flex size-8 items-center justify-center rounded-full font-display ${indicatorClassName}`}
-                    >
-                      {isComplete ? "✓" : stepNumber}
-                    </span>
-                    {t(`sidebarSteps.${step}`)}
-                  </li>
-                );
-              })}
-            </ol>
-          </aside>
-          <form
-            ref={formRef}
-            data-testid="create-activity-form"
-            noValidate
-            onSubmit={handleFormSubmit}
-            onChange={() => setIsDirty(true)}
-            className="mx-auto w-full max-w-[800px] space-y-8"
-          >
-            <div>
-              <p className="font-display text-xs font-bold tracking-widest text-primary-strong uppercase">
-                {t("steps.progress", { current: currentStep, total: 3 })}
-              </p>
-              <h1 className="mt-2 font-display text-4xl font-extrabold tracking-[-0.04em] text-ink">
-                {t(stepContent.title)}
-              </h1>
-              <p className="mt-2 text-muted">{t(stepContent.description)}</p>
-            </div>
-
-            {errorMessage ? (
-              <p
-                role="alert"
-                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-              >
-                {errorMessage}
-              </p>
-            ) : null}
-
-            <section hidden={currentStep !== 1} className="flex flex-col gap-6">
-              <div className="flex flex-col gap-3">
-                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-panel/60 px-6 py-14 text-muted">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    aria-label={t("activityPhotos")}
-                    className="sr-only"
-                    onChange={handlePhotoSelection}
-                  />
-                  <ImagePlusIcon className="size-8" />
-                  <span className="font-display text-sm font-semibold text-ink">
-                    {t("uploadPhotos")}
-                  </span>
-                  <span className="text-xs">
-                    {selectedFiles.length > 0
-                      ? t("selectedPhotos", { count: selectedFiles.length })
-                      : t("photoHint")}
-                  </span>
-                </label>
-
-                {selectedPhotos.length > 0 ? (
-                  <ul aria-label={t("selectedPhotosList")} className="grid grid-cols-4 gap-2">
-                    {selectedPhotos.map((photo) => (
-                      <li
-                        key={photo.id}
-                        className="relative aspect-square overflow-hidden rounded-xl border border-line-soft bg-panel"
-                      >
-                        <Image
-                          src={photo.previewUrl}
-                          alt={photo.file.name}
-                          fill
-                          sizes="72px"
-                          unoptimized
-                          className="object-cover"
-                        />
-                        <button
-                          type="button"
-                          aria-label={t("removePhoto", { name: photo.file.name })}
-                          onClick={() => removeSelectedPhoto(photo.id)}
-                          className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-on-primary transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
-                        >
-                          <TrashIcon className="size-3.5" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("activityTitle")}</FieldLabel>
+  function renderStep() {
+    switch (currentStep) {
+      case "category":
+        return (
+          <CategoryStep
+            value={draft.category}
+            onChange={(value) => updateField("category", value)}
+            t={t}
+          />
+        );
+      case "concept":
+        return (
+          <div className="grid gap-6">
+            <Field label={t("fields.conceptTitle")} hint={t("hints.conceptTitle")}>
+              <input
+                className={INPUT_CLASS}
+                value={draft.conceptTitle}
+                onChange={(event) => updateField("conceptTitle", event.target.value)}
+                placeholder={t("placeholders.conceptTitle")}
+              />
+            </Field>
+            <Field label={t("fields.conceptDescription")}>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={draft.conceptDescription}
+                onChange={(event) => updateField("conceptDescription", event.target.value)}
+                placeholder={t("placeholders.conceptDescription")}
+              />
+            </Field>
+          </div>
+        );
+      case "host":
+        return (
+          <div className="grid gap-6">
+            <Field label={t("fields.hostIntroduction")}>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={draft.hostIntroduction}
+                onChange={(event) => updateField("hostIntroduction", event.target.value)}
+                placeholder={t("placeholders.hostIntroduction")}
+              />
+            </Field>
+            <Field label={t("fields.qualifications")}>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={draft.qualifications}
+                onChange={(event) => updateField("qualifications", event.target.value)}
+                placeholder={t("placeholders.qualifications")}
+              />
+            </Field>
+            <Field label={t("fields.pressHistory")} hint={t("hints.optional")}>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={draft.pressHistory}
+                onChange={(event) => updateField("pressHistory", event.target.value)}
+                placeholder={t("placeholders.pressHistory")}
+              />
+            </Field>
+          </div>
+        );
+      case "photos":
+        return (
+          <PhotoStep photos={draft.photos} onAdd={addPhotoFiles} onRemove={removePhoto} t={t} />
+        );
+      case "listing":
+        return (
+          <div className="grid gap-6">
+            <Field label={t("fields.experienceName")} hint={t("hints.experienceName")}>
+              <input
+                className={INPUT_CLASS}
+                value={draft.experienceName}
+                onChange={(event) => updateField("experienceName", event.target.value)}
+                placeholder={t("placeholders.experienceName")}
+              />
+            </Field>
+            <Field label={t("fields.experienceDescription")}>
+              <textarea
+                className={`${TEXTAREA_CLASS} min-h-56`}
+                value={draft.experienceDescription}
+                onChange={(event) => updateField("experienceDescription", event.target.value)}
+                placeholder={t("placeholders.experienceDescription")}
+              />
+            </Field>
+          </div>
+        );
+      case "meeting":
+        return (
+          <div className="grid gap-6">
+            <Field label={t("fields.meetingPlace")}>
+              <div className="relative">
+                <MapPinIcon className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary" />
                 <input
-                  type="text"
-                  name="title"
-                  required
-                  placeholder={t("titlePlaceholder")}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} pl-12`}
+                  value={draft.meetingPlace}
+                  onChange={(event) => updateField("meetingPlace", event.target.value)}
+                  placeholder={t("placeholders.meetingPlace")}
                 />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("description")}</FieldLabel>
-                <textarea
-                  name="description"
-                  required
-                  rows={4}
-                  placeholder={t("descriptionPlaceholder")}
-                  className={`${INPUT_CLASS} resize-none`}
-                />
-              </label>
-            </section>
-
-            <section
-              hidden={currentStep !== 2}
-              data-testid="create-activity-primary-fields"
-              className="grid gap-6 md:grid-cols-2"
-            >
-              <div className="flex flex-col gap-2 md:col-span-2">
-                <FieldLabel>{t("availability")}</FieldLabel>
-                <p className="text-xs text-muted">{t("kstNotice")}</p>
-                {timeSlots.map((key, index) => (
-                  <div key={key} className="relative">
-                    <input
-                      name="scheduleDateTime"
-                      type="datetime-local"
-                      required={index === 0}
-                      aria-label={t("availableSchedule")}
-                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                    />
-                    {index > 0 ? (
-                      <InlineRemoveButton
-                        ariaLabel={t("removeTimeSlot", { index: index + 1 })}
-                        title={t("removeTimeSlotTitle")}
-                        onClick={() => removeTimeSlot(key)}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  aria-label={t("addTimeSlot")}
-                  onClick={addTimeSlot}
-                  className={ADD_ROW_BUTTON_CLASS}
-                >
-                  + {t("addTimeSlot")}
-                </button>
               </div>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("maxCapacity")}</FieldLabel>
-                <span className="relative">
-                  <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
+            </Field>
+            <Field label={t("fields.meetingDetails")} hint={t("hints.meetingDetails")}>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={draft.meetingDetails}
+                onChange={(event) => updateField("meetingDetails", event.target.value)}
+                placeholder={t("placeholders.meetingDetails")}
+              />
+            </Field>
+          </div>
+        );
+      case "itinerary":
+        return (
+          <ItineraryStep
+            items={draft.itinerary}
+            onAdd={addItineraryItem}
+            onRemove={removeItineraryItem}
+            onChange={updateItineraryItem}
+            onPhotoChange={updateItineraryPhoto}
+            t={t}
+          />
+        );
+      case "pricing":
+        return (
+          <div className="grid gap-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label={t("fields.maxGuests")}>
+                <div className="relative">
+                  <UsersIcon className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
                   <input
-                    name="maxCapacity"
                     type="number"
-                    min={1}
-                    required
-                    placeholder={t("capacityPlaceholder", { count: 4 })}
-                    className={`${INPUT_CLASS} pl-11`}
+                    min="1"
+                    className={`${INPUT_CLASS} pl-12`}
+                    value={draft.maxGuests}
+                    onChange={(event) => updateField("maxGuests", event.target.value)}
+                    placeholder={t("placeholders.maxGuests")}
                   />
-                </span>
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("pricePerPerson")}</FieldLabel>
-                <span className="relative">
-                  <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-muted">
+                </div>
+              </Field>
+              <Field label={t("fields.pricePerPerson")}>
+                <div className="relative">
+                  <span className="absolute top-1/2 left-4 -translate-y-1/2 font-bold text-muted">
                     ₩
                   </span>
                   <input
-                    name="price"
                     type="number"
-                    min={1}
-                    step={1}
-                    required
-                    aria-label={t("pricePerPerson")}
-                    placeholder={t("pricePlaceholder")}
-                    className={`${INPUT_CLASS} pl-11`}
-                    onChange={handlePriceChange}
-                    onBlur={handlePriceBlur}
+                    min="1"
+                    className={`${INPUT_CLASS} pl-10`}
+                    value={draft.pricePerPerson}
+                    onChange={(event) => updateField("pricePerPerson", event.target.value)}
+                    placeholder={t("placeholders.pricePerPerson")}
                   />
-                </span>
-                {pricePreviewMutation.isPending ? (
-                  <output className="text-xs text-muted">{t("payoutLoading")}</output>
-                ) : null}
-                {pricePreviewMutation.error ? (
-                  <span
-                    role="alert"
-                    aria-label={t("payoutErrorLabel")}
-                    className="text-xs text-danger"
-                  >
-                    {getApiErrorMessage(pricePreviewMutation.error, t("payoutError"))}
-                  </span>
-                ) : null}
-                {pricePreviewMutation.data ? (
-                  <dl
-                    aria-label={t("payoutSummary", {
-                      amount: pricePreviewMutation.data.estimatedGuidePayoutAmountKrw,
-                    })}
-                    className="flex flex-col gap-2 rounded-xl bg-panel-raised px-4 py-3 text-sm"
-                  >
-                    <div className="flex items-center justify-between text-muted">
-                      <dt>
-                        {t("platformFee", { rate: pricePreviewMutation.data.commissionRate })}
-                      </dt>
-                      <dd>
-                        {formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw, locale)}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between font-semibold text-primary-strong">
-                      <dt>{t("estimatedPayout")}</dt>
-                      <dd>
-                        {formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw, locale)}
-                      </dd>
-                    </div>
-                  </dl>
-                ) : null}
-              </label>
-            </section>
+                </div>
+              </Field>
+            </div>
+            <Field label={t("fields.inclusions")} hint={t("hints.onePerLine")}>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={draft.inclusions}
+                onChange={(event) => updateField("inclusions", event.target.value)}
+                placeholder={t("placeholders.inclusions")}
+              />
+            </Field>
+            <Field label={t("fields.discount")} hint={t("hints.optional")}>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                className={INPUT_CLASS}
+                value={draft.discountPercent}
+                onChange={(event) => updateField("discountPercent", event.target.value)}
+                placeholder={t("placeholders.discount")}
+              />
+            </Field>
+            <Field label={t("fields.restrictions")} hint={t("hints.onePerLine")}>
+              <textarea
+                className={TEXTAREA_CLASS}
+                value={draft.restrictions}
+                onChange={(event) => updateField("restrictions", event.target.value)}
+                placeholder={t("placeholders.restrictions")}
+              />
+            </Field>
+          </div>
+        );
+      case "review":
+        return <ReviewStep draft={draft} t={t} />;
+    }
+  }
 
-            <section hidden={currentStep !== 3} className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <FieldLabel>{t("meetingPoint")}</FieldLabel>
-                <label className="flex flex-col">
-                  <span className="relative">
-                    <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
-                    <input
-                      type="text"
-                      value={meetingPlaceQuery}
-                      onChange={handlePlaceQueryChange}
-                      placeholder={t("placeSearchPlaceholder")}
-                      aria-label={t("placeSearch")}
-                      className={`${INPUT_CLASS} pl-11`}
-                    />
-                  </span>
-                </label>
-                <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
-                <MeetingPlaceFeedback
-                  googleMapsApiKey={googleMapsApiKey}
-                  isSearchingPlaces={isSearchingPlaces}
-                  meetingMapUrl={meetingMapUrl}
-                  onPlaceSelect={handlePlaceSelect}
-                  placePredictions={placePredictions}
-                  selectedMeetingPlaceAddress={selectedMeetingPlaceAddress}
-                />
-                <label className="mt-2 flex flex-col gap-2">
-                  <FieldLabel>{t("meetingPointName")}</FieldLabel>
-                  <input
-                    name="meetingPointName"
-                    type="text"
-                    required
-                    placeholder={t("meetingPointNamePlaceholder")}
-                    aria-label={t("meetingPointName")}
-                    className={INPUT_CLASS}
-                  />
-                </label>
-              </div>
+  return (
+    <div className="flex min-h-[calc(100vh-76px)] flex-col bg-white">
+      <header className="border-b border-line-soft px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase">
+              {t("eyebrow")}
+            </p>
+            <h1 className="mt-1 truncate font-display text-lg font-bold text-ink sm:text-xl">
+              {t("title")}
+            </h1>
+          </div>
+          <p className="shrink-0 text-sm font-semibold text-muted">
+            {t("progress", { current: currentIndex + 1, total: ACTIVITY_CREATE_STEPS.length })}
+          </p>
+        </div>
+      </header>
 
-              <fieldset
-                aria-label={t("includedItemsCount", { count: includedItems.length })}
-                className="flex min-w-0 flex-col gap-2 border-0 p-0"
-              >
-                <FieldLabel>{t("included")}</FieldLabel>
-                {includedItems.map((key, index) => (
-                  <div key={key} className="relative">
-                    <input
-                      name="includedItems"
-                      type="text"
-                      required={index === 0}
-                      placeholder={t("includedItemPlaceholder")}
-                      aria-label={t("includedItem")}
-                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                    />
-                    {index > 0 ? (
-                      <InlineRemoveButton
-                        ariaLabel={t("removeIncludedItem", { index: index + 1 })}
-                        title={t("removeIncludedItemTitle")}
-                        onClick={() => removeIncludedItem(key)}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  aria-label={t("addIncludedItem")}
-                  onClick={addIncludedItem}
-                  className={ADD_ROW_BUTTON_CLASS}
-                >
-                  + {t("addIncludedItem")}
-                </button>
-              </fieldset>
-
-              <fieldset
-                aria-label={t("restrictionsCount", { count: restrictions.length })}
-                className="flex min-w-0 flex-col gap-2 border-0 p-0"
-              >
-                <FieldLabel>{t("restrictions")}</FieldLabel>
-                {restrictions.map((key, index) => (
-                  <div key={key} className="relative">
-                    <input
-                      name="restrictionNotes"
-                      type="text"
-                      placeholder={t("restrictionPlaceholder")}
-                      aria-label={t("restriction")}
-                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                    />
-                    {index > 0 ? (
-                      <InlineRemoveButton
-                        ariaLabel={t("removeRestriction", { index: index + 1 })}
-                        title={t("removeRestrictionTitle")}
-                        onClick={() => removeRestriction(key)}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  aria-label={t("addRestriction")}
-                  onClick={addRestriction}
-                  className={ADD_ROW_BUTTON_CLASS}
-                >
-                  + {t("addRestriction")}
-                </button>
-              </fieldset>
-            </section>
-            <BottomActionBar>
-              <button
-                type="button"
-                onClick={currentStep === 1 ? handleBack : goToPreviousStep}
-                disabled={isSubmitting}
-                className="h-12 flex-1 rounded-xl border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {currentStep === 1 ? t("cancel") : t("previous")}
-              </button>
-              <button
-                type="button"
-                onClick={currentStep === 3 ? handleRegisterClick : goToNextStep}
-                disabled={isSubmitting}
-                className="h-12 flex-1 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {t(getPrimaryActionLabelKey(submissionPhase, currentStep))}
-              </button>
-            </BottomActionBar>
-          </form>
-        </PageContainer>
-      </main>
-      {pendingPublish && (
-        <ConfirmDialog
-          title={t("registerTitle")}
-          description={t("registerDescription")}
-          confirmLabel={t("register")}
-          onConfirm={() => {
-            const formData = pendingPublish;
-            setPendingPublish(null);
-            void submitActivity("ACTIVE", formData);
-          }}
-          onClose={() => setPendingPublish(null)}
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 overflow-hidden border-x border-line-soft">
+        <ProgressRail
+          currentStep={currentStep}
+          getTitle={getStepTitle}
+          label={t("progressLabel")}
         />
-      )}
-      {showDiscardConfirm && (
-        <ConfirmDialog
-          title={t("discardTitle")}
-          description={t("discardDescription")}
-          confirmLabel={t("discard")}
-          tone="danger"
-          onConfirm={() => router.push("/my-activities")}
-          onClose={() => setShowDiscardConfirm(false)}
-        />
-      )}
+        <main className="min-w-0 flex-1">
+          <div className="h-1 bg-line-soft xl:hidden">
+            <div
+              className="h-full bg-primary transition-[width]"
+              style={{ width: `${((currentIndex + 1) / ACTIVITY_CREATE_STEPS.length) * 100}%` }}
+            />
+          </div>
+          <div className="mx-auto w-full max-w-4xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
+            <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase xl:hidden">
+              {t("progress", { current: currentIndex + 1, total: ACTIVITY_CREATE_STEPS.length })}
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+              {getStepTitle(currentStep)}
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-muted sm:text-lg">
+              {t(`steps.${currentStep}.description`)}
+            </p>
+            <div className="mt-9">{renderStep()}</div>
+            {errorKey ? (
+              <p
+                role="alert"
+                className="mt-6 rounded-xl bg-primary-soft px-4 py-3 text-sm font-semibold text-primary-strong"
+              >
+                {t(`errors.${errorKey}`)}
+              </p>
+            ) : null}
+            {previewComplete ? (
+              <p
+                role="status"
+                className="mt-6 rounded-xl bg-panel px-4 py-3 text-sm font-semibold text-ink"
+              >
+                {t("review.complete")}
+              </p>
+            ) : null}
+          </div>
+        </main>
+      </div>
+
+      <footer className="sticky bottom-0 z-20 border-t border-line-soft bg-white/95 px-5 py-4 backdrop-blur sm:px-8">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 xl:pl-72">
+          <button
+            type="button"
+            onClick={goBack}
+            disabled={currentIndex === 0}
+            className="flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold text-ink hover:bg-panel disabled:invisible"
+          >
+            <ArrowLeftIcon className="size-4" />
+            {t("actions.back")}
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            className="flex min-h-11 min-w-32 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(209,63,50,0.2)] hover:bg-primary-hover sm:min-w-40"
+          >
+            {currentStep === "review" ? t("actions.finish") : t("actions.next")}
+            <ArrowRightIcon className="size-4" />
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -154,6 +154,19 @@ describe("shared localized selectors and statuses", () => {
     expect(container).not.toContainElement(panel);
   });
 
+  it("does not select a country when Enter is pressed during IME composition", () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    const onChange = vi.fn();
+    renderWithIntl(<CountrySelect value="" onChange={onChange} ariaLabel="Nationality" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
+    const search = screen.getByRole("combobox", { name: "Search country" });
+    fireEvent.keyDown(search, { key: "Enter", isComposing: true });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId("country-select-panel")).toBeInTheDocument();
+  });
+
   it("localizes every application status in Korean", () => {
     renderWithIntl(
       <>

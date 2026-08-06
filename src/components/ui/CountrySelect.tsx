@@ -145,6 +145,8 @@ export function CountrySelect({
   }
 
   function handleSearchKeyDown(e: React.KeyboardEvent) {
+    if (e.nativeEvent.isComposing) return;
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));

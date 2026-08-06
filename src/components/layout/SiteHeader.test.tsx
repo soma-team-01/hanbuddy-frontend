@@ -201,6 +201,21 @@ describe("SiteHeader", () => {
     );
   });
 
+  it("keeps the buddy login action visible while a possible session is being checked", () => {
+    mockedUsePathname.mockReturnValue("/buddy");
+    renderWithIntl(<SiteHeader mayHaveSession />);
+
+    expect(screen.getByRole("button", { name: "Log in" })).toBeInTheDocument();
+  });
+
+  it("shows the account indicator on the buddy landing page after authentication", () => {
+    mockedUsePathname.mockReturnValue("/buddy");
+    renderWithIntl(<SiteHeader role="buddy" authenticated mayHaveSession />);
+
+    expect(screen.getByRole("link", { name: "Open my account" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Log in" })).not.toBeInTheDocument();
+  });
+
   it("uses the buddy landing page as home throughout buddy-prefixed routes", () => {
     mockedUsePathname.mockReturnValue("/buddy/auth/status");
     renderWithIntl(<SiteHeader />);

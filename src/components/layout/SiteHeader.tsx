@@ -160,7 +160,7 @@ export function SiteHeader({
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
           <LocaleSwitcher />
-          {isBuddyHostingPage && sessionStatus === "guest" ? (
+          {isBuddyHostingPage && !effectiveAuthenticated ? (
             <BuddyGoogleAuthDialog variant="header" />
           ) : null}
           {!isMinimalHeader && sessionStatus === "pending" ? (
@@ -169,7 +169,7 @@ export function SiteHeader({
               className="size-11 animate-pulse rounded-full border border-line-soft bg-panel"
             />
           ) : null}
-          {!isMinimalHeader && effectiveAuthenticated ? (
+          {(!isMinimalHeader || isBuddyHostingPage) && effectiveAuthenticated ? (
             <Link
               href="/my-page"
               aria-label={t("openAccount")}

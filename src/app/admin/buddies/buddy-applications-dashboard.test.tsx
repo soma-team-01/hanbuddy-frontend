@@ -66,4 +66,37 @@ describe("BuddyApplicationsDashboard", () => {
     );
     expect(screen.getByText("1")).toBeInTheDocument();
   });
+
+  it("filters applications by account status", async () => {
+    mockedGetApplications.mockResolvedValue({
+      status: "success",
+      applications: [
+        {
+          userId: 42,
+          email: "pending@example.com",
+          name: "승인대기 버디",
+          nationalityCode: "KR",
+          accountStatus: "PENDING_APPROVAL",
+          appliedAt: "2026-08-06T10:00:00+09:00",
+        },
+        {
+          userId: 43,
+          email: "active@example.com",
+          name: "승인완료 버디",
+          nationalityCode: "KR",
+          accountStatus: "ACTIVE",
+          appliedAt: "2026-08-05T10:00:00+09:00",
+        },
+      ],
+    });
+
+    renderWithQueryClient(<BuddyApplicationsDashboard />);
+
+    expect(await screen.findByText("승인대기 버디")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "승인" }));
+
+    expect(screen.queryByText("승인대기 버디")).not.toBeInTheDocument();
+    expect(screen.getByText("승인완료 버디")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "승인" })).toHaveAttribute("aria-pressed", "true");
+  });
 });

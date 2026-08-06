@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { isUnauthenticatedError } from "@/lib/api/errors";
 import { adminBuddyApplicationsQueryOptions } from "@/lib/query/admin";
 
@@ -13,10 +14,25 @@ const STATUS_LABELS = {
   SUSPENDED: "정지",
 } as const;
 
+type StatusFilter = "ALL" | keyof typeof STATUS_LABELS;
+
+const STATUS_FILTERS: Array<{ value: StatusFilter; label: string }> = [
+  { value: "ALL", label: "전체" },
+  ...Object.entries(STATUS_LABELS).map(([value, label]) => ({
+    value: value as keyof typeof STATUS_LABELS,
+    label,
+  })),
+];
+
 export function BuddyApplicationsDashboard() {
   const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const query = useQuery(adminBuddyApplicationsQueryOptions());
   const applications = query.data ?? [];
+  const filteredApplications =
+    statusFilter === "ALL"
+      ? applications
+      : applications.filter((item) => item.accountStatus === statusFilter);
   const sessionExpired = isUnauthenticatedError(query.error);
   const pendingCount = applications.filter(
     (item) => item.accountStatus === "PENDING_APPROVAL",
@@ -39,6 +55,25 @@ export function BuddyApplicationsDashboard() {
           <strong className="font-display text-3xl text-primary">{pendingCount}</strong>
         </div>
       </div>
+      {!query.isPending && !query.error && applications.length > 0 ? (
+        <div aria-label="신청 상태 필터" className="mt-7 flex flex-wrap gap-2">
+          {STATUS_FILTERS.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              aria-pressed={statusFilter === filter.value}
+              onClick={() => setStatusFilter(filter.value)}
+              className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
+                statusFilter === filter.value
+                  ? "border-primary bg-primary text-white"
+                  : "border-line-strong bg-white text-muted hover:border-primary hover:text-primary"
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {query.isPending ? <LoadingRows /> : null}
       {sessionExpired ? (
         <State
@@ -54,13 +89,21 @@ export function BuddyApplicationsDashboard() {
           action={() => query.refetch()}
         />
       ) : null}
-      {!query.isPending && !query.error && applications.length === 0 ? (
+      {!query.isPending && !query.error && filteredApplications.length === 0 ? (
         <State
-          title="새로운 버디 신청이 없습니다."
-          description="신청이 접수되면 이곳에 표시됩니다."
+          title={
+            applications.length === 0
+              ? "새로운 버디 신청이 없습니다."
+              : `${STATUS_LABELS[statusFilter as keyof typeof STATUS_LABELS]} 상태의 신청이 없습니다.`
+          }
+          description={
+            applications.length === 0
+              ? "신청이 접수되면 이곳에 표시됩니다."
+              : "다른 상태를 선택해 신청 내역을 확인해 주세요."
+          }
         />
       ) : null}
-      {applications.length > 0 ? (
+      {filteredApplications.length > 0 ? (
         <div className="mt-8 overflow-hidden rounded-2xl border border-line-soft">
           <div className="hidden grid-cols-[1.4fr_1fr_0.8fr_0.9fr_auto] gap-4 border-b border-line-soft bg-panel-raised px-6 py-3 text-xs font-bold tracking-[0.12em] text-muted uppercase md:grid">
             <span>신청자</span>
@@ -70,7 +113,7 @@ export function BuddyApplicationsDashboard() {
             <span>검토</span>
           </div>
           <ul className="divide-y divide-line-soft">
-            {applications.map((item) => (
+            {filteredApplications.map((item) => (
               <li
                 key={item.userId}
                 className="grid gap-4 px-5 py-5 transition-colors hover:bg-primary-soft/30 md:grid-cols-[1.4fr_1fr_0.8fr_0.9fr_auto] md:items-center md:px-6"

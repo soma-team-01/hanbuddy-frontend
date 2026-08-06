@@ -7,13 +7,22 @@ import { useState } from "react";
 export function AdminHeader() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
   async function logout() {
     setPending(true);
+    setError("");
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Logout request failed");
+      }
       router.replace("/admin/login");
       router.refresh();
+    } catch {
+      setError("로그아웃하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      setPending(false);
     }
   }
   return (
@@ -31,14 +40,21 @@ export function AdminHeader() {
             Admin
           </span>
         </Link>
-        <button
-          type="button"
-          onClick={logout}
-          disabled={pending}
-          className="rounded-full border border-line-strong px-4 py-2 text-sm font-semibold transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
-        >
-          {pending ? "로그아웃 중" : "로그아웃"}
-        </button>
+        <div className="flex items-center gap-3">
+          {error ? (
+            <p role="alert" className="text-xs font-medium text-danger">
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            onClick={logout}
+            disabled={pending}
+            className="rounded-full border border-line-strong px-4 py-2 text-sm font-semibold transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+          >
+            {pending ? "로그아웃 중" : "로그아웃"}
+          </button>
+        </div>
       </div>
     </header>
   );

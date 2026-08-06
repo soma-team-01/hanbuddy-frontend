@@ -6,8 +6,13 @@ import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LogOutIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
+import type { UserType } from "@/lib/auth/types";
 
-export function LogoutButton() {
+interface LogoutButtonProps {
+  userType: UserType;
+}
+
+export function LogoutButton({ userType }: Readonly<LogoutButtonProps>) {
   const t = useTranslations("MyPage");
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -26,7 +31,7 @@ export function LogoutButton() {
       // Logout is best-effort; still return the user to the signed-out screen.
     } finally {
       queryClient.clear();
-      router.replace("/login");
+      router.replace(userType === "BUDDY" ? "/buddy" : "/");
       router.refresh();
     }
   }

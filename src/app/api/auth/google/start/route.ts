@@ -11,7 +11,9 @@ class GoogleAuthStartConfigError extends Error {}
 
 export function GET(request: NextRequest) {
   try {
-    const intent = request.nextUrl.searchParams.get("intent");
+    const requestedIntent = request.nextUrl.searchParams.get("intent");
+    const intent =
+      requestedIntent === "buddy" || requestedIntent === "admin" ? requestedIntent : undefined;
     const locale = getLocaleOrDefault(
       request.nextUrl.searchParams.get("locale") ?? request.cookies.get(LOCALE_COOKIE_NAME)?.value,
     );
@@ -25,8 +27,10 @@ export function GET(request: NextRequest) {
     const response = NextResponse.redirect(authorizationUrl);
     response.cookies.set(AUTH_COOKIES.oauthState, state, OAUTH_STATE_COOKIE_OPTIONS);
     response.cookies.set(AUTH_COOKIES.oauthLocale, locale, OAUTH_STATE_COOKIE_OPTIONS);
-    if (intent === "admin") {
+    if (intent) {
       response.cookies.set(AUTH_COOKIES.oauthIntent, intent, OAUTH_STATE_COOKIE_OPTIONS);
+    } else {
+      response.cookies.delete(AUTH_COOKIES.oauthIntent);
     }
     return response;
   } catch (error) {

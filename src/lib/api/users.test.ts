@@ -74,10 +74,10 @@ describe("updateMyProfile", () => {
   });
 
   const updateRequest = {
-    name: "Sarah J.",
+    displayName: "Sarah J.",
     profileImageKey: null,
     nationalityCode: "US",
-    age: 29,
+    birthDate: "1997-04-12",
     contactMethod: "WHATSAPP",
     contactCountryCode: "+1",
     contactIdentifier: "555-0199",
@@ -90,7 +90,7 @@ describe("updateMyProfile", () => {
           isSuccess: true,
           code: "200",
           message: "ok",
-          result: { ...profile, name: "Sarah J." },
+          result: { ...profile, displayName: "Sarah J." },
         }),
         { status: 200 },
       ),
@@ -99,7 +99,7 @@ describe("updateMyProfile", () => {
 
     await expect(updateMyProfile(updateRequest)).resolves.toEqual({
       status: "success",
-      profile: { ...profile, name: "Sarah J." },
+      profile: { ...profile, displayName: "Sarah J." },
     });
 
     const [url, init] = fetch.mock.calls[0] as [string, RequestInit];

@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
-import { DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
+import { Caveat, DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SERVICE_TIME_ZONE } from "@/i18n/formats";
 import { isLocale, routing, type Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
@@ -27,6 +28,12 @@ const dmSans = DM_Sans({
 const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
   variable: "--font-noto-sans-kr",
+  weight: ["400", "500", "600", "700"],
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
   weight: ["400", "500", "600", "700"],
 });
 
@@ -61,7 +68,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const [messages, cookieStore] = await Promise.all([getMessages(), cookies()]);
   const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
-  const authenticated = Boolean(userType && cookieStore.get(AUTH_COOKIES.accessToken)?.value);
+  const accessToken = cookieStore.get(AUTH_COOKIES.accessToken)?.value;
+  const authenticated = Boolean(userType && accessToken);
+  const mayHaveSession =
+    Boolean(accessToken) || Boolean(cookieStore.get(AUTH_COOKIES.refreshToken)?.value);
   let role: "buddy" | "tourist" | null = null;
   if (authenticated && userType === "BUDDY") {
     role = "buddy";
@@ -72,13 +82,14 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${plusJakartaSans.variable} ${dmSans.variable} ${notoSansKr.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${notoSansKr.variable} ${caveat.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
           <QueryProvider>
-            <SiteHeader role={role} authenticated={authenticated} />
+            <SiteHeader role={role} authenticated={authenticated} mayHaveSession={mayHaveSession} />
             <div className="flex flex-1 flex-col">{children}</div>
+            <SiteFooter locale={locale} />
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

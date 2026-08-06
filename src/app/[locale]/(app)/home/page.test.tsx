@@ -28,11 +28,11 @@ describe("HomePage", () => {
   });
 
   it.each<[string, string | undefined, string]>([
-    ["ko", "TOURIST", "/ko/explore"],
+    ["ko", "TOURIST", "/ko"],
     ["en", "BUDDY", "/en/dashboard"],
     ["ko", undefined, "/ko/login"],
     ["en", "ADMIN", "/en/login"],
-    ["fr", "TOURIST", "/en/explore"],
+    ["fr", "TOURIST", "/en"],
   ])("redirects %s %s to %s", async (locale, userType, expectedPath) => {
     stubUserTypeCookie(userType);
 

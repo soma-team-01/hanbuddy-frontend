@@ -48,16 +48,30 @@ async function renderLogin(locale: Locale, searchParams: { error?: string | stri
 
 describe("LoginPage", () => {
   it.each([
-    ["en", "Welcome to HanBuddy", "Continue with Google", "Privacy Policy"],
-    ["ko", "HanBuddy에 오신 것을 환영합니다", "Google로 계속하기", "개인정보 처리방침"],
+    [
+      "en",
+      "Experience Korea like a local.",
+      "Continue with Google",
+      "Privacy Policy",
+      "new friends, Jul 26 ⚾",
+    ],
+    [
+      "ko",
+      "현지인처럼 한국을 경험해 보세요.",
+      "Google로 계속하기",
+      "개인정보 처리방침",
+      "새 친구들, 7월 26일 ⚾",
+    ],
   ] as const)(
     "renders localized authentication content for %s",
-    async (locale, heading, action, policy) => {
+    async (locale, heading, action, policy, visualCaption) => {
       await renderLogin(locale);
 
       expect(screen.getByRole("main")).toHaveClass("w-full");
       expect(screen.getByRole("heading", { name: heading })).toHaveClass("font-display");
       expect(screen.getByText(policy)).toBeInTheDocument();
+      expect(screen.getByText(visualCaption)).toBeInTheDocument();
+      expect(screen.getAllByRole("figure")).toHaveLength(4);
       const googleLoginLink = screen.getByRole("link", { name: action });
       expect(googleLoginLink).toHaveAttribute("href", `/api/auth/google/start?locale=${locale}`);
       expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");

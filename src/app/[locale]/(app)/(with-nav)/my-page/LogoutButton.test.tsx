@@ -30,8 +30,8 @@ describe("LogoutButton", () => {
     );
   });
 
-  it("posts to logout and returns the user to login after confirming", async () => {
-    const { queryClient } = renderWithQueryClient(<LogoutButton />);
+  it("posts to logout and returns tourists to the home page after confirming", async () => {
+    const { queryClient } = renderWithQueryClient(<LogoutButton userType="TOURIST" />);
     queryClient.setQueryData(userKeys.me(), createMockProfile());
 
     const logoutButton = screen.getByRole("button", { name: "Log Out" });
@@ -46,13 +46,13 @@ describe("LogoutButton", () => {
         credentials: "same-origin",
       });
     });
-    expect(replace).toHaveBeenCalledWith("/en/login");
+    expect(replace).toHaveBeenCalledWith("/en");
     expect(refresh).toHaveBeenCalled();
     expect(queryClient.getQueryData(userKeys.me())).toBeUndefined();
   });
 
   it("does not log out when the confirmation is cancelled", () => {
-    renderWithQueryClient(<LogoutButton />);
+    renderWithQueryClient(<LogoutButton userType="TOURIST" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
@@ -63,7 +63,7 @@ describe("LogoutButton", () => {
 
   it("shows the localized pending label while logout is in progress", async () => {
     vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
-    renderWithQueryClient(<LogoutButton />);
+    renderWithQueryClient(<LogoutButton userType="TOURIST" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
     confirmLogoutInDialog();
@@ -81,7 +81,7 @@ describe("LogoutButton", () => {
   ] as const)(
     "localizes the logout action and named confirmation dialog for %s",
     (locale, action, title, description, cancel) => {
-      renderWithQueryClient(<LogoutButton />, { locale });
+      renderWithQueryClient(<LogoutButton userType="TOURIST" />, { locale });
 
       fireEvent.click(screen.getByRole("button", { name: action }));
 
@@ -92,15 +92,27 @@ describe("LogoutButton", () => {
     },
   );
 
-  it("still returns the user to login when the logout request fails", async () => {
+  it("still returns tourists home when the logout request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network unavailable")));
-    renderWithQueryClient(<LogoutButton />);
+    renderWithQueryClient(<LogoutButton userType="TOURIST" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
     confirmLogoutInDialog();
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith("/en/login");
+      expect(replace).toHaveBeenCalledWith("/en");
+    });
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("returns buddies to the buddy landing page after logout", async () => {
+    renderWithQueryClient(<LogoutButton userType="BUDDY" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
+    confirmLogoutInDialog();
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith("/en/buddy");
     });
     expect(refresh).toHaveBeenCalled();
   });

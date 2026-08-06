@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 
 const fontMocks = vi.hoisted(() => ({
+  caveat: vi.fn(() => ({ variable: "--font-caveat-class" })),
   dmSans: vi.fn(() => ({ variable: "--font-dm-sans-class" })),
   notoSansKr: vi.fn(() => ({ variable: "--font-noto-sans-kr-class" })),
   plusJakartaSans: vi.fn(() => ({ variable: "--font-plus-jakarta-sans-class" })),
@@ -10,6 +11,7 @@ const fontMocks = vi.hoisted(() => ({
 
 vi.mock("next/font/google", () => ({
   Be_Vietnam_Pro: vi.fn(() => ({ variable: "--font-be-vietnam-pro-class" })),
+  Caveat: fontMocks.caveat,
   DM_Sans: fontMocks.dmSans,
   Manrope: vi.fn(() => ({ variable: "--font-manrope-class" })),
   Noto_Sans_KR: fontMocks.notoSansKr,
@@ -70,6 +72,11 @@ describe("locale layout fonts", () => {
     expect(fontMocks.notoSansKr).toHaveBeenCalledWith({
       subsets: ["latin"],
       variable: "--font-noto-sans-kr",
+      weight: ["400", "500", "600", "700"],
+    });
+    expect(fontMocks.caveat).toHaveBeenCalledWith({
+      subsets: ["latin"],
+      variable: "--font-caveat",
       weight: ["400", "500", "600", "700"],
     });
   });

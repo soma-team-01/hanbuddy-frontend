@@ -5,6 +5,7 @@ import { ChevronRightIcon, CircleHelpIcon, UserMinusIcon } from "@/components/ui
 import { LanguagePreference } from "./LanguagePreference";
 import { LogoutButton } from "./LogoutButton";
 import { ProfileCard } from "./ProfileCard";
+import type { UserType } from "@/lib/auth/types";
 
 const UNAVAILABLE_MENU_ITEMS = [
   { messageKey: "helpCenter", Icon: CircleHelpIcon },
@@ -12,10 +13,11 @@ const UNAVAILABLE_MENU_ITEMS = [
 ] as const;
 
 interface MyPageContentProps {
-  backHref: "/explore" | "/dashboard";
+  backHref: "/" | "/dashboard";
+  userType: UserType;
 }
 
-export function MyPageContent({ backHref }: Readonly<MyPageContentProps>) {
+export function MyPageContent({ backHref, userType }: Readonly<MyPageContentProps>) {
   const t = useTranslations("MyPage");
   const tCommon = useTranslations("Common");
 
@@ -55,7 +57,7 @@ export function MyPageContent({ backHref }: Readonly<MyPageContentProps>) {
               <p className="mt-2 text-sm leading-6 text-muted">{t("accountSettingsDescription")}</p>
             </div>
             <div className="mt-8">
-              <LogoutButton />
+              <LogoutButton userType={userType} />
             </div>
           </div>
         </main>

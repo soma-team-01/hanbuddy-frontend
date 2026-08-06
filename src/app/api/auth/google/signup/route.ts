@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendBackendSetCookies, createProxyErrorResponse, postBackend } from "@/lib/auth/backend";
 import {
   AUTH_COOKIES,
+  clearAuthenticatedSessionCookies,
+  clearAuthStatusReasonCookie,
   clearSignupCookies,
+  setAuthStatusReasonCookie,
   setAuthenticatedSessionCookies,
 } from "@/lib/auth/cookies";
 import type { GoogleLoginResponse, GoogleSignupRequest } from "@/lib/auth/types";
@@ -35,11 +38,21 @@ export async function POST(request: NextRequest) {
     );
 
     const response = NextResponse.json(backend.payload, { status: backend.status });
-    appendBackendSetCookies(response, backend.setCookies);
-
     if (backend.payload.isSuccess) {
-      setAuthenticatedSessionCookies(response, backend.payload.result);
+      const result = backend.payload.result;
+      const isActive = result.authStatus === "ACTIVE" && result.accessToken && result.userType;
+
+      if (isActive) {
+        setAuthenticatedSessionCookies(response, result);
+        clearAuthStatusReasonCookie(response);
+      } else {
+        clearAuthenticatedSessionCookies(response);
+        setAuthStatusReasonCookie(response, result.statusReason);
+      }
       clearSignupCookies(response);
+      if (isActive) {
+        appendBackendSetCookies(response, backend.setCookies);
+      }
     }
 
     return response;

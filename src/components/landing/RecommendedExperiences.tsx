@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ActivityCard } from "@/components/ui/ActivityCard";
+import { CompassIcon, MapIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
@@ -43,7 +44,18 @@ export function RecommendedExperiences() {
     );
   }
 
-  if (activitiesQuery.error || !activitiesQuery.data?.length) return null;
+  if (activitiesQuery.error) {
+    return (
+      <RecommendedState
+        kind="error"
+        onRetry={() => {
+          void activitiesQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  if (!activitiesQuery.data?.length) return <RecommendedState kind="empty" />;
 
   const activities = activitiesQuery.data
     .slice(0, RECOMMENDED_LIMIT)
@@ -79,6 +91,55 @@ export function RecommendedExperiences() {
               <ActivityCard activity={activity} eagerImage={index === 0} />
             </Link>
           ))}
+        </div>
+      </PageContainer>
+    </section>
+  );
+}
+
+interface RecommendedStateProps {
+  readonly kind: "empty" | "error";
+  readonly onRetry?: () => void;
+}
+
+function RecommendedState({ kind, onRetry }: RecommendedStateProps) {
+  const t = useTranslations("Landing");
+  const isError = kind === "error";
+  const Icon = isError ? CompassIcon : MapIcon;
+
+  return (
+    <section
+      aria-labelledby="recommended-title"
+      className="border-t border-line-soft bg-canvas-soft py-12 md:py-16"
+    >
+      <PageContainer>
+        <RecommendedHeading />
+        <div
+          role={isError ? "alert" : undefined}
+          className="mt-8 flex min-h-64 flex-col items-center justify-center rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-10 text-center shadow-[0_14px_35px_rgba(61,45,43,0.05)]"
+        >
+          <span
+            aria-hidden
+            data-testid={`recommended-${kind}-icon`}
+            className="flex size-20 items-center justify-center rounded-full bg-primary-soft text-primary"
+          >
+            <Icon className="size-9" />
+          </span>
+          <h3 className="mt-5 font-display text-xl font-bold text-ink sm:text-2xl">
+            {t(`recommended.${kind}Title`)}
+          </h3>
+          <p className="mt-2 max-w-md text-sm leading-6 text-muted sm:text-base">
+            {t(`recommended.${kind}Description`)}
+          </p>
+          {isError ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="motion-press mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {t("recommended.retry")}
+            </button>
+          ) : null}
         </div>
       </PageContainer>
     </section>

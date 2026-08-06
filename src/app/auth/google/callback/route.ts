@@ -3,8 +3,11 @@ import { appendBackendSetCookies, postBackend } from "@/lib/auth/backend";
 import {
   AUTH_COOKIES,
   SIGNUP_COOKIE_OPTIONS,
+  clearAuthenticatedSessionCookies,
+  clearAuthStatusReasonCookie,
   clearSignupCookies,
   encodeGoogleProfile,
+  setAuthStatusReasonCookie,
   setAuthenticatedSessionCookies,
 } from "@/lib/auth/cookies";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
@@ -49,14 +52,16 @@ export async function GET(request: NextRequest) {
     const adminIntent = isAdminIntent(request);
     const response = adminIntent
       ? createAdminRedirect(request, result)
-      : result.registered
-        ? createAuthenticatedRedirect(request, result)
-        : createOnboardingRedirect(request, result);
+      : createAuthStatusRedirect(request, result);
 
     response.cookies.delete(AUTH_COOKIES.oauthState);
     response.cookies.delete(AUTH_COOKIES.oauthLocale);
     response.cookies.delete(AUTH_COOKIES.oauthIntent);
-    if (adminIntent ? hasUsableAdminLoginResult(result) : hasUsableGoogleLoginResult(result)) {
+    if (
+      adminIntent
+        ? hasUsableAdminLoginResult(result)
+        : result.authStatus === "ACTIVE" && result.accessToken && result.userType
+    ) {
       appendBackendSetCookies(response, backend.setCookies);
     }
     return response;
@@ -66,7 +71,12 @@ export async function GET(request: NextRequest) {
 }
 
 function hasUsableAdminLoginResult(result: GoogleLoginResponse) {
-  return Boolean(result.registered && result.accessToken && result.userType === "ADMIN");
+  return Boolean(
+    result.registered &&
+    result.authStatus === "ACTIVE" &&
+    result.accessToken &&
+    result.userType === "ADMIN",
+  );
 }
 
 function isAdminIntent(request: NextRequest) {
@@ -74,25 +84,33 @@ function isAdminIntent(request: NextRequest) {
 }
 
 function createAdminRedirect(request: NextRequest, result: GoogleLoginResponse) {
-  if (!result.registered) {
+  if (!result.registered || result.authStatus === "ONBOARDING_REQUIRED") {
     return redirectToAdminLoginWithError(request, "adminAccountRequired");
   }
-  if (!result.accessToken || result.userType !== "ADMIN") {
+  if (result.authStatus !== "ACTIVE" || !result.accessToken || result.userType !== "ADMIN") {
     return redirectToAdminLoginWithError(request, "adminOnly");
   }
 
   const response = NextResponse.redirect(new URL("/admin/buddies", request.url));
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
+  clearAuthStatusReasonCookie(response);
   return response;
 }
 
-function hasUsableGoogleLoginResult(result: GoogleLoginResponse) {
-  if (result.registered) {
-    return Boolean(result.accessToken && result.userType);
+function createAuthStatusRedirect(request: NextRequest, result: GoogleLoginResponse) {
+  switch (result.authStatus) {
+    case "ACTIVE":
+      return createAuthenticatedRedirect(request, result);
+    case "ONBOARDING_REQUIRED":
+      return createOnboardingRedirect(request, result);
+    case "PENDING_APPROVAL":
+    case "REJECTED":
+    case "SUSPENDED":
+      return createInactiveAccountRedirect(request, result);
+    default:
+      return redirectToLoginWithError(request, "invalidLoginResponse");
   }
-
-  return Boolean(result.signupToken);
 }
 
 function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginResponse) {
@@ -101,19 +119,26 @@ function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginRe
   }
 
   const response = NextResponse.redirect(
-    createLocalizedUrl(request, result.userType === "BUDDY" ? "/dashboard" : "/explore"),
+    createLocalizedUrl(request, result.userType === "BUDDY" ? "/dashboard" : "/"),
   );
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
+  clearAuthStatusReasonCookie(response);
   return response;
 }
 
 function createOnboardingRedirect(request: NextRequest, result: GoogleLoginResponse) {
-  if (!result.signupToken) {
+  if (result.registered || !result.signupToken) {
     return redirectToLoginWithError(request, "missingSignupToken");
   }
 
-  const response = NextResponse.redirect(createLocalizedUrl(request, "/onboarding"));
+  const onboardingPath =
+    request.cookies.get(AUTH_COOKIES.oauthIntent)?.value === "buddy"
+      ? "/buddy/onboarding"
+      : "/onboarding";
+  const response = NextResponse.redirect(createLocalizedUrl(request, onboardingPath));
+  clearAuthenticatedSessionCookies(response);
+  clearAuthStatusReasonCookie(response);
   response.cookies.set(AUTH_COOKIES.signupToken, result.signupToken, SIGNUP_COOKIE_OPTIONS);
   if (result.googleProfile) {
     response.cookies.set(
@@ -122,6 +147,20 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
       SIGNUP_COOKIE_OPTIONS,
     );
   }
+  return response;
+}
+
+function createInactiveAccountRedirect(request: NextRequest, result: GoogleLoginResponse) {
+  if (!result.registered || !result.userType) {
+    return redirectToLoginWithError(request, "invalidLoginResponse");
+  }
+
+  const statusUrl = createLocalizedUrl(request, "/buddy/auth/status");
+  statusUrl.searchParams.set("status", result.authStatus);
+  const response = NextResponse.redirect(statusUrl);
+  clearAuthenticatedSessionCookies(response);
+  clearSignupCookies(response);
+  setAuthStatusReasonCookie(response, result.statusReason);
   return response;
 }
 

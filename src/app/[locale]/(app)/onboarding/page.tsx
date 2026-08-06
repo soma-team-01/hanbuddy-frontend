@@ -32,5 +32,5 @@ export default async function ProfileSetupPage() {
   const cookieStore = await cookies();
   const googleProfile = decodeGoogleProfile(cookieStore.get(AUTH_COOKIES.googleProfile)?.value);
 
-  return <OnboardingForm googleProfile={googleProfile} />;
+  return <OnboardingForm userType="TOURIST" googleProfile={googleProfile} />;
 }

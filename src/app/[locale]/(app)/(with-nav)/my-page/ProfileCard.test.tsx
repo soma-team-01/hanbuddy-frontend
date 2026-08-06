@@ -36,12 +36,12 @@ describe("ProfileCard", () => {
 
     renderWithQueryClient(<ProfileCard />);
 
-    expect(await screen.findByText("Sarah Jenkins")).toBeInTheDocument();
+    expect(await screen.findByText("Sarah")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Edit Profile/ })).toHaveAttribute(
       "href",
       "/en/my-page/edit",
     );
-    expect(screen.getByAltText("Sarah Jenkins")).toHaveAttribute("loading", "eager");
+    expect(screen.getByAltText("Sarah")).toHaveAttribute("loading", "eager");
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -89,11 +89,11 @@ describe("ProfileCard", () => {
     const queryClient = createQueryClient();
     const firstRender = renderWithQueryClient(<ProfileCard />, { queryClient });
 
-    expect(await screen.findByText("Sarah Jenkins")).toBeInTheDocument();
+    expect(await screen.findByText("Sarah")).toBeInTheDocument();
     firstRender.unmount();
     renderWithQueryClient(<ProfileCard />, { queryClient });
 
-    expect(await screen.findByText("Sarah Jenkins")).toBeInTheDocument();
+    expect(await screen.findByText("Sarah")).toBeInTheDocument();
     expect(mockedGetMyProfile).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appendBackendSetCookies, createProxyErrorResponse, postBackend } from "@/lib/auth/backend";
-import { clearAuthenticatedSessionCookies, clearSignupCookies } from "@/lib/auth/cookies";
+import {
+  clearAuthenticatedSessionCookies,
+  clearAuthStatusReasonCookie,
+  clearSignupCookies,
+} from "@/lib/auth/cookies";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +16,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(backend.payload, { status: backend.status });
     appendBackendSetCookies(response, backend.setCookies);
     clearAuthenticatedSessionCookies(response);
+    clearAuthStatusReasonCookie(response);
     clearSignupCookies(response);
     return response;
   } catch {
@@ -22,6 +27,7 @@ export async function POST(request: NextRequest) {
       },
     );
     clearAuthenticatedSessionCookies(response);
+    clearAuthStatusReasonCookie(response);
     clearSignupCookies(response);
     return response;
   }

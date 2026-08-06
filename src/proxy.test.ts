@@ -42,7 +42,7 @@ describe("route access proxy", () => {
   });
 
   it.each([
-    ["TOURIST", "/dashboard", "/explore"],
+    ["TOURIST", "/dashboard", ""],
     ["BUDDY", "/activities/1/book", "/dashboard"],
   ] as const)("redirects %s away from %s", async (userType, pathname, homePath) => {
     const response = await runProxy(pathname, {
@@ -150,7 +150,7 @@ describe("route access proxy", () => {
   });
 
   it.each([
-    ["TOURIST", "/ko/dashboard", "/ko/explore"],
+    ["TOURIST", "/ko/dashboard", "/ko"],
     ["BUDDY", "/en/activities/1/book", "/en/dashboard"],
   ] as const)(
     "preserves locale when redirecting %s away from %s",

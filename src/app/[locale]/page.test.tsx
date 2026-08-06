@@ -62,25 +62,6 @@ describe("LandingPage", () => {
   });
 
   it.each([
-    ["en", "Email HanBuddy", "Open HanBuddy on Instagram"],
-    ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Instagram 열기"],
-  ] as const)(
-    "connects the footer contact icons for %s",
-    async (locale, emailLabel, instagramLabel) => {
-      await renderLanding(locale);
-
-      expect(screen.getByRole("link", { name: emailLabel })).toHaveAttribute(
-        "href",
-        "mailto:zeroone.soma@gmail.com",
-      );
-      expect(screen.getByRole("link", { name: instagramLabel })).toHaveAttribute(
-        "href",
-        "https://www.instagram.com/hanbuddy_kr/",
-      );
-    },
-  );
-
-  it.each([
     ["en", "The moments that stay with you.", "5 out of 5 stars"],
     ["ko", "오래 기억에 남는 순간.", "별점 5점 만점에 5점"],
   ] as const)(

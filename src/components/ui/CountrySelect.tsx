@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/countries";
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "@/components/ui/icons";
@@ -15,6 +16,14 @@ interface CountrySelectProps {
   triggerClassName?: string;
 }
 
+interface PanelPosition {
+  left: number;
+  width: number;
+  maxHeight: number;
+  top?: number;
+  bottom?: number;
+}
+
 export function CountrySelect({
   value,
   onChange,
@@ -27,6 +36,7 @@ export function CountrySelect({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [panelPosition, setPanelPosition] = useState<PanelPosition | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const activeOptionRef = useRef<HTMLLIElement>(null);
@@ -65,9 +75,51 @@ export function CountrySelect({
     );
   }, [query, display, localizedCountries]);
 
+  const updatePanelPosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+
+    const viewportPadding = 8;
+    const panelGap = 8;
+    const triggerRect = trigger.getBoundingClientRect();
+    const availableWidth = Math.max(0, window.innerWidth - viewportPadding * 2);
+    const preferredWidth = display === "dialCode" ? 288 : Math.max(triggerRect.width, 256);
+    const width = Math.min(preferredWidth, availableWidth);
+    const left = Math.min(
+      Math.max(viewportPadding, triggerRect.left),
+      Math.max(viewportPadding, window.innerWidth - width - viewportPadding),
+    );
+    const availableBelow = window.innerHeight - triggerRect.bottom - panelGap - viewportPadding;
+    const availableAbove = triggerRect.top - panelGap - viewportPadding;
+    const opensAbove = availableBelow < 240 && availableAbove > availableBelow;
+    const availableHeight = opensAbove ? availableAbove : availableBelow;
+    const maxHeight = Math.max(96, Math.min(320, availableHeight));
+
+    setPanelPosition({
+      left,
+      width,
+      maxHeight,
+      ...(opensAbove
+        ? { bottom: window.innerHeight - triggerRect.top + panelGap }
+        : { top: triggerRect.bottom + panelGap }),
+    });
+  }, [display]);
+
   useEffect(() => {
     if (isOpen) searchRef.current?.focus();
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    updatePanelPosition();
+    window.addEventListener("resize", updatePanelPosition);
+    window.addEventListener("scroll", updatePanelPosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePanelPosition);
+      window.removeEventListener("scroll", updatePanelPosition, true);
+    };
+  }, [isOpen, updatePanelPosition]);
 
   useEffect(() => {
     activeOptionRef.current?.scrollIntoView({ block: "nearest" });
@@ -76,11 +128,13 @@ export function CountrySelect({
   function open() {
     setQuery("");
     setActiveIndex(0);
+    updatePanelPosition();
     setIsOpen(true);
   }
 
   function close() {
     setIsOpen(false);
+    setPanelPosition(null);
     // 패널이 닫히면 검색 input이 언마운트되므로 포커스를 트리거로 복귀시킨다
     triggerRef.current?.focus();
   }
@@ -91,6 +145,8 @@ export function CountrySelect({
   }
 
   function handleSearchKeyDown(e: React.KeyboardEvent) {
+    if (e.nativeEvent.isComposing) return;
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
@@ -114,7 +170,7 @@ export function CountrySelect({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-controls={isOpen ? listboxId : undefined}
-        onClick={() => (isOpen ? setIsOpen(false) : open())}
+        onClick={() => (isOpen ? close() : open())}
         className={
           triggerClassName ??
           "flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong"
@@ -133,78 +189,95 @@ export function CountrySelect({
         <ChevronDownIcon className="size-4 shrink-0 text-ink" />
       </button>
 
-      {isOpen && (
-        <>
-          {/* 바깥 클릭 시 닫기용 투명 오버레이 */}
-          <div className="fixed inset-0 z-10" onClick={close} aria-hidden />
-          <div
-            className={`absolute left-0 z-20 mt-2 flex max-h-80 flex-col overflow-hidden rounded-xl border border-line-soft bg-panel shadow-xl ${
-              display === "dialCode" ? "w-72" : "w-full min-w-64"
-            }`}
-          >
-            <div className="flex items-center gap-2 border-b border-line-soft px-3 py-2.5">
-              <SearchIcon className="size-4 shrink-0 text-muted" />
-              <input
-                ref={searchRef}
-                type="text"
-                value={query}
-                placeholder={t("search")}
-                aria-label={t("search")}
-                role="combobox"
-                aria-expanded="true"
-                aria-controls={listboxId}
-                aria-activedescendant={
-                  filtered[activeIndex] ? `${listboxId}-${filtered[activeIndex].code}` : undefined
-                }
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setActiveIndex(0);
-                }}
-                onKeyDown={handleSearchKeyDown}
-                className="w-full bg-transparent text-base text-ink outline-none placeholder:text-muted/70"
+      {isOpen && panelPosition
+        ? createPortal(
+            <>
+              {/* 포털로 렌더링해 상위 overflow 컨테이너에 잘리지 않게 한다. */}
+              <div
+                data-testid="country-select-backdrop"
+                className="fixed inset-0 z-[90]"
+                onClick={close}
+                aria-hidden
               />
-            </div>
-            <ul id={listboxId} role="listbox" aria-label={ariaLabel} className="overflow-y-auto">
-              {filtered.map((country, index) => {
-                const isSelected = country.code === value;
-                const isActive = index === activeIndex;
-                return (
-                  <li
-                    key={country.code}
-                    id={`${listboxId}-${country.code}`}
-                    ref={isActive ? activeOptionRef : undefined}
-                    role="option"
-                    aria-selected={isSelected}
-                  >
-                    <button
-                      type="button"
-                      // aria-activedescendant 패턴: 포커스는 검색 input이 유지하고 옵션은 탭 순서에서 제외
-                      tabIndex={-1}
-                      onClick={() => select(country.code)}
-                      onMouseMove={() => setActiveIndex(index)}
-                      className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${
-                        isActive ? "bg-primary-soft" : ""
-                      }`}
-                    >
-                      <span aria-hidden>{country.flag}</span>
-                      <span className="min-w-0 flex-1 truncate text-base text-ink">
-                        {country.localizedName}
-                      </span>
-                      {display === "dialCode" && (
-                        <span className="shrink-0 text-sm text-muted">{country.dialCode}</span>
-                      )}
-                      {isSelected && <CheckIcon className="size-4 shrink-0 text-primary-strong" />}
-                    </button>
-                  </li>
-                );
-              })}
-              {filtered.length === 0 && (
-                <li className="px-3 py-4 text-center text-sm text-muted">{t("noResults")}</li>
-              )}
-            </ul>
-          </div>
-        </>
-      )}
+              <div
+                data-testid="country-select-panel"
+                style={panelPosition}
+                className="fixed z-[100] flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel shadow-xl"
+              >
+                <div className="flex items-center gap-2 border-b border-line-soft px-3 py-2.5">
+                  <SearchIcon className="size-4 shrink-0 text-muted" />
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={query}
+                    placeholder={t("search")}
+                    aria-label={t("search")}
+                    role="combobox"
+                    aria-expanded="true"
+                    aria-controls={listboxId}
+                    aria-activedescendant={
+                      filtered[activeIndex]
+                        ? `${listboxId}-${filtered[activeIndex].code}`
+                        : undefined
+                    }
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      setActiveIndex(0);
+                    }}
+                    onKeyDown={handleSearchKeyDown}
+                    className="w-full bg-transparent text-base text-ink outline-none placeholder:text-muted/70"
+                  />
+                </div>
+                <ul
+                  id={listboxId}
+                  role="listbox"
+                  aria-label={ariaLabel}
+                  className="overflow-y-auto"
+                >
+                  {filtered.map((country, index) => {
+                    const isSelected = country.code === value;
+                    const isActive = index === activeIndex;
+                    return (
+                      <li
+                        key={country.code}
+                        id={`${listboxId}-${country.code}`}
+                        ref={isActive ? activeOptionRef : undefined}
+                        role="option"
+                        aria-selected={isSelected}
+                      >
+                        <button
+                          type="button"
+                          // aria-activedescendant 패턴: 포커스는 검색 input이 유지하고 옵션은 탭 순서에서 제외
+                          tabIndex={-1}
+                          onClick={() => select(country.code)}
+                          onMouseMove={() => setActiveIndex(index)}
+                          className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${
+                            isActive ? "bg-primary-soft" : ""
+                          }`}
+                        >
+                          <span aria-hidden>{country.flag}</span>
+                          <span className="min-w-0 flex-1 truncate text-base text-ink">
+                            {country.localizedName}
+                          </span>
+                          {display === "dialCode" && (
+                            <span className="shrink-0 text-sm text-muted">{country.dialCode}</span>
+                          )}
+                          {isSelected && (
+                            <CheckIcon className="size-4 shrink-0 text-primary-strong" />
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                  {filtered.length === 0 && (
+                    <li className="px-3 py-4 text-center text-sm text-muted">{t("noResults")}</li>
+                  )}
+                </ul>
+              </div>
+            </>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

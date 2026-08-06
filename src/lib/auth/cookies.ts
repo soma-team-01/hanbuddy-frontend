@@ -4,11 +4,14 @@ import type { GoogleLoginResponse, GoogleProfile } from "./types";
 export const AUTH_COOKIES = {
   oauthState: "hanbuddy_oauth_state",
   oauthLocale: "hanbuddy_oauth_locale",
+  oauthIntent: "hanbuddy_oauth_intent",
   accessToken: "hanbuddy_access_token",
+  refreshToken: "refresh_token",
   signupToken: "hanbuddy_signup_token",
   googleProfile: "hanbuddy_google_profile",
   userId: "hanbuddy_user_id",
   userType: "hanbuddy_user_type",
+  statusReason: "hanbuddy_auth_status_reason",
 } as const;
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -49,8 +52,27 @@ export function setAuthenticatedSessionCookies(
 
 export function clearAuthenticatedSessionCookies(response: NextResponse) {
   response.cookies.delete(AUTH_COOKIES.accessToken);
+  response.cookies.delete(AUTH_COOKIES.refreshToken);
   response.cookies.delete(AUTH_COOKIES.userId);
   response.cookies.delete(AUTH_COOKIES.userType);
+}
+
+export function setAuthStatusReasonCookie(response: NextResponse, reason?: string) {
+  const normalizedReason = reason?.trim();
+  if (normalizedReason) {
+    response.cookies.set(
+      AUTH_COOKIES.statusReason,
+      normalizedReason.slice(0, 500),
+      SIGNUP_COOKIE_OPTIONS,
+    );
+    return;
+  }
+
+  response.cookies.delete(AUTH_COOKIES.statusReason);
+}
+
+export function clearAuthStatusReasonCookie(response: NextResponse) {
+  response.cookies.delete(AUTH_COOKIES.statusReason);
 }
 
 export function clearSignupCookies(response: NextResponse) {

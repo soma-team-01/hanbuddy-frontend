@@ -23,6 +23,166 @@
 
   --font-sans: var(--font-dm-sans), var(--font-noto-sans-kr), system-ui, sans-serif;
   --font-display: var(--font-plus-jakarta-sans), var(--font-noto-sans-kr), system-ui, sans-serif;
+  --font-hand: var(--font-caveat), var(--font-noto-sans-kr), cursive;
+}
+
+.login-polaroid {
+  position: relative;
+  width: 100%;
+  max-width: 205px;
+  justify-self: center;
+  background: #ffffff;
+  padding: 8px 8px 34px;
+  box-shadow:
+    0 6px 18px rgb(38 27 24 / 15%),
+    0 2px 4px rgb(38 27 24 / 8%);
+  transition:
+    transform 250ms ease,
+    box-shadow 250ms ease;
+}
+
+.login-polaroid-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.login-polaroid-tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 1;
+  width: 64px;
+  height: 20px;
+  background: rgb(233 205 160 / 75%);
+  box-shadow: 0 1px 3px rgb(38 27 24 / 12%);
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+.login-polaroid figcaption {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  left: 0;
+  overflow: hidden;
+  padding-inline: 4px;
+  color: #4a3f3a;
+  font-family: var(--font-caveat), var(--font-noto-sans-kr), cursive;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login-polaroid-1 {
+  transform: rotate(-4deg);
+}
+
+.login-polaroid-2 {
+  transform: translateY(22px) rotate(3deg);
+}
+
+.login-polaroid-2 .login-polaroid-tape {
+  background: rgb(214 197 191 / 80%);
+  transform: translateX(-50%) rotate(3deg);
+}
+
+.login-polaroid-3 {
+  margin-top: 18px;
+  transform: translateY(-6px) rotate(3deg);
+}
+
+.login-polaroid-3 .login-polaroid-tape {
+  background: rgb(255 240 236 / 95%);
+  transform: translateX(-50%) rotate(-2deg);
+}
+
+.login-polaroid-4 {
+  margin-top: 18px;
+  transform: translateY(14px) rotate(-3.5deg);
+}
+
+.login-polaroid-4 .login-polaroid-tape {
+  background: rgb(233 205 160 / 75%);
+  transform: translateX(-50%) rotate(2deg);
+}
+
+.login-polaroid:hover {
+  z-index: 20;
+  box-shadow: 0 16px 36px rgb(38 27 24 / 22%);
+  transform: rotate(0deg) scale(1.05);
+}
+
+@media (min-width: 1024px) {
+  .login-polaroid {
+    position: absolute;
+    width: 176px;
+    max-width: none;
+  }
+
+  .login-polaroid-1 {
+    top: 72px;
+    left: -4%;
+  }
+
+  .login-polaroid-2 {
+    top: 100px;
+    right: -4%;
+  }
+
+  .login-polaroid-3 {
+    bottom: 52px;
+    left: -4%;
+    margin-top: 0;
+  }
+
+  .login-polaroid-4 {
+    right: -4%;
+    bottom: 40px;
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .login-polaroid {
+    width: 232px;
+    padding: 9px 9px 38px;
+  }
+
+  .login-polaroid figcaption {
+    bottom: 7px;
+    font-size: 21px;
+  }
+
+  .login-polaroid-tape {
+    width: 78px;
+    height: 24px;
+  }
+
+  .login-polaroid-1 {
+    left: -2%;
+  }
+
+  .login-polaroid-2 {
+    right: -2%;
+  }
+
+  .login-polaroid-3 {
+    left: -2%;
+  }
+
+  .login-polaroid-4 {
+    right: -2%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-polaroid {
+    transition: none;
+  }
 }
 
 :root {

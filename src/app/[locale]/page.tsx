@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
-import { InstagramIcon, MailIcon } from "@/components/ui/icons";
+import { MailIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -265,40 +264,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
         </PageContainer>
       </section>
-
-      <footer className="border-t border-line-soft bg-canvas-soft py-6 text-sm text-muted">
-        <PageContainer className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/" aria-label="HanBuddy" className="flex items-center gap-2">
-            <Image
-              src="/images/brand/logo-borderless.webp"
-              alt=""
-              width={28}
-              height={28}
-              className="size-7"
-            />
-            <span className="font-display font-bold text-ink">HanBuddy</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <a
-              href={`mailto:${CONTACT_DETAILS.email}`}
-              aria-label={t("contact.emailIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
-            >
-              <MailIcon className="size-5" />
-            </a>
-            <a
-              href={CONTACT_DETAILS.instagramUrl}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={t("contact.instagramIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
-            >
-              <InstagramIcon className="size-5" />
-            </a>
-          </div>
-        </PageContainer>
-      </footer>
     </main>
   );
 }

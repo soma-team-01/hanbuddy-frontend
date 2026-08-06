@@ -9,6 +9,8 @@
   "ApiErrors": {
     "authenticationRequired": "Please sign in again to continue.",
     "googleAuthenticationInvalid": "Google authentication could not be verified. Please try signing in again.",
+    "signupAgreementsInvalid": "Review the signup agreements and try again.",
+    "signupAgreementsOutdated": "The signup agreements have been updated. Review them again to continue.",
     "emailAlreadyRegistered": "This email is already registered. Please sign in instead.",
     "validationRequired": "Check the required fields and try again.",
     "validationFormat": "Check the format of the entered information.",
@@ -50,6 +52,9 @@
     "closeMenu": "Close menu",
     "changeLanguageToKorean": "Switch to Korean",
     "changeLanguageToEnglish": "Switch to English",
+    "selectLanguage": "Select language, current language: {language}",
+    "languageMenu": "Language selection",
+    "language": "Language",
     "home": "Home",
     "explore": "Explore",
     "applications": "My Applications",
@@ -60,7 +65,10 @@
     "createActivity": "Create Activity",
     "createActivityInSidebar": "Create Activity from sidebar",
     "myPage": "My Page",
-    "login": "Log in"
+    "hostAnExperience": "Host an experience",
+    "login": "Log in",
+    "account": "Account",
+    "openAccount": "Open my account"
   },
   "Accessibility": {
     "goBack": "Go back",
@@ -119,7 +127,12 @@
       "title": "Recommended experiences",
       "description": "Find an activity that matches the way you want to experience Korea.",
       "viewAll": "View all experiences",
-      "loading": "Loading recommended experiences..."
+      "loading": "Loading recommended experiences...",
+      "emptyTitle": "No experiences available yet.",
+      "emptyDescription": "Local buddies are preparing something special. Check back soon!",
+      "errorTitle": "We couldn't load experiences right now.",
+      "errorDescription": "There was a temporary connection problem. Please try again.",
+      "retry": "Try again"
     },
     "visuals": {
       "ariaLabel": "Real HanBuddy moments in Seoul",
@@ -168,16 +181,128 @@
       "instagramIconLabel": "Open HanBuddy on Instagram"
     }
   },
+  "BuddyHosting": {
+    "metadataTitle": "Become a buddy host | HanBuddy",
+    "metadataDescription": "Turn the Korea you know and love into a personal experience for travelers with HanBuddy.",
+    "hero": {
+      "eyebrow": "Host with HanBuddy",
+      "title": "Your everyday Korea can become someone’s favorite memory.",
+      "description": "Share the places, flavors, and moments you genuinely love. Create a small, personal experience and help travelers discover Korea through a local point of view.",
+      "primaryCta": "Start as a buddy",
+      "secondaryCta": "See how it works",
+      "imageAlt": "A local buddy introducing Korean market food to a small group of travelers in Seoul"
+    },
+    "benefits": {
+      "eyebrow": "Why host with HanBuddy",
+      "title": "You already know the Korea travelers are looking for.",
+      "description": "You do not need to be a professional guide. Start with a corner of Korea you care about and a story you want to share.",
+      "items": {
+        "share": {
+          "title": "Share what feels truly local",
+          "description": "Turn your favorite neighborhood, food, hobby, or culture into an experience only a local could create."
+        },
+        "connect": {
+          "title": "Meet people across cultures",
+          "description": "Welcome curious travelers, exchange perspectives, and create a moment that feels personal to everyone."
+        },
+        "schedule": {
+          "title": "Host in your own rhythm",
+          "description": "Create the experience you want and open schedules that work naturally with your day-to-day life."
+        }
+      }
+    },
+    "ideas": {
+      "eyebrow": "Make it yours",
+      "title": "The best experience starts with something you love.",
+      "description": "A memorable activity can be simple. What matters is your local perspective and the way you help guests feel included.",
+      "items": {
+        "baseball": {
+          "title": "Cheer like a local",
+          "description": "Teach the chants, order stadium favorites, and share the energy of a Korean baseball night.",
+          "imageAlt": "Travelers and local buddies enjoying a Korean baseball game together"
+        },
+        "picnic": {
+          "title": "Share your favorite Seoul evening",
+          "description": "Plan a Han River picnic, neighborhood walk, or sunset route with the details only locals know.",
+          "imageAlt": "Friends enjoying a picnic together beside the Han River"
+        },
+        "food": {
+          "title": "Tell the story behind the food",
+          "description": "Introduce a market, café, or comfort food through the memories and customs that make it meaningful.",
+          "imageAlt": "A local buddy sharing Korean market food with travelers"
+        }
+      }
+    },
+    "steps": {
+      "eyebrow": "How it works",
+      "title": "From a local idea to a hosted experience.",
+      "description": "Build your buddy profile, shape your activity, and manage the experience from one place.",
+      "items": {
+        "profile": {
+          "title": "Create your buddy profile",
+          "description": "Tell travelers who you are and how they can stay in touch with you."
+        },
+        "design": {
+          "title": "Design your experience",
+          "description": "Add the story, meeting place, price, photos, and details guests need to decide."
+        },
+        "publish": {
+          "title": "Open a schedule",
+          "description": "Choose the dates and capacity that work for you, then make the activity available to travelers."
+        },
+        "host": {
+          "title": "Meet and host",
+          "description": "Review applications, welcome your guests, and create a Korea story worth remembering."
+        }
+      }
+    },
+    "support": {
+      "eyebrow": "Your buddy workspace",
+      "title": "Host with clarity from the first idea to the final meetup.",
+      "description": "HanBuddy keeps the practical parts together so you can focus on the people and the experience itself.",
+      "items": {
+        "manage": {
+          "title": "Keep activities and schedules organized",
+          "description": "Create activities, check their status, and manage upcoming schedules in your buddy workspace."
+        },
+        "communicate": {
+          "title": "Know who is joining",
+          "description": "Review guest applications and the details you need before the experience begins."
+        },
+        "grow": {
+          "title": "Improve every time you host",
+          "description": "Update your activity as you learn what helps guests feel more welcome and connected."
+        }
+      }
+    },
+    "finalCta": {
+      "title": "What part of Korea would you love to share?",
+      "description": "Start your buddy account and turn a place, taste, or everyday passion into a HanBuddy experience.",
+      "button": "Start as a buddy"
+    }
+  },
   "Auth": {
     "metadataTitle": "Log in | HanBuddy",
-    "metadataDescription": "Log in to HanBuddy and find authentic local experiences in Korea.",
-    "welcome": "Welcome to HanBuddy",
-    "introduction": "Tell us about yourself to find the perfect local experience.",
+    "metadataDescription": "Meet local buddies and experience Korea beyond the itinerary.",
+    "eyebrow": "Welcome to HanBuddy",
+    "welcome": "Experience Korea like a local.",
+    "introduction": "Meet local buddies and discover the moments that make Korea feel like yours.",
     "continueWithGoogle": "Continue with Google",
+    "legalNoticeStart": "By continuing, you agree to HanBuddy's",
+    "legalNoticeMiddle": "and",
+    "legalNoticeEnd": ".",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "helpCenter": "Help Center",
     "copyright": "© 2026 HanBuddy. All rights reserved.",
+    "visualAlt": "HanBuddy guests and buddies smiling together at a baseball game",
+    "visualCaption": "new friends, Jul 26 ⚾",
+    "visualRightAlt": "Guests and buddies smiling together in the baseball stands",
+    "visualRightCaption": "first baseball night ⚾",
+    "visualBottomLeftAlt": "Banpo Bridge rainbow fountain lighting up the Han River",
+    "visualBottomLeftCaption": "Banpo rainbow 🌈",
+    "visualBottomRightAlt": "Fried chicken, noodles, and drinks shared by the Han River",
+    "visualBottomRightCaption": "chimaek by the river 🍗",
     "errors": {
       "googleCancelled": "Google sign-in was cancelled.",
       "missingCode": "Google did not return an authorization code.",
@@ -190,53 +315,123 @@
       "unknown": "Something went wrong during sign-in. Please try again."
     }
   },
+  "BuddyAuth": {
+    "trigger": "Start as a buddy",
+    "loginTrigger": "Log in",
+    "close": "Close buddy sign in",
+    "eyebrow": "Host with HanBuddy",
+    "title": "Start your buddy journey",
+    "description": "Use Google to create your buddy account and turn the Korea you love into a welcoming local experience.",
+    "continueWithGoogle": "Continue as a buddy with Google"
+  },
   "Onboarding": {
-    "title": "Complete your profile",
+    "title": "Complete your traveler profile",
     "metadataTitle": "Complete your profile | HanBuddy",
-    "metadataDescription": "Choose your HanBuddy role and complete your profile.",
-    "roleHeading": "I am a...",
-    "roles": {
-      "tourist": "Tourist",
-      "buddy": "Buddy"
-    },
-    "personalInformation": "Personal Information",
+    "metadataDescription": "Complete your traveler profile and start exploring Korea with HanBuddy.",
+    "eyebrow": "Welcome, traveler",
+    "headline": "A few details, then Korea is yours to explore.",
+    "description": "Help local buddies welcome you well and reach you when an experience is confirmed.",
+    "displayName": "Nickname",
+    "personalInformation": "About you",
     "nationality": "Nationality",
-    "age": "Age",
-    "agePlaceholder": "e.g. 25",
-    "contactMethods": "Contact Methods",
+    "birthDate": "Date of birth",
+    "contactMethods": "How should buddies reach you?",
+    "contactDescription": "Choose the messenger you check most often.",
     "preferredMessagingApp": "Preferred Messaging App",
     "addProfilePhoto": "Add profile photo",
+    "profilePhotoHint": "Profile photo",
+    "profilePhotoOptional": "Choose a clear face photo so your buddy can recognize you when you meet.",
     "selectedProfilePhotoPreview": "Selected profile photo preview",
-    "googleProfile": "Google profile",
-    "profileFor": "{name} profile",
+    "defaultProfilePhoto": "HanBuddy default profile image",
+    "steps": {
+      "progress": "Step {current} of {total}",
+      "aboutYou": "About you",
+      "aboutYouDescription": "Add the details your buddy will use to welcome you.",
+      "contact": "Contact",
+      "agreements": "Agreements",
+      "continue": "Next",
+      "back": "Back"
+    },
+    "agreements": {
+      "title": "Agreements",
+      "description": "Review the required items before creating your account.",
+      "agreeAll": "Agree to all",
+      "required": "Required",
+      "optional": "Optional",
+      "items": {
+        "adultConfirmation": "I confirm that I am 19 years or older.",
+        "termsOfService": "HanBuddy Terms of Service",
+        "privacyCollectionUse": "Personal information collection and use",
+        "buddyPrivacyCollectionUse": "Personal information collection, use, and buddy application review",
+        "buddyOperationTerms": "Buddy operation terms",
+        "buddyCommissionPolicy": "Commission and settlement policy",
+        "buddyProfileContactProvision": "Profile visibility and contact sharing with confirmed guests",
+        "marketingCommunication": "Receive event and marketing updates"
+      }
+    },
     "validation": {
       "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
       "imageTooLarge": "Profile photos must be 5MB or smaller.",
+      "displayNameInvalid": "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
       "nationalityRequired": "Please select a nationality.",
-      "ageInvalid": "Enter an age from 0 to 150.",
-      "contactInvalid": "Enter a contact ID or number with at least 2 characters."
+      "birthDateInvalid": "Enter a valid date of birth for an age between 19 and 120.",
+      "contactInvalid": "Enter a valid contact ID or phone number for the selected method.",
+      "agreementsRequired": "Agree to all required items to continue."
     },
     "profileUploadFailed": "Could not upload the profile photo. Please try again.",
     "signupFailed": "Could not complete registration. Please try again.",
     "serverUnavailable": "The authentication server is unavailable. Please try again.",
     "completing": "Completing...",
-    "completeRegistration": "Complete Registration"
+    "completeRegistration": "Sign up"
+  },
+  "BuddyOnboarding": {
+    "title": "Complete your buddy profile",
+    "metadataTitle": "Create your buddy profile | HanBuddy",
+    "metadataDescription": "Complete your buddy profile and begin hosting local experiences with HanBuddy.",
+    "eyebrow": "Welcome, future buddy",
+    "headline": "A few details, then your local story can begin.",
+    "description": "For now, tell us how guests can recognize and reach you. You can add hosting details later.",
+    "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
+    "contactMethods": "How should guests reach you?",
+    "contactDescription": "Choose the messenger you check most often.",
+    "completing": "Creating buddy account...",
+    "completeRegistration": "Sign up as a buddy"
+  },
+  "AccountStatus": {
+    "metadataTitle": "Account status | HanBuddy",
+    "metadataDescription": "Check the review status of your HanBuddy account.",
+    "pending": {
+      "title": "Buddy application under review",
+      "description": "We'll email you when the review is complete.",
+      "reviewTime": "Usually 1–3 business days"
+    },
+    "rejected": {
+      "title": "Buddy application not approved",
+      "description": "Check the reason below and contact us if you need help."
+    },
+    "suspended": {
+      "title": "Buddy account suspended",
+      "description": "Buddy features are unavailable. Contact us if you need help."
+    },
+    "reasonLabel": "Reason provided",
+    "contactHelp": "Questions? Contact <email>zeroone.soma@gmail.com</email>.",
+    "backToBuddy": "Back to buddy page"
   },
   "Profile": {
     "title": "Edit profile",
     "metadataTitle": "Edit profile | HanBuddy",
     "metadataDescription": "Update your HanBuddy profile and contact details.",
-    "fullName": "Full Name",
+    "fullName": "Nickname",
     "nationality": "Nationality",
-    "age": "Age",
+    "age": "Date of birth",
     "contactDetails": "Contact Details",
     "preferredMessagingApp": "Preferred Messaging App",
     "addProfilePhoto": "Add profile photo",
     "selectedProfilePhotoPreview": "Selected profile photo preview",
     "validation": {
-      "nameRequired": "Please enter your name.",
+      "nameRequired": "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
       "nationalityRequired": "Please select a nationality.",
-      "ageInvalid": "Enter an age from 0 to 150.",
+      "ageInvalid": "Please enter a valid date of birth.",
       "contactInvalid": "Enter a contact ID or number with at least 2 characters.",
       "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
       "imageTooLarge": "Profile photos must be 5MB or smaller."

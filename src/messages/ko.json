@@ -9,6 +9,8 @@
   "ApiErrors": {
     "authenticationRequired": "계속하려면 다시 로그인해 주세요.",
     "googleAuthenticationInvalid": "Google 인증 정보를 확인할 수 없습니다. 다시 로그인해 주세요.",
+    "signupAgreementsInvalid": "회원가입 동의 항목을 확인한 뒤 다시 시도해 주세요.",
+    "signupAgreementsOutdated": "회원가입 동의 항목이 변경되었습니다. 다시 확인하고 동의해 주세요.",
     "emailAlreadyRegistered": "이미 가입된 이메일입니다. 로그인해 주세요.",
     "validationRequired": "필수 입력 항목을 확인해 주세요.",
     "validationFormat": "입력한 정보의 형식을 확인해 주세요.",
@@ -50,6 +52,9 @@
     "closeMenu": "메뉴 닫기",
     "changeLanguageToKorean": "한국어로 변경",
     "changeLanguageToEnglish": "영어로 변경",
+    "selectLanguage": "언어 선택, 현재 언어: {language}",
+    "languageMenu": "언어 선택",
+    "language": "언어",
     "home": "홈",
     "explore": "탐색",
     "applications": "내 신청",
@@ -60,7 +65,10 @@
     "createActivity": "액티비티 만들기",
     "createActivityInSidebar": "사이드바에서 액티비티 만들기",
     "myPage": "마이페이지",
-    "login": "로그인"
+    "hostAnExperience": "호스팅하기",
+    "login": "로그인",
+    "account": "계정",
+    "openAccount": "내 계정 열기"
   },
   "Accessibility": {
     "goBack": "뒤로 가기",
@@ -119,7 +127,12 @@
       "title": "추천 액티비티",
       "description": "내가 원하는 방식으로 한국을 경험할 수 있는 활동을 찾아보세요.",
       "viewAll": "모든 액티비티 보기",
-      "loading": "추천 액티비티를 불러오는 중..."
+      "loading": "추천 액티비티를 불러오는 중...",
+      "emptyTitle": "아직 준비된 액티비티가 없어요.",
+      "emptyDescription": "로컬 버디들이 특별한 경험을 준비하고 있어요. 조금만 기다려 주세요!",
+      "errorTitle": "지금은 액티비티를 불러올 수 없어요.",
+      "errorDescription": "일시적인 연결 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+      "retry": "다시 시도"
     },
     "visuals": {
       "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",
@@ -168,16 +181,128 @@
       "instagramIconLabel": "HanBuddy Instagram 열기"
     }
   },
+  "BuddyHosting": {
+    "metadataTitle": "버디로 호스팅하기 | HanBuddy",
+    "metadataDescription": "내가 사랑하는 한국의 일상을 여행자를 위한 특별한 경험으로 만들어 보세요.",
+    "hero": {
+      "eyebrow": "HanBuddy에서 호스팅하기",
+      "title": "당신의 평범한 한국이 누군가에게는 가장 특별한 기억이 됩니다.",
+      "description": "내가 좋아하는 장소와 음식, 일상의 순간을 나눠보세요. 작고 진솔한 경험을 만들고 여행자가 현지인의 시선으로 한국을 발견하도록 도와주세요.",
+      "primaryCta": "버디로 시작하기",
+      "secondaryCta": "진행 방식 보기",
+      "imageAlt": "서울의 시장에서 현지 버디가 소규모 여행자 그룹에게 한국 음식을 소개하는 모습"
+    },
+    "benefits": {
+      "eyebrow": "HanBuddy 버디가 되어야 하는 이유",
+      "title": "여행자가 찾는 한국을 당신은 이미 알고 있어요.",
+      "description": "전문 가이드일 필요는 없습니다. 내가 아끼는 한국의 한 장면과 나누고 싶은 이야기에서 시작해 보세요.",
+      "items": {
+        "share": {
+          "title": "진짜 로컬의 일상을 나누세요",
+          "description": "좋아하는 동네, 음식, 취미, 문화를 현지인만 만들 수 있는 경험으로 바꿔보세요."
+        },
+        "connect": {
+          "title": "서로 다른 문화를 연결하세요",
+          "description": "한국이 궁금한 여행자를 만나 서로의 시선을 나누고 모두에게 특별한 순간을 만들어보세요."
+        },
+        "schedule": {
+          "title": "내 생활에 맞춰 호스팅하세요",
+          "description": "내가 원하는 경험을 만들고 일상과 자연스럽게 맞는 일정만 열어 운영할 수 있어요."
+        }
+      }
+    },
+    "ideas": {
+      "eyebrow": "나만의 경험 만들기",
+      "title": "가장 좋은 경험은 내가 좋아하는 것에서 시작됩니다.",
+      "description": "기억에 남는 활동이 거창할 필요는 없습니다. 현지인의 시선과 게스트를 자연스럽게 어울리게 하는 방식이 중요해요.",
+      "items": {
+        "baseball": {
+          "title": "현지인처럼 함께 응원하기",
+          "description": "응원가와 경기장 먹거리를 알려주며 한국 야구장의 뜨거운 분위기를 함께 나눠보세요.",
+          "imageAlt": "여행자와 현지 버디가 함께 한국 야구 경기를 즐기는 모습"
+        },
+        "picnic": {
+          "title": "내가 좋아하는 서울의 저녁 나누기",
+          "description": "한강 피크닉, 동네 산책, 노을 명소처럼 현지인만 아는 디테일을 담아보세요.",
+          "imageAlt": "한강 옆에서 친구들이 함께 피크닉을 즐기는 모습"
+        },
+        "food": {
+          "title": "음식에 담긴 이야기를 들려주기",
+          "description": "시장과 카페, 소울푸드에 담긴 추억과 문화를 여행자에게 소개해 보세요.",
+          "imageAlt": "현지 버디가 여행자에게 한국 시장 음식을 소개하는 모습"
+        }
+      }
+    },
+    "steps": {
+      "eyebrow": "진행 방식",
+      "title": "로컬의 아이디어를 실제 경험으로 만들어보세요.",
+      "description": "버디 프로필을 만들고 활동을 구성한 뒤 한 곳에서 편하게 운영할 수 있습니다.",
+      "items": {
+        "profile": {
+          "title": "버디 프로필 만들기",
+          "description": "어떤 사람인지 소개하고 여행자가 연락할 수 있는 방법을 등록하세요."
+        },
+        "design": {
+          "title": "경험 구성하기",
+          "description": "활동의 이야기와 만남 장소, 가격, 사진, 게스트에게 필요한 정보를 담아보세요."
+        },
+        "publish": {
+          "title": "일정 열기",
+          "description": "가능한 날짜와 인원을 정하고 여행자가 활동을 발견할 수 있도록 공개하세요."
+        },
+        "host": {
+          "title": "게스트 만나기",
+          "description": "신청을 확인하고 게스트를 맞이해 오래 기억할 한국의 이야기를 함께 만드세요."
+        }
+      }
+    },
+    "support": {
+      "eyebrow": "버디 워크스페이스",
+      "title": "첫 아이디어부터 마지막 만남까지 명확하게 운영하세요.",
+      "description": "HanBuddy가 운영에 필요한 정보를 한곳에 모아드리니, 버디는 사람과 경험 자체에 더 집중할 수 있습니다.",
+      "items": {
+        "manage": {
+          "title": "활동과 일정을 한눈에 관리",
+          "description": "버디 워크스페이스에서 활동을 만들고 상태를 확인하며 예정된 일정을 관리하세요."
+        },
+        "communicate": {
+          "title": "누가 참여하는지 미리 확인",
+          "description": "게스트의 신청과 경험 전에 필요한 정보를 확인할 수 있습니다."
+        },
+        "grow": {
+          "title": "호스팅할수록 더 좋은 경험으로",
+          "description": "게스트가 더 편안하게 연결될 수 있도록 배운 점을 활동에 계속 반영하세요."
+        }
+      }
+    },
+    "finalCta": {
+      "title": "당신은 어떤 한국을 나누고 싶나요?",
+      "description": "버디 계정을 시작하고 내가 좋아하는 장소와 맛, 일상의 관심사를 HanBuddy 경험으로 만들어보세요.",
+      "button": "버디로 시작하기"
+    }
+  },
   "Auth": {
     "metadataTitle": "로그인 | HanBuddy",
-    "metadataDescription": "HanBuddy에 로그인하고 한국의 진짜 로컬 경험을 찾아보세요.",
-    "welcome": "HanBuddy에 오신 것을 환영합니다",
-    "introduction": "나에게 꼭 맞는 로컬 경험을 찾을 수 있도록 정보를 알려 주세요.",
+    "metadataDescription": "현지 버디와 함께 여행 일정 너머의 한국을 경험해 보세요.",
+    "eyebrow": "HanBuddy에 오신 것을 환영해요",
+    "welcome": "현지인처럼 한국을 경험해 보세요.",
+    "introduction": "현지 버디와 만나 한국을 더 가까이, 더 나답게 경험해 보세요.",
     "continueWithGoogle": "Google로 계속하기",
+    "legalNoticeStart": "계속 진행하면 HanBuddy의",
+    "legalNoticeMiddle": "및",
+    "legalNoticeEnd": "에 동의하는 것으로 간주됩니다.",
     "privacyPolicy": "개인정보 처리방침",
     "termsOfService": "이용약관",
     "helpCenter": "고객센터",
     "copyright": "© 2026 HanBuddy. 모든 권리 보유.",
+    "visualAlt": "한버디 게스트와 버디가 야구장에서 함께 웃고 있는 모습",
+    "visualCaption": "새 친구들, 7월 26일 ⚾",
+    "visualRightAlt": "야구장 관중석에서 게스트와 버디가 함께 웃고 있는 모습",
+    "visualRightCaption": "첫 야구 직관 ⚾",
+    "visualBottomLeftAlt": "한강을 밝히는 반포대교 무지개분수",
+    "visualBottomLeftCaption": "반포 무지개분수 🌈",
+    "visualBottomRightAlt": "한강에서 즐기는 치킨과 라면, 음료",
+    "visualBottomRightCaption": "한강 치맥 🍗",
     "errors": {
       "googleCancelled": "Google 로그인이 취소되었습니다.",
       "missingCode": "Google에서 인증 코드를 받지 못했습니다.",
@@ -190,53 +315,123 @@
       "unknown": "로그인 중 문제가 발생했습니다. 다시 시도해 주세요."
     }
   },
+  "BuddyAuth": {
+    "trigger": "버디로 시작하기",
+    "loginTrigger": "로그인",
+    "close": "버디 로그인 닫기",
+    "eyebrow": "HanBuddy에서 호스팅하기",
+    "title": "버디 여정을 시작해 보세요",
+    "description": "Google 계정으로 버디 프로필을 만들고, 내가 사랑하는 한국을 따뜻한 로컬 경험으로 나눠보세요.",
+    "continueWithGoogle": "Google로 버디 시작하기"
+  },
   "Onboarding": {
-    "title": "프로필 완성하기",
+    "title": "여행자 프로필 완성하기",
     "metadataTitle": "프로필 설정 | HanBuddy",
-    "metadataDescription": "HanBuddy 역할을 선택하고 프로필을 완성하세요.",
-    "roleHeading": "역할을 선택해 주세요",
-    "roles": {
-      "tourist": "여행자",
-      "buddy": "버디"
-    },
-    "personalInformation": "개인 정보",
+    "metadataDescription": "여행자 프로필을 완성하고 HanBuddy와 함께 한국을 둘러보세요.",
+    "eyebrow": "여행자님, 반가워요",
+    "headline": "몇 가지만 알려주면, 한버디 여행 준비가 끝나요.",
+    "description": "활동이 확정되었을 때 버디가 여행자님을 잘 맞이하고 연락할 수 있도록 사용해요.",
+    "displayName": "닉네임",
+    "personalInformation": "기본 정보",
     "nationality": "국적",
-    "age": "나이",
-    "agePlaceholder": "예: 25",
-    "contactMethods": "연락 방법",
+    "birthDate": "생년월일",
+    "contactMethods": "버디가 어떻게 연락하면 될까요?",
+    "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",
     "preferredMessagingApp": "선호하는 메신저",
     "addProfilePhoto": "프로필 사진 추가",
+    "profilePhotoHint": "프로필 사진",
+    "profilePhotoOptional": "만날 때 버디가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
     "selectedProfilePhotoPreview": "선택한 프로필 사진 미리보기",
-    "googleProfile": "Google 프로필",
-    "profileFor": "{name} 프로필",
+    "defaultProfilePhoto": "한버디 기본 프로필 이미지",
+    "steps": {
+      "progress": "총 {total}단계 중 {current}단계",
+      "aboutYou": "기본 정보",
+      "aboutYouDescription": "버디가 여행자님을 맞이할 때 필요한 정보를 알려주세요.",
+      "contact": "연락 수단",
+      "agreements": "동의 항목",
+      "continue": "다음",
+      "back": "이전"
+    },
+    "agreements": {
+      "title": "동의 항목",
+      "description": "회원가입 전에 필수 항목을 확인해 주세요.",
+      "agreeAll": "전체 동의",
+      "required": "필수",
+      "optional": "선택",
+      "items": {
+        "adultConfirmation": "만 19세 이상임을 확인합니다.",
+        "termsOfService": "HanBuddy 서비스 이용약관",
+        "privacyCollectionUse": "개인정보 수집·이용",
+        "buddyPrivacyCollectionUse": "개인정보 수집·이용 및 버디 가입 심사",
+        "buddyOperationTerms": "버디 운영약관",
+        "buddyCommissionPolicy": "수수료·정산 정책",
+        "buddyProfileContactProvision": "프로필 공개 및 예약 확정자 연락처 제공",
+        "marketingCommunication": "이벤트 및 마케팅 정보 수신"
+      }
+    },
     "validation": {
       "unsupportedImageType": "JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.",
       "imageTooLarge": "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.",
+      "displayNameInvalid": "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요.",
       "nationalityRequired": "국적을 선택해 주세요.",
-      "ageInvalid": "나이는 0에서 150 사이의 숫자로 입력해 주세요.",
-      "contactInvalid": "연락처 ID 또는 번호를 2자 이상 입력해 주세요."
+      "birthDateInvalid": "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요.",
+      "contactInvalid": "선택한 연락 수단에 맞는 올바른 ID 또는 전화번호를 입력해 주세요.",
+      "agreementsRequired": "회원가입을 계속하려면 필수 항목에 모두 동의해 주세요."
     },
     "profileUploadFailed": "프로필 이미지를 업로드하지 못했습니다. 다시 시도해 주세요.",
     "signupFailed": "회원가입을 완료하지 못했습니다. 다시 시도해 주세요.",
     "serverUnavailable": "인증 서버에 연결할 수 없습니다. 다시 시도해 주세요.",
     "completing": "가입 처리 중...",
-    "completeRegistration": "가입 완료"
+    "completeRegistration": "회원가입"
+  },
+  "BuddyOnboarding": {
+    "title": "버디 프로필 완성하기",
+    "metadataTitle": "버디 프로필 만들기 | HanBuddy",
+    "metadataDescription": "버디 프로필을 완성하고 HanBuddy에서 로컬 경험 호스팅을 시작하세요.",
+    "eyebrow": "예비 버디님, 반가워요",
+    "headline": "몇 가지만 알려주면, 나만의 로컬 이야기를 시작할 수 있어요.",
+    "description": "지금은 게스트가 버디를 알아보고 연락할 수 있는 기본 정보만 알려주세요. 호스팅 정보는 나중에 추가할 수 있어요.",
+    "profilePhotoOptional": "만날 때 게스트가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
+    "contactMethods": "게스트가 어떻게 연락하면 될까요?",
+    "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",
+    "completing": "버디 계정 생성 중...",
+    "completeRegistration": "버디로 회원가입"
+  },
+  "AccountStatus": {
+    "metadataTitle": "계정 상태 | HanBuddy",
+    "metadataDescription": "HanBuddy 버디 계정의 검토 상태를 확인하세요.",
+    "pending": {
+      "title": "버디 가입 요청 검토 중",
+      "description": "검토가 끝나면 이메일로 알려드릴게요.",
+      "reviewTime": "영업일 기준 1~3일 소요"
+    },
+    "rejected": {
+      "title": "버디 가입 요청 미승인",
+      "description": "아래 사유를 확인하고 도움이 필요하면 문의해 주세요."
+    },
+    "suspended": {
+      "title": "버디 계정 이용 정지",
+      "description": "버디 기능을 이용할 수 없습니다. 도움이 필요하면 문의해 주세요."
+    },
+    "reasonLabel": "안내된 사유",
+    "contactHelp": "문의: <email>zeroone.soma@gmail.com</email>",
+    "backToBuddy": "버디 페이지로 돌아가기"
   },
   "Profile": {
     "title": "프로필 수정",
     "metadataTitle": "프로필 수정 | HanBuddy",
     "metadataDescription": "HanBuddy 프로필과 연락처 정보를 수정하세요.",
-    "fullName": "이름",
+    "fullName": "닉네임",
     "nationality": "국적",
-    "age": "나이",
+    "age": "생년월일",
     "contactDetails": "연락처 정보",
     "preferredMessagingApp": "선호하는 메신저",
     "addProfilePhoto": "프로필 사진 추가",
     "selectedProfilePhotoPreview": "선택한 프로필 사진 미리보기",
     "validation": {
-      "nameRequired": "이름을 입력해 주세요.",
+      "nameRequired": "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요.",
       "nationalityRequired": "국적을 선택해 주세요.",
-      "ageInvalid": "나이는 0에서 150 사이의 숫자로 입력해 주세요.",
+      "ageInvalid": "올바른 생년월일을 입력해 주세요.",
       "contactInvalid": "연락처 ID 또는 번호를 2자 이상 입력해 주세요.",
       "unsupportedImageType": "JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.",
       "imageTooLarge": "프로필 이미지는 5MB 이하만 업로드할 수 있습니다."

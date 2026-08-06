@@ -18,13 +18,11 @@ export function parseUserType(value?: string | null): UserType | undefined {
   return undefined;
 }
 
-export function getUserTypeHomePath(userType: "TOURIST"): "/explore";
+export function getUserTypeHomePath(userType: "TOURIST"): "/";
 export function getUserTypeHomePath(userType: "BUDDY"): "/dashboard";
-export function getUserTypeHomePath(
-  userType?: UserType | null,
-): "/login" | "/explore" | "/dashboard";
+export function getUserTypeHomePath(userType?: UserType | null): "/login" | "/" | "/dashboard";
 export function getUserTypeHomePath(userType?: UserType | null) {
-  if (userType === "TOURIST") return "/explore";
+  if (userType === "TOURIST") return "/";
   if (userType === "BUDDY") return "/dashboard";
   return "/login";
 }
@@ -42,7 +40,7 @@ export function getRouteAccessRedirect({
   const authenticated = Boolean(accessToken && userType);
   const homePath = getUserTypeHomePath(userType);
 
-  if (pathname === "/login" || pathname === "/onboarding") {
+  if (pathname === "/login" || pathname === "/onboarding" || pathname === "/buddy/onboarding") {
     return getAuthEntryRedirect({ pathname, signupToken }, authenticated, homePath);
   }
 
@@ -55,7 +53,9 @@ function getAuthEntryRedirect(
   homePath: string,
 ) {
   if (authenticated) return homePath;
-  if (pathname === "/onboarding" && !signupToken) return "/login";
+  if ((pathname === "/onboarding" || pathname === "/buddy/onboarding") && !signupToken) {
+    return "/login";
+  }
   return null;
 }
 

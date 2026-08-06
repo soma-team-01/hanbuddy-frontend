@@ -5,7 +5,7 @@ import { MyPageContent } from "@/app/[locale]/(app)/(with-nav)/my-page/my-page-c
 export function BuddyMyPage() {
   return (
     <BuddyShell>
-      <MyPageContent backHref={getUserTypeHomePath("BUDDY")} />
+      <MyPageContent backHref={getUserTypeHomePath("BUDDY")} userType="BUDDY" />
     </BuddyShell>
   );
 }

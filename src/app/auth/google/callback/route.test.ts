@@ -88,7 +88,7 @@ describe("GET /auth/google/callback", () => {
         isSuccess: true,
         code: "AUTH200",
         message: "OK",
-        result: { registered: true },
+        result: { registered: true, authStatus: "ACTIVE" },
       },
     });
 
@@ -110,6 +110,7 @@ describe("GET /auth/google/callback", () => {
         message: "OK",
         result: {
           registered: true,
+          authStatus: "ACTIVE",
           accessToken: "access-token",
           userType: "TOURIST",
         } satisfies GoogleLoginResponse,
@@ -118,7 +119,7 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest("ko"));
 
-    expect(response.headers.get("location")).toBe("http://localhost/ko/explore");
+    expect(response.headers.get("location")).toBe("http://localhost/ko");
     expect(response.headers.get("set-cookie") ?? "").toContain("refresh_token=backend");
   });
 
@@ -132,6 +133,7 @@ describe("GET /auth/google/callback", () => {
         message: "OK",
         result: {
           registered: true,
+          authStatus: "ACTIVE",
           accessToken: "access-token",
           userType: "TOURIST",
         } satisfies GoogleLoginResponse,
@@ -141,7 +143,7 @@ describe("GET /auth/google/callback", () => {
     const response = await GET(createCallbackRequest("en", "ko"));
     const setCookie = response.headers.get("set-cookie") ?? "";
 
-    expect(response.headers.get("location")).toBe("http://localhost/ko/explore");
+    expect(response.headers.get("location")).toBe("http://localhost/ko");
     expect(setCookie).toContain(`${AUTH_COOKIES.oauthLocale}=;`);
   });
 
@@ -155,6 +157,7 @@ describe("GET /auth/google/callback", () => {
         message: "OK",
         result: {
           registered: true,
+          authStatus: "ACTIVE",
           accessToken: "access-token",
           userType: "TOURIST",
         } satisfies GoogleLoginResponse,
@@ -163,7 +166,7 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest());
 
-    expect(response.headers.get("location")).toBe("http://localhost/en/explore");
+    expect(response.headers.get("location")).toBe("http://localhost/en");
   });
 
   it("redirects registered buddies to the localized dashboard", async () => {
@@ -176,6 +179,7 @@ describe("GET /auth/google/callback", () => {
         message: "OK",
         result: {
           registered: true,
+          authStatus: "ACTIVE",
           accessToken: "access-token",
           userType: "BUDDY",
         } satisfies GoogleLoginResponse,
@@ -185,6 +189,84 @@ describe("GET /auth/google/callback", () => {
     const response = await GET(createCallbackRequest("ko"));
 
     expect(response.headers.get("location")).toBe("http://localhost/ko/dashboard");
+  });
+
+  it("redirects pending buddy accounts to the approval status page without session tokens", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: ["refresh_token=backend; Path=/; HttpOnly"],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "PENDING_APPROVAL",
+          userId: 7,
+          userType: "BUDDY",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("ko", undefined, "buddy"));
+    const setCookie = response.headers.get("set-cookie") ?? "";
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/ko/buddy/auth/status?status=PENDING_APPROVAL",
+    );
+    expect(setCookie).not.toContain("refresh_token=backend");
+    expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.userType}=;`);
+  });
+
+  it("keeps a rejection reason out of the URL and stores it for the status screen", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "REJECTED",
+          statusReason: "제출한 활동 정보를 확인할 수 없습니다.",
+          userId: 8,
+          userType: "BUDDY",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("en", undefined, "buddy"));
+    const location = response.headers.get("location") ?? "";
+
+    expect(location).toBe("http://localhost/en/buddy/auth/status?status=REJECTED");
+    expect(location).not.toContain("reason");
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.statusReason}=`);
+  });
+
+  it("redirects suspended buddy accounts to the suspended status screen", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "SUSPENDED",
+          userId: 9,
+          userType: "BUDDY",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("en", undefined, "buddy"));
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/buddy/auth/status?status=SUSPENDED",
+    );
   });
 
   it("redirects unregistered users to onboarding with signup cookies", async () => {
@@ -197,6 +279,7 @@ describe("GET /auth/google/callback", () => {
         message: "OK",
         result: {
           registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
           signupToken: "signup-token",
           googleProfile: {
             email: "traveler@example.com",
@@ -207,12 +290,25 @@ describe("GET /auth/google/callback", () => {
       },
     });
 
-    const response = await GET(createCallbackRequest("ko"));
+    const response = await GET(
+      createCallbackRequest("ko", undefined, undefined, [
+        `${AUTH_COOKIES.accessToken}=old-access-token`,
+        `${AUTH_COOKIES.refreshToken}=old-refresh-token`,
+        `${AUTH_COOKIES.userId}=99`,
+        `${AUTH_COOKIES.userType}=TOURIST`,
+        `${AUTH_COOKIES.statusReason}=old-status-reason`,
+      ]),
+    );
     const setCookie = response.headers.get("set-cookie") ?? "";
 
     expect(response.headers.get("location")).toBe("http://localhost/ko/onboarding");
     expect(setCookie).toContain(`${AUTH_COOKIES.signupToken}=signup-token`);
-    expect(setCookie).toContain("refresh_token=backend");
+    expect(setCookie).not.toContain("refresh_token=backend");
+    expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.refreshToken}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.userId}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.userType}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.statusReason}=;`);
 
     const profileCookieValue = setCookie.match(
       new RegExp(`${AUTH_COOKIES.googleProfile}=([^;,]+)`),
@@ -226,6 +322,29 @@ describe("GET /auth/google/callback", () => {
     expect(decodedProfile).not.toHaveProperty("email");
   });
 
+  it("redirects an unregistered buddy signup to buddy onboarding", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
+          signupToken: "signup-token",
+          googleProfile: { name: "Future Buddy" },
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("en", undefined, "buddy"));
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/buddy/onboarding");
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.oauthIntent}=;`);
+  });
+
   it("uses the default locale for onboarding when the locale cookie is invalid", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,
@@ -236,6 +355,7 @@ describe("GET /auth/google/callback", () => {
         message: "OK",
         result: {
           registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
           signupToken: "signup-token",
         } satisfies GoogleLoginResponse,
       },
@@ -254,7 +374,7 @@ describe("GET /auth/google/callback", () => {
         isSuccess: true,
         code: "AUTH200",
         message: "OK",
-        result: { registered: false },
+        result: { registered: false, authStatus: "ONBOARDING_REQUIRED" },
       },
     });
 
@@ -296,10 +416,16 @@ describe("GET /auth/google/callback", () => {
   });
 });
 
-function createCallbackRequest(locale?: string, oauthLocale?: string) {
-  const requestCookies = [`${AUTH_COOKIES.oauthState}=state`];
+function createCallbackRequest(
+  locale?: string,
+  oauthLocale?: string,
+  oauthIntent?: string,
+  existingCookies: string[] = [],
+) {
+  const requestCookies = [`${AUTH_COOKIES.oauthState}=state`, ...existingCookies];
   if (locale) requestCookies.push(`${LOCALE_COOKIE_NAME}=${locale}`);
   if (oauthLocale) requestCookies.push(`${AUTH_COOKIES.oauthLocale}=${oauthLocale}`);
+  if (oauthIntent) requestCookies.push(`${AUTH_COOKIES.oauthIntent}=${oauthIntent}`);
 
   return new NextRequest("http://localhost/auth/google/callback?code=code&state=state", {
     headers: {

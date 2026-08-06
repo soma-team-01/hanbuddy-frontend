@@ -72,6 +72,19 @@ describe("MessagingAppField", () => {
 
   it.each([
     ["whatsapp", "WhatsApp"],
+    ["line", "Line"],
+    ["wechat", "WeChat"],
+    ["phone", "Phone Number"],
+  ] as const)("renders the dedicated %s contact icon", (icon, label) => {
+    renderField({ variant: "cards" });
+
+    expect(
+      screen.getByRole("button", { name: label }).querySelector(`[data-messaging-icon="${icon}"]`),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ["whatsapp", "WhatsApp"],
     ["phone", "전화번호"],
   ] as const)("localizes the Korean phone field for the %s state", (app, selectedOption) => {
     renderField({ app }, "ko");
@@ -115,16 +128,43 @@ describe("shared localized selectors and statuses", () => {
 
   it("restores focus to the country trigger after backdrop dismissal", () => {
     Element.prototype.scrollIntoView = vi.fn();
-    const { container } = renderWithIntl(
-      <CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />,
-    );
+    renderWithIntl(<CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />);
     const trigger = screen.getByRole("button", { name: "Nationality" });
     fireEvent.click(trigger);
     expect(screen.getByRole("combobox", { name: "Search country" })).toHaveFocus();
 
-    fireEvent.click(container.querySelector(".fixed.inset-0.z-10")!);
+    fireEvent.click(screen.getByTestId("country-select-backdrop"));
 
     expect(trigger).toHaveFocus();
+  });
+
+  it("renders the country panel in a body portal above clipping containers", () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    const { container } = renderWithIntl(
+      <div className="overflow-hidden">
+        <CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />
+      </div>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
+
+    const panel = screen.getByTestId("country-select-panel");
+    expect(panel.parentElement).toBe(document.body);
+    expect(panel).toHaveClass("fixed", "z-[100]");
+    expect(container).not.toContainElement(panel);
+  });
+
+  it("does not select a country when Enter is pressed during IME composition", () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    const onChange = vi.fn();
+    renderWithIntl(<CountrySelect value="" onChange={onChange} ariaLabel="Nationality" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
+    const search = screen.getByRole("combobox", { name: "Search country" });
+    fireEvent.keyDown(search, { key: "Enter", isComposing: true });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId("country-select-panel")).toBeInTheDocument();
   });
 
   it("localizes every application status in Korean", () => {

@@ -37,7 +37,7 @@ export function ProfileCard() {
     content = (
       <div className="flex min-w-0 items-center gap-5">
         <Avatar
-          name={result.profile.name}
+          name={result.profile.displayName}
           src={result.profile.profileImageUrl}
           size={88}
           eagerImage
@@ -47,7 +47,7 @@ export function ProfileCard() {
             {t(result.profile.userType === "BUDDY" ? "buddy" : "tourist")}
           </p>
           <h1 className="truncate font-display text-2xl font-bold tracking-tight text-ink">
-            {result.profile.name}
+            {result.profile.displayName}
           </h1>
           <p className="mt-1 truncate text-sm text-muted">{result.profile.email}</p>
           <Link

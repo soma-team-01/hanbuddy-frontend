@@ -34,6 +34,11 @@ import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 import type messages from "@/messages/en.json";
 import type { MyProfile } from "@/types/user";
 
+function getLocalDateInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 10);
+}
+
 type ProfileValidationErrorKey = keyof (typeof messages)["Profile"]["validation"];
 type ProfileErrorKey =
   `validation.${ProfileValidationErrorKey}` | "profileUploadFailed" | "saveFailed";
@@ -152,13 +157,14 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     setRequestFailure(null);
 
     const formData = new FormData(event.currentTarget);
-    const nameEntry = formData.get("name");
-    const ageEntry = formData.get("age");
-    const name = typeof nameEntry === "string" ? nameEntry.trim() : "";
-    const age = typeof ageEntry === "string" && ageEntry.trim() ? Number(ageEntry) : Number.NaN;
+    const displayNameEntry = formData.get("displayName");
+    const birthDateEntry = formData.get("birthDate");
+    const rawDisplayName = typeof displayNameEntry === "string" ? displayNameEntry : "";
+    const displayName = rawDisplayName.trim();
+    const birthDate = typeof birthDateEntry === "string" ? birthDateEntry.trim() : "";
     const contactIdentifier = messagingContact.trim();
 
-    if (!name) {
+    if (displayName.length < 2 || displayName.length > 30 || displayName !== rawDisplayName) {
       setErrorKey("validation.nameRequired");
       return;
     }
@@ -166,7 +172,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       setErrorKey("validation.nationalityRequired");
       return;
     }
-    if (!Number.isInteger(age) || age < 0 || age > 150) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || birthDate > getLocalDateInputValue(new Date())) {
       setErrorKey("validation.ageInvalid");
       return;
     }
@@ -186,10 +192,10 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       }
 
       await updateProfileMutation.mutateAsync({
-        name,
+        displayName,
         profileImageKey,
         nationalityCode: nationality,
-        age,
+        birthDate,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
         contactCountryCode: resolveContactCountryCode(isBuddy, messagingApp, messagingCountry),
         contactIdentifier,
@@ -212,7 +218,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       className="size-28 shrink-0 rounded-full border border-line-strong object-cover"
     />
   ) : (
-    <Avatar name={profile.name} src={profile.profileImageUrl} size={112} />
+    <Avatar name={profile.displayName} src={profile.profileImageUrl} size={112} />
   );
   let errorMessage: string | null = null;
   if (requestFailure) {
@@ -266,10 +272,12 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
               <label className="flex flex-col gap-2 md:col-span-2">
                 <span className="text-sm font-medium text-ink">{t("fullName")}</span>
                 <input
-                  name="name"
+                  name="displayName"
                   type="text"
                   required
-                  defaultValue={profile.name}
+                  minLength={2}
+                  maxLength={30}
+                  defaultValue={profile.displayName}
                   className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink"
                 />
               </label>
@@ -285,12 +293,11 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                 <label className="flex flex-col gap-2">
                   <span className="text-sm font-medium text-ink">{t("age")}</span>
                   <input
-                    name="age"
-                    type="number"
-                    min={0}
-                    max={150}
+                    name="birthDate"
+                    type="date"
+                    max={getLocalDateInputValue(new Date())}
                     required
-                    defaultValue={profile.age}
+                    defaultValue={profile.birthDate}
                     className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink"
                   />
                 </label>

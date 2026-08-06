@@ -46,6 +46,12 @@ interface SiteHeaderProps {
   mayHaveSession?: boolean;
 }
 
+interface SessionResolution {
+  key: string;
+  profile: MyProfile | null;
+  status: "authenticated" | "guest";
+}
+
 export function SiteHeader({
   role = null,
   authenticated = Boolean(role),
@@ -53,43 +59,46 @@ export function SiteHeader({
 }: Readonly<SiteHeaderProps>) {
   const t = useTranslations("Navigation");
   const pathname = usePathname();
-  const [profile, setProfile] = useState<MyProfile | null>(null);
-  const [sessionStatus, setSessionStatus] = useState<"authenticated" | "guest" | "pending">(
-    authenticated ? "authenticated" : mayHaveSession ? "pending" : "guest",
-  );
+  const sessionKey = `${authenticated}:${mayHaveSession}`;
+  const [sessionResolution, setSessionResolution] = useState<SessionResolution | null>(null);
+  const currentResolution = sessionResolution?.key === sessionKey ? sessionResolution : undefined;
+  const sessionStatus =
+    currentResolution?.status ??
+    (authenticated ? "authenticated" : mayHaveSession ? "pending" : "guest");
+  const profile = currentResolution?.profile ?? null;
 
   useEffect(() => {
-    if (!mayHaveSession) {
-      setProfile(null);
-      setSessionStatus("guest");
-      return;
-    }
-
-    setSessionStatus(authenticated ? "authenticated" : "pending");
+    if (!mayHaveSession) return;
 
     let active = true;
     void getMyProfile().then((result) => {
       if (!active) return;
 
       if (result.status === "success") {
-        setProfile(result.profile);
-        setSessionStatus("authenticated");
+        setSessionResolution({
+          key: sessionKey,
+          profile: result.profile,
+          status: "authenticated",
+        });
         return;
       }
 
       if (result.status === "unauthenticated") {
-        setProfile(null);
-        setSessionStatus("guest");
+        setSessionResolution({ key: sessionKey, profile: null, status: "guest" });
         return;
       }
 
-      setSessionStatus(authenticated ? "authenticated" : "guest");
+      setSessionResolution({
+        key: sessionKey,
+        profile: null,
+        status: authenticated ? "authenticated" : "guest",
+      });
     });
 
     return () => {
       active = false;
     };
-  }, [authenticated, mayHaveSession]);
+  }, [authenticated, mayHaveSession, sessionKey]);
 
   const effectiveAuthenticated = sessionStatus === "authenticated";
   const effectiveRole = profile ? getUserTypeNavRole(profile.userType) : role;

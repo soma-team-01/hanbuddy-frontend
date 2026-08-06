@@ -17,7 +17,6 @@ interface AccountStatusContentProps {
 export function AccountStatusContent({ status, reason }: Readonly<AccountStatusContentProps>) {
   const t = useTranslations("AccountStatus");
   const copy = getStatusCopy(status, t);
-  const StatusIcon = getStatusIcon(status);
 
   return (
     <main className="flex flex-1 items-center justify-center bg-white px-4 py-12 md:px-6 md:py-16">
@@ -25,7 +24,7 @@ export function AccountStatusContent({ status, reason }: Readonly<AccountStatusC
         <div className="h-1.5 bg-primary" />
         <div className="flex flex-col items-center px-6 py-10 text-center sm:px-10 md:px-14 md:py-14">
           <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-primary-soft text-primary">
-            <StatusIcon className="size-7" />
+            <AccountStatusIcon status={status} />
           </div>
           <p className="mb-3 text-xs font-bold tracking-[0.24em] text-primary uppercase">
             {t("eyebrow")}
@@ -82,10 +81,10 @@ export function AccountStatusContent({ status, reason }: Readonly<AccountStatusC
   );
 }
 
-function getStatusIcon(status: InactiveAuthStatus) {
-  if (status === "PENDING_APPROVAL") return ClockIcon;
-  if (status === "REJECTED") return CircleHelpIcon;
-  return UserMinusIcon;
+function AccountStatusIcon({ status }: Readonly<{ status: InactiveAuthStatus }>) {
+  if (status === "PENDING_APPROVAL") return <ClockIcon className="size-7" />;
+  if (status === "REJECTED") return <CircleHelpIcon className="size-7" />;
+  return <UserMinusIcon className="size-7" />;
 }
 
 function getStatusCopy(status: InactiveAuthStatus, t: ReturnType<typeof useTranslations>) {

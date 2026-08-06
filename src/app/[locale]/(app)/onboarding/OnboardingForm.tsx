@@ -134,6 +134,10 @@ export function OnboardingForm({
     const birthDateEntry = formData.get("birthDate");
     const birthDate = typeof birthDateEntry === "string" ? birthDateEntry.trim() : "";
     const contactIdentifier = messagingContact.trim();
+    const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
+    const contactCountryCode = requiresContactCountryCode
+      ? findCountry(messagingCountry)?.dialCode
+      : "";
     const today = getLocalDateInputValue(new Date());
 
     if (!nationality) {
@@ -144,7 +148,7 @@ export function OnboardingForm({
       setErrorKey("validation.birthDateInvalid");
       return;
     }
-    if (contactIdentifier.length < 2) {
+    if (contactIdentifier.length < 2 || (requiresContactCountryCode && !contactCountryCode)) {
       setErrorKey("validation.contactInvalid");
       return;
     }
@@ -170,10 +174,7 @@ export function OnboardingForm({
         nationalityCode: nationality,
         birthDate,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-        contactCountryCode:
-          messagingApp === "whatsapp" || messagingApp === "phone"
-            ? (findCountry(messagingCountry)?.dialCode ?? "")
-            : "",
+        contactCountryCode,
         contactIdentifier,
       };
 

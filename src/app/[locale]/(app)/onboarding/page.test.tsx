@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import * as countries from "@/lib/countries";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import { OnboardingForm } from "./OnboardingForm";
@@ -13,6 +14,7 @@ const routerMocks = vi.hoisted(() => ({
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   routerMocks.refresh.mockClear();
   routerMocks.replace.mockClear();
 });
@@ -238,6 +240,28 @@ describe("OnboardingForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
     expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
+  });
+
+  it("blocks phone-based signup when the selected country has no dial code", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(countries, "findCountry").mockReturnValue(undefined);
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
+    fillLocalizedOnboardingFields("en", {
+      birthDate: "1998-04-12",
+      contact: "line_user",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
+    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+      target: { value: "2025550123" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a contact ID or number with at least 2 characters.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

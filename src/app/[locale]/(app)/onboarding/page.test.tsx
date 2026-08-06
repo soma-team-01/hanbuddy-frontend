@@ -25,7 +25,7 @@ vi.mock("next-intl/server", async () => {
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock("@/lib/images/presigned", async (importOriginal) => ({

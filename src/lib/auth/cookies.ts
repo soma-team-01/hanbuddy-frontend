@@ -6,6 +6,7 @@ export const AUTH_COOKIES = {
   oauthLocale: "hanbuddy_oauth_locale",
   oauthIntent: "hanbuddy_oauth_intent",
   accessToken: "hanbuddy_access_token",
+  refreshToken: "refresh_token",
   signupToken: "hanbuddy_signup_token",
   googleProfile: "hanbuddy_google_profile",
   userId: "hanbuddy_user_id",
@@ -50,6 +51,7 @@ export function setAuthenticatedSessionCookies(
 
 export function clearAuthenticatedSessionCookies(response: NextResponse) {
   response.cookies.delete(AUTH_COOKIES.accessToken);
+  response.cookies.delete(AUTH_COOKIES.refreshToken);
   response.cookies.delete(AUTH_COOKIES.userId);
   response.cookies.delete(AUTH_COOKIES.userType);
 }

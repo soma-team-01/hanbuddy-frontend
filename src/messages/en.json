@@ -64,7 +64,9 @@
     "createActivityInSidebar": "Create Activity from sidebar",
     "myPage": "My Page",
     "hostAnExperience": "Host an experience",
-    "login": "Log in"
+    "login": "Log in",
+    "account": "Account",
+    "openAccount": "Open my account"
   },
   "Accessibility": {
     "goBack": "Go back",

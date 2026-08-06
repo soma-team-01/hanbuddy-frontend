@@ -194,6 +194,7 @@ export function OnboardingForm({
       }
 
       router.replace(userType === "BUDDY" ? "/dashboard" : "/explore");
+      router.refresh();
     } catch (error) {
       setRequestFailure({ error, fallbackKey: "serverUnavailable" });
     } finally {

@@ -68,7 +68,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const [messages, cookieStore] = await Promise.all([getMessages(), cookies()]);
   const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
-  const authenticated = Boolean(userType && cookieStore.get(AUTH_COOKIES.accessToken)?.value);
+  const accessToken = cookieStore.get(AUTH_COOKIES.accessToken)?.value;
+  const authenticated = Boolean(userType && accessToken);
+  const mayHaveSession =
+    Boolean(accessToken) || Boolean(cookieStore.get(AUTH_COOKIES.refreshToken)?.value);
   let role: "buddy" | "tourist" | null = null;
   if (authenticated && userType === "BUDDY") {
     role = "buddy";
@@ -84,7 +87,7 @@ export default async function LocaleLayout({
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
           <QueryProvider>
-            <SiteHeader role={role} authenticated={authenticated} />
+            <SiteHeader role={role} authenticated={authenticated} mayHaveSession={mayHaveSession} />
             <div className="flex flex-1 flex-col">{children}</div>
             <SiteFooter locale={locale} />
           </QueryProvider>

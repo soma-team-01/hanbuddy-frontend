@@ -1,8 +1,16 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { SiteHeader } from "./SiteHeader";
+
+const apiMocks = vi.hoisted(() => ({
+  getMyProfile: vi.fn(),
+}));
+
+vi.mock("@/lib/api/users", () => ({
+  getMyProfile: apiMocks.getMyProfile,
+}));
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -19,6 +27,8 @@ describe("SiteHeader", () => {
     vi.clearAllMocks();
     mockedUsePathname.mockReturnValue("/explore");
     mockedUseRouter.mockReturnValue({ replace } as unknown as ReturnType<typeof useRouter>);
+    apiMocks.getMyProfile.mockReset();
+    apiMocks.getMyProfile.mockReturnValue(new Promise(() => undefined));
     document.body.style.overflow = "";
   });
 
@@ -84,6 +94,42 @@ describe("SiteHeader", () => {
     renderWithIntl(<SiteHeader role="tourist" authenticated />);
 
     expect(screen.queryByRole("link", { name: "Host an experience" })).not.toBeInTheDocument();
+  });
+
+  it("replaces the login action with an account indicator for authenticated users", () => {
+    renderWithIntl(<SiteHeader role="tourist" authenticated />);
+
+    expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+  });
+
+  it("restores a refresh-token session and shows the user's profile image", async () => {
+    apiMocks.getMyProfile.mockResolvedValue({
+      status: "success",
+      profile: {
+        userId: 1,
+        email: "traveler@example.com",
+        name: "Google Traveler",
+        displayName: "June",
+        userType: "TOURIST",
+        profileImageKey: "profiles/june.webp",
+        profileImageUrl: "/images/landing/hanriver-food.webp",
+        nationalityCode: "US",
+        birthDate: "2000-01-01",
+        contactMethod: "WHATSAPP",
+        contactCountryCode: null,
+        contactIdentifier: "june",
+      },
+    });
+
+    renderWithIntl(<SiteHeader mayHaveSession />);
+
+    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+    });
+    expect(screen.getAllByAltText("June")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/explore");
   });
 
   it("shows only the brand and locale switcher on authentication pages", () => {

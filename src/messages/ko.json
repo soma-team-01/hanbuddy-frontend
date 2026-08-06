@@ -64,7 +64,9 @@
     "createActivityInSidebar": "사이드바에서 액티비티 만들기",
     "myPage": "마이페이지",
     "hostAnExperience": "호스팅하기",
-    "login": "로그인"
+    "login": "로그인",
+    "account": "계정",
+    "openAccount": "내 계정 열기"
   },
   "Accessibility": {
     "goBack": "뒤로 가기",

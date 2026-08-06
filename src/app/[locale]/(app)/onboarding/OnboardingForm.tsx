@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
@@ -49,6 +49,18 @@ function getLocalDateInputValue(date: Date) {
   return localDate.toISOString().slice(0, 10);
 }
 
+function subscribeToLocalDate() {
+  return () => undefined;
+}
+
+function getCurrentLocalDateInputValue() {
+  return getLocalDateInputValue(new Date());
+}
+
+function getServerLocalDateInputValue() {
+  return "";
+}
+
 export function OnboardingForm({
   googleProfile,
   userType = "TOURIST",
@@ -69,6 +81,11 @@ export function OnboardingForm({
     >;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const maxBirthDate = useSyncExternalStore(
+    subscribeToLocalDate,
+    getCurrentLocalDateInputValue,
+    getServerLocalDateInputValue,
+  );
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
@@ -359,7 +376,7 @@ export function OnboardingForm({
                     <input
                       name="birthDate"
                       type="date"
-                      max={getLocalDateInputValue(new Date())}
+                      max={maxBirthDate}
                       required
                       aria-label={t("birthDate")}
                       className="w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"

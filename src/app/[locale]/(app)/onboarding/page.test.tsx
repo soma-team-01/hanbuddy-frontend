@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import * as countries from "@/lib/countries";
@@ -13,6 +14,7 @@ const routerMocks = vi.hoisted(() => ({
 }));
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   routerMocks.refresh.mockClear();
@@ -119,6 +121,24 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("link", { name: close })).toHaveAttribute("href", `/${locale}/login`);
     },
   );
+
+  it("adds the local birth date limit only after client mount", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-06T12:00:00+09:00"));
+
+    const serverHtml = renderToString(
+      <IntlTestProvider locale="en">
+        <OnboardingForm />
+      </IntlTestProvider>,
+    );
+    expect(serverHtml).not.toContain('max="2026-08-06"');
+
+    renderWithIntl(<OnboardingForm />);
+    await act(async () => undefined);
+    expect(screen.getByLabelText("Date of birth")).toHaveAttribute("max", "2026-08-06");
+
+    vi.useRealTimers();
+  });
 
   it.each([
     ["en", "Please select a nationality."],

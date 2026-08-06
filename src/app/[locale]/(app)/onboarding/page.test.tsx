@@ -181,17 +181,99 @@ describe("OnboardingForm", () => {
       birthDate: "1998-04-12",
       contact: "line_user",
     });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign up as a buddy" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
       userType: "BUDDY",
       displayName: "Google Buddy",
+      agreements: expect.arrayContaining([
+        expect.objectContaining({ type: "BUDDY_OPERATION_TERMS", agreed: true }),
+        expect.objectContaining({ type: "BUDDY_COMMISSION_POLICY", agreed: true }),
+        expect.objectContaining({ type: "BUDDY_PROFILE_CONTACT_PROVISION", agreed: true }),
+      ]),
     });
     expect(routerMocks.replace).toHaveBeenCalledWith(
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
     );
     expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("shows only the tourist signup agreements on traveler onboarding", () => {
+    renderWithIntl(<OnboardingForm />);
+
+    expect(screen.getByText("HanBuddy Terms of Service")).toHaveClass("text-primary", "underline");
+    expect(screen.getByText("Personal information collection and use")).toBeInTheDocument();
+    expect(screen.getByText("Receive event and marketing updates")).toBeInTheDocument();
+    expect(screen.queryByText("Buddy operation terms")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Required")).toHaveLength(3);
+    expect(screen.getAllByText("Optional")).toHaveLength(1);
+  });
+
+  it("shows the additional buddy agreements on buddy onboarding", () => {
+    renderWithIntl(<OnboardingForm userType="BUDDY" />);
+
+    expect(
+      screen.getByText("Personal information collection, use, and buddy application review"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Buddy operation terms")).toBeInTheDocument();
+    expect(screen.getByText("Commission and settlement policy")).toBeInTheDocument();
+    expect(
+      screen.getByText("Profile visibility and contact sharing with confirmed guests"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Required")).toHaveLength(6);
+    expect(screen.getAllByText("Optional")).toHaveLength(1);
+  });
+
+  it("blocks signup until every required agreement is accepted", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
+    fillLocalizedOnboardingFields("en", {
+      birthDate: "1998-04-12",
+      contact: "line_user",
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Agree to all required items to continue.");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("submits every tourist agreement and keeps marketing optional", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "201",
+          message: "OK",
+          result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
+        }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
+    fillLocalizedOnboardingFields("en", {
+      birthDate: "1998-04-12",
+      contact: "line_user",
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: /19 years or older/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /HanBuddy Terms of Service/ }));
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /Personal information collection and use/ }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).agreements).toEqual([
+      { type: "ADULT_CONFIRMATION", version: "2026-08-06", agreed: true },
+      { type: "TERMS_OF_SERVICE", version: "2026-08-06", agreed: true },
+      { type: "PRIVACY_COLLECTION_USE", version: "2026-08-06", agreed: true },
+      { type: "MARKETING_COMMUNICATION", version: "2026-08-06", agreed: false },
+    ]);
   });
 
   it("relocalizes a stored validation error when the locale changes", () => {
@@ -358,6 +440,7 @@ describe("OnboardingForm profile image", () => {
     fireEvent.change(screen.getByLabelText("Messaging app ID"), {
       target: { value: "line_user" },
     });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
   }
 
   it("shows a local preview after selecting a profile image", () => {

@@ -14,6 +14,12 @@ import { ArrowRightIcon, CameraIcon, UserIcon, XIcon } from "@/components/ui/ico
 import { Link, useRouter } from "@/i18n/navigation";
 import { createApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import {
+  buildSignupAgreements,
+  getRequiredSignupAgreementTypes,
+  getSignupAgreementTypes,
+  hasAllRequiredSignupAgreements,
+} from "@/lib/auth/signup-agreements";
 import { findCountry } from "@/lib/countries";
 import {
   MAX_PROFILE_IMAGE_BYTES,
@@ -29,6 +35,7 @@ import type {
   GoogleLoginResponse,
   GoogleProfile,
   GoogleSignupRequest,
+  SignupAgreementType,
   UserType,
 } from "@/lib/auth/types";
 
@@ -72,6 +79,9 @@ export function OnboardingForm({
   const router = useRouter();
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
   const [messagingContact, setMessagingContact] = useState("");
+  const [agreementDecisions, setAgreementDecisions] = useState<
+    Partial<Record<SignupAgreementType, boolean>>
+  >({});
   const [errorKey, setErrorKey] = useState<OnboardingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
     error: unknown;
@@ -92,6 +102,11 @@ export function OnboardingForm({
   const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("");
+  const agreementTypes = getSignupAgreementTypes(userType);
+  const requiredAgreementTypes = getRequiredSignupAgreementTypes(userType);
+  const allAgreementsSelected = agreementTypes.every(
+    (agreementType) => agreementDecisions[agreementType] === true,
+  );
 
   useEffect(() => {
     return () => {
@@ -126,6 +141,20 @@ export function OnboardingForm({
     setMessagingApp(nextApp);
     // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
     setMessagingContact("");
+  }
+
+  function handleAgreementChange(type: SignupAgreementType, agreed: boolean) {
+    setAgreementDecisions((current) => ({ ...current, [type]: agreed }));
+    setErrorKey(null);
+  }
+
+  function handleAllAgreementsChange(agreed: boolean) {
+    setAgreementDecisions((current) => {
+      const next = { ...current };
+      for (const type of agreementTypes) next[type] = agreed;
+      return next;
+    });
+    setErrorKey(null);
   }
 
   async function resolveProfileImageKey(): Promise<string | undefined> {
@@ -173,6 +202,10 @@ export function OnboardingForm({
       setErrorKey("validation.displayNameInvalid");
       return;
     }
+    if (!hasAllRequiredSignupAgreements(userType, agreementDecisions)) {
+      setErrorKey("validation.agreementsRequired");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -193,6 +226,7 @@ export function OnboardingForm({
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
         contactCountryCode,
         contactIdentifier,
+        agreements: buildSignupAgreements(userType, agreementDecisions),
       };
 
       const response = await fetch("/api/auth/google/signup", {
@@ -287,6 +321,55 @@ export function OnboardingForm({
     submit: userType === "BUDDY" ? buddyT("completeRegistration") : t("completeRegistration"),
     submitting: userType === "BUDDY" ? buddyT("completing") : t("completing"),
   };
+
+  const agreementItems: Array<{
+    type: SignupAgreementType;
+    label: string;
+    isDocument: boolean;
+  }> = [
+    {
+      type: "ADULT_CONFIRMATION",
+      label: t("agreements.items.adultConfirmation"),
+      isDocument: false,
+    },
+    {
+      type: "TERMS_OF_SERVICE",
+      label: t("agreements.items.termsOfService"),
+      isDocument: true,
+    },
+    {
+      type: "PRIVACY_COLLECTION_USE",
+      label:
+        userType === "BUDDY"
+          ? t("agreements.items.buddyPrivacyCollectionUse")
+          : t("agreements.items.privacyCollectionUse"),
+      isDocument: true,
+    },
+    ...(userType === "BUDDY"
+      ? [
+          {
+            type: "BUDDY_OPERATION_TERMS" as const,
+            label: t("agreements.items.buddyOperationTerms"),
+            isDocument: true,
+          },
+          {
+            type: "BUDDY_COMMISSION_POLICY" as const,
+            label: t("agreements.items.buddyCommissionPolicy"),
+            isDocument: true,
+          },
+          {
+            type: "BUDDY_PROFILE_CONTACT_PROVISION" as const,
+            label: t("agreements.items.buddyProfileContactProvision"),
+            isDocument: true,
+          },
+        ]
+      : []),
+    {
+      type: "MARKETING_COMMUNICATION",
+      label: t("agreements.items.marketingCommunication"),
+      isDocument: false,
+    },
+  ];
 
   return (
     <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
@@ -408,6 +491,65 @@ export function OnboardingForm({
                 </div>
               </section>
             </div>
+
+            <section className="border-t border-line-soft px-5 py-5 md:px-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-display text-lg font-bold text-ink">
+                    {t("agreements.title")}
+                  </h2>
+                  <p className="mt-0.5 text-sm text-muted">{t("agreements.description")}</p>
+                </div>
+                <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line-soft px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary">
+                  <input
+                    type="checkbox"
+                    checked={allAgreementsSelected}
+                    onChange={(event) => handleAllAgreementsChange(event.target.checked)}
+                    className="size-4 accent-primary"
+                  />
+                  {t("agreements.agreeAll")}
+                </label>
+              </div>
+
+              <div className="mt-4 grid gap-2 md:grid-cols-2">
+                {agreementItems.map((item) => {
+                  const isRequired = requiredAgreementTypes.includes(item.type);
+                  return (
+                    <label
+                      key={item.type}
+                      className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-4 py-3 transition-colors hover:border-primary"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={agreementDecisions[item.type] === true}
+                        onChange={(event) => handleAgreementChange(item.type, event.target.checked)}
+                        className="mt-0.5 size-4 shrink-0 accent-primary"
+                      />
+                      <span className="flex min-w-0 flex-1 items-start justify-between gap-3 text-sm leading-5">
+                        <span
+                          className={
+                            item.isDocument
+                              ? "font-medium text-primary underline decoration-primary/40 underline-offset-4"
+                              : "text-ink"
+                          }
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={
+                            isRequired
+                              ? "shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-strong"
+                              : "shrink-0 rounded-full bg-panel px-2 py-0.5 text-xs font-semibold text-muted"
+                          }
+                        >
+                          {isRequired ? t("agreements.required") : t("agreements.optional")}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
 
             {errorMessage ? (
               <p

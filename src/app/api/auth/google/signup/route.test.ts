@@ -20,6 +20,19 @@ const signupRequest: GoogleSignupRequest = {
   contactMethod: "PHONE",
   contactCountryCode: "+82",
   contactIdentifier: "01012345678",
+  agreements: [
+    { type: "ADULT_CONFIRMATION", version: "2026-08-06", agreed: true },
+    { type: "TERMS_OF_SERVICE", version: "2026-08-06", agreed: true },
+    { type: "PRIVACY_COLLECTION_USE", version: "2026-08-06", agreed: true },
+    { type: "BUDDY_OPERATION_TERMS", version: "2026-08-06", agreed: true },
+    { type: "BUDDY_COMMISSION_POLICY", version: "2026-08-06", agreed: true },
+    {
+      type: "BUDDY_PROFILE_CONTACT_PROVISION",
+      version: "2026-08-06",
+      agreed: true,
+    },
+    { type: "MARKETING_COMMUNICATION", version: "2026-08-06", agreed: false },
+  ],
 };
 
 function createSignupRequest() {
@@ -45,6 +58,25 @@ function successfulPayload(result: GoogleLoginResponse) {
 describe("POST /api/auth/google/signup", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
+  });
+
+  it("forwards role-specific signup agreements to the backend", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: successfulPayload({
+        registered: true,
+        authStatus: "PENDING_APPROVAL",
+        userId: 16,
+        userType: "BUDDY",
+      }),
+    });
+
+    await POST(createSignupRequest());
+
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/signup", signupRequest, {
+      bearerToken: "signup-token",
+    });
   });
 
   it("stores the authenticated session when signup immediately becomes active", async () => {

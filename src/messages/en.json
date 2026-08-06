@@ -9,6 +9,8 @@
   "ApiErrors": {
     "authenticationRequired": "Please sign in again to continue.",
     "googleAuthenticationInvalid": "Google authentication could not be verified. Please try signing in again.",
+    "signupAgreementsInvalid": "Review the signup agreements and try again.",
+    "signupAgreementsOutdated": "The signup agreements have been updated. Review them again to continue.",
     "emailAlreadyRegistered": "This email is already registered. Please sign in instead.",
     "validationRequired": "Check the required fields and try again.",
     "validationFormat": "Check the format of the entered information.",
@@ -343,13 +345,31 @@
     "selectedProfilePhotoPreview": "Selected profile photo preview",
     "googleProfile": "Google profile",
     "profileFor": "{name} profile",
+    "agreements": {
+      "title": "Agreements",
+      "description": "Review the required items before creating your account.",
+      "agreeAll": "Agree to all",
+      "required": "Required",
+      "optional": "Optional",
+      "items": {
+        "adultConfirmation": "I confirm that I am 19 years or older.",
+        "termsOfService": "HanBuddy Terms of Service",
+        "privacyCollectionUse": "Personal information collection and use",
+        "buddyPrivacyCollectionUse": "Personal information collection, use, and buddy application review",
+        "buddyOperationTerms": "Buddy operation terms",
+        "buddyCommissionPolicy": "Commission and settlement policy",
+        "buddyProfileContactProvision": "Profile visibility and contact sharing with confirmed guests",
+        "marketingCommunication": "Receive event and marketing updates"
+      }
+    },
     "validation": {
       "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
       "imageTooLarge": "Profile photos must be 5MB or smaller.",
       "displayNameInvalid": "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
       "nationalityRequired": "Please select a nationality.",
       "birthDateInvalid": "Please enter a valid date of birth.",
-      "contactInvalid": "Enter a contact ID or number with at least 2 characters."
+      "contactInvalid": "Enter a contact ID or number with at least 2 characters.",
+      "agreementsRequired": "Agree to all required items to continue."
     },
     "profileUploadFailed": "Could not upload the profile photo. Please try again.",
     "signupFailed": "Could not complete registration. Please try again.",

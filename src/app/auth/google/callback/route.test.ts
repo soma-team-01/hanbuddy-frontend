@@ -290,12 +290,25 @@ describe("GET /auth/google/callback", () => {
       },
     });
 
-    const response = await GET(createCallbackRequest("ko"));
+    const response = await GET(
+      createCallbackRequest("ko", undefined, undefined, [
+        `${AUTH_COOKIES.accessToken}=old-access-token`,
+        `${AUTH_COOKIES.refreshToken}=old-refresh-token`,
+        `${AUTH_COOKIES.userId}=99`,
+        `${AUTH_COOKIES.userType}=TOURIST`,
+        `${AUTH_COOKIES.statusReason}=old-status-reason`,
+      ]),
+    );
     const setCookie = response.headers.get("set-cookie") ?? "";
 
     expect(response.headers.get("location")).toBe("http://localhost/ko/onboarding");
     expect(setCookie).toContain(`${AUTH_COOKIES.signupToken}=signup-token`);
     expect(setCookie).not.toContain("refresh_token=backend");
+    expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.refreshToken}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.userId}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.userType}=;`);
+    expect(setCookie).toContain(`${AUTH_COOKIES.statusReason}=;`);
 
     const profileCookieValue = setCookie.match(
       new RegExp(`${AUTH_COOKIES.googleProfile}=([^;,]+)`),
@@ -403,8 +416,13 @@ describe("GET /auth/google/callback", () => {
   });
 });
 
-function createCallbackRequest(locale?: string, oauthLocale?: string, oauthIntent?: string) {
-  const requestCookies = [`${AUTH_COOKIES.oauthState}=state`];
+function createCallbackRequest(
+  locale?: string,
+  oauthLocale?: string,
+  oauthIntent?: string,
+  existingCookies: string[] = [],
+) {
+  const requestCookies = [`${AUTH_COOKIES.oauthState}=state`, ...existingCookies];
   if (locale) requestCookies.push(`${LOCALE_COOKIE_NAME}=${locale}`);
   if (oauthLocale) requestCookies.push(`${AUTH_COOKIES.oauthLocale}=${oauthLocale}`);
   if (oauthIntent) requestCookies.push(`${AUTH_COOKIES.oauthIntent}=${oauthIntent}`);

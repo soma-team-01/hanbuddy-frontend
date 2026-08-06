@@ -102,6 +102,8 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
       ? "/buddy/onboarding"
       : "/onboarding";
   const response = NextResponse.redirect(createLocalizedUrl(request, onboardingPath));
+  clearAuthenticatedSessionCookies(response);
+  clearAuthStatusReasonCookie(response);
   response.cookies.set(AUTH_COOKIES.signupToken, result.signupToken, SIGNUP_COOKIE_OPTIONS);
   if (result.googleProfile) {
     response.cookies.set(

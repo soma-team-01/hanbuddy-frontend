@@ -10,7 +10,7 @@ import {
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
-import { ArrowRightIcon, CameraIcon, UserIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, CameraIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -53,6 +53,12 @@ interface OnboardingFormProps {
 
 type OnboardingStep = 1 | 2 | 3;
 
+const MINIMUM_SIGNUP_AGE = 19;
+const MAXIMUM_SIGNUP_AGE = 120;
+const COUNTRY_CALLING_CODE_PATTERN = /^\+\d{1,4}$/;
+const PHONE_CONTACT_PATTERN = /^\d{6,15}$/;
+const MESSENGER_CONTACT_PATTERN = /^[A-Za-z0-9@._+\-]{2,100}$/;
+
 function getLocalDateInputValue(date: Date) {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
   return localDate.toISOString().slice(0, 10);
@@ -68,6 +74,24 @@ function getCurrentLocalDateInputValue() {
 
 function getServerLocalDateInputValue() {
   return "";
+}
+
+function subtractYearsFromDateInput(value: string, years: number) {
+  const [year, month, day] = value.split("-").map(Number);
+  const targetYear = year - years;
+  const maxDay = new Date(Date.UTC(targetYear, month, 0)).getUTCDate();
+
+  return `${targetYear}-${String(month).padStart(2, "0")}-${String(Math.min(day, maxDay)).padStart(2, "0")}`;
+}
+
+function isValidDateInputValue(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+  );
 }
 
 export function OnboardingForm({
@@ -96,11 +120,17 @@ export function OnboardingForm({
     >;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const maxBirthDate = useSyncExternalStore(
+  const currentLocalDate = useSyncExternalStore(
     subscribeToLocalDate,
     getCurrentLocalDateInputValue,
     getServerLocalDateInputValue,
   );
+  const oldestAllowedBirthDate = currentLocalDate
+    ? subtractYearsFromDateInput(currentLocalDate, MAXIMUM_SIGNUP_AGE)
+    : "";
+  const youngestAllowedBirthDate = currentLocalDate
+    ? subtractYearsFromDateInput(currentLocalDate, MINIMUM_SIGNUP_AGE)
+    : "";
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
@@ -194,7 +224,13 @@ export function OnboardingForm({
     }
 
     const today = getLocalDateInputValue(new Date());
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || birthDate > today) {
+    const oldestBirthDate = subtractYearsFromDateInput(today, MAXIMUM_SIGNUP_AGE);
+    const youngestBirthDate = subtractYearsFromDateInput(today, MINIMUM_SIGNUP_AGE);
+    if (
+      !isValidDateInputValue(birthDate) ||
+      birthDate < oldestBirthDate ||
+      birthDate > youngestBirthDate
+    ) {
       setErrorKey("validation.birthDateInvalid");
       return false;
     }
@@ -208,7 +244,13 @@ export function OnboardingForm({
       ? findCountry(messagingCountry)?.dialCode
       : "";
 
-    if (contactIdentifier.length < 2 || (requiresContactCountryCode && !contactCountryCode)) {
+    const normalizedPhoneNumber = contactIdentifier.replace(/[ -]/g, "");
+    const isValidContact = requiresContactCountryCode
+      ? COUNTRY_CALLING_CODE_PATTERN.test(contactCountryCode ?? "") &&
+        PHONE_CONTACT_PATTERN.test(normalizedPhoneNumber)
+      : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
+
+    if (!isValidContact) {
       setErrorKey("validation.contactInvalid");
       return false;
     }
@@ -327,7 +369,13 @@ export function OnboardingForm({
 
   let profilePhoto = (
     <div className="flex size-16 items-center justify-center rounded-2xl border border-line-soft bg-canvas-soft ring-4 ring-primary-soft">
-      <UserIcon className="size-7 text-muted" />
+      <Image
+        src="/images/brand/logo-borderless.webp"
+        alt={t("defaultProfilePhoto")}
+        width={40}
+        height={40}
+        className="size-10 object-contain"
+      />
     </div>
   );
   if (profileImagePreview) {
@@ -338,18 +386,6 @@ export function OnboardingForm({
         width={64}
         height={64}
         unoptimized
-        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
-      />
-    );
-  } else if (googleProfile?.picture) {
-    profilePhoto = (
-      <Image
-        src={googleProfile.picture}
-        alt={
-          googleProfile.name ? t("profileFor", { name: googleProfile.name }) : t("googleProfile")
-        }
-        width={64}
-        height={64}
         className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
       />
     );
@@ -562,7 +598,8 @@ export function OnboardingForm({
                         <input
                           name="birthDate"
                           type="date"
-                          max={maxBirthDate}
+                          min={oldestAllowedBirthDate || undefined}
+                          max={youngestAllowedBirthDate || undefined}
                           required
                           value={birthDate}
                           onChange={(event) => setBirthDate(event.target.value)}

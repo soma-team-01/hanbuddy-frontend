@@ -342,8 +342,7 @@
     "profilePhotoHint": "Profile photo",
     "profilePhotoOptional": "Choose a clear face photo so your buddy can recognize you when you meet.",
     "selectedProfilePhotoPreview": "Selected profile photo preview",
-    "googleProfile": "Google profile",
-    "profileFor": "{name} profile",
+    "defaultProfilePhoto": "HanBuddy default profile image",
     "steps": {
       "progress": "Step {current} of {total}",
       "aboutYou": "About you",
@@ -375,8 +374,8 @@
       "imageTooLarge": "Profile photos must be 5MB or smaller.",
       "displayNameInvalid": "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
       "nationalityRequired": "Please select a nationality.",
-      "birthDateInvalid": "Please enter a valid date of birth.",
-      "contactInvalid": "Enter a contact ID or number with at least 2 characters.",
+      "birthDateInvalid": "Enter a valid date of birth for an age between 19 and 120.",
+      "contactInvalid": "Enter a valid contact ID or phone number for the selected method.",
       "agreementsRequired": "Agree to all required items to continue."
     },
     "profileUploadFailed": "Could not upload the profile photo. Please try again.",

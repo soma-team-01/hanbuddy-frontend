@@ -137,11 +137,13 @@ describe("OnboardingForm", () => {
         <OnboardingForm />
       </IntlTestProvider>,
     );
-    expect(serverHtml).not.toContain('max="2026-08-06"');
+    expect(serverHtml).not.toContain('min="1906-08-06"');
+    expect(serverHtml).not.toContain('max="2007-08-06"');
 
     renderWithIntl(<OnboardingForm />);
     await act(async () => undefined);
-    expect(screen.getByLabelText("Date of birth")).toHaveAttribute("max", "2026-08-06");
+    expect(screen.getByLabelText("Date of birth")).toHaveAttribute("min", "1906-08-06");
+    expect(screen.getByLabelText("Date of birth")).toHaveAttribute("max", "2007-08-06");
 
     vi.useRealTimers();
   });
@@ -297,10 +299,12 @@ describe("OnboardingForm", () => {
   });
 
   it.each([
-    ["en", "", "Please enter a valid date of birth."],
-    ["en", "2100-01-01", "Please enter a valid date of birth."],
-    ["ko", "", "올바른 생년월일을 입력해 주세요."],
-    ["ko", "2100-01-01", "올바른 생년월일을 입력해 주세요."],
+    ["en", "", "Enter a valid date of birth for an age between 19 and 120."],
+    ["en", "2010-01-01", "Enter a valid date of birth for an age between 19 and 120."],
+    ["en", "1900-01-01", "Enter a valid date of birth for an age between 19 and 120."],
+    ["ko", "", "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요."],
+    ["ko", "2010-01-01", "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요."],
+    ["ko", "1900-01-01", "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요."],
   ] as const)(
     "shows localized birth date validation after a real %s submit with birth date %s",
     (locale, birthDate, message) => {
@@ -317,8 +321,8 @@ describe("OnboardingForm", () => {
   );
 
   it.each([
-    ["en", "Enter a contact ID or number with at least 2 characters."],
-    ["ko", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
+    ["en", "Enter a valid contact ID or phone number for the selected method."],
+    ["ko", "선택한 연락 수단에 맞는 올바른 ID 또는 전화번호를 입력해 주세요."],
   ] as const)("shows localized contact validation after a real %s submit", (locale, message) => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -364,7 +368,44 @@ describe("OnboardingForm", () => {
     clickContinue("en");
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Enter a contact ID or number with at least 2 characters.",
+      "Enter a valid contact ID or phone number for the selected method.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a messenger ID containing unsupported characters", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm />);
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    fireEvent.change(screen.getByLabelText("Messaging app ID"), {
+      target: { value: "line user" },
+    });
+
+    clickContinue("en");
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a valid contact ID or phone number for the selected method.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a phone-based contact containing non-numeric characters", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm />);
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
+    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+      target: { value: "12-ab" },
+    });
+
+    clickContinue("en");
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a valid contact ID or phone number for the selected method.",
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -465,6 +506,20 @@ describe("OnboardingForm profile image", () => {
     expect(screen.getByAltText("Selected profile photo preview")).toBeInTheDocument();
   });
 
+  it("shows the HanBuddy default image instead of the Google profile picture", () => {
+    renderWithIntl(
+      <OnboardingForm
+        googleProfile={{
+          name: "Traveler",
+          picture: "https://lh3.googleusercontent.com/google-profile.png",
+        }}
+      />,
+    );
+
+    expect(screen.getByAltText("HanBuddy default profile image")).toBeInTheDocument();
+    expect(screen.queryByAltText("Traveler profile")).not.toBeInTheDocument();
+  });
+
   it("uploads the selected image and submits its key as profileImageKey", async () => {
     vi.mocked(uploadProfileImage).mockResolvedValue({
       uploadUrl: "https://bucket.s3.amazonaws.com/profiles/2026/07/07/uuid.png?signed",
@@ -522,7 +577,14 @@ describe("OnboardingForm profile image", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
+    renderWithIntl(
+      <OnboardingForm
+        googleProfile={{
+          name: "Traveler",
+          picture: "https://lh3.googleusercontent.com/google-profile.png",
+        }}
+      />,
+    );
     fillRequiredFields();
 
     fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));

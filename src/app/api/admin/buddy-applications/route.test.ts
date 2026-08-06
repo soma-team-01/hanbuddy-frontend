@@ -14,24 +14,48 @@ const mockedGetBackend = vi.mocked(getBackend);
 describe("GET /api/admin/buddy-applications", () => {
   beforeEach(() => mockedGetBackend.mockReset());
 
-  it("rejects non-admin sessions before calling the backend", async () => {
+  it("rejects a forged admin cookie when the authenticated user is not an admin", async () => {
+    mockedGetBackend.mockResolvedValue({
+      status: 200,
+      payload: {
+        isSuccess: true,
+        code: "OK",
+        message: "ok",
+        result: { userType: "BUDDY" },
+      },
+      setCookies: [],
+    } as Awaited<ReturnType<typeof getBackend>>);
+
     const response = await GET(
       new NextRequest("http://localhost/api/admin/buddy-applications", {
         headers: {
-          cookie: `${AUTH_COOKIES.accessToken}=token; ${AUTH_COOKIES.userType}=BUDDY`,
+          cookie: `${AUTH_COOKIES.accessToken}=token; ${AUTH_COOKIES.userType}=ADMIN`,
         },
       }),
     );
+
     expect(response.status).toBe(403);
-    expect(mockedGetBackend).not.toHaveBeenCalled();
+    expect(mockedGetBackend).toHaveBeenCalledOnce();
+    expect(mockedGetBackend).toHaveBeenCalledWith("/users/me", { bearerToken: "token" });
   });
 
   it("forwards an admin session to the backend", async () => {
-    mockedGetBackend.mockResolvedValue({
-      status: 200,
-      payload: { isSuccess: true, code: "OK", message: "ok", result: [] },
-      setCookies: [],
-    });
+    mockedGetBackend
+      .mockResolvedValueOnce({
+        status: 200,
+        payload: {
+          isSuccess: true,
+          code: "OK",
+          message: "ok",
+          result: { userType: "ADMIN" },
+        },
+        setCookies: [],
+      } as Awaited<ReturnType<typeof getBackend>>)
+      .mockResolvedValueOnce({
+        status: 200,
+        payload: { isSuccess: true, code: "OK", message: "ok", result: [] },
+        setCookies: [],
+      });
     const response = await GET(
       new NextRequest("http://localhost/api/admin/buddy-applications", {
         headers: {
@@ -39,7 +63,11 @@ describe("GET /api/admin/buddy-applications", () => {
         },
       }),
     );
-    expect(mockedGetBackend).toHaveBeenCalledWith("/admin/buddy-applications", {
+
+    expect(mockedGetBackend).toHaveBeenNthCalledWith(1, "/users/me", {
+      bearerToken: "admin-token",
+    });
+    expect(mockedGetBackend).toHaveBeenNthCalledWith(2, "/admin/buddy-applications", {
       bearerToken: "admin-token",
     });
     expect(response.status).toBe(200);

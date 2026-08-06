@@ -11,7 +11,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ buddyUserId: string }> },
 ) {
-  const forbidden = requireAdmin(request);
+  const forbidden = await requireAdmin(request);
   if (forbidden) return forbidden;
   const { buddyUserId } = await params;
   if (!/^\d+$/.test(buddyUserId)) return badRequestResponse("올바른 사용자 ID가 필요합니다.");

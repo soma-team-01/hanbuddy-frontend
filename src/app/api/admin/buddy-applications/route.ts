@@ -3,7 +3,7 @@ import { proxyAuthenticatedGet, requireAdmin } from "@/app/api/_utils/authentica
 import type { BuddyApplicationSummary } from "@/types/admin";
 
 export async function GET(request: NextRequest) {
-  const forbidden = requireAdmin(request);
+  const forbidden = await requireAdmin(request);
   if (forbidden) return forbidden;
   return proxyAuthenticatedGet<BuddyApplicationSummary[]>(
     request,

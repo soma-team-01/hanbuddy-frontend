@@ -9,6 +9,7 @@ import {
   type BackendResponse,
 } from "@/lib/auth/backend";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import type { MyProfile } from "@/types/user";
 
 export function getAccessToken(request: NextRequest) {
   return request.cookies.get(AUTH_COOKIES.accessToken)?.value;
@@ -22,8 +23,21 @@ export function forbiddenResponse(message = "관리자 권한이 필요합니다
   return NextResponse.json(createProxyErrorResponse(message), { status: 403 });
 }
 
-export function requireAdmin(request: NextRequest) {
-  return request.cookies.get(AUTH_COOKIES.userType)?.value === "ADMIN" ? null : forbiddenResponse();
+export async function requireAdmin(request: NextRequest) {
+  const accessToken = getAccessToken(request);
+  if (!accessToken) return unauthorizedResponse();
+
+  try {
+    const backend = await getBackend<MyProfile>("/users/me", { bearerToken: accessToken });
+    if (!backend.payload.isSuccess || backend.status < 200 || backend.status >= 300) {
+      return createBackendJsonResponse(backend);
+    }
+
+    return backend.payload.result.userType === "ADMIN" ? null : forbiddenResponse();
+  } catch (error) {
+    console.error("관리자 권한을 확인하지 못했습니다.", error);
+    return backendUnavailableResponse("관리자 권한을 확인하지 못했습니다.");
+  }
 }
 
 export function badRequestResponse(message: string) {

@@ -35,9 +35,6 @@ export function AccountStatusContent({ status, reason }: Readonly<AccountStatusC
             <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
               <AccountStatusIcon status={status} />
             </div>
-            <p className="mb-2 text-[11px] font-bold tracking-[0.22em] text-primary uppercase">
-              {t("eyebrow")}
-            </p>
             <h1 className="max-w-[540px] font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-[30px]">
               {copy.title}
             </h1>

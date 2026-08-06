@@ -374,22 +374,21 @@
   "AccountStatus": {
     "metadataTitle": "Account status | HanBuddy",
     "metadataDescription": "Check the review status of your HanBuddy account.",
-    "eyebrow": "Buddy account status",
     "pending": {
-      "title": "Your buddy application is under review",
-      "description": "Thanks for applying to host with HanBuddy. We will carefully review your profile and let you know when your buddy account is ready.",
-      "reviewTime": "Reviews usually take 1–3 business days."
+      "title": "Buddy application under review",
+      "description": "We'll email you when the review is complete.",
+      "reviewTime": "Usually 1–3 business days"
     },
     "rejected": {
-      "title": "We could not approve your buddy application",
-      "description": "Please review the reason below if one was provided. Contact us if you would like help or have additional information to share."
+      "title": "Buddy application not approved",
+      "description": "Check the reason below and contact us if you need help."
     },
     "suspended": {
-      "title": "Your buddy account is currently suspended",
-      "description": "Access to buddy features is temporarily unavailable. Please contact HanBuddy so we can check the account with you."
+      "title": "Buddy account suspended",
+      "description": "Buddy features are unavailable. Contact us if you need help."
     },
     "reasonLabel": "Reason provided",
-    "contactHelp": "If you have questions about the review or your account, please contact <email>zeroone.soma@gmail.com</email>.",
+    "contactHelp": "Questions? Contact <email>zeroone.soma@gmail.com</email>.",
     "backToBuddy": "Back to buddy page"
   },
   "Profile": {

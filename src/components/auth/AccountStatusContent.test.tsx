@@ -8,9 +8,9 @@ describe("AccountStatusContent", () => {
     renderWithIntl(<AccountStatusContent status="PENDING_APPROVAL" />);
 
     expect(
-      screen.getByRole("heading", { name: "Your buddy application is under review" }),
+      screen.getByRole("heading", { name: "Buddy application under review" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Reviews usually take 1–3 business days.")).toBeInTheDocument();
+    expect(screen.getByText("Usually 1–3 business days")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "zeroone.soma@gmail.com" })).toHaveAttribute(
       "href",
       "mailto:zeroone.soma@gmail.com",
@@ -39,9 +39,7 @@ describe("AccountStatusContent", () => {
   it("localizes the suspended account guidance in Korean", () => {
     renderWithIntl(<AccountStatusContent status="SUSPENDED" />, { locale: "ko" });
 
-    expect(
-      screen.getByRole("heading", { name: "현재 버디 계정 이용이 정지되어 있어요" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "버디 계정 이용 정지" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "버디 페이지로 돌아가기" })).toHaveAttribute(
       "href",
       "/ko/buddy",

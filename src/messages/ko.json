@@ -332,7 +332,6 @@
     "headline": "몇 가지만 알려주면, 한버디 여행 준비가 끝나요.",
     "description": "활동이 확정되었을 때 버디가 여행자님을 잘 맞이하고 연락할 수 있도록 사용해요.",
     "displayName": "닉네임",
-    "displayNameDescription": "버디에게 보이는 이름이에요. Google에서 받은 이름을 자유롭게 수정할 수 있어요.",
     "personalInformation": "기본 정보",
     "nationality": "국적",
     "birthDate": "생년월일",
@@ -345,6 +344,15 @@
     "selectedProfilePhotoPreview": "선택한 프로필 사진 미리보기",
     "googleProfile": "Google 프로필",
     "profileFor": "{name} 프로필",
+    "steps": {
+      "progress": "총 {total}단계 중 {current}단계",
+      "aboutYou": "기본 정보",
+      "aboutYouDescription": "버디가 여행자님을 맞이할 때 필요한 정보를 알려주세요.",
+      "contact": "연락 수단",
+      "agreements": "동의 항목",
+      "continue": "다음",
+      "back": "이전"
+    },
     "agreements": {
       "title": "동의 항목",
       "description": "회원가입 전에 필수 항목을 확인해 주세요.",
@@ -384,7 +392,6 @@
     "eyebrow": "예비 버디님, 반가워요",
     "headline": "몇 가지만 알려주면, 나만의 로컬 이야기를 시작할 수 있어요.",
     "description": "지금은 게스트가 버디를 알아보고 연락할 수 있는 기본 정보만 알려주세요. 호스팅 정보는 나중에 추가할 수 있어요.",
-    "displayNameDescription": "게스트에게 보이는 이름이에요. Google에서 받은 이름을 자유롭게 수정할 수 있어요.",
     "profilePhotoOptional": "만날 때 게스트가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
     "contactMethods": "게스트가 어떻게 연락하면 될까요?",
     "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",

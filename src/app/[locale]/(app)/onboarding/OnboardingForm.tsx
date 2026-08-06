@@ -51,6 +51,8 @@ interface OnboardingFormProps {
   userType?: UserType;
 }
 
+type OnboardingStep = 1 | 2 | 3;
+
 function getLocalDateInputValue(date: Date) {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
   return localDate.toISOString().slice(0, 10);
@@ -77,6 +79,9 @@ export function OnboardingForm({
   const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
+  const [displayName, setDisplayName] = useState(googleProfile?.name ?? "");
+  const [birthDate, setBirthDate] = useState("");
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
   const [messagingContact, setMessagingContact] = useState("");
   const [agreementDecisions, setAgreementDecisions] = useState<
@@ -100,6 +105,7 @@ export function OnboardingForm({
   const [profileImagePreview, setProfileImagePreview] = useState("");
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
   const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync("");
   const agreementTypes = getSignupAgreementTypes(userType);
@@ -113,6 +119,10 @@ export function OnboardingForm({
       if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
     };
   }, [profileImagePreview]);
+
+  useEffect(() => {
+    stepHeadingRef.current?.focus();
+  }, [currentStep]);
 
   function handleProfileImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -168,44 +178,90 @@ export function OnboardingForm({
     return uploaded.imageKey;
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErrorKey(null);
-    setRequestFailure(null);
+  function validateAboutYou() {
+    const trimmedDisplayName = displayName.trim();
+    if (
+      trimmedDisplayName.length < 2 ||
+      trimmedDisplayName.length > 30 ||
+      trimmedDisplayName !== displayName
+    ) {
+      setErrorKey("validation.displayNameInvalid");
+      return false;
+    }
+    if (!nationality) {
+      setErrorKey("validation.nationalityRequired");
+      return false;
+    }
 
-    const formData = new FormData(event.currentTarget);
-    const displayNameEntry = formData.get("displayName");
-    const rawDisplayName = typeof displayNameEntry === "string" ? displayNameEntry : "";
-    const displayName = rawDisplayName.trim();
-    const birthDateEntry = formData.get("birthDate");
-    const birthDate = typeof birthDateEntry === "string" ? birthDateEntry.trim() : "";
+    const today = getLocalDateInputValue(new Date());
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || birthDate > today) {
+      setErrorKey("validation.birthDateInvalid");
+      return false;
+    }
+    return true;
+  }
+
+  function validateContact() {
     const contactIdentifier = messagingContact.trim();
     const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
     const contactCountryCode = requiresContactCountryCode
       ? findCountry(messagingCountry)?.dialCode
       : "";
-    const today = getLocalDateInputValue(new Date());
 
-    if (!nationality) {
-      setErrorKey("validation.nationalityRequired");
-      return;
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || birthDate > today) {
-      setErrorKey("validation.birthDateInvalid");
-      return;
-    }
     if (contactIdentifier.length < 2 || (requiresContactCountryCode && !contactCountryCode)) {
       setErrorKey("validation.contactInvalid");
-      return;
+      return false;
     }
-    if (displayName.length < 2 || displayName.length > 30 || displayName !== rawDisplayName) {
-      setErrorKey("validation.displayNameInvalid");
-      return;
-    }
+    return true;
+  }
+
+  function validateAgreements() {
     if (!hasAllRequiredSignupAgreements(userType, agreementDecisions)) {
       setErrorKey("validation.agreementsRequired");
+      return false;
+    }
+    return true;
+  }
+
+  function goToStep(step: OnboardingStep) {
+    setErrorKey(null);
+    setRequestFailure(null);
+    setCurrentStep(step);
+  }
+
+  function handleContinue() {
+    setErrorKey(null);
+    setRequestFailure(null);
+
+    if (currentStep === 1 && validateAboutYou()) goToStep(2);
+    if (currentStep === 2 && validateContact()) goToStep(3);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorKey(null);
+    setRequestFailure(null);
+
+    if (currentStep !== 3) {
+      handleContinue();
       return;
     }
+
+    if (!validateAboutYou()) {
+      setCurrentStep(1);
+      return;
+    }
+    if (!validateContact()) {
+      setCurrentStep(2);
+      return;
+    }
+    if (!validateAgreements()) return;
+
+    const contactIdentifier = messagingContact.trim();
+    const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
+    const contactCountryCode = requiresContactCountryCode
+      ? findCountry(messagingCountry)?.dialCode
+      : "";
 
     setIsSubmitting(true);
     try {
@@ -219,7 +275,7 @@ export function OnboardingForm({
 
       const payload: GoogleSignupRequest = {
         userType,
-        displayName,
+        displayName: displayName.trim(),
         ...(profileImageKey ? { profileImageKey } : {}),
         nationalityCode: nationality,
         birthDate,
@@ -311,8 +367,6 @@ export function OnboardingForm({
     eyebrow: userType === "BUDDY" ? buddyT("eyebrow") : t("eyebrow"),
     headline: userType === "BUDDY" ? buddyT("headline") : t("headline"),
     description: userType === "BUDDY" ? buddyT("description") : t("description"),
-    displayNameDescription:
-      userType === "BUDDY" ? buddyT("displayNameDescription") : t("displayNameDescription"),
     photoGuidance:
       userType === "BUDDY" ? buddyT("profilePhotoOptional") : t("profilePhotoOptional"),
     contactMethods: userType === "BUDDY" ? buddyT("contactMethods") : t("contactMethods"),
@@ -370,12 +424,13 @@ export function OnboardingForm({
       isDocument: false,
     },
   ];
+  const stepLabels = [t("steps.aboutYou"), t("steps.contact"), t("steps.agreements")];
 
   return (
     <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
       <main className="flex-1 py-3 md:py-4">
         <PageContainer>
-          <div className="flex h-10 items-center">
+          <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4">
             <Link
               href={userType === "BUDDY" ? "/buddy" : "/login"}
               aria-label={accessibilityT("close")}
@@ -383,191 +438,272 @@ export function OnboardingForm({
             >
               <XIcon className="size-5" />
             </Link>
+            <header className="min-w-0 pt-1 text-left">
+              <p className="font-display text-[11px] font-bold tracking-[0.22em] text-primary uppercase">
+                {roleCopy.eyebrow}
+              </p>
+              <h1 className="mt-1.5 font-display text-xl leading-tight font-extrabold tracking-[-0.03em] text-ink md:text-2xl lg:whitespace-nowrap">
+                {roleCopy.headline}
+              </h1>
+              <p className="mt-1.5 text-sm leading-6 text-muted lg:whitespace-nowrap">
+                {roleCopy.description}
+              </p>
+            </header>
           </div>
-
-          <header className="mx-auto mt-1 max-w-none text-center lg:-mt-7">
-            <p className="font-display text-xs font-bold tracking-[0.24em] text-primary uppercase">
-              {roleCopy.eyebrow}
-            </p>
-            <h1 className="mt-2 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-3xl lg:whitespace-nowrap">
-              {roleCopy.headline}
-            </h1>
-            <p className="mx-auto mt-2 max-w-none text-sm leading-6 text-muted md:text-base lg:whitespace-nowrap">
-              {roleCopy.description}
-            </p>
-          </header>
 
           <form
             id="google-onboarding-form"
             aria-label={roleCopy.title}
             noValidate
             onSubmit={handleSubmit}
-            className="mx-auto mt-5 flex w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-t-[3px] border-line-soft border-t-primary bg-canvas-soft shadow-[0_16px_48px_rgba(61,45,43,0.07)]"
+            className="mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft lg:min-h-[620px] lg:grid-cols-[250px_minmax(0,1fr)]"
           >
-            <section className="flex items-center gap-4 px-5 py-4 md:px-6">
-              <div className="relative">
-                {profilePhoto}
-                <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
-                  <CameraIcon className="size-4" />
-                  <span className="sr-only">{t("addProfilePhoto")}</span>
-                  <input
-                    type="file"
-                    accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
-                    className="sr-only"
-                    onChange={handleProfileImageChange}
-                  />
-                </label>
-              </div>
-              <div className="grid min-w-0 flex-1 gap-1.5 sm:grid-cols-[minmax(0,260px)_1fr] sm:items-end sm:gap-5">
-                <label className="flex min-w-0 flex-col gap-1">
-                  <span className="text-xs font-semibold text-ink">{t("displayName")}</span>
-                  <input
-                    name="displayName"
-                    type="text"
-                    required
-                    minLength={2}
-                    maxLength={30}
-                    defaultValue={googleProfile?.name ?? ""}
-                    aria-label={t("displayName")}
-                    className="h-10 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
-                  />
-                </label>
-                <div className="min-w-0 pb-0.5">
-                  <p className="text-xs leading-5 text-muted">{roleCopy.displayNameDescription}</p>
-                  <p className="text-xs leading-5 text-muted">{roleCopy.photoGuidance}</p>
-                </div>
-              </div>
-            </section>
-
-            <div className="grid border-t border-line-soft lg:grid-cols-2">
-              <section className="flex flex-col gap-3 px-5 py-5 md:px-6 lg:border-r lg:border-line-soft">
-                <h2 className="font-display text-lg font-bold text-ink">
-                  {t("personalInformation")}
-                </h2>
-                <div data-testid="onboarding-personal-fields" className="grid gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-sm font-medium text-ink">{t("nationality")}</span>
-                    <CountrySelect
-                      value={nationality}
-                      onChange={handleNationalityChange}
-                      ariaLabel={t("nationality")}
-                      triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong"
-                    />
-                  </div>
-                  <label className="flex flex-col gap-1.5">
-                    <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
-                    <input
-                      name="birthDate"
-                      type="date"
-                      max={maxBirthDate}
-                      required
-                      aria-label={t("birthDate")}
-                      className="w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
-                    />
-                  </label>
-                </div>
-              </section>
-
-              <section className="flex flex-col gap-3 border-t border-line-soft px-5 py-5 md:px-6 lg:border-t-0">
-                <div>
-                  <h2 className="font-display text-lg font-bold text-ink">
-                    {roleCopy.contactMethods}
-                  </h2>
-                  <p className="mt-0.5 text-sm text-muted">{roleCopy.contactDescription}</p>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
-                  <MessagingAppField
-                    app={messagingApp}
-                    onAppChange={handleMessagingAppChange}
-                    country={messagingCountry}
-                    onCountryChange={handleMessagingCountryChange}
-                    contactValue={messagingContact}
-                    onContactChange={setMessagingContact}
-                    inputName="contactIdentifier"
-                    inputRequired
-                    variant="cards"
-                  />
-                </div>
-              </section>
-            </div>
-
-            <section className="border-t border-line-soft px-5 py-5 md:px-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="font-display text-lg font-bold text-ink">
-                    {t("agreements.title")}
-                  </h2>
-                  <p className="mt-0.5 text-sm text-muted">{t("agreements.description")}</p>
-                </div>
-                <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line-soft px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary">
-                  <input
-                    type="checkbox"
-                    checked={allAgreementsSelected}
-                    onChange={(event) => handleAllAgreementsChange(event.target.checked)}
-                    className="size-4 accent-primary"
-                  />
-                  {t("agreements.agreeAll")}
-                </label>
-              </div>
-
-              <div className="mt-4 grid gap-2 md:grid-cols-2">
-                {agreementItems.map((item) => {
-                  const isRequired = requiredAgreementTypes.includes(item.type);
+            <nav
+              aria-label={t("steps.progress", { current: currentStep, total: stepLabels.length })}
+              className="border-b border-line-soft px-5 py-4 lg:border-r lg:border-b-0 lg:px-8 lg:py-12"
+            >
+              <p className="mb-4 hidden text-xs font-bold tracking-[0.18em] text-primary uppercase lg:block">
+                {t("steps.progress", { current: currentStep, total: stepLabels.length })}
+              </p>
+              <ol className="grid grid-cols-3 gap-2 lg:flex lg:flex-col lg:gap-5">
+                {stepLabels.map((label, index) => {
+                  const step = (index + 1) as OnboardingStep;
+                  const isActive = currentStep === step;
+                  const isComplete = currentStep > step;
                   return (
-                    <label
-                      key={item.type}
-                      className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line-soft bg-canvas-soft px-4 py-3 transition-colors hover:border-primary"
+                    <li
+                      key={label}
+                      aria-current={isActive ? "step" : undefined}
+                      className="flex min-w-0 items-center gap-2.5"
                     >
-                      <input
-                        type="checkbox"
-                        checked={agreementDecisions[item.type] === true}
-                        onChange={(event) => handleAgreementChange(item.type, event.target.checked)}
-                        className="mt-0.5 size-4 shrink-0 accent-primary"
-                      />
-                      <span className="flex min-w-0 flex-1 items-start justify-between gap-3 text-sm leading-5">
-                        <span
-                          className={
-                            item.isDocument
-                              ? "font-medium text-primary underline decoration-primary/40 underline-offset-4"
-                              : "text-ink"
-                          }
-                        >
-                          {item.label}
-                        </span>
-                        <span
-                          className={
-                            isRequired
-                              ? "shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-strong"
-                              : "shrink-0 rounded-full bg-panel px-2 py-0.5 text-xs font-semibold text-muted"
-                          }
-                        >
-                          {isRequired ? t("agreements.required") : t("agreements.optional")}
-                        </span>
+                      <span
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                          isActive || isComplete
+                            ? "border-primary bg-primary text-on-primary"
+                            : "border-line-strong bg-canvas-soft text-muted"
+                        }`}
+                      >
+                        {step}
                       </span>
-                    </label>
+                      <span
+                        className={`hidden truncate text-xs font-semibold sm:block sm:text-sm ${
+                          isActive ? "text-primary-strong" : "text-muted"
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    </li>
                   );
                 })}
-              </div>
-            </section>
+              </ol>
+            </nav>
 
-            {errorMessage ? (
-              <p
-                role="alert"
-                className="mx-5 mb-5 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger md:mx-8 md:mb-8"
-              >
-                {errorMessage}
-              </p>
-            ) : null}
-            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-canvas-soft px-4 py-3 shadow-[0_-8px_24px_rgba(61,45,43,0.08)] lg:static lg:flex lg:justify-end lg:px-6 lg:py-4 lg:shadow-none">
-              <div className="w-full lg:w-72">
+            <div className="flex min-w-0 flex-col">
+              {currentStep === 1 ? (
+                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                  <div>
+                    <h2
+                      ref={stepHeadingRef}
+                      tabIndex={-1}
+                      className="font-display text-xl font-bold text-ink outline-none"
+                    >
+                      {t("personalInformation")}
+                    </h2>
+                  </div>
+
+                  <div className="mt-8 max-w-2xl space-y-6">
+                    <div className="grid items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
+                      <div className="relative shrink-0">
+                        {profilePhoto}
+                        <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
+                          <CameraIcon className="size-4" />
+                          <span className="sr-only">{t("addProfilePhoto")}</span>
+                          <input
+                            type="file"
+                            accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
+                            className="sr-only"
+                            onChange={handleProfileImageChange}
+                          />
+                        </label>
+                      </div>
+                      <div className="min-w-0">
+                        <label className="flex min-w-0 flex-col gap-1.5">
+                          <span className="text-sm font-medium text-ink">{t("displayName")}</span>
+                          <input
+                            name="displayName"
+                            type="text"
+                            required
+                            minLength={2}
+                            maxLength={30}
+                            value={displayName}
+                            onChange={(event) => setDisplayName(event.target.value)}
+                            aria-label={t("displayName")}
+                            className="h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                          />
+                        </label>
+                        <p className="mt-2 text-xs leading-5 text-muted">
+                          {roleCopy.photoGuidance}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div data-testid="onboarding-personal-fields" className="grid gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-sm font-medium text-ink">{t("nationality")}</span>
+                        <CountrySelect
+                          value={nationality}
+                          onChange={handleNationalityChange}
+                          ariaLabel={t("nationality")}
+                          triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong"
+                        />
+                      </div>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
+                        <input
+                          name="birthDate"
+                          type="date"
+                          max={maxBirthDate}
+                          required
+                          value={birthDate}
+                          onChange={(event) => setBirthDate(event.target.value)}
+                          aria-label={t("birthDate")}
+                          className="w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
+              {currentStep === 2 ? (
+                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                  <div>
+                    <h2
+                      ref={stepHeadingRef}
+                      tabIndex={-1}
+                      className="font-display text-xl font-bold text-ink outline-none"
+                    >
+                      {roleCopy.contactMethods}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted">{roleCopy.contactDescription}</p>
+                  </div>
+                  <div className="mt-8 flex max-w-3xl flex-col gap-1.5">
+                    <span className="text-sm font-medium text-ink">
+                      {t("preferredMessagingApp")}
+                    </span>
+                    <MessagingAppField
+                      app={messagingApp}
+                      onAppChange={handleMessagingAppChange}
+                      country={messagingCountry}
+                      onCountryChange={handleMessagingCountryChange}
+                      contactValue={messagingContact}
+                      onContactChange={setMessagingContact}
+                      inputName="contactIdentifier"
+                      inputRequired
+                      variant="cards"
+                    />
+                  </div>
+                </section>
+              ) : null}
+
+              {currentStep === 3 ? (
+                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2
+                        ref={stepHeadingRef}
+                        tabIndex={-1}
+                        className="font-display text-xl font-bold text-ink outline-none"
+                      >
+                        {t("agreements.title")}
+                      </h2>
+                      <p className="mt-1 text-sm text-muted">{t("agreements.description")}</p>
+                    </div>
+                    <label className="flex cursor-pointer items-center gap-2 self-start rounded-full border border-line-soft px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary sm:self-auto">
+                      <input
+                        type="checkbox"
+                        checked={allAgreementsSelected}
+                        onChange={(event) => handleAllAgreementsChange(event.target.checked)}
+                        className="size-4 accent-primary"
+                      />
+                      {t("agreements.agreeAll")}
+                    </label>
+                  </div>
+
+                  <div className="mt-7 max-w-3xl divide-y divide-line-soft border-y border-line-soft">
+                    {agreementItems.map((item) => {
+                      const isRequired = requiredAgreementTypes.includes(item.type);
+                      return (
+                        <label
+                          key={item.type}
+                          className="flex cursor-pointer items-start gap-3 py-3.5"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={agreementDecisions[item.type] === true}
+                            onChange={(event) =>
+                              handleAgreementChange(item.type, event.target.checked)
+                            }
+                            className="mt-0.5 size-4 shrink-0 accent-primary"
+                          />
+                          <span className="flex min-w-0 flex-1 items-start justify-between gap-3 text-sm leading-5">
+                            <span
+                              className={
+                                item.isDocument
+                                  ? "font-medium text-primary underline decoration-primary/40 underline-offset-4"
+                                  : "text-ink"
+                              }
+                            >
+                              {item.label}
+                            </span>
+                            <span
+                              className={
+                                isRequired
+                                  ? "shrink-0 text-xs font-semibold text-primary-strong"
+                                  : "shrink-0 text-xs font-semibold text-muted"
+                              }
+                            >
+                              {isRequired ? t("agreements.required") : t("agreements.optional")}
+                            </span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
+
+              {errorMessage ? (
+                <p
+                  role="alert"
+                  className="mx-5 mb-5 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger md:mx-8 md:mb-8"
+                >
+                  {errorMessage}
+                </p>
+              ) : null}
+              <div className="fixed inset-x-0 bottom-0 z-30 mt-auto flex justify-end gap-2 bg-canvas-soft px-4 py-3 shadow-[0_-8px_24px_rgba(61,45,43,0.08)] lg:static lg:bg-transparent lg:px-16 lg:py-6 lg:shadow-none">
+                {currentStep > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => goToStep((currentStep - 1) as OnboardingStep)}
+                    className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-line-soft bg-canvas-soft px-5 font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary lg:flex-none"
+                  >
+                    <ArrowRightIcon className="size-4 rotate-180" />
+                    {t("steps.back")}
+                  </button>
+                ) : null}
                 <button
                   form="google-onboarding-form"
-                  type="submit"
+                  type={currentStep === 3 ? "submit" : "button"}
+                  onClick={currentStep === 3 ? undefined : handleContinue}
                   disabled={isSubmitting}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-base font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+                  className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60 lg:min-w-32 lg:flex-none"
                 >
-                  {isSubmitting ? roleCopy.submitting : roleCopy.submit}
+                  {currentStep === 3
+                    ? isSubmitting
+                      ? roleCopy.submitting
+                      : roleCopy.submit
+                    : t("steps.continue")}
                   <ArrowRightIcon className="size-4" />
                 </button>
               </div>

@@ -332,7 +332,6 @@
     "headline": "A few details, then Korea is yours to explore.",
     "description": "Help local buddies welcome you well and reach you when an experience is confirmed.",
     "displayName": "Nickname",
-    "displayNameDescription": "This is the name buddies will see. You can edit the name from Google.",
     "personalInformation": "About you",
     "nationality": "Nationality",
     "birthDate": "Date of birth",
@@ -345,6 +344,15 @@
     "selectedProfilePhotoPreview": "Selected profile photo preview",
     "googleProfile": "Google profile",
     "profileFor": "{name} profile",
+    "steps": {
+      "progress": "Step {current} of {total}",
+      "aboutYou": "About you",
+      "aboutYouDescription": "Add the details your buddy will use to welcome you.",
+      "contact": "Contact",
+      "agreements": "Agreements",
+      "continue": "Next",
+      "back": "Back"
+    },
     "agreements": {
       "title": "Agreements",
       "description": "Review the required items before creating your account.",
@@ -384,7 +392,6 @@
     "eyebrow": "Welcome, future buddy",
     "headline": "A few details, then your local story can begin.",
     "description": "For now, tell us how guests can recognize and reach you. You can add hosting details later.",
-    "displayNameDescription": "This is the name guests will see. You can edit the name from Google.",
     "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
     "contactMethods": "How should guests reach you?",
     "contactDescription": "Choose the messenger you check most often.",

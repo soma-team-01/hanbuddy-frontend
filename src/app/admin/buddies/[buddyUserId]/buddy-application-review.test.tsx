@@ -74,6 +74,17 @@ describe("BuddyApplicationReview", () => {
     expect(screen.getByRole("button", { name: "거절" })).toBeInTheDocument();
   });
 
+  it("approves the applicant and returns to the list after success", async () => {
+    mockedApprove.mockResolvedValue({ status: "success", message: "승인되었습니다." });
+    renderWithQueryClient(<BuddyApplicationReview userId="42" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "버디 승인" }));
+    fireEvent.click(screen.getByRole("button", { name: "승인하기" }));
+
+    await waitFor(() => expect(mockedApprove).toHaveBeenCalledWith("42"));
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddies"));
+  });
+
   it("requires a reason before rejecting and returns to the list after success", async () => {
     mockedReject.mockResolvedValue({ status: "success", message: "거절되었습니다." });
     renderWithQueryClient(<BuddyApplicationReview userId="42" />);

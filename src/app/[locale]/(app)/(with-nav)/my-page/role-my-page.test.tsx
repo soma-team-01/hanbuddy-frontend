@@ -34,10 +34,10 @@ function renderRoleMyPage(
 }
 
 describe("role-specific My Page", () => {
-  it("returns tourists to Explore", () => {
+  it("returns tourists to Home", () => {
     renderRoleMyPage(<TouristMyPage />, "TOURIST");
 
-    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/en/explore");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/en");
     expect(screen.getByTestId("my-page-layout")).toHaveClass(
       "lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]",
     );

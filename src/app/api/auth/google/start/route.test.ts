@@ -72,6 +72,23 @@ describe("GET /api/auth/google/start", () => {
     expect(setCookie).toContain("Path=/");
   });
 
+  it("stores an admin OAuth intent and returns admin errors to the admin login", () => {
+    process.env.GOOGLE_CLIENT_ID = "server-client-id";
+    process.env.GOOGLE_REDIRECT_URI = "http://localhost:3000/auth/google/callback";
+
+    const response = GET(new NextRequest("http://localhost/api/auth/google/start?intent=admin"));
+
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.oauthIntent}=admin`);
+
+    delete process.env.GOOGLE_CLIENT_ID;
+    const errorResponse = GET(
+      new NextRequest("http://localhost/api/auth/google/start?intent=admin"),
+    );
+    expect(errorResponse.headers.get("location")).toBe(
+      "http://localhost/admin/login?error=configuration",
+    );
+  });
+
   it("does not expose unexpected internal error messages", async () => {
     vi.resetModules();
     vi.doMock("@/lib/auth/google", () => ({

@@ -18,6 +18,14 @@ export function unauthorizedResponse() {
   return NextResponse.json(createProxyErrorResponse("로그인이 필요합니다."), { status: 401 });
 }
 
+export function forbiddenResponse(message = "관리자 권한이 필요합니다.") {
+  return NextResponse.json(createProxyErrorResponse(message), { status: 403 });
+}
+
+export function requireAdmin(request: NextRequest) {
+  return request.cookies.get(AUTH_COOKIES.userType)?.value === "ADMIN" ? null : forbiddenResponse();
+}
+
 export function badRequestResponse(message: string) {
   return NextResponse.json(createProxyErrorResponse(message), { status: 400 });
 }

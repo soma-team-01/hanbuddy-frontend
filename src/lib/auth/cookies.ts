@@ -4,6 +4,7 @@ import type { GoogleLoginResponse, GoogleProfile } from "./types";
 export const AUTH_COOKIES = {
   oauthState: "hanbuddy_oauth_state",
   oauthLocale: "hanbuddy_oauth_locale",
+  oauthIntent: "hanbuddy_oauth_intent",
   accessToken: "hanbuddy_access_token",
   signupToken: "hanbuddy_signup_token",
   googleProfile: "hanbuddy_google_profile",

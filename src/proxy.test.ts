@@ -88,6 +88,32 @@ describe("route access proxy", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
+  it("protects bare admin routes without locale rewriting", async () => {
+    const unauthenticated = await runProxy("/admin/buddies");
+    expect(unauthenticated.headers.get("location")).toBe("http://localhost/admin/login");
+
+    const nonAdmin = await runProxy("/admin/buddies", {
+      [AUTH_COOKIES.accessToken]: "access-token",
+      [AUTH_COOKIES.userType]: "TOURIST",
+    });
+    expect(nonAdmin.headers.get("location")).toBe("http://localhost/admin/login?error=adminOnly");
+
+    const admin = await runProxy("/admin/buddies", {
+      [AUTH_COOKIES.accessToken]: "access-token",
+      [AUTH_COOKIES.userType]: "ADMIN",
+    });
+    expect(admin.status).toBe(200);
+    expect(admin.headers.get("x-middleware-rewrite")).toBeNull();
+  });
+
+  it("redirects authenticated admins away from the admin login", async () => {
+    const response = await runProxy("/admin/login", {
+      [AUTH_COOKIES.accessToken]: "access-token",
+      [AUTH_COOKIES.userType]: "ADMIN",
+    });
+    expect(response.headers.get("location")).toBe("http://localhost/admin/buddies");
+  });
+
   it("redirects authenticated users away from login", async () => {
     const response = await runProxy("/en/login", {
       [AUTH_COOKIES.accessToken]: "access-token",
@@ -173,6 +199,9 @@ describe("route access proxy", () => {
     "/my-activities/1/applicants",
     "/my-page",
     "/my-page/edit",
+    "/admin",
+    "/admin/login",
+    "/admin/buddies",
   ])("matches the protected page route %s", (url) => {
     expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(true);
   });

@@ -187,6 +187,69 @@ describe("GET /auth/google/callback", () => {
     expect(response.headers.get("location")).toBe("http://localhost/ko/dashboard");
   });
 
+  it("redirects a registered admin intent to the admin dashboard", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          accessToken: "admin-access-token",
+          userType: "ADMIN",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest(undefined, undefined, "admin"));
+
+    expect(response.headers.get("location")).toBe("http://localhost/admin/buddies");
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.userType}=ADMIN`);
+  });
+
+  it("rejects non-admin and unregistered users from the admin login flow", async () => {
+    mockedPostBackend.mockResolvedValueOnce({
+      status: 200,
+      setCookies: ["refresh_token=tourist; Path=/; HttpOnly"],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          accessToken: "tourist-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+    const touristResponse = await GET(createCallbackRequest(undefined, undefined, "admin"));
+    expect(touristResponse.headers.get("location")).toBe(
+      "http://localhost/admin/login?error=adminOnly",
+    );
+    expect(touristResponse.headers.get("set-cookie") ?? "").not.toContain("refresh_token=tourist");
+
+    mockedPostBackend.mockResolvedValueOnce({
+      status: 200,
+      setCookies: ["refresh_token=signup; Path=/; HttpOnly"],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: { registered: false, signupToken: "signup-token" },
+      },
+    });
+    const signupResponse = await GET(createCallbackRequest(undefined, undefined, "admin"));
+    expect(signupResponse.headers.get("location")).toBe(
+      "http://localhost/admin/login?error=adminAccountRequired",
+    );
+    expect(signupResponse.headers.get("set-cookie") ?? "").not.toContain(
+      `${AUTH_COOKIES.signupToken}=signup-token`,
+    );
+    expect(signupResponse.headers.get("set-cookie") ?? "").not.toContain("refresh_token=signup");
+  });
+
   it("redirects unregistered users to onboarding with signup cookies", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,
@@ -296,10 +359,11 @@ describe("GET /auth/google/callback", () => {
   });
 });
 
-function createCallbackRequest(locale?: string, oauthLocale?: string) {
+function createCallbackRequest(locale?: string, oauthLocale?: string, oauthIntent?: string) {
   const requestCookies = [`${AUTH_COOKIES.oauthState}=state`];
   if (locale) requestCookies.push(`${LOCALE_COOKIE_NAME}=${locale}`);
   if (oauthLocale) requestCookies.push(`${AUTH_COOKIES.oauthLocale}=${oauthLocale}`);
+  if (oauthIntent) requestCookies.push(`${AUTH_COOKIES.oauthIntent}=${oauthIntent}`);
 
   return new NextRequest("http://localhost/auth/google/callback?code=code&state=state", {
     headers: {

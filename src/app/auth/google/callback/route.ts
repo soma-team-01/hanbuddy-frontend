@@ -46,19 +46,45 @@ export async function GET(request: NextRequest) {
     }
 
     const result = backend.payload.result;
-    const response = result.registered
-      ? createAuthenticatedRedirect(request, result)
-      : createOnboardingRedirect(request, result);
+    const adminIntent = isAdminIntent(request);
+    const response = adminIntent
+      ? createAdminRedirect(request, result)
+      : result.registered
+        ? createAuthenticatedRedirect(request, result)
+        : createOnboardingRedirect(request, result);
 
     response.cookies.delete(AUTH_COOKIES.oauthState);
     response.cookies.delete(AUTH_COOKIES.oauthLocale);
-    if (hasUsableGoogleLoginResult(result)) {
+    response.cookies.delete(AUTH_COOKIES.oauthIntent);
+    if (adminIntent ? hasUsableAdminLoginResult(result) : hasUsableGoogleLoginResult(result)) {
       appendBackendSetCookies(response, backend.setCookies);
     }
     return response;
   } catch {
     return redirectToLoginWithError(request, "serverUnavailable");
   }
+}
+
+function hasUsableAdminLoginResult(result: GoogleLoginResponse) {
+  return Boolean(result.registered && result.accessToken && result.userType === "ADMIN");
+}
+
+function isAdminIntent(request: NextRequest) {
+  return request.cookies.get(AUTH_COOKIES.oauthIntent)?.value === "admin";
+}
+
+function createAdminRedirect(request: NextRequest, result: GoogleLoginResponse) {
+  if (!result.registered) {
+    return redirectToAdminLoginWithError(request, "adminAccountRequired");
+  }
+  if (!result.accessToken || result.userType !== "ADMIN") {
+    return redirectToAdminLoginWithError(request, "adminOnly");
+  }
+
+  const response = NextResponse.redirect(new URL("/admin/buddies", request.url));
+  setAuthenticatedSessionCookies(response, result);
+  clearSignupCookies(response);
+  return response;
 }
 
 function hasUsableGoogleLoginResult(result: GoogleLoginResponse) {
@@ -100,12 +126,25 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
 }
 
 function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
+  if (isAdminIntent(request)) return redirectToAdminLoginWithError(request, code);
   const loginUrl = createLocalizedUrl(request, "/login");
   loginUrl.searchParams.set("error", code);
 
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);
   response.cookies.delete(AUTH_COOKIES.oauthLocale);
+  response.cookies.delete(AUTH_COOKIES.oauthIntent);
+  return response;
+}
+
+function redirectToAdminLoginWithError(request: NextRequest, code: string) {
+  const loginUrl = new URL("/admin/login", request.url);
+  loginUrl.searchParams.set("error", code);
+  const response = NextResponse.redirect(loginUrl);
+  response.cookies.delete(AUTH_COOKIES.oauthState);
+  response.cookies.delete(AUTH_COOKIES.oauthLocale);
+  response.cookies.delete(AUTH_COOKIES.oauthIntent);
+  clearSignupCookies(response);
   return response;
 }
 

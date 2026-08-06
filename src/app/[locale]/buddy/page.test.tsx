@@ -68,6 +68,12 @@ describe("BuddyHostingPage", () => {
         name: "A local buddy introducing Korean market food to a small group of travelers in Seoul",
       }),
     ).toHaveAttribute("src", expect.stringContaining("hosting-hero.jpg"));
+
+    const desktopHero = Array.from(
+      document.querySelectorAll<HTMLImageElement>('img[src*="hosting-hero.jpg"]'),
+    ).find((image) => image.alt === "");
+
+    expect(desktopHero).toHaveAttribute("sizes", "(min-width: 1024px) 50vw, 1px");
   });
 
   it("keeps the hero concise and uses a market image for the food idea", async () => {

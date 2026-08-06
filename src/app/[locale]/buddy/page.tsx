@@ -121,7 +121,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
               alt=""
               fill
               priority
-              sizes="50vw"
+              sizes="(min-width: 1024px) 50vw, 1px"
               className="object-cover object-[68%_center]"
             />
             <div

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
-import { DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
+import { Caveat, DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -28,6 +28,12 @@ const dmSans = DM_Sans({
 const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
   variable: "--font-noto-sans-kr",
+  weight: ["400", "500", "600", "700"],
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
   weight: ["400", "500", "600", "700"],
 });
 
@@ -73,7 +79,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${plusJakartaSans.variable} ${dmSans.variable} ${notoSansKr.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${notoSansKr.variable} ${caveat.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>

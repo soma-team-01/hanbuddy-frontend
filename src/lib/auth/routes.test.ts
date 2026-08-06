@@ -17,7 +17,7 @@ describe("user type routes", () => {
   });
 
   it.each([
-    ["TOURIST", "/explore"],
+    ["TOURIST", "/"],
     ["BUDDY", "/dashboard"],
     [undefined, "/login"],
     ["ADMIN", "/login"],
@@ -59,15 +59,15 @@ describe("route access redirects", () => {
   });
 
   it.each([
-    ["TOURIST", "/dashboard", "/explore"],
-    ["TOURIST", "/my-activities/create", "/explore"],
+    ["TOURIST", "/dashboard", "/"],
+    ["TOURIST", "/my-activities/create", "/"],
     ["BUDDY", "/activities/1/book", "/dashboard"],
   ] as const)("redirects %s away from %s", (userType, pathname, expectedPath) => {
     expect(getRouteAccessRedirect({ pathname, accessToken: "token", userType })).toBe(expectedPath);
   });
 
   it.each([
-    ["TOURIST", "/explore"],
+    ["TOURIST", "/"],
     ["TOURIST", "/activities/1/book"],
     ["BUDDY", "/dashboard"],
     ["BUDDY", "/my-activities/create"],
@@ -96,7 +96,7 @@ describe("route access redirects", () => {
   });
 
   it.each([
-    ["TOURIST", "/explore"],
+    ["TOURIST", "/"],
     ["BUDDY", "/dashboard"],
   ] as const)("redirects an authenticated %s away from public auth pages", (userType, home) => {
     expect(getRouteAccessRedirect({ pathname: "/login", accessToken: "token", userType })).toBe(

@@ -59,7 +59,13 @@ export function SiteHeader({
   );
 
   useEffect(() => {
-    if (!mayHaveSession) return;
+    if (!mayHaveSession) {
+      setProfile(null);
+      setSessionStatus("guest");
+      return;
+    }
+
+    setSessionStatus(authenticated ? "authenticated" : "pending");
 
     let active = true;
     void getMyProfile().then((result) => {
@@ -88,11 +94,14 @@ export function SiteHeader({
   const effectiveAuthenticated = sessionStatus === "authenticated";
   const effectiveRole = profile ? getUserTypeNavRole(profile.userType) : role;
   const isAuthPage =
-    pathname === "/login" || pathname === "/onboarding" || pathname === "/buddy/onboarding";
+    pathname === "/login" ||
+    pathname === "/onboarding" ||
+    pathname === "/buddy/onboarding" ||
+    pathname === "/auth/status";
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
-  const logoHref = LOGO_DESTINATIONS[effectiveRole ?? "guest"];
+  const logoHref = isBuddyHostingPage ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");
 
   const navigationLinks = destinations.map(({ href, labelKey }) => {

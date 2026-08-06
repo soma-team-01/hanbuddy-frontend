@@ -105,6 +105,36 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
+  it("replaces a stale account indicator with login when the session is cleared", async () => {
+    const { rerender } = renderWithIntl(
+      <SiteHeader role="tourist" authenticated mayHaveSession />,
+    );
+
+    expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+
+    rerender(<SiteHeader role={null} authenticated={false} mayHaveSession={false} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Log in" })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("link", { name: "Open my account" })).not.toBeInTheDocument();
+  });
+
+  it("shows an account indicator immediately when a new session becomes authenticated", async () => {
+    const { rerender } = renderWithIntl(
+      <SiteHeader role={null} authenticated={false} mayHaveSession={false} />,
+    );
+
+    expect(screen.getByRole("link", { name: "Log in" })).toBeInTheDocument();
+
+    rerender(<SiteHeader role="tourist" authenticated mayHaveSession />);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+    });
+    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+  });
+
   it("restores a refresh-token session and shows the user's profile image", async () => {
     apiMocks.getMyProfile.mockResolvedValue({
       status: "success",
@@ -160,7 +190,7 @@ describe("SiteHeader", () => {
     expect(
       screen.getByRole("button", { name: "Select language, current language: English" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/buddy");
     expect(
       screen.queryByRole("navigation", { name: "Primary navigation" }),
     ).not.toBeInTheDocument();

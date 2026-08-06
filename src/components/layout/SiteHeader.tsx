@@ -100,12 +100,12 @@ export function SiteHeader({
           {isGuestLandingPage ? (
             <Link
               href="/buddy"
-              className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-bold text-ink transition-colors hover:bg-primary-soft hover:text-primary-strong"
+              className="inline-flex min-h-11 items-center rounded-full border border-transparent bg-white px-4 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong focus-visible:border-primary focus-visible:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {t("hostAnExperience")}
             </Link>
           ) : null}
-          <LocaleSwitcher className="bg-primary-soft px-4" />
+          <LocaleSwitcher />
           {!isMinimalHeader && !authenticated ? (
             <Link
               href="/login"

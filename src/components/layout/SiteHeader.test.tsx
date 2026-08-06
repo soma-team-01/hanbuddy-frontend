@@ -73,10 +73,10 @@ describe("SiteHeader", () => {
     renderWithIntl(<SiteHeader />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
-    expect(screen.getAllByRole("link", { name: "Host an experience" })[0]).toHaveAttribute(
-      "href",
-      "/en/buddy",
-    );
+    const hostLink = screen.getAllByRole("link", { name: "Host an experience" })[0];
+    expect(hostLink).toHaveAttribute("href", "/en/buddy");
+    expect(hostLink).toHaveClass("border-transparent", "hover:border-primary");
+    expect(hostLink).not.toHaveClass("hover:bg-primary-soft");
   });
 
   it("does not offer role switching to authenticated accounts", () => {
@@ -91,7 +91,9 @@ describe("SiteHeader", () => {
     renderWithIntl(<SiteHeader />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
-    expect(screen.getByRole("button", { name: "Switch to Korean" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Select language, current language: English" }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("navigation", { name: "Primary navigation" }),
     ).not.toBeInTheDocument();
@@ -103,7 +105,9 @@ describe("SiteHeader", () => {
     mockedUsePathname.mockReturnValue("/buddy");
     renderWithIntl(<SiteHeader />);
 
-    expect(screen.getByRole("button", { name: "Switch to Korean" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Select language, current language: English" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
     expect(
       screen.queryByRole("navigation", { name: "Primary navigation" }),
@@ -136,9 +140,34 @@ describe("SiteHeader", () => {
     mockedUsePathname.mockReturnValue("/applications");
     renderWithIntl(<SiteHeader role="tourist" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Switch to Korean" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Select language, current language: English" }),
+    );
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
 
     expect(replace).toHaveBeenCalledWith("/ko/applications");
+  });
+
+  it("shows only the current locale until the language menu opens", () => {
+    renderWithIntl(<SiteHeader role="tourist" />);
+
+    const trigger = screen.getByRole("button", {
+      name: "Select language, current language: English",
+    });
+    expect(within(trigger).getByText("EN")).toBeInTheDocument();
+    expect(screen.queryByRole("menu", { name: "Language selection" })).not.toBeInTheDocument();
+
+    fireEvent.click(trigger);
+
+    const menu = screen.getByRole("menu", { name: "Language selection" });
+    expect(within(menu).getByRole("menuitemradio", { name: "English" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(within(menu).getByRole("menuitemradio", { name: "한국어" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
   });
 
   it("localizes the site navigation and mobile menu in Korean", () => {

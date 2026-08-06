@@ -371,6 +371,28 @@
     "completing": "Creating buddy account...",
     "completeRegistration": "Sign up as a buddy"
   },
+  "AccountStatus": {
+    "metadataTitle": "Account status | HanBuddy",
+    "metadataDescription": "Check the review status of your HanBuddy account.",
+    "eyebrow": "Buddy account status",
+    "pending": {
+      "title": "Your buddy application is under review",
+      "description": "Thanks for applying to host with HanBuddy. We will carefully review your profile and let you know when your buddy account is ready.",
+      "reviewTime": "Reviews usually take 1–3 business days."
+    },
+    "rejected": {
+      "title": "We could not approve your buddy application",
+      "description": "Please review the reason below if one was provided. Contact us if you would like help or have additional information to share."
+    },
+    "suspended": {
+      "title": "Your buddy account is currently suspended",
+      "description": "Access to buddy features is temporarily unavailable. Please contact HanBuddy so we can check the account with you."
+    },
+    "reasonLabel": "Reason provided",
+    "contactHelp": "Have a question about the review or your account? Email the HanBuddy team and we will help you.",
+    "emailUs": "Email HanBuddy",
+    "backToBuddy": "Back to buddy page"
+  },
   "Profile": {
     "title": "Edit profile",
     "metadataTitle": "Edit profile | HanBuddy",

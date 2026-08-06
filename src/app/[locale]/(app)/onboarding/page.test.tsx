@@ -6,8 +6,15 @@ import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import { OnboardingForm } from "./OnboardingForm";
 import { generateMetadata } from "./page";
 
+const routerMocks = vi.hoisted(() => ({
+  refresh: vi.fn(),
+  replace: vi.fn(),
+}));
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  routerMocks.refresh.mockClear();
+  routerMocks.replace.mockClear();
 });
 
 vi.mock("next-intl/server", async () => {
@@ -25,7 +32,7 @@ vi.mock("next-intl/server", async () => {
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
+  useRouter: () => routerMocks,
 }));
 
 vi.mock("@/lib/images/presigned", async (importOriginal) => ({
@@ -129,7 +136,7 @@ describe("OnboardingForm", () => {
           isSuccess: true,
           code: "201",
           message: "OK",
-          result: { registered: true, userType: "BUDDY" },
+          result: { registered: true, authStatus: "PENDING_APPROVAL", userType: "BUDDY" },
         }),
         { status: 201, headers: { "Content-Type": "application/json" } },
       ),
@@ -159,6 +166,8 @@ describe("OnboardingForm", () => {
       userType: "BUDDY",
       displayName: "Google Buddy",
     });
+    expect(routerMocks.replace).toHaveBeenCalledWith("/en/auth/status?status=PENDING_APPROVAL");
+    expect(routerMocks.refresh).toHaveBeenCalled();
   });
 
   it("relocalizes a stored validation error when the locale changes", () => {
@@ -328,7 +337,7 @@ describe("OnboardingForm profile image", () => {
           isSuccess: true,
           code: "201",
           message: "요청이 성공했습니다.",
-          result: { registered: true, userType: "TOURIST" },
+          result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
         }),
         { status: 201, headers: { "Content-Type": "application/json" } },
       ),
@@ -365,7 +374,7 @@ describe("OnboardingForm profile image", () => {
           isSuccess: true,
           code: "201",
           message: "요청이 성공했습니다.",
-          result: { registered: true, userType: "TOURIST" },
+          result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
         }),
         { status: 201, headers: { "Content-Type": "application/json" } },
       ),
@@ -504,7 +513,7 @@ describe("OnboardingForm profile image", () => {
             isSuccess: true,
             code: "201",
             message: "요청이 성공했습니다.",
-            result: { registered: true, userType: "TOURIST" },
+            result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
           }),
           { status: 201, headers: { "Content-Type": "application/json" } },
         ),

@@ -371,6 +371,28 @@
     "completing": "버디 계정 생성 중...",
     "completeRegistration": "버디로 회원가입"
   },
+  "AccountStatus": {
+    "metadataTitle": "계정 상태 | HanBuddy",
+    "metadataDescription": "HanBuddy 버디 계정의 검토 상태를 확인하세요.",
+    "eyebrow": "버디 계정 상태",
+    "pending": {
+      "title": "버디 가입 요청을 검토하고 있어요",
+      "description": "HanBuddy 버디로 신청해 주셔서 감사합니다. 보내주신 프로필을 확인한 뒤 버디 활동을 시작할 수 있도록 안내해 드릴게요.",
+      "reviewTime": "승인 검토는 보통 영업일 기준 1~3일이 소요됩니다."
+    },
+    "rejected": {
+      "title": "버디 가입 요청이 승인되지 않았어요",
+      "description": "전달된 사유가 있다면 아래에서 확인해 주세요. 도움이 필요하거나 추가로 전달할 내용이 있다면 언제든 문의해 주세요."
+    },
+    "suspended": {
+      "title": "현재 버디 계정 이용이 정지되어 있어요",
+      "description": "버디 기능을 일시적으로 이용할 수 없습니다. 계정 상태 확인이 필요하면 HanBuddy 팀으로 문의해 주세요."
+    },
+    "reasonLabel": "안내된 사유",
+    "contactHelp": "승인 검토나 계정 상태가 궁금한가요? HanBuddy 팀에 메일을 보내주시면 확인해 드릴게요.",
+    "emailUs": "HanBuddy에 메일 보내기",
+    "backToBuddy": "버디 페이지로 돌아가기"
+  },
   "Profile": {
     "title": "프로필 수정",
     "metadataTitle": "프로필 수정 | HanBuddy",

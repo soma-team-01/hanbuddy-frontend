@@ -1,5 +1,7 @@
 export type UserType = "TOURIST" | "BUDDY";
 export type ContactMethod = "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
+export type AuthStatus =
+  "ONBOARDING_REQUIRED" | "PENDING_APPROVAL" | "ACTIVE" | "REJECTED" | "SUSPENDED";
 
 export interface ApiResponse<T> {
   isSuccess: true;
@@ -23,6 +25,8 @@ export interface GoogleProfile {
 
 export interface GoogleLoginResponse {
   registered: boolean;
+  authStatus: AuthStatus;
+  statusReason?: string;
   userId?: number;
   userType?: UserType;
   accessToken?: string;

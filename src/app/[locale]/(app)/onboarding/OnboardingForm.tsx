@@ -193,7 +193,22 @@ export function OnboardingForm({
         return;
       }
 
-      router.replace(userType === "BUDDY" ? "/dashboard" : "/explore");
+      const authStatus = body.result.authStatus;
+      if (authStatus === "ACTIVE") {
+        router.replace(userType === "BUDDY" ? "/dashboard" : "/");
+      } else if (
+        authStatus === "PENDING_APPROVAL" ||
+        authStatus === "REJECTED" ||
+        authStatus === "SUSPENDED"
+      ) {
+        router.replace(`/auth/status?status=${authStatus}`);
+      } else {
+        setRequestFailure({
+          error: createApiClientError(502, undefined),
+          fallbackKey: "signupFailed",
+        });
+        return;
+      }
       router.refresh();
     } catch (error) {
       setRequestFailure({ error, fallbackKey: "serverUnavailable" });

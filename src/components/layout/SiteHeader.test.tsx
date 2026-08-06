@@ -36,7 +36,10 @@ describe("SiteHeader", () => {
     renderWithIntl(<SiteHeader role="tourist" />);
 
     const primaryNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
-    expect(within(primaryNavigation).queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
+    expect(within(primaryNavigation).getByRole("link", { name: "Home" })).toHaveAttribute(
+      "href",
+      "/en",
+    );
     expect(within(primaryNavigation).getByRole("link", { name: "Explore" })).toHaveAttribute(
       "href",
       "/en/explore",
@@ -45,10 +48,12 @@ describe("SiteHeader", () => {
       "href",
       "/en/applications",
     );
-    expect(screen.getByRole("link", { name: "My Page" })).toHaveAttribute("href", "/en/my-page");
+    expect(
+      within(primaryNavigation).queryByRole("link", { name: "My Page" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Explore" })).toHaveClass("border-b-2");
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/explore");
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
   });
 
   it("renders buddy destinations", () => {
@@ -83,10 +88,7 @@ describe("SiteHeader", () => {
     renderWithIntl(<SiteHeader />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
-    const hostLink = screen.getAllByRole("link", { name: "Host an experience" })[0];
-    expect(hostLink).toHaveAttribute("href", "/en/buddy");
-    expect(hostLink).toHaveClass("border-transparent", "hover:border-primary");
-    expect(hostLink).not.toHaveClass("hover:bg-primary-soft");
+    expect(screen.queryByRole("link", { name: "Host an experience" })).not.toBeInTheDocument();
   });
 
   it("does not offer role switching to authenticated accounts", () => {
@@ -128,8 +130,12 @@ describe("SiteHeader", () => {
     await waitFor(() => {
       expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
     });
+    expect(screen.getAllByRole("link", { name: "Open my account" })[0]).toHaveAttribute(
+      "href",
+      "/en/my-page",
+    );
     expect(screen.getAllByAltText("June")).toHaveLength(2);
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/explore");
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
   });
 
   it("shows only the brand and locale switcher on authentication pages", () => {
@@ -147,7 +153,7 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
-  it("shows only the brand and locale switcher on the buddy hosting landing page", () => {
+  it("shows the brand, locale switcher, and buddy login dialog on the hosting landing page", () => {
     mockedUsePathname.mockReturnValue("/buddy");
     renderWithIntl(<SiteHeader />);
 
@@ -159,7 +165,12 @@ describe("SiteHeader", () => {
       screen.queryByRole("navigation", { name: "Primary navigation" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    expect(screen.getByRole("dialog", { name: "Start your buddy journey" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continue as a buddy with Google" })).toHaveAttribute(
+      "href",
+      "/api/auth/google/start?locale=en&intent=buddy",
+    );
   });
 
   it("opens an accessible mobile drawer, restores focus, and unlocks scrolling on Escape", () => {

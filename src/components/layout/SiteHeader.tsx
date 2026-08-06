@@ -7,6 +7,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { getMyProfile } from "@/lib/api/users";
 import { getUserTypeNavRole } from "@/lib/auth/routes";
 import type { MyProfile } from "@/types/user";
+import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import { Avatar } from "../ui/Avatar";
 import { UserIcon } from "../ui/icons";
 import { LocaleSwitcher } from "./LocaleSwitcher";
@@ -17,9 +18,9 @@ export type SiteRole = "tourist" | "buddy" | null;
 
 const DESTINATIONS = {
   tourist: [
+    { href: "/", labelKey: "home" },
     { href: "/explore", labelKey: "explore" },
     { href: "/applications", labelKey: "applications" },
-    { href: "/my-page", labelKey: "myPage" },
   ],
   buddy: [
     { href: "/home", labelKey: "home" },
@@ -34,7 +35,7 @@ const DESTINATIONS = {
 } as const;
 
 const LOGO_DESTINATIONS = {
-  tourist: "/explore",
+  tourist: "/",
   buddy: "/dashboard",
   guest: "/",
 } as const;
@@ -90,7 +91,6 @@ export function SiteHeader({
     pathname === "/login" || pathname === "/onboarding" || pathname === "/buddy/onboarding";
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
-  const isGuestLandingPage = pathname === "/" && sessionStatus === "guest";
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
   const logoHref = LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");
@@ -140,15 +140,10 @@ export function SiteHeader({
         ) : null}
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
-          {isGuestLandingPage ? (
-            <Link
-              href="/buddy"
-              className="inline-flex min-h-11 items-center rounded-full border border-transparent bg-white px-4 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong focus-visible:border-primary focus-visible:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              {t("hostAnExperience")}
-            </Link>
-          ) : null}
           <LocaleSwitcher />
+          {isBuddyHostingPage && sessionStatus === "guest" ? (
+            <BuddyGoogleAuthDialog variant="header" />
+          ) : null}
           {!isMinimalHeader && sessionStatus === "pending" ? (
             <span
               aria-hidden
@@ -210,14 +205,6 @@ export function SiteHeader({
                 {navigationLinks}
               </nav>
               <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
-                {isGuestLandingPage ? (
-                  <Link
-                    href="/buddy"
-                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-line-strong bg-canvas-soft px-5 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong"
-                  >
-                    {t("hostAnExperience")}
-                  </Link>
-                ) : null}
                 <LocaleSwitcher dismissMenu className="justify-start px-1" />
                 {sessionStatus === "guest" ? (
                   <Link

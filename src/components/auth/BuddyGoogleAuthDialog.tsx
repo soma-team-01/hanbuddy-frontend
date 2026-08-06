@@ -6,8 +6,17 @@ import { createPortal } from "react-dom";
 import { ArrowRightIcon, GoogleIcon, XIcon } from "@/components/ui/icons";
 
 interface BuddyGoogleAuthDialogProps {
-  variant?: "primary" | "inverse";
+  variant?: "primary" | "inverse" | "header";
 }
+
+const TRIGGER_CLASS_NAMES = {
+  primary:
+    "motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_14px_30px_rgba(209,63,50,0.35)] transition-colors hover:bg-primary-hover",
+  inverse:
+    "motion-press mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 font-display text-sm font-bold text-primary-strong shadow-[0_12px_28px_rgba(84,24,18,0.2)] transition-colors hover:bg-primary-soft",
+  header:
+    "inline-flex min-h-11 items-center justify-center rounded-full border border-line-strong bg-canvas-soft px-6 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+} as const;
 
 export function BuddyGoogleAuthDialog({
   variant = "primary",
@@ -56,10 +65,7 @@ export function BuddyGoogleAuthDialog({
     };
   }, [isOpen]);
 
-  const triggerClassName =
-    variant === "inverse"
-      ? "motion-press mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 font-display text-sm font-bold text-primary-strong shadow-[0_12px_28px_rgba(84,24,18,0.2)] transition-colors hover:bg-primary-soft"
-      : "motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_14px_30px_rgba(209,63,50,0.35)] transition-colors hover:bg-primary-hover";
+  const triggerClassName = TRIGGER_CLASS_NAMES[variant];
 
   return (
     <>
@@ -69,8 +75,8 @@ export function BuddyGoogleAuthDialog({
         onClick={() => setIsOpen(true)}
         className={triggerClassName}
       >
-        {t("trigger")}
-        <ArrowRightIcon className="ml-2 size-4" />
+        {variant === "header" ? t("loginTrigger") : t("trigger")}
+        {variant === "header" ? null : <ArrowRightIcon className="ml-2 size-4" />}
       </button>
       {isOpen
         ? createPortal(
@@ -85,7 +91,7 @@ export function BuddyGoogleAuthDialog({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className="relative w-full max-w-[480px] rounded-[2rem] bg-canvas-soft px-6 py-8 text-center shadow-[0_28px_90px_rgba(38,27,24,0.3)] sm:px-9 sm:py-10"
+                className="relative w-full max-w-[800px] rounded-[2rem] bg-canvas-soft px-6 py-8 text-center shadow-[0_28px_90px_rgba(38,27,24,0.3)] sm:px-10 sm:py-10"
               >
                 <button
                   ref={closeRef}
@@ -101,23 +107,23 @@ export function BuddyGoogleAuthDialog({
                 </p>
                 <h2
                   id={titleId}
-                  className="mt-3 font-display text-2xl font-extrabold tracking-[-0.035em] text-ink sm:text-3xl"
+                  className="mt-3 font-display text-2xl font-extrabold tracking-[-0.035em] text-ink lg:whitespace-nowrap"
                 >
                   {t("title")}
                 </h2>
-                <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted sm:text-base">
+                <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted lg:max-w-none lg:whitespace-nowrap">
                   {t("description")}
                 </p>
                 <a
                   href={`/api/auth/google/start?locale=${locale}&intent=buddy`}
-                  className="motion-press relative mt-8 flex h-14 w-full items-center justify-center rounded-full bg-primary px-14 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.25)] transition-colors hover:bg-primary-hover"
+                  className="motion-press relative mt-8 flex h-14 w-full items-center justify-center rounded-full bg-primary px-12 font-display text-xs font-bold whitespace-nowrap text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.25)] transition-colors hover:bg-primary-hover sm:px-14 sm:text-sm"
                 >
                   <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm">
                     <GoogleIcon className="size-5" />
                   </span>
                   {t("continueWithGoogle")}
                 </a>
-                <p className="mt-5 text-xs leading-5 text-muted">
+                <p className="mt-5 text-xs leading-5 text-muted lg:whitespace-nowrap">
                   {authT("legalNoticeStart")}{" "}
                   <span className="font-semibold text-primary underline underline-offset-2">
                     {authT("termsOfService")}

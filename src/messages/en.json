@@ -315,6 +315,7 @@
   },
   "BuddyAuth": {
     "trigger": "Start as a buddy",
+    "loginTrigger": "Log in",
     "close": "Close buddy sign in",
     "eyebrow": "Host with HanBuddy",
     "title": "Start your buddy journey",

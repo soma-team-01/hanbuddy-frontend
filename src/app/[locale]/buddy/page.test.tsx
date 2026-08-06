@@ -43,7 +43,12 @@ describe("BuddyHostingPage", () => {
       expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
       expect(screen.getAllByRole("button", { name: cta })).toHaveLength(2);
       fireEvent.click(screen.getAllByRole("button", { name: cta })[0]);
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toBeInTheDocument();
+      expect(dialog).toHaveClass("max-w-[800px]");
+      expect(screen.getByText(/Terms of Service|이용약관/).closest("p")).toHaveClass(
+        "lg:whitespace-nowrap",
+      );
       expect(screen.getByRole("link", { name: /Google|구글/ })).toHaveAttribute(
         "href",
         `/api/auth/google/start?locale=${locale}&intent=buddy`,

@@ -315,6 +315,7 @@
   },
   "BuddyAuth": {
     "trigger": "버디로 시작하기",
+    "loginTrigger": "로그인",
     "close": "버디 로그인 닫기",
     "eyebrow": "HanBuddy에서 호스팅하기",
     "title": "버디 여정을 시작해 보세요",

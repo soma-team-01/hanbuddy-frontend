@@ -212,7 +212,7 @@ describe("GET /auth/google/callback", () => {
     const setCookie = response.headers.get("set-cookie") ?? "";
 
     expect(response.headers.get("location")).toBe(
-      "http://localhost/ko/auth/status?status=PENDING_APPROVAL",
+      "http://localhost/ko/buddy/auth/status?status=PENDING_APPROVAL",
     );
     expect(setCookie).not.toContain("refresh_token=backend");
     expect(setCookie).toContain(`${AUTH_COOKIES.accessToken}=;`);
@@ -240,7 +240,7 @@ describe("GET /auth/google/callback", () => {
     const response = await GET(createCallbackRequest("en", undefined, "buddy"));
     const location = response.headers.get("location") ?? "";
 
-    expect(location).toBe("http://localhost/en/auth/status?status=REJECTED");
+    expect(location).toBe("http://localhost/en/buddy/auth/status?status=REJECTED");
     expect(location).not.toContain("reason");
     expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.statusReason}=`);
   });
@@ -265,7 +265,7 @@ describe("GET /auth/google/callback", () => {
     const response = await GET(createCallbackRequest("en", undefined, "buddy"));
 
     expect(response.headers.get("location")).toBe(
-      "http://localhost/en/auth/status?status=SUSPENDED",
+      "http://localhost/en/buddy/auth/status?status=SUSPENDED",
     );
   });
 

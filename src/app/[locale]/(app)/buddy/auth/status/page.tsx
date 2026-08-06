@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import { AccountStatusContent } from "@/components/auth/AccountStatusContent";
 import { localizePathname } from "@/i18n/pathname";
 import type { Locale } from "@/i18n/routing";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import type { AuthStatus } from "@/lib/auth/types";
 
 interface AccountStatusPageProps {
@@ -23,14 +26,15 @@ export async function generateMetadata({ params }: AccountStatusPageProps): Prom
 }
 
 export default async function AccountStatusPage({ params, searchParams }: AccountStatusPageProps) {
-  const [{ locale }, query] = await Promise.all([params, searchParams]);
+  const [{ locale }, query, cookieStore] = await Promise.all([params, searchParams, cookies()]);
   const status = parseInactiveAuthStatus(query.status);
 
   if (!status) {
     redirect(localizePathname("/login", locale));
   }
 
-  redirect(`${localizePathname("/buddy/auth/status", locale)}?status=${status}`);
+  const reason = cookieStore.get(AUTH_COOKIES.statusReason)?.value;
+  return <AccountStatusContent status={status} reason={reason} />;
 }
 
 function parseInactiveAuthStatus(value?: string | string[]): InactiveAuthStatus | null {

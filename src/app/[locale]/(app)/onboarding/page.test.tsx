@@ -166,7 +166,9 @@ describe("OnboardingForm", () => {
       userType: "BUDDY",
       displayName: "Google Buddy",
     });
-    expect(routerMocks.replace).toHaveBeenCalledWith("/en/auth/status?status=PENDING_APPROVAL");
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/en/buddy/auth/status?status=PENDING_APPROVAL",
+    );
     expect(routerMocks.refresh).toHaveBeenCalled();
   });
 

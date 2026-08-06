@@ -201,7 +201,7 @@ export function OnboardingForm({
         authStatus === "REJECTED" ||
         authStatus === "SUSPENDED"
       ) {
-        router.replace(`/auth/status?status=${authStatus}`);
+        router.replace(`/buddy/auth/status?status=${authStatus}`);
       } else {
         setRequestFailure({
           error: createApiClientError(502, undefined),

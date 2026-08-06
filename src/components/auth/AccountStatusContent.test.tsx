@@ -11,10 +11,15 @@ describe("AccountStatusContent", () => {
       screen.getByRole("heading", { name: "Your buddy application is under review" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Reviews usually take 1–3 business days.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Email HanBuddy" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "zeroone.soma@gmail.com" })).toHaveAttribute(
       "href",
       "mailto:zeroone.soma@gmail.com",
     );
+    expect(screen.getByRole("link", { name: "Back to buddy page" })).toHaveAttribute(
+      "href",
+      "/en/buddy",
+    );
+    expect(screen.queryByText("Email HanBuddy")).not.toBeInTheDocument();
   });
 
   it("shows a rejection reason supplied by the backend", () => {

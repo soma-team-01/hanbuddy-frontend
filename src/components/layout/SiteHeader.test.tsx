@@ -201,6 +201,16 @@ describe("SiteHeader", () => {
     );
   });
 
+  it("uses the buddy landing page as home throughout buddy-prefixed routes", () => {
+    mockedUsePathname.mockReturnValue("/buddy/auth/status");
+    renderWithIntl(<SiteHeader />);
+
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/buddy");
+    expect(
+      screen.queryByRole("navigation", { name: "Primary navigation" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("opens an accessible mobile drawer, restores focus, and unlocks scrolling on Escape", () => {
     renderWithIntl(<SiteHeader role="tourist" />);
 

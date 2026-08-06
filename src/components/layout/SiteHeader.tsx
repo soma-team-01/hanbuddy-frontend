@@ -106,11 +106,12 @@ export function SiteHeader({
     pathname === "/login" ||
     pathname === "/onboarding" ||
     pathname === "/buddy/onboarding" ||
-    pathname === "/auth/status";
+    pathname === "/buddy/auth/status";
+  const isBuddyArea = pathname === "/buddy" || pathname.startsWith("/buddy/");
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
-  const logoHref = isBuddyHostingPage ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
+  const logoHref = isBuddyArea ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");
 
   const navigationLinks = destinations.map(({ href, labelKey }) => {

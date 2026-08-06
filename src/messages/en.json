@@ -389,8 +389,7 @@
       "description": "Access to buddy features is temporarily unavailable. Please contact HanBuddy so we can check the account with you."
     },
     "reasonLabel": "Reason provided",
-    "contactHelp": "Have a question about the review or your account? Email the HanBuddy team and we will help you.",
-    "emailUs": "Email HanBuddy",
+    "contactHelp": "If you have questions about the review or your account, please contact <email>zeroone.soma@gmail.com</email>.",
     "backToBuddy": "Back to buddy page"
   },
   "Profile": {

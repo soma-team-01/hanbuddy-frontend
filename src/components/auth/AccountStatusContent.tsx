@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { AuthStatus } from "@/lib/auth/types";
-import { CircleHelpIcon, ClockIcon, MailIcon, UserMinusIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, CircleHelpIcon, ClockIcon, UserMinusIcon } from "@/components/ui/icons";
 
 const CONTACT_EMAIL = "zeroone.soma@gmail.com";
 
@@ -19,64 +19,62 @@ export function AccountStatusContent({ status, reason }: Readonly<AccountStatusC
   const copy = getStatusCopy(status, t);
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-white px-4 py-12 md:px-6 md:py-16">
-      <section className="w-full max-w-[720px] overflow-hidden rounded-[32px] border border-line-soft bg-white shadow-[0_24px_70px_rgba(38,27,24,0.08)]">
-        <div className="h-1.5 bg-primary" />
-        <div className="flex flex-col items-center px-6 py-10 text-center sm:px-10 md:px-14 md:py-14">
-          <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-primary-soft text-primary">
-            <AccountStatusIcon status={status} />
-          </div>
-          <p className="mb-3 text-xs font-bold tracking-[0.24em] text-primary uppercase">
-            {t("eyebrow")}
-          </p>
-          <h1 className="max-w-[580px] font-display text-3xl font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
-            {copy.title}
-          </h1>
-          <p className="mt-4 max-w-[570px] text-base leading-7 text-muted md:text-lg">
-            {copy.description}
-          </p>
+    <main className="flex flex-1 items-center justify-center bg-white px-4 py-8 md:px-6 md:py-10">
+      <div className="w-full max-w-[680px]">
+        <Link
+          href="/buddy"
+          aria-label={t("backToBuddy")}
+          className="mb-4 inline-flex size-10 items-center justify-center rounded-full border border-line-soft bg-white text-ink transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <ArrowLeftIcon className="size-5" />
+        </Link>
 
-          {reason ? (
-            <div className="mt-7 w-full rounded-2xl border border-line-soft bg-panel-raised p-5 text-left">
-              <p className="text-xs font-bold tracking-[0.14em] text-primary uppercase">
-                {t("reasonLabel")}
-              </p>
-              <p className="mt-2 text-sm leading-6 whitespace-pre-wrap text-ink md:text-base">
-                {reason}
-              </p>
+        <section className="overflow-hidden rounded-[28px] border border-line-soft bg-white shadow-[0_20px_56px_rgba(38,27,24,0.07)]">
+          <div className="h-1 bg-primary" />
+          <div className="flex flex-col items-center px-6 py-8 text-center sm:px-9 md:px-10 md:py-10">
+            <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <AccountStatusIcon status={status} />
             </div>
-          ) : null}
-
-          {copy.note ? (
-            <p className="mt-6 rounded-full bg-primary-soft px-5 py-2.5 text-sm font-semibold text-primary-strong">
-              {copy.note}
+            <p className="mb-2 text-[11px] font-bold tracking-[0.22em] text-primary uppercase">
+              {t("eyebrow")}
             </p>
-          ) : null}
+            <h1 className="max-w-[540px] font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-[30px]">
+              {copy.title}
+            </h1>
+            <p className="mt-3 max-w-[540px] text-sm leading-6 text-muted md:text-base">
+              {copy.description}
+            </p>
 
-          <p className="mt-7 text-sm leading-6 text-muted md:text-base">{t("contactHelp")}</p>
-          <div className="mt-6 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover sm:max-w-[260px]"
-            >
-              <MailIcon className="size-5" />
-              {t("emailUs")}
-            </a>
-            <Link
-              href="/buddy"
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full border border-line-strong bg-white px-6 text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong sm:max-w-[260px]"
-            >
-              {t("backToBuddy")}
-            </Link>
+            {reason ? (
+              <div className="mt-5 w-full rounded-2xl border border-line-soft bg-panel-raised p-4 text-left">
+                <p className="text-[11px] font-bold tracking-[0.14em] text-primary uppercase">
+                  {t("reasonLabel")}
+                </p>
+                <p className="mt-2 text-sm leading-6 whitespace-pre-wrap text-ink">{reason}</p>
+              </div>
+            ) : null}
+
+            {copy.note ? (
+              <p className="mt-5 rounded-full bg-primary-soft px-4 py-2 text-sm font-semibold text-primary-strong">
+                {copy.note}
+              </p>
+            ) : null}
+
+            <p className="mt-6 max-w-[540px] text-sm leading-6 text-muted">
+              {t.rich("contactHelp", {
+                email: (chunks) => (
+                  <a
+                    href={`mailto:${CONTACT_EMAIL}`}
+                    className="font-semibold text-primary underline underline-offset-4"
+                  >
+                    {chunks}
+                  </a>
+                ),
+              })}
+            </p>
           </div>
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="mt-5 text-sm font-semibold text-primary underline underline-offset-4"
-          >
-            {CONTACT_EMAIL}
-          </a>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

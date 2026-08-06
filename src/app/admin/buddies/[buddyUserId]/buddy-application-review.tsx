@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { approveBuddyApplication, rejectBuddyApplication } from "@/lib/api/admin";
+import { isUnauthenticatedError } from "@/lib/api/errors";
 import { adminBuddyApplicationQueryOptions, adminKeys } from "@/lib/query/admin";
 import { unwrapApiResult } from "@/lib/query/result";
 
@@ -38,6 +39,20 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
     return (
       <main className="mx-auto max-w-[1000px] px-5 py-16 md:px-8">
         <div className="h-96 animate-pulse rounded-3xl bg-panel" />
+      </main>
+    );
+  if (isUnauthenticatedError(query.error))
+    return (
+      <main className="mx-auto max-w-[1000px] px-5 py-24 text-center md:px-8">
+        <h1 className="font-display text-2xl font-bold">관리자 세션이 만료되었습니다.</h1>
+        <p className="mt-3 text-muted">다시 로그인한 뒤 신청 정보를 확인해 주세요.</p>
+        <button
+          type="button"
+          onClick={() => router.replace("/admin/login")}
+          className="mt-6 font-bold text-primary underline"
+        >
+          다시 로그인
+        </button>
       </main>
     );
   if (query.error || !query.data)

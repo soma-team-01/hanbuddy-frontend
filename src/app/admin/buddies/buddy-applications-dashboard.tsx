@@ -2,6 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { isUnauthenticatedError } from "@/lib/api/errors";
 import { adminBuddyApplicationsQueryOptions } from "@/lib/query/admin";
 
 const STATUS_LABELS = {
@@ -12,8 +14,10 @@ const STATUS_LABELS = {
 } as const;
 
 export function BuddyApplicationsDashboard() {
+  const router = useRouter();
   const query = useQuery(adminBuddyApplicationsQueryOptions());
   const applications = query.data ?? [];
+  const sessionExpired = isUnauthenticatedError(query.error);
   const pendingCount = applications.filter(
     (item) => item.accountStatus === "PENDING_APPROVAL",
   ).length;
@@ -36,7 +40,14 @@ export function BuddyApplicationsDashboard() {
         </div>
       </div>
       {query.isPending ? <LoadingRows /> : null}
-      {query.error ? (
+      {sessionExpired ? (
+        <State
+          title="관리자 세션이 만료되었습니다."
+          description="다시 로그인한 뒤 버디 신청을 확인해 주세요."
+          action={() => router.replace("/admin/login")}
+          actionLabel="다시 로그인"
+        />
+      ) : query.error ? (
         <State
           title="목록을 불러오지 못했습니다."
           description="잠시 후 다시 시도해 주세요."
@@ -102,10 +113,12 @@ function State({
   title,
   description,
   action,
+  actionLabel = "다시 시도",
 }: {
   title: string;
   description: string;
   action?: () => void;
+  actionLabel?: string;
 }) {
   return (
     <div className="py-24 text-center">
@@ -117,7 +130,7 @@ function State({
           onClick={action}
           className="mt-6 rounded-full border border-primary px-5 py-2 text-sm font-bold text-primary"
         >
-          다시 시도
+          {actionLabel}
         </button>
       ) : null}
     </div>

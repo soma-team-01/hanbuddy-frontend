@@ -8,7 +8,7 @@ import {
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { BuddyApplicationReview } from "./buddy-application-review";
 
-const routerMock = vi.hoisted(() => ({ push: vi.fn() }));
+const routerMock = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -28,6 +28,7 @@ const mockedReject = vi.mocked(rejectBuddyApplication);
 describe("BuddyApplicationReview", () => {
   beforeEach(() => {
     routerMock.push.mockReset();
+    routerMock.replace.mockReset();
     mockedApprove.mockReset();
     mockedGetApplication.mockReset();
     mockedReject.mockReset();
@@ -51,6 +52,16 @@ describe("BuddyApplicationReview", () => {
         rejectionReason: null,
       },
     });
+  });
+
+  it("guides an expired admin session back to login", async () => {
+    mockedGetApplication.mockResolvedValue({ status: "unauthenticated" });
+
+    renderWithQueryClient(<BuddyApplicationReview userId="42" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "다시 로그인" }));
+    expect(routerMock.replace).toHaveBeenCalledWith("/admin/login");
+    expect(screen.queryByRole("link", { name: "목록으로 돌아가기" })).not.toBeInTheDocument();
   });
 
   it("renders the applicant profile and approval actions", async () => {

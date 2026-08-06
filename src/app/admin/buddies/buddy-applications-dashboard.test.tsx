@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBuddyApplicationsForAdmin } from "@/lib/api/admin";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -9,9 +9,28 @@ vi.mock("@/lib/api/admin", () => ({
 }));
 
 const mockedGetApplications = vi.mocked(getBuddyApplicationsForAdmin);
+const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
+
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => routerMock,
+}));
 
 describe("BuddyApplicationsDashboard", () => {
-  beforeEach(() => mockedGetApplications.mockReset());
+  beforeEach(() => {
+    mockedGetApplications.mockReset();
+    routerMock.replace.mockReset();
+  });
+
+  it("guides an expired admin session back to login", async () => {
+    mockedGetApplications.mockResolvedValue({ status: "unauthenticated" });
+
+    renderWithQueryClient(<BuddyApplicationsDashboard />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "다시 로그인" }));
+    expect(routerMock.replace).toHaveBeenCalledWith("/admin/login");
+    expect(screen.queryByRole("button", { name: "다시 시도" })).not.toBeInTheDocument();
+  });
 
   it("shows the empty state when there are no applications", async () => {
     mockedGetApplications.mockResolvedValue({ status: "success", applications: [] });

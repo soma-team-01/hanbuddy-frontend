@@ -655,38 +655,61 @@
         "title": "카테고리를 선택해 주세요",
         "description": "체험을 가장 잘 설명하는 카테고리를 골라 주세요."
       },
-      "concept": {
-        "title": "체험의 콘셉트를 알려 주세요",
-        "description": "게스트가 기억할 핵심 아이디어부터 정리해 보세요."
-      },
       "host": {
-        "title": "호스트를 소개해 주세요",
-        "description": "이 체험을 잘 이끌 수 있는 경험과 전문성을 들려 주세요."
+        "title": "본인을 소개해 주세요",
+        "description": "게스트에게 어떤 사람인지 짧고 진솔하게 소개해 주세요."
+      },
+      "name": {
+        "title": "체험 이름을 지어 주세요",
+        "description": "무엇이 특별한지 바로 알 수 있는 간결하고 기억하기 쉬운 이름이 좋아요."
+      },
+      "description": {
+        "title": "체험에 대해 자세히 설명해 주세요",
+        "description": "체험이 시작해서 끝날 때까지 게스트가 무엇을 경험하는지 그려 주세요."
       },
       "photos": {
         "title": "체험을 보여 주세요",
-        "description": "체험의 특징이 잘 드러나는 선명한 사진을 5장 이상 추가해 주세요."
+        "description": "체험의 특징이 잘 드러나는 선명한 사진을 3장 이상 10장 이하로 추가해 주세요."
       },
-      "listing": {
-        "title": "체험 이름과 설명을 작성해 주세요",
-        "description": "게스트에게 공개될 이름과 자세한 이야기를 작성해 주세요."
+      "itinerary": {
+        "title": "활동 일정표를 만들어 주세요",
+        "description": "체험이 시작해서 끝날 때까지 게스트가 하게 될 활동을 순서대로 적어 주세요."
       },
       "meeting": {
         "title": "만나는 장소를 정해 주세요",
         "description": "게스트가 당일 쉽게 찾아올 수 있도록 안내해 주세요."
       },
-      "itinerary": {
-        "title": "활동 일정표를 만들어 주세요",
-        "description": "체험에서 진행할 활동을 순서대로 나눠 알려 주세요."
+      "schedule": {
+        "title": "진행 날짜와 시작 시간을 정해 주세요",
+        "description": "예약 가능한 날짜를 모두 선택하고 날짜별 시작 시간을 설정해 주세요."
       },
-      "pricing": {
-        "title": "인원과 요금을 설정해 주세요",
-        "description": "예약 전에 게스트가 알아야 할 운영 정보를 마무리해 주세요."
+      "capacity": {
+        "title": "최대 인원 수를 정해 주세요",
+        "description": "한 번에 편안하게 진행할 수 있는 게스트 수를 선택해 주세요."
       },
-      "review": {
-        "title": "체험을 검토해 주세요",
-        "description": "API를 연결하기 전에 전체 입력 내용을 확인해 주세요."
+      "price": {
+        "title": "1인당 요금을 정해 주세요",
+        "description": "게스트 한 명이 결제할 금액을 원화로 입력해 주세요."
+      },
+      "inclusions": {
+        "title": "포함 사항을 알려 주세요",
+        "description": "요금에 무엇이 포함되는지 정확하게 알려 주세요."
+      },
+      "discount": {
+        "title": "할인을 추가해 보세요",
+        "description": "원한다면 종료일이 있는 기간 한정 할인을 설정해 주세요."
+      },
+      "restrictions": {
+        "title": "참여 전 확인사항",
+        "description": "게스트가 활동에 참여하기 전에 알아야 할 내용을 선택해 주세요."
       }
+    },
+    "groups": {
+      "intro": "소개",
+      "activity": "체험",
+      "operation": "운영",
+      "pricing": "요금",
+      "policy": "정책"
     },
     "categories": {
       "food": "음식과 음료",
@@ -697,15 +720,15 @@
       "wellness": "웰니스"
     },
     "fields": {
-      "conceptTitle": "어떤 체험을 제공하나요?",
-      "conceptDescription": "체험 아이디어 상세 소개",
       "hostIntroduction": "본인 소개",
       "qualifications": "자격 사항과 관련 경험",
       "pressHistory": "수상 또는 언론 보도 이력",
       "experienceName": "체험 이름",
       "experienceDescription": "체험에 대한 자세한 설명",
-      "meetingPlace": "게스트와 만나는 장소",
-      "meetingDetails": "만남 장소 안내",
+      "meetingAddress": "주소 검색",
+      "meetingPlace": "만나는 장소 이름",
+      "scheduleDate": "체험 진행 날짜",
+      "scheduleStartTime": "시작 시간",
       "itineraryTitle": "활동 제목",
       "itineraryDescription": "게스트가 하게 될 활동",
       "duration": "소요 시간(분)",
@@ -714,92 +737,222 @@
       "pricePerPerson": "1인당 요금",
       "inclusions": "포함 사항",
       "discount": "할인율",
-      "restrictions": "제한 사항"
+      "discountEndsAt": "할인 종료일",
+      "restrictions": "참여 전 확인사항"
     },
     "hints": {
-      "conceptTitle": "최종 체험 이름보다, 제공하려는 경험 자체에 집중해 주세요.",
       "optional": "선택 사항",
       "experienceName": "무엇이 특별한지 알 수 있도록 짧고 구체적으로 작성해 주세요.",
-      "meetingDetails": "게스트가 알아보기 쉬운 랜드마크, 출구 번호 등의 정보를 적어 주세요.",
-      "onePerLine": "한 줄에 하나씩 입력해 주세요."
+      "meetingAddress": "주소를 검색한 뒤 검색 결과에서 정확한 장소를 선택해 주세요.",
+      "meetingPlace": "주소와 별개로 게스트가 알아보기 쉬운 짧은 장소 이름을 적어 주세요.",
+      "onePerLine": "한 줄에 하나씩 입력해 주세요.",
+      "restrictionsList": "게스트가 확인할 내용을 한 번에 하나씩 추가해 주세요.",
+      "characters": "{count, number}자 입력",
+      "hostIntroductionCharacters": "{count, number}/{max, number}자 · 최소 {min, number}자",
+      "experienceNameCharacters": "{count, number}/{max, number}자",
+      "experienceDescriptionCharacters": "{count, number}/{max, number}자 · 최소 {min, number}자"
     },
     "placeholders": {
-      "conceptTitle": "예: 현지 팬과 함께 한국 야구 응원 배우기",
-      "conceptDescription": "이 체험이 특별하고 기억에 남는 이유를 설명해 주세요.",
       "hostIntroduction": "본인을 소개하고 이 체험을 호스팅하려는 이유를 알려 주세요.",
       "qualifications": "관련 직업, 전공, 자격증 또는 직접 쌓은 경험을 적어 주세요.",
       "pressHistory": "수상, 출판, 인터뷰 또는 주목할 만한 이력을 적어 주세요.",
       "experienceName": "예: 한국 프로야구 응원 나이트",
       "experienceDescription": "체험이 시작해서 끝날 때까지 게스트가 무엇을 느끼고 경험하는지 알려 주세요.",
-      "meetingPlace": "예: 잠실야구장 1번 게이트",
-      "meetingDetails": "예: 시작 15분 전 메인 매표소 옆에서 만나요.",
+      "meetingAddress": "예: 서울특별시 송파구 올림픽로 25",
+      "meetingPlace": "예: 1번 게이트 매표소",
       "itineraryTitle": "예: 응원가 배우기",
-      "itineraryDescription": "이 활동을 30자 이상으로 자세히 설명해 주세요.",
+      "itineraryDescription": "이 활동을 5자 이상 50자 이하로 설명해 주세요.",
       "duration": "예: 30",
       "maxGuests": "예: 8",
       "pricePerPerson": "예: 50000",
+      "inclusionsCustom": "예: 구단 모자",
       "inclusions": "입장권\n웰컴 간식\n응원 도구",
       "discount": "예: 10",
-      "restrictions": "만 19세 미만은 보호자와 참여해야 합니다.\n휠체어 접근이 어렵습니다."
+      "restrictions": "예: 편한 신발을 신고 와 주세요"
     },
     "photos": {
       "upload": "체험 사진 추가",
-      "hint": "JPG, PNG, WebP · 최소 5장, 최대 10장",
+      "hint": "JPG, PNG, WebP · 최소 3장, 최대 10장",
       "label": "체험 사진 업로드",
       "count": "{count, plural, one {#장 선택됨} other {#장 선택됨}}",
-      "minimum": "최소 5장",
+      "minimum": "최소 3장",
+      "cover": "대표 사진",
+      "makeCover": "대표 사진으로 설정",
       "preview": "{index, number}번째 체험 사진",
       "remove": "{index, number}번째 체험 사진 삭제"
     },
     "itinerary": {
       "item": "활동 {index, number}",
       "remove": "{index, number}번째 활동 삭제",
-      "descriptionCount": "{count, plural, one {#자} other {#자}} · 최소 30자",
+      "titleCount": "{count, number}/{max, number}자",
+      "descriptionCount": "{count, number}/{max, number}자 · 최소 {min, number}자",
       "addPhoto": "활동 사진 추가",
-      "add": "다른 활동 추가"
+      "photoLabel": "{index, number}번째 활동 사진 업로드",
+      "add": "활동 추가하기",
+      "edit": "{index, number}번째 활동 수정",
+      "untitled": "새 활동",
+      "incomplete": "세부 정보를 추가해 주세요",
+      "durationSummary": "{minutes, number}분",
+      "editor": {
+        "progress": "{total, number}단계 중 {current, number}단계",
+        "close": "활동 편집 닫기",
+        "photoTitle": "활동 사진을 선택해 주세요",
+        "photoDescription": "이 활동을 가장 잘 보여 주는 선명한 사진 한 장을 골라 주세요.",
+        "changePhoto": "사진 변경",
+        "descriptionTitle": "게스트가 무엇을 하게 되나요?",
+        "durationTitle": "얼마나 걸리나요?",
+        "titleTitle": "이 활동의 이름을 지어 주세요",
+        "minutes": "분",
+        "decreaseDuration": "소요 시간 줄이기",
+        "increaseDuration": "소요 시간 늘리기",
+        "done": "완료",
+        "errors": {
+          "photo": "계속하려면 사진을 추가해 주세요.",
+          "description": "활동 설명을 5자 이상 50자 이하로 입력해 주세요.",
+          "duration": "소요 시간을 1분 이상으로 설정해 주세요.",
+          "title": "활동 제목을 1자 이상 20자 이하로 입력해 주세요."
+        }
+      }
+    },
+    "capacity": {
+      "decrease": "최대 인원 줄이기",
+      "increase": "최대 인원 늘리기",
+      "guests": "{count, plural, one {최대 #명} other {최대 #명}}"
+    },
+    "meeting": {
+      "searching": "주소를 검색하고 있어요…",
+      "selecting": "선택한 주소를 불러오고 있어요…",
+      "searchError": "주소 검색에 실패했습니다. 다시 시도해 주세요.",
+      "apiUnavailable": "Google Maps API 키가 없어 주소 검색을 사용할 수 없습니다.",
+      "mapTitle": "선택한 만남 주소 지도"
+    },
+    "schedule": {
+      "notice": "필요한 날짜를 여러 개 선택할 수 있습니다. 모든 시작 시간은 한국 표준시(KST) 기준입니다.",
+      "calendarLabel": "체험 진행 날짜 달력",
+      "previousMonth": "이전 달",
+      "nextMonth": "다음 달",
+      "selectDate": "{date} 선택",
+      "editDate": "{date} 시작 시간 편집",
+      "selectedTitle": "선택한 일정",
+      "selectedCount": "{count, plural, one {#개 날짜 선택} other {#개 날짜 선택}}",
+      "sessionCount": "{count, plural, one {#개 회차} other {#개 회차}}",
+      "empty": "달력에서 날짜를 선택하면 예약 가능한 일정으로 추가됩니다.",
+      "editingDate": "시작 시간 편집",
+      "customTime": "시작 시간 추가",
+      "addTime": "시간 추가",
+      "addedTimes": "추가한 시작 시간",
+      "noTimes": "아직 시작 시간이 없습니다. 위에서 시간을 선택해 추가해 주세요.",
+      "removeTime": "{date}에서 {time} 삭제",
+      "applyDateTimesToAll": "이 시간들을 선택한 날짜 {count, number}개에 일괄 적용",
+      "removeDate": "{date} 삭제"
+    },
+    "price": {
+      "notice": "수수료와 정산액 계산은 요금 정책과 API 계약이 확정된 뒤 연결됩니다."
+    },
+    "inclusions": {
+      "custom": "기타 포함사항",
+      "customHint": "위 목록에 없는 포함사항을 직접 추가해 주세요.",
+      "add": "항목 추가",
+      "remove": "포함사항 삭제: {item}",
+      "options": {
+        "tickets": "관광명소 티켓",
+        "meal": "식사",
+        "snacks": "간식",
+        "drinks": "스페셜티 음료",
+        "transport": "대중교통 요금",
+        "parking": "주차",
+        "equipment": "장비 대여",
+        "souvenir": "특별한 기념품"
+      }
+    },
+    "discount": {
+      "policyNotice": "할인 규칙은 UI 초안이며 백엔드 계약과 함께 확정됩니다.",
+      "options": {
+        "none": {
+          "title": "할인 없음",
+          "description": "체험을 기본 요금으로 등록합니다."
+        },
+        "limited": {
+          "title": "기간 한정 할인",
+          "description": "한정된 프로모션 기간에 더 낮은 요금을 제공합니다."
+        }
+      }
+    },
+    "restrictions": {
+      "none": "별도로 확인할 사항이 없어요",
+      "noneDescription": "게스트가 참여 전에 추가로 확인할 내용이 없습니다.",
+      "custom": "기타 확인사항",
+      "customHint": "위 목록에 없지만 게스트가 참여 전에 확인해야 할 내용을 추가해 주세요.",
+      "add": "확인사항 추가",
+      "remove": "확인사항 삭제: {item}",
+      "options": {
+        "age": "만 19세 이상만 참여할 수 있어요",
+        "activity": "걷거나 오래 서 있는 등 신체 활동이 포함될 수 있어요",
+        "accessibility": "휠체어 또는 유모차 이용이 어려울 수 있어요",
+        "allergy": "음식 알레르기가 있다면 예약 전 확인해 주세요"
+      }
     },
     "review": {
+      "title": "게스트 화면을 미리 확인해 주세요",
+      "description": "입력한 정보가 활동 상세 페이지에서 게스트에게 어떻게 보일지 확인해 주세요.",
+      "guestPreviewNotice": "게스트가 보게 될 활동 상세 화면을 미리 보여 드립니다.",
+      "guestPreviewBadge": "게스트 화면 미리보기",
+      "aboutExperience": "체험 소개",
+      "schedule": "진행 날짜와 시작 시간",
+      "discountSummary": "{date}까지 {percent, number}% 할인",
       "category": "카테고리",
-      "concept": "체험 콘셉트",
       "host": "호스트",
       "photos": "사진",
       "name": "체험 이름",
+      "descriptionLabel": "상세 설명",
       "meeting": "만나는 장소",
       "itinerary": "활동 일정표",
       "guests": "최대 인원",
       "price": "요금",
+      "inclusions": "포함 사항",
+      "discount": "할인",
+      "restrictions": "참여 전 확인사항",
       "itineraryCount": "{count, plural, one {활동 #개} other {활동 #개}}",
       "guestCount": "{count, plural, one {#명} other {#명}}",
       "priceValue": "1인당 ₩{price, number}",
+      "hostName": "한버디 호스트",
+      "hostedBy": "{name}님이 진행",
+      "availability": "예약 가능한 일정",
+      "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",
+      "remaining": "최대 {count, plural, one {#명} other {#명}}",
+      "meetingPoint": "만나는 장소",
+      "mapTitle": "{place} 지도",
+      "perPerson": "1인당 {price}",
+      "nextSession": "가장 빠른 예약 가능 일정",
+      "bookNow": "예약하기",
       "apiNotice": "현재는 UI 미리보기입니다. API 명세가 확정되면 저장과 게시 기능을 연결합니다.",
       "complete": "UI 미리보기를 완료했습니다. 서버로 전송된 데이터는 없습니다."
     },
     "actions": {
+      "exit": "나가기",
       "back": "이전",
       "next": "다음",
       "finish": "미리보기 완료"
     },
     "errors": {
       "categoryRequired": "계속하려면 카테고리를 선택해 주세요.",
-      "conceptTitleRequired": "제공할 체험의 제목을 입력해 주세요.",
-      "conceptDescriptionRequired": "체험 콘셉트를 자세히 설명해 주세요.",
-      "hostIntroductionRequired": "게스트에게 본인을 소개해 주세요.",
-      "qualificationsRequired": "관련 자격 사항이나 경험을 입력해 주세요.",
-      "photosMinimum": "체험 사진을 5장 이상 추가해 주세요.",
-      "experienceNameRequired": "체험 이름을 입력해 주세요.",
-      "experienceDescriptionRequired": "체험에 대한 자세한 설명을 입력해 주세요.",
-      "meetingPlaceRequired": "만나는 장소를 입력해 주세요.",
-      "meetingDetailsRequired": "게스트를 위한 만남 장소 안내를 입력해 주세요.",
+      "hostIntroductionRequired": "본인 소개를 30자 이상 200자 이하로 입력해 주세요.",
+      "photosMinimum": "체험 사진을 3장 이상 10장 이하로 추가해 주세요.",
+      "experienceNameRequired": "체험 이름을 1자 이상 20자 이하로 입력해 주세요.",
+      "experienceDescriptionRequired": "체험 상세 설명을 30자 이상 200자 이하로 입력해 주세요.",
+      "meetingAddressRequired": "만나는 장소의 주소를 입력해 주세요.",
+      "meetingPlaceRequired": "짧은 만남 장소 이름을 입력해 주세요.",
+      "scheduleInvalid": "날짜를 한 개 이상 선택하고 선택한 모든 날짜의 시작 시간을 설정해 주세요.",
       "itineraryRequired": "일정표에 활동을 한 개 이상 추가해 주세요.",
-      "itineraryTitleRequired": "모든 활동에 제목을 입력해 주세요.",
-      "itineraryDescriptionTooShort": "각 활동 설명을 30자 이상 입력해 주세요.",
+      "itineraryTitleRequired": "모든 활동 제목을 1자 이상 20자 이하로 입력해 주세요.",
+      "itineraryDescriptionTooShort": "각 활동 설명을 5자 이상 50자 이하로 입력해 주세요.",
       "itineraryDurationInvalid": "모든 활동에 1분 이상의 소요 시간을 입력해 주세요.",
       "itineraryPhotoRequired": "모든 활동에 사진을 추가해 주세요.",
       "maxGuestsInvalid": "최대 인원을 1명 이상의 정수로 입력해 주세요.",
       "priceInvalid": "1인당 요금을 1원 이상의 정수로 입력해 주세요.",
       "inclusionsRequired": "포함 사항을 한 개 이상 입력해 주세요.",
-      "discountInvalid": "할인율을 0부터 100 사이의 정수로 입력해 주세요.",
-      "restrictionsRequired": "제한 사항을 한 개 이상 입력해 주세요."
+      "discountInvalid": "할인 종료일을 선택하고 할인율을 1부터 100 사이의 정수로 입력해 주세요.",
+      "restrictionsRequired": "확인사항을 한 개 이상 선택하거나 별도로 확인할 사항이 없음을 선택해 주세요."
     }
   }
 }

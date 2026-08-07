@@ -2,20 +2,12 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "@/i18n/navigation";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
 import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  CameraIcon,
-  CheckIcon,
-  ClockIcon,
-  ImagePlusIcon,
-  MapPinIcon,
-  PlusIcon,
-  TrashIcon,
-  UsersIcon,
-} from "@/components/ui/icons";
-import {
+  ACTIVITY_CREATE_LIMITS,
   ACTIVITY_CREATE_STEPS,
   EMPTY_ACTIVITY_DRAFT,
   getNextActivityCreateStep,
@@ -24,19 +16,59 @@ import {
   type ActivityCreateDraft,
   type ActivityCreateErrorKey,
   type ActivityCreateStep,
+  type DiscountType,
   type ItineraryDraft,
   type PhotoDraft,
+  type ScheduleDraft,
   validateActivityCreateStep,
 } from "./activity-create-wizard";
+import {
+  CapacityStep,
+  DescriptionStep,
+  DiscountStep,
+  HostStep,
+  InclusionsStep,
+  ItineraryStep,
+  MeetingStep,
+  NameStep,
+  PhotoStep,
+  PriceStep,
+  RestrictionsStep,
+  ReviewStep,
+  ScheduleStep,
+} from "./activity-create-steps";
 
-const CATEGORY_OPTIONS = ["food", "culture", "sports", "nature", "nightlife", "wellness"] as const;
-const MAX_EXPERIENCE_PHOTOS = 10;
+const MAX_EXPERIENCE_PHOTOS = ACTIVITY_CREATE_LIMITS.photos.max;
 
-const INPUT_CLASS =
-  "w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink outline-none transition focus:border-primary focus:ring-3 focus:ring-primary-soft placeholder:text-muted/60";
-const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-36 resize-y leading-7`;
+const STEP_GROUPS = [
+  { key: "intro", steps: ["host"] },
+  { key: "activity", steps: ["name", "description", "photos", "itinerary"] },
+  { key: "operation", steps: ["meeting", "schedule", "capacity"] },
+  { key: "pricing", steps: ["price", "discount"] },
+  { key: "policy", steps: ["inclusions", "restrictions"] },
+] as const satisfies ReadonlyArray<{
+  key: "intro" | "activity" | "operation" | "pricing" | "policy";
+  steps: ReadonlyArray<ActivityCreateStep>;
+}>;
 
-type DraftTextField = Exclude<keyof ActivityCreateDraft, "photos" | "itinerary">;
+type DraftTextField = Exclude<
+  keyof ActivityCreateDraft,
+  "photos" | "itinerary" | "schedules" | "discountType" | "hasNoRestrictions"
+>;
+
+interface ActivityCreateLocaleSnapshot {
+  currentStep: ActivityCreateStep;
+  furthestStepIndex: number;
+  draft: ActivityCreateDraft;
+  errorKey: ActivityCreateErrorKey | null;
+  reviewing: boolean;
+  previewComplete: boolean;
+  fileSequence: number;
+  scheduleSequence: number;
+  objectUrls: Set<string>;
+}
+
+let activityCreateLocaleSnapshot: ActivityCreateLocaleSnapshot | null = null;
 
 function makeId(prefix: string, sequence: number) {
   return `${prefix}-${Date.now()}-${sequence}`;
@@ -48,42 +80,112 @@ function createPhotoDraft(file: File, id: string): PhotoDraft {
 
 function ProgressRail({
   currentStep,
+  furthestStepIndex,
+  reviewing,
   getTitle,
+  getGroupTitle,
+  isStepComplete,
   label,
+  onNavigate,
 }: Readonly<{
   currentStep: ActivityCreateStep;
+  furthestStepIndex: number;
+  reviewing: boolean;
   getTitle: (step: ActivityCreateStep) => string;
+  getGroupTitle: (group: (typeof STEP_GROUPS)[number]["key"]) => string;
+  isStepComplete: (step: ActivityCreateStep) => boolean;
   label: string;
+  onNavigate: (step: ActivityCreateStep) => void;
 }>) {
   const currentIndex = getStepIndex(currentStep);
+  const currentGroupIndex = STEP_GROUPS.findIndex((group) =>
+    group.steps.some((step) => step === currentStep),
+  );
+  const isVisitedAndComplete = (step: ActivityCreateStep) =>
+    (reviewing || getStepIndex(step) <= furthestStepIndex) && isStepComplete(step);
+  const canNavigateForwardTo = (step: ActivityCreateStep) => {
+    const targetIndex = getStepIndex(step);
+    if (reviewing || targetIndex <= currentIndex) return true;
+    if (targetIndex > furthestStepIndex) return false;
+    return ACTIVITY_CREATE_STEPS.slice(0, targetIndex).every(isStepComplete);
+  };
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-line-soft px-8 py-10 xl:block">
-      <p className="text-xs font-bold tracking-[0.18em] text-primary uppercase">
+    <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-primary/15 bg-[#fff] px-7 py-9 lg:block">
+      <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase">
         {currentIndex + 1} / {ACTIVITY_CREATE_STEPS.length}
       </p>
-      <ol className="mt-8 space-y-1" aria-label={label}>
-        {ACTIVITY_CREATE_STEPS.map((step, index) => {
-          const isCurrent = step === currentStep;
-          const isComplete = index < currentIndex;
+      <ol className="mt-7 space-y-3" aria-label={label}>
+        {STEP_GROUPS.map((group, index) => {
+          const isCurrent = !reviewing && index === currentGroupIndex;
+          const groupSteps: ReadonlyArray<ActivityCreateStep> = group.steps;
+          const isComplete = groupSteps.every(isVisitedAndComplete);
+          const currentInGroup = isCurrent ? groupSteps.indexOf(currentStep) + 1 : 0;
+          const groupTarget = groupSteps[0];
+          const groupDisabled = !canNavigateForwardTo(groupTarget);
           return (
-            <li
-              key={step}
-              aria-current={isCurrent ? "step" : undefined}
-              className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold ${
-                isCurrent ? "bg-primary-soft text-primary-strong" : "text-muted"
-              }`}
-            >
-              <span
-                className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs ${
-                  isComplete || isCurrent
-                    ? "border-primary bg-primary text-white"
-                    : "border-line-strong bg-white"
+            <li key={group.key}>
+              <button
+                type="button"
+                onClick={() => onNavigate(groupTarget)}
+                disabled={groupDisabled}
+                aria-label={getGroupTitle(group.key)}
+                aria-current={isCurrent ? "step" : undefined}
+                className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border bg-white px-3 py-2.5 text-left text-sm transition ${
+                  isCurrent
+                    ? "border-primary/70 font-bold text-ink shadow-[0_6px_18px_rgba(209,63,50,0.06)]"
+                    : "border-transparent font-medium text-muted enabled:hover:border-primary/30 enabled:hover:text-primary-strong disabled:cursor-not-allowed disabled:opacity-45"
                 }`}
               >
-                {isComplete ? <CheckIcon className="size-3.5" /> : index + 1}
-              </span>
-              {getTitle(step)}
+                <span
+                  className={`relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${
+                    isComplete
+                      ? "border-primary bg-primary text-white"
+                      : isCurrent
+                        ? "border-primary bg-white text-primary"
+                        : "border-line-strong bg-white text-muted"
+                  }`}
+                >
+                  {isComplete ? <CheckIcon className="size-3" /> : index + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block ${isCurrent ? "text-primary-strong" : ""}`}>
+                    {getGroupTitle(group.key)}
+                  </span>
+                  {isCurrent && group.steps.length > 1 ? (
+                    <span className="mt-0.5 block truncate text-xs font-medium text-muted">
+                      {getTitle(currentStep)} · {currentInGroup}/{group.steps.length}
+                    </span>
+                  ) : null}
+                </span>
+              </button>
+              {isCurrent && group.steps.length > 1 ? (
+                <ol className="mt-2 ml-6 space-y-1 border-l border-line-soft pl-4">
+                  {group.steps.map((step) => {
+                    const active = step === currentStep;
+                    const complete = isVisitedAndComplete(step);
+                    const disabled = !canNavigateForwardTo(step);
+                    return (
+                      <li key={step}>
+                        <button
+                          type="button"
+                          onClick={() => onNavigate(step)}
+                          disabled={disabled}
+                          aria-current={active ? "step" : undefined}
+                          className={`flex w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 py-2 text-left text-xs transition ${
+                            active
+                              ? "border-primary/60 font-bold text-primary-strong"
+                              : "border-transparent font-medium text-muted enabled:hover:border-primary/25 enabled:hover:text-primary-strong disabled:cursor-not-allowed disabled:opacity-45"
+                          }`}
+                        >
+                          <span>{getTitle(step)}</span>
+                          {complete ? <CheckIcon className="size-3 shrink-0 text-primary" /> : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : null}
             </li>
           );
         })}
@@ -92,267 +194,168 @@ function ProgressRail({
   );
 }
 
-function Field({
-  label,
-  children,
-  hint,
-}: Readonly<{ label: string; children: ReactNode; hint?: string }>) {
-  return (
-    <label className="grid gap-2 text-sm font-semibold text-ink">
-      {label}
-      {children}
-      {hint ? <span className="leading-5 font-normal text-muted">{hint}</span> : null}
-    </label>
-  );
-}
-
-function CategoryStep({
-  value,
-  onChange,
-  t,
-}: Readonly<{
-  value: string;
-  onChange: (value: string) => void;
-  t: ReturnType<typeof useTranslations<"CreateActivity">>;
-}>) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {CATEGORY_OPTIONS.map((category) => (
-        <button
-          key={category}
-          type="button"
-          aria-pressed={value === category}
-          onClick={() => onChange(category)}
-          className={`min-h-24 rounded-2xl border p-5 text-left transition ${
-            value === category
-              ? "border-primary bg-primary-soft text-primary-strong shadow-[0_8px_24px_rgba(209,63,50,0.1)]"
-              : "border-line-strong bg-white text-ink hover:border-primary/60"
-          }`}
-        >
-          <span className="font-display text-lg font-bold">{t(`categories.${category}`)}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function PhotoStep({
-  photos,
-  onAdd,
-  onRemove,
-  t,
-}: Readonly<{
-  photos: PhotoDraft[];
-  onAdd: (files: FileList | null) => void;
-  onRemove: (id: string) => void;
-  t: ReturnType<typeof useTranslations<"CreateActivity">>;
-}>) {
-  return (
-    <div className="space-y-5">
-      <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-primary/45 bg-primary-soft/35 px-6 text-center transition hover:bg-primary-soft/60">
-        <ImagePlusIcon className="size-8 text-primary" />
-        <span className="mt-3 font-bold text-ink">{t("photos.upload")}</span>
-        <span className="mt-1 text-sm text-muted">{t("photos.hint")}</span>
-        <input
-          type="file"
-          multiple
-          accept="image/jpeg,image/png,image/webp"
-          className="sr-only"
-          aria-label={t("photos.label")}
-          onChange={(event) => {
-            onAdd(event.target.files);
-            event.target.value = "";
-          }}
-        />
-      </label>
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-ink">
-          {t("photos.count", { count: photos.length })}
-        </span>
-        <span className="text-muted">{t("photos.minimum")}</span>
-      </div>
-      {photos.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {photos.map((photo, index) => (
-            <li
-              key={photo.id}
-              className="group relative aspect-square overflow-hidden rounded-xl bg-panel"
-            >
-              <Image
-                src={photo.previewUrl}
-                alt={t("photos.preview", { index: index + 1 })}
-                fill
-                unoptimized
-                className="object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => onRemove(photo.id)}
-                aria-label={t("photos.remove", { index: index + 1 })}
-                className="absolute top-2 right-2 flex size-9 items-center justify-center rounded-full bg-white/95 text-ink shadow-sm hover:text-primary"
-              >
-                <TrashIcon className="size-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
-
-function ItineraryStep({
-  items,
-  onAdd,
-  onRemove,
-  onChange,
-  onPhotoChange,
-  t,
-}: Readonly<{
-  items: ItineraryDraft[];
-  onAdd: () => void;
-  onRemove: (id: string) => void;
-  onChange: (id: string, field: "title" | "description" | "durationMinutes", value: string) => void;
-  onPhotoChange: (id: string, files: FileList | null) => void;
-  t: ReturnType<typeof useTranslations<"CreateActivity">>;
-}>) {
-  return (
-    <div className="space-y-5">
-      {items.map((item, index) => (
-        <section key={item.id} className="rounded-2xl border border-line-soft p-5 sm:p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <h3 className="font-display text-lg font-bold text-ink">
-              {t("itinerary.item", { index: index + 1 })}
-            </h3>
-            {items.length > 1 ? (
-              <button
-                type="button"
-                onClick={() => onRemove(item.id)}
-                aria-label={t("itinerary.remove", { index: index + 1 })}
-                className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft hover:text-primary"
-              >
-                <TrashIcon className="size-4" />
-              </button>
-            ) : null}
-          </div>
-          <div className="grid gap-5">
-            <Field label={t("fields.itineraryTitle")}>
-              <input
-                className={INPUT_CLASS}
-                value={item.title}
-                onChange={(event) => onChange(item.id, "title", event.target.value)}
-                placeholder={t("placeholders.itineraryTitle")}
-              />
-            </Field>
-            <Field
-              label={t("fields.itineraryDescription")}
-              hint={t("itinerary.descriptionCount", { count: item.description.trim().length })}
-            >
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={item.description}
-                onChange={(event) => onChange(item.id, "description", event.target.value)}
-                placeholder={t("placeholders.itineraryDescription")}
-              />
-            </Field>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label={t("fields.duration")}>
-                <div className="relative">
-                  <ClockIcon className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
-                  <input
-                    type="number"
-                    min="1"
-                    className={`${INPUT_CLASS} pl-12`}
-                    value={item.durationMinutes}
-                    onChange={(event) => onChange(item.id, "durationMinutes", event.target.value)}
-                    placeholder={t("placeholders.duration")}
-                  />
-                </div>
-              </Field>
-              <label className="grid gap-2 text-sm font-semibold text-ink">
-                {t("fields.itineraryPhoto")}
-                <span className="flex min-h-[54px] cursor-pointer items-center gap-3 rounded-xl border border-line-strong px-4 text-muted hover:border-primary">
-                  <CameraIcon className="size-5 text-primary" />
-                  {item.photo ? item.photo.file.name : t("itinerary.addPhoto")}
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="sr-only"
-                    onChange={(event) => onPhotoChange(item.id, event.target.files)}
-                  />
-                </span>
-              </label>
-            </div>
-          </div>
-        </section>
-      ))}
-      <button
-        type="button"
-        onClick={onAdd}
-        className="flex min-h-12 items-center gap-2 rounded-full border border-line-strong px-5 text-sm font-bold text-ink hover:border-primary hover:text-primary"
-      >
-        <PlusIcon className="size-4" />
-        {t("itinerary.add")}
-      </button>
-    </div>
-  );
-}
-
-function ReviewStep({
-  draft,
-  t,
-}: Readonly<{
-  draft: ActivityCreateDraft;
-  t: ReturnType<typeof useTranslations<"CreateActivity">>;
-}>) {
-  const rows = [
-    [t("review.category"), t(`categories.${draft.category as (typeof CATEGORY_OPTIONS)[number]}`)],
-    [t("review.concept"), draft.conceptTitle],
-    [t("review.host"), draft.hostIntroduction],
-    [t("review.photos"), t("photos.count", { count: draft.photos.length })],
-    [t("review.name"), draft.experienceName],
-    [t("review.meeting"), draft.meetingPlace],
-    [t("review.itinerary"), t("review.itineraryCount", { count: draft.itinerary.length })],
-    [t("review.guests"), t("review.guestCount", { count: Number(draft.maxGuests) })],
-    [t("review.price"), t("review.priceValue", { price: Number(draft.pricePerPerson) })],
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-primary/25 bg-primary-soft/45 p-5 text-sm leading-6 text-primary-strong">
-        {t("review.apiNotice")}
-      </div>
-      <dl className="divide-y divide-line-soft border-y border-line-soft">
-        {rows.map(([label, value]) => (
-          <div key={label} className="grid gap-1 py-4 sm:grid-cols-[180px_1fr] sm:gap-5">
-            <dt className="text-sm font-semibold text-muted">{label}</dt>
-            <dd className="line-clamp-2 font-medium text-ink">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
 export function CreateActivityForm() {
   const t = useTranslations("CreateActivity");
-  const [currentStep, setCurrentStep] = useState<ActivityCreateStep>("category");
-  const [draft, setDraft] = useState<ActivityCreateDraft>(EMPTY_ACTIVITY_DRAFT);
-  const [errorKey, setErrorKey] = useState<ActivityCreateErrorKey | null>(null);
-  const [previewComplete, setPreviewComplete] = useState(false);
-  const fileSequence = useRef(0);
-  const objectUrls = useRef(new Set<string>());
+  const initialSnapshot = activityCreateLocaleSnapshot;
+  const [currentStep, setCurrentStep] = useState<ActivityCreateStep>(
+    initialSnapshot?.currentStep ?? "host",
+  );
+  const [furthestStepIndex, setFurthestStepIndex] = useState(
+    initialSnapshot?.furthestStepIndex ?? 0,
+  );
+  const [draft, setDraft] = useState<ActivityCreateDraft>(
+    initialSnapshot?.draft ?? EMPTY_ACTIVITY_DRAFT,
+  );
+  const [errorKey, setErrorKey] = useState<ActivityCreateErrorKey | null>(
+    initialSnapshot?.errorKey ?? null,
+  );
+  const [reviewing, setReviewing] = useState(initialSnapshot?.reviewing ?? false);
+  const [previewComplete, setPreviewComplete] = useState(initialSnapshot?.previewComplete ?? false);
+  const fileSequence = useRef(initialSnapshot?.fileSequence ?? 0);
+  const scheduleSequence = useRef(initialSnapshot?.scheduleSequence ?? 0);
+  const objectUrls = useRef(initialSnapshot?.objectUrls ?? new Set<string>());
+  const contentRef = useRef<HTMLDivElement>(null);
   const currentIndex = getStepIndex(currentStep);
+  const progressIndex = reviewing ? ACTIVITY_CREATE_STEPS.length : currentIndex + 1;
 
   useEffect(() => {
     const urls = objectUrls.current;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
     return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url));
+      if (!activityCreateLocaleSnapshot) {
+        urls.forEach((url) => URL.revokeObjectURL(url));
+      }
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
 
+  function preserveForLocaleChange() {
+    activityCreateLocaleSnapshot = {
+      currentStep,
+      furthestStepIndex,
+      draft,
+      errorKey,
+      reviewing,
+      previewComplete,
+      fileSequence: fileSequence.current,
+      scheduleSequence: scheduleSequence.current,
+      objectUrls: new Set(objectUrls.current),
+    };
+  }
+
+  function clearPreservedDraft() {
+    activityCreateLocaleSnapshot = null;
+    objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    objectUrls.current.clear();
+  }
+
   function updateField(field: DraftTextField, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
+    setErrorKey(null);
+  }
+
+  function updateDiscountType(discountType: DiscountType) {
+    setDraft((current) => ({
+      ...current,
+      discountType,
+      discountPercent: discountType === "none" ? "" : current.discountPercent,
+      discountEndsAt: discountType === "none" ? "" : current.discountEndsAt,
+    }));
+    setErrorKey(null);
+  }
+
+  function updateHasNoRestrictions(hasNoRestrictions: boolean) {
+    setDraft((current) => ({
+      ...current,
+      hasNoRestrictions,
+      restrictions: hasNoRestrictions ? "" : current.restrictions,
+    }));
+    setErrorKey(null);
+  }
+
+  function toggleScheduleDate(date: string) {
+    setDraft((current) => {
+      const exists = current.schedules.some((schedule) => schedule.date === date);
+      scheduleSequence.current += 1;
+      const schedules = exists
+        ? current.schedules.filter((schedule) => schedule.date !== date)
+        : [
+            ...current.schedules,
+            {
+              id: makeId(`schedule-${date}`, scheduleSequence.current),
+              date,
+              startTime: "",
+            },
+          ].sort((a, b) => a.date.localeCompare(b.date));
+      return { ...current, schedules };
+    });
+    setErrorKey(null);
+  }
+
+  function buildSchedulesForDate(
+    currentSchedules: ScheduleDraft[],
+    date: string,
+    startTimes: string[],
+  ) {
+    const existing = currentSchedules.filter((schedule) => schedule.date === date);
+    const uniqueStartTimes = [...new Set(startTimes.filter(Boolean))].sort();
+
+    if (!uniqueStartTimes.length) {
+      const emptySchedule = existing.find((schedule) => !schedule.startTime);
+      if (emptySchedule) return [emptySchedule];
+      scheduleSequence.current += 1;
+      return [
+        {
+          id: makeId(`schedule-${date}`, scheduleSequence.current),
+          date,
+          startTime: "",
+        },
+      ];
+    }
+
+    return uniqueStartTimes.map((startTime) => {
+      const matchingSchedule = existing.find((schedule) => schedule.startTime === startTime);
+      if (matchingSchedule) return matchingSchedule;
+      scheduleSequence.current += 1;
+      return {
+        id: makeId(`schedule-${date}`, scheduleSequence.current),
+        date,
+        startTime,
+      };
+    });
+  }
+
+  function setScheduleTimesForDate(date: string, startTimes: string[]) {
+    setDraft((current) => ({
+      ...current,
+      schedules: [
+        ...current.schedules.filter((schedule) => schedule.date !== date),
+        ...buildSchedulesForDate(current.schedules, date, startTimes),
+      ].sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)),
+    }));
+    setErrorKey(null);
+  }
+
+  function applyScheduleTimesToAll(sourceDate: string) {
+    setDraft((current) => {
+      const dates = [...new Set(current.schedules.map((schedule) => schedule.date))];
+      const sourceTimes = current.schedules
+        .filter((schedule) => schedule.date === sourceDate && schedule.startTime)
+        .map((schedule) => schedule.startTime);
+      if (!sourceTimes.length) return current;
+
+      return {
+        ...current,
+        schedules: dates
+          .flatMap((date) => buildSchedulesForDate(current.schedules, date, sourceTimes))
+          .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)),
+      };
+    });
     setErrorKey(null);
   }
 
@@ -382,6 +385,17 @@ export function CreateActivityForm() {
     });
   }
 
+  function makeCoverPhoto(id: string) {
+    setDraft((current) => {
+      const selected = current.photos.find((photo) => photo.id === id);
+      if (!selected || current.photos[0]?.id === id) return current;
+      return {
+        ...current,
+        photos: [selected, ...current.photos.filter((photo) => photo.id !== id)],
+      };
+    });
+  }
+
   function addItineraryItem() {
     fileSequence.current += 1;
     const item: ItineraryDraft = {
@@ -392,6 +406,7 @@ export function CreateActivityForm() {
       photo: null,
     };
     setDraft((current) => ({ ...current, itinerary: [...current.itinerary, item] }));
+    return item.id;
   }
 
   function removeItineraryItem(id: string) {
@@ -442,29 +457,63 @@ export function CreateActivityForm() {
     setErrorKey(null);
   }
 
+  function scrollToTop() {
+    contentRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
+  }
+
   function goNext() {
+    if (reviewing) {
+      setPreviewComplete(true);
+      return;
+    }
+
     const validationError = validateActivityCreateStep(currentStep, draft);
     if (validationError) {
       setErrorKey(validationError);
       return;
     }
-    if (currentStep === "review") {
-      setPreviewComplete(true);
+
+    if (currentStep === "restrictions") {
+      setReviewing(true);
+      setErrorKey(null);
+      scrollToTop();
       return;
     }
+
     const nextStep = getNextActivityCreateStep(currentStep);
+    setFurthestStepIndex((furthest) => Math.max(furthest, getStepIndex(nextStep)));
     setCurrentStep(nextStep);
-    if (nextStep === "itinerary" && draft.itinerary.length === 0) addItineraryItem();
     setErrorKey(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
   }
 
   function goBack() {
+    if (reviewing) {
+      setReviewing(false);
+      setPreviewComplete(false);
+      scrollToTop();
+      return;
+    }
     if (currentIndex === 0) return;
     setCurrentStep(getPreviousActivityCreateStep(currentStep));
     setErrorKey(null);
     setPreviewComplete(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
+  }
+
+  function navigateToStep(step: ActivityCreateStep) {
+    const targetIndex = getStepIndex(step);
+    if (!reviewing && targetIndex > currentIndex) {
+      const priorStepsAreComplete = ACTIVITY_CREATE_STEPS.slice(0, targetIndex).every(
+        (priorStep) => validateActivityCreateStep(priorStep, draft) === null,
+      );
+      if (targetIndex > furthestStepIndex || !priorStepsAreComplete) return;
+    }
+    setCurrentStep(step);
+    setReviewing(false);
+    setPreviewComplete(false);
+    setErrorKey(null);
+    scrollToTop();
   }
 
   function getStepTitle(step: ActivityCreateStep) {
@@ -472,113 +521,37 @@ export function CreateActivityForm() {
   }
 
   function renderStep() {
+    if (reviewing) return <ReviewStep draft={draft} t={t} />;
+
     switch (currentStep) {
-      case "category":
+      case "host":
+        return <HostStep draft={draft} onChange={updateField} t={t} />;
+      case "name":
         return (
-          <CategoryStep
-            value={draft.category}
-            onChange={(value) => updateField("category", value)}
+          <NameStep
+            value={draft.experienceName}
+            onChange={(value) => updateField("experienceName", value)}
             t={t}
           />
         );
-      case "concept":
+      case "description":
         return (
-          <div className="grid gap-6">
-            <Field label={t("fields.conceptTitle")} hint={t("hints.conceptTitle")}>
-              <input
-                className={INPUT_CLASS}
-                value={draft.conceptTitle}
-                onChange={(event) => updateField("conceptTitle", event.target.value)}
-                placeholder={t("placeholders.conceptTitle")}
-              />
-            </Field>
-            <Field label={t("fields.conceptDescription")}>
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={draft.conceptDescription}
-                onChange={(event) => updateField("conceptDescription", event.target.value)}
-                placeholder={t("placeholders.conceptDescription")}
-              />
-            </Field>
-          </div>
-        );
-      case "host":
-        return (
-          <div className="grid gap-6">
-            <Field label={t("fields.hostIntroduction")}>
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={draft.hostIntroduction}
-                onChange={(event) => updateField("hostIntroduction", event.target.value)}
-                placeholder={t("placeholders.hostIntroduction")}
-              />
-            </Field>
-            <Field label={t("fields.qualifications")}>
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={draft.qualifications}
-                onChange={(event) => updateField("qualifications", event.target.value)}
-                placeholder={t("placeholders.qualifications")}
-              />
-            </Field>
-            <Field label={t("fields.pressHistory")} hint={t("hints.optional")}>
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={draft.pressHistory}
-                onChange={(event) => updateField("pressHistory", event.target.value)}
-                placeholder={t("placeholders.pressHistory")}
-              />
-            </Field>
-          </div>
+          <DescriptionStep
+            experienceName={draft.experienceName}
+            value={draft.experienceDescription}
+            onChange={(value) => updateField("experienceDescription", value)}
+            t={t}
+          />
         );
       case "photos":
         return (
-          <PhotoStep photos={draft.photos} onAdd={addPhotoFiles} onRemove={removePhoto} t={t} />
-        );
-      case "listing":
-        return (
-          <div className="grid gap-6">
-            <Field label={t("fields.experienceName")} hint={t("hints.experienceName")}>
-              <input
-                className={INPUT_CLASS}
-                value={draft.experienceName}
-                onChange={(event) => updateField("experienceName", event.target.value)}
-                placeholder={t("placeholders.experienceName")}
-              />
-            </Field>
-            <Field label={t("fields.experienceDescription")}>
-              <textarea
-                className={`${TEXTAREA_CLASS} min-h-56`}
-                value={draft.experienceDescription}
-                onChange={(event) => updateField("experienceDescription", event.target.value)}
-                placeholder={t("placeholders.experienceDescription")}
-              />
-            </Field>
-          </div>
-        );
-      case "meeting":
-        return (
-          <div className="grid gap-6">
-            <Field label={t("fields.meetingPlace")}>
-              <div className="relative">
-                <MapPinIcon className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary" />
-                <input
-                  className={`${INPUT_CLASS} pl-12`}
-                  value={draft.meetingPlace}
-                  onChange={(event) => updateField("meetingPlace", event.target.value)}
-                  placeholder={t("placeholders.meetingPlace")}
-                />
-              </div>
-            </Field>
-            <Field label={t("fields.meetingDetails")} hint={t("hints.meetingDetails")}>
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={draft.meetingDetails}
-                onChange={(event) => updateField("meetingDetails", event.target.value)}
-                placeholder={t("placeholders.meetingDetails")}
-              />
-            </Field>
-          </div>
+          <PhotoStep
+            photos={draft.photos}
+            onAdd={addPhotoFiles}
+            onRemove={removePhoto}
+            onCover={makeCoverPhoto}
+            t={t}
+          />
         );
       case "itinerary":
         return (
@@ -591,156 +564,202 @@ export function CreateActivityForm() {
             t={t}
           />
         );
-      case "pricing":
+      case "meeting":
+        return <MeetingStep draft={draft} onChange={updateField} t={t} />;
+      case "schedule":
         return (
-          <div className="grid gap-6">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field label={t("fields.maxGuests")}>
-                <div className="relative">
-                  <UsersIcon className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
-                  <input
-                    type="number"
-                    min="1"
-                    className={`${INPUT_CLASS} pl-12`}
-                    value={draft.maxGuests}
-                    onChange={(event) => updateField("maxGuests", event.target.value)}
-                    placeholder={t("placeholders.maxGuests")}
-                  />
-                </div>
-              </Field>
-              <Field label={t("fields.pricePerPerson")}>
-                <div className="relative">
-                  <span className="absolute top-1/2 left-4 -translate-y-1/2 font-bold text-muted">
-                    ₩
-                  </span>
-                  <input
-                    type="number"
-                    min="1"
-                    className={`${INPUT_CLASS} pl-10`}
-                    value={draft.pricePerPerson}
-                    onChange={(event) => updateField("pricePerPerson", event.target.value)}
-                    placeholder={t("placeholders.pricePerPerson")}
-                  />
-                </div>
-              </Field>
-            </div>
-            <Field label={t("fields.inclusions")} hint={t("hints.onePerLine")}>
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={draft.inclusions}
-                onChange={(event) => updateField("inclusions", event.target.value)}
-                placeholder={t("placeholders.inclusions")}
-              />
-            </Field>
-            <Field label={t("fields.discount")} hint={t("hints.optional")}>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                className={INPUT_CLASS}
-                value={draft.discountPercent}
-                onChange={(event) => updateField("discountPercent", event.target.value)}
-                placeholder={t("placeholders.discount")}
-              />
-            </Field>
-            <Field label={t("fields.restrictions")} hint={t("hints.onePerLine")}>
-              <textarea
-                className={TEXTAREA_CLASS}
-                value={draft.restrictions}
-                onChange={(event) => updateField("restrictions", event.target.value)}
-                placeholder={t("placeholders.restrictions")}
-              />
-            </Field>
-          </div>
+          <ScheduleStep
+            schedules={draft.schedules}
+            onToggleDate={toggleScheduleDate}
+            onSetTimesForDate={setScheduleTimesForDate}
+            onApplyTimesToAll={applyScheduleTimesToAll}
+            t={t}
+          />
         );
-      case "review":
-        return <ReviewStep draft={draft} t={t} />;
+      case "capacity":
+        return (
+          <CapacityStep
+            value={draft.maxGuests}
+            onChange={(value) => updateField("maxGuests", value)}
+            t={t}
+          />
+        );
+      case "price":
+        return (
+          <PriceStep
+            value={draft.pricePerPerson}
+            onChange={(value) => updateField("pricePerPerson", value)}
+            t={t}
+          />
+        );
+      case "inclusions":
+        return (
+          <InclusionsStep
+            value={draft.inclusions}
+            onChange={(value) => updateField("inclusions", value)}
+            t={t}
+          />
+        );
+      case "discount":
+        return (
+          <DiscountStep
+            type={draft.discountType}
+            percent={draft.discountPercent}
+            endsAt={draft.discountEndsAt}
+            onTypeChange={updateDiscountType}
+            onPercentChange={(value) => updateField("discountPercent", value)}
+            onEndsAtChange={(value) => updateField("discountEndsAt", value)}
+            t={t}
+          />
+        );
+      case "restrictions":
+        return (
+          <RestrictionsStep
+            value={draft.restrictions}
+            hasNoRestrictions={draft.hasNoRestrictions}
+            onChange={(value) => updateField("restrictions", value)}
+            onNoRestrictionsChange={updateHasNoRestrictions}
+            t={t}
+          />
+        );
     }
   }
 
+  const title = reviewing ? t("review.title") : getStepTitle(currentStep);
+  const description = reviewing ? t("review.description") : t(`steps.${currentStep}.description`);
+  const isLongStep =
+    reviewing ||
+    currentStep === "photos" ||
+    currentStep === "itinerary" ||
+    currentStep === "schedule";
+  const currentGroup =
+    STEP_GROUPS.find((group) => group.steps.some((step) => step === currentStep)) ?? STEP_GROUPS[0];
+
   return (
-    <div className="flex min-h-[calc(100vh-76px)] flex-col bg-white">
-      <header className="border-b border-line-soft px-5 py-4 sm:px-8">
+    <div className="fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-[#fff] text-ink">
+      <header className="z-20 shrink-0 border-b border-primary/15 bg-[#fff] px-5 py-3.5 sm:px-8">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase">
-              {t("eyebrow")}
-            </p>
-            <h1 className="mt-1 truncate font-display text-lg font-bold text-ink sm:text-xl">
-              {t("title")}
-            </h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <Image
+              src="/images/brand/logo-borderless.webp"
+              alt=""
+              width={36}
+              height={36}
+              className="size-9 shrink-0 object-contain"
+              priority
+            />
+            <span className="truncate font-display text-lg font-extrabold tracking-[-0.04em] text-ink">
+              HanBuddy
+            </span>
           </div>
-          <p className="shrink-0 text-sm font-semibold text-muted">
-            {t("progress", { current: currentIndex + 1, total: ACTIVITY_CREATE_STEPS.length })}
-          </p>
+          <div className="flex items-center gap-2">
+            <LocaleSwitcher
+              className="min-h-10 px-3 sm:px-4"
+              onBeforeLocaleChange={preserveForLocaleChange}
+            />
+            <Link
+              href="/dashboard"
+              onClick={clearPreservedDraft}
+              className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong bg-white px-3 text-sm font-bold text-ink transition hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
+            >
+              <LogOutIcon className="size-4" />
+              {t("actions.exit")}
+            </Link>
+          </div>
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 overflow-hidden border-x border-line-soft">
-        <ProgressRail
-          currentStep={currentStep}
-          getTitle={getStepTitle}
-          label={t("progressLabel")}
+      <div className="h-1 shrink-0 bg-line-soft lg:hidden">
+        <div
+          className="h-full bg-primary transition-[width]"
+          style={{ width: `${(progressIndex / ACTIVITY_CREATE_STEPS.length) * 100}%` }}
         />
-        <main className="min-w-0 flex-1">
-          <div className="h-1 bg-line-soft xl:hidden">
-            <div
-              className="h-full bg-primary transition-[width]"
-              style={{ width: `${((currentIndex + 1) / ACTIVITY_CREATE_STEPS.length) * 100}%` }}
-            />
-          </div>
-          <div className="mx-auto w-full max-w-4xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
-            <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase xl:hidden">
-              {t("progress", { current: currentIndex + 1, total: ACTIVITY_CREATE_STEPS.length })}
-            </p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-              {getStepTitle(currentStep)}
-            </h2>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-muted sm:text-lg">
-              {t(`steps.${currentStep}.description`)}
-            </p>
-            <div className="mt-9">{renderStep()}</div>
-            {errorKey ? (
-              <p
-                role="alert"
-                className="mt-6 rounded-xl bg-primary-soft px-4 py-3 text-sm font-semibold text-primary-strong"
-              >
-                {t(`errors.${errorKey}`)}
-              </p>
-            ) : null}
-            {previewComplete ? (
-              <p
-                role="status"
-                className="mt-6 rounded-xl bg-panel px-4 py-3 text-sm font-semibold text-ink"
-              >
-                {t("review.complete")}
-              </p>
-            ) : null}
-          </div>
-        </main>
       </div>
 
-      <footer className="sticky bottom-0 z-20 border-t border-line-soft bg-white/95 px-5 py-4 backdrop-blur sm:px-8">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 xl:pl-72">
-          <button
-            type="button"
-            onClick={goBack}
-            disabled={currentIndex === 0}
-            className="flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold text-ink hover:bg-panel disabled:invisible"
+      <div className="flex min-h-0 flex-1">
+        <ProgressRail
+          currentStep={currentStep}
+          furthestStepIndex={furthestStepIndex}
+          reviewing={reviewing}
+          getTitle={getStepTitle}
+          getGroupTitle={(group) => t(`groups.${group}`)}
+          isStepComplete={(step) => validateActivityCreateStep(step, draft) === null}
+          label={t("progressLabel")}
+          onNavigate={navigateToStep}
+        />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main
+            ref={contentRef}
+            className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
           >
-            <ArrowLeftIcon className="size-4" />
-            {t("actions.back")}
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            className="flex min-h-11 min-w-32 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_10px_22px_rgba(209,63,50,0.2)] hover:bg-primary-hover sm:min-w-40"
-          >
-            {currentStep === "review" ? t("actions.finish") : t("actions.next")}
-            <ArrowRightIcon className="size-4" />
-          </button>
+            <button
+              type="button"
+              onClick={goBack}
+              disabled={!reviewing && currentIndex === 0}
+              aria-label={t("actions.back")}
+              className="absolute top-5 left-5 z-10 flex size-10 items-center justify-center rounded-full text-primary-strong transition hover:bg-primary-soft disabled:invisible sm:top-8 sm:left-8 lg:top-10 lg:left-10"
+            >
+              <ArrowLeftIcon className="size-5" />
+            </button>
+            <div
+              className={`mx-auto flex min-h-full w-full flex-col px-5 py-8 sm:px-8 sm:py-12 lg:px-12 ${
+                reviewing ? "max-w-7xl" : "max-w-4xl"
+              } ${isLongStep ? "justify-start" : "justify-center"}`}
+            >
+              <div className={`mx-auto w-full ${reviewing ? "max-w-6xl" : "max-w-3xl"}`}>
+                <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase lg:hidden">
+                  {t(`groups.${currentGroup.key}`)} ·
+                  {currentGroup.steps.findIndex((step) => step === currentStep) + 1}/
+                  {currentGroup.steps.length}
+                </p>
+                <h1
+                  aria-live="polite"
+                  className="mt-2 font-display text-2xl font-bold tracking-tight break-keep text-ink sm:text-3xl"
+                >
+                  {title}
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted sm:text-base sm:leading-7">
+                  {description}
+                </p>
+                <div className="mt-8 sm:mt-10">{renderStep()}</div>
+                {errorKey ? (
+                  <p
+                    role="alert"
+                    className="mt-6 rounded-xl border border-primary/20 bg-primary-soft/55 px-4 py-3 text-sm font-semibold text-primary-strong"
+                  >
+                    {t(`errors.${errorKey}`)}
+                  </p>
+                ) : null}
+                {previewComplete ? (
+                  <p
+                    role="status"
+                    className="mt-6 rounded-xl border border-primary/25 bg-white px-4 py-3 text-sm font-semibold text-primary-strong"
+                  >
+                    {t("review.complete")}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </main>
+
+          <footer className="z-20 shrink-0 border-t border-primary/15 bg-[#fff] px-5 pt-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-8">
+            <div
+              className={`mx-auto flex items-center justify-end gap-3 lg:px-12 ${
+                reviewing ? "max-w-7xl" : "max-w-4xl"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={goNext}
+                className="flex min-h-11 min-w-28 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_8px_18px_rgba(209,63,50,0.18)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-w-32"
+              >
+                {reviewing ? t("actions.finish") : t("actions.next")}
+                <ArrowRightIcon className="size-4" />
+              </button>
+            </div>
+          </footer>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }

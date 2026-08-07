@@ -18,7 +18,12 @@ const LOCALE_OPTIONS = [
 export function LocaleSwitcher({
   className,
   dismissMenu = false,
-}: Readonly<{ className?: string; dismissMenu?: boolean }>) {
+  onBeforeLocaleChange,
+}: Readonly<{
+  className?: string;
+  dismissMenu?: boolean;
+  onBeforeLocaleChange?: () => void;
+}>) {
   const locale = useLocale();
   const t = useTranslations("Navigation");
   const pathname = usePathname();
@@ -51,7 +56,10 @@ export function LocaleSwitcher({
 
   const selectLocale = (nextLocale: Locale) => {
     setIsOpen(false);
-    if (nextLocale !== locale) router.replace(pathname, { locale: nextLocale });
+    if (nextLocale !== locale) {
+      onBeforeLocaleChange?.();
+      router.replace(pathname, { locale: nextLocale });
+    }
   };
 
   return (

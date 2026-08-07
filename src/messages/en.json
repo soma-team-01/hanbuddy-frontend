@@ -655,38 +655,61 @@
         "title": "Choose a category",
         "description": "Pick the category that best describes your experience."
       },
-      "concept": {
-        "title": "Shape your experience",
-        "description": "Start with the idea guests will remember."
-      },
       "host": {
         "title": "Introduce yourself",
-        "description": "Share the knowledge and experience that make you the right host."
+        "description": "Give guests a short, personal introduction to who you are."
+      },
+      "name": {
+        "title": "Name your experience",
+        "description": "Use a clear, memorable name that tells guests what makes it special."
+      },
+      "description": {
+        "title": "Describe your experience in detail",
+        "description": "Help guests picture the experience from the moment it starts until it ends."
       },
       "photos": {
         "title": "Show what guests can expect",
-        "description": "Add at least five clear photos that capture the experience."
+        "description": "Add 3 to 10 clear photos that capture the experience."
       },
-      "listing": {
-        "title": "Name and describe your experience",
-        "description": "Write the public-facing name and story guests will see."
+      "itinerary": {
+        "title": "Build the itinerary",
+        "description": "Add the activities guests will follow from the beginning of the experience to the end."
       },
       "meeting": {
         "title": "Set the meeting place",
         "description": "Help guests find you easily on the day."
       },
-      "itinerary": {
-        "title": "Build the itinerary",
-        "description": "Break the experience into clear activities."
+      "schedule": {
+        "title": "Set dates and start times",
+        "description": "Choose every date guests can book and set a start time for each one."
       },
-      "pricing": {
-        "title": "Set capacity and pricing",
-        "description": "Finish the practical details guests need before booking."
+      "capacity": {
+        "title": "Set the maximum group size",
+        "description": "Choose how many guests you can host comfortably at one time."
       },
-      "review": {
-        "title": "Review your experience",
-        "description": "Check the full experience before API integration."
+      "price": {
+        "title": "Set the price per person",
+        "description": "Enter the amount each guest will pay in Korean won."
+      },
+      "inclusions": {
+        "title": "Tell guests what's included",
+        "description": "Be precise about what the price covers."
+      },
+      "discount": {
+        "title": "Add a discount",
+        "description": "Optionally set a limited-time discount with an end date."
+      },
+      "restrictions": {
+        "title": "Before guests join",
+        "description": "Select anything guests should know before taking part in the activity."
       }
+    },
+    "groups": {
+      "intro": "Intro",
+      "activity": "Activity",
+      "operation": "Operations",
+      "pricing": "Pricing",
+      "policy": "Policies"
     },
     "categories": {
       "food": "Food & drink",
@@ -697,15 +720,15 @@
       "wellness": "Wellness"
     },
     "fields": {
-      "conceptTitle": "What will guests experience?",
-      "conceptDescription": "Describe the idea",
       "hostIntroduction": "About you",
       "qualifications": "Qualifications and experience",
       "pressHistory": "Awards or press coverage",
       "experienceName": "Experience name",
       "experienceDescription": "Detailed description",
-      "meetingPlace": "Meeting place",
-      "meetingDetails": "Meeting instructions",
+      "meetingAddress": "Search address",
+      "meetingPlace": "Meeting place name",
+      "scheduleDate": "Experience date",
+      "scheduleStartTime": "Start time",
       "itineraryTitle": "Activity title",
       "itineraryDescription": "What guests will do",
       "duration": "Duration in minutes",
@@ -714,92 +737,222 @@
       "pricePerPerson": "Price per person",
       "inclusions": "What's included",
       "discount": "Discount percentage",
-      "restrictions": "Restrictions"
+      "discountEndsAt": "Discount ends on",
+      "restrictions": "Things to know before joining"
     },
     "hints": {
-      "conceptTitle": "Keep this focused on the experience, not the final listing name.",
       "optional": "Optional",
       "experienceName": "Use a short, specific name that tells guests what makes it special.",
-      "meetingDetails": "Add a landmark, exit number, or other details guests can recognize.",
-      "onePerLine": "Enter one item per line."
+      "meetingAddress": "Search for an address and select it from the suggestions.",
+      "meetingPlace": "Use a short recognizable name, separate from the address.",
+      "onePerLine": "Enter one item per line.",
+      "restrictionsList": "Add one thing guests should know at a time.",
+      "characters": "{count, number} characters entered",
+      "hostIntroductionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
+      "experienceNameCharacters": "{count, number}/{max, number} characters",
+      "experienceDescriptionCharacters": "{count, number}/{max, number} characters · minimum {min, number}"
     },
     "placeholders": {
-      "conceptTitle": "e.g., Learn Korean baseball cheers with a local fan",
-      "conceptDescription": "Explain what makes this experience personal and memorable.",
       "hostIntroduction": "Introduce yourself and why you want to host this experience.",
       "qualifications": "Share relevant work, study, certifications, or lived experience.",
       "pressHistory": "Add awards, publications, interviews, or notable recognition.",
       "experienceName": "e.g., Cheer at a Korean Baseball Night",
       "experienceDescription": "Tell guests what the experience feels like from start to finish.",
-      "meetingPlace": "e.g., Jamsil Baseball Stadium Gate 1",
-      "meetingDetails": "e.g., Meet beside the main ticket booth 15 minutes before start time.",
+      "meetingAddress": "e.g., 25 Olympic-ro, Songpa-gu, Seoul",
+      "meetingPlace": "e.g., Gate 1 ticket booth",
       "itineraryTitle": "e.g., Learn the team chants",
-      "itineraryDescription": "Describe this activity in at least 30 characters.",
+      "itineraryDescription": "Describe this activity in 5 to 50 characters.",
       "duration": "e.g., 30",
       "maxGuests": "e.g., 8",
       "pricePerPerson": "e.g., 50000",
+      "inclusionsCustom": "e.g., Team cap",
       "inclusions": "Ticket\nWelcome snack\nCheering kit",
       "discount": "e.g., 10",
-      "restrictions": "Guests under 19 must join with a guardian\nNot wheelchair accessible"
+      "restrictions": "e.g., Comfortable shoes are recommended"
     },
     "photos": {
       "upload": "Add experience photos",
-      "hint": "JPG, PNG, or WebP · at least 5, up to 10",
+      "hint": "JPG, PNG, or WebP · at least 3, up to 10",
       "label": "Upload experience photos",
       "count": "{count, plural, one {# photo selected} other {# photos selected}}",
-      "minimum": "Minimum 5 photos",
+      "minimum": "Minimum 3 photos",
+      "cover": "Cover photo",
+      "makeCover": "Set as cover",
       "preview": "Experience photo {index, number}",
       "remove": "Remove experience photo {index, number}"
     },
     "itinerary": {
       "item": "Activity {index, number}",
       "remove": "Remove activity {index, number}",
-      "descriptionCount": "{count, plural, one {# character} other {# characters}} · minimum 30",
+      "titleCount": "{count, number}/{max, number} characters",
+      "descriptionCount": "{count, number}/{max, number} characters · minimum {min, number}",
       "addPhoto": "Add an activity photo",
-      "add": "Add another activity"
+      "photoLabel": "Upload a photo for activity {index, number}",
+      "add": "Add an activity",
+      "edit": "Edit activity {index, number}",
+      "untitled": "New activity",
+      "incomplete": "Add the details",
+      "durationSummary": "{minutes, number} min",
+      "editor": {
+        "progress": "{current, number} of {total, number}",
+        "close": "Close activity editor",
+        "photoTitle": "Choose an activity photo",
+        "photoDescription": "Use one clear photo that represents this part of the experience.",
+        "changePhoto": "Change photo",
+        "descriptionTitle": "What will guests do?",
+        "durationTitle": "How long will it take?",
+        "titleTitle": "Name this activity",
+        "minutes": "minutes",
+        "decreaseDuration": "Decrease duration",
+        "increaseDuration": "Increase duration",
+        "done": "Done",
+        "errors": {
+          "photo": "Add a photo to continue.",
+          "description": "Write 5 to 50 characters.",
+          "duration": "Set a duration of at least 1 minute.",
+          "title": "Enter a 1 to 20 character activity title."
+        }
+      }
+    },
+    "capacity": {
+      "decrease": "Decrease maximum guests",
+      "increase": "Increase maximum guests",
+      "guests": "{count, plural, one {# guest maximum} other {# guests maximum}}"
+    },
+    "meeting": {
+      "searching": "Searching addresses…",
+      "selecting": "Loading the selected address…",
+      "searchError": "Address search failed. Please try again.",
+      "apiUnavailable": "Address search is unavailable because the Google Maps API key is missing.",
+      "mapTitle": "Map of the selected meeting address"
+    },
+    "schedule": {
+      "notice": "Select as many dates as you need. All start times are shown in Korea Standard Time (KST).",
+      "calendarLabel": "Experience dates calendar",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "selectDate": "Select {date}",
+      "editDate": "Edit start times for {date}",
+      "selectedTitle": "Selected sessions",
+      "selectedCount": "{count, plural, one {# date} other {# dates}} selected",
+      "sessionCount": "{count, plural, one {# session} other {# sessions}}",
+      "empty": "Select dates on the calendar to add bookable sessions.",
+      "editingDate": "Editing start times",
+      "customTime": "Add a start time",
+      "addTime": "Add time",
+      "addedTimes": "Added start times",
+      "noTimes": "No start times yet. Choose a time above and add it.",
+      "removeTime": "Remove {time} from {date}",
+      "applyDateTimesToAll": "Apply these times to all {count, number} dates",
+      "removeDate": "Remove {date}"
+    },
+    "price": {
+      "notice": "Fee and payout calculations will be added after the pricing policy and API contract are finalized."
+    },
+    "inclusions": {
+      "custom": "Other included items",
+      "customHint": "Add anything included that is not listed above.",
+      "add": "Add item",
+      "remove": "Remove included item: {item}",
+      "options": {
+        "tickets": "Admission tickets",
+        "meal": "Meal",
+        "snacks": "Snacks",
+        "drinks": "Specialty drinks",
+        "transport": "Public transportation",
+        "parking": "Parking",
+        "equipment": "Equipment rental",
+        "souvenir": "Special souvenir"
+      }
+    },
+    "discount": {
+      "policyNotice": "Discount rules are a UI draft and will be finalized with the backend contract.",
+      "options": {
+        "none": {
+          "title": "No discount",
+          "description": "List the experience at its standard price."
+        },
+        "limited": {
+          "title": "Limited-time discount",
+          "description": "Offer a lower price for a limited promotional period."
+        }
+      }
+    },
+    "restrictions": {
+      "none": "Nothing guests need to know",
+      "noneDescription": "There are no additional details guests need to check before joining.",
+      "custom": "Other things to know",
+      "customHint": "Add anything guests should check before joining that is not listed above.",
+      "add": "Add information",
+      "remove": "Remove information: {item}",
+      "options": {
+        "age": "Guests must be at least 19 years old",
+        "activity": "The activity may involve walking, standing for long periods, or other physical activity",
+        "accessibility": "Wheelchair or stroller access may be difficult",
+        "allergy": "Please check with the host before booking if you have any food allergies"
+      }
     },
     "review": {
+      "title": "Preview your experience",
+      "description": "See how the information you entered will appear to guests on the activity details page.",
+      "guestPreviewNotice": "This preview shows the guest-facing activity details layout.",
+      "guestPreviewBadge": "Guest preview",
+      "aboutExperience": "About this experience",
+      "schedule": "Date and start time",
+      "discountSummary": "{percent, number}% off until {date}",
       "category": "Category",
-      "concept": "Experience concept",
       "host": "Host",
       "photos": "Photos",
       "name": "Experience name",
+      "descriptionLabel": "Description",
       "meeting": "Meeting place",
       "itinerary": "Itinerary",
       "guests": "Capacity",
       "price": "Price",
+      "inclusions": "What's included",
+      "discount": "Discount",
+      "restrictions": "Before you join",
       "itineraryCount": "{count, plural, one {# activity} other {# activities}}",
       "guestCount": "{count, plural, one {# guest} other {# guests}}",
       "priceValue": "₩{price, number} per person",
+      "hostName": "HanBuddy host",
+      "hostedBy": "Hosted by {name}",
+      "availability": "Availability",
+      "kstNotice": "All times are shown in Korea Standard Time (KST).",
+      "remaining": "Up to {count, plural, one {# guest} other {# guests}}",
+      "meetingPoint": "Meeting point",
+      "mapTitle": "Map of {place}",
+      "perPerson": "{price} per person",
+      "nextSession": "Next available session",
+      "bookNow": "Book now",
       "apiNotice": "This is a UI preview. Saving and publishing will be connected after the API contract is finalized.",
       "complete": "UI preview complete. No data was sent to the server."
     },
     "actions": {
+      "exit": "Exit",
       "back": "Back",
       "next": "Next",
       "finish": "Finish preview"
     },
     "errors": {
       "categoryRequired": "Choose a category to continue.",
-      "conceptTitleRequired": "Enter a title for the experience concept.",
-      "conceptDescriptionRequired": "Describe the experience concept.",
-      "hostIntroductionRequired": "Introduce yourself to guests.",
-      "qualificationsRequired": "Add your qualifications or relevant experience.",
-      "photosMinimum": "Add at least five experience photos.",
-      "experienceNameRequired": "Enter an experience name.",
-      "experienceDescriptionRequired": "Add a detailed experience description.",
-      "meetingPlaceRequired": "Enter the meeting place.",
-      "meetingDetailsRequired": "Add meeting instructions for guests.",
+      "hostIntroductionRequired": "Write an introduction between 30 and 200 characters.",
+      "photosMinimum": "Add between 3 and 10 experience photos.",
+      "experienceNameRequired": "Enter an experience name between 1 and 20 characters.",
+      "experienceDescriptionRequired": "Write a detailed description between 30 and 200 characters.",
+      "meetingAddressRequired": "Enter the meeting address.",
+      "meetingPlaceRequired": "Enter a short meeting place name.",
+      "scheduleInvalid": "Choose at least one date and set a start time for every selected date.",
       "itineraryRequired": "Add at least one itinerary activity.",
-      "itineraryTitleRequired": "Every activity needs a title.",
-      "itineraryDescriptionTooShort": "Each activity description must be at least 30 characters.",
+      "itineraryTitleRequired": "Every activity needs a title between 1 and 20 characters.",
+      "itineraryDescriptionTooShort": "Each activity description must be between 5 and 50 characters.",
       "itineraryDurationInvalid": "Enter a duration greater than 0 for every activity.",
       "itineraryPhotoRequired": "Add a photo for every activity.",
       "maxGuestsInvalid": "Enter a whole-number capacity greater than 0.",
       "priceInvalid": "Enter a whole-number price greater than 0.",
       "inclusionsRequired": "Add at least one included item.",
-      "discountInvalid": "Enter a whole-number discount between 0 and 100.",
-      "restrictionsRequired": "Add at least one restriction."
+      "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
+      "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note."
     }
   }
 }

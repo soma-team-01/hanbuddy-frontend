@@ -43,7 +43,9 @@
     "permissionDenied": "You do not have permission to perform this action.",
     "resourceNotFound": "The requested information could not be found.",
     "conflict": "This action cannot be completed in the current state.",
-    "serverUnavailable": "The service is temporarily unavailable. Please try again shortly."
+    "serverUnavailable": "The service is temporarily unavailable. Please try again shortly.",
+    "activityDiscountInvalid": "Set the discount rate and end date together.",
+    "activityDiscountEndDate": "The discount end date must be today or a later date."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
@@ -844,7 +846,8 @@
       "noTimes": "No start times yet. Choose a time above and add it.",
       "removeTime": "Remove {time} from {date}",
       "applyDateTimesToAll": "Apply these times to all {count, number} dates",
-      "removeDate": "Remove {date}"
+      "removeDate": "Remove {date}",
+      "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
       "notice": "Fee and payout calculations will be added after the pricing policy and API contract are finalized."
@@ -925,14 +928,15 @@
       "perPerson": "{price} per person",
       "nextSession": "Next available session",
       "bookNow": "Book now",
-      "apiNotice": "This is a UI preview. Saving and publishing will be connected after the API contract is finalized.",
-      "complete": "UI preview complete. No data was sent to the server."
+      "apiNotice": "This is a preview of what guests will see. Check the details, then register your experience."
     },
     "actions": {
       "exit": "Exit",
       "back": "Back",
       "next": "Next",
-      "finish": "Finish preview"
+      "finish": "Register experience",
+      "submitUploading": "Uploading photos…",
+      "submitRegistering": "Registering…"
     },
     "errors": {
       "categoryRequired": "Choose a category to continue.",
@@ -952,7 +956,10 @@
       "priceInvalid": "Enter a whole-number price greater than 0.",
       "inclusionsRequired": "Add at least one included item.",
       "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
-      "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note."
+      "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",
+      "imageUploadFailed": "We couldn't upload your photos. Please try again.",
+      "submissionFailed": "We couldn't register your experience. Please try again.",
+      "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only."
     }
   }
 }

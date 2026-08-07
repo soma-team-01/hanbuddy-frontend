@@ -43,7 +43,9 @@
     "permissionDenied": "이 작업을 수행할 권한이 없습니다.",
     "resourceNotFound": "요청한 정보를 찾을 수 없습니다.",
     "conflict": "현재 상태에서는 이 작업을 완료할 수 없습니다.",
-    "serverUnavailable": "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+    "serverUnavailable": "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    "activityDiscountInvalid": "할인율과 할인 종료일은 함께 설정해야 합니다.",
+    "activityDiscountEndDate": "할인 종료일은 오늘 또는 이후 날짜여야 합니다."
   },
   "Navigation": {
     "primaryNavigation": "주요 내비게이션",
@@ -844,7 +846,8 @@
       "noTimes": "아직 시작 시간이 없습니다. 위에서 시간을 선택해 추가해 주세요.",
       "removeTime": "{date}에서 {time} 삭제",
       "applyDateTimesToAll": "이 시간들을 선택한 날짜 {count, number}개에 일괄 적용",
-      "removeDate": "{date} 삭제"
+      "removeDate": "{date} 삭제",
+      "pastTimeHint": "오늘 날짜에는 현재 시각(KST) 이후의 시간만 추가할 수 있어요."
     },
     "price": {
       "notice": "수수료와 정산액 계산은 요금 정책과 API 계약이 확정된 뒤 연결됩니다."
@@ -925,14 +928,15 @@
       "perPerson": "1인당 {price}",
       "nextSession": "가장 빠른 예약 가능 일정",
       "bookNow": "예약하기",
-      "apiNotice": "현재는 UI 미리보기입니다. API 명세가 확정되면 저장과 게시 기능을 연결합니다.",
-      "complete": "UI 미리보기를 완료했습니다. 서버로 전송된 데이터는 없습니다."
+      "apiNotice": "게스트에게 보이는 화면 미리보기입니다. 내용을 확인한 뒤 체험을 등록해 주세요."
     },
     "actions": {
       "exit": "나가기",
       "back": "이전",
       "next": "다음",
-      "finish": "미리보기 완료"
+      "finish": "체험 등록하기",
+      "submitUploading": "사진 업로드 중…",
+      "submitRegistering": "등록하는 중…"
     },
     "errors": {
       "categoryRequired": "계속하려면 카테고리를 선택해 주세요.",
@@ -952,7 +956,10 @@
       "priceInvalid": "1인당 요금을 1원 이상의 정수로 입력해 주세요.",
       "inclusionsRequired": "포함 사항을 한 개 이상 입력해 주세요.",
       "discountInvalid": "할인 종료일을 선택하고 할인율을 1부터 100 사이의 정수로 입력해 주세요.",
-      "restrictionsRequired": "확인사항을 한 개 이상 선택하거나 별도로 확인할 사항이 없음을 선택해 주세요."
+      "restrictionsRequired": "확인사항을 한 개 이상 선택하거나 별도로 확인할 사항이 없음을 선택해 주세요.",
+      "imageUploadFailed": "사진 업로드에 실패했어요. 잠시 후 다시 시도해 주세요.",
+      "submissionFailed": "체험 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",
+      "scheduleInPast": "이미 지난 날짜나 시작 시간이 포함되어 있어요. 미래의 일정만 선택해 주세요."
     }
   }
 }

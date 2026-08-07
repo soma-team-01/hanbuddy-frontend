@@ -1,11 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
+import { createMyActivity } from "@/lib/api/buddy";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { toSeoulStartAt } from "@/lib/datetime";
+import { uploadActivityImageSet } from "@/lib/images/presigned";
+import { activityKeys } from "@/lib/query/activities";
+import { buddyKeys } from "@/lib/query/buddy";
+import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import type { ActivityUpsertRequest } from "@/types/buddy";
 import {
   ACTIVITY_CREATE_LIMITS,
   ACTIVITY_CREATE_STEPS,
@@ -56,13 +66,16 @@ type DraftTextField = Exclude<
   "photos" | "itinerary" | "schedules" | "discountType" | "hasNoRestrictions"
 >;
 
+type SubmissionPhase = "uploading" | "registering";
+
+type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed";
+
 interface ActivityCreateLocaleSnapshot {
   currentStep: ActivityCreateStep;
   furthestStepIndex: number;
   draft: ActivityCreateDraft;
   errorKey: ActivityCreateErrorKey | null;
   reviewing: boolean;
-  previewComplete: boolean;
   fileSequence: number;
   scheduleSequence: number;
   objectUrls: Set<string>;
@@ -76,6 +89,52 @@ function makeId(prefix: string, sequence: number) {
 
 function createPhotoDraft(file: File, id: string): PhotoDraft {
   return { id, file, previewUrl: URL.createObjectURL(file) };
+}
+
+function splitDraftLines(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+export function buildActivityUpsertRequest(
+  draft: ActivityCreateDraft,
+  imageKeys: string[],
+  itineraryImageKeys: string[],
+): ActivityUpsertRequest {
+  const schedules = draft.schedules
+    .map((schedule) => toSeoulStartAt(`${schedule.date}T${schedule.startTime}`))
+    .filter((startAt): startAt is string => startAt !== null)
+    .map((startAt) => ({ startAt }));
+
+  return {
+    title: draft.experienceName.trim(),
+    description: draft.experienceDescription.trim(),
+    hostIntroduction: draft.hostIntroduction.trim(),
+    imageKeys,
+    includedItems: splitDraftLines(draft.inclusions),
+    restrictionNotes: draft.hasNoRestrictions ? [] : splitDraftLines(draft.restrictions),
+    maxCapacity: Number(draft.maxGuests),
+    price: Number(draft.pricePerPerson),
+    currency: "KRW",
+    ...(draft.discountType === "limited"
+      ? {
+          discountPercent: Number(draft.discountPercent),
+          discountEndDate: draft.discountEndsAt,
+        }
+      : {}),
+    meetingPointName: draft.meetingPlace.trim(),
+    meetingPlaceId: draft.meetingPlaceId,
+    status: "ACTIVE",
+    schedules,
+    itineraries: draft.itinerary.map((item, index) => ({
+      title: item.title.trim(),
+      description: item.description.trim(),
+      durationMinutes: Number(item.durationMinutes),
+      imageKey: itineraryImageKeys[index] ?? "",
+    })),
+  };
 }
 
 function ProgressRail({
@@ -196,6 +255,9 @@ function ProgressRail({
 
 export function CreateActivityForm() {
   const t = useTranslations("CreateActivity");
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const getApiErrorMessage = useApiErrorMessage();
   const initialSnapshot = activityCreateLocaleSnapshot;
   const [currentStep, setCurrentStep] = useState<ActivityCreateStep>(
     initialSnapshot?.currentStep ?? "host",
@@ -210,13 +272,33 @@ export function CreateActivityForm() {
     initialSnapshot?.errorKey ?? null,
   );
   const [reviewing, setReviewing] = useState(initialSnapshot?.reviewing ?? false);
-  const [previewComplete, setPreviewComplete] = useState(initialSnapshot?.previewComplete ?? false);
+  const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
+  const [submissionError, setSubmissionError] = useState<{
+    error: unknown;
+    fallbackKey: SubmissionFallbackKey;
+  } | null>(null);
   const fileSequence = useRef(initialSnapshot?.fileSequence ?? 0);
   const scheduleSequence = useRef(initialSnapshot?.scheduleSequence ?? 0);
   const objectUrls = useRef(initialSnapshot?.objectUrls ?? new Set<string>());
   const contentRef = useRef<HTMLDivElement>(null);
   const currentIndex = getStepIndex(currentStep);
   const progressIndex = reviewing ? ACTIVITY_CREATE_STEPS.length : currentIndex + 1;
+  const isSubmitting = submissionPhase !== null;
+  const createActivityMutation = useMutation({
+    mutationFn: async (request: ActivityUpsertRequest) =>
+      unwrapApiResult(await createMyActivity(request), "activity"),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
+        queryClient.invalidateQueries({ queryKey: buddyKeys.scheduleDates() }),
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
+    },
+  });
+  useAuthQueryRedirect(
+    (submissionError?.error instanceof Error ? submissionError.error : null) ??
+      createActivityMutation.error,
+  );
 
   useEffect(() => {
     const urls = objectUrls.current;
@@ -241,7 +323,6 @@ export function CreateActivityForm() {
       draft,
       errorKey,
       reviewing,
-      previewComplete,
       fileSequence: fileSequence.current,
       scheduleSequence: scheduleSequence.current,
       objectUrls: new Set(objectUrls.current),
@@ -461,9 +542,59 @@ export function CreateActivityForm() {
     contentRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
   }
 
+  async function submitActivity() {
+    if (isSubmitting) return;
+
+    // 제출 직전 전체 단계를 한 번 더 검증해 리뷰 중 유실된 값이 있으면 해당 단계로 되돌린다
+    const invalidStep = ACTIVITY_CREATE_STEPS.find(
+      (step) => validateActivityCreateStep(step, draft) !== null,
+    );
+    if (invalidStep) {
+      setReviewing(false);
+      setCurrentStep(invalidStep);
+      setErrorKey(validateActivityCreateStep(invalidStep, draft));
+      scrollToTop();
+      return;
+    }
+
+    setSubmissionError(null);
+    setSubmissionPhase("uploading");
+    try {
+      const galleryFiles = draft.photos.map((photo) => photo.file);
+      const itineraryFiles = draft.itinerary
+        .map((item) => item.photo?.file)
+        .filter((file): file is File => Boolean(file));
+
+      let uploadedImages;
+      try {
+        uploadedImages = await uploadActivityImageSet([...galleryFiles, ...itineraryFiles]);
+      } catch (error) {
+        if (error instanceof UnauthenticatedQueryError) throw error;
+        setSubmissionError({ error, fallbackKey: "imageUploadFailed" });
+        return;
+      }
+      const imageKeys = uploadedImages.slice(0, galleryFiles.length).map((image) => image.imageKey);
+      const itineraryImageKeys = uploadedImages
+        .slice(galleryFiles.length)
+        .map((image) => image.imageKey);
+
+      setSubmissionPhase("registering");
+      await createActivityMutation.mutateAsync(
+        buildActivityUpsertRequest(draft, imageKeys, itineraryImageKeys),
+      );
+      clearPreservedDraft();
+      router.push("/my-activities");
+    } catch (error) {
+      setSubmissionError({ error, fallbackKey: "submissionFailed" });
+    } finally {
+      setSubmissionPhase(null);
+    }
+  }
+
   function goNext() {
+    if (isSubmitting) return;
     if (reviewing) {
-      setPreviewComplete(true);
+      void submitActivity();
       return;
     }
 
@@ -488,20 +619,21 @@ export function CreateActivityForm() {
   }
 
   function goBack() {
+    if (isSubmitting) return;
     if (reviewing) {
       setReviewing(false);
-      setPreviewComplete(false);
+      setSubmissionError(null);
       scrollToTop();
       return;
     }
     if (currentIndex === 0) return;
     setCurrentStep(getPreviousActivityCreateStep(currentStep));
     setErrorKey(null);
-    setPreviewComplete(false);
     scrollToTop();
   }
 
   function navigateToStep(step: ActivityCreateStep) {
+    if (isSubmitting) return;
     const targetIndex = getStepIndex(step);
     if (!reviewing && targetIndex > currentIndex) {
       const priorStepsAreComplete = ACTIVITY_CREATE_STEPS.slice(0, targetIndex).every(
@@ -511,7 +643,7 @@ export function CreateActivityForm() {
     }
     setCurrentStep(step);
     setReviewing(false);
-    setPreviewComplete(false);
+    setSubmissionError(null);
     setErrorKey(null);
     scrollToTop();
   }
@@ -634,6 +766,9 @@ export function CreateActivityForm() {
     currentStep === "schedule";
   const currentGroup =
     STEP_GROUPS.find((group) => group.steps.some((step) => step === currentStep)) ?? STEP_GROUPS[0];
+  let primaryActionLabel = reviewing ? t("actions.finish") : t("actions.next");
+  if (submissionPhase === "uploading") primaryActionLabel = t("actions.submitUploading");
+  if (submissionPhase === "registering") primaryActionLabel = t("actions.submitRegistering");
 
   return (
     <div className="fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-[#fff] text-ink">
@@ -695,7 +830,7 @@ export function CreateActivityForm() {
             <button
               type="button"
               onClick={goBack}
-              disabled={!reviewing && currentIndex === 0}
+              disabled={isSubmitting || (!reviewing && currentIndex === 0)}
               aria-label={t("actions.back")}
               className="absolute top-5 left-5 z-10 flex size-10 items-center justify-center rounded-full text-primary-strong transition hover:bg-primary-soft disabled:invisible sm:top-8 sm:left-8 lg:top-10 lg:left-10"
             >
@@ -730,12 +865,15 @@ export function CreateActivityForm() {
                     {t(`errors.${errorKey}`)}
                   </p>
                 ) : null}
-                {previewComplete ? (
+                {submissionError ? (
                   <p
-                    role="status"
-                    className="mt-6 rounded-xl border border-primary/25 bg-white px-4 py-3 text-sm font-semibold text-primary-strong"
+                    role="alert"
+                    className="mt-6 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger"
                   >
-                    {t("review.complete")}
+                    {getApiErrorMessage(
+                      submissionError.error,
+                      t(`errors.${submissionError.fallbackKey}`),
+                    )}
                   </p>
                 ) : null}
               </div>
@@ -748,13 +886,17 @@ export function CreateActivityForm() {
                 reviewing ? "max-w-7xl" : "max-w-4xl"
               }`}
             >
+              <p aria-live="polite" className="sr-only">
+                {isSubmitting ? primaryActionLabel : ""}
+              </p>
               <button
                 type="button"
                 onClick={goNext}
-                className="flex min-h-11 min-w-28 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_8px_18px_rgba(209,63,50,0.18)] transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-w-32"
+                disabled={isSubmitting}
+                className="flex min-h-11 min-w-28 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_8px_18px_rgba(209,63,50,0.18)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-32"
               >
-                {reviewing ? t("actions.finish") : t("actions.next")}
-                <ArrowRightIcon className="size-4" />
+                {primaryActionLabel}
+                {isSubmitting ? null : <ArrowRightIcon className="size-4" />}
               </button>
             </div>
           </footer>

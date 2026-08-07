@@ -2,6 +2,8 @@ import { ApiClientError } from "./errors";
 
 export const BACKEND_ERROR_CODES = [
   "ACTIVITY400_CURRENCY",
+  "ACTIVITY400_DISCOUNT",
+  "ACTIVITY400_DISCOUNT_END_DATE",
   "ACTIVITY403_OWNER",
   "ACTIVITY404",
   "ACTIVITY_SCHEDULE400_START_AT",
@@ -56,6 +58,8 @@ export const API_ERROR_MESSAGE_KEYS = [
   "imageContentType",
   "imageCount",
   "activityCurrency",
+  "activityDiscountInvalid",
+  "activityDiscountEndDate",
   "activityScheduleFuture",
   "activityOwner",
   "activityNotFound",
@@ -87,6 +91,8 @@ export type ApiErrorMessageKey = (typeof API_ERROR_MESSAGE_KEYS)[number];
 
 export const ERROR_CODE_MESSAGE_KEYS = {
   ACTIVITY400_CURRENCY: "activityCurrency",
+  ACTIVITY400_DISCOUNT: "activityDiscountInvalid",
+  ACTIVITY400_DISCOUNT_END_DATE: "activityDiscountEndDate",
   ACTIVITY403_OWNER: "activityOwner",
   ACTIVITY404: "activityNotFound",
   ACTIVITY_SCHEDULE400_START_AT: "activityScheduleFuture",

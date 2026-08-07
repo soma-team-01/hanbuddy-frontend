@@ -249,16 +249,16 @@ describe("uploadActivityImages", () => {
     );
   });
 
-  it("rejects more than 8 activity images without calling the network", async () => {
+  it("rejects more than 10 activity images without calling the network", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     const files = Array.from(
-      { length: 9 },
+      { length: 11 },
       (_, index) => new File([new Uint8Array([index])], `${index}.webp`, { type: "image/webp" }),
     );
 
     await expect(uploadActivityImages(files)).rejects.toThrow(
-      "활동 이미지는 최대 8장까지 업로드할 수 있습니다.",
+      "활동 이미지는 최대 10장까지 업로드할 수 있습니다.",
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });

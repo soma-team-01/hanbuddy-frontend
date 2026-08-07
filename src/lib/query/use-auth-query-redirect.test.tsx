@@ -1,6 +1,7 @@
 import { waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiClientError } from "@/lib/api/errors";
+import { SessionRoleProvider } from "@/lib/auth/session-role-context";
 import { createQueryClient } from "./client";
 import { UnauthenticatedQueryError } from "./result";
 import { useAuthQueryRedirect } from "./use-auth-query-redirect";
@@ -61,6 +62,18 @@ describe("useAuthQueryRedirect", () => {
 
     await waitFor(() =>
       expect(routerMock.replace).toHaveBeenCalledWith("/login", { locale: "ko" }),
+    );
+  });
+
+  it("redirects an expired buddy session to the buddy landing page", async () => {
+    renderWithQueryClient(
+      <SessionRoleProvider role="buddy">
+        <AuthRedirectHarness error={new UnauthenticatedQueryError()} />
+      </SessionRoleProvider>,
+    );
+
+    await waitFor(() =>
+      expect(routerMock.replace).toHaveBeenCalledWith("/buddy", { locale: "ko" }),
     );
   });
 });

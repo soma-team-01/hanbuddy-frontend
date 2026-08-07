@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetails,
+  fetchGooglePlaceDetailsViaBff,
   searchGooglePlacePredictions,
+  searchGooglePlacePredictionsViaBff,
 } from "./places";
 
 describe("Google Places helpers", () => {
@@ -23,6 +25,7 @@ describe("Google Places helpers", () => {
       fetchGooglePlaceDetails("ChIJ-bukchon", "test-key", {
         locale: "ko",
         fetcher,
+        referrer: "http://localhost:3000/",
         sessionToken: "session-token",
       }),
     ).resolves.toEqual({
@@ -40,6 +43,7 @@ describe("Google Places helpers", () => {
     expect(requestInit).toEqual(
       expect.objectContaining({
         headers: {
+          Referer: "http://localhost:3000/",
           "X-Goog-Api-Key": "test-key",
           "X-Goog-FieldMask": "formattedAddress",
         },
@@ -72,6 +76,7 @@ describe("Google Places helpers", () => {
       searchGooglePlacePredictions("a", "test-key", {
         locale: "ko",
         fetcher,
+        referrer: "http://localhost:3000/",
         sessionToken: "session-token",
       }),
     ).resolves.toEqual([
@@ -89,6 +94,7 @@ describe("Google Places helpers", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Referer: "http://localhost:3000/",
           "X-Goog-Api-Key": "test-key",
           "X-Goog-FieldMask":
             "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat",
@@ -102,5 +108,45 @@ describe("Google Places helpers", () => {
         }),
       }),
     );
+  });
+
+  it("searches addresses through the same-origin BFF", async () => {
+    const predictions = [
+      {
+        placeId: "ChIJ-anguk",
+        mainText: "Anguk Station",
+        secondaryText: "Seoul, South Korea",
+        text: "Anguk Station, Seoul, South Korea",
+      },
+    ];
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(predictions), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await expect(searchGooglePlacePredictionsViaBff("Anguk", "en", fetcher)).resolves.toEqual(
+      predictions,
+    );
+    expect(fetcher).toHaveBeenCalledWith("/api/google/places/autocomplete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: "Anguk", locale: "en" }),
+    });
+  });
+
+  it("loads formatted address details through the same-origin BFF", async () => {
+    const fetcher = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ formattedAddress: "Jongno-gu, Seoul" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await expect(
+      fetchGooglePlaceDetailsViaBff("places/ChIJ-anguk", "ko", fetcher),
+    ).resolves.toEqual({ formattedAddress: "Jongno-gu, Seoul" });
+    expect(fetcher).toHaveBeenCalledWith("/api/google/places/ChIJ-anguk?locale=ko");
   });
 });

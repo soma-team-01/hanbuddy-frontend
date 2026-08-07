@@ -14,7 +14,7 @@ const TOURIST_ROUTES = ["/applications"] as const;
 const BUDDY_ROUTES = ["/dashboard", "/my-activities"] as const;
 
 export function parseUserType(value?: string | null): UserType | undefined {
-  if (value === "TOURIST" || value === "BUDDY") return value;
+  if (value === "TOURIST" || value === "BUDDY" || value === "ADMIN") return value;
   return undefined;
 }
 

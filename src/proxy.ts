@@ -15,6 +15,9 @@ const handleI18nRouting = createMiddleware(routing);
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return handleAdminRoute(request);
+  }
   if (hasUnsupportedLanguageSegment(pathname)) return NextResponse.next();
 
   const intlResponse = handleI18nRouting(request);
@@ -34,6 +37,24 @@ export function proxy(request: NextRequest) {
   }
 
   return intlResponse;
+}
+
+function handleAdminRoute(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
+  const userType = parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value);
+  const authenticatedAdmin = Boolean(accessToken && userType === "ADMIN");
+
+  if (pathname === "/admin/login") {
+    return authenticatedAdmin
+      ? NextResponse.redirect(new URL("/admin/buddies", request.url))
+      : NextResponse.next();
+  }
+  if (!accessToken) return NextResponse.redirect(new URL("/admin/login", request.url));
+  if (userType !== "ADMIN") {
+    return NextResponse.redirect(new URL("/admin/login?error=adminOnly", request.url));
+  }
+  return NextResponse.next();
 }
 
 export const config = {

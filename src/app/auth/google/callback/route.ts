@@ -49,18 +49,53 @@ export async function GET(request: NextRequest) {
     }
 
     const result = backend.payload.result;
-    const response = createAuthStatusRedirect(request, result);
+    const adminIntent = isAdminIntent(request);
+    const response = adminIntent
+      ? createAdminRedirect(request, result)
+      : createAuthStatusRedirect(request, result);
 
     response.cookies.delete(AUTH_COOKIES.oauthState);
     response.cookies.delete(AUTH_COOKIES.oauthLocale);
     response.cookies.delete(AUTH_COOKIES.oauthIntent);
-    if (result.authStatus === "ACTIVE" && result.accessToken && result.userType) {
+    if (
+      adminIntent
+        ? hasUsableAdminLoginResult(result)
+        : result.authStatus === "ACTIVE" && result.accessToken && result.userType
+    ) {
       appendBackendSetCookies(response, backend.setCookies);
     }
     return response;
   } catch {
     return redirectToLoginWithError(request, "serverUnavailable");
   }
+}
+
+function hasUsableAdminLoginResult(result: GoogleLoginResponse) {
+  return Boolean(
+    result.registered &&
+    result.authStatus === "ACTIVE" &&
+    result.accessToken &&
+    result.userType === "ADMIN",
+  );
+}
+
+function isAdminIntent(request: NextRequest) {
+  return request.cookies.get(AUTH_COOKIES.oauthIntent)?.value === "admin";
+}
+
+function createAdminRedirect(request: NextRequest, result: GoogleLoginResponse) {
+  if (!result.registered || result.authStatus === "ONBOARDING_REQUIRED") {
+    return redirectToAdminLoginWithError(request, "adminAccountRequired");
+  }
+  if (result.authStatus !== "ACTIVE" || !result.accessToken || result.userType !== "ADMIN") {
+    return redirectToAdminLoginWithError(request, "adminOnly");
+  }
+
+  const response = NextResponse.redirect(new URL("/admin/buddies", request.url));
+  setAuthenticatedSessionCookies(response, result);
+  clearSignupCookies(response);
+  clearAuthStatusReasonCookie(response);
+  return response;
 }
 
 function createAuthStatusRedirect(request: NextRequest, result: GoogleLoginResponse) {
@@ -130,6 +165,7 @@ function createInactiveAccountRedirect(request: NextRequest, result: GoogleLogin
 }
 
 function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
+  if (isAdminIntent(request)) return redirectToAdminLoginWithError(request, code);
   const loginUrl = createLocalizedUrl(request, "/login");
   loginUrl.searchParams.set("error", code);
 
@@ -137,6 +173,17 @@ function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
   response.cookies.delete(AUTH_COOKIES.oauthState);
   response.cookies.delete(AUTH_COOKIES.oauthLocale);
   response.cookies.delete(AUTH_COOKIES.oauthIntent);
+  return response;
+}
+
+function redirectToAdminLoginWithError(request: NextRequest, code: string) {
+  const loginUrl = new URL("/admin/login", request.url);
+  loginUrl.searchParams.set("error", code);
+  const response = NextResponse.redirect(loginUrl);
+  response.cookies.delete(AUTH_COOKIES.oauthState);
+  response.cookies.delete(AUTH_COOKIES.oauthLocale);
+  response.cookies.delete(AUTH_COOKIES.oauthIntent);
+  clearSignupCookies(response);
   return response;
 }
 

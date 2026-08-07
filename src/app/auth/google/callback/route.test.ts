@@ -191,6 +191,75 @@ describe("GET /auth/google/callback", () => {
     expect(response.headers.get("location")).toBe("http://localhost/ko/dashboard");
   });
 
+  it("redirects a registered admin intent to the admin dashboard", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "ACTIVE",
+          accessToken: "admin-access-token",
+          userType: "ADMIN",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest(undefined, undefined, "admin"));
+
+    expect(response.headers.get("location")).toBe("http://localhost/admin/buddies");
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.userType}=ADMIN`);
+  });
+
+  it("rejects non-admin and unregistered users from the admin login flow", async () => {
+    mockedPostBackend.mockResolvedValueOnce({
+      status: 200,
+      setCookies: ["refresh_token=tourist; Path=/; HttpOnly"],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "ACTIVE",
+          accessToken: "tourist-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+    const touristResponse = await GET(createCallbackRequest(undefined, undefined, "admin"));
+    expect(touristResponse.headers.get("location")).toBe(
+      "http://localhost/admin/login?error=adminOnly",
+    );
+    expect(touristResponse.headers.get("set-cookie") ?? "").not.toContain("refresh_token=tourist");
+
+    mockedPostBackend.mockResolvedValueOnce({
+      status: 200,
+      setCookies: ["refresh_token=signup; Path=/; HttpOnly"],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
+          signupToken: "signup-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+    const signupResponse = await GET(createCallbackRequest(undefined, undefined, "admin"));
+    expect(signupResponse.headers.get("location")).toBe(
+      "http://localhost/admin/login?error=adminAccountRequired",
+    );
+    expect(signupResponse.headers.get("set-cookie") ?? "").not.toContain(
+      `${AUTH_COOKIES.signupToken}=signup-token`,
+    );
+    expect(signupResponse.headers.get("set-cookie") ?? "").not.toContain("refresh_token=signup");
+  });
+
   it("redirects pending buddy accounts to the approval status page without session tokens", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,

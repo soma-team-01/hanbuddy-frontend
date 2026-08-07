@@ -11,7 +11,7 @@ describe("user type routes", () => {
     ["TOURIST", "TOURIST"],
     ["BUDDY", "BUDDY"],
     [undefined, undefined],
-    ["ADMIN", undefined],
+    ["ADMIN", "ADMIN"],
   ] as const)("parses %s as %s", (value, expectedUserType) => {
     expect(parseUserType(value)).toBe(expectedUserType);
   });

@@ -11,10 +11,12 @@ class GoogleAuthStartConfigError extends Error {}
 
 export function GET(request: NextRequest) {
   try {
+    const requestedIntent = request.nextUrl.searchParams.get("intent");
+    const intent =
+      requestedIntent === "buddy" || requestedIntent === "admin" ? requestedIntent : undefined;
     const locale = getLocaleOrDefault(
       request.nextUrl.searchParams.get("locale") ?? request.cookies.get(LOCALE_COOKIE_NAME)?.value,
     );
-    const intent = request.nextUrl.searchParams.get("intent") === "buddy" ? "buddy" : undefined;
     const state = createOAuthState();
     const authorizationUrl = buildGoogleAuthorizationUrl({
       clientId: getGoogleClientId(),
@@ -40,6 +42,11 @@ export function GET(request: NextRequest) {
 }
 
 function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
+  if (request.nextUrl.searchParams.get("intent") === "admin") {
+    const loginUrl = new URL("/admin/login", request.url);
+    loginUrl.searchParams.set("error", code);
+    return NextResponse.redirect(loginUrl);
+  }
   const locale = getLocaleOrDefault(
     request.nextUrl.searchParams.get("locale") ?? request.cookies.get(LOCALE_COOKIE_NAME)?.value,
   );

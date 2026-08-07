@@ -1,4 +1,4 @@
-export type UserType = "TOURIST" | "BUDDY";
+export type UserType = "TOURIST" | "BUDDY" | "ADMIN";
 export type ContactMethod = "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
 export type SignupAgreementType =
   | "ADULT_CONFIRMATION"

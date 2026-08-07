@@ -9,6 +9,9 @@ import type {
 } from "@/types/activity";
 
 export function mapTouristActivitySummaryToActivity(summary: TouristActivitySummary): Activity {
+  const hasActiveDiscount =
+    summary.discountedPrice !== undefined && summary.discountedPrice !== null;
+
   return {
     id: String(summary.activityId),
     title: summary.title,
@@ -18,7 +21,10 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     imageUrl: summary.thumbnailImageUrl,
     heroImageUrl: summary.thumbnailImageUrl,
     images: summary.thumbnailImageUrl ? [summary.thumbnailImageUrl] : [],
-    price: summary.price,
+    price: summary.discountedPrice ?? summary.price,
+    originalPrice: hasActiveDiscount ? summary.price : undefined,
+    discountPercent: summary.discountPercent ?? undefined,
+    isSoldOut: summary.isSoldOut,
     host: {
       name: summary.buddyName,
       bio: "Local HanBuddy host",

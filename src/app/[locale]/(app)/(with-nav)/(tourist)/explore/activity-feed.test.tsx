@@ -73,8 +73,7 @@ describe("ActivityFeed", () => {
     renderWithQueryClient(<ActivityFeed />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(screen.getByText("Anguk Station Exit 2")).toBeInTheDocument();
-    expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getByText("Jihoon Kim · Anguk Station Exit 2")).toBeInTheDocument();
 
     const activityLink = screen.getByRole("link", { name: /Bukchon Hidden Gems/ });
     expect(screen.getByTestId("activity-grid")).toHaveClass(
@@ -136,8 +135,7 @@ describe("ActivityFeed", () => {
     renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(screen.getByText("Anguk Station Exit 2")).toBeInTheDocument();
-    expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getByText("Jihoon Kim · Anguk Station Exit 2")).toBeInTheDocument();
     expect(screen.getByText("₩45,000 / 1인")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute(
       "href",

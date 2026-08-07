@@ -23,15 +23,11 @@ export function ActivityFeed() {
       >
         <p className="sr-only">{t("loading")}</p>
         {Array.from({ length: 6 }, (_, index) => (
-          <div
-            key={index}
-            className="overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft"
-          >
-            <div className="h-56 animate-pulse bg-panel-raised" />
-            <div className="space-y-3 p-5">
-              <div className="h-5 w-3/4 animate-pulse rounded-full bg-panel-raised" />
-              <div className="h-4 w-1/2 animate-pulse rounded-full bg-panel-raised" />
-              <div className="h-px bg-line-soft" />
+          <div key={index} className="flex w-full flex-col gap-3">
+            <div className="aspect-square w-full animate-pulse rounded-2xl bg-panel-raised" />
+            <div className="flex flex-col gap-2 px-0.5">
+              <div className="h-4 w-3/4 animate-pulse rounded-full bg-panel-raised" />
+              <div className="h-3.5 w-1/2 animate-pulse rounded-full bg-panel-raised" />
               <div className="h-4 w-1/3 animate-pulse rounded-full bg-panel-raised" />
             </div>
           </div>

@@ -22,12 +22,43 @@ const activity: Activity = {
 };
 
 describe("ActivityCard", () => {
-  it("renders a responsive marketplace card using the semantic surface tokens", () => {
+  it("renders a photography-first card with title, buddy, place, and price", () => {
     renderWithIntl(<ActivityCard activity={activity} />);
 
-    expect(screen.getByRole("article")).toHaveClass("rounded-2xl", "border-line-soft", "bg-panel");
     expect(screen.getByRole("heading", { name: "Market walk" })).toHaveClass("text-ink");
-    expect(screen.getByText("Seoul")).toHaveClass("text-muted");
+    expect(screen.getByText("Min Buddy · Seoul")).toHaveClass("text-muted");
+    expect(screen.getByText("₩35,000 per person")).toHaveClass("text-ink");
+    expect(screen.queryByText("Sold out")).not.toBeInTheDocument();
+  });
+
+  it("shows the struck original price, discounted price, and discount badge", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{ ...activity, price: 31500, originalPrice: 35000, discountPercent: 10 }}
+      />,
+    );
+
+    const struckPrice = screen.getByText("₩35,000");
+    expect(struckPrice.tagName).toBe("S");
+    expect(screen.getByText("₩31,500 per person")).toHaveClass("text-primary-strong");
+    expect(screen.getByText("10% off")).toBeInTheDocument();
+  });
+
+  it("marks sold-out activities and hides the discount badge", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{
+          ...activity,
+          price: 31500,
+          originalPrice: 35000,
+          discountPercent: 10,
+          isSoldOut: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Sold out")).toBeInTheDocument();
+    expect(screen.queryByText("10% off")).not.toBeInTheDocument();
   });
 
   it("loads the card image eagerly when requested", () => {

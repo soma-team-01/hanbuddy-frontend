@@ -452,7 +452,9 @@
     "empty": "No activities available yet.",
     "emptyDescription": "Local buddies are preparing new experiences. Check back soon!",
     "loadError": "Could not load activities.",
-    "perPerson": "{price} per person"
+    "perPerson": "{price} per person",
+    "discountBadge": "{percent}% off",
+    "soldOut": "Sold out"
   },
   "ActivityDetail": {
     "loading": "Loading activity...",

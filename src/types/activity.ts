@@ -35,10 +35,14 @@ export interface Activity {
   images?: string[];
   rating?: number;
   reviewCount?: number;
-  /** 원화(₩) 기준 1인당 가격 */
+  /** 원화(₩) 기준 1인당 가격 (진행 중인 할인이 있으면 할인 적용가) */
   price: number;
   /** 할인 전 가격 (있을 때만 취소선으로 노출) */
   originalPrice?: number;
+  /** 진행 중인 할인율(%) — 카드 할인 배지에 사용 */
+  discountPercent?: number;
+  /** 모든 일정이 예약 마감이면 true */
+  isSoldOut?: boolean;
   host: Host;
   included: IncludedItem[];
   restrictions: string[];

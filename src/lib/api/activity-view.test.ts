@@ -38,6 +38,42 @@ describe("activity view adapters", () => {
     });
   });
 
+  it("keeps the list price when no discount is running", () => {
+    expect(
+      mapTouristActivitySummaryToActivity({
+        ...summary,
+        discountPercent: null,
+        discountEndDate: null,
+        discountedPrice: null,
+      }),
+    ).toMatchObject({
+      price: 45000,
+      originalPrice: undefined,
+      discountPercent: undefined,
+    });
+  });
+
+  it("maps an active discount to the discounted price, original price, and badge percent", () => {
+    const activity = mapTouristActivitySummaryToActivity({
+      ...summary,
+      discountPercent: 20,
+      discountEndDate: "2026-08-31",
+      discountedPrice: 36000,
+      isSoldOut: false,
+    });
+
+    expect(activity.price).toBe(36000);
+    expect(activity.originalPrice).toBe(45000);
+    expect(activity.discountPercent).toBe(20);
+    expect(activity.isSoldOut).toBe(false);
+  });
+
+  it("passes the sold-out flag through to the card model", () => {
+    expect(mapTouristActivitySummaryToActivity({ ...summary, isSoldOut: true })).toMatchObject({
+      isSoldOut: true,
+    });
+  });
+
   it("maps a tourist activity detail schedule ids for booking", () => {
     const activity = mapTouristActivityDetailToActivity(
       {

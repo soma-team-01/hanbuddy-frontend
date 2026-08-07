@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { getSeoulNowParts } from "@/lib/datetime";
 import {
   ACTIVITY_CREATE_STEPS,
   EMPTY_ACTIVITY_DRAFT,
   getNextActivityCreateStep,
   getPreviousActivityCreateStep,
+  isPastSchedule,
   validateActivityCreateStep,
   type ActivityCreateDraft,
   type ActivityCreateErrorKey,
@@ -21,6 +23,16 @@ const itinerary = {
   photo,
 } satisfies ItineraryDraft;
 
+/** Asia/Seoul 기준 offsetDays 뒤의 날짜 키 (테스트가 실제 날짜에 좌우되지 않도록 동적으로 계산) */
+function seoulDateKey(offsetDays: number) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(
+    new Date(Date.now() + offsetDays * 86_400_000),
+  );
+}
+
+const futureDateA = seoulDateKey(7);
+const futureDateB = seoulDateKey(14);
+
 function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): ActivityCreateDraft {
   return {
     ...EMPTY_ACTIVITY_DRAFT,
@@ -31,8 +43,8 @@ function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): Acti
     meetingAddress: "88 Changgyeonggung-ro, Jongno-gu, Seoul",
     meetingPlace: "Gwangjang Market Gate 2",
     schedules: [
-      { id: "schedule-2026-08-15", date: "2026-08-15", startTime: "10:00" },
-      { id: "schedule-2026-08-22", date: "2026-08-22", startTime: "14:00" },
+      { id: `schedule-${futureDateA}`, date: futureDateA, startTime: "10:00" },
+      { id: `schedule-${futureDateB}`, date: futureDateB, startTime: "14:00" },
     ],
     itinerary: [itinerary],
     maxGuests: "6",
@@ -97,8 +109,13 @@ describe("activity creation wizard", () => {
     ["schedule", { schedules: [] }, "scheduleInvalid"],
     [
       "schedule",
-      { schedules: [{ id: "schedule-2026-08-15", date: "2026-08-15", startTime: "" }] },
+      { schedules: [{ id: `schedule-${futureDateA}`, date: futureDateA, startTime: "" }] },
       "scheduleInvalid",
+    ],
+    [
+      "schedule",
+      { schedules: [{ id: "schedule-2020-01-01", date: "2020-01-01", startTime: "10:00" }] },
+      "scheduleInPast",
     ],
     ["capacity", { maxGuests: "0" }, "maxGuestsInvalid"],
     ["price", { pricePerPerson: "0" }, "priceInvalid"],
@@ -113,6 +130,24 @@ describe("activity creation wizard", () => {
 
   it.each(validationCases)("validates the %s step", (step, overrides, error) => {
     expect(validateActivityCreateStep(step, createCompleteDraft(overrides))).toBe(error);
+  });
+
+  it("rejects a start time that has already passed today in Asia/Seoul", () => {
+    const now = getSeoulNowParts();
+    const draft = createCompleteDraft({
+      schedules: [{ id: `schedule-${now.date}`, date: now.date, startTime: "00:00" }],
+    });
+
+    expect(validateActivityCreateStep("schedule", draft)).toBe("scheduleInPast");
+  });
+
+  it("judges past schedules against an Asia/Seoul reference time", () => {
+    const reference = { date: "2026-08-07", time: "11:30" };
+
+    expect(isPastSchedule({ date: "2026-08-06", startTime: "23:00" }, reference)).toBe(true);
+    expect(isPastSchedule({ date: "2026-08-07", startTime: "11:30" }, reference)).toBe(true);
+    expect(isPastSchedule({ date: "2026-08-07", startTime: "11:31" }, reference)).toBe(false);
+    expect(isPastSchedule({ date: "2026-08-08", startTime: "00:00" }, reference)).toBe(false);
   });
 
   it("accepts a complete draft and clamps step navigation", () => {

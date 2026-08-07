@@ -1,3 +1,5 @@
+import { getSeoulNowParts } from "@/lib/datetime";
+
 export const ACTIVITY_CREATE_STEPS = [
   "host",
   "name",
@@ -74,6 +76,7 @@ export type ActivityCreateErrorKey =
   | "meetingAddressRequired"
   | "meetingPlaceRequired"
   | "scheduleInvalid"
+  | "scheduleInPast"
   | "itineraryRequired"
   | "itineraryTitleRequired"
   | "itineraryDescriptionTooShort"
@@ -114,6 +117,17 @@ function isPositiveInteger(value: string) {
 function isWithinLength(value: string, min: number, max: number) {
   const length = value.trim().length;
   return length >= min && length <= max;
+}
+
+/** 일정이 Asia/Seoul 기준 현재보다 과거인지 판단한다 (오늘 날짜는 지나간 시각까지 과거로 본다) */
+export function isPastSchedule(
+  schedule: Pick<ScheduleDraft, "date" | "startTime">,
+  now = getSeoulNowParts(),
+) {
+  if (schedule.date < now.date) return true;
+  return (
+    schedule.date === now.date && Boolean(schedule.startTime) && schedule.startTime <= now.time
+  );
 }
 
 export function validateActivityCreateStep(
@@ -184,11 +198,18 @@ export function validateActivityCreateStep(
     case "meeting":
       if (!draft.meetingAddress.trim()) return "meetingAddressRequired";
       return draft.meetingPlace.trim() ? null : "meetingPlaceRequired";
-    case "schedule":
-      return draft.schedules.length > 0 &&
-        draft.schedules.every((schedule) => schedule.date && schedule.startTime)
-        ? null
-        : "scheduleInvalid";
+    case "schedule": {
+      if (
+        draft.schedules.length === 0 ||
+        draft.schedules.some((schedule) => !schedule.date || !schedule.startTime)
+      ) {
+        return "scheduleInvalid";
+      }
+      const now = getSeoulNowParts();
+      return draft.schedules.some((schedule) => isPastSchedule(schedule, now))
+        ? "scheduleInPast"
+        : null;
+    }
     case "capacity":
       return isPositiveInteger(draft.maxGuests) ? null : "maxGuestsInvalid";
     case "price":

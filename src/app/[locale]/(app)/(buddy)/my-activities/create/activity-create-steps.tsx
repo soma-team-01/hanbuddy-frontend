@@ -28,6 +28,7 @@ import {
   XIcon,
 } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
+import { getSeoulNowParts } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
@@ -917,6 +918,7 @@ export function ScheduleStep({
   t: Translator;
 }>) {
   const locale = useLocale();
+  const today = getSeoulNowParts();
   const initialMonth = schedules[0] ? parseDateKey(schedules[0].date) : new Date();
   const [visibleMonth, setVisibleMonth] = useState({
     year: initialMonth.getUTCFullYear(),
@@ -932,6 +934,9 @@ export function ScheduleStep({
     .filter((schedule) => schedule.date === activeDate && schedule.startTime)
     .map((schedule) => schedule.startTime)
     .sort();
+  // 오늘 날짜에는 Asia/Seoul 기준으로 이미 지난 시각을 추가할 수 없다
+  const isPastCustomTime =
+    activeDate === today.date && Boolean(customTime) && customTime <= today.time;
   const sessionCount = schedules.filter((schedule) => schedule.startTime).length;
   const calendarDays = getCalendarDays(visibleMonth.year, visibleMonth.month);
   const monthLabel = new Intl.DateTimeFormat(locale, {
@@ -957,7 +962,7 @@ export function ScheduleStep({
   }
 
   function addCustomTime() {
-    if (!activeDate || !customTime || activeTimes.includes(customTime)) return;
+    if (!activeDate || !customTime || isPastCustomTime || activeTimes.includes(customTime)) return;
     onSetTimesForDate(activeDate, [...activeTimes, customTime]);
     setCustomTime("");
   }
@@ -1001,6 +1006,7 @@ export function ScheduleStep({
                 (schedule) => schedule.date === dateKey && schedule.startTime,
               );
               const isVisibleMonth = date.getUTCMonth() === visibleMonth.month;
+              const isPast = dateKey < today.date;
               const fullDate = formatScheduleDate(dateKey, locale, {
                 year: "numeric",
                 month: "long",
@@ -1010,6 +1016,7 @@ export function ScheduleStep({
                 <button
                   key={dateKey}
                   type="button"
+                  disabled={isPast}
                   aria-pressed={selected}
                   aria-label={
                     selected
@@ -1022,7 +1029,7 @@ export function ScheduleStep({
                       setVisibleMonth({ year: date.getUTCFullYear(), month: date.getUTCMonth() });
                     }
                   }}
-                  className="group flex aspect-square items-center justify-center p-0.5"
+                  className="group flex aspect-square items-center justify-center p-0.5 disabled:cursor-not-allowed"
                 >
                   <span
                     className={`relative flex size-9 items-center justify-center rounded-full text-sm font-semibold transition sm:size-10 ${
@@ -1030,9 +1037,11 @@ export function ScheduleStep({
                         ? "bg-primary text-white shadow-[0_6px_14px_rgba(209,63,50,0.2)] ring-2 ring-primary/20 ring-offset-2"
                         : selected
                           ? "border border-primary bg-white text-primary-strong"
-                          : isVisibleMonth
-                            ? "text-ink group-hover:bg-primary-soft group-hover:text-primary-strong"
-                            : "text-muted/35 group-hover:bg-primary-soft/35"
+                          : isPast
+                            ? "text-muted/25"
+                            : isVisibleMonth
+                              ? "text-ink group-hover:bg-primary-soft group-hover:text-primary-strong"
+                              : "text-muted/35 group-hover:bg-primary-soft/35"
                     }`}
                   >
                     {date.getUTCDate()}
@@ -1119,12 +1128,17 @@ export function ScheduleStep({
                     <button
                       type="button"
                       onClick={addCustomTime}
-                      disabled={!customTime || activeTimes.includes(customTime)}
+                      disabled={!customTime || isPastCustomTime || activeTimes.includes(customTime)}
                       className="rounded-xl border border-primary bg-white px-3 text-xs font-bold text-primary transition hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:border-line-strong disabled:text-muted/35"
                     >
                       {t("schedule.addTime")}
                     </button>
                   </div>
+                  {isPastCustomTime ? (
+                    <p className="mt-2 text-xs font-semibold text-primary-strong">
+                      {t("schedule.pastTimeHint")}
+                    </p>
+                  ) : null}
                 </div>
 
                 {activeTimes.length ? (

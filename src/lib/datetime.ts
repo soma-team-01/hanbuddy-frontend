@@ -87,6 +87,15 @@ export function getSeoulDateTimeParts(value: string): SeoulDateTimeParts | null 
   };
 }
 
+/** 현재 시각을 Asia/Seoul 기준 날짜/시간 문자열로 반환한다 */
+export function getSeoulNowParts(): SeoulDateTimeParts {
+  const parts = getSeoulDateTimeParts(new Date().toISOString());
+  if (!parts) {
+    throw new Error("현재 시각을 Asia/Seoul 기준으로 변환하지 못했습니다.");
+  }
+  return parts;
+}
+
 export function toSeoulStartAt(localDateTime: string): string | null {
   const match = DATETIME_LOCAL_PATTERN.exec(localDateTime);
   if (!match || !isValidCalendarDateTime(match)) return null;

@@ -452,7 +452,9 @@
     "empty": "아직 등록된 액티비티가 없습니다.",
     "emptyDescription": "현지 버디들이 새로운 경험을 준비하고 있습니다. 곧 다시 확인해 주세요!",
     "loadError": "액티비티를 불러오지 못했습니다.",
-    "perPerson": "{price} / 1인",
+    "perPersonLabel": "1인당",
+    "durationHours": "{hours, plural, other {#시간}}",
+    "durationMinutes": "{minutes}분",
     "discountBadge": "{percent}% 할인",
     "soldOut": "예약 마감"
   },
@@ -464,10 +466,22 @@
     "bookNow": "지금 예약하기",
     "host": "호스트: {name}",
     "localHost": "HanBuddy 로컬 호스트",
+    "duration": "소요 시간",
+    "aboutHost": "버디 소개",
+    "whatYoullDo": "체험 내용",
+    "itineraryStep": "{number}단계",
+    "itineraryMinutes": "{minutes}분",
     "included": "포함 사항",
-    "cannotJoin": "참여 제한",
+    "cannotJoin": "신청 전 확인사항",
     "availability": "예약 가능 일정",
-    "remaining": "{count, plural, other {#자리 남음}}",
+    "selectDatePlaceholder": "날짜를 선택하세요",
+    "noDates": "예약 가능한 일정이 없습니다",
+    "availableTimes": "선택 가능한 시간",
+    "noDatesThisMonth": "이번 달에는 가능한 날짜가 없습니다.",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "selectDate": "{date} 선택",
+    "remaining": "{count, plural, =0 {마감} other {#자리 남음}}",
     "meetingPoint": "만나는 장소",
     "mapUnavailable": "지도를 이용할 수 없습니다",
     "mapTitle": "{place} 지도",
@@ -620,6 +634,7 @@
     "deleteError": "액티비티를 삭제하지 못했습니다.",
     "empty": "아직 등록한 액티비티가 없습니다.",
     "edit": "수정",
+    "editActivity": "{title} 수정",
     "viewApplicants": "신청자 보기",
     "delete": "삭제",
     "deleteActivity": "{title} 삭제",
@@ -631,6 +646,15 @@
       "draft": "임시 저장",
       "inactive": "비활성"
     }
+  },
+  "MyActivityDetail": {
+    "title": "활동 상세",
+    "loading": "활동 정보를 불러오는 중...",
+    "loadError": "활동 정보를 불러오지 못했습니다.",
+    "edit": "활동 수정",
+    "viewApplicants": "신청자 보기",
+    "previewTitle": "고객 화면 미리보기",
+    "previewNotice": "고객에게 보이는 활동 상세와 동일한 화면입니다. 미리보기에서는 예약 단계로 이동할 수 없습니다."
   },
   "Applicants": {
     "title": "신청자",
@@ -937,8 +961,15 @@
       "back": "이전",
       "next": "다음",
       "finish": "체험 등록하기",
+      "save": "변경사항 저장",
       "submitUploading": "사진 업로드 중…",
-      "submitRegistering": "등록하는 중…"
+      "submitRegistering": "등록하는 중…",
+      "submitSaving": "저장하는 중…"
+    },
+    "edit": {
+      "loading": "활동 정보를 불러오는 중…",
+      "loadError": "수정할 활동 정보를 불러오지 못했습니다.",
+      "backToActivity": "활동 상세로 돌아가기"
     },
     "errors": {
       "categoryRequired": "계속하려면 카테고리를 선택해 주세요.",

@@ -155,6 +155,34 @@ describe("BookingForm", () => {
     vi.unstubAllEnvs();
   });
 
+  it("preselects the schedule passed from the availability calendar", () => {
+    const twoSessionActivity: Activity = {
+      ...activity,
+      sessions: [
+        ...activity.sessions,
+        { id: "102", dateLabel: "2026-07-21", timeLabel: "14:00", spotsLeft: 2 },
+      ],
+    };
+
+    renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
+
+    expect(screen.getByRole("combobox")).toHaveValue("102");
+  });
+
+  it("falls back to the first schedule when the requested one is unknown or full", () => {
+    const twoSessionActivity: Activity = {
+      ...activity,
+      sessions: [
+        ...activity.sessions,
+        { id: "102", dateLabel: "2026-07-21", timeLabel: "14:00", spotsLeft: 0 },
+      ],
+    };
+
+    renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
+
+    expect(screen.getByRole("combobox")).toHaveValue("101");
+  });
+
   it("creates an application and captures the PayPal payment from the confirm dialog", async () => {
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
     mockedCaptureApplicationPayment.mockResolvedValue({

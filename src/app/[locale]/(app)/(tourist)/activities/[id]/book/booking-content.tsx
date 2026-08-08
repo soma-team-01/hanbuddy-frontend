@@ -9,7 +9,10 @@ import { touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import { BookingForm } from "./booking-form";
 
-export function BookingContent({ activityId }: Readonly<{ activityId: string }>) {
+export function BookingContent({
+  activityId,
+  initialScheduleId,
+}: Readonly<{ activityId: string; initialScheduleId?: string }>) {
   const activityQuery = useQuery(touristActivityQueryOptions(activityId));
   const locale = useLocale();
   const t = useTranslations("Booking");
@@ -40,5 +43,5 @@ export function BookingContent({ activityId }: Readonly<{ activityId: string }>)
     );
   }
 
-  return <BookingForm activity={activity} />;
+  return <BookingForm activity={activity} initialSessionId={initialScheduleId} />;
 }

@@ -452,7 +452,9 @@
     "empty": "No activities available yet.",
     "emptyDescription": "Local buddies are preparing new experiences. Check back soon!",
     "loadError": "Could not load activities.",
-    "perPerson": "{price} per person",
+    "perPersonLabel": "per person",
+    "durationHours": "{hours, plural, one {# hour} other {# hours}}",
+    "durationMinutes": "{minutes}min",
     "discountBadge": "{percent}% off",
     "soldOut": "Sold out"
   },
@@ -464,9 +466,21 @@
     "bookNow": "Book now",
     "host": "Host: {name}",
     "localHost": "Local HanBuddy host",
+    "duration": "Duration",
+    "aboutHost": "Meet your buddy",
+    "whatYoullDo": "What you'll do",
+    "itineraryStep": "Step {number}",
+    "itineraryMinutes": "{minutes} min",
     "included": "What's included",
-    "cannotJoin": "Who cannot join",
+    "cannotJoin": "Before you join",
     "availability": "Availability",
+    "selectDatePlaceholder": "Select a date",
+    "noDates": "No dates available yet",
+    "availableTimes": "Available times",
+    "noDatesThisMonth": "No available dates this month.",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "selectDate": "Select {date}",
     "remaining": "{count, plural, =0 {No spots left} one {# spot left} other {# spots left}}",
     "meetingPoint": "Meeting Point",
     "mapUnavailable": "Map unavailable",
@@ -620,6 +634,7 @@
     "deleteError": "Could not delete the activity.",
     "empty": "No activities yet.",
     "edit": "Edit",
+    "editActivity": "Edit {title}",
     "viewApplicants": "View applicants",
     "delete": "Delete",
     "deleteActivity": "Delete {title}",
@@ -631,6 +646,15 @@
       "draft": "Draft",
       "inactive": "Inactive"
     }
+  },
+  "MyActivityDetail": {
+    "title": "Activity details",
+    "loading": "Loading activity...",
+    "loadError": "Could not load the activity.",
+    "edit": "Edit activity",
+    "viewApplicants": "View applicants",
+    "previewTitle": "Guest preview",
+    "previewNotice": "This is exactly what guests see. Booking steps are disabled in this preview."
   },
   "Applicants": {
     "title": "Applicants",
@@ -937,8 +961,15 @@
       "back": "Back",
       "next": "Next",
       "finish": "Register experience",
+      "save": "Save changes",
       "submitUploading": "Uploading photos…",
-      "submitRegistering": "Registering…"
+      "submitRegistering": "Registering…",
+      "submitSaving": "Saving…"
+    },
+    "edit": {
+      "loading": "Loading your experience…",
+      "loadError": "Could not load the activity to edit.",
+      "backToActivity": "Back to activity"
     },
     "errors": {
       "categoryRequired": "Choose a category to continue.",

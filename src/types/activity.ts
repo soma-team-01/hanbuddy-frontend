@@ -11,6 +11,10 @@ export interface IncludedItem {
 
 export interface Session {
   id: string;
+  /** 오프셋 포함 원본 시작 일시 — 종료 시간 계산용 */
+  startAt?: string;
+  /** Asia/Seoul 기준 날짜 키 (YYYY-MM-DD) — 캘린더 그룹핑용 */
+  dateKey?: string;
   dateLabel: string;
   timeLabel: string;
   spotsLeft: number;
@@ -21,6 +25,14 @@ export interface MeetingPoint {
   area: string;
   placeId?: string;
   mapImageUrl?: string;
+}
+
+export interface ActivityItineraryItem {
+  id: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  imageUrl: string;
 }
 
 export interface Activity {
@@ -41,12 +53,18 @@ export interface Activity {
   originalPrice?: number;
   /** 진행 중인 할인율(%) — 카드 할인 배지에 사용 */
   discountPercent?: number;
+  /** 총 소요 시간(분). 백엔드 totalDurationHours(0.5시간 단위)를 분으로 환산한 값 */
+  durationMinutes?: number;
   /** 모든 일정이 예약 마감이면 true */
   isSoldOut?: boolean;
   host: Host;
+  /** 버디가 활동별로 작성한 자기소개 */
+  hostIntroduction?: string;
   included: IncludedItem[];
   restrictions: string[];
   sessions: Session[];
+  /** 활동 일정표 (itemOrder 순 정렬) */
+  itinerary?: ActivityItineraryItem[];
   meetingPoint: MeetingPoint;
 }
 
@@ -78,6 +96,8 @@ export interface TouristActivitySummary {
   activityId: number;
   title: string;
   description: string;
+  /** 총 소요시간(시간 단위). 일정표 소요시간 합을 0.5시간 단위로 올림한 값 */
+  totalDurationHours?: number | null;
   thumbnailImageUrl: string;
   buddyName: string;
   buddyProfileImageUrl: string | null;

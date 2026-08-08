@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { TrashIcon, UsersIcon } from "@/components/ui/icons";
+import { PencilIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { deleteMyActivity } from "@/lib/api/buddy";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
@@ -101,7 +101,7 @@ export function MyActivitiesContent() {
             className="flex flex-col gap-3 rounded-3xl border border-line-soft bg-canvas-soft p-4 shadow-[0_8px_22px_rgba(61,45,43,0.06)]"
           >
             <Link
-              href={`/my-activities/${activity.activityId}/applicants`}
+              href={`/my-activities/${activity.activityId}`}
               className="relative block aspect-[4/3] w-full overflow-hidden rounded-xl transition-opacity hover:opacity-90"
             >
               <Image
@@ -121,20 +121,26 @@ export function MyActivitiesContent() {
               >
                 {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
               </span>
-              <button
-                type="button"
-                aria-label={t("deleteActivity", { title: activity.title })}
-                onClick={() => setDeleteTargetId(activity.activityId)}
-                disabled={deleteActivityMutation.isPending}
-                className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <TrashIcon className="size-4" />
-              </button>
+              <span className="flex items-center gap-1">
+                <Link
+                  href={`/my-activities/${activity.activityId}/edit`}
+                  aria-label={t("editActivity", { title: activity.title })}
+                  className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft hover:text-primary-strong"
+                >
+                  <PencilIcon className="size-4" />
+                </Link>
+                <button
+                  type="button"
+                  aria-label={t("deleteActivity", { title: activity.title })}
+                  onClick={() => setDeleteTargetId(activity.activityId)}
+                  disabled={deleteActivityMutation.isPending}
+                  className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <TrashIcon className="size-4" />
+                </button>
+              </span>
             </div>
-            <Link
-              href={`/my-activities/${activity.activityId}/applicants`}
-              className="hover:underline"
-            >
+            <Link href={`/my-activities/${activity.activityId}`} className="hover:underline">
               <h2 className="font-display text-xl leading-7 font-semibold text-ink">
                 {activity.title}
               </h2>

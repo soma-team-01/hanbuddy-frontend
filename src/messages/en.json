@@ -881,7 +881,7 @@
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
-      "notice": "Fee and payout calculations will be added after the pricing policy and API contract are finalized."
+      "notice": "This amount is shown to guests as the price per person in Korean won."
     },
     "inclusions": {
       "custom": "Other included items",
@@ -900,7 +900,7 @@
       }
     },
     "discount": {
-      "policyNotice": "Discount rules are a UI draft and will be finalized with the backend contract.",
+      "policyNotice": "The discount applies to every session until the end date you set.",
       "options": {
         "none": {
           "title": "No discount",

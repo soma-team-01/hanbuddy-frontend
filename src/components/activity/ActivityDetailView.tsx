@@ -212,11 +212,11 @@ export function ActivityDetailView({
         <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
       </button>
       <div className="flex shrink-0 flex-col items-end">
-        {activity.originalPrice && (
+        {hasDiscount ? (
           <span className="text-sm text-muted line-through">
-            {formatKrw(activity.originalPrice, locale)}
+            {formatKrw(activity.originalPrice ?? activity.price, locale)}
           </span>
-        )}
+        ) : null}
         <span className="font-display text-xl font-bold text-primary">
           {t("perPerson", { price: formatKrw(activity.price, locale) })}
         </span>

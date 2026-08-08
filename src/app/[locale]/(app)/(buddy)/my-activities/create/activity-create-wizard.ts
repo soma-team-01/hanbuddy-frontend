@@ -228,6 +228,14 @@ export function validateActivityCreateStep(
       ) {
         return "scheduleInvalid";
       }
+      // startAt 변환에 실패한 일정이 제출 요청에서 조용히 빠지지 않도록 여기서 막는다
+      if (
+        draft.schedules.some(
+          (schedule) => toSeoulStartAt(`${schedule.date}T${schedule.startTime}`) === null,
+        )
+      ) {
+        return "scheduleInvalid";
+      }
       if (draft.schedules.length > ACTIVITY_CREATE_LIMITS.schedules.max) {
         return "schedulesTooMany";
       }

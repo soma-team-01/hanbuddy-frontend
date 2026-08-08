@@ -234,6 +234,8 @@ export function validateActivityCreateStep(
         const discount = Number(draft.discountPercent);
         if (
           !draft.discountEndsAt ||
+          // 백엔드 계약: 할인 종료일은 Asia/Seoul 기준 오늘 또는 이후 날짜
+          draft.discountEndsAt < getSeoulNowParts().date ||
           !Number.isInteger(discount) ||
           discount <= 0 ||
           discount > 100

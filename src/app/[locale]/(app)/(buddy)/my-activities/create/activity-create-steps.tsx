@@ -1435,6 +1435,7 @@ export function DiscountStep({
               type="date"
               className={INPUT_CLASS}
               value={endsAt}
+              min={getSeoulNowParts().date}
               onChange={(event) => onEndsAtChange(event.target.value)}
             />
           </Field>

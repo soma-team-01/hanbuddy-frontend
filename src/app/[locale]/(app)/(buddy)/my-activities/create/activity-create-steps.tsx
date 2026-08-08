@@ -926,7 +926,8 @@ export function ScheduleStep({
 }>) {
   const locale = useLocale();
   const today = getSeoulNowParts();
-  const initialMonth = schedules[0] ? parseDateKey(schedules[0].date) : new Date();
+  // 일정이 없으면 UTC가 아니라 Asia/Seoul 기준 오늘이 속한 달을 연다 (월말 KST 오전에 이전 달이 열리는 문제 방지)
+  const initialMonth = parseDateKey(schedules[0]?.date ?? today.date);
   const [visibleMonth, setVisibleMonth] = useState({
     year: initialMonth.getUTCFullYear(),
     month: initialMonth.getUTCMonth(),

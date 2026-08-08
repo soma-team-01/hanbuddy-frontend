@@ -2,15 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { PayPalPaymentProvider } from "@/components/payments/PayPalPaymentButton";
-import { useRouter } from "@/i18n/navigation";
-import {
-  cancelMyApplication,
-  captureApplicationPayment,
-  continueApplicationPayment,
-} from "@/lib/api/applications";
+import { cancelMyApplication, continueApplicationPayment } from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import type { Locale } from "@/i18n/routing";
+import { requestTossPayment } from "@/lib/payments/toss";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
@@ -20,7 +16,6 @@ import { ApplicationList } from "./application-list";
 import type { CancelDialogOutcome } from "./cancel-dialog";
 
 export function ApplicationsContent() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const locale = useLocale();
   const t = useTranslations("Applications");
@@ -48,41 +43,16 @@ export function ApplicationsContent() {
     mutationFn: async (applicationId: string) =>
       unwrapApiResult(await continueApplicationPayment(applicationId), "payment"),
   });
-  const capturePaymentMutation = useMutation({
-    mutationFn: async ({
-      applicationId,
-      paypalOrderId,
-    }: {
-      applicationId: string;
-      paypalOrderId: string;
-    }) =>
-      unwrapApiResult(await captureApplicationPayment(applicationId, paypalOrderId), "application"),
-    onSuccess: async (application) => {
-      queryClient.setQueryData<ApplicationResponse[]>(applicationKeys.mine(), (current = []) =>
-        current.map((item) =>
-          item.applicationId === application.applicationId
-            ? {
-                ...application,
-                paymentAmount: application.paymentAmount ?? item.paymentAmount,
-                paymentCurrency: application.paymentCurrency ?? item.paymentCurrency,
-              }
-            : item,
-        ),
-      );
-      await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
-      router.replace(`/payments/success?applicationId=${application.applicationId}`);
-    },
-  });
   useAuthQueryRedirect(
-    applicationsQuery.error ??
-      cancelApplicationMutation.error ??
-      continuePaymentMutation.error ??
-      capturePaymentMutation.error,
+    applicationsQuery.error ?? cancelApplicationMutation.error ?? continuePaymentMutation.error,
   );
 
-  const applications = (applicationsQuery.data ?? []).map((application) =>
-    mapApplicationResponseToApplication(application, tErrors("dateTimeUnavailable"), locale),
-  );
+  const applications = (applicationsQuery.data ?? [])
+    // 새 신청으로 대체된 신청은 결제할 수도 취소할 수도 없으므로 목록에서 제외한다
+    .filter((application) => application.status !== "SUPERSEDED")
+    .map((application) =>
+      mapApplicationResponseToApplication(application, tErrors("dateTimeUnavailable"), locale),
+    );
 
   async function handleCancelApplication(
     applicationId: string,
@@ -101,15 +71,8 @@ export function ApplicationsContent() {
 
   async function handleContinuePayment(applicationId: string) {
     const payment = await continuePaymentMutation.mutateAsync(applicationId);
-    return {
-      orderId: payment.paypalOrderId,
-      paymentAmount: payment.paymentAmount,
-      paymentCurrency: payment.paymentCurrency,
-    };
-  }
-
-  async function handleCapturePayment(applicationId: string, paypalOrderId: string) {
-    await capturePaymentMutation.mutateAsync({ applicationId, paypalOrderId });
+    // 결제 인증이 끝나면 successUrl(/payments/success)로 리다이렉트되어 승인 API를 호출한다
+    await requestTossPayment(payment, locale as Locale);
   }
 
   if (applicationsQuery.isPending) {
@@ -128,14 +91,11 @@ export function ApplicationsContent() {
   }
 
   return (
-    <PayPalPaymentProvider>
-      <ApplicationList
-        applications={applications}
-        onCancelApplication={handleCancelApplication}
-        onContinuePayment={handleContinuePayment}
-        onCapturePayment={handleCapturePayment}
-        isPaymentPending={continuePaymentMutation.isPending || capturePaymentMutation.isPending}
-      />
-    </PayPalPaymentProvider>
+    <ApplicationList
+      applications={applications}
+      onCancelApplication={handleCancelApplication}
+      onContinuePayment={handleContinuePayment}
+      isPaymentPending={continuePaymentMutation.isPending}
+    />
   );
 }

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -15,19 +15,11 @@ import {
   StarIcon,
   UserIcon,
 } from "@/components/ui/icons";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import {
-  PayPalPaymentButtons,
-  PayPalPaymentProvider,
-} from "@/components/payments/PayPalPaymentButton";
-import { useRouter } from "@/i18n/navigation";
-import {
-  captureApplicationPayment,
-  continueApplicationPayment,
-  createApplication,
-} from "@/lib/api/applications";
+import type { Locale } from "@/i18n/routing";
+import { createApplication } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { formatCurrency, formatKrw } from "@/lib/format";
+import { formatKrw } from "@/lib/format";
+import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
 import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
@@ -36,12 +28,7 @@ import type { Activity } from "@/types/activity";
 
 const MAX_GUESTS = 8;
 
-type BookingErrorKey =
-  | "scheduleRequired"
-  | "applicationMissing"
-  | "paymentFailed"
-  | "paymentProcessFailed"
-  | "paymentCancelled";
+type BookingErrorKey = "scheduleRequired" | "paymentProcessFailed" | "paymentCancelled";
 
 function validateBookingSession(sessionId: string): BookingErrorKey | null {
   return sessionId ? null : "scheduleRequired";
@@ -51,11 +38,9 @@ export function BookingForm({
   activity,
   initialSessionId,
 }: Readonly<{ activity: Activity; initialSessionId?: string }>) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const locale = useLocale();
   const t = useTranslations("Booking");
-  const tPayment = useTranslations("Payment");
   const getApiErrorMessage = useApiErrorMessage();
   const [sessionId, setSessionId] = useState(() => {
     if (
@@ -74,14 +59,9 @@ export function BookingForm({
     error: unknown;
     fallbackKey: BookingErrorKey;
   } | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [paymentCharge, setPaymentCharge] = useState<{
-    amount: number;
-    currency: string;
-  } | null>(null);
-  const [preparedOrderId, setPreparedOrderId] = useState<string | null>(null);
-  // PayPal 결제 재시도 시 신청을 중복 생성하지 않도록 첫 신청의 ID를 기억한다
-  const applicationIdRef = useRef<number | null>(null);
+  // 토스 결제창이 열려 있는 동안 제출 버튼을 잠근다
+  const [paymentInFlight, setPaymentInFlight] = useState(false);
+  // 재시도 시에도 매번 신청을 새로 생성한다 — 백엔드가 기존 PENDING_PAYMENT 신청을 대체(SUPERSEDED)한다
   const createApplicationMutation = useMutation({
     mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
       unwrapApiResult(await createApplication(request), "payment"),
@@ -92,41 +72,11 @@ export function BookingForm({
       ]);
     },
   });
-  const continuePaymentMutation = useMutation({
-    mutationFn: async (applicationId: number) =>
-      unwrapApiResult(await continueApplicationPayment(applicationId), "payment"),
-  });
-  const capturePaymentMutation = useMutation({
-    mutationFn: async ({
-      applicationId,
-      paypalOrderId,
-    }: {
-      applicationId: number;
-      paypalOrderId: string;
-    }) =>
-      unwrapApiResult(await captureApplicationPayment(applicationId, paypalOrderId), "application"),
-    onSuccess: async (application) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
-        queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
-      ]);
-      router.replace(`/payments/success?applicationId=${application.applicationId}`);
-    },
-  });
-  useAuthQueryRedirect(
-    createApplicationMutation.error ??
-      continuePaymentMutation.error ??
-      capturePaymentMutation.error,
-  );
-
-  const isSubmitting =
-    createApplicationMutation.isPending ||
-    continuePaymentMutation.isPending ||
-    capturePaymentMutation.isPending;
+  useAuthQueryRedirect(createApplicationMutation.error);
+  const isSubmitting = createApplicationMutation.isPending || paymentInFlight;
 
   const subtotal = activity.price * guests;
   const total = subtotal;
-  const selectedSession = activity.sessions.find((session) => session.id === sessionId);
 
   async function handleSubmitClick() {
     const validationError = validateBookingSession(sessionId);
@@ -143,63 +93,18 @@ export function BookingForm({
         guestCount: guests,
         specialRequest: specialRequest.trim() || undefined,
       });
-      applicationIdRef.current = payment.application.applicationId;
-      setPreparedOrderId(payment.paypalOrderId);
-      setPaymentCharge({ amount: payment.paymentAmount, currency: payment.paymentCurrency });
-      setShowConfirm(true);
+      setPaymentInFlight(true);
+      // 결제 인증이 끝나면 successUrl(/payments/success)로 리다이렉트되어 승인 API를 호출한다
+      await requestTossPayment(payment, locale as Locale);
     } catch (error) {
-      handlePayPalError(error);
-    }
-  }
-
-  async function startPayPalOrder(): Promise<{ orderId: string }> {
-    setErrorKey(null);
-    setRequestFailure(null);
-    if (preparedOrderId) {
-      return { orderId: preparedOrderId };
-    }
-    const applicationId = applicationIdRef.current;
-    if (applicationId === null) {
-      setErrorKey("applicationMissing");
-      throw new Error("applicationMissing");
-    }
-    const payment = await continuePaymentMutation.mutateAsync(applicationId);
-    setPreparedOrderId(payment.paypalOrderId);
-    setPaymentCharge({ amount: payment.paymentAmount, currency: payment.paymentCurrency });
-    return { orderId: payment.paypalOrderId };
-  }
-
-  async function approvePayPalOrder({ orderId }: { orderId: string }) {
-    const applicationId = applicationIdRef.current;
-    if (applicationId === null) return;
-    try {
-      await capturePaymentMutation.mutateAsync({ applicationId, paypalOrderId: orderId });
-    } catch (error) {
-      setPreparedOrderId(null);
       if (error instanceof UnauthenticatedQueryError) return;
-      setRequestFailure({ error, fallbackKey: "paymentFailed" });
-    }
-  }
-
-  function handlePayPalError(error: unknown) {
-    if (error instanceof UnauthenticatedQueryError) return;
-    if (error instanceof Error && error.message === "applicationMissing") {
-      setErrorKey("applicationMissing");
-      return;
-    }
-    setRequestFailure({ error, fallbackKey: "paymentProcessFailed" });
-  }
-
-  function handlePayPalCancel() {
-    setRequestFailure(null);
-    setErrorKey("paymentCancelled");
-  }
-
-  function handleDialogClose() {
-    setShowConfirm(false);
-    // 신청은 이미 PENDING_PAYMENT로 생성됐으므로 My Applications에서 이어서 결제하도록 보낸다
-    if (applicationIdRef.current !== null && !capturePaymentMutation.isSuccess) {
-      router.replace("/applications");
+      if (isTossUserCancel(error)) {
+        setErrorKey("paymentCancelled");
+      } else {
+        setRequestFailure({ error, fallbackKey: "paymentProcessFailed" });
+      }
+    } finally {
+      setPaymentInFlight(false);
     }
   }
 
@@ -211,7 +116,7 @@ export function BookingForm({
   }
 
   return (
-    <PayPalPaymentProvider>
+    <>
       <PageContainer className="py-6 md:py-10">
         <main
           data-testid="booking-layout"
@@ -358,7 +263,7 @@ export function BookingForm({
               </label>
             </section>
 
-            {!showConfirm && errorMessage ? (
+            {errorMessage ? (
               <p
                 role="alert"
                 className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
@@ -379,62 +284,8 @@ export function BookingForm({
               </button>
             </BottomActionBar>
           </BookingPanel>
-
-          {showConfirm && (
-            <ConfirmDialog
-              title={t("choosePaymentMethod")}
-              isPending={isSubmitting}
-              onClose={handleDialogClose}
-              confirmSlot={
-                <PayPalPaymentButtons
-                  createOrder={startPayPalOrder}
-                  onApprove={approvePayPalOrder}
-                  onCancel={handlePayPalCancel}
-                  onError={handlePayPalError}
-                  disabled={isSubmitting}
-                />
-              }
-            >
-              <p className="truncate text-sm text-muted">
-                {t("paymentSummary", {
-                  title: activity.title,
-                  schedule: selectedSession
-                    ? `${selectedSession.dateLabel} ${selectedSession.timeLabel}`
-                    : "—",
-                  count: guests,
-                })}
-              </p>
-              <div className="mt-3 flex flex-col gap-3 rounded-xl bg-panel-raised p-4 text-sm text-ink">
-                <div className="font-display font-semibold text-ink">
-                  <p>{tPayment("totalApplicationAmount", { amount: formatKrw(total, locale) })}</p>
-                </div>
-                {paymentCharge ? (
-                  <div className="font-display text-base font-semibold text-primary-strong">
-                    <p>
-                      {tPayment("paypalCharge", {
-                        amount: formatCurrency(
-                          paymentCharge.amount,
-                          paymentCharge.currency,
-                          locale,
-                        ),
-                      })}
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-              <p className="mt-3 text-xs text-muted">{tPayment("paypalUsdNotice")}</p>
-              {errorMessage ? (
-                <p
-                  role="alert"
-                  className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-                >
-                  {errorMessage}
-                </p>
-              ) : null}
-            </ConfirmDialog>
-          )}
         </main>
       </PageContainer>
-    </PayPalPaymentProvider>
+    </>
   );
 }

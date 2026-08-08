@@ -4,8 +4,8 @@ import { getExternalLocales } from "./external-locales";
 
 describe("getExternalLocales", () => {
   it.each([
-    ["en", { paypal: "en-US", googleLanguage: "en", googleRegion: "KR" }],
-    ["ko", { paypal: "ko-KR", googleLanguage: "ko", googleRegion: "KR" }],
+    ["en", { googleLanguage: "en", googleRegion: "KR" }],
+    ["ko", { googleLanguage: "ko", googleRegion: "KR" }],
   ] satisfies Array<[Locale, ReturnType<typeof getExternalLocales>]>)(
     "maps %s to the external provider locales",
     (locale, expected) => {

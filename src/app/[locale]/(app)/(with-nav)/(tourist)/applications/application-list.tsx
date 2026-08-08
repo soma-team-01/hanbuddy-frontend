@@ -2,23 +2,17 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { PayPalPaymentButtons } from "@/components/payments/PayPalPaymentButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatCurrency, formatKrw } from "@/lib/format";
+import { isTossUserCancel } from "@/lib/payments/toss";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 
 const TABS = ["upcoming", "past"] as const;
-
-interface PaymentOrderDetails {
-  orderId: string;
-  paymentAmount: number;
-  paymentCurrency: string;
-}
 
 type TabKey = (typeof TABS)[number];
 
@@ -64,7 +58,7 @@ function PriceBreakdown({
           </div>
           {hasCompletedPayment && paymentCharge ? (
             <div className="font-display font-semibold text-primary-strong">
-              {t("paidWithPayPal", {
+              {t("paidAmount", {
                 amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
               })}
             </div>
@@ -82,29 +76,23 @@ function ApplicationCard({
   application,
   onCancel,
   onContinuePayment,
-  onCapturePayment,
   isPaymentPending,
 }: Readonly<{
   application: Application;
   onCancel: () => void;
-  onContinuePayment: (applicationId: string) => Promise<PaymentOrderDetails>;
-  onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
+  onContinuePayment: (applicationId: string) => Promise<void>;
   isPaymentPending: boolean;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const locale = useLocale();
   const t = useTranslations("Applications");
   const getApiErrorMessage = useApiErrorMessage();
-  const [paymentCharge, setPaymentCharge] = useState<{
-    amount: number;
-    currency: string;
-  } | null>(
+  const paymentCharge =
     application.paymentAmount !== null &&
-      application.paymentAmount !== undefined &&
-      application.paymentCurrency
+    application.paymentAmount !== undefined &&
+    application.paymentCurrency
       ? { amount: application.paymentAmount, currency: application.paymentCurrency }
-      : null,
-  );
+      : null;
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const hasCompletedPayment = application.status === "confirmed" || isCompleted;
@@ -152,7 +140,7 @@ function ApplicationCard({
             </p>
             {hasCompletedPayment && paymentCharge ? (
               <p className="mt-0.5 text-xs text-primary-strong">
-                {t("paidWithPayPal", {
+                {t("paidAmount", {
                   amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
                 })}
               </p>
@@ -165,26 +153,23 @@ function ApplicationCard({
       )}
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
-          <PayPalPaymentButtons
+          <button
+            type="button"
             disabled={isPaymentPending}
-            createOrder={async () => {
+            onClick={async () => {
               setPaymentError(null);
-              const payment = await onContinuePayment(application.id);
-              setPaymentCharge({
-                amount: payment.paymentAmount,
-                currency: payment.paymentCurrency,
-              });
-              return { orderId: payment.orderId };
-            }}
-            onApprove={async ({ orderId }) => {
               try {
-                await onCapturePayment(application.id, orderId);
+                // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
+                await onContinuePayment(application.id);
               } catch (error) {
+                if (isTossUserCancel(error)) return;
                 showPaymentError(error);
               }
             }}
-            onError={showPaymentError}
-          />
+            className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+          >
+            {isPaymentPending ? t("paymentProcessing") : t("continuePayment")}
+          </button>
           {paymentError !== null && (
             <p
               role="alert"
@@ -221,7 +206,6 @@ export function ApplicationList({
   applications,
   onCancelApplication,
   onContinuePayment,
-  onCapturePayment,
   isPaymentPending,
 }: Readonly<{
   applications: Application[];
@@ -229,8 +213,7 @@ export function ApplicationList({
     applicationId: string,
     reason: ApplicationCancellationReason,
   ) => Promise<CancelDialogOutcome>;
-  onContinuePayment: (applicationId: string) => Promise<PaymentOrderDetails>;
-  onCapturePayment: (applicationId: string, paypalOrderId: string) => Promise<void>;
+  onContinuePayment: (applicationId: string) => Promise<void>;
   isPaymentPending: boolean;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
@@ -273,7 +256,6 @@ export function ApplicationList({
             application={application}
             onCancel={() => setCancelTargetId(application.id)}
             onContinuePayment={onContinuePayment}
-            onCapturePayment={onCapturePayment}
             isPaymentPending={isPaymentPending}
           />
         ))}

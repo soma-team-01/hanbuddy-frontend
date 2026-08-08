@@ -77,7 +77,6 @@ describe("locale messages", () => {
       "Booking.refundPolicy",
       "Booking.agreement",
       "Booking.submit",
-      "Booking.choosePaymentMethod",
       "Booking.processing",
       "Booking.kstNotice",
       "Booking.scheduleRequired",
@@ -86,7 +85,7 @@ describe("locale messages", () => {
       "Applications.past",
       "Applications.loading",
       "Applications.empty",
-      "Applications.paidWithPayPal",
+      "Applications.paidAmount",
       "Applications.total",
       "Applications.continuePayment",
       "Applications.cancel",
@@ -99,8 +98,9 @@ describe("locale messages", () => {
       "Payment.complete",
       "Payment.confirmed",
       "Payment.totalApplicationAmount",
-      "Payment.paidWithPayPal",
-      "Payment.paypalUsdNotice",
+      "Payment.paidAmount",
+      "Payment.confirming",
+      "Payment.failTitle",
       "Payment.loading",
     ];
 
@@ -121,10 +121,10 @@ describe("locale messages", () => {
       expect(messages.Booking.guests).toContain("plural");
       expect(messages.Booking.subtotal).toContain("plural");
       expect(messages.Booking.totalKrw).toContain("{amount}");
-      expect(messages.Applications.paidWithPayPal).toContain("{amount}");
+      expect(messages.Applications.paidAmount).toContain("{amount}");
       expect(messages.Applications.total).toContain("{amount}");
       expect(messages.Payment.totalApplicationAmount).toContain("{amount}");
-      expect(messages.Payment.paidWithPayPal).toContain("{amount}");
+      expect(messages.Payment.paidAmount).toContain("{amount}");
     }
   });
 

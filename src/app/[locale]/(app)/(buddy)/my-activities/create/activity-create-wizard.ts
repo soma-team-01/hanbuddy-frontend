@@ -32,6 +32,10 @@ export const ACTIVITY_CREATE_LIMITS = {
   photos: { min: 3, max: 10 },
   itineraryTitle: { min: 1, max: 20 },
   itineraryDescription: { min: 5, max: 50 },
+  // 백엔드 ActivityUpsertRequest 계약 상한
+  maxGuests: { max: 100 },
+  schedules: { max: 30 },
+  itineraryItems: { max: 20 },
 } as const;
 
 export type ActivityCreateStep = (typeof ACTIVITY_CREATE_STEPS)[number];
@@ -95,7 +99,10 @@ export type ActivityCreateErrorKey =
   | "itineraryDescriptionTooShort"
   | "itineraryDurationInvalid"
   | "itineraryPhotoRequired"
+  | "itineraryTooMany"
   | "maxGuestsInvalid"
+  | "maxGuestsTooMany"
+  | "schedulesTooMany"
   | "priceInvalid"
   | "inclusionsRequired"
   | "restrictionsRequired"
@@ -203,6 +210,9 @@ export function validateActivityCreateStep(
       ) {
         return "itineraryDescriptionTooShort";
       }
+      if (draft.itinerary.length > ACTIVITY_CREATE_LIMITS.itineraryItems.max) {
+        return "itineraryTooMany";
+      }
       if (draft.itinerary.some((item) => !isPositiveInteger(item.durationMinutes))) {
         return "itineraryDurationInvalid";
       }
@@ -218,13 +228,19 @@ export function validateActivityCreateStep(
       ) {
         return "scheduleInvalid";
       }
+      if (draft.schedules.length > ACTIVITY_CREATE_LIMITS.schedules.max) {
+        return "schedulesTooMany";
+      }
       const now = getSeoulNowParts();
       return draft.schedules.some((schedule) => isPastSchedule(schedule, now))
         ? "scheduleInPast"
         : null;
     }
     case "capacity":
-      return isPositiveInteger(draft.maxGuests) ? null : "maxGuestsInvalid";
+      if (!isPositiveInteger(draft.maxGuests)) return "maxGuestsInvalid";
+      return Number(draft.maxGuests) <= ACTIVITY_CREATE_LIMITS.maxGuests.max
+        ? null
+        : "maxGuestsTooMany";
     case "price":
       return isPositiveInteger(draft.pricePerPerson) ? null : "priceInvalid";
     case "inclusions":

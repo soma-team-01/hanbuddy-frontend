@@ -967,7 +967,10 @@
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",
       "imageUploadFailed": "We couldn't upload your photos. Please try again.",
       "submissionFailed": "We couldn't register your experience. Please try again.",
-      "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only."
+      "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only.",
+      "maxGuestsTooMany": "Capacity can be at most 100 guests.",
+      "schedulesTooMany": "You can add up to 30 sessions.",
+      "itineraryTooMany": "You can add up to 20 itinerary activities."
     }
   }
 }

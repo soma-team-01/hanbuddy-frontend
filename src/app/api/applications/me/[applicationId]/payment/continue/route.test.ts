@@ -36,7 +36,7 @@ describe("POST /api/applications/me/[applicationId]/payment/continue", () => {
         isSuccess: true,
         code: "200",
         message: "ok",
-        result: { paymentId: 7, approvalUrl: "https://www.sandbox.paypal.com/checkoutnow" },
+        result: { paymentId: 7, orderNumber: "hanbuddy-11-order", clientKey: "test_ck_client-key" },
       },
       setCookies: [],
     });

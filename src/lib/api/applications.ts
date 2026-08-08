@@ -1,6 +1,7 @@
 import type {
   ApplicationCancellationReason,
   ApplicationResponse,
+  ConfirmPaymentRequest,
   CreateApplicationRequest,
   PaymentReadyResponse,
 } from "@/types/application";
@@ -14,7 +15,7 @@ const DEFAULT_APPLICATION_CREATE_ERROR_MESSAGE = "신청을 완료하지 못했�
 const DEFAULT_APPLICATION_LIST_ERROR_MESSAGE = "신청 목록을 불러오지 못했습니다.";
 const DEFAULT_APPLICATION_CANCEL_ERROR_MESSAGE = "신청을 취소하지 못했습니다.";
 const DEFAULT_PAYMENT_CONTINUE_ERROR_MESSAGE = "결제를 이어가지 못했습니다.";
-const DEFAULT_PAYMENT_CAPTURE_ERROR_MESSAGE = "결제를 완료하지 못했습니다.";
+const DEFAULT_PAYMENT_CONFIRM_ERROR_MESSAGE = "결제를 완료하지 못했습니다.";
 
 export async function createApplication(
   request: CreateApplicationRequest,
@@ -42,19 +43,19 @@ export async function continueApplicationPayment(
   );
 }
 
-export async function captureApplicationPayment(
+export async function confirmApplicationPayment(
   applicationId: number | string,
-  paypalOrderId: string,
+  request: ConfirmPaymentRequest,
 ): Promise<ApplicationResult> {
   return requestApiResult<ApplicationResponse, "application">(
-    `/api/applications/me/${applicationId}/payment/capture`,
+    `/api/applications/me/${applicationId}/payment/confirm`,
     "application",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paypalOrderId }),
+      body: JSON.stringify(request),
     },
-    DEFAULT_PAYMENT_CAPTURE_ERROR_MESSAGE,
+    DEFAULT_PAYMENT_CONFIRM_ERROR_MESSAGE,
   );
 }
 

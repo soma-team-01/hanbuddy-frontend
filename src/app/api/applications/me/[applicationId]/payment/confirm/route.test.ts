@@ -10,19 +10,23 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 });
 
 const mockedPostBackend = vi.mocked(postBackend);
-const captureRequest = { paypalOrderId: "5O190127TN364715T" };
+const confirmRequest = {
+  paymentKey: "tviva20260809abcdef",
+  orderId: "hanbuddy-1-550e8400-e29b-41d4-a716-446655440000",
+  amount: 100000,
+};
 const context = { params: Promise.resolve({ applicationId: "11" }) };
 
-describe("POST /api/applications/me/[applicationId]/payment/capture", () => {
+describe("POST /api/applications/me/[applicationId]/payment/confirm", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
   });
 
   it("returns 401 without calling the backend when the access token cookie is missing", async () => {
     const response = await POST(
-      new NextRequest("http://localhost/api/applications/me/11/payment/capture", {
+      new NextRequest("http://localhost/api/applications/me/11/payment/confirm", {
         method: "POST",
-        body: JSON.stringify(captureRequest),
+        body: JSON.stringify(confirmRequest),
       }),
       context,
     );
@@ -31,7 +35,7 @@ describe("POST /api/applications/me/[applicationId]/payment/capture", () => {
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
-  it("proxies the payment capture with the access token as bearer", async () => {
+  it("proxies the payment confirmation with the access token as bearer", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,
       payload: {
@@ -44,17 +48,17 @@ describe("POST /api/applications/me/[applicationId]/payment/capture", () => {
     });
 
     const response = await POST(
-      new NextRequest("http://localhost/api/applications/me/11/payment/capture", {
+      new NextRequest("http://localhost/api/applications/me/11/payment/confirm", {
         method: "POST",
-        body: JSON.stringify(captureRequest),
+        body: JSON.stringify(confirmRequest),
         headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
       }),
       context,
     );
 
     expect(mockedPostBackend).toHaveBeenCalledWith(
-      "/applications/me/11/payment/capture",
-      captureRequest,
+      "/applications/me/11/payment/confirm",
+      confirmRequest,
       { bearerToken: "access-token" },
     );
     expect(response.status).toBe(200);
@@ -62,9 +66,9 @@ describe("POST /api/applications/me/[applicationId]/payment/capture", () => {
 
   it("rejects non-numeric application ids before proxying", async () => {
     const response = await POST(
-      new NextRequest("http://localhost/api/applications/me/not-a-number/payment/capture", {
+      new NextRequest("http://localhost/api/applications/me/not-a-number/payment/confirm", {
         method: "POST",
-        body: JSON.stringify(captureRequest),
+        body: JSON.stringify(confirmRequest),
         headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
       }),
       { params: Promise.resolve({ applicationId: "not-a-number" }) },
@@ -76,7 +80,7 @@ describe("POST /api/applications/me/[applicationId]/payment/capture", () => {
 
   it("rejects an unreadable request body before proxying", async () => {
     const response = await POST(
-      new NextRequest("http://localhost/api/applications/me/11/payment/capture", {
+      new NextRequest("http://localhost/api/applications/me/11/payment/confirm", {
         method: "POST",
         body: "not-json",
         headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
@@ -89,23 +93,16 @@ describe("POST /api/applications/me/[applicationId]/payment/capture", () => {
   });
 
   it.each([
-    ["missing", {}],
-    ["non-string", { paypalOrderId: 123 }],
-    ["blank", { paypalOrderId: "   " }],
-  ])("rejects a %s PayPal order id before proxying", async (_case, body) => {
-    mockedPostBackend.mockResolvedValue({
-      status: 200,
-      payload: {
-        isSuccess: true,
-        code: "200",
-        message: "ok",
-        result: { applicationId: 11, status: "CONFIRMED" },
-      },
-      setCookies: [],
-    });
-
+    ["missing paymentKey", { ...confirmRequest, paymentKey: undefined }],
+    ["blank paymentKey", { ...confirmRequest, paymentKey: "   " }],
+    ["missing orderId", { ...confirmRequest, orderId: undefined }],
+    ["blank orderId", { ...confirmRequest, orderId: "" }],
+    ["missing amount", { ...confirmRequest, amount: undefined }],
+    ["non-numeric amount", { ...confirmRequest, amount: "100000" }],
+    ["non-positive amount", { ...confirmRequest, amount: 0 }],
+  ])("rejects a request with %s before proxying", async (_case, body) => {
     const response = await POST(
-      new NextRequest("http://localhost/api/applications/me/11/payment/capture", {
+      new NextRequest("http://localhost/api/applications/me/11/payment/confirm", {
         method: "POST",
         body: JSON.stringify(body),
         headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },

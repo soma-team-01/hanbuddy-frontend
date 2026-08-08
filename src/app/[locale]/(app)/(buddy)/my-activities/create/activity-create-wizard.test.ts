@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { getSeoulNowParts } from "@/lib/datetime";
+import type { MyActivityDetailResponse } from "@/types/buddy";
 import {
   ACTIVITY_CREATE_STEPS,
   EMPTY_ACTIVITY_DRAFT,
+  buildDraftFromMyActivityDetail,
   getNextActivityCreateStep,
   getPreviousActivityCreateStep,
   isPastSchedule,
@@ -164,5 +166,130 @@ describe("activity creation wizard", () => {
     const draft = createCompleteDraft({ restrictions: "", hasNoRestrictions: true });
 
     expect(validateActivityCreateStep("restrictions", draft)).toBeNull();
+  });
+
+  describe("buildDraftFromMyActivityDetail", () => {
+    const detail: MyActivityDetailResponse = {
+      activityId: 42,
+      title: "Seoul market walk",
+      description: "Meet local vendors and taste a neighborhood breakfast together.",
+      thumbnailImageUrl: "https://cdn.example.test/activities/cover.webp",
+      status: "ACTIVE",
+      hostIntroduction: "I have guided friends through this market for years.",
+      includedItems: ["Equipment rental", "Breakfast tasting"],
+      restrictionNotes: ["Not suitable for guests with shellfish allergies"],
+      maxCapacity: 4,
+      price: 50000,
+      currency: "KRW",
+      discountPercent: null,
+      discountEndDate: null,
+      discountedPrice: null,
+      meetingPointName: "Gwangjang Market Gate 2",
+      meetingPlaceId: "ChIJ-gwangjang",
+      images: [
+        { imageUrl: "https://cdn.example.test/activities/two.webp", imageOrder: 1 },
+        { imageUrl: "https://cdn.example.test/activities/cover.webp", imageOrder: 0 },
+      ],
+      schedules: [
+        {
+          scheduleId: 7,
+          startAt: `${futureDateA}T10:00:00+09:00`,
+          bookedCount: 2,
+          status: "OPEN",
+        },
+        {
+          scheduleId: 8,
+          startAt: "2020-01-01T10:00:00+09:00",
+          bookedCount: 0,
+          status: "CLOSED",
+        },
+      ],
+      itineraries: [
+        {
+          itineraryId: 9,
+          title: "Meet market vendors",
+          description: "Taste three breakfast dishes with local vendors.",
+          durationMinutes: 60,
+          imageUrl: "https://cdn.example.test/activities/itinerary.webp",
+          itemOrder: 0,
+        },
+      ],
+    };
+
+    it("prefills the draft from the detail response with reusable image keys", () => {
+      const draft = buildDraftFromMyActivityDetail(detail);
+
+      expect(draft.experienceName).toBe("Seoul market walk");
+      expect(draft.hostIntroduction).toBe("I have guided friends through this market for years.");
+      expect(draft.photos.map((photoDraft) => photoDraft.previewUrl)).toEqual([
+        "https://cdn.example.test/activities/cover.webp",
+        "https://cdn.example.test/activities/two.webp",
+      ]);
+      expect(draft.photos.map((photoDraft) => photoDraft.existingKey)).toEqual([
+        "activities/cover.webp",
+        "activities/two.webp",
+      ]);
+      expect(draft.photos.every((photoDraft) => photoDraft.file === null)).toBe(true);
+      expect(draft.itinerary).toHaveLength(1);
+      expect(draft.itinerary[0]).toMatchObject({
+        title: "Meet market vendors",
+        durationMinutes: "60",
+      });
+      expect(draft.itinerary[0].photo).toMatchObject({
+        file: null,
+        existingKey: "activities/itinerary.webp",
+      });
+      expect(draft.meetingPlace).toBe("Gwangjang Market Gate 2");
+      expect(draft.meetingPlaceId).toBe("ChIJ-gwangjang");
+      expect(draft.meetingAddress).toBe("Gwangjang Market Gate 2");
+      expect(draft.maxGuests).toBe("4");
+      expect(draft.pricePerPerson).toBe("50000");
+      expect(draft.inclusions).toBe("Equipment rental\nBreakfast tasting");
+      expect(draft.restrictions).toBe("Not suitable for guests with shellfish allergies");
+      expect(draft.hasNoRestrictions).toBe(false);
+      expect(draft.discountType).toBe("none");
+    });
+
+    it("keeps future schedules only, so past ones cannot block editing", () => {
+      const draft = buildDraftFromMyActivityDetail(detail);
+
+      expect(draft.schedules).toEqual([
+        {
+          id: "existing-schedule-7",
+          date: futureDateA,
+          startTime: "10:00",
+        },
+      ]);
+      expect(validateActivityCreateStep("schedule", draft)).toBeNull();
+    });
+
+    it("prefills a running discount but drops an expired one", () => {
+      const running = buildDraftFromMyActivityDetail({
+        ...detail,
+        discountPercent: 20,
+        discountEndDate: "2099-12-31",
+        discountedPrice: 40000,
+      });
+      expect(running.discountType).toBe("limited");
+      expect(running.discountPercent).toBe("20");
+      expect(running.discountEndsAt).toBe("2099-12-31");
+
+      const expired = buildDraftFromMyActivityDetail({
+        ...detail,
+        discountPercent: 20,
+        discountEndDate: "2020-01-01",
+        discountedPrice: null,
+      });
+      expect(expired.discountType).toBe("none");
+      expect(expired.discountPercent).toBe("");
+      expect(expired.discountEndsAt).toBe("");
+    });
+
+    it("marks no-restrictions when the detail has none", () => {
+      const draft = buildDraftFromMyActivityDetail({ ...detail, restrictionNotes: [] });
+
+      expect(draft.restrictions).toBe("");
+      expect(draft.hasNoRestrictions).toBe(true);
+    });
   });
 });

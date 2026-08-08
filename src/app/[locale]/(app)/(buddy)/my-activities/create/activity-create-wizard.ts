@@ -1,4 +1,6 @@
-import { getSeoulNowParts } from "@/lib/datetime";
+import { getSeoulDateTimeParts, getSeoulNowParts } from "@/lib/datetime";
+import { extractImageKeyFromUrl } from "@/lib/images/presigned";
+import type { MyActivityDetailResponse } from "@/types/buddy";
 
 export const ACTIVITY_CREATE_STEPS = [
   "host",
@@ -29,8 +31,11 @@ export type DiscountType = "none" | "limited";
 
 export interface PhotoDraft {
   id: string;
-  file: File;
+  /** 새로 선택한 파일. 서버에 이미 올라간 기존 이미지는 null */
+  file: File | null;
   previewUrl: string;
+  /** 기존 이미지 유지 시 재사용할 S3 key */
+  existingKey?: string;
 }
 
 export interface ItineraryDraft {
@@ -233,6 +238,74 @@ export function validateActivityCreateStep(
     case "restrictions":
       return draft.hasNoRestrictions || draft.restrictions.trim() ? null : "restrictionsRequired";
   }
+}
+
+function toExistingPhotoDraft(id: string, imageUrl: string): PhotoDraft {
+  return {
+    id,
+    file: null,
+    previewUrl: imageUrl,
+    existingKey: extractImageKeyFromUrl(imageUrl),
+  };
+}
+
+/**
+ * 내 활동 상세 응답을 수정용 draft로 변환한다.
+ * 지난 일정은 편집 화면 검증(과거 일정 금지)과 충돌하므로 제외한다.
+ */
+export function buildDraftFromMyActivityDetail(
+  detail: MyActivityDetailResponse,
+): ActivityCreateDraft {
+  const now = getSeoulNowParts();
+  const schedules = detail.schedules
+    .map((schedule) => {
+      const parts = getSeoulDateTimeParts(schedule.startAt);
+      if (!parts) return null;
+      return {
+        id: `existing-schedule-${schedule.scheduleId}`,
+        date: parts.date,
+        startTime: parts.time,
+      };
+    })
+    .filter((schedule): schedule is ScheduleDraft => schedule !== null)
+    .filter((schedule) => !isPastSchedule(schedule, now))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+  // 종료일이 지난 할인은 그대로 제출하면 백엔드 검증(오늘 이후)에 걸리므로 미적용으로 되돌린다
+  const hasDiscount =
+    detail.discountPercent !== null &&
+    detail.discountEndDate !== null &&
+    detail.discountEndDate >= now.date;
+
+  return {
+    ...EMPTY_ACTIVITY_DRAFT,
+    hostIntroduction: detail.hostIntroduction,
+    photos: [...detail.images]
+      .sort((left, right) => left.imageOrder - right.imageOrder)
+      .map((image, index) => toExistingPhotoDraft(`existing-photo-${index}`, image.imageUrl)),
+    experienceName: detail.title,
+    experienceDescription: detail.description,
+    meetingAddress: detail.meetingPointName,
+    meetingPlaceId: detail.meetingPlaceId,
+    meetingPlace: detail.meetingPointName,
+    schedules,
+    itinerary: [...detail.itineraries]
+      .sort((left, right) => left.itemOrder - right.itemOrder)
+      .map((item) => ({
+        id: `existing-itinerary-${item.itineraryId}`,
+        title: item.title,
+        description: item.description,
+        durationMinutes: String(item.durationMinutes),
+        photo: toExistingPhotoDraft(`existing-itinerary-photo-${item.itineraryId}`, item.imageUrl),
+      })),
+    maxGuests: String(detail.maxCapacity),
+    pricePerPerson: String(detail.price),
+    inclusions: detail.includedItems.join("\n"),
+    discountType: hasDiscount ? "limited" : "none",
+    discountPercent: hasDiscount ? String(detail.discountPercent) : "",
+    discountEndsAt: hasDiscount ? (detail.discountEndDate ?? "") : "",
+    restrictions: detail.restrictionNotes.join("\n"),
+    hasNoRestrictions: detail.restrictionNotes.length === 0,
+  };
 }
 
 export function getStepIndex(step: ActivityCreateStep) {

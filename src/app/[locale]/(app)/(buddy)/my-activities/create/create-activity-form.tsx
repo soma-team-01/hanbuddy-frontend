@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
-import { createMyActivity } from "@/lib/api/buddy";
+import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { toSeoulStartAt } from "@/lib/datetime";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
@@ -15,7 +15,7 @@ import { activityKeys } from "@/lib/query/activities";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { ActivityUpsertRequest } from "@/types/buddy";
+import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
 import {
   ACTIVITY_CREATE_LIMITS,
   ACTIVITY_CREATE_STEPS,
@@ -71,6 +71,8 @@ type SubmissionPhase = "uploading" | "registering";
 type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed";
 
 interface ActivityCreateLocaleSnapshot {
+  mode: "create" | "edit";
+  activityId?: string;
   currentStep: ActivityCreateStep;
   furthestStepIndex: number;
   draft: ActivityCreateDraft;
@@ -102,6 +104,7 @@ export function buildActivityUpsertRequest(
   draft: ActivityCreateDraft,
   imageKeys: string[],
   itineraryImageKeys: string[],
+  status: MyActivityStatus = "ACTIVE",
 ): ActivityUpsertRequest {
   const schedules = draft.schedules
     .map((schedule) => toSeoulStartAt(`${schedule.date}T${schedule.startTime}`))
@@ -126,7 +129,7 @@ export function buildActivityUpsertRequest(
       : {}),
     meetingPointName: draft.meetingPlace.trim(),
     meetingPlaceId: draft.meetingPlaceId,
-    status: "ACTIVE",
+    status,
     schedules,
     itineraries: draft.itinerary.map((item, index) => ({
       title: item.title.trim(),
@@ -253,25 +256,45 @@ function ProgressRail({
   );
 }
 
-export function CreateActivityForm() {
+export interface CreateActivityFormProps {
+  mode?: "create" | "edit";
+  /** edit 모드에서 수정할 활동 id (라우트 파라미터 그대로) */
+  activityId?: string;
+  /** edit 모드에서 기존 활동으로 채운 초기 draft */
+  initialDraft?: ActivityCreateDraft;
+  /** edit 모드에서 유지할 기존 활동 상태 */
+  initialStatus?: MyActivityStatus;
+}
+
+export function CreateActivityForm({
+  mode = "create",
+  activityId,
+  initialDraft,
+  initialStatus,
+}: Readonly<CreateActivityFormProps> = {}) {
   const t = useTranslations("CreateActivity");
   const router = useRouter();
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
-  const initialSnapshot = activityCreateLocaleSnapshot;
+  const isEdit = mode === "edit";
+  const storedSnapshot = activityCreateLocaleSnapshot;
+  const initialSnapshot =
+    storedSnapshot && storedSnapshot.mode === mode && storedSnapshot.activityId === activityId
+      ? storedSnapshot
+      : null;
   const [currentStep, setCurrentStep] = useState<ActivityCreateStep>(
     initialSnapshot?.currentStep ?? "host",
   );
   const [furthestStepIndex, setFurthestStepIndex] = useState(
-    initialSnapshot?.furthestStepIndex ?? 0,
+    initialSnapshot?.furthestStepIndex ?? (isEdit ? ACTIVITY_CREATE_STEPS.length - 1 : 0),
   );
   const [draft, setDraft] = useState<ActivityCreateDraft>(
-    initialSnapshot?.draft ?? EMPTY_ACTIVITY_DRAFT,
+    initialSnapshot?.draft ?? initialDraft ?? EMPTY_ACTIVITY_DRAFT,
   );
   const [errorKey, setErrorKey] = useState<ActivityCreateErrorKey | null>(
     initialSnapshot?.errorKey ?? null,
   );
-  const [reviewing, setReviewing] = useState(initialSnapshot?.reviewing ?? false);
+  const [reviewing, setReviewing] = useState(initialSnapshot?.reviewing ?? isEdit);
   const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
   const [submissionError, setSubmissionError] = useState<{
     error: unknown;
@@ -284,20 +307,30 @@ export function CreateActivityForm() {
   const currentIndex = getStepIndex(currentStep);
   const progressIndex = reviewing ? ACTIVITY_CREATE_STEPS.length : currentIndex + 1;
   const isSubmitting = submissionPhase !== null;
-  const createActivityMutation = useMutation({
-    mutationFn: async (request: ActivityUpsertRequest) =>
-      unwrapApiResult(await createMyActivity(request), "activity"),
+  const submitActivityMutation = useMutation({
+    mutationFn: async (request: ActivityUpsertRequest) => {
+      if (isEdit && activityId !== undefined) {
+        return unwrapApiResult(await updateMyActivity(activityId, request), "activity");
+      }
+      return unwrapApiResult(await createMyActivity(request), "activity");
+    },
     onSuccess: async () => {
-      await Promise.all([
+      const invalidations = [
         queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
         queryClient.invalidateQueries({ queryKey: buddyKeys.scheduleDates() }),
         queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
-      ]);
+      ];
+      if (isEdit && activityId !== undefined) {
+        invalidations.push(
+          queryClient.invalidateQueries({ queryKey: buddyKeys.activityDetail(activityId) }),
+        );
+      }
+      await Promise.all(invalidations);
     },
   });
   useAuthQueryRedirect(
     (submissionError?.error instanceof Error ? submissionError.error : null) ??
-      createActivityMutation.error,
+      submitActivityMutation.error,
   );
 
   useEffect(() => {
@@ -318,6 +351,8 @@ export function CreateActivityForm() {
 
   function preserveForLocaleChange() {
     activityCreateLocaleSnapshot = {
+      mode,
+      activityId,
       currentStep,
       furthestStepIndex,
       draft,
@@ -560,30 +595,47 @@ export function CreateActivityForm() {
     setSubmissionError(null);
     setSubmissionPhase("uploading");
     try {
-      const galleryFiles = draft.photos.map((photo) => photo.file);
-      const itineraryFiles = draft.itinerary
+      // 기존 이미지는 발급받았던 key를 그대로 쓰고, 새로 고른 파일만 업로드한다
+      const newGalleryFiles = draft.photos
+        .map((photo) => photo.file)
+        .filter((file): file is File => file !== null);
+      const newItineraryFiles = draft.itinerary
         .map((item) => item.photo?.file)
         .filter((file): file is File => Boolean(file));
+      const filesToUpload = [...newGalleryFiles, ...newItineraryFiles];
 
-      let uploadedImages;
-      try {
-        uploadedImages = await uploadActivityImageSet([...galleryFiles, ...itineraryFiles]);
-      } catch (error) {
-        if (error instanceof UnauthenticatedQueryError) throw error;
-        setSubmissionError({ error, fallbackKey: "imageUploadFailed" });
-        return;
+      let uploadedKeys: string[] = [];
+      if (filesToUpload.length > 0) {
+        try {
+          const uploadedImages = await uploadActivityImageSet(filesToUpload);
+          uploadedKeys = uploadedImages.map((image) => image.imageKey);
+        } catch (error) {
+          if (error instanceof UnauthenticatedQueryError) throw error;
+          setSubmissionError({ error, fallbackKey: "imageUploadFailed" });
+          return;
+        }
       }
-      const imageKeys = uploadedImages.slice(0, galleryFiles.length).map((image) => image.imageKey);
-      const itineraryImageKeys = uploadedImages
-        .slice(galleryFiles.length)
-        .map((image) => image.imageKey);
+
+      let uploadIndex = 0;
+      const imageKeys = draft.photos.map((photo) => {
+        if (photo.existingKey) return photo.existingKey;
+        if (photo.file) return uploadedKeys[uploadIndex++] ?? "";
+        return "";
+      });
+      const itineraryImageKeys = draft.itinerary.map((item) => {
+        if (item.photo?.existingKey) return item.photo.existingKey;
+        if (item.photo?.file) return uploadedKeys[uploadIndex++] ?? "";
+        return "";
+      });
 
       setSubmissionPhase("registering");
-      await createActivityMutation.mutateAsync(
-        buildActivityUpsertRequest(draft, imageKeys, itineraryImageKeys),
+      await submitActivityMutation.mutateAsync(
+        buildActivityUpsertRequest(draft, imageKeys, itineraryImageKeys, initialStatus ?? "ACTIVE"),
       );
       clearPreservedDraft();
-      router.push("/my-activities");
+      router.push(
+        isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/my-activities",
+      );
     } catch (error) {
       setSubmissionError({ error, fallbackKey: "submissionFailed" });
     } finally {
@@ -766,9 +818,15 @@ export function CreateActivityForm() {
     currentStep === "schedule";
   const currentGroup =
     STEP_GROUPS.find((group) => group.steps.some((step) => step === currentStep)) ?? STEP_GROUPS[0];
-  let primaryActionLabel = reviewing ? t("actions.finish") : t("actions.next");
+  const exitHref =
+    isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/dashboard";
+  let primaryActionLabel = reviewing
+    ? t(isEdit ? "actions.save" : "actions.finish")
+    : t("actions.next");
   if (submissionPhase === "uploading") primaryActionLabel = t("actions.submitUploading");
-  if (submissionPhase === "registering") primaryActionLabel = t("actions.submitRegistering");
+  if (submissionPhase === "registering") {
+    primaryActionLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
+  }
 
   return (
     <div className="fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-[#fff] text-ink">
@@ -793,7 +851,7 @@ export function CreateActivityForm() {
               onBeforeLocaleChange={preserveForLocaleChange}
             />
             <Link
-              href="/dashboard"
+              href={exitHref}
               onClick={clearPreservedDraft}
               className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong bg-white px-3 text-sm font-bold text-ink transition hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
             >

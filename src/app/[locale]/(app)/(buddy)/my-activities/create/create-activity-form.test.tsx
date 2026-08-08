@@ -2,12 +2,14 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import { createMyActivity } from "@/lib/api/buddy";
+import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import type { MyActivityDetailResponse } from "@/types/buddy";
 import {
   fetchGooglePlaceDetailsViaBff,
   searchGooglePlacePredictionsViaBff,
 } from "@/lib/google/places";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
+import { buildDraftFromMyActivityDetail } from "./activity-create-wizard";
 import { CreateActivityForm } from "./create-activity-form";
 
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -42,6 +44,7 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
 vi.mock("@/lib/api/buddy", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/buddy")>()),
   createMyActivity: vi.fn(),
+  updateMyActivity: vi.fn(),
 }));
 
 const mockedUsePathname = vi.mocked(usePathname);
@@ -50,6 +53,7 @@ const mockedSearchGooglePlacePredictions = vi.mocked(searchGooglePlacePrediction
 const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetailsViaBff);
 const mockedUploadActivityImageSet = vi.mocked(uploadActivityImageSet);
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
+const mockedUpdateMyActivity = vi.mocked(updateMyActivity);
 
 const createObjectUrlMock = vi.fn((file: Blob) =>
   file instanceof File ? `blob:${file.name}` : "blob:preview",
@@ -191,6 +195,7 @@ describe("CreateActivityForm", () => {
         expiresInSeconds: 300,
       })),
     );
+    mockedUpdateMyActivity.mockReset();
     mockedCreateMyActivity.mockReset();
     mockedCreateMyActivity.mockResolvedValue({
       status: "success",
@@ -629,5 +634,143 @@ describe("CreateActivityForm", () => {
     expect(screen.getByAltText("Experience photo 1").parentElement).toHaveTextContent(
       "Cover photo",
     );
+  });
+
+  function buildEditDetail(): MyActivityDetailResponse {
+    return {
+      activityId: 42,
+      title: "Seoul market walk",
+      description: "Meet local vendors and taste a neighborhood breakfast together.",
+      thumbnailImageUrl: "https://cdn.example.test/activities/cover.webp",
+      status: "ACTIVE",
+      hostIntroduction: "I have guided friends through this market for years.",
+      includedItems: ["Equipment rental"],
+      restrictionNotes: [],
+      maxCapacity: 4,
+      price: 50000,
+      currency: "KRW",
+      discountPercent: null,
+      discountEndDate: null,
+      discountedPrice: null,
+      meetingPointName: "Gwangjang Market Gate 2",
+      meetingPlaceId: "ChIJ-gwangjang",
+      images: [
+        { imageUrl: "https://cdn.example.test/activities/cover.webp", imageOrder: 0 },
+        { imageUrl: "https://cdn.example.test/activities/two.webp", imageOrder: 1 },
+        { imageUrl: "https://cdn.example.test/activities/three.webp", imageOrder: 2 },
+      ],
+      schedules: [
+        {
+          scheduleId: 7,
+          startAt: `${dateKeyA}T10:00:00+09:00`,
+          bookedCount: 0,
+          status: "OPEN",
+        },
+      ],
+      itineraries: [
+        {
+          itineraryId: 9,
+          title: "Meet market vendors",
+          description: "Taste three breakfast dishes with local vendors.",
+          durationMinutes: 60,
+          imageUrl: "https://cdn.example.test/activities/itinerary.webp",
+          itemOrder: 0,
+        },
+      ],
+    };
+  }
+
+  function renderEditForm(detail: MyActivityDetailResponse) {
+    return renderWithQueryClient(
+      <CreateActivityForm
+        mode="edit"
+        activityId="42"
+        initialDraft={buildDraftFromMyActivityDetail(detail)}
+        initialStatus={detail.status}
+      />,
+    );
+  }
+
+  it("starts edit mode in review and saves reused image keys through the update API", async () => {
+    const detail = buildEditDetail();
+    mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+
+    renderEditForm(detail);
+
+    expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
+    expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+
+    const [calledActivityId, request] = mockedUpdateMyActivity.mock.calls[0];
+    expect(calledActivityId).toBe("42");
+    expect(request).toMatchObject({
+      title: "Seoul market walk",
+      hostIntroduction: "I have guided friends through this market for years.",
+      imageKeys: ["activities/cover.webp", "activities/two.webp", "activities/three.webp"],
+      includedItems: ["Equipment rental"],
+      restrictionNotes: [],
+      maxCapacity: 4,
+      price: 50000,
+      currency: "KRW",
+      meetingPointName: "Gwangjang Market Gate 2",
+      meetingPlaceId: "ChIJ-gwangjang",
+      status: "ACTIVE",
+      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00` }],
+      itineraries: [
+        {
+          title: "Meet market vendors",
+          description: "Taste three breakfast dishes with local vendors.",
+          durationMinutes: 60,
+          imageKey: "activities/itinerary.webp",
+        },
+      ],
+    });
+    expect(request).not.toHaveProperty("discountPercent");
+    await waitFor(() => expect(routerPush).toHaveBeenCalled());
+    expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+  });
+
+  it("uploads only newly added photos in edit mode and appends their keys", async () => {
+    const detail = buildEditDetail();
+    mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+
+    renderEditForm(detail);
+
+    fireEvent.click(screen.getByRole("button", { name: "Activity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show what guests can expect" }));
+    expect(
+      screen.getByRole("heading", { name: "Show what guests can expect" }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Upload experience photos"), {
+      target: { files: [new File([new Uint8Array([9])], "new-shot.webp", { type: "image/webp" })] },
+    });
+
+    for (let step = 0; step < 9; step += 1) {
+      clickNext();
+    }
+    expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
+    expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
+    expect(mockedUploadActivityImageSet.mock.calls[0][0].map((file: File) => file.name)).toEqual([
+      "new-shot.webp",
+    ]);
+
+    const [, request] = mockedUpdateMyActivity.mock.calls[0];
+    expect(request.imageKeys).toEqual([
+      "activities/cover.webp",
+      "activities/two.webp",
+      "activities/three.webp",
+      "activities/2026/08/07/key-0.webp",
+    ]);
+    expect(request.itineraries[0].imageKey).toBe("activities/itinerary.webp");
   });
 });

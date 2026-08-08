@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { uploadActivityImages, uploadProfileImage } from "./presigned";
+import { extractImageKeyFromUrl, uploadActivityImages, uploadProfileImage } from "./presigned";
 
 function createJsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -275,5 +275,15 @@ describe("uploadActivityImages", () => {
     await expect(uploadActivityImages(files)).rejects.toThrow(
       "활동 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.",
     );
+  });
+
+  it("restores the S3 key from a served image URL", () => {
+    expect(
+      extractImageKeyFromUrl("https://static.hanbuddy.com/activities/2026/07/07/uuid.webp"),
+    ).toBe("activities/2026/07/07/uuid.webp");
+    expect(extractImageKeyFromUrl("https://cdn.example.test/profiles/photo%20one.png")).toBe(
+      "profiles/photo one.png",
+    );
+    expect(extractImageKeyFromUrl("/activities/relative.webp")).toBe("activities/relative.webp");
   });
 });

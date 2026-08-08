@@ -40,6 +40,19 @@ export function isSupportedProfileImageType(type: string): type is ProfileImageC
   return (PROFILE_IMAGE_CONTENT_TYPES as readonly string[]).includes(type);
 }
 
+/**
+ * 조회 응답의 imageUrl에서 업로드 시 발급된 S3 key를 복원한다.
+ * presigned 발급 계약상 imageUrl 경로가 곧 imageKey다 (예: https://cdn/activities/a.webp -> activities/a.webp).
+ */
+export function extractImageKeyFromUrl(imageUrl: string): string {
+  try {
+    const { pathname } = new URL(imageUrl);
+    return decodeURIComponent(pathname.replace(/^\//, ""));
+  } catch {
+    return imageUrl.replace(/^\//, "");
+  }
+}
+
 function isRequestTimeoutError(error: unknown) {
   return (
     typeof error === "object" &&

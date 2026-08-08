@@ -49,7 +49,13 @@ export function extractImageKeyFromUrl(imageUrl: string): string {
     const { pathname } = new URL(imageUrl);
     return decodeURIComponent(pathname.replace(/^\//, ""));
   } catch {
-    return imageUrl.replace(/^\//, "");
+    // 상대 경로도 절대 URL과 동일하게 디코딩해 같은 key를 돌려준다
+    const path = imageUrl.replace(/^\//, "");
+    try {
+      return decodeURIComponent(path);
+    } catch {
+      return path;
+    }
   }
 }
 

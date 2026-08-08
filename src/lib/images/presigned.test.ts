@@ -285,5 +285,7 @@ describe("uploadActivityImages", () => {
       "profiles/photo one.png",
     );
     expect(extractImageKeyFromUrl("/activities/relative.webp")).toBe("activities/relative.webp");
+    expect(extractImageKeyFromUrl("/profiles/photo%20one.png")).toBe("profiles/photo one.png");
+    expect(extractImageKeyFromUrl("/activities/broken%2.webp")).toBe("activities/broken%2.webp");
   });
 });

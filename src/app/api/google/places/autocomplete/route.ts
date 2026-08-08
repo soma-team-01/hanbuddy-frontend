@@ -11,12 +11,17 @@ interface AutocompleteBody {
 }
 
 export async function POST(request: NextRequest) {
-  let body: AutocompleteBody;
+  let parsed: unknown;
   try {
-    body = (await request.json()) as AutocompleteBody;
+    parsed = await request.json();
   } catch {
     return NextResponse.json({ message: "Invalid address search request." }, { status: 400 });
   }
+  // null 등 JSON 원시값 본문은 파싱에 성공하므로 별도로 400 처리한다
+  if (typeof parsed !== "object" || parsed === null) {
+    return NextResponse.json({ message: "Invalid address search request." }, { status: 400 });
+  }
+  const body = parsed as AutocompleteBody;
 
   const input = typeof body.input === "string" ? body.input.trim() : "";
   const locale: Locale = body.locale === "ko" ? "ko" : "en";

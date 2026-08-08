@@ -34,4 +34,16 @@ describe("POST /api/google/places/autocomplete", () => {
       referrer: "http://localhost:3000/",
     });
   });
+
+  it("rejects a JSON primitive body with 400 instead of crashing", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/google/places/autocomplete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "null",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+  });
 });

@@ -34,8 +34,10 @@ export function PhotoGalleryDialog({
 
   if (images.length === 0) return null;
 
-  const showPrevious = () => setIndex((current) => (current - 1 + images.length) % images.length);
-  const showNext = () => setIndex((current) => (current + 1) % images.length);
+  // 다이얼로그가 열린 채로 images가 짧아져도 범위를 벗어나지 않게 렌더 시점에 클램프한다
+  const safeIndex = Math.min(index, images.length - 1);
+  const showPrevious = () => setIndex((safeIndex - 1 + images.length) % images.length);
+  const showNext = () => setIndex((safeIndex + 1) % images.length);
 
   return (
     <dialog
@@ -51,7 +53,7 @@ export function PhotoGalleryDialog({
       <div className="relative flex h-full w-full flex-col">
         <div className="flex items-center justify-between px-4 py-3">
           <span className="rounded-full bg-ink/60 px-3 py-1 font-display text-sm font-bold text-white">
-            {t("photoCounter", { current: index + 1, total: images.length })}
+            {t("photoCounter", { current: safeIndex + 1, total: images.length })}
           </span>
           <button
             type="button"
@@ -64,7 +66,7 @@ export function PhotoGalleryDialog({
         </div>
         <div className="relative min-h-0 flex-1">
           <Image
-            src={images[index]}
+            src={images[safeIndex]}
             alt={alt}
             fill
             sizes="100vw"

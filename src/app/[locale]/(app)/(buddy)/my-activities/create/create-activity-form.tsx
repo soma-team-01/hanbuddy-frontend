@@ -895,8 +895,8 @@ export function CreateActivityForm({
               <ArrowLeftIcon className="size-5" />
             </button>
             <div
-              className={`mx-auto flex min-h-full w-full flex-col px-5 py-8 sm:px-8 sm:py-12 lg:px-12 ${
-                reviewing ? "max-w-7xl" : "max-w-4xl"
+              className={`mx-auto flex min-h-full w-full flex-col px-5 pb-8 sm:px-8 sm:pb-12 lg:px-12 ${
+                reviewing ? "max-w-7xl pt-16 sm:pt-20" : "max-w-4xl pt-8 sm:pt-12"
               } ${isLongStep ? "justify-start" : "justify-center"}`}
             >
               <div className={`mx-auto w-full ${reviewing ? "max-w-6xl" : "max-w-3xl"}`}>

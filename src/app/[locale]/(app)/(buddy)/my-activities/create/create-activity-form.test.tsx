@@ -50,6 +50,13 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
   updateMyActivity: vi.fn(),
 }));
 
+vi.mock("@/lib/api/useMyProfile", () => ({
+  useMyProfile: () => ({
+    status: "success",
+    profile: { name: "Jihoon Kim", profileImageUrl: null },
+  }),
+}));
+
 const mockedUsePathname = vi.mocked(usePathname);
 const mockedUseRouter = vi.mocked(useRouter);
 const mockedSearchGooglePlacePredictions = vi.mocked(searchGooglePlacePredictionsViaBff);
@@ -471,6 +478,8 @@ describe("CreateActivityForm", () => {
     expect(screen.getByTestId("activity-detail-layout")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
     expect(screen.getByText("Seoul market walk")).toBeInTheDocument();
+    // 미리보기의 호스트는 버디 본인 프로필로 표시된다
+    expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What's included" })).toBeInTheDocument();
     expect(screen.getByText("Equipment rental")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Before you join" })).not.toBeInTheDocument();

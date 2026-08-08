@@ -18,6 +18,13 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
   getMyActivity: vi.fn(),
 }));
 
+vi.mock("@/lib/api/useMyProfile", () => ({
+  useMyProfile: () => ({
+    status: "success",
+    profile: { name: "Jihoon Kim", profileImageUrl: null },
+  }),
+}));
+
 const mockedUsePathname = vi.mocked(usePathname);
 const mockedUseRouter = vi.mocked(useRouter);
 const mockedGetMyActivity = vi.mocked(getMyActivity);

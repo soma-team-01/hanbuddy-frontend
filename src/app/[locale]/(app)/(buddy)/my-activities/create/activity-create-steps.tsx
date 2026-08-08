@@ -28,6 +28,7 @@ import {
   XIcon,
 } from "@/components/ui/icons";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
+import { useMyProfile } from "@/lib/api/useMyProfile";
 import type { Locale } from "@/i18n/routing";
 import { getSeoulNowParts } from "@/lib/datetime";
 import {
@@ -1621,12 +1622,15 @@ export function ReviewStep({ draft, t }: Readonly<{ draft: ActivityCreateDraft; 
   const locale = useLocale() as Locale;
   const tActivityDetail = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
+  const profileResult = useMyProfile();
+  const profile = profileResult?.status === "success" ? profileResult.profile : null;
   // 게스트 상세 화면과 완전히 동일한 컴포넌트로 미리보기를 그린다 (예약 진입만 차단)
   const activity = buildPreviewActivityFromDraft(draft, {
     locale,
     dateTimeUnavailable: tErrors("dateTimeUnavailable"),
-    hostName: t("review.hostName"),
+    hostName: profile?.name ?? t("review.hostName"),
     hostBio: tActivityDetail("localHost"),
+    hostAvatarUrl: profile?.profileImageUrl ?? null,
   });
 
   return (

@@ -931,7 +931,9 @@ export function ScheduleStep({
     year: initialMonth.getUTCFullYear(),
     month: initialMonth.getUTCMonth(),
   });
-  const selectedDateList = [...new Set(schedules.map((schedule) => schedule.date))].sort();
+  const selectedDateList = [...new Set(schedules.map((schedule) => schedule.date))].sort((a, b) =>
+    a.localeCompare(b),
+  );
   const [focusedDate, setFocusedDate] = useState<string | null>(selectedDateList[0] ?? null);
   const [customTime, setCustomTime] = useState("");
   const selectedDates = new Set(selectedDateList);
@@ -940,7 +942,7 @@ export function ScheduleStep({
   const activeTimes = schedules
     .filter((schedule) => schedule.date === activeDate && schedule.startTime)
     .map((schedule) => schedule.startTime)
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
   // 오늘 날짜에는 Asia/Seoul 기준으로 이미 지난 시각을 추가할 수 없다
   const isPastCustomTime =
     activeDate === today.date && Boolean(customTime) && customTime <= today.time;

@@ -419,7 +419,9 @@ export function CreateActivityForm({
     startTimes: string[],
   ) {
     const existing = currentSchedules.filter((schedule) => schedule.date === date);
-    const uniqueStartTimes = [...new Set(startTimes.filter(Boolean))].sort();
+    const uniqueStartTimes = [...new Set(startTimes.filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b),
+    );
 
     if (!uniqueStartTimes.length) {
       const emptySchedule = existing.find((schedule) => !schedule.startTime);

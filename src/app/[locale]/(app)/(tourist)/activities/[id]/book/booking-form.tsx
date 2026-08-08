@@ -47,14 +47,25 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
   return sessionId ? null : "scheduleRequired";
 }
 
-export function BookingForm({ activity }: Readonly<{ activity: Activity }>) {
+export function BookingForm({
+  activity,
+  initialSessionId,
+}: Readonly<{ activity: Activity; initialSessionId?: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const locale = useLocale();
   const t = useTranslations("Booking");
   const tPayment = useTranslations("Payment");
   const getApiErrorMessage = useApiErrorMessage();
-  const [sessionId, setSessionId] = useState(activity.sessions[0]?.id ?? "");
+  const [sessionId, setSessionId] = useState(() => {
+    if (
+      initialSessionId &&
+      activity.sessions.some((session) => session.id === initialSessionId && session.spotsLeft > 0)
+    ) {
+      return initialSessionId;
+    }
+    return activity.sessions[0]?.id ?? "";
+  });
   const [guests, setGuests] = useState(2);
   const [agreed, setAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");

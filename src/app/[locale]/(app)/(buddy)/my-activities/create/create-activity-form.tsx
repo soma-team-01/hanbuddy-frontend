@@ -2,1085 +2,966 @@
 
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ImagePlusIcon, MapIcon, SearchIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
-import { useRouter } from "@/i18n/navigation";
-import type { Locale } from "@/i18n/routing";
-import { createMyActivity, previewActivityPrice } from "@/lib/api/buddy";
+import { Link, useRouter } from "@/i18n/navigation";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
+import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { toSeoulStartAt } from "@/lib/datetime";
-import { formatKrw } from "@/lib/format";
-import {
-  buildGoogleMapsEmbedUrl,
-  fetchGooglePlaceDetails,
-  getGoogleMapsApiKey,
-  type GooglePlacePrediction,
-  searchGooglePlacePredictions,
-} from "@/lib/google/places";
-import { uploadActivityImages } from "@/lib/images/presigned";
+import { uploadActivityImageSet } from "@/lib/images/presigned";
 import { activityKeys } from "@/lib/query/activities";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
-import { useAuthSessionCheck } from "@/lib/query/use-auth-session-check";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type {
-  ActivityPricePreviewRequest,
-  ActivityUpsertRequest,
-  MyActivityStatus,
-} from "@/types/buddy";
-import type messages from "@/messages/en.json";
+import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
+import {
+  ACTIVITY_CREATE_LIMITS,
+  ACTIVITY_CREATE_STEPS,
+  EMPTY_ACTIVITY_DRAFT,
+  getNextActivityCreateStep,
+  getPreviousActivityCreateStep,
+  getStepIndex,
+  type ActivityCreateDraft,
+  type ActivityCreateErrorKey,
+  type ActivityCreateStep,
+  type DiscountType,
+  type ItineraryDraft,
+  type PhotoDraft,
+  type ScheduleDraft,
+  validateActivityCreateStep,
+} from "./activity-create-wizard";
+import {
+  CapacityStep,
+  DescriptionStep,
+  DiscountStep,
+  HostStep,
+  InclusionsStep,
+  ItineraryStep,
+  MeetingStep,
+  NameStep,
+  PhotoStep,
+  PriceStep,
+  RestrictionsStep,
+  ReviewStep,
+  ScheduleStep,
+} from "./activity-create-steps";
 
-function FieldLabel({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <span className="text-sm font-medium text-ink">{children}</span>;
-}
+const MAX_EXPERIENCE_PHOTOS = ACTIVITY_CREATE_LIMITS.photos.max;
 
-const INPUT_CLASS =
-  "border-line-soft text-ink placeholder:text-muted/70 w-full rounded-2xl border bg-canvas-soft px-4 py-4 text-base";
-const ADD_ROW_BUTTON_CLASS =
-  "self-start rounded-full px-3 py-2 text-sm font-semibold text-primary-strong transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
-const INLINE_REMOVE_BUTTON_CLASS =
-  "absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger";
-const MAX_ACTIVITY_PHOTOS = 8;
-const PLACE_SEARCH_DEBOUNCE_MS = 300;
+const STEP_GROUPS = [
+  { key: "intro", steps: ["host"] },
+  { key: "activity", steps: ["name", "description", "photos", "itinerary"] },
+  { key: "operation", steps: ["meeting", "schedule", "capacity"] },
+  { key: "pricing", steps: ["price", "discount"] },
+  { key: "policy", steps: ["inclusions", "restrictions"] },
+] as const satisfies ReadonlyArray<{
+  key: "intro" | "activity" | "operation" | "pricing" | "policy";
+  steps: ReadonlyArray<ActivityCreateStep>;
+}>;
 
-interface SelectedActivityPhoto {
-  id: number;
-  file: File;
-  previewUrl: string;
-}
-
-interface LocalizedMeetingPlaceAddress {
-  locale: Locale;
-  value: string;
-}
-
-type CreateActivityStep = 1 | 2 | 3;
-type SubmissionPhase = "uploading" | "registering";
-
-const STEP_CONTENT = {
-  1: {
-    title: "steps.basicsTitle",
-    description: "steps.basicsDescription",
-  },
-  2: {
-    title: "steps.scheduleTitle",
-    description: "steps.scheduleDescription",
-  },
-  3: {
-    title: "steps.meetingTitle",
-    description: "steps.meetingDescription",
-  },
-} as const satisfies Record<CreateActivityStep, { title: string; description: string }>;
-
-const SIDEBAR_STEPS = ["basics", "details", "meeting"] as const;
-
-export type CreateActivityErrorKey = keyof (typeof messages)["CreateActivity"]["errors"];
-
-interface CreateActivityValidationInput {
-  step: CreateActivityStep;
-  selectedPhotoCount: number;
-  title: string;
-  description: string;
-  scheduleDateTimes: string[];
-  maxCapacity: string;
-  price: string;
-  meetingPlaceId: string;
-  meetingPointName: string;
-  includedItems: string[];
-}
-
-function isPositiveInteger(value: string) {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0;
-}
-
-function validateActivityBasics({
-  selectedPhotoCount,
-  title,
-  description,
-}: CreateActivityValidationInput): CreateActivityErrorKey | null {
-  if (selectedPhotoCount === 0) return "photosRequired";
-  if (!title.trim()) return "titleRequired";
-  if (!description.trim()) return "descriptionRequired";
-  return null;
-}
-
-function validateScheduleAndPricing({
-  scheduleDateTimes,
-  maxCapacity,
-  price,
-}: CreateActivityValidationInput): CreateActivityErrorKey | null {
-  if (!scheduleDateTimes.some((value) => toSeoulStartAt(value.trim()))) {
-    return "scheduleRequired";
-  }
-  if (!isPositiveInteger(maxCapacity)) return "capacityInvalid";
-  if (!isPositiveInteger(price)) return "priceInvalid";
-  return null;
-}
-
-function validateMeetingDetails({
-  meetingPlaceId,
-  meetingPointName,
-  includedItems,
-}: CreateActivityValidationInput): CreateActivityErrorKey | null {
-  if (!meetingPlaceId.trim()) return "meetingPlaceRequired";
-  if (!meetingPointName.trim()) return "meetingPointNameRequired";
-  if (!includedItems.some((value) => value.trim())) return "includedItemRequired";
-  return null;
-}
-
-const CREATE_ACTIVITY_STEP_VALIDATORS = {
-  1: validateActivityBasics,
-  2: validateScheduleAndPricing,
-  3: validateMeetingDetails,
-} satisfies Record<
-  CreateActivityStep,
-  (input: CreateActivityValidationInput) => CreateActivityErrorKey | null
+type DraftTextField = Exclude<
+  keyof ActivityCreateDraft,
+  "photos" | "itinerary" | "schedules" | "discountType" | "hasNoRestrictions"
 >;
 
-export function validateCreateActivityStep(
-  input: CreateActivityValidationInput,
-): CreateActivityErrorKey | null {
-  return CREATE_ACTIVITY_STEP_VALIDATORS[input.step](input);
+type SubmissionPhase = "uploading" | "registering";
+
+type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed";
+
+interface ActivityCreateLocaleSnapshot {
+  mode: "create" | "edit";
+  activityId?: string;
+  currentStep: ActivityCreateStep;
+  furthestStepIndex: number;
+  draft: ActivityCreateDraft;
+  errorKey: ActivityCreateErrorKey | null;
+  reviewing: boolean;
+  fileSequence: number;
+  scheduleSequence: number;
+  objectUrls: Set<string>;
 }
 
-function getNextStep(step: CreateActivityStep): CreateActivityStep {
-  return step === 1 ? 2 : 3;
+let activityCreateLocaleSnapshot: ActivityCreateLocaleSnapshot | null = null;
+
+function makeId(prefix: string, sequence: number) {
+  return `${prefix}-${Date.now()}-${sequence}`;
 }
 
-function getPreviousStep(step: CreateActivityStep): CreateActivityStep {
-  return step === 3 ? 2 : 1;
+function createPhotoDraft(file: File, id: string): PhotoDraft {
+  return { id, file, previewUrl: URL.createObjectURL(file) };
 }
 
-function getPrimaryActionLabelKey(
-  submissionPhase: SubmissionPhase | null,
-  currentStep: CreateActivityStep,
-) {
-  if (submissionPhase === "uploading") return "uploadingPhotos";
-  if (submissionPhase === "registering") return "registering";
-  return currentStep === 3 ? "registerActivity" : "next";
-}
-
-function getNextRowKey(rows: number[]) {
-  return rows.length === 0 ? 0 : Math.max(...rows) + 1;
-}
-
-function InlineRemoveButton({
-  ariaLabel,
-  title,
-  onClick,
-}: Readonly<{ ariaLabel: string; title: string; onClick: () => void }>) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      title={title}
-      onClick={onClick}
-      className={INLINE_REMOVE_BUTTON_CLASS}
-    >
-      <TrashIcon className="size-4" />
-    </button>
-  );
-}
-
-function getString(formData: FormData, name: string) {
-  const value = formData.get(name);
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function getStringList(formData: FormData, name: string) {
-  return formData
-    .getAll(name)
-    .map((value) => (typeof value === "string" ? value.trim() : ""))
+function splitDraftLines(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
     .filter(Boolean);
 }
 
-function buildSchedules(formData: FormData) {
-  return formData
-    .getAll("scheduleDateTime")
-    .map((value) => (typeof value === "string" ? value.trim() : ""))
-    .map((scheduleDateTime) => toSeoulStartAt(scheduleDateTime))
-    .map((startAt) => (startAt ? { startAt } : null))
-    .filter((schedule): schedule is { startAt: string } => schedule !== null);
+export function buildActivityUpsertRequest(
+  draft: ActivityCreateDraft,
+  imageKeys: string[],
+  itineraryImageKeys: string[],
+  status: MyActivityStatus = "ACTIVE",
+): ActivityUpsertRequest {
+  const schedules = draft.schedules
+    .map((schedule) => toSeoulStartAt(`${schedule.date}T${schedule.startTime}`))
+    .filter((startAt): startAt is string => startAt !== null)
+    .map((startAt) => ({ startAt }));
+
+  return {
+    title: draft.experienceName.trim(),
+    description: draft.experienceDescription.trim(),
+    hostIntroduction: draft.hostIntroduction.trim(),
+    imageKeys,
+    includedItems: splitDraftLines(draft.inclusions),
+    restrictionNotes: draft.hasNoRestrictions ? [] : splitDraftLines(draft.restrictions),
+    maxCapacity: Number(draft.maxGuests),
+    price: Number(draft.pricePerPerson),
+    currency: "KRW",
+    ...(draft.discountType === "limited"
+      ? {
+          discountPercent: Number(draft.discountPercent),
+          discountEndDate: draft.discountEndsAt,
+        }
+      : {}),
+    meetingPointName: draft.meetingPlace.trim(),
+    meetingPlaceId: draft.meetingPlaceId,
+    status,
+    schedules,
+    itineraries: draft.itinerary.map((item, index) => ({
+      title: item.title.trim(),
+      description: item.description.trim(),
+      durationMinutes: Number(item.durationMinutes),
+      imageKey: itineraryImageKeys[index] ?? "",
+    })),
+  };
 }
 
-async function uploadSelectedActivityImages(
-  files: File[],
-): Promise<{ imageKeys: string[]; error: null } | { imageKeys: null; error: unknown }> {
-  try {
-    const uploadedImages = await uploadActivityImages(files);
-    return { imageKeys: uploadedImages.map((image) => image.imageKey), error: null };
-  } catch (error) {
-    if (error instanceof UnauthenticatedQueryError) throw error;
-    return { imageKeys: null, error };
-  }
-}
-
-type MeetingPlaceFeedbackProps = Readonly<{
-  googleMapsApiKey: string;
-  isSearchingPlaces: boolean;
-  meetingMapUrl: string;
-  onPlaceSelect: (prediction: GooglePlacePrediction, predictionLocale: Locale) => void;
-  placePredictions: { locale: Locale; values: GooglePlacePrediction[] } | null;
-  selectedMeetingPlaceAddress: LocalizedMeetingPlaceAddress | null;
-}>;
-
-function MeetingPlaceFeedback({
-  googleMapsApiKey,
-  isSearchingPlaces,
-  meetingMapUrl,
-  onPlaceSelect,
-  placePredictions,
-  selectedMeetingPlaceAddress,
-}: MeetingPlaceFeedbackProps) {
-  const locale = useLocale();
-  const t = useTranslations("CreateActivity");
+function ProgressRail({
+  currentStep,
+  furthestStepIndex,
+  reviewing,
+  getTitle,
+  getGroupTitle,
+  isStepComplete,
+  label,
+  onNavigate,
+}: Readonly<{
+  currentStep: ActivityCreateStep;
+  furthestStepIndex: number;
+  reviewing: boolean;
+  getTitle: (step: ActivityCreateStep) => string;
+  getGroupTitle: (group: (typeof STEP_GROUPS)[number]["key"]) => string;
+  isStepComplete: (step: ActivityCreateStep) => boolean;
+  label: string;
+  onNavigate: (step: ActivityCreateStep) => void;
+}>) {
+  const currentIndex = getStepIndex(currentStep);
+  const currentGroupIndex = STEP_GROUPS.findIndex((group) =>
+    group.steps.some((step) => step === currentStep),
+  );
+  const isVisitedAndComplete = (step: ActivityCreateStep) =>
+    (reviewing || getStepIndex(step) <= furthestStepIndex) && isStepComplete(step);
+  const canNavigateForwardTo = (step: ActivityCreateStep) => {
+    const targetIndex = getStepIndex(step);
+    if (reviewing || targetIndex <= currentIndex) return true;
+    if (targetIndex > furthestStepIndex) return false;
+    return ACTIVITY_CREATE_STEPS.slice(0, targetIndex).every(isStepComplete);
+  };
 
   return (
-    <>
-      {!googleMapsApiKey ? (
-        <p className="px-1 text-xs text-muted">{t("placeSearchUnavailable")}</p>
-      ) : null}
-      {placePredictions?.locale === locale && placePredictions.values.length > 0 ? (
-        <ul
-          aria-label={t("placeResults")}
-          className="overflow-hidden rounded-xl border border-line-soft bg-panel"
-        >
-          {placePredictions.values.map((prediction) => (
-            <li key={prediction.placeId}>
+    <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-primary/15 bg-[#fff] px-7 py-9 lg:block">
+      <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase">
+        {currentIndex + 1} / {ACTIVITY_CREATE_STEPS.length}
+      </p>
+      <ol className="mt-7 space-y-3" aria-label={label}>
+        {STEP_GROUPS.map((group, index) => {
+          const isCurrent = !reviewing && index === currentGroupIndex;
+          const groupSteps: ReadonlyArray<ActivityCreateStep> = group.steps;
+          const isComplete = groupSteps.every(isVisitedAndComplete);
+          const currentInGroup = isCurrent ? groupSteps.indexOf(currentStep) + 1 : 0;
+          const groupTarget = groupSteps[0];
+          const groupDisabled = !canNavigateForwardTo(groupTarget);
+          return (
+            <li key={group.key}>
               <button
                 type="button"
-                onClick={() => onPlaceSelect(prediction, placePredictions.locale)}
-                className="flex w-full flex-col items-start px-4 py-3 text-left transition-colors hover:bg-primary-soft"
+                onClick={() => onNavigate(groupTarget)}
+                disabled={groupDisabled}
+                aria-label={getGroupTitle(group.key)}
+                aria-current={isCurrent ? "step" : undefined}
+                className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border bg-white px-3 py-2.5 text-left text-sm transition ${
+                  isCurrent
+                    ? "border-primary/70 font-bold text-ink shadow-[0_6px_18px_rgba(209,63,50,0.06)]"
+                    : "border-transparent font-medium text-muted enabled:hover:border-primary/30 enabled:hover:text-primary-strong disabled:cursor-not-allowed disabled:opacity-45"
+                }`}
               >
-                <span className="text-sm font-semibold text-ink">{prediction.mainText}</span>
-                {prediction.secondaryText ? (
-                  <span className="text-xs text-muted">{prediction.secondaryText}</span>
-                ) : null}
+                <span
+                  className={`relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${
+                    isComplete
+                      ? "border-primary bg-primary text-white"
+                      : isCurrent
+                        ? "border-primary bg-white text-primary"
+                        : "border-line-strong bg-white text-muted"
+                  }`}
+                >
+                  {isComplete ? <CheckIcon className="size-3" /> : index + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block ${isCurrent ? "text-primary-strong" : ""}`}>
+                    {getGroupTitle(group.key)}
+                  </span>
+                  {isCurrent && group.steps.length > 1 ? (
+                    <span className="mt-0.5 block truncate text-xs font-medium text-muted">
+                      {getTitle(currentStep)} · {currentInGroup}/{group.steps.length}
+                    </span>
+                  ) : null}
+                </span>
               </button>
+              {isCurrent && group.steps.length > 1 ? (
+                <ol className="mt-2 ml-6 space-y-1 border-l border-line-soft pl-4">
+                  {group.steps.map((step) => {
+                    const active = step === currentStep;
+                    const complete = isVisitedAndComplete(step);
+                    const disabled = !canNavigateForwardTo(step);
+                    return (
+                      <li key={step}>
+                        <button
+                          type="button"
+                          onClick={() => onNavigate(step)}
+                          disabled={disabled}
+                          aria-current={active ? "step" : undefined}
+                          className={`flex w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 py-2 text-left text-xs transition ${
+                            active
+                              ? "border-primary/60 font-bold text-primary-strong"
+                              : "border-transparent font-medium text-muted enabled:hover:border-primary/25 enabled:hover:text-primary-strong disabled:cursor-not-allowed disabled:opacity-45"
+                          }`}
+                        >
+                          <span>{getTitle(step)}</span>
+                          {complete ? <CheckIcon className="size-3 shrink-0 text-primary" /> : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : null}
             </li>
-          ))}
-        </ul>
-      ) : null}
-      {isSearchingPlaces ? (
-        <p className="px-1 text-xs text-muted">{t("placeSearchLoading")}</p>
-      ) : null}
-      {selectedMeetingPlaceAddress?.locale === locale ? (
-        <p className="px-1 text-xs text-muted">{selectedMeetingPlaceAddress.value}</p>
-      ) : null}
-      {meetingMapUrl ? (
-        <iframe
-          title={t("mapTitle")}
-          src={meetingMapUrl}
-          className="h-40 w-full rounded-xl border-0"
-          loading="lazy"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-        />
-      ) : (
-        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-xl bg-panel-raised text-muted">
-          <MapIcon className="size-6" />
-          <span className="text-sm">{t("mapFallback")}</span>
-        </div>
-      )}
-    </>
+          );
+        })}
+      </ol>
+    </aside>
   );
 }
 
-export function CreateActivityForm() {
+export interface CreateActivityFormProps {
+  mode?: "create" | "edit";
+  /** edit 모드에서 수정할 활동 id (라우트 파라미터 그대로) */
+  activityId?: string;
+  /** edit 모드에서 기존 활동으로 채운 초기 draft */
+  initialDraft?: ActivityCreateDraft;
+  /** edit 모드에서 유지할 기존 활동 상태 */
+  initialStatus?: MyActivityStatus;
+}
+
+export function CreateActivityForm({
+  mode = "create",
+  activityId,
+  initialDraft,
+  initialStatus,
+}: Readonly<CreateActivityFormProps> = {}) {
+  const t = useTranslations("CreateActivity");
   const router = useRouter();
   const queryClient = useQueryClient();
-  const locale = useLocale();
-  const activeLocaleRef = useRef(locale);
-  const t = useTranslations("CreateActivity");
   const getApiErrorMessage = useApiErrorMessage();
-  useAuthSessionCheck();
-  const formRef = useRef<HTMLFormElement>(null);
-  const [currentStep, setCurrentStep] = useState<CreateActivityStep>(1);
-  const [includedItems, setIncludedItems] = useState<number[]>([0]);
-  const [timeSlots, setTimeSlots] = useState<number[]>([0]);
-  const [restrictions, setRestrictions] = useState<number[]>([0]);
-  const [selectedPhotos, setSelectedPhotos] = useState<SelectedActivityPhoto[]>([]);
-  const selectedPhotosRef = useRef<SelectedActivityPhoto[]>([]);
-  const nextPhotoIdRef = useRef(0);
-  const placeSessionTokenRef = useRef<string | null>(null);
-  const selectedPlaceSessionTokenRef = useRef<{ placeId: string; sessionToken: string } | null>(
-    null,
+  const isEdit = mode === "edit";
+  const storedSnapshot = activityCreateLocaleSnapshot;
+  const initialSnapshot =
+    storedSnapshot && storedSnapshot.mode === mode && storedSnapshot.activityId === activityId
+      ? storedSnapshot
+      : null;
+  const [currentStep, setCurrentStep] = useState<ActivityCreateStep>(
+    initialSnapshot?.currentStep ?? "host",
   );
-  const placeSelectionVersionRef = useRef(0);
-  const placeSearchVersionRef = useRef(0);
-  const [meetingPlaceQuery, setMeetingPlaceQuery] = useState("");
-  const [meetingPlaceId, setMeetingPlaceId] = useState("");
-  const [selectedMeetingPlaceLabel, setSelectedMeetingPlaceLabel] = useState("");
-  const [selectedMeetingPlaceAddress, setSelectedMeetingPlaceAddress] =
-    useState<LocalizedMeetingPlaceAddress | null>(null);
-  const [placePredictions, setPlacePredictions] = useState<{
-    locale: Locale;
-    values: GooglePlacePrediction[];
-  } | null>(null);
-  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
-  const [pendingPublish, setPendingPublish] = useState<FormData | null>(null);
+  const [furthestStepIndex, setFurthestStepIndex] = useState(
+    initialSnapshot?.furthestStepIndex ?? (isEdit ? ACTIVITY_CREATE_STEPS.length - 1 : 0),
+  );
+  const [draft, setDraft] = useState<ActivityCreateDraft>(
+    initialSnapshot?.draft ?? initialDraft ?? EMPTY_ACTIVITY_DRAFT,
+  );
+  const [errorKey, setErrorKey] = useState<ActivityCreateErrorKey | null>(
+    initialSnapshot?.errorKey ?? null,
+  );
+  const [reviewing, setReviewing] = useState(initialSnapshot?.reviewing ?? isEdit);
   const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
-  const [submissionAuthError, setSubmissionAuthError] = useState<UnauthenticatedQueryError | null>(
-    null,
-  );
-  const [errorKey, setErrorKey] = useState<CreateActivityErrorKey | null>(null);
-  const [requestFailure, setRequestFailure] = useState<{
+  const [submissionError, setSubmissionError] = useState<{
     error: unknown;
-    fallbackKey: Extract<CreateActivityErrorKey, "imageUploadFailed" | "submissionFailed">;
+    fallbackKey: SubmissionFallbackKey;
   } | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
-  useEffect(() => {
-    activeLocaleRef.current = locale;
-  }, [locale]);
-  const createActivityMutation = useMutation({
-    mutationFn: async (request: ActivityUpsertRequest) =>
-      unwrapApiResult(await createMyActivity(request), "activity"),
+  const fileSequence = useRef(initialSnapshot?.fileSequence ?? 0);
+  const scheduleSequence = useRef(initialSnapshot?.scheduleSequence ?? 0);
+  const objectUrls = useRef(initialSnapshot?.objectUrls ?? new Set<string>());
+  const contentRef = useRef<HTMLDivElement>(null);
+  const currentIndex = getStepIndex(currentStep);
+  const progressIndex = reviewing ? ACTIVITY_CREATE_STEPS.length : currentIndex + 1;
+  const isSubmitting = submissionPhase !== null;
+  const submitActivityMutation = useMutation({
+    mutationFn: async (request: ActivityUpsertRequest) => {
+      if (isEdit && activityId !== undefined) {
+        return unwrapApiResult(await updateMyActivity(activityId, request), "activity");
+      }
+      return unwrapApiResult(await createMyActivity(request), "activity");
+    },
     onSuccess: async () => {
-      await Promise.all([
+      const invalidations = [
         queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
         queryClient.invalidateQueries({ queryKey: buddyKeys.scheduleDates() }),
         queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
-      ]);
-      router.push("/my-activities");
+      ];
+      if (isEdit && activityId !== undefined) {
+        invalidations.push(
+          queryClient.invalidateQueries({ queryKey: buddyKeys.activityDetail(activityId) }),
+        );
+      }
+      await Promise.all(invalidations);
     },
   });
-  const pricePreviewMutation = useMutation({
-    mutationFn: async (request: ActivityPricePreviewRequest) =>
-      unwrapApiResult(await previewActivityPrice(request), "preview"),
-  });
   useAuthQueryRedirect(
-    submissionAuthError ??
-      (requestFailure?.error instanceof Error ? requestFailure.error : null) ??
-      createActivityMutation.error ??
-      pricePreviewMutation.error,
+    (submissionError?.error instanceof Error ? submissionError.error : null) ??
+      submitActivityMutation.error,
   );
-  const googleMapsApiKey = getGoogleMapsApiKey();
-
-  function handlePriceChange() {
-    pricePreviewMutation.reset();
-  }
-
-  function handlePriceBlur(event: React.FocusEvent<HTMLInputElement>) {
-    const price = Number(event.currentTarget.value);
-
-    if (!Number.isInteger(price) || price <= 0) {
-      pricePreviewMutation.reset();
-      return;
-    }
-
-    pricePreviewMutation.mutate({ price, currency: "KRW" });
-  }
 
   useEffect(() => {
-    if (!isDirty) return;
+    const urls = objectUrls.current;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
 
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
-
-  useEffect(() => {
-    selectedPhotosRef.current = selectedPhotos;
-  }, [selectedPhotos]);
-
-  useEffect(() => {
     return () => {
-      selectedPhotosRef.current.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+      if (!activityCreateLocaleSnapshot) {
+        urls.forEach((url) => URL.revokeObjectURL(url));
+      }
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
 
-  useEffect(() => {
-    const query = meetingPlaceQuery.trim();
-    if (!query || !googleMapsApiKey || query === selectedMeetingPlaceLabel) {
+  function preserveForLocaleChange() {
+    activityCreateLocaleSnapshot = {
+      mode,
+      activityId,
+      currentStep,
+      furthestStepIndex,
+      draft,
+      errorKey,
+      reviewing,
+      fileSequence: fileSequence.current,
+      scheduleSequence: scheduleSequence.current,
+      objectUrls: new Set(objectUrls.current),
+    };
+  }
+
+  function clearPreservedDraft() {
+    activityCreateLocaleSnapshot = null;
+    objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    objectUrls.current.clear();
+  }
+
+  function updateField(field: DraftTextField, value: string) {
+    setDraft((current) => ({ ...current, [field]: value }));
+    setErrorKey(null);
+  }
+
+  function updateDiscountType(discountType: DiscountType) {
+    setDraft((current) => ({
+      ...current,
+      discountType,
+      discountPercent: discountType === "none" ? "" : current.discountPercent,
+      discountEndsAt: discountType === "none" ? "" : current.discountEndsAt,
+    }));
+    setErrorKey(null);
+  }
+
+  function updateHasNoRestrictions(hasNoRestrictions: boolean) {
+    setDraft((current) => ({
+      ...current,
+      hasNoRestrictions,
+      restrictions: hasNoRestrictions ? "" : current.restrictions,
+    }));
+    setErrorKey(null);
+  }
+
+  function toggleScheduleDate(date: string) {
+    setDraft((current) => {
+      const exists = current.schedules.some((schedule) => schedule.date === date);
+      scheduleSequence.current += 1;
+      const schedules = exists
+        ? current.schedules.filter((schedule) => schedule.date !== date)
+        : [
+            ...current.schedules,
+            {
+              id: makeId(`schedule-${date}`, scheduleSequence.current),
+              date,
+              startTime: "",
+            },
+          ].sort((a, b) => a.date.localeCompare(b.date));
+      return { ...current, schedules };
+    });
+    setErrorKey(null);
+  }
+
+  function buildSchedulesForDate(
+    currentSchedules: ScheduleDraft[],
+    date: string,
+    startTimes: string[],
+  ) {
+    const existing = currentSchedules.filter((schedule) => schedule.date === date);
+    const uniqueStartTimes = [...new Set(startTimes.filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+    if (!uniqueStartTimes.length) {
+      const emptySchedule = existing.find((schedule) => !schedule.startTime);
+      if (emptySchedule) return [emptySchedule];
+      scheduleSequence.current += 1;
+      return [
+        {
+          id: makeId(`schedule-${date}`, scheduleSequence.current),
+          date,
+          startTime: "",
+        },
+      ];
+    }
+
+    return uniqueStartTimes.map((startTime) => {
+      const matchingSchedule = existing.find((schedule) => schedule.startTime === startTime);
+      if (matchingSchedule) return matchingSchedule;
+      scheduleSequence.current += 1;
+      return {
+        id: makeId(`schedule-${date}`, scheduleSequence.current),
+        date,
+        startTime,
+      };
+    });
+  }
+
+  function setScheduleTimesForDate(date: string, startTimes: string[]) {
+    setDraft((current) => ({
+      ...current,
+      schedules: [
+        ...current.schedules.filter((schedule) => schedule.date !== date),
+        ...buildSchedulesForDate(current.schedules, date, startTimes),
+      ].sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)),
+    }));
+    setErrorKey(null);
+  }
+
+  function applyScheduleTimesToAll(sourceDate: string) {
+    setDraft((current) => {
+      const dates = [...new Set(current.schedules.map((schedule) => schedule.date))];
+      const sourceTimes = current.schedules
+        .filter((schedule) => schedule.date === sourceDate && schedule.startTime)
+        .map((schedule) => schedule.startTime);
+      if (!sourceTimes.length) return current;
+
+      return {
+        ...current,
+        schedules: dates
+          .flatMap((date) => buildSchedulesForDate(current.schedules, date, sourceTimes))
+          .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)),
+      };
+    });
+    setErrorKey(null);
+  }
+
+  function addPhotoFiles(files: FileList | null) {
+    if (!files) return;
+    const remaining = MAX_EXPERIENCE_PHOTOS - draft.photos.length;
+    const additions = Array.from(files)
+      .slice(0, remaining)
+      .map((file) => {
+        fileSequence.current += 1;
+        const photo = createPhotoDraft(file, makeId("experience-photo", fileSequence.current));
+        objectUrls.current.add(photo.previewUrl);
+        return photo;
+      });
+    setDraft((current) => ({ ...current, photos: [...current.photos, ...additions] }));
+    setErrorKey(null);
+  }
+
+  function removePhoto(id: string) {
+    setDraft((current) => {
+      const photo = current.photos.find((candidate) => candidate.id === id);
+      if (photo) {
+        URL.revokeObjectURL(photo.previewUrl);
+        objectUrls.current.delete(photo.previewUrl);
+      }
+      return { ...current, photos: current.photos.filter((candidate) => candidate.id !== id) };
+    });
+  }
+
+  function makeCoverPhoto(id: string) {
+    setDraft((current) => {
+      const selected = current.photos.find((photo) => photo.id === id);
+      if (!selected || current.photos[0]?.id === id) return current;
+      return {
+        ...current,
+        photos: [selected, ...current.photos.filter((photo) => photo.id !== id)],
+      };
+    });
+  }
+
+  function addItineraryItem() {
+    fileSequence.current += 1;
+    const item: ItineraryDraft = {
+      id: makeId("itinerary", fileSequence.current),
+      title: "",
+      description: "",
+      durationMinutes: "",
+      photo: null,
+    };
+    setDraft((current) => ({ ...current, itinerary: [...current.itinerary, item] }));
+    return item.id;
+  }
+
+  function removeItineraryItem(id: string) {
+    setDraft((current) => {
+      const item = current.itinerary.find((candidate) => candidate.id === id);
+      if (item?.photo) {
+        URL.revokeObjectURL(item.photo.previewUrl);
+        objectUrls.current.delete(item.photo.previewUrl);
+      }
+      return {
+        ...current,
+        itinerary: current.itinerary.filter((candidate) => candidate.id !== id),
+      };
+    });
+  }
+
+  function updateItineraryItem(
+    id: string,
+    field: "title" | "description" | "durationMinutes",
+    value: string,
+  ) {
+    setDraft((current) => ({
+      ...current,
+      itinerary: current.itinerary.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
+    }));
+    setErrorKey(null);
+  }
+
+  function updateItineraryPhoto(id: string, files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    fileSequence.current += 1;
+    const photo = createPhotoDraft(file, makeId("itinerary-photo", fileSequence.current));
+    objectUrls.current.add(photo.previewUrl);
+    setDraft((current) => ({
+      ...current,
+      itinerary: current.itinerary.map((item) => {
+        if (item.id !== id) return item;
+        if (item.photo) {
+          URL.revokeObjectURL(item.photo.previewUrl);
+          objectUrls.current.delete(item.photo.previewUrl);
+        }
+        return { ...item, photo };
+      }),
+    }));
+    setErrorKey(null);
+  }
+
+  function scrollToTop() {
+    contentRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
+  }
+
+  async function submitActivity() {
+    if (isSubmitting) return;
+
+    // 제출 직전 전체 단계를 한 번 더 검증해 리뷰 중 유실된 값이 있으면 해당 단계로 되돌린다
+    const invalidStep = ACTIVITY_CREATE_STEPS.find(
+      (step) => validateActivityCreateStep(step, draft) !== null,
+    );
+    if (invalidStep) {
+      setReviewing(false);
+      setCurrentStep(invalidStep);
+      setErrorKey(validateActivityCreateStep(invalidStep, draft));
+      scrollToTop();
       return;
     }
 
-    const requestVersion = ++placeSearchVersionRef.current;
-    let isMounted = true;
+    setSubmissionError(null);
+    setSubmissionPhase("uploading");
+    try {
+      // 기존 이미지는 발급받았던 key를 그대로 쓰고, 새로 고른 파일만 업로드한다
+      const newGalleryFiles = draft.photos
+        .map((photo) => photo.file)
+        .filter((file): file is File => file !== null);
+      const newItineraryFiles = draft.itinerary
+        .map((item) => item.photo?.file)
+        .filter((file): file is File => Boolean(file));
+      const filesToUpload = [...newGalleryFiles, ...newItineraryFiles];
 
-    // Places Autocomplete는 호출당 과금되므로 타이핑이 멈춘 뒤에만 요청한다
-    const timeoutId = window.setTimeout(() => {
-      placeSessionTokenRef.current ??= globalThis.crypto.randomUUID();
-      searchGooglePlacePredictions(query, googleMapsApiKey, {
-        locale,
-        fetcher: fetch,
-        sessionToken: placeSessionTokenRef.current,
-      })
-        .then((predictions) => {
-          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
-          setPlacePredictions({ locale, values: predictions });
-        })
-        .catch(() => {
-          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
-          setPlacePredictions({ locale, values: [] });
-        })
-        .finally(() => {
-          if (!isMounted || placeSearchVersionRef.current !== requestVersion) return;
-          setIsSearchingPlaces(false);
-        });
-    }, PLACE_SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      isMounted = false;
-      window.clearTimeout(timeoutId);
-    };
-  }, [googleMapsApiKey, locale, meetingPlaceQuery, selectedMeetingPlaceLabel]);
-
-  useEffect(() => {
-    if (!meetingPlaceId || !googleMapsApiKey) return;
-
-    const pendingSession = selectedPlaceSessionTokenRef.current;
-    const sessionToken =
-      pendingSession?.placeId === meetingPlaceId ? pendingSession.sessionToken : null;
-    if (sessionToken) {
-      selectedPlaceSessionTokenRef.current = null;
-    }
-
-    const requestVersion = ++placeSelectionVersionRef.current;
-    let isActive = true;
-
-    fetchGooglePlaceDetails(meetingPlaceId, googleMapsApiKey, {
-      locale,
-      fetcher: fetch,
-      ...(sessionToken ? { sessionToken } : {}),
-    })
-      .then((place) => {
-        if (
-          !isActive ||
-          placeSelectionVersionRef.current !== requestVersion ||
-          !place.formattedAddress
-        ) {
+      let uploadedKeys: string[] = [];
+      if (filesToUpload.length > 0) {
+        try {
+          const uploadedImages = await uploadActivityImageSet(filesToUpload);
+          uploadedKeys = uploadedImages.map((image) => image.imageKey);
+        } catch (error) {
+          if (error instanceof UnauthenticatedQueryError) throw error;
+          setSubmissionError({ error, fallbackKey: "imageUploadFailed" });
           return;
         }
-        setSelectedMeetingPlaceAddress({ locale, value: place.formattedAddress });
-      })
-      .catch(() => {
-        // Initial selection keeps its current-locale Autocomplete fallback. Locale refetch stays empty.
+      }
+
+      let uploadIndex = 0;
+      const imageKeys = draft.photos.map((photo) => {
+        if (photo.existingKey) return photo.existingKey;
+        if (photo.file) return uploadedKeys[uploadIndex++] ?? "";
+        return "";
+      });
+      const itineraryImageKeys = draft.itinerary.map((item) => {
+        if (item.photo?.existingKey) return item.photo.existingKey;
+        if (item.photo?.file) return uploadedKeys[uploadIndex++] ?? "";
+        return "";
       });
 
-    return () => {
-      isActive = false;
-    };
-  }, [googleMapsApiKey, locale, meetingPlaceId]);
-
-  const selectedFiles = selectedPhotos.map((photo) => photo.file);
-  const stepContent = STEP_CONTENT[currentStep];
-
-  function handleBack() {
-    // 제출 진행 중 이탈하면 업로드/등록이 백그라운드에서 계속돼 폐기했다고 착각할 수 있으므로 무시한다
-    if (submissionPhase !== null) return;
-    if (isDirty) {
-      setShowDiscardConfirm(true);
-      return;
-    }
-    router.push("/my-activities");
-  }
-
-  function validateStep(step: CreateActivityStep) {
-    const form = formRef.current;
-    if (!form) return false;
-    const formData = new FormData(form);
-    const validationError = validateCreateActivityStep({
-      step,
-      selectedPhotoCount: selectedFiles.length,
-      title: getString(formData, "title"),
-      description: getString(formData, "description"),
-      scheduleDateTimes: formData
-        .getAll("scheduleDateTime")
-        .map((value) => (typeof value === "string" ? value : "")),
-      maxCapacity: getString(formData, "maxCapacity"),
-      price: getString(formData, "price"),
-      meetingPlaceId,
-      meetingPointName: getString(formData, "meetingPointName"),
-      includedItems: formData
-        .getAll("includedItems")
-        .map((value) => (typeof value === "string" ? value : "")),
-    });
-    setRequestFailure(null);
-    setErrorKey(validationError);
-    return validationError === null;
-  }
-
-  function goToNextStep() {
-    if (!validateStep(currentStep)) return;
-    setCurrentStep(getNextStep(currentStep));
-  }
-
-  function goToPreviousStep() {
-    setRequestFailure(null);
-    setErrorKey(null);
-    setCurrentStep(getPreviousStep(currentStep));
-  }
-
-  function handleRegisterClick() {
-    if (!validateStep(3)) return;
-    const form = formRef.current;
-    if (!form) return;
-    setPendingPublish(new FormData(form));
-  }
-
-  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (currentStep === 3) {
-      handleRegisterClick();
-      return;
-    }
-    goToNextStep();
-  }
-
-  async function submitActivity(status: MyActivityStatus, formData: FormData) {
-    const meetingPointName = getString(formData, "meetingPointName");
-    const selectedMeetingPlaceId = getString(formData, "meetingPlaceId");
-
-    setErrorKey(null);
-    setRequestFailure(null);
-    setSubmissionAuthError(null);
-    setSubmissionPhase("uploading");
-
-    try {
-      const uploadedImages = await uploadSelectedActivityImages(selectedFiles);
-      if (uploadedImages.imageKeys === null) {
-        setRequestFailure({ error: uploadedImages.error, fallbackKey: "imageUploadFailed" });
-        setSubmissionPhase(null);
-        return;
-      }
       setSubmissionPhase("registering");
-      const request: ActivityUpsertRequest = {
-        title: getString(formData, "title"),
-        description: getString(formData, "description"),
-        imageKeys: uploadedImages.imageKeys,
-        includedItems: getStringList(formData, "includedItems"),
-        restrictionNotes: getStringList(formData, "restrictionNotes"),
-        maxCapacity: Number(getString(formData, "maxCapacity")),
-        price: Number(getString(formData, "price")),
-        currency: "KRW",
-        meetingPointName,
-        meetingPlaceId: selectedMeetingPlaceId,
-        status,
-        schedules: buildSchedules(formData),
-      };
-      await createActivityMutation.mutateAsync(request);
+      await submitActivityMutation.mutateAsync(
+        buildActivityUpsertRequest(draft, imageKeys, itineraryImageKeys, initialStatus ?? "ACTIVE"),
+      );
+      clearPreservedDraft();
+      router.push(
+        isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/my-activities",
+      );
     } catch (error) {
-      if (error instanceof UnauthenticatedQueryError) {
-        setSubmissionPhase(null);
-        setSubmissionAuthError(error);
-        return;
-      }
-      setRequestFailure({ error, fallbackKey: "submissionFailed" });
+      setSubmissionError({ error, fallbackKey: "submissionFailed" });
+    } finally {
       setSubmissionPhase(null);
     }
   }
 
-  function handlePlaceQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = event.target.value;
-    placeSelectionVersionRef.current += 1;
-    placeSearchVersionRef.current += 1;
-    if (!value.trim()) {
-      placeSessionTokenRef.current = null;
+  function goNext() {
+    if (isSubmitting) return;
+    if (reviewing) {
+      void submitActivity();
+      return;
     }
-    selectedPlaceSessionTokenRef.current = null;
-    setMeetingPlaceQuery(value);
-    setMeetingPlaceId("");
-    setSelectedMeetingPlaceLabel("");
-    setSelectedMeetingPlaceAddress(null);
-    setPlacePredictions(null);
-    setIsSearchingPlaces(Boolean(value.trim()) && Boolean(googleMapsApiKey));
+
+    const validationError = validateActivityCreateStep(currentStep, draft);
+    if (validationError) {
+      setErrorKey(validationError);
+      return;
+    }
+
+    if (currentStep === "restrictions") {
+      setReviewing(true);
+      setErrorKey(null);
+      scrollToTop();
+      return;
+    }
+
+    const nextStep = getNextActivityCreateStep(currentStep);
+    setFurthestStepIndex((furthest) => Math.max(furthest, getStepIndex(nextStep)));
+    setCurrentStep(nextStep);
+    setErrorKey(null);
+    scrollToTop();
   }
 
-  function handlePlaceSelect(prediction: GooglePlacePrediction, predictionLocale: Locale) {
-    if (predictionLocale !== activeLocaleRef.current) return;
-
-    const fallbackAddress =
-      prediction.secondaryText || (prediction.text !== prediction.mainText ? prediction.text : "");
-    const sessionToken = placeSessionTokenRef.current;
-    placeSelectionVersionRef.current += 1;
-    placeSessionTokenRef.current = null;
-    selectedPlaceSessionTokenRef.current = sessionToken
-      ? { placeId: prediction.placeId, sessionToken }
-      : null;
-
-    setMeetingPlaceId(prediction.placeId);
-    setMeetingPlaceQuery(prediction.mainText);
-    setSelectedMeetingPlaceLabel(prediction.mainText);
-    setSelectedMeetingPlaceAddress(
-      fallbackAddress ? { locale: predictionLocale, value: fallbackAddress } : null,
-    );
-    setPlacePredictions(null);
+  function goBack() {
+    if (isSubmitting) return;
+    if (reviewing) {
+      setReviewing(false);
+      setSubmissionError(null);
+      scrollToTop();
+      return;
+    }
+    if (currentIndex === 0) return;
+    setCurrentStep(getPreviousActivityCreateStep(currentStep));
+    setErrorKey(null);
+    scrollToTop();
   }
 
-  function handlePhotoSelection(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.currentTarget.files ?? []);
-    event.currentTarget.value = "";
-    if (files.length === 0) return;
-
-    // Strict Mode가 updater를 이중 호출해도 blob URL이 누수되지 않도록 부수효과는 updater 밖에서 수행한다
-    const remainingSlots = Math.max(MAX_ACTIVITY_PHOTOS - selectedPhotos.length, 0);
-    const acceptedFiles = files.slice(0, remainingSlots);
-    const nextPhotos = acceptedFiles.map((file) => ({
-      id: nextPhotoIdRef.current++,
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-    setSelectedPhotos((photos) => [...photos, ...nextPhotos]);
+  function navigateToStep(step: ActivityCreateStep) {
+    if (isSubmitting) return;
+    const targetIndex = getStepIndex(step);
+    if (!reviewing && targetIndex > currentIndex) {
+      const priorStepsAreComplete = ACTIVITY_CREATE_STEPS.slice(0, targetIndex).every(
+        (priorStep) => validateActivityCreateStep(priorStep, draft) === null,
+      );
+      if (targetIndex > furthestStepIndex || !priorStepsAreComplete) return;
+    }
+    setCurrentStep(step);
+    setReviewing(false);
+    setSubmissionError(null);
+    setErrorKey(null);
+    scrollToTop();
   }
 
-  function removeSelectedPhoto(photoId: number) {
-    const removedPhoto = selectedPhotos.find((photo) => photo.id === photoId);
-    if (!removedPhoto) return;
-
-    URL.revokeObjectURL(removedPhoto.previewUrl);
-    setSelectedPhotos((photos) => photos.filter((photo) => photo.id !== photoId));
-    setIsDirty(true);
+  function getStepTitle(step: ActivityCreateStep) {
+    return t(`steps.${step}.title`);
   }
 
-  function addIncludedItem() {
-    setIncludedItems((items) => [...items, getNextRowKey(items)]);
-    setIsDirty(true);
+  function renderStep() {
+    if (reviewing) return <ReviewStep draft={draft} t={t} />;
+
+    switch (currentStep) {
+      case "host":
+        return <HostStep draft={draft} onChange={updateField} t={t} />;
+      case "name":
+        return (
+          <NameStep
+            value={draft.experienceName}
+            onChange={(value) => updateField("experienceName", value)}
+            t={t}
+          />
+        );
+      case "description":
+        return (
+          <DescriptionStep
+            experienceName={draft.experienceName}
+            value={draft.experienceDescription}
+            onChange={(value) => updateField("experienceDescription", value)}
+            t={t}
+          />
+        );
+      case "photos":
+        return (
+          <PhotoStep
+            photos={draft.photos}
+            onAdd={addPhotoFiles}
+            onRemove={removePhoto}
+            onCover={makeCoverPhoto}
+            t={t}
+          />
+        );
+      case "itinerary":
+        return (
+          <ItineraryStep
+            items={draft.itinerary}
+            onAdd={addItineraryItem}
+            onRemove={removeItineraryItem}
+            onChange={updateItineraryItem}
+            onPhotoChange={updateItineraryPhoto}
+            t={t}
+          />
+        );
+      case "meeting":
+        return <MeetingStep draft={draft} onChange={updateField} t={t} />;
+      case "schedule":
+        return (
+          <ScheduleStep
+            schedules={draft.schedules}
+            onToggleDate={toggleScheduleDate}
+            onSetTimesForDate={setScheduleTimesForDate}
+            onApplyTimesToAll={applyScheduleTimesToAll}
+            t={t}
+          />
+        );
+      case "capacity":
+        return (
+          <CapacityStep
+            value={draft.maxGuests}
+            onChange={(value) => updateField("maxGuests", value)}
+            t={t}
+          />
+        );
+      case "price":
+        return (
+          <PriceStep
+            value={draft.pricePerPerson}
+            onChange={(value) => updateField("pricePerPerson", value)}
+            t={t}
+          />
+        );
+      case "inclusions":
+        return (
+          <InclusionsStep
+            value={draft.inclusions}
+            onChange={(value) => updateField("inclusions", value)}
+            t={t}
+          />
+        );
+      case "discount":
+        return (
+          <DiscountStep
+            type={draft.discountType}
+            percent={draft.discountPercent}
+            endsAt={draft.discountEndsAt}
+            onTypeChange={updateDiscountType}
+            onPercentChange={(value) => updateField("discountPercent", value)}
+            onEndsAtChange={(value) => updateField("discountEndsAt", value)}
+            t={t}
+          />
+        );
+      case "restrictions":
+        return (
+          <RestrictionsStep
+            value={draft.restrictions}
+            hasNoRestrictions={draft.hasNoRestrictions}
+            onChange={(value) => updateField("restrictions", value)}
+            onNoRestrictionsChange={updateHasNoRestrictions}
+            t={t}
+          />
+        );
+    }
   }
 
-  function removeIncludedItem(key: number) {
-    setIncludedItems((items) => items.filter((item) => item !== key));
-    setIsDirty(true);
-  }
-
-  function addTimeSlot() {
-    setTimeSlots((slots) => [...slots, getNextRowKey(slots)]);
-    setIsDirty(true);
-  }
-
-  function removeTimeSlot(key: number) {
-    setTimeSlots((slots) => slots.filter((slot) => slot !== key));
-    setIsDirty(true);
-  }
-
-  function addRestriction() {
-    setRestrictions((items) => [...items, getNextRowKey(items)]);
-    setIsDirty(true);
-  }
-
-  function removeRestriction(key: number) {
-    setRestrictions((items) => items.filter((item) => item !== key));
-    setIsDirty(true);
-  }
-
-  const isSubmitting = submissionPhase !== null;
-  const meetingMapUrl = meetingPlaceId
-    ? buildGoogleMapsEmbedUrl(meetingPlaceId, googleMapsApiKey, locale)
-    : "";
-  let errorMessage: string | null = null;
-  if (requestFailure) {
-    errorMessage = getApiErrorMessage(
-      requestFailure.error,
-      t(`errors.${requestFailure.fallbackKey}`),
-    );
-  } else if (errorKey) {
-    errorMessage = t(`errors.${errorKey}`);
+  const title = reviewing ? t("review.title") : getStepTitle(currentStep);
+  const description = reviewing ? t("review.description") : t(`steps.${currentStep}.description`);
+  const isLongStep =
+    reviewing ||
+    currentStep === "photos" ||
+    currentStep === "itinerary" ||
+    currentStep === "schedule";
+  const currentGroup =
+    STEP_GROUPS.find((group) => group.steps.some((step) => step === currentStep)) ?? STEP_GROUPS[0];
+  const exitHref =
+    isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/dashboard";
+  let primaryActionLabel = reviewing
+    ? t(isEdit ? "actions.save" : "actions.finish")
+    : t("actions.next");
+  if (submissionPhase === "uploading") primaryActionLabel = t("actions.submitUploading");
+  if (submissionPhase === "registering") {
+    primaryActionLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-canvas pb-28 lg:pb-0">
-      <PageHeader onLeftClick={handleBack} />
-      <main className="flex-1 py-6 md:py-10">
-        <PageContainer className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
-          <aside className="mb-8 hidden lg:block">
-            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-              {t("sidebarEyebrow")}
-            </p>
-            <h2 className="mt-5 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em]">
-              {t("sidebarTitle")}
-            </h2>
-            <ol className="mt-12 flex flex-col gap-4 text-sm">
-              {SIDEBAR_STEPS.map((step, index) => {
-                const stepNumber = index + 1;
-                const isCurrent = currentStep === stepNumber;
-                const isComplete = stepNumber < currentStep;
-                let stepClassName = "text-muted";
-                if (isCurrent) stepClassName = "font-bold text-ink";
-
-                let indicatorClassName = "border border-line-strong";
-                if (isComplete) indicatorClassName = "bg-success text-white";
-                if (isCurrent) indicatorClassName = "bg-primary text-white";
-
-                return (
-                  <li key={step} className={`flex items-center gap-3 ${stepClassName}`}>
-                    <span
-                      className={`flex size-8 items-center justify-center rounded-full font-display ${indicatorClassName}`}
-                    >
-                      {isComplete ? "✓" : stepNumber}
-                    </span>
-                    {t(`sidebarSteps.${step}`)}
-                  </li>
-                );
-              })}
-            </ol>
-          </aside>
-          <form
-            ref={formRef}
-            data-testid="create-activity-form"
-            noValidate
-            onSubmit={handleFormSubmit}
-            onChange={() => setIsDirty(true)}
-            className="mx-auto w-full max-w-[800px] space-y-8"
-          >
-            <div>
-              <p className="font-display text-xs font-bold tracking-widest text-primary-strong uppercase">
-                {t("steps.progress", { current: currentStep, total: 3 })}
-              </p>
-              <h1 className="mt-2 font-display text-4xl font-extrabold tracking-[-0.04em] text-ink">
-                {t(stepContent.title)}
-              </h1>
-              <p className="mt-2 text-muted">{t(stepContent.description)}</p>
-            </div>
-
-            {errorMessage ? (
-              <p
-                role="alert"
-                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-              >
-                {errorMessage}
-              </p>
-            ) : null}
-
-            <section hidden={currentStep !== 1} className="flex flex-col gap-6">
-              <div className="flex flex-col gap-3">
-                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-line-strong bg-panel/60 px-6 py-14 text-muted">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    aria-label={t("activityPhotos")}
-                    className="sr-only"
-                    onChange={handlePhotoSelection}
-                  />
-                  <ImagePlusIcon className="size-8" />
-                  <span className="font-display text-sm font-semibold text-ink">
-                    {t("uploadPhotos")}
-                  </span>
-                  <span className="text-xs">
-                    {selectedFiles.length > 0
-                      ? t("selectedPhotos", { count: selectedFiles.length })
-                      : t("photoHint")}
-                  </span>
-                </label>
-
-                {selectedPhotos.length > 0 ? (
-                  <ul aria-label={t("selectedPhotosList")} className="grid grid-cols-4 gap-2">
-                    {selectedPhotos.map((photo) => (
-                      <li
-                        key={photo.id}
-                        className="relative aspect-square overflow-hidden rounded-xl border border-line-soft bg-panel"
-                      >
-                        <Image
-                          src={photo.previewUrl}
-                          alt={photo.file.name}
-                          fill
-                          sizes="72px"
-                          unoptimized
-                          className="object-cover"
-                        />
-                        <button
-                          type="button"
-                          aria-label={t("removePhoto", { name: photo.file.name })}
-                          onClick={() => removeSelectedPhoto(photo.id)}
-                          className="absolute top-1 right-1 flex size-7 items-center justify-center rounded-full bg-ink/80 text-on-primary transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
-                        >
-                          <TrashIcon className="size-3.5" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("activityTitle")}</FieldLabel>
-                <input
-                  type="text"
-                  name="title"
-                  required
-                  placeholder={t("titlePlaceholder")}
-                  className={INPUT_CLASS}
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("description")}</FieldLabel>
-                <textarea
-                  name="description"
-                  required
-                  rows={4}
-                  placeholder={t("descriptionPlaceholder")}
-                  className={`${INPUT_CLASS} resize-none`}
-                />
-              </label>
-            </section>
-
-            <section
-              hidden={currentStep !== 2}
-              data-testid="create-activity-primary-fields"
-              className="grid gap-6 md:grid-cols-2"
+    <div className="fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-[#fff] text-ink">
+      <header className="z-20 shrink-0 border-b border-primary/15 bg-[#fff] px-5 py-3.5 sm:px-8">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Image
+              src="/images/brand/logo-borderless.webp"
+              alt=""
+              width={36}
+              height={36}
+              className="size-9 shrink-0 object-contain"
+              priority
+            />
+            <span className="truncate font-display text-lg font-extrabold tracking-[-0.04em] text-ink">
+              HanBuddy
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <LocaleSwitcher
+              className="min-h-10 px-3 sm:px-4"
+              onBeforeLocaleChange={preserveForLocaleChange}
+            />
+            <Link
+              href={exitHref}
+              onClick={clearPreservedDraft}
+              className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong bg-white px-3 text-sm font-bold text-ink transition hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
             >
-              <div className="flex flex-col gap-2 md:col-span-2">
-                <FieldLabel>{t("availability")}</FieldLabel>
-                <p className="text-xs text-muted">{t("kstNotice")}</p>
-                {timeSlots.map((key, index) => (
-                  <div key={key} className="relative">
-                    <input
-                      name="scheduleDateTime"
-                      type="datetime-local"
-                      required={index === 0}
-                      aria-label={t("availableSchedule")}
-                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                    />
-                    {index > 0 ? (
-                      <InlineRemoveButton
-                        ariaLabel={t("removeTimeSlot", { index: index + 1 })}
-                        title={t("removeTimeSlotTitle")}
-                        onClick={() => removeTimeSlot(key)}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  aria-label={t("addTimeSlot")}
-                  onClick={addTimeSlot}
-                  className={ADD_ROW_BUTTON_CLASS}
+              <LogOutIcon className="size-4" />
+              {t("actions.exit")}
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="h-1 shrink-0 bg-line-soft lg:hidden">
+        <div
+          className="h-full bg-primary transition-[width]"
+          style={{ width: `${(progressIndex / ACTIVITY_CREATE_STEPS.length) * 100}%` }}
+        />
+      </div>
+
+      <div className="flex min-h-0 flex-1">
+        <ProgressRail
+          currentStep={currentStep}
+          furthestStepIndex={furthestStepIndex}
+          reviewing={reviewing}
+          getTitle={getStepTitle}
+          getGroupTitle={(group) => t(`groups.${group}`)}
+          isStepComplete={(step) => validateActivityCreateStep(step, draft) === null}
+          label={t("progressLabel")}
+          onNavigate={navigateToStep}
+        />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main
+            ref={contentRef}
+            className="relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
+          >
+            <button
+              type="button"
+              onClick={goBack}
+              disabled={isSubmitting || (!reviewing && currentIndex === 0)}
+              aria-label={t("actions.back")}
+              className="absolute top-5 left-5 z-10 flex size-10 items-center justify-center rounded-full text-primary-strong transition hover:bg-primary-soft disabled:invisible sm:top-8 sm:left-8 lg:top-10 lg:left-10"
+            >
+              <ArrowLeftIcon className="size-5" />
+            </button>
+            <div
+              className={`mx-auto flex min-h-full w-full flex-col px-5 pb-8 sm:px-8 sm:pb-12 lg:px-12 ${
+                reviewing ? "max-w-7xl pt-16 sm:pt-20" : "max-w-4xl pt-8 sm:pt-12"
+              } ${isLongStep ? "justify-start" : "justify-center"}`}
+            >
+              <div className={`mx-auto w-full ${reviewing ? "max-w-6xl" : "max-w-3xl"}`}>
+                <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase lg:hidden">
+                  {t(`groups.${currentGroup.key}`)} ·
+                  {currentGroup.steps.findIndex((step) => step === currentStep) + 1}/
+                  {currentGroup.steps.length}
+                </p>
+                <h1
+                  aria-live="polite"
+                  className="mt-2 font-display text-2xl font-bold tracking-tight break-keep text-ink sm:text-3xl"
                 >
-                  + {t("addTimeSlot")}
-                </button>
-              </div>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("maxCapacity")}</FieldLabel>
-                <span className="relative">
-                  <UsersIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
-                  <input
-                    name="maxCapacity"
-                    type="number"
-                    min={1}
-                    required
-                    placeholder={t("capacityPlaceholder", { count: 4 })}
-                    className={`${INPUT_CLASS} pl-11`}
-                  />
-                </span>
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <FieldLabel>{t("pricePerPerson")}</FieldLabel>
-                <span className="relative">
-                  <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-base text-muted">
-                    ₩
-                  </span>
-                  <input
-                    name="price"
-                    type="number"
-                    min={1}
-                    step={1}
-                    required
-                    aria-label={t("pricePerPerson")}
-                    placeholder={t("pricePlaceholder")}
-                    className={`${INPUT_CLASS} pl-11`}
-                    onChange={handlePriceChange}
-                    onBlur={handlePriceBlur}
-                  />
-                </span>
-                {pricePreviewMutation.isPending ? (
-                  <output className="text-xs text-muted">{t("payoutLoading")}</output>
-                ) : null}
-                {pricePreviewMutation.error ? (
-                  <span
+                  {title}
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted sm:text-base sm:leading-7">
+                  {description}
+                </p>
+                <div className="mt-8 sm:mt-10">{renderStep()}</div>
+                {errorKey ? (
+                  <p
                     role="alert"
-                    aria-label={t("payoutErrorLabel")}
-                    className="text-xs text-danger"
+                    className="mt-6 rounded-xl border border-primary/20 bg-primary-soft/55 px-4 py-3 text-sm font-semibold text-primary-strong"
                   >
-                    {getApiErrorMessage(pricePreviewMutation.error, t("payoutError"))}
-                  </span>
+                    {t(`errors.${errorKey}`)}
+                  </p>
                 ) : null}
-                {pricePreviewMutation.data ? (
-                  <dl
-                    aria-label={t("payoutSummary", {
-                      amount: pricePreviewMutation.data.estimatedGuidePayoutAmountKrw,
-                    })}
-                    className="flex flex-col gap-2 rounded-xl bg-panel-raised px-4 py-3 text-sm"
+                {submissionError ? (
+                  <p
+                    role="alert"
+                    className="mt-6 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger"
                   >
-                    <div className="flex items-center justify-between text-muted">
-                      <dt>
-                        {t("platformFee", { rate: pricePreviewMutation.data.commissionRate })}
-                      </dt>
-                      <dd>
-                        {formatKrw(pricePreviewMutation.data.platformCommissionAmountKrw, locale)}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between font-semibold text-primary-strong">
-                      <dt>{t("estimatedPayout")}</dt>
-                      <dd>
-                        {formatKrw(pricePreviewMutation.data.estimatedGuidePayoutAmountKrw, locale)}
-                      </dd>
-                    </div>
-                  </dl>
+                    {getApiErrorMessage(
+                      submissionError.error,
+                      t(`errors.${submissionError.fallbackKey}`),
+                    )}
+                  </p>
                 ) : null}
-              </label>
-            </section>
-
-            <section hidden={currentStep !== 3} className="flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <FieldLabel>{t("meetingPoint")}</FieldLabel>
-                <label className="flex flex-col">
-                  <span className="relative">
-                    <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted" />
-                    <input
-                      type="text"
-                      value={meetingPlaceQuery}
-                      onChange={handlePlaceQueryChange}
-                      placeholder={t("placeSearchPlaceholder")}
-                      aria-label={t("placeSearch")}
-                      className={`${INPUT_CLASS} pl-11`}
-                    />
-                  </span>
-                </label>
-                <input type="hidden" name="meetingPlaceId" value={meetingPlaceId} />
-                <MeetingPlaceFeedback
-                  googleMapsApiKey={googleMapsApiKey}
-                  isSearchingPlaces={isSearchingPlaces}
-                  meetingMapUrl={meetingMapUrl}
-                  onPlaceSelect={handlePlaceSelect}
-                  placePredictions={placePredictions}
-                  selectedMeetingPlaceAddress={selectedMeetingPlaceAddress}
-                />
-                <label className="mt-2 flex flex-col gap-2">
-                  <FieldLabel>{t("meetingPointName")}</FieldLabel>
-                  <input
-                    name="meetingPointName"
-                    type="text"
-                    required
-                    placeholder={t("meetingPointNamePlaceholder")}
-                    aria-label={t("meetingPointName")}
-                    className={INPUT_CLASS}
-                  />
-                </label>
               </div>
+            </div>
+          </main>
 
-              <fieldset
-                aria-label={t("includedItemsCount", { count: includedItems.length })}
-                className="flex min-w-0 flex-col gap-2 border-0 p-0"
-              >
-                <FieldLabel>{t("included")}</FieldLabel>
-                {includedItems.map((key, index) => (
-                  <div key={key} className="relative">
-                    <input
-                      name="includedItems"
-                      type="text"
-                      required={index === 0}
-                      placeholder={t("includedItemPlaceholder")}
-                      aria-label={t("includedItem")}
-                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                    />
-                    {index > 0 ? (
-                      <InlineRemoveButton
-                        ariaLabel={t("removeIncludedItem", { index: index + 1 })}
-                        title={t("removeIncludedItemTitle")}
-                        onClick={() => removeIncludedItem(key)}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  aria-label={t("addIncludedItem")}
-                  onClick={addIncludedItem}
-                  className={ADD_ROW_BUTTON_CLASS}
-                >
-                  + {t("addIncludedItem")}
-                </button>
-              </fieldset>
-
-              <fieldset
-                aria-label={t("restrictionsCount", { count: restrictions.length })}
-                className="flex min-w-0 flex-col gap-2 border-0 p-0"
-              >
-                <FieldLabel>{t("restrictions")}</FieldLabel>
-                {restrictions.map((key, index) => (
-                  <div key={key} className="relative">
-                    <input
-                      name="restrictionNotes"
-                      type="text"
-                      placeholder={t("restrictionPlaceholder")}
-                      aria-label={t("restriction")}
-                      className={`${INPUT_CLASS} ${index > 0 ? "pr-12" : ""}`}
-                    />
-                    {index > 0 ? (
-                      <InlineRemoveButton
-                        ariaLabel={t("removeRestriction", { index: index + 1 })}
-                        title={t("removeRestrictionTitle")}
-                        onClick={() => removeRestriction(key)}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  aria-label={t("addRestriction")}
-                  onClick={addRestriction}
-                  className={ADD_ROW_BUTTON_CLASS}
-                >
-                  + {t("addRestriction")}
-                </button>
-              </fieldset>
-            </section>
-            <BottomActionBar>
+          <footer className="z-20 shrink-0 border-t border-primary/15 bg-[#fff] px-5 pt-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-8">
+            <div
+              className={`mx-auto flex items-center justify-end gap-3 lg:px-12 ${
+                reviewing ? "max-w-7xl" : "max-w-4xl"
+              }`}
+            >
+              <p aria-live="polite" className="sr-only">
+                {isSubmitting ? primaryActionLabel : ""}
+              </p>
               <button
                 type="button"
-                onClick={currentStep === 1 ? handleBack : goToPreviousStep}
+                onClick={goNext}
                 disabled={isSubmitting}
-                className="h-12 flex-1 rounded-xl border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-11 min-w-28 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_8px_18px_rgba(209,63,50,0.18)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-32"
               >
-                {currentStep === 1 ? t("cancel") : t("previous")}
+                {primaryActionLabel}
+                {isSubmitting ? null : <ArrowRightIcon className="size-4" />}
               </button>
-              <button
-                type="button"
-                onClick={currentStep === 3 ? handleRegisterClick : goToNextStep}
-                disabled={isSubmitting}
-                className="h-12 flex-1 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {t(getPrimaryActionLabelKey(submissionPhase, currentStep))}
-              </button>
-            </BottomActionBar>
-          </form>
-        </PageContainer>
-      </main>
-      {pendingPublish && (
-        <ConfirmDialog
-          title={t("registerTitle")}
-          description={t("registerDescription")}
-          confirmLabel={t("register")}
-          onConfirm={() => {
-            const formData = pendingPublish;
-            setPendingPublish(null);
-            void submitActivity("ACTIVE", formData);
-          }}
-          onClose={() => setPendingPublish(null)}
-        />
-      )}
-      {showDiscardConfirm && (
-        <ConfirmDialog
-          title={t("discardTitle")}
-          description={t("discardDescription")}
-          confirmLabel={t("discard")}
-          tone="danger"
-          onConfirm={() => router.push("/my-activities")}
-          onClose={() => setShowDiscardConfirm(false)}
-        />
-      )}
+            </div>
+          </footer>
+        </div>
+      </div>
     </div>
   );
 }

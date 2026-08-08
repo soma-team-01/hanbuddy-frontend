@@ -43,6 +43,7 @@ const activityDetail = {
 const activityRequest: ActivityUpsertRequest = {
   title: "Traditional Tea Tasting",
   description: "Learn Korean tea etiquette.",
+  hostIntroduction: "A tea sommelier hosting hanok tea ceremonies in Seoul.",
   imageKeys: ["activities/2026/07/07/uuid.webp"],
   includedItems: ["Tea", "Snacks"],
   restrictionNotes: [],
@@ -53,6 +54,14 @@ const activityRequest: ActivityUpsertRequest = {
   meetingPlaceId: "place-1",
   status: "ACTIVE",
   schedules: [{ startAt: "2026-07-20T10:00:00+09:00" }],
+  itineraries: [
+    {
+      title: "Tea ceremony",
+      description: "Taste seasonal Korean teas with hanok views.",
+      durationMinutes: 60,
+      imageKey: "activities/2026/07/07/uuid.webp",
+    },
+  ],
 };
 
 const applicantSummary = {

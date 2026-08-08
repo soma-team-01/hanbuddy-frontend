@@ -20,6 +20,7 @@ type Fetcher = typeof fetch;
 interface GooglePlacesOptions {
   locale: Locale;
   fetcher?: Fetcher;
+  referrer?: string;
   sessionToken?: string;
 }
 
@@ -78,7 +79,7 @@ export async function fetchGooglePlaceDetails(
   apiKey: string,
   options: GooglePlacesOptions,
 ): Promise<GooglePlaceDetails> {
-  const { locale, fetcher = fetch, sessionToken } = options;
+  const { locale, fetcher = fetch, referrer, sessionToken } = options;
   const normalizedPlaceId = normalizeGooglePlaceId(placeId);
   const trimmedApiKey = apiKey.trim();
   const trimmedSessionToken = sessionToken?.trim();
@@ -98,6 +99,7 @@ export async function fetchGooglePlaceDetails(
   const placeDetailsUrl = `${GOOGLE_PLACES_API_BASE_URL}/places/${normalizedPlaceId}?${params.toString()}`;
   const response = await fetcher(placeDetailsUrl, {
     headers: {
+      ...(referrer ? { Referer: referrer } : {}),
       "X-Goog-Api-Key": trimmedApiKey,
       "X-Goog-FieldMask": "formattedAddress",
     },
@@ -118,7 +120,7 @@ export async function searchGooglePlacePredictions(
   apiKey: string,
   options: GooglePlacesOptions,
 ): Promise<GooglePlacePrediction[]> {
-  const { locale, fetcher = fetch, sessionToken } = options;
+  const { locale, fetcher = fetch, referrer, sessionToken } = options;
   const trimmedInput = input.trim();
   const trimmedApiKey = apiKey.trim();
   const trimmedSessionToken = sessionToken?.trim();
@@ -132,6 +134,7 @@ export async function searchGooglePlacePredictions(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(referrer ? { Referer: referrer } : {}),
       "X-Goog-Api-Key": trimmedApiKey,
       "X-Goog-FieldMask":
         "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat",
@@ -172,4 +175,39 @@ export async function searchGooglePlacePredictions(
       },
     ];
   });
+}
+
+export async function searchGooglePlacePredictionsViaBff(
+  input: string,
+  locale: Locale,
+  fetcher: Fetcher = fetch,
+): Promise<GooglePlacePrediction[]> {
+  const response = await fetcher("/api/google/places/autocomplete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ input, locale }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to search Google places through the BFF.");
+  }
+
+  return (await response.json()) as GooglePlacePrediction[];
+}
+
+export async function fetchGooglePlaceDetailsViaBff(
+  placeId: string,
+  locale: Locale,
+  fetcher: Fetcher = fetch,
+): Promise<GooglePlaceDetails> {
+  const params = new URLSearchParams({ locale });
+  const response = await fetcher(
+    `/api/google/places/${encodeURIComponent(normalizeGooglePlaceId(placeId))}?${params.toString()}`,
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to load Google place details through the BFF.");
+  }
+
+  return (await response.json()) as GooglePlaceDetails;
 }

@@ -74,7 +74,7 @@ function getProtectedRouteRedirect(
   if (!isSharedProtectedRoute && !isTouristRoute && !isTouristBookingRoute && !isBuddyRoute) {
     return null;
   }
-  if (!authenticated) return "/login";
+  if (!authenticated) return userType === "BUDDY" ? "/buddy" : "/login";
   if ((isTouristRoute || isTouristBookingRoute) && userType !== "TOURIST") return homePath;
   if (isBuddyRoute && userType !== "BUDDY") return homePath;
 

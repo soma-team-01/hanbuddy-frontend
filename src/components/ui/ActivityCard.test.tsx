@@ -22,12 +22,76 @@ const activity: Activity = {
 };
 
 describe("ActivityCard", () => {
-  it("renders a responsive marketplace card using the semantic surface tokens", () => {
+  it("renders the title and per-person price without the buddy name or location", () => {
     renderWithIntl(<ActivityCard activity={activity} />);
 
-    expect(screen.getByRole("article")).toHaveClass("rounded-2xl", "border-line-soft", "bg-panel");
     expect(screen.getByRole("heading", { name: "Market walk" })).toHaveClass("text-ink");
-    expect(screen.getByText("Seoul")).toHaveClass("text-muted");
+    expect(screen.getByText("₩35,000")).toHaveClass("text-ink");
+    expect(screen.getByText("per person")).toBeInTheDocument();
+    expect(screen.queryByText("Min Buddy")).not.toBeInTheDocument();
+    expect(screen.queryByText("Seoul")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sold out")).not.toBeInTheDocument();
+  });
+
+  it("shows the discount percent chip and the signature-colored discounted price", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{ ...activity, price: 31500, originalPrice: 35000, discountPercent: 10 }}
+      />,
+    );
+
+    const struckPrice = screen.getByText("₩35,000");
+    const discountedPrice = screen.getByText("₩31,500");
+    expect(struckPrice.tagName).toBe("S");
+    expect(screen.getByText("10% off")).toHaveClass("bg-primary");
+    expect(discountedPrice).toHaveClass("text-primary");
+    expect(
+      struckPrice.compareDocumentPosition(discountedPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("replaces the discount chip with a sold-out chip when sold out", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{
+          ...activity,
+          price: 31500,
+          originalPrice: 35000,
+          discountPercent: 10,
+          isSoldOut: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Sold out")).toBeInTheDocument();
+    expect(screen.queryByText("10% off")).not.toBeInTheDocument();
+  });
+
+  it("omits the duration row when the API does not provide a duration", () => {
+    renderWithIntl(<ActivityCard activity={activity} />);
+
+    expect(screen.queryByText(/hour|min/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [30, "30min"],
+    [45, "45min"],
+    [60, "1 hour"],
+    [90, "1.5 hours"],
+    [150, "2.5 hours"],
+  ])("formats a %i minute duration as %s", (durationMinutes, expected) => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, durationMinutes }} />);
+
+    expect(screen.getByText(expected)).toBeInTheDocument();
+  });
+
+  it("localizes the duration and per-person label in Korean", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, durationMinutes: 90 }} />, {
+      locale: "ko",
+    });
+
+    expect(screen.getByText("1.5시간")).toBeInTheDocument();
+    expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 
   it("loads the card image eagerly when requested", () => {

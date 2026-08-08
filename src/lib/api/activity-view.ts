@@ -1,7 +1,8 @@
 import type { Locale } from "@/i18n/routing";
-import { formatSeoulDate, formatSeoulTime } from "@/lib/datetime";
+import { formatSeoulDate, formatSeoulTime, getSeoulDateTimeParts } from "@/lib/datetime";
 import type {
   Activity,
+  ActivityItineraryItem,
   IncludedItem,
   Session,
   TouristActivityDetail,
@@ -9,6 +10,9 @@ import type {
 } from "@/types/activity";
 
 export function mapTouristActivitySummaryToActivity(summary: TouristActivitySummary): Activity {
+  const hasActiveDiscount =
+    summary.discountedPrice !== undefined && summary.discountedPrice !== null;
+
   return {
     id: String(summary.activityId),
     title: summary.title,
@@ -18,7 +22,14 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     imageUrl: summary.thumbnailImageUrl,
     heroImageUrl: summary.thumbnailImageUrl,
     images: summary.thumbnailImageUrl ? [summary.thumbnailImageUrl] : [],
-    price: summary.price,
+    price: summary.discountedPrice ?? summary.price,
+    originalPrice: hasActiveDiscount ? summary.price : undefined,
+    discountPercent: summary.discountPercent ?? undefined,
+    durationMinutes:
+      summary.totalDurationHours != null && summary.totalDurationHours > 0
+        ? Math.round(summary.totalDurationHours * 60)
+        : undefined,
+    isSoldOut: summary.isSoldOut,
     host: {
       name: summary.buddyName,
       bio: "Local HanBuddy host",
@@ -54,16 +65,28 @@ export function mapTouristActivityDetailToActivity(
       bio: hostBio,
       avatarUrl: detail.buddyProfileImageUrl,
     },
+    hostIntroduction: detail.hostIntroduction?.trim() ? detail.hostIntroduction : undefined,
     included: detail.includedItems.map(toIncludedItem),
     restrictions: detail.restrictionNotes,
     sessions: detail.schedules.map<Session>((schedule) => {
       return {
         id: String(schedule.activityScheduleId),
+        startAt: schedule.startAt,
+        dateKey: getSeoulDateTimeParts(schedule.startAt)?.date,
         dateLabel: formatSeoulDate(schedule.startAt, locale) ?? dateTimeUnavailable,
         timeLabel: formatSeoulTime(schedule.startAt, locale) ?? "",
         spotsLeft: schedule.remainingCapacity,
       };
     }),
+    itinerary: [...(detail.itineraries ?? [])]
+      .sort((left, right) => left.itemOrder - right.itemOrder)
+      .map<ActivityItineraryItem>((item) => ({
+        id: String(item.itineraryId),
+        title: item.title,
+        description: item.description,
+        durationMinutes: item.durationMinutes,
+        imageUrl: item.imageUrl,
+      })),
     meetingPoint: {
       name: detail.meetingPointName,
       area: detail.meetingPointName,

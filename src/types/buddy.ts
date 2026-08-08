@@ -6,6 +6,17 @@ export interface ActivityScheduleRequest {
   startAt: string;
 }
 
+export interface ActivityItineraryRequest {
+  /** 1~20자 */
+  title: string;
+  /** 5~50자 */
+  description: string;
+  /** 1 이상의 정수 (분) */
+  durationMinutes: number;
+  /** Presigned URL 발급 API의 ACTIVITY 목적으로 발급받은 S3 key */
+  imageKey: string;
+}
+
 export interface ActivityPricePreviewRequest {
   price: number;
   currency: string;
@@ -20,23 +31,45 @@ export interface ActivityPricePreviewResponse {
 }
 
 export interface ActivityUpsertRequest {
+  /** 1~20자 */
   title: string;
+  /** 30~200자 */
   description: string;
+  /** 버디 본인 소개. 30~200자, 활동별 저장 */
+  hostIntroduction: string;
+  /** 최소 3장, 최대 10장. 첫 번째 이미지가 대표 이미지 */
   imageKeys: string[];
   includedItems: string[];
   restrictionNotes: string[];
+  /** 1~100 */
   maxCapacity: number;
   price: number;
   currency: string;
+  /** 1~100 (%). 할인 미사용 시 discountEndDate와 함께 생략 */
+  discountPercent?: number;
+  /** Asia/Seoul 기준 할인 종료일 (YYYY-MM-DD). 오늘 또는 이후 날짜 */
+  discountEndDate?: string;
   meetingPointName: string;
   meetingPlaceId: string;
   status: MyActivityStatus;
+  /** 최대 30개 */
   schedules: ActivityScheduleRequest[];
+  /** 최소 1개, 최대 20개 */
+  itineraries: ActivityItineraryRequest[];
 }
 
 export interface ActivityImageResponse {
   imageUrl: string;
   imageOrder: number;
+}
+
+export interface ActivityItineraryResponse {
+  itineraryId: number;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  imageUrl: string;
+  itemOrder: number;
 }
 
 export interface ActivityScheduleResponse {
@@ -56,15 +89,22 @@ export interface MyActivitySummaryResponse {
 }
 
 export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
+  hostIntroduction: string;
   includedItems: string[];
   restrictionNotes: string[];
   maxCapacity: number;
   price: number;
   currency: string;
+  /** 설정된 할인이 없으면 null. 종료일이 지난 할인도 설정값 그대로 응답 */
+  discountPercent: number | null;
+  discountEndDate: string | null;
+  /** 할인 적용가 (KRW 정수 반올림). 진행 중인 할인이 없으면 null */
+  discountedPrice: number | null;
   meetingPointName: string;
   meetingPlaceId: string;
   images: ActivityImageResponse[];
   schedules: ActivityScheduleResponse[];
+  itineraries: ActivityItineraryResponse[];
 }
 
 export interface BuddyScheduleDateResponse {

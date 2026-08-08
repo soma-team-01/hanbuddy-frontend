@@ -52,6 +52,19 @@ describe("MyActivitiesContent", () => {
     expect(screen.getByTestId("activity-records")).toHaveClass("md:grid-cols-2", "xl:grid-cols-3");
     expect(screen.getByText("Learn Korean tea etiquette.")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
+    const detailLinks = screen.getAllByRole("link", { name: "Traditional Tea Tasting" });
+    expect(detailLinks.length).toBeGreaterThanOrEqual(1);
+    for (const detailLink of detailLinks) {
+      expect(detailLink).toHaveAttribute("href", "/en/my-activities/42");
+    }
+    expect(screen.getByRole("link", { name: "Edit Traditional Tea Tasting" })).toHaveAttribute(
+      "href",
+      "/en/my-activities/42/edit",
+    );
+    expect(screen.getByRole("link", { name: "View applicants" })).toHaveAttribute(
+      "href",
+      "/en/my-activities/42/applicants",
+    );
   });
 
   it("removes an activity after a successful delete request", async () => {

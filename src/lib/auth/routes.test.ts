@@ -56,6 +56,7 @@ describe("route access redirects", () => {
     expect(getRouteAccessRedirect({ pathname: "/applications", userType: "TOURIST" })).toBe(
       "/login",
     );
+    expect(getRouteAccessRedirect({ pathname: "/dashboard", userType: "BUDDY" })).toBe("/buddy");
   });
 
   it.each([

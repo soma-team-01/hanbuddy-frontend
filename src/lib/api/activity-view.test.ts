@@ -38,6 +38,42 @@ describe("activity view adapters", () => {
     });
   });
 
+  it("keeps the list price when no discount is running", () => {
+    expect(
+      mapTouristActivitySummaryToActivity({
+        ...summary,
+        discountPercent: null,
+        discountEndDate: null,
+        discountedPrice: null,
+      }),
+    ).toMatchObject({
+      price: 45000,
+      originalPrice: undefined,
+      discountPercent: undefined,
+    });
+  });
+
+  it("maps an active discount to the discounted price, original price, and badge percent", () => {
+    const activity = mapTouristActivitySummaryToActivity({
+      ...summary,
+      discountPercent: 20,
+      discountEndDate: "2026-08-31",
+      discountedPrice: 36000,
+      isSoldOut: false,
+    });
+
+    expect(activity.price).toBe(36000);
+    expect(activity.originalPrice).toBe(45000);
+    expect(activity.discountPercent).toBe(20);
+    expect(activity.isSoldOut).toBe(false);
+  });
+
+  it("passes the sold-out flag through to the card model", () => {
+    expect(mapTouristActivitySummaryToActivity({ ...summary, isSoldOut: true })).toMatchObject({
+      isSoldOut: true,
+    });
+  });
+
   it("maps a tourist activity detail schedule ids for booking", () => {
     const activity = mapTouristActivityDetailToActivity(
       {
@@ -76,6 +112,8 @@ describe("activity view adapters", () => {
     expect(activity.sessions).toEqual([
       {
         id: "101",
+        startAt: "2026-07-18T16:30:00Z",
+        dateKey: "2026-07-19",
         dateLabel: "Jul 19, 2026",
         timeLabel: "1:30 AM",
         spotsLeft: 4,
@@ -86,6 +124,108 @@ describe("activity view adapters", () => {
       area: "Anguk Station Exit 2",
       placeId: "ChIJ-bukchon",
     });
+  });
+
+  it("converts totalDurationHours to minutes for the card duration", () => {
+    expect(
+      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: 1.5 }).durationMinutes,
+    ).toBe(90);
+    expect(
+      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: 0.5 }).durationMinutes,
+    ).toBe(30);
+  });
+
+  it("omits the duration when the response has no totalDurationHours", () => {
+    expect(mapTouristActivitySummaryToActivity(summary).durationMinutes).toBeUndefined();
+    expect(
+      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: null }).durationMinutes,
+    ).toBeUndefined();
+  });
+
+  it("passes the detail totalDurationHours through to the activity duration", () => {
+    const detail = mapTouristActivityDetailToActivity(
+      {
+        ...summary,
+        totalDurationHours: 2.5,
+        buddyId: 7,
+        includedItems: [],
+        restrictionNotes: [],
+        images: [],
+        schedules: [],
+      },
+      "Time unavailable.",
+    );
+
+    expect(detail.durationMinutes).toBe(150);
+  });
+
+  it("maps the host introduction and itinerary sorted by item order", () => {
+    const activity = mapTouristActivityDetailToActivity(
+      {
+        ...summary,
+        buddyId: 7,
+        hostIntroduction: "I have guided Bukchon walks for seven years.",
+        includedItems: [],
+        restrictionNotes: [],
+        images: [],
+        schedules: [],
+        itineraries: [
+          {
+            itineraryId: 12,
+            title: "Hanok tea break",
+            description: "Rest with warm tea in a hanok courtyard.",
+            durationMinutes: 40,
+            imageUrl: "https://static.hanbuddy.com/activities/tea.webp",
+            itemOrder: 1,
+          },
+          {
+            itineraryId: 11,
+            title: "Meet at Anguk",
+            description: "Short briefing before we start walking.",
+            durationMinutes: 20,
+            imageUrl: "https://static.hanbuddy.com/activities/anguk.webp",
+            itemOrder: 0,
+          },
+        ],
+      },
+      "Time unavailable.",
+    );
+
+    expect(activity.hostIntroduction).toBe("I have guided Bukchon walks for seven years.");
+    expect(activity.itinerary).toEqual([
+      {
+        id: "11",
+        title: "Meet at Anguk",
+        description: "Short briefing before we start walking.",
+        durationMinutes: 20,
+        imageUrl: "https://static.hanbuddy.com/activities/anguk.webp",
+      },
+      {
+        id: "12",
+        title: "Hanok tea break",
+        description: "Rest with warm tea in a hanok courtyard.",
+        durationMinutes: 40,
+        imageUrl: "https://static.hanbuddy.com/activities/tea.webp",
+      },
+    ]);
+  });
+
+  it("omits a blank host introduction and defaults to an empty itinerary", () => {
+    const activity = mapTouristActivityDetailToActivity(
+      {
+        ...summary,
+        buddyId: 7,
+        hostIntroduction: "   ",
+        includedItems: [],
+        restrictionNotes: [],
+        images: [],
+        schedules: [],
+      },
+      "Time unavailable.",
+    );
+
+    expect(activity.hostIntroduction).toBeUndefined();
+    expect(activity.itinerary).toEqual([]);
   });
 
   it("uses the supplied fallback for an invalid schedule timestamp", () => {

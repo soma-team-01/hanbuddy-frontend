@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
@@ -31,6 +31,16 @@ const mockedGetTouristActivity = vi.mocked(getTouristActivity);
 const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetails);
 const mockedGetGoogleMapsApiKey = vi.mocked(getGoogleMapsApiKey);
 
+/** Asia/Seoul 기준 offsetDays 뒤의 날짜 키 — 캘린더가 현재 달 이전을 잘라내므로 항상 미래를 쓴다 */
+function seoulDateKey(offsetDays: number) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(
+    new Date(Date.now() + offsetDays * 86_400_000),
+  );
+}
+
+const futureDateKey = seoulDateKey(7);
+const futureStartAt = `${futureDateKey}T10:00:00+09:00`;
+
 function createDeferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((resolvePromise) => {
@@ -40,26 +50,43 @@ function createDeferred<T>() {
   return { promise, resolve };
 }
 
+function buildActivityDetail() {
+  return {
+    activityId: 42,
+    title: "Bukchon Hidden Gems",
+    description: "Walk through quiet alleys with a local buddy.",
+    thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+    buddyId: 7,
+    buddyName: "Jihoon Kim",
+    buddyProfileImageUrl: null,
+    includedItems: ["Local guide"],
+    restrictionNotes: ["Comfortable shoes recommended"],
+    price: 45000,
+    currency: "KRW",
+    meetingPointName: "Anguk Station Exit 2",
+    meetingPlaceId: "ChIJ-bukchon",
+    images: [],
+    schedules: [
+      {
+        activityScheduleId: 101,
+        startAt: futureStartAt,
+        remainingCapacity: 4,
+        status: "OPEN" as const,
+      },
+      {
+        activityScheduleId: 102,
+        startAt: `${futureDateKey}T14:00:00+09:00`,
+        remainingCapacity: 2,
+        status: "OPEN" as const,
+      },
+    ],
+  };
+}
+
 function mockActivityDetail() {
   mockedGetTouristActivity.mockResolvedValue({
     status: "success",
-    activity: {
-      activityId: 42,
-      title: "Bukchon Hidden Gems",
-      description: "Walk through quiet alleys with a local buddy.",
-      thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
-      buddyId: 7,
-      buddyName: "Jihoon Kim",
-      buddyProfileImageUrl: null,
-      includedItems: [],
-      restrictionNotes: [],
-      price: 45000,
-      currency: "KRW",
-      meetingPointName: "Anguk Station Exit 2",
-      meetingPlaceId: "ChIJ-bukchon",
-      images: [],
-      schedules: [],
-    },
+    activity: { ...buildActivityDetail(), includedItems: [], restrictionNotes: [], schedules: [] },
   });
 }
 
@@ -71,36 +98,13 @@ describe("ActivityDetailContent", () => {
     mockedGetGoogleMapsApiKey.mockReturnValue("test-google-key");
   });
 
-  it("renders activity detail loaded from the API", async () => {
+  it("renders activity detail with the fixed booking bar", async () => {
     mockedFetchGooglePlaceDetails.mockResolvedValue({
       formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
     });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
-      activity: {
-        activityId: 42,
-        title: "Bukchon Hidden Gems",
-        description: "Walk through quiet alleys with a local buddy.",
-        thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
-        buddyId: 7,
-        buddyName: "Jihoon Kim",
-        buddyProfileImageUrl: null,
-        includedItems: ["Local guide"],
-        restrictionNotes: ["Comfortable shoes recommended"],
-        price: 45000,
-        currency: "KRW",
-        meetingPointName: "Anguk Station Exit 2",
-        meetingPlaceId: "ChIJ-bukchon",
-        images: [],
-        schedules: [
-          {
-            activityScheduleId: 101,
-            startAt: "2026-07-20T10:00:00+09:00",
-            remainingCapacity: 4,
-            status: "OPEN",
-          },
-        ],
-      },
+      activity: buildActivityDetail(),
     });
 
     renderWithQueryClient(<ActivityDetailContent activityId="42" />);
@@ -110,14 +114,14 @@ describe("ActivityDetailContent", () => {
       "loading",
       "eager",
     );
-    expect(screen.getByTestId("activity-detail-layout")).toHaveClass(
-      "lg:grid-cols-[minmax(0,1fr)_360px]",
-    );
-    expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
+    expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
+    expect(screen.getByText("₩45,000 per person")).toBeInTheDocument();
+    // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
+    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+    expect(screen.queryByRole("link", { name: "Book now" })).not.toBeInTheDocument();
     expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
     expect(screen.getByText("Local guide")).toBeInTheDocument();
-    expect(screen.getByText("4 spots left")).toBeInTheDocument();
-    expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
     expect(await screen.findAllByText("123 Anguk-ro, Jongno-gu, Seoul")).toHaveLength(2);
     expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith("ChIJ-bukchon", "test-google-key", {
       locale: "en",
@@ -128,65 +132,156 @@ describe("ActivityDetailContent", () => {
     );
   });
 
-  it("shows the Korean Seoul time-zone notice", async () => {
+  it("selects a calendar time slot and points Book now at that schedule", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+
+    fireEvent.click(await screen.findByTestId("date-select-box"));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(screen.getByRole("heading", { name: "Availability" })).toBeInTheDocument();
+    expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
+
+    // 가능 날짜는 미리 선택되어 시간대가 바로 보인다
+    expect(screen.getByText("Available times")).toBeInTheDocument();
+    const slot = within(dialog).getByRole("button", { name: /2:00 PM/ });
+    expect(slot).toHaveTextContent("2 spots left");
+    fireEvent.click(slot);
+
+    // 선택하면 다이얼로그가 닫히고 날짜 박스와 Book now 링크가 그 일정으로 바뀐다
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
+    expect(screen.getByRole("link", { name: "Book now" })).toHaveAttribute(
+      "href",
+      "/en/activities/42/book?scheduleId=102",
+    );
+  });
+
+  it("shows start and end times in the calendar when a duration is provided", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: { ...buildActivityDetail(), totalDurationHours: 2.25 },
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+
+    fireEvent.click(await screen.findByTestId("date-select-box"));
+
+    const dialog = await screen.findByRole("dialog");
+    // 소요시간 135분: 10:00 AM 시작 → 12:15 PM 종료
+    expect(within(dialog).getByRole("button", { name: /10:00 AM ~ 12:15 PM/ })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /2:00 PM ~ 4:15 PM/ })).toBeInTheDocument();
+  });
+
+  it("localizes the calendar flow in Korean", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />, { locale: "ko" });
+
+    expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
+    expect(screen.getByText("호스트: Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getByText("Local guide")).toBeInTheDocument();
+    expect(screen.getByText("Comfortable shoes recommended")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "포함 사항" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "신청 전 확인사항" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "만나는 장소" })).toBeInTheDocument();
+    expect(screen.getByText("1인당 ₩45,000")).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "지금 예약하기" })).toBeDisabled();
+    const dateBox = screen.getByTestId("date-select-box");
+    expect(dateBox).toHaveTextContent("날짜를 선택하세요");
+
+    fireEvent.click(dateBox);
+
+    expect(await screen.findByRole("heading", { name: "예약 가능 일정" })).toBeInTheDocument();
+    expect(screen.getByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog");
+    const slot = within(dialog).getByRole("button", { name: /오전 10:00/ });
+    expect(slot).toHaveTextContent("4자리 남음");
+    fireEvent.click(slot);
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("오전 10:00");
+    expect(screen.getByRole("link", { name: "지금 예약하기" })).toHaveAttribute(
+      "href",
+      "/ko/activities/42/book?scheduleId=101",
+    );
+    expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith("ChIJ-bukchon", "test-google-key", {
+      locale: "ko",
+    });
+  });
+
+  it("renders the itinerary timeline and host introduction when provided", async () => {
     mockedFetchGooglePlaceDetails.mockResolvedValue({
       formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
     });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
       activity: {
-        activityId: 42,
-        title: "Bukchon Hidden Gems",
-        description: "Walk through quiet alleys with a local buddy.",
-        thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
-        buddyId: 7,
-        buddyName: "Jihoon Kim",
-        buddyProfileImageUrl: null,
-        includedItems: ["Local guide"],
-        restrictionNotes: ["Comfortable shoes recommended"],
-        price: 45000,
-        currency: "KRW",
-        meetingPointName: "Anguk Station Exit 2",
-        meetingPlaceId: "ChIJ-bukchon",
-        images: [],
-        schedules: [
+        ...buildActivityDetail(),
+        totalDurationHours: 2.5,
+        hostIntroduction: "I have guided Bukchon walks for seven years and love quiet alleys.",
+        restrictionNotes: [],
+        schedules: [],
+        itineraries: [
           {
-            activityScheduleId: 101,
-            startAt: "2026-07-20T10:00:00+09:00",
-            remainingCapacity: 4,
-            status: "OPEN",
+            itineraryId: 2,
+            title: "Hanok tea break",
+            description: "Rest with warm tea in a hanok courtyard.",
+            durationMinutes: 40,
+            imageUrl: "/images/activities/tea.jpg",
+            itemOrder: 1,
+          },
+          {
+            itineraryId: 1,
+            title: "Meet at Anguk",
+            description: "Short briefing before we start walking.",
+            durationMinutes: 20,
+            imageUrl: "/images/activities/anguk.jpg",
+            itemOrder: 0,
           },
         ],
       },
     });
 
-    renderWithQueryClient(<ActivityDetailContent activityId="42" />, { locale: "ko" });
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
-    expect(screen.getByText("Walk through quiet alleys with a local buddy.")).toBeInTheDocument();
-    expect(screen.getByText("호스트: Jihoon Kim")).toBeInTheDocument();
-    expect(screen.getByText("Local guide")).toBeInTheDocument();
-    expect(screen.getByText("Comfortable shoes recommended")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "포함 사항" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "참여 제한" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "예약 가능 일정" })).toBeInTheDocument();
-    expect(screen.getByText("4자리 남음")).toBeInTheDocument();
-    expect(screen.getByText("2026. 7. 20.")).toBeInTheDocument();
-    expect(screen.getByText("오전 10:00")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "만나는 장소" })).toBeInTheDocument();
-    expect(await screen.findByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
-    expect(screen.getByText("1인당 ₩45,000")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "지금 예약하기" })).toHaveAttribute(
-      "href",
-      "/ko/activities/42/book",
-    );
-    expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith("ChIJ-bukchon", "test-google-key", {
-      locale: "ko",
-    });
-    expect(screen.getByTitle("Anguk Station Exit 2 지도")).toHaveAttribute(
-      "src",
-      "https://www.google.com/maps/embed/v1/place?key=test-google-key&q=place_id%3AChIJ-bukchon&language=ko&region=KR",
-    );
+    expect(screen.getByRole("heading", { name: "What you'll do" })).toBeInTheDocument();
+    const itineraryTitles = [
+      screen.getByRole("heading", { name: "Meet at Anguk" }),
+      screen.getByRole("heading", { name: "Hanok tea break" }),
+    ];
+    expect(
+      itineraryTitles[0].compareDocumentPosition(itineraryTitles[1]) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText("Step 1 · 20 min")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 · 40 min")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Meet your buddy" })).toBeInTheDocument();
+    expect(
+      screen.getByText("I have guided Bukchon walks for seven years and love quiet alleys."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("2.5 hours")).toBeInTheDocument();
+    // 일정이 없으면 칩 대신 안내 문구가 뜨고 Book now가 비활성화된다
+    expect(screen.getByText("No dates available yet")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
   });
 
   it("localizes Korean loading and maps the activity-not-found code", async () => {

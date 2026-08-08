@@ -6,7 +6,8 @@ export type ProfileImageContentType = (typeof PROFILE_IMAGE_CONTENT_TYPES)[numbe
 
 export const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
 export const PROFILE_IMAGE_SIZE_ERROR_MESSAGE = "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.";
-export const MAX_ACTIVITY_IMAGE_COUNT = 8;
+/** 백엔드 presigned 발급 한도와 동일 (ACTIVITY 목적, 요청당 최대 10장) */
+export const MAX_ACTIVITY_IMAGE_COUNT = 10;
 
 const PRESIGNED_REQUEST_TIMEOUT_MS = 10_000;
 const DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS = 300;
@@ -37,6 +38,25 @@ export interface PresignedImageUploadResult {
 
 export function isSupportedProfileImageType(type: string): type is ProfileImageContentType {
   return (PROFILE_IMAGE_CONTENT_TYPES as readonly string[]).includes(type);
+}
+
+/**
+ * 조회 응답의 imageUrl에서 업로드 시 발급된 S3 key를 복원한다.
+ * presigned 발급 계약상 imageUrl 경로가 곧 imageKey다 (예: https://cdn/activities/a.webp -> activities/a.webp).
+ */
+export function extractImageKeyFromUrl(imageUrl: string): string {
+  try {
+    const { pathname } = new URL(imageUrl);
+    return decodeURIComponent(pathname.replace(/^\//, ""));
+  } catch {
+    // 상대 경로도 절대 URL과 동일하게 디코딩해 같은 key를 돌려준다
+    const path = imageUrl.replace(/^\//, "");
+    try {
+      return decodeURIComponent(path);
+    } catch {
+      return path;
+    }
+  }
 }
 
 function isRequestTimeoutError(error: unknown) {
@@ -192,4 +212,39 @@ export async function uploadActivityImages(files: File[]): Promise<PresignedImag
   );
 
   return uploadTargets;
+}
+
+/**
+ * 갤러리 사진과 일정표 사진처럼 형식이 섞이거나 10장을 넘는 활동 이미지 묶음을 업로드한다.
+ * Presigned 발급은 contentType 단위·요청당 최대 10장이므로 형식별로 묶어 10장씩 나눠 발급하고,
+ * 결과는 입력 파일 순서 그대로 반환한다.
+ */
+export async function uploadActivityImageSet(files: File[]): Promise<PresignedImageItem[]> {
+  if (files.length === 0) {
+    throw new Error("활동 이미지를 선택해 주세요.");
+  }
+  for (const file of files) {
+    if (!isSupportedProfileImageType(file.type)) {
+      throw new Error("JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.");
+    }
+  }
+
+  const indexesByContentType = new Map<string, number[]>();
+  files.forEach((file, index) => {
+    const indexes = indexesByContentType.get(file.type) ?? [];
+    indexes.push(index);
+    indexesByContentType.set(file.type, indexes);
+  });
+
+  const results = new Array<PresignedImageItem>(files.length);
+  for (const indexes of indexesByContentType.values()) {
+    for (let start = 0; start < indexes.length; start += MAX_ACTIVITY_IMAGE_COUNT) {
+      const chunk = indexes.slice(start, start + MAX_ACTIVITY_IMAGE_COUNT);
+      const uploaded = await uploadActivityImages(chunk.map((index) => files[index]));
+      chunk.forEach((originalIndex, position) => {
+        results[originalIndex] = uploaded[position];
+      });
+    }
+  }
+  return results;
 }

@@ -79,11 +79,15 @@ describe("ApplicantsContent", () => {
         description: "Learn Korean tea etiquette.",
         thumbnailImageUrl: null,
         status: "ACTIVE",
+        hostIntroduction: "A tea sommelier hosting hanok tea ceremonies in Seoul.",
         includedItems: [],
         restrictionNotes: [],
         maxCapacity: 4,
         price: 50000,
         currency: "KRW",
+        discountPercent: null,
+        discountEndDate: null,
+        discountedPrice: null,
         meetingPointName: "Anguk Station",
         meetingPlaceId: "place-1",
         images: [],
@@ -95,6 +99,7 @@ describe("ApplicantsContent", () => {
             status: "OPEN",
           },
         ],
+        itineraries: [],
       },
     });
     mockedGetBuddyActivityApplications.mockResolvedValue({

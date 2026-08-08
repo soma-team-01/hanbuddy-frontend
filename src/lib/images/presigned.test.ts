@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { uploadActivityImages, uploadProfileImage } from "./presigned";
+import { extractImageKeyFromUrl, uploadActivityImages, uploadProfileImage } from "./presigned";
 
 function createJsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -249,16 +249,16 @@ describe("uploadActivityImages", () => {
     );
   });
 
-  it("rejects more than 8 activity images without calling the network", async () => {
+  it("rejects more than 10 activity images without calling the network", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     const files = Array.from(
-      { length: 9 },
+      { length: 11 },
       (_, index) => new File([new Uint8Array([index])], `${index}.webp`, { type: "image/webp" }),
     );
 
     await expect(uploadActivityImages(files)).rejects.toThrow(
-      "활동 이미지는 최대 8장까지 업로드할 수 있습니다.",
+      "활동 이미지는 최대 10장까지 업로드할 수 있습니다.",
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -275,5 +275,17 @@ describe("uploadActivityImages", () => {
     await expect(uploadActivityImages(files)).rejects.toThrow(
       "활동 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.",
     );
+  });
+
+  it("restores the S3 key from a served image URL", () => {
+    expect(
+      extractImageKeyFromUrl("https://static.hanbuddy.com/activities/2026/07/07/uuid.webp"),
+    ).toBe("activities/2026/07/07/uuid.webp");
+    expect(extractImageKeyFromUrl("https://cdn.example.test/profiles/photo%20one.png")).toBe(
+      "profiles/photo one.png",
+    );
+    expect(extractImageKeyFromUrl("/activities/relative.webp")).toBe("activities/relative.webp");
+    expect(extractImageKeyFromUrl("/profiles/photo%20one.png")).toBe("profiles/photo one.png");
+    expect(extractImageKeyFromUrl("/activities/broken%2.webp")).toBe("activities/broken%2.webp");
   });
 });

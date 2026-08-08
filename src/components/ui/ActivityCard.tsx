@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { StarIcon } from "@/components/ui/icons";
+import { ClockIcon } from "@/components/ui/icons";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
@@ -14,8 +14,8 @@ export function ActivityCard({
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
 
   return (
-    <article className="group flex w-full flex-col gap-3">
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-panel">
+    <article className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)] transition duration-200 hover:shadow-[0_14px_32px_rgba(61,45,43,0.1)]">
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-panel">
         <Image
           src={activity.imageUrl}
           alt={activity.title}
@@ -27,45 +27,50 @@ export function ActivityCard({
           }`}
         />
         {activity.isSoldOut ? (
-          <span className="absolute top-3 left-3 rounded-full bg-ink/75 px-2.5 py-1 font-display text-xs font-bold text-white backdrop-blur-[2px]">
+          <span className="absolute top-3 left-3 rounded-full bg-ink/80 px-2.5 py-1 font-display text-xs font-bold text-white backdrop-blur-[2px]">
             {t("soldOut")}
           </span>
         ) : hasDiscount && activity.discountPercent ? (
-          <span className="absolute top-3 left-3 rounded-full bg-canvas-soft/95 px-2.5 py-1 font-display text-xs font-bold text-primary-strong shadow-sm backdrop-blur-[2px]">
+          <span className="absolute top-3 left-3 rounded-full bg-primary px-2.5 py-1 font-display text-xs font-bold text-on-primary shadow-sm">
             {t("discountBadge", { percent: activity.discountPercent })}
           </span>
         ) : null}
-        {activity.rating !== undefined ? (
-          <span className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-canvas-soft/90 px-2.5 py-1 text-ink shadow-sm backdrop-blur-[2px]">
-            <StarIcon className="size-3.5" />
-            <span className="font-display text-xs font-semibold">{activity.rating.toFixed(2)}</span>
-          </span>
-        ) : null}
       </div>
-      <div className="flex min-w-0 flex-col gap-0.5 px-0.5">
-        <h2 className="truncate font-display text-[15px] leading-6 font-semibold text-ink">
+
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
           {activity.title}
         </h2>
-        <p className="truncate text-sm leading-5 text-muted">
-          {activity.host.name} · {activity.location}
-        </p>
-        <p className="flex flex-wrap items-baseline gap-x-1.5 pt-1 text-[15px] leading-6">
+
+        {activity.durationMinutes !== undefined ? (
+          <p className="flex items-center gap-1.5 text-sm leading-5 text-muted">
+            <ClockIcon className="size-4 shrink-0" />
+            <span>{formatDuration(t, activity.durationMinutes)}</span>
+          </p>
+        ) : null}
+
+        <div className="mt-auto flex flex-col items-end gap-0.5 text-right">
           {hasDiscount ? (
-            <>
-              <s className="text-sm text-muted">
-                {formatKrw(activity.originalPrice ?? activity.price, locale)}
-              </s>
-              <span className="font-display font-bold text-primary-strong">
-                {t("perPerson", { price: formatKrw(activity.price, locale) })}
-              </span>
-            </>
-          ) : (
-            <span className="font-display font-bold text-ink">
-              {t("perPerson", { price: formatKrw(activity.price, locale) })}
-            </span>
-          )}
-        </p>
+            <s className="text-xs leading-4 text-muted">
+              {formatKrw(activity.originalPrice ?? activity.price, locale)}
+            </s>
+          ) : null}
+          <p
+            className={`font-display text-xl leading-7 ${
+              hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
+            }`}
+          >
+            {formatKrw(activity.price, locale)}
+          </p>
+          <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
+        </div>
       </div>
     </article>
   );
+}
+
+function formatDuration(t: ReturnType<typeof useTranslations<"Explore">>, minutes: number): string {
+  if (minutes < 60) return t("durationMinutes", { minutes });
+
+  return t("durationHours", { hours: minutes / 60 });
 }

@@ -47,6 +47,7 @@ import {
   type PhotoDraft,
   type ScheduleDraft,
 } from "./activity-create-wizard";
+import { getPresetLabelVariants, getPresetLineSet } from "./preset-labels";
 
 type Translator = ReturnType<typeof useTranslations<"CreateActivity">>;
 
@@ -1259,11 +1260,20 @@ export function InclusionsStep({
 }: Readonly<{ value: string; onChange: (value: string) => void; t: Translator }>) {
   const [customInput, setCustomInput] = useState("");
   const lines = getLines(value);
-  const optionLabels = INCLUSION_OPTIONS.map(({ key }) => t(`inclusions.options.${key}`));
-  const customItems = lines.filter((line) => !optionLabels.includes(line));
+  const presetLines = getPresetLineSet(
+    "inclusions",
+    INCLUSION_OPTIONS.map(({ key }) => key),
+  );
+  const customItems = lines.filter((line) => !presetLines.has(line));
 
-  function toggle(label: string) {
-    const next = lines.includes(label) ? lines.filter((line) => line !== label) : [...lines, label];
+  function isPresetSelected(key: string) {
+    return getPresetLabelVariants("inclusions", key).some((variant) => lines.includes(variant));
+  }
+
+  function toggle(key: string, label: string) {
+    const variants = new Set(getPresetLabelVariants("inclusions", key));
+    const withoutPreset = lines.filter((line) => !variants.has(line));
+    const next = withoutPreset.length === lines.length ? [...lines, label] : withoutPreset;
     onChange(next.join("\n"));
   }
 
@@ -1283,13 +1293,13 @@ export function InclusionsStep({
       <div className="grid gap-3 sm:grid-cols-2">
         {INCLUSION_OPTIONS.map(({ key, Icon }) => {
           const label = t(`inclusions.options.${key}`);
-          const selected = lines.includes(label);
+          const selected = isPresetSelected(key);
           return (
             <button
               key={key}
               type="button"
               aria-pressed={selected}
-              onClick={() => toggle(label)}
+              onClick={() => toggle(key, label)}
               className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition ${
                 selected
                   ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-[0_6px_18px_rgba(5,150,105,0.12)]"
@@ -1480,12 +1490,21 @@ export function RestrictionsStep({
 }>) {
   const [input, setInput] = useState("");
   const lines = getLines(value);
-  const optionLabels = RESTRICTION_OPTIONS.map(({ key }) => t(`restrictions.options.${key}`));
-  const customItems = lines.filter((line) => !optionLabels.includes(line));
+  const presetLines = getPresetLineSet(
+    "restrictions",
+    RESTRICTION_OPTIONS.map(({ key }) => key),
+  );
+  const customItems = lines.filter((line) => !presetLines.has(line));
 
-  function toggle(label: string) {
+  function isPresetSelected(key: string) {
+    return getPresetLabelVariants("restrictions", key).some((variant) => lines.includes(variant));
+  }
+
+  function toggle(key: string, label: string) {
     if (hasNoRestrictions) return;
-    const next = lines.includes(label) ? lines.filter((line) => line !== label) : [...lines, label];
+    const variants = new Set(getPresetLabelVariants("restrictions", key));
+    const withoutPreset = lines.filter((line) => !variants.has(line));
+    const next = withoutPreset.length === lines.length ? [...lines, label] : withoutPreset;
     onChange(next.join("\n"));
   }
 
@@ -1529,14 +1548,14 @@ export function RestrictionsStep({
         <div className="grid gap-3 sm:grid-cols-2">
           {RESTRICTION_OPTIONS.map(({ key, Icon }) => {
             const label = t(`restrictions.options.${key}`);
-            const selected = lines.includes(label);
+            const selected = isPresetSelected(key);
             return (
               <button
                 key={key}
                 type="button"
                 disabled={hasNoRestrictions}
                 aria-pressed={selected}
-                onClick={() => toggle(label)}
+                onClick={() => toggle(key, label)}
                 className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition ${
                   selected
                     ? "border-primary bg-primary-soft text-primary-strong shadow-[0_6px_18px_rgba(209,63,50,0.12)]"

@@ -17,9 +17,11 @@ export function RouteShell({
   sessionRole?: SiteNavRole | null;
 }>) {
   const pathname = usePathname() ?? "";
-  const isActivityCreation = pathname === "/my-activities/create";
+  // 활동 생성·수정은 전체 화면 위저드라 전역 헤더/푸터를 렌더링하지 않는다
+  const isFullScreenActivityForm =
+    pathname === "/my-activities/create" || /^\/my-activities\/[^/]+\/edit$/.test(pathname);
 
-  if (isActivityCreation) {
+  if (isFullScreenActivityForm) {
     return <SessionRoleProvider role={sessionRole}>{children}</SessionRoleProvider>;
   }
 

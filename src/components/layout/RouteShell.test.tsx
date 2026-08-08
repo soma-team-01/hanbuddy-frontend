@@ -39,4 +39,31 @@ describe("RouteShell", () => {
     expect(screen.queryByText("Header")).not.toBeInTheDocument();
     expect(screen.queryByText("Footer")).not.toBeInTheDocument();
   });
+
+  it("removes the shared header and footer from activity editing", () => {
+    navigation.pathname = "/my-activities/42/edit";
+
+    render(
+      <RouteShell header={<div>Header</div>} footer={<div>Footer</div>}>
+        <main>Edit flow</main>
+      </RouteShell>,
+    );
+
+    expect(screen.getByText("Edit flow")).toBeInTheDocument();
+    expect(screen.queryByText("Header")).not.toBeInTheDocument();
+    expect(screen.queryByText("Footer")).not.toBeInTheDocument();
+  });
+
+  it("keeps the site chrome on the buddy activity detail route", () => {
+    navigation.pathname = "/my-activities/42";
+
+    render(
+      <RouteShell header={<div>Header</div>} footer={<div>Footer</div>}>
+        <main>Detail</main>
+      </RouteShell>,
+    );
+
+    expect(screen.getByText("Header")).toBeInTheDocument();
+    expect(screen.getByText("Footer")).toBeInTheDocument();
+  });
 });

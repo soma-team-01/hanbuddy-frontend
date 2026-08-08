@@ -1325,6 +1325,8 @@ export function InclusionsStep({
             value={customInput}
             onChange={(event) => setCustomInput(event.target.value)}
             onKeyDown={(event) => {
+              // 한글 조합 중 Enter는 후보 확정 키이므로 항목 추가로 처리하지 않는다
+              if (event.nativeEvent.isComposing) return;
               if (event.key === "Enter") {
                 event.preventDefault();
                 addCustomItem();
@@ -1572,6 +1574,8 @@ export function RestrictionsStep({
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
+                // 한글 조합 중 Enter는 후보 확정 키이므로 항목 추가로 처리하지 않는다
+                if (event.nativeEvent.isComposing) return;
                 if (event.key !== "Enter") return;
                 event.preventDefault();
                 addRestriction();

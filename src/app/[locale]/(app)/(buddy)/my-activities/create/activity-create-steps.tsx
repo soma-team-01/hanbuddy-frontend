@@ -27,9 +27,9 @@ import {
   UtensilsIcon,
   XIcon,
 } from "@/components/ui/icons";
+import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
 import type { Locale } from "@/i18n/routing";
 import { getSeoulNowParts } from "@/lib/datetime";
-import { formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetailsViaBff,
@@ -39,6 +39,7 @@ import {
 } from "@/lib/google/places";
 import {
   ACTIVITY_CREATE_LIMITS,
+  buildPreviewActivityFromDraft,
   type ActivityCreateDraft,
   type DiscountType,
   type ItineraryDraft,
@@ -391,13 +392,18 @@ export function ItineraryStep({
               <span className="block text-xs font-bold tracking-[0.12em] text-primary uppercase">
                 {t("itinerary.item", { index: index + 1 })}
               </span>
-              <span className="mt-1 block truncate font-display text-base font-bold text-ink">
-                {item.title || t("itinerary.untitled")}
+              <span className="mt-1 flex min-w-0 items-baseline gap-2">
+                <span className="truncate font-display text-base font-bold text-ink">
+                  {item.title || t("itinerary.untitled")}
+                </span>
+                {item.durationMinutes ? (
+                  <span className="shrink-0 text-xs font-semibold text-muted">
+                    {t("itinerary.durationSummary", { minutes: Number(item.durationMinutes) })}
+                  </span>
+                ) : null}
               </span>
-              <span className="mt-1 block truncate text-sm text-muted">
-                {item.durationMinutes
-                  ? t("itinerary.durationSummary", { minutes: Number(item.durationMinutes) })
-                  : t("itinerary.incomplete")}
+              <span className="mt-1 line-clamp-2 block text-sm text-muted">
+                {item.description || t("itinerary.incomplete")}
               </span>
             </button>
             <div className="flex shrink-0 items-center gap-1">
@@ -1613,233 +1619,19 @@ export function RestrictionsStep({
 
 export function ReviewStep({ draft, t }: Readonly<{ draft: ActivityCreateDraft; t: Translator }>) {
   const locale = useLocale() as Locale;
-  const inclusionItems = getLines(draft.inclusions);
-  const restrictionItems = getLines(draft.restrictions);
-  const coverPhoto = draft.photos[0];
-  const mapUrl = draft.meetingPlaceId
-    ? buildGoogleMapsEmbedUrl(draft.meetingPlaceId, getGoogleMapsApiKey(), locale)
-    : "";
-  const originalPrice = Number(draft.pricePerPerson);
-  const discountPercent = draft.discountType === "limited" ? Number(draft.discountPercent) : 0;
-  const previewPrice = Math.round(originalPrice * (1 - discountPercent / 100));
-
-  function formatTime(time: string) {
-    const [hour, minute] = time.split(":").map(Number);
-    return new Intl.DateTimeFormat(locale, {
-      hour: "numeric",
-      minute: "2-digit",
-      timeZone: "UTC",
-    }).format(new Date(Date.UTC(2024, 0, 1, hour, minute)));
-  }
+  const tActivityDetail = useTranslations("ActivityDetail");
+  const tErrors = useTranslations("Errors");
+  // 게스트 상세 화면과 완전히 동일한 컴포넌트로 미리보기를 그린다 (예약 진입만 차단)
+  const activity = buildPreviewActivityFromDraft(draft, {
+    locale,
+    dateTimeUnavailable: tErrors("dateTimeUnavailable"),
+    hostName: t("review.hostName"),
+    hostBio: tActivityDetail("localHost"),
+  });
 
   return (
-    <main
-      data-testid="activity-detail-preview"
-      className="grid gap-8 pb-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
-    >
-      <article className="min-w-0">
-        <div className="grid h-[320px] grid-cols-2 gap-2 overflow-hidden rounded-3xl md:h-[390px] md:grid-cols-[1.4fr_0.6fr]">
-          <div className="relative row-span-2 min-h-0 bg-white">
-            {coverPhoto ? (
-              <Image
-                src={coverPhoto.previewUrl}
-                alt={draft.experienceName}
-                fill
-                sizes="(max-width: 1023px) 70vw, 560px"
-                unoptimized
-                className="object-cover"
-              />
-            ) : null}
-          </div>
-          {[draft.photos[1], draft.photos[2]].map((photo, index) => (
-            <div
-              key={photo?.id ?? `empty-${index}`}
-              className="relative hidden min-h-0 bg-white md:block"
-            >
-              {photo ? (
-                <Image
-                  src={photo.previewUrl}
-                  alt=""
-                  fill
-                  sizes="280px"
-                  unoptimized
-                  className="object-cover"
-                />
-              ) : null}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-10 py-8 md:py-10">
-          <section className="flex flex-col gap-2">
-            <h2 className="font-display text-2xl leading-tight font-extrabold tracking-[-0.035em] text-ink md:text-4xl">
-              {draft.experienceName}
-            </h2>
-            <p className="leading-7 whitespace-pre-line text-muted">
-              {draft.experienceDescription}
-            </p>
-            <p className="pt-1 text-xs font-medium text-muted">
-              {draft.meetingAddress} · {t("categories.sports")}
-            </p>
-          </section>
-
-          <section className="flex flex-col gap-4 border-t border-line-soft pt-6 md:grid md:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-2xl border border-line-soft bg-white p-5">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display font-bold text-primary-strong">
-                H
-              </span>
-              <div className="min-w-0">
-                <h3 className="font-display text-sm font-bold text-ink">
-                  {t("review.hostedBy", { name: t("review.hostName") })}
-                </h3>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                  {draft.hostIntroduction}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 rounded-2xl border border-line-soft bg-white p-5">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
-                <MapPinIcon className="size-5 text-primary-strong" />
-              </span>
-              <div className="min-w-0">
-                <h3 className="font-display text-sm font-bold text-ink">{draft.meetingPlace}</h3>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                  {draft.meetingAddress}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="flex flex-col gap-4 border-t border-line-soft pt-6">
-            <h3 className="font-display text-xl font-bold text-ink">{t("review.itinerary")}</h3>
-            <ol className="space-y-4">
-              {draft.itinerary.map((item, index) => (
-                <li key={item.id} className="flex gap-4">
-                  <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-white">
-                    {item.photo ? (
-                      <Image
-                        src={item.photo.previewUrl}
-                        alt=""
-                        fill
-                        sizes="96px"
-                        unoptimized
-                        className="object-cover"
-                      />
-                    ) : null}
-                  </div>
-                  <div className="min-w-0 py-1">
-                    <p className="text-xs font-bold text-primary">
-                      {t("itinerary.item", { index: index + 1 })} ·{" "}
-                      {t("itinerary.durationSummary", { minutes: Number(item.durationMinutes) })}
-                    </p>
-                    <p className="mt-1 font-display font-bold text-ink">{item.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-muted">{item.description}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          {inclusionItems.length ? (
-            <section className="flex flex-col gap-4 border-t border-line-soft pt-6">
-              <h3 className="font-display text-lg font-bold text-ink">{t("review.inclusions")}</h3>
-              <ul className="flex flex-col gap-2">
-                {inclusionItems.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-xs font-medium text-ink">
-                    <CheckIcon className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {restrictionItems.length ? (
-            <section className="flex flex-col gap-4 border-t border-line-soft pt-6">
-              <h3 className="font-display text-lg font-bold text-ink">
-                {t("review.restrictions")}
-              </h3>
-              <ul className="flex list-inside list-disc flex-col gap-2 text-xs font-medium text-ink">
-                {restrictionItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          <section className="flex flex-col gap-4 border-t border-line-soft pt-6">
-            <h3 className="font-display text-xl font-bold text-ink">{t("review.availability")}</h3>
-            <p className="text-xs text-muted">{t("review.kstNotice")}</p>
-            <div className="flex scrollbar-none gap-4 overflow-x-auto pb-2">
-              {draft.schedules.map((schedule) => (
-                <div
-                  key={schedule.id}
-                  className="w-64 shrink-0 rounded-2xl border border-line-soft bg-white p-4"
-                >
-                  <p className="font-display text-sm font-bold text-ink">
-                    {formatScheduleDate(schedule.date, locale, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                  <p className="mt-1 text-xs text-muted">{formatTime(schedule.startTime)}</p>
-                  <p className="mt-3 text-xs font-medium text-ink">
-                    {t("review.remaining", { count: Number(draft.maxGuests) })}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="flex flex-col gap-1 border-t border-line-soft pt-6">
-            <h3 className="font-display text-xl font-bold text-ink">{t("review.meetingPoint")}</h3>
-            <p className="mt-3 font-display text-sm font-bold text-ink">{draft.meetingPlace}</p>
-            <p className="text-xs text-muted">{draft.meetingAddress}</p>
-            {mapUrl ? (
-              <iframe
-                title={t("review.mapTitle", { place: draft.meetingPlace })}
-                src={mapUrl}
-                className="mt-3 h-[204px] w-full rounded-xl border-0"
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            ) : null}
-          </section>
-        </div>
-      </article>
-
-      <aside className="sticky top-8 hidden overflow-hidden rounded-3xl border border-line-soft bg-white shadow-[0_18px_45px_rgba(38,27,24,0.08)] lg:block">
-        <div className="p-6">
-          {discountPercent > 0 ? (
-            <span className="text-sm text-muted line-through">
-              {formatKrw(originalPrice, locale)}
-            </span>
-          ) : null}
-          <p className="font-display text-xl font-bold text-primary-strong">
-            {t("review.perPerson", { price: formatKrw(previewPrice, locale) })}
-          </p>
-          {draft.schedules[0] ? (
-            <div className="mt-5 rounded-2xl border border-line-soft px-4 py-3">
-              <p className="text-xs font-bold text-muted">{t("review.nextSession")}</p>
-              <p className="mt-1 text-sm font-bold text-ink">
-                {formatScheduleDate(draft.schedules[0].date, locale, {
-                  month: "long",
-                  day: "numeric",
-                })}{" "}
-                · {formatTime(draft.schedules[0].startTime)}
-              </p>
-            </div>
-          ) : null}
-          <button
-            type="button"
-            className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary px-8 font-display text-sm font-bold text-white shadow-[0_10px_22px_rgba(209,63,50,0.2)]"
-          >
-            {t("review.bookNow")}
-          </button>
-        </div>
-      </aside>
-    </main>
+    <div data-testid="activity-detail-preview">
+      <ActivityDetailView activity={activity} preview bottomBar="inline" unoptimizedImages />
+    </div>
   );
 }

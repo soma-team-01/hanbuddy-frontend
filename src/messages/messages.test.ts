@@ -265,24 +265,7 @@ describe("locale messages", () => {
       "CreateActivity.restrictions.remove",
       "CreateActivity.review.title",
       "CreateActivity.review.description",
-      "CreateActivity.review.apiNotice",
-      "CreateActivity.review.itineraryCount",
-      "CreateActivity.review.guestCount",
-      "CreateActivity.review.priceValue",
-      "CreateActivity.review.guestPreviewNotice",
-      "CreateActivity.review.guestPreviewBadge",
-      "CreateActivity.review.aboutExperience",
-      "CreateActivity.review.schedule",
       "CreateActivity.review.hostName",
-      "CreateActivity.review.hostedBy",
-      "CreateActivity.review.availability",
-      "CreateActivity.review.kstNotice",
-      "CreateActivity.review.remaining",
-      "CreateActivity.review.meetingPoint",
-      "CreateActivity.review.mapTitle",
-      "CreateActivity.review.perPerson",
-      "CreateActivity.review.nextSession",
-      "CreateActivity.review.bookNow",
       "CreateActivity.actions.exit",
       "CreateActivity.actions.back",
       "CreateActivity.actions.next",
@@ -325,9 +308,8 @@ describe("locale messages", () => {
       expect(messages["CreateActivity.progress"]).toContain("number");
       expect(messages["CreateActivity.photos.count"]).toContain("plural");
       expect(messages["CreateActivity.itinerary.descriptionCount"]).toContain("number");
-      expect(messages["CreateActivity.review.itineraryCount"]).toContain("plural");
-      expect(messages["CreateActivity.review.guestCount"]).toContain("plural");
-      expect(messages["CreateActivity.review.priceValue"]).toContain("number");
+      // 검토 화면이 게스트 상세 뷰를 재사용하므로 세션 잔여석 문구의 plural 계약을 확인한다
+      expect(messages["ActivityDetail.remaining"]).toContain("plural");
     }
   });
 });

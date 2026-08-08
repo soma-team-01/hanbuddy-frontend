@@ -1,5 +1,13 @@
-import { getSeoulDateTimeParts, getSeoulNowParts } from "@/lib/datetime";
+import type { Locale } from "@/i18n/routing";
+import {
+  formatSeoulDate,
+  formatSeoulTime,
+  getSeoulDateTimeParts,
+  getSeoulNowParts,
+  toSeoulStartAt,
+} from "@/lib/datetime";
 import { extractImageKeyFromUrl } from "@/lib/images/presigned";
+import type { Activity, Session } from "@/types/activity";
 import type { MyActivityDetailResponse } from "@/types/buddy";
 
 export const ACTIVITY_CREATE_STEPS = [
@@ -305,6 +313,92 @@ export function buildDraftFromMyActivityDetail(
     discountEndsAt: hasDiscount ? (detail.discountEndDate ?? "") : "",
     restrictions: detail.restrictionNotes.join("\n"),
     hasNoRestrictions: detail.restrictionNotes.length === 0,
+  };
+}
+
+function splitLines(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/**
+ * 검토 화면에서 실제 상세 화면과 동일한 미리보기를 그리기 위해
+ * draft를 게스트 상세 뷰 모델로 변환한다. 서버 계산값은 같은 규칙으로 재현한다.
+ */
+export function buildPreviewActivityFromDraft(
+  draft: ActivityCreateDraft,
+  options: Readonly<{
+    locale: Locale;
+    dateTimeUnavailable: string;
+    hostName: string;
+    hostBio: string;
+    hostAvatarUrl?: string | null;
+  }>,
+): Activity {
+  const { locale, dateTimeUnavailable, hostName, hostBio, hostAvatarUrl = null } = options;
+  const images = draft.photos.map((photo) => photo.previewUrl);
+  const maxGuests = Number(draft.maxGuests) || 1;
+  const sessions = draft.schedules
+    .filter((schedule) => schedule.date && schedule.startTime)
+    .map<Session | null>((schedule) => {
+      const startAt = toSeoulStartAt(`${schedule.date}T${schedule.startTime}`);
+      if (!startAt) return null;
+      return {
+        id: schedule.id,
+        startAt,
+        dateKey: schedule.date,
+        dateLabel: formatSeoulDate(startAt, locale) ?? dateTimeUnavailable,
+        timeLabel: formatSeoulTime(startAt, locale) ?? "",
+        spotsLeft: maxGuests,
+      };
+    })
+    .filter((session): session is Session => session !== null);
+  const itineraryMinutes = draft.itinerary.reduce(
+    (total, item) => total + (Number(item.durationMinutes) || 0),
+    0,
+  );
+  const price = Number(draft.pricePerPerson) || 0;
+  const discountPercent = draft.discountType === "limited" ? Number(draft.discountPercent) : 0;
+  const hasDiscount = discountPercent > 0;
+  const discountedPrice = Math.round(price * (1 - discountPercent / 100));
+
+  return {
+    id: "preview",
+    title: draft.experienceName,
+    description: draft.experienceDescription,
+    location: draft.meetingPlace,
+    district: draft.meetingPlace,
+    imageUrl: images[0] ?? "",
+    heroImageUrl: images[0] ?? "",
+    images,
+    price: hasDiscount ? discountedPrice : price,
+    originalPrice: hasDiscount ? price : undefined,
+    discountPercent: hasDiscount ? discountPercent : undefined,
+    durationMinutes: itineraryMinutes > 0 ? Math.ceil(itineraryMinutes / 30) * 30 : undefined,
+    isSoldOut: false,
+    host: {
+      name: hostName,
+      bio: hostBio,
+      avatarUrl: hostAvatarUrl,
+    },
+    hostIntroduction: draft.hostIntroduction.trim() || undefined,
+    included: splitLines(draft.inclusions).map((label) => ({ label, provided: true })),
+    restrictions: draft.hasNoRestrictions ? [] : splitLines(draft.restrictions),
+    sessions,
+    itinerary: draft.itinerary.map((item, index) => ({
+      id: item.id || `preview-itinerary-${index}`,
+      title: item.title,
+      description: item.description,
+      durationMinutes: Number(item.durationMinutes) || 0,
+      imageUrl: item.photo?.previewUrl ?? "",
+    })),
+    meetingPoint: {
+      name: draft.meetingPlace,
+      area: draft.meetingAddress,
+      placeId: draft.meetingPlaceId,
+    },
   };
 }
 

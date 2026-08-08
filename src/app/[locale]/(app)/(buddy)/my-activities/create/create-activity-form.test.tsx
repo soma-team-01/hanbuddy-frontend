@@ -34,6 +34,9 @@ vi.mock("@/lib/google/places", async (importOriginal) => ({
   fetchGooglePlaceDetailsViaBff: vi.fn().mockResolvedValue({
     formattedAddress: "88 Changgyeonggung-ro, Jongno-gu, Seoul",
   }),
+  fetchGooglePlaceDetails: vi.fn().mockResolvedValue({
+    formattedAddress: "88 Changgyeonggung-ro, Jongno-gu, Seoul",
+  }),
 }));
 
 vi.mock("@/lib/images/presigned", async (importOriginal) => ({
@@ -464,15 +467,19 @@ describe("CreateActivityForm", () => {
 
     expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
     expect(screen.getByTestId("activity-detail-preview")).toBeInTheDocument();
-    expect(screen.getAllByText(labelA).length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText(labelB)).toBeInTheDocument();
-    expect(screen.getAllByText("10:00 AM").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("4:00 PM")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Book now" })).toBeInTheDocument();
+    // 검토 화면은 실제 게스트 상세 뷰와 동일한 컴포넌트를 사용한다
+    expect(screen.getByTestId("activity-detail-layout")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
     expect(screen.getByText("Seoul market walk")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What's included" })).toBeInTheDocument();
     expect(screen.getByText("Equipment rental")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Before you join" })).not.toBeInTheDocument();
+
+    // 날짜 박스로 캘린더를 열면 등록한 세션들이 보인다
+    fireEvent.click(screen.getByTestId("date-select-box"));
+    const calendarDialog = await screen.findByRole("dialog");
+    expect(within(calendarDialog).getByRole("button", { name: /10:00 AM/ })).toBeInTheDocument();
+    expect(within(calendarDialog).getByRole("button", { name: /4:00 PM/ })).toBeInTheDocument();
   });
 
   it("disables calendar dates before today", async () => {

@@ -6,9 +6,7 @@ import { useState } from "react";
 import { ActivityReviewsDialog } from "@/components/review/ActivityReviewsDialog";
 import { ReviewCard } from "@/components/review/ReviewCard";
 import { RatingSummary } from "@/components/ui/RatingSummary";
-import { getActivityReviews } from "@/lib/api/reviews";
-import { reviewKeys, REVIEW_PREVIEW_SIZE } from "@/lib/query/reviews";
-import { unwrapApiResult } from "@/lib/query/result";
+import { activityReviewSummaryQueryOptions } from "@/lib/query/reviews";
 
 /**
  * 활동 상세의 후기 섹션.
@@ -20,12 +18,7 @@ export function ActivityReviewsSection({
 }: Readonly<{ activityId: number | string; id?: string }>) {
   const t = useTranslations("Reviews");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const previewQuery = useQuery({
-    queryKey: [...reviewKeys.activity(activityId), "preview", REVIEW_PREVIEW_SIZE],
-    queryFn: async () =>
-      unwrapApiResult(await getActivityReviews(activityId, 0, REVIEW_PREVIEW_SIZE), "reviews"),
-    staleTime: 60_000,
-  });
+  const previewQuery = useQuery(activityReviewSummaryQueryOptions(activityId));
 
   const preview = previewQuery.data;
   const reviews = preview?.reviews ?? [];

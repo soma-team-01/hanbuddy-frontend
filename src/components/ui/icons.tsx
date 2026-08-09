@@ -323,6 +323,16 @@ export function ChevronRightIcon(props: IconProps) {
   );
 }
 
+/** 답글 화살표(↳) — 앞선 항목에 딸린 내용임을 나타낸다 */
+export function CornerDownRightIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="m15 10 5 5-5 5" />
+      <path d="M4 4v7a4 4 0 0 0 4 4h12" />
+    </IconBase>
+  );
+}
+
 export function UsersIcon(props: IconProps) {
   return (
     <IconBase {...props}>

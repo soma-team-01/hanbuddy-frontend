@@ -429,7 +429,7 @@ describe("ActivityDetailContent", () => {
     expect(await within(dialog).findByLabelText("Rated 4.9 out of 5")).toBeInTheDocument();
     expect(within(dialog).getByText("2 live experiences")).toBeInTheDocument();
     expect(mockedGetBuddyProfile).toHaveBeenCalledWith(7);
-    expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 12);
+    expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 12, null);
   });
 
   it("lists the buddy's reviews across activities in the host profile", async () => {

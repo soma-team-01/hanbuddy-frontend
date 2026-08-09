@@ -22,6 +22,19 @@ describe("buildReviewPageQuery", () => {
     expect(query("page=0&size=500")).toBe("?page=0&size=50");
   });
 
+  it("passes a valid star rating filter through", () => {
+    expect(query("page=0&size=12&rating=5")).toBe("?page=0&size=12&rating=5");
+    expect(query("page=0&size=12&rating=1")).toBe("?page=0&size=12&rating=1");
+  });
+
+  it("drops a rating outside the one-to-five range", () => {
+    expect(query("page=0&size=12&rating=0")).toBe("?page=0&size=12");
+    expect(query("page=0&size=12&rating=6")).toBe("?page=0&size=12");
+    expect(query("page=0&size=12&rating=4.5")).toBe("?page=0&size=12");
+    expect(query("page=0&size=12&rating=all")).toBe("?page=0&size=12");
+    expect(query("page=0&size=12&rating=")).toBe("?page=0&size=12");
+  });
+
   it("ignores unrelated query parameters", () => {
     expect(query("page=1&size=6&sort=rating&injected=%2Fadmin")).toBe("?page=1&size=6");
   });

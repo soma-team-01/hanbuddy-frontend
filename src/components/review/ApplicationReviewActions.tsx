@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ReviewFormDialog } from "@/components/review/ReviewFormDialog";
 import { ReviewStars } from "@/components/review/ReviewStars";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { PencilIcon, TrashIcon } from "@/components/ui/icons";
+import { CornerDownRightIcon, PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDate } from "@/lib/datetime";
@@ -80,51 +80,62 @@ export function ApplicationReviewActions({
   return (
     <div className="flex flex-col gap-2">
       {review ? (
-        /* 내가 남긴 후기를 그대로 보여주고, 수정·삭제는 아이콘으로만 둔다 */
-        <section className="rounded-2xl border border-primary/30 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-display text-[11px] font-bold tracking-[0.12em] text-primary uppercase">
-                {t("yourReview")}
-              </p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <ReviewStars
-                  rating={review.rating}
-                  label={t("ratingAria", { rating: review.rating })}
-                  starClassName="size-3.5"
-                />
-                {writtenOn ? <span className="text-xs text-muted">{writtenOn}</span> : null}
+        /*
+         * 활동에 딸린 답글처럼 보이도록 화살표를 앞에 두고,
+         * 카드 썸네일(size-24 / md:size-28) + gap-4 만큼 들여써 활동 제목과 좌측을 맞춘다.
+         */
+        <div className="flex items-start gap-4">
+          <span
+            aria-hidden="true"
+            className="flex size-24 shrink-0 items-start justify-end pt-3 pr-1 text-line-strong md:size-28"
+          >
+            <CornerDownRightIcon className="size-5" />
+          </span>
+          <section className="min-w-0 flex-1 rounded-2xl border border-primary/30 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-display text-[11px] font-bold tracking-[0.12em] text-primary uppercase">
+                  {t("yourReview")}
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <ReviewStars
+                    rating={review.rating}
+                    label={t("ratingAria", { rating: review.rating })}
+                    starClassName="size-3.5"
+                  />
+                  {writtenOn ? <span className="text-xs text-muted">{writtenOn}</span> : null}
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  title={t("edit")}
+                  aria-label={t("edit")}
+                  onClick={() => {
+                    setError(null);
+                    setFormOpen(true);
+                  }}
+                  className="flex size-9 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-primary hover:text-primary"
+                >
+                  <PencilIcon className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  title={t("delete")}
+                  aria-label={t("delete")}
+                  onClick={() => {
+                    setError(null);
+                    setDeleteOpen(true);
+                  }}
+                  className="flex size-9 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-danger hover:text-danger"
+                >
+                  <TrashIcon className="size-4" />
+                </button>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                title={t("edit")}
-                aria-label={t("edit")}
-                onClick={() => {
-                  setError(null);
-                  setFormOpen(true);
-                }}
-                className="flex size-9 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-primary hover:text-primary"
-              >
-                <PencilIcon className="size-4" />
-              </button>
-              <button
-                type="button"
-                title={t("delete")}
-                aria-label={t("delete")}
-                onClick={() => {
-                  setError(null);
-                  setDeleteOpen(true);
-                }}
-                className="flex size-9 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-danger hover:text-danger"
-              >
-                <TrashIcon className="size-4" />
-              </button>
-            </div>
-          </div>
-          <p className="mt-3 text-sm leading-6 whitespace-pre-line text-ink">{review.content}</p>
-        </section>
+            <p className="mt-3 text-sm leading-6 whitespace-pre-line text-ink">{review.content}</p>
+          </section>
+        </div>
       ) : (
         <button
           type="button"

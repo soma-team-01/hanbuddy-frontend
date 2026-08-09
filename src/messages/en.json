@@ -531,7 +531,11 @@
     "contentRequired": "Please write a few words about the experience.",
     "yourReview": "Your review",
     "saveError": "Could not save your review.",
-    "deleteError": "Could not delete your review."
+    "deleteError": "Could not delete your review.",
+    "filterByRating": "Show only {rating}-star reviews",
+    "clearFilter": "Show all ratings",
+    "filteredCount": "{count, plural, =0 {No reviews with this rating} one {# review} other {# reviews}}",
+    "noneForRating": "No reviews with this rating yet."
   },
   "Booking": {
     "title": "Book activity",

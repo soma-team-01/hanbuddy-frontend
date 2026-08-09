@@ -22,11 +22,16 @@ export interface MyReviewResponse {
   createdAt: string;
 }
 
+/** 별점별 리뷰 수. 1~5 키가 항상 모두 내려오며 해당 별점이 없으면 0 */
+export type ReviewRatingCounts = Record<string, number>;
+
 export interface ReviewPageResponse {
-  /** 전체 리뷰 기준 평균 별점 (소수 첫째 자리). 리뷰가 없으면 null */
+  /** 평균 별점 (소수 첫째 자리). 별점 필터와 무관하게 항상 전체 기준이며, 리뷰가 없으면 null */
   averageRating: number | null;
-  /** 페이지와 무관한 전체 리뷰 수 */
+  /** 조회된 리뷰 수. 별점 필터를 걸면 필터된 개수이며 페이지네이션 기준이 된다 */
   totalCount: number;
+  /** 별점 분포. 필터와 무관하게 항상 전체 기준이라 필터 중에도 막대를 그대로 그린다 */
+  ratingCounts?: ReviewRatingCounts;
   reviews: ReviewResponse[];
   page: number;
   size: number;

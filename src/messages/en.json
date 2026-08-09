@@ -590,7 +590,14 @@
     "confirmFailed": "We couldn't confirm your payment. Please try again from My Applications.",
     "failTitle": "Payment failed",
     "failDescription": "The payment was not completed and nothing has been charged.",
-    "retryFromApplications": "Try again in My Applications"
+    "retryFromApplications": "Try again in My Applications",
+    "failReasons": {
+      "cancelled": "You cancelled the payment before it was completed.",
+      "aborted": "The payment was interrupted. Please try again.",
+      "rejectedByCardCompany": "Your card issuer declined the payment. Please try another card.",
+      "cardIssue": "This card cannot be used. Check the card details and try again.",
+      "exceededLimit": "The payment exceeds your card's limit."
+    }
   },
   "Country": {
     "select": "Select country",

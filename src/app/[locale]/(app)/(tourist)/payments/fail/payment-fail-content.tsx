@@ -5,13 +5,14 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { XIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
+import type { TossFailReasonKey } from "@/lib/payments/toss-fail-codes";
 
 interface PaymentFailContentProps {
-  /** 토스 failUrl 쿼리 파라미터로 전달된 오류 메시지 */
-  failMessage: string;
+  /** 토스 오류 코드에서 매핑한 실패 사유. 알 수 없는 코드면 null */
+  reasonKey: TossFailReasonKey | null;
 }
 
-export function PaymentFailContent({ failMessage }: Readonly<PaymentFailContentProps>) {
+export function PaymentFailContent({ reasonKey }: Readonly<PaymentFailContentProps>) {
   const t = useTranslations("Payment");
 
   return (
@@ -26,9 +27,9 @@ export function PaymentFailContent({ failMessage }: Readonly<PaymentFailContentP
           </span>
           <h1 className="mt-6 font-display text-3xl font-bold text-ink">{t("failTitle")}</h1>
           <p className="mt-2 text-sm text-muted">{t("failDescription")}</p>
-          {failMessage ? (
+          {reasonKey ? (
             <p role="alert" className="mt-4 text-sm break-keep text-danger">
-              {failMessage}
+              {t(`failReasons.${reasonKey}`)}
             </p>
           ) : null}
         </section>

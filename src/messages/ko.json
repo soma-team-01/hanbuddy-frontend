@@ -590,7 +590,14 @@
     "confirmFailed": "결제를 승인하지 못했습니다. 내 신청에서 다시 시도해 주세요.",
     "failTitle": "결제에 실패했습니다",
     "failDescription": "결제가 완료되지 않았으며 금액은 청구되지 않았습니다.",
-    "retryFromApplications": "내 신청에서 다시 시도"
+    "retryFromApplications": "내 신청에서 다시 시도",
+    "failReasons": {
+      "cancelled": "결제가 완료되기 전에 취소되었습니다.",
+      "aborted": "결제가 중단되었습니다. 다시 시도해 주세요.",
+      "rejectedByCardCompany": "카드사에서 결제를 거절했습니다. 다른 카드로 시도해 주세요.",
+      "cardIssue": "사용할 수 없는 카드입니다. 카드 정보를 확인한 뒤 다시 시도해 주세요.",
+      "exceededLimit": "카드 한도를 초과했습니다."
+    }
   },
   "Country": {
     "select": "국가 선택",

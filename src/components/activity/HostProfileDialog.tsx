@@ -67,11 +67,14 @@ export function HostProfileDialog({
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
 
-  const hostedActivities = activities.filter(
-    (activity) =>
-      (hasBuddyId ? activity.buddyId === buddyId : activity.buddyName === host.name) &&
-      String(activity.activityId) !== currentActivityId,
-  );
+  // 공개 닉네임은 동명이인이 있을 수 있어 매칭 기준으로 쓰지 않는다.
+  // 버디를 특정하지 못하면 남의 활동을 섞어 보여주느니 아무것도 보여주지 않는다.
+  const hostedActivities = hasBuddyId
+    ? activities.filter(
+        (activity) =>
+          activity.buddyId === buddyId && String(activity.activityId) !== currentActivityId,
+      )
+    : [];
 
   const profile = profileQuery.data;
   const reviewPages = reviewsQuery.data?.pages ?? [];

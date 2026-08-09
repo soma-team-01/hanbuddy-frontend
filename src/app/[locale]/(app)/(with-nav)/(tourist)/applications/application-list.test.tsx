@@ -237,6 +237,19 @@ describe("ApplicationList", () => {
       status: "success",
       activities: [
         {
+          activityId: 42,
+          buddyId: 7,
+          title: "Bukchon Hidden Gems",
+          description: "The activity this application is for.",
+          thumbnailImageUrl: "/images/activities/bukchon.jpg",
+          buddyName: "Jihoon Kim",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Anguk Station Exit 2",
+          meetingPlaceId: "ChIJ-bukchon",
+          price: 45000,
+          currency: "KRW",
+        },
+        {
           activityId: 77,
           buddyId: 7,
           title: "Seoul Night Market Walk",
@@ -269,6 +282,37 @@ describe("ApplicationList", () => {
     expect(
       await within(dialog).findByRole("link", { name: /Seoul Night Market Walk/ }),
     ).toHaveAttribute("href", "/en/activities/77");
+  });
+
+  it("shows no hosted activities when the buddy cannot be identified", async () => {
+    // 신청한 활동이 목록에 없으면(삭제 등) buddyId를 알 수 없다.
+    // 이때 공개 닉네임으로 매칭하면 동명이인의 활동이 섞이므로 아무것도 보여주지 않는다.
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 88,
+          buddyId: 12,
+          title: "Namesake's experience",
+          description: "Hosted by a different buddy with the same public name.",
+          thumbnailImageUrl: "/images/activities/other.jpg",
+          buddyName: "Jihoon Kim",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Hongdae",
+          meetingPlaceId: "ChIJ-hongdae",
+          price: 20000,
+          currency: "KRW",
+        },
+      ],
+    });
+
+    renderList();
+
+    fireEvent.click(screen.getByRole("button", { name: "View Jihoon Kim's profile" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findByText("No other experiences yet.")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Namesake's experience")).not.toBeInTheDocument();
   });
 
   it("counts down the seat hold and asks for a refresh when it expires", async () => {

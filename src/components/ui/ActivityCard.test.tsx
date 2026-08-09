@@ -94,12 +94,12 @@ describe("ActivityCard", () => {
     expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 
-  it("shows the average rating with the review count", () => {
+  it("shows the average rating alone, without the review count", () => {
     renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
 
     expect(screen.getByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();
     expect(screen.getByText("4.8")).toBeInTheDocument();
-    expect(screen.getByText("(12)")).toBeInTheDocument();
+    expect(screen.queryByText("(12)")).not.toBeInTheDocument();
   });
 
   it("hides the rating entirely when the activity has no reviews yet", () => {

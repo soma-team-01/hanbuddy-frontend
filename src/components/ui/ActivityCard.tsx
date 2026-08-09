@@ -39,16 +39,9 @@ export function ActivityCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
-            {activity.title}
-          </h2>
-          <RatingSummary
-            rating={activity.rating}
-            reviewCount={activity.reviewCount}
-            className="mt-0.5 shrink-0"
-          />
-        </div>
+        <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
+          {activity.title}
+        </h2>
 
         {activity.durationMinutes !== undefined ? (
           <p className="flex items-center gap-1.5 text-sm leading-5 text-muted">
@@ -57,20 +50,24 @@ export function ActivityCard({
           </p>
         ) : null}
 
-        <div className="mt-auto flex flex-col items-end gap-0.5 text-right">
-          {hasDiscount ? (
-            <s className="text-xs leading-4 text-muted">
-              {formatKrw(activity.originalPrice ?? activity.price, locale)}
-            </s>
-          ) : null}
-          <p
-            className={`font-display text-xl leading-7 ${
-              hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
-            }`}
-          >
-            {formatKrw(activity.price, locale)}
-          </p>
-          <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
+        {/* 카드 하단: 평균 별점(좌) · 가격(우) — 후기 수는 상세에서만 보여준다 */}
+        <div className="mt-auto flex items-end justify-between gap-3">
+          <RatingSummary rating={activity.rating} className="pb-1" />
+          <div className="ml-auto flex flex-col items-end gap-0.5 text-right">
+            {hasDiscount ? (
+              <s className="text-xs leading-4 text-muted">
+                {formatKrw(activity.originalPrice ?? activity.price, locale)}
+              </s>
+            ) : null}
+            <p
+              className={`font-display text-xl leading-7 ${
+                hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
+              }`}
+            >
+              {formatKrw(activity.price, locale)}
+            </p>
+            <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
+          </div>
         </div>
       </div>
     </article>

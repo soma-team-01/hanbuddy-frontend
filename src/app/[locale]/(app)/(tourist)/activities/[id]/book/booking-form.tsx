@@ -12,9 +12,9 @@ import {
   ChevronDownIcon,
   MinusIcon,
   PlusIcon,
-  StarIcon,
   UserIcon,
 } from "@/components/ui/icons";
+import { formatSessionTimeRange } from "@/components/activity/AvailabilityCalendarDialog";
 import type { Locale } from "@/i18n/routing";
 import { createApplication } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -115,66 +115,28 @@ export function BookingForm({
     errorMessage = t(errorKey);
   }
 
+  const selectedSession = activity.sessions.find((session) => session.id === sessionId) ?? null;
+  const sessionTimeRange = selectedSession
+    ? formatSessionTimeRange(selectedSession, activity.durationMinutes, locale as Locale)
+    : "";
+
   return (
     <>
       <PageContainer className="py-6 md:py-10">
         <main
           data-testid="booking-layout"
-          className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
+          className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
         >
-          <div className="space-y-8">
-            <div className="mb-2 flex items-center gap-3 text-sm font-semibold text-primary-strong">
-              <span className="flex size-8 items-center justify-center rounded-full bg-primary text-white">
-                1
-              </span>
-              <span className="h-px w-10 bg-line-strong" />
-              <span className="text-muted">2&nbsp; Payment</span>
-              <span className="h-px w-10 bg-line-strong" />
-              <span className="text-muted">3&nbsp; Confirmed</span>
-            </div>
-            <section className="overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft p-4 shadow-[0_12px_30px_rgba(61,45,43,0.06)] md:p-5">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl">
-                <Image
-                  src={activity.heroImageUrl}
-                  alt={activity.title}
-                  fill
-                  loading="eager"
-                  sizes="(max-width: 1023px) 100vw, 760px"
-                  className="object-cover"
-                />
-              </div>
-              <h1 className="mt-4 font-display text-2xl font-bold text-ink md:text-3xl">
-                {activity.title}
-              </h1>
-              <p className="mt-1 flex items-center gap-1 text-sm text-muted">
-                <UserIcon className="size-4" />
-                {t("hostedBy", { name: activity.host.name })}
-              </p>
-              {activity.rating !== undefined ? (
-                <p className="mt-3 flex items-center gap-1.5 text-sm text-ink">
-                  <StarIcon className="size-4" />
-                  <span className="font-display font-semibold">{activity.rating.toFixed(1)}</span>
-                  {activity.reviewCount !== undefined ? (
-                    <span className="text-muted">
-                      {t("reviewCount", { count: activity.reviewCount })}
-                    </span>
-                  ) : null}
-                </p>
-              ) : null}
-            </section>
-
-            <section className="flex flex-col gap-3">
-              <h2 className="border-b border-line-soft pb-3 text-base font-semibold text-ink">
-                {t("dateTimeHeading")}
-              </h2>
+          <div className="mx-auto w-full max-w-xl divide-y divide-line-soft lg:mx-0">
+            <section className="flex flex-col gap-3 pb-7">
+              <h2 className="font-display text-base font-bold text-ink">{t("dateTimeHeading")}</h2>
               <label className="flex flex-col gap-2">
-                <span className="text-sm text-muted">{t("dateTime")}</span>
-                <span className="text-xs text-muted">{t("kstNotice")}</span>
+                <span className="sr-only">{t("dateTime")}</span>
                 <span className="relative">
                   <select
                     value={sessionId}
                     onChange={(event) => setSessionId(event.target.value)}
-                    className="w-full appearance-none rounded-2xl border border-line-soft bg-canvas-soft px-4 py-4 text-base text-ink"
+                    className="w-full appearance-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm font-semibold text-ink transition-colors outline-none focus:border-primary"
                   >
                     {activity.sessions.map((session) => (
                       <option key={session.id} value={session.id}>
@@ -182,28 +144,27 @@ export function BookingForm({
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-ink" />
+                  <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-primary" />
                 </span>
+                <span className="text-xs text-muted">{t("kstNotice")}</span>
               </label>
             </section>
 
-            <section className="flex flex-col gap-3">
-              <h2 className="border-b border-line-soft pb-3 text-base font-semibold text-ink">
-                {t("guestsHeading")}
-              </h2>
-              <div className="flex items-center justify-between rounded-2xl border border-line-soft bg-canvas-soft px-4 py-4">
-                <span className="text-base text-ink">{t("guestCount")}</span>
+            <section className="flex flex-col gap-3 py-7">
+              <h2 className="font-display text-base font-bold text-ink">{t("guestsHeading")}</h2>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">{t("guestCount")}</span>
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
                     aria-label={t("decreaseGuests")}
                     disabled={guests <= 1}
                     onClick={() => setGuests((count) => Math.max(1, count - 1))}
-                    className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-primary-soft disabled:opacity-40"
+                    className="flex size-9 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                   >
                     <MinusIcon className="size-4" />
                   </button>
-                  <span className="min-w-16 text-center font-display text-base font-semibold text-ink">
+                  <span className="min-w-14 text-center font-display text-base font-semibold text-ink">
                     {t("guests", { count: guests })}
                   </span>
                   <button
@@ -211,7 +172,7 @@ export function BookingForm({
                     aria-label={t("increaseGuests")}
                     disabled={guests >= MAX_GUESTS}
                     onClick={() => setGuests((count) => Math.min(MAX_GUESTS, count + 1))}
-                    className="flex size-8 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:bg-primary-soft disabled:opacity-40"
+                    className="flex size-9 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                   >
                     <PlusIcon className="size-4" />
                   </button>
@@ -219,49 +180,116 @@ export function BookingForm({
               </div>
             </section>
 
-            <section className="flex flex-col gap-3">
-              <h2 className="border-b border-line-soft pb-3 text-base font-semibold text-ink">
-                {t("specialRequest")}
-              </h2>
+            <section className="flex flex-col gap-3 py-7">
+              <h2 className="font-display text-base font-bold text-ink">{t("specialRequest")}</h2>
               <label className="flex flex-col gap-2">
-                <span className="text-sm text-muted">{t("specialRequestDescription")}</span>
+                <span className="text-xs text-muted">{t("specialRequestDescription")}</span>
                 <textarea
                   rows={3}
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
-                  className="w-full resize-none rounded-2xl border border-line-soft bg-canvas-soft px-4 py-4 text-base text-ink placeholder:text-muted/70"
+                  className="w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm text-ink transition-colors outline-none placeholder:text-muted/60 focus:border-primary"
                 />
               </label>
             </section>
-          </div>
-          <BookingPanel>
-            <section className="flex flex-col gap-3 rounded-2xl border border-line-soft bg-canvas-soft p-5 shadow-[0_12px_30px_rgba(61,45,43,0.08)]">
-              <h2 className="text-base font-medium text-ink">{t("priceDetails")}</h2>
-              <div className="flex items-center justify-between text-sm text-ink">
-                <span>
-                  {t("subtotal", { price: formatKrw(activity.price, locale), count: guests })}
-                </span>
-                <span>{formatKrw(subtotal, locale)}</span>
-              </div>
-              <div className="h-px w-full bg-line-soft" aria-hidden />
-              <div className="font-display text-2xl font-bold text-primary-strong">
-                {t("totalKrw", { amount: formatKrw(total, locale) })}
-              </div>
-            </section>
 
-            <section className="flex flex-col gap-3">
-              <p className="text-base text-ink">{t("refundPolicy")}</p>
+            <section className="flex flex-col gap-3 pt-7">
+              <p className="text-sm leading-6 text-muted">
+                {t.rich("refundPolicy", {
+                  policy: (chunks) => (
+                    <span className="group relative inline-block">
+                      <button
+                        type="button"
+                        className="font-semibold text-ink underline decoration-primary/60 decoration-2 underline-offset-4 transition-colors hover:text-primary focus-visible:text-primary"
+                      >
+                        {chunks}
+                      </button>
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-72 -translate-x-1/2 rounded-xl border border-primary/30 bg-canvas-soft p-3.5 text-left text-xs leading-5 font-normal text-ink no-underline shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:block group-hover:block"
+                      >
+                        {t("refundPolicyDetail")}
+                      </span>
+                    </span>
+                  ),
+                })}
+              </p>
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={agreed}
                   onChange={(event) => setAgreed(event.target.checked)}
-                  className="size-5 rounded accent-primary"
+                  className="size-4.5 rounded accent-primary"
                 />
-                <span className="text-base text-ink">{t("agreement")}</span>
+                <span className="text-sm text-ink">{t("agreement")}</span>
               </label>
             </section>
+          </div>
+
+          <BookingPanel>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="relative size-16 shrink-0 overflow-hidden rounded-xl">
+                  <Image
+                    src={activity.heroImageUrl}
+                    alt={activity.title}
+                    fill
+                    loading="eager"
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="line-clamp-2 font-display text-base leading-6 font-bold text-ink">
+                    {activity.title}
+                  </h1>
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                    <UserIcon className="size-3.5" />
+                    {t("hostedBy", { name: activity.host.name })}
+                  </p>
+                </div>
+              </div>
+
+              <dl className="flex flex-col gap-3 border-t border-line-soft pt-4 text-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="shrink-0 text-muted">{t("dateTime")}</dt>
+                  <dd className="text-right font-semibold text-ink">
+                    {selectedSession ? (
+                      <>
+                        <span className="block">{selectedSession.dateLabel}</span>
+                        <span className="block text-xs font-medium text-muted">
+                          {sessionTimeRange}
+                        </span>
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-muted">{t("guestCount")}</dt>
+                  <dd className="font-semibold text-ink">{t("guests", { count: guests })}</dd>
+                </div>
+              </dl>
+
+              <div className="flex flex-col gap-2 border-t border-line-soft pt-4 text-sm">
+                <h2 className="font-display text-sm font-bold text-ink">{t("priceDetails")}</h2>
+                <div className="flex items-center justify-between text-muted">
+                  <span>
+                    {t("subtotal", { price: formatKrw(activity.price, locale), count: guests })}
+                  </span>
+                  <span>{formatKrw(subtotal, locale)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-line-soft pt-4">
+                <span className="font-display text-base font-bold text-ink">{t("totalLabel")}</span>
+                <span className="font-display text-xl font-bold text-primary">
+                  {formatKrw(total, locale)}
+                </span>
+              </div>
+            </div>
 
             {errorMessage ? (
               <p
@@ -277,7 +305,7 @@ export function BookingForm({
                 type="button"
                 disabled={!agreed || isSubmitting}
                 onClick={handleSubmitClick}
-                className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-base font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+                className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-transparent font-display text-base font-bold text-primary transition-colors enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
               >
                 {isSubmitting ? t("processing") : t("submit")}
                 <ArrowRightIcon className="size-4" />

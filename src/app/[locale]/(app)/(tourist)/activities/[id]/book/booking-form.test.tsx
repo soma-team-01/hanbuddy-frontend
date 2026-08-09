@@ -115,6 +115,16 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("booking-layout")).toHaveClass("lg:grid-cols-[minmax(0,1fr)_360px]");
     expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
+    // 요약 카드: 선택한 일정과 총액이 보인다
+    expect(screen.getByText("2026-07-20")).toBeInTheDocument();
+    expect(screen.getByText("Total (KRW)")).toBeInTheDocument();
+    // 취소·환불 정책은 밑줄 트리거에 호버 툴팁으로 제공된다
+    expect(
+      screen.getByRole("button", { name: "cancellation & refund policy" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "Free cancellation until 24 hours before the session starts",
+    );
   });
 
   it("preselects the schedule passed from the availability calendar", () => {

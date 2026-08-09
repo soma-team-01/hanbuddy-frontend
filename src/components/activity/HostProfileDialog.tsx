@@ -4,10 +4,11 @@ import Image from "next/image";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
+import { StartChatButton } from "@/components/chat/StartChatButton";
 import { ReviewCard } from "@/components/review/ReviewCard";
 import { useInfiniteScrollSentinel } from "@/components/review/use-infinite-scroll-sentinel";
 import { Avatar } from "@/components/ui/Avatar";
-import { XIcon } from "@/components/ui/icons";
+import { MessageSquareIcon, XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatKrw } from "@/lib/format";
@@ -28,17 +29,21 @@ export function HostProfileDialog({
   currentActivityId,
   /** 버디 미리보기·등록 검토처럼 실제 목록을 조회할 수 없는 화면에서는 목록을 숨긴다 */
   showHostedActivities = true,
+  /** 버디 본인이 자기 화면을 미리 볼 때는 자신에게 말을 걸 수 없다 */
+  canContact = true,
   onClose,
 }: Readonly<{
   host: Host;
   hostIntroduction?: string;
   currentActivityId: string;
   showHostedActivities?: boolean;
+  canContact?: boolean;
   onClose: () => void;
 }>) {
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
   const tReviews = useTranslations("Reviews");
+  const tChat = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const activitiesQuery = useQuery({
@@ -126,12 +131,28 @@ export function HostProfileDialog({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 md:p-7">
+        {canContact && hasBuddyId ? (
+          <StartChatButton
+            target={{ kind: "direct", targetUserId: buddyId }}
+            label={tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
+            icon={<MessageSquareIcon className="size-4" />}
+            onOpened={onClose}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+          />
+        ) : null}
+
         {hostIntroduction ? (
-          <p className="text-sm leading-7 whitespace-pre-line text-ink">{hostIntroduction}</p>
+          <p className="mt-5 text-sm leading-7 whitespace-pre-line text-ink">{hostIntroduction}</p>
         ) : null}
 
         {showHostedActivities ? (
-          <section className={hostIntroduction ? "mt-6 border-t border-line-soft pt-5" : ""}>
+          <section
+            className={
+              hostIntroduction || (canContact && hasBuddyId)
+                ? "mt-6 border-t border-line-soft pt-5"
+                : ""
+            }
+          >
             <h3 className="font-display text-sm font-bold text-ink">{t("hostedActivities")}</h3>
             {activitiesQuery.isPending ? (
               <p className="mt-3 text-sm text-muted">{t("loading")}</p>

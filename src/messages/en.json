@@ -49,7 +49,11 @@
     "reviewNotReviewable": "You can leave a review after the activity ends.",
     "reviewOwner": "You can only edit reviews you wrote.",
     "reviewNotFound": "This review could not be found.",
-    "reviewDuplicate": "You already reviewed this booking."
+    "reviewDuplicate": "You already reviewed this booking.",
+    "chatOwnerLeave": "You can't leave a group chat you created.",
+    "chatInvalidTarget": "You can't start a chat with this person.",
+    "chatForbidden": "You are no longer part of this conversation.",
+    "chatNotFound": "This conversation could not be found."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
@@ -74,7 +78,8 @@
     "hostAnExperience": "Host an experience",
     "login": "Log in",
     "account": "Account",
-    "openAccount": "Open my account"
+    "openAccount": "Open my account",
+    "chat": "Messages"
   },
   "Accessibility": {
     "goBack": "Go back",
@@ -660,6 +665,44 @@
     "phoneInputLabel": "Messaging phone number",
     "appIdPlaceholder": "{app} ID",
     "appIdInputLabel": "Messaging app ID"
+  },
+  "Chat": {
+    "title": "Messages",
+    "description": "Talk with your buddy or your guests.",
+    "loading": "Loading conversations...",
+    "loadError": "Could not load your conversations.",
+    "empty": "No conversations yet",
+    "emptyDescription": "Message a buddy from an activity page, or start a group chat with your guests.",
+    "noMessagesYet": "No messages yet",
+    "selectConversation": "Pick a conversation",
+    "selectConversationDescription": "Choose a conversation on the left to start reading.",
+    "backToList": "Back to conversations",
+    "groupBadge": "Group",
+    "memberCount": "{count, plural, one {# member} other {# members}}",
+    "leftMember": "left",
+    "messagePlaceholder": "Write a message",
+    "messageLabel": "Message",
+    "send": "Send",
+    "sending": "Sending...",
+    "sendError": "Could not send your message.",
+    "messagesLoadError": "Could not load messages.",
+    "loadOlder": "Load earlier messages",
+    "loadingOlder": "Loading...",
+    "readBy": "Read",
+    "unreadCount": "{count, plural, other {#}}",
+    "unreadLabel": "{count, plural, one {# unread message} other {# unread messages}}",
+    "contactBuddy": "Message {name}",
+    "messageApplicant": "Message {name}",
+    "openGroupChat": "Group chat with guests",
+    "openingChat": "Opening...",
+    "leave": "Leave conversation",
+    "leaveTitle": "Leave this conversation?",
+    "leaveDescription": "You will stop receiving messages here. Opening it again from the activity restores your place.",
+    "leaving": "Leaving...",
+    "leaveError": "Could not leave this conversation.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "you": "You"
   },
   "MyPage": {
     "title": "My Page",

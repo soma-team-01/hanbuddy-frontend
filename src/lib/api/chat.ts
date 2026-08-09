@@ -1,0 +1,124 @@
+import type {
+  ChatMessagePageResponse,
+  ChatMessageResponse,
+  ChatRoomDetailResponse,
+  ChatRoomSummaryResponse,
+  CreateDirectChatRoomRequest,
+  CreateGroupChatRoomRequest,
+  SendChatMessageRequest,
+  UpdateChatReadRequest,
+} from "@/types/chat";
+import { requestApiResult, type ApiResult } from "./result";
+
+export type ChatRoomsResult = ApiResult<ChatRoomSummaryResponse[], "rooms">;
+export type ChatRoomResult = ApiResult<ChatRoomDetailResponse, "room">;
+export type ChatMessagesResult = ApiResult<ChatMessagePageResponse, "messages">;
+export type ChatMessageResult = ApiResult<ChatMessageResponse, "message">;
+export type ChatVoidResult = ApiResult<null, "chat">;
+
+const DEFAULT_ROOM_LIST_ERROR_MESSAGE = "채팅 목록을 불러오지 못했습니다.";
+const DEFAULT_ROOM_ERROR_MESSAGE = "채팅방을 불러오지 못했습니다.";
+const DEFAULT_ROOM_CREATE_ERROR_MESSAGE = "채팅방을 열지 못했습니다.";
+const DEFAULT_MESSAGE_LIST_ERROR_MESSAGE = "메시지를 불러오지 못했습니다.";
+const DEFAULT_MESSAGE_SEND_ERROR_MESSAGE = "메시지를 보내지 못했습니다.";
+const DEFAULT_READ_ERROR_MESSAGE = "읽음 처리를 하지 못했습니다.";
+const DEFAULT_LEAVE_ERROR_MESSAGE = "채팅방을 나가지 못했습니다.";
+
+function jsonRequest(method: string, body: unknown): RequestInit {
+  return {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
+
+export async function getMyChatRooms(): Promise<ChatRoomsResult> {
+  return requestApiResult<ChatRoomSummaryResponse[], "rooms">(
+    "/api/chat/rooms",
+    "rooms",
+    undefined,
+    DEFAULT_ROOM_LIST_ERROR_MESSAGE,
+  );
+}
+
+export async function getChatRoom(chatRoomId: number | string): Promise<ChatRoomResult> {
+  return requestApiResult<ChatRoomDetailResponse, "room">(
+    `/api/chat/rooms/${chatRoomId}`,
+    "room",
+    undefined,
+    DEFAULT_ROOM_ERROR_MESSAGE,
+  );
+}
+
+/** 같은 두 사람의 방은 하나뿐이라, 이미 있으면 그 방이 그대로 돌아온다 */
+export async function createDirectChatRoom(
+  request: CreateDirectChatRoomRequest,
+): Promise<ChatRoomResult> {
+  return requestApiResult<ChatRoomDetailResponse, "room">(
+    "/api/chat/rooms/direct",
+    "room",
+    jsonRequest("POST", request),
+    DEFAULT_ROOM_CREATE_ERROR_MESSAGE,
+  );
+}
+
+/** 회차당 단체방은 하나뿐이며, 조회 시점의 확정 신청자가 자동으로 합류한다 */
+export async function createGroupChatRoom(
+  request: CreateGroupChatRoomRequest,
+): Promise<ChatRoomResult> {
+  return requestApiResult<ChatRoomDetailResponse, "room">(
+    "/api/chat/rooms/group",
+    "room",
+    jsonRequest("POST", request),
+    DEFAULT_ROOM_CREATE_ERROR_MESSAGE,
+  );
+}
+
+export async function getChatMessages(
+  chatRoomId: number | string,
+  /** 이 메시지보다 과거만 불러온다. 첫 조회면 생략 */
+  beforeMessageId: number | null,
+  size: number,
+): Promise<ChatMessagesResult> {
+  const cursor = beforeMessageId === null ? "" : `&beforeMessageId=${beforeMessageId}`;
+
+  return requestApiResult<ChatMessagePageResponse, "messages">(
+    `/api/chat/rooms/${chatRoomId}/messages?size=${size}${cursor}`,
+    "messages",
+    undefined,
+    DEFAULT_MESSAGE_LIST_ERROR_MESSAGE,
+  );
+}
+
+export async function sendChatMessage(
+  chatRoomId: number | string,
+  request: SendChatMessageRequest,
+): Promise<ChatMessageResult> {
+  return requestApiResult<ChatMessageResponse, "message">(
+    `/api/chat/rooms/${chatRoomId}/messages`,
+    "message",
+    jsonRequest("POST", request),
+    DEFAULT_MESSAGE_SEND_ERROR_MESSAGE,
+  );
+}
+
+export async function updateChatRead(
+  chatRoomId: number | string,
+  request: UpdateChatReadRequest,
+): Promise<ChatVoidResult> {
+  return requestApiResult<null, "chat">(
+    `/api/chat/rooms/${chatRoomId}/read`,
+    "chat",
+    jsonRequest("PATCH", request),
+    DEFAULT_READ_ERROR_MESSAGE,
+  );
+}
+
+export async function leaveChatRoom(chatRoomId: number | string): Promise<ChatVoidResult> {
+  return requestApiResult<null, "chat">(
+    `/api/chat/rooms/${chatRoomId}/members/me`,
+    "chat",
+    { method: "DELETE" },
+    DEFAULT_LEAVE_ERROR_MESSAGE,
+  );
+}

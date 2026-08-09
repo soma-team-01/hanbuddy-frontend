@@ -562,6 +562,7 @@ export function ActivityDetailView({
           hostIntroduction={activity.hostIntroduction}
           currentActivityId={activity.id}
           showHostedActivities={!preview}
+          canContact={!preview}
           onClose={() => setHostProfileOpen(false)}
         />
       ) : null}

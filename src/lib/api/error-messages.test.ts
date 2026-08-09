@@ -17,7 +17,7 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(44);
+    expect(BACKEND_ERROR_CODES).toHaveLength(48);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
   });
 
@@ -28,6 +28,13 @@ describe("API error message registry", () => {
     expect(resolveApiErrorMessageKey(apiError("REVIEW409_DUPLICATE", 409))).toBe("reviewDuplicate");
     expect(resolveApiErrorMessageKey(apiError("REVIEW403_OWNER", 403))).toBe("reviewOwner");
     expect(resolveApiErrorMessageKey(apiError("REVIEW404", 404))).toBe("reviewNotFound");
+  });
+
+  it("maps chat errors to their own messages", () => {
+    expect(resolveApiErrorMessageKey(apiError("CHAT404", 404))).toBe("chatNotFound");
+    expect(resolveApiErrorMessageKey(apiError("CHAT403_MEMBER", 403))).toBe("chatForbidden");
+    expect(resolveApiErrorMessageKey(apiError("CHAT400_TARGET", 400))).toBe("chatInvalidTarget");
+    expect(resolveApiErrorMessageKey(apiError("CHAT400_OWNER_LEAVE", 400))).toBe("chatOwnerLeave");
   });
 
   it("groups payment gateway failures under one user message", () => {

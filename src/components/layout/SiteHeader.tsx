@@ -8,6 +8,7 @@ import { getMyProfile } from "@/lib/api/users";
 import { getUserTypeNavRole } from "@/lib/auth/routes";
 import type { MyProfile } from "@/types/user";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
+import { ChatUnreadBadge } from "@/components/chat/ChatUnreadBadge";
 import { Avatar } from "../ui/Avatar";
 import { UserIcon } from "../ui/icons";
 import { LocaleSwitcher } from "./LocaleSwitcher";
@@ -21,11 +22,13 @@ const DESTINATIONS = {
     { href: "/", labelKey: "home" },
     { href: "/explore", labelKey: "explore" },
     { href: "/applications", labelKey: "applications" },
+    { href: "/chat", labelKey: "chat" },
   ],
   buddy: [
     { href: "/home", labelKey: "home" },
     { href: "/dashboard", labelKey: "dashboard" },
     { href: "/my-activities", labelKey: "myActivities" },
+    { href: "/chat", labelKey: "chat" },
     { href: "/my-page", labelKey: "myPage" },
   ],
   guest: [
@@ -122,13 +125,14 @@ export function SiteHeader({
         key={href}
         href={href}
         aria-current={isActive ? "page" : undefined}
-        className={`border-b-2 px-1 py-3 text-sm font-semibold transition-colors ${
+        className={`flex items-center gap-1.5 border-b-2 px-1 py-3 text-sm font-semibold transition-colors ${
           isActive
             ? "border-primary text-ink"
             : "border-transparent text-muted hover:border-primary-soft hover:text-ink"
         }`}
       >
         {t(labelKey)}
+        {href === "/chat" ? <ChatUnreadBadge /> : null}
       </Link>
     );
   });

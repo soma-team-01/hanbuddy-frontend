@@ -7,6 +7,7 @@ import {
   AvailabilityCalendarDialog,
   formatSessionTimeRange,
 } from "@/components/activity/AvailabilityCalendarDialog";
+import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Avatar } from "@/components/ui/Avatar";
@@ -60,6 +61,7 @@ export function ActivityDetailView({
   const tExplore = useTranslations("Explore");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+  const [hostProfileOpen, setHostProfileOpen] = useState(false);
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
     null,
   );
@@ -413,10 +415,26 @@ export function ActivityDetailView({
               >
                 <h2 className="font-display text-xl font-bold text-ink">{t("aboutHost")}</h2>
                 <div className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 sm:flex-row sm:gap-5 md:p-6">
-                  <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={64} />
-                  <div className="min-w-0">
-                    <h3 className="font-display text-lg font-bold text-ink">
+                  <button
+                    type="button"
+                    aria-label={t("viewHostProfile", { name: activity.host.name })}
+                    onClick={() => setHostProfileOpen(true)}
+                    className="flex shrink-0 items-center gap-4 self-start rounded-full transition-opacity hover:opacity-80 sm:block"
+                  >
+                    <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={64} />
+                    <span className="font-display text-lg font-bold text-primary underline decoration-primary/50 decoration-2 underline-offset-4 sm:hidden">
                       {activity.host.name}
+                    </span>
+                  </button>
+                  <div className="min-w-0">
+                    <h3 className="max-sm:hidden">
+                      <button
+                        type="button"
+                        onClick={() => setHostProfileOpen(true)}
+                        className="font-display text-lg font-bold text-ink underline decoration-primary/50 decoration-2 underline-offset-4 transition-colors hover:text-primary"
+                      >
+                        {activity.host.name}
+                      </button>
                     </h3>
                     <p className="text-xs font-medium text-muted">{activity.host.bio}</p>
                     {activity.hostIntroduction ? (
@@ -504,6 +522,16 @@ export function ActivityDetailView({
           durationMinutes={activity.durationMinutes}
           onSelectSession={handleCalendarSelect}
           onClose={() => setCalendarOpen(false)}
+        />
+      ) : null}
+
+      {hostProfileOpen ? (
+        <HostProfileDialog
+          host={activity.host}
+          hostIntroduction={activity.hostIntroduction}
+          currentActivityId={activity.id}
+          showHostedActivities={!preview}
+          onClose={() => setHostProfileOpen(false)}
         />
       ) : null}
 

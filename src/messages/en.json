@@ -490,7 +490,10 @@
     "meetingPoint": "Meeting Point",
     "mapUnavailable": "Map unavailable",
     "mapTitle": "Map of {place}",
-    "kstNotice": "All times are in Korea Standard Time (KST)."
+    "kstNotice": "All times are in Korea Standard Time (KST).",
+    "hostedActivities": "Experiences hosted by this buddy",
+    "noOtherActivities": "No other experiences yet.",
+    "viewHostProfile": "View {name}'s profile"
   },
   "Booking": {
     "title": "Book activity",

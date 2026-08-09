@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivity } from "@/lib/api/activities";
+import { getTouristActivities, getTouristActivity } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
@@ -9,13 +9,16 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { ActivityDetailContent } from "./activity-detail-content";
 
+const routerMock = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }));
+
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => routerMock,
 }));
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivity: vi.fn(),
+  getTouristActivities: vi.fn(),
 }));
 
 vi.mock("@/lib/google/places", async () => {
@@ -28,6 +31,7 @@ vi.mock("@/lib/google/places", async () => {
 });
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
+const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetails);
 const mockedGetGoogleMapsApiKey = vi.mocked(getGoogleMapsApiKey);
 
@@ -92,7 +96,11 @@ function mockActivityDetail() {
 
 describe("ActivityDetailContent", () => {
   beforeEach(() => {
+    routerMock.back.mockReset();
+    routerMock.push.mockReset();
     mockedGetTouristActivity.mockReset();
+    mockedGetTouristActivities.mockReset();
+    mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
     mockedFetchGooglePlaceDetails.mockReset();
     mockedGetGoogleMapsApiKey.mockReset();
     mockedGetGoogleMapsApiKey.mockReturnValue("test-google-key");
@@ -282,6 +290,97 @@ describe("ActivityDetailContent", () => {
     // 일정이 없으면 칩 대신 안내 문구가 뜨고 Book now가 비활성화된다
     expect(screen.getByText("No dates available yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+  });
+
+  it("returns to the previous page instead of a fixed explore link", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+
+    // 앱 안에서 이동해 온 상황을 만든다
+    window.history.pushState({}, "", "/en/activities/42");
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Go back" }));
+
+    expect(routerMock.back).toHaveBeenCalledTimes(1);
+    expect(routerMock.push).not.toHaveBeenCalled();
+  });
+
+  it("opens the host profile with the buddy's other experiences", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: {
+        ...buildActivityDetail(),
+        hostIntroduction: "I have guided Bukchon walks for seven years.",
+      },
+    });
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Bukchon Hidden Gems",
+          description: "Current activity is excluded.",
+          thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+          buddyName: "Jihoon Kim",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Anguk Station Exit 2",
+          meetingPlaceId: "ChIJ-bukchon",
+          price: 45000,
+          currency: "KRW",
+        },
+        {
+          activityId: 77,
+          title: "Seoul Night Market Walk",
+          description: "Another experience by the same buddy.",
+          thumbnailImageUrl: "/images/activities/market.jpg",
+          buddyName: "Jihoon Kim",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Gwangjang Market",
+          meetingPlaceId: "ChIJ-gwangjang",
+          price: 30000,
+          currency: "KRW",
+        },
+        {
+          activityId: 88,
+          title: "Other buddy experience",
+          description: "Hosted by a different buddy.",
+          thumbnailImageUrl: "/images/activities/other.jpg",
+          buddyName: "Minji Lee",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Hongdae",
+          meetingPlaceId: "ChIJ-hongdae",
+          price: 20000,
+          currency: "KRW",
+        },
+      ],
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "View Jihoon Kim's profile" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Jihoon Kim" })).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("I have guided Bukchon walks for seven years."),
+    ).toBeInTheDocument();
+    // 같은 버디의 다른 체험만 노출하고 현재 활동·다른 버디 활동은 제외한다
+    const hostedLink = await within(dialog).findByRole("link", {
+      name: /Seoul Night Market Walk/,
+    });
+    expect(hostedLink).toHaveAttribute("href", "/en/activities/77");
+    expect(within(dialog).queryByText("Other buddy experience")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Current activity is excluded.")).not.toBeInTheDocument();
   });
 
   it("localizes Korean loading and maps the activity-not-found code", async () => {

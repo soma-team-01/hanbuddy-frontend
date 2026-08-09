@@ -151,8 +151,9 @@ function ApplicationCard({
             className={`object-cover ${isCompleted || isCancelled ? "opacity-60 saturate-[0.85]" : ""}`}
           />
         </Link>
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-2">
+        {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
+        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5">
+          <div className="col-span-2 flex flex-wrap items-center gap-2">
             <StatusBadge status={application.status} />
             {dDay !== null && dDay >= 0 ? (
               <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
@@ -160,19 +161,20 @@ function ApplicationCard({
               </span>
             ) : null}
           </div>
-          {/* 제목과 결제 금액을 같은 줄에 둔다 */}
-          <div className="flex items-start justify-between gap-4">
-            <Link href={`/activities/${application.activityId}`} className="min-w-0">
-              <h3
-                className={`line-clamp-2 font-display text-base leading-6 font-bold ${
-                  isCompleted || isCancelled ? "text-muted" : "text-ink"
-                }`}
-              >
-                {application.activityTitle}
-              </h3>
-            </Link>
+
+          <Link href={`/activities/${application.activityId}`} className="col-start-1 min-w-0">
+            <h3
+              className={`line-clamp-2 font-display text-base leading-6 font-bold ${
+                isCompleted || isCancelled ? "text-muted" : "text-ink"
+              }`}
+            >
+              {application.activityTitle}
+            </h3>
+          </Link>
+          {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 금액과 취소 사유를 담는다 */}
+          <div className="col-start-2 row-span-3 flex flex-col items-end text-right">
             {totalKrw !== null ? (
-              <div className="shrink-0 text-right">
+              <>
                 <p className="font-display text-xl leading-6 font-bold text-ink">
                   {formatKrw(totalKrw, locale)}
                 </p>
@@ -191,25 +193,10 @@ function ApplicationCard({
                     })}
                   </p>
                 ) : null}
-              </div>
+              </>
             ) : null}
-          </div>
-          <p className="text-sm text-muted">{application.dateLabel}</p>
-          {/* 호스트와 취소 사유를 같은 높이에 둔다 */}
-          <div className="mt-auto flex items-end justify-between gap-4">
-            <button
-              type="button"
-              aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
-              onClick={() => setHostProfileOpen(true)}
-              className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
-            >
-              <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-              <span className="underline decoration-primary/40 decoration-2 underline-offset-4">
-                {application.hostName}
-              </span>
-            </button>
             {isCancelled && application.cancellationReason ? (
-              <p className="shrink-0 text-right text-xs text-muted">
+              <p className="mt-auto text-xs text-muted">
                 {t("cancelledReason", {
                   reason: t(
                     `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
@@ -218,6 +205,19 @@ function ApplicationCard({
               </p>
             ) : null}
           </div>
+
+          <p className="col-start-1 text-sm text-muted">{application.dateLabel}</p>
+          <button
+            type="button"
+            aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
+            onClick={() => setHostProfileOpen(true)}
+            className="col-start-1 flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
+          >
+            <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
+            <span className="underline decoration-primary/40 decoration-2 underline-offset-4">
+              {application.hostName}
+            </span>
+          </button>
         </div>
       </div>
       {application.status === "confirmed" && (

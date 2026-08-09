@@ -31,7 +31,8 @@ export async function POST(request: NextRequest, context: PaymentRouteContext) {
   if (typeof orderId !== "string" || orderId.trim().length === 0) {
     return badRequestResponse("orderId가 필요합니다.");
   }
-  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+  // 백엔드 계약상 결제 금액은 KRW 정수다
+  if (typeof amount !== "number" || !Number.isInteger(amount) || amount <= 0) {
     return badRequestResponse("amount가 필요합니다.");
   }
 

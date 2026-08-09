@@ -100,6 +100,7 @@ describe("POST /api/applications/me/[applicationId]/payment/confirm", () => {
     ["missing amount", { ...confirmRequest, amount: undefined }],
     ["non-numeric amount", { ...confirmRequest, amount: "100000" }],
     ["non-positive amount", { ...confirmRequest, amount: 0 }],
+    ["non-integer amount", { ...confirmRequest, amount: 100.5 }],
   ])("rejects a request with %s before proxying", async (_case, body) => {
     const response = await POST(
       new NextRequest("http://localhost/api/applications/me/11/payment/confirm", {

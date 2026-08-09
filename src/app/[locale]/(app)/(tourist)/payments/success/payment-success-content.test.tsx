@@ -100,7 +100,7 @@ describe("PaymentSuccessContent", () => {
     renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The captured PayPal amount or currency does not match the payment.",
+      "The approved amount or currency does not match this payment.",
     );
     expect(screen.queryByText("raw Toss failure")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View My Applications" })).toHaveAttribute(

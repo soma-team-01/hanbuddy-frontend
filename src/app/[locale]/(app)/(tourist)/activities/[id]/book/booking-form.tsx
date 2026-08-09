@@ -205,11 +205,13 @@ export function BookingForm({
                     <span className="group relative inline-block">
                       <button
                         type="button"
+                        aria-describedby="refund-policy-tooltip"
                         className="font-semibold text-ink underline decoration-primary/60 decoration-2 underline-offset-4 transition-colors hover:text-primary focus-visible:text-primary"
                       >
                         {chunks}
                       </button>
                       <span
+                        id="refund-policy-tooltip"
                         role="tooltip"
                         className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-72 -translate-x-1/2 flex-col gap-2 rounded-xl border border-primary/30 bg-canvas-soft p-4 text-left text-xs leading-5 font-normal no-underline shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:flex group-hover:flex"
                       >

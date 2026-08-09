@@ -185,7 +185,7 @@ function ApplicationCard({
         <div className="flex shrink-0 flex-col items-end text-right">
           {totalKrw !== null ? (
             <>
-              <p className="font-display text-sm font-semibold text-ink">
+              <p className="font-display text-xl leading-7 font-bold text-ink">
                 {formatKrw(totalKrw, locale)}
               </p>
               {application.breakdown ? (

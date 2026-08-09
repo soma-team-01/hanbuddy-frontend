@@ -15,6 +15,8 @@ describe("sanitizeReturnToPath", () => {
     // 쿼리에 절대 URL이 섞인 경로도 보수적으로 거른다
     expect(sanitizeReturnToPath("/redirect?next=https://evil.example.com/")).toBeNull();
     expect(sanitizeReturnToPath("/login")).toBeNull();
+    expect(sanitizeReturnToPath("/onboarding")).toBeNull();
+    expect(sanitizeReturnToPath("/buddy/onboarding")).toBeNull();
     expect(sanitizeReturnToPath("/login?next=%2Fexplore")).toBeNull();
     expect(sanitizeReturnToPath("/")).toBeNull();
     expect(sanitizeReturnToPath("")).toBeNull();

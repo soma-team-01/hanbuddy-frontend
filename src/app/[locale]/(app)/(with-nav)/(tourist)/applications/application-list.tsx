@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -88,8 +89,10 @@ function ApplicationCard({
   isPaymentPending: boolean;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
+  const [hostProfileOpen, setHostProfileOpen] = useState(false);
   const locale = useLocale();
   const t = useTranslations("Applications");
+  const tActivityDetail = useTranslations("ActivityDetail");
   const getApiErrorMessage = useApiErrorMessage();
   const paymentCharge =
     application.paymentAmount !== null &&
@@ -115,12 +118,13 @@ function ApplicationCard({
 
   return (
     <article className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 transition-colors hover:border-primary/50 md:p-6">
-      <Link
-        href={`/activities/${application.activityId}`}
-        className="flex gap-4"
-        aria-label={application.activityTitle}
-      >
-        <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-panel md:size-28">
+      <div className="flex gap-4">
+        <Link
+          href={`/activities/${application.activityId}`}
+          aria-hidden="true"
+          tabIndex={-1}
+          className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-panel md:size-28"
+        >
           <Image
             src={getActivityThumbnail(application.thumbnailUrl)}
             alt=""
@@ -128,7 +132,7 @@ function ApplicationCard({
             sizes="112px"
             className={`object-cover ${isCompleted || isCancelled ? "opacity-60 saturate-[0.85]" : ""}`}
           />
-        </div>
+        </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={application.status} />
@@ -138,18 +142,27 @@ function ApplicationCard({
               </span>
             ) : null}
           </div>
-          <h3
-            className={`line-clamp-2 font-display text-base leading-6 font-bold ${
-              isCompleted || isCancelled ? "text-muted" : "text-ink"
-            }`}
-          >
-            {application.activityTitle}
-          </h3>
+          <Link href={`/activities/${application.activityId}`} className="min-w-0">
+            <h3
+              className={`line-clamp-2 font-display text-base leading-6 font-bold ${
+                isCompleted || isCancelled ? "text-muted" : "text-ink"
+              }`}
+            >
+              {application.activityTitle}
+            </h3>
+          </Link>
           <p className="text-sm text-muted">{application.dateLabel}</p>
-          <p className="flex items-center gap-1.5 text-sm text-muted">
+          <button
+            type="button"
+            aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
+            onClick={() => setHostProfileOpen(true)}
+            className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
+          >
             <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-            {application.hostName}
-          </p>
+            <span className="underline decoration-primary/40 decoration-2 underline-offset-4">
+              {application.hostName}
+            </span>
+          </button>
         </div>
         {totalKrw !== null ? (
           <div className="shrink-0 text-right">
@@ -165,7 +178,7 @@ function ApplicationCard({
             ) : null}
           </div>
         ) : null}
-      </Link>
+      </div>
       {application.status === "confirmed" && (
         <PriceBreakdown application={application} paymentCharge={paymentCharge} />
       )}
@@ -216,6 +229,17 @@ function ApplicationCard({
           {t("leaveReviewComingSoon")}
         </button>
       )}
+      {hostProfileOpen ? (
+        <HostProfileDialog
+          host={{
+            name: application.hostName,
+            bio: tActivityDetail("localHost"),
+            avatarUrl: application.hostAvatarUrl,
+          }}
+          currentActivityId={String(application.activityId)}
+          onClose={() => setHostProfileOpen(false)}
+        />
+      ) : null}
     </article>
   );
 }

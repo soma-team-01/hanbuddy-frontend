@@ -1,10 +1,18 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { getTouristActivities } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Locale } from "@/i18n/routing";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
+
+vi.mock("@/lib/api/activities", () => ({
+  getTouristActivities: vi.fn(),
+}));
+
+const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 
 const applications: Application[] = [
   {
@@ -160,6 +168,43 @@ describe("ApplicationList", () => {
     renderList({ isPaymentPending: true });
 
     expect(screen.getByRole("button", { name: "Opening payment..." })).toBeDisabled();
+  });
+
+  it("opens the host profile popup from the application card", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 77,
+          title: "Seoul Night Market Walk",
+          description: "Another experience by the same buddy.",
+          thumbnailImageUrl: "/images/activities/market.jpg",
+          buddyName: "Jihoon Kim",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Gwangjang Market",
+          meetingPlaceId: "ChIJ-gwangjang",
+          price: 30000,
+          currency: "KRW",
+        },
+      ],
+    });
+
+    renderWithQueryClient(
+      <ApplicationList
+        applications={applications}
+        onCancelApplication={vi.fn()}
+        onContinuePayment={vi.fn().mockResolvedValue(undefined)}
+        isPaymentPending={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "View Jihoon Kim's profile" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Jihoon Kim" })).toBeInTheDocument();
+    expect(
+      await within(dialog).findByRole("link", { name: /Seoul Night Market Walk/ }),
+    ).toHaveAttribute("href", "/en/activities/77");
   });
 
   it("keeps the review action disabled until its flow is available", () => {

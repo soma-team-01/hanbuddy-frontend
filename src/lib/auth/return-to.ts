@@ -11,7 +11,9 @@ export function sanitizeReturnToPath(value: string | null | undefined): string |
   if (value.includes("\\") || value.includes("://")) return null;
 
   const [pathname] = value.split("?");
+  // 로그인 완료 후 되돌아갈 이유가 없는 인증 진입 화면들
   if (pathname === "/login" || pathname === "/") return null;
+  if (pathname === "/onboarding" || pathname === "/buddy/onboarding") return null;
 
   return value;
 }

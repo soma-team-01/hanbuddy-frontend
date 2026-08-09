@@ -34,6 +34,7 @@ export function mapApplicationResponseToApplication(
     hostAvatarUrl: null,
     activityTitle: response.activityTitle,
     thumbnailUrl: response.thumbnailImageUrl,
+    cancellationReason: response.cancellationReason,
     breakdown: {
       unitPrice: response.price,
       guests: response.guestCount,

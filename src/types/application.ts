@@ -22,6 +22,8 @@ export interface Application {
   hostAvatarUrl: string | null;
   activityTitle: string;
   thumbnailUrl: string | null;
+  /** 취소된 신청의 사유. 취소되지 않았으면 null */
+  cancellationReason: ApplicationCancellationReason | null;
   breakdown?: PriceBreakdown;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;

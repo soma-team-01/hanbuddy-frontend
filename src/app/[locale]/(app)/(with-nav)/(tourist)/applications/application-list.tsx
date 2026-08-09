@@ -15,9 +15,17 @@ import { formatCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel } from "@/lib/payments/toss";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 
 const TABS = ["upcoming", "past"] as const;
+
+const REASON_MESSAGE_KEY = {
+  SCHEDULE_CONFLICT: "scheduleConflict",
+  ILLNESS: "illness",
+  FOUND_OTHER: "foundOther",
+  OTHER: "other",
+} as const satisfies Record<ApplicationCancellationReason, string>;
 
 type TabKey = (typeof TABS)[number];
 
@@ -80,11 +88,13 @@ function PriceBreakdown({
 function ApplicationCard({
   application,
   onCancel,
+  onCancelPending,
   onContinuePayment,
   isPaymentPending,
 }: Readonly<{
   application: Application;
   onCancel: () => void;
+  onCancelPending: () => void;
   onContinuePayment: (applicationId: string) => Promise<void>;
   isPaymentPending: boolean;
 }>) {
@@ -155,6 +165,15 @@ function ApplicationCard({
             </h3>
           </Link>
           <p className="text-sm text-muted">{application.dateLabel}</p>
+          {isCancelled && application.cancellationReason ? (
+            <p className="text-xs text-muted">
+              {t("cancelledReason", {
+                reason: t(
+                  `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
+                ),
+              })}
+            </p>
+          ) : null}
           <button
             type="button"
             aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
@@ -206,6 +225,14 @@ function ApplicationCard({
           >
             {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
           </button>
+          <button
+            type="button"
+            disabled={isPaymentBusy}
+            onClick={onCancelPending}
+            className="h-11 w-full rounded-lg border border-line-strong font-display text-sm font-bold text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+          >
+            {t("cancel")}
+          </button>
           {paymentError !== null && (
             <p
               role="alert"
@@ -252,6 +279,7 @@ function ApplicationCard({
 export function ApplicationList({
   applications,
   onCancelApplication,
+  onCancelPendingPayment,
   onContinuePayment,
   isPaymentPending,
 }: Readonly<{
@@ -260,12 +288,16 @@ export function ApplicationList({
     applicationId: string,
     reason: ApplicationCancellationReason,
   ) => Promise<CancelDialogOutcome>;
+  onCancelPendingPayment: (applicationId: string) => Promise<CancelDialogOutcome>;
   onContinuePayment: (applicationId: string) => Promise<void>;
   isPaymentPending: boolean;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
+  const [pendingCancelTargetId, setPendingCancelTargetId] = useState<string | null>(null);
+  const [pendingCancelError, setPendingCancelError] = useState<unknown>(null);
   const t = useTranslations("Applications");
+  const getListApiErrorMessage = useApiErrorMessage();
 
   const visibleApplications = applications.filter((application) =>
     tab === "upcoming"
@@ -302,6 +334,10 @@ export function ApplicationList({
             key={application.id}
             application={application}
             onCancel={() => setCancelTargetId(application.id)}
+            onCancelPending={() => {
+              setPendingCancelError(null);
+              setPendingCancelTargetId(application.id);
+            }}
             onContinuePayment={onContinuePayment}
             isPaymentPending={isPaymentPending}
           />
@@ -318,6 +354,34 @@ export function ApplicationList({
           </div>
         )}
       </div>
+      {pendingCancelTargetId ? (
+        <ConfirmDialog
+          title={t("cancelPendingTitle")}
+          description={t("cancelPendingDescription")}
+          confirmLabel={t("cancelPendingConfirm")}
+          cancelLabel={t("keepPendingApplication")}
+          pendingLabel={t("cancelling")}
+          tone="danger"
+          onConfirm={async () => {
+            const outcome = await onCancelPendingPayment(pendingCancelTargetId);
+            if (outcome.ok) {
+              setPendingCancelTargetId(null);
+              return;
+            }
+            setPendingCancelError(outcome.error);
+          }}
+          onClose={() => setPendingCancelTargetId(null)}
+        >
+          {pendingCancelError !== null ? (
+            <p
+              role="alert"
+              className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+            >
+              {getListApiErrorMessage(pendingCancelError, t("cancelFailed"))}
+            </p>
+          ) : null}
+        </ConfirmDialog>
+      ) : null}
       {cancelTargetId && (
         <CancelDialog
           onClose={() => setCancelTargetId(null)}

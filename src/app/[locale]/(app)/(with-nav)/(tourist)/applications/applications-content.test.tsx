@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   cancelMyApplication,
+  cancelPendingPayment,
   continueApplicationPayment,
   getMyApplications,
 } from "@/lib/api/applications";
@@ -21,6 +22,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 vi.mock("@/lib/api/applications", () => ({
   cancelMyApplication: vi.fn(),
+  cancelPendingPayment: vi.fn(),
   continueApplicationPayment: vi.fn(),
   getMyApplications: vi.fn(),
 }));
@@ -31,6 +33,7 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
 }));
 
 const mockedCancelMyApplication = vi.mocked(cancelMyApplication);
+const mockedCancelPendingPayment = vi.mocked(cancelPendingPayment);
 const mockedContinueApplicationPayment = vi.mocked(continueApplicationPayment);
 const mockedGetMyApplications = vi.mocked(getMyApplications);
 const mockedRequestTossPayment = vi.mocked(requestTossPayment);
@@ -61,6 +64,7 @@ describe("ApplicationsContent", () => {
   beforeEach(() => {
     routerMock.replace.mockReset();
     mockedCancelMyApplication.mockReset();
+    mockedCancelPendingPayment.mockReset();
     mockedContinueApplicationPayment.mockReset();
     mockedGetMyApplications.mockReset();
     mockedRequestTossPayment.mockReset();
@@ -103,6 +107,33 @@ describe("ApplicationsContent", () => {
       expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
     });
     expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11");
+  });
+
+  it("removes a pending application from the list after cancelling it", async () => {
+    const pendingApplication: ApplicationResponse = {
+      ...confirmedApplication,
+      status: "PENDING_PAYMENT",
+      paymentAmount: null,
+      paymentCurrency: null,
+    };
+    mockedGetMyApplications.mockResolvedValueOnce({
+      status: "success",
+      applications: [pendingApplication],
+    });
+    // 결제 전 취소된 신청은 백엔드 목록에서 빠진다
+    mockedGetMyApplications.mockResolvedValue({ status: "success", applications: [] });
+    mockedCancelPendingPayment.mockResolvedValue({
+      status: "success",
+      application: { ...pendingApplication, status: "CANCELLED" },
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
+
+    await waitFor(() => expect(mockedCancelPendingPayment).toHaveBeenCalledWith("11"));
+    await waitFor(() => expect(screen.queryByText("Bukchon Hidden Gems")).not.toBeInTheDocument());
   });
 
   it("hides superseded applications from the list", async () => {

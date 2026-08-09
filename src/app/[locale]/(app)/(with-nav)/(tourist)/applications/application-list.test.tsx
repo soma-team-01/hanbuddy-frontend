@@ -25,6 +25,7 @@ const applications: Application[] = [
     hostAvatarUrl: null,
     activityTitle: "Bukchon Hidden Gems",
     thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
+    cancellationReason: null,
     breakdown: {
       unitPrice: 45000,
       guests: 2,
@@ -43,6 +44,7 @@ const applications: Application[] = [
     hostAvatarUrl: null,
     activityTitle: "Traditional Tea Tasting",
     thumbnailUrl: null,
+    cancellationReason: null,
   },
 ];
 
@@ -62,6 +64,7 @@ function renderList(
     <ApplicationList
       applications={applications}
       onCancelApplication={vi.fn()}
+      onCancelPendingPayment={vi.fn().mockResolvedValue({ ok: true })}
       onContinuePayment={vi.fn().mockResolvedValue(undefined)}
       isPaymentPending={false}
       {...overrides}
@@ -174,6 +177,7 @@ describe("ApplicationList", () => {
       <ApplicationList
         applications={applications}
         onCancelApplication={vi.fn()}
+        onCancelPendingPayment={vi.fn().mockResolvedValue({ ok: true })}
         onContinuePayment={onContinuePayment}
         isPaymentPending={false}
       />
@@ -218,6 +222,7 @@ describe("ApplicationList", () => {
       <ApplicationList
         applications={applications}
         onCancelApplication={vi.fn()}
+        onCancelPendingPayment={vi.fn().mockResolvedValue({ ok: true })}
         onContinuePayment={vi.fn().mockResolvedValue(undefined)}
         isPaymentPending={false}
       />,
@@ -230,6 +235,65 @@ describe("ApplicationList", () => {
     expect(
       await within(dialog).findByRole("link", { name: /Seoul Night Market Walk/ }),
     ).toHaveAttribute("href", "/en/activities/77");
+  });
+
+  it("cancels a pending payment after confirming the seat release", async () => {
+    const onCancelPendingPayment = vi.fn().mockResolvedValue({ ok: true });
+    renderList({ onCancelPendingPayment });
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(
+      screen.getByText("The seat we're holding for you will be released right away."),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
+
+    await waitFor(() => expect(onCancelPendingPayment).toHaveBeenCalledWith("1"));
+    await waitFor(() =>
+      expect(
+        screen.queryByText("The seat we're holding for you will be released right away."),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the pending cancellation dialog open and shows why it failed", async () => {
+    const onCancelPendingPayment = vi.fn().mockResolvedValue({
+      ok: false,
+      error: new ApiClientError({
+        code: "PAYMENT409_REVIEW_REQUIRED",
+        status: 409,
+        details: null,
+        backendMessage: "운영자 확인이 필요한 결제입니다.",
+      }),
+    });
+    renderList({ onCancelPendingPayment });
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This payment needs administrator review before it can continue.",
+    );
+    expect(
+      screen.getByText("The seat we're holding for you will be released right away."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the cancellation reason on a cancelled application", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[1],
+          id: "9",
+          status: "cancelled",
+          cancellationReason: "SCHEDULE_CONFLICT",
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+
+    expect(screen.getByText("Cancellation reason: Schedule conflict")).toBeInTheDocument();
   });
 
   it("keeps the review action disabled until its flow is available", () => {

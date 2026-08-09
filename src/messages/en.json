@@ -571,7 +571,12 @@
     "paymentProcessing": "Opening payment...",
     "dDay": "D-{count}",
     "dDayToday": "D-DAY",
-    "exploreCta": "Explore activities"
+    "exploreCta": "Explore activities",
+    "cancelledReason": "Cancellation reason: {reason}",
+    "cancelPendingTitle": "Cancel this application?",
+    "cancelPendingDescription": "The seat we're holding for you will be released right away.",
+    "cancelPendingConfirm": "Yes, cancel",
+    "keepPendingApplication": "Keep application"
   },
   "Payment": {
     "unavailable": "Payment unavailable",

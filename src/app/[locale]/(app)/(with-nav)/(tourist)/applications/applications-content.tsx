@@ -2,7 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { cancelMyApplication, continueApplicationPayment } from "@/lib/api/applications";
+import {
+  cancelMyApplication,
+  cancelPendingPayment,
+  continueApplicationPayment,
+} from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import type { Locale } from "@/i18n/routing";
@@ -39,12 +43,24 @@ export function ApplicationsContent() {
       await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
     },
   });
+  const cancelPendingPaymentMutation = useMutation({
+    mutationFn: async (applicationId: string) =>
+      unwrapApiResult(await cancelPendingPayment(applicationId), "application"),
+    onSuccess: async () => {
+      // 결제 전 취소된 신청은 백엔드 목록에서 제외되므로 다시 불러온다
+      await queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+      await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
+    },
+  });
   const continuePaymentMutation = useMutation({
     mutationFn: async (applicationId: string) =>
       unwrapApiResult(await continueApplicationPayment(applicationId), "payment"),
   });
   useAuthQueryRedirect(
-    applicationsQuery.error ?? cancelApplicationMutation.error ?? continuePaymentMutation.error,
+    applicationsQuery.error ??
+      cancelApplicationMutation.error ??
+      cancelPendingPaymentMutation.error ??
+      continuePaymentMutation.error,
   );
 
   const applications = (applicationsQuery.data ?? [])
@@ -66,6 +82,15 @@ export function ApplicationsContent() {
         ok: false,
         error,
       };
+    }
+  }
+
+  async function handleCancelPendingPayment(applicationId: string): Promise<CancelDialogOutcome> {
+    try {
+      await cancelPendingPaymentMutation.mutateAsync(applicationId);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 
@@ -94,6 +119,7 @@ export function ApplicationsContent() {
     <ApplicationList
       applications={applications}
       onCancelApplication={handleCancelApplication}
+      onCancelPendingPayment={handleCancelPendingPayment}
       onContinuePayment={handleContinuePayment}
       isPaymentPending={continuePaymentMutation.isPending}
     />

@@ -571,7 +571,12 @@
     "paymentProcessing": "결제창을 여는 중...",
     "dDay": "D-{count}",
     "dDayToday": "D-DAY",
-    "exploreCta": "액티비티 둘러보기"
+    "exploreCta": "액티비티 둘러보기",
+    "cancelledReason": "취소 사유: {reason}",
+    "cancelPendingTitle": "이 신청을 취소할까요?",
+    "cancelPendingDescription": "선점 중인 좌석이 즉시 해제됩니다.",
+    "cancelPendingConfirm": "네, 취소할게요",
+    "keepPendingApplication": "신청 유지"
   },
   "Payment": {
     "unavailable": "결제를 이용할 수 없습니다.",

@@ -24,6 +24,7 @@ import { createApplication } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatKrw } from "@/lib/format";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
+import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
@@ -74,6 +75,8 @@ export function BookingForm({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
         queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
+        // 좌석을 선점했으므로 활동 상세의 잔여 좌석을 다시 불러온다
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
       ]);
     },
   });

@@ -10,6 +10,7 @@ import {
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import type { Locale } from "@/i18n/routing";
+import { activityKeys } from "@/lib/query/activities";
 import { requestTossPayment } from "@/lib/payments/toss";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -40,7 +41,11 @@ export function ApplicationsContent() {
           item.applicationId === application.applicationId ? application : item,
         ),
       );
-      await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
+        // 좌석이 풀렸으므로 활동 상세의 잔여 좌석을 갱신한다
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
     },
   });
   const cancelPendingPaymentMutation = useMutation({
@@ -48,8 +53,12 @@ export function ApplicationsContent() {
       unwrapApiResult(await cancelPendingPayment(applicationId), "application"),
     onSuccess: async () => {
       // 결제 전 취소된 신청은 백엔드 목록에서 제외되므로 다시 불러온다
-      await queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
-      await queryClient.invalidateQueries({ queryKey: buddyKeys.applications() });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+        queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
+        // 선점이 즉시 해제되므로 활동 상세의 잔여 좌석을 갱신한다
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
     },
   });
   const continuePaymentMutation = useMutation({

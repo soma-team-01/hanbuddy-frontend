@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApplication } from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
+import { activityKeys } from "@/lib/query/activities";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Activity } from "@/types/activity";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
@@ -179,6 +180,18 @@ describe("BookingForm", () => {
       specialRequest: "Vegetarian snacks, please.",
     });
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
+  });
+
+  it("refreshes the activity detail so the held seat is reflected", async () => {
+    const { queryClient } = renderWithQueryClient(<BookingForm activity={activity} />);
+    queryClient.setQueryData(activityKeys.detail("42"), { activityId: 42 });
+
+    await agreeAndSubmit();
+
+    // 좌석을 선점했으므로 잔여 좌석이 담긴 활동 상세 캐시를 무효화해야 한다
+    await waitFor(() =>
+      expect(queryClient.getQueryState(activityKeys.detail("42"))?.isInvalidated).toBe(true),
+    );
   });
 
   it("shows a localized capacity error when the selected schedule is full", async () => {

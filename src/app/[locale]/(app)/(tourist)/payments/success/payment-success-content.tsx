@@ -11,6 +11,7 @@ import { confirmApplicationPayment } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDateTime } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
+import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
@@ -135,7 +136,11 @@ export function PaymentSuccessContent({
         "application",
       ),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+        // 선점이 좌석으로 확정됐으므로 활동 상세의 잔여 좌석을 갱신한다
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
     },
   });
   const confirmStartedRef = useRef(false);

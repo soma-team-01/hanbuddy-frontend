@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getActivityReviews } from "@/lib/api/reviews";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -25,13 +25,13 @@ function createReview(reviewId: number): ReviewResponse {
   };
 }
 
-function createPage(page: number, hasNext: boolean): ReviewPageResponse {
+function createPage(page: number, size: number, hasNext: boolean): ReviewPageResponse {
   return {
     averageRating: 4.8,
-    totalCount: 8,
-    reviews: [createReview(page * 2 + 1), createReview(page * 2 + 2)],
+    totalCount: 31,
+    reviews: Array.from({ length: 2 }, (_, index) => createReview(page * 100 + index + 1)),
     page,
-    size: 6,
+    size,
     hasNext,
   };
 }
@@ -41,36 +41,56 @@ describe("ActivityReviewsSection", () => {
     vi.clearAllMocks();
   });
 
-  it("shows the average rating and the total review count", async () => {
+  it("previews six reviews with the average rating and total count", async () => {
     mockedGetActivityReviews.mockResolvedValue({
       status: "success",
-      reviews: createPage(0, false),
+      reviews: createPage(0, 6, true),
     });
 
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
 
     expect(await screen.findByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();
-    expect(screen.getByText("8 reviews")).toBeInTheDocument();
+    expect(screen.getByText("31 reviews")).toBeInTheDocument();
     expect(screen.getByText("Loved every minute of it (1).")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Show all/ })).not.toBeInTheDocument();
+    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 6);
   });
 
-  it("appends the next page when the reader asks for every review", async () => {
-    mockedGetActivityReviews.mockImplementation(async (_activityId, page) => ({
+  it("opens the full list in a dialog that pages twelve at a time", async () => {
+    mockedGetActivityReviews.mockImplementation(async (_activityId, page, size) => ({
       status: "success",
-      reviews: createPage(page, page === 0),
+      reviews: createPage(page, size, page === 0),
     }));
 
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
 
-    const showAll = await screen.findByRole("button", { name: "Show all 8 reviews" });
-    fireEvent.click(showAll);
+    fireEvent.click(await screen.findByRole("button", { name: "Show all 31 reviews" }));
 
-    await waitFor(() => {
-      expect(screen.getByText("Loved every minute of it (3).")).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12));
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Load more reviews" }));
+
+    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenLastCalledWith(42, 1, 12));
+    expect(await within(dialog).findByText("Loved every minute of it (101).")).toBeInTheDocument();
+  });
+
+  it("hides the full-list button when the preview already shows everything", async () => {
+    mockedGetActivityReviews.mockResolvedValue({
+      status: "success",
+      reviews: {
+        averageRating: 5,
+        totalCount: 2,
+        reviews: [createReview(1), createReview(2)],
+        page: 0,
+        size: 6,
+        hasNext: false,
+      },
     });
-    expect(screen.getByText("Loved every minute of it (1).")).toBeInTheDocument();
-    expect(mockedGetActivityReviews).toHaveBeenLastCalledWith(42, 1, 6);
+
+    renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
+
+    expect(await screen.findByText("Loved every minute of it (1).")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Show all/ })).not.toBeInTheDocument();
   });
 
   it("invites the first review when the activity has none", async () => {

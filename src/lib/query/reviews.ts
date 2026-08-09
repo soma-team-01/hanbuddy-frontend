@@ -2,8 +2,10 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
 import { unwrapApiResult } from "./result";
 
-/** 미리보기·캐러셀은 한 번에 6건씩 불러온다 */
-export const REVIEW_PAGE_SIZE = 6;
+/** 활동 상세 본문의 미리보기는 6건만 보여준다 */
+export const REVIEW_PREVIEW_SIZE = 6;
+/** 전체 후기 목록(다이얼로그·호스트 프로필)은 12건씩 이어 붙인다 */
+export const REVIEW_PAGE_SIZE = 12;
 
 export const reviewKeys = {
   all: () => ["reviews"] as const,

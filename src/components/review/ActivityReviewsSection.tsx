@@ -1,39 +1,48 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { ActivityReviewsDialog } from "@/components/review/ActivityReviewsDialog";
 import { ReviewCard } from "@/components/review/ReviewCard";
 import { RatingSummary } from "@/components/ui/RatingSummary";
-import { activityReviewsQueryOptions } from "@/lib/query/reviews";
+import { getActivityReviews } from "@/lib/api/reviews";
+import { reviewKeys, REVIEW_PREVIEW_SIZE } from "@/lib/query/reviews";
+import { unwrapApiResult } from "@/lib/query/result";
 
 /**
  * 활동 상세의 후기 섹션.
- * 첫 페이지(6건)를 미리보기로 보여주고, 남은 후기는 페이지를 이어 붙여 더 불러온다.
+ * 본문에는 최신 6건만 두고, 전체 목록은 다이얼로그에서 12건씩 이어 붙인다.
  */
 export function ActivityReviewsSection({
   activityId,
   id,
 }: Readonly<{ activityId: number | string; id?: string }>) {
   const t = useTranslations("Reviews");
-  const reviewsQuery = useInfiniteQuery(activityReviewsQueryOptions(activityId));
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const previewQuery = useQuery({
+    queryKey: [...reviewKeys.activity(activityId), "preview", REVIEW_PREVIEW_SIZE],
+    queryFn: async () =>
+      unwrapApiResult(await getActivityReviews(activityId, 0, REVIEW_PREVIEW_SIZE), "reviews"),
+    staleTime: 60_000,
+  });
 
-  const pages = reviewsQuery.data?.pages ?? [];
-  const reviews = pages.flatMap((page) => page.reviews);
-  const firstPage = pages[0];
-  const totalCount = firstPage?.totalCount ?? 0;
+  const preview = previewQuery.data;
+  const reviews = preview?.reviews ?? [];
+  const totalCount = preview?.totalCount ?? 0;
 
   return (
     <section id={id} className="flex scroll-mt-24 flex-col gap-5 border-t border-line-soft pt-6">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2 className="font-display text-xl font-bold text-ink">{t("sectionTitle")}</h2>
-        <RatingSummary rating={firstPage?.averageRating} size="md" />
+        <RatingSummary rating={preview?.averageRating} size="md" />
         <span className="text-sm text-muted">{t("countLabel", { count: totalCount })}</span>
       </div>
 
-      {reviewsQuery.isPending ? <p className="text-sm text-muted">{t("loading")}</p> : null}
-      {reviewsQuery.isError ? <p className="text-sm text-primary">{t("loadError")}</p> : null}
+      {previewQuery.isPending ? <p className="text-sm text-muted">{t("loading")}</p> : null}
+      {previewQuery.isError ? <p className="text-sm text-primary">{t("loadError")}</p> : null}
 
-      {!reviewsQuery.isPending && !reviewsQuery.isError && reviews.length === 0 ? (
+      {!previewQuery.isPending && !previewQuery.isError && reviews.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line-strong p-6 text-center">
           <p className="font-display text-sm font-bold text-ink">{t("none")}</p>
           <p className="mt-1 text-sm text-muted">{t("noneDescription")}</p>
@@ -50,19 +59,18 @@ export function ActivityReviewsSection({
         </ul>
       ) : null}
 
-      {reviewsQuery.hasNextPage ? (
+      {totalCount > reviews.length ? (
         <button
           type="button"
-          onClick={() => void reviewsQuery.fetchNextPage()}
-          disabled={reviewsQuery.isFetchingNextPage}
-          className="self-start rounded-full border border-primary px-5 py-2.5 font-display text-sm font-bold text-primary transition-colors hover:bg-primary-soft disabled:opacity-60"
+          onClick={() => setDialogOpen(true)}
+          className="self-start rounded-full border border-primary px-5 py-2.5 font-display text-sm font-bold text-primary transition-colors hover:bg-primary-soft"
         >
-          {reviewsQuery.isFetchingNextPage
-            ? t("loading")
-            : pages.length === 1
-              ? t("showAll", { count: totalCount })
-              : t("loadMore")}
+          {t("showAll", { count: totalCount })}
         </button>
+      ) : null}
+
+      {dialogOpen ? (
+        <ActivityReviewsDialog activityId={activityId} onClose={() => setDialogOpen(false)} />
       ) : null}
     </section>
   );

@@ -9,6 +9,14 @@ import type { Locale } from "@/i18n/routing";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
+const routerMock = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }));
+
+// 호스트 프로필의 "메시지 보내기"가 라우터를 쓰므로 앱 라우터를 대신 세워준다
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => routerMock,
+}));
+
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
 }));

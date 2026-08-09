@@ -526,15 +526,15 @@
     "totalLabel": "Total (KRW)",
     "refundRules": {
       "full": {
-        "label": "Until 48 hours before the activity",
+        "label": "48+ hours before the activity",
         "value": "Full refund"
       },
       "half": {
-        "label": "Until 24 hours before the activity",
+        "label": "24–48 hours before",
         "value": "50% refund"
       },
       "none": {
-        "label": "Less than 24 hours before the activity",
+        "label": "Less than 24 hours before",
         "value": "No refund"
       }
     }

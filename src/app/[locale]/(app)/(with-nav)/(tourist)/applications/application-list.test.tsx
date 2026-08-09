@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
@@ -129,6 +129,31 @@ describe("ApplicationList", () => {
       "The payment service is temporarily unavailable. Please try again shortly.",
     );
     expect(screen.queryByText("토스 결제 요청에 실패했습니다.")).not.toBeInTheDocument();
+  });
+
+  it("keeps the payment action locked while the Toss window is open", async () => {
+    let resolvePayment!: () => void;
+    const onContinuePayment = vi.fn().mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolvePayment = resolve;
+      }),
+    );
+    renderList({ onContinuePayment });
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+
+    // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Opening payment..." })).toBeDisabled(),
+    );
+
+    await act(async () => {
+      resolvePayment();
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Continue Payment" })).toBeEnabled(),
+    );
+    expect(onContinuePayment).toHaveBeenCalledTimes(1);
   });
 
   it("stays silent when the buyer closes the Toss window", async () => {

@@ -90,6 +90,8 @@ function ApplicationCard({
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
+  // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
+  const [paymentInFlight, setPaymentInFlight] = useState(false);
   const locale = useLocale();
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
@@ -103,6 +105,7 @@ function ApplicationCard({
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
+  const isPaymentBusy = isPaymentPending || paymentInFlight;
   const hasCompletedPayment = application.status === "confirmed" || isCompleted;
   const totalKrw = application.breakdown
     ? application.breakdown.unitPrice * application.breakdown.guests +
@@ -186,20 +189,22 @@ function ApplicationCard({
         <div className="flex flex-col gap-2">
           <button
             type="button"
-            disabled={isPaymentPending}
+            disabled={isPaymentBusy}
             onClick={async () => {
               setPaymentError(null);
+              setPaymentInFlight(true);
               try {
                 // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
                 await onContinuePayment(application.id);
               } catch (error) {
-                if (isTossUserCancel(error)) return;
-                showPaymentError(error);
+                if (!isTossUserCancel(error)) showPaymentError(error);
+              } finally {
+                setPaymentInFlight(false);
               }
             }}
             className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
           >
-            {isPaymentPending ? t("paymentProcessing") : t("continuePayment")}
+            {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
           </button>
           {paymentError !== null && (
             <p

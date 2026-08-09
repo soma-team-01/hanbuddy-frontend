@@ -45,7 +45,11 @@
     "conflict": "현재 상태에서는 이 작업을 완료할 수 없습니다.",
     "serverUnavailable": "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "activityDiscountInvalid": "할인율과 할인 종료일은 함께 설정해야 합니다.",
-    "activityDiscountEndDate": "할인 종료일은 오늘 또는 이후 날짜여야 합니다."
+    "activityDiscountEndDate": "할인 종료일은 오늘 또는 이후 날짜여야 합니다.",
+    "reviewNotReviewable": "활동이 끝난 뒤에 후기를 남길 수 있습니다.",
+    "reviewOwner": "본인이 작성한 후기만 수정할 수 있습니다.",
+    "reviewNotFound": "후기를 찾을 수 없습니다.",
+    "reviewDuplicate": "이미 후기를 작성한 신청입니다."
   },
   "Navigation": {
     "primaryNavigation": "주요 내비게이션",

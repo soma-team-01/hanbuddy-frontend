@@ -45,7 +45,11 @@
     "conflict": "This action cannot be completed in the current state.",
     "serverUnavailable": "The service is temporarily unavailable. Please try again shortly.",
     "activityDiscountInvalid": "Set the discount rate and end date together.",
-    "activityDiscountEndDate": "The discount end date must be today or a later date."
+    "activityDiscountEndDate": "The discount end date must be today or a later date.",
+    "reviewNotReviewable": "You can leave a review after the activity ends.",
+    "reviewOwner": "You can only edit reviews you wrote.",
+    "reviewNotFound": "This review could not be found.",
+    "reviewDuplicate": "You already reviewed this booking."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",

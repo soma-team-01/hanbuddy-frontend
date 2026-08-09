@@ -122,6 +122,8 @@ describe("BookingForm", () => {
     expect(
       screen.getByRole("button", { name: "cancellation & refund policy" }),
     ).toBeInTheDocument();
+    // 특별 요청 칸은 처음부터 표시되고 비어 있으면 대시로 보인다
+    expect(screen.getByTestId("summary-special-request")).toHaveTextContent("—");
     const tooltip = screen.getByRole("tooltip");
     expect(tooltip).toHaveTextContent("Until 48 hours before the activity");
     expect(tooltip).toHaveTextContent("Full refund");
@@ -165,6 +167,9 @@ describe("BookingForm", () => {
     });
     await agreeAndSubmit();
 
+    expect(screen.getByTestId("summary-special-request")).toHaveTextContent(
+      "Vegetarian snacks, please.",
+    );
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
     expect(mockedCreateApplication).toHaveBeenCalledWith({
       activityScheduleId: 101,

@@ -286,14 +286,17 @@ export function BookingForm({
                   <dt className="text-muted">{t("guestCount")}</dt>
                   <dd className="font-semibold text-ink">{t("guests", { count: guests })}</dd>
                 </div>
-                {specialRequest.trim() ? (
-                  <div className="flex items-start justify-between gap-4">
-                    <dt className="shrink-0 text-muted">{t("specialRequest")}</dt>
-                    <dd className="line-clamp-3 text-right text-xs leading-5 font-medium break-keep text-ink">
-                      {specialRequest.trim()}
-                    </dd>
-                  </div>
-                ) : null}
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="shrink-0 text-muted">{t("specialRequest")}</dt>
+                  <dd
+                    data-testid="summary-special-request"
+                    className={`line-clamp-3 text-right text-xs leading-5 font-medium break-keep ${
+                      specialRequest.trim() ? "text-ink" : "text-muted"
+                    }`}
+                  >
+                    {specialRequest.trim() || "—"}
+                  </dd>
+                </div>
               </dl>
 
               <div className="flex flex-col gap-2 border-t border-line-soft pt-4 text-sm">
@@ -314,15 +317,6 @@ export function BookingForm({
               </div>
             </div>
 
-            {errorMessage ? (
-              <p
-                role="alert"
-                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-              >
-                {errorMessage}
-              </p>
-            ) : null}
-
             <div className="lg:pt-6">
               <BottomActionBar>
                 <button
@@ -336,6 +330,15 @@ export function BookingForm({
                 </button>
               </BottomActionBar>
             </div>
+
+            {errorMessage ? (
+              <p
+                role="alert"
+                className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+              >
+                {errorMessage}
+              </p>
+            ) : null}
           </BookingPanel>
         </main>
       </PageContainer>

@@ -535,7 +535,8 @@
     "filterByRating": "{rating}점 후기만 보기",
     "clearFilter": "전체 별점 보기",
     "filteredCount": "{count, plural, =0 {해당 별점의 후기가 없습니다} other {후기 #개}}",
-    "noneForRating": "해당 별점의 후기가 아직 없습니다."
+    "noneForRating": "해당 별점의 후기가 아직 없습니다.",
+    "ratingWithCountAria": "{count, plural, other {후기 #개 기준 5점 만점에 {rating}점}}"
   },
   "Booking": {
     "title": "액티비티 예약",

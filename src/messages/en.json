@@ -535,7 +535,8 @@
     "filterByRating": "Show only {rating}-star reviews",
     "clearFilter": "Show all ratings",
     "filteredCount": "{count, plural, =0 {No reviews with this rating} one {# review} other {# reviews}}",
-    "noneForRating": "No reviews with this rating yet."
+    "noneForRating": "No reviews with this rating yet.",
+    "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
   },
   "Booking": {
     "title": "Book activity",

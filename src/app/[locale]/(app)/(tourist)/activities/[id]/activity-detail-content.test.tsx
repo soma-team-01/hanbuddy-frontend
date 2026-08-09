@@ -426,7 +426,9 @@ describe("ActivityDetailContent", () => {
     expect(within(dialog).queryByText("Other buddy experience")).not.toBeInTheDocument();
     expect(within(dialog).queryByText("Current activity is excluded.")).not.toBeInTheDocument();
     // 버디 프로필 API가 내려준 평점·운영 중인 체험 수를 함께 보여준다
-    expect(await within(dialog).findByLabelText("Rated 4.9 out of 5")).toBeInTheDocument();
+    expect(
+      await within(dialog).findByRole("img", { name: "Rated 4.9 out of 5 from 12 reviews" }),
+    ).toBeInTheDocument();
     expect(within(dialog).getByText("2 live experiences")).toBeInTheDocument();
     expect(mockedGetBuddyProfile).toHaveBeenCalledWith(7);
     expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 12, null);

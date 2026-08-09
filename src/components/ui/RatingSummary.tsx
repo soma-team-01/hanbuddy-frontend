@@ -34,9 +34,15 @@ export function RatingSummary({
   const formatted = formatRating(rating);
 
   return (
+    // 안쪽 내용을 aria-hidden으로 감추므로, 컨테이너가 이미지 역할로 이름을 대신 전달한다
     <span
+      role="img"
       className={`inline-flex items-center gap-1 font-semibold text-ink ${classes.text} ${className}`}
-      aria-label={t("ratingAria", { rating: formatted })}
+      aria-label={
+        reviewCount
+          ? t("ratingWithCountAria", { rating: formatted, count: reviewCount })
+          : t("ratingAria", { rating: formatted })
+      }
     >
       <StarIcon className={`${classes.star} shrink-0 text-primary`} />
       <span aria-hidden="true">{formatted}</span>

@@ -50,7 +50,7 @@ describe("ActivityReviewsSection", () => {
 
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
 
-    expect(await screen.findByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "Rated 4.8 out of 5" })).toBeInTheDocument();
     expect(screen.getByText("31 reviews")).toBeInTheDocument();
     expect(screen.getByText("Loved every minute of it (1).")).toBeInTheDocument();
     expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 6);

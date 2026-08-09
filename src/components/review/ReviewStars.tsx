@@ -17,7 +17,8 @@ export function ReviewStars({
   starClassName?: string;
 }>) {
   return (
-    <span className={`inline-flex items-center gap-0.5 ${className}`} aria-label={label}>
+    // 별 아이콘은 모두 aria-hidden이라 컨테이너가 이미지 역할로 점수를 전달한다
+    <span role="img" className={`inline-flex items-center gap-0.5 ${className}`} aria-label={label}>
       {STARS.map((star) => (
         <StarIcon
           key={star}

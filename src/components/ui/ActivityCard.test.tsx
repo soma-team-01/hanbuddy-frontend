@@ -102,6 +102,15 @@ describe("ActivityCard", () => {
     expect(screen.queryByText("(12)")).not.toBeInTheDocument();
   });
 
+  it("names the rating for assistive technology as an image", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
+
+    // 카드는 평균만 보여주므로 접근성 이름에도 후기 수를 넣지 않는다
+    expect(screen.getByRole("img", { name: "Rated 4.8 out of 5" })).toBeInTheDocument();
+    // 화면에 보이는 숫자는 중복 낭독되지 않도록 감춘다
+    expect(screen.getByText("4.8")).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("hides the rating entirely when the activity has no reviews yet", () => {
     renderWithIntl(<ActivityCard activity={{ ...activity, rating: undefined, reviewCount: 0 }} />);
 

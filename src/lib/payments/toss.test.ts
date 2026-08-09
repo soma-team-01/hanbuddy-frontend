@@ -76,7 +76,7 @@ describe("requestTossPayment", () => {
 
     expect(requestPayment).toHaveBeenCalledWith(
       expect.objectContaining({
-        card: { useInternationalCardOnly: true },
+        card: { useInternationalCardOnly: true, showEstimatedAmount: false },
       }),
     );
     const request = requestPayment.mock.calls[0][0];

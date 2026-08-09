@@ -22,6 +22,8 @@ function toActivityId(value: string) {
 
 const STATUS_MESSAGE_KEY = {
   PENDING_PAYMENT: "pendingPayment",
+  // 새 신청으로 대체된 신청은 버디에게 취소된 신청과 동일하게 보인다
+  SUPERSEDED: "cancelled",
   CONFIRMED: "confirmed",
   CANCELLED: "cancelled",
   COMPLETED: "completed",

@@ -142,7 +142,7 @@ export interface BuddyDateActivityApplicationsResponse {
 }
 
 export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicationApplicantSummaryResponse {
-  status: "PENDING_PAYMENT" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   specialRequest: string | null;
   appliedAt: string;
 }

@@ -70,6 +70,41 @@ describe("ApplicantsContent", () => {
     expect(mockedGetMyActivity).not.toHaveBeenCalled();
   });
 
+  it("labels a superseded application as cancelled instead of rendering an empty status", async () => {
+    mockedGetBuddyActivityApplications.mockResolvedValue({
+      status: "success",
+      applications: {
+        activityId: 42,
+        activityScheduleId: 99,
+        activityTitle: "Traditional Tea Tasting",
+        startAt: "2026-07-18T16:30:00Z",
+        applicantCount: 1,
+        statusCounts: { SUPERSEDED: 1 },
+        applicants: [
+          {
+            applicationId: 12,
+            applicantUserId: 4,
+            applicantName: "Liam Brown",
+            applicantProfileImageUrl: null,
+            applicantNationalityCode: "GB",
+            guestCount: 2,
+            applicantContactMethod: "LINE",
+            applicantContactCountryCode: null,
+            applicantContactIdentifier: "liam.line",
+            status: "SUPERSEDED",
+            specialRequest: null,
+            appliedAt: "2026-07-18T16:30:00Z",
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
+
+    expect(await screen.findByText("Liam Brown")).toBeInTheDocument();
+    expect(screen.getByText("• Cancelled")).toBeInTheDocument();
+  });
+
   it("falls back to the first activity schedule when no schedule query is provided", async () => {
     mockedGetMyActivity.mockResolvedValue({
       status: "success",

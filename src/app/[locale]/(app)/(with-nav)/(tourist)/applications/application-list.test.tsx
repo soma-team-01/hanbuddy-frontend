@@ -40,6 +40,7 @@ const applications: Application[] = [
     thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
     cancellationReason: null,
     holdExpiresAt: null,
+    myReview: null,
     breakdown: {
       unitPrice: 45000,
       guests: 2,
@@ -61,8 +62,20 @@ const applications: Application[] = [
     thumbnailUrl: null,
     cancellationReason: null,
     holdExpiresAt: null,
+    myReview: null,
   },
 ];
+
+/** 백엔드가 myReview를 함께 내려준 완료 신청 */
+const reviewedApplication: Application = {
+  ...applications[1],
+  myReview: {
+    reviewId: 9,
+    rating: 5,
+    content: "The tea master was wonderful.",
+    createdAt: "2026-07-11T13:00:00+09:00",
+  },
+};
 
 const paidApplication: Application = {
   ...applications[0],
@@ -386,18 +399,20 @@ describe("ApplicationList", () => {
   });
 
   it("writes a review from a completed application card", async () => {
-    const savedReview = {
-      reviewId: 9,
-      applicationId: 2,
-      activityId: 43,
-      activityTitle: "Traditional Tea Tasting",
-      reviewerName: "Nelli",
-      reviewerProfileImageUrl: null,
-      rating: 5,
-      content: "The tea master was wonderful.",
-      createdAt: "2026-07-11T13:00:00+09:00",
-    };
-    mockedCreateReview.mockResolvedValue({ status: "success", review: savedReview });
+    mockedCreateReview.mockResolvedValue({
+      status: "success",
+      review: {
+        reviewId: 9,
+        applicationId: 2,
+        activityId: 43,
+        activityTitle: "Traditional Tea Tasting",
+        reviewerName: "Nelli",
+        reviewerProfileImageUrl: null,
+        rating: 5,
+        content: "The tea master was wonderful.",
+        createdAt: "2026-07-11T13:00:00+09:00",
+      },
+    });
 
     renderList();
 
@@ -420,45 +435,34 @@ describe("ApplicationList", () => {
         content: "The tea master was wonderful.",
       }),
     );
-    // 작성 직후에는 같은 카드에서 수정·삭제로 이어진다
-    expect(await screen.findByRole("button", { name: "Edit review" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("edits and then deletes the review written in this session", async () => {
-    const savedReview = {
-      reviewId: 9,
-      applicationId: 2,
-      activityId: 43,
-      activityTitle: "Traditional Tea Tasting",
-      reviewerName: "Nelli",
-      reviewerProfileImageUrl: null,
-      rating: 5,
-      content: "The tea master was wonderful.",
-      createdAt: "2026-07-11T13:00:00+09:00",
-    };
-    mockedCreateReview.mockResolvedValue({ status: "success", review: savedReview });
+  it("offers edit and delete when the application already carries my review", async () => {
     mockedUpdateReview.mockResolvedValue({
       status: "success",
-      review: { ...savedReview, rating: 4, content: "Slightly rushed at the end." },
+      review: {
+        reviewId: 9,
+        applicationId: 2,
+        activityId: 43,
+        activityTitle: "Traditional Tea Tasting",
+        reviewerName: "Nelli",
+        reviewerProfileImageUrl: null,
+        rating: 4,
+        content: "Slightly rushed at the end.",
+        createdAt: "2026-07-11T13:00:00+09:00",
+      },
     });
     mockedDeleteReview.mockResolvedValue({ status: "success", review: null });
 
-    renderList();
+    renderList({ applications: [reviewedApplication] });
 
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
-    fireEvent.click(screen.getByRole("button", { name: "Write a review" }));
+    expect(screen.queryByRole("button", { name: "Write a review" })).not.toBeInTheDocument();
 
-    const createDialog = await screen.findByRole("dialog");
-    fireEvent.click(within(createDialog).getByRole("button", { name: "5 stars" }));
-    fireEvent.change(within(createDialog).getByLabelText("Your review"), {
-      target: { value: "The tea master was wonderful." },
-    });
-    fireEvent.click(within(createDialog).getByRole("button", { name: "Submit review" }));
-
-    fireEvent.click(await screen.findByRole("button", { name: "Edit review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit review" }));
     const editDialog = await screen.findByRole("dialog");
-    // 수정 폼은 기존 후기 내용으로 채워진다
+    // 수정 폼은 백엔드가 내려준 후기 내용으로 채워진다
     expect(within(editDialog).getByLabelText("Your review")).toHaveValue(
       "The tea master was wonderful.",
     );
@@ -475,13 +479,11 @@ describe("ApplicationList", () => {
       }),
     );
 
-    fireEvent.click(await screen.findByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     const confirmDialog = await screen.findByRole("dialog");
     fireEvent.click(within(confirmDialog).getByRole("button", { name: "Delete" }));
 
     await waitFor(() => expect(mockedDeleteReview).toHaveBeenCalledWith(9));
-    // 삭제하면 같은 예약에 다시 작성할 수 있다
-    expect(await screen.findByRole("button", { name: "Write a review" })).toBeInTheDocument();
   });
 
   it("refuses to submit a review without a rating", async () => {

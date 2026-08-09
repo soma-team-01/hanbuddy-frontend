@@ -58,6 +58,7 @@ const confirmedApplication: ApplicationResponse = {
   cancellationReason: null,
   cancellationDetail: null,
   holdExpiresAt: null,
+  myReview: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 };

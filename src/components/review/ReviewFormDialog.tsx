@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { MAX_REVIEW_RATING } from "@/components/review/ReviewStars";
 import { StarIcon, XIcon } from "@/components/ui/icons";
-import type { ReviewResponse } from "@/types/review";
 
 export const MAX_REVIEW_CONTENT_LENGTH = 1000;
 
@@ -22,8 +21,8 @@ export function ReviewFormDialog({
   onSubmit,
   onClose,
 }: Readonly<{
-  /** 수정 모드일 때 기존 후기 */
-  review?: ReviewResponse;
+  /** 수정 모드일 때 기존 후기. 새로 작성하면 null */
+  review?: { rating: number; content: string } | null;
   activityTitle: string;
   isSaving?: boolean;
   errorMessage?: string | null;

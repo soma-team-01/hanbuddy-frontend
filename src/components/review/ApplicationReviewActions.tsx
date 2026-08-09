@@ -8,36 +8,39 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { activityKeys } from "@/lib/query/activities";
+import { applicationKeys } from "@/lib/query/applications";
 import { unwrapApiResult } from "@/lib/query/result";
 import { buddyProfileKeys, reviewKeys } from "@/lib/query/reviews";
-import type { ReviewResponse } from "@/types/review";
+import type { MyReviewResponse } from "@/types/review";
 
 /**
  * 완료된 신청 카드의 후기 작성·수정·삭제 액션.
- *
- * 백엔드가 신청 응답에 기존 후기를 함께 내려주지 않아, 새로고침 전까지는 이번 세션에서 작성한
- * 후기만 수정·삭제 버튼으로 이어진다. (백엔드에 `myReview` 노출을 요청해 둔 상태)
+ * 기존 후기 여부는 신청 응답의 `myReview`로 판단하므로 새로고침 후에도 상태가 유지된다.
  */
 export function ApplicationReviewActions({
   applicationId,
   activityTitle,
+  review,
 }: Readonly<{
   applicationId: number | string;
   activityTitle: string;
+  /** 신청 응답이 내려준 내 후기. 아직 쓰지 않았으면 null */
+  review: MyReviewResponse | null;
 }>) {
   const t = useTranslations("Reviews");
   const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
-  const [review, setReview] = useState<ReviewResponse | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  async function invalidateReviewViews() {
+  async function refreshReviewViews() {
     await Promise.all([
+      // 신청 목록이 myReview를 함께 내려주므로 버튼 상태도 여기서 갱신된다
+      queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
       queryClient.invalidateQueries({ queryKey: reviewKeys.all() }),
       queryClient.invalidateQueries({ queryKey: buddyProfileKeys.all() }),
-      // 평균 별점이 바뀌므로 목록·상세도 다시 불러온다
+      // 평균 별점이 바뀌므로 활동 목록·상세도 다시 불러온다
       queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
     ]);
   }
@@ -50,11 +53,10 @@ export function ApplicationReviewActions({
             await createReview({ applicationId: Number(applicationId), ...values }),
             "review",
           ),
-    onSuccess: async (saved) => {
-      setReview(saved);
+    onSuccess: async () => {
       setFormOpen(false);
       setError(null);
-      await invalidateReviewViews();
+      await refreshReviewViews();
     },
     onError: setError,
   });
@@ -62,10 +64,9 @@ export function ApplicationReviewActions({
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: number) => unwrapApiResult(await deleteReview(reviewId), "review"),
     onSuccess: async () => {
-      setReview(null);
       setDeleteOpen(false);
       setError(null);
-      await invalidateReviewViews();
+      await refreshReviewViews();
     },
     onError: setError,
   });
@@ -108,7 +109,7 @@ export function ApplicationReviewActions({
 
       {formOpen ? (
         <ReviewFormDialog
-          review={review ?? undefined}
+          review={review}
           activityTitle={activityTitle}
           isSaving={saveMutation.isPending}
           errorMessage={error === null ? null : getApiErrorMessage(error, t("saveError"))}

@@ -282,6 +282,7 @@ function ApplicationCard({
         <ApplicationReviewActions
           applicationId={application.id}
           activityTitle={application.activityTitle}
+          review={application.myReview}
         />
       )}
       {hostProfileOpen ? (

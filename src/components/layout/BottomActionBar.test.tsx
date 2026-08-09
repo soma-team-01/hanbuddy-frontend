@@ -13,7 +13,7 @@ describe("BottomActionBar", () => {
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass(
       "pb-[max(1rem,env(safe-area-inset-bottom))]",
       "lg:static",
-      "lg:rounded-2xl",
+      "lg:bg-transparent",
     );
   });
 });

@@ -36,5 +36,8 @@ export async function requestTossPayment(
     orderName: ready.orderName,
     successUrl: `${origin}/${locale}/payments/success?applicationId=${applicationId}`,
     failUrl: `${origin}/${locale}/payments/fail?applicationId=${applicationId}`,
+    // 한국어 외 로케일은 다국어 결제창(해외카드 전용, 한/영/중/일 지원)을 연다.
+    // 국내 결제창은 언어 옵션이 없어 한국어로만 표시된다.
+    card: locale === "ko" ? undefined : { useInternationalCardOnly: true },
   });
 }

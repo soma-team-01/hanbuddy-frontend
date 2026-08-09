@@ -1,16 +1,20 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ReviewFormDialog } from "@/components/review/ReviewFormDialog";
+import { ReviewStars } from "@/components/review/ReviewStars";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { formatSeoulDate } from "@/lib/datetime";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { unwrapApiResult } from "@/lib/query/result";
 import { buddyProfileKeys, reviewKeys } from "@/lib/query/reviews";
+import type { Locale } from "@/i18n/routing";
 import type { MyReviewResponse } from "@/types/review";
 
 /**
@@ -28,11 +32,13 @@ export function ApplicationReviewActions({
   review: MyReviewResponse | null;
 }>) {
   const t = useTranslations("Reviews");
+  const locale = useLocale() as Locale;
   const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const writtenOn = review ? formatSeoulDate(review.createdAt, locale) : null;
 
   async function refreshReviewViews() {
     await Promise.all([
@@ -73,30 +79,64 @@ export function ApplicationReviewActions({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
+      {review ? (
+        /* 내가 남긴 후기를 그대로 보여주고, 수정·삭제는 아이콘으로만 둔다 */
+        <section className="rounded-2xl border border-primary/30 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-display text-[11px] font-bold tracking-[0.12em] text-primary uppercase">
+                {t("yourReview")}
+              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <ReviewStars
+                  rating={review.rating}
+                  label={t("ratingAria", { rating: review.rating })}
+                  starClassName="size-3.5"
+                />
+                {writtenOn ? <span className="text-xs text-muted">{writtenOn}</span> : null}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                title={t("edit")}
+                aria-label={t("edit")}
+                onClick={() => {
+                  setError(null);
+                  setFormOpen(true);
+                }}
+                className="flex size-9 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-primary hover:text-primary"
+              >
+                <PencilIcon className="size-4" />
+              </button>
+              <button
+                type="button"
+                title={t("delete")}
+                aria-label={t("delete")}
+                onClick={() => {
+                  setError(null);
+                  setDeleteOpen(true);
+                }}
+                className="flex size-9 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-danger hover:text-danger"
+              >
+                <TrashIcon className="size-4" />
+              </button>
+            </div>
+          </div>
+          <p className="mt-3 text-sm leading-6 whitespace-pre-line text-ink">{review.content}</p>
+        </section>
+      ) : (
         <button
           type="button"
           onClick={() => {
             setError(null);
             setFormOpen(true);
           }}
-          className="h-11 flex-1 rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+          className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
         >
-          {review ? t("edit") : t("write")}
+          {t("write")}
         </button>
-        {review ? (
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setDeleteOpen(true);
-            }}
-            className="h-11 rounded-lg border border-line-strong px-4 font-display text-sm font-bold text-muted transition-colors hover:border-primary hover:text-primary"
-          >
-            {t("delete")}
-          </button>
-        ) : null}
-      </div>
+      )}
 
       {error !== null && !formOpen && !deleteOpen ? (
         <p

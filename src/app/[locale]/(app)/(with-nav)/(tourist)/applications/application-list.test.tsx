@@ -459,6 +459,11 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
     expect(screen.queryByRole("button", { name: "Write a review" })).not.toBeInTheDocument();
+    // 작성한 후기가 카드 안에 그대로 보이고, 수정·삭제는 아이콘 버튼이다
+    expect(screen.getByText("Your review")).toBeInTheDocument();
+    expect(screen.getByText("The tea master was wonderful.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Rated 5 out of 5")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit review" })).toHaveTextContent("");
 
     fireEvent.click(screen.getByRole("button", { name: "Edit review" }));
     const editDialog = await screen.findByRole("dialog");

@@ -30,6 +30,7 @@ const paymentReady: PaymentReadyResponse = {
     status: "PENDING_PAYMENT",
     cancellationReason: null,
     cancellationDetail: null,
+    holdExpiresAt: null,
     cancelledAt: null,
     createdAt: "2026-08-09T10:00:00Z",
   },

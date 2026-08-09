@@ -56,6 +56,7 @@ const confirmedApplication: ApplicationResponse = {
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
+  holdExpiresAt: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 };
@@ -107,6 +108,27 @@ describe("ApplicationsContent", () => {
       expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
     });
     expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11");
+  });
+
+  it("shows the seat-hold countdown from the application response", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [
+        {
+          ...confirmedApplication,
+          status: "PENDING_PAYMENT",
+          paymentAmount: null,
+          paymentCurrency: null,
+          holdExpiresAt: new Date(Date.now() + 9 * 60_000 + 30_000).toISOString(),
+        },
+      ],
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+
+    expect(await screen.findByTestId("payment-hold-countdown")).toHaveTextContent(
+      /9:2\d left to complete payment/,
+    );
   });
 
   it("removes a pending application from the list after cancelling it", async () => {

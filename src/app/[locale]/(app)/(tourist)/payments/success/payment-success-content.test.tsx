@@ -39,6 +39,7 @@ const confirmedApplication: ApplicationResponse = {
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
+  holdExpiresAt: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 };

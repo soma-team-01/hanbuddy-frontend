@@ -72,8 +72,8 @@ export interface ApplicationResponse {
   cancellationReason: ApplicationCancellationReason | null;
   cancellationDetail: string | null;
   cancelledAt: string | null;
-  /** 결제 대기 신청이 좌석을 선점하는 만료 시각 (Asia/Seoul 오프셋 포함). 백엔드가 제공하면 남은 시간을 표시한다 */
-  holdExpiresAt?: string | null;
+  /** 결제 대기 신청의 좌석 선점 만료 시각 (Asia/Seoul 오프셋 포함). 선점 중이 아니면 null */
+  holdExpiresAt: string | null;
   createdAt: string;
 }
 

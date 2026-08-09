@@ -149,7 +149,7 @@ function ApplicationCard({
             alt=""
             fill
             sizes="112px"
-            className={`object-cover ${isCompleted || isCancelled ? "opacity-60 saturate-[0.85]" : ""}`}
+            className={`object-cover ${isCancelled ? "opacity-60 saturate-[0.85]" : ""}`}
           />
         </Link>
         {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
@@ -166,7 +166,7 @@ function ApplicationCard({
           <Link href={`/activities/${application.activityId}`} className="col-start-1 min-w-0">
             <h3
               className={`line-clamp-2 font-display text-base leading-6 font-bold ${
-                isCompleted || isCancelled ? "text-muted" : "text-ink"
+                isCancelled ? "text-muted" : "text-ink"
               }`}
             >
               {application.activityTitle}

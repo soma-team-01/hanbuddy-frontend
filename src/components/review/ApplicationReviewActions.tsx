@@ -79,7 +79,7 @@ export function ApplicationReviewActions({
             setError(null);
             setFormOpen(true);
           }}
-          className="h-11 flex-1 rounded-lg border border-primary font-display text-sm font-bold text-primary transition-colors hover:bg-primary-soft"
+          className="h-11 flex-1 rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
         >
           {review ? t("edit") : t("write")}
         </button>
@@ -90,7 +90,7 @@ export function ApplicationReviewActions({
               setError(null);
               setDeleteOpen(true);
             }}
-            className="h-11 rounded-lg border border-line-strong px-4 font-display text-sm font-bold text-muted transition-colors hover:border-danger hover:text-danger"
+            className="h-11 rounded-lg border border-line-strong px-4 font-display text-sm font-bold text-muted transition-colors hover:border-primary hover:text-primary"
           >
             {t("delete")}
           </button>

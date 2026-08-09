@@ -180,20 +180,32 @@ function ApplicationCard({
             </span>
           </button>
         </div>
-        {totalKrw !== null ? (
-          <div className="shrink-0 text-right">
-            <p className="font-display text-sm font-semibold text-ink">
-              {formatKrw(totalKrw, locale)}
-            </p>
-            {hasCompletedPayment && paymentCharge ? (
-              <p className="mt-0.5 text-xs text-primary">
-                {t("paidAmount", {
-                  amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
-                })}
+        <div className="flex shrink-0 flex-col items-end text-right">
+          {totalKrw !== null ? (
+            <>
+              <p className="font-display text-sm font-semibold text-ink">
+                {formatKrw(totalKrw, locale)}
               </p>
-            ) : null}
-          </div>
-        ) : null}
+              {hasCompletedPayment && paymentCharge ? (
+                <p className="mt-0.5 text-xs text-primary">
+                  {t("paidAmount", {
+                    amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
+                  })}
+                </p>
+              ) : null}
+            </>
+          ) : null}
+          {isCancelled && application.cancellationReason ? (
+            // 호스트 줄과 같은 높이에 맞춰 카드 우측 하단에 붙인다
+            <p className="mt-auto text-xs text-muted">
+              {t("cancelledReason", {
+                reason: t(
+                  `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
+                ),
+              })}
+            </p>
+          ) : null}
+        </div>
       </div>
       {application.status === "confirmed" && (
         <PriceBreakdown application={application} paymentCharge={paymentCharge} />
@@ -261,14 +273,6 @@ function ApplicationCard({
           {t("leaveReviewComingSoon")}
         </button>
       )}
-      {isCancelled && application.cancellationReason ? (
-        <p className="text-right text-xs text-muted">
-          {t("cancelledReason", {
-            reason: t(`cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`),
-          })}
-        </p>
-      ) : null}
-
       {hostProfileOpen ? (
         <HostProfileDialog
           host={{

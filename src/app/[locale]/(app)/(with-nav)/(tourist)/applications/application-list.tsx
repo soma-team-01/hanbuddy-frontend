@@ -160,61 +160,64 @@ function ApplicationCard({
               </span>
             ) : null}
           </div>
-          <Link href={`/activities/${application.activityId}`} className="min-w-0">
-            <h3
-              className={`line-clamp-2 font-display text-base leading-6 font-bold ${
-                isCompleted || isCancelled ? "text-muted" : "text-ink"
-              }`}
-            >
-              {application.activityTitle}
-            </h3>
-          </Link>
+          {/* 제목과 결제 금액을 같은 줄에 둔다 */}
+          <div className="flex items-start justify-between gap-4">
+            <Link href={`/activities/${application.activityId}`} className="min-w-0">
+              <h3
+                className={`line-clamp-2 font-display text-base leading-6 font-bold ${
+                  isCompleted || isCancelled ? "text-muted" : "text-ink"
+                }`}
+              >
+                {application.activityTitle}
+              </h3>
+            </Link>
+            {totalKrw !== null ? (
+              <div className="shrink-0 text-right">
+                <p className="font-display text-xl leading-6 font-bold text-ink">
+                  {formatKrw(totalKrw, locale)}
+                </p>
+                {application.breakdown ? (
+                  <p className="mt-1 text-xs text-muted">
+                    {t("subtotal", {
+                      price: formatKrw(application.breakdown.unitPrice, locale),
+                      count: application.breakdown.guests,
+                    })}
+                  </p>
+                ) : null}
+                {hasCompletedPayment && paymentCharge ? (
+                  <p className="mt-0.5 text-xs text-primary">
+                    {t("paidAmount", {
+                      amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
+                    })}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
           <p className="text-sm text-muted">{application.dateLabel}</p>
-          <button
-            type="button"
-            aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
-            onClick={() => setHostProfileOpen(true)}
-            className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
-          >
-            <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-            <span className="underline decoration-primary/40 decoration-2 underline-offset-4">
-              {application.hostName}
-            </span>
-          </button>
-        </div>
-        <div className="flex shrink-0 flex-col items-end text-right">
-          {totalKrw !== null ? (
-            <>
-              <p className="font-display text-xl leading-7 font-bold text-ink">
-                {formatKrw(totalKrw, locale)}
+          {/* 호스트와 취소 사유를 같은 높이에 둔다 */}
+          <div className="mt-auto flex items-end justify-between gap-4">
+            <button
+              type="button"
+              aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
+              onClick={() => setHostProfileOpen(true)}
+              className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
+            >
+              <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
+              <span className="underline decoration-primary/40 decoration-2 underline-offset-4">
+                {application.hostName}
+              </span>
+            </button>
+            {isCancelled && application.cancellationReason ? (
+              <p className="shrink-0 text-right text-xs text-muted">
+                {t("cancelledReason", {
+                  reason: t(
+                    `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
+                  ),
+                })}
               </p>
-              {application.breakdown ? (
-                <p className="mt-0.5 text-xs text-muted">
-                  {t("subtotal", {
-                    price: formatKrw(application.breakdown.unitPrice, locale),
-                    count: application.breakdown.guests,
-                  })}
-                </p>
-              ) : null}
-              {hasCompletedPayment && paymentCharge ? (
-                <p className="mt-0.5 text-xs text-primary">
-                  {t("paidAmount", {
-                    amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
-                  })}
-                </p>
-              ) : null}
-            </>
-          ) : null}
-          {isCancelled && application.cancellationReason ? (
-            // 호스트 줄과 같은 높이에 맞춰 카드 우측 하단에 붙인다
-            <p className="mt-auto text-xs text-muted">
-              {t("cancelledReason", {
-                reason: t(
-                  `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
-                ),
-              })}
-            </p>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </div>
       {application.status === "confirmed" && (

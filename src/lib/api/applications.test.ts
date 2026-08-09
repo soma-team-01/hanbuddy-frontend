@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   cancelMyApplication,
+  cancelPendingPayment,
   confirmApplicationPayment,
   continueApplicationPayment,
   createApplication,
@@ -205,6 +206,29 @@ describe("application API client", () => {
         status: 400,
         backendMessage: "남은 자리가 부족합니다.",
       }),
+    });
+  });
+
+  it("cancels a pending payment through the internal API without a body", async () => {
+    const cancelled = { ...application, status: "CANCELLED" };
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: cancelled,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(cancelPendingPayment(11)).resolves.toEqual({
+      status: "success",
+      application: cancelled,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/cancel", {
+      method: "PATCH",
+      credentials: "same-origin",
     });
   });
 

@@ -188,6 +188,14 @@ function ApplicationCard({
               <p className="font-display text-sm font-semibold text-ink">
                 {formatKrw(totalKrw, locale)}
               </p>
+              {application.breakdown ? (
+                <p className="mt-0.5 text-xs text-muted">
+                  {t("subtotal", {
+                    price: formatKrw(application.breakdown.unitPrice, locale),
+                    count: application.breakdown.guests,
+                  })}
+                </p>
+              ) : null}
               {hasCompletedPayment && paymentCharge ? (
                 <p className="mt-0.5 text-xs text-primary">
                   {t("paidAmount", {

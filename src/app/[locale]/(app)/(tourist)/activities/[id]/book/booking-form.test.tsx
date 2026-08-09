@@ -174,9 +174,10 @@ describe("BookingForm", () => {
       "Vegetarian snacks, please.",
     );
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
+    // 기본 인원은 1명이다
     expect(mockedCreateApplication).toHaveBeenCalledWith({
       activityScheduleId: 101,
-      guestCount: 2,
+      guestCount: 1,
       specialRequest: "Vegetarian snacks, please.",
     });
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
@@ -191,6 +192,22 @@ describe("BookingForm", () => {
     // 좌석을 선점했으므로 잔여 좌석이 담긴 활동 상세 캐시를 무효화해야 한다
     await waitFor(() =>
       expect(queryClient.getQueryState(activityKeys.detail("42"))?.isInvalidated).toBe(true),
+    );
+  });
+
+  it("starts with a single guest and applies the chosen count", async () => {
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    // 스테퍼와 우측 요약 모두 1명으로 시작한다
+    expect(screen.getAllByText("1 guest")).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "Increase guests" }));
+    await agreeAndSubmit();
+
+    await waitFor(() =>
+      expect(mockedCreateApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ guestCount: 2 }),
+      ),
     );
   });
 

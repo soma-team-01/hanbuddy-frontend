@@ -389,9 +389,12 @@ describe("ApplicationList", () => {
     expect(screen.getByText("₩90,000 결제 완료")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
 
+    // 카드 우측 상단에 1인당 가격 × 인원이 함께 보인다
+    expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: "가격 상세" }));
 
-    expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
+    expect(screen.getAllByText("₩45,000 × 2명")).toHaveLength(2);
     expect(screen.getAllByText("₩90,000 결제 완료")).toHaveLength(2);
     expect(screen.getByText("총액: ₩90,000")).toBeInTheDocument();
 

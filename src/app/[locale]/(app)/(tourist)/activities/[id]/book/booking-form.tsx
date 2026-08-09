@@ -56,7 +56,7 @@ export function BookingForm({
     }
     return activity.sessions[0]?.id ?? "";
   });
-  const [guests, setGuests] = useState(2);
+  const [guests, setGuests] = useState(1);
   const [agreed, setAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorKey, setErrorKey] = useState<BookingErrorKey | null>(null);

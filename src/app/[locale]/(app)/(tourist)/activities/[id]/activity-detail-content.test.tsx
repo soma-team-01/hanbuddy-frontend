@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities, getTouristActivity } from "@/lib/api/activities";
+import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
@@ -21,6 +22,12 @@ vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
 }));
 
+vi.mock("@/lib/api/reviews", () => ({
+  getActivityReviews: vi.fn(),
+  getBuddyProfile: vi.fn(),
+  getBuddyReviews: vi.fn(),
+}));
+
 vi.mock("@/lib/google/places", async () => {
   const actual = await vi.importActual<typeof import("@/lib/google/places")>("@/lib/google/places");
   return {
@@ -32,8 +39,26 @@ vi.mock("@/lib/google/places", async () => {
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
+const mockedGetActivityReviews = vi.mocked(getActivityReviews);
+const mockedGetBuddyProfile = vi.mocked(getBuddyProfile);
+const mockedGetBuddyReviews = vi.mocked(getBuddyReviews);
+
 const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetails);
 const mockedGetGoogleMapsApiKey = vi.mocked(getGoogleMapsApiKey);
+
+function emptyReviewPage() {
+  return {
+    status: "success" as const,
+    reviews: {
+      averageRating: null,
+      totalCount: 0,
+      reviews: [],
+      page: 0,
+      size: 6,
+      hasNext: false,
+    },
+  };
+}
 
 /** Asia/Seoul 기준 offsetDays 뒤의 날짜 키 — 캘린더가 현재 달 이전을 잘라내므로 항상 미래를 쓴다 */
 function seoulDateKey(offsetDays: number) {
@@ -104,6 +129,22 @@ describe("ActivityDetailContent", () => {
     mockedFetchGooglePlaceDetails.mockReset();
     mockedGetGoogleMapsApiKey.mockReset();
     mockedGetGoogleMapsApiKey.mockReturnValue("test-google-key");
+    mockedGetActivityReviews.mockReset();
+    mockedGetActivityReviews.mockResolvedValue(emptyReviewPage());
+    mockedGetBuddyReviews.mockReset();
+    mockedGetBuddyReviews.mockResolvedValue(emptyReviewPage());
+    mockedGetBuddyProfile.mockReset();
+    mockedGetBuddyProfile.mockResolvedValue({
+      status: "success",
+      buddy: {
+        buddyId: 7,
+        buddyName: "Jihoon Kim",
+        buddyProfileImageUrl: null,
+        averageRating: 4.9,
+        reviewCount: 12,
+        activeActivityCount: 2,
+      },
+    });
   });
 
   it("renders activity detail with the fixed booking bar", async () => {
@@ -354,11 +395,11 @@ describe("ActivityDetailContent", () => {
         },
         {
           activityId: 88,
-          buddyId: 7,
+          buddyId: 9,
           title: "Other buddy experience",
-          description: "Hosted by a different buddy.",
+          description: "Hosted by a different buddy with the same public name.",
           thumbnailImageUrl: "/images/activities/other.jpg",
-          buddyName: "Minji Lee",
+          buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
           meetingPointName: "Hongdae",
           meetingPlaceId: "ChIJ-hongdae",
@@ -377,13 +418,60 @@ describe("ActivityDetailContent", () => {
     expect(
       within(dialog).getByText("I have guided Bukchon walks for seven years."),
     ).toBeInTheDocument();
-    // 같은 버디의 다른 체험만 노출하고 현재 활동·다른 버디 활동은 제외한다
+    // 같은 buddyId의 다른 체험만 노출한다 — 공개 닉네임이 같은 동명이인은 제외된다
     const hostedLink = await within(dialog).findByRole("link", {
       name: /Seoul Night Market Walk/,
     });
     expect(hostedLink).toHaveAttribute("href", "/en/activities/77");
     expect(within(dialog).queryByText("Other buddy experience")).not.toBeInTheDocument();
     expect(within(dialog).queryByText("Current activity is excluded.")).not.toBeInTheDocument();
+    // 버디 프로필 API가 내려준 평점·운영 중인 체험 수를 함께 보여준다
+    expect(await within(dialog).findByLabelText("Rated 4.9 out of 5")).toBeInTheDocument();
+    expect(within(dialog).getByText("2 live experiences")).toBeInTheDocument();
+    expect(mockedGetBuddyProfile).toHaveBeenCalledWith(7);
+    expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 6);
+  });
+
+  it("lists the buddy's reviews across activities in the host profile", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+    mockedGetBuddyReviews.mockResolvedValue({
+      status: "success",
+      reviews: {
+        averageRating: 4.9,
+        totalCount: 1,
+        reviews: [
+          {
+            reviewId: 5,
+            applicationId: 15,
+            activityId: 77,
+            activityTitle: "Seoul Night Market Walk",
+            reviewerName: "Nelli",
+            reviewerProfileImageUrl: null,
+            rating: 5,
+            content: "Jihoon knows every alley.",
+            createdAt: "2026-08-01T13:00:00+09:00",
+          },
+        ],
+        page: 0,
+        size: 6,
+        hasNext: false,
+      },
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "View Jihoon Kim's profile" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findByText("Jihoon knows every alley.")).toBeInTheDocument();
+    // 여러 활동의 후기가 섞이므로 어떤 활동의 후기인지 함께 보여준다
+    expect(within(dialog).getByText("Seoul Night Market Walk")).toBeInTheDocument();
   });
 
   it("localizes Korean loading and maps the activity-not-found code", async () => {

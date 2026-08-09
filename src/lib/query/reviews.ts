@@ -12,9 +12,9 @@ export const reviewKeys = {
   buddy: (buddyId: number | string) => [...reviewKeys.all(), "buddy", String(buddyId)] as const,
 };
 
-export const buddyKeys = {
+export const buddyProfileKeys = {
   all: () => ["buddies"] as const,
-  profile: (buddyId: number | string) => [...buddyKeys.all(), String(buddyId)] as const,
+  profile: (buddyId: number | string) => [...buddyProfileKeys.all(), String(buddyId)] as const,
 };
 
 export function activityReviewsQueryOptions(
@@ -47,7 +47,7 @@ export function buddyReviewsQueryOptions(
 
 export function buddyProfileQueryOptions(buddyId: number | string) {
   return queryOptions({
-    queryKey: buddyKeys.profile(buddyId),
+    queryKey: buddyProfileKeys.profile(buddyId),
     queryFn: async () => unwrapApiResult(await getBuddyProfile(buddyId), "buddy"),
     staleTime: 60_000,
   });

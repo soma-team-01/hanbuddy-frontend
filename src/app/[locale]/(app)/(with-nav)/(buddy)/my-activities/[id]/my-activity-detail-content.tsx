@@ -17,12 +17,14 @@ const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
   ACTIVE: "bg-success-soft text-success",
   DRAFT: "bg-panel-raised text-muted",
   INACTIVE: "bg-warning-soft text-warning",
+  DELETED: "bg-panel-raised text-muted",
 };
 
-const STATUS_MESSAGE_KEY: Record<MyActivityStatus, "active" | "draft" | "inactive"> = {
+const STATUS_MESSAGE_KEY: Record<MyActivityStatus, "active" | "draft" | "inactive" | "deleted"> = {
   ACTIVE: "active",
   DRAFT: "draft",
   INACTIVE: "inactive",
+  DELETED: "deleted",
 };
 
 export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {

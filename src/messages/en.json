@@ -529,7 +529,9 @@
     "deleting": "Deleting...",
     "ratingRequired": "Please choose a rating.",
     "contentRequired": "Please write a few words about the experience.",
-    "yourReview": "Your review"
+    "yourReview": "Your review",
+    "saveError": "Could not save your review.",
+    "deleteError": "Could not delete your review."
   },
   "Booking": {
     "title": "Book activity",
@@ -588,7 +590,6 @@
     "total": "Total: {amount}",
     "continuePayment": "Continue Payment",
     "cancel": "Cancel",
-    "leaveReviewComingSoon": "Leave Review · Coming soon",
     "paymentFailed": "Could not complete the payment.",
     "cancelFailed": "Could not cancel the application.",
     "cancellationTitle": "Cancel Application?",
@@ -719,7 +720,8 @@
     "status": {
       "active": "Active",
       "draft": "Draft",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "deleted": "Deleted"
     }
   },
   "MyActivityDetail": {

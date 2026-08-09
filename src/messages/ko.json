@@ -529,7 +529,9 @@
     "deleting": "삭제 중...",
     "ratingRequired": "별점을 선택해 주세요.",
     "contentRequired": "체험에 대한 후기를 한두 문장이라도 적어 주세요.",
-    "yourReview": "내가 남긴 후기"
+    "yourReview": "내가 남긴 후기",
+    "saveError": "후기를 저장하지 못했습니다.",
+    "deleteError": "후기를 삭제하지 못했습니다."
   },
   "Booking": {
     "title": "액티비티 예약",
@@ -588,7 +590,6 @@
     "total": "총액: {amount}",
     "continuePayment": "결제 이어서 하기",
     "cancel": "취소",
-    "leaveReviewComingSoon": "리뷰 작성 · 출시 예정",
     "paymentFailed": "결제를 완료하지 못했습니다.",
     "cancelFailed": "신청을 취소하지 못했습니다.",
     "cancellationTitle": "신청을 취소할까요?",
@@ -719,7 +720,8 @@
     "status": {
       "active": "게시 중",
       "draft": "임시 저장",
-      "inactive": "비활성"
+      "inactive": "비활성",
+      "deleted": "삭제됨"
     }
   },
   "MyActivityDetail": {

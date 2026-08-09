@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
+import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -278,13 +279,10 @@ function ApplicationCard({
         </button>
       )}
       {isCompleted && (
-        <button
-          type="button"
-          disabled
-          className="h-11 w-full cursor-not-allowed rounded-lg border border-line-soft bg-panel-raised font-display text-sm font-semibold text-muted opacity-60"
-        >
-          {t("leaveReviewComingSoon")}
-        </button>
+        <ApplicationReviewActions
+          applicationId={application.id}
+          activityTitle={application.activityTitle}
+        />
       )}
       {hostProfileOpen ? (
         <HostProfileDialog

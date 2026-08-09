@@ -150,6 +150,19 @@ export function formatSeoulTime(value: string, locale: Locale): string | null {
     : formatted;
 }
 
+/** 요일을 포함한 짧은 날짜 표기 (예: "Fri, Aug 22" / "8월 22일 (금)") */
+export function formatSeoulDateWithWeekday(value: string, locale: Locale): string | null {
+  const date = getOffsetfulDate(value);
+  if (!date) return null;
+
+  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    timeZone: SERVICE_TIME_ZONE,
+    month: locale === "ko" ? "numeric" : "short",
+    day: "numeric",
+    weekday: "short",
+  }).format(date);
+}
+
 export function formatSeoulWeekday(value: string, locale: Locale): string | null {
   const date = getOffsetfulDate(value);
   if (!date) return null;

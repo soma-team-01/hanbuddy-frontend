@@ -62,7 +62,7 @@ describe("BookingContent", () => {
     renderWithQueryClient(<BookingContent activityId="42" />);
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Jul 20, 2026 10:00 AM" })).toBeInTheDocument();
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("10:00 AM");
     expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe("BookingContent", () => {
 
     expect(await screen.findByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "2026. 7. 20. 오전 10:00" })).toBeInTheDocument();
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("오전 10:00");
   });
 
   it("localizes Korean booking loading and maps the activity-not-found code", async () => {

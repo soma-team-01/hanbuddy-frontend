@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApplication } from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
@@ -122,9 +122,11 @@ describe("BookingForm", () => {
     expect(
       screen.getByRole("button", { name: "cancellation & refund policy" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("tooltip")).toHaveTextContent(
-      "Free cancellation until 24 hours before the session starts",
-    );
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Until 48 hours before the activity");
+    expect(tooltip).toHaveTextContent("Full refund");
+    expect(tooltip).toHaveTextContent("50% refund");
+    expect(tooltip).toHaveTextContent("No refund");
   });
 
   it("preselects the schedule passed from the availability calendar", () => {
@@ -138,7 +140,7 @@ describe("BookingForm", () => {
 
     renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
-    expect(screen.getByRole("combobox")).toHaveValue("102");
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2026-07-21 14:00");
   });
 
   it("falls back to the first schedule when the requested one is unknown or full", () => {
@@ -152,7 +154,7 @@ describe("BookingForm", () => {
 
     renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
-    expect(screen.getByRole("combobox")).toHaveValue("101");
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2026-07-20 10:00");
   });
 
   it("creates an application and opens the Toss payment window", async () => {
@@ -212,6 +214,51 @@ describe("BookingForm", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Something went wrong while processing the payment.",
+    );
+  });
+
+  it("changes the schedule through the calendar dialog", async () => {
+    const futureDateKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(
+      new Date(Date.now() + 7 * 86_400_000),
+    );
+    const calendarActivity: Activity = {
+      ...activity,
+      sessions: [
+        {
+          id: "101",
+          startAt: `${futureDateKey}T10:00:00+09:00`,
+          dateKey: futureDateKey,
+          dateLabel: "2026-07-20",
+          timeLabel: "10:00 AM",
+          spotsLeft: 4,
+        },
+        {
+          id: "102",
+          startAt: `${futureDateKey}T14:00:00+09:00`,
+          dateKey: futureDateKey,
+          dateLabel: "2026-07-20",
+          timeLabel: "2:00 PM",
+          spotsLeft: 2,
+        },
+      ],
+    };
+
+    renderWithQueryClient(<BookingForm activity={calendarActivity} />);
+
+    fireEvent.click(screen.getByTestId("date-select-box"));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: /2:00 PM/ }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
+
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: /Apply & Pay/ }));
+
+    await waitFor(() =>
+      expect(mockedCreateApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ activityScheduleId: 102 }),
+      ),
     );
   });
 

@@ -521,7 +521,20 @@
     "paymentProcessFailed": "Something went wrong while processing the payment. Please try again shortly.",
     "paymentCancelled": "Payment was not completed. You can continue payment from My Applications.",
     "totalLabel": "Total (KRW)",
-    "refundPolicyDetail": "Free cancellation until 24 hours before the session starts — the full amount is refunded to your original payment method. Cancellations within 24 hours of the start time are non-refundable."
+    "refundRules": {
+      "full": {
+        "label": "Until 48 hours before the activity",
+        "value": "Full refund"
+      },
+      "half": {
+        "label": "Until 24 hours before the activity",
+        "value": "50% refund"
+      },
+      "none": {
+        "label": "Less than 24 hours before the activity",
+        "value": "No refund"
+      }
+    }
   },
   "Applications": {
     "title": "My Applications",

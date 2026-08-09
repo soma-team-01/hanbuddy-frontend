@@ -12,6 +12,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { Avatar } from "@/components/ui/Avatar";
 import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
+import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
@@ -25,22 +26,6 @@ const SECTION_IDS = {
   meetingPoint: "meeting-point",
   itinerary: "what-youll-do",
 } as const;
-
-function formatChipDate(dateKey: string, locale: string) {
-  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
-    timeZone: "UTC",
-    month: "short",
-    day: "numeric",
-  }).format(
-    new Date(
-      Date.UTC(
-        Number(dateKey.slice(0, 4)),
-        Number(dateKey.slice(5, 7)) - 1,
-        Number(dateKey.slice(8, 10)),
-      ),
-    ),
-  );
-}
 
 function scrollToSection(sectionId: string) {
   document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -149,9 +134,10 @@ export function ActivityDetailView({
   let dateBoxLabel = t("selectDatePlaceholder");
   if (selectedSession) {
     const timeRange = formatSessionTimeRange(selectedSession, activity.durationMinutes, locale);
-    dateBoxLabel = selectedSession.dateKey
-      ? `${formatChipDate(selectedSession.dateKey, locale)} ${timeRange}`
-      : `${selectedSession.dateLabel} ${timeRange}`;
+    const dateWithWeekday = selectedSession.startAt
+      ? formatSeoulDateWithWeekday(selectedSession.startAt, locale)
+      : null;
+    dateBoxLabel = `${dateWithWeekday ?? selectedSession.dateLabel} ${timeRange}`;
   } else if (activity.sessions.length === 0) {
     dateBoxLabel = t("noDates");
   } else if (bookableSessions.length === 0) {

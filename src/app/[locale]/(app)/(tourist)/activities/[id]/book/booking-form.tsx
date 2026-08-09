@@ -9,13 +9,17 @@ import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
   ArrowRightIcon,
-  ChevronDownIcon,
+  CalendarDaysIcon,
   MinusIcon,
   PlusIcon,
   UserIcon,
 } from "@/components/ui/icons";
-import { formatSessionTimeRange } from "@/components/activity/AvailabilityCalendarDialog";
+import {
+  AvailabilityCalendarDialog,
+  formatSessionTimeRange,
+} from "@/components/activity/AvailabilityCalendarDialog";
 import type { Locale } from "@/i18n/routing";
+import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { createApplication } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatKrw } from "@/lib/format";
@@ -61,6 +65,7 @@ export function BookingForm({
   } | null>(null);
   // 토스 결제창이 열려 있는 동안 제출 버튼을 잠근다
   const [paymentInFlight, setPaymentInFlight] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   // 재시도 시에도 매번 신청을 새로 생성한다 — 백엔드가 기존 PENDING_PAYMENT 신청을 대체(SUPERSEDED)한다
   const createApplicationMutation = useMutation({
     mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
@@ -119,6 +124,12 @@ export function BookingForm({
   const sessionTimeRange = selectedSession
     ? formatSessionTimeRange(selectedSession, activity.durationMinutes, locale as Locale)
     : "";
+  const sessionDateLabel = selectedSession
+    ? ((selectedSession.startAt
+        ? formatSeoulDateWithWeekday(selectedSession.startAt, locale as Locale)
+        : null) ?? selectedSession.dateLabel)
+    : "";
+  const sessionSummaryLabel = selectedSession ? `${sessionDateLabel} ${sessionTimeRange}` : "—";
 
   return (
     <>
@@ -130,24 +141,17 @@ export function BookingForm({
           <div className="mx-auto w-full max-w-xl divide-y divide-line-soft lg:mx-0">
             <section className="flex flex-col gap-3 pb-7">
               <h2 className="font-display text-base font-bold text-ink">{t("dateTimeHeading")}</h2>
-              <label className="flex flex-col gap-2">
-                <span className="sr-only">{t("dateTime")}</span>
-                <span className="relative">
-                  <select
-                    value={sessionId}
-                    onChange={(event) => setSessionId(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm font-semibold text-ink transition-colors outline-none focus:border-primary"
-                  >
-                    {activity.sessions.map((session) => (
-                      <option key={session.id} value={session.id}>
-                        {session.dateLabel} {session.timeLabel}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-primary" />
-                </span>
-                <span className="text-xs text-muted">{t("kstNotice")}</span>
-              </label>
+              <button
+                type="button"
+                data-testid="date-select-box"
+                aria-label={t("dateTime")}
+                onClick={() => setCalendarOpen(true)}
+                className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left text-sm font-semibold text-ink transition-colors hover:border-primary"
+              >
+                <span className="truncate">{sessionSummaryLabel}</span>
+                <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
+              </button>
+              <span className="text-xs text-muted">{t("kstNotice")}</span>
             </section>
 
             <section className="flex flex-col gap-3 py-7">
@@ -207,9 +211,20 @@ export function BookingForm({
                       </button>
                       <span
                         role="tooltip"
-                        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-72 -translate-x-1/2 rounded-xl border border-primary/30 bg-canvas-soft p-3.5 text-left text-xs leading-5 font-normal text-ink no-underline shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:block group-hover:block"
+                        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-72 -translate-x-1/2 flex-col gap-2 rounded-xl border border-primary/30 bg-canvas-soft p-4 text-left text-xs leading-5 font-normal no-underline shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:flex group-hover:flex"
                       >
-                        {t("refundPolicyDetail")}
+                        {(["full", "half", "none"] as const).map((rule) => (
+                          <span key={rule} className="flex items-center justify-between gap-3">
+                            <span className="text-muted">{t(`refundRules.${rule}.label`)}</span>
+                            <span
+                              className={`font-display font-bold ${
+                                rule === "none" ? "text-ink" : "text-primary"
+                              }`}
+                            >
+                              {t(`refundRules.${rule}.value`)}
+                            </span>
+                          </span>
+                        ))}
                       </span>
                     </span>
                   ),
@@ -257,7 +272,7 @@ export function BookingForm({
                   <dd className="text-right font-semibold text-ink">
                     {selectedSession ? (
                       <>
-                        <span className="block">{selectedSession.dateLabel}</span>
+                        <span className="block">{sessionDateLabel}</span>
                         <span className="block text-xs font-medium text-muted">
                           {sessionTimeRange}
                         </span>
@@ -271,6 +286,14 @@ export function BookingForm({
                   <dt className="text-muted">{t("guestCount")}</dt>
                   <dd className="font-semibold text-ink">{t("guests", { count: guests })}</dd>
                 </div>
+                {specialRequest.trim() ? (
+                  <div className="flex items-start justify-between gap-4">
+                    <dt className="shrink-0 text-muted">{t("specialRequest")}</dt>
+                    <dd className="line-clamp-3 text-right text-xs leading-5 font-medium break-keep text-ink">
+                      {specialRequest.trim()}
+                    </dd>
+                  </div>
+                ) : null}
               </dl>
 
               <div className="flex flex-col gap-2 border-t border-line-soft pt-4 text-sm">
@@ -314,6 +337,19 @@ export function BookingForm({
           </BookingPanel>
         </main>
       </PageContainer>
+
+      {calendarOpen ? (
+        <AvailabilityCalendarDialog
+          sessions={activity.sessions}
+          selectedSessionId={sessionId || null}
+          durationMinutes={activity.durationMinutes}
+          onSelectSession={(nextSessionId) => {
+            setSessionId(nextSessionId);
+            setCalendarOpen(false);
+          }}
+          onClose={() => setCalendarOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

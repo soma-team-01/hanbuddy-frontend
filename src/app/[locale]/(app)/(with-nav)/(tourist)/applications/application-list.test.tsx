@@ -209,6 +209,7 @@ describe("ApplicationList", () => {
       activities: [
         {
           activityId: 77,
+          buddyId: 7,
           title: "Seoul Night Market Walk",
           description: "Another experience by the same buddy.",
           thumbnailImageUrl: "/images/activities/market.jpg",

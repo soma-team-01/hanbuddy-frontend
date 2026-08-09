@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon } from "@/components/ui/icons";
+import { RatingSummary } from "@/components/ui/RatingSummary";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
@@ -38,9 +39,16 @@ export function ActivityCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
-          {activity.title}
-        </h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
+            {activity.title}
+          </h2>
+          <RatingSummary
+            rating={activity.rating}
+            reviewCount={activity.reviewCount}
+            className="mt-0.5 shrink-0"
+          />
+        </div>
 
         {activity.durationMinutes !== undefined ? (
           <p className="flex items-center gap-1.5 text-sm leading-5 text-muted">

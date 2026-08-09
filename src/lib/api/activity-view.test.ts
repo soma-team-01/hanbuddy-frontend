@@ -6,6 +6,7 @@ import {
 
 const summary = {
   activityId: 42,
+  buddyId: 7,
   title: "Bukchon Hidden Gems",
   description: "Walk through quiet alleys with a local buddy.",
   thumbnailImageUrl:

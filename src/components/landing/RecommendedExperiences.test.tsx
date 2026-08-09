@@ -13,6 +13,7 @@ const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 function createActivity(activityId: number) {
   return {
     activityId,
+    buddyId: 7,
     title: `HanBuddy activity ${activityId}`,
     description: "A personal Korean experience.",
     thumbnailImageUrl: "/images/activities/hanok-hero.jpg",

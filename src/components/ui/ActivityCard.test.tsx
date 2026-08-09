@@ -94,6 +94,20 @@ describe("ActivityCard", () => {
     expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 
+  it("shows the average rating with the review count", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
+
+    expect(screen.getByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();
+    expect(screen.getByText("4.8")).toBeInTheDocument();
+    expect(screen.getByText("(12)")).toBeInTheDocument();
+  });
+
+  it("hides the rating entirely when the activity has no reviews yet", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, rating: undefined, reviewCount: 0 }} />);
+
+    expect(screen.queryByLabelText(/Rated/)).not.toBeInTheDocument();
+  });
+
   it("loads the card image eagerly when requested", () => {
     renderWithIntl(<ActivityCard activity={activity} eagerImage />);
 

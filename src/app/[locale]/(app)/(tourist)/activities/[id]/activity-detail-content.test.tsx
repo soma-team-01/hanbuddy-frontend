@@ -57,10 +57,10 @@ function createDeferred<T>() {
 function buildActivityDetail() {
   return {
     activityId: 42,
+    buddyId: 7,
     title: "Bukchon Hidden Gems",
     description: "Walk through quiet alleys with a local buddy.",
     thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
-    buddyId: 7,
     buddyName: "Jihoon Kim",
     buddyProfileImageUrl: null,
     includedItems: ["Local guide"],
@@ -328,6 +328,7 @@ describe("ActivityDetailContent", () => {
       activities: [
         {
           activityId: 42,
+          buddyId: 7,
           title: "Bukchon Hidden Gems",
           description: "Current activity is excluded.",
           thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
@@ -340,6 +341,7 @@ describe("ActivityDetailContent", () => {
         },
         {
           activityId: 77,
+          buddyId: 7,
           title: "Seoul Night Market Walk",
           description: "Another experience by the same buddy.",
           thumbnailImageUrl: "/images/activities/market.jpg",
@@ -352,6 +354,7 @@ describe("ActivityDetailContent", () => {
         },
         {
           activityId: 88,
+          buddyId: 7,
           title: "Other buddy experience",
           description: "Hosted by a different buddy.",
           thumbnailImageUrl: "/images/activities/other.jpg",

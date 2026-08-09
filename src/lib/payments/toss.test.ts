@@ -32,6 +32,7 @@ const paymentReady: PaymentReadyResponse = {
     cancellationReason: null,
     cancellationDetail: null,
     holdExpiresAt: null,
+    myReview: null,
     cancelledAt: null,
     createdAt: "2026-08-09T10:00:00Z",
   },

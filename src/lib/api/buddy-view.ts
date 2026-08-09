@@ -13,6 +13,7 @@ const ACTIVITY_STATUS_LABELS: Record<MyActivityStatus, string> = {
   ACTIVE: "Active",
   DRAFT: "Draft",
   INACTIVE: "Inactive",
+  DELETED: "Deleted",
 };
 
 const CONTACT_METHOD_LABELS: Record<

@@ -30,7 +30,10 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
         ? Math.round(summary.totalDurationHours * 60)
         : undefined,
     isSoldOut: summary.isSoldOut,
+    rating: summary.averageRating ?? undefined,
+    reviewCount: summary.reviewCount ?? undefined,
     host: {
+      id: summary.buddyId,
       name: summary.buddyName,
       bio: "Local HanBuddy host",
       avatarUrl: summary.buddyProfileImageUrl,
@@ -61,6 +64,7 @@ export function mapTouristActivityDetailToActivity(
     heroImageUrl,
     images: images.map(({ imageUrl }) => imageUrl),
     host: {
+      id: detail.buddyId,
       name: detail.buddyName,
       bio: hostBio,
       avatarUrl: detail.buddyProfileImageUrl,

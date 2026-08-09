@@ -1,3 +1,5 @@
+import type { MyReviewResponse } from "./review";
+
 export type ApplicationStatus = "pending_payment" | "confirmed" | "cancelled" | "completed";
 export type BackendApplicationStatus =
   "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
@@ -28,6 +30,8 @@ export interface Application {
   cancellationReason: ApplicationCancellationReason | null;
   /** 결제 대기 신청의 좌석 선점 만료 시각. 없으면 남은 시간을 표시하지 않는다 */
   holdExpiresAt: string | null;
+  /** 내가 이 신청에 남긴 리뷰. 아직 쓰지 않았으면 null */
+  myReview: MyReviewResponse | null;
   breakdown?: PriceBreakdown;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;
@@ -78,6 +82,8 @@ export interface ApplicationResponse {
   cancelledAt: string | null;
   /** 결제 대기 신청의 좌석 선점 만료 시각 (Asia/Seoul 오프셋 포함). 선점 중이 아니면 null */
   holdExpiresAt: string | null;
+  /** 내가 이 신청에 남긴 리뷰. 아직 쓰지 않았으면 null */
+  myReview: MyReviewResponse | null;
   createdAt: string;
 }
 

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon } from "@/components/ui/icons";
+import { RatingSummary } from "@/components/ui/RatingSummary";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
@@ -49,20 +50,24 @@ export function ActivityCard({
           </p>
         ) : null}
 
-        <div className="mt-auto flex flex-col items-end gap-0.5 text-right">
-          {hasDiscount ? (
-            <s className="text-xs leading-4 text-muted">
-              {formatKrw(activity.originalPrice ?? activity.price, locale)}
-            </s>
-          ) : null}
-          <p
-            className={`font-display text-xl leading-7 ${
-              hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
-            }`}
-          >
-            {formatKrw(activity.price, locale)}
-          </p>
-          <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
+        {/* 카드 하단: 평균 별점(좌) · 가격(우) — 후기 수는 상세에서만 보여준다 */}
+        <div className="mt-auto flex items-end justify-between gap-3">
+          <RatingSummary rating={activity.rating} className="pb-1" />
+          <div className="ml-auto flex flex-col items-end gap-0.5 text-right">
+            {hasDiscount ? (
+              <s className="text-xs leading-4 text-muted">
+                {formatKrw(activity.originalPrice ?? activity.price, locale)}
+              </s>
+            ) : null}
+            <p
+              className={`font-display text-xl leading-7 ${
+                hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
+              }`}
+            >
+              {formatKrw(activity.price, locale)}
+            </p>
+            <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
+          </div>
         </div>
       </div>
     </article>

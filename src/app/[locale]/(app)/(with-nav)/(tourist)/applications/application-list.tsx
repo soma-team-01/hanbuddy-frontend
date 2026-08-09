@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
+import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -148,7 +149,7 @@ function ApplicationCard({
             alt=""
             fill
             sizes="112px"
-            className={`object-cover ${isCompleted || isCancelled ? "opacity-60 saturate-[0.85]" : ""}`}
+            className={`object-cover ${isCancelled ? "opacity-60 saturate-[0.85]" : ""}`}
           />
         </Link>
         {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
@@ -165,7 +166,7 @@ function ApplicationCard({
           <Link href={`/activities/${application.activityId}`} className="col-start-1 min-w-0">
             <h3
               className={`line-clamp-2 font-display text-base leading-6 font-bold ${
-                isCompleted || isCancelled ? "text-muted" : "text-ink"
+                isCancelled ? "text-muted" : "text-ink"
               }`}
             >
               {application.activityTitle}
@@ -278,13 +279,11 @@ function ApplicationCard({
         </button>
       )}
       {isCompleted && (
-        <button
-          type="button"
-          disabled
-          className="h-11 w-full cursor-not-allowed rounded-lg border border-line-soft bg-panel-raised font-display text-sm font-semibold text-muted opacity-60"
-        >
-          {t("leaveReviewComingSoon")}
-        </button>
+        <ApplicationReviewActions
+          applicationId={application.id}
+          activityTitle={application.activityTitle}
+          review={application.myReview}
+        />
       )}
       {hostProfileOpen ? (
         <HostProfileDialog

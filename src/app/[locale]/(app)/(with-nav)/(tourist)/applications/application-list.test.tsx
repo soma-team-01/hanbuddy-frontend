@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
+import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
-import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
+import { IntlTestProvider } from "@/test/render-with-intl";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Locale } from "@/i18n/routing";
 import type { Application } from "@/types/application";
@@ -12,7 +13,18 @@ vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
 }));
 
+vi.mock("@/lib/api/reviews", () => ({
+  getBuddyProfile: vi.fn(),
+  getBuddyReviews: vi.fn(),
+  createReview: vi.fn(),
+  updateReview: vi.fn(),
+  deleteReview: vi.fn(),
+}));
+
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
+const mockedCreateReview = vi.mocked(createReview);
+const mockedUpdateReview = vi.mocked(updateReview);
+const mockedDeleteReview = vi.mocked(deleteReview);
 
 const applications: Application[] = [
   {
@@ -28,6 +40,7 @@ const applications: Application[] = [
     thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
     cancellationReason: null,
     holdExpiresAt: null,
+    myReview: null,
     breakdown: {
       unitPrice: 45000,
       guests: 2,
@@ -49,8 +62,20 @@ const applications: Application[] = [
     thumbnailUrl: null,
     cancellationReason: null,
     holdExpiresAt: null,
+    myReview: null,
   },
 ];
+
+/** 백엔드가 myReview를 함께 내려준 완료 신청 */
+const reviewedApplication: Application = {
+  ...applications[1],
+  myReview: {
+    reviewId: 9,
+    rating: 5,
+    content: "The tea master was wonderful.",
+    createdAt: "2026-07-11T13:00:00+09:00",
+  },
+};
 
 const paidApplication: Application = {
   ...applications[0],
@@ -64,7 +89,7 @@ function renderList(
   overrides: Partial<React.ComponentProps<typeof ApplicationList>> = {},
   locale: Locale = "en",
 ) {
-  return renderWithIntl(
+  return renderWithQueryClient(
     <ApplicationList
       applications={applications}
       onCancelApplication={vi.fn()}
@@ -78,6 +103,10 @@ function renderList(
 }
 
 describe("ApplicationList", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("shows a continue-payment action for pending applications", () => {
     const onContinuePayment = vi.fn().mockResolvedValue(undefined);
 
@@ -208,7 +237,21 @@ describe("ApplicationList", () => {
       status: "success",
       activities: [
         {
+          activityId: 42,
+          buddyId: 7,
+          title: "Bukchon Hidden Gems",
+          description: "The activity this application is for.",
+          thumbnailImageUrl: "/images/activities/bukchon.jpg",
+          buddyName: "Jihoon Kim",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Anguk Station Exit 2",
+          meetingPlaceId: "ChIJ-bukchon",
+          price: 45000,
+          currency: "KRW",
+        },
+        {
           activityId: 77,
+          buddyId: 7,
           title: "Seoul Night Market Walk",
           description: "Another experience by the same buddy.",
           thumbnailImageUrl: "/images/activities/market.jpg",
@@ -239,6 +282,37 @@ describe("ApplicationList", () => {
     expect(
       await within(dialog).findByRole("link", { name: /Seoul Night Market Walk/ }),
     ).toHaveAttribute("href", "/en/activities/77");
+  });
+
+  it("shows no hosted activities when the buddy cannot be identified", async () => {
+    // 신청한 활동이 목록에 없으면(삭제 등) buddyId를 알 수 없다.
+    // 이때 공개 닉네임으로 매칭하면 동명이인의 활동이 섞이므로 아무것도 보여주지 않는다.
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 88,
+          buddyId: 12,
+          title: "Namesake's experience",
+          description: "Hosted by a different buddy with the same public name.",
+          thumbnailImageUrl: "/images/activities/other.jpg",
+          buddyName: "Jihoon Kim",
+          buddyProfileImageUrl: null,
+          meetingPointName: "Hongdae",
+          meetingPlaceId: "ChIJ-hongdae",
+          price: 20000,
+          currency: "KRW",
+        },
+      ],
+    });
+
+    renderList();
+
+    fireEvent.click(screen.getByRole("button", { name: "View Jihoon Kim's profile" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(await within(dialog).findByText("No other experiences yet.")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Namesake's experience")).not.toBeInTheDocument();
   });
 
   it("counts down the seat hold and asks for a refresh when it expires", async () => {
@@ -368,12 +442,141 @@ describe("ApplicationList", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 
-  it("keeps the review action disabled until its flow is available", () => {
+  it("writes a review from a completed application card", async () => {
+    mockedCreateReview.mockResolvedValue({
+      status: "success",
+      review: {
+        reviewId: 9,
+        applicationId: 2,
+        activityId: 43,
+        activityTitle: "Traditional Tea Tasting",
+        reviewerName: "Nelli",
+        reviewerProfileImageUrl: null,
+        rating: 5,
+        content: "The tea master was wonderful.",
+        createdAt: "2026-07-11T13:00:00+09:00",
+      },
+    });
+
     renderList();
 
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    fireEvent.click(screen.getByRole("button", { name: "Write a review" }));
 
-    expect(screen.getByRole("button", { name: "Leave Review · Coming soon" })).toBeDisabled();
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Traditional Tea Tasting")).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "5 stars" }));
+    fireEvent.change(within(dialog).getByLabelText("Your review"), {
+      target: { value: "The tea master was wonderful." },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Submit review" }));
+
+    await waitFor(() =>
+      expect(mockedCreateReview).toHaveBeenCalledWith({
+        applicationId: 2,
+        rating: 5,
+        content: "The tea master was wonderful.",
+      }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("offers edit and delete when the application already carries my review", async () => {
+    mockedUpdateReview.mockResolvedValue({
+      status: "success",
+      review: {
+        reviewId: 9,
+        applicationId: 2,
+        activityId: 43,
+        activityTitle: "Traditional Tea Tasting",
+        reviewerName: "Nelli",
+        reviewerProfileImageUrl: null,
+        rating: 4,
+        content: "Slightly rushed at the end.",
+        createdAt: "2026-07-11T13:00:00+09:00",
+      },
+    });
+    mockedDeleteReview.mockResolvedValue({ status: "success", review: null });
+
+    renderList({ applications: [reviewedApplication] });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    expect(screen.queryByRole("button", { name: "Write a review" })).not.toBeInTheDocument();
+    // 작성한 후기가 카드 안에 그대로 보이고, 수정·삭제는 아이콘 버튼이다
+    expect(screen.getByText("Your review")).toBeInTheDocument();
+    expect(screen.getByText("The tea master was wonderful.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Rated 5 out of 5")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit review" })).toHaveTextContent("");
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit review" }));
+    const editDialog = await screen.findByRole("dialog");
+    // 수정 폼은 백엔드가 내려준 후기 내용으로 채워진다
+    expect(within(editDialog).getByLabelText("Your review")).toHaveValue(
+      "The tea master was wonderful.",
+    );
+    fireEvent.click(within(editDialog).getByRole("button", { name: "4 stars" }));
+    fireEvent.change(within(editDialog).getByLabelText("Your review"), {
+      target: { value: "Slightly rushed at the end." },
+    });
+    fireEvent.click(within(editDialog).getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(mockedUpdateReview).toHaveBeenCalledWith(9, {
+        rating: 4,
+        content: "Slightly rushed at the end.",
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    const confirmDialog = await screen.findByRole("dialog");
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => expect(mockedDeleteReview).toHaveBeenCalledWith(9));
+  });
+
+  it("refuses to submit a review without a rating", async () => {
+    renderList();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    fireEvent.click(screen.getByRole("button", { name: "Write a review" }));
+
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("Your review"), {
+      target: { value: "Forgot the stars." },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Submit review" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Please choose a rating.");
+    expect(mockedCreateReview).not.toHaveBeenCalled();
+  });
+
+  it("surfaces the backend message when the booking was already reviewed", async () => {
+    mockedCreateReview.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "REVIEW409_DUPLICATE",
+        status: 409,
+        details: null,
+        backendMessage: "이미 리뷰를 작성한 신청입니다.",
+      }),
+    });
+
+    renderList();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    fireEvent.click(screen.getByRole("button", { name: "Write a review" }));
+
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "4 stars" }));
+    fireEvent.change(within(dialog).getByLabelText("Your review"), {
+      target: { value: "Second attempt." },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Submit review" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "You already reviewed this booking.",
+    );
   });
 
   it("localizes Korean tabs, actions, payment labels, totals, and empty state", () => {

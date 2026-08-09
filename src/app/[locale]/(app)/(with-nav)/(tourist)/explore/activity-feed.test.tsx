@@ -13,6 +13,7 @@ const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 
 const touristActivity = {
   activityId: 42,
+  buddyId: 7,
   title: "Bukchon Hidden Gems",
   description: "Walk through quiet alleys with a local buddy.",
   totalDurationHours: 1.5,

@@ -45,7 +45,11 @@
     "conflict": "This action cannot be completed in the current state.",
     "serverUnavailable": "The service is temporarily unavailable. Please try again shortly.",
     "activityDiscountInvalid": "Set the discount rate and end date together.",
-    "activityDiscountEndDate": "The discount end date must be today or a later date."
+    "activityDiscountEndDate": "The discount end date must be today or a later date.",
+    "reviewNotReviewable": "You can leave a review after the activity ends.",
+    "reviewOwner": "You can only edit reviews you wrote.",
+    "reviewNotFound": "This review could not be found.",
+    "reviewDuplicate": "You already reviewed this booking."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
@@ -495,6 +499,45 @@
     "noOtherActivities": "No other experiences yet.",
     "viewHostProfile": "View {name}'s profile"
   },
+  "Reviews": {
+    "sectionTitle": "Reviews",
+    "ratingAria": "Rated {rating} out of 5",
+    "countLabel": "{count, plural, =0 {No reviews yet} one {# review} other {# reviews}}",
+    "none": "No reviews yet",
+    "noneDescription": "Be the first to share how this experience went.",
+    "showAll": "Show all {count, plural, one {# review} other {# reviews}}",
+    "loading": "Loading reviews...",
+    "loadError": "Could not load reviews.",
+    "loadMore": "Load more reviews",
+    "hostReviews": "Reviews for {name}",
+    "hostedCount": "{count, plural, =0 {No live experiences} one {# live experience} other {# live experiences}}",
+    "write": "Write a review",
+    "edit": "Edit review",
+    "delete": "Delete",
+    "createTitle": "Write a review",
+    "editTitle": "Edit your review",
+    "yourRating": "Your rating",
+    "starLabel": "{rating, plural, one {# star} other {# stars}}",
+    "contentLabel": "Your review",
+    "contentPlaceholder": "How was the experience? What stood out?",
+    "contentCount": "{count} / {max}",
+    "submit": "Submit review",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "deleteTitle": "Delete this review?",
+    "deleteDescription": "This cannot be undone. You can write a new review for this booking later.",
+    "deleting": "Deleting...",
+    "ratingRequired": "Please choose a rating.",
+    "contentRequired": "Please write a few words about the experience.",
+    "yourReview": "Your review",
+    "saveError": "Could not save your review.",
+    "deleteError": "Could not delete your review.",
+    "filterByRating": "Show only {rating}-star reviews",
+    "clearFilter": "Show all ratings",
+    "filteredCount": "{count, plural, =0 {No reviews with this rating} one {# review} other {# reviews}}",
+    "noneForRating": "No reviews with this rating yet.",
+    "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
+  },
   "Booking": {
     "title": "Book activity",
     "loading": "Loading booking...",
@@ -552,7 +595,6 @@
     "total": "Total: {amount}",
     "continuePayment": "Continue Payment",
     "cancel": "Cancel",
-    "leaveReviewComingSoon": "Leave Review · Coming soon",
     "paymentFailed": "Could not complete the payment.",
     "cancelFailed": "Could not cancel the application.",
     "cancellationTitle": "Cancel Application?",
@@ -683,7 +725,8 @@
     "status": {
       "active": "Active",
       "draft": "Draft",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "deleted": "Deleted"
     }
   },
   "MyActivityDetail": {

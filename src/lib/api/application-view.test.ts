@@ -21,6 +21,7 @@ const application = {
   cancellationReason: null,
   cancellationDetail: null,
   holdExpiresAt: null,
+  myReview: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 } as const;
@@ -36,6 +37,7 @@ describe("application view adapters", () => {
       thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
       cancellationReason: null,
       holdExpiresAt: null,
+      myReview: null,
       dateLabel: "Sun, Jul 19 · 1:30 AM ~ 3:45 AM",
       hostName: "Jihoon Kim",
       hostAvatarUrl: null,
@@ -48,6 +50,23 @@ describe("application view adapters", () => {
       paymentAmount: 68.97,
       paymentCurrency: "USD",
     });
+  });
+
+  it("carries the backend-provided review through to the card model", () => {
+    const myReview = {
+      reviewId: 9,
+      rating: 5,
+      content: "Loved it.",
+      createdAt: "2026-07-19T13:00:00+09:00",
+    };
+
+    expect(
+      mapApplicationResponseToApplication(
+        { ...application, status: "COMPLETED", myReview },
+        "Time unavailable.",
+        "en",
+      ).myReview,
+    ).toEqual(myReview);
   });
 
   it("maps cancelled applications into a past-list status", () => {

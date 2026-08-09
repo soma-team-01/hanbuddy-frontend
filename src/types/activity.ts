@@ -1,4 +1,6 @@
 export interface Host {
+  /** 백엔드 버디 식별자. 동명이인이 있어도 이 값으로 호스트를 구분한다 */
+  id?: number;
   name: string;
   bio: string;
   avatarUrl: string | null;
@@ -94,8 +96,13 @@ export interface TouristActivitySchedule {
 
 export interface TouristActivitySummary {
   activityId: number;
+  buddyId: number;
   title: string;
   description: string;
+  /** 소수 첫째 자리 반올림 평균 별점. 리뷰가 없으면 null */
+  averageRating?: number | null;
+  /** 이 활동에 달린 리뷰 수 */
+  reviewCount?: number | null;
   /** 총 소요시간(시간 단위). 일정표 소요시간 합을 0.5시간 단위로 올림한 값 */
   totalDurationHours?: number | null;
   thumbnailImageUrl: string;
@@ -116,7 +123,6 @@ export interface TouristActivitySummary {
 }
 
 export interface TouristActivityDetail extends TouristActivitySummary {
-  buddyId: number;
   /** 버디 본인 소개 (활동별 저장) */
   hostIntroduction?: string;
   includedItems: string[];

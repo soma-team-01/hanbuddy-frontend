@@ -17,8 +17,17 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(40);
+    expect(BACKEND_ERROR_CODES).toHaveLength(44);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
+  });
+
+  it("maps review errors to their own messages", () => {
+    expect(resolveApiErrorMessageKey(apiError("REVIEW400_NOT_REVIEWABLE", 400))).toBe(
+      "reviewNotReviewable",
+    );
+    expect(resolveApiErrorMessageKey(apiError("REVIEW409_DUPLICATE", 409))).toBe("reviewDuplicate");
+    expect(resolveApiErrorMessageKey(apiError("REVIEW403_OWNER", 403))).toBe("reviewOwner");
+    expect(resolveApiErrorMessageKey(apiError("REVIEW404", 404))).toBe("reviewNotFound");
   });
 
   it("groups payment gateway failures under one user message", () => {

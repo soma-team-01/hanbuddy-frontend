@@ -10,8 +10,10 @@ import {
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ActivityReviewsSection } from "@/components/review/ActivityReviewsSection";
 import { Avatar } from "@/components/ui/Avatar";
 import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
+import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
@@ -26,6 +28,7 @@ const SECTION_IDS = {
   aboutHost: "about-host",
   meetingPoint: "meeting-point",
   itinerary: "what-youll-do",
+  reviews: "reviews",
 } as const;
 
 function scrollToSection(sectionId: string) {
@@ -67,6 +70,8 @@ export function ActivityDetailView({
   );
   const meetingPlaceId = activity.meetingPoint.placeId ?? "";
   const googleMapsApiKey = getGoogleMapsApiKey();
+  // 위저드 검토 화면은 아직 저장되지 않은 초안이라 조회할 후기가 없다
+  const showReviews = /^\d+$/.test(activity.id);
 
   useEffect(() => {
     if (!meetingPlaceId || !googleMapsApiKey) {
@@ -314,6 +319,28 @@ export function ActivityDetailView({
                 <h1 className="font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-5xl">
                   {activity.title}
                 </h1>
+                {activity.rating !== undefined ? (
+                  showReviews ? (
+                    <button
+                      type="button"
+                      onClick={() => scrollToSection(SECTION_IDS.reviews)}
+                      className="self-start underline decoration-line-strong decoration-1 underline-offset-4 transition-colors hover:decoration-primary"
+                    >
+                      <RatingSummary
+                        rating={activity.rating}
+                        reviewCount={activity.reviewCount}
+                        size="md"
+                      />
+                    </button>
+                  ) : (
+                    <RatingSummary
+                      rating={activity.rating}
+                      reviewCount={activity.reviewCount}
+                      size="md"
+                      className="self-start"
+                    />
+                  )
+                ) : null}
                 <p className="max-w-2xl leading-7 text-muted">{activity.description}</p>
               </section>
 
@@ -445,6 +472,10 @@ export function ActivityDetailView({
                   </div>
                 </div>
               </section>
+
+              {showReviews ? (
+                <ActivityReviewsSection activityId={activity.id} id={SECTION_IDS.reviews} />
+              ) : null}
 
               {activity.included.length > 0 || activity.restrictions.length > 0 ? (
                 <section className="grid gap-8 border-t border-line-soft pt-6 md:grid-cols-2">

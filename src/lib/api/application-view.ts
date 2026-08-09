@@ -40,6 +40,7 @@ export function mapApplicationResponseToApplication(
     thumbnailUrl: response.thumbnailImageUrl,
     cancellationReason: response.cancellationReason,
     holdExpiresAt: response.holdExpiresAt,
+    myReview: response.myReview ?? null,
     breakdown: {
       unitPrice: response.price,
       guests: response.guestCount,

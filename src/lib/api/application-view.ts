@@ -35,6 +35,7 @@ export function mapApplicationResponseToApplication(
     activityTitle: response.activityTitle,
     thumbnailUrl: response.thumbnailImageUrl,
     cancellationReason: response.cancellationReason,
+    holdExpiresAt: response.holdExpiresAt ?? null,
     breakdown: {
       unitPrice: response.price,
       guests: response.guestCount,

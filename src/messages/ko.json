@@ -576,7 +576,8 @@
     "cancelPendingTitle": "이 신청을 취소할까요?",
     "cancelPendingDescription": "선점 중인 좌석이 즉시 해제됩니다.",
     "cancelPendingConfirm": "네, 취소할게요",
-    "keepPendingApplication": "신청 유지"
+    "keepPendingApplication": "신청 유지",
+    "holdRemaining": "결제 마감까지 {time}"
   },
   "Payment": {
     "unavailable": "결제를 이용할 수 없습니다.",

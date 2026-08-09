@@ -32,6 +32,7 @@ describe("application view adapters", () => {
       startAt: "2026-07-18T16:30:00Z",
       thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
       cancellationReason: null,
+      holdExpiresAt: null,
       dateLabel: "Sun, Jul 19 · 1:30 AM",
       hostName: "Jihoon Kim",
       hostAvatarUrl: null,

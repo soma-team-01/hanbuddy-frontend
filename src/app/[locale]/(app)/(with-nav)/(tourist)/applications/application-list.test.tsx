@@ -26,6 +26,7 @@ const applications: Application[] = [
     activityTitle: "Bukchon Hidden Gems",
     thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
     cancellationReason: null,
+    holdExpiresAt: null,
     breakdown: {
       unitPrice: 45000,
       guests: 2,
@@ -45,6 +46,7 @@ const applications: Application[] = [
     activityTitle: "Traditional Tea Tasting",
     thumbnailUrl: null,
     cancellationReason: null,
+    holdExpiresAt: null,
   },
 ];
 
@@ -235,6 +237,49 @@ describe("ApplicationList", () => {
     expect(
       await within(dialog).findByRole("link", { name: /Seoul Night Market Walk/ }),
     ).toHaveAttribute("href", "/en/activities/77");
+  });
+
+  it("counts down the seat hold and asks for a refresh when it expires", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const onHoldExpired = vi.fn();
+    try {
+      renderList({
+        applications: [
+          {
+            ...applications[0],
+            holdExpiresAt: new Date(Date.now() + 65_000).toISOString(),
+          },
+        ],
+        onHoldExpired,
+      });
+
+      expect(screen.getByTestId("payment-hold-countdown")).toHaveTextContent(
+        "1:05 left to complete payment",
+      );
+
+      await act(async () => {
+        vi.advanceTimersByTime(60_000);
+      });
+      expect(screen.getByTestId("payment-hold-countdown")).toHaveTextContent(
+        "0:05 left to complete payment",
+      );
+      expect(onHoldExpired).not.toHaveBeenCalled();
+
+      // 선점이 끝나면 목록을 다시 불러오도록 알리고 남은 시간은 감춘다
+      await act(async () => {
+        vi.advanceTimersByTime(6_000);
+      });
+      expect(screen.queryByTestId("payment-hold-countdown")).not.toBeInTheDocument();
+      expect(onHoldExpired).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("omits the countdown when the seat hold is unknown", () => {
+    renderList();
+
+    expect(screen.queryByTestId("payment-hold-countdown")).not.toBeInTheDocument();
   });
 
   it("cancels a pending payment after confirming the seat release", async () => {

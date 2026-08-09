@@ -24,6 +24,8 @@ export interface Application {
   thumbnailUrl: string | null;
   /** 취소된 신청의 사유. 취소되지 않았으면 null */
   cancellationReason: ApplicationCancellationReason | null;
+  /** 결제 대기 신청의 좌석 선점 만료 시각. 없으면 남은 시간을 표시하지 않는다 */
+  holdExpiresAt: string | null;
   breakdown?: PriceBreakdown;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;
@@ -70,6 +72,8 @@ export interface ApplicationResponse {
   cancellationReason: ApplicationCancellationReason | null;
   cancellationDetail: string | null;
   cancelledAt: string | null;
+  /** 결제 대기 신청이 좌석을 선점하는 만료 시각 (Asia/Seoul 오프셋 포함). 백엔드가 제공하면 남은 시간을 표시한다 */
+  holdExpiresAt?: string | null;
   createdAt: string;
 }
 

@@ -17,6 +17,7 @@ import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
+import { PaymentHoldCountdown } from "./payment-hold-countdown";
 
 const TABS = ["upcoming", "past"] as const;
 
@@ -90,12 +91,14 @@ function ApplicationCard({
   onCancel,
   onCancelPending,
   onContinuePayment,
+  onHoldExpired,
   isPaymentPending,
 }: Readonly<{
   application: Application;
   onCancel: () => void;
   onCancelPending: () => void;
   onContinuePayment: (applicationId: string) => Promise<void>;
+  onHoldExpired?: () => void;
   isPaymentPending: boolean;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
@@ -165,15 +168,6 @@ function ApplicationCard({
             </h3>
           </Link>
           <p className="text-sm text-muted">{application.dateLabel}</p>
-          {isCancelled && application.cancellationReason ? (
-            <p className="text-xs text-muted">
-              {t("cancelledReason", {
-                reason: t(
-                  `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
-                ),
-              })}
-            </p>
-          ) : null}
           <button
             type="button"
             aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
@@ -206,6 +200,12 @@ function ApplicationCard({
       )}
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
+          {application.holdExpiresAt ? (
+            <PaymentHoldCountdown
+              holdExpiresAt={application.holdExpiresAt}
+              onExpire={onHoldExpired}
+            />
+          ) : null}
           <button
             type="button"
             disabled={isPaymentBusy}
@@ -261,6 +261,14 @@ function ApplicationCard({
           {t("leaveReviewComingSoon")}
         </button>
       )}
+      {isCancelled && application.cancellationReason ? (
+        <p className="text-right text-xs text-muted">
+          {t("cancelledReason", {
+            reason: t(`cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`),
+          })}
+        </p>
+      ) : null}
+
       {hostProfileOpen ? (
         <HostProfileDialog
           host={{
@@ -281,6 +289,7 @@ export function ApplicationList({
   onCancelApplication,
   onCancelPendingPayment,
   onContinuePayment,
+  onHoldExpired,
   isPaymentPending,
 }: Readonly<{
   applications: Application[];
@@ -290,6 +299,8 @@ export function ApplicationList({
   ) => Promise<CancelDialogOutcome>;
   onCancelPendingPayment: (applicationId: string) => Promise<CancelDialogOutcome>;
   onContinuePayment: (applicationId: string) => Promise<void>;
+  /** 좌석 선점이 만료되면 목록을 다시 불러오도록 알린다 */
+  onHoldExpired?: () => void;
   isPaymentPending: boolean;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
@@ -339,6 +350,7 @@ export function ApplicationList({
               setPendingCancelTargetId(application.id);
             }}
             onContinuePayment={onContinuePayment}
+            onHoldExpired={onHoldExpired}
             isPaymentPending={isPaymentPending}
           />
         ))}

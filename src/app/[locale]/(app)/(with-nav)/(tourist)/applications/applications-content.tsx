@@ -121,6 +121,9 @@ export function ApplicationsContent() {
       onCancelApplication={handleCancelApplication}
       onCancelPendingPayment={handleCancelPendingPayment}
       onContinuePayment={handleContinuePayment}
+      onHoldExpired={() => {
+        void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+      }}
       isPaymentPending={continuePaymentMutation.isPending}
     />
   );

@@ -576,7 +576,8 @@
     "cancelPendingTitle": "Cancel this application?",
     "cancelPendingDescription": "The seat we're holding for you will be released right away.",
     "cancelPendingConfirm": "Yes, cancel",
-    "keepPendingApplication": "Keep application"
+    "keepPendingApplication": "Keep application",
+    "holdRemaining": "{time} left to complete payment"
   },
   "Payment": {
     "unavailable": "Payment unavailable",

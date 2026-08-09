@@ -36,6 +36,8 @@ describe("buddy view helpers", () => {
     expect(getMyActivityStatusLabel("ACTIVE")).toBe("Active");
     expect(getMyActivityStatusLabel("DRAFT")).toBe("Draft");
     expect(getMyActivityStatusLabel("INACTIVE")).toBe("Inactive");
+    // soft delete된 활동은 목록에서 빠지지만 상태 계약에는 남아 있다
+    expect(getMyActivityStatusLabel("DELETED")).toBe("Deleted");
   });
 
   it("formats applicant nationality and contact details", () => {

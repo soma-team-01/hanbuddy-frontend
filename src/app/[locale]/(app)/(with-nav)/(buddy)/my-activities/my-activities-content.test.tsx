@@ -67,6 +67,26 @@ describe("MyActivitiesContent", () => {
     );
   });
 
+  it("labels a soft-deleted activity instead of falling back to a blank status", async () => {
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 43,
+          title: "Retired Night Walk",
+          description: "No longer offered.",
+          thumbnailImageUrl: null,
+          status: "DELETED",
+        },
+      ],
+    });
+
+    renderWithQueryClient(<MyActivitiesContent />);
+
+    expect(await screen.findByText("Retired Night Walk")).toBeInTheDocument();
+    expect(screen.getByText("Deleted")).toBeInTheDocument();
+  });
+
   it("removes an activity after a successful delete request", async () => {
     mockedGetMyActivities.mockResolvedValueOnce({
       status: "success",

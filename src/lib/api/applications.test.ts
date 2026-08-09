@@ -18,6 +18,7 @@ const application = {
   guestCount: 2,
   specialRequest: "Vegetarian snacks, please.",
   startAt: "2026-07-20T10:00:00+09:00",
+  endAt: "2026-07-20T10:00:00+09:00",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",

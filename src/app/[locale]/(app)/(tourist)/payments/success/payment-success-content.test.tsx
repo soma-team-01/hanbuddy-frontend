@@ -31,6 +31,7 @@ const confirmedApplication: ApplicationResponse = {
   guestCount: 2,
   specialRequest: null,
   startAt: "2026-07-18T16:30:00Z",
+  endAt: "2026-07-18T16:30:00Z",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",

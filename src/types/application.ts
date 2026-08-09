@@ -17,6 +17,8 @@ export interface Application {
   status: ApplicationStatus;
   /** 활동 시작 일시 (Asia/Seoul 오프셋 포함) — D-day 계산용 */
   startAt: string;
+  /** 활동 종료 예정 일시 — 종료된 활동의 취소 차단에 사용 */
+  endAt: string;
   dateLabel: string;
   hostName: string;
   hostAvatarUrl: string | null;
@@ -63,6 +65,8 @@ export interface ApplicationResponse {
   specialRequest: string | null;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   startAt: string;
+  /** 활동 종료 예정 일시 (시작 시각 + 일정표 소요시간 합) */
+  endAt: string;
   price: number;
   totalPrice: number;
   currency: string;

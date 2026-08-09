@@ -7,6 +7,7 @@ import {
   getSeoulDateTimeParts,
   SERVICE_TIME_ZONE,
   toSeoulStartAt,
+  hasDateTimePassed,
 } from "./datetime";
 
 const SEOUL_BOUNDARY_INSTANT = "2026-07-18T16:30:00Z";
@@ -59,5 +60,17 @@ describe("Seoul date-time boundary", () => {
     expect(formatSeoulTime(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("오전 1:30");
     expect(formatSeoulWeekday(SEOUL_BOUNDARY_INSTANT, "en")).toBe("Sun");
     expect(formatSeoulWeekday(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("일");
+  });
+});
+
+describe("hasDateTimePassed", () => {
+  it("detects whether an offsetful timestamp is already in the past", () => {
+    const now = Date.parse("2026-08-09T12:00:00+09:00");
+
+    expect(hasDateTimePassed("2026-08-09T11:59:00+09:00", now)).toBe(true);
+    expect(hasDateTimePassed("2026-08-09T12:00:00+09:00", now)).toBe(true);
+    expect(hasDateTimePassed("2026-08-09T12:01:00+09:00", now)).toBe(false);
+    // 형식이 잘못된 값으로 지난 일정으로 오판하지 않는다
+    expect(hasDateTimePassed("2026-08-09T12:00", now)).toBe(false);
   });
 });

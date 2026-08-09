@@ -11,6 +11,7 @@ const application = {
   guestCount: 2,
   specialRequest: "Vegetarian snacks, please.",
   startAt: "2026-07-18T16:30:00Z",
+  endAt: "2026-07-18T18:45:00Z",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
@@ -31,10 +32,11 @@ describe("application view adapters", () => {
       activityId: 42,
       status: "confirmed",
       startAt: "2026-07-18T16:30:00Z",
+      endAt: "2026-07-18T18:45:00Z",
       thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
       cancellationReason: null,
       holdExpiresAt: null,
-      dateLabel: "Sun, Jul 19 · 1:30 AM",
+      dateLabel: "Sun, Jul 19 · 1:30 AM ~ 3:45 AM",
       hostName: "Jihoon Kim",
       hostAvatarUrl: null,
       activityTitle: "Bukchon Hidden Gems",
@@ -77,7 +79,7 @@ describe("application view adapters", () => {
     expect(
       mapApplicationResponseToApplication(application, "시간 정보를 확인할 수 없습니다.", "ko"),
     ).toMatchObject({
-      dateLabel: "7. 19. (일) · 오전 1:30",
+      dateLabel: "7. 19. (일) · 오전 1:30 ~ 오전 3:45",
       activityTitle: "Bukchon Hidden Gems",
       hostName: "Jihoon Kim",
     });

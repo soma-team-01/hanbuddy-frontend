@@ -20,6 +20,7 @@ const applications: Application[] = [
     activityId: 42,
     status: "pending_payment",
     startAt: "2099-07-20T10:00:00+09:00",
+    endAt: "2099-07-20T12:00:00+09:00",
     dateLabel: "Jul 20, 2026",
     hostName: "Jihoon Kim",
     hostAvatarUrl: null,
@@ -40,6 +41,7 @@ const applications: Application[] = [
     activityId: 43,
     status: "completed",
     startAt: "2026-07-10T10:00:00+09:00",
+    endAt: "2026-07-10T12:00:00+09:00",
     dateLabel: "Jul 10, 2026",
     hostName: "Minji Lee",
     hostAvatarUrl: null,
@@ -339,6 +341,31 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
 
     expect(screen.getByText("Cancellation reason: Schedule conflict")).toBeInTheDocument();
+  });
+
+  it("hides the cancel action once the activity has ended", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          id: "8",
+          status: "confirmed",
+          startAt: "2026-07-20T10:00:00+09:00",
+          endAt: "2026-07-20T12:00:00+09:00",
+        },
+      ],
+    });
+
+    // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 노출하지 않는다
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the cancel action for a confirmed activity that has not started", () => {
+    renderList({
+      applications: [{ ...applications[0], id: "7", status: "confirmed" }],
+    });
+
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 
   it("keeps the review action disabled until its flow is available", () => {

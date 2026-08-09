@@ -23,13 +23,17 @@ export function mapApplicationResponseToApplication(
 ): Application {
   const subtotal = response.price * response.guestCount;
   const dateWithWeekday = formatSeoulDateWithWeekday(response.startAt, locale);
-  const time = formatSeoulTime(response.startAt, locale);
+  const startTime = formatSeoulTime(response.startAt, locale);
+  const endTime = formatSeoulTime(response.endAt, locale);
+  const timeLabel = startTime && endTime ? `${startTime} ~ ${endTime}` : startTime;
   return {
     id: String(response.applicationId),
     activityId: response.activityId,
     status: STATUS_BY_BACKEND_STATUS[response.status],
     startAt: response.startAt,
-    dateLabel: dateWithWeekday && time ? `${dateWithWeekday} · ${time}` : dateTimeUnavailable,
+    endAt: response.endAt,
+    dateLabel:
+      dateWithWeekday && timeLabel ? `${dateWithWeekday} · ${timeLabel}` : dateTimeUnavailable,
     hostName: response.buddyName,
     hostAvatarUrl: null,
     activityTitle: response.activityTitle,

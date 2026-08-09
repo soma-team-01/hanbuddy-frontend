@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { daysUntilSeoulDate } from "@/lib/datetime";
+import { daysUntilSeoulDate, hasDateTimePassed } from "@/lib/datetime";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel } from "@/lib/payments/toss";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
@@ -119,6 +119,8 @@ function ApplicationCard({
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
   const isPaymentBusy = isPaymentPending || paymentInFlight;
+  // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 내린다 (조회 후 종료 시각이 지난 경우)
+  const hasEnded = hasDateTimePassed(application.endAt);
   const hasCompletedPayment = application.status === "confirmed" || isCompleted;
   const totalKrw = application.breakdown
     ? application.breakdown.unitPrice * application.breakdown.guests +
@@ -255,7 +257,7 @@ function ApplicationCard({
           )}
         </div>
       )}
-      {application.status === "confirmed" && (
+      {application.status === "confirmed" && !hasEnded && (
         <button
           type="button"
           onClick={onCancel}

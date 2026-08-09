@@ -22,6 +22,7 @@ const paymentReady: PaymentReadyResponse = {
     guestCount: 2,
     specialRequest: null,
     startAt: "2026-08-20T10:00:00+09:00",
+    endAt: "2026-08-20T10:00:00+09:00",
     price: 45000,
     totalPrice: 90000,
     currency: "KRW",

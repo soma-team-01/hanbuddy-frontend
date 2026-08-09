@@ -150,6 +150,13 @@ export function formatSeoulTime(value: string, locale: Locale): string | null {
     : formatted;
 }
 
+/** 해당 일시가 이미 지났는지 판단한다. 형식이 잘못되면 false로 본다. */
+export function hasDateTimePassed(value: string, now = Date.now()): boolean {
+  const date = getOffsetfulDate(value);
+  if (!date) return false;
+  return date.getTime() <= now;
+}
+
 /** Asia/Seoul 기준 오늘부터 해당 일시의 날짜까지 남은 일수 (지난 날짜는 음수) */
 export function daysUntilSeoulDate(value: string, now = getSeoulNowParts()): number | null {
   const parts = getSeoulDateTimeParts(value);

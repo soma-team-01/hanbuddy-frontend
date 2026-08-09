@@ -1,19 +1,28 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useRef } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CheckCircleIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
+import { confirmApplicationPayment } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDateTime } from "@/lib/datetime";
-import { formatCurrency, formatKrw } from "@/lib/format";
-import { myApplicationsQueryOptions } from "@/lib/query/applications";
+import { formatKrw } from "@/lib/format";
+import { activityKeys } from "@/lib/query/activities";
+import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
+import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import type { ApplicationResponse } from "@/types/application";
 
 interface PaymentSuccessContentProps {
   applicationId: string;
+  /** 토스 successUrl 쿼리 파라미터 — 있으면 이 화면에서 결제 승인 API를 호출한다 */
+  paymentKey: string;
+  orderId: string;
+  amount: number | null;
 }
 
 function RecoveryState({ message }: Readonly<{ message: string }>) {
@@ -38,53 +47,22 @@ function RecoveryState({ message }: Readonly<{ message: string }>) {
   );
 }
 
-export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccessContentProps>) {
+function ConfirmationResult({ application }: Readonly<{ application: ApplicationResponse }>) {
   const locale = useLocale();
   const t = useTranslations("Payment");
   const tErrors = useTranslations("Errors");
-  const getApiErrorMessage = useApiErrorMessage();
-  const applicationsQuery = useQuery({
-    ...myApplicationsQueryOptions(),
-    enabled: applicationId.length > 0,
-  });
-  useAuthQueryRedirect(applicationsQuery.error);
-
-  if (!applicationId) {
-    return <RecoveryState message={t("confirmationNotFound")} />;
-  }
-
-  if (applicationsQuery.isPending) {
-    return <p className="flex flex-1 items-center justify-center text-muted">{t("loading")}</p>;
-  }
-
-  if (applicationsQuery.error) {
-    return <RecoveryState message={getApiErrorMessage(applicationsQuery.error, t("loadError"))} />;
-  }
-
-  const application = applicationsQuery.data.find(
-    (item) => String(item.applicationId) === applicationId,
-  );
-  if (!application) {
-    return <RecoveryState message={t("confirmationNotFound")} />;
-  }
-  if (application.status !== "CONFIRMED" && application.status !== "COMPLETED") {
-    return <RecoveryState message={t("notPaid")} />;
-  }
-
   const scheduleLabel =
     formatSeoulDateTime(application.startAt, locale) ?? tErrors("dateTimeUnavailable");
-  const paypalCharge =
-    application.paymentAmount !== null &&
-    application.paymentAmount !== undefined &&
-    application.paymentCurrency
-      ? formatCurrency(application.paymentAmount, application.paymentCurrency, locale)
-      : "—";
+  const paidAmount =
+    application.paymentAmount !== null && application.paymentAmount !== undefined
+      ? application.paymentAmount
+      : application.totalPrice;
 
   return (
     <PageContainer className="flex flex-1 items-center justify-center py-10 pb-44 md:py-16 lg:pb-16">
       <main
         data-testid="payment-result"
-        className="w-full max-w-2xl rounded-2xl rounded-3xl border border-line-soft bg-canvas-soft p-6 shadow-[0_18px_45px_rgba(61,45,43,0.1)] md:p-10"
+        className="w-full max-w-2xl rounded-3xl border border-line-soft bg-canvas-soft p-6 shadow-[0_18px_45px_rgba(61,45,43,0.1)] md:p-10"
       >
         <section className="flex flex-col items-center text-center">
           <span className="flex size-20 items-center justify-center rounded-full bg-success-soft text-success">
@@ -111,11 +89,10 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
                 })}
               </p>
             </div>
-            <div className="py-3 font-display text-lg font-semibold text-primary-strong">
-              <p>{t("paidWithPayPal", { amount: paypalCharge })}</p>
+            <div className="py-3 font-display text-lg font-semibold text-primary">
+              <p>{t("paidAmount", { amount: formatKrw(paidAmount, locale) })}</p>
             </div>
           </div>
-          <p className="mt-3 text-xs text-muted">{t("paypalUsdNotice")}</p>
         </section>
         <BottomActionBar>
           <div className="flex w-full flex-col gap-2">
@@ -127,7 +104,7 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
             </Link>
             <Link
               href="/explore"
-              className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary-strong"
+              className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary"
             >
               {t("exploreMore")}
             </Link>
@@ -136,4 +113,90 @@ export function PaymentSuccessContent({ applicationId }: Readonly<PaymentSuccess
       </main>
     </PageContainer>
   );
+}
+
+export function PaymentSuccessContent({
+  applicationId,
+  paymentKey,
+  orderId,
+  amount,
+}: Readonly<PaymentSuccessContentProps>) {
+  const queryClient = useQueryClient();
+  const t = useTranslations("Payment");
+  const getApiErrorMessage = useApiErrorMessage();
+  const hasConfirmParams = paymentKey.length > 0 && orderId.length > 0 && amount !== null;
+  const confirmMutation = useMutation({
+    mutationFn: async () =>
+      unwrapApiResult(
+        await confirmApplicationPayment(applicationId, {
+          paymentKey,
+          orderId,
+          amount: amount ?? 0,
+        }),
+        "application",
+      ),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+        // 선점이 좌석으로 확정됐으므로 활동 상세의 잔여 좌석을 갱신한다
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
+    },
+  });
+  const confirmStartedRef = useRef(false);
+  const applicationsQuery = useQuery({
+    ...myApplicationsQueryOptions(),
+    enabled: applicationId.length > 0 && !hasConfirmParams,
+  });
+  useAuthQueryRedirect(applicationsQuery.error ?? confirmMutation.error);
+
+  const shouldConfirm = hasConfirmParams && applicationId.length > 0;
+  const confirmMutate = confirmMutation.mutate;
+  useEffect(() => {
+    if (!shouldConfirm || confirmStartedRef.current) return;
+    confirmStartedRef.current = true;
+    confirmMutate();
+  }, [shouldConfirm, confirmMutate]);
+
+  if (!applicationId) {
+    return <RecoveryState message={t("confirmationNotFound")} />;
+  }
+
+  // 토스 결제창에서 돌아온 경우: 승인 API 결과에 따라 화면을 결정한다
+  if (hasConfirmParams) {
+    if (confirmMutation.isError) {
+      return (
+        <RecoveryState message={getApiErrorMessage(confirmMutation.error, t("confirmFailed"))} />
+      );
+    }
+    if (!confirmMutation.isSuccess) {
+      return (
+        <p role="status" className="flex flex-1 items-center justify-center text-muted">
+          {t("confirming")}
+        </p>
+      );
+    }
+    return <ConfirmationResult application={confirmMutation.data} />;
+  }
+
+  // 승인 파라미터 없이 진입한 경우: 이미 승인된 신청의 확인 화면을 보여준다
+  if (applicationsQuery.isPending) {
+    return <p className="flex flex-1 items-center justify-center text-muted">{t("loading")}</p>;
+  }
+
+  if (applicationsQuery.error) {
+    return <RecoveryState message={getApiErrorMessage(applicationsQuery.error, t("loadError"))} />;
+  }
+
+  const application = applicationsQuery.data.find(
+    (item) => String(item.applicationId) === applicationId,
+  );
+  if (!application) {
+    return <RecoveryState message={t("confirmationNotFound")} />;
+  }
+  if (application.status !== "CONFIRMED" && application.status !== "COMPLETED") {
+    return <RecoveryState message={t("notPaid")} />;
+  }
+
+  return <ConfirmationResult application={application} />;
 }

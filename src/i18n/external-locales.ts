@@ -1,8 +1,8 @@
 import type { Locale } from "./routing";
 
 const EXTERNAL_LOCALES = {
-  en: { paypal: "en-US", googleLanguage: "en", googleRegion: "KR" },
-  ko: { paypal: "ko-KR", googleLanguage: "ko", googleRegion: "KR" },
+  en: { googleLanguage: "en", googleRegion: "KR" },
+  ko: { googleLanguage: "ko", googleRegion: "KR" },
 } as const;
 
 export function getExternalLocales(locale: Locale) {

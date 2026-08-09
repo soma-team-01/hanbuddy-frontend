@@ -29,11 +29,11 @@
     "applicationNotCancellable": "This application can no longer be cancelled.",
     "applicationOwner": "You can only access your own applications.",
     "applicationNotFound": "This application could not be found.",
-    "paymentOrderMismatch": "The PayPal order does not match this payment.",
+    "paymentOrderMismatch": "The payment order does not match this application.",
     "paymentState": "This payment cannot be processed in its current state.",
     "paymentNotFound": "Payment information could not be found.",
     "paymentReviewRequired": "This payment needs administrator review before it can continue.",
-    "paymentCaptureMismatch": "The captured PayPal amount or currency does not match the payment.",
+    "paymentCaptureMismatch": "The approved amount or currency does not match this payment.",
     "paymentServiceUnavailable": "The payment service is temporarily unavailable. Please try again shortly.",
     "exchangeRateUnavailable": "Exchange-rate information is temporarily unavailable. Please try again shortly.",
     "buddyRequired": "This feature is only available to buddies.",
@@ -490,7 +490,10 @@
     "meetingPoint": "Meeting Point",
     "mapUnavailable": "Map unavailable",
     "mapTitle": "Map of {place}",
-    "kstNotice": "All times are in Korea Standard Time (KST)."
+    "kstNotice": "All times are in Korea Standard Time (KST).",
+    "hostedActivities": "Experiences hosted by this buddy",
+    "noOtherActivities": "No other experiences yet.",
+    "viewHostProfile": "View {name}'s profile"
   },
   "Booking": {
     "title": "Book activity",
@@ -512,18 +515,29 @@
     "priceDetails": "Price details",
     "subtotal": "{price} × {count, plural, one {# guest} other {# guests}}",
     "totalKrw": "Total (KRW): {amount}",
-    "refundPolicy": "Refunds are only available until a day before.",
+    "refundPolicy": "Please review the <policy>cancellation & refund policy</policy> before applying.",
     "agreement": "I agree to the terms above.",
-    "submit": "Submit Application",
-    "choosePaymentMethod": "Choose a payment method",
+    "submit": "Apply & Pay",
     "processing": "Processing...",
     "kstNotice": "All times are in Korea Standard Time (KST).",
     "scheduleRequired": "Please select an available schedule.",
-    "applicationMissing": "We couldn't find the application to pay for.",
-    "paymentFailed": "Could not complete the payment.",
     "paymentProcessFailed": "Something went wrong while processing the payment. Please try again shortly.",
     "paymentCancelled": "Payment was not completed. You can continue payment from My Applications.",
-    "paymentSummary": "{title} · {schedule} · {count, plural, one {# guest} other {# guests}}"
+    "totalLabel": "Total (KRW)",
+    "refundRules": {
+      "full": {
+        "label": "48+ hours before the activity",
+        "value": "Full refund"
+      },
+      "half": {
+        "label": "24–48 hours before",
+        "value": "50% refund"
+      },
+      "none": {
+        "label": "Less than 24 hours before",
+        "value": "No refund"
+      }
+    }
   },
   "Applications": {
     "title": "My Applications",
@@ -535,7 +549,6 @@
     "loadError": "Could not load applications.",
     "priceBreakdown": "Price Breakdown",
     "subtotal": "{price} × {count, plural, one {# guest} other {# guests}}",
-    "paidWithPayPal": "Paid with PayPal: {amount}",
     "total": "Total: {amount}",
     "continuePayment": "Continue Payment",
     "cancel": "Cancel",
@@ -553,7 +566,18 @@
     },
     "keepApplication": "No, Keep It",
     "confirmCancellation": "Yes, Cancel",
-    "cancelling": "Cancelling..."
+    "cancelling": "Cancelling...",
+    "paidAmount": "Paid: {amount}",
+    "paymentProcessing": "Opening payment...",
+    "dDay": "D-{count}",
+    "dDayToday": "D-DAY",
+    "exploreCta": "Explore activities",
+    "cancelledReason": "Cancellation reason: {reason}",
+    "cancelPendingTitle": "Cancel this application?",
+    "cancelPendingDescription": "The seat we're holding for you will be released right away.",
+    "cancelPendingConfirm": "Yes, cancel",
+    "keepPendingApplication": "Keep application",
+    "holdRemaining": "{time} left to complete payment"
   },
   "Payment": {
     "unavailable": "Payment unavailable",
@@ -561,15 +585,25 @@
     "confirmed": "Your application is confirmed.",
     "experience": "Your experience",
     "totalApplicationAmount": "Total application amount: {amount}",
-    "paidWithPayPal": "Paid with PayPal: {amount}",
-    "paypalCharge": "PayPal charge: {amount}",
-    "paypalUsdNotice": "PayPal payments are processed in USD.",
     "loading": "Loading payment...",
     "loadError": "Could not load the payment confirmation.",
     "confirmationNotFound": "We couldn't find this payment confirmation.",
     "notPaid": "This application has not been paid yet.",
     "viewApplications": "View My Applications",
-    "exploreMore": "Explore More Activities"
+    "exploreMore": "Explore More Activities",
+    "paidAmount": "Amount paid: {amount}",
+    "confirming": "Confirming your payment...",
+    "confirmFailed": "We couldn't confirm your payment. Please try again from My Applications.",
+    "failTitle": "Payment failed",
+    "failDescription": "The payment was not completed and nothing has been charged.",
+    "retryFromApplications": "Try again in My Applications",
+    "failReasons": {
+      "cancelled": "You cancelled the payment before it was completed.",
+      "aborted": "The payment was interrupted. Please try again.",
+      "rejectedByCardCompany": "Your card issuer declined the payment. Please try another card.",
+      "cardIssue": "This card cannot be used. Check the card details and try again.",
+      "exceededLimit": "The payment exceeds your card's limit."
+    }
   },
   "Country": {
     "select": "Select country",

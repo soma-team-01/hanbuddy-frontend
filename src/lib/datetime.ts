@@ -150,6 +150,38 @@ export function formatSeoulTime(value: string, locale: Locale): string | null {
     : formatted;
 }
 
+/** 해당 일시가 이미 지났는지 판단한다. 형식이 잘못되면 false로 본다. */
+export function hasDateTimePassed(value: string, now = Date.now()): boolean {
+  const date = getOffsetfulDate(value);
+  if (!date) return false;
+  return date.getTime() <= now;
+}
+
+/** Asia/Seoul 기준 오늘부터 해당 일시의 날짜까지 남은 일수 (지난 날짜는 음수) */
+export function daysUntilSeoulDate(value: string, now = getSeoulNowParts()): number | null {
+  const parts = getSeoulDateTimeParts(value);
+  if (!parts) return null;
+
+  const toUtc = (dateKey: string) => {
+    const [year, month, day] = dateKey.split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((toUtc(parts.date) - toUtc(now.date)) / 86_400_000);
+}
+
+/** 요일을 포함한 짧은 날짜 표기 (예: "Fri, Aug 22" / "8월 22일 (금)") */
+export function formatSeoulDateWithWeekday(value: string, locale: Locale): string | null {
+  const date = getOffsetfulDate(value);
+  if (!date) return null;
+
+  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    timeZone: SERVICE_TIME_ZONE,
+    month: locale === "ko" ? "numeric" : "short",
+    day: "numeric",
+    weekday: "short",
+  }).format(date);
+}
+
 export function formatSeoulWeekday(value: string, locale: Locale): string | null {
   const date = getOffsetfulDate(value);
   if (!date) return null;

@@ -22,6 +22,21 @@ describe("domain query options", () => {
     expect(myApplicationsQueryOptions().queryKey).toEqual(applicationKeys.mine());
   });
 
+  it("polls my applications only while a pending payment can expire", () => {
+    const { refetchInterval } = myApplicationsQueryOptions();
+    expect(typeof refetchInterval).toBe("function");
+    if (typeof refetchInterval !== "function") return;
+
+    type QueryArg = Parameters<typeof refetchInterval>[0];
+    const withStatus = (status?: string) =>
+      ({ state: { data: status ? [{ status }] : undefined } }) as unknown as QueryArg;
+
+    // 좌석 선점이 풀린 결제 대기 신청은 백엔드 목록에서 사라지므로 주기적으로 확인한다
+    expect(refetchInterval(withStatus("PENDING_PAYMENT"))).toBe(60_000);
+    expect(refetchInterval(withStatus("CONFIRMED"))).toBe(false);
+    expect(refetchInterval(withStatus())).toBe(false);
+  });
+
   it("includes buddy filters and identifiers in keys", () => {
     expect(buddyKeys.activityDetail(42)).toEqual(buddyKeys.activityDetail("42"));
     expect(buddyKeys.applicationsBySchedule(99)).toEqual(buddyKeys.applicationsBySchedule("99"));

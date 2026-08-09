@@ -30,9 +30,20 @@ describe("route access proxy", () => {
       const response = await runProxy(pathname);
 
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toBe("http://localhost/en/login");
+      expect(response.headers.get("location")).toBe(
+        `http://localhost/en/login?next=${encodeURIComponent(pathname)}`,
+      );
     },
   );
+
+  it("keeps the booking destination so login returns to it", async () => {
+    const response = await runProxy("/en/activities/42/book?scheduleId=101");
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      `http://localhost/en/login?next=${encodeURIComponent("/activities/42/book?scheduleId=101")}`,
+    );
+  });
 
   it("requires a signup session for onboarding", async () => {
     const response = await runProxy("/onboarding");

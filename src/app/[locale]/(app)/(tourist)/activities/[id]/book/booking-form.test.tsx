@@ -1,12 +1,9 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  captureApplicationPayment,
-  continueApplicationPayment,
-  createApplication,
-} from "@/lib/api/applications";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createApplication } from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
-import { applicationKeys } from "@/lib/query/applications";
+import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
+import { activityKeys } from "@/lib/query/activities";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Activity } from "@/types/activity";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
@@ -21,52 +18,15 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 vi.mock("@/lib/api/applications", () => ({
   createApplication: vi.fn(),
-  continueApplicationPayment: vi.fn(),
-  captureApplicationPayment: vi.fn(),
 }));
 
-vi.mock("@paypal/react-paypal-js/sdk-v6", () => {
-  interface MockButtonProps {
-    createOrder: () => Promise<{ orderId: string }>;
-    onApprove: (data: { orderId: string }) => Promise<void> | void;
-    onError?: (error: unknown) => void;
-  }
-  function MockPaymentButton({
-    label,
-    createOrder,
-    onApprove,
-    onError,
-  }: MockButtonProps & { label: string }) {
-    return (
-      <button
-        type="button"
-        onClick={async () => {
-          try {
-            const { orderId } = await createOrder();
-            await onApprove({ orderId });
-          } catch (error) {
-            onError?.(error);
-          }
-        }}
-      >
-        {label}
-      </button>
-    );
-  }
-  return {
-    PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
-    PayPalOneTimePaymentButton: (props: MockButtonProps) => (
-      <MockPaymentButton label="PayPal" {...props} />
-    ),
-    PayPalGuestPaymentButton: (props: MockButtonProps) => (
-      <MockPaymentButton label="Debit or Credit Card" {...props} />
-    ),
-  };
-});
+vi.mock("@/lib/payments/toss", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/payments/toss")>()),
+  requestTossPayment: vi.fn(),
+}));
 
 const mockedCreateApplication = vi.mocked(createApplication);
-const mockedContinueApplicationPayment = vi.mocked(continueApplicationPayment);
-const mockedCaptureApplicationPayment = vi.mocked(captureApplicationPayment);
+const mockedRequestTossPayment = vi.mocked(requestTossPayment);
 
 const activity: Activity = {
   id: "42",
@@ -112,12 +72,14 @@ const pendingApplication: ApplicationResponse = {
   guestCount: 2,
   specialRequest: "Vegetarian snacks, please.",
   startAt: "2026-07-20T10:00:00+09:00",
+  endAt: "2026-07-20T10:00:00+09:00",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
   status: "PENDING_PAYMENT",
   cancellationReason: null,
   cancellationDetail: null,
+  holdExpiresAt: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 };
@@ -125,18 +87,25 @@ const pendingApplication: ApplicationResponse = {
 const paymentReady: PaymentReadyResponse = {
   application: pendingApplication,
   paymentId: 7,
-  paypalOrderId: "5O190127TN364715T",
-  approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
+  orderNumber: "hanbuddy-11-550e8400-e29b-41d4-a716-446655440000",
+  clientKey: "test_ck_client-key",
+  orderName: "Bukchon Hidden Gems",
   paymentStatus: "CREATED",
-  paymentAmount: 68.97,
-  paymentCurrency: "USD",
+  paymentAmount: 90000,
+  paymentCurrency: "KRW",
   orderExpiresAt: "2026-07-14T13:00:00+09:00",
 };
+
+async function agreeAndSubmit(submitLabel = "Apply & Pay") {
+  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(submitLabel) }));
+}
 
 describe("BookingForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "test-client-id");
+    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
+    mockedRequestTossPayment.mockResolvedValue(undefined);
   });
 
   it("uses one responsive form layout with a sticky desktop summary", () => {
@@ -149,10 +118,20 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("booking-layout")).toHaveClass("lg:grid-cols-[minmax(0,1fr)_360px]");
     expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
-  });
-
-  afterEach(() => {
-    vi.unstubAllEnvs();
+    // 요약 카드: 선택한 일정과 총액이 보인다
+    expect(screen.getByText("2026-07-20")).toBeInTheDocument();
+    expect(screen.getByText("Total (KRW)")).toBeInTheDocument();
+    // 취소·환불 정책은 밑줄 트리거에 호버 툴팁으로 제공된다
+    expect(
+      screen.getByRole("button", { name: "cancellation & refund policy" }),
+    ).toBeInTheDocument();
+    // 특별 요청 칸은 처음부터 표시되고 비어 있으면 대시로 보인다
+    expect(screen.getByTestId("summary-special-request")).toHaveTextContent("—");
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent("48+ hours before the activity");
+    expect(tooltip).toHaveTextContent("Full refund");
+    expect(tooltip).toHaveTextContent("50% refund");
+    expect(tooltip).toHaveTextContent("No refund");
   });
 
   it("preselects the schedule passed from the availability calendar", () => {
@@ -166,7 +145,7 @@ describe("BookingForm", () => {
 
     renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
-    expect(screen.getByRole("combobox")).toHaveValue("102");
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2026-07-21 14:00");
   });
 
   it("falls back to the first schedule when the requested one is unknown or full", () => {
@@ -180,50 +159,56 @@ describe("BookingForm", () => {
 
     renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
-    expect(screen.getByRole("combobox")).toHaveValue("101");
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2026-07-20 10:00");
   });
 
-  it("creates an application and captures the PayPal payment from the confirm dialog", async () => {
-    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
-    mockedCaptureApplicationPayment.mockResolvedValue({
-      status: "success",
-      application: { ...pendingApplication, status: "CONFIRMED" },
-    });
+  it("creates an application and opens the Toss payment window", async () => {
+    renderWithQueryClient(<BookingForm activity={activity} />);
 
-    const { queryClient } = renderWithQueryClient(<BookingForm activity={activity} />);
-    queryClient.setQueryData(applicationKeys.mine(), []);
-    fireEvent.change(screen.getByPlaceholderText("Let your buddy know..."), {
+    fireEvent.change(screen.getByPlaceholderText(/Let your buddy know/i), {
       target: { value: "Vegetarian snacks, please." },
     });
-    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
-    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
+    await agreeAndSubmit();
 
-    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
-    expect(
-      within(dialog).getByText("Bukchon Hidden Gems · 2026-07-20 10:00 · 2 guests"),
-    ).toBeInTheDocument();
-    expect(within(dialog).getByText("Total application amount: ₩90,000")).toBeInTheDocument();
-    expect(within(dialog).getByText("PayPal charge: $68.97")).toBeInTheDocument();
-    expect(within(dialog).getByText("PayPal payments are processed in USD.")).toBeInTheDocument();
-    expect(within(dialog).queryByText("Activity")).not.toBeInTheDocument();
-    expect(within(dialog).queryByText("When")).not.toBeInTheDocument();
-    expect(within(dialog).queryByText("Guests")).not.toBeInTheDocument();
-
+    expect(screen.getByTestId("summary-special-request")).toHaveTextContent(
+      "Vegetarian snacks, please.",
+    );
+    await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
+    // 기본 인원은 1명이다
     expect(mockedCreateApplication).toHaveBeenCalledWith({
       activityScheduleId: 101,
-      guestCount: 2,
+      guestCount: 1,
       specialRequest: "Vegetarian snacks, please.",
     });
+    expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
+  });
 
-    fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
+  it("refreshes the activity detail so the held seat is reflected", async () => {
+    const { queryClient } = renderWithQueryClient(<BookingForm activity={activity} />);
+    queryClient.setQueryData(activityKeys.detail("42"), { activityId: 42 });
 
-    await waitFor(() => {
-      expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
-    });
+    await agreeAndSubmit();
+
+    // 좌석을 선점했으므로 잔여 좌석이 담긴 활동 상세 캐시를 무효화해야 한다
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+      expect(queryClient.getQueryState(activityKeys.detail("42"))?.isInvalidated).toBe(true),
     );
-    expect(queryClient.getQueryState(applicationKeys.mine())?.isInvalidated).toBe(true);
+  });
+
+  it("starts with a single guest and applies the chosen count", async () => {
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    // 스테퍼와 우측 요약 모두 1명으로 시작한다
+    expect(screen.getAllByText("1 guest")).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "Increase guests" }));
+    await agreeAndSubmit();
+
+    await waitFor(() =>
+      expect(mockedCreateApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ guestCount: 2 }),
+      ),
+    );
   });
 
   it("shows a localized capacity error when the selected schedule is full", async () => {
@@ -233,178 +218,101 @@ describe("BookingForm", () => {
         code: "APPLICATION400_CAPACITY_EXCEEDED",
         status: 400,
         details: null,
-        backendMessage: "신청 가능 인원을 초과했습니다.",
-        fallbackMessage: "신청을 생성하지 못했습니다.",
+        backendMessage: "남은 자리가 부족합니다.",
       }),
     });
 
     renderWithQueryClient(<BookingForm activity={activity} />);
-    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
-    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
+    await agreeAndSubmit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
-    expect(screen.queryByText("신청 가능 인원을 초과했습니다.")).not.toBeInTheDocument();
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
   });
 
-  it("pays as a guest with a card through the same application flow", async () => {
-    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
-    mockedCaptureApplicationPayment.mockResolvedValue({
-      status: "success",
-      application: { ...pendingApplication, status: "CONFIRMED" },
+  it("shows a cancellation notice when the buyer closes the Toss window", async () => {
+    mockedRequestTossPayment.mockRejectedValue({
+      code: "PAY_PROCESS_CANCELED",
+      message: "결제가 취소되었습니다.",
     });
 
     renderWithQueryClient(<BookingForm activity={activity} />);
-    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
-    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
+    await agreeAndSubmit();
 
-    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Debit or Credit Card" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Payment was not completed.");
+    // 신청은 이미 생성됐고, 같은 화면에서 다시 제출할 수 있다
+    expect(screen.getByRole("button", { name: /Apply & Pay/ })).toBeEnabled();
+  });
 
-    await waitFor(() => {
-      expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith(11, "5O190127TN364715T");
-    });
+  it("surfaces an error when the Toss window fails to open", async () => {
+    mockedRequestTossPayment.mockRejectedValue(new Error("INVALID_CLIENT_KEY"));
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Something went wrong while processing the payment.",
+    );
+  });
+
+  it("changes the schedule through the calendar dialog", async () => {
+    const futureDateKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(
+      new Date(Date.now() + 7 * 86_400_000),
+    );
+    const calendarActivity: Activity = {
+      ...activity,
+      sessions: [
+        {
+          id: "101",
+          startAt: `${futureDateKey}T10:00:00+09:00`,
+          dateKey: futureDateKey,
+          dateLabel: "2026-07-20",
+          timeLabel: "10:00 AM",
+          spotsLeft: 4,
+        },
+        {
+          id: "102",
+          startAt: `${futureDateKey}T14:00:00+09:00`,
+          dateKey: futureDateKey,
+          dateLabel: "2026-07-20",
+          timeLabel: "2:00 PM",
+          spotsLeft: 2,
+        },
+      ],
+    };
+
+    renderWithQueryClient(<BookingForm activity={calendarActivity} />);
+
+    fireEvent.click(screen.getByTestId("date-select-box"));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: /2:00 PM/ }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
+
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: /Apply & Pay/ }));
+
     await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+      expect(mockedCreateApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ activityScheduleId: 102 }),
+      ),
     );
   });
 
-  it("continues the existing payment when retrying after a capture failure", async () => {
-    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
-    mockedCaptureApplicationPayment
-      .mockResolvedValueOnce({
-        status: "error",
-        error: new ApiClientError({
-          code: null,
-          status: null,
-          details: null,
-          backendMessage: null,
-          fallbackMessage: "PayPal 결제 캡처에 실패했습니다.",
-        }),
-      })
-      .mockResolvedValueOnce({
-        status: "success",
-        application: { ...pendingApplication, status: "CONFIRMED" },
-      });
-    mockedContinueApplicationPayment.mockResolvedValue({
-      status: "success",
-      payment: { ...paymentReady, paypalOrderId: "NEW_ORDER_ID" },
-    });
-
-    renderWithQueryClient(<BookingForm activity={activity} />);
-    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
-    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
-
-    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
-
-    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-      "Could not complete the payment.",
-    );
-    expect(screen.getAllByRole("alert")).toHaveLength(1);
-    expect(within(dialog).queryByText("PayPal 결제 캡처에 실패했습니다.")).not.toBeInTheDocument();
-
-    fireEvent.click(within(dialog).getByRole("button", { name: "PayPal" }));
-
-    await waitFor(() => {
-      expect(mockedContinueApplicationPayment).toHaveBeenCalledWith(11);
-    });
-    await waitFor(() => {
-      expect(mockedCaptureApplicationPayment).toHaveBeenLastCalledWith(11, "NEW_ORDER_ID");
-    });
-    expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
-    await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
-    );
-  });
-
-  it("keeps the pending application available when the payment dialog is closed", async () => {
-    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
-
-    renderWithQueryClient(<BookingForm activity={activity} />);
-    fireEvent.click(screen.getByLabelText("I agree to the terms above."));
-    fireEvent.click(screen.getByRole("button", { name: /Submit Application/ }));
-
-    const dialog = await screen.findByRole("dialog", { name: "Choose a payment method" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Close dialog" }));
-
-    expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
-    expect(mockedCaptureApplicationPayment).not.toHaveBeenCalled();
-    expect(replace).toHaveBeenCalledWith("/en/applications");
-  });
-
-  it("localizes Korean booking controls and HanBuddy-owned PayPal copy", async () => {
-    mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
-
+  it("localizes Korean booking controls and the payment flow", async () => {
     renderWithQueryClient(<BookingForm activity={activity} />, { locale: "ko" });
 
-    expect(screen.getByText("Jihoon Kim 버디와 함께")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "날짜 및 시간" })).toBeInTheDocument();
-    expect(screen.getByText("날짜와 시간")).toBeInTheDocument();
-    expect(screen.getByText("모든 시간은 한국 표준시(KST) 기준입니다.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "인원" })).toBeInTheDocument();
-    expect(screen.getByText("게스트 수")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "인원 줄이기" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "인원 늘리기" })).toBeEnabled();
-    expect(screen.getByRole("heading", { name: "특별 요청" })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("버디에게 요청 사항을 알려 주세요...")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "가격 상세" })).toBeInTheDocument();
-    expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
-    expect(screen.getByText("총액(KRW): ₩90,000")).toBeInTheDocument();
-    expect(screen.getByText("환불은 이용일 하루 전까지만 가능합니다.")).toBeInTheDocument();
-    expect(screen.getByLabelText("위 약관에 동의합니다.")).toBeInTheDocument();
+    expect(screen.getByText("가격 상세")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: /신청 및 결제/ }));
 
-    fireEvent.change(screen.getByPlaceholderText("버디에게 요청 사항을 알려 주세요..."), {
-      target: { value: "Vegetarian snacks, please." },
-    });
-    fireEvent.click(screen.getByLabelText("위 약관에 동의합니다."));
-    fireEvent.click(screen.getByRole("button", { name: "신청하기" }));
-
-    const dialog = await screen.findByRole("dialog", { name: "결제 수단 선택" });
-    expect(
-      within(dialog).getByText("Bukchon Hidden Gems · 2026-07-20 10:00 · 2명"),
-    ).toBeInTheDocument();
-    expect(within(dialog).getByText("신청 총액: ₩90,000")).toBeInTheDocument();
-    expect(within(dialog).getByText("PayPal 결제 금액: US$68.97")).toBeInTheDocument();
-    expect(within(dialog).getByText("PayPal 결제는 USD로 처리됩니다.")).toBeInTheDocument();
-    expect(mockedCreateApplication).toHaveBeenCalledWith({
-      activityScheduleId: 101,
-      guestCount: 2,
-      specialRequest: "Vegetarian snacks, please.",
-    });
-
-    fireEvent.click(within(dialog).getByRole("button", { name: "대화상자 닫기" }));
-    expect(replace).toHaveBeenCalledWith("/ko/applications");
+    await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
+    expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "ko");
   });
 
-  it.each([
-    ["en", "Please select an available schedule."],
-    ["ko", "신청 가능한 일정을 선택해 주세요."],
-  ] as const)("translates the stable schedule validation key in %s", (locale, message) => {
-    renderWithQueryClient(<BookingForm activity={{ ...activity, sessions: [] }} />, { locale });
-
-    const agreement = locale === "ko" ? "위 약관에 동의합니다." : "I agree to the terms above.";
-    const submit = locale === "ko" ? "신청하기" : "Submit Application";
-    fireEvent.click(screen.getByLabelText(agreement));
-    fireEvent.click(screen.getByRole("button", { name: submit }));
-
-    expect(screen.getByRole("alert")).toHaveTextContent(message);
-    expect(mockedCreateApplication).not.toHaveBeenCalled();
+  it("treats a Toss user-cancel error code as a cancellation", () => {
+    expect(isTossUserCancel({ code: "PAY_PROCESS_CANCELED" })).toBe(true);
+    expect(isTossUserCancel({ code: "INVALID_CARD" })).toBe(false);
+    expect(isTossUserCancel(new Error("boom"))).toBe(false);
   });
-
-  it.each([
-    ["en", "2 guests", "1 guest", "Decrease guests"],
-    ["ko", "2명", "1명", "인원 줄이기"],
-  ] as const)(
-    "renders the localized guest-count plural in %s",
-    (locale, twoGuests, oneGuest, decreaseGuests) => {
-      renderWithQueryClient(<BookingForm activity={activity} />, { locale });
-
-      expect(screen.getByText(twoGuests)).toBeInTheDocument();
-
-      fireEvent.click(screen.getByRole("button", { name: decreaseGuests }));
-
-      expect(screen.getByText(oneGuest)).toBeInTheDocument();
-      expect(screen.queryByText(twoGuests)).not.toBeInTheDocument();
-    },
-  );
 });

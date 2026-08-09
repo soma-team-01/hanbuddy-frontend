@@ -1,8 +1,8 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   cancelMyApplication,
-  captureApplicationPayment,
+  cancelPendingPayment,
   continueApplicationPayment,
   getMyApplications,
 } from "@/lib/api/applications";
@@ -10,6 +10,7 @@ import { ApiClientError } from "@/lib/api/errors";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ApplicationResponse } from "@/types/application";
+import { requestTossPayment } from "@/lib/payments/toss";
 import { ApplicationsContent } from "./applications-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -21,43 +22,21 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 vi.mock("@/lib/api/applications", () => ({
   cancelMyApplication: vi.fn(),
-  captureApplicationPayment: vi.fn(),
+  cancelPendingPayment: vi.fn(),
   continueApplicationPayment: vi.fn(),
   getMyApplications: vi.fn(),
 }));
 
-vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
-  PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
-  PayPalOneTimePaymentButton: ({
-    createOrder,
-    onApprove,
-    onError,
-  }: {
-    createOrder: () => Promise<{ orderId: string }>;
-    onApprove: (data: { orderId: string }) => Promise<void> | void;
-    onError?: (error: unknown) => void;
-  }) => (
-    <button
-      type="button"
-      onClick={async () => {
-        try {
-          const { orderId } = await createOrder();
-          await onApprove({ orderId });
-        } catch (error) {
-          onError?.(error);
-        }
-      }}
-    >
-      PayPal
-    </button>
-  ),
-  PayPalGuestPaymentButton: () => <button type="button">Debit or Credit Card</button>,
+vi.mock("@/lib/payments/toss", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/payments/toss")>()),
+  requestTossPayment: vi.fn(),
 }));
 
 const mockedCancelMyApplication = vi.mocked(cancelMyApplication);
-const mockedCaptureApplicationPayment = vi.mocked(captureApplicationPayment);
+const mockedCancelPendingPayment = vi.mocked(cancelPendingPayment);
 const mockedContinueApplicationPayment = vi.mocked(continueApplicationPayment);
 const mockedGetMyApplications = vi.mocked(getMyApplications);
+const mockedRequestTossPayment = vi.mocked(requestTossPayment);
 
 const confirmedApplication: ApplicationResponse = {
   applicationId: 11,
@@ -68,15 +47,17 @@ const confirmedApplication: ApplicationResponse = {
   buddyName: "Jihoon Kim",
   guestCount: 2,
   specialRequest: null,
-  startAt: "2026-07-20T10:00:00+09:00",
+  startAt: "2099-07-20T10:00:00+09:00",
+  endAt: "2099-07-20T12:00:00+09:00",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
-  paymentAmount: 68.97,
-  paymentCurrency: "USD",
+  paymentAmount: 90000,
+  paymentCurrency: "KRW",
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
+  holdExpiresAt: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 };
@@ -85,20 +66,30 @@ describe("ApplicationsContent", () => {
   beforeEach(() => {
     routerMock.replace.mockReset();
     mockedCancelMyApplication.mockReset();
-    mockedCaptureApplicationPayment.mockReset();
+    mockedCancelPendingPayment.mockReset();
     mockedContinueApplicationPayment.mockReset();
     mockedGetMyApplications.mockReset();
-    vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "test-client-id");
+    mockedRequestTossPayment.mockReset();
+    mockedRequestTossPayment.mockResolvedValue(undefined);
   });
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  it("completes a pending payment through the PayPal button", async () => {
+  it("continues a pending payment through the Toss window", async () => {
     const pendingApplication: ApplicationResponse = {
       ...confirmedApplication,
       status: "PENDING_PAYMENT",
+      paymentAmount: null,
+      paymentCurrency: null,
+    };
+    const paymentReady = {
+      application: pendingApplication,
+      paymentId: 7,
+      orderNumber: "hanbuddy-11-order",
+      clientKey: "test_ck_client-key",
+      orderName: "Bukchon Hidden Gems",
+      paymentStatus: "CREATED" as const,
+      paymentAmount: 90000,
+      paymentCurrency: "KRW",
+      orderExpiresAt: "2026-07-14T13:00:00+09:00",
     };
     mockedGetMyApplications.mockResolvedValue({
       status: "success",
@@ -106,46 +97,88 @@ describe("ApplicationsContent", () => {
     });
     mockedContinueApplicationPayment.mockResolvedValue({
       status: "success",
-      payment: {
-        application: pendingApplication,
-        paymentId: 7,
-        paypalOrderId: "ORDER123",
-        approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=ORDER123",
-        paymentStatus: "CREATED",
-        paymentAmount: 68.97,
-        paymentCurrency: "USD",
-        orderExpiresAt: "2026-07-14T13:00:00+09:00",
-      },
-    });
-    mockedCaptureApplicationPayment.mockResolvedValue({
-      status: "success",
-      application: {
-        ...confirmedApplication,
-        paymentAmount: null,
-        paymentCurrency: null,
-      },
+      payment: paymentReady,
     });
 
-    const { queryClient } = renderWithQueryClient(<ApplicationsContent />);
+    renderWithQueryClient(<ApplicationsContent />);
 
     expect(await screen.findByText("₩90,000")).toBeInTheDocument();
-    expect(screen.queryByText("Paid with PayPal: $68.97")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "PayPal" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
 
     await waitFor(() => {
-      expect(mockedCaptureApplicationPayment).toHaveBeenCalledWith("11", "ORDER123");
+      expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
     });
     expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11");
-    expect(await screen.findByText("Confirmed")).toBeInTheDocument();
-    expect(queryClient.getQueryData(applicationKeys.mine())).toEqual([
-      expect.objectContaining({
-        applicationId: 11,
-        status: "CONFIRMED",
-        paymentAmount: 68.97,
-        paymentCurrency: "USD",
-      }),
-    ]);
-    expect(routerMock.replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11");
+  });
+
+  it("shows the seat-hold countdown from the application response", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [
+        {
+          ...confirmedApplication,
+          status: "PENDING_PAYMENT",
+          paymentAmount: null,
+          paymentCurrency: null,
+          holdExpiresAt: new Date(Date.now() + 9 * 60_000 + 30_000).toISOString(),
+        },
+      ],
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+
+    expect(await screen.findByTestId("payment-hold-countdown")).toHaveTextContent(
+      /9:2\d left to complete payment/,
+    );
+  });
+
+  it("removes a pending application from the list after cancelling it", async () => {
+    const pendingApplication: ApplicationResponse = {
+      ...confirmedApplication,
+      status: "PENDING_PAYMENT",
+      paymentAmount: null,
+      paymentCurrency: null,
+    };
+    mockedGetMyApplications.mockResolvedValueOnce({
+      status: "success",
+      applications: [pendingApplication],
+    });
+    // 결제 전 취소된 신청은 백엔드 목록에서 빠진다
+    mockedGetMyApplications.mockResolvedValue({ status: "success", applications: [] });
+    mockedCancelPendingPayment.mockResolvedValue({
+      status: "success",
+      application: { ...pendingApplication, status: "CANCELLED" },
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
+
+    await waitFor(() => expect(mockedCancelPendingPayment).toHaveBeenCalledWith("11"));
+    await waitFor(() => expect(screen.queryByText("Bukchon Hidden Gems")).not.toBeInTheDocument());
+  });
+
+  it("hides superseded applications from the list", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [
+        confirmedApplication,
+        {
+          ...confirmedApplication,
+          applicationId: 12,
+          activityTitle: "Old superseded application",
+          status: "SUPERSEDED",
+        },
+      ],
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+
+    expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(screen.queryByText("Old superseded application")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    expect(screen.queryByText("Old superseded application")).not.toBeInTheDocument();
   });
 
   it("renders applications loaded from the API", async () => {

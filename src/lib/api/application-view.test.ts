@@ -11,6 +11,7 @@ const application = {
   guestCount: 2,
   specialRequest: "Vegetarian snacks, please.",
   startAt: "2026-07-18T16:30:00Z",
+  endAt: "2026-07-18T18:45:00Z",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
@@ -19,6 +20,7 @@ const application = {
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
+  holdExpiresAt: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 } as const;
@@ -27,8 +29,14 @@ describe("application view adapters", () => {
   it("maps backend application fields to the existing card model", () => {
     expect(mapApplicationResponseToApplication(application, "Time unavailable.", "en")).toEqual({
       id: "11",
+      activityId: 42,
       status: "confirmed",
-      dateLabel: "Jul 19, 2026, 1:30 AM",
+      startAt: "2026-07-18T16:30:00Z",
+      endAt: "2026-07-18T18:45:00Z",
+      thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
+      cancellationReason: null,
+      holdExpiresAt: null,
+      dateLabel: "Sun, Jul 19 · 1:30 AM ~ 3:45 AM",
       hostName: "Jihoon Kim",
       hostAvatarUrl: null,
       activityTitle: "Bukchon Hidden Gems",
@@ -54,6 +62,7 @@ describe("application view adapters", () => {
       ),
     ).toMatchObject({
       status: "cancelled",
+      cancellationReason: "SCHEDULE_CONFLICT",
     });
   });
 
@@ -70,7 +79,7 @@ describe("application view adapters", () => {
     expect(
       mapApplicationResponseToApplication(application, "시간 정보를 확인할 수 없습니다.", "ko"),
     ).toMatchObject({
-      dateLabel: "2026. 7. 19. 오전 1:30",
+      dateLabel: "7. 19. (일) · 오전 1:30 ~ 오전 3:45",
       activityTitle: "Bukchon Hidden Gems",
       hostName: "Jihoon Kim",
     });

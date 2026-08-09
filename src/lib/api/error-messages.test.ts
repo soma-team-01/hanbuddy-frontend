@@ -23,10 +23,9 @@ describe("API error message registry", () => {
 
   it("groups payment gateway failures under one user message", () => {
     for (const code of [
-      "PAYMENT502_AUTH",
-      "PAYMENT502_CAPTURE",
-      "PAYMENT502_ORDER_CREATE",
-      "PAYMENT502_ORDER_LOOKUP",
+      "PAYMENT502_TOSS_CANCEL",
+      "PAYMENT502_TOSS_CONFIRM",
+      "PAYMENT502_TOSS_LOOKUP",
     ]) {
       expect(resolveApiErrorMessageKey(apiError(code, 502))).toBe("paymentServiceUnavailable");
     }

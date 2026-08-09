@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   cancelMyApplication,
-  captureApplicationPayment,
+  cancelPendingPayment,
+  confirmApplicationPayment,
   continueApplicationPayment,
   createApplication,
   getMyApplications,
@@ -17,12 +18,14 @@ const application = {
   guestCount: 2,
   specialRequest: "Vegetarian snacks, please.",
   startAt: "2026-07-20T10:00:00+09:00",
+  endAt: "2026-07-20T10:00:00+09:00",
   price: 45000,
   totalPrice: 90000,
   currency: "KRW",
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
+  holdExpiresAt: null,
   cancelledAt: null,
   createdAt: "2026-07-07T10:00:00Z",
 };
@@ -106,8 +109,13 @@ describe("application API client", () => {
     });
   });
 
-  it("captures an approved payment through the internal API", async () => {
+  it("confirms an authorized payment through the internal API", async () => {
     const confirmed = { ...application, status: "CONFIRMED" };
+    const confirmRequest = {
+      paymentKey: "tviva20260809abcdef",
+      orderId: "hanbuddy-1-550e8400-e29b-41d4-a716-446655440000",
+      amount: 90000,
+    };
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({
         isSuccess: true,
@@ -118,15 +126,15 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(captureApplicationPayment(11, "5O190127TN364715T")).resolves.toEqual({
+    await expect(confirmApplicationPayment(11, confirmRequest)).resolves.toEqual({
       status: "success",
       application: confirmed,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/capture", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paypalOrderId: "5O190127TN364715T" }),
+      body: JSON.stringify(confirmRequest),
       credentials: "same-origin",
     });
   });
@@ -203,25 +211,54 @@ describe("application API client", () => {
     });
   });
 
-  it("returns structured backend metadata when payment capture fails", async () => {
+  it("cancels a pending payment through the internal API without a body", async () => {
+    const cancelled = { ...application, status: "CANCELLED" };
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: cancelled,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(cancelPendingPayment(11)).resolves.toEqual({
+      status: "success",
+      application: cancelled,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/cancel", {
+      method: "PATCH",
+      credentials: "same-origin",
+    });
+  });
+
+  it("returns structured backend metadata when payment confirmation fails", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse(
         {
           isSuccess: false,
           code: "PAYMENT400_ORDER",
-          message: "요청한 PayPal order id가 신청의 결제 정보와 일치하지 않습니다.",
+          message: "요청한 주문번호가 신청의 결제 정보와 일치하지 않습니다.",
         },
         400,
       ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(captureApplicationPayment(11, "WRONG_ORDER_ID")).resolves.toEqual({
+    await expect(
+      confirmApplicationPayment(11, {
+        paymentKey: "tviva20260809abcdef",
+        orderId: "WRONG_ORDER_ID",
+        amount: 90000,
+      }),
+    ).resolves.toEqual({
       status: "error",
       error: expect.objectContaining({
         code: "PAYMENT400_ORDER",
         status: 400,
-        backendMessage: "요청한 PayPal order id가 신청의 결제 정보와 일치하지 않습니다.",
+        backendMessage: "요청한 주문번호가 신청의 결제 정보와 일치하지 않습니다.",
       }),
     });
   });

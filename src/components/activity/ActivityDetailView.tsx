@@ -7,11 +7,13 @@ import {
   AvailabilityCalendarDialog,
   formatSessionTimeRange,
 } from "@/components/activity/AvailabilityCalendarDialog";
+import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Avatar } from "@/components/ui/Avatar";
 import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
+import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
@@ -25,22 +27,6 @@ const SECTION_IDS = {
   meetingPoint: "meeting-point",
   itinerary: "what-youll-do",
 } as const;
-
-function formatChipDate(dateKey: string, locale: string) {
-  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
-    timeZone: "UTC",
-    month: "short",
-    day: "numeric",
-  }).format(
-    new Date(
-      Date.UTC(
-        Number(dateKey.slice(0, 4)),
-        Number(dateKey.slice(5, 7)) - 1,
-        Number(dateKey.slice(8, 10)),
-      ),
-    ),
-  );
-}
 
 function scrollToSection(sectionId: string) {
   document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -75,6 +61,7 @@ export function ActivityDetailView({
   const tExplore = useTranslations("Explore");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+  const [hostProfileOpen, setHostProfileOpen] = useState(false);
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
     null,
   );
@@ -149,9 +136,10 @@ export function ActivityDetailView({
   let dateBoxLabel = t("selectDatePlaceholder");
   if (selectedSession) {
     const timeRange = formatSessionTimeRange(selectedSession, activity.durationMinutes, locale);
-    dateBoxLabel = selectedSession.dateKey
-      ? `${formatChipDate(selectedSession.dateKey, locale)} ${timeRange}`
-      : `${selectedSession.dateLabel} ${timeRange}`;
+    const dateWithWeekday = selectedSession.startAt
+      ? formatSeoulDateWithWeekday(selectedSession.startAt, locale)
+      : null;
+    dateBoxLabel = `${dateWithWeekday ?? selectedSession.dateLabel} ${timeRange}`;
   } else if (activity.sessions.length === 0) {
     dateBoxLabel = t("noDates");
   } else if (bookableSessions.length === 0) {
@@ -427,10 +415,26 @@ export function ActivityDetailView({
               >
                 <h2 className="font-display text-xl font-bold text-ink">{t("aboutHost")}</h2>
                 <div className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 sm:flex-row sm:gap-5 md:p-6">
-                  <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={64} />
-                  <div className="min-w-0">
-                    <h3 className="font-display text-lg font-bold text-ink">
+                  <button
+                    type="button"
+                    aria-label={t("viewHostProfile", { name: activity.host.name })}
+                    onClick={() => setHostProfileOpen(true)}
+                    className="flex shrink-0 items-center gap-4 self-start rounded-full transition-opacity hover:opacity-80 sm:block"
+                  >
+                    <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={64} />
+                    <span className="font-display text-lg font-bold text-primary underline decoration-primary/50 decoration-2 underline-offset-4 sm:hidden">
                       {activity.host.name}
+                    </span>
+                  </button>
+                  <div className="min-w-0">
+                    <h3 className="max-sm:hidden">
+                      <button
+                        type="button"
+                        onClick={() => setHostProfileOpen(true)}
+                        className="font-display text-lg font-bold text-ink underline decoration-primary/50 decoration-2 underline-offset-4 transition-colors hover:text-primary"
+                      >
+                        {activity.host.name}
+                      </button>
                     </h3>
                     <p className="text-xs font-medium text-muted">{activity.host.bio}</p>
                     {activity.hostIntroduction ? (
@@ -518,6 +522,16 @@ export function ActivityDetailView({
           durationMinutes={activity.durationMinutes}
           onSelectSession={handleCalendarSelect}
           onClose={() => setCalendarOpen(false)}
+        />
+      ) : null}
+
+      {hostProfileOpen ? (
+        <HostProfileDialog
+          host={activity.host}
+          hostIntroduction={activity.hostIntroduction}
+          currentActivityId={activity.id}
+          showHostedActivities={!preview}
+          onClose={() => setHostProfileOpen(false)}
         />
       ) : null}
 

@@ -29,11 +29,11 @@
     "applicationNotCancellable": "더 이상 취소할 수 없는 신청입니다.",
     "applicationOwner": "본인의 신청만 이용할 수 있습니다.",
     "applicationNotFound": "신청 내역을 찾을 수 없습니다.",
-    "paymentOrderMismatch": "PayPal 주문 정보가 이 결제와 일치하지 않습니다.",
+    "paymentOrderMismatch": "결제 주문 정보가 이 신청과 일치하지 않습니다.",
     "paymentState": "현재 상태에서는 결제를 진행할 수 없습니다.",
     "paymentNotFound": "결제 정보를 찾을 수 없습니다.",
     "paymentReviewRequired": "결제를 계속하려면 운영자 확인이 필요합니다.",
-    "paymentCaptureMismatch": "PayPal 결제 금액 또는 통화가 결제 정보와 일치하지 않습니다.",
+    "paymentCaptureMismatch": "승인된 결제 금액 또는 통화가 결제 정보와 일치하지 않습니다.",
     "paymentServiceUnavailable": "결제 서비스에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "exchangeRateUnavailable": "환율 정보를 일시적으로 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "buddyRequired": "버디 사용자만 이용할 수 있는 기능입니다.",
@@ -490,7 +490,10 @@
     "meetingPoint": "만나는 장소",
     "mapUnavailable": "지도를 이용할 수 없습니다",
     "mapTitle": "{place} 지도",
-    "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다."
+    "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",
+    "hostedActivities": "이 버디가 호스팅 중인 체험",
+    "noOtherActivities": "아직 다른 체험이 없습니다.",
+    "viewHostProfile": "{name} 프로필 보기"
   },
   "Booking": {
     "title": "액티비티 예약",
@@ -512,18 +515,29 @@
     "priceDetails": "가격 상세",
     "subtotal": "{price} × {count, plural, other {#명}}",
     "totalKrw": "총액(KRW): {amount}",
-    "refundPolicy": "환불은 이용일 하루 전까지만 가능합니다.",
+    "refundPolicy": "신청 전에 <policy>취소 및 환불 정책</policy>을 확인해 주세요.",
     "agreement": "위 약관에 동의합니다.",
-    "submit": "신청하기",
-    "choosePaymentMethod": "결제 수단 선택",
+    "submit": "신청 및 결제",
     "processing": "처리 중...",
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",
     "scheduleRequired": "신청 가능한 일정을 선택해 주세요.",
-    "applicationMissing": "결제할 신청 정보를 찾지 못했습니다.",
-    "paymentFailed": "결제를 완료하지 못했습니다.",
     "paymentProcessFailed": "결제 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     "paymentCancelled": "결제가 완료되지 않았습니다. 내 신청에서 이어서 결제할 수 있습니다.",
-    "paymentSummary": "{title} · {schedule} · {count, plural, other {#명}}"
+    "totalLabel": "총액 (KRW)",
+    "refundRules": {
+      "full": {
+        "label": "활동 48시간 전까지",
+        "value": "전액 환불"
+      },
+      "half": {
+        "label": "활동 24~48시간 전",
+        "value": "부분 환불 50%"
+      },
+      "none": {
+        "label": "활동 24시간 전 이후",
+        "value": "환불 불가"
+      }
+    }
   },
   "Applications": {
     "title": "내 신청",
@@ -535,7 +549,6 @@
     "loadError": "신청 내역을 불러오지 못했습니다.",
     "priceBreakdown": "가격 상세",
     "subtotal": "{price} × {count, plural, other {#명}}",
-    "paidWithPayPal": "PayPal로 결제: {amount}",
     "total": "총액: {amount}",
     "continuePayment": "결제 이어서 하기",
     "cancel": "취소",
@@ -553,7 +566,18 @@
     },
     "keepApplication": "유지하기",
     "confirmCancellation": "신청 취소",
-    "cancelling": "취소 중..."
+    "cancelling": "취소 중...",
+    "paidAmount": "{amount} 결제 완료",
+    "paymentProcessing": "결제창을 여는 중...",
+    "dDay": "D-{count}",
+    "dDayToday": "D-DAY",
+    "exploreCta": "액티비티 둘러보기",
+    "cancelledReason": "취소 사유: {reason}",
+    "cancelPendingTitle": "이 신청을 취소할까요?",
+    "cancelPendingDescription": "선점 중인 좌석이 즉시 해제됩니다.",
+    "cancelPendingConfirm": "네, 취소할게요",
+    "keepPendingApplication": "신청 유지",
+    "holdRemaining": "결제 마감까지 {time}"
   },
   "Payment": {
     "unavailable": "결제를 이용할 수 없습니다.",
@@ -561,15 +585,25 @@
     "confirmed": "신청이 확정되었습니다.",
     "experience": "내 액티비티",
     "totalApplicationAmount": "신청 총액: {amount}",
-    "paidWithPayPal": "PayPal로 결제: {amount}",
-    "paypalCharge": "PayPal 결제 금액: {amount}",
-    "paypalUsdNotice": "PayPal 결제는 USD로 처리됩니다.",
     "loading": "결제 정보를 불러오는 중...",
     "loadError": "결제 확인 정보를 불러오지 못했습니다.",
     "confirmationNotFound": "결제 확인 정보를 찾을 수 없습니다.",
     "notPaid": "아직 결제가 완료되지 않은 신청입니다.",
     "viewApplications": "내 신청 보기",
-    "exploreMore": "액티비티 더 둘러보기"
+    "exploreMore": "액티비티 더 둘러보기",
+    "paidAmount": "결제 금액: {amount}",
+    "confirming": "결제를 승인하는 중...",
+    "confirmFailed": "결제를 승인하지 못했습니다. 내 신청에서 다시 시도해 주세요.",
+    "failTitle": "결제에 실패했습니다",
+    "failDescription": "결제가 완료되지 않았으며 금액은 청구되지 않았습니다.",
+    "retryFromApplications": "내 신청에서 다시 시도",
+    "failReasons": {
+      "cancelled": "결제가 완료되기 전에 취소되었습니다.",
+      "aborted": "결제가 중단되었습니다. 다시 시도해 주세요.",
+      "rejectedByCardCompany": "카드사에서 결제를 거절했습니다. 다른 카드로 시도해 주세요.",
+      "cardIssue": "사용할 수 없는 카드입니다. 카드 정보를 확인한 뒤 다시 시도해 주세요.",
+      "exceededLimit": "카드 한도를 초과했습니다."
+    }
   },
   "Country": {
     "select": "국가 선택",

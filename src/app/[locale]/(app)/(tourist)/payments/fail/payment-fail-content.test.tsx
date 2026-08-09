@@ -50,5 +50,9 @@ describe("resolveTossFailReasonKey", () => {
     expect(resolveTossFailReasonKey("<script>alert(1)</script>")).toBeNull();
     expect(resolveTossFailReasonKey("UNKNOWN_CODE")).toBeNull();
     expect(resolveTossFailReasonKey(null)).toBeNull();
+    // 상속 속성 이름도 허용 목록으로 새지 않는다
+    expect(resolveTossFailReasonKey("toString")).toBeNull();
+    expect(resolveTossFailReasonKey("constructor")).toBeNull();
+    expect(resolveTossFailReasonKey("__proto__")).toBeNull();
   });
 });

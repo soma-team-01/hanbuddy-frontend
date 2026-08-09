@@ -139,6 +139,8 @@ describe("ActivityReviewsSection", () => {
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
 
     expect(await screen.findByText("No reviews yet")).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Rated/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /Rated/ })).not.toBeInTheDocument();
+    // 별점이 없으면 "0 reviews"도 남기지 않는다
+    expect(screen.queryByText(/reviews?$/)).not.toBeInTheDocument();
   });
 });

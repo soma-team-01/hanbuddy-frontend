@@ -29,7 +29,10 @@ export function ActivityReviewsSection({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2 className="font-display text-xl font-bold text-ink">{t("sectionTitle")}</h2>
         <RatingSummary rating={preview?.averageRating} size="md" />
-        <span className="text-sm text-muted">{t("countLabel", { count: totalCount })}</span>
+        {/* 후기가 없을 때는 별점 영역을 통째로 감춘다 — 아래 빈 상태 안내로 충분하다 */}
+        {totalCount > 0 ? (
+          <span className="text-sm text-muted">{t("countLabel", { count: totalCount })}</span>
+        ) : null}
       </div>
 
       {previewQuery.isPending ? <p className="text-sm text-muted">{t("loading")}</p> : null}

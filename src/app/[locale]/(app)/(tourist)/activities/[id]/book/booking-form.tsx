@@ -323,17 +323,19 @@ export function BookingForm({
               </p>
             ) : null}
 
-            <BottomActionBar>
-              <button
-                type="button"
-                disabled={!agreed || isSubmitting}
-                onClick={handleSubmitClick}
-                className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-transparent font-display text-base font-bold text-primary transition-colors enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
-              >
-                {isSubmitting ? t("processing") : t("submit")}
-                <ArrowRightIcon className="size-4" />
-              </button>
-            </BottomActionBar>
+            <div className="lg:pt-6">
+              <BottomActionBar>
+                <button
+                  type="button"
+                  disabled={!agreed || isSubmitting}
+                  onClick={handleSubmitClick}
+                  className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-transparent font-display text-base font-bold text-primary transition-colors enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
+                >
+                  {isSubmitting ? t("processing") : t("submit")}
+                  <ArrowRightIcon className="size-4" />
+                </button>
+              </BottomActionBar>
+            </div>
           </BookingPanel>
         </main>
       </PageContainer>

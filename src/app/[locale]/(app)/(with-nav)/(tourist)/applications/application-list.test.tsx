@@ -9,11 +9,14 @@ import { ApplicationList } from "./application-list";
 const applications: Application[] = [
   {
     id: "1",
+    activityId: 42,
     status: "pending_payment",
+    startAt: "2099-07-20T10:00:00+09:00",
     dateLabel: "Jul 20, 2026",
     hostName: "Jihoon Kim",
     hostAvatarUrl: null,
     activityTitle: "Bukchon Hidden Gems",
+    thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
     breakdown: {
       unitPrice: 45000,
       guests: 2,
@@ -24,11 +27,14 @@ const applications: Application[] = [
   },
   {
     id: "2",
+    activityId: 43,
     status: "completed",
+    startAt: "2026-07-10T10:00:00+09:00",
     dateLabel: "Jul 10, 2026",
     hostName: "Minji Lee",
     hostAvatarUrl: null,
     activityTitle: "Traditional Tea Tasting",
+    thumbnailUrl: null,
   },
 ];
 
@@ -64,6 +70,14 @@ describe("ApplicationList", () => {
 
     expect(screen.getByTestId("application-list")).toHaveClass("grid", "lg:grid-cols-2");
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    // 카드에 활동 사진·제목·호스트가 보이고 카드가 상세로 연결된다
+    expect(screen.getByRole("link", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
+      "href",
+      "/en/activities/42",
+    );
+    expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
+    // 미래 일정에는 디데이 배지가 붙는다
+    expect(screen.getByText(/^D-\d+$/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue Payment" })).toBeEnabled();
     expect(onContinuePayment).not.toHaveBeenCalled();
   });
@@ -177,6 +191,10 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "지난 내역" }));
     expect(screen.getByText("아직 신청 내역이 없습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "액티비티 둘러보기" })).toHaveAttribute(
+      "href",
+      "/ko/explore",
+    );
   });
 
   it("localizes the continue-payment action in Korean", () => {

@@ -565,7 +565,10 @@
     "confirmCancellation": "Yes, Cancel",
     "cancelling": "Cancelling...",
     "paidAmount": "Paid: {amount}",
-    "paymentProcessing": "Opening payment..."
+    "paymentProcessing": "Opening payment...",
+    "dDay": "D-{count}",
+    "dDayToday": "D-DAY",
+    "exploreCta": "Explore activities"
   },
   "Payment": {
     "unavailable": "Payment unavailable",

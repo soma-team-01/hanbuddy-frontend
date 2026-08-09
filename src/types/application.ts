@@ -12,11 +12,16 @@ export interface PriceBreakdown {
 
 export interface Application {
   id: string;
+  /** 신청한 활동 상세로 이동하기 위한 활동 ID */
+  activityId: number;
   status: ApplicationStatus;
+  /** 활동 시작 일시 (Asia/Seoul 오프셋 포함) — D-day 계산용 */
+  startAt: string;
   dateLabel: string;
   hostName: string;
   hostAvatarUrl: string | null;
   activityTitle: string;
+  thumbnailUrl: string | null;
   breakdown?: PriceBreakdown;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;

@@ -1,11 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Link } from "@/i18n/navigation";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
+import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { daysUntilSeoulDate } from "@/lib/datetime";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel } from "@/lib/payments/toss";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
@@ -95,6 +99,7 @@ function ApplicationCard({
       : null;
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
+  const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
   const hasCompletedPayment = application.status === "confirmed" || isCompleted;
   const totalKrw = application.breakdown
     ? application.breakdown.unitPrice * application.breakdown.guests +
@@ -106,32 +111,45 @@ function ApplicationCard({
     setPaymentError(error);
   }
 
+  const dDay = isUpcoming ? daysUntilSeoulDate(application.startAt) : null;
+
   return (
-    <article className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 shadow-[0_8px_22px_rgba(61,45,43,0.06)] md:p-6">
-      <div className="flex items-center justify-between">
-        <StatusBadge status={application.status} />
-        <span className="text-xs text-muted">{application.dateLabel}</span>
-      </div>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <Avatar
-            name={application.hostName}
-            src={application.hostAvatarUrl}
-            size={48}
-            className={isCompleted ? "opacity-70" : ""}
+    <article className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 transition-colors hover:border-primary/50 md:p-6">
+      <Link
+        href={`/activities/${application.activityId}`}
+        className="flex gap-4"
+        aria-label={application.activityTitle}
+      >
+        <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-panel md:size-28">
+          <Image
+            src={getActivityThumbnail(application.thumbnailUrl)}
+            alt=""
+            fill
+            sizes="112px"
+            className={`object-cover ${isCompleted || isCancelled ? "opacity-60 saturate-[0.85]" : ""}`}
           />
-          <div className="min-w-0">
-            <p
-              className={`font-display text-sm font-semibold ${isCompleted || isCancelled ? "text-muted" : "text-ink"}`}
-            >
-              {application.hostName}
-            </p>
-            <p
-              className={`truncate text-base ${isCompleted || isCancelled ? "text-muted" : "text-ink"}`}
-            >
-              {application.activityTitle}
-            </p>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={application.status} />
+            {dDay !== null && dDay >= 0 ? (
+              <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
+                {dDay === 0 ? t("dDayToday") : t("dDay", { count: dDay })}
+              </span>
+            ) : null}
           </div>
+          <h3
+            className={`line-clamp-2 font-display text-base leading-6 font-bold ${
+              isCompleted || isCancelled ? "text-muted" : "text-ink"
+            }`}
+          >
+            {application.activityTitle}
+          </h3>
+          <p className="text-sm text-muted">{application.dateLabel}</p>
+          <p className="flex items-center gap-1.5 text-sm text-muted">
+            <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
+            {application.hostName}
+          </p>
         </div>
         {totalKrw !== null ? (
           <div className="shrink-0 text-right">
@@ -139,7 +157,7 @@ function ApplicationCard({
               {formatKrw(totalKrw, locale)}
             </p>
             {hasCompletedPayment && paymentCharge ? (
-              <p className="mt-0.5 text-xs text-primary-strong">
+              <p className="mt-0.5 text-xs text-primary">
                 {t("paidAmount", {
                   amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
                 })}
@@ -147,7 +165,7 @@ function ApplicationCard({
             ) : null}
           </div>
         ) : null}
-      </div>
+      </Link>
       {application.status === "confirmed" && (
         <PriceBreakdown application={application} paymentCharge={paymentCharge} />
       )}
@@ -260,7 +278,15 @@ export function ApplicationList({
           />
         ))}
         {visibleApplications.length === 0 && (
-          <p className="py-10 text-center text-muted lg:col-span-2">{t("empty")}</p>
+          <div className="flex flex-col items-center gap-5 py-14 lg:col-span-2">
+            <p className="text-center text-muted">{t("empty")}</p>
+            <Link
+              href="/explore"
+              className="flex h-11 items-center justify-center rounded-full border-2 border-primary px-6 font-display text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-on-primary"
+            >
+              {t("exploreCta")}
+            </Link>
+          </div>
         )}
       </div>
       {cancelTargetId && (

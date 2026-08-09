@@ -147,6 +147,61 @@ describe("GET /auth/google/callback", () => {
     expect(setCookie).toContain(`${AUTH_COOKIES.oauthLocale}=;`);
   });
 
+  it("returns a tourist to the page they were on before logging in", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "ACTIVE",
+          accessToken: "access-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(
+      createCallbackRequest("en", undefined, undefined, [
+        `${AUTH_COOKIES.oauthReturnTo}=${encodeURIComponent("/activities/42/book?scheduleId=101")}`,
+      ]),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/activities/42/book?scheduleId=101",
+    );
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.oauthReturnTo}=;`);
+  });
+
+  it("ignores an unsafe return-to target and falls back to the home page", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "ACTIVE",
+          accessToken: "access-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(
+      createCallbackRequest("en", undefined, undefined, [
+        `${AUTH_COOKIES.oauthReturnTo}=${encodeURIComponent("https://evil.example.com/")}`,
+      ]),
+    );
+
+    expect(response.headers.get("location")).toBe("http://localhost/en");
+  });
+
   it("redirects a registered tourist without a locale cookie to the default locale", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,

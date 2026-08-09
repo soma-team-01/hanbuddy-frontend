@@ -150,6 +150,18 @@ export function formatSeoulTime(value: string, locale: Locale): string | null {
     : formatted;
 }
 
+/** Asia/Seoul 기준 오늘부터 해당 일시의 날짜까지 남은 일수 (지난 날짜는 음수) */
+export function daysUntilSeoulDate(value: string, now = getSeoulNowParts()): number | null {
+  const parts = getSeoulDateTimeParts(value);
+  if (!parts) return null;
+
+  const toUtc = (dateKey: string) => {
+    const [year, month, day] = dateKey.split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return Math.round((toUtc(parts.date) - toUtc(now.date)) / 86_400_000);
+}
+
 /** 요일을 포함한 짧은 날짜 표기 (예: "Fri, Aug 22" / "8월 22일 (금)") */
 export function formatSeoulDateWithWeekday(value: string, locale: Locale): string | null {
   const date = getOffsetfulDate(value);

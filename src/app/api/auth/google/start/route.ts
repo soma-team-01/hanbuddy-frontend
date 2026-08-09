@@ -4,6 +4,7 @@ import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 import { AUTH_COOKIES, OAUTH_STATE_COOKIE_OPTIONS } from "@/lib/auth/cookies";
 import type { AuthErrorCode } from "@/lib/auth/error-codes";
 import { buildGoogleAuthorizationUrl, createOAuthState } from "@/lib/auth/google";
+import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export function GET(request: NextRequest) {
     const locale = getLocaleOrDefault(
       request.nextUrl.searchParams.get("locale") ?? request.cookies.get(LOCALE_COOKIE_NAME)?.value,
     );
+    const returnTo = sanitizeReturnToPath(request.nextUrl.searchParams.get("next"));
     const state = createOAuthState();
     const authorizationUrl = buildGoogleAuthorizationUrl({
       clientId: getGoogleClientId(),
@@ -31,6 +33,11 @@ export function GET(request: NextRequest) {
       response.cookies.set(AUTH_COOKIES.oauthIntent, intent, OAUTH_STATE_COOKIE_OPTIONS);
     } else {
       response.cookies.delete(AUTH_COOKIES.oauthIntent);
+    }
+    if (returnTo) {
+      response.cookies.set(AUTH_COOKIES.oauthReturnTo, returnTo, OAUTH_STATE_COOKIE_OPTIONS);
+    } else {
+      response.cookies.delete(AUTH_COOKIES.oauthReturnTo);
     }
     return response;
   } catch (error) {

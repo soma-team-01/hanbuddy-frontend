@@ -27,8 +27,11 @@ describe("application view adapters", () => {
   it("maps backend application fields to the existing card model", () => {
     expect(mapApplicationResponseToApplication(application, "Time unavailable.", "en")).toEqual({
       id: "11",
+      activityId: 42,
       status: "confirmed",
-      dateLabel: "Jul 19, 2026, 1:30 AM",
+      startAt: "2026-07-18T16:30:00Z",
+      thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
+      dateLabel: "Sun, Jul 19 · 1:30 AM",
       hostName: "Jihoon Kim",
       hostAvatarUrl: null,
       activityTitle: "Bukchon Hidden Gems",
@@ -70,7 +73,7 @@ describe("application view adapters", () => {
     expect(
       mapApplicationResponseToApplication(application, "시간 정보를 확인할 수 없습니다.", "ko"),
     ).toMatchObject({
-      dateLabel: "2026. 7. 19. 오전 1:30",
+      dateLabel: "7. 19. (일) · 오전 1:30",
       activityTitle: "Bukchon Hidden Gems",
       hostName: "Jihoon Kim",
     });

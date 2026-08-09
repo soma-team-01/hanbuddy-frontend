@@ -6,12 +6,13 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { GoogleIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import { parseAuthErrorCode } from "@/lib/auth/error-codes";
+import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface LoginPageProps {
   readonly params: Promise<{ locale: Locale }>;
-  readonly searchParams: Promise<{ error?: string | string[] }>;
+  readonly searchParams: Promise<{ error?: string | string[]; next?: string | string[] }>;
 }
 
 export async function generateMetadata({
@@ -36,9 +37,13 @@ export async function generateMetadata({
 export default async function LoginPage({ params, searchParams }: LoginPageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Auth" });
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const errorValue = Array.isArray(error) ? error[0] : error;
   const errorCode = errorValue ? parseAuthErrorCode(errorValue) : null;
+  const returnTo = sanitizeReturnToPath(Array.isArray(next) ? next[0] : next);
+  const googleStartHref = returnTo
+    ? `/api/auth/google/start?locale=${locale}&next=${encodeURIComponent(returnTo)}`
+    : `/api/auth/google/start?locale=${locale}`;
 
   return (
     <main className="flex w-full flex-1 flex-col overflow-hidden bg-canvas-soft">
@@ -62,7 +67,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             </p>
           ) : null}
           <Link
-            href={`/api/auth/google/start?locale=${locale}`}
+            href={googleStartHref}
             prefetch={false}
             className={`${errorCode ? "mt-6" : "mt-10"} motion-press relative mx-auto flex h-14 w-full max-w-[520px] items-center justify-center rounded-full border border-primary bg-primary px-16 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.28)] transition-colors hover:border-primary-hover hover:bg-primary-hover`}
           >

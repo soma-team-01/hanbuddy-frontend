@@ -565,7 +565,10 @@
     "confirmCancellation": "신청 취소",
     "cancelling": "취소 중...",
     "paidAmount": "{amount} 결제 완료",
-    "paymentProcessing": "결제창을 여는 중..."
+    "paymentProcessing": "결제창을 여는 중...",
+    "dDay": "D-{count}",
+    "dDayToday": "D-DAY",
+    "exploreCta": "액티비티 둘러보기"
   },
   "Payment": {
     "unavailable": "결제를 이용할 수 없습니다.",

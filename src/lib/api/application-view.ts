@@ -1,5 +1,5 @@
 import type { Locale } from "@/i18n/routing";
-import { formatSeoulDateTime } from "@/lib/datetime";
+import { formatSeoulDateWithWeekday, formatSeoulTime } from "@/lib/datetime";
 import type {
   Application,
   ApplicationResponse,
@@ -22,13 +22,18 @@ export function mapApplicationResponseToApplication(
   locale: Locale = "en",
 ): Application {
   const subtotal = response.price * response.guestCount;
+  const dateWithWeekday = formatSeoulDateWithWeekday(response.startAt, locale);
+  const time = formatSeoulTime(response.startAt, locale);
   return {
     id: String(response.applicationId),
+    activityId: response.activityId,
     status: STATUS_BY_BACKEND_STATUS[response.status],
-    dateLabel: formatSeoulDateTime(response.startAt, locale) ?? dateTimeUnavailable,
+    startAt: response.startAt,
+    dateLabel: dateWithWeekday && time ? `${dateWithWeekday} · ${time}` : dateTimeUnavailable,
     hostName: response.buddyName,
     hostAvatarUrl: null,
     activityTitle: response.activityTitle,
+    thumbnailUrl: response.thumbnailImageUrl,
     breakdown: {
       unitPrice: response.price,
       guests: response.guestCount,

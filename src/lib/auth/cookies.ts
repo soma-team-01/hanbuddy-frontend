@@ -5,6 +5,7 @@ export const AUTH_COOKIES = {
   oauthState: "hanbuddy_oauth_state",
   oauthLocale: "hanbuddy_oauth_locale",
   oauthIntent: "hanbuddy_oauth_intent",
+  oauthReturnTo: "hanbuddy_oauth_return_to",
   accessToken: "hanbuddy_access_token",
   refreshToken: "refresh_token",
   signupToken: "hanbuddy_signup_token",

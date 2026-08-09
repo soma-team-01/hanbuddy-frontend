@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/cookies";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
 import type { AuthErrorCode } from "@/lib/auth/error-codes";
+import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { localizePathname } from "@/i18n/pathname";
 import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
     response.cookies.delete(AUTH_COOKIES.oauthState);
     response.cookies.delete(AUTH_COOKIES.oauthLocale);
     response.cookies.delete(AUTH_COOKIES.oauthIntent);
+    response.cookies.delete(AUTH_COOKIES.oauthReturnTo);
     if (
       adminIntent
         ? hasUsableAdminLoginResult(result)
@@ -118,9 +120,10 @@ function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginRe
     return redirectToLoginWithError(request, "invalidLoginResponse");
   }
 
-  const response = NextResponse.redirect(
-    createLocalizedUrl(request, result.userType === "BUDDY" ? "/dashboard" : "/"),
-  );
+  // 로그인 전에 보던 화면이 있으면 그 화면으로 복귀한다 (검증된 내부 경로만)
+  const returnTo = sanitizeReturnToPath(request.cookies.get(AUTH_COOKIES.oauthReturnTo)?.value);
+  const fallbackPath = result.userType === "BUDDY" ? "/dashboard" : "/";
+  const response = NextResponse.redirect(createLocalizedUrl(request, returnTo ?? fallbackPath));
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
   clearAuthStatusReasonCookie(response);

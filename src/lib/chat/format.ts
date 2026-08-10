@@ -115,3 +115,34 @@ export function isSameSeoulMinute(left: string, right: string): boolean {
     leftParts.time.slice(0, 5) === rightParts.time.slice(0, 5),
   );
 }
+
+/** 말풍선 한 줄 — 사진 묶음이면 여러 장을 하나로 묶어 격자로 그린다 */
+export type ChatBubble =
+  | { kind: "text"; key: number; message: ChatMessageResponse }
+  | { kind: "images"; key: number; images: ChatMessageResponse[] };
+
+/**
+ * 묶음 안의 메시지를 말풍선 단위로 나눈다.
+ * 연달아 붙은 사진은 한 덩어리로 합치고, 글은 하나씩 그대로 둔다.
+ */
+export function toChatBubbles(messages: ChatMessageResponse[]): ChatBubble[] {
+  const bubbles: ChatBubble[] = [];
+
+  for (const message of messages) {
+    const isImage = message.messageType === "IMAGE" && Boolean(message.imageUrl);
+    const open = bubbles.at(-1);
+
+    if (isImage && open?.kind === "images") {
+      open.images.push(message);
+      continue;
+    }
+
+    bubbles.push(
+      isImage
+        ? { kind: "images", key: message.messageId, images: [message] }
+        : { kind: "text", key: message.messageId, message },
+    );
+  }
+
+  return bubbles;
+}

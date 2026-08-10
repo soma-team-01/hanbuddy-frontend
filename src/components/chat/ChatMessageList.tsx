@@ -2,11 +2,11 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { ChatImageBubble } from "@/components/chat/ChatImageBubble";
+import { ChatImageGrid } from "@/components/chat/ChatImageGrid";
 import { useInfiniteScrollSentinel } from "@/components/ui/use-infinite-scroll-sentinel";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Locale } from "@/i18n/routing";
-import { formatChatDateSeparator, groupChatMessages } from "@/lib/chat/format";
+import { formatChatDateSeparator, groupChatMessages, toChatBubbles } from "@/lib/chat/format";
 import { formatSeoulTime } from "@/lib/datetime";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
 
@@ -129,30 +129,24 @@ export function ChatMessageList({
                     <p className="text-xs font-semibold text-muted">{group.senderName}</p>
                   )}
 
-                  {group.messages.map((message) => {
-                    const unread = mine ? countUnread(message.messageId) : 0;
-                    // 한 묶음으로 보낸 사진은 함께 넘겨봐야 하나로 읽힌다
-                    const groupImages = group.messages.filter(
-                      (item) => item.messageType === "IMAGE" && item.imageUrl,
-                    );
+                  {toChatBubbles(group.messages).map((bubble) => {
+                    // 사진 묶음은 가장 마지막 사진 기준으로 안 읽은 사람 수를 센다
+                    const anchorId =
+                      bubble.kind === "images"
+                        ? (bubble.images.at(-1)?.messageId ?? 0)
+                        : bubble.message.messageId;
+                    const unread = mine ? countUnread(anchorId) : 0;
 
                     return (
                       <div
-                        key={message.messageId}
+                        key={bubble.key}
                         className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""}`}
                       >
-                        {message.messageType === "IMAGE" && message.imageUrl ? (
-                          <ChatImageBubble
-                            message={message}
+                        {bubble.kind === "images" ? (
+                          <ChatImageGrid
+                            images={bubble.images}
                             mine={mine}
-                            onOpen={() =>
-                              onOpenImage(
-                                groupImages,
-                                groupImages.findIndex(
-                                  (item) => item.messageId === message.messageId,
-                                ),
-                              )
-                            }
+                            onOpen={(index) => onOpenImage(bubble.images, index)}
                           />
                         ) : (
                           <p
@@ -160,7 +154,7 @@ export function ChatMessageList({
                               mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
                             }`}
                           >
-                            {message.content}
+                            {bubble.message.content}
                           </p>
                         )}
                         {unread > 0 ? (

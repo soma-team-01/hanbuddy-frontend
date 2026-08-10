@@ -4,6 +4,7 @@ import {
   formatChatTimestamp,
   groupChatMessages,
   isSameSeoulDate,
+  toChatBubbles,
 } from "./format";
 import type { ChatMessageResponse } from "@/types/chat";
 
@@ -101,5 +102,51 @@ describe("groupChatMessages", () => {
 
   it("returns nothing for an empty conversation", () => {
     expect(groupChatMessages([])).toEqual([]);
+  });
+});
+
+function imageMessage(messageId: number, senderId: number, createdAt: string): ChatMessageResponse {
+  return {
+    ...message(messageId, senderId, createdAt),
+    messageType: "IMAGE",
+    content: null,
+    imageUrl: `https://cdn/chats/${messageId}.webp`,
+  };
+}
+
+describe("toChatBubbles", () => {
+  it("merges photos sent together into one bubble", () => {
+    const bubbles = toChatBubbles([
+      imageMessage(1, 11, "2026-08-10T11:20:05+09:00"),
+      imageMessage(2, 11, "2026-08-10T11:20:06+09:00"),
+      imageMessage(3, 11, "2026-08-10T11:20:07+09:00"),
+    ]);
+
+    expect(bubbles).toHaveLength(1);
+    expect(bubbles[0].kind).toBe("images");
+    expect(bubbles[0].kind === "images" && bubbles[0].images).toHaveLength(3);
+  });
+
+  it("keeps text messages as their own bubbles", () => {
+    const bubbles = toChatBubbles([
+      message(1, 11, "2026-08-10T11:20:05+09:00"),
+      message(2, 11, "2026-08-10T11:20:06+09:00"),
+    ]);
+
+    expect(bubbles.map((bubble) => bubble.kind)).toEqual(["text", "text"]);
+  });
+
+  it("splits a photo run when a message comes between", () => {
+    const bubbles = toChatBubbles([
+      imageMessage(1, 11, "2026-08-10T11:20:05+09:00"),
+      message(2, 11, "2026-08-10T11:20:06+09:00"),
+      imageMessage(3, 11, "2026-08-10T11:20:07+09:00"),
+    ]);
+
+    expect(bubbles.map((bubble) => bubble.kind)).toEqual(["images", "text", "images"]);
+  });
+
+  it("returns nothing for an empty group", () => {
+    expect(toChatBubbles([])).toEqual([]);
   });
 });

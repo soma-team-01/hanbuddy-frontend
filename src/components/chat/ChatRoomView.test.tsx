@@ -346,6 +346,36 @@ describe("ChatRoomView", () => {
     expect(screen.getAllByRole("button", { name: "Remove photo" })).toHaveLength(5);
   });
 
+  it("asks whether to save one photo or the whole batch", async () => {
+    const photos = [
+      {
+        ...message(30, 6, ""),
+        messageType: "IMAGE" as const,
+        content: null,
+        imageUrl: "https://cdn/chats/30.webp",
+      },
+      {
+        ...message(31, 6, ""),
+        messageType: "IMAGE" as const,
+        content: null,
+        imageUrl: "https://cdn/chats/31.webp",
+      },
+    ];
+    mockedGetChatMessages.mockResolvedValue({
+      status: "success",
+      messages: { messages: [photos[1], photos[0]], nextCursor: null, hasNext: false },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Open photo 1 of 2" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Download" }));
+
+    // 아이콘 하나로 열고, 그 안에서 범위를 고른다
+    expect(await screen.findByRole("button", { name: "Save this photo" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save all 2" })).toBeInTheDocument();
+  });
+
   it("leaves the conversation after confirmation", async () => {
     mockedLeaveChatRoom.mockResolvedValue({ status: "success", chat: null });
 

@@ -404,6 +404,8 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             buildChatImageDownloadUrl(chatRoomId, image.messageId),
           )}
           downloadLabel={t("download")}
+          downloadTitle={t("downloadTitle")}
+          downloadOneLabel={t("downloadOne")}
           downloadAllLabel={t("downloadAll", { count: viewer.images.length })}
           onClose={() => setViewer(null)}
         />

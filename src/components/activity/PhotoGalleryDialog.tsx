@@ -14,7 +14,9 @@ export function PhotoGalleryDialog({
   unoptimizedImages = false,
   downloadUrls,
   downloadLabel,
+  downloadOneLabel,
   downloadAllLabel,
+  downloadTitle,
   onClose,
 }: Readonly<{
   images: string[];
@@ -25,12 +27,15 @@ export function PhotoGalleryDialog({
   /** 저장할 수 있는 사진이면 사진 순서대로 내려받기 경로를 준다 (채팅 사진) */
   downloadUrls?: string[];
   downloadLabel?: string;
+  downloadOneLabel?: string;
   downloadAllLabel?: string;
+  downloadTitle?: string;
   onClose: () => void;
 }>) {
   const t = useTranslations("ActivityDetail");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [downloadChoiceOpen, setDownloadChoiceOpen] = useState(false);
   const [index, setIndex] = useState(() =>
     Math.min(Math.max(initialIndex, 0), Math.max(images.length - 1, 0)),
   );
@@ -64,17 +69,18 @@ export function PhotoGalleryDialog({
             {t("photoCounter", { current: safeIndex + 1, total: images.length })}
           </span>
           <div className="flex items-center gap-2">
+            {/* 여러 장이면 무엇을 저장할지 먼저 고르게 한다 */}
             {downloadUrls && downloadUrls.length > 1 ? (
               <button
                 type="button"
-                onClick={() => void downloadFilesInSequence(downloadUrls)}
-                className="flex h-11 items-center gap-1.5 rounded-full bg-ink/60 px-4 font-display text-sm font-bold text-white transition-colors hover:bg-ink/80"
+                aria-label={downloadLabel}
+                title={downloadLabel}
+                onClick={() => setDownloadChoiceOpen(true)}
+                className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
               >
-                <DownloadIcon className="size-4" />
-                {downloadAllLabel}
+                <DownloadIcon className="size-5" />
               </button>
-            ) : null}
-            {downloadUrls?.[safeIndex] ? (
+            ) : downloadUrls?.[safeIndex] ? (
               <a
                 href={downloadUrls[safeIndex]}
                 aria-label={downloadLabel}
@@ -125,6 +131,77 @@ export function PhotoGalleryDialog({
           </>
         ) : null}
         <div className="pb-[max(1rem,env(safe-area-inset-bottom))]" />
+      </div>
+      {downloadChoiceOpen && downloadUrls ? (
+        <PhotoDownloadChoiceDialog
+          title={downloadTitle}
+          oneLabel={downloadOneLabel}
+          allLabel={downloadAllLabel}
+          onChoose={(scope) => {
+            setDownloadChoiceOpen(false);
+            void downloadFilesInSequence(
+              scope === "all" ? downloadUrls : [downloadUrls[safeIndex]],
+            );
+          }}
+          onClose={() => setDownloadChoiceOpen(false)}
+        />
+      ) : null}
+    </dialog>
+  );
+}
+
+/** 사진을 한 장만 받을지 묶음 전체를 받을지 고르는 작은 창 */
+function PhotoDownloadChoiceDialog({
+  title,
+  oneLabel,
+  allLabel,
+  onChoose,
+  onClose,
+}: Readonly<{
+  title?: string;
+  oneLabel?: string;
+  allLabel?: string;
+  onChoose: (scope: "one" | "all") => void;
+  onClose: () => void;
+}>) {
+  const tCommon = useTranslations("Common");
+  const choiceRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = choiceRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  return (
+    <dialog
+      ref={choiceRef}
+      aria-label={title}
+      onClose={onClose}
+      className="motion-dialog m-auto w-[calc(100%-3rem)] max-w-xs rounded-2xl border-0 bg-canvas-soft p-5 text-ink shadow-2xl backdrop:bg-ink/60"
+    >
+      <p className="font-display text-base font-bold text-ink">{title}</p>
+      <div className="mt-4 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => onChoose("one")}
+          className="h-11 rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
+        >
+          {oneLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => onChoose("all")}
+          className="h-11 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+        >
+          {allLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="h-10 font-display text-sm font-semibold text-muted transition-colors hover:text-ink"
+        >
+          {tCommon("cancel")}
+        </button>
       </div>
     </dialog>
   );

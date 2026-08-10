@@ -726,7 +726,9 @@
     "markingAllRead": "Marking...",
     "listMenu": "Conversation options",
     "downloadAll": "Save all {count}",
-    "openPhotoAt": "Open photo {index} of {total}"
+    "openPhotoAt": "Open photo {index} of {total}",
+    "downloadTitle": "Save photos",
+    "downloadOne": "Save this photo"
   },
   "MyPage": {
     "title": "My Page",

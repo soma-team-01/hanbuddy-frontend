@@ -83,6 +83,20 @@ describe("PaymentSuccessContent", () => {
     expect(screen.getAllByText("₩90,000")).toHaveLength(2);
   });
 
+  it("shows the paid amount in the currency it was charged in", async () => {
+    mockedConfirmApplicationPayment.mockResolvedValue({
+      status: "success",
+      application: { ...confirmedApplication, paymentAmount: 62.5, paymentCurrency: "USD" },
+    });
+
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
+
+    expect(await screen.findByRole("heading", { name: "Payment complete" })).toBeInTheDocument();
+    // 신청 총액은 원화, 실제 결제는 결제 통화로 적는다
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    expect(screen.getByText("$62.50")).toBeInTheDocument();
+  });
+
   it("shows a confirming status while the approval call is in flight", () => {
     mockedConfirmApplicationPayment.mockReturnValue(new Promise(() => undefined));
 

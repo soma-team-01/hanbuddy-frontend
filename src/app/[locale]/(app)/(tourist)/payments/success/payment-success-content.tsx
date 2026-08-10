@@ -12,7 +12,7 @@ import { confirmApplicationPayment } from "@/lib/api/applications";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDateTime } from "@/lib/datetime";
-import { formatKrw } from "@/lib/format";
+import { formatCurrency, formatKrw } from "@/lib/format";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { unwrapApiResult } from "@/lib/query/result";
@@ -60,6 +60,8 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
     application.paymentAmount !== null && application.paymentAmount !== undefined
       ? application.paymentAmount
       : application.totalPrice;
+  // 실제 결제 통화로 표기한다 — 원화가 아닌 결제를 ₩로 적으면 금액을 잘못 읽는다
+  const paidCurrency = application.paymentCurrency ?? application.currency;
 
   return (
     <PageContainer className="flex flex-1 items-center justify-center py-10 pb-44 md:py-16 lg:pb-16">
@@ -131,7 +133,7 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
           <div className="flex items-center justify-between border-t border-line-soft pt-4">
             <span className="font-display text-base font-bold text-ink">{t("paidLabel")}</span>
             <span className="font-display text-xl font-bold text-primary">
-              {formatKrw(paidAmount, locale)}
+              {formatCurrency(paidAmount, paidCurrency, locale)}
             </span>
           </div>
         </section>

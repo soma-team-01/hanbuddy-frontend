@@ -5,5 +5,6 @@ export default async function ChatRoomPage({
 }: Readonly<{ params: Promise<{ chatRoomId: string }> }>) {
   const { chatRoomId } = await params;
 
-  return <ChatRoomView chatRoomId={chatRoomId} />;
+  // 방을 옮기면 초안·첨부·읽음 보고 기준선까지 새로 시작해야 해서 인스턴스를 갈아 끼운다
+  return <ChatRoomView key={chatRoomId} chatRoomId={chatRoomId} />;
 }

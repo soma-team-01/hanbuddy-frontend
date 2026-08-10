@@ -50,7 +50,8 @@ export function StartChatButton({
           ),
     onSuccess: async (room) => {
       setError(null);
-      await queryClient.invalidateQueries({ queryKey: chatKeys.rooms() });
+      // 목록 재조회를 기다리면 방이 열렸는데도 이동이 늦어진다 — 갱신은 뒤에서 돌게 둔다
+      void queryClient.invalidateQueries({ queryKey: chatKeys.rooms() });
       onOpened?.();
       router.push(`/chat/${room.chatRoomId}`);
     },

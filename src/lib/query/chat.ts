@@ -33,11 +33,18 @@ export function myChatRoomsQueryOptions() {
   });
 }
 
-export function chatRoomQueryOptions(chatRoomId: number | string) {
+/**
+ * 방 상세(참여자·읽음 위치).
+ * 말풍선 옆 "안 읽은 사람 수"가 여기서 나오므로, 실시간 구독이 끊겼을 때는 메시지와 같은 주기로
+ * 다시 받아 숫자가 멈춰 있지 않게 한다.
+ */
+export function chatRoomQueryOptions(chatRoomId: number | string, live = false) {
   return queryOptions({
     queryKey: chatKeys.room(chatRoomId),
     queryFn: async () => unwrapApiResult(await getChatRoom(chatRoomId), "room"),
-    staleTime: 30_000,
+    refetchInterval: live ? false : CHAT_MESSAGE_POLL_INTERVAL,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 }
 

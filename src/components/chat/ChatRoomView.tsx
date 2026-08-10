@@ -38,7 +38,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   // 실시간 구독이 붙으면 폴링을 멈추고 브로드캐스트로 받는다
   const live = useChatRoomStream(chatRoomId);
   const profileQuery = useQuery(myProfileQueryOptions());
-  const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId));
+  const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, live));
   const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, live));
 
   const latestMessages = latestQuery.data?.messages ?? [];

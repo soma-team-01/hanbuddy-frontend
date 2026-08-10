@@ -40,7 +40,8 @@ export function ChatPhoto({
   const [failed, setFailed] = useState(false);
   const aspectRatio = stretch ? undefined : resolveAspectRatio(imageWidth, imageHeight);
 
-  if (failed) {
+  // imageUrl이 비면 next/image가 onError보다 먼저 src 오류를 던진다
+  if (failed || !imageUrl) {
     return (
       <span
         style={{ aspectRatio }}

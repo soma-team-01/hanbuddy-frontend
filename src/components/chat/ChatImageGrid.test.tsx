@@ -101,6 +101,15 @@ describe("ChatImageGrid", () => {
     expect(screen.getByRole("button", { name: "Open photo 4 of 5" })).toBeInTheDocument();
   });
 
+  it("falls back instead of handing next/image an empty source", () => {
+    renderWithIntl(
+      <ChatImageGrid images={[{ ...photo(1), imageUrl: null }]} mine onOpen={vi.fn()} />,
+    );
+
+    expect(screen.getByText("Photo unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
   it("shows the caption once for the whole batch", () => {
     renderWithIntl(
       <ChatImageGrid

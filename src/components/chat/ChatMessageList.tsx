@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Locale } from "@/i18n/routing";
-import { formatChatDateSeparator, isSameSeoulDate } from "@/lib/chat/format";
+import { formatChatDateSeparator, groupChatMessages } from "@/lib/chat/format";
 import { formatSeoulTime } from "@/lib/datetime";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
 
@@ -38,11 +38,14 @@ export function ChatMessageList({
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [newestMessageId]);
 
-  // 상대가 어디까지 읽었는지 — 1:1이면 상대 한 명, 단체면 모두가 읽은 지점
-  const othersLastRead = members
+  // 아직 안 읽은 사람 수를 세기 위해, 나를 뺀 참여 중인 사람들의 읽음 위치를 모은다
+  const otherReadPositions = members
     .filter((member) => member.userId !== myUserId && !member.left)
     .map((member) => member.lastReadMessageId ?? 0);
-  const readUpTo = othersLastRead.length > 0 ? Math.min(...othersLastRead) : 0;
+
+  function countUnread(messageId: number) {
+    return otherReadPositions.filter((position) => position < messageId).length;
+  }
 
   if (isPending) {
     return <p className="flex-1 p-8 text-center text-sm text-muted">{t("loading")}</p>;
@@ -56,8 +59,10 @@ export function ChatMessageList({
     );
   }
 
+  const groups = groupChatMessages(messages);
+
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-5 md:px-6">
+    <div className="flex-1 overflow-y-auto bg-canvas px-4 py-5 md:px-6">
       {hasOlder ? (
         <button
           type="button"
@@ -73,59 +78,66 @@ export function ChatMessageList({
         <p className="py-10 text-center text-sm text-muted">{t("noMessagesYet")}</p>
       ) : null}
 
-      <ol className="flex flex-col gap-3">
-        {messages.map((message, index) => {
-          const previous = messages[index - 1];
-          const mine = message.senderId === myUserId;
-          const showDate = !previous || !isSameSeoulDate(previous.createdAt, message.createdAt);
-          // 같은 사람이 이어서 보내면 이름과 프로필을 반복하지 않는다
-          const showSender =
-            !mine && (showDate || !previous || previous.senderId !== message.senderId);
+      <ol className="flex flex-col gap-4">
+        {groups.map((group) => {
+          const mine = group.senderId === myUserId;
 
           return (
-            <li key={message.messageId} className="flex flex-col gap-3">
-              {showDate ? (
-                <p className="my-2 text-center text-xs font-semibold text-muted">
-                  {formatChatDateSeparator(message.createdAt, locale, t)}
+            <li key={group.key} className="flex flex-col gap-4">
+              {group.startsNewDate ? (
+                <p className="my-1 text-center text-xs font-semibold text-muted">
+                  {formatChatDateSeparator(group.timestamp, locale, t)}
                 </p>
               ) : null}
 
               <div className={`flex gap-2.5 ${mine ? "flex-row-reverse" : ""}`}>
                 {mine ? null : (
-                  <span className="w-8 shrink-0">
-                    {showSender ? (
-                      <Avatar
-                        name={message.senderName}
-                        src={message.senderProfileImageUrl}
-                        size={32}
-                      />
-                    ) : null}
-                  </span>
+                  <Avatar
+                    name={group.senderName}
+                    src={group.senderProfileImageUrl}
+                    size={32}
+                    className="mt-5 shrink-0"
+                  />
                 )}
 
                 <div
                   className={`flex min-w-0 flex-col gap-1 ${mine ? "items-end" : "items-start"}`}
                 >
-                  {showSender ? (
-                    <p className="text-xs font-semibold text-muted">{message.senderName}</p>
-                  ) : null}
-                  <div className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""}`}>
-                    <p
-                      className={`max-w-[min(30rem,72vw)] rounded-2xl px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap ${
-                        mine
-                          ? "bg-primary text-on-primary"
-                          : "border border-line-soft bg-canvas-soft text-ink"
-                      }`}
-                    >
-                      {message.content}
-                    </p>
-                    <span className="flex shrink-0 flex-col items-end text-[11px] text-muted">
-                      {mine && readUpTo >= message.messageId ? (
-                        <span className="font-semibold text-primary">{t("readBy")}</span>
-                      ) : null}
-                      <span>{formatSeoulTime(message.createdAt, locale) ?? ""}</span>
-                    </span>
-                  </div>
+                  {mine ? null : (
+                    <p className="text-xs font-semibold text-muted">{group.senderName}</p>
+                  )}
+
+                  {group.messages.map((message) => {
+                    const unread = mine ? countUnread(message.messageId) : 0;
+
+                    return (
+                      <div
+                        key={message.messageId}
+                        className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""}`}
+                      >
+                        <p
+                          className={`max-w-[min(30rem,72vw)] rounded-2xl px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap text-ink ${
+                            mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
+                          }`}
+                        >
+                          {message.content}
+                        </p>
+                        {unread > 0 ? (
+                          <span
+                            aria-label={t("unreadByCount", { count: unread })}
+                            className="shrink-0 pb-1 font-display text-[11px] font-bold text-primary tabular-nums"
+                          >
+                            {unread}
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+
+                  {/* 묶음당 시각은 한 번만 — 같은 사람이 같은 분에 보낸 메시지 아래에 붙는다 */}
+                  <p className="mt-0.5 text-[11px] text-muted">
+                    {formatSeoulTime(group.timestamp, locale) ?? ""}
+                  </p>
                 </div>
               </div>
             </li>

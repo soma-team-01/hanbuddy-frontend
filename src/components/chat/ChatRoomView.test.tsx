@@ -114,6 +114,88 @@ describe("ChatRoomView", () => {
     expect(bubbles[1]).toHaveTextContent("언제 만날까요?");
   });
 
+  it("shows one timestamp per sender-minute group instead of per message", async () => {
+    mockedGetChatMessages.mockResolvedValue({
+      status: "success",
+      messages: {
+        messages: [
+          { ...message(23, 11, "곧 도착해요"), createdAt: "2026-08-10T11:20:50+09:00" },
+          { ...message(22, 11, "출발했어요"), createdAt: "2026-08-10T11:20:10+09:00" },
+          { ...message(21, 6, "네 기다릴게요"), createdAt: "2026-08-10T11:20:30+09:00" },
+        ],
+        nextCursor: null,
+        hasNext: false,
+      },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    expect(await screen.findByText("출발했어요")).toBeInTheDocument();
+    // 내 메시지 2건과 상대 메시지 1건이 각각 하나의 시각만 갖는다 (11:20 두 번)
+    expect(screen.getAllByText("11:20 AM")).toHaveLength(2);
+  });
+
+  it("counts how many people have not read my message yet", async () => {
+    // 상대는 20번까지 읽었으므로 21번은 1명이 아직 안 읽은 상태다
+    mockedGetChatMessages.mockResolvedValue({
+      status: "success",
+      messages: {
+        messages: [message(21, 11, "읽었나요?"), message(20, 11, "안녕하세요")],
+        nextCursor: null,
+        hasNext: false,
+      },
+    });
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "DIRECT",
+        title: "SeoulMate",
+        activityScheduleId: null,
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+          {
+            userId: 6,
+            userName: "SeoulMate",
+            profileImageUrl: null,
+            lastReadMessageId: 20,
+            left: false,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    expect(await screen.findByLabelText("1 person has not read this")).toHaveTextContent("1");
+    // 상대가 읽은 메시지에는 숫자를 남기지 않는다
+    expect(screen.queryByLabelText(/2 people/)).not.toBeInTheDocument();
+  });
+
+  it("does not send twice when Enter confirms a Korean composition", async () => {
+    mockedSendChatMessage.mockResolvedValue({
+      status: "success",
+      message: message(22, 11, "안녕하세요"),
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    const input = await screen.findByLabelText("Message");
+    fireEvent.change(input, { target: { value: "안녕하세요" } });
+    // 조합 확정 Enter는 무시하고, 그다음 Enter만 전송한다
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(mockedSendChatMessage).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() => expect(mockedSendChatMessage).toHaveBeenCalledTimes(1));
+  });
+
   it("reports the newest message as read when the conversation opens", async () => {
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
 

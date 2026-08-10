@@ -688,7 +688,6 @@
     "messagesLoadError": "Could not load messages.",
     "loadOlder": "Load earlier messages",
     "loadingOlder": "Loading...",
-    "readBy": "Read",
     "unreadCount": "{count, plural, other {#}}",
     "unreadLabel": "{count, plural, one {# unread message} other {# unread messages}}",
     "contactBuddy": "Message {name}",
@@ -702,7 +701,8 @@
     "leaveError": "Could not leave this conversation.",
     "today": "Today",
     "yesterday": "Yesterday",
-    "you": "You"
+    "you": "You",
+    "unreadByCount": "{count, plural, one {# person has not read this} other {# people have not read this}}"
   },
   "MyPage": {
     "title": "My Page",

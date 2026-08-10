@@ -2,18 +2,11 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import {
-  HistoryIcon,
-  HomeIcon,
-  MessageSquareIcon,
-  PlusIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { HistoryIcon, HomeIcon, PlusIcon, UserIcon } from "@/components/ui/icons";
 
 const LINKS = [
   { href: "/dashboard", labelKey: "dashboard", Icon: HomeIcon },
   { href: "/my-activities", labelKey: "myActivities", Icon: HistoryIcon },
-  { href: "/chat", labelKey: "chat", Icon: MessageSquareIcon },
   { href: "/my-page", labelKey: "myPage", Icon: UserIcon },
 ] as const;
 

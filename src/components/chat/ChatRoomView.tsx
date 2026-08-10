@@ -201,6 +201,8 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             disabled={sendMutation.isPending}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
+              // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
+              if (event.nativeEvent.isComposing) return;
               // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();

@@ -62,6 +62,11 @@ export function openChatRoomStream(
       // 같은 티켓으로 다시 붙을 수 없어 stompjs 자체 재연결은 끄고 직접 다시 연다
       reconnectDelay: 0,
       onConnect: () => {
+        // 정리됐거나 이미 다음 연결로 교체된 클라이언트의 콜백은 무시한다
+        if (disposed || client !== stompClient) {
+          void stompClient.deactivate();
+          return;
+        }
         attempt = 0;
         handlers.onConnectedChange(true);
         stompClient.subscribe(`/topic/chat/rooms/${chatRoomId}`, (frame) => {
@@ -74,10 +79,12 @@ export function openChatRoomStream(
         });
       },
       onWebSocketClose: () => {
+        if (disposed || client !== stompClient) return;
         handlers.onConnectedChange(false);
         scheduleRetry();
       },
       onStompError: () => {
+        if (disposed || client !== stompClient) return;
         handlers.onConnectedChange(false);
         scheduleRetry();
       },

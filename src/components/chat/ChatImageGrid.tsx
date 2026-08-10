@@ -54,7 +54,7 @@ export function ChatImageGrid({
   return (
     <ImageFigure mine={mine} caption={caption}>
       <div
-        className={`grid gap-0.5 overflow-hidden rounded-2xl border border-line-soft ${columnsFor(
+        className={`grid w-full gap-0.5 overflow-hidden rounded-2xl border border-line-soft ${columnsFor(
           images.length,
         )}`}
       >
@@ -64,7 +64,7 @@ export function ChatImageGrid({
             type="button"
             onClick={() => onOpen(index)}
             aria-label={t("openPhotoAt", { index: index + 1, total: images.length })}
-            className="block transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+            className="block w-full transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
           >
             <ChatPhoto imageUrl={image.imageUrl ?? ""} alt="" square sizes="96px" />
           </button>

@@ -22,6 +22,10 @@ import { PaymentHoldCountdown } from "./payment-hold-countdown";
 
 const TABS = ["upcoming", "past"] as const;
 
+/** 카드 우측 실행 버튼 — 혼자 있든 둘이 있든 폭이 같아 보이도록 최소 폭을 고정한다 */
+const CARD_ACTION_CLASS =
+  "h-9 min-w-32 shrink-0 rounded-lg px-4 font-display text-xs font-bold whitespace-nowrap transition-colors disabled:opacity-40";
+
 const REASON_MESSAGE_KEY = {
   SCHEDULE_CONFLICT: "scheduleConflict",
   ILLNESS: "illness",
@@ -190,7 +194,7 @@ function ApplicationCard({
                       setPaymentInFlight(false);
                     }
                   }}
-                  className="h-9 shrink-0 rounded-lg bg-primary px-4 font-display text-xs font-bold whitespace-nowrap text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+                  className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
                 >
                   {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
                 </button>
@@ -198,7 +202,7 @@ function ApplicationCard({
                   type="button"
                   disabled={isPaymentBusy}
                   onClick={onCancelPending}
-                  className="h-9 shrink-0 rounded-lg border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+                  className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary`}
                 >
                   {t("cancel")}
                 </button>
@@ -208,7 +212,7 @@ function ApplicationCard({
               <button
                 type="button"
                 onClick={onCancel}
-                className="h-9 shrink-0 rounded-lg border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors hover:border-primary hover:text-primary"
+                className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary`}
               >
                 {t("cancel")}
               </button>

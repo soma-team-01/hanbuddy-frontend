@@ -66,3 +66,19 @@ export interface SendChatMessageRequest {
 export interface UpdateChatReadRequest {
   lastReadMessageId: number;
 }
+
+/** WebSocket 연결용 단기 티켓. 1회용이며 수십 초 뒤 만료된다 */
+export interface ChatWsTicketResponse {
+  ticket: string;
+  /** 남은 유효 시간(초). 값이 바뀔 수 있으므로 상수로 두지 않는다 */
+  expiresIn: number;
+  /** BFF가 채워 주는 SockJS 엔드포인트 주소 */
+  socketUrl?: string;
+}
+
+/** `/topic/chat/rooms/{id}/read`로 오는 읽음 위치 변경 알림 */
+export interface ChatReadEvent {
+  chatRoomId: number;
+  userId: number;
+  lastReadMessageId: number;
+}

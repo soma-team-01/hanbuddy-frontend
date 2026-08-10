@@ -7,9 +7,8 @@ import { unwrapApiResult } from "./result";
 export const CHAT_MESSAGE_PAGE_SIZE = 30;
 
 /**
- * 백엔드는 WebSocket으로도 전달하지만, 브라우저가 JWT를 갖지 못하는 BFF 구조라 폴링으로 받는다.
- * 대화 중에는 최신 페이지만 짧은 주기로 확인하고, 과거 페이지는 다시 부르지 않는다.
- * (실시간 전환은 백엔드 협의 후 후속 작업)
+ * 실시간 구독(STOMP)이 끊겼을 때만 쓰는 대비책이다.
+ * 연결되어 있는 동안에는 폴링을 멈추고 브로드캐스트로 받는다.
  */
 export const CHAT_MESSAGE_POLL_INTERVAL = 4_000;
 export const CHAT_ROOM_LIST_POLL_INTERVAL = 20_000;
@@ -42,13 +41,16 @@ export function chatRoomQueryOptions(chatRoomId: number | string) {
   });
 }
 
-/** 최신 묶음만 주기적으로 다시 받아 새 메시지를 확인한다 */
-export function latestChatMessagesQueryOptions(chatRoomId: number | string) {
+/**
+ * 대화방의 최신 묶음.
+ * 실시간 구독이 살아 있으면(`live`) 폴링을 끄고, 끊겼을 때만 주기적으로 다시 받는다.
+ */
+export function latestChatMessagesQueryOptions(chatRoomId: number | string, live = false) {
   return queryOptions({
     queryKey: chatKeys.latestMessages(chatRoomId),
     queryFn: async () =>
       unwrapApiResult(await getChatMessages(chatRoomId, null, CHAT_MESSAGE_PAGE_SIZE), "messages"),
-    refetchInterval: CHAT_MESSAGE_POLL_INTERVAL,
+    refetchInterval: live ? false : CHAT_MESSAGE_POLL_INTERVAL,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });

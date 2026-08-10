@@ -4,6 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
+import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ArrowLeftIcon, LogOutIcon, UsersIcon } from "@/components/ui/icons";
@@ -34,9 +35,11 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const [error, setError] = useState<unknown>(null);
   const notifiedReadRef = useRef<number>(0);
 
+  // 실시간 구독이 붙으면 폴링을 멈추고 브로드캐스트로 받는다
+  const live = useChatRoomStream(chatRoomId);
   const profileQuery = useQuery(myProfileQueryOptions());
   const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId));
-  const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId));
+  const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, live));
 
   const latestMessages = latestQuery.data?.messages ?? [];
   const oldestLatestId = latestMessages.at(-1)?.messageId ?? 0;

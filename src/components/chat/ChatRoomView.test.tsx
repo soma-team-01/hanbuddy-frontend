@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createChatWsTicket,
   getChatMessages,
   getChatRoom,
   getMyChatRooms,
@@ -21,6 +22,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/chat", () => ({
+  createChatWsTicket: vi.fn(),
   getChatRoom: vi.fn(),
   getChatMessages: vi.fn(),
   getMyChatRooms: vi.fn(),
@@ -31,6 +33,7 @@ vi.mock("@/lib/api/chat", () => ({
 
 vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn() }));
 
+const mockedCreateChatWsTicket = vi.mocked(createChatWsTicket);
 const mockedGetChatRoom = vi.mocked(getChatRoom);
 const mockedGetChatMessages = vi.mocked(getChatMessages);
 const mockedGetMyChatRooms = vi.mocked(getMyChatRooms);
@@ -81,6 +84,10 @@ function mockDirectRoom(lastReadMessageId: number | null = null) {
 describe("ChatRoomView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // 실시간 구독은 테스트 대상이 아니므로 티켓 발급을 실패시켜 폴링 경로만 확인한다
+    mockedCreateChatWsTicket.mockResolvedValue({
+      status: "unauthenticated",
+    });
     mockedGetMyProfile.mockResolvedValue({
       status: "success",
       profile: { userId: 11, displayName: "Nelli" } as never,

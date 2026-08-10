@@ -1,5 +1,6 @@
 import type {
   ChatMessagePageResponse,
+  ChatWsTicketResponse,
   ChatMessageResponse,
   ChatRoomDetailResponse,
   ChatRoomSummaryResponse,
@@ -15,6 +16,7 @@ export type ChatRoomResult = ApiResult<ChatRoomDetailResponse, "room">;
 export type ChatMessagesResult = ApiResult<ChatMessagePageResponse, "messages">;
 export type ChatMessageResult = ApiResult<ChatMessageResponse, "message">;
 export type ChatVoidResult = ApiResult<null, "chat">;
+export type ChatWsTicketResult = ApiResult<ChatWsTicketResponse, "ticket">;
 
 const DEFAULT_ROOM_LIST_ERROR_MESSAGE = "채팅 목록을 불러오지 못했습니다.";
 const DEFAULT_ROOM_ERROR_MESSAGE = "채팅방을 불러오지 못했습니다.";
@@ -120,5 +122,15 @@ export async function leaveChatRoom(chatRoomId: number | string): Promise<ChatVo
     "chat",
     { method: "DELETE" },
     DEFAULT_LEAVE_ERROR_MESSAGE,
+  );
+}
+
+/** 소켓을 열기 직전에만 호출한다. 미리 받아 두면 만료되거나 1회용 제약에 걸린다 */
+export async function createChatWsTicket(): Promise<ChatWsTicketResult> {
+  return requestApiResult<ChatWsTicketResponse, "ticket">(
+    "/api/chat/ws-ticket",
+    "ticket",
+    { method: "POST" },
+    "실시간 연결을 준비하지 못했습니다.",
   );
 }

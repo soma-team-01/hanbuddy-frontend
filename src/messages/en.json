@@ -63,7 +63,10 @@
     "paymentAlreadyCreated": "This booking already has a payment. Please check My Applications.",
     "paymentOrderConflict": "The payment could not be started. Please try again.",
     "paymentKeyConflict": "This payment was already processed. Please check My Applications before trying again.",
-    "applicationPaymentPending": "You already have a booking waiting for payment. Finish or cancel it in My Applications, then book again."
+    "applicationPaymentPending": "You already have a booking waiting for payment. Finish or cancel it in My Applications, then book again.",
+    "chatNotGroup": "This only works in a group chat.",
+    "chatSelfTarget": "You can't remove yourself.",
+    "chatOwnerOnly": "Only the buddy who created this chat can do that."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
@@ -740,7 +743,18 @@
     "downloadOne": "Save this photo",
     "photoUnavailable": "Photo unavailable",
     "roomMenu": "Conversation menu",
-    "startDirectChat": "Start a direct chat"
+    "startDirectChat": "Start a direct chat",
+    "renameRoom": "Rename chat",
+    "renameLabel": "Chat name",
+    "renamePlaceholder": "Leave empty to use the activity name",
+    "renameSave": "Save",
+    "renameSaving": "Saving...",
+    "renameError": "Could not rename this chat.",
+    "removeMember": "Remove from chat",
+    "removeMemberTitle": "Remove {name}?",
+    "removeMemberDescription": "They will not be able to rejoin, even if they book again. Their messages stay in the conversation.",
+    "removingMember": "Removing...",
+    "removeMemberError": "Could not remove this member."
   },
   "MyPage": {
     "title": "My Page",

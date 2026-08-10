@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { Avatar } from "@/components/ui/Avatar";
-import { ImagesIcon, LogOutIcon, MenuIcon } from "@/components/ui/icons";
+import { ImagesIcon, LogOutIcon, MenuIcon, PencilIcon } from "@/components/ui/icons";
 import type { ChatRoomMemberResponse } from "@/types/chat";
 
 /**
@@ -20,6 +20,8 @@ export function ChatRoomMenu({
   onSelectMember,
   onOpenPhotos,
   onLeave,
+  canRename,
+  onRename,
 }: Readonly<{
   open: boolean;
   onToggle: () => void;
@@ -30,6 +32,9 @@ export function ChatRoomMenu({
   onSelectMember: (member: ChatRoomMemberResponse) => void;
   onOpenPhotos: () => void;
   onLeave: () => void;
+  /** 단체 채팅방의 방장만 이름을 바꿀 수 있다 */
+  canRename: boolean;
+  onRename: () => void;
 }>) {
   const t = useTranslations("Chat");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -106,6 +111,16 @@ export function ChatRoomMenu({
           ) : null}
 
           <div className={`shrink-0 p-1.5 ${isGroup ? "border-t border-line-soft" : ""}`}>
+            {canRename ? (
+              <button
+                type="button"
+                onClick={onRename}
+                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left text-sm font-semibold text-ink transition-colors hover:text-primary"
+              >
+                <PencilIcon className="size-4 shrink-0" />
+                {t("renameRoom")}
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={onOpenPhotos}

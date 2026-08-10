@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChatMemberDialog } from "@/components/chat/ChatMemberDialog";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import { ChatRoomMenu } from "@/components/chat/ChatRoomMenu";
+import { ChatRoomTitleDialog } from "@/components/chat/ChatRoomTitleDialog";
 import { ChatPhotoPanel } from "@/components/chat/ChatPhotoPanel";
 import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
@@ -57,6 +58,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [photoPanelOpen, setPhotoPanelOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [titleDialogOpen, setTitleDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<ChatRoomMemberResponse | null>(null);
   const [viewer, setViewer] = useState<{
     images: ChatMessageResponse[];
@@ -221,12 +223,12 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const room = roomQuery.data;
   const isGroup = room.roomType === "GROUP";
   const activeMembers = room.members.filter((member) => !member.left);
-  // 방 상세에는 대표 이미지가 없어 이미 받아둔 목록에서 가져온다 (단체는 활동 사진, 1:1은 상대 프로필)
-  const counterpart = room.members.find((member) => member.userId !== myUserId);
+  // 단체는 활동 대표 이미지, 1:1은 상대 프로필이 상세 응답으로 내려온다
   const roomImageUrl =
+    room.imageUrl ??
     roomsQuery.data?.find((item) => item.chatRoomId === room.chatRoomId)?.imageUrl ??
-    counterpart?.profileImageUrl ??
     null;
+  const isRoomOwner = isGroup && room.ownerId != null && room.ownerId === myUserId;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -282,6 +284,11 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             setMenuOpen(false);
             setError(null);
             setLeaveOpen(true);
+          }}
+          canRename={isRoomOwner}
+          onRename={() => {
+            setMenuOpen(false);
+            setTitleDialogOpen(true);
           }}
         />
       </header>
@@ -405,10 +412,20 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         </form>
       </div>
 
+      {titleDialogOpen ? (
+        <ChatRoomTitleDialog
+          chatRoomId={chatRoomId}
+          currentTitle={room.title}
+          onClose={() => setTitleDialogOpen(false)}
+        />
+      ) : null}
+
       {selectedMember ? (
         <ChatMemberDialog
+          chatRoomId={chatRoomId}
           member={selectedMember}
           isMe={selectedMember.userId === myUserId}
+          canRemove={isRoomOwner}
           onClose={() => setSelectedMember(null)}
         />
       ) : null}

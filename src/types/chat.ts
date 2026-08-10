@@ -50,8 +50,17 @@ export interface ChatRoomDetailResponse {
   chatRoomId: number;
   roomType: ChatRoomType;
   title: string;
+  /** 단체는 활동 대표 이미지, 1:1은 상대 프로필 */
+  imageUrl?: string | null;
+  /** 단체 채팅방을 만든 버디의 사용자 ID. 1:1이면 null */
+  ownerId?: number | null;
   activityScheduleId: number | null;
   members: ChatRoomMemberResponse[];
+}
+
+export interface UpdateChatRoomTitleRequest {
+  /** 비우면 활동 제목으로 되돌아간다. 50자 이하 */
+  title: string | null;
 }
 
 export interface ChatMessagePageResponse {

@@ -68,3 +68,19 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 export function isValidChatBatchId(batchId: unknown): batchId is string {
   return typeof batchId === "string" && UUID_PATTERN.test(batchId);
 }
+
+export const CHAT_ROOM_TITLE_MAX_LENGTH = 50;
+
+/**
+ * 채팅방 이름을 정규화한다.
+ * 비어 있으면 null(활동 제목으로 복귀), 너무 길면 undefined(거절)를 돌려준다.
+ */
+export function normalizeChatRoomTitle(title: unknown): string | null | undefined {
+  if (title === null || title === undefined) return null;
+  if (typeof title !== "string") return undefined;
+
+  const trimmed = title.trim();
+  if (trimmed.length === 0) return null;
+
+  return trimmed.length <= CHAT_ROOM_TITLE_MAX_LENGTH ? trimmed : undefined;
+}

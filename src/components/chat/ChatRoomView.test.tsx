@@ -2,6 +2,8 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createChatWsTicket,
+  removeChatRoomMember,
+  updateChatRoomTitle,
   getChatMessages,
   getChatRoom,
   getMyChatRooms,
@@ -28,6 +30,8 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/chat", () => ({
+  removeChatRoomMember: vi.fn(),
+  updateChatRoomTitle: vi.fn(),
   buildChatImageDownloadUrl: (roomId: string, messageId: number) =>
     `/api/chat/rooms/${roomId}/images/${messageId}/download`,
   getChatRoomImages: vi.fn(),
@@ -44,6 +48,8 @@ vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn() }));
 
 const mockedCreateChatWsTicket = vi.mocked(createChatWsTicket);
 const mockedGetChatRoom = vi.mocked(getChatRoom);
+const mockedRemoveChatRoomMember = vi.mocked(removeChatRoomMember);
+const mockedUpdateChatRoomTitle = vi.mocked(updateChatRoomTitle);
 const mockedGetChatMessages = vi.mocked(getChatMessages);
 const mockedGetMyChatRooms = vi.mocked(getMyChatRooms);
 const mockedSendChatMessage = vi.mocked(sendChatMessage);
@@ -504,6 +510,106 @@ describe("ChatRoomView", () => {
     const menu = await screen.findByRole("dialog", { name: "Conversation menu" });
     expect(within(menu).getByRole("button", { name: "Photos" })).toBeInTheDocument();
     expect(within(menu).queryByText("You")).not.toBeInTheDocument();
+  });
+
+  it("lets the room owner rename the chat and remove a member", async () => {
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "GROUP",
+        title: "Bukchon Hidden Gems",
+        imageUrl: null,
+        ownerId: 11,
+        activityScheduleId: 101,
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+          {
+            userId: 6,
+            userName: "SeoulMate",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+        ],
+      },
+    });
+    mockedUpdateChatRoomTitle.mockResolvedValue({ status: "success", room: {} as never });
+    mockedRemoveChatRoomMember.mockResolvedValue({ status: "success", chat: null });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Conversation menu" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Rename chat" }));
+
+    const renameDialog = await screen.findByRole("dialog", { name: "Rename chat" });
+    fireEvent.change(within(renameDialog).getByLabelText("Chat name"), {
+      target: { value: "Aug 14 walk" },
+    });
+    fireEvent.click(within(renameDialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(mockedUpdateChatRoomTitle).toHaveBeenCalledWith("1", { title: "Aug 14 walk" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Conversation menu" }));
+    fireEvent.click(await screen.findByRole("button", { name: /SeoulMate/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Remove from chat" }));
+
+    const confirm = await screen.findByRole("dialog", { name: "Remove SeoulMate?" });
+    fireEvent.click(within(confirm).getByRole("button", { name: "Remove from chat" }));
+
+    await waitFor(() => expect(mockedRemoveChatRoomMember).toHaveBeenCalledWith("1", 6));
+  });
+
+  it("hides room management from members who are not the owner", async () => {
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "GROUP",
+        title: "Bukchon Hidden Gems",
+        imageUrl: null,
+        ownerId: 6,
+        activityScheduleId: 101,
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+          {
+            userId: 6,
+            userName: "SeoulMate",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Conversation menu" }));
+
+    const menu = await screen.findByRole("dialog", { name: "Conversation menu" });
+    expect(within(menu).queryByRole("button", { name: "Rename chat" })).not.toBeInTheDocument();
+
+    fireEvent.click(within(menu).getByRole("button", { name: /SeoulMate/ }));
+
+    const profile = await screen.findByRole("dialog", { name: "SeoulMate" });
+    expect(
+      within(profile).queryByRole("button", { name: "Remove from chat" }),
+    ).not.toBeInTheDocument();
   });
 
   it("surfaces the backend message when sending fails", async () => {

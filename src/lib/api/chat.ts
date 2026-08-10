@@ -9,6 +9,7 @@ import type {
   CreateGroupChatRoomRequest,
   SendChatMessageRequest,
   UpdateChatReadRequest,
+  UpdateChatRoomTitleRequest,
 } from "@/types/chat";
 import { requestApiResult, type ApiResult } from "./result";
 
@@ -128,6 +129,32 @@ export async function leaveChatRoom(chatRoomId: number | string): Promise<ChatVo
 }
 
 /** 방에 오간 사진만 최신순으로. 합류 이전 사진은 백엔드가 제외한다 */
+/** 단체 채팅방 이름 변경. 방장만 가능하며 비우면 활동 제목으로 되돌아간다 */
+export async function updateChatRoomTitle(
+  chatRoomId: number | string,
+  request: UpdateChatRoomTitleRequest,
+): Promise<ChatRoomResult> {
+  return requestApiResult<ChatRoomDetailResponse, "room">(
+    `/api/chat/rooms/${chatRoomId}`,
+    "room",
+    jsonRequest("PATCH", request),
+    "채팅방 이름을 바꾸지 못했습니다.",
+  );
+}
+
+/** 참여자 내보내기. 방장만 가능하며 내보낸 사람은 다시 들어오지 않는다 */
+export async function removeChatRoomMember(
+  chatRoomId: number | string,
+  userId: number,
+): Promise<ChatVoidResult> {
+  return requestApiResult<null, "chat">(
+    `/api/chat/rooms/${chatRoomId}/members/${userId}`,
+    "chat",
+    { method: "DELETE" },
+    "참여자를 내보내지 못했습니다.",
+  );
+}
+
 export async function getChatRoomImages(
   chatRoomId: number | string,
   page: number,

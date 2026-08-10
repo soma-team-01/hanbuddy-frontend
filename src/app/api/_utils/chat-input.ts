@@ -3,7 +3,8 @@ export const CHAT_MESSAGE_PAGE_MAX_SIZE = 100;
 const CHAT_MESSAGE_PAGE_DEFAULT_SIZE = 30;
 
 export function isPositiveId(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
+  // 안전 범위를 넘는 수는 정확히 표현되지 않으므로 ID로 받지 않는다
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 }
 
 export function isValidChatMessageContent(content: unknown): content is string {
@@ -31,7 +32,8 @@ export function buildChatMessageQuery(searchParams: URLSearchParams): string {
 
 /** 경로 파라미터로 들어온 채팅방 ID가 양의 정수인지 확인한다 */
 export function isValidChatRoomId(chatRoomId: string): boolean {
-  return /^\d+$/.test(chatRoomId) && Number(chatRoomId) > 0;
+  // 자릿수가 아주 많은 문자열은 Number 변환에서 Infinity가 되므로 안전 정수만 통과시킨다
+  return /^\d+$/.test(chatRoomId) && isPositiveId(Number(chatRoomId));
 }
 
 const CHAT_IMAGE_PAGE_MAX_SIZE = 100;

@@ -21,6 +21,10 @@ describe("chat input validation", () => {
     expect(isPositiveId(1.5)).toBe(false);
     expect(isPositiveId("7")).toBe(false);
     expect(isPositiveId(undefined)).toBe(false);
+    // 안전 범위를 넘으면 값이 정확히 표현되지 않으므로 ID로 받지 않는다
+    expect(isPositiveId(Number.MAX_SAFE_INTEGER)).toBe(true);
+    expect(isPositiveId(Number.MAX_SAFE_INTEGER + 2)).toBe(false);
+    expect(isPositiveId(Number.POSITIVE_INFINITY)).toBe(false);
   });
 
   it("requires non-empty message content within the backend limit", () => {
@@ -37,6 +41,8 @@ describe("chat input validation", () => {
     expect(isValidChatRoomId("0")).toBe(false);
     expect(isValidChatRoomId("-1")).toBe(false);
     expect(isValidChatRoomId("1a")).toBe(false);
+    // 자릿수가 아주 많은 문자열은 Number 변환에서 Infinity가 된다
+    expect(isValidChatRoomId("9".repeat(400))).toBe(false);
   });
 
   it("treats only an explicit null or blank title as a reset", () => {

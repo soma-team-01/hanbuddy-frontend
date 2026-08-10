@@ -690,7 +690,6 @@
     "sending": "Sending...",
     "sendError": "Could not send your message.",
     "messagesLoadError": "Could not load messages.",
-    "loadOlder": "Load earlier messages",
     "loadingOlder": "Loading...",
     "unreadCount": "{count, plural, other {#}}",
     "unreadLabel": "{count, plural, one {# unread message} other {# unread messages}}",

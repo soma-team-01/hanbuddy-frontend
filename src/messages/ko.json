@@ -690,7 +690,6 @@
     "sending": "보내는 중...",
     "sendError": "메시지를 보내지 못했습니다.",
     "messagesLoadError": "메시지를 불러오지 못했습니다.",
-    "loadOlder": "이전 메시지 보기",
     "loadingOlder": "불러오는 중...",
     "unreadCount": "{count, plural, other {#}}",
     "unreadLabel": "{count, plural, other {안 읽은 메시지 #개}}",

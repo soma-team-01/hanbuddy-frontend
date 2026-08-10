@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { ChatImageBubble } from "@/components/chat/ChatImageBubble";
+import { useInfiniteScrollSentinel } from "@/components/ui/use-infinite-scroll-sentinel";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Locale } from "@/i18n/routing";
 import { formatChatDateSeparator, groupChatMessages } from "@/lib/chat/format";
@@ -35,11 +36,31 @@ export function ChatMessageList({
 }>) {
   const t = useTranslations("Chat");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const heightBeforeLoadRef = useRef(0);
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
+  const oldestMessageId = messages[0]?.messageId ?? 0;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [newestMessageId]);
+
+  // 위쪽에 이전 메시지가 붙으면 화면이 밀리므로, 늘어난 높이만큼 되돌려 보던 자리를 지킨다
+  useLayoutEffect(() => {
+    const container = scrollRef.current;
+    const heightBeforeLoad = heightBeforeLoadRef.current;
+    if (!container || heightBeforeLoad === 0) return;
+
+    container.scrollTop += container.scrollHeight - heightBeforeLoad;
+    heightBeforeLoadRef.current = 0;
+  }, [oldestMessageId]);
+
+  function loadOlder() {
+    heightBeforeLoadRef.current = scrollRef.current?.scrollHeight ?? 0;
+    onLoadOlder();
+  }
+
+  const olderSentinelRef = useInfiniteScrollSentinel(loadOlder, hasOlder && !isLoadingOlder);
 
   const others = members.filter((member) => member.userId !== myUserId && !member.left);
 
@@ -67,16 +88,11 @@ export function ChatMessageList({
   const groups = groupChatMessages(messages);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-canvas px-4 py-5 md:px-6">
-      {hasOlder ? (
-        <button
-          type="button"
-          onClick={onLoadOlder}
-          disabled={isLoadingOlder}
-          className="mx-auto mb-5 block rounded-full border border-line-strong px-4 py-1.5 text-xs font-semibold text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-60"
-        >
-          {isLoadingOlder ? t("loadingOlder") : t("loadOlder")}
-        </button>
+    <div ref={scrollRef} className="flex-1 overflow-y-auto bg-canvas px-4 py-5 md:px-6">
+      {/* 위로 끝까지 올리면 이전 메시지를 알아서 이어 붙인다 */}
+      <div ref={olderSentinelRef} aria-hidden="true" className="h-px" />
+      {isLoadingOlder ? (
+        <p className="mb-4 text-center text-xs text-muted">{t("loadingOlder")}</p>
       ) : null}
 
       {messages.length === 0 ? (

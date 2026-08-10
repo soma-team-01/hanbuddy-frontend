@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { RatingDistribution } from "@/components/review/RatingDistribution";
 import { ReviewCard } from "@/components/review/ReviewCard";
-import { useInfiniteScrollSentinel } from "@/components/review/use-infinite-scroll-sentinel";
+import { useInfiniteScrollSentinel } from "@/components/ui/use-infinite-scroll-sentinel";
 import { XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import {

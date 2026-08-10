@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
 import { ReviewCard } from "@/components/review/ReviewCard";
-import { useInfiniteScrollSentinel } from "@/components/review/use-infinite-scroll-sentinel";
+import { useInfiniteScrollSentinel } from "@/components/ui/use-infinite-scroll-sentinel";
 import { Avatar } from "@/components/ui/Avatar";
 import { MessageSquareIcon, XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";

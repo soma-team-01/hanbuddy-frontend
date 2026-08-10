@@ -141,7 +141,8 @@ export function BookingForm({
           data-testid="booking-layout"
           className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
         >
-          <div className="mx-auto w-full max-w-xl divide-y divide-line-soft lg:mx-0">
+          {/* 페이지 헤더의 뒤로가기 화살표와 왼쪽 시작점을 맞춘다 (가운데 정렬하지 않는다) */}
+          <div className="w-full max-w-xl divide-y divide-line-soft">
             <section className="flex flex-col gap-3 pb-7">
               <h2 className="font-display text-base font-bold text-ink">{t("dateTimeHeading")}</h2>
               <button

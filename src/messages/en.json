@@ -57,7 +57,9 @@
     "chatMessageNotFound": "This photo could not be found.",
     "chatInvalidMessage": "This message could not be sent.",
     "chatInvalidImage": "This photo could not be attached. Please pick it again.",
-    "chatTooManyMessages": "You are sending messages too quickly. Please slow down."
+    "chatTooManyMessages": "You are sending messages too quickly. Please slow down.",
+    "activityScheduleHasApplications": "A date with existing bookings cannot be removed.",
+    "dataConflict": "This request was already processed. Please refresh and try again."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",

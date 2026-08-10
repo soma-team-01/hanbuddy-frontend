@@ -74,6 +74,11 @@ export interface ActivityCreateDraft {
   meetingPlaceId: string;
   meetingPlace: string;
   schedules: ScheduleDraft[];
+  /**
+   * 편집 화면에 띄우지 않지만 그대로 유지해야 하는 지난 일정의 시작 시각.
+   * 제출에서 빠지면 백엔드가 삭제로 보고, 신청 내역이 있으면 수정 자체가 거절된다.
+   */
+  retainedScheduleStartAts: string[];
   itinerary: ItineraryDraft[];
   maxGuests: string;
   pricePerPerson: string;
@@ -118,6 +123,7 @@ export const EMPTY_ACTIVITY_DRAFT: ActivityCreateDraft = {
   meetingPlaceId: "",
   meetingPlace: "",
   schedules: [],
+  retainedScheduleStartAts: [],
   itinerary: [],
   maxGuests: "1",
   pricePerPerson: "",
@@ -285,7 +291,8 @@ function toExistingPhotoDraft(id: string, imageUrl: string): PhotoDraft {
 
 /**
  * 내 활동 상세 응답을 수정용 draft로 변환한다.
- * 지난 일정은 편집 화면 검증(과거 일정 금지)과 충돌하므로 제외한다.
+ * 지난 일정은 편집 화면 검증(과거 일정 금지)과 충돌해 목록에서 빼되,
+ * 제출할 때는 그대로 다시 넣어 삭제로 처리되지 않게 한다.
  */
 export function buildDraftFromMyActivityDetail(
   detail: MyActivityDetailResponse,
@@ -304,6 +311,12 @@ export function buildDraftFromMyActivityDetail(
     .filter((schedule): schedule is ScheduleDraft => schedule !== null)
     .filter((schedule) => !isPastSchedule(schedule, now))
     .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+  const retainedScheduleStartAts = detail.schedules
+    .filter((schedule) => {
+      const parts = getSeoulDateTimeParts(schedule.startAt);
+      return parts !== null && isPastSchedule({ date: parts.date, startTime: parts.time }, now);
+    })
+    .map((schedule) => schedule.startAt);
   // 종료일이 지난 할인은 그대로 제출하면 백엔드 검증(오늘 이후)에 걸리므로 미적용으로 되돌린다
   const hasDiscount =
     detail.discountPercent !== null &&
@@ -312,6 +325,7 @@ export function buildDraftFromMyActivityDetail(
 
   return {
     ...EMPTY_ACTIVITY_DRAFT,
+    retainedScheduleStartAts,
     hostIntroduction: detail.hostIntroduction,
     photos: [...detail.images]
       .sort((left, right) => left.imageOrder - right.imageOrder)

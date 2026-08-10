@@ -9,8 +9,8 @@ import {
   searchGooglePlacePredictionsViaBff,
 } from "@/lib/google/places";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
-import { buildDraftFromMyActivityDetail } from "./activity-create-wizard";
-import { CreateActivityForm } from "./create-activity-form";
+import { buildDraftFromMyActivityDetail, EMPTY_ACTIVITY_DRAFT } from "./activity-create-wizard";
+import { buildActivityUpsertRequest, CreateActivityForm } from "./create-activity-form";
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -788,5 +788,52 @@ describe("CreateActivityForm", () => {
       "activities/2026/08/07/key-0.webp",
     ]);
     expect(request.itineraries[0].imageKey).toBe("activities/itinerary.webp");
+  });
+});
+
+describe("buildActivityUpsertRequest", () => {
+  const baseDraft = {
+    ...EMPTY_ACTIVITY_DRAFT,
+    experienceName: "Seoul market walk",
+    experienceDescription: "Meet local vendors and taste a neighborhood breakfast together.",
+    hostIntroduction: "I have guided friends through this market for years.",
+    meetingPlace: "Gwangjang Market Gate 2",
+    meetingPlaceId: "ChIJ-gwangjang",
+    maxGuests: "4",
+    pricePerPerson: "50000",
+    inclusions: "Breakfast tasting",
+    hasNoRestrictions: true,
+  };
+
+  it("submits edited dates together with the past ones it must keep", () => {
+    const request = buildActivityUpsertRequest(
+      {
+        ...baseDraft,
+        schedules: [{ id: "new", date: "2099-07-20", startTime: "10:00" }],
+        retainedScheduleStartAts: ["2020-01-01T10:00:00+09:00"],
+      },
+      [],
+      [],
+    );
+
+    // 지난 일정이 빠지면 백엔드가 삭제로 보고, 신청 내역이 있으면 수정을 거절한다
+    expect(request.schedules).toEqual([
+      { startAt: "2099-07-20T10:00:00+09:00" },
+      { startAt: "2020-01-01T10:00:00+09:00" },
+    ]);
+  });
+
+  it("does not send the same moment twice", () => {
+    const request = buildActivityUpsertRequest(
+      {
+        ...baseDraft,
+        schedules: [{ id: "new", date: "2099-07-20", startTime: "10:00" }],
+        retainedScheduleStartAts: ["2099-07-20T10:00:00+09:00"],
+      },
+      [],
+      [],
+    );
+
+    expect(request.schedules).toHaveLength(1);
   });
 });

@@ -155,3 +155,31 @@ export function toChatBubbles(messages: ChatMessageResponse[]): ChatBubble[] {
 
   return bubbles;
 }
+
+/**
+ * 사진 묶음을 줄 단위로 나눈다. 각 줄은 칸을 균등하게 나눠 가져 빈칸이 남지 않는다.
+ * (5장이면 3 + 2, 7장이면 3 + 2 + 2처럼 아래 줄이 더 크게 보인다)
+ */
+export function chatPhotoRows(count: number): number[] {
+  const LAYOUTS: Record<number, number[]> = {
+    1: [1],
+    2: [2],
+    3: [3],
+    4: [2, 2],
+    5: [3, 2],
+    6: [3, 3],
+    7: [3, 2, 2],
+    8: [3, 3, 2],
+    9: [3, 3, 3],
+  };
+  if (count <= 0) return [];
+  if (LAYOUTS[count]) return LAYOUTS[count];
+
+  // 정해둔 표(최대 9장)를 넘어서면 세 칸씩 채우고 남은 만큼 마지막 줄에 둔다
+  const rows: number[] = [];
+  for (let remaining = count; remaining > 0; remaining -= 3) {
+    rows.push(Math.min(remaining, 3));
+  }
+
+  return rows;
+}

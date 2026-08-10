@@ -25,26 +25,28 @@ export function ChatPhoto({
   alt,
   imageWidth,
   imageHeight,
-  square = false,
+  stretch = false,
   sizes,
 }: Readonly<{
   imageUrl: string;
   alt: string;
   imageWidth?: number | null;
   imageHeight?: number | null;
-  /** 격자 칸처럼 정사각으로 잘라 채울 때 */
-  square?: boolean;
+  /** 줄 높이가 정해진 격자 칸처럼, 부모가 준 상자를 그대로 채울 때 */
+  stretch?: boolean;
   sizes: string;
 }>) {
   const t = useTranslations("Chat");
   const [failed, setFailed] = useState(false);
-  const aspectRatio = square ? 1 : resolveAspectRatio(imageWidth, imageHeight);
+  const aspectRatio = stretch ? undefined : resolveAspectRatio(imageWidth, imageHeight);
 
   if (failed) {
     return (
       <span
         style={{ aspectRatio }}
-        className="flex w-full flex-col items-center justify-center gap-1 bg-panel text-muted"
+        className={`flex w-full flex-col items-center justify-center gap-1 bg-panel text-muted ${
+          stretch ? "h-full" : ""
+        }`}
       >
         <ImagesIcon className="size-5" />
         <span className="px-2 text-center text-[11px] leading-4">{t("photoUnavailable")}</span>
@@ -53,7 +55,10 @@ export function ChatPhoto({
   }
 
   return (
-    <span style={{ aspectRatio }} className="relative block w-full bg-panel">
+    <span
+      style={{ aspectRatio }}
+      className={`relative block w-full bg-panel ${stretch ? "h-full" : ""}`}
+    >
       <Image
         src={imageUrl}
         alt={alt}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  chatPhotoRows,
   formatChatDateSeparator,
   formatChatTimestamp,
   groupChatMessages,
@@ -190,5 +191,33 @@ describe("toChatBubbles", () => {
 
   it("returns nothing for an empty group", () => {
     expect(toChatBubbles([])).toEqual([]);
+  });
+});
+
+describe("chatPhotoRows", () => {
+  it.each([
+    [1, [1]],
+    [2, [2]],
+    [3, [3]],
+    [4, [2, 2]],
+    [5, [3, 2]],
+    [6, [3, 3]],
+    [7, [3, 2, 2]],
+    [8, [3, 3, 2]],
+    [9, [3, 3, 3]],
+  ])("splits %i photos as %j", (count, expected) => {
+    expect(chatPhotoRows(count)).toEqual(expected);
+  });
+
+  it("always accounts for every photo", () => {
+    for (let count = 1; count <= 9; count += 1) {
+      const rows = chatPhotoRows(count);
+      expect(rows.reduce((total, size) => total + size, 0)).toBe(count);
+      expect(rows.every((size) => size > 0)).toBe(true);
+    }
+  });
+
+  it("returns nothing when there is no photo", () => {
+    expect(chatPhotoRows(0)).toEqual([]);
   });
 });

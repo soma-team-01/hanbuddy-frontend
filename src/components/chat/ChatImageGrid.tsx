@@ -2,15 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { ChatPhoto } from "@/components/chat/ChatPhoto";
+import { chatPhotoRows } from "@/lib/chat/format";
 import type { ChatMessageResponse } from "@/types/chat";
-
-/** 장수에 따른 열 수 — 4장만 2열이고 나머지는 3열로 채운다 */
-function columnsFor(count: number) {
-  if (count === 2) return "grid-cols-2";
-  if (count === 4) return "grid-cols-2";
-
-  return "grid-cols-3";
-}
 
 /**
  * 한 번에 보낸 사진 묶음. 카카오톡처럼 격자로 붙여 하나의 덩어리로 보이게 한다.
@@ -27,6 +20,16 @@ export function ChatImageGrid({
 }>) {
   const t = useTranslations("Chat");
   const caption = images.find((image) => image.content)?.content;
+  // 줄마다 칸을 나눠 가져 마지막 줄에도 빈칸이 남지 않는다
+  const rows = chatPhotoRows(images.length).reduce<
+    { startIndex: number; images: ChatMessageResponse[] }[]
+  >((collected, size) => {
+    const startIndex = collected.reduce((total, row) => total + row.images.length, 0);
+    collected.push({ startIndex, images: images.slice(startIndex, startIndex + size) });
+    return collected;
+  }, []);
+  // 첫 줄의 칸 수가 줄 높이를 정한다 (3칸이면 가로:세로 = 3:1)
+  const rowAspectRatio = rows[0]?.images.length ?? 1;
 
   if (images.length === 1) {
     const single = images[0];
@@ -54,20 +57,32 @@ export function ChatImageGrid({
   return (
     <ImageFigure mine={mine} caption={caption}>
       <div
-        className={`grid w-full gap-0.5 overflow-hidden rounded-2xl border border-line-soft ${columnsFor(
-          images.length,
-        )}`}
+        data-testid="chat-photo-grid"
+        className="flex w-full flex-col gap-0.5 overflow-hidden rounded-2xl border border-line-soft"
       >
-        {images.map((image, index) => (
-          <button
-            key={image.messageId}
-            type="button"
-            onClick={() => onOpen(index)}
-            aria-label={t("openPhotoAt", { index: index + 1, total: images.length })}
-            className="block w-full transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+        {rows.map((row) => (
+          // 줄마다 높이를 같게 두어, 칸 수가 달라도 위아래 줄이 같은 높이로 보인다
+          <div
+            key={row.startIndex}
+            data-testid="chat-photo-row"
+            style={{ aspectRatio: rowAspectRatio }}
+            className="flex gap-0.5"
           >
-            <ChatPhoto imageUrl={image.imageUrl ?? ""} alt="" square sizes="96px" />
-          </button>
+            {row.images.map((image, indexInRow) => (
+              <button
+                key={image.messageId}
+                type="button"
+                onClick={() => onOpen(row.startIndex + indexInRow)}
+                aria-label={t("openPhotoAt", {
+                  index: row.startIndex + indexInRow + 1,
+                  total: images.length,
+                })}
+                className="block h-full min-w-0 flex-1 transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+              >
+                <ChatPhoto imageUrl={image.imageUrl ?? ""} alt="" stretch sizes="144px" />
+              </button>
+            ))}
+          </div>
         ))}
       </div>
     </ImageFigure>

@@ -44,8 +44,10 @@ export function formatChatDateSeparator(
 export function isSameSeoulDate(left: string, right: string): boolean {
   const leftParts = getSeoulDateTimeParts(left);
   const rightParts = getSeoulDateTimeParts(right);
+  // 한쪽이라도 못 읽으면 같은 날인지 알 수 없다 — 옵셔널 체이닝으로 쓰면 둘 다 없을 때 참이 되어 버린다
+  if (!leftParts || !rightParts) return false;
 
-  return Boolean(leftParts && rightParts && leftParts.date === rightParts.date);
+  return leftParts.date === rightParts.date;
 }
 
 function previousSeoulDate(date: string): string {
@@ -113,12 +115,10 @@ export function groupChatMessages(messages: ChatMessageResponse[]): ChatMessageG
 export function isSameSeoulMinute(left: string, right: string): boolean {
   const leftParts = getSeoulDateTimeParts(left);
   const rightParts = getSeoulDateTimeParts(right);
+  if (!leftParts || !rightParts) return false;
 
-  return Boolean(
-    leftParts &&
-    rightParts &&
-    leftParts.date === rightParts.date &&
-    leftParts.time.slice(0, 5) === rightParts.time.slice(0, 5),
+  return (
+    leftParts.date === rightParts.date && leftParts.time.slice(0, 5) === rightParts.time.slice(0, 5)
   );
 }
 

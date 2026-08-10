@@ -46,6 +46,28 @@ interface ChatAttachment {
   previewUrl: string;
 }
 
+/** 고른 사진을 올린 뒤 한 장씩 보낸다. 여러 장이면 같은 batchId로 묶어 화면에서 한 덩어리가 되게 한다 */
+async function sendChatPhotos(chatRoomId: string, files: File[], content: string) {
+  // 발급받은 key는 1시간 안에 써야 하므로 보내기 직전에 올린다
+  const uploaded = await uploadChatImages(files);
+  const sizes = await Promise.all(files.map(readImageSize));
+  const batchId = files.length > 1 ? crypto.randomUUID() : undefined;
+
+  for (const [index, target] of uploaded.entries()) {
+    unwrapApiResult(
+      await sendChatMessage(chatRoomId, {
+        messageType: "IMAGE",
+        imageKey: target.imageKey,
+        // 캡션은 첫 장에만 붙인다
+        content: index === 0 && content ? content : null,
+        batchId,
+        ...sizes[index],
+      }),
+      "message",
+    );
+  }
+}
+
 /** 대화 화면. 최신 묶음은 폴링으로 받고, 위로 스크롤하면 과거를 이어 붙인다 */
 export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const t = useTranslations("Chat");
@@ -124,26 +146,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       if (files.length === 0) {
         return unwrapApiResult(await sendChatMessage(chatRoomId, { content }), "message");
       }
-
-      // 발급받은 key는 1시간 안에 써야 하므로 보내기 직전에 올린다
-      const uploaded = await uploadChatImages(files);
-      const sizes = await Promise.all(files.map(readImageSize));
-      // 한 번에 보낸 사진들을 화면에서 한 덩어리로 묶어 주는 식별자
-      const batchId = files.length > 1 ? crypto.randomUUID() : undefined;
-
-      for (const [index, target] of uploaded.entries()) {
-        unwrapApiResult(
-          await sendChatMessage(chatRoomId, {
-            messageType: "IMAGE",
-            imageKey: target.imageKey,
-            // 캡션은 첫 장에만 붙인다
-            content: index === 0 && content ? content : null,
-            batchId,
-            ...sizes[index],
-          }),
-          "message",
-        );
-      }
+      await sendChatPhotos(chatRoomId, files, content);
       return null;
     },
     onSuccess: async () => {
@@ -172,6 +175,11 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     },
     onError: setError,
   });
+
+  function sendLabel() {
+    if (!sendMutation.isPending) return t("send");
+    return attachments.length > 0 ? t("uploadingPhotos") : t("sending");
+  }
 
   function submitDraft() {
     const content = draft.trim();
@@ -232,6 +240,15 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const isRoomOwner = isGroup && room.ownerId != null && room.ownerId === myUserId;
   // 같은 활동을 회차별로 열면 방 이름이 전부 같아진다 — 어느 회차인지 헤더에 붙인다
   const scheduleLabel = formatChatScheduleLabel(room.activityStartAt, locale);
+  // 대표 이미지가 없는 단체방은 사람 아이콘으로, 1:1은 상대 이름 이니셜로 채운다
+  let roomAvatar = <Avatar name={room.title} src={roomImageUrl} size={44} />;
+  if (!roomImageUrl && isGroup) {
+    roomAvatar = (
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 text-primary">
+        <UsersIcon className="size-5" />
+      </span>
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -244,15 +261,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           <ArrowLeftIcon className="size-5" />
         </Link>
 
-        {roomImageUrl ? (
-          <Avatar name={room.title} src={roomImageUrl} size={44} />
-        ) : isGroup ? (
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 text-primary">
-            <UsersIcon className="size-5" />
-          </span>
-        ) : (
-          <Avatar name={room.title} src={null} size={44} />
-        )}
+        {roomAvatar}
 
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-display text-base font-bold text-ink">{room.title}</h1>
@@ -416,11 +425,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             }
             className="h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
           >
-            {sendMutation.isPending
-              ? attachments.length > 0
-                ? t("uploadingPhotos")
-                : t("sending")
-              : t("send")}
+            {sendLabel()}
           </button>
         </form>
       </div>

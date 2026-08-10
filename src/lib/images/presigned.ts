@@ -40,6 +40,9 @@ export interface PresignedImageUploadResult {
   images: PresignedImageItem[];
 }
 
+/** presigned 발급 응답 본문 — 성공/실패 어느 쪽이든 올 수 있다 */
+type PresignedResponseBody = ApiResponse<PresignedImageUploadResult> | ErrorApiResponse;
+
 export function isSupportedProfileImageType(type: string): type is ProfileImageContentType {
   return (PROFILE_IMAGE_CONTENT_TYPES as readonly string[]).includes(type);
 }
@@ -106,7 +109,7 @@ export async function uploadProfileImage(file: File): Promise<PresignedImageItem
     PROFILE_UPLOAD_TIMEOUT_ERROR_MESSAGE,
   );
   const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
-    ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
+    PresignedResponseBody | undefined;
 
   if (!presignedResponse.ok || !presignedBody?.isSuccess) {
     throw createApiClientError(
@@ -176,7 +179,7 @@ export async function uploadActivityImages(files: File[]): Promise<PresignedImag
     ACTIVITY_UPLOAD_TIMEOUT_ERROR_MESSAGE,
   );
   const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
-    ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
+    PresignedResponseBody | undefined;
 
   if (!presignedResponse.ok || !presignedBody?.isSuccess) {
     throw createApiClientError(
@@ -293,7 +296,7 @@ export async function uploadChatImages(files: File[]): Promise<PresignedImageIte
     CHAT_UPLOAD_TIMEOUT_ERROR_MESSAGE,
   );
   const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
-    ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
+    PresignedResponseBody | undefined;
 
   if (!presignedResponse.ok || !presignedBody?.isSuccess) {
     throw createApiClientError(

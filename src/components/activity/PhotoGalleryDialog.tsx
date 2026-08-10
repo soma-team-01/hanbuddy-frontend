@@ -52,6 +52,35 @@ export function PhotoGalleryDialog({
   const showPrevious = () => setIndex((safeIndex - 1 + images.length) % images.length);
   const showNext = () => setIndex((safeIndex + 1) % images.length);
 
+  const downloadButtonClass =
+    "flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80";
+  let downloadControl = null;
+  if (downloadUrls && downloadUrls.length > 1) {
+    // 여러 장이면 무엇을 저장할지 먼저 고르게 한다
+    downloadControl = (
+      <button
+        type="button"
+        aria-label={downloadLabel}
+        title={downloadLabel}
+        onClick={() => setDownloadChoiceOpen(true)}
+        className={downloadButtonClass}
+      >
+        <DownloadIcon className="size-5" />
+      </button>
+    );
+  } else if (downloadUrls?.[safeIndex]) {
+    downloadControl = (
+      <a
+        href={downloadUrls[safeIndex]}
+        aria-label={downloadLabel}
+        title={downloadLabel}
+        className={downloadButtonClass}
+      >
+        <DownloadIcon className="size-5" />
+      </a>
+    );
+  }
+
   return (
     <dialog
       ref={dialogRef}
@@ -69,27 +98,7 @@ export function PhotoGalleryDialog({
             {t("photoCounter", { current: safeIndex + 1, total: images.length })}
           </span>
           <div className="flex items-center gap-2">
-            {/* 여러 장이면 무엇을 저장할지 먼저 고르게 한다 */}
-            {downloadUrls && downloadUrls.length > 1 ? (
-              <button
-                type="button"
-                aria-label={downloadLabel}
-                title={downloadLabel}
-                onClick={() => setDownloadChoiceOpen(true)}
-                className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
-              >
-                <DownloadIcon className="size-5" />
-              </button>
-            ) : downloadUrls?.[safeIndex] ? (
-              <a
-                href={downloadUrls[safeIndex]}
-                aria-label={downloadLabel}
-                title={downloadLabel}
-                className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
-              >
-                <DownloadIcon className="size-5" />
-              </a>
-            ) : null}
+            {downloadControl}
             <button
               type="button"
               aria-label={tAccessibility("closeDialog")}

@@ -29,6 +29,8 @@ export function useChatMessages(chatRoomId: string, live: boolean) {
   const [historyBoundaryId, setHistoryBoundaryId] = useState(0);
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
 
+  // 경계가 잡히면 첫 과거 묶음은 미리 받아 둔다 — 목록 위쪽 감시 요소가 화면 240px 앞에서 이미
+  // 다음 묶음을 요청하므로, 여기서 미루면 위로 올릴 때마다 빈 화면을 먼저 보게 된다
   const historyQuery = useInfiniteQuery({
     ...chatMessageHistoryQueryOptions(chatRoomId, historyBoundaryId),
     enabled: historyBoundaryId > 0 && Boolean(latestQuery.data?.hasNext),

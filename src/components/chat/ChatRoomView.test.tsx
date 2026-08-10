@@ -333,17 +333,17 @@ describe("ChatRoomView", () => {
     fireEvent.change(input, {
       target: {
         files: Array.from(
-          { length: 6 },
+          { length: 10 },
           (_, index) => new File(["x"], `photo-${index}.webp`, { type: "image/webp" }),
         ),
       },
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "You can send up to 5 photos at once.",
+      "You can send up to 9 photos at once.",
     );
     // 넘친 만큼은 버리고 5장만 담는다
-    expect(screen.getAllByRole("button", { name: "Remove photo" })).toHaveLength(5);
+    expect(screen.getAllByRole("button", { name: "Remove photo" })).toHaveLength(9);
   });
 
   it("asks whether to save one photo or the whole batch", async () => {

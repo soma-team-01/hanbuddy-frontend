@@ -67,6 +67,8 @@ export interface ChatMessageGroup {
   timestamp: string;
   /** 이 묶음 앞에 날짜 구분선을 넣을지 */
   startsNewDate: boolean;
+  /** 한 번에 보낸 사진 묶음의 식별자. 없으면 null */
+  batchId: string | null;
   messages: ChatMessageResponse[];
 }
 
@@ -77,11 +79,13 @@ export function groupChatMessages(messages: ChatMessageResponse[]): ChatMessageG
     const previous = messages[index - 1];
     const startsNewDate = !previous || !isSameSeoulDate(previous.createdAt, message.createdAt);
     const openGroup = groups.at(-1);
+    // 한 번에 보낸 묶음은 분이 바뀌어도 갈라지지 않게 batchId를 함께 본다
+    const sameBatch = Boolean(message.batchId) && openGroup?.batchId === message.batchId;
     const continues =
       openGroup !== undefined &&
       !startsNewDate &&
       openGroup.senderId === message.senderId &&
-      isSameSeoulMinute(openGroup.timestamp, message.createdAt);
+      (sameBatch || isSameSeoulMinute(openGroup.timestamp, message.createdAt));
 
     if (continues) {
       openGroup.messages.push(message);
@@ -96,6 +100,7 @@ export function groupChatMessages(messages: ChatMessageResponse[]): ChatMessageG
       senderProfileImageUrl: message.senderProfileImageUrl,
       timestamp: message.createdAt,
       startsNewDate,
+      batchId: message.batchId ?? null,
       messages: [message],
     });
   }
@@ -123,7 +128,7 @@ export type ChatBubble =
 
 /**
  * 묶음 안의 메시지를 말풍선 단위로 나눈다.
- * 연달아 붙은 사진은 한 덩어리로 합치고, 글은 하나씩 그대로 둔다.
+ * 한 번에 보낸 사진은 `batchId`로 묶고, 값이 없는 예전 메시지는 연달아 붙은 순서로 묶는다.
  */
 export function toChatBubbles(messages: ChatMessageResponse[]): ChatBubble[] {
   const bubbles: ChatBubble[] = [];
@@ -131,8 +136,12 @@ export function toChatBubbles(messages: ChatMessageResponse[]): ChatBubble[] {
   for (const message of messages) {
     const isImage = message.messageType === "IMAGE" && Boolean(message.imageUrl);
     const open = bubbles.at(-1);
+    const openBatchId = open?.kind === "images" ? (open.images[0].batchId ?? null) : null;
+    // 서로 다른 묶음이 나란히 오면 각각의 덩어리로 갈라 놓는다
+    const sameBatch =
+      openBatchId === null && !message.batchId ? true : openBatchId === (message.batchId ?? null);
 
-    if (isImage && open?.kind === "images") {
+    if (isImage && open?.kind === "images" && sameBatch) {
       open.images.push(message);
       continue;
     }

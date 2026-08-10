@@ -105,14 +105,33 @@ describe("groupChatMessages", () => {
   });
 });
 
-function imageMessage(messageId: number, senderId: number, createdAt: string): ChatMessageResponse {
+function imageMessage(
+  messageId: number,
+  senderId: number,
+  createdAt: string,
+  batchId?: string,
+): ChatMessageResponse {
   return {
     ...message(messageId, senderId, createdAt),
     messageType: "IMAGE",
     content: null,
     imageUrl: `https://cdn/chats/${messageId}.webp`,
+    batchId: batchId ?? null,
   };
 }
+
+describe("groupChatMessages with batches", () => {
+  it("keeps a batch together when it crosses a minute boundary", () => {
+    const batchId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const groups = groupChatMessages([
+      imageMessage(1, 11, "2026-08-10T11:20:59+09:00", batchId),
+      imageMessage(2, 11, "2026-08-10T11:21:00+09:00", batchId),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].messages.map((item) => item.messageId)).toEqual([1, 2]);
+  });
+});
 
 describe("toChatBubbles", () => {
   it("merges photos sent together into one bubble", () => {
@@ -144,6 +163,29 @@ describe("toChatBubbles", () => {
     ]);
 
     expect(bubbles.map((bubble) => bubble.kind)).toEqual(["images", "text", "images"]);
+  });
+
+  it("keeps two batches sent back to back apart", () => {
+    const bubbles = toChatBubbles([
+      imageMessage(1, 11, "2026-08-10T11:20:05+09:00", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+      imageMessage(2, 11, "2026-08-10T11:20:06+09:00", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+      imageMessage(3, 11, "2026-08-10T11:20:07+09:00", "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+    ]);
+
+    expect(bubbles).toHaveLength(2);
+    expect(bubbles[0].kind === "images" && bubbles[0].images).toHaveLength(2);
+    expect(bubbles[1].kind === "images" && bubbles[1].images).toHaveLength(1);
+  });
+
+  it("groups a batch even when the minute rolls over", () => {
+    const batchId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const bubbles = toChatBubbles([
+      imageMessage(1, 11, "2026-08-10T11:20:59+09:00", batchId),
+      imageMessage(2, 11, "2026-08-10T11:21:00+09:00", batchId),
+    ]);
+
+    expect(bubbles).toHaveLength(1);
+    expect(bubbles[0].kind === "images" && bubbles[0].images).toHaveLength(2);
   });
 
   it("returns nothing for an empty group", () => {

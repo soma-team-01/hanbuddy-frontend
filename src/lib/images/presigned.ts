@@ -8,8 +8,8 @@ export const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
 export const PROFILE_IMAGE_SIZE_ERROR_MESSAGE = "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.";
 /** 백엔드 presigned 발급 한도와 동일 (ACTIVITY 목적, 요청당 최대 10장) */
 export const MAX_ACTIVITY_IMAGE_COUNT = 10;
-/** 채팅 이미지 발급 한도 (CHAT 목적, 요청당 최대 5장) */
-export const MAX_CHAT_IMAGE_COUNT = 5;
+/** 채팅 이미지 발급 한도 (CHAT 목적, 요청당 최대 9장) */
+export const MAX_CHAT_IMAGE_COUNT = 9;
 export const MAX_CHAT_IMAGE_BYTES = 10 * 1024 * 1024;
 export const CHAT_IMAGE_SIZE_ERROR_MESSAGE = "사진은 10MB 이하만 보낼 수 있습니다.";
 

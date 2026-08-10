@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { ChatPhoto } from "@/components/chat/ChatPhoto";
 import type { ChatMessageResponse } from "@/types/chat";
 
 /** 장수에 따른 열 수 — 4장만 2열이고 나머지는 3열로 채운다 */
@@ -39,13 +39,12 @@ export function ChatImageGrid({
           aria-label={t("openPhoto")}
           className="block w-full overflow-hidden rounded-2xl border border-line-soft transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <Image
-            src={single.imageUrl ?? ""}
+          <ChatPhoto
+            imageUrl={single.imageUrl ?? ""}
             alt={single.content ?? t("photo")}
-            width={single.imageWidth ?? 4}
-            height={single.imageHeight ?? 3}
+            imageWidth={single.imageWidth}
+            imageHeight={single.imageHeight}
             sizes="288px"
-            className="h-auto w-full object-cover"
           />
         </button>
       </ImageFigure>
@@ -65,9 +64,9 @@ export function ChatImageGrid({
             type="button"
             onClick={() => onOpen(index)}
             aria-label={t("openPhotoAt", { index: index + 1, total: images.length })}
-            className="relative aspect-square transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+            className="block transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
           >
-            <Image src={image.imageUrl ?? ""} alt="" fill sizes="96px" className="object-cover" />
+            <ChatPhoto imageUrl={image.imageUrl ?? ""} alt="" square sizes="96px" />
           </button>
         ))}
       </div>

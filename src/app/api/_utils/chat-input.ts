@@ -61,3 +61,10 @@ export function isValidChatImageKey(imageKey: unknown): imageKey is string {
     !imageKey.split("/").includes("..")
   );
 }
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** 묶음 식별자는 서버가 해석하지 않고 그대로 보관하므로 형식만 확인한다 */
+export function isValidChatBatchId(batchId: unknown): batchId is string {
+  return typeof batchId === "string" && UUID_PATTERN.test(batchId);
+}

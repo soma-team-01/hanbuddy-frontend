@@ -728,7 +728,8 @@
     "downloadAll": "Save all {count}",
     "openPhotoAt": "Open photo {index} of {total}",
     "downloadTitle": "Save photos",
-    "downloadOne": "Save this photo"
+    "downloadOne": "Save this photo",
+    "photoUnavailable": "Photo unavailable"
   },
   "MyPage": {
     "title": "My Page",

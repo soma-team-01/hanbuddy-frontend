@@ -7,6 +7,7 @@ import {
 } from "@/app/api/_utils/authenticated-backend";
 import {
   buildChatMessageQuery,
+  isValidChatBatchId,
   isValidChatImageKey,
   isValidChatMessageContent,
   isValidChatRoomId,
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest, context: ChatMessagesRouteConte
         content: body.content ?? null,
         imageWidth: toPositiveInteger(body.imageWidth),
         imageHeight: toPositiveInteger(body.imageHeight),
+        batchId: isValidChatBatchId(body.batchId) ? body.batchId : undefined,
       },
       "채팅 서버에 연결할 수 없습니다.",
     );

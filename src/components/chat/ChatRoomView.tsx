@@ -126,6 +126,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       // 발급받은 key는 1시간 안에 써야 하므로 보내기 직전에 올린다
       const uploaded = await uploadChatImages(files);
       const sizes = await Promise.all(files.map(readImageSize));
+      // 한 번에 보낸 사진들을 화면에서 한 덩어리로 묶어 주는 식별자
+      const batchId = files.length > 1 ? crypto.randomUUID() : undefined;
+
       for (const [index, target] of uploaded.entries()) {
         unwrapApiResult(
           await sendChatMessage(chatRoomId, {
@@ -133,6 +136,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             imageKey: target.imageKey,
             // 캡션은 첫 장에만 붙인다
             content: index === 0 && content ? content : null,
+            batchId,
             ...sizes[index],
           }),
           "message",

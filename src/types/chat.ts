@@ -14,6 +14,8 @@ export interface ChatMessageResponse {
   /** 있으면 로딩 중 레이아웃이 튀지 않는다 */
   imageWidth?: number | null;
   imageHeight?: number | null;
+  /** 한 번에 보낸 묶음을 잇는 값. 단건이면 null */
+  batchId?: string | null;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   createdAt: string;
 }
@@ -77,6 +79,8 @@ export interface SendChatMessageRequest {
   imageKey?: string;
   imageWidth?: number;
   imageHeight?: number;
+  /** 같은 동작으로 보낸 메시지에 같은 UUID를 넣는다 */
+  batchId?: string;
 }
 
 export interface ChatRoomImage {

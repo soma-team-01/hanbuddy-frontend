@@ -162,7 +162,7 @@ export function CancelDialog({
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="h-12 flex-1 rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors enabled:hover:border-ink disabled:opacity-60"
         >
           {t("keepApplication")}
         </button>

@@ -24,6 +24,7 @@ import {
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulTime, formatSeoulWeekday, getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyApplicationsQueryOptions, buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
+import { myChatRoomsQueryOptions } from "@/lib/query/chat";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 const DATE_PAGE_SIZE = 5;
@@ -43,6 +44,13 @@ export function DashboardContent() {
   const t = useTranslations("BuddyDashboard");
   const tErrors = useTranslations("Errors");
   const tChat = useTranslations("Chat");
+  // 단체 채팅방이 이미 있는 회차 — 버튼 문구를 만들기/열기로 나눈다
+  const chatRoomsQuery = useQuery(myChatRoomsQueryOptions());
+  const groupRoomScheduleIds = new Set(
+    (chatRoomsQuery.data ?? [])
+      .map((room) => room.activityScheduleId)
+      .filter((scheduleId): scheduleId is number => scheduleId !== null),
+  );
   const getApiErrorMessage = useApiErrorMessage();
   const [selectedDate, setSelectedDate] = useState("");
   const [requestedDatePage, setRequestedDatePage] = useState<number | null>(null);
@@ -161,7 +169,12 @@ export function DashboardContent() {
                           kind: "group",
                           activityScheduleId: schedule.activityScheduleId,
                         }}
-                        label={tChat("openGroupChat")}
+                        // 방이 이미 있으면 "만들기"가 아니라 "열기"로 보여, 매번 눌러야 한다는 오해를 막는다
+                        label={
+                          groupRoomScheduleIds.has(schedule.activityScheduleId)
+                            ? tChat("openGroupChat")
+                            : tChat("createGroupChat")
+                        }
                         icon={<UsersIcon className="size-3.5" />}
                         className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-primary px-3 font-display text-xs font-bold text-primary transition-colors enabled:hover:bg-primary-soft disabled:opacity-60"
                       />

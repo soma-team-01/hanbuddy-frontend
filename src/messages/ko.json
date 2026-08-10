@@ -754,7 +754,9 @@
     "removeMemberTitle": "{name} 님을 내보낼까요?",
     "removeMemberDescription": "내보낸 참여자는 다시 신청해도 돌아오지 않습니다. 남긴 메시지는 대화에 그대로 남습니다.",
     "removingMember": "내보내는 중...",
-    "removeMemberError": "참여자를 내보내지 못했습니다."
+    "removeMemberError": "참여자를 내보내지 못했습니다.",
+    "createGroupChat": "단체 채팅 만들기",
+    "autoJoinNotice": "결제가 확정된 신청자는 자동으로 참여합니다."
   },
   "MyPage": {
     "title": "마이페이지",

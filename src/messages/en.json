@@ -754,7 +754,9 @@
     "removeMemberTitle": "Remove {name}?",
     "removeMemberDescription": "They will not be able to rejoin, even if they book again. Their messages stay in the conversation.",
     "removingMember": "Removing...",
-    "removeMemberError": "Could not remove this member."
+    "removeMemberError": "Could not remove this member.",
+    "createGroupChat": "Start group chat",
+    "autoJoinNotice": "Guests join automatically once their booking is confirmed."
   },
   "MyPage": {
     "title": "My Page",

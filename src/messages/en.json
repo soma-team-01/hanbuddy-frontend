@@ -756,7 +756,7 @@
     "removingMember": "Removing...",
     "removeMemberError": "Could not remove this member.",
     "createGroupChat": "Start group chat",
-    "autoJoinNotice": "Guests join automatically once their booking is confirmed."
+    "autoJoinNotice": "Create it once — every guest who completes payment joins automatically, including later bookings."
   },
   "MyPage": {
     "title": "My Page",

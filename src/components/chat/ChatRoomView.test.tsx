@@ -546,10 +546,6 @@ describe("ChatRoomView", () => {
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Conversation menu" }));
-    // 매번 눌러 사람을 넣어야 한다고 오해하지 않도록 방장에게 알려 준다
-    expect(
-      screen.getByText("Guests join automatically once their booking is confirmed."),
-    ).toBeInTheDocument();
     fireEvent.click(await screen.findByRole("button", { name: "Rename chat" }));
 
     const renameDialog = await screen.findByRole("dialog", { name: "Rename chat" });

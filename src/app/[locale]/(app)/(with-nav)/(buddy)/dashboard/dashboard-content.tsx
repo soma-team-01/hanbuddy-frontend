@@ -164,20 +164,28 @@ export function DashboardContent() {
                       </span>
                     </Link>
                     {schedule.applicantCount > 0 ? (
-                      <StartChatButton
-                        target={{
-                          kind: "group",
-                          activityScheduleId: schedule.activityScheduleId,
-                        }}
-                        // 방이 이미 있으면 "만들기"가 아니라 "열기"로 보여, 매번 눌러야 한다는 오해를 막는다
-                        label={
-                          groupRoomScheduleIds.has(schedule.activityScheduleId)
-                            ? tChat("openGroupChat")
-                            : tChat("createGroupChat")
-                        }
-                        icon={<UsersIcon className="size-3.5" />}
-                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-primary px-3 font-display text-xs font-bold text-primary transition-colors enabled:hover:bg-primary-soft disabled:opacity-60"
-                      />
+                      // 한 번 만들면 이후 신청자는 자동으로 들어온다는 걸 누르기 전에 알려 준다
+                      <span className="group relative inline-flex shrink-0">
+                        <StartChatButton
+                          target={{
+                            kind: "group",
+                            activityScheduleId: schedule.activityScheduleId,
+                          }}
+                          label={
+                            groupRoomScheduleIds.has(schedule.activityScheduleId)
+                              ? tChat("openGroupChat")
+                              : tChat("createGroupChat")
+                          }
+                          icon={<UsersIcon className="size-3.5" />}
+                          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-primary px-3 font-display text-xs font-bold text-primary transition-colors enabled:hover:bg-primary-soft disabled:opacity-60"
+                        />
+                        <span
+                          role="tooltip"
+                          className="pointer-events-none absolute right-0 bottom-full z-40 mb-2 hidden w-60 rounded-xl border border-primary/30 bg-canvas-soft p-3 text-left text-xs leading-5 text-muted shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:block group-hover:block"
+                        >
+                          {tChat("autoJoinNotice")}
+                        </span>
+                      </span>
                     ) : null}
                   </div>
                   {schedule.applicants.length > 0 ? (

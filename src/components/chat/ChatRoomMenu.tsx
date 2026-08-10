@@ -83,15 +83,9 @@ export function ChatRoomMenu({
         >
           {isGroup ? (
             <div className="flex min-h-0 flex-col">
-              <p className="shrink-0 px-4 pt-4 pb-1 font-display text-[11px] font-bold tracking-[0.14em] text-muted uppercase">
+              <p className="shrink-0 px-4 pt-4 pb-2 font-display text-[11px] font-bold tracking-[0.14em] text-muted uppercase">
                 {t("memberCount", { count: activeMembers.length })}
               </p>
-              {/* 매번 버튼을 눌러 사람을 넣어야 한다고 오해하지 않도록 방장에게 알려 준다 */}
-              {canRename ? (
-                <p className="shrink-0 px-4 pb-2 text-[11px] leading-4 text-muted">
-                  {t("autoJoinNotice")}
-                </p>
-              ) : null}
               <ul className="min-h-0 flex-1 overflow-y-auto pb-2">
                 {activeMembers.map((member) => (
                   <li key={member.userId}>

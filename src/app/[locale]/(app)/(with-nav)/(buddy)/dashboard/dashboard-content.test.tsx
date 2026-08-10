@@ -13,6 +13,12 @@ vi.mock("next/navigation", async (importOriginal) => ({
   useRouter: () => routerMock,
 }));
 
+vi.mock("@/lib/api/chat", () => ({
+  getMyChatRooms: vi.fn(async () => ({ status: "success", rooms: [] })),
+  createDirectChatRoom: vi.fn(),
+  createGroupChatRoom: vi.fn(),
+}));
+
 vi.mock("@/lib/api/buddy", () => ({
   getBuddyApplications: vi.fn(),
   getBuddyScheduleDates: vi.fn(),
@@ -356,5 +362,39 @@ describe("DashboardContent", () => {
       "버디 사용자만 이용할 수 있는 기능입니다.",
     );
     expect(screen.queryByText("raw schedule service failure")).not.toBeInTheDocument();
+  });
+
+  it("explains that the group chat keeps absorbing later bookings", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          activityTitle: "Traditional Tea Tasting",
+          thumbnailImageUrl: null,
+          totalApplicantCount: 1,
+          schedules: [
+            {
+              activityScheduleId: 99,
+              startAt: "2026-07-20T10:00:00+09:00",
+              applicantCount: 1,
+              applicants: [],
+            },
+          ],
+        },
+      ],
+    });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    const button = await screen.findByRole("button", { name: /group chat/i });
+    // 누르기 전에, 한 번만 만들면 된다는 걸 알려 준다
+    expect(button.parentElement).toHaveTextContent(
+      "every guest who completes payment joins automatically",
+    );
   });
 });

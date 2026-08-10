@@ -137,9 +137,10 @@ export function BookingForm({
   return (
     <>
       <PageContainer className="py-6 md:py-10">
+        {/* 왼쪽 칸이 남는 폭까지 늘어나면 요약 패널과 사이가 크게 비므로 본문 폭에 맞춰 묶어 둔다 */}
         <main
           data-testid="booking-layout"
-          className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start"
+          className="grid gap-6 lg:grid-cols-[minmax(0,36rem)_360px] lg:items-start lg:justify-center"
         >
           <div className="mx-auto w-full max-w-xl divide-y divide-line-soft lg:mx-0">
             <section className="flex flex-col gap-3 pb-7">

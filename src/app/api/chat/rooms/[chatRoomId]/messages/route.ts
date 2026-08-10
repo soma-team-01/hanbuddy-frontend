@@ -47,7 +47,12 @@ export async function POST(request: NextRequest, context: ChatMessagesRouteConte
   if (!parsed.ok) return parsed.response;
 
   const body = parsed.body;
-  const messageType = body?.messageType ?? "TEXT";
+  // 모르는 값을 조용히 TEXT로 처리하면 계약이 어긋난 요청이 성공한 것처럼 보인다
+  const requestedType = body?.messageType;
+  if (requestedType !== undefined && requestedType !== "TEXT" && requestedType !== "IMAGE") {
+    return badRequestResponse("메시지 유형이 올바르지 않습니다.");
+  }
+  const messageType = requestedType ?? "TEXT";
 
   if (messageType === "IMAGE") {
     if (!isValidChatImageKey(body?.imageKey)) {

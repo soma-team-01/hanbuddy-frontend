@@ -6,6 +6,7 @@ import {
   isPositiveId,
   isValidChatMessageContent,
   isValidChatRoomId,
+  normalizeChatRoomTitle,
 } from "./chat-input";
 
 function query(search: string) {
@@ -36,6 +37,17 @@ describe("chat input validation", () => {
     expect(isValidChatRoomId("0")).toBe(false);
     expect(isValidChatRoomId("-1")).toBe(false);
     expect(isValidChatRoomId("1a")).toBe(false);
+  });
+
+  it("treats only an explicit null or blank title as a reset", () => {
+    expect(normalizeChatRoomTitle("8월 14일 팀")).toBe("8월 14일 팀");
+    expect(normalizeChatRoomTitle("  여백  ")).toBe("여백");
+    expect(normalizeChatRoomTitle(null)).toBeNull();
+    expect(normalizeChatRoomTitle("   ")).toBeNull();
+    // title 키가 없는 요청까지 초기화로 처리하면 빈 PATCH가 방 이름을 지운다
+    expect(normalizeChatRoomTitle(undefined)).toBeUndefined();
+    expect(normalizeChatRoomTitle(12)).toBeUndefined();
+    expect(normalizeChatRoomTitle("a".repeat(51))).toBeUndefined();
   });
 
   it("normalizes the message page query", () => {

@@ -73,10 +73,11 @@ export const CHAT_ROOM_TITLE_MAX_LENGTH = 50;
 
 /**
  * 채팅방 이름을 정규화한다.
- * 비어 있으면 null(활동 제목으로 복귀), 너무 길면 undefined(거절)를 돌려준다.
+ * 명시적 null이나 빈 문자열이면 null(활동 제목으로 복귀), 그 밖에 잘못된 값은 undefined(거절)를 돌려준다.
+ * title 키가 아예 없는 요청까지 초기화로 처리하면 빈 PATCH가 방 이름을 지워 버린다.
  */
 export function normalizeChatRoomTitle(title: unknown): string | null | undefined {
-  if (title === null || title === undefined) return null;
+  if (title === null) return null;
   if (typeof title !== "string") return undefined;
 
   const trimmed = title.trim();

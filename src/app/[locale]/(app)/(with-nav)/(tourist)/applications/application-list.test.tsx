@@ -9,6 +9,14 @@ import type { Locale } from "@/i18n/routing";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
+const routerMock = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }));
+
+// 호스트 프로필의 "메시지 보내기"가 라우터를 쓰므로 앱 라우터를 대신 세워준다
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => routerMock,
+}));
+
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
 }));
@@ -139,11 +147,14 @@ describe("ApplicationList", () => {
   it("shows the paid amount instead of a service fee after payment", () => {
     renderList({ applications: [paidApplication] });
 
-    expect(screen.getByText("Paid: ₩90,000")).toBeInTheDocument();
+    // 총액은 접힌 상태에서도 보이고, 카드에서 따로 반복하지 않는다
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    expect(screen.queryByText("Paid")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Price Breakdown" }));
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
 
-    expect(screen.getAllByText("Paid: ₩90,000")).toHaveLength(2);
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("₩90,000");
+    expect(screen.getByText("Paid").parentElement).toHaveTextContent("₩90,000");
     expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
   });
 
@@ -589,17 +600,17 @@ describe("ApplicationList", () => {
     );
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
-    expect(screen.getByText("₩90,000 결제 완료")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
 
-    // 카드 우측 상단에 1인당 가격 × 인원이 함께 보인다
+    // 총액은 가격 상세 줄에만 나오고 카드에서 반복하지 않는다
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    expect(screen.queryByText("₩45,000 × 2명")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /가격 상세/ }));
+
     expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "가격 상세" }));
-
-    expect(screen.getAllByText("₩45,000 × 2명")).toHaveLength(2);
-    expect(screen.getAllByText("₩90,000 결제 완료")).toHaveLength(2);
-    expect(screen.getByText("총액: ₩90,000")).toBeInTheDocument();
+    expect(screen.getByText("총액").parentElement).toHaveTextContent("₩90,000");
+    expect(screen.getByText("결제 금액").parentElement).toHaveTextContent("₩90,000");
 
     fireEvent.click(screen.getByRole("tab", { name: "지난 내역" }));
     expect(screen.getByText("아직 신청 내역이 없습니다.")).toBeInTheDocument();

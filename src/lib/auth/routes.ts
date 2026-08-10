@@ -9,7 +9,7 @@ interface RouteAccessInput {
   userType?: UserType;
 }
 
-const SHARED_PROTECTED_ROUTES = ["/home", "/my-page"] as const;
+const SHARED_PROTECTED_ROUTES = ["/home", "/my-page", "/chat"] as const;
 const TOURIST_ROUTES = ["/applications"] as const;
 const BUDDY_ROUTES = ["/dashboard", "/my-activities"] as const;
 

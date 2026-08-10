@@ -23,3 +23,10 @@ HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement, returnV
 // jsdom은 스크롤을 구현하지 않는다. 목록을 맨 위로 되돌리거나 바닥에 붙이는 화면에서 필요하다.
 Element.prototype.scrollTo ??= function () {};
 Element.prototype.scrollIntoView ??= function () {};
+
+// jsdom은 Object URL을 구현하지 않는다. 첨부 미리보기에서 쓴다.
+URL.createObjectURL ??= (() => {
+  let sequence = 0;
+  return () => `blob:hanbuddy/${++sequence}`;
+})();
+URL.revokeObjectURL ??= () => {};

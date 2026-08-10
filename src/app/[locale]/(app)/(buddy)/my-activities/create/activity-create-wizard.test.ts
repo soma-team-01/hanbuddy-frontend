@@ -216,6 +216,15 @@ describe("activity creation wizard", () => {
       ],
     };
 
+    it("keeps past schedules out of editing but remembers them for submission", () => {
+      const draft = buildDraftFromMyActivityDetail(detail);
+
+      // 편집 목록에는 미래 일정만 남는다 (과거 일정 금지 검증과 충돌하므로)
+      expect(draft.schedules.map((schedule) => schedule.date)).toEqual([futureDateA]);
+      // 지난 일정을 빼고 제출하면 백엔드가 삭제로 보고 신청 내역이 있으면 거절한다
+      expect(draft.retainedScheduleStartAts).toEqual(["2020-01-01T10:00:00+09:00"]);
+    });
+
     it("prefills the draft from the detail response with reusable image keys", () => {
       const draft = buildDraftFromMyActivityDetail(detail);
 

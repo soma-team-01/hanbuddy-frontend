@@ -106,10 +106,15 @@ export function buildActivityUpsertRequest(
   itineraryImageKeys: string[],
   status: MyActivityStatus = "ACTIVE",
 ): ActivityUpsertRequest {
-  const schedules = draft.schedules
-    .map((schedule) => toSeoulStartAt(`${schedule.date}T${schedule.startTime}`))
-    .filter((startAt): startAt is string => startAt !== null)
-    .map((startAt) => ({ startAt }));
+  // 화면에서 편집한 일정과, 편집 대상이 아닌 지난 일정을 함께 보낸다.
+  // 지난 일정을 빼고 보내면 백엔드가 삭제로 보고 신청 내역이 있을 때 수정이 거절된다.
+  const startAts = [
+    ...draft.schedules
+      .map((schedule) => toSeoulStartAt(`${schedule.date}T${schedule.startTime}`))
+      .filter((startAt): startAt is string => startAt !== null),
+    ...draft.retainedScheduleStartAts,
+  ];
+  const schedules = [...new Set(startAts)].map((startAt) => ({ startAt }));
 
   return {
     title: draft.experienceName.trim(),

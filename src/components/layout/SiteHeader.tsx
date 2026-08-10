@@ -8,6 +8,7 @@ import { getMyProfile } from "@/lib/api/users";
 import { getUserTypeNavRole } from "@/lib/auth/routes";
 import type { MyProfile } from "@/types/user";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
+import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
 import { Avatar } from "../ui/Avatar";
 import { UserIcon } from "../ui/icons";
 import { LocaleSwitcher } from "./LocaleSwitcher";
@@ -169,6 +170,7 @@ export function SiteHeader({
               className="size-11 animate-pulse rounded-full border border-line-soft bg-panel"
             />
           ) : null}
+          {!isMinimalHeader && effectiveAuthenticated ? <ChatNavIcon /> : null}
           {(!isMinimalHeader || isBuddyHostingPage) && effectiveAuthenticated ? (
             <Link
               href="/my-page"
@@ -201,6 +203,7 @@ export function SiteHeader({
                 className="size-10 animate-pulse rounded-full border border-line-soft bg-panel"
               />
             ) : null}
+            {effectiveAuthenticated ? <ChatNavIcon compact /> : null}
             {effectiveAuthenticated ? (
               <Link
                 href="/my-page"

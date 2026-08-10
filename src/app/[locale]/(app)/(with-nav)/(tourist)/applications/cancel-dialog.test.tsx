@@ -8,7 +8,7 @@ describe("CancelDialog", () => {
   it("disables Yes, Cancel until a reason is selected", () => {
     renderWithIntl(<CancelDialog onClose={vi.fn()} onConfirm={vi.fn()} />);
 
-    expect(screen.getByRole("dialog")).toHaveClass("max-md:mt-auto", "md:rounded-2xl");
+    expect(screen.getByRole("dialog")).toHaveClass("max-md:mt-auto", "md:rounded-3xl");
     expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
@@ -23,7 +23,42 @@ describe("CancelDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Found another option" }));
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
-    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith("FOUND_OTHER"));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledWith("FOUND_OTHER", undefined));
+  });
+
+  it("holds back Yes, Cancel until the other reason is written out", async () => {
+    const onConfirm = vi.fn().mockResolvedValue({ ok: true });
+    renderWithIntl(<CancelDialog onClose={vi.fn()} onConfirm={onConfirm} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Other reason" }));
+
+    const detail = screen.getByLabelText("Tell us what happened");
+    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeDisabled();
+
+    // 공백만 적은 것은 사유가 아니다
+    fireEvent.change(detail, { target: { value: "   " } });
+    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeDisabled();
+
+    fireEvent.change(detail, { target: { value: "  My flight was cancelled.  " } });
+    fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
+
+    await waitFor(() =>
+      expect(onConfirm).toHaveBeenCalledWith("OTHER", "My flight was cancelled."),
+    );
+  });
+
+  it("drops the written detail when the reason moves off other", () => {
+    renderWithIntl(<CancelDialog onClose={vi.fn()} onConfirm={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Other reason" }));
+    fireEvent.change(screen.getByLabelText("Tell us what happened"), {
+      target: { value: "My flight was cancelled." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+
+    // 다른 사유에 상세 설명을 붙이면 백엔드가 거절하므로 입력칸 자체가 사라진다
+    expect(screen.queryByLabelText("Tell us what happened")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
   });
 
   it("prevents Escape from closing while cancellation is submitting", async () => {

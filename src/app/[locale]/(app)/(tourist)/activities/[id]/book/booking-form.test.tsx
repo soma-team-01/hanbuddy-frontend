@@ -116,7 +116,10 @@ describe("BookingForm", () => {
       "loading",
       "eager",
     );
-    expect(screen.getByTestId("booking-layout")).toHaveClass("lg:grid-cols-[minmax(0,1fr)_360px]");
+    // 본문 폭을 묶어 두어야 요약 패널과 사이가 크게 비지 않는다
+    expect(screen.getByTestId("booking-layout")).toHaveClass(
+      "lg:grid-cols-[minmax(0,36rem)_360px]",
+    );
     expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
     // 요약 카드: 선택한 일정과 총액이 보인다
@@ -315,5 +318,30 @@ describe("BookingForm", () => {
     expect(isTossUserCancel({ code: "PAY_PROCESS_CANCELED" })).toBe(true);
     expect(isTossUserCancel({ code: "INVALID_CARD" })).toBe(false);
     expect(isTossUserCancel(new Error("boom"))).toBe(false);
+  });
+
+  it("points to My Applications when an unfinished booking blocks a new one", async () => {
+    const { ApiClientError } = await import("@/lib/api/errors");
+    mockedCreateApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "APPLICATION409_PAYMENT_PENDING",
+        status: 409,
+        details: null,
+        backendMessage: "결제를 진행 중인 신청이 있습니다.",
+      }),
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    await agreeAndSubmit();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "You already have a booking waiting for payment.",
+    );
+    expect(screen.getByRole("link", { name: "Go to My Applications" })).toHaveAttribute(
+      "href",
+      "/en/applications",
+    );
   });
 });

@@ -12,6 +12,9 @@ const REASONS = [
   { value: "OTHER", key: "other" },
 ] as const satisfies ReadonlyArray<{ value: ApplicationCancellationReason; key: string }>;
 
+/** 백엔드 CancelApplicationRequest.cancellationDetail의 @Size(max = 255)와 맞춘다 */
+const CANCELLATION_DETAIL_MAX_LENGTH = 255;
+
 export type CancelDialogOutcome = { ok: true } | { ok: false; error: unknown };
 
 export function CancelDialog({
@@ -19,32 +22,47 @@ export function CancelDialog({
   onConfirm,
 }: Readonly<{
   onClose: () => void;
-  onConfirm: (reason: ApplicationCancellationReason) => Promise<CancelDialogOutcome>;
+  onConfirm: (
+    reason: ApplicationCancellationReason,
+    detail?: string,
+  ) => Promise<CancelDialogOutcome>;
 }>) {
   const t = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
   const [reason, setReason] = useState<ApplicationCancellationReason | null>(null);
+  const [detail, setDetail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [failure, setFailure] = useState<{
     error: unknown;
     fallbackKey: "cancelFailed" | "generic";
   } | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const detailRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
 
+  // 기타를 고르면 곧바로 적을 수 있게 커서를 옮긴다
+  useEffect(() => {
+    if (reason === "OTHER") detailRef.current?.focus();
+  }, [reason]);
+
+  const trimmedDetail = detail.trim();
+  // 백엔드는 OTHER에서 상세 사유를 필수로 받는다
+  const needsDetail = reason === "OTHER";
+  const canSubmit = Boolean(reason) && (!needsDetail || trimmedDetail.length > 0);
+
   async function handleConfirm() {
-    if (!reason || isSubmitting) return;
+    if (!reason || !canSubmit || isSubmitting) return;
     setIsSubmitting(true);
     setFailure(null);
 
     // onConfirm이 계약을 어기고 reject하면 두 버튼이 잠긴 채 복구 불가가 되므로 여기서 방어한다
     try {
-      const outcome = await onConfirm(reason);
+      const outcome = await onConfirm(reason, needsDetail ? trimmedDetail : undefined);
       if (!outcome.ok) {
         setFailure({ error: outcome.error, fallbackKey: "cancelFailed" });
         setIsSubmitting(false);
@@ -65,16 +83,15 @@ export function CancelDialog({
         if (isSubmitting) event.preventDefault();
       }}
       onClose={onClose}
-      className="m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:rounded-3xl md:p-8"
+      className="motion-dialog m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-3xl md:p-8"
     >
       <h2 id="cancel-dialog-title" className="font-display text-xl font-bold text-ink">
         {t("cancellationTitle")}
       </h2>
-      <p className="mt-2 text-muted">{t("cancellationPrompt")}</p>
-      <p className="mt-5 font-display text-sm font-semibold text-ink">
-        {t("cancellationQuestion")}
-      </p>
-      <div className="mt-3 flex flex-col gap-3">
+      <p className="mt-2 text-sm leading-6 text-muted">{t("cancellationPrompt")}</p>
+
+      <p className="mt-6 font-display text-sm font-bold text-ink">{t("cancellationQuestion")}</p>
+      <div className="mt-3 flex flex-col gap-2">
         {REASONS.map(({ value, key }) => {
           const isSelected = reason === value;
           return (
@@ -83,52 +100,77 @@ export function CancelDialog({
               type="button"
               aria-pressed={isSelected}
               onClick={() => setReason(value)}
-              className={`flex items-center gap-3 rounded-2xl border bg-panel px-4 py-4 text-left transition-colors ${
+              className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-colors ${
                 isSelected
-                  ? "border-primary-strong bg-primary-soft"
-                  : "border-line-strong hover:border-primary/50"
+                  ? "border-primary text-primary"
+                  : "border-line-soft text-ink hover:border-primary/40"
               }`}
             >
               <span
                 aria-hidden
-                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                  isSelected ? "border-primary-strong" : "border-line-strong"
+                className={`flex size-[18px] shrink-0 items-center justify-center rounded-full border transition-colors ${
+                  isSelected ? "border-primary" : "border-line-strong"
                 }`}
               >
-                {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
+                {isSelected ? <span className="size-2.5 rounded-full bg-primary" /> : null}
               </span>
-              <span className="text-base text-ink">{t(`cancellationReasons.${key}`)}</span>
+              <span className={`text-sm ${isSelected ? "font-bold" : "font-medium"}`}>
+                {t(`cancellationReasons.${key}`)}
+              </span>
             </button>
           );
         })}
-        {/* OTHER 상세 사유 입력란은 백엔드 CancelApplicationRequest.cancellationDetail 타입 오류(boolean)가
-            고쳐져 실제로 전송할 수 있게 되면 다시 추가한다. 입력을 받고 버리는 UI는 두지 않는다. */}
       </div>
-      {failure && (
-        <p
-          role="alert"
-          className="mt-4 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-        >
+
+      {/* 기타 사유는 무엇이 문제였는지 남겨야 버디에게 전달할 내용이 생긴다 */}
+      {needsDetail ? (
+        <div className="mt-4">
+          <label htmlFor="cancellation-detail" className="font-display text-sm font-bold text-ink">
+            {t("cancellationDetailLabel")}
+          </label>
+          <textarea
+            id="cancellation-detail"
+            ref={detailRef}
+            rows={3}
+            value={detail}
+            maxLength={CANCELLATION_DETAIL_MAX_LENGTH}
+            disabled={isSubmitting}
+            placeholder={t("cancellationDetailPlaceholder")}
+            onChange={(event) => setDetail(event.target.value)}
+            className="focus-border-only mt-2 w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
+          />
+          <p className="mt-1.5 text-right text-xs text-muted tabular-nums">
+            {t("cancellationDetailCount", {
+              count: trimmedDetail.length,
+              max: CANCELLATION_DETAIL_MAX_LENGTH,
+            })}
+          </p>
+        </div>
+      ) : null}
+
+      {failure ? (
+        <p role="alert" className="mt-4 border-l-2 border-danger pl-3 text-sm text-danger">
           {getApiErrorMessage(
             failure.error,
             failure.fallbackKey === "generic" ? tErrors("generic") : t("cancelFailed"),
           )}
         </p>
-      )}
-      <div className="mt-6 flex gap-3">
+      ) : null}
+
+      <div className="mt-6 flex gap-2.5">
         <button
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="h-12 flex-1 rounded-full border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:opacity-60"
+          className="h-12 flex-1 rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors enabled:hover:border-ink disabled:opacity-60"
         >
           {t("keepApplication")}
         </button>
         <button
           type="button"
           onClick={handleConfirm}
-          disabled={!reason || isSubmitting}
-          className="h-12 flex-1 rounded-full bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+          disabled={!canSubmit || isSubmitting}
+          className="h-12 flex-1 rounded-xl border border-primary font-display text-sm font-bold text-primary transition-colors enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
         >
           {isSubmitting ? t("cancelling") : t("confirmCancellation")}
         </button>

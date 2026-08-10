@@ -1,15 +1,20 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { SiteHeader } from "./SiteHeader";
 
 const apiMocks = vi.hoisted(() => ({
   getMyProfile: vi.fn(),
+  getMyChatRooms: vi.fn(),
 }));
 
 vi.mock("@/lib/api/users", () => ({
   getMyProfile: apiMocks.getMyProfile,
+}));
+
+vi.mock("@/lib/api/chat", () => ({
+  getMyChatRooms: apiMocks.getMyChatRooms,
 }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -29,11 +34,12 @@ describe("SiteHeader", () => {
     mockedUseRouter.mockReturnValue({ replace } as unknown as ReturnType<typeof useRouter>);
     apiMocks.getMyProfile.mockReset();
     apiMocks.getMyProfile.mockReturnValue(new Promise(() => undefined));
+    apiMocks.getMyChatRooms.mockResolvedValue({ status: "success", rooms: [] });
     document.body.style.overflow = "";
   });
 
   it("renders tourist destinations with a non-color active indicator", () => {
-    renderWithIntl(<SiteHeader role="tourist" />);
+    renderWithQueryClient(<SiteHeader role="tourist" />);
 
     const primaryNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
     expect(within(primaryNavigation).getByRole("link", { name: "Home" })).toHaveAttribute(
@@ -58,7 +64,7 @@ describe("SiteHeader", () => {
 
   it("renders buddy destinations", () => {
     mockedUsePathname.mockReturnValue("/dashboard");
-    renderWithIntl(<SiteHeader role="buddy" />);
+    renderWithQueryClient(<SiteHeader role="buddy" />);
 
     expect(
       screen.queryByRole("navigation", { name: "Primary navigation" }),
@@ -78,14 +84,14 @@ describe("SiteHeader", () => {
   });
 
   it("routes the buddy logo to the dashboard", () => {
-    renderWithIntl(<SiteHeader role="buddy" />);
+    renderWithQueryClient(<SiteHeader role="buddy" />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/dashboard");
   });
 
   it("keeps the landing route for guests", () => {
     mockedUsePathname.mockReturnValue("/");
-    renderWithIntl(<SiteHeader />);
+    renderWithQueryClient(<SiteHeader />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
     expect(screen.queryByRole("link", { name: "Host an experience" })).not.toBeInTheDocument();
@@ -93,20 +99,22 @@ describe("SiteHeader", () => {
 
   it("does not offer role switching to authenticated accounts", () => {
     mockedUsePathname.mockReturnValue("/");
-    renderWithIntl(<SiteHeader role="tourist" authenticated />);
+    renderWithQueryClient(<SiteHeader role="tourist" authenticated />);
 
     expect(screen.queryByRole("link", { name: "Host an experience" })).not.toBeInTheDocument();
   });
 
   it("replaces the login action with an account indicator for authenticated users", () => {
-    renderWithIntl(<SiteHeader role="tourist" authenticated />);
+    renderWithQueryClient(<SiteHeader role="tourist" authenticated />);
 
     expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
   it("replaces a stale account indicator with login when the session is cleared", async () => {
-    const { rerender } = renderWithIntl(<SiteHeader role="tourist" authenticated mayHaveSession />);
+    const { rerender } = renderWithQueryClient(
+      <SiteHeader role="tourist" authenticated mayHaveSession />,
+    );
 
     expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
 
@@ -119,7 +127,7 @@ describe("SiteHeader", () => {
   });
 
   it("shows an account indicator immediately when a new session becomes authenticated", async () => {
-    const { rerender } = renderWithIntl(
+    const { rerender } = renderWithQueryClient(
       <SiteHeader role={null} authenticated={false} mayHaveSession={false} />,
     );
 
@@ -152,7 +160,7 @@ describe("SiteHeader", () => {
       },
     });
 
-    renderWithIntl(<SiteHeader mayHaveSession />);
+    renderWithQueryClient(<SiteHeader mayHaveSession />);
 
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
     await waitFor(() => {
@@ -168,7 +176,7 @@ describe("SiteHeader", () => {
 
   it("shows only the brand and locale switcher on authentication pages", () => {
     mockedUsePathname.mockReturnValue("/login");
-    renderWithIntl(<SiteHeader />);
+    renderWithQueryClient(<SiteHeader />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
     expect(
@@ -183,7 +191,7 @@ describe("SiteHeader", () => {
 
   it("shows the brand, locale switcher, and buddy login dialog on the hosting landing page", () => {
     mockedUsePathname.mockReturnValue("/buddy");
-    renderWithIntl(<SiteHeader />);
+    renderWithQueryClient(<SiteHeader />);
 
     expect(
       screen.getByRole("button", { name: "Select language, current language: English" }),
@@ -203,14 +211,14 @@ describe("SiteHeader", () => {
 
   it("keeps the buddy login action visible while a possible session is being checked", () => {
     mockedUsePathname.mockReturnValue("/buddy");
-    renderWithIntl(<SiteHeader mayHaveSession />);
+    renderWithQueryClient(<SiteHeader mayHaveSession />);
 
     expect(screen.getByRole("button", { name: "Log in" })).toBeInTheDocument();
   });
 
   it("shows the account indicator on the buddy landing page after authentication", () => {
     mockedUsePathname.mockReturnValue("/buddy");
-    renderWithIntl(<SiteHeader role="buddy" authenticated mayHaveSession />);
+    renderWithQueryClient(<SiteHeader role="buddy" authenticated mayHaveSession />);
 
     expect(screen.getByRole("link", { name: "Open my account" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Log in" })).not.toBeInTheDocument();
@@ -218,7 +226,7 @@ describe("SiteHeader", () => {
 
   it("uses the buddy landing page as home throughout buddy-prefixed routes", () => {
     mockedUsePathname.mockReturnValue("/buddy/auth/status");
-    renderWithIntl(<SiteHeader />);
+    renderWithQueryClient(<SiteHeader />);
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/buddy");
     expect(
@@ -227,7 +235,7 @@ describe("SiteHeader", () => {
   });
 
   it("opens an accessible mobile drawer, restores focus, and unlocks scrolling on Escape", () => {
-    renderWithIntl(<SiteHeader role="tourist" />);
+    renderWithQueryClient(<SiteHeader role="tourist" />);
 
     const trigger = screen.getByRole("button", { name: "Open menu" });
     fireEvent.click(trigger);
@@ -248,7 +256,7 @@ describe("SiteHeader", () => {
 
   it("changes locale while preserving the current pathname", () => {
     mockedUsePathname.mockReturnValue("/applications");
-    renderWithIntl(<SiteHeader role="tourist" />);
+    renderWithQueryClient(<SiteHeader role="tourist" />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Select language, current language: English" }),
@@ -259,7 +267,7 @@ describe("SiteHeader", () => {
   });
 
   it("shows only the current locale until the language menu opens", () => {
-    renderWithIntl(<SiteHeader role="tourist" />);
+    renderWithQueryClient(<SiteHeader role="tourist" />);
 
     const trigger = screen.getByRole("button", {
       name: "Select language, current language: English",
@@ -281,7 +289,7 @@ describe("SiteHeader", () => {
   });
 
   it("localizes the site navigation and mobile menu in Korean", () => {
-    renderWithIntl(<SiteHeader role="tourist" />, { locale: "ko" });
+    renderWithQueryClient(<SiteHeader role="tourist" />, { locale: "ko" });
 
     expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/ko/explore");
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(

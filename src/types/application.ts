@@ -45,6 +45,8 @@ export interface CreateApplicationRequest {
 
 export interface CancelApplicationRequest {
   cancellationReason: ApplicationCancellationReason;
+  /** OTHER일 때만 보낸다. 다른 사유에 붙이면 백엔드가 거절한다. 255자 이하 */
+  cancellationDetail?: string;
 }
 
 export type PaymentStatus =

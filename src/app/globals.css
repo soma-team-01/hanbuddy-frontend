@@ -209,6 +209,14 @@ body {
   outline-offset: 3px;
 }
 
+/*
+ * 포커스를 테두리 색으로 이미 알리는 입력칸용. 위 전역 외곽선이 겹쳐 이중 테두리가 되는 걸 막는다.
+ * Tailwind 유틸리티는 레이어 안에 있어 레이어 밖의 위 규칙을 이기지 못하므로 여기서 함께 둔다.
+ */
+.focus-border-only:focus-visible {
+  outline: none;
+}
+
 /* Tailwind v4 preflight는 버튼 커서를 default로 두므로 클릭 가능한 버튼에 포인터를 복원 */
 button:not(:disabled),
 [role="button"]:not(:disabled) {

@@ -323,6 +323,16 @@ export function ChevronRightIcon(props: IconProps) {
   );
 }
 
+export function DownloadIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M12 15V3" />
+    </IconBase>
+  );
+}
+
 /** 답글 화살표(↳) — 앞선 항목에 딸린 내용임을 나타낸다 */
 export function CornerDownRightIcon(props: IconProps) {
   return (
@@ -417,6 +427,37 @@ export function PhoneIcon(props: IconProps) {
   return (
     <IconBase {...props}>
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+    </IconBase>
+  );
+}
+
+export function MoreHorizontalIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
+    </IconBase>
+  );
+}
+
+/** 둥근 말풍선 — 내비게이션의 채팅 진입점 */
+export function MessageCircleIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+    </IconBase>
+  );
+}
+
+/** 겹친 사진 — 대화에 오간 사진 모음(사진함)을 뜻한다 */
+export function ImagesIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M18 22H4a2 2 0 0 1-2-2V6" />
+      <path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18" />
+      <circle cx="12" cy="8" r="2" />
+      <rect width="16" height="16" x="6" y="2" rx="2" />
     </IconBase>
   );
 }

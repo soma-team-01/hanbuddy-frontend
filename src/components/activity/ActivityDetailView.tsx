@@ -449,7 +449,7 @@ export function ActivityDetailView({
                     className="flex shrink-0 items-center gap-4 self-start rounded-full transition-opacity hover:opacity-80 sm:block"
                   >
                     <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={64} />
-                    <span className="font-display text-lg font-bold text-primary underline decoration-primary/50 decoration-2 underline-offset-4 sm:hidden">
+                    <span className="font-display text-lg font-bold text-primary sm:hidden">
                       {activity.host.name}
                     </span>
                   </button>
@@ -458,12 +458,11 @@ export function ActivityDetailView({
                       <button
                         type="button"
                         onClick={() => setHostProfileOpen(true)}
-                        className="font-display text-lg font-bold text-ink underline decoration-primary/50 decoration-2 underline-offset-4 transition-colors hover:text-primary"
+                        className="font-display text-lg font-bold text-ink transition-colors hover:text-primary"
                       >
                         {activity.host.name}
                       </button>
                     </h3>
-                    <p className="text-xs font-medium text-muted">{activity.host.bio}</p>
                     {activity.hostIntroduction ? (
                       <p className="mt-3 text-sm leading-7 whitespace-pre-line text-ink">
                         {activity.hostIntroduction}
@@ -562,6 +561,7 @@ export function ActivityDetailView({
           hostIntroduction={activity.hostIntroduction}
           currentActivityId={activity.id}
           showHostedActivities={!preview}
+          canContact={!preview}
           onClose={() => setHostProfileOpen(false)}
         />
       ) : null}

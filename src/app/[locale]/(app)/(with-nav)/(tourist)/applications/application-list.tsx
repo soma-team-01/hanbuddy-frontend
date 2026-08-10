@@ -22,6 +22,13 @@ import { PaymentHoldCountdown } from "./payment-hold-countdown";
 
 const TABS = ["upcoming", "past"] as const;
 
+/**
+ * 카드 실행 버튼 — 혼자 있든 둘이 있든 폭이 같아 보이도록 최소 폭을 고정한다.
+ * 좁은 화면에서는 제목이 설 자리가 없어지므로 최소 폭 대신 가로를 꽉 채운다.
+ */
+const CARD_ACTION_CLASS =
+  "h-9 w-full shrink-0 rounded-lg px-4 font-display text-xs font-bold whitespace-nowrap transition-colors disabled:opacity-40 sm:w-auto sm:min-w-32";
+
 const REASON_MESSAGE_KEY = {
   SCHEDULE_CONFLICT: "scheduleConflict",
   ILLNESS: "illness",
@@ -55,10 +62,14 @@ function PriceBreakdown({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-sm text-muted transition-colors hover:text-ink"
+        className="flex w-full items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-ink"
       >
-        {t("priceBreakdown")}
-        <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span>{t("priceBreakdown")}</span>
+        {/* 접혀 있어도 총액은 보이게 둔다 — 카드에서 금액을 따로 반복하지 않기 위해 */}
+        <span className="flex items-center gap-1.5">
+          <span className="font-display font-bold text-ink">{formatKrw(total, locale)}</span>
+          <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        </span>
       </button>
       {open && (
         <div className="mt-3 flex flex-col gap-2 text-sm text-ink">
@@ -69,18 +80,20 @@ function PriceBreakdown({
                 count: breakdown.guests,
               })}
             </span>
-            <span>{formatKrw(subtotal, locale)}</span>
+            <span className="tabular-nums">{formatKrw(subtotal, locale)}</span>
+          </div>
+          <div className="flex justify-end gap-2 font-display font-semibold">
+            <span>{t("total")}</span>
+            <span className="tabular-nums">{formatKrw(total, locale)}</span>
           </div>
           {hasCompletedPayment && paymentCharge ? (
-            <div className="font-display font-semibold text-primary-strong">
-              {t("paidAmount", {
-                amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
-              })}
+            <div className="flex justify-end gap-2 font-display font-semibold text-primary">
+              <span>{t("paidAmount")}</span>
+              <span className="tabular-nums">
+                {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
+              </span>
             </div>
           ) : null}
-          <div className="font-display font-semibold">
-            {t("total", { amount: formatKrw(total, locale) })}
-          </div>
         </div>
       )}
     </div>
@@ -106,7 +119,6 @@ function ApplicationCard({
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
   const [paymentInFlight, setPaymentInFlight] = useState(false);
-  const locale = useLocale();
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
   const getApiErrorMessage = useApiErrorMessage();
@@ -122,11 +134,6 @@ function ApplicationCard({
   const isPaymentBusy = isPaymentPending || paymentInFlight;
   // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 내린다 (조회 후 종료 시각이 지난 경우)
   const hasEnded = hasDateTimePassed(application.endAt);
-  const hasCompletedPayment = application.status === "confirmed" || isCompleted;
-  const totalKrw = application.breakdown
-    ? application.breakdown.unitPrice * application.breakdown.guests +
-      application.breakdown.serviceFee
-    : null;
 
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
@@ -153,8 +160,8 @@ function ApplicationCard({
           />
         </Link>
         {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
-        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5">
-          <div className="col-span-2 flex flex-wrap items-center gap-2">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
             <StatusBadge status={application.status} />
             {dDay !== null && dDay >= 0 ? (
               <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
@@ -163,7 +170,7 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <Link href={`/activities/${application.activityId}`} className="col-start-1 min-w-0">
+          <Link href={`/activities/${application.activityId}`} className="min-w-0 sm:col-start-1">
             <h3
               className={`line-clamp-2 font-display text-base leading-6 font-bold ${
                 isCancelled ? "text-muted" : "text-ink"
@@ -172,29 +179,48 @@ function ApplicationCard({
               {application.activityTitle}
             </h3>
           </Link>
-          {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 금액과 취소 사유를 담는다 */}
-          <div className="col-start-2 row-span-3 flex flex-col items-end text-right">
-            {totalKrw !== null ? (
-              <>
-                <p className="font-display text-xl leading-6 font-bold text-ink">
-                  {formatKrw(totalKrw, locale)}
-                </p>
-                {application.breakdown ? (
-                  <p className="mt-1 text-xs text-muted">
-                    {t("subtotal", {
-                      price: formatKrw(application.breakdown.unitPrice, locale),
-                      count: application.breakdown.guests,
-                    })}
-                  </p>
-                ) : null}
-                {hasCompletedPayment && paymentCharge ? (
-                  <p className="mt-0.5 text-xs text-primary">
-                    {t("paidAmount", {
-                      amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
-                    })}
-                  </p>
-                ) : null}
-              </>
+          {/* 넓은 화면에서는 제목 줄에서 시작해 호스트 줄까지 걸쳐 실행 버튼과 취소 사유를 담는다 */}
+          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-3 sm:items-end sm:text-right">
+            {application.status === "pending_payment" ? (
+              // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
+              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
+                <button
+                  type="button"
+                  disabled={isPaymentBusy}
+                  onClick={async () => {
+                    setPaymentError(null);
+                    setPaymentInFlight(true);
+                    try {
+                      // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
+                      await onContinuePayment(application.id);
+                    } catch (error) {
+                      if (!isTossUserCancel(error)) showPaymentError(error);
+                    } finally {
+                      setPaymentInFlight(false);
+                    }
+                  }}
+                  className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
+                >
+                  {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
+                </button>
+                <button
+                  type="button"
+                  disabled={isPaymentBusy}
+                  onClick={onCancelPending}
+                  className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary`}
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            ) : null}
+            {application.status === "confirmed" && !hasEnded ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary`}
+              >
+                {t("cancel")}
+              </button>
             ) : null}
             {isCancelled && application.cancellationReason ? (
               <p className="mt-auto text-xs text-muted">
@@ -207,23 +233,19 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <p className="col-start-1 text-sm text-muted">{application.dateLabel}</p>
+          <p className="text-sm text-muted sm:col-start-1">{application.dateLabel}</p>
           <button
             type="button"
             aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
             onClick={() => setHostProfileOpen(true)}
-            className="col-start-1 flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
+            className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary sm:col-start-1"
           >
             <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-            <span className="underline decoration-primary/40 decoration-2 underline-offset-4">
-              {application.hostName}
-            </span>
+            <span>{application.hostName}</span>
           </button>
         </div>
       </div>
-      {application.status === "confirmed" && (
-        <PriceBreakdown application={application} paymentCharge={paymentCharge} />
-      )}
+      <PriceBreakdown application={application} paymentCharge={paymentCharge} />
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
           {application.holdExpiresAt ? (
@@ -232,51 +254,15 @@ function ApplicationCard({
               onExpire={onHoldExpired}
             />
           ) : null}
-          <button
-            type="button"
-            disabled={isPaymentBusy}
-            onClick={async () => {
-              setPaymentError(null);
-              setPaymentInFlight(true);
-              try {
-                // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
-                await onContinuePayment(application.id);
-              } catch (error) {
-                if (!isTossUserCancel(error)) showPaymentError(error);
-              } finally {
-                setPaymentInFlight(false);
-              }
-            }}
-            className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
-          >
-            {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
-          </button>
-          <button
-            type="button"
-            disabled={isPaymentBusy}
-            onClick={onCancelPending}
-            className="h-11 w-full rounded-lg border border-line-strong font-display text-sm font-bold text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
-          >
-            {t("cancel")}
-          </button>
           {paymentError !== null && (
             <p
               role="alert"
-              className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+              className="rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
             >
               {getApiErrorMessage(paymentError, t("paymentFailed"))}
             </p>
           )}
         </div>
-      )}
-      {application.status === "confirmed" && !hasEnded && (
-        <button
-          type="button"
-          onClick={onCancel}
-          className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
-        >
-          {t("cancel")}
-        </button>
       )}
       {isCompleted && (
         <ApplicationReviewActions
@@ -312,6 +298,7 @@ export function ApplicationList({
   onCancelApplication: (
     applicationId: string,
     reason: ApplicationCancellationReason,
+    detail?: string,
   ) => Promise<CancelDialogOutcome>;
   onCancelPendingPayment: (applicationId: string) => Promise<CancelDialogOutcome>;
   onContinuePayment: (applicationId: string) => Promise<void>;
@@ -413,8 +400,8 @@ export function ApplicationList({
       {cancelTargetId && (
         <CancelDialog
           onClose={() => setCancelTargetId(null)}
-          onConfirm={async (reason) => {
-            const outcome = await onCancelApplication(cancelTargetId, reason);
+          onConfirm={async (reason, detail) => {
+            const outcome = await onCancelApplication(cancelTargetId, reason, detail);
             if (outcome.ok) setCancelTargetId(null);
             return outcome;
           }}

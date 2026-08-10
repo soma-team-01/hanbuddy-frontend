@@ -31,10 +31,12 @@ export function ApplicationsContent() {
     mutationFn: async ({
       applicationId,
       reason,
+      detail,
     }: {
       applicationId: string;
       reason: ApplicationCancellationReason;
-    }) => unwrapApiResult(await cancelMyApplication(applicationId, reason), "application"),
+      detail?: string;
+    }) => unwrapApiResult(await cancelMyApplication(applicationId, reason, detail), "application"),
     onSuccess: async (application) => {
       queryClient.setQueryData<ApplicationResponse[]>(applicationKeys.mine(), (current = []) =>
         current.map((item) =>
@@ -82,9 +84,10 @@ export function ApplicationsContent() {
   async function handleCancelApplication(
     applicationId: string,
     reason: ApplicationCancellationReason,
+    detail?: string,
   ): Promise<CancelDialogOutcome> {
     try {
-      await cancelApplicationMutation.mutateAsync({ applicationId, reason });
+      await cancelApplicationMutation.mutateAsync({ applicationId, reason, detail });
       return { ok: true };
     } catch (error) {
       return {

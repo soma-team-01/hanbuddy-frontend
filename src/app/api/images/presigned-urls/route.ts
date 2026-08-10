@@ -3,6 +3,7 @@ import { appendBackendSetCookies, createProxyErrorResponse, postBackend } from "
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import {
   isSupportedProfileImageType,
+  MAX_CHAT_IMAGE_COUNT,
   type PresignedImageUploadRequest,
   type PresignedImageUploadResult,
 } from "@/lib/images/presigned";
@@ -48,10 +49,15 @@ export async function POST(request: NextRequest) {
     Number.isInteger(uploadRequest.imageCount) &&
     uploadRequest.imageCount >= 1 &&
     uploadRequest.imageCount <= 8;
+  const isValidChatRequest =
+    uploadRequest.purpose === "CHAT" &&
+    Number.isInteger(uploadRequest.imageCount) &&
+    uploadRequest.imageCount >= 1 &&
+    uploadRequest.imageCount <= MAX_CHAT_IMAGE_COUNT;
 
   if (
     !isSupportedProfileImageType(contentType) ||
-    (!isValidProfileRequest && !isValidActivityRequest)
+    (!isValidProfileRequest && !isValidActivityRequest && !isValidChatRequest)
   ) {
     return NextResponse.json(createProxyErrorResponse("잘못된 이미지 업로드 요청입니다."), {
       status: 400,

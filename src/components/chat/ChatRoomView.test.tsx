@@ -373,7 +373,7 @@ describe("ChatRoomView", () => {
 
     // 아이콘 하나로 열고, 그 안에서 범위를 고른다
     expect(await screen.findByRole("button", { name: "Save this photo" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save all 2" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save all" })).toBeInTheDocument();
   });
 
   it("leaves the conversation after confirmation", async () => {

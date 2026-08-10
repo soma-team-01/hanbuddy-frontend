@@ -164,7 +164,7 @@ function PhotoDownloadChoiceDialog({
   onChoose: (scope: "one" | "all") => void;
   onClose: () => void;
 }>) {
-  const tCommon = useTranslations("Common");
+  const tAccessibility = useTranslations("Accessibility");
   const choiceRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -179,7 +179,17 @@ function PhotoDownloadChoiceDialog({
       onClose={onClose}
       className="motion-dialog m-auto w-[calc(100%-3rem)] max-w-xs rounded-2xl border-0 bg-canvas-soft p-5 text-ink shadow-2xl backdrop:bg-ink/60"
     >
-      <p className="font-display text-base font-bold text-ink">{title}</p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-display text-base font-bold text-ink">{title}</p>
+        <button
+          type="button"
+          aria-label={tAccessibility("closeDialog")}
+          onClick={onClose}
+          className="-mt-1.5 -mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
+        >
+          <XIcon className="size-4" />
+        </button>
+      </div>
       <div className="mt-4 flex flex-col gap-2">
         <button
           type="button"
@@ -191,16 +201,9 @@ function PhotoDownloadChoiceDialog({
         <button
           type="button"
           onClick={() => onChoose("all")}
-          className="h-11 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+          className="h-11 rounded-xl border border-primary font-display text-sm font-bold text-primary transition-colors hover:bg-primary-soft"
         >
           {allLabel}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="h-10 font-display text-sm font-semibold text-muted transition-colors hover:text-ink"
-        >
-          {tCommon("cancel")}
         </button>
       </div>
     </dialog>

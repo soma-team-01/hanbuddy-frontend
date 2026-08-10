@@ -356,7 +356,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             aria-label={t("attachPhoto")}
             disabled={sendMutation.isPending || attachments.length >= MAX_CHAT_IMAGE_COUNT}
             onClick={() => fileInputRef.current?.click()}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line-strong text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-primary disabled:opacity-40"
           >
             <ImagePlusIcon className="size-5" />
           </button>
@@ -410,7 +410,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           downloadLabel={t("download")}
           downloadTitle={t("downloadTitle")}
           downloadOneLabel={t("downloadOne")}
-          downloadAllLabel={t("downloadAll", { count: viewer.images.length })}
+          downloadAllLabel={t("downloadAll")}
           onClose={() => setViewer(null)}
         />
       ) : null}

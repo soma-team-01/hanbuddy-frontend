@@ -725,7 +725,7 @@
     "markAllRead": "Mark all as read",
     "markingAllRead": "Marking...",
     "listMenu": "Conversation options",
-    "downloadAll": "Save all {count}",
+    "downloadAll": "Save all",
     "openPhotoAt": "Open photo {index} of {total}",
     "downloadTitle": "Save photos",
     "downloadOne": "Save this photo",

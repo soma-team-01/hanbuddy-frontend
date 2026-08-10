@@ -656,7 +656,9 @@
       "rejectedByCardCompany": "카드사에서 결제를 거절했습니다. 다른 카드로 시도해 주세요.",
       "cardIssue": "사용할 수 없는 카드입니다. 카드 정보를 확인한 뒤 다시 시도해 주세요.",
       "exceededLimit": "카드 한도를 초과했습니다."
-    }
+    },
+    "totalLabel": "신청 총액",
+    "paidLabel": "결제 금액"
   },
   "Country": {
     "select": "국가 선택",

@@ -215,9 +215,7 @@ function ApplicationCard({
             className="col-start-1 flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
           >
             <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-            <span className="underline decoration-primary/40 decoration-2 underline-offset-4">
-              {application.hostName}
-            </span>
+            <span>{application.hostName}</span>
           </button>
         </div>
       </div>

@@ -656,7 +656,9 @@
       "rejectedByCardCompany": "Your card issuer declined the payment. Please try another card.",
       "cardIssue": "This card cannot be used. Check the card details and try again.",
       "exceededLimit": "The payment exceeds your card's limit."
-    }
+    },
+    "totalLabel": "Application total",
+    "paidLabel": "Paid"
   },
   "Country": {
     "select": "Select country",

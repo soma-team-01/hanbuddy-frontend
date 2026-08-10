@@ -77,8 +77,10 @@ describe("PaymentSuccessContent", () => {
       amount: 90000,
     });
     expect(mockedGetMyApplications).not.toHaveBeenCalled();
-    expect(screen.getByText("Total application amount: ₩90,000")).toBeInTheDocument();
-    expect(screen.getByText("Amount paid: ₩90,000")).toBeInTheDocument();
+    // 예약 요약과 같은 구성 — 라벨과 금액이 좌우로 나뉜다
+    expect(screen.getByText("Application total")).toBeInTheDocument();
+    expect(screen.getByText("Paid")).toBeInTheDocument();
+    expect(screen.getAllByText("₩90,000")).toHaveLength(2);
   });
 
   it("shows a confirming status while the approval call is in flight", () => {
@@ -125,8 +127,10 @@ describe("PaymentSuccessContent", () => {
     expect(screen.getByText("Your application is confirmed.")).toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Jul 19, 2026, 1:30 AM")).toBeInTheDocument();
-    expect(screen.getByText("Total application amount: ₩90,000")).toBeInTheDocument();
-    expect(screen.getByText("Amount paid: ₩90,000")).toBeInTheDocument();
+    // 예약 요약과 같은 구성 — 라벨과 금액이 좌우로 나뉜다
+    expect(screen.getByText("Application total")).toBeInTheDocument();
+    expect(screen.getByText("Paid")).toBeInTheDocument();
+    expect(screen.getAllByText("₩90,000")).toHaveLength(2);
     expect(mockedConfirmApplicationPayment).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "View My Applications" })).toHaveAttribute(
       "href",
@@ -191,11 +195,11 @@ describe("PaymentSuccessContent", () => {
 
     expect(await screen.findByRole("heading", { name: "결제 완료" })).toBeInTheDocument();
     expect(screen.getByText("신청이 확정되었습니다.")).toBeInTheDocument();
-    expect(screen.getByText("내 액티비티")).toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("2026. 7. 19. 오전 1:30")).toBeInTheDocument();
-    expect(screen.getByText("신청 총액: ₩90,000")).toBeInTheDocument();
-    expect(screen.getByText("결제 금액: ₩90,000")).toBeInTheDocument();
+    expect(screen.getByText("신청 총액")).toBeInTheDocument();
+    expect(screen.getByText("결제 금액")).toBeInTheDocument();
+    expect(screen.getAllByText("₩90,000")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "내 신청 보기" })).toHaveAttribute(
       "href",
       "/ko/applications",

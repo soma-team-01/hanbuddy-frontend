@@ -1,13 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { CheckCircleIcon } from "@/components/ui/icons";
+import { CheckCircleIcon, UserIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { confirmApplicationPayment } from "@/lib/api/applications";
+import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDateTime } from "@/lib/datetime";
 import { formatKrw } from "@/lib/format";
@@ -50,6 +52,7 @@ function RecoveryState({ message }: Readonly<{ message: string }>) {
 function ConfirmationResult({ application }: Readonly<{ application: ApplicationResponse }>) {
   const locale = useLocale();
   const t = useTranslations("Payment");
+  const tBooking = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
   const scheduleLabel =
     formatSeoulDateTime(application.startAt, locale) ?? tErrors("dateTimeUnavailable");
@@ -65,33 +68,71 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
         className="w-full max-w-2xl rounded-3xl border border-line-soft bg-canvas-soft p-6 shadow-[0_18px_45px_rgba(61,45,43,0.1)] md:p-10"
       >
         <section className="flex flex-col items-center text-center">
-          <span className="flex size-20 items-center justify-center rounded-full bg-success-soft text-success">
-            <CheckCircleIcon className="size-10" aria-hidden />
+          <span className="flex size-16 items-center justify-center rounded-full border border-success/40 text-success">
+            <CheckCircleIcon className="size-8" aria-hidden />
           </span>
-          <h1 className="mt-6 font-display text-3xl font-bold text-ink">{t("complete")}</h1>
+          <h1 className="mt-5 font-display text-2xl font-bold text-ink md:text-3xl">
+            {t("complete")}
+          </h1>
           <p className="mt-2 text-sm text-muted">{t("confirmed")}</p>
         </section>
 
-        <section className="mt-10 rounded-2xl bg-panel-raised p-5">
-          <p className="text-xs font-semibold tracking-wide text-muted uppercase">
-            {t("experience")}
-          </p>
-          <h2 className="mt-2 font-display text-xl font-bold text-ink">
-            {application.activityTitle}
-          </h2>
-          <p className="mt-1 text-sm text-muted">{scheduleLabel}</p>
-
-          <div className="mt-5 divide-y divide-line-soft border-y border-line-soft">
-            <div className="py-3 font-display text-base font-semibold text-ink">
-              <p>
-                {t("totalApplicationAmount", {
-                  amount: formatKrw(application.totalPrice, locale),
-                })}
+        {/* 예약 화면의 요약 패널과 같은 구성 — 배경을 채우지 않고 구분선으로만 나눈다 */}
+        <section className="mt-8 flex flex-col gap-4 rounded-2xl border border-line-soft p-5">
+          <div className="flex items-center gap-3">
+            <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-panel">
+              <Image
+                src={getActivityThumbnail(application.thumbnailImageUrl)}
+                alt={application.activityTitle}
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <h2 className="line-clamp-2 font-display text-base leading-6 font-bold text-ink">
+                {application.activityTitle}
+              </h2>
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+                <UserIcon className="size-3.5" />
+                {tBooking("hostedBy", { name: application.buddyName })}
               </p>
             </div>
-            <div className="py-3 font-display text-lg font-semibold text-primary">
-              <p>{t("paidAmount", { amount: formatKrw(paidAmount, locale) })}</p>
+          </div>
+
+          <dl className="flex flex-col gap-3 border-t border-line-soft pt-4 text-sm">
+            <div className="flex items-start justify-between gap-4">
+              <dt className="shrink-0 text-muted">{tBooking("dateTime")}</dt>
+              <dd className="text-right font-semibold text-ink">{scheduleLabel}</dd>
             </div>
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted">{tBooking("guestCount")}</dt>
+              <dd className="font-semibold text-ink">
+                {tBooking("guests", { count: application.guestCount })}
+              </dd>
+            </div>
+            {application.specialRequest ? (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="shrink-0 text-muted">{tBooking("specialRequest")}</dt>
+                <dd className="line-clamp-3 text-right text-xs leading-5 font-medium break-keep text-ink">
+                  {application.specialRequest}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+
+          <div className="flex items-center justify-between border-t border-line-soft pt-4 text-sm">
+            <span className="text-muted">{t("totalLabel")}</span>
+            <span className="font-semibold text-ink">
+              {formatKrw(application.totalPrice, locale)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-line-soft pt-4">
+            <span className="font-display text-base font-bold text-ink">{t("paidLabel")}</span>
+            <span className="font-display text-xl font-bold text-primary">
+              {formatKrw(paidAmount, locale)}
+            </span>
           </div>
         </section>
         <BottomActionBar>

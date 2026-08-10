@@ -55,10 +55,14 @@ function PriceBreakdown({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between text-sm text-muted transition-colors hover:text-ink"
+        className="flex w-full items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-ink"
       >
-        {t("priceBreakdown")}
-        <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span>{t("priceBreakdown")}</span>
+        {/* 접혀 있어도 총액은 보이게 둔다 — 카드에서 금액을 따로 반복하지 않기 위해 */}
+        <span className="flex items-center gap-1.5">
+          <span className="font-display font-bold text-ink">{formatKrw(total, locale)}</span>
+          <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        </span>
       </button>
       {open && (
         <div className="mt-3 flex flex-col gap-2 text-sm text-ink">
@@ -106,7 +110,6 @@ function ApplicationCard({
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
   const [paymentInFlight, setPaymentInFlight] = useState(false);
-  const locale = useLocale();
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
   const getApiErrorMessage = useApiErrorMessage();
@@ -122,11 +125,6 @@ function ApplicationCard({
   const isPaymentBusy = isPaymentPending || paymentInFlight;
   // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 내린다 (조회 후 종료 시각이 지난 경우)
   const hasEnded = hasDateTimePassed(application.endAt);
-  const hasCompletedPayment = application.status === "confirmed" || isCompleted;
-  const totalKrw = application.breakdown
-    ? application.breakdown.unitPrice * application.breakdown.guests +
-      application.breakdown.serviceFee
-    : null;
 
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
@@ -172,30 +170,8 @@ function ApplicationCard({
               {application.activityTitle}
             </h3>
           </Link>
-          {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 금액과 취소 사유를 담는다 */}
+          {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 취소 사유를 담는다 */}
           <div className="col-start-2 row-span-3 flex flex-col items-end text-right">
-            {totalKrw !== null ? (
-              <>
-                <p className="font-display text-xl leading-6 font-bold text-ink">
-                  {formatKrw(totalKrw, locale)}
-                </p>
-                {application.breakdown ? (
-                  <p className="mt-1 text-xs text-muted">
-                    {t("subtotal", {
-                      price: formatKrw(application.breakdown.unitPrice, locale),
-                      count: application.breakdown.guests,
-                    })}
-                  </p>
-                ) : null}
-                {hasCompletedPayment && paymentCharge ? (
-                  <p className="mt-0.5 text-xs text-primary">
-                    {t("paidAmount", {
-                      amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
-                    })}
-                  </p>
-                ) : null}
-              </>
-            ) : null}
             {isCancelled && application.cancellationReason ? (
               <p className="mt-auto text-xs text-muted">
                 {t("cancelledReason", {
@@ -219,9 +195,7 @@ function ApplicationCard({
           </button>
         </div>
       </div>
-      {application.status === "confirmed" && (
-        <PriceBreakdown application={application} paymentCharge={paymentCharge} />
-      )}
+      <PriceBreakdown application={application} paymentCharge={paymentCharge} />
       {application.status === "pending_payment" && (
         <div className="flex flex-col gap-2">
           {application.holdExpiresAt ? (

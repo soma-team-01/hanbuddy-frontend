@@ -147,11 +147,13 @@ describe("ApplicationList", () => {
   it("shows the paid amount instead of a service fee after payment", () => {
     renderList({ applications: [paidApplication] });
 
+    // 총액은 접힌 상태에서도 보이고, 카드에서 따로 반복하지 않는다
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    expect(screen.queryByText("Paid: ₩90,000")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+
     expect(screen.getByText("Paid: ₩90,000")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Price Breakdown" }));
-
-    expect(screen.getAllByText("Paid: ₩90,000")).toHaveLength(2);
     expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
   });
 
@@ -597,16 +599,16 @@ describe("ApplicationList", () => {
     );
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
-    expect(screen.getByText("₩90,000 결제 완료")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
 
-    // 카드 우측 상단에 1인당 가격 × 인원이 함께 보인다
+    // 총액은 가격 상세 줄에만 나오고 카드에서 반복하지 않는다
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+    expect(screen.queryByText("₩45,000 × 2명")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /가격 상세/ }));
+
     expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "가격 상세" }));
-
-    expect(screen.getAllByText("₩45,000 × 2명")).toHaveLength(2);
-    expect(screen.getAllByText("₩90,000 결제 완료")).toHaveLength(2);
+    expect(screen.getByText("₩90,000 결제 완료")).toBeInTheDocument();
     expect(screen.getByText("총액: ₩90,000")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: "지난 내역" }));

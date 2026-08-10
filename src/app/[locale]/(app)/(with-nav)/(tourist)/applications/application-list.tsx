@@ -22,9 +22,12 @@ import { PaymentHoldCountdown } from "./payment-hold-countdown";
 
 const TABS = ["upcoming", "past"] as const;
 
-/** 카드 우측 실행 버튼 — 혼자 있든 둘이 있든 폭이 같아 보이도록 최소 폭을 고정한다 */
+/**
+ * 카드 실행 버튼 — 혼자 있든 둘이 있든 폭이 같아 보이도록 최소 폭을 고정한다.
+ * 좁은 화면에서는 제목이 설 자리가 없어지므로 최소 폭 대신 가로를 꽉 채운다.
+ */
 const CARD_ACTION_CLASS =
-  "h-9 min-w-32 shrink-0 rounded-lg px-4 font-display text-xs font-bold whitespace-nowrap transition-colors disabled:opacity-40";
+  "h-9 w-full shrink-0 rounded-lg px-4 font-display text-xs font-bold whitespace-nowrap transition-colors disabled:opacity-40 sm:w-auto sm:min-w-32";
 
 const REASON_MESSAGE_KEY = {
   SCHEDULE_CONFLICT: "scheduleConflict",
@@ -157,8 +160,8 @@ function ApplicationCard({
           />
         </Link>
         {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
-        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5">
-          <div className="col-span-2 flex flex-wrap items-center gap-2">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
             <StatusBadge status={application.status} />
             {dDay !== null && dDay >= 0 ? (
               <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
@@ -167,7 +170,7 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <Link href={`/activities/${application.activityId}`} className="col-start-1 min-w-0">
+          <Link href={`/activities/${application.activityId}`} className="min-w-0 sm:col-start-1">
             <h3
               className={`line-clamp-2 font-display text-base leading-6 font-bold ${
                 isCancelled ? "text-muted" : "text-ink"
@@ -176,11 +179,11 @@ function ApplicationCard({
               {application.activityTitle}
             </h3>
           </Link>
-          {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 실행 버튼과 취소 사유를 담는다 */}
-          <div className="col-start-2 row-span-3 flex flex-col items-end gap-2 text-right">
+          {/* 넓은 화면에서는 제목 줄에서 시작해 호스트 줄까지 걸쳐 실행 버튼과 취소 사유를 담는다 */}
+          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-3 sm:items-end sm:text-right">
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
-              <div className="flex flex-col items-stretch gap-2">
+              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
                 <button
                   type="button"
                   disabled={isPaymentBusy}
@@ -230,12 +233,12 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <p className="col-start-1 text-sm text-muted">{application.dateLabel}</p>
+          <p className="text-sm text-muted sm:col-start-1">{application.dateLabel}</p>
           <button
             type="button"
             aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
             onClick={() => setHostProfileOpen(true)}
-            className="col-start-1 flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
+            className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary sm:col-start-1"
           >
             <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
             <span>{application.hostName}</span>

@@ -77,18 +77,20 @@ function PriceBreakdown({
                 count: breakdown.guests,
               })}
             </span>
-            <span>{formatKrw(subtotal, locale)}</span>
+            <span className="tabular-nums">{formatKrw(subtotal, locale)}</span>
+          </div>
+          <div className="flex justify-end gap-2 font-display font-semibold">
+            <span>{t("total")}</span>
+            <span className="tabular-nums">{formatKrw(total, locale)}</span>
           </div>
           {hasCompletedPayment && paymentCharge ? (
-            <div className="font-display font-semibold text-primary-strong">
-              {t("paidAmount", {
-                amount: formatCurrency(paymentCharge.amount, paymentCharge.currency, locale),
-              })}
+            <div className="flex justify-end gap-2 font-display font-semibold text-primary">
+              <span>{t("paidAmount")}</span>
+              <span className="tabular-nums">
+                {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
+              </span>
             </div>
           ) : null}
-          <div className="font-display font-semibold">
-            {t("total", { amount: formatKrw(total, locale) })}
-          </div>
         </div>
       )}
     </div>
@@ -293,6 +295,7 @@ export function ApplicationList({
   onCancelApplication: (
     applicationId: string,
     reason: ApplicationCancellationReason,
+    detail?: string,
   ) => Promise<CancelDialogOutcome>;
   onCancelPendingPayment: (applicationId: string) => Promise<CancelDialogOutcome>;
   onContinuePayment: (applicationId: string) => Promise<void>;
@@ -394,8 +397,8 @@ export function ApplicationList({
       {cancelTargetId && (
         <CancelDialog
           onClose={() => setCancelTargetId(null)}
-          onConfirm={async (reason) => {
-            const outcome = await onCancelApplication(cancelTargetId, reason);
+          onConfirm={async (reason, detail) => {
+            const outcome = await onCancelApplication(cancelTargetId, reason, detail);
             if (outcome.ok) setCancelTargetId(null);
             return outcome;
           }}

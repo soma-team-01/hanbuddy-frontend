@@ -217,7 +217,7 @@ describe("ApplicationsContent", () => {
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     await waitFor(() =>
-      expect(mockedCancelMyApplication).toHaveBeenCalledWith("11", "SCHEDULE_CONFLICT"),
+      expect(mockedCancelMyApplication).toHaveBeenCalledWith("11", "SCHEDULE_CONFLICT", undefined),
     );
     await waitFor(() => expect(screen.queryByText("Bukchon Hidden Gems")).not.toBeInTheDocument());
 

@@ -1,6 +1,7 @@
 import type {
   ApplicationCancellationReason,
   ApplicationResponse,
+  CancelApplicationRequest,
   ConfirmPaymentRequest,
   CreateApplicationRequest,
   PaymentReadyResponse,
@@ -84,14 +85,22 @@ export async function getMyApplications(): Promise<ApplicationsResult> {
 export async function cancelMyApplication(
   applicationId: number | string,
   cancellationReason: ApplicationCancellationReason,
+  /** OTHER 사유의 상세 설명. 다른 사유에 붙이면 백엔드가 거절하므로 그때는 넘기지 않는다 */
+  cancellationDetail?: string,
 ): Promise<ApplicationResult> {
+  const detail = cancellationDetail?.trim();
+  const body: CancelApplicationRequest =
+    cancellationReason === "OTHER" && detail
+      ? { cancellationReason, cancellationDetail: detail }
+      : { cancellationReason };
+
   return requestApiResult<ApplicationResponse, "application">(
     `/api/applications/me/${applicationId}/cancel`,
     "application",
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cancellationReason }),
+      body: JSON.stringify(body),
     },
     DEFAULT_APPLICATION_CANCEL_ERROR_MESSAGE,
   );

@@ -121,8 +121,9 @@ describe("locale messages", () => {
       expect(messages.Booking.guests).toContain("plural");
       expect(messages.Booking.subtotal).toContain("plural");
       expect(messages.Booking.totalKrw).toContain("{amount}");
-      expect(messages.Applications.paidAmount).toContain("{amount}");
-      expect(messages.Applications.total).toContain("{amount}");
+      // 신청 가격 상세는 라벨과 금액을 각 칸에 따로 두므로 문구에 금액을 끼우지 않는다
+      expect(messages.Applications.paidAmount).not.toContain("{");
+      expect(messages.Applications.total).not.toContain("{");
       expect(messages.Payment.totalApplicationAmount).toContain("{amount}");
       expect(messages.Payment.paidAmount).toContain("{amount}");
     }

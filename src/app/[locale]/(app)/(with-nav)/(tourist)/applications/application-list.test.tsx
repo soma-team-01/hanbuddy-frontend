@@ -149,11 +149,12 @@ describe("ApplicationList", () => {
 
     // 총액은 접힌 상태에서도 보이고, 카드에서 따로 반복하지 않는다
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
-    expect(screen.queryByText("Paid: ₩90,000")).not.toBeInTheDocument();
+    expect(screen.queryByText("Paid")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
 
-    expect(screen.getByText("Paid: ₩90,000")).toBeInTheDocument();
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("₩90,000");
+    expect(screen.getByText("Paid").parentElement).toHaveTextContent("₩90,000");
     expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
   });
 
@@ -608,8 +609,8 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("button", { name: /가격 상세/ }));
 
     expect(screen.getByText("₩45,000 × 2명")).toBeInTheDocument();
-    expect(screen.getByText("₩90,000 결제 완료")).toBeInTheDocument();
-    expect(screen.getByText("총액: ₩90,000")).toBeInTheDocument();
+    expect(screen.getByText("총액").parentElement).toHaveTextContent("₩90,000");
+    expect(screen.getByText("결제 금액").parentElement).toHaveTextContent("₩90,000");
 
     fireEvent.click(screen.getByRole("tab", { name: "지난 내역" }));
     expect(screen.getByText("아직 신청 내역이 없습니다.")).toBeInTheDocument();

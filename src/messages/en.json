@@ -738,7 +738,9 @@
     "openPhotoAt": "Open photo {index} of {total}",
     "downloadTitle": "Save photos",
     "downloadOne": "Save this photo",
-    "photoUnavailable": "Photo unavailable"
+    "photoUnavailable": "Photo unavailable",
+    "roomMenu": "Conversation menu",
+    "startDirectChat": "Start a direct chat"
   },
   "MyPage": {
     "title": "My Page",

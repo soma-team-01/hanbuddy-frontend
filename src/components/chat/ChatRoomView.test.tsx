@@ -381,12 +381,108 @@ describe("ChatRoomView", () => {
 
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "Leave conversation" }));
-    const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Leave conversation" }));
+    // 나가기는 이제 헤더의 메뉴 안에 있다
+    fireEvent.click(await screen.findByRole("button", { name: "Conversation menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Leave conversation" }));
+
+    const confirmDialog = await screen.findByRole("dialog", { name: "Leave this conversation?" });
+    fireEvent.click(within(confirmDialog).getByRole("button", { name: "Leave conversation" }));
 
     await waitFor(() => expect(mockedLeaveChatRoom).toHaveBeenCalledWith("1"));
     await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/en/chat"));
+  });
+
+  it("lists group members in the menu and opens a member profile", async () => {
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "GROUP",
+        title: "Bukchon Hidden Gems",
+        activityScheduleId: 101,
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+          {
+            userId: 6,
+            userName: "SeoulMate",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+          {
+            userId: 9,
+            userName: "Gone",
+            profileImageUrl: null,
+            lastReadMessageId: null,
+            left: true,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    // 참여자 수를 눌러도 같은 메뉴가 열린다
+    fireEvent.click(await screen.findByRole("button", { name: "2 members" }));
+
+    const menu = await screen.findByRole("dialog", { name: "Conversation menu" });
+    // 나간 참여자는 목록에 남기지 않는다
+    expect(within(menu).queryByText("Gone")).not.toBeInTheDocument();
+    expect(within(menu).getByText("You")).toBeInTheDocument();
+
+    fireEvent.click(within(menu).getByRole("button", { name: /SeoulMate/ }));
+
+    const profile = await screen.findByRole("dialog", { name: "SeoulMate" });
+    expect(
+      within(profile).getByRole("button", { name: "Start a direct chat" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not offer a direct chat with myself", async () => {
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "GROUP",
+        title: "Bukchon Hidden Gems",
+        activityScheduleId: 101,
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Conversation menu" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Nelli/ }));
+
+    const profile = await screen.findByRole("dialog", { name: "Nelli" });
+    expect(
+      within(profile).queryByRole("button", { name: "Start a direct chat" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the member list out of a one-to-one conversation", async () => {
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Conversation menu" }));
+
+    const menu = await screen.findByRole("dialog", { name: "Conversation menu" });
+    expect(within(menu).getByRole("button", { name: "Photos" })).toBeInTheDocument();
+    expect(within(menu).queryByText("You")).not.toBeInTheDocument();
   });
 
   it("surfaces the backend message when sending fails", async () => {

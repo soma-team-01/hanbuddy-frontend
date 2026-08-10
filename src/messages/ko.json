@@ -738,7 +738,9 @@
     "openPhotoAt": "{total}장 중 {index}번째 사진 보기",
     "downloadTitle": "사진 저장",
     "downloadOne": "이 사진만 저장",
-    "photoUnavailable": "사진을 불러올 수 없습니다"
+    "photoUnavailable": "사진을 불러올 수 없습니다",
+    "roomMenu": "대화 메뉴",
+    "startDirectChat": "1:1 채팅하기"
   },
   "MyPage": {
     "title": "마이페이지",

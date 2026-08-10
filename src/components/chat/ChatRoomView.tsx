@@ -4,20 +4,15 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { ChatMemberDialog } from "@/components/chat/ChatMemberDialog";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
+import { ChatRoomMenu } from "@/components/chat/ChatRoomMenu";
 import { ChatPhotoPanel } from "@/components/chat/ChatPhotoPanel";
 import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
-import {
-  ArrowLeftIcon,
-  ImagePlusIcon,
-  ImagesIcon,
-  LogOutIcon,
-  UsersIcon,
-  XIcon,
-} from "@/components/ui/icons";
+import { ArrowLeftIcon, ImagePlusIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -39,7 +34,7 @@ import {
 } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
-import type { ChatMessageResponse } from "@/types/chat";
+import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
 
 /** 보내기 전 미리보기용으로만 쓰는 첨부 항목 */
 interface ChatAttachment {
@@ -60,6 +55,8 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const [attachNotice, setAttachNotice] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [photoPanelOpen, setPhotoPanelOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<ChatRoomMemberResponse | null>(null);
   const [viewer, setViewer] = useState<{
     images: ChatMessageResponse[];
     index: number;
@@ -246,34 +243,38 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-display text-base font-bold text-ink">{room.title}</h1>
           {isGroup ? (
-            <p className="text-xs text-muted">
+            // 참여자 수를 눌러도 메뉴가 열린다 — 사람 목록을 찾아 헤매지 않도록
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              className="text-xs text-muted transition-colors hover:text-primary"
+            >
               {t("memberCount", { count: activeMembers.length })}
-            </p>
+            </button>
           ) : null}
         </div>
 
-        <button
-          type="button"
-          title={t("openPhotoPanel")}
-          aria-label={t("openPhotoPanel")}
-          onClick={() => setPhotoPanelOpen(true)}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
-        >
-          <ImagesIcon className="size-5" />
-        </button>
-
-        <button
-          type="button"
-          title={t("leave")}
-          aria-label={t("leave")}
-          onClick={() => {
+        <ChatRoomMenu
+          open={menuOpen}
+          onToggle={() => setMenuOpen((open) => !open)}
+          onClose={() => setMenuOpen(false)}
+          members={room.members}
+          myUserId={myUserId}
+          isGroup={isGroup}
+          onSelectMember={(member) => {
+            setMenuOpen(false);
+            setSelectedMember(member);
+          }}
+          onOpenPhotos={() => {
+            setMenuOpen(false);
+            setPhotoPanelOpen(true);
+          }}
+          onLeave={() => {
+            setMenuOpen(false);
             setError(null);
             setLeaveOpen(true);
           }}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
-        >
-          <LogOutIcon className="size-5" />
-        </button>
+        />
       </header>
 
       <ChatMessageList
@@ -394,6 +395,14 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           </button>
         </form>
       </div>
+
+      {selectedMember ? (
+        <ChatMemberDialog
+          member={selectedMember}
+          isMe={selectedMember.userId === myUserId}
+          onClose={() => setSelectedMember(null)}
+        />
+      ) : null}
 
       {photoPanelOpen ? (
         <ChatPhotoPanel chatRoomId={chatRoomId} onClose={() => setPhotoPanelOpen(false)} />

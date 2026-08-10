@@ -70,7 +70,11 @@ export function useChatMessages(chatRoomId: string, live: boolean) {
     messages,
     isPending: latestQuery.isPending,
     isError: latestQuery.isError,
-    hasOlder: Boolean(historyQuery.hasNextPage || latestQuery.data?.hasNext),
+    // 과거를 받기 시작했으면 그쪽이 기준이다. 최신 창의 hasNext는 마지막 묶음까지 받은 뒤에도
+    // 계속 참이라, 그대로 쓰면 더 볼 게 없는데도 불러오기가 끝나지 않는다
+    hasOlder: historyQuery.data
+      ? Boolean(historyQuery.hasNextPage)
+      : Boolean(latestQuery.data?.hasNext),
     isLoadingOlder: historyQuery.isFetchingNextPage,
     loadOlder: () => void historyQuery.fetchNextPage(),
   };

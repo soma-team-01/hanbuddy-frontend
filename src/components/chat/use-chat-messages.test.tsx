@@ -92,6 +92,36 @@ describe("useChatMessages", () => {
     expect(mockedGetChatMessages.mock.calls.length).toBe(callsBefore + 1);
   });
 
+  it("stops offering older messages once the last history page is in", async () => {
+    // 최신 창은 위로 더 있다고 말하지만(hasNext), 과거는 한 페이지로 끝난다
+    mockedGetChatMessages.mockImplementation(async (_roomId, beforeMessageId) => ({
+      status: "success",
+      messages:
+        beforeMessageId == null ? page(100, 5) : { ...page(95, 5), hasNext: false, nextCursor: 91 },
+    }));
+
+    renderProbe();
+    await waitFor(() => expect(ids()).toBe("96,97,98,99,100"));
+
+    await waitFor(() => expect(ids()).toBe("91,92,93,94,95,96,97,98,99,100"));
+
+    // 최신 창의 hasNext를 그대로 쓰면 여기서 계속 열려 있어 불러오기가 끝나지 않는다
+    await waitFor(() => expect(screen.getByRole("button", { name: "older" })).toBeDisabled());
+  });
+
+  it("keeps offering older messages when the first history page fails", async () => {
+    mockedGetChatMessages.mockImplementation(async (_roomId, beforeMessageId) => {
+      if (beforeMessageId == null) return { status: "success", messages: page(100, 5) };
+      throw new Error("history unavailable");
+    });
+
+    renderProbe();
+
+    // 과거를 못 받아도 최신 대화는 그대로 두고, 다시 시도할 여지를 남긴다
+    await waitFor(() => expect(ids()).toBe("96,97,98,99,100"));
+    expect(screen.getByRole("button", { name: "older" })).toBeEnabled();
+  });
+
   it("starts over when the latest window no longer overlaps what we have", async () => {
     mockedGetChatMessages.mockImplementation(async (_roomId, beforeMessageId) => ({
       status: "success",

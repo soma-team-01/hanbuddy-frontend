@@ -431,6 +431,25 @@ export function PhoneIcon(props: IconProps) {
   );
 }
 
+export function MoreHorizontalIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
+    </IconBase>
+  );
+}
+
+/** 둥근 말풍선 — 내비게이션의 채팅 진입점 */
+export function MessageCircleIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+    </IconBase>
+  );
+}
+
 /** 겹친 사진 — 대화에 오간 사진 모음(사진함)을 뜻한다 */
 export function ImagesIcon(props: IconProps) {
   return (

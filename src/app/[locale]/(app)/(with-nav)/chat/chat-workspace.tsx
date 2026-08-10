@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { ChatMarkAllReadButton } from "@/components/chat/ChatMarkAllReadButton";
+import { ChatListMenu } from "@/components/chat/ChatListMenu";
 import { ChatRoomList } from "@/components/chat/ChatRoomList";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { usePathname } from "@/i18n/navigation";
@@ -29,7 +29,7 @@ export function ChatWorkspace({ children }: Readonly<{ children: ReactNode }>) {
         >
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
             <h1 className="font-display text-base font-bold text-ink">{t("title")}</h1>
-            <ChatMarkAllReadButton />
+            <ChatListMenu />
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             <ChatRoomList />

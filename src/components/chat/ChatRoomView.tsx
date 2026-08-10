@@ -163,7 +163,11 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         queryClient.invalidateQueries({ queryKey: chatKeys.rooms() }),
       ]);
     },
-    onError: setError,
+    // 묶음 전송은 한 장씩 보내므로 도중에 끊겨도 앞선 장은 이미 서버에 있다
+    onError: async (sendError) => {
+      setError(sendError);
+      await queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) });
+    },
   });
 
   const leaveMutation = useMutation({

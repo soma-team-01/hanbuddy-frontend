@@ -59,7 +59,10 @@
     "chatInvalidImage": "This photo could not be attached. Please pick it again.",
     "chatTooManyMessages": "You are sending messages too quickly. Please slow down.",
     "activityScheduleHasApplications": "A date with existing bookings cannot be removed.",
-    "dataConflict": "This request was already processed. Please refresh and try again."
+    "dataConflict": "This request was already processed. Please refresh and try again.",
+    "paymentAlreadyCreated": "This booking already has a payment. Please check My Applications.",
+    "paymentOrderConflict": "The payment could not be started. Please try again.",
+    "paymentKeyConflict": "This payment was already processed. Please check My Applications before trying again."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",

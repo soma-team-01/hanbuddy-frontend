@@ -51,7 +51,7 @@ describe("ChatImageGrid", () => {
 
   it.each([
     [2, [2]],
-    [3, [3]],
+    [3, [1, 2]],
     [4, [2, 2]],
     [5, [3, 2]],
     [6, [3, 3]],
@@ -70,6 +70,15 @@ describe("ChatImageGrid", () => {
     expect(rows).toHaveLength(2);
     for (const row of rows) {
       expect(row).toHaveStyle({ aspectRatio: "3" });
+    }
+  });
+
+  it("sizes rows by the fullest row so a lone top photo stays a banner", () => {
+    rowSizesOf(3);
+
+    // 3장은 1 + 2 — 아래 줄이 3칸이 아니라 2칸이므로 높이 기준도 2:1이다
+    for (const row of screen.getAllByTestId("chat-photo-row")) {
+      expect(row).toHaveStyle({ aspectRatio: "2" });
     }
   });
 

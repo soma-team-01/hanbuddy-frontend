@@ -170,8 +170,48 @@ function ApplicationCard({
               {application.activityTitle}
             </h3>
           </Link>
-          {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 취소 사유를 담는다 */}
-          <div className="col-start-2 row-span-3 flex flex-col items-end text-right">
+          {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 실행 버튼과 취소 사유를 담는다 */}
+          <div className="col-start-2 row-span-3 flex flex-col items-end gap-2 text-right">
+            {application.status === "pending_payment" ? (
+              <>
+                <button
+                  type="button"
+                  disabled={isPaymentBusy}
+                  onClick={async () => {
+                    setPaymentError(null);
+                    setPaymentInFlight(true);
+                    try {
+                      // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
+                      await onContinuePayment(application.id);
+                    } catch (error) {
+                      if (!isTossUserCancel(error)) showPaymentError(error);
+                    } finally {
+                      setPaymentInFlight(false);
+                    }
+                  }}
+                  className="h-9 shrink-0 rounded-full bg-primary px-4 font-display text-xs font-bold whitespace-nowrap text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+                >
+                  {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
+                </button>
+                <button
+                  type="button"
+                  disabled={isPaymentBusy}
+                  onClick={onCancelPending}
+                  className="h-9 shrink-0 rounded-full border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+                >
+                  {t("cancel")}
+                </button>
+              </>
+            ) : null}
+            {application.status === "confirmed" && !hasEnded ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="h-9 shrink-0 rounded-full border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors hover:border-primary hover:text-primary"
+              >
+                {t("cancel")}
+              </button>
+            ) : null}
             {isCancelled && application.cancellationReason ? (
               <p className="mt-auto text-xs text-muted">
                 {t("cancelledReason", {
@@ -204,51 +244,15 @@ function ApplicationCard({
               onExpire={onHoldExpired}
             />
           ) : null}
-          <button
-            type="button"
-            disabled={isPaymentBusy}
-            onClick={async () => {
-              setPaymentError(null);
-              setPaymentInFlight(true);
-              try {
-                // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
-                await onContinuePayment(application.id);
-              } catch (error) {
-                if (!isTossUserCancel(error)) showPaymentError(error);
-              } finally {
-                setPaymentInFlight(false);
-              }
-            }}
-            className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
-          >
-            {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
-          </button>
-          <button
-            type="button"
-            disabled={isPaymentBusy}
-            onClick={onCancelPending}
-            className="h-11 w-full rounded-lg border border-line-strong font-display text-sm font-bold text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
-          >
-            {t("cancel")}
-          </button>
           {paymentError !== null && (
             <p
               role="alert"
-              className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+              className="rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
             >
               {getApiErrorMessage(paymentError, t("paymentFailed"))}
             </p>
           )}
         </div>
-      )}
-      {application.status === "confirmed" && !hasEnded && (
-        <button
-          type="button"
-          onClick={onCancel}
-          className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
-        >
-          {t("cancel")}
-        </button>
       )}
       {isCompleted && (
         <ApplicationReviewActions

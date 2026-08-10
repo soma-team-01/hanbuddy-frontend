@@ -62,7 +62,8 @@
     "dataConflict": "이미 처리된 요청입니다. 새로고침 후 다시 시도해 주세요.",
     "paymentAlreadyCreated": "이미 결제가 생성된 신청입니다. 내 신청에서 확인해 주세요.",
     "paymentOrderConflict": "결제를 시작하지 못했습니다. 다시 시도해 주세요.",
-    "paymentKeyConflict": "이미 처리된 결제입니다. 내 신청에서 상태를 확인한 뒤 진행해 주세요."
+    "paymentKeyConflict": "이미 처리된 결제입니다. 내 신청에서 상태를 확인한 뒤 진행해 주세요.",
+    "applicationPaymentPending": "결제를 진행 중인 신청이 있습니다. 내 신청에서 결제를 마치거나 취소한 뒤 다시 신청해 주세요."
   },
   "Navigation": {
     "primaryNavigation": "주요 내비게이션",
@@ -594,7 +595,8 @@
         "label": "활동 24시간 전 이후",
         "value": "환불 불가"
       }
-    }
+    },
+    "goToApplications": "내 신청으로 가기"
   },
   "Applications": {
     "title": "내 신청",

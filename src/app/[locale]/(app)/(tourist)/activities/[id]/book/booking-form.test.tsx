@@ -319,4 +319,29 @@ describe("BookingForm", () => {
     expect(isTossUserCancel({ code: "INVALID_CARD" })).toBe(false);
     expect(isTossUserCancel(new Error("boom"))).toBe(false);
   });
+
+  it("points to My Applications when an unfinished booking blocks a new one", async () => {
+    const { ApiClientError } = await import("@/lib/api/errors");
+    mockedCreateApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "APPLICATION409_PAYMENT_PENDING",
+        status: 409,
+        details: null,
+        backendMessage: "결제를 진행 중인 신청이 있습니다.",
+      }),
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    await agreeAndSubmit();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "You already have a booking waiting for payment.",
+    );
+    expect(screen.getByRole("link", { name: "Go to My Applications" })).toHaveAttribute(
+      "href",
+      "/en/applications",
+    );
+  });
 });

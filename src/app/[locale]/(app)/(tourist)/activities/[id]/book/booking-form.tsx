@@ -7,6 +7,8 @@ import { useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { Link } from "@/i18n/navigation";
+import { ApiClientError } from "@/lib/api/errors";
 import {
   ArrowRightIcon,
   CalendarDaysIcon,
@@ -122,6 +124,10 @@ export function BookingForm({
   } else if (errorKey) {
     errorMessage = t(errorKey);
   }
+  // 결제 중인 신청 때문에 막힌 경우에는 어디서 해결하는지까지 알려준다
+  const blockedByPendingPayment =
+    requestFailure?.error instanceof ApiClientError &&
+    requestFailure.error.code === "APPLICATION409_PAYMENT_PENDING";
 
   const selectedSession = activity.sessions.find((session) => session.id === sessionId) ?? null;
   const sessionTimeRange = selectedSession
@@ -338,12 +344,20 @@ export function BookingForm({
             </div>
 
             {errorMessage ? (
-              <p
+              <div
                 role="alert"
-                className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+                className="mt-3 rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger"
               >
-                {errorMessage}
-              </p>
+                <p>{errorMessage}</p>
+                {blockedByPendingPayment ? (
+                  <Link
+                    href="/applications"
+                    className="mt-2 inline-flex font-display text-sm font-bold text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary"
+                  >
+                    {t("goToApplications")}
+                  </Link>
+                ) : null}
+              </div>
             ) : null}
           </BookingPanel>
         </main>

@@ -17,7 +17,7 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(57);
+    expect(BACKEND_ERROR_CODES).toHaveLength(58);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
   });
 
@@ -35,6 +35,12 @@ describe("API error message registry", () => {
     expect(resolveApiErrorMessageKey(apiError("CHAT403_MEMBER", 403))).toBe("chatForbidden");
     expect(resolveApiErrorMessageKey(apiError("CHAT400_TARGET", 400))).toBe("chatInvalidTarget");
     expect(resolveApiErrorMessageKey(apiError("CHAT400_OWNER_LEAVE", 400))).toBe("chatOwnerLeave");
+  });
+
+  it("explains that an unfinished booking blocks a new one", () => {
+    expect(resolveApiErrorMessageKey(apiError("APPLICATION409_PAYMENT_PENDING", 409))).toBe(
+      "applicationPaymentPending",
+    );
   });
 
   it("tells the three payment conflicts apart so retries are safe", () => {

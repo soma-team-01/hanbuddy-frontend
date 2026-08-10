@@ -62,7 +62,8 @@
     "dataConflict": "This request was already processed. Please refresh and try again.",
     "paymentAlreadyCreated": "This booking already has a payment. Please check My Applications.",
     "paymentOrderConflict": "The payment could not be started. Please try again.",
-    "paymentKeyConflict": "This payment was already processed. Please check My Applications before trying again."
+    "paymentKeyConflict": "This payment was already processed. Please check My Applications before trying again.",
+    "applicationPaymentPending": "You already have a booking waiting for payment. Finish or cancel it in My Applications, then book again."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
@@ -594,7 +595,8 @@
         "label": "Less than 24 hours before",
         "value": "No refund"
       }
-    }
+    },
+    "goToApplications": "Go to My Applications"
   },
   "Applications": {
     "title": "My Applications",

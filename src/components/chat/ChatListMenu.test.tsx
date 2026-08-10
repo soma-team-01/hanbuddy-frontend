@@ -73,6 +73,30 @@ describe("ChatListMenu", () => {
     await waitFor(() => expect(screen.queryByRole("menuitem")).not.toBeInTheDocument());
   });
 
+  it("waits for every request even when one of them fails", async () => {
+    mockedGetMyChatRooms.mockResolvedValue({
+      status: "success",
+      rooms: [room(1, 3, 21), room(3, 1, 55)],
+    });
+    mockedUpdateChatRead.mockImplementation(async (chatRoomId) => {
+      if (chatRoomId === 1) throw new Error("read failed");
+      return { status: "success", chat: null };
+    });
+
+    renderWithQueryClient(<ChatListMenu />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Conversation options" }));
+    const action = await screen.findByRole("menuitem", { name: "Mark all as read" });
+    await waitFor(() => expect(action).toBeEnabled());
+    fireEvent.click(action);
+
+    // 먼저 실패했다고 나머지를 끊지 않는다 — 성공한 방은 읽음으로 남아야 한다
+    await waitFor(() => expect(mockedUpdateChatRead).toHaveBeenCalledTimes(2));
+    expect(mockedUpdateChatRead).toHaveBeenCalledWith(3, { lastReadMessageId: 55 });
+    // 전부 성공하지 않았으므로 메뉴는 열어 둔다
+    expect(await screen.findByRole("menuitem", { name: "Mark all as read" })).toBeInTheDocument();
+  });
+
   it("disables the action when everything is already read", async () => {
     mockedGetMyChatRooms.mockResolvedValue({ status: "success", rooms: [room(1, 0, 21)] });
 

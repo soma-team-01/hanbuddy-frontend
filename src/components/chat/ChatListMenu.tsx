@@ -46,7 +46,8 @@ export function ChatListMenu() {
 
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
-      await Promise.all(
+      // 하나가 실패해도 나머지가 끝날 때까지 기다린다 — 먼저 끊고 나가면 성공한 방의 배지가 남는다
+      const results = await Promise.allSettled(
         unreadRooms.map(async (room) =>
           unwrapApiResult(
             await updateChatRead(room.chatRoomId, {
@@ -56,9 +57,13 @@ export function ChatListMenu() {
           ),
         ),
       );
+
+      const failed = results.find((result) => result.status === "rejected");
+      if (failed) throw failed.reason;
     },
-    onSuccess: async () => {
-      setIsOpen(false);
+    onSuccess: () => setIsOpen(false),
+    // 일부만 성공했어도 그만큼은 반영해야 한다
+    onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: chatKeys.all() });
     },
   });

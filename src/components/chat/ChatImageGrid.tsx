@@ -28,9 +28,9 @@ export function ChatImageGrid({
     collected.push({ startIndex, images: images.slice(startIndex, startIndex + size) });
     return collected;
   }, []);
-  // 가장 많이 든 줄이 줄 높이를 정한다 (3칸이면 가로:세로 = 3:1).
-  // 그 줄은 정사각이 되고, 칸이 적은 줄은 같은 높이에 더 넓게 눕는다.
-  const rowAspectRatio = Math.max(...rows.map((row) => row.images.length), 1);
+  // 여러 줄이면 줄 높이를 폭의 1/3로 고정한다.
+  // 그래야 3장·4장·6장 묶음의 덩어리 높이가 같아지고, 장수가 적은데 더 커 보이지 않는다.
+  const rowAspectRatio = rows.length > 1 ? 3 : (rows[0]?.images.length ?? 1);
 
   if (images.length === 1) {
     const single = images[0];

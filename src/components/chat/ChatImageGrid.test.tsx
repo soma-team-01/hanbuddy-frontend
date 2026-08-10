@@ -62,32 +62,30 @@ describe("ChatImageGrid", () => {
     expect(rowSizesOf(count)).toEqual(expected);
   });
 
-  it("gives every row the same height as the first", () => {
+  it("gives every row the same height", () => {
     rowSizesOf(5);
     const rows = screen.getAllByTestId("chat-photo-row");
 
-    // 첫 줄이 3칸이면 모든 줄이 가로:세로 3:1 — 아래 줄 칸이 더 넓어질 뿐 높이는 같다
+    // 아래 줄은 칸이 적어 더 넓어질 뿐, 높이는 위와 같다
     expect(rows).toHaveLength(2);
     for (const row of rows) {
       expect(row).toHaveStyle({ aspectRatio: "3" });
     }
   });
 
-  it("sizes rows by the fullest row so a lone top photo stays a banner", () => {
-    rowSizesOf(3);
+  it.each([3, 4, 5, 6])("keeps the block height the same for %i photos", (count) => {
+    // 줄이 둘 이상이면 줄 높이는 폭의 1/3로 고정된다 — 장수가 적은데 더 커 보이지 않게
+    rowSizesOf(count);
 
-    // 3장은 1 + 2 — 아래 줄이 3칸이 아니라 2칸이므로 높이 기준도 2:1이다
     for (const row of screen.getAllByTestId("chat-photo-row")) {
-      expect(row).toHaveStyle({ aspectRatio: "2" });
+      expect(row).toHaveStyle({ aspectRatio: "3" });
     }
   });
 
-  it("keeps rows square when the first row holds two photos", () => {
-    rowSizesOf(4);
+  it("keeps a single row of two photos square", () => {
+    rowSizesOf(2);
 
-    for (const row of screen.getAllByTestId("chat-photo-row")) {
-      expect(row).toHaveStyle({ aspectRatio: "2" });
-    }
+    expect(screen.getByTestId("chat-photo-row")).toHaveStyle({ aspectRatio: "2" });
   });
 
   it("numbers photos across rows so the viewer opens the right one", () => {

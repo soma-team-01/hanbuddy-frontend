@@ -1,16 +1,18 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { MessageCircleIcon, XIcon } from "@/components/ui/icons";
+import { MapPinIcon, MessageCircleIcon, XIcon } from "@/components/ui/icons";
+import { formatNationalityCode } from "@/lib/api/buddy-view";
 import { removeChatRoomMember } from "@/lib/api/chat";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { chatKeys } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
+import type { Locale } from "@/i18n/routing";
 import type { ChatRoomMemberResponse } from "@/types/chat";
 
 /** 참여자 한 명의 프로필. 본인이 아니면 여기서 바로 1:1 대화를 연다 */
@@ -30,6 +32,7 @@ export function ChatMemberDialog({
 }>) {
   const t = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
+  const locale = useLocale() as Locale;
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -75,6 +78,12 @@ export function ChatMemberDialog({
           <p id="chat-member-name" className="font-display text-lg font-bold text-ink">
             {member.userName}
           </p>
+          {member.nationalityCode ? (
+            <p className="mt-1 flex items-center justify-center gap-1 text-sm text-muted">
+              <MapPinIcon className="size-3.5 shrink-0" />
+              {formatNationalityCode(member.nationalityCode, locale)}
+            </p>
+          ) : null}
           {member.left ? <p className="mt-0.5 text-xs text-muted">{t("leftMember")}</p> : null}
         </div>
       </div>

@@ -24,6 +24,8 @@ export interface ChatRoomMemberResponse {
   userId: number;
   userName: string;
   profileImageUrl: string | null;
+  /** ISO 3166-1 alpha-2 국가 코드. 백엔드 반영 전이거나 값이 없으면 표시하지 않는다 */
+  nationalityCode?: string | null;
   /** 이 참여자가 읽은 마지막 메시지 ID. 아직 읽지 않았으면 null */
   lastReadMessageId: number | null;
   /** 합류 시점의 마지막 메시지 ID. 이보다 앞선 메시지는 이 참여자에게 보이지 않는다 */

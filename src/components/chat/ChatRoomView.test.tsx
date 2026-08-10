@@ -497,6 +497,44 @@ describe("ChatRoomView", () => {
     expect(await screen.findByText("Fri, Aug 14 5:30 PM")).toBeInTheDocument();
   });
 
+  it("shows a member's nationality on their profile", async () => {
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "GROUP",
+        title: "Bukchon Hidden Gems",
+        activityScheduleId: 101,
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+          {
+            userId: 6,
+            userName: "SeoulMate",
+            profileImageUrl: null,
+            nationalityCode: "KR",
+            lastReadMessageId: 21,
+            left: false,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "2 members" }));
+    const menu = await screen.findByRole("dialog", { name: "Conversation menu" });
+    fireEvent.click(within(menu).getByRole("button", { name: /SeoulMate/ }));
+
+    const profile = await screen.findByRole("dialog", { name: "SeoulMate" });
+    expect(within(profile).getByText("South Korea")).toBeInTheDocument();
+  });
+
   it("does not offer a direct chat with myself", async () => {
     mockedGetChatRoom.mockResolvedValue({
       status: "success",

@@ -31,6 +31,7 @@ import {
   chatRoomQueryOptions,
   latestChatMessagesQueryOptions,
   mergeChatMessages,
+  myChatRoomsQueryOptions,
 } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
@@ -74,6 +75,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   const profileQuery = useQuery(myProfileQueryOptions());
   const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, live));
+  const roomsQuery = useQuery(myChatRoomsQueryOptions());
   const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, live));
 
   const latestMessages = latestQuery.data?.messages ?? [];
@@ -219,7 +221,12 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const room = roomQuery.data;
   const isGroup = room.roomType === "GROUP";
   const activeMembers = room.members.filter((member) => !member.left);
+  // 방 상세에는 대표 이미지가 없어 이미 받아둔 목록에서 가져온다 (단체는 활동 사진, 1:1은 상대 프로필)
   const counterpart = room.members.find((member) => member.userId !== myUserId);
+  const roomImageUrl =
+    roomsQuery.data?.find((item) => item.chatRoomId === room.chatRoomId)?.imageUrl ??
+    counterpart?.profileImageUrl ??
+    null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -232,12 +239,14 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           <ArrowLeftIcon className="size-5" />
         </Link>
 
-        {isGroup ? (
+        {roomImageUrl ? (
+          <Avatar name={room.title} src={roomImageUrl} size={44} />
+        ) : isGroup ? (
           <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 text-primary">
             <UsersIcon className="size-5" />
           </span>
         ) : (
-          <Avatar name={room.title} src={counterpart?.profileImageUrl ?? null} size={44} />
+          <Avatar name={room.title} src={null} size={44} />
         )}
 
         <div className="min-w-0 flex-1">

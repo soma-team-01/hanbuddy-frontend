@@ -102,7 +102,20 @@ describe("ChatRoomView", () => {
       status: "success",
       profile: { userId: 11, displayName: "Nelli" } as never,
     });
-    mockedGetMyChatRooms.mockResolvedValue({ status: "success", rooms: [] });
+    mockedGetMyChatRooms.mockResolvedValue({
+      status: "success",
+      rooms: [
+        {
+          chatRoomId: 1,
+          roomType: "DIRECT",
+          title: "SeoulMate",
+          imageUrl: "https://cdn/activities/hero.webp",
+          activityScheduleId: null,
+          lastMessage: null,
+          unreadCount: 0,
+        },
+      ],
+    });
     mockedUpdateChatRead.mockResolvedValue({ status: "success", chat: null });
     mockDirectRoom();
     mockedGetChatMessages.mockResolvedValue({
@@ -390,6 +403,14 @@ describe("ChatRoomView", () => {
 
     await waitFor(() => expect(mockedLeaveChatRoom).toHaveBeenCalledWith("1"));
     await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/en/chat"));
+  });
+
+  it("shows the room image from the conversation list in the header", async () => {
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    // 방 상세 응답에는 대표 이미지가 없어 목록에서 가져온다
+    const image = await screen.findByRole("img", { name: "SeoulMate" });
+    expect(image).toHaveAttribute("src", expect.stringContaining("hero.webp"));
   });
 
   it("lists group members in the menu and opens a member profile", async () => {

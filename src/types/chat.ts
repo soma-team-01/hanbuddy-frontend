@@ -41,6 +41,8 @@ export interface ChatRoomSummaryResponse {
   imageUrl: string | null;
   /** 단체 채팅방이 속한 활동 회차 ID. 1:1이면 null */
   activityScheduleId: number | null;
+  /** 그 회차의 시작 일시. 1:1이면 null */
+  activityStartAt?: string | null;
   /** 아직 대화가 없으면 null */
   lastMessage: ChatMessageResponse | null;
   unreadCount: number;
@@ -55,6 +57,8 @@ export interface ChatRoomDetailResponse {
   /** 단체 채팅방을 만든 버디의 사용자 ID. 1:1이면 null */
   ownerId?: number | null;
   activityScheduleId: number | null;
+  /** 그 회차의 시작 일시. 1:1이면 null */
+  activityStartAt?: string | null;
   members: ChatRoomMemberResponse[];
 }
 

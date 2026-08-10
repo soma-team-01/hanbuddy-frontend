@@ -471,6 +471,32 @@ describe("ChatRoomView", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows which schedule a group conversation belongs to", async () => {
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "GROUP",
+        title: "Bukchon Hidden Gems",
+        activityScheduleId: 101,
+        activityStartAt: "2026-08-14T17:30:00+09:00",
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    expect(await screen.findByText("Fri, Aug 14 5:30 PM")).toBeInTheDocument();
+  });
+
   it("does not offer a direct chat with myself", async () => {
     mockedGetChatRoom.mockResolvedValue({
       status: "success",

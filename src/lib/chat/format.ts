@@ -2,6 +2,7 @@ import type { Locale } from "@/i18n/routing";
 import type { ChatMessageResponse } from "@/types/chat";
 import {
   formatSeoulDate,
+  formatSeoulDateWithWeekday,
   formatSeoulTime,
   getSeoulDateTimeParts,
   getSeoulNowParts,
@@ -182,4 +183,21 @@ export function chatPhotoRows(count: number): number[] {
   }
 
   return rows;
+}
+
+/**
+ * 단체 채팅방이 어느 회차인지 알려 주는 짧은 표기.
+ * 같은 활동을 여러 회차로 열면 방 이름이 모두 같아지므로 제목 옆에 함께 보여준다.
+ */
+export function formatChatScheduleLabel(
+  activityStartAt: string | null | undefined,
+  locale: Locale,
+): string | null {
+  if (!activityStartAt) return null;
+
+  const date = formatSeoulDateWithWeekday(activityStartAt, locale);
+  const time = formatSeoulTime(activityStartAt, locale);
+  if (!date || !time) return null;
+
+  return `${date} ${time}`;
 }

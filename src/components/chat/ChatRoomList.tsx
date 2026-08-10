@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { UsersIcon } from "@/components/ui/icons";
 import { Link, usePathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { formatChatTimestamp } from "@/lib/chat/format";
+import { formatChatScheduleLabel, formatChatTimestamp } from "@/lib/chat/format";
 import { myChatRoomsQueryOptions } from "@/lib/query/chat";
 
 /** 내 채팅방 목록. 대화 화면 옆에도 그대로 붙는다 */
@@ -43,6 +43,8 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
       {rooms.map((room) => {
         const href = `/chat/${room.chatRoomId}`;
         const active = activeRoomId === String(room.chatRoomId) || pathname === href;
+        // 같은 활동의 회차별 방은 이름이 같다 — 시작 시각으로 구분한다
+        const scheduleLabel = formatChatScheduleLabel(room.activityStartAt, locale);
 
         return (
           <li key={room.chatRoomId}>
@@ -80,6 +82,11 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
                     </span>
                   ) : null}
                 </span>
+                {scheduleLabel ? (
+                  <span className="mt-0.5 block truncate text-[11px] font-semibold text-primary">
+                    {scheduleLabel}
+                  </span>
+                ) : null}
                 <span className="mt-0.5 flex items-center justify-between gap-2">
                   <span className="truncate text-sm text-muted">
                     {room.lastMessage ? room.lastMessage.content : t("noMessagesYet")}

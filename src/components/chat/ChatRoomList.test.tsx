@@ -39,6 +39,7 @@ const groupRoom: ChatRoomSummaryResponse = {
   title: "Bukchon Hidden Gems",
   imageUrl: null,
   activityScheduleId: 101,
+  activityStartAt: "2026-08-14T17:30:00+09:00",
   lastMessage: null,
   unreadCount: 0,
 };
@@ -74,6 +75,16 @@ describe("ChatRoomList", () => {
     renderWithQueryClient(<ChatRoomList />);
 
     expect(await screen.findByText("No conversations yet")).toBeInTheDocument();
+  });
+
+  it("tells apart group rooms of the same activity by their schedule time", async () => {
+    mockedGetMyChatRooms.mockResolvedValue({ status: "success", rooms: [directRoom, groupRoom] });
+
+    renderWithQueryClient(<ChatRoomList />);
+
+    expect(await screen.findByText("Fri, Aug 14 5:30 PM")).toBeInTheDocument();
+    // 1:1 방에는 회차가 없어 표기도 붙지 않는다
+    expect(screen.getAllByText(/5:30 PM/)).toHaveLength(1);
   });
 
   it("says a group conversation has no messages yet", async () => {

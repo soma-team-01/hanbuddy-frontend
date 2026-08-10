@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   chatPhotoRows,
   formatChatDateSeparator,
+  formatChatScheduleLabel,
   formatChatTimestamp,
   groupChatMessages,
   isSameSeoulDate,
@@ -219,5 +220,19 @@ describe("chatPhotoRows", () => {
 
   it("returns nothing when there is no photo", () => {
     expect(chatPhotoRows(0)).toEqual([]);
+  });
+});
+
+describe("formatChatScheduleLabel", () => {
+  it("names the day and start time of the group room's schedule", () => {
+    expect(formatChatScheduleLabel("2026-08-14T17:30:00+09:00", "en")).toBe("Fri, Aug 14 5:30 PM");
+    expect(formatChatScheduleLabel("2026-08-14T17:30:00+09:00", "ko")).toBe(
+      "8. 14. (금) 오후 5:30",
+    );
+  });
+
+  it("stays out of the way for one-to-one rooms", () => {
+    expect(formatChatScheduleLabel(null, "en")).toBeNull();
+    expect(formatChatScheduleLabel(undefined, "en")).toBeNull();
   });
 });

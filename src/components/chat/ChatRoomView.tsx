@@ -23,6 +23,7 @@ import {
   updateChatRead,
 } from "@/lib/api/chat";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { formatChatScheduleLabel } from "@/lib/chat/format";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
 import { readImageSize } from "@/lib/chat/image-size";
 import { MAX_CHAT_IMAGE_COUNT, uploadChatImages } from "@/lib/images/presigned";
@@ -229,6 +230,8 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     roomsQuery.data?.find((item) => item.chatRoomId === room.chatRoomId)?.imageUrl ??
     null;
   const isRoomOwner = isGroup && room.ownerId != null && room.ownerId === myUserId;
+  // 같은 활동을 회차별로 열면 방 이름이 전부 같아진다 — 어느 회차인지 헤더에 붙인다
+  const scheduleLabel = formatChatScheduleLabel(room.activityStartAt, locale);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -254,14 +257,24 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-display text-base font-bold text-ink">{room.title}</h1>
           {isGroup ? (
-            // 참여자 수를 눌러도 메뉴가 열린다 — 사람 목록을 찾아 헤매지 않도록
-            <button
-              type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              className="text-xs text-muted transition-colors hover:text-primary"
-            >
-              {t("memberCount", { count: activeMembers.length })}
-            </button>
+            <div className="flex min-w-0 items-center gap-1.5 text-xs">
+              {scheduleLabel ? (
+                <>
+                  <span className="truncate font-semibold text-primary">{scheduleLabel}</span>
+                  <span aria-hidden="true" className="shrink-0 text-line-strong">
+                    ·
+                  </span>
+                </>
+              ) : null}
+              {/* 참여자 수를 눌러도 메뉴가 열린다 — 사람 목록을 찾아 헤매지 않도록 */}
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                className="shrink-0 text-muted transition-colors hover:text-primary"
+              >
+                {t("memberCount", { count: activeMembers.length })}
+              </button>
+            </div>
           ) : null}
         </div>
 

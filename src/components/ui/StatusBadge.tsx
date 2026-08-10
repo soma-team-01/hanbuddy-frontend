@@ -12,21 +12,23 @@ const STATUS_KEYS = {
   "pendingPayment" | "confirmed" | "cancelled" | "completed"
 >;
 
+// 배경을 채우지 않고 테두리와 글씨 색으로만 상태를 구분한다.
+// 결제 대기는 사용자가 뭔가 해야 하는 상태라 브랜드 색으로 시선을 끈다.
 const STYLES: Record<ApplicationStatus, { className: string; Icon: typeof ClockIcon }> = {
   pending_payment: {
-    className: "bg-warning-soft text-warning",
+    className: "border-primary/40 text-primary",
     Icon: ClockIcon,
   },
   confirmed: {
-    className: "bg-success-soft text-success",
+    className: "border-success/40 text-success",
     Icon: CheckCircleIcon,
   },
   cancelled: {
-    className: "bg-danger/10 text-danger",
+    className: "border-line-strong text-muted",
     Icon: ClockIcon,
   },
   completed: {
-    className: "bg-panel-raised text-muted",
+    className: "border-line-strong text-muted",
     Icon: CheckCircleIcon,
   },
 };
@@ -36,7 +38,7 @@ export function StatusBadge({ status }: Readonly<{ status: ApplicationStatus }>)
   const { className, Icon } = STYLES[status];
   return (
     <span
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-display text-xs font-semibold ${className}`}
+      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 font-display text-xs font-semibold ${className}`}
     >
       <Icon className="size-3.5" />
       {t(STATUS_KEYS[status])}

@@ -173,7 +173,8 @@ function ApplicationCard({
           {/* 제목 줄에서 시작해 호스트 줄까지 걸쳐 실행 버튼과 취소 사유를 담는다 */}
           <div className="col-start-2 row-span-3 flex flex-col items-end gap-2 text-right">
             {application.status === "pending_payment" ? (
-              <>
+              // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
+              <div className="flex flex-col items-stretch gap-2">
                 <button
                   type="button"
                   disabled={isPaymentBusy}
@@ -189,7 +190,7 @@ function ApplicationCard({
                       setPaymentInFlight(false);
                     }
                   }}
-                  className="h-9 shrink-0 rounded-full bg-primary px-4 font-display text-xs font-bold whitespace-nowrap text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+                  className="h-9 shrink-0 rounded-lg bg-primary px-4 font-display text-xs font-bold whitespace-nowrap text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
                 >
                   {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
                 </button>
@@ -197,17 +198,17 @@ function ApplicationCard({
                   type="button"
                   disabled={isPaymentBusy}
                   onClick={onCancelPending}
-                  className="h-9 shrink-0 rounded-full border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+                  className="h-9 shrink-0 rounded-lg border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                 >
                   {t("cancel")}
                 </button>
-              </>
+              </div>
             ) : null}
             {application.status === "confirmed" && !hasEnded ? (
               <button
                 type="button"
                 onClick={onCancel}
-                className="h-9 shrink-0 rounded-full border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors hover:border-primary hover:text-primary"
+                className="h-9 shrink-0 rounded-lg border border-line-strong px-4 font-display text-xs font-bold whitespace-nowrap text-muted transition-colors hover:border-primary hover:text-primary"
               >
                 {t("cancel")}
               </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +9,7 @@ import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import { ChatRoomMenu } from "@/components/chat/ChatRoomMenu";
 import { ChatRoomTitleDialog } from "@/components/chat/ChatRoomTitleDialog";
 import { ChatPhotoPanel } from "@/components/chat/ChatPhotoPanel";
+import { useChatMessages } from "@/components/chat/use-chat-messages";
 import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -27,14 +28,7 @@ import { formatChatScheduleLabel } from "@/lib/chat/format";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
 import { readImageSize } from "@/lib/chat/image-size";
 import { MAX_CHAT_IMAGE_COUNT, uploadChatImages } from "@/lib/images/presigned";
-import {
-  chatKeys,
-  chatMessageHistoryQueryOptions,
-  chatRoomQueryOptions,
-  latestChatMessagesQueryOptions,
-  mergeChatMessages,
-  myChatRoomsQueryOptions,
-} from "@/lib/query/chat";
+import { chatKeys, chatRoomQueryOptions, myChatRoomsQueryOptions } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
@@ -101,19 +95,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const profileQuery = useQuery(myProfileQueryOptions());
   const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, live));
   const roomsQuery = useQuery(myChatRoomsQueryOptions());
-  const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, live));
+  const chatMessages = useChatMessages(chatRoomId, live);
 
-  const latestMessages = latestQuery.data?.messages ?? [];
-  const oldestLatestId = latestMessages.at(-1)?.messageId ?? 0;
-  const historyQuery = useInfiniteQuery({
-    ...chatMessageHistoryQueryOptions(chatRoomId, oldestLatestId),
-    enabled: oldestLatestId > 0 && Boolean(latestQuery.data?.hasNext),
-  });
-
-  const messages = mergeChatMessages(
-    latestMessages,
-    (historyQuery.data?.pages ?? []).flatMap((page) => page.messages),
-  );
+  const messages = chatMessages.messages;
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
   const myUserId = profileQuery.data?.userId;
 
@@ -324,11 +308,11 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         members={room.members}
         myUserId={myUserId}
         locale={locale}
-        isPending={latestQuery.isPending}
-        isError={latestQuery.isError}
-        hasOlder={Boolean(historyQuery.hasNextPage || latestQuery.data?.hasNext)}
-        isLoadingOlder={historyQuery.isFetchingNextPage}
-        onLoadOlder={() => void historyQuery.fetchNextPage()}
+        isPending={chatMessages.isPending}
+        isError={chatMessages.isError}
+        hasOlder={chatMessages.hasOlder}
+        isLoadingOlder={chatMessages.isLoadingOlder}
+        onLoadOlder={chatMessages.loadOlder}
         onOpenImage={(images, index) => setViewer({ images, index })}
       />
 

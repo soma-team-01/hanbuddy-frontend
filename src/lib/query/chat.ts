@@ -27,6 +27,8 @@ export const chatKeys = {
     [...chatKeys.all(), "images", String(chatRoomId)] as const,
   latestMessages: (chatRoomId: number | string) =>
     [...chatKeys.messages(chatRoomId), "latest"] as const,
+  messageHistory: (chatRoomId: number | string, boundaryId: number) =>
+    [...chatKeys.messages(chatRoomId), "history", boundaryId] as const,
 };
 
 export function myChatRoomsQueryOptions() {
@@ -69,16 +71,24 @@ export function latestChatMessagesQueryOptions(chatRoomId: number | string, live
   });
 }
 
-/** 위로 스크롤할 때만 늘어나는 과거 메시지. 폴링하지 않는다 */
-export function chatMessageHistoryQueryOptions(chatRoomId: number | string, oldestKnownId: number) {
+/**
+ * 위로 스크롤할 때만 늘어나는 과거 메시지. 폴링하지 않는다.
+ *
+ * 시작 경계(`boundaryId`)는 키에 들어가지만, 호출부가 이 값을 **고정**해서 넘긴다.
+ * 최신 창의 가장 오래된 ID를 그대로 흘려보내면 메시지가 하나 올 때마다 키가 바뀌어
+ * 쌓아 둔 페이지가 통째로 버려지고 처음부터 다시 받게 된다.
+ * 경계가 바뀌는 건 이어 붙일 수 없을 만큼 창이 멀어져 다시 시작해야 할 때뿐이고,
+ * 그때는 키가 함께 바뀌어 낡은 페이지가 정리되는 편이 맞다.
+ */
+export function chatMessageHistoryQueryOptions(chatRoomId: number | string, boundaryId: number) {
   return infiniteQueryOptions({
-    queryKey: [...chatKeys.messages(chatRoomId), "history", oldestKnownId],
+    queryKey: chatKeys.messageHistory(chatRoomId, boundaryId),
     queryFn: async ({ pageParam }) =>
       unwrapApiResult(
         await getChatMessages(chatRoomId, pageParam, CHAT_MESSAGE_PAGE_SIZE),
         "messages",
       ),
-    initialPageParam: oldestKnownId,
+    initialPageParam: boundaryId,
     getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.nextCursor : undefined),
     staleTime: Infinity,
   });

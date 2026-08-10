@@ -49,8 +49,8 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
             <Link
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 border-b border-line-soft px-4 py-3.5 transition-colors hover:bg-primary-soft/50 ${
-                active ? "bg-primary-soft" : ""
+              className={`flex items-center gap-3 border-b border-l-2 border-line-soft py-3.5 pr-4 pl-3.5 transition-colors ${
+                active ? "border-l-primary" : "border-l-transparent hover:border-l-primary/40"
               }`}
             >
               <span className="relative shrink-0">
@@ -67,7 +67,11 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
 
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-2">
-                  <span className="truncate font-display text-sm font-bold text-ink">
+                  <span
+                    className={`truncate font-display text-sm font-bold ${
+                      active ? "text-primary" : "text-ink"
+                    }`}
+                  >
                     {room.title}
                   </span>
                   {room.lastMessage ? (

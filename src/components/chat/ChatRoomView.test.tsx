@@ -294,7 +294,7 @@ describe("ChatRoomView", () => {
       },
     });
 
-    expect(await screen.findByText("a.webp")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "a.webp" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     await waitFor(() => expect(mockedUploadChatImages).toHaveBeenCalledTimes(1));
@@ -316,11 +316,34 @@ describe("ChatRoomView", () => {
       target: { files: [new File(["a"], "a.webp", { type: "image/webp" })] },
     });
 
-    expect(await screen.findByText("a.webp")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "a.webp" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Remove photo" }));
 
-    await waitFor(() => expect(screen.queryByText("a.webp")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole("img", { name: "a.webp" })).not.toBeInTheDocument(),
+    );
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
+  it("explains the limit when more than five photos are picked", async () => {
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    const picker = await screen.findByLabelText("Attach photos");
+    const input = picker.parentElement?.querySelector("input[type=file]") as HTMLInputElement;
+    fireEvent.change(input, {
+      target: {
+        files: Array.from(
+          { length: 6 },
+          (_, index) => new File(["x"], `photo-${index}.webp`, { type: "image/webp" }),
+        ),
+      },
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "You can send up to 5 photos at once.",
+    );
+    // 넘친 만큼은 버리고 5장만 담는다
+    expect(screen.getAllByRole("button", { name: "Remove photo" })).toHaveLength(5);
   });
 
   it("leaves the conversation after confirmation", async () => {

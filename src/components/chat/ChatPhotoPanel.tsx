@@ -42,7 +42,7 @@ export function ChatPhotoPanel({
           type="button"
           aria-label={t("closePhotoPanel")}
           onClick={onClose}
-          className="flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:border hover:border-primary hover:text-primary"
+          className="flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
         >
           <XIcon className="size-5" />
         </button>
@@ -80,7 +80,7 @@ export function ChatPhotoPanel({
                   href={buildChatImageDownloadUrl(chatRoomId, image.messageId)}
                   aria-label={t("download")}
                   title={t("download")}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full border border-transparent text-muted transition-colors hover:border-primary hover:text-primary"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
                 >
                   <DownloadIcon className="size-4" />
                 </a>

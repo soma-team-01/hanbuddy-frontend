@@ -724,7 +724,8 @@
     "sentBy": "{name} 님이 보냄",
     "markAllRead": "모두 읽음",
     "markingAllRead": "처리 중...",
-    "listMenu": "대화 목록 메뉴"
+    "listMenu": "대화 목록 메뉴",
+    "downloadAll": "{count}장 모두 저장"
   },
   "MyPage": {
     "title": "마이페이지",

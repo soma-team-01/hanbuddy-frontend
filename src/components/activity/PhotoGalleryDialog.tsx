@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, XIcon } from "@/components/ui/icons";
+import { downloadFilesInSequence } from "@/lib/chat/download";
 
 /** 활동 사진을 전체 화면으로 넘겨 볼 수 있는 갤러리 오버레이 */
 export function PhotoGalleryDialog({
@@ -11,8 +12,9 @@ export function PhotoGalleryDialog({
   alt,
   initialIndex = 0,
   unoptimizedImages = false,
-  downloadUrl,
+  downloadUrls,
   downloadLabel,
+  downloadAllLabel,
   onClose,
 }: Readonly<{
   images: string[];
@@ -20,9 +22,10 @@ export function PhotoGalleryDialog({
   initialIndex?: number;
   /** blob 미리보기 등 next/image 최적화를 탈 수 없는 소스일 때 */
   unoptimizedImages?: boolean;
-  /** 저장할 수 있는 사진이면 내려받기 경로를 준다 (채팅 사진) */
-  downloadUrl?: string;
+  /** 저장할 수 있는 사진이면 사진 순서대로 내려받기 경로를 준다 (채팅 사진) */
+  downloadUrls?: string[];
   downloadLabel?: string;
+  downloadAllLabel?: string;
   onClose: () => void;
 }>) {
   const t = useTranslations("ActivityDetail");
@@ -61,9 +64,19 @@ export function PhotoGalleryDialog({
             {t("photoCounter", { current: safeIndex + 1, total: images.length })}
           </span>
           <div className="flex items-center gap-2">
-            {downloadUrl ? (
+            {downloadUrls && downloadUrls.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => void downloadFilesInSequence(downloadUrls)}
+                className="flex h-11 items-center gap-1.5 rounded-full bg-ink/60 px-4 font-display text-sm font-bold text-white transition-colors hover:bg-ink/80"
+              >
+                <DownloadIcon className="size-4" />
+                {downloadAllLabel}
+              </button>
+            ) : null}
+            {downloadUrls?.[safeIndex] ? (
               <a
-                href={downloadUrl}
+                href={downloadUrls[safeIndex]}
                 aria-label={downloadLabel}
                 title={downloadLabel}
                 className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"

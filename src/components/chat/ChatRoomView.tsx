@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import { ChatPhotoPanel } from "@/components/chat/ChatPhotoPanel";
@@ -40,6 +41,13 @@ import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
 import type { ChatMessageResponse } from "@/types/chat";
 
+/** 보내기 전 미리보기용으로만 쓰는 첨부 항목 */
+interface ChatAttachment {
+  file: File;
+  /** createObjectURL 결과 — 목록에서 빠질 때 반드시 해제한다 */
+  previewUrl: string;
+}
+
 /** 대화 화면. 최신 묶음은 폴링으로 받고, 위로 스크롤하면 과거를 이어 붙인다 */
 export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const t = useTranslations("Chat");
@@ -48,16 +56,25 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
   const [draft, setDraft] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const [attachNotice, setAttachNotice] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [photoPanelOpen, setPhotoPanelOpen] = useState(false);
-  const [viewerImage, setViewerImage] = useState<ChatMessageResponse | null>(null);
+  const [viewer, setViewer] = useState<{
+    images: ChatMessageResponse[];
+    index: number;
+  } | null>(null);
   const [error, setError] = useState<unknown>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentsRef = useRef<ChatAttachment[]>([]);
   const notifiedReadRef = useRef<number>(0);
 
   // 실시간 구독이 붙으면 폴링을 멈추고 브로드캐스트로 받는다
   const live = useChatRoomStream(chatRoomId);
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+
   const profileQuery = useQuery(myProfileQueryOptions());
   const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, live));
   const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, live));
@@ -93,6 +110,13 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newestMessageId]);
 
+  // 대화방을 떠날 때 남아 있는 미리보기 URL을 정리한다
+  useEffect(() => {
+    return () => {
+      for (const item of attachmentsRef.current) URL.revokeObjectURL(item.previewUrl);
+    };
+  }, []);
+
   const sendMutation = useMutation({
     mutationFn: async ({ content, files }: { content: string; files: File[] }) => {
       if (files.length === 0) {
@@ -118,7 +142,11 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     },
     onSuccess: async () => {
       setDraft("");
-      setAttachments([]);
+      setAttachments((current) => {
+        for (const item of current) URL.revokeObjectURL(item.previewUrl);
+        return [];
+      });
+      setAttachNotice(null);
       setError(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
@@ -143,14 +171,33 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     const content = draft.trim();
     if (sendMutation.isPending) return;
     if (!content && attachments.length === 0) return;
-    sendMutation.mutate({ content, files: attachments });
+    sendMutation.mutate({ content, files: attachments.map((item) => item.file) });
   }
 
   function attachFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    const picked = [...files].slice(0, MAX_CHAT_IMAGE_COUNT - attachments.length);
-    setAttachments((current) => [...current, ...picked].slice(0, MAX_CHAT_IMAGE_COUNT));
+
+    const room = MAX_CHAT_IMAGE_COUNT - attachments.length;
+    const picked = [...files].slice(0, Math.max(room, 0));
+    // 넘치게 고르면 앞에서부터 채우고 왜 다 못 담았는지 알린다
+    setAttachNotice(
+      picked.length < files.length ? t("photoTooMany", { max: MAX_CHAT_IMAGE_COUNT }) : null,
+    );
+    if (picked.length === 0) return;
+
+    setAttachments((current) => [
+      ...current,
+      ...picked.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
+    ]);
     setError(null);
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments((current) => {
+      URL.revokeObjectURL(current[index].previewUrl);
+      return current.filter((_, at) => at !== index);
+    });
+    setAttachNotice(null);
   }
 
   if (roomQuery.isPending) {
@@ -179,7 +226,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         <Link
           href="/chat"
           aria-label={t("backToList")}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:border hover:border-primary hover:text-primary lg:hidden"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary lg:hidden"
         >
           <ArrowLeftIcon className="size-5" />
         </Link>
@@ -206,7 +253,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           title={t("openPhotoPanel")}
           aria-label={t("openPhotoPanel")}
           onClick={() => setPhotoPanelOpen(true)}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:border hover:border-primary hover:text-primary"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
         >
           <ImagesIcon className="size-5" />
         </button>
@@ -219,7 +266,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             setError(null);
             setLeaveOpen(true);
           }}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:border hover:border-danger hover:text-danger"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
         >
           <LogOutIcon className="size-5" />
         </button>
@@ -235,7 +282,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         hasOlder={Boolean(historyQuery.hasNextPage || latestQuery.data?.hasNext)}
         isLoadingOlder={historyQuery.isFetchingNextPage}
         onLoadOlder={() => void historyQuery.fetchNextPage()}
-        onOpenImage={setViewerImage}
+        onOpenImage={(images, index) => setViewer({ images, index })}
       />
 
       <div className="border-t border-line-soft px-4 py-3 md:px-6">
@@ -244,24 +291,34 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             {getApiErrorMessage(error, t("sendError"))}
           </p>
         ) : null}
+        {attachNotice ? (
+          <p role="alert" className="mb-2 text-xs text-danger">
+            {attachNotice}
+          </p>
+        ) : null}
         {attachments.length > 0 ? (
           <ul className="mb-2 flex flex-wrap gap-2">
-            {attachments.map((file, index) => (
+            {attachments.map((item, index) => (
               <li
-                key={`${file.name}-${file.lastModified}-${index}`}
-                className="flex items-center gap-2 rounded-full border border-primary/30 py-1 pr-1 pl-3 text-xs text-ink"
+                key={item.previewUrl}
+                className="relative size-16 overflow-hidden rounded-xl border border-line-soft"
               >
-                <span className="max-w-40 truncate">{file.name}</span>
+                <Image
+                  src={item.previewUrl}
+                  alt={item.file.name}
+                  fill
+                  sizes="64px"
+                  unoptimized
+                  className="object-cover"
+                />
                 <button
                   type="button"
                   aria-label={t("removePhoto")}
                   disabled={sendMutation.isPending}
-                  onClick={() =>
-                    setAttachments((current) => current.filter((_, at) => at !== index))
-                  }
-                  className="flex size-6 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-danger disabled:opacity-60"
+                  onClick={() => removeAttachment(index)}
+                  className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-ink/70 text-white transition-colors enabled:hover:bg-ink disabled:opacity-60"
                 >
-                  <XIcon className="size-3.5" />
+                  <XIcon className="size-3" />
                 </button>
               </li>
             ))}
@@ -338,14 +395,17 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         <ChatPhotoPanel chatRoomId={chatRoomId} onClose={() => setPhotoPanelOpen(false)} />
       ) : null}
 
-      {viewerImage?.imageUrl ? (
+      {viewer && viewer.images.length > 0 ? (
         <PhotoGalleryDialog
-          images={[viewerImage.imageUrl]}
-          alt={viewerImage.content ?? t("photo")}
-          initialIndex={0}
-          downloadUrl={buildChatImageDownloadUrl(chatRoomId, viewerImage.messageId)}
+          images={viewer.images.map((image) => image.imageUrl ?? "")}
+          alt={viewer.images[viewer.index]?.content ?? t("photo")}
+          initialIndex={Math.max(viewer.index, 0)}
+          downloadUrls={viewer.images.map((image) =>
+            buildChatImageDownloadUrl(chatRoomId, image.messageId),
+          )}
           downloadLabel={t("download")}
-          onClose={() => setViewerImage(null)}
+          downloadAllLabel={t("downloadAll", { count: viewer.images.length })}
+          onClose={() => setViewer(null)}
         />
       ) : null}
 

@@ -72,7 +72,7 @@ export function ChatListMenu() {
         aria-expanded={isOpen}
         aria-label={t("listMenu")}
         onClick={() => setIsOpen((open) => !open)}
-        className="flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-panel hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <MoreHorizontalIcon className="size-5" />
       </button>
@@ -88,7 +88,7 @@ export function ChatListMenu() {
             role="menuitem"
             disabled={unreadRooms.length === 0 || markAllReadMutation.isPending}
             onClick={() => markAllReadMutation.mutate()}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-ink transition-colors enabled:hover:bg-primary-soft disabled:text-muted disabled:opacity-60"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-ink transition-colors enabled:hover:text-primary disabled:text-muted disabled:opacity-60"
           >
             <CheckIcon className="size-4 shrink-0" />
             {markAllReadMutation.isPending ? t("markingAllRead") : t("markAllRead")}

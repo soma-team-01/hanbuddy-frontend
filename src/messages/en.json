@@ -724,7 +724,8 @@
     "sentBy": "Sent by {name}",
     "markAllRead": "Mark all as read",
     "markingAllRead": "Marking...",
-    "listMenu": "Conversation options"
+    "listMenu": "Conversation options",
+    "downloadAll": "Save all {count}"
   },
   "MyPage": {
     "title": "My Page",

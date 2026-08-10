@@ -32,7 +32,8 @@ export function ChatMessageList({
   hasOlder: boolean;
   isLoadingOlder: boolean;
   onLoadOlder: () => void;
-  onOpenImage: (message: ChatMessageResponse) => void;
+  /** 같은 묶음으로 보낸 사진들과, 그중 누른 사진의 위치 */
+  onOpenImage: (images: ChatMessageResponse[], index: number) => void;
 }>) {
   const t = useTranslations("Chat");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -130,6 +131,10 @@ export function ChatMessageList({
 
                   {group.messages.map((message) => {
                     const unread = mine ? countUnread(message.messageId) : 0;
+                    // 한 묶음으로 보낸 사진은 함께 넘겨봐야 하나로 읽힌다
+                    const groupImages = group.messages.filter(
+                      (item) => item.messageType === "IMAGE" && item.imageUrl,
+                    );
 
                     return (
                       <div
@@ -140,7 +145,14 @@ export function ChatMessageList({
                           <ChatImageBubble
                             message={message}
                             mine={mine}
-                            onOpen={() => onOpenImage(message)}
+                            onOpen={() =>
+                              onOpenImage(
+                                groupImages,
+                                groupImages.findIndex(
+                                  (item) => item.messageId === message.messageId,
+                                ),
+                              )
+                            }
                           />
                         ) : (
                           <p

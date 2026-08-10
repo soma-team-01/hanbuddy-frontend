@@ -21,6 +21,9 @@ export function RouteShell({
   const isFullScreenActivityForm =
     pathname === "/my-activities/create" || /^\/my-activities\/[^/]+\/edit$/.test(pathname);
 
+  // 채팅은 화면 높이에 딱 맞춰 스크롤 없이 쓰는 화면이라 푸터를 두지 않는다
+  const isChatWorkspace = pathname === "/chat" || pathname.startsWith("/chat/");
+
   if (isFullScreenActivityForm) {
     return <SessionRoleProvider role={sessionRole}>{children}</SessionRoleProvider>;
   }
@@ -29,7 +32,7 @@ export function RouteShell({
     <SessionRoleProvider role={sessionRole}>
       {header}
       <div className="flex flex-1 flex-col">{children}</div>
-      {footer}
+      {isChatWorkspace ? null : footer}
     </SessionRoleProvider>
   );
 }

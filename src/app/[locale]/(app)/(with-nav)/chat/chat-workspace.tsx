@@ -16,15 +16,21 @@ export function ChatWorkspace({ children }: Readonly<{ children: ReactNode }>) {
   const roomOpen = /^\/chat\/[^/]+$/.test(pathname);
 
   return (
-    <PageContainer className="flex-1 py-4 md:py-8">
-      <main className="flex h-[calc(100dvh-9rem)] min-h-[26rem] overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)]">
+    // 전역 헤더(76px)를 뺀 나머지를 그대로 채워 페이지 자체는 스크롤되지 않게 한다
+    <PageContainer className="h-[calc(100dvh-76px)] py-3 md:py-5">
+      <main className="flex h-full overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)]">
         <section
           aria-label={t("title")}
-          className={`w-full shrink-0 overflow-y-auto border-line-soft lg:block lg:w-80 lg:border-r ${
-            roomOpen ? "hidden" : "block"
+          className={`flex w-full shrink-0 flex-col border-line-soft lg:flex lg:w-80 lg:border-r ${
+            roomOpen ? "hidden" : "flex"
           }`}
         >
-          <ChatRoomList />
+          <h1 className="shrink-0 border-b border-line-soft px-4 py-3.5 font-display text-base font-bold text-ink">
+            {t("title")}
+          </h1>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <ChatRoomList />
+          </div>
         </section>
         <section className={`min-w-0 flex-1 ${roomOpen ? "block" : "hidden lg:block"}`}>
           {children}

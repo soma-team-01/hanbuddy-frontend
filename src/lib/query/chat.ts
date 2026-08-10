@@ -11,7 +11,7 @@ export const CHAT_MESSAGE_PAGE_SIZE = 30;
  * 연결되어 있는 동안에는 폴링을 멈추고 브로드캐스트로 받는다.
  */
 export const CHAT_MESSAGE_POLL_INTERVAL = 2_500;
-export const CHAT_ROOM_LIST_POLL_INTERVAL = 20_000;
+export const CHAT_ROOM_LIST_POLL_INTERVAL = 10_000;
 
 export const chatKeys = {
   all: () => ["chat"] as const,

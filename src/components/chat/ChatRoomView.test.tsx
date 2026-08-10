@@ -344,7 +344,7 @@ describe("ChatRoomView", () => {
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
   });
 
-  it("explains the limit when more than five photos are picked", async () => {
+  it("explains the limit when more than nine photos are picked", async () => {
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
 
     const picker = await screen.findByLabelText("Attach photos");
@@ -361,7 +361,7 @@ describe("ChatRoomView", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "You can send up to 9 photos at once.",
     );
-    // 넘친 만큼은 버리고 5장만 담는다
+    // 넘친 만큼은 버리고 한도인 9장까지만 담는다
     expect(screen.getAllByRole("button", { name: "Remove photo" })).toHaveLength(9);
   });
 

@@ -722,7 +722,9 @@
     "download": "Download",
     "loadMorePhotos": "Load more photos",
     "photosLoadError": "Could not load photos.",
-    "sentBy": "Sent by {name}"
+    "sentBy": "Sent by {name}",
+    "markAllRead": "Mark all as read",
+    "markingAllRead": "Marking..."
   },
   "MyPage": {
     "title": "My Page",

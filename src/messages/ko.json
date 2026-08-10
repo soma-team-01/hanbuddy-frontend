@@ -722,7 +722,9 @@
     "download": "저장",
     "loadMorePhotos": "사진 더 보기",
     "photosLoadError": "사진을 불러오지 못했습니다.",
-    "sentBy": "{name} 님이 보냄"
+    "sentBy": "{name} 님이 보냄",
+    "markAllRead": "모두 읽음",
+    "markingAllRead": "처리 중..."
   },
   "MyPage": {
     "title": "마이페이지",

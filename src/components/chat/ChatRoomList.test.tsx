@@ -11,7 +11,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
   usePathname: vi.fn(),
 }));
 
-vi.mock("@/lib/api/chat", () => ({ getMyChatRooms: vi.fn() }));
+vi.mock("@/lib/api/chat", () => ({ getMyChatRooms: vi.fn(), updateChatRead: vi.fn() }));
 
 const mockedGetMyChatRooms = vi.mocked(getMyChatRooms);
 const mockedUsePathname = vi.mocked(usePathname);

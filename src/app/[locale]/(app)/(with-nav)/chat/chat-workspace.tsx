@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { ChatMarkAllReadButton } from "@/components/chat/ChatMarkAllReadButton";
 import { ChatRoomList } from "@/components/chat/ChatRoomList";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { usePathname } from "@/i18n/navigation";
@@ -16,7 +17,8 @@ export function ChatWorkspace({ children }: Readonly<{ children: ReactNode }>) {
   const roomOpen = /^\/chat\/[^/]+$/.test(pathname);
 
   return (
-    // 전역 헤더(76px)를 뺀 나머지를 그대로 채워 페이지 자체는 스크롤되지 않게 한다
+    // 전역 헤더(76px)를 뺀 높이를 채워 첫 화면에 대화가 통째로 들어오게 한다.
+    // 푸터는 그 아래에 남아 있어 스크롤하면 볼 수 있다.
     <PageContainer className="h-[calc(100dvh-76px)] py-3 md:py-5">
       <main className="flex h-full overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)]">
         <section
@@ -25,9 +27,10 @@ export function ChatWorkspace({ children }: Readonly<{ children: ReactNode }>) {
             roomOpen ? "hidden" : "flex"
           }`}
         >
-          <h1 className="shrink-0 border-b border-line-soft px-4 py-3.5 font-display text-base font-bold text-ink">
-            {t("title")}
-          </h1>
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line-soft px-4 py-3">
+            <h1 className="font-display text-base font-bold text-ink">{t("title")}</h1>
+            <ChatMarkAllReadButton />
+          </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             <ChatRoomList />
           </div>

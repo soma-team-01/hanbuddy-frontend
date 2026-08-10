@@ -9,7 +9,14 @@ import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
-import { ArrowLeftIcon, ImagePlusIcon, LogOutIcon, UsersIcon, XIcon } from "@/components/ui/icons";
+import {
+  ArrowLeftIcon,
+  ImagePlusIcon,
+  ImagesIcon,
+  LogOutIcon,
+  UsersIcon,
+  XIcon,
+} from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -201,7 +208,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           onClick={() => setPhotoPanelOpen(true)}
           className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:border hover:border-primary hover:text-primary"
         >
-          <ImagePlusIcon className="size-5" />
+          <ImagesIcon className="size-5" />
         </button>
 
         <button

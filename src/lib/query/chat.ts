@@ -1,5 +1,5 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
-import { getChatMessages, getChatRoom, getMyChatRooms } from "@/lib/api/chat";
+import { getChatMessages, getChatRoom, getChatRoomImages, getMyChatRooms } from "@/lib/api/chat";
 import type { ChatMessageResponse } from "@/types/chat";
 import { unwrapApiResult } from "./result";
 
@@ -10,7 +10,7 @@ export const CHAT_MESSAGE_PAGE_SIZE = 30;
  * 실시간 구독(STOMP)이 끊겼을 때만 쓰는 대비책이다.
  * 연결되어 있는 동안에는 폴링을 멈추고 브로드캐스트로 받는다.
  */
-export const CHAT_MESSAGE_POLL_INTERVAL = 4_000;
+export const CHAT_MESSAGE_POLL_INTERVAL = 2_500;
 export const CHAT_ROOM_LIST_POLL_INTERVAL = 20_000;
 
 export const chatKeys = {
@@ -19,6 +19,8 @@ export const chatKeys = {
   room: (chatRoomId: number | string) => [...chatKeys.all(), "room", String(chatRoomId)] as const,
   messages: (chatRoomId: number | string) =>
     [...chatKeys.all(), "messages", String(chatRoomId)] as const,
+  images: (chatRoomId: number | string) =>
+    [...chatKeys.all(), "images", String(chatRoomId)] as const,
   latestMessages: (chatRoomId: number | string) =>
     [...chatKeys.messages(chatRoomId), "latest"] as const,
 };
@@ -86,4 +88,21 @@ export function mergeChatMessages(...groups: ChatMessageResponse[][]): ChatMessa
   }
 
   return [...byId.values()].sort((left, right) => left.messageId - right.messageId);
+}
+
+/** 사진함은 한 번에 30장씩 */
+export const CHAT_IMAGE_PAGE_SIZE = 30;
+
+export function chatRoomImagesQueryOptions(chatRoomId: number | string) {
+  return infiniteQueryOptions({
+    queryKey: chatKeys.images(chatRoomId),
+    queryFn: async ({ pageParam }) =>
+      unwrapApiResult(
+        await getChatRoomImages(chatRoomId, pageParam, CHAT_IMAGE_PAGE_SIZE),
+        "images",
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
+    staleTime: 30_000,
+  });
 }

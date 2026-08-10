@@ -8,6 +8,10 @@ export const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
 export const PROFILE_IMAGE_SIZE_ERROR_MESSAGE = "프로필 이미지는 5MB 이하만 업로드할 수 있습니다.";
 /** 백엔드 presigned 발급 한도와 동일 (ACTIVITY 목적, 요청당 최대 10장) */
 export const MAX_ACTIVITY_IMAGE_COUNT = 10;
+/** 채팅 이미지 발급 한도 (CHAT 목적, 요청당 최대 5장) */
+export const MAX_CHAT_IMAGE_COUNT = 5;
+export const MAX_CHAT_IMAGE_BYTES = 10 * 1024 * 1024;
+export const CHAT_IMAGE_SIZE_ERROR_MESSAGE = "사진은 10MB 이하만 보낼 수 있습니다.";
 
 const PRESIGNED_REQUEST_TIMEOUT_MS = 10_000;
 const DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS = 300;
@@ -17,7 +21,7 @@ const PROFILE_UPLOAD_TIMEOUT_ERROR_MESSAGE =
 const ACTIVITY_UPLOAD_TIMEOUT_ERROR_MESSAGE =
   "활동 이미지 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.";
 
-export type ImageUploadPurpose = "PROFILE" | "ACTIVITY";
+export type ImageUploadPurpose = "PROFILE" | "ACTIVITY" | "CHAT";
 
 export interface PresignedImageUploadRequest {
   purpose: ImageUploadPurpose;
@@ -247,4 +251,82 @@ export async function uploadActivityImageSet(files: File[]): Promise<PresignedIm
     }
   }
   return results;
+}
+
+const CHAT_UPLOAD_TIMEOUT_ERROR_MESSAGE =
+  "사진 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.";
+
+/**
+ * 채팅에 보낼 사진을 업로드하고 발급받은 key를 돌려준다.
+ * 발급 후 1시간 안에 전송해야 하므로, 보내기 직전에 호출한다.
+ */
+export async function uploadChatImages(files: File[]): Promise<PresignedImageItem[]> {
+  if (files.length === 0) return [];
+  if (files.length > MAX_CHAT_IMAGE_COUNT) {
+    throw new Error(`사진은 한 번에 ${MAX_CHAT_IMAGE_COUNT}장까지 보낼 수 있습니다.`);
+  }
+
+  const contentType = files[0].type;
+  if (!isSupportedProfileImageType(contentType)) {
+    throw new Error("JPEG, PNG, WebP 형식의 이미지만 보낼 수 있습니다.");
+  }
+  // presigned는 요청당 contentType이 하나라 형식이 섞이면 나눠 올려야 한다
+  if (files.some((file) => file.type !== contentType)) {
+    throw new Error("같은 형식의 사진끼리 보내 주세요.");
+  }
+  if (files.some((file) => file.size > MAX_CHAT_IMAGE_BYTES)) {
+    throw new Error(CHAT_IMAGE_SIZE_ERROR_MESSAGE);
+  }
+
+  const presignedResponse = await fetchWithTimeoutMessage(
+    "/api/images/presigned-urls",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(PRESIGNED_REQUEST_TIMEOUT_MS),
+      body: JSON.stringify({
+        purpose: "CHAT",
+        contentType,
+        imageCount: files.length,
+      } satisfies PresignedImageUploadRequest),
+    },
+    CHAT_UPLOAD_TIMEOUT_ERROR_MESSAGE,
+  );
+  const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
+    ApiResponse<PresignedImageUploadResult> | ErrorApiResponse | undefined;
+
+  if (!presignedResponse.ok || !presignedBody?.isSuccess) {
+    throw createApiClientError(
+      presignedResponse.status,
+      presignedBody?.isSuccess === false ? presignedBody : null,
+      "사진 업로드 URL을 발급받지 못했습니다.",
+    );
+  }
+
+  const targets = presignedBody.result.images.slice(0, files.length);
+  if (targets.length !== files.length) {
+    throw new Error("사진 업로드 URL을 발급받지 못했습니다.");
+  }
+
+  await Promise.all(
+    targets.map(async (target, index) => {
+      const s3TimeoutSeconds = Math.min(
+        target.expiresInSeconds || DEFAULT_S3_UPLOAD_TIMEOUT_SECONDS,
+        MAX_S3_UPLOAD_TIMEOUT_SECONDS,
+      );
+      const s3Response = await fetchWithTimeoutMessage(
+        target.uploadUrl,
+        {
+          method: "PUT",
+          headers: { "Content-Type": contentType },
+          signal: AbortSignal.timeout(s3TimeoutSeconds * 1000),
+          body: files[index],
+        },
+        CHAT_UPLOAD_TIMEOUT_ERROR_MESSAGE,
+      );
+      if (!s3Response.ok) throw new Error("사진 업로드에 실패했습니다.");
+    }),
+  );
+
+  return targets;
 }

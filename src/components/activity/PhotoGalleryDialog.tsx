@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, XIcon } from "@/components/ui/icons";
 
 /** 활동 사진을 전체 화면으로 넘겨 볼 수 있는 갤러리 오버레이 */
 export function PhotoGalleryDialog({
@@ -11,6 +11,8 @@ export function PhotoGalleryDialog({
   alt,
   initialIndex = 0,
   unoptimizedImages = false,
+  downloadUrl,
+  downloadLabel,
   onClose,
 }: Readonly<{
   images: string[];
@@ -18,6 +20,9 @@ export function PhotoGalleryDialog({
   initialIndex?: number;
   /** blob 미리보기 등 next/image 최적화를 탈 수 없는 소스일 때 */
   unoptimizedImages?: boolean;
+  /** 저장할 수 있는 사진이면 내려받기 경로를 준다 (채팅 사진) */
+  downloadUrl?: string;
+  downloadLabel?: string;
   onClose: () => void;
 }>) {
   const t = useTranslations("ActivityDetail");
@@ -55,14 +60,26 @@ export function PhotoGalleryDialog({
           <span className="rounded-full bg-ink/60 px-3 py-1 font-display text-sm font-bold text-white">
             {t("photoCounter", { current: safeIndex + 1, total: images.length })}
           </span>
-          <button
-            type="button"
-            aria-label={tAccessibility("closeDialog")}
-            onClick={onClose}
-            className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
-          >
-            <XIcon className="size-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {downloadUrl ? (
+              <a
+                href={downloadUrl}
+                aria-label={downloadLabel}
+                title={downloadLabel}
+                className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
+              >
+                <DownloadIcon className="size-5" />
+              </a>
+            ) : null}
+            <button
+              type="button"
+              aria-label={tAccessibility("closeDialog")}
+              onClick={onClose}
+              className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
+            >
+              <XIcon className="size-5" />
+            </button>
+          </div>
         </div>
         <div className="relative min-h-0 flex-1">
           <Image

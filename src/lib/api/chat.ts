@@ -1,5 +1,6 @@
 import type {
   ChatMessagePageResponse,
+  ChatRoomImagePageResponse,
   ChatWsTicketResponse,
   ChatMessageResponse,
   ChatRoomDetailResponse,
@@ -17,6 +18,7 @@ export type ChatMessagesResult = ApiResult<ChatMessagePageResponse, "messages">;
 export type ChatMessageResult = ApiResult<ChatMessageResponse, "message">;
 export type ChatVoidResult = ApiResult<null, "chat">;
 export type ChatWsTicketResult = ApiResult<ChatWsTicketResponse, "ticket">;
+export type ChatRoomImagesResult = ApiResult<ChatRoomImagePageResponse, "images">;
 
 const DEFAULT_ROOM_LIST_ERROR_MESSAGE = "채팅 목록을 불러오지 못했습니다.";
 const DEFAULT_ROOM_ERROR_MESSAGE = "채팅방을 불러오지 못했습니다.";
@@ -123,6 +125,25 @@ export async function leaveChatRoom(chatRoomId: number | string): Promise<ChatVo
     { method: "DELETE" },
     DEFAULT_LEAVE_ERROR_MESSAGE,
   );
+}
+
+/** 방에 오간 사진만 최신순으로. 합류 이전 사진은 백엔드가 제외한다 */
+export async function getChatRoomImages(
+  chatRoomId: number | string,
+  page: number,
+  size: number,
+): Promise<ChatRoomImagesResult> {
+  return requestApiResult<ChatRoomImagePageResponse, "images">(
+    `/api/chat/rooms/${chatRoomId}/images?page=${page}&size=${size}`,
+    "images",
+    undefined,
+    "사진을 불러오지 못했습니다.",
+  );
+}
+
+/** 저장용 임시 URL로 이어지는 경로. fetch가 아니라 이동시켜야 CORS에 걸리지 않는다 */
+export function buildChatImageDownloadUrl(chatRoomId: number | string, messageId: number | string) {
+  return `/api/chat/rooms/${chatRoomId}/images/${messageId}/download`;
 }
 
 /** 소켓을 열기 직전에만 호출한다. 미리 받아 두면 만료되거나 1회용 제약에 걸린다 */

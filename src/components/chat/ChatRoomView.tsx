@@ -4,15 +4,24 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
+import { ChatPhotoPanel } from "@/components/chat/ChatPhotoPanel";
 import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ArrowLeftIcon, LogOutIcon, UsersIcon } from "@/components/ui/icons";
+import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
+import { ArrowLeftIcon, ImagePlusIcon, LogOutIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { leaveChatRoom, sendChatMessage, updateChatRead } from "@/lib/api/chat";
+import {
+  buildChatImageDownloadUrl,
+  leaveChatRoom,
+  sendChatMessage,
+  updateChatRead,
+} from "@/lib/api/chat";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
+import { readImageSize } from "@/lib/chat/image-size";
+import { MAX_CHAT_IMAGE_COUNT, uploadChatImages } from "@/lib/images/presigned";
 import {
   chatKeys,
   chatMessageHistoryQueryOptions,
@@ -22,6 +31,7 @@ import {
 } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
+import type { ChatMessageResponse } from "@/types/chat";
 
 /** 대화 화면. 최신 묶음은 폴링으로 받고, 위로 스크롤하면 과거를 이어 붙인다 */
 export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
@@ -31,8 +41,12 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
   const [draft, setDraft] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [photoPanelOpen, setPhotoPanelOpen] = useState(false);
+  const [viewerImage, setViewerImage] = useState<ChatMessageResponse | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const notifiedReadRef = useRef<number>(0);
 
   // 실시간 구독이 붙으면 폴링을 멈추고 브로드캐스트로 받는다
@@ -73,13 +87,35 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   }, [newestMessageId]);
 
   const sendMutation = useMutation({
-    mutationFn: async (content: string) =>
-      unwrapApiResult(await sendChatMessage(chatRoomId, { content }), "message"),
+    mutationFn: async ({ content, files }: { content: string; files: File[] }) => {
+      if (files.length === 0) {
+        return unwrapApiResult(await sendChatMessage(chatRoomId, { content }), "message");
+      }
+
+      // 발급받은 key는 1시간 안에 써야 하므로 보내기 직전에 올린다
+      const uploaded = await uploadChatImages(files);
+      const sizes = await Promise.all(files.map(readImageSize));
+      for (const [index, target] of uploaded.entries()) {
+        unwrapApiResult(
+          await sendChatMessage(chatRoomId, {
+            messageType: "IMAGE",
+            imageKey: target.imageKey,
+            // 캡션은 첫 장에만 붙인다
+            content: index === 0 && content ? content : null,
+            ...sizes[index],
+          }),
+          "message",
+        );
+      }
+      return null;
+    },
     onSuccess: async () => {
       setDraft("");
+      setAttachments([]);
       setError(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.images(chatRoomId) }),
         queryClient.invalidateQueries({ queryKey: chatKeys.rooms() }),
       ]);
     },
@@ -98,8 +134,16 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   function submitDraft() {
     const content = draft.trim();
-    if (!content || sendMutation.isPending) return;
-    sendMutation.mutate(content);
+    if (sendMutation.isPending) return;
+    if (!content && attachments.length === 0) return;
+    sendMutation.mutate({ content, files: attachments });
+  }
+
+  function attachFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const picked = [...files].slice(0, MAX_CHAT_IMAGE_COUNT - attachments.length);
+    setAttachments((current) => [...current, ...picked].slice(0, MAX_CHAT_IMAGE_COUNT));
+    setError(null);
   }
 
   if (roomQuery.isPending) {
@@ -152,6 +196,16 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
         <button
           type="button"
+          title={t("openPhotoPanel")}
+          aria-label={t("openPhotoPanel")}
+          onClick={() => setPhotoPanelOpen(true)}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:border hover:border-primary hover:text-primary"
+        >
+          <ImagePlusIcon className="size-5" />
+        </button>
+
+        <button
+          type="button"
           title={t("leave")}
           aria-label={t("leave")}
           onClick={() => {
@@ -174,6 +228,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         hasOlder={Boolean(historyQuery.hasNextPage || latestQuery.data?.hasNext)}
         isLoadingOlder={historyQuery.isFetchingNextPage}
         onLoadOlder={() => void historyQuery.fetchNextPage()}
+        onOpenImage={setViewerImage}
       />
 
       <div className="border-t border-line-soft px-4 py-3 md:px-6">
@@ -181,6 +236,29 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           <p role="alert" className="mb-2 text-sm text-danger">
             {getApiErrorMessage(error, t("sendError"))}
           </p>
+        ) : null}
+        {attachments.length > 0 ? (
+          <ul className="mb-2 flex flex-wrap gap-2">
+            {attachments.map((file, index) => (
+              <li
+                key={`${file.name}-${file.lastModified}-${index}`}
+                className="flex items-center gap-2 rounded-full border border-primary/30 py-1 pr-1 pl-3 text-xs text-ink"
+              >
+                <span className="max-w-40 truncate">{file.name}</span>
+                <button
+                  type="button"
+                  aria-label={t("removePhoto")}
+                  disabled={sendMutation.isPending}
+                  onClick={() =>
+                    setAttachments((current) => current.filter((_, at) => at !== index))
+                  }
+                  className="flex size-6 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-danger disabled:opacity-60"
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
         ) : null}
         <form
           className="flex items-end gap-2"
@@ -192,6 +270,28 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           <label htmlFor="chat-draft" className="sr-only">
             {t("messageLabel")}
           </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            className="hidden"
+            onChange={(event) => {
+              attachFiles(event.target.files);
+              // 같은 파일을 다시 고를 수 있도록 값을 비운다
+              event.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            title={t("attachPhoto")}
+            aria-label={t("attachPhoto")}
+            disabled={sendMutation.isPending || attachments.length >= MAX_CHAT_IMAGE_COUNT}
+            onClick={() => fileInputRef.current?.click()}
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line-strong text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+          >
+            <ImagePlusIcon className="size-5" />
+          </button>
           <textarea
             id="chat-draft"
             rows={1}
@@ -213,13 +313,34 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           />
           <button
             type="submit"
-            disabled={sendMutation.isPending || draft.trim().length === 0}
+            disabled={
+              sendMutation.isPending || (draft.trim().length === 0 && attachments.length === 0)
+            }
             className="h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
           >
-            {sendMutation.isPending ? t("sending") : t("send")}
+            {sendMutation.isPending
+              ? attachments.length > 0
+                ? t("uploadingPhotos")
+                : t("sending")
+              : t("send")}
           </button>
         </form>
       </div>
+
+      {photoPanelOpen ? (
+        <ChatPhotoPanel chatRoomId={chatRoomId} onClose={() => setPhotoPanelOpen(false)} />
+      ) : null}
+
+      {viewerImage?.imageUrl ? (
+        <PhotoGalleryDialog
+          images={[viewerImage.imageUrl]}
+          alt={viewerImage.content ?? t("photo")}
+          initialIndex={0}
+          downloadUrl={buildChatImageDownloadUrl(chatRoomId, viewerImage.messageId)}
+          downloadLabel={t("download")}
+          onClose={() => setViewerImage(null)}
+        />
+      ) : null}
 
       {leaveOpen ? (
         <ConfirmDialog

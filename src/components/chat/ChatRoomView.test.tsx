@@ -10,6 +10,7 @@ import {
   updateChatRead,
 } from "@/lib/api/chat";
 import { getMyProfile } from "@/lib/api/users";
+import { uploadChatImages } from "@/lib/images/presigned";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ChatMessageResponse } from "@/types/chat";
 import { ChatRoomView } from "./ChatRoomView";
@@ -21,7 +22,15 @@ vi.mock("next/navigation", async (importOriginal) => ({
   useRouter: () => routerMock,
 }));
 
+vi.mock("@/lib/images/presigned", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/images/presigned")>()),
+  uploadChatImages: vi.fn(),
+}));
+
 vi.mock("@/lib/api/chat", () => ({
+  buildChatImageDownloadUrl: (roomId: string, messageId: number) =>
+    `/api/chat/rooms/${roomId}/images/${messageId}/download`,
+  getChatRoomImages: vi.fn(),
   createChatWsTicket: vi.fn(),
   getChatRoom: vi.fn(),
   getChatMessages: vi.fn(),
@@ -41,6 +50,7 @@ const mockedSendChatMessage = vi.mocked(sendChatMessage);
 const mockedUpdateChatRead = vi.mocked(updateChatRead);
 const mockedLeaveChatRoom = vi.mocked(leaveChatRoom);
 const mockedGetMyProfile = vi.mocked(getMyProfile);
+const mockedUploadChatImages = vi.mocked(uploadChatImages);
 
 function message(messageId: number, senderId: number, content: string): ChatMessageResponse {
   return {
@@ -249,6 +259,68 @@ describe("ChatRoomView", () => {
 
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
     expect(mockedSendChatMessage).not.toHaveBeenCalled();
+  });
+
+  it("uploads picked photos and sends them as image messages", async () => {
+    mockedUploadChatImages.mockResolvedValue([
+      {
+        uploadUrl: "https://s3/1",
+        imageKey: "chats/a.webp",
+        imageUrl: "https://s3/a.webp",
+        expiresInSeconds: 300,
+      },
+      {
+        uploadUrl: "https://s3/2",
+        imageKey: "chats/b.webp",
+        imageUrl: "https://s3/b.webp",
+        expiresInSeconds: 300,
+      },
+    ]);
+    mockedSendChatMessage.mockResolvedValue({
+      status: "success",
+      message: message(22, 11, "사진"),
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    const picker = await screen.findByLabelText("Attach photos");
+    const input = picker.parentElement?.querySelector("input[type=file]") as HTMLInputElement;
+    fireEvent.change(input, {
+      target: {
+        files: [
+          new File(["a"], "a.webp", { type: "image/webp" }),
+          new File(["b"], "b.webp", { type: "image/webp" }),
+        ],
+      },
+    });
+
+    expect(await screen.findByText("a.webp")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(mockedUploadChatImages).toHaveBeenCalledTimes(1));
+    // 사진 장수만큼 메시지를 보낸다
+    await waitFor(() => expect(mockedSendChatMessage).toHaveBeenCalledTimes(2));
+    expect(mockedSendChatMessage).toHaveBeenNthCalledWith(
+      1,
+      "1",
+      expect.objectContaining({ messageType: "IMAGE", imageKey: "chats/a.webp" }),
+    );
+  });
+
+  it("lets a photo be removed before sending", async () => {
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    const picker = await screen.findByLabelText("Attach photos");
+    const input = picker.parentElement?.querySelector("input[type=file]") as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { files: [new File(["a"], "a.webp", { type: "image/webp" })] },
+    });
+
+    expect(await screen.findByText("a.webp")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Remove photo" }));
+
+    await waitFor(() => expect(screen.queryByText("a.webp")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
   });
 
   it("leaves the conversation after confirmation", async () => {

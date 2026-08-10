@@ -1,11 +1,19 @@
 export type ChatRoomType = "DIRECT" | "GROUP";
+export type ChatMessageType = "TEXT" | "IMAGE";
 
 export interface ChatMessageResponse {
   messageId: number;
   senderId: number;
   senderName: string;
   senderProfileImageUrl: string | null;
-  content: string;
+  /** 생략되면 TEXT로 간주한다 (구버전 응답 호환) */
+  messageType?: ChatMessageType;
+  /** IMAGE에서는 캡션이라 비어 있을 수 있다 */
+  content: string | null;
+  imageUrl?: string | null;
+  /** 있으면 로딩 중 레이아웃이 튀지 않는다 */
+  imageWidth?: number | null;
+  imageHeight?: number | null;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   createdAt: string;
 }
@@ -16,6 +24,8 @@ export interface ChatRoomMemberResponse {
   profileImageUrl: string | null;
   /** 이 참여자가 읽은 마지막 메시지 ID. 아직 읽지 않았으면 null */
   lastReadMessageId: number | null;
+  /** 합류 시점의 마지막 메시지 ID. 이보다 앞선 메시지는 이 참여자에게 보이지 않는다 */
+  visibleFromMessageId?: number | null;
   /** 채팅방을 나간 참여자 */
   left: boolean;
 }
@@ -59,8 +69,31 @@ export interface CreateGroupChatRoomRequest {
 }
 
 export interface SendChatMessageRequest {
-  /** 1~2000자 */
-  content: string;
+  /** 생략하면 TEXT */
+  messageType?: ChatMessageType;
+  /** TEXT면 필수, IMAGE면 캡션(선택) */
+  content?: string | null;
+  /** IMAGE면 필수. presigned 발급 후 1시간 안에 보내야 한다 */
+  imageKey?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+}
+
+export interface ChatRoomImage {
+  messageId: number;
+  imageUrl: string;
+  imageWidth: number | null;
+  imageHeight: number | null;
+  senderId: number;
+  senderName: string;
+  createdAt: string;
+}
+
+export interface ChatRoomImagePageResponse {
+  images: ChatRoomImage[];
+  page: number;
+  size: number;
+  hasNext: boolean;
 }
 
 export interface UpdateChatReadRequest {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { ChatImageBubble } from "@/components/chat/ChatImageBubble";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Locale } from "@/i18n/routing";
 import { formatChatDateSeparator, groupChatMessages } from "@/lib/chat/format";
@@ -19,6 +20,7 @@ export function ChatMessageList({
   hasOlder,
   isLoadingOlder,
   onLoadOlder,
+  onOpenImage,
 }: Readonly<{
   messages: ChatMessageResponse[];
   members: ChatRoomMemberResponse[];
@@ -29,6 +31,7 @@ export function ChatMessageList({
   hasOlder: boolean;
   isLoadingOlder: boolean;
   onLoadOlder: () => void;
+  onOpenImage: (message: ChatMessageResponse) => void;
 }>) {
   const t = useTranslations("Chat");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -38,13 +41,15 @@ export function ChatMessageList({
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [newestMessageId]);
 
-  // 아직 안 읽은 사람 수를 세기 위해, 나를 뺀 참여 중인 사람들의 읽음 위치를 모은다
-  const otherReadPositions = members
-    .filter((member) => member.userId !== myUserId && !member.left)
-    .map((member) => member.lastReadMessageId ?? 0);
+  const others = members.filter((member) => member.userId !== myUserId && !member.left);
 
+  // 합류 이전 메시지는 그 사람에게 보이지 않으므로 안 읽은 사람으로 세지 않는다
   function countUnread(messageId: number) {
-    return otherReadPositions.filter((position) => position < messageId).length;
+    return others.filter(
+      (member) =>
+        (member.visibleFromMessageId ?? 0) < messageId &&
+        (member.lastReadMessageId ?? 0) < messageId,
+    ).length;
   }
 
   if (isPending) {
@@ -115,13 +120,21 @@ export function ChatMessageList({
                         key={message.messageId}
                         className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""}`}
                       >
-                        <p
-                          className={`max-w-[min(30rem,72vw)] rounded-2xl px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap text-ink ${
-                            mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
-                          }`}
-                        >
-                          {message.content}
-                        </p>
+                        {message.messageType === "IMAGE" && message.imageUrl ? (
+                          <ChatImageBubble
+                            message={message}
+                            mine={mine}
+                            onOpen={() => onOpenImage(message)}
+                          />
+                        ) : (
+                          <p
+                            className={`max-w-[min(30rem,72vw)] rounded-2xl px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap text-ink ${
+                              mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
+                            }`}
+                          >
+                            {message.content}
+                          </p>
+                        )}
                         {unread > 0 ? (
                           <span
                             aria-label={t("unreadByCount", { count: unread })}

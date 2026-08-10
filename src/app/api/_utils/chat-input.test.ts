@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildChatImagePageQuery,
   buildChatMessageQuery,
+  isValidChatImageKey,
   isPositiveId,
   isValidChatMessageContent,
   isValidChatRoomId,
@@ -48,5 +50,25 @@ describe("chat input validation", () => {
     expect(query("size=20&beforeMessageId=0")).toBe("?size=20");
     expect(query("size=20&beforeMessageId=abc")).toBe("?size=20");
     expect(query("size=20&beforeMessageId=-5")).toBe("?size=20");
+  });
+});
+
+describe("chat image input", () => {
+  it("accepts only keys issued for the chat folder", () => {
+    expect(isValidChatImageKey("chats/2026/08/10/uuid.webp")).toBe(true);
+    expect(isValidChatImageKey("activities/uuid.webp")).toBe(false);
+    expect(isValidChatImageKey("profiles/uuid.webp")).toBe(false);
+    expect(isValidChatImageKey("chats/../secret.webp")).toBe(false);
+    expect(isValidChatImageKey("")).toBe(false);
+    expect(isValidChatImageKey(42)).toBe(false);
+  });
+
+  it("normalizes the photo panel page query", () => {
+    const query = (search: string) => buildChatImagePageQuery(new URLSearchParams(search));
+
+    expect(query("page=1&size=30")).toBe("?page=1&size=30");
+    expect(query("")).toBe("?page=0&size=30");
+    expect(query("page=-1&size=0")).toBe("?page=0&size=30");
+    expect(query("page=0&size=500")).toBe("?page=0&size=100");
   });
 });

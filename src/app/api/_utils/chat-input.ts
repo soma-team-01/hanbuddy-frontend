@@ -33,3 +33,31 @@ export function buildChatMessageQuery(searchParams: URLSearchParams): string {
 export function isValidChatRoomId(chatRoomId: string): boolean {
   return /^\d+$/.test(chatRoomId) && Number(chatRoomId) > 0;
 }
+
+const CHAT_IMAGE_PAGE_MAX_SIZE = 100;
+const CHAT_IMAGE_PAGE_DEFAULT_SIZE = 30;
+
+/** 사진함은 page·size만 정규화해 넘긴다 */
+export function buildChatImagePageQuery(searchParams: URLSearchParams): string {
+  const page = Number(searchParams.get("page"));
+  const size = Number(searchParams.get("size"));
+  const safePage = Number.isInteger(page) && page >= 0 ? page : 0;
+  const safeSize =
+    Number.isInteger(size) && size > 0
+      ? Math.min(size, CHAT_IMAGE_PAGE_MAX_SIZE)
+      : CHAT_IMAGE_PAGE_DEFAULT_SIZE;
+
+  return `?page=${safePage}&size=${safeSize}`;
+}
+
+/**
+ * IMAGE 메시지의 imageKey는 채팅 전용 폴더의 key여야 한다.
+ * 상위 경로로 빠져나가는 값은 여기서 막는다 (소유권은 백엔드가 최종 확인한다).
+ */
+export function isValidChatImageKey(imageKey: unknown): imageKey is string {
+  return (
+    typeof imageKey === "string" &&
+    /^chats\/[\w.\-/]+$/.test(imageKey) &&
+    !imageKey.split("/").includes("..")
+  );
+}

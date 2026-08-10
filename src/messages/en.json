@@ -53,7 +53,11 @@
     "chatOwnerLeave": "You can't leave a group chat you created.",
     "chatInvalidTarget": "You can't start a chat with this person.",
     "chatForbidden": "You are no longer part of this conversation.",
-    "chatNotFound": "This conversation could not be found."
+    "chatNotFound": "This conversation could not be found.",
+    "chatMessageNotFound": "This photo could not be found.",
+    "chatInvalidMessage": "This message could not be sent.",
+    "chatInvalidImage": "This photo could not be attached. Please pick it again.",
+    "chatTooManyMessages": "You are sending messages too quickly. Please slow down."
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
@@ -702,7 +706,23 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "you": "You",
-    "unreadByCount": "{count, plural, one {# person has not read this} other {# people have not read this}}"
+    "unreadByCount": "{count, plural, one {# person has not read this} other {# people have not read this}}",
+    "photo": "Photo",
+    "openPhoto": "Open photo",
+    "photoMessage": "Photo",
+    "attachPhoto": "Attach photos",
+    "attachedPhotos": "{count, plural, one {# photo attached} other {# photos attached}}",
+    "removePhoto": "Remove photo",
+    "uploadingPhotos": "Uploading photos...",
+    "photoTooMany": "You can send up to {max} photos at once.",
+    "photoPanel": "Photos in this chat",
+    "photoPanelEmpty": "No photos yet",
+    "openPhotoPanel": "Photos",
+    "closePhotoPanel": "Close photos",
+    "download": "Download",
+    "loadMorePhotos": "Load more photos",
+    "photosLoadError": "Could not load photos.",
+    "sentBy": "Sent by {name}"
   },
   "MyPage": {
     "title": "My Page",

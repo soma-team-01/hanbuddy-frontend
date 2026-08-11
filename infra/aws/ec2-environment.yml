@@ -125,7 +125,9 @@ Resources:
         HttpEndpoint: enabled
         HttpTokens: required
         HttpPutResponseHopLimit: 1
-      NetworkInterfaces:
+      # Public ingress is intentional for the Caddy frontend; the security group
+      # exposes only HTTP/HTTPS, while administration remains SSM-only.
+      NetworkInterfaces: # NOSONAR
         - DeleteOnTermination: true
           DeviceIndex: "0"
           GroupSet:

@@ -114,6 +114,10 @@ Resources:
 
   FrontendInstance:
     Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
     Properties:
       ImageId: !Ref LatestAmiId
       InstanceType: !Ref InstanceType
@@ -154,7 +158,19 @@ Resources:
           #!/usr/bin/env bash
           set -Eeuxo pipefail
 
-          dnf install -y docker
+          signal_bootstrap() {
+            local bootstrap_exit_code="$?"
+            trap - EXIT
+            /opt/aws/bin/cfn-signal \
+              --exit-code "$bootstrap_exit_code" \
+              --stack ${AWS::StackName} \
+              --resource FrontendInstance \
+              --region ${AWS::Region}
+            exit "$bootstrap_exit_code"
+          }
+          trap signal_bootstrap EXIT
+
+          dnf install -y aws-cfn-bootstrap docker
           systemctl enable --now docker
 
           if [[ ! -f /swapfile ]]; then

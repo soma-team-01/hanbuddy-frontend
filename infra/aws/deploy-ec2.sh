@@ -97,7 +97,8 @@ google_client_id="$(jq -r '.GOOGLE_CLIENT_ID' <<< "${EC2_RUNTIME_ENVIRONMENT_JSO
 google_redirect_uri="$(jq -r '.GOOGLE_REDIRECT_URI' <<< "${EC2_RUNTIME_ENVIRONMENT_JSON}")"
 
 encode() {
-  printf '%s' "$1" | base64 | tr -d '\n'
+  local value="$1"
+  printf '%s' "${value}" | base64 | tr -d '\n'
 }
 
 image_uri_base64="$(encode "${IMAGE_URI}")"
@@ -214,6 +215,7 @@ for _ in $(seq 1 120); do
     Success | Cancelled | Failed | TimedOut | Cancelling)
       break
       ;;
+    *) ;;
   esac
 
   sleep 5

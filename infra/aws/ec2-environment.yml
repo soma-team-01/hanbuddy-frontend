@@ -126,8 +126,7 @@ Resources:
         HttpTokens: required
         HttpPutResponseHopLimit: 1
       NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeleteOnTermination: true
+        - DeleteOnTermination: true
           DeviceIndex: "0"
           GroupSet:
             - !Ref FrontendSecurityGroup

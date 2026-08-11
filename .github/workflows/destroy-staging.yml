@@ -1,0 +1,83 @@
+name: Destroy staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type "destroy-staging" to delete the staging service
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'ap-northeast-2' }}
+      AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+      LIGHTSAIL_SERVICE_NAME: hanbuddy-frontend-staging
+
+    steps:
+      - name: Require the develop branch and confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != "develop" ]]; then
+            echo "Run this workflow with 'Use workflow from: develop'."
+            exit 1
+          fi
+
+          if [[ "${CONFIRMATION}" != "destroy-staging" ]]; then
+            echo 'Confirmation must exactly match "destroy-staging".'
+            exit 1
+          fi
+
+          test -n "${AWS_ROLE_ARN}" || { echo "Missing AWS_ROLE_ARN repository variable"; exit 1; }
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Delete staging service
+        run: |
+          service_count="$(aws lightsail get-container-services \
+            --service-name "${LIGHTSAIL_SERVICE_NAME}" \
+            --region "${AWS_REGION}" \
+            --query 'length(containerServices)' \
+            --output text)"
+
+          if [[ "${service_count}" == "0" ]]; then
+            echo "Staging service does not exist; nothing to delete."
+            exit 0
+          fi
+
+          aws lightsail delete-container-service \
+            --service-name "${LIGHTSAIL_SERVICE_NAME}" \
+            --region "${AWS_REGION}" >/dev/null
+
+          for _ in $(seq 1 60); do
+            remaining="$(aws lightsail get-container-services \
+              --service-name "${LIGHTSAIL_SERVICE_NAME}" \
+              --region "${AWS_REGION}" \
+              --query 'length(containerServices)' \
+              --output text)"
+
+            if [[ "${remaining}" == "0" ]]; then
+              echo "Staging service was deleted. Its compute charge has stopped."
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "Timed out waiting for the staging service to be deleted." >&2
+          exit 1

@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: HanBuddy frontend ECR, GitHub Actions OIDC role, and cost budget
+
+Parameters:
+  GitHubOidcProviderArn:
+    Type: String
+    Description: ARN of the account-level token.actions.githubusercontent.com OIDC provider
+  GitHubOwner:
+    Type: String
+    Default: soma-team-01
+  GitHubRepository:
+    Type: String
+    Default: hanbuddy-frontend
+  EcrRepositoryName:
+    Type: String
+    Default: hanbuddy-frontend
+  Route53HostedZoneId:
+    Type: String
+    Description: Route 53 hosted zone ID that contains the frontend domains
+  BudgetEmail:
+    Type: String
+    Description: Email address that receives AWS cost alerts
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 20
+    MinValue: 1
+
+Resources:
+  FrontendRepository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: !Ref EcrRepositoryName
+      EmptyOnDelete: false
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: MUTABLE
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Remove untagged images after one day",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 1
+                },
+                "action": { "type": "expire" }
+              },
+              {
+                "rulePriority": 2,
+                "description": "Keep the latest twenty environment-specific commit images",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPatternList": ["*-sha-*"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 20
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Deploy HanBuddy frontend from protected GitHub environments
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:production
+                  - !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:staging
+      Policies:
+        - PolicyName: DeployFrontendToLightsail
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: GetEcrAuthorizationToken
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              - Sid: PushAndManageFrontendRepository
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
+                  - ecr:InitiateLayerUpload
+                  - ecr:ListImages
+                  - ecr:PutImage
+                  - ecr:SetRepositoryPolicy
+                  - ecr:UploadLayerPart
+                Resource: !GetAtt FrontendRepository.Arn
+              - Sid: ManageFrontendContainerServices
+                Effect: Allow
+                Action:
+                  - lightsail:CreateContainerService
+                  - lightsail:CreateContainerServiceDeployment
+                  - lightsail:DeleteContainerService
+                  - lightsail:GetContainerServices
+                  - lightsail:UpdateContainerService
+                Resource: "*"
+              - Sid: UpdateFrontendDnsAliases
+                Effect: Allow
+                Action: route53:ChangeResourceRecordSets
+                Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
+
+  MonthlyCostBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetLimit:
+          Amount: !Ref MonthlyBudgetUsd
+          Unit: USD
+        BudgetName: hanbuddy-frontend-monthly-cost
+        BudgetType: COST
+        TimeUnit: MONTHLY
+      NotificationsWithSubscribers:
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: FORECASTED
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - Address: !Ref BudgetEmail
+              SubscriptionType: EMAIL
+        - Notification:
+            ComparisonOperator: GREATER_THAN
+            NotificationType: ACTUAL
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - Address: !Ref BudgetEmail
+              SubscriptionType: EMAIL
+
+Outputs:
+  AwsRoleArn:
+    Description: Set this value as the GitHub repository variable AWS_ROLE_ARN
+    Value: !GetAtt GitHubActionsRole.Arn
+  EcrRepositoryUri:
+    Value: !GetAtt FrontendRepository.RepositoryUri
+  EcrRepositoryName:
+    Value: !Ref EcrRepositoryName

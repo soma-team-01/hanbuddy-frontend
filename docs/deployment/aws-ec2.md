@@ -114,11 +114,12 @@ stack 생성 즉시 EC2와 public IPv4 사용 요금이 시작된다. 설정과 
 
 Repository variables:
 
-| Name             | 값                            |
-| ---------------- | ----------------------------- |
-| `AWS_ROLE_ARN`   | bootstrap output `AwsRoleArn` |
-| `AWS_REGION`     | `ap-northeast-2`              |
-| `ECR_REPOSITORY` | `hanbuddy-frontend`           |
+| Name                            | 값                                         |
+| ------------------------------- | ------------------------------------------ |
+| `AWS_ROLE_ARN`                  | bootstrap output `AwsRoleArn`              |
+| `AWS_REGION`                    | `ap-northeast-2`                           |
+| `ECR_REPOSITORY`                | `hanbuddy-frontend`                        |
+| `PRODUCTION_DEPLOYMENT_ENABLED` | production 전환 전 `false`, 전환 시 `true` |
 
 `staging` environment는 `develop` branch만 허용하고 다음 variable을 추가한다.
 
@@ -185,6 +186,8 @@ RootVolumeSize: 16
 ```
 
 Outputs의 `InstanceId`와 domain 값을 `production` GitHub environment에 추가한다. `production`은 `main` branch만 허용한다. main CI 성공 후 `Deploy production`이 자동 실행되므로 landing DNS 전환 준비가 끝나기 전에는 production variable을 완성하거나 workflow를 수동 실행하지 않는다.
+
+모든 production 준비가 끝난 마지막 단계에서 repository variable `PRODUCTION_DEPLOYMENT_ENABLED`를 `true`로 바꾼다. 그전에는 `false`로 유지하므로 배포 workflow가 main에 병합되어도 production job은 실행되지 않는다.
 
 Production의 Elastic IP는 주소 안정성을 위한 것이며 EC2를 정지해도 시간당 `$0.005`가 계속 청구된다. Production은 상시 실행을 전제로 한다.
 

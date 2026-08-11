@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Shared custom VPC and public subnets for HanBuddy frontend environments
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: 10.20.0.0/16
+    Description: IPv4 CIDR for the shared frontend VPC
+  PublicSubnetACidr:
+    Type: String
+    Default: 10.20.10.0/24
+    Description: IPv4 CIDR for the first public subnet (staging initially)
+  PublicSubnetBCidr:
+    Type: String
+    Default: 10.20.20.0/24
+    Description: IPv4 CIDR for the second public subnet (production initially)
+
+Resources:
+  FrontendVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: hanbuddy-frontend-vpc
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+
+  FrontendInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: hanbuddy-frontend-igw
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+
+  FrontendInternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref FrontendInternetGateway
+      VpcId: !Ref FrontendVpc
+
+  FrontendPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref FrontendVpc
+      Tags:
+        - Key: Name
+          Value: hanbuddy-frontend-public
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+
+  FrontendPublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: FrontendInternetGatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref FrontendInternetGateway
+      RouteTableId: !Ref FrontendPublicRouteTable
+
+  FrontendPublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref PublicSubnetACidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref FrontendVpc
+      Tags:
+        - Key: Name
+          Value: hanbuddy-frontend-public-a
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+
+  FrontendPublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: !Ref PublicSubnetBCidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref FrontendVpc
+      Tags:
+        - Key: Name
+          Value: hanbuddy-frontend-public-b
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+
+  FrontendPublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref FrontendPublicRouteTable
+      SubnetId: !Ref FrontendPublicSubnetA
+
+  FrontendPublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref FrontendPublicRouteTable
+      SubnetId: !Ref FrontendPublicSubnetB
+
+Outputs:
+  VpcId:
+    Description: Shared VPC ID for staging and production EC2 stacks
+    Value: !Ref FrontendVpc
+  PublicSubnetAId:
+    Description: Use as the initial staging SubnetId
+    Value: !Ref FrontendPublicSubnetA
+  PublicSubnetBId:
+    Description: Use as the initial production SubnetId
+    Value: !Ref FrontendPublicSubnetB
+  PublicRouteTableId:
+    Value: !Ref FrontendPublicRouteTable
+  InternetGatewayId:
+    Value: !Ref FrontendInternetGateway

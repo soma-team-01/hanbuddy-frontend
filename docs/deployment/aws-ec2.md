@@ -7,6 +7,7 @@ HanBuddy Next.js 프론트엔드를 private ECR과 환경별 EC2에 배포한다
 - `main`은 production이며 CI 성공 후 자동 배포한다.
 - `develop`은 staging이며 GitHub Actions에서 수동 배포한다.
 - production과 staging은 별도 EC2, EBS, IAM instance role, security group을 사용한다.
+- frontend 전용 custom VPC 하나와 서로 다른 Availability Zone의 public subnet 두 개를 공유한다. staging은 첫 번째 subnet, production은 두 번째 subnet을 사용한다.
 - 기본 인스턴스는 x86_64 `t3a.small`(2 vCPU, 2 GiB)이고 root volume은 gp3 16GB다.
 - staging은 사용 후 `Stop staging` workflow로 정지한다. 다음 배포가 자동으로 다시 시작한다.
 - staging은 Elastic IP를 쓰지 않고 시작할 때 바뀐 public IPv4를 Route 53 A record에 자동 반영한다. production은 안정적인 주소를 위해 Elastic IP를 사용한다. NAT Gateway와 ALB는 사용하지 않는다.
@@ -68,15 +69,42 @@ repo:soma-team-01/hanbuddy-frontend:environment:staging
 | `EcrRepositoryName`     | `hanbuddy-frontend`                                                           |
 | `Route53HostedZoneId`   | `hanbuddy.kr` hosted zone ID                                                  |
 
-## 3. Public subnet 확인
+## 3. Frontend network stack 생성
 
-환경 stack에는 VPC ID와 public subnet ID가 필요하다. 기본 VPC가 있다면 기본 VPC와 그 안의 subnet 하나를 사용해도 된다.
+production과 staging은 EC2, EBS, IAM instance role, security group을 각각 분리하지만 frontend 전용 custom VPC는 하나를 공유한다. 현재 규모에서 VPC까지 환경별로 나누면 실질적인 이점보다 route와 subnet 관리 대상만 늘어난다.
 
-1. VPC Console → `Your VPCs`에서 사용할 VPC ID를 확인한다.
-2. VPC Console → `Subnets`에서 해당 VPC의 subnet 하나를 고른다.
-3. 연결된 route table에 `0.0.0.0/0 → Internet Gateway` route가 있는지 확인한다.
+`infra/aws/network.yml`은 다음 리소스를 만든다.
 
-NAT Gateway가 필요한 private subnet을 선택하지 않는다. EC2 network interface에는 public IPv4가 자동 할당되지만, subnet 자체가 Internet Gateway로 나갈 수 있어야 한다.
+- `10.20.0.0/16` frontend 전용 VPC
+- 서로 다른 Availability Zone의 public subnet 두 개
+- Internet Gateway 하나
+- `0.0.0.0/0 → Internet Gateway` route가 있는 public route table
+- public IPv4 자동 할당 설정
+
+NAT Gateway와 private subnet은 만들지 않는다. VPC, subnet, route table, Internet Gateway 자체에는 시간당 요금이 없지만 EC2에 할당되는 public IPv4와 데이터 전송에는 요금이 발생한다.
+
+1. CloudFormation → `Create stack` → `With new resources (standard)`를 누른다.
+2. `infra/aws/network.yml`을 업로드한다.
+3. stack 이름은 `hanbuddy-frontend-network`로 한다.
+4. CIDR parameter는 다른 VPC와 겹치지 않는다면 기본값을 유지한다.
+
+| Parameter           | 기본값          |
+| ------------------- | --------------- |
+| `VpcCidr`           | `10.20.0.0/16`  |
+| `PublicSubnetACidr` | `10.20.10.0/24` |
+| `PublicSubnetBCidr` | `10.20.20.0/24` |
+
+5. stack을 생성하고 `CREATE_COMPLETE`가 될 때까지 기다린다.
+6. Outputs의 `VpcId`, `PublicSubnetAId`, `PublicSubnetBId`를 확인한다.
+
+초기 환경 배치는 다음과 같다.
+
+| Environment  | Subnet output     |
+| ------------ | ----------------- |
+| `staging`    | `PublicSubnetAId` |
+| `production` | `PublicSubnetBId` |
+
+두 subnet은 같은 public route table과 Internet Gateway를 사용한다. 환경 간 접근 권한은 각 EC2 stack이 별도로 생성하는 security group으로 통제한다.
 
 ## 4. Staging EC2 stack 생성
 
@@ -85,17 +113,17 @@ NAT Gateway가 필요한 private subnet을 선택하지 않는다. EC2 network i
 3. stack 이름은 `hanbuddy-frontend-staging-ec2`로 한다.
 4. parameter를 입력한다.
 
-| Parameter           | 값                      |
-| ------------------- | ----------------------- |
-| `EnvironmentName`   | `staging`               |
-| `FrontendDomain`    | `staging.hanbuddy.kr`   |
-| `VpcId`             | 3단계에서 확인한 VPC    |
-| `SubnetId`          | 3단계에서 확인한 subnet |
-| `InstanceType`      | `t3a.small`             |
-| `AllocateElasticIp` | `false`                 |
-| `RootVolumeSize`    | `16`                    |
-| `EcrRepositoryName` | `hanbuddy-frontend`     |
-| `LatestAmiId`       | 기본값 유지             |
+| Parameter           | 값                               |
+| ------------------- | -------------------------------- |
+| `EnvironmentName`   | `staging`                        |
+| `FrontendDomain`    | `staging.hanbuddy.kr`            |
+| `VpcId`             | network output `VpcId`           |
+| `SubnetId`          | network output `PublicSubnetAId` |
+| `InstanceType`      | `t3a.small`                      |
+| `AllocateElasticIp` | `false`                          |
+| `RootVolumeSize`    | `16`                             |
+| `EcrRepositoryName` | `hanbuddy-frontend`              |
+| `LatestAmiId`       | 기본값 유지                      |
 
 5. CloudFormation IAM resource 생성 동의 후 생성한다.
 6. `CREATE_COMPLETE`가 되면 Outputs의 `InstanceId`를 복사한다.
@@ -180,6 +208,8 @@ production과 staging은 당분간 같은 backend `https://api.hanbuddy.kr`을 �
 Stack name: hanbuddy-frontend-production-ec2
 EnvironmentName: production
 FrontendDomain: hanbuddy.kr
+VpcId: network output VpcId
+SubnetId: network output PublicSubnetBId
 InstanceType: t3a.small
 AllocateElasticIp: true
 RootVolumeSize: 16

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
 import { postBackend } from "@/lib/auth/backend";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
@@ -19,6 +19,10 @@ const mockedPostBackend = vi.mocked(postBackend);
 describe("GET /auth/google/callback", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("redirects to login when Google returns an error", async () => {
@@ -444,6 +448,34 @@ describe("GET /auth/google/callback", () => {
       picture: "https://lh3.googleusercontent.com/profile",
     });
     expect(decodedProfile).not.toHaveProperty("email");
+  });
+
+  it("uses the configured public origin behind the EC2 reverse proxy", async () => {
+    vi.stubEnv("GOOGLE_REDIRECT_URI", "https://staging.hanbuddy.kr/auth/google/callback");
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
+          signupToken: "signup-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(
+      new NextRequest("http://0.0.0.0:3000/auth/google/callback?code=code&state=state", {
+        headers: {
+          cookie: `${AUTH_COOKIES.oauthState}=state; ${AUTH_COOKIES.oauthLocale}=ko`,
+        },
+      }),
+    );
+
+    expect(response.headers.get("location")).toBe("https://staging.hanbuddy.kr/ko/onboarding");
   });
 
   it("redirects an unregistered buddy signup to buddy onboarding", async () => {

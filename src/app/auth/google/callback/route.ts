@@ -93,7 +93,7 @@ function createAdminRedirect(request: NextRequest, result: GoogleLoginResponse) 
     return redirectToAdminLoginWithError(request, "adminOnly");
   }
 
-  const response = NextResponse.redirect(new URL("/admin/buddies", request.url));
+  const response = NextResponse.redirect(createPublicUrl(request, "/admin/buddies"));
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
   clearAuthStatusReasonCookie(response);
@@ -180,7 +180,7 @@ function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
 }
 
 function redirectToAdminLoginWithError(request: NextRequest, code: string) {
-  const loginUrl = new URL("/admin/login", request.url);
+  const loginUrl = createPublicUrl(request, "/admin/login");
   loginUrl.searchParams.set("error", code);
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);
@@ -195,5 +195,19 @@ function createLocalizedUrl(request: NextRequest, pathname: string) {
     request.cookies.get(AUTH_COOKIES.oauthLocale)?.value ??
       request.cookies.get(LOCALE_COOKIE_NAME)?.value,
   );
-  return new URL(localizePathname(pathname, locale), request.url);
+  return createPublicUrl(request, localizePathname(pathname, locale));
+}
+
+function createPublicUrl(request: NextRequest, pathname: string) {
+  const configuredRedirectUri = process.env.GOOGLE_REDIRECT_URI?.trim();
+
+  if (configuredRedirectUri) {
+    try {
+      return new URL(pathname, new URL(configuredRedirectUri).origin);
+    } catch {
+      // 잘못된 로컬 설정에서는 기존 요청 URL을 사용해 오류 화면으로 이동한다.
+    }
+  }
+
+  return new URL(pathname, request.url);
 }

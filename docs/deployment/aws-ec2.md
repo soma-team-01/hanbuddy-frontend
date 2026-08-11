@@ -11,7 +11,7 @@ HanBuddy Next.js 프론트엔드를 private ECR과 환경별 EC2에 배포한다
 - 기본 인스턴스는 x86_64 `t3a.small`(2 vCPU, 2 GiB)이고 root volume은 gp3 16GB다.
 - staging은 사용 후 `Stop staging` workflow로 정지한다. 다음 배포가 자동으로 다시 시작한다.
 - staging은 Elastic IP를 쓰지 않고 시작할 때 바뀐 public IPv4를 Route 53 A record에 자동 반영한다. production은 안정적인 주소를 위해 Elastic IP를 사용한다. NAT Gateway와 ALB는 사용하지 않는다.
-- 하나의 ECR repository를 사용하되 `production-latest`, `staging-latest`, `<environment>-sha-<commit>` tag로 구분한다.
+- 하나의 ECR repository를 사용하되 `production-latest`, `staging-latest`, `<environment>-sha-<commit>` tag로 구분한다. `*-latest`만 이동할 수 있고 commit tag는 덮어쓸 수 없다.
 - ECR lifecycle policy는 untagged image를 하루 후 삭제하고 production commit image 10개, staging commit image 3개를 유지한다.
 
 ## 예상 비용
@@ -68,6 +68,7 @@ repo:soma-team-01/hanbuddy-frontend:environment:staging
 | `GitHubRepository`      | `hanbuddy-frontend`                                                           |
 | `EcrRepositoryName`     | `hanbuddy-frontend`                                                           |
 | `Route53HostedZoneId`   | `hanbuddy.kr` hosted zone ID                                                  |
+| `FrontendRecordNames`   | `hanbuddy.kr,staging.hanbuddy.kr`                                             |
 
 ## 3. Environment network stack 두 개 생성
 
@@ -132,7 +133,7 @@ NAT Gateway와 private subnet은 만들지 않는다. VPC, subnet, route table, 
 - gp3 root volume 16GB와 swap 1GB
 - 80/443만 허용하고 SSH 22는 열지 않는 security group
 - SSM 접속과 ECR pull만 가능한 EC2 instance role
-- Docker와 Caddy bootstrap
+- Docker와 Caddy bootstrap. 실패 시 CloudFormation stack 생성도 실패한다.
 
 stack 생성 즉시 EC2와 public IPv4 사용 요금이 시작된다. 설정과 첫 배포가 끝난 후 staging을 사용하지 않으면 workflow로 정지한다.
 

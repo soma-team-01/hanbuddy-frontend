@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: HanBuddy frontend ECR, GitHub Actions OIDC role, and cost budget
+Description: HanBuddy frontend ECR and GitHub Actions OIDC role
 
 Parameters:
   GitHubOidcProviderArn:
@@ -17,14 +17,6 @@ Parameters:
   Route53HostedZoneId:
     Type: String
     Description: Route 53 hosted zone ID that contains the frontend domains
-  BudgetEmail:
-    Type: String
-    Description: Email address that receives AWS cost alerts
-  MonthlyBudgetUsd:
-    Type: Number
-    Default: 20
-    MinValue: 1
-
 Resources:
   FrontendRepository:
     Type: AWS::ECR::Repository
@@ -53,12 +45,23 @@ Resources:
               },
               {
                 "rulePriority": 2,
-                "description": "Keep the latest twenty environment-specific commit images",
+                "description": "Keep the latest ten production commit images",
                 "selection": {
                   "tagStatus": "tagged",
-                  "tagPatternList": ["*-sha-*"],
+                  "tagPrefixList": ["production-sha-"],
                   "countType": "imageCountMoreThan",
-                  "countNumber": 20
+                  "countNumber": 10
+                },
+                "action": { "type": "expire" }
+              },
+              {
+                "rulePriority": 3,
+                "description": "Keep the latest three staging commit images",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPrefixList": ["staging-sha-"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 3
                 },
                 "action": { "type": "expire" }
               }
@@ -118,34 +121,6 @@ Resources:
                 Effect: Allow
                 Action: route53:ChangeResourceRecordSets
                 Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
-
-  MonthlyCostBudget:
-    Type: AWS::Budgets::Budget
-    Properties:
-      Budget:
-        BudgetLimit:
-          Amount: !Ref MonthlyBudgetUsd
-          Unit: USD
-        BudgetName: hanbuddy-frontend-monthly-cost
-        BudgetType: COST
-        TimeUnit: MONTHLY
-      NotificationsWithSubscribers:
-        - Notification:
-            ComparisonOperator: GREATER_THAN
-            NotificationType: FORECASTED
-            Threshold: 80
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - Address: !Ref BudgetEmail
-              SubscriptionType: EMAIL
-        - Notification:
-            ComparisonOperator: GREATER_THAN
-            NotificationType: ACTUAL
-            Threshold: 100
-            ThresholdType: PERCENTAGE
-          Subscribers:
-            - Address: !Ref BudgetEmail
-              SubscriptionType: EMAIL
 
 Outputs:
   AwsRoleArn:

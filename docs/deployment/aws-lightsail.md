@@ -9,7 +9,7 @@
 - production은 기본 `small`, scale `1`이다. GitHub 변수만 바꾸면 이후 power 또는 scale을 높일 수 있다.
 - staging을 사용하지 않을 때는 `Destroy staging` workflow를 수동 실행해 Lightsail service를 삭제한다. 별도 scheduled cleanup workflow는 두지 않는다.
 - 하나의 private ECR repository를 사용하되 `production-latest`, `staging-latest`, `<environment>-sha-<commit>` 태그로 구분한다.
-- ECR lifecycle policy는 untagged 이미지를 하루 후 삭제하고 commit 이미지는 최근 20개만 유지한다.
+- ECR lifecycle policy는 untagged 이미지를 하루 후 삭제하고 production commit 이미지는 최근 10개, staging commit 이미지는 최근 3개만 유지한다.
 - NAT Gateway, ALB, ECS/Fargate는 만들지 않는다.
 
 Lightsail은 같은 리전의 private ECR repository를 직접 pull할 수 있다. 배포 스크립트는 Lightsail service별 image puller role을 ECR policy에 자동 반영한다.
@@ -18,16 +18,14 @@ Lightsail은 같은 리전의 private ECR repository를 직접 pull할 수 있�
 
 다음 값만 메모해 둔다. AWS 비밀번호, Access Key, Secret Access Key는 저장소나 다른 사람에게 전달하지 않는다.
 
-| 값                      | 권장/예시                                                                         |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| AWS Region              | `ap-northeast-2`                                                                  |
-| Route 53 Hosted Zone ID | Route 53 → Hosted zones → 도메인 → Hosted zone details                            |
-| Production domain       | 예: `app.example.com`                                                             |
-| Staging domain          | 예: `staging.example.com`                                                         |
-| Backend base URL        | `/api`를 붙이지 않은 운영 백엔드 주소                                             |
-| Google Client ID        | 현재 웹 OAuth client ID                                                           |
-| 결제 설정               | production=`live`, staging은 client ID를 비워 기능 차단하거나 sandbox client 사용 |
-| 비용 알림 이메일        | 실제 확인하는 이메일                                                              |
+| 값                      | 권장/예시                                              |
+| ----------------------- | ------------------------------------------------------ |
+| AWS Region              | `ap-northeast-2`                                       |
+| Route 53 Hosted Zone ID | Route 53 → Hosted zones → 도메인 → Hosted zone details |
+| Production domain       | `hanbuddy.kr` — 현재 랜딩이 사용 중이므로 연결 보류    |
+| Staging domain          | `staging.hanbuddy.kr`                                  |
+| Backend base URL        | `https://api.hanbuddy.kr`                              |
+| Google Client ID        | 현재 웹 OAuth client ID                                |
 
 ## 1. GitHub OIDC provider 확인 또는 생성
 
@@ -45,7 +43,7 @@ AWS 문서: [GitHub Actions용 OIDC 구성](https://docs.aws.amazon.com/IAM/late
 
 ## 2. 최초 CloudFormation stack 생성
 
-이 단계가 사용자가 AWS에서 직접 실행할 유일한 필수 bootstrap 작업이다. ECR repository, 최소 권한 GitHub role, 월 비용 budget을 만든다. Lightsail service는 아직 만들지 않아 비용이 발생하지 않는다.
+이 단계가 사용자가 AWS에서 직접 실행할 유일한 필수 bootstrap 작업이다. ECR repository와 최소 권한 GitHub role을 만든다. Lightsail service는 아직 만들지 않아 compute 비용이 발생하지 않는다.
 
 1. AWS Console 우측 상단 region을 `Asia Pacific (Seoul) ap-northeast-2`로 맞춘다.
 2. `CloudFormation` → `Stacks` → `Create stack` → `With new resources`를 누른다.
@@ -57,8 +55,6 @@ AWS 문서: [GitHub Actions용 OIDC 구성](https://docs.aws.amazon.com/IAM/late
    - `GitHubRepository`: `hanbuddy-frontend`
    - `EcrRepositoryName`: `hanbuddy-frontend`
    - `Route53HostedZoneId`: 프론트 도메인의 hosted zone ID
-   - `BudgetEmail`: 비용 알림 이메일
-   - `MonthlyBudgetUsd`: 처음에는 `20` 권장
 6. 나머지는 기본값으로 두고 IAM resource 생성 동의 체크박스를 선택한 뒤 stack을 생성한다.
 7. 상태가 `CREATE_COMPLETE`가 되면 `Outputs` 탭에서 `AwsRoleArn`을 복사한다.
 
@@ -72,8 +68,7 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --parameter-overrides \
     GitHubOidcProviderArn='<OIDC_PROVIDER_ARN>' \
-    Route53HostedZoneId='<HOSTED_ZONE_ID>' \
-    BudgetEmail='<EMAIL>'
+    Route53HostedZoneId='<HOSTED_ZONE_ID>'
 ```
 
 ## 3. GitHub Environments와 변수 설정
@@ -93,14 +88,13 @@ Repository의 `Settings` → `Secrets and variables` → `Actions` → `Variable
 
 각 Environment의 `Environment variables`에 다음을 추가한다.
 
-| Environment variable             | production                                   | staging                                       |
-| -------------------------------- | -------------------------------------------- | --------------------------------------------- |
-| `HANBUDDY_API_BASE_URL`          | 운영 백엔드 URL                              | 현재는 같은 운영 백엔드 URL                   |
-| `GOOGLE_CLIENT_ID`               | Google client ID                             | 같은 client ID 사용 가능                      |
-| `GOOGLE_REDIRECT_URI`            | `https://<prod-domain>/auth/google/callback` | `https://<stage-domain>/auth/google/callback` |
-| `NEXT_PUBLIC_PAYPAL_ENVIRONMENT` | `live`                                       | `sandbox`                                     |
-| `LIGHTSAIL_POWER`                | `small`                                      | `small`                                       |
-| `LIGHTSAIL_SCALE`                | `1`                                          | `1`                                           |
+| Environment variable    | production                | staging                                            |
+| ----------------------- | ------------------------- | -------------------------------------------------- |
+| `HANBUDDY_API_BASE_URL` | `https://api.hanbuddy.kr` | `https://api.hanbuddy.kr`                          |
+| `GOOGLE_CLIENT_ID`      | Google client ID          | 같은 client ID 사용 가능                           |
+| `GOOGLE_REDIRECT_URI`   | Production 연결 시 설정   | `https://staging.hanbuddy.kr/auth/google/callback` |
+| `LIGHTSAIL_POWER`       | `small`                   | `small`                                            |
+| `LIGHTSAIL_SCALE`       | `1`                       | `1`                                                |
 
 아래 domain 관련 값은 첫 배포와 인증서 생성 후 추가해도 된다.
 
@@ -110,12 +104,15 @@ Repository의 `Settings` → `Secrets and variables` → `Actions` → `Variable
 | `LIGHTSAIL_CERTIFICATE_NAME` | Lightsail에서 생성한 certificate 이름 |
 | `ROUTE53_HOSTED_ZONE_ID`     | Route 53 hosted zone ID               |
 
+Production의 `FRONTEND_DOMAIN`, certificate, Route 53 값은 `hanbuddy.kr` 랜딩 전환 시점까지 비워 둔다. Staging의 `FRONTEND_DOMAIN`은 `staging.hanbuddy.kr`로 설정한다.
+
 각 Environment의 `Environment secrets`에는 필요한 공개 SDK 키를 넣는다. 브라우저 bundle에 포함되는 값이므로 진짜 비밀로 간주할 수는 없지만 Actions log 노출을 줄이기 위해 secret으로 관리한다.
 
-| Environment secret                | 설정                                                                       |
-| --------------------------------- | -------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | production/staging 도메인 HTTP referrer 제한 필수                          |
-| `NEXT_PUBLIC_PAYPAL_CLIENT_ID`    | production은 live client, staging은 비워 결제를 끄거나 sandbox client 사용 |
+| Environment secret                | 설정                                              |
+| --------------------------------- | ------------------------------------------------- |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | production/staging 도메인 HTTP referrer 제한 필수 |
+
+토스 결제용 프론트 환경변수는 없다. 결제 준비 API가 `clientKey`, 주문번호, 결제 금액을 내려주며 프론트는 해당 응답으로 토스 SDK를 초기화한다.
 
 ## 4. 백엔드와 외부 서비스 허용 목록
 
@@ -125,7 +122,8 @@ Repository의 `Settings` → `Secrets and variables` → `Actions` → `Variable
 2. WebSocket/STOMP allowed origins에도 두 origin을 추가한다.
 3. Google Cloud Console → APIs & Services → Credentials → OAuth client에서 두 callback URI를 Authorized redirect URIs에 추가한다.
 4. Google Maps key의 Website restrictions에 두 domain을 추가한다.
-5. staging에서 운영 결제가 일어나지 않게 PayPal live client ID를 넣지 않는다.
+
+Production과 staging이 같은 백엔드를 사용하면 두 환경 모두 백엔드가 내려주는 동일한 토스 `clientKey`를 사용한다. 별도의 차단 로직이 생기기 전에는 staging에서 실제 결제 버튼을 누르지 않는다.
 
 ## 5. 첫 배포와 domain 연결
 
@@ -175,9 +173,8 @@ AWS 문서: [Route 53에서 Lightsail Container로 라우팅](https://docs.aws.a
 
 ## 8. 비용 확인
 
-- AWS Console → `Billing and Cost Management` → `Budgets`에서 `hanbuddy-frontend-monthly-cost` 알림 수신 주소와 금액을 확인한다.
 - Lightsail → `Containers`에는 production 하나만 상시 남아 있어야 한다.
-- ECR → `hanbuddy-frontend` → `Lifecycle policy`에서 이미지 20개 유지 규칙을 확인한다.
+- ECR → `hanbuddy-frontend` → `Lifecycle policy`에서 production 10개, staging 3개 유지 규칙을 확인한다.
 - staging 삭제 직후에는 월 최대 요금이 즉시 청구되는 것이 아니라 사용한 시간만큼 계산된다.
 
 ## 로컬 검증

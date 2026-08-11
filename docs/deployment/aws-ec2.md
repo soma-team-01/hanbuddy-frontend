@@ -4,7 +4,7 @@ HanBuddy Next.js 프론트엔드를 private ECR과 환경별 EC2에 배포한다
 
 ## 구성과 비용 원칙
 
-- `main`은 production이며 CI 성공 후 자동 배포한다.
+- `main`은 production이며 `PRODUCTION_DEPLOYMENT_ENABLED=true`일 때만 CI 성공 후 자동 배포한다. 실제 전환 전에는 `false`로 유지한다.
 - `develop`은 staging이며 GitHub Actions에서 수동 배포한다.
 - production과 staging은 별도 EC2, EBS, IAM instance role, security group을 사용한다.
 - production과 staging은 각각 별도 custom VPC, Internet Gateway, route table, public subnet 두 개를 사용한다.
@@ -164,6 +164,27 @@ Environment secret:
 | --------------------------------- | --------------------------------------- |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | staging domain이 허용된 Google Maps key |
 
+이 값은 컨테이너 실행 시점의 환경변수가 아니라 Next.js image 빌드 입력이다. 값이 없으면 image 빌드를 중단한다.
+
+`production` environment는 `main` branch만 허용하고 다음 variable을 추가한다.
+
+| Name                     | 값                                               |
+| ------------------------ | ------------------------------------------------ |
+| `EC2_INSTANCE_ID`        | production EC2 stack output `InstanceId`         |
+| `FRONTEND_DOMAIN`        | 운영 전환 시 사용할 frontend domain              |
+| `ROUTE53_HOSTED_ZONE_ID` | `hanbuddy.kr` hosted zone ID                     |
+| `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                        |
+| `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                       |
+| `GOOGLE_REDIRECT_URI`    | 운영 frontend domain의 Google OAuth callback URL |
+
+Production environment secret:
+
+| Name                              | 값                                         |
+| --------------------------------- | ------------------------------------------ |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | production domain이 허용된 Google Maps key |
+
+`AWS_ROLE_ARN`, `AWS_REGION`, `ECR_REPOSITORY`, `PRODUCTION_DEPLOYMENT_ENABLED`는 두 환경이 공유하는 repository variable이다. `PRODUCTION_DEPLOYMENT_ENABLED`는 production job의 실행 여부만 제어하며 environment variable을 대신하지 않는다.
+
 토스 결제용 frontend 환경변수는 없다. 결제 준비 API가 `clientKey`, 주문번호, 금액을 내려준다.
 
 ## 6. 외부 허용 목록
@@ -212,7 +233,7 @@ AllocateElasticIp: true
 RootVolumeSize: 16
 ```
 
-Outputs의 `InstanceId`를 `production` GitHub environment에 추가한다. `production`은 `main` branch만 허용한다. landing DNS 전환 준비가 끝나기 전에는 production workflow를 실행하지 않는다.
+Outputs의 `InstanceId`를 앞의 표에 따라 `production` GitHub environment에 추가한다. landing DNS 전환 준비가 끝나기 전에는 production workflow를 실행하지 않는다.
 
 모든 production 준비가 끝난 마지막 단계에서 repository variable `PRODUCTION_DEPLOYMENT_ENABLED`를 `true`로 바꾼다. 그전에는 `false`로 유지하므로 배포 workflow가 main에 병합되어도 production job은 실행되지 않는다.
 
@@ -228,11 +249,20 @@ Production의 Elastic IP는 주소 안정성을 위한 것이며 EC2를 정지�
 ## 로컬 검증
 
 ```bash
-docker build -t hanbuddy-frontend:local .
-docker run --rm -p 3000:3000 \
+docker build \
+  --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=test \
+  -t hanbuddy-frontend:local \
+  .
+container_id="$(docker run --rm -d \
+  --add-host=host.docker.internal:host-gateway \
+  -p 3000:3000 \
   -e HANBUDDY_API_BASE_URL=http://host.docker.internal:8080 \
   -e GOOGLE_CLIENT_ID=test \
   -e GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback \
-  hanbuddy-frontend:local
-curl --fail http://localhost:3000/api/health
+  hanbuddy-frontend:local)"
+trap 'docker stop "${container_id}" >/dev/null 2>&1 || true' EXIT
+curl --fail --retry 20 --retry-connrefused --retry-delay 1 \
+  http://localhost:3000/api/health
+docker stop "${container_id}"
+trap - EXIT
 ```

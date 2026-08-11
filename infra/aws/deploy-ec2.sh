@@ -92,9 +92,22 @@ if [[ "${ping_status}" != "Online" ]]; then
   exit 1
 fi
 
-api_base_url="$(jq -r '.HANBUDDY_API_BASE_URL' <<< "${EC2_RUNTIME_ENVIRONMENT_JSON}")"
-google_client_id="$(jq -r '.GOOGLE_CLIENT_ID' <<< "${EC2_RUNTIME_ENVIRONMENT_JSON}")"
-google_redirect_uri="$(jq -r '.GOOGLE_REDIRECT_URI' <<< "${EC2_RUNTIME_ENVIRONMENT_JSON}")"
+read_runtime_value() {
+  local key="$1"
+  local value
+
+  value="$(jq -r --arg key "${key}" '.[$key] // empty' <<< "${EC2_RUNTIME_ENVIRONMENT_JSON}")"
+  if [[ -z "${value}" ]]; then
+    echo "EC2_RUNTIME_ENVIRONMENT_JSON is missing ${key}." >&2
+    exit 1
+  fi
+
+  printf '%s' "${value}"
+}
+
+api_base_url="$(read_runtime_value HANBUDDY_API_BASE_URL)"
+google_client_id="$(read_runtime_value GOOGLE_CLIENT_ID)"
+google_redirect_uri="$(read_runtime_value GOOGLE_REDIRECT_URI)"
 
 encode() {
   local value="$1"
@@ -192,18 +205,23 @@ remote_script_base64="$(encode "${remote_script}")"
 command_parameters="$(jq -n \
   --arg command "printf '%s' '${remote_script_base64}' | base64 --decode | bash" \
   '{commands: [$command]}')"
+image_tag="${IMAGE_URI##*:}"
+command_comment="Deploy HanBuddy frontend ${image_tag}"
+command_comment="${command_comment:0:100}"
+ssm_timeout_seconds=1200
 
 command_id="$(aws ssm send-command \
   --instance-ids "${EC2_INSTANCE_ID}" \
   --document-name AWS-RunShellScript \
-  --comment "Deploy HanBuddy frontend ${IMAGE_URI}" \
+  --comment "${command_comment}" \
+  --timeout-seconds "${ssm_timeout_seconds}" \
   --parameters "${command_parameters}" \
   --region "${AWS_REGION}" \
   --query 'Command.CommandId' \
   --output text)"
 
 command_status="Pending"
-for _ in $(seq 1 120); do
+for _ in $(seq 1 300); do
   command_status="$(aws ssm get-command-invocation \
     --command-id "${command_id}" \
     --instance-id "${EC2_INSTANCE_ID}" \

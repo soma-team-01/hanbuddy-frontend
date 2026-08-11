@@ -17,8 +17,7 @@ jobs:
     if: >-
       vars.PRODUCTION_DEPLOYMENT_ENABLED == 'true' &&
       github.repository == 'soma-team-01/hanbuddy-frontend' &&
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -43,8 +42,11 @@ jobs:
           test -n "${GOOGLE_REDIRECT_URI}" || { echo "Missing GOOGLE_REDIRECT_URI production variable"; exit 1; }
           test -n "${FRONTEND_DOMAIN}" || { echo "Missing FRONTEND_DOMAIN production variable"; exit 1; }
           test -n "${ROUTE53_HOSTED_ZONE_ID}" || { echo "Missing ROUTE53_HOSTED_ZONE_ID production variable"; exit 1; }
+          test -n "${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}" || { echo "Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY production secret"; exit 1; }
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6
         with:

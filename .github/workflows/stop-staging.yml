@@ -60,7 +60,7 @@ jobs:
             --query "ResourceRecordSets[?Name == '${record_name}' && Type == 'A'] | [0]" \
             --output json)"
 
-          if [[ "${record_json}" == "null" ]]; then
+          if [[ -z "${record_json}" || "${record_json}" == "null" ]]; then
             echo "No staging A record exists; nothing to delete."
             exit 0
           fi

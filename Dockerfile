@@ -9,12 +9,13 @@ FROM node:24-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
-ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=""
+ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN test -n "${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}" \
+  && npm run build
 
 FROM node:24-bookworm-slim AS runner
 WORKDIR /app

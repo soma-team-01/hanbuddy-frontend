@@ -1,46 +1,81 @@
 import Image from "next/image";
-import { Avatar } from "@/components/ui/Avatar";
-import { MapPinIcon, StarIcon } from "@/components/ui/icons";
+import { useLocale, useTranslations } from "next-intl";
+import { ClockIcon } from "@/components/ui/icons";
+import { RatingSummary } from "@/components/ui/RatingSummary";
 import { formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
-export function ActivityCard({ activity }: Readonly<{ activity: Activity }>) {
+export function ActivityCard({
+  activity,
+  eagerImage = false,
+}: Readonly<{ activity: Activity; eagerImage?: boolean }>) {
+  const locale = useLocale();
+  const t = useTranslations("Explore");
+  const hasDiscount =
+    activity.originalPrice !== undefined && activity.originalPrice > activity.price;
+
   return (
-    <article className="w-full overflow-hidden rounded-xl border border-line bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]">
-      <div className="relative h-48 w-full">
+    <article className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)] transition duration-200 hover:shadow-[0_14px_32px_rgba(61,45,43,0.1)]">
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-panel">
         <Image
           src={activity.imageUrl}
           alt={activity.title}
           fill
-          sizes="(max-width: 448px) 100vw, 448px"
-          className="object-cover"
+          loading={eagerImage ? "eager" : undefined}
+          sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw"
+          className={`object-cover transition duration-300 group-hover:scale-[1.03] ${
+            activity.isSoldOut ? "opacity-55 saturate-[0.85]" : ""
+          }`}
         />
-        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1 text-ink shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] backdrop-blur-[2px]">
-          <StarIcon className="size-3.5" />
-          <span className="font-display text-sm font-semibold">{activity.rating.toFixed(1)}</span>
-        </div>
+        {activity.isSoldOut ? (
+          <span className="absolute top-3 left-3 rounded-full bg-ink/80 px-2.5 py-1 font-display text-xs font-bold text-white backdrop-blur-[2px]">
+            {t("soldOut")}
+          </span>
+        ) : hasDiscount && activity.discountPercent ? (
+          <span className="absolute top-3 left-3 rounded-full bg-primary px-2.5 py-1 font-display text-xs font-bold text-on-primary shadow-sm">
+            {t("discountBadge", { percent: activity.discountPercent })}
+          </span>
+        ) : null}
       </div>
-      <div className="flex flex-col gap-3 p-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="truncate font-display text-xl leading-7 font-semibold text-ink">
-            {activity.title}
-          </h2>
-          <p className="flex items-center gap-1 text-base text-ink-soft">
-            <MapPinIcon className="size-4 shrink-0" />
-            <span className="truncate">{activity.location}</span>
+
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
+          {activity.title}
+        </h2>
+
+        {activity.durationMinutes !== undefined ? (
+          <p className="flex items-center gap-1.5 text-sm leading-5 text-muted">
+            <ClockIcon className="size-4 shrink-0" />
+            <span>{formatDuration(t, activity.durationMinutes)}</span>
           </p>
-        </div>
-        <div className="h-px w-full bg-line" aria-hidden />
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={32} />
-            <p className="font-display text-sm font-semibold text-ink">{activity.host.name}</p>
+        ) : null}
+
+        {/* 카드 하단: 평균 별점(좌) · 가격(우) — 후기 수는 상세에서만 보여준다 */}
+        <div className="mt-auto flex items-end justify-between gap-3">
+          <RatingSummary rating={activity.rating} className="pb-1" />
+          <div className="ml-auto flex flex-col items-end gap-0.5 text-right">
+            {hasDiscount ? (
+              <s className="text-xs leading-4 text-muted">
+                {formatKrw(activity.originalPrice ?? activity.price, locale)}
+              </s>
+            ) : null}
+            <p
+              className={`font-display text-xl leading-7 ${
+                hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
+              }`}
+            >
+              {formatKrw(activity.price, locale)}
+            </p>
+            <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
           </div>
-          <p className="font-display text-xl font-semibold text-forest">
-            {formatKrw(activity.price)}
-          </p>
         </div>
       </div>
     </article>
   );
+}
+
+function formatDuration(t: ReturnType<typeof useTranslations<"Explore">>, minutes: number): string {
+  if (minutes < 60) return t("durationMinutes", { minutes });
+
+  return t("durationHours", { hours: minutes / 60 });
 }

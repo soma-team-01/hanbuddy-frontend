@@ -1,32 +1,226 @@
 @import "tailwindcss";
 
-@theme {
-  /* Figma 디자인 토큰 (prototype 페이지 기준) */
-  --color-cream: #fbf9f4;
-  --color-ink: #1b1c19;
-  --color-ink-soft: #434844;
-  --color-forest: #182820;
-  --color-forest-soft: #2d3e35;
-  --color-sage: #96a99d;
-  --color-line: #e4e2dd;
-  --color-line-strong: #c3c8c3;
-  --color-chip: #f5f3ee;
-  --color-sand: #f0eee9;
-  --color-earth: #8a6c33;
+@theme inline {
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #ffffff;
+  --color-primary: #d13f32;
+  --color-primary-hover: #b9342b;
+  --color-primary-strong: #8f2f28;
+  --color-primary-soft: #fff0ec;
+  --color-ink: #261b18;
+  --color-muted: #675b56;
+  --color-line-strong: #d6c5bf;
+  --color-line-soft: #eee2dd;
+  --color-panel: #f8f3f0;
+  --color-panel-raised: #fcf8f6;
+  --color-on-primary: #ffffff;
+  --color-on-primary-strong: #ffffff;
   --color-success: #3f6b46;
   --color-success-soft: #dcead9;
   --color-warning: #7a5210;
   --color-warning-soft: #f6e3c2;
   --color-danger: #cf3d33;
 
-  --font-sans: var(--font-be-vietnam-pro), sans-serif;
-  --font-display: var(--font-manrope), sans-serif;
+  --font-sans: var(--font-dm-sans), var(--font-noto-sans-kr), system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta-sans), var(--font-noto-sans-kr), system-ui, sans-serif;
+  --font-hand: var(--font-caveat), var(--font-noto-sans-kr), cursive;
+}
+
+.login-polaroid {
+  position: relative;
+  width: 100%;
+  max-width: 205px;
+  justify-self: center;
+  background: #ffffff;
+  padding: 8px 8px 34px;
+  box-shadow:
+    0 6px 18px rgb(38 27 24 / 15%),
+    0 2px 4px rgb(38 27 24 / 8%);
+  transition:
+    transform 250ms ease,
+    box-shadow 250ms ease;
+}
+
+.login-polaroid-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.login-polaroid-tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 1;
+  width: 64px;
+  height: 20px;
+  background: rgb(233 205 160 / 75%);
+  box-shadow: 0 1px 3px rgb(38 27 24 / 12%);
+  transform: translateX(-50%) rotate(-4deg);
+}
+
+.login-polaroid figcaption {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  left: 0;
+  overflow: hidden;
+  padding-inline: 4px;
+  color: #4a3f3a;
+  font-family: var(--font-caveat), var(--font-noto-sans-kr), cursive;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login-polaroid-1 {
+  transform: rotate(-4deg);
+}
+
+.login-polaroid-2 {
+  transform: translateY(22px) rotate(3deg);
+}
+
+.login-polaroid-2 .login-polaroid-tape {
+  background: rgb(214 197 191 / 80%);
+  transform: translateX(-50%) rotate(3deg);
+}
+
+.login-polaroid-3 {
+  margin-top: 18px;
+  transform: translateY(-6px) rotate(3deg);
+}
+
+.login-polaroid-3 .login-polaroid-tape {
+  background: rgb(255 240 236 / 95%);
+  transform: translateX(-50%) rotate(-2deg);
+}
+
+.login-polaroid-4 {
+  margin-top: 18px;
+  transform: translateY(14px) rotate(-3.5deg);
+}
+
+.login-polaroid-4 .login-polaroid-tape {
+  background: rgb(233 205 160 / 75%);
+  transform: translateX(-50%) rotate(2deg);
+}
+
+.login-polaroid:hover {
+  z-index: 20;
+  box-shadow: 0 16px 36px rgb(38 27 24 / 22%);
+  transform: rotate(0deg) scale(1.05);
+}
+
+@media (min-width: 1024px) {
+  .login-polaroid {
+    position: absolute;
+    width: 176px;
+    max-width: none;
+  }
+
+  .login-polaroid-1 {
+    top: 72px;
+    left: -4%;
+  }
+
+  .login-polaroid-2 {
+    top: 100px;
+    right: -4%;
+  }
+
+  .login-polaroid-3 {
+    bottom: 52px;
+    left: -4%;
+    margin-top: 0;
+  }
+
+  .login-polaroid-4 {
+    right: -4%;
+    bottom: 40px;
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .login-polaroid {
+    width: 232px;
+    padding: 9px 9px 38px;
+  }
+
+  .login-polaroid figcaption {
+    bottom: 7px;
+    font-size: 21px;
+  }
+
+  .login-polaroid-tape {
+    width: 78px;
+    height: 24px;
+  }
+
+  .login-polaroid-1 {
+    left: -2%;
+  }
+
+  .login-polaroid-2 {
+    right: -2%;
+  }
+
+  .login-polaroid-3 {
+    left: -2%;
+  }
+
+  .login-polaroid-4 {
+    right: -2%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-polaroid {
+    transition: none;
+  }
+}
+
+:root {
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 180ms;
+  --motion-duration-slow: 240ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  /* 스크롤바 유무와 무관하게 자리를 예약해 페이지 간 중앙 정렬 쏠림 방지 */
+  scrollbar-gutter: stable;
 }
 
 body {
-  background-color: var(--color-cream);
+  background-color: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primary-strong);
+  outline-offset: 3px;
+}
+
+/*
+ * 포커스를 테두리 색으로 이미 알리는 입력칸용. 위 전역 외곽선이 겹쳐 이중 테두리가 되는 걸 막는다.
+ * Tailwind 유틸리티는 레이어 안에 있어 레이어 밖의 위 규칙을 이기지 못하므로 여기서 함께 둔다.
+ */
+.focus-border-only:focus-visible {
+  outline: none;
+}
+
+/* Tailwind v4 preflight는 버튼 커서를 default로 두므로 클릭 가능한 버튼에 포인터를 복원 */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
 }
 
 @utility scrollbar-none {
@@ -35,4 +229,154 @@ body {
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+@keyframes motion-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-reveal {
+  animation: landing-reveal 700ms var(--motion-ease-out) both;
+}
+
+.landing-reveal-delay-1 {
+  animation-delay: 100ms;
+}
+
+.landing-reveal-delay-2 {
+  animation-delay: 260ms;
+}
+
+@keyframes hero-media-cycle {
+  0%,
+  20% {
+    opacity: 1;
+  }
+  25%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hero-media-zoom {
+  0%,
+  100% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.hero-media-frame {
+  animation: hero-media-cycle 20s linear infinite;
+  animation-delay: var(--hero-media-delay);
+  opacity: 0;
+}
+
+.hero-media-frame:first-child {
+  opacity: 1;
+}
+
+.hero-media-image {
+  animation: hero-media-zoom 20s ease-in-out infinite;
+  animation-delay: var(--hero-media-delay);
+}
+
+@keyframes motion-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-backdrop-in {
+  from {
+    background-color: rgb(0 0 0 / 0%);
+    backdrop-filter: blur(0);
+  }
+}
+
+.motion-reveal {
+  animation: motion-reveal var(--motion-duration-slow) var(--motion-ease-out) both;
+}
+
+.motion-press {
+  transition:
+    scale var(--motion-duration-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+.motion-press:active {
+  scale: 0.985;
+}
+
+.motion-nav-indicator {
+  transition: transform var(--motion-duration-slow) var(--motion-ease-out);
+}
+
+.motion-nav-icon {
+  transition: transform var(--motion-duration-base) var(--motion-ease-out);
+}
+
+.motion-nav-icon[data-active="true"] {
+  transform: translateY(-1px) scale(1.05);
+}
+
+dialog.motion-dialog[open] {
+  transform-origin: center bottom;
+  animation: motion-dialog-in var(--motion-duration-base) var(--motion-ease-out) both;
+}
+
+dialog.motion-dialog[open]::backdrop {
+  animation: motion-backdrop-in var(--motion-duration-base) var(--motion-ease-standard) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-reveal,
+  .landing-reveal,
+  .hero-media-frame,
+  .hero-media-image,
+  dialog.motion-dialog[open],
+  dialog.motion-dialog[open]::backdrop {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .hero-media-frame:not(:first-child) {
+    opacity: 0;
+  }
+
+  .motion-press,
+  .motion-nav-indicator,
+  .motion-nav-icon {
+    transition-duration: 0.01ms;
+  }
+
+  .motion-press:active {
+    scale: none;
+  }
 }

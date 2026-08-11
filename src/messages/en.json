@@ -1,0 +1,1154 @@
+{
+  "Common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "comingSoon": "Coming soon",
+    "loading": "Loading...",
+    "unavailable": "Unavailable"
+  },
+  "ApiErrors": {
+    "authenticationRequired": "Please sign in again to continue.",
+    "googleAuthenticationInvalid": "Google authentication could not be verified. Please try signing in again.",
+    "signupAgreementsInvalid": "Review the signup agreements and try again.",
+    "signupAgreementsOutdated": "The signup agreements have been updated. Review them again to continue.",
+    "emailAlreadyRegistered": "This email is already registered. Please sign in instead.",
+    "validationRequired": "Check the required fields and try again.",
+    "validationFormat": "Check the format of the entered information.",
+    "validationRange": "Check the allowed range of the entered value.",
+    "validationInvalid": "Check the entered information and try again.",
+    "imageContentType": "Only JPEG, PNG, or WebP images can be uploaded.",
+    "imageCount": "Too many images were selected for upload.",
+    "activityCurrency": "Activities can currently be priced in KRW only.",
+    "activityScheduleFuture": "Activity schedules must start in the future.",
+    "activityOwner": "You can only access activities you created.",
+    "activityNotFound": "This activity could not be found.",
+    "activityScheduleNotFound": "This activity schedule could not be found.",
+    "applicationNotApplicable": "This activity is not accepting applications.",
+    "applicationScheduleNotOpen": "The selected schedule is not open for applications.",
+    "applicationCapacityExceeded": "Not enough spots are available.",
+    "applicationNotCancellable": "This application can no longer be cancelled.",
+    "applicationOwner": "You can only access your own applications.",
+    "applicationNotFound": "This application could not be found.",
+    "paymentOrderMismatch": "The payment order does not match this application.",
+    "paymentState": "This payment cannot be processed in its current state.",
+    "paymentNotFound": "Payment information could not be found.",
+    "paymentReviewRequired": "This payment needs administrator review before it can continue.",
+    "paymentCaptureMismatch": "The approved amount or currency does not match this payment.",
+    "paymentServiceUnavailable": "The payment service is temporarily unavailable. Please try again shortly.",
+    "exchangeRateUnavailable": "Exchange-rate information is temporarily unavailable. Please try again shortly.",
+    "buddyRequired": "This feature is only available to buddies.",
+    "touristRequired": "This feature is only available to tourists.",
+    "userNotFound": "Your user profile could not be found.",
+    "buddyProfileInvalid": "Complete the required buddy profile settings before continuing.",
+    "permissionDenied": "You do not have permission to perform this action.",
+    "resourceNotFound": "The requested information could not be found.",
+    "conflict": "This action cannot be completed in the current state.",
+    "serverUnavailable": "The service is temporarily unavailable. Please try again shortly.",
+    "activityDiscountInvalid": "Set the discount rate and end date together.",
+    "activityDiscountEndDate": "The discount end date must be today or a later date.",
+    "reviewNotReviewable": "You can leave a review after the activity ends.",
+    "reviewOwner": "You can only edit reviews you wrote.",
+    "reviewNotFound": "This review could not be found.",
+    "reviewDuplicate": "You already reviewed this booking.",
+    "chatOwnerLeave": "You can't leave a group chat you created.",
+    "chatInvalidTarget": "You can't start a chat with this person.",
+    "chatForbidden": "You are no longer part of this conversation.",
+    "chatNotFound": "This conversation could not be found.",
+    "chatMessageNotFound": "This photo could not be found.",
+    "chatInvalidMessage": "This message could not be sent.",
+    "chatInvalidImage": "This photo could not be attached. Please pick it again.",
+    "chatTooManyMessages": "You are sending messages too quickly. Please slow down.",
+    "activityScheduleHasApplications": "A date with existing bookings cannot be removed.",
+    "dataConflict": "This request was already processed. Please refresh and try again.",
+    "paymentAlreadyCreated": "This booking already has a payment. Please check My Applications.",
+    "paymentOrderConflict": "The payment could not be started. Please try again.",
+    "paymentKeyConflict": "This payment was already processed. Please check My Applications before trying again.",
+    "applicationPaymentPending": "You already have a booking waiting for payment. Finish or cancel it in My Applications, then book again.",
+    "chatNotGroup": "This only works in a group chat.",
+    "chatSelfTarget": "You can't remove yourself.",
+    "chatOwnerOnly": "Only the buddy who created this chat can do that."
+  },
+  "Navigation": {
+    "primaryNavigation": "Primary navigation",
+    "navigationMenu": "Navigation menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "changeLanguageToKorean": "Switch to Korean",
+    "changeLanguageToEnglish": "Switch to English",
+    "selectLanguage": "Select language, current language: {language}",
+    "languageMenu": "Language selection",
+    "language": "Language",
+    "home": "Home",
+    "explore": "Explore",
+    "applications": "My Applications",
+    "dashboard": "Dashboard",
+    "buddyWorkspace": "Buddy workspace",
+    "myActivities": "My Activities",
+    "applicants": "Applicants",
+    "createActivity": "Create Activity",
+    "createActivityInSidebar": "Create Activity from sidebar",
+    "myPage": "My Page",
+    "hostAnExperience": "Host an experience",
+    "login": "Log in",
+    "account": "Account",
+    "openAccount": "Open my account",
+    "chat": "Messages"
+  },
+  "Accessibility": {
+    "goBack": "Go back",
+    "close": "Close",
+    "closeDialog": "Close dialog"
+  },
+  "Status": {
+    "pendingPayment": "Pending Payment",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "completed": "Completed"
+  },
+  "Landing": {
+    "metadataTitle": "HanBuddy | Experience Korea like a local!",
+    "metadataDescription": "Connect with local buddies for authentic Korean experiences.",
+    "eyebrow": "Seoul · hosted by local buddies",
+    "headline": "Experience Korea like a local!",
+    "description": "Go beyond the itinerary. Find the food, places, and small moments that feel more meaningful with someone who knows Korea by heart.",
+    "exploreExperiences": "Explore experiences",
+    "highlights": {
+      "localPerspective": {
+        "title": "Local perspective",
+        "description": "See Korea through a buddy's eyes."
+      },
+      "realConnection": {
+        "title": "Real connection",
+        "description": "Meet people, not just places."
+      },
+      "sharedMoments": {
+        "title": "Shared moments",
+        "description": "Bring home a story worth telling."
+      }
+    },
+    "booking": {
+      "eyebrow": "How it works",
+      "title": "Book a Korean experience in three simple steps.",
+      "description": "Choose an experience, pick a schedule, and meet your local buddy.",
+      "steps": {
+        "experience": {
+          "title": "Choose an experience",
+          "description": "Explore activities that match the way you want to experience Korea."
+        },
+        "schedule": {
+          "title": "Pick a schedule",
+          "description": "Select an available date and the number of guests."
+        },
+        "payment": {
+          "title": "Apply and pay",
+          "description": "Send your application and complete payment to confirm your experience."
+        }
+      },
+      "cta": "Log in to book"
+    },
+    "recommended": {
+      "eyebrow": "Explore with HanBuddy",
+      "title": "Recommended experiences",
+      "description": "Find an activity that matches the way you want to experience Korea.",
+      "viewAll": "View all experiences",
+      "loading": "Loading recommended experiences...",
+      "emptyTitle": "No experiences available yet.",
+      "emptyDescription": "Local buddies are preparing something special. Check back soon!",
+      "errorTitle": "We couldn't load experiences right now.",
+      "errorDescription": "There was a temporary connection problem. Please try again.",
+      "retry": "Try again"
+    },
+    "visuals": {
+      "ariaLabel": "Real HanBuddy moments in Seoul",
+      "mainAlt": "Friends enjoying a picnic by the Han River",
+      "marketAlt": "A baseball game under the lights in Seoul",
+      "teaAlt": "Travelers and local buddies cheering together at a baseball game",
+      "fountainAlt": "The Han River fountain glowing at dusk",
+      "mainCaption": "Your Korea, made personal."
+    },
+    "reviews": {
+      "cheerTogether": {
+        "rating": "5.0",
+        "starLabel": "5 out of 5 stars",
+        "event": "KBO Baseball Night",
+        "meta": "Guest review · July 2026",
+        "quote": "It was fun to watch the game and cheer together!"
+      },
+      "localBuddy": {
+        "rating": "5.0",
+        "starLabel": "5 out of 5 stars",
+        "event": "KBO Baseball Night",
+        "meta": "Guest review · July 2026",
+        "quote": "Great experience to enjoy a baseball game with a local."
+      },
+      "lookedAfter": {
+        "rating": "5.0",
+        "starLabel": "5 out of 5 stars",
+        "event": "KBO Baseball Night",
+        "meta": "Guest review · August 2026",
+        "quote": "Had such a great time at the baseball game with HanBuddy! We were looked after so well throughout the whole experience."
+      }
+    },
+    "reviewsSection": {
+      "eyebrow": "Stories from the community",
+      "title": "The moments that stay with you.",
+      "description": "A few words from guests who experienced Korea with HanBuddy."
+    },
+    "contact": {
+      "eyebrow": "Stay in touch",
+      "title": "Want to learn more about HanBuddy",
+      "description": "Want to host an experience, share an idea, or learn more about HanBuddy? Drop us a message and we will get back to you.",
+      "emailLabel": "Email us anything",
+      "instagramLabel": "Instagram",
+      "responseNote": "We would love to hear from you.",
+      "emailIconLabel": "Email HanBuddy",
+      "instagramIconLabel": "Open HanBuddy on Instagram"
+    }
+  },
+  "BuddyHosting": {
+    "metadataTitle": "Become a buddy host | HanBuddy",
+    "metadataDescription": "Turn the Korea you know and love into a personal experience for travelers with HanBuddy.",
+    "hero": {
+      "eyebrow": "Host with HanBuddy",
+      "title": "Your everyday Korea can become someone’s favorite memory.",
+      "description": "Share the places, flavors, and moments you genuinely love. Create a small, personal experience and help travelers discover Korea through a local point of view.",
+      "primaryCta": "Start as a buddy",
+      "secondaryCta": "See how it works",
+      "imageAlt": "A local buddy introducing Korean market food to a small group of travelers in Seoul"
+    },
+    "benefits": {
+      "eyebrow": "Why host with HanBuddy",
+      "title": "You already know the Korea travelers are looking for.",
+      "description": "You do not need to be a professional guide. Start with a corner of Korea you care about and a story you want to share.",
+      "items": {
+        "share": {
+          "title": "Share what feels truly local",
+          "description": "Turn your favorite neighborhood, food, hobby, or culture into an experience only a local could create."
+        },
+        "connect": {
+          "title": "Meet people across cultures",
+          "description": "Welcome curious travelers, exchange perspectives, and create a moment that feels personal to everyone."
+        },
+        "schedule": {
+          "title": "Host in your own rhythm",
+          "description": "Create the experience you want and open schedules that work naturally with your day-to-day life."
+        }
+      }
+    },
+    "ideas": {
+      "eyebrow": "Make it yours",
+      "title": "The best experience starts with something you love.",
+      "description": "A memorable activity can be simple. What matters is your local perspective and the way you help guests feel included.",
+      "items": {
+        "baseball": {
+          "title": "Cheer like a local",
+          "description": "Teach the chants, order stadium favorites, and share the energy of a Korean baseball night.",
+          "imageAlt": "Travelers and local buddies enjoying a Korean baseball game together"
+        },
+        "picnic": {
+          "title": "Share your favorite Seoul evening",
+          "description": "Plan a Han River picnic, neighborhood walk, or sunset route with the details only locals know.",
+          "imageAlt": "Friends enjoying a picnic together beside the Han River"
+        },
+        "food": {
+          "title": "Tell the story behind the food",
+          "description": "Introduce a market, café, or comfort food through the memories and customs that make it meaningful.",
+          "imageAlt": "A local buddy sharing Korean market food with travelers"
+        }
+      }
+    },
+    "steps": {
+      "eyebrow": "How it works",
+      "title": "From a local idea to a hosted experience.",
+      "description": "Build your buddy profile, shape your activity, and manage the experience from one place.",
+      "items": {
+        "profile": {
+          "title": "Create your buddy profile",
+          "description": "Tell travelers who you are and how they can stay in touch with you."
+        },
+        "design": {
+          "title": "Design your experience",
+          "description": "Add the story, meeting place, price, photos, and details guests need to decide."
+        },
+        "publish": {
+          "title": "Open a schedule",
+          "description": "Choose the dates and capacity that work for you, then make the activity available to travelers."
+        },
+        "host": {
+          "title": "Meet and host",
+          "description": "Review applications, welcome your guests, and create a Korea story worth remembering."
+        }
+      }
+    },
+    "support": {
+      "eyebrow": "Your buddy workspace",
+      "title": "Host with clarity from the first idea to the final meetup.",
+      "description": "HanBuddy keeps the practical parts together so you can focus on the people and the experience itself.",
+      "items": {
+        "manage": {
+          "title": "Keep activities and schedules organized",
+          "description": "Create activities, check their status, and manage upcoming schedules in your buddy workspace."
+        },
+        "communicate": {
+          "title": "Know who is joining",
+          "description": "Review guest applications and the details you need before the experience begins."
+        },
+        "grow": {
+          "title": "Improve every time you host",
+          "description": "Update your activity as you learn what helps guests feel more welcome and connected."
+        }
+      }
+    },
+    "finalCta": {
+      "title": "What part of Korea would you love to share?",
+      "description": "Start your buddy account and turn a place, taste, or everyday passion into a HanBuddy experience.",
+      "button": "Start as a buddy"
+    }
+  },
+  "Auth": {
+    "metadataTitle": "Log in | HanBuddy",
+    "metadataDescription": "Meet local buddies and experience Korea beyond the itinerary.",
+    "eyebrow": "Welcome to HanBuddy",
+    "welcome": "Experience Korea like a local.",
+    "introduction": "Meet local buddies and discover the moments that make Korea feel like yours.",
+    "continueWithGoogle": "Continue with Google",
+    "legalNoticeStart": "By continuing, you agree to HanBuddy's",
+    "legalNoticeMiddle": "and",
+    "legalNoticeEnd": ".",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "helpCenter": "Help Center",
+    "copyright": "© 2026 HanBuddy. All rights reserved.",
+    "visualAlt": "HanBuddy guests and buddies smiling together at a baseball game",
+    "visualCaption": "new friends, Jul 26 ⚾",
+    "visualRightAlt": "Guests and buddies smiling together in the baseball stands",
+    "visualRightCaption": "first baseball night ⚾",
+    "visualBottomLeftAlt": "Banpo Bridge rainbow fountain lighting up the Han River",
+    "visualBottomLeftCaption": "Banpo rainbow 🌈",
+    "visualBottomRightAlt": "Fried chicken, noodles, and drinks shared by the Han River",
+    "visualBottomRightCaption": "chimaek by the river 🍗",
+    "errors": {
+      "googleCancelled": "Google sign-in was cancelled.",
+      "missingCode": "Google did not return an authorization code.",
+      "invalidState": "We couldn't verify your Google sign-in session.",
+      "backendRejected": "Google sign-in was rejected. Please try again.",
+      "invalidLoginResponse": "The login response was incomplete. Please try again.",
+      "missingSignupToken": "We couldn't start registration. Please try again.",
+      "serverUnavailable": "The authentication server is unavailable. Please try again.",
+      "configuration": "Google sign-in is temporarily unavailable.",
+      "unknown": "Something went wrong during sign-in. Please try again."
+    }
+  },
+  "BuddyAuth": {
+    "trigger": "Start as a buddy",
+    "loginTrigger": "Log in",
+    "close": "Close buddy sign in",
+    "eyebrow": "Host with HanBuddy",
+    "title": "Start your buddy journey",
+    "description": "Use Google to create your buddy account and turn the Korea you love into a welcoming local experience.",
+    "continueWithGoogle": "Continue as a buddy with Google"
+  },
+  "Onboarding": {
+    "title": "Complete your traveler profile",
+    "metadataTitle": "Complete your profile | HanBuddy",
+    "metadataDescription": "Complete your traveler profile and start exploring Korea with HanBuddy.",
+    "eyebrow": "Welcome, traveler",
+    "headline": "A few details, then Korea is yours to explore.",
+    "description": "Help local buddies welcome you well and reach you when an experience is confirmed.",
+    "displayName": "Nickname",
+    "personalInformation": "About you",
+    "nationality": "Nationality",
+    "birthDate": "Date of birth",
+    "contactMethods": "How should buddies reach you?",
+    "contactDescription": "Choose the messenger you check most often.",
+    "preferredMessagingApp": "Preferred Messaging App",
+    "addProfilePhoto": "Add profile photo",
+    "profilePhotoHint": "Profile photo",
+    "profilePhotoOptional": "Choose a clear face photo so your buddy can recognize you when you meet.",
+    "selectedProfilePhotoPreview": "Selected profile photo preview",
+    "defaultProfilePhoto": "HanBuddy default profile image",
+    "steps": {
+      "progress": "Step {current} of {total}",
+      "aboutYou": "About you",
+      "aboutYouDescription": "Add the details your buddy will use to welcome you.",
+      "contact": "Contact",
+      "agreements": "Agreements",
+      "continue": "Next",
+      "back": "Back"
+    },
+    "agreements": {
+      "title": "Agreements",
+      "description": "Review the required items before creating your account.",
+      "agreeAll": "Agree to all",
+      "required": "Required",
+      "optional": "Optional",
+      "items": {
+        "adultConfirmation": "I confirm that I am 19 years or older.",
+        "termsOfService": "HanBuddy Terms of Service",
+        "privacyCollectionUse": "Personal information collection and use",
+        "buddyPrivacyCollectionUse": "Personal information collection, use, and buddy application review",
+        "buddyOperationTerms": "Buddy operation terms",
+        "buddyCommissionPolicy": "Commission and settlement policy",
+        "buddyProfileContactProvision": "Profile visibility and contact sharing with confirmed guests",
+        "marketingCommunication": "Receive event and marketing updates"
+      }
+    },
+    "validation": {
+      "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
+      "imageTooLarge": "Profile photos must be 5MB or smaller.",
+      "displayNameInvalid": "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+      "nationalityRequired": "Please select a nationality.",
+      "birthDateInvalid": "Enter a valid date of birth for an age between 19 and 120.",
+      "contactInvalid": "Enter a valid contact ID or phone number for the selected method.",
+      "agreementsRequired": "Agree to all required items to continue."
+    },
+    "profileUploadFailed": "Could not upload the profile photo. Please try again.",
+    "signupFailed": "Could not complete registration. Please try again.",
+    "serverUnavailable": "The authentication server is unavailable. Please try again.",
+    "completing": "Completing...",
+    "completeRegistration": "Sign up"
+  },
+  "BuddyOnboarding": {
+    "title": "Complete your buddy profile",
+    "metadataTitle": "Create your buddy profile | HanBuddy",
+    "metadataDescription": "Complete your buddy profile and begin hosting local experiences with HanBuddy.",
+    "eyebrow": "Welcome, future buddy",
+    "headline": "A few details, then your local story can begin.",
+    "description": "For now, tell us how guests can recognize and reach you. You can add hosting details later.",
+    "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
+    "contactMethods": "How should guests reach you?",
+    "contactDescription": "Choose the messenger you check most often.",
+    "completing": "Creating buddy account...",
+    "completeRegistration": "Sign up as a buddy"
+  },
+  "AccountStatus": {
+    "metadataTitle": "Account status | HanBuddy",
+    "metadataDescription": "Check the review status of your HanBuddy account.",
+    "pending": {
+      "title": "Buddy application under review",
+      "description": "We'll email you when the review is complete.",
+      "reviewTime": "Usually 1–3 business days"
+    },
+    "rejected": {
+      "title": "Buddy application not approved",
+      "description": "Check the reason below and contact us if you need help."
+    },
+    "suspended": {
+      "title": "Buddy account suspended",
+      "description": "Buddy features are unavailable. Contact us if you need help."
+    },
+    "reasonLabel": "Reason provided",
+    "contactHelp": "Questions? Contact <email>zeroone.soma@gmail.com</email>.",
+    "backToBuddy": "Back to buddy page"
+  },
+  "Profile": {
+    "title": "Edit profile",
+    "metadataTitle": "Edit profile | HanBuddy",
+    "metadataDescription": "Update your HanBuddy profile and contact details.",
+    "fullName": "Nickname",
+    "nationality": "Nationality",
+    "age": "Date of birth",
+    "contactDetails": "Contact Details",
+    "preferredMessagingApp": "Preferred Messaging App",
+    "addProfilePhoto": "Add profile photo",
+    "selectedProfilePhotoPreview": "Selected profile photo preview",
+    "validation": {
+      "nameRequired": "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+      "nationalityRequired": "Please select a nationality.",
+      "ageInvalid": "Please enter a valid date of birth.",
+      "contactInvalid": "Enter a contact ID or number with at least 2 characters.",
+      "unsupportedImageType": "Only JPEG, PNG, or WebP images can be uploaded.",
+      "imageTooLarge": "Profile photos must be 5MB or smaller."
+    },
+    "profileUploadFailed": "Could not upload the profile photo. Please try again.",
+    "saveFailed": "Could not save your profile. Please try again.",
+    "loadFailed": "Could not load your profile.",
+    "save": "Save",
+    "saveOnMobile": "Save profile",
+    "saving": "Saving..."
+  },
+  "Explore": {
+    "title": "Explore experiences",
+    "description": "Discover Korea with a local buddy by your side.",
+    "loading": "Loading activities...",
+    "empty": "No activities available yet.",
+    "emptyDescription": "Local buddies are preparing new experiences. Check back soon!",
+    "loadError": "Could not load activities.",
+    "perPersonLabel": "per person",
+    "durationHours": "{hours, plural, one {# hour} other {# hours}}",
+    "durationMinutes": "{minutes}min",
+    "discountBadge": "{percent}% off",
+    "soldOut": "Sold out"
+  },
+  "ActivityDetail": {
+    "loading": "Loading activity...",
+    "loadError": "Could not load activity details.",
+    "notFound": "This activity could not be found.",
+    "perPerson": "{price} per person",
+    "bookNow": "Book now",
+    "host": "Host: {name}",
+    "localHost": "Buddy",
+    "duration": "Duration",
+    "viewPhoto": "View photo {number}",
+    "morePhotos": "+{count}",
+    "photoCounter": "{current} / {total}",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "aboutHost": "Meet your buddy",
+    "whatYoullDo": "What you'll do",
+    "itineraryStep": "Step {number}",
+    "itineraryMinutes": "{minutes} min",
+    "included": "What's included",
+    "cannotJoin": "Before you join",
+    "availability": "Availability",
+    "selectDatePlaceholder": "Select a date",
+    "noDates": "No dates available yet",
+    "availableTimes": "Available times",
+    "noDatesThisMonth": "No available dates this month.",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "selectDate": "Select {date}",
+    "remaining": "{count, plural, =0 {No spots left} one {# spot left} other {# spots left}}",
+    "meetingPoint": "Meeting Point",
+    "mapUnavailable": "Map unavailable",
+    "mapTitle": "Map of {place}",
+    "kstNotice": "All times are in Korea Standard Time (KST).",
+    "hostedActivities": "Experiences hosted by this buddy",
+    "noOtherActivities": "No other experiences yet.",
+    "viewHostProfile": "View {name}'s profile"
+  },
+  "Reviews": {
+    "sectionTitle": "Reviews",
+    "ratingAria": "Rated {rating} out of 5",
+    "countLabel": "{count, plural, =0 {No reviews yet} one {# review} other {# reviews}}",
+    "none": "No reviews yet",
+    "noneDescription": "Be the first to share how this experience went.",
+    "showAll": "Show all {count, plural, one {# review} other {# reviews}}",
+    "loading": "Loading reviews...",
+    "loadError": "Could not load reviews.",
+    "loadMore": "Load more reviews",
+    "hostReviews": "Reviews for {name}",
+    "hostedCount": "{count, plural, =0 {No live experiences} one {# live experience} other {# live experiences}}",
+    "write": "Write a review",
+    "edit": "Edit review",
+    "delete": "Delete",
+    "createTitle": "Write a review",
+    "editTitle": "Edit your review",
+    "yourRating": "Your rating",
+    "starLabel": "{rating, plural, one {# star} other {# stars}}",
+    "contentLabel": "Your review",
+    "contentPlaceholder": "How was the experience? What stood out?",
+    "contentCount": "{count} / {max}",
+    "submit": "Submit review",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "deleteTitle": "Delete this review?",
+    "deleteDescription": "This cannot be undone. You can write a new review for this booking later.",
+    "deleting": "Deleting...",
+    "ratingRequired": "Please choose a rating.",
+    "contentRequired": "Please write a few words about the experience.",
+    "yourReview": "Your review",
+    "saveError": "Could not save your review.",
+    "deleteError": "Could not delete your review.",
+    "filterByRating": "Show only {rating}-star reviews",
+    "clearFilter": "Show all ratings",
+    "filteredCount": "{count, plural, =0 {No reviews with this rating} one {# review} other {# reviews}}",
+    "noneForRating": "No reviews with this rating yet.",
+    "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
+  },
+  "Booking": {
+    "title": "Book activity",
+    "loading": "Loading booking...",
+    "loadError": "Could not load booking details.",
+    "notFound": "This activity is not available for booking.",
+    "hostedBy": "with {name}",
+    "reviewCount": "{count, plural, =0 {(No reviews)} one {(# review)} other {(# reviews)}}",
+    "dateTimeHeading": "When are you going?",
+    "dateTime": "Date and time",
+    "guestsHeading": "How many people?",
+    "guestCount": "Number of guests",
+    "guests": "{count, plural, one {# guest} other {# guests}}",
+    "decreaseGuests": "Decrease guests",
+    "increaseGuests": "Increase guests",
+    "specialRequest": "Special Requests",
+    "specialRequestDescription": "Dietary restrictions, accessibility needs, etc. (Optional)",
+    "specialRequestPlaceholder": "Let your buddy know...",
+    "priceDetails": "Price details",
+    "subtotal": "{price} × {count, plural, one {# guest} other {# guests}}",
+    "totalKrw": "Total (KRW): {amount}",
+    "refundPolicy": "Please review the <policy>cancellation & refund policy</policy> before applying.",
+    "agreement": "I agree to the terms above.",
+    "submit": "Apply & Pay",
+    "processing": "Processing...",
+    "kstNotice": "All times are in Korea Standard Time (KST).",
+    "scheduleRequired": "Please select an available schedule.",
+    "paymentProcessFailed": "Something went wrong while processing the payment. Please try again shortly.",
+    "paymentCancelled": "Payment was not completed. You can continue payment from My Applications.",
+    "totalLabel": "Total (KRW)",
+    "refundRules": {
+      "full": {
+        "label": "48+ hours before the activity",
+        "value": "Full refund"
+      },
+      "half": {
+        "label": "24–48 hours before",
+        "value": "50% refund"
+      },
+      "none": {
+        "label": "Less than 24 hours before",
+        "value": "No refund"
+      }
+    },
+    "goToApplications": "Go to My Applications"
+  },
+  "Applications": {
+    "title": "My Applications",
+    "description": "Review upcoming experiences, payments, and past applications.",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "loading": "Loading applications...",
+    "empty": "No applications here yet.",
+    "loadError": "Could not load applications.",
+    "priceBreakdown": "Price Breakdown",
+    "subtotal": "{price} × {count, plural, one {# guest} other {# guests}}",
+    "total": "Total",
+    "continuePayment": "Continue Payment",
+    "cancel": "Cancel",
+    "paymentFailed": "Could not complete the payment.",
+    "cancelFailed": "Could not cancel the application.",
+    "cancellationTitle": "Cancel Application?",
+    "cancellationPrompt": "Are you sure you want to cancel this booking? This action cannot be undone.",
+    "cancellationQuestion": "Why are you cancelling?",
+    "cancellationReasons": {
+      "scheduleConflict": "Schedule conflict",
+      "illness": "Illness or unexpected emergency",
+      "foundOther": "Found another option",
+      "other": "Other reason"
+    },
+    "cancellationDetailLabel": "Tell us what happened",
+    "cancellationDetailPlaceholder": "A short note helps your buddy understand.",
+    "cancellationDetailRequired": "Please tell us why you're cancelling.",
+    "cancellationDetailCount": "{count}/{max}",
+    "keepApplication": "No, Keep It",
+    "confirmCancellation": "Yes, Cancel",
+    "cancelling": "Cancelling...",
+    "paidAmount": "Paid",
+    "paymentProcessing": "Opening payment...",
+    "dDay": "D-{count}",
+    "dDayToday": "D-DAY",
+    "exploreCta": "Explore activities",
+    "cancelledReason": "Cancellation reason: {reason}",
+    "cancelPendingTitle": "Cancel this application?",
+    "cancelPendingDescription": "The seat we're holding for you will be released right away.",
+    "cancelPendingConfirm": "Yes, cancel",
+    "keepPendingApplication": "Keep application",
+    "holdRemaining": "{time} left to complete payment"
+  },
+  "Payment": {
+    "unavailable": "Payment unavailable",
+    "complete": "Payment complete",
+    "confirmed": "Your application is confirmed.",
+    "experience": "Your experience",
+    "totalApplicationAmount": "Total application amount: {amount}",
+    "loading": "Loading payment...",
+    "loadError": "Could not load the payment confirmation.",
+    "confirmationNotFound": "We couldn't find this payment confirmation.",
+    "notPaid": "This application has not been paid yet.",
+    "viewApplications": "View My Applications",
+    "exploreMore": "Explore More Activities",
+    "paidAmount": "Amount paid: {amount}",
+    "confirming": "Confirming your payment...",
+    "confirmFailed": "We couldn't confirm your payment. Please try again from My Applications.",
+    "failTitle": "Payment failed",
+    "failDescription": "The payment was not completed and nothing has been charged.",
+    "retryFromApplications": "Try again in My Applications",
+    "failReasons": {
+      "cancelled": "You cancelled the payment before it was completed.",
+      "aborted": "The payment was interrupted. Please try again.",
+      "rejectedByCardCompany": "Your card issuer declined the payment. Please try another card.",
+      "cardIssue": "This card cannot be used. Check the card details and try again.",
+      "exceededLimit": "The payment exceeds your card's limit."
+    },
+    "totalLabel": "Application total",
+    "paidLabel": "Paid"
+  },
+  "Country": {
+    "select": "Select country",
+    "search": "Search country",
+    "noResults": "No countries found"
+  },
+  "Messaging": {
+    "phoneNumber": "Phone Number",
+    "countryCode": "Messaging country code",
+    "phonePlaceholder": "Phone number",
+    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "phoneInputLabel": "Messaging phone number",
+    "appIdPlaceholder": "{app} ID",
+    "appIdInputLabel": "Messaging app ID"
+  },
+  "Chat": {
+    "title": "Messages",
+    "description": "Talk with your buddy or your guests.",
+    "loading": "Loading conversations...",
+    "loadError": "Could not load your conversations.",
+    "empty": "No conversations yet",
+    "emptyDescription": "Message a buddy from an activity page, or start a group chat with your guests.",
+    "noMessagesYet": "No messages yet",
+    "selectConversation": "Pick a conversation",
+    "selectConversationDescription": "Choose a conversation on the left to start reading.",
+    "backToList": "Back to conversations",
+    "groupBadge": "Group",
+    "memberCount": "{count, plural, one {# member} other {# members}}",
+    "leftMember": "left",
+    "messagePlaceholder": "Write a message",
+    "messageLabel": "Message",
+    "send": "Send",
+    "sending": "Sending...",
+    "sendError": "Could not send your message.",
+    "messagesLoadError": "Could not load messages.",
+    "loadingOlder": "Loading...",
+    "unreadCount": "{count, plural, other {#}}",
+    "unreadLabel": "{count, plural, one {# unread message} other {# unread messages}}",
+    "contactBuddy": "Message {name}",
+    "messageApplicant": "Message {name}",
+    "openGroupChat": "Group chat with guests",
+    "openingChat": "Opening...",
+    "leave": "Leave conversation",
+    "leaveTitle": "Leave this conversation?",
+    "leaveDescription": "You will stop receiving messages here. Opening it again from the activity restores your place.",
+    "leaving": "Leaving...",
+    "leaveError": "Could not leave this conversation.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "you": "You",
+    "unreadByCount": "{count, plural, one {# person has not read this} other {# people have not read this}}",
+    "photo": "Photo",
+    "openPhoto": "Open photo",
+    "photoMessage": "Photo",
+    "attachPhoto": "Attach photos",
+    "attachedPhotos": "{count, plural, one {# photo attached} other {# photos attached}}",
+    "removePhoto": "Remove photo",
+    "uploadingPhotos": "Uploading photos...",
+    "photoTooMany": "You can send up to {max} photos at once.",
+    "photoPanel": "Photos in this chat",
+    "photoPanelEmpty": "No photos yet",
+    "openPhotoPanel": "Photos",
+    "closePhotoPanel": "Close photos",
+    "download": "Download",
+    "loadMorePhotos": "Load more photos",
+    "photosLoadError": "Could not load photos.",
+    "sentBy": "Sent by {name}",
+    "markAllRead": "Mark all as read",
+    "markingAllRead": "Marking...",
+    "listMenu": "Conversation options",
+    "downloadAll": "Save all",
+    "openPhotoAt": "Open photo {index} of {total}",
+    "downloadTitle": "Save photos",
+    "downloadOne": "Save this photo",
+    "photoUnavailable": "Photo unavailable",
+    "roomMenu": "Conversation menu",
+    "startDirectChat": "Start a direct chat",
+    "renameRoom": "Rename chat",
+    "renameLabel": "Chat name",
+    "renamePlaceholder": "Leave empty to use the activity name",
+    "renameSave": "Save",
+    "renameSaving": "Saving...",
+    "renameError": "Could not rename this chat.",
+    "removeMember": "Remove from chat",
+    "removeMemberTitle": "Remove {name}?",
+    "removeMemberDescription": "They will not be able to rejoin, even if they book again. Their messages stay in the conversation.",
+    "removingMember": "Removing...",
+    "removeMemberError": "Could not remove this member.",
+    "createGroupChat": "Start group chat",
+    "autoJoinNotice": "Create it once — every guest who completes payment joins automatically, including later bookings."
+  },
+  "MyPage": {
+    "title": "My Page",
+    "language": "Language",
+    "languageSheetTitle": "Language",
+    "english": "English",
+    "korean": "한국어",
+    "helpCenter": "Help Center",
+    "deleteAccount": "Delete Account",
+    "editProfile": "Edit Profile",
+    "tourist": "Tourist",
+    "buddy": "Buddy",
+    "accountSettings": "Account",
+    "accountSettingsTitle": "Keep your account in sync",
+    "accountSettingsDescription": "Update your profile details and language preferences whenever you need to.",
+    "profileLoadFailed": "Could not load your profile.",
+    "logOut": "Log Out",
+    "loggingOut": "Logging out...",
+    "logoutTitle": "Log out?",
+    "logoutDescription": "You can log back in anytime."
+  },
+  "Errors": {
+    "generic": "Something went wrong. Please try again.",
+    "dateTimeUnavailable": "Time unavailable."
+  },
+  "DateTime": {
+    "kstNotice": "All times are in Korea Standard Time (KST)."
+  },
+  "BuddyDashboard": {
+    "title": "Buddy dashboard",
+    "description": "Stay on top of upcoming schedules and guest applications.",
+    "quickActions": "Quick Actions",
+    "createActivity": "Create Activity",
+    "upcoming": "Upcoming",
+    "loadingSchedule": "Loading schedule...",
+    "scheduleLoadError": "Could not load the schedule.",
+    "noUpcoming": "No upcoming schedules yet.",
+    "previousDates": "Previous {count, number} dates",
+    "nextDates": "Next {count, number} dates",
+    "scheduleDates": "Schedule dates",
+    "dateWithActivity": "{date}, has activity",
+    "loadingApplicants": "Loading applicants...",
+    "applicantsLoadError": "Could not load applicants.",
+    "noApplicants": "No applicants for this date yet.",
+    "applicantCount": "{count, plural, one {# Applicant} other {# Applicants}}"
+  },
+  "MyActivities": {
+    "title": "My Activities",
+    "description": "Manage your hosted cultural experiences.",
+    "createActivity": "Create Activity",
+    "loading": "Loading activities...",
+    "loadError": "Could not load activities.",
+    "deleteError": "Could not delete the activity.",
+    "empty": "No activities yet.",
+    "edit": "Edit",
+    "editActivity": "Edit {title}",
+    "viewApplicants": "View applicants",
+    "delete": "Delete",
+    "deleteActivity": "Delete {title}",
+    "deleteTitle": "Delete this activity?",
+    "deleteDescription": "This action cannot be undone.",
+    "deleting": "Deleting...",
+    "status": {
+      "active": "Active",
+      "draft": "Draft",
+      "inactive": "Inactive",
+      "deleted": "Deleted"
+    }
+  },
+  "MyActivityDetail": {
+    "title": "Activity details",
+    "loading": "Loading activity...",
+    "loadError": "Could not load the activity.",
+    "edit": "Edit activity",
+    "viewApplicants": "View applicants",
+    "previewTitle": "Guest preview",
+    "previewNotice": "This is exactly what guests see. Booking steps are disabled in this preview."
+  },
+  "Applicants": {
+    "title": "Applicants",
+    "loading": "Loading applicants...",
+    "loadError": "Could not load applicants.",
+    "noSchedule": "No schedules are registered for this activity.",
+    "empty": "No applicants for this schedule yet.",
+    "appliedOn": "Applied on {date}",
+    "confirmedCount": "{count, plural, one {# confirmed} other {# confirmed}}",
+    "pendingCount": "{count, plural, one {# pending payment} other {# pending payment}}",
+    "guestCount": "{count, plural, one {# guest} other {# guests}}",
+    "status": {
+      "pendingPayment": "Pending Payment",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "completed": "Completed"
+    }
+  },
+  "CreateActivity": {
+    "eyebrow": "Create an experience",
+    "title": "Design your HanBuddy experience",
+    "progress": "Step {current, number} of {total, number}",
+    "progressLabel": "Activity creation progress",
+    "steps": {
+      "category": {
+        "title": "Choose a category",
+        "description": "Pick the category that best describes your experience."
+      },
+      "host": {
+        "title": "Introduce yourself",
+        "description": "Give guests a short, personal introduction to who you are."
+      },
+      "name": {
+        "title": "Name your experience",
+        "description": "Use a clear, memorable name that tells guests what makes it special."
+      },
+      "description": {
+        "title": "Describe your experience in detail",
+        "description": "Help guests picture the experience from the moment it starts until it ends."
+      },
+      "photos": {
+        "title": "Show what guests can expect",
+        "description": "Add 3 to 10 clear photos that capture the experience."
+      },
+      "itinerary": {
+        "title": "Build the itinerary",
+        "description": "Add the activities guests will follow from the beginning of the experience to the end."
+      },
+      "meeting": {
+        "title": "Set the meeting place",
+        "description": "Help guests find you easily on the day."
+      },
+      "schedule": {
+        "title": "Set dates and start times",
+        "description": "Choose every date guests can book and set a start time for each one."
+      },
+      "capacity": {
+        "title": "Set the maximum group size",
+        "description": "Choose how many guests you can host comfortably at one time."
+      },
+      "price": {
+        "title": "Set the price per person",
+        "description": "Enter the amount each guest will pay in Korean won."
+      },
+      "inclusions": {
+        "title": "Tell guests what's included",
+        "description": "Be precise about what the price covers."
+      },
+      "discount": {
+        "title": "Add a discount",
+        "description": "Optionally set a limited-time discount with an end date."
+      },
+      "restrictions": {
+        "title": "Before guests join",
+        "description": "Select anything guests should know before taking part in the activity."
+      }
+    },
+    "groups": {
+      "intro": "Intro",
+      "activity": "Activity",
+      "operation": "Operations",
+      "pricing": "Pricing",
+      "policy": "Policies"
+    },
+    "categories": {
+      "food": "Food & drink",
+      "culture": "Culture & history",
+      "sports": "Sports",
+      "nature": "Nature & outdoors",
+      "nightlife": "Nightlife",
+      "wellness": "Wellness"
+    },
+    "fields": {
+      "hostIntroduction": "About you",
+      "qualifications": "Qualifications and experience",
+      "pressHistory": "Awards or press coverage",
+      "experienceName": "Experience name",
+      "experienceDescription": "Detailed description",
+      "meetingAddress": "Search address",
+      "meetingPlace": "Meeting place name",
+      "scheduleDate": "Experience date",
+      "scheduleStartTime": "Start time",
+      "itineraryTitle": "Activity title",
+      "itineraryDescription": "What guests will do",
+      "duration": "Duration in minutes",
+      "itineraryPhoto": "Activity photo",
+      "maxGuests": "Maximum guests",
+      "pricePerPerson": "Price per person",
+      "inclusions": "What's included",
+      "discount": "Discount percentage",
+      "discountEndsAt": "Discount ends on",
+      "restrictions": "Things to know before joining"
+    },
+    "hints": {
+      "optional": "Optional",
+      "experienceName": "Use a short, specific name that tells guests what makes it special.",
+      "meetingAddress": "Search for an address and select it from the suggestions.",
+      "meetingPlace": "Use a short recognizable name, separate from the address.",
+      "onePerLine": "Enter one item per line.",
+      "restrictionsList": "Add one thing guests should know at a time.",
+      "characters": "{count, number} characters entered",
+      "hostIntroductionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
+      "experienceNameCharacters": "{count, number}/{max, number} characters",
+      "experienceDescriptionCharacters": "{count, number}/{max, number} characters · minimum {min, number}"
+    },
+    "placeholders": {
+      "hostIntroduction": "Introduce yourself and why you want to host this experience.",
+      "qualifications": "Share relevant work, study, certifications, or lived experience.",
+      "pressHistory": "Add awards, publications, interviews, or notable recognition.",
+      "experienceName": "e.g., Cheer at a Korean Baseball Night",
+      "experienceDescription": "Tell guests what the experience feels like from start to finish.",
+      "meetingAddress": "e.g., 25 Olympic-ro, Songpa-gu, Seoul",
+      "meetingPlace": "e.g., Gate 1 ticket booth",
+      "itineraryTitle": "e.g., Learn the team chants",
+      "itineraryDescription": "Describe this activity in 5 to 50 characters.",
+      "duration": "e.g., 30",
+      "maxGuests": "e.g., 8",
+      "pricePerPerson": "e.g., 50000",
+      "inclusionsCustom": "e.g., Team cap",
+      "inclusions": "Ticket\nWelcome snack\nCheering kit",
+      "discount": "e.g., 10",
+      "restrictions": "e.g., Comfortable shoes are recommended"
+    },
+    "photos": {
+      "upload": "Add experience photos",
+      "hint": "JPG, PNG, or WebP · at least 3, up to 10",
+      "label": "Upload experience photos",
+      "count": "{count, plural, one {# photo selected} other {# photos selected}}",
+      "minimum": "Minimum 3 photos",
+      "cover": "Cover photo",
+      "makeCover": "Set as cover",
+      "preview": "Experience photo {index, number}",
+      "remove": "Remove experience photo {index, number}"
+    },
+    "itinerary": {
+      "item": "Activity {index, number}",
+      "remove": "Remove activity {index, number}",
+      "titleCount": "{count, number}/{max, number} characters",
+      "descriptionCount": "{count, number}/{max, number} characters · minimum {min, number}",
+      "addPhoto": "Add an activity photo",
+      "photoLabel": "Upload a photo for activity {index, number}",
+      "add": "Add an activity",
+      "edit": "Edit activity {index, number}",
+      "untitled": "New activity",
+      "incomplete": "Add the details",
+      "durationSummary": "{minutes, number} min",
+      "editor": {
+        "progress": "{current, number} of {total, number}",
+        "close": "Close activity editor",
+        "photoTitle": "Choose an activity photo",
+        "photoDescription": "Use one clear photo that represents this part of the experience.",
+        "changePhoto": "Change photo",
+        "descriptionTitle": "What will guests do?",
+        "durationTitle": "How long will it take?",
+        "titleTitle": "Name this activity",
+        "minutes": "minutes",
+        "decreaseDuration": "Decrease duration",
+        "increaseDuration": "Increase duration",
+        "done": "Done",
+        "errors": {
+          "photo": "Add a photo to continue.",
+          "description": "Write 5 to 50 characters.",
+          "duration": "Set a duration of at least 1 minute.",
+          "title": "Enter a 1 to 20 character activity title."
+        }
+      }
+    },
+    "capacity": {
+      "decrease": "Decrease maximum guests",
+      "increase": "Increase maximum guests",
+      "guests": "{count, plural, one {# guest maximum} other {# guests maximum}}"
+    },
+    "meeting": {
+      "searching": "Searching addresses…",
+      "selecting": "Loading the selected address…",
+      "searchError": "Address search failed. Please try again.",
+      "apiUnavailable": "Address search is unavailable because the Google Maps API key is missing.",
+      "mapTitle": "Map of the selected meeting address"
+    },
+    "schedule": {
+      "notice": "Select as many dates as you need. All start times are shown in Korea Standard Time (KST).",
+      "calendarLabel": "Experience dates calendar",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "selectDate": "Select {date}",
+      "editDate": "Edit start times for {date}",
+      "selectedTitle": "Selected sessions",
+      "selectedCount": "{count, plural, one {# date} other {# dates}} selected",
+      "sessionCount": "{count, plural, one {# session} other {# sessions}}",
+      "empty": "Select dates on the calendar to add bookable sessions.",
+      "editingDate": "Editing start times",
+      "customTime": "Add a start time",
+      "addTime": "Add time",
+      "addedTimes": "Added start times",
+      "noTimes": "No start times yet. Choose a time above and add it.",
+      "removeTime": "Remove {time} from {date}",
+      "applyDateTimesToAll": "Apply these times to all {count, number} dates",
+      "removeDate": "Remove {date}",
+      "pastTimeHint": "Start times for today must be later than the current time (KST)."
+    },
+    "price": {
+      "notice": "This amount is shown to guests as the price per person in Korean won."
+    },
+    "inclusions": {
+      "custom": "Other included items",
+      "customHint": "Add anything included that is not listed above.",
+      "add": "Add item",
+      "remove": "Remove included item: {item}",
+      "options": {
+        "tickets": "Admission tickets",
+        "meal": "Meal",
+        "snacks": "Snacks",
+        "drinks": "Specialty drinks",
+        "transport": "Public transportation",
+        "parking": "Parking",
+        "equipment": "Equipment rental",
+        "souvenir": "Special souvenir"
+      }
+    },
+    "discount": {
+      "policyNotice": "The discount applies to every session until the end date you set.",
+      "options": {
+        "none": {
+          "title": "No discount",
+          "description": "List the experience at its standard price."
+        },
+        "limited": {
+          "title": "Limited-time discount",
+          "description": "Offer a lower price for a limited promotional period."
+        }
+      }
+    },
+    "restrictions": {
+      "none": "Nothing guests need to know",
+      "noneDescription": "There are no additional details guests need to check before joining.",
+      "custom": "Other things to know",
+      "customHint": "Add anything guests should check before joining that is not listed above.",
+      "add": "Add information",
+      "remove": "Remove information: {item}",
+      "options": {
+        "age": "Guests must be at least 19 years old",
+        "activity": "The activity may involve walking, standing for long periods, or other physical activity",
+        "accessibility": "Wheelchair or stroller access may be difficult",
+        "allergy": "Please check with the host before booking if you have any food allergies"
+      }
+    },
+    "review": {
+      "title": "Preview your experience",
+      "description": "See how the information you entered will appear to guests on the activity details page.",
+      "hostName": "HanBuddy host"
+    },
+    "actions": {
+      "exit": "Exit",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Register experience",
+      "save": "Save changes",
+      "submitUploading": "Uploading photos…",
+      "submitRegistering": "Registering…",
+      "submitSaving": "Saving…"
+    },
+    "edit": {
+      "loading": "Loading your experience…",
+      "loadError": "Could not load the activity to edit.",
+      "backToActivity": "Back to activity"
+    },
+    "errors": {
+      "categoryRequired": "Choose a category to continue.",
+      "hostIntroductionRequired": "Write an introduction between 30 and 200 characters.",
+      "photosMinimum": "Add between 3 and 10 experience photos.",
+      "experienceNameRequired": "Enter an experience name between 1 and 20 characters.",
+      "experienceDescriptionRequired": "Write a detailed description between 30 and 200 characters.",
+      "meetingAddressRequired": "Enter the meeting address.",
+      "meetingPlaceRequired": "Enter a short meeting place name.",
+      "scheduleInvalid": "Choose at least one date and set a start time for every selected date.",
+      "itineraryRequired": "Add at least one itinerary activity.",
+      "itineraryTitleRequired": "Every activity needs a title between 1 and 20 characters.",
+      "itineraryDescriptionTooShort": "Each activity description must be between 5 and 50 characters.",
+      "itineraryDurationInvalid": "Enter a duration greater than 0 for every activity.",
+      "itineraryPhotoRequired": "Add a photo for every activity.",
+      "maxGuestsInvalid": "Enter a whole-number capacity greater than 0.",
+      "priceInvalid": "Enter a whole-number price greater than 0.",
+      "inclusionsRequired": "Add at least one included item.",
+      "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
+      "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",
+      "imageUploadFailed": "We couldn't upload your photos. Please try again.",
+      "submissionFailed": "We couldn't register your experience. Please try again.",
+      "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only.",
+      "maxGuestsTooMany": "Capacity can be at most 100 guests.",
+      "schedulesTooMany": "You can add up to 30 sessions.",
+      "itineraryTooMany": "You can add up to 20 itinerary activities."
+    }
+  }
+}

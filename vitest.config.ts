@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 
@@ -6,6 +6,12 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
+    exclude: [...configDefaults.exclude, ".worktrees/**", ".claude/**", ".serena/**"],
+    server: {
+      deps: {
+        inline: ["next-intl"],
+      },
+    },
     setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {

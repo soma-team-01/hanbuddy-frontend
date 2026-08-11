@@ -1,0 +1,220 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon, XIcon } from "@/components/ui/icons";
+import { downloadFilesInSequence } from "@/lib/chat/download";
+
+/** 활동 사진을 전체 화면으로 넘겨 볼 수 있는 갤러리 오버레이 */
+export function PhotoGalleryDialog({
+  images,
+  alt,
+  initialIndex = 0,
+  unoptimizedImages = false,
+  downloadUrls,
+  downloadLabel,
+  downloadOneLabel,
+  downloadAllLabel,
+  downloadTitle,
+  onClose,
+}: Readonly<{
+  images: string[];
+  alt: string;
+  initialIndex?: number;
+  /** blob 미리보기 등 next/image 최적화를 탈 수 없는 소스일 때 */
+  unoptimizedImages?: boolean;
+  /** 저장할 수 있는 사진이면 사진 순서대로 내려받기 경로를 준다 (채팅 사진) */
+  downloadUrls?: string[];
+  downloadLabel?: string;
+  downloadOneLabel?: string;
+  downloadAllLabel?: string;
+  downloadTitle?: string;
+  onClose: () => void;
+}>) {
+  const t = useTranslations("ActivityDetail");
+  const tAccessibility = useTranslations("Accessibility");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [downloadChoiceOpen, setDownloadChoiceOpen] = useState(false);
+  const [index, setIndex] = useState(() =>
+    Math.min(Math.max(initialIndex, 0), Math.max(images.length - 1, 0)),
+  );
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  if (images.length === 0) return null;
+
+  // 다이얼로그가 열린 채로 images가 짧아져도 범위를 벗어나지 않게 렌더 시점에 클램프한다
+  const safeIndex = Math.min(index, images.length - 1);
+  const showPrevious = () => setIndex((safeIndex - 1 + images.length) % images.length);
+  const showNext = () => setIndex((safeIndex + 1) % images.length);
+
+  const downloadButtonClass =
+    "flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80";
+  let downloadControl = null;
+  if (downloadUrls && downloadUrls.length > 1) {
+    // 여러 장이면 무엇을 저장할지 먼저 고르게 한다
+    downloadControl = (
+      <button
+        type="button"
+        aria-label={downloadLabel}
+        title={downloadLabel}
+        onClick={() => setDownloadChoiceOpen(true)}
+        className={downloadButtonClass}
+      >
+        <DownloadIcon className="size-5" />
+      </button>
+    );
+  } else if (downloadUrls?.[safeIndex]) {
+    downloadControl = (
+      <a
+        href={downloadUrls[safeIndex]}
+        aria-label={downloadLabel}
+        title={downloadLabel}
+        className={downloadButtonClass}
+      >
+        <DownloadIcon className="size-5" />
+      </a>
+    );
+  }
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-label={alt}
+      onClose={onClose}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") showPrevious();
+        if (event.key === "ArrowRight") showNext();
+      }}
+      className="m-0 h-dvh max-h-none w-screen max-w-none bg-transparent p-0 backdrop:bg-ink/95"
+    >
+      <div className="relative flex h-full w-full flex-col">
+        <div className="flex items-center justify-between px-4 py-3">
+          <span className="rounded-full bg-ink/60 px-3 py-1 font-display text-sm font-bold text-white">
+            {t("photoCounter", { current: safeIndex + 1, total: images.length })}
+          </span>
+          <div className="flex items-center gap-2">
+            {downloadControl}
+            <button
+              type="button"
+              aria-label={tAccessibility("closeDialog")}
+              onClick={onClose}
+              className="flex size-11 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
+            >
+              <XIcon className="size-5" />
+            </button>
+          </div>
+        </div>
+        <div className="relative min-h-0 flex-1">
+          <Image
+            src={images[safeIndex]}
+            alt={alt}
+            fill
+            sizes="100vw"
+            unoptimized={unoptimizedImages}
+            className="object-contain"
+          />
+        </div>
+        {images.length > 1 ? (
+          <>
+            <button
+              type="button"
+              aria-label={t("previousPhoto")}
+              onClick={showPrevious}
+              className="absolute top-1/2 left-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
+            >
+              <ArrowLeftIcon className="size-5" />
+            </button>
+            <button
+              type="button"
+              aria-label={t("nextPhoto")}
+              onClick={showNext}
+              className="absolute top-1/2 right-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/60 text-white transition-colors hover:bg-ink/80"
+            >
+              <ArrowRightIcon className="size-5" />
+            </button>
+          </>
+        ) : null}
+        <div className="pb-[max(1rem,env(safe-area-inset-bottom))]" />
+      </div>
+      {downloadChoiceOpen && downloadUrls ? (
+        <PhotoDownloadChoiceDialog
+          title={downloadTitle}
+          oneLabel={downloadOneLabel}
+          allLabel={downloadAllLabel}
+          onChoose={(scope) => {
+            setDownloadChoiceOpen(false);
+            void downloadFilesInSequence(
+              scope === "all" ? downloadUrls : [downloadUrls[safeIndex]],
+            );
+          }}
+          onClose={() => setDownloadChoiceOpen(false)}
+        />
+      ) : null}
+    </dialog>
+  );
+}
+
+/** 사진을 한 장만 받을지 묶음 전체를 받을지 고르는 작은 창 */
+function PhotoDownloadChoiceDialog({
+  title,
+  oneLabel,
+  allLabel,
+  onChoose,
+  onClose,
+}: Readonly<{
+  title?: string;
+  oneLabel?: string;
+  allLabel?: string;
+  onChoose: (scope: "one" | "all") => void;
+  onClose: () => void;
+}>) {
+  const tAccessibility = useTranslations("Accessibility");
+  const choiceRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = choiceRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
+
+  return (
+    <dialog
+      ref={choiceRef}
+      aria-label={title}
+      onClose={onClose}
+      className="motion-dialog m-auto w-[calc(100%-3rem)] max-w-xs rounded-2xl border-0 bg-canvas-soft p-5 text-ink shadow-2xl backdrop:bg-ink/60"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-display text-base font-bold text-ink">{title}</p>
+        <button
+          type="button"
+          aria-label={tAccessibility("closeDialog")}
+          onClick={onClose}
+          className="-mt-1.5 -mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
+        >
+          <XIcon className="size-4" />
+        </button>
+      </div>
+      <div className="mt-4 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => onChoose("one")}
+          className="h-11 rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
+        >
+          {oneLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => onChoose("all")}
+          className="h-11 rounded-xl border border-primary font-display text-sm font-bold text-primary transition-colors hover:bg-primary-soft"
+        >
+          {allLabel}
+        </button>
+      </div>
+    </dialog>
+  );
+}

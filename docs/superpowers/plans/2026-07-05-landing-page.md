@@ -93,11 +93,11 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-cream px-6 text-center">
-      <h1 className="font-display text-4xl font-extrabold text-forest">HanBuddy</h1>
+    <main className="bg-cream flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+      <h1 className="text-forest font-display text-4xl font-extrabold">HanBuddy</h1>
       <Link
         href="/login"
-        className="rounded-full bg-forest px-8 py-3 font-display font-semibold text-cream"
+        className="bg-forest text-cream rounded-full px-8 py-3 font-display font-semibold"
       >
         Get started
       </Link>
@@ -259,15 +259,15 @@ const experiences = [
 
 export default function LandingPage() {
   return (
-    <main className="flex min-h-dvh flex-col bg-cream text-ink">
+    <main className="bg-cream flex min-h-dvh flex-col text-ink">
       {/* Top bar */}
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-        <span className="font-display text-xl font-extrabold tracking-tight text-forest">
+        <span className="text-forest font-display text-xl font-extrabold tracking-tight">
           HanBuddy
         </span>
         <Link
           href="/login"
-          className="rounded-full border border-line px-5 py-2 font-display text-sm font-semibold text-ink transition-colors hover:bg-chip"
+          className="border-line hover:bg-chip rounded-full border px-5 py-2 font-display text-sm font-semibold text-ink transition-colors"
         >
           Log in
         </Link>
@@ -275,26 +275,26 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-6 pt-12 pb-14 text-center md:pt-20 md:pb-20">
-        <p className="mb-4 font-display text-xs font-semibold tracking-[0.2em] text-sage uppercase">
+        <p className="text-sage mb-4 font-display text-xs font-semibold tracking-[0.2em] uppercase">
           Match with a local buddy
         </p>
-        <h1 className="max-w-3xl font-display text-4xl leading-tight font-extrabold text-forest md:text-6xl">
+        <h1 className="text-forest max-w-3xl font-display text-4xl leading-tight font-extrabold md:text-6xl">
           Experience Korea like a local.
         </h1>
-        <p className="mt-5 max-w-xl text-base text-ink-soft md:text-lg">
+        <p className="text-ink-soft mt-5 max-w-xl text-base md:text-lg">
           From KBO nights to traditional markets, connect with a local buddy for authentic cultural
           experiences — not just sightseeing.
         </p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
           <Link
             href="/login"
-            className="rounded-full bg-forest px-8 py-3 font-display font-semibold text-cream transition-colors hover:bg-forest-soft"
+            className="bg-forest text-cream hover:bg-forest-soft rounded-full px-8 py-3 font-display font-semibold transition-colors"
           >
             Get started
           </Link>
           <Link
             href="/explore"
-            className="font-display font-semibold text-forest underline-offset-4 hover:underline"
+            className="text-forest font-display font-semibold underline-offset-4 hover:underline"
           >
             Browse experiences &rarr;
           </Link>
@@ -316,9 +316,9 @@ export default function LandingPage() {
                 sizes="(min-width: 768px) 30vw, 60vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-forest/80 via-forest/10 to-transparent" />
-              <div className="absolute bottom-0 left-0 p-4 text-cream">
-                <p className="font-display text-[11px] font-semibold tracking-wide text-sage uppercase">
+              <div className="from-forest/80 via-forest/10 absolute inset-0 bg-gradient-to-t to-transparent" />
+              <div className="text-cream absolute bottom-0 left-0 p-4">
+                <p className="text-sage font-display text-[11px] font-semibold tracking-wide uppercase">
                   {e.tag}
                 </p>
                 <h2 className="font-display text-lg font-bold">{e.title}</h2>
@@ -329,8 +329,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="mx-auto mt-auto w-full max-w-5xl px-6 py-8 text-sm text-ink-soft">
-        <span className="font-display font-semibold text-forest">HanBuddy</span>
+      <footer className="text-ink-soft mx-auto mt-auto w-full max-w-5xl px-6 py-8 text-sm">
+        <span className="text-forest font-display font-semibold">HanBuddy</span>
         <span className="mx-2 text-line-strong">·</span>
         Authentic Korea, together.
       </footer>

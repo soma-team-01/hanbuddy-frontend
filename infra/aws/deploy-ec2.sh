@@ -104,6 +104,7 @@ image_uri_base64="$(encode "${IMAGE_URI}")"
 api_base_url_base64="$(encode "${api_base_url}")"
 google_client_id_base64="$(encode "${google_client_id}")"
 google_redirect_uri_base64="$(encode "${google_redirect_uri}")"
+frontend_domain_base64="$(encode "${FRONTEND_DOMAIN}")"
 
 read -r -d '' remote_script <<EOF || true
 #!/usr/bin/env bash
@@ -125,6 +126,7 @@ image_uri="\$(printf '%s' '${image_uri_base64}' | base64 --decode)"
 api_base_url="\$(printf '%s' '${api_base_url_base64}' | base64 --decode)"
 google_client_id="\$(printf '%s' '${google_client_id_base64}' | base64 --decode)"
 google_redirect_uri="\$(printf '%s' '${google_redirect_uri_base64}' | base64 --decode)"
+frontend_domain="\$(printf '%s' '${frontend_domain_base64}' | base64 --decode)"
 registry="\${image_uri%%/*}"
 
 aws ecr get-login-password --region '${AWS_REGION}' \
@@ -174,6 +176,12 @@ if [[ "\${healthy}" != "true" ]]; then
 
   exit 1
 fi
+
+printf '%s\n' \
+  "\${frontend_domain} {" \
+  '  encode zstd gzip' \
+  '  reverse_proxy 127.0.0.1:3000' \
+  '}' > /opt/hanbuddy/Caddyfile
 
 docker restart hanbuddy-caddy >/dev/null
 docker image prune --all --force --filter until=168h >/dev/null

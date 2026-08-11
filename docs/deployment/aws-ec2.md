@@ -7,7 +7,7 @@ HanBuddy Next.js 프론트엔드를 private ECR과 환경별 EC2에 배포한다
 - `main`은 production이며 CI 성공 후 자동 배포한다.
 - `develop`은 staging이며 GitHub Actions에서 수동 배포한다.
 - production과 staging은 별도 EC2, EBS, IAM instance role, security group을 사용한다.
-- frontend 전용 custom VPC 하나와 서로 다른 Availability Zone의 public subnet 두 개를 공유한다. staging은 첫 번째 subnet, production은 두 번째 subnet을 사용한다.
+- production과 staging은 각각 별도 custom VPC, Internet Gateway, route table, public subnet 두 개를 사용한다.
 - 기본 인스턴스는 x86_64 `t3a.small`(2 vCPU, 2 GiB)이고 root volume은 gp3 16GB다.
 - staging은 사용 후 `Stop staging` workflow로 정지한다. 다음 배포가 자동으로 다시 시작한다.
 - staging은 Elastic IP를 쓰지 않고 시작할 때 바뀐 public IPv4를 Route 53 A record에 자동 반영한다. production은 안정적인 주소를 위해 Elastic IP를 사용한다. NAT Gateway와 ALB는 사용하지 않는다.
@@ -69,13 +69,13 @@ repo:soma-team-01/hanbuddy-frontend:environment:staging
 | `EcrRepositoryName`     | `hanbuddy-frontend`                                                           |
 | `Route53HostedZoneId`   | `hanbuddy.kr` hosted zone ID                                                  |
 
-## 3. Frontend network stack 생성
+## 3. Environment network stack 두 개 생성
 
-production과 staging은 EC2, EBS, IAM instance role, security group을 각각 분리하지만 frontend 전용 custom VPC는 하나를 공유한다. 현재 규모에서 VPC까지 환경별로 나누면 실질적인 이점보다 route와 subnet 관리 대상만 늘어난다.
+production과 staging은 EC2뿐 아니라 VPC도 분리한다. 같은 `infra/aws/network.yml`을 서로 다른 parameter로 두 번 실행한다.
 
 `infra/aws/network.yml`은 다음 리소스를 만든다.
 
-- `10.20.0.0/16` frontend 전용 VPC
+- 환경별 frontend 전용 VPC
 - 서로 다른 Availability Zone의 public subnet 두 개
 - Internet Gateway 하나
 - `0.0.0.0/0 → Internet Gateway` route가 있는 public route table
@@ -83,28 +83,27 @@ production과 staging은 EC2, EBS, IAM instance role, security group을 각각 �
 
 NAT Gateway와 private subnet은 만들지 않는다. VPC, subnet, route table, Internet Gateway 자체에는 시간당 요금이 없지만 EC2에 할당되는 public IPv4와 데이터 전송에는 요금이 발생한다.
 
-1. CloudFormation → `Create stack` → `With new resources (standard)`를 누른다.
-2. `infra/aws/network.yml`을 업로드한다.
-3. stack 이름은 `hanbuddy-frontend-network`로 한다.
-4. CIDR parameter는 다른 VPC와 겹치지 않는다면 기본값을 유지한다.
+먼저 staging network를 생성한다.
 
-| Parameter           | 기본값          |
-| ------------------- | --------------- |
-| `VpcCidr`           | `10.20.0.0/16`  |
-| `PublicSubnetACidr` | `10.20.10.0/24` |
-| `PublicSubnetBCidr` | `10.20.20.0/24` |
+| 항목                | 값                                  |
+| ------------------- | ----------------------------------- |
+| Stack name          | `hanbuddy-frontend-staging-network` |
+| `EnvironmentName`   | `staging`                           |
+| `VpcCidr`           | `10.20.0.0/16`                      |
+| `PublicSubnetACidr` | `10.20.10.0/24`                     |
+| `PublicSubnetBCidr` | `10.20.20.0/24`                     |
 
-5. stack을 생성하고 `CREATE_COMPLETE`가 될 때까지 기다린다.
-6. Outputs의 `VpcId`, `PublicSubnetAId`, `PublicSubnetBId`를 확인한다.
+다음으로 같은 template을 다시 업로드해 production network를 생성한다.
 
-초기 환경 배치는 다음과 같다.
+| 항목                | 값                                     |
+| ------------------- | -------------------------------------- |
+| Stack name          | `hanbuddy-frontend-production-network` |
+| `EnvironmentName`   | `production`                           |
+| `VpcCidr`           | `10.30.0.0/16`                         |
+| `PublicSubnetACidr` | `10.30.10.0/24`                        |
+| `PublicSubnetBCidr` | `10.30.20.0/24`                        |
 
-| Environment  | Subnet output     |
-| ------------ | ----------------- |
-| `staging`    | `PublicSubnetAId` |
-| `production` | `PublicSubnetBId` |
-
-두 subnet은 같은 public route table과 Internet Gateway를 사용한다. 환경 간 접근 권한은 각 EC2 stack이 별도로 생성하는 security group으로 통제한다.
+각 stack이 `CREATE_COMPLETE`가 되면 Outputs의 `VpcId`, `PublicSubnetAId`, `PublicSubnetBId`를 환경별로 기록한다. 각 환경의 단일 EC2는 `PublicSubnetAId`를 사용하고, `PublicSubnetBId`는 향후 ALB 또는 다중 AZ 확장을 위해 비워둔다.
 
 ## 4. Staging EC2 stack 생성
 
@@ -113,17 +112,16 @@ NAT Gateway와 private subnet은 만들지 않는다. VPC, subnet, route table, 
 3. stack 이름은 `hanbuddy-frontend-staging-ec2`로 한다.
 4. parameter를 입력한다.
 
-| Parameter           | 값                               |
-| ------------------- | -------------------------------- |
-| `EnvironmentName`   | `staging`                        |
-| `FrontendDomain`    | `staging.hanbuddy.kr`            |
-| `VpcId`             | network output `VpcId`           |
-| `SubnetId`          | network output `PublicSubnetAId` |
-| `InstanceType`      | `t3a.small`                      |
-| `AllocateElasticIp` | `false`                          |
-| `RootVolumeSize`    | `16`                             |
-| `EcrRepositoryName` | `hanbuddy-frontend`              |
-| `LatestAmiId`       | 기본값 유지                      |
+| Parameter           | 값                                       |
+| ------------------- | ---------------------------------------- |
+| `EnvironmentName`   | `staging`                                |
+| `VpcId`             | staging network output `VpcId`           |
+| `SubnetId`          | staging network output `PublicSubnetAId` |
+| `InstanceType`      | `t3a.small`                              |
+| `AllocateElasticIp` | `false`                                  |
+| `RootVolumeSize`    | `16`                                     |
+| `EcrRepositoryName` | `hanbuddy-frontend`                      |
+| `LatestAmiId`       | 기본값 유지                              |
 
 5. CloudFormation IAM resource 생성 동의 후 생성한다.
 6. `CREATE_COMPLETE`가 되면 Outputs의 `InstanceId`를 복사한다.
@@ -200,26 +198,25 @@ production과 staging은 당분간 같은 backend `https://api.hanbuddy.kr`을 �
 
 정지 중에는 compute와 public IPv4 요금이 멈추지만 gp3 16GB 약 `$1.46/월`은 계속 발생한다. 별도 schedule workflow는 없으며 사용자가 버튼을 누를 때만 정지한다.
 
-## 8. Production은 전환 시점에 별도 생성
+## 8. Production EC2 사전 생성과 전환
 
-현재 `hanbuddy.kr`은 landing이 사용하므로 production EC2 stack은 만들지 않는다. 전환 시점에 같은 `infra/aws/ec2-environment.yml`로 다음 stack을 만든다.
+production EC2도 staging과 함께 미리 생성한다. 초기 Caddy는 도메인 인증서를 요청하지 않는 HTTP 대기 설정으로 시작하고, 첫 production 배포 때만 `hanbuddy.kr` 설정과 인증서 발급을 적용한다. 따라서 현재 landing DNS에는 영향을 주지 않는다.
 
 ```text
 Stack name: hanbuddy-frontend-production-ec2
 EnvironmentName: production
-FrontendDomain: hanbuddy.kr
-VpcId: network output VpcId
-SubnetId: network output PublicSubnetBId
+VpcId: production network output VpcId
+SubnetId: production network output PublicSubnetAId
 InstanceType: t3a.small
 AllocateElasticIp: true
 RootVolumeSize: 16
 ```
 
-Outputs의 `InstanceId`와 domain 값을 `production` GitHub environment에 추가한다. `production`은 `main` branch만 허용한다. main CI 성공 후 `Deploy production`이 자동 실행되므로 landing DNS 전환 준비가 끝나기 전에는 production variable을 완성하거나 workflow를 수동 실행하지 않는다.
+Outputs의 `InstanceId`를 `production` GitHub environment에 추가한다. `production`은 `main` branch만 허용한다. landing DNS 전환 준비가 끝나기 전에는 production workflow를 실행하지 않는다.
 
 모든 production 준비가 끝난 마지막 단계에서 repository variable `PRODUCTION_DEPLOYMENT_ENABLED`를 `true`로 바꾼다. 그전에는 `false`로 유지하므로 배포 workflow가 main에 병합되어도 production job은 실행되지 않는다.
 
-Production의 Elastic IP는 주소 안정성을 위한 것이며 EC2를 정지해도 시간당 `$0.005`가 계속 청구된다. Production은 상시 실행을 전제로 한다.
+Production의 Elastic IP는 주소 안정성을 위한 것이며 EC2를 정지해도 시간당 `$0.005`가 계속 청구된다. 전환 전 production EC2를 중지하면 compute 요금은 멈추지만 EBS와 Elastic IP를 합쳐 약 `$5.11/월`이 발생한다. 계속 실행하면 약 `$22.19/월`이다.
 
 ## 9. 사양 변경과 rollback
 

@@ -7,9 +7,6 @@ Parameters:
     AllowedValues:
       - production
       - staging
-  FrontendDomain:
-    Type: String
-    Description: Frontend domain without protocol
   VpcId:
     Type: AWS::EC2::VPC::Id
   SubnetId:
@@ -169,7 +166,7 @@ Resources:
 
           install -d -m 0755 /opt/hanbuddy
           printf '%s\n' \
-            '${FrontendDomain} {' \
+            ':80 {' \
             '  encode zstd gzip' \
             '  reverse_proxy 127.0.0.1:3000' \
             '}' > /opt/hanbuddy/Caddyfile
@@ -187,7 +184,7 @@ Resources:
             -v hanbuddy-caddy-config:/config \
             caddy:2-alpine
 
-            touch /opt/hanbuddy/bootstrap-complete
+          touch /opt/hanbuddy/bootstrap-complete
 
   FrontendElasticIp:
     Type: AWS::EC2::EIP
@@ -217,8 +214,6 @@ Outputs:
     Value: !Ref FrontendInstance
   InstanceType:
     Value: !Ref InstanceType
-  FrontendDomain:
-    Value: !Ref FrontendDomain
   PublicIpAtCreation:
     Description: Changes after a stop and start; deployment updates Route 53 with the live address
     Value: !If

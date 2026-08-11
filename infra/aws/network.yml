@@ -1,19 +1,21 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Shared custom VPC and public subnets for HanBuddy frontend environments
+Description: Environment-specific VPC and public subnets for HanBuddy frontend
 
 Parameters:
+  EnvironmentName:
+    Type: String
+    AllowedValues:
+      - production
+      - staging
   VpcCidr:
     Type: String
-    Default: 10.20.0.0/16
-    Description: IPv4 CIDR for the shared frontend VPC
+    Description: Non-overlapping IPv4 CIDR for this environment VPC
   PublicSubnetACidr:
     Type: String
-    Default: 10.20.10.0/24
-    Description: IPv4 CIDR for the first public subnet (staging initially)
+    Description: IPv4 CIDR for the first public subnet
   PublicSubnetBCidr:
     Type: String
-    Default: 10.20.20.0/24
-    Description: IPv4 CIDR for the second public subnet (production initially)
+    Description: IPv4 CIDR for the second public subnet
 
 Resources:
   FrontendVpc:
@@ -25,22 +27,26 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value: hanbuddy-frontend-vpc
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-vpc
         - Key: Project
           Value: hanbuddy
         - Key: Service
           Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
 
   FrontendInternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: hanbuddy-frontend-igw
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-igw
         - Key: Project
           Value: hanbuddy
         - Key: Service
           Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
 
   FrontendInternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -54,11 +60,13 @@ Resources:
       VpcId: !Ref FrontendVpc
       Tags:
         - Key: Name
-          Value: hanbuddy-frontend-public
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-public
         - Key: Project
           Value: hanbuddy
         - Key: Service
           Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
 
   FrontendPublicDefaultRoute:
     Type: AWS::EC2::Route
@@ -77,11 +85,13 @@ Resources:
       VpcId: !Ref FrontendVpc
       Tags:
         - Key: Name
-          Value: hanbuddy-frontend-public-a
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-public-a
         - Key: Project
           Value: hanbuddy
         - Key: Service
           Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
 
   FrontendPublicSubnetB:
     Type: AWS::EC2::Subnet
@@ -92,11 +102,13 @@ Resources:
       VpcId: !Ref FrontendVpc
       Tags:
         - Key: Name
-          Value: hanbuddy-frontend-public-b
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-public-b
         - Key: Project
           Value: hanbuddy
         - Key: Service
           Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
 
   FrontendPublicSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -111,14 +123,16 @@ Resources:
       SubnetId: !Ref FrontendPublicSubnetB
 
 Outputs:
+  EnvironmentName:
+    Value: !Ref EnvironmentName
   VpcId:
-    Description: Shared VPC ID for staging and production EC2 stacks
+    Description: VPC ID for this environment EC2 stack
     Value: !Ref FrontendVpc
   PublicSubnetAId:
-    Description: Use as the initial staging SubnetId
+    Description: Primary subnet for the environment EC2 instance
     Value: !Ref FrontendPublicSubnetA
   PublicSubnetBId:
-    Description: Use as the initial production SubnetId
+    Description: Reserved for future multi-AZ load balancing or failover
     Value: !Ref FrontendPublicSubnetB
   PublicRouteTableId:
     Value: !Ref FrontendPublicRouteTable

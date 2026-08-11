@@ -1,0 +1,241 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: HanBuddy frontend EC2 environment with Docker, Caddy, and SSM
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    AllowedValues:
+      - production
+      - staging
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public subnet with a route to an internet gateway
+  InstanceType:
+    Type: String
+    Default: t3a.small
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3a.micro
+      - t3a.small
+      - t3a.medium
+  AllocateElasticIp:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Use true for production and false for stoppable staging
+  RootVolumeSize:
+    Type: Number
+    Default: 16
+    MinValue: 8
+    MaxValue: 100
+  EcrRepositoryName:
+    Type: String
+    Default: hanbuddy-frontend
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+
+Conditions:
+  ShouldAllocateElasticIp: !Equals [!Ref AllocateElasticIp, "true"]
+
+Resources:
+  FrontendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub HTTPS access for HanBuddy frontend ${EnvironmentName}
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: Caddy HTTP and ACME redirect
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Caddy HTTPS
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: !Sub Runtime role for HanBuddy frontend ${EnvironmentName} EC2
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: PullFrontendImageFromEcr
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                Resource: !Sub arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${EcrRepositoryName}
+      Tags:
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref FrontendInstanceRole
+
+  FrontendInstance:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref FrontendInstanceProfile
+      InstanceInitiatedShutdownBehavior: stop
+      CreditSpecification:
+        CPUCredits: standard
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+      # Public ingress is intentional for the Caddy frontend; the security group
+      # exposes only HTTP/HTTPS, while administration remains SSM-only.
+      NetworkInterfaces: # NOSONAR
+        - DeleteOnTermination: true
+          DeviceIndex: "0"
+          GroupSet:
+            - !Ref FrontendSecurityGroup
+          SubnetId: !Ref SubnetId
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            VolumeSize: !Ref RootVolumeSize
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+      UserData:
+        Fn::Base64: !Sub |
+          #!/usr/bin/env bash
+          set -Eeuxo pipefail
+
+          signal_bootstrap() {
+            local bootstrap_exit_code="$?"
+            trap - EXIT
+            /opt/aws/bin/cfn-signal \
+              --exit-code "$bootstrap_exit_code" \
+              --stack ${AWS::StackName} \
+              --resource FrontendInstance \
+              --region ${AWS::Region}
+            exit "$bootstrap_exit_code"
+          }
+          trap signal_bootstrap EXIT
+
+          dnf install -y aws-cfn-bootstrap docker
+          systemctl enable --now docker
+
+          if [[ ! -f /swapfile ]]; then
+            fallocate -l 1G /swapfile
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            printf '%s\n' '/swapfile none swap sw 0 0' >> /etc/fstab
+          fi
+
+          install -d -m 0755 /opt/hanbuddy
+          printf '%s\n' \
+            ':80 {' \
+            '  encode zstd gzip' \
+            '  reverse_proxy 127.0.0.1:3000' \
+            '}' > /opt/hanbuddy/Caddyfile
+
+          docker pull caddy:2-alpine
+          docker rm -f hanbuddy-caddy || true
+          docker run -d \
+            --name hanbuddy-caddy \
+            --restart unless-stopped \
+            --network host \
+            --log-opt max-size=10m \
+            --log-opt max-file=3 \
+            -v /opt/hanbuddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z \
+            -v hanbuddy-caddy-data:/data \
+            -v hanbuddy-caddy-config:/config \
+            caddy:2-alpine
+
+          touch /opt/hanbuddy/bootstrap-complete
+
+  FrontendElasticIp:
+    Type: AWS::EC2::EIP
+    Condition: ShouldAllocateElasticIp
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendElasticIpAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Condition: ShouldAllocateElasticIp
+    Properties:
+      AllocationId: !GetAtt FrontendElasticIp.AllocationId
+      InstanceId: !Ref FrontendInstance
+
+Outputs:
+  InstanceId:
+    Description: Set this value as the GitHub environment variable EC2_INSTANCE_ID
+    Value: !Ref FrontendInstance
+  InstanceType:
+    Value: !Ref InstanceType
+  PublicIpAtCreation:
+    Description: Changes after a stop and start; deployment updates Route 53 with the live address
+    Value: !If
+      - ShouldAllocateElasticIp
+      - !Ref FrontendElasticIp
+      - !GetAtt FrontendInstance.PublicIp
+  SecurityGroupId:
+    Value: !Ref FrontendSecurityGroup

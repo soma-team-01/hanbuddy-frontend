@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: HanBuddy frontend ECR and GitHub Actions OIDC role
+
+Parameters:
+  GitHubOidcProviderArn:
+    Type: String
+    Description: ARN of the account-level token.actions.githubusercontent.com OIDC provider
+  GitHubOwner:
+    Type: String
+    Default: soma-team-01
+  GitHubRepository:
+    Type: String
+    Default: hanbuddy-frontend
+  EcrRepositoryName:
+    Type: String
+    Default: hanbuddy-frontend
+  Route53HostedZoneId:
+    Type: String
+    Description: Route 53 hosted zone ID that contains the frontend domains
+  FrontendRecordNames:
+    Type: CommaDelimitedList
+    Default: hanbuddy.kr,staging.hanbuddy.kr
+    Description: Lowercase frontend DNS record names without trailing dots
+Resources:
+  FrontendRepository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: !Ref EcrRepositoryName
+      EmptyOnDelete: false
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: IMMUTABLE_WITH_EXCLUSION
+      ImageTagMutabilityExclusionFilters:
+        - ImageTagMutabilityExclusionFilterType: WILDCARD
+          ImageTagMutabilityExclusionFilterValue: "*-latest"
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Remove untagged images after one day",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 1
+                },
+                "action": { "type": "expire" }
+              },
+              {
+                "rulePriority": 2,
+                "description": "Keep the latest ten production commit images",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPrefixList": ["production-sha-"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": { "type": "expire" }
+              },
+              {
+                "rulePriority": 3,
+                "description": "Keep the latest three staging commit images",
+                "selection": {
+                  "tagStatus": "tagged",
+                  "tagPrefixList": ["staging-sha-"],
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 3
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Deploy HanBuddy frontend from protected GitHub environments
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:production
+                  - !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:staging
+      Policies:
+        - PolicyName: DeployFrontendToEc2
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: GetEcrAuthorizationToken
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              - Sid: PushAndManageFrontendRepository
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:DescribeImages
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:ListImages
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: !GetAtt FrontendRepository.Arn
+              - Sid: InspectFrontendInstances
+                Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                Resource: "*"
+              - Sid: StartAndStopFrontendInstances
+                Effect: Allow
+                Action:
+                  - ec2:StartInstances
+                  - ec2:StopInstances
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ec2:ResourceTag/Project: hanbuddy
+                    ec2:ResourceTag/Service: frontend
+              - Sid: RunCommandsOnFrontendInstances
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ssm:resourceTag/Project: hanbuddy
+                    ssm:resourceTag/Service: frontend
+              - Sid: UseAwsRunShellScriptDocument
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+              - Sid: ReadFrontendCommandStatus
+                Effect: Allow
+                Action:
+                  - ssm:DescribeInstanceInformation
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: "*"
+              - Sid: ManageFrontendDnsRecords
+                Effect: Allow
+                Action: route53:ChangeResourceRecordSets
+                Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
+                Condition:
+                  ForAllValues:StringEquals:
+                    route53:ChangeResourceRecordSetsNormalizedRecordNames: !Ref FrontendRecordNames
+                    route53:ChangeResourceRecordSetsRecordTypes:
+                      - A
+                    route53:ChangeResourceRecordSetsActions:
+                      - UPSERT
+                      - DELETE
+              - Sid: ReadFrontendDnsRecords
+                Effect: Allow
+                Action: route53:ListResourceRecordSets
+                Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
+
+Outputs:
+  AwsRoleArn:
+    Description: Set this value as the GitHub repository variable AWS_ROLE_ARN
+    Value: !GetAtt GitHubActionsRole.Arn
+  EcrRepositoryUri:
+    Value: !GetAtt FrontendRepository.RepositoryUri
+  EcrRepositoryName:
+    Value: !Ref EcrRepositoryName

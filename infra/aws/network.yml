@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Environment-specific VPC and public subnets for HanBuddy frontend
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    AllowedValues:
+      - production
+      - staging
+  VpcCidr:
+    Type: String
+    Description: Non-overlapping IPv4 CIDR for this environment VPC
+  PublicSubnetACidr:
+    Type: String
+    Description: IPv4 CIDR for the first public subnet
+  PublicSubnetBCidr:
+    Type: String
+    Description: IPv4 CIDR for the second public subnet
+
+Resources:
+  FrontendVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-vpc
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-igw
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendInternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref FrontendInternetGateway
+      VpcId: !Ref FrontendVpc
+
+  FrontendPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref FrontendVpc
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-public
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendPublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: FrontendInternetGatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref FrontendInternetGateway
+      RouteTableId: !Ref FrontendPublicRouteTable
+
+  FrontendPublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: !Ref PublicSubnetACidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref FrontendVpc
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-public-a
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendPublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: !Ref PublicSubnetBCidr
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref FrontendVpc
+      Tags:
+        - Key: Name
+          Value: !Sub hanbuddy-frontend-${EnvironmentName}-public-b
+        - Key: Project
+          Value: hanbuddy
+        - Key: Service
+          Value: frontend
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  FrontendPublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref FrontendPublicRouteTable
+      SubnetId: !Ref FrontendPublicSubnetA
+
+  FrontendPublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref FrontendPublicRouteTable
+      SubnetId: !Ref FrontendPublicSubnetB
+
+Outputs:
+  EnvironmentName:
+    Value: !Ref EnvironmentName
+  VpcId:
+    Description: VPC ID for this environment EC2 stack
+    Value: !Ref FrontendVpc
+  PublicSubnetAId:
+    Description: Primary subnet for the environment EC2 instance
+    Value: !Ref FrontendPublicSubnetA
+  PublicSubnetBId:
+    Description: Reserved for future multi-AZ load balancing or failover
+    Value: !Ref FrontendPublicSubnetB
+  PublicRouteTableId:
+    Value: !Ref FrontendPublicRouteTable
+  InternetGatewayId:
+    Value: !Ref FrontendInternetGateway

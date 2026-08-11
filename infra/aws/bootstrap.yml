@@ -87,7 +87,7 @@ Resources:
                   - !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:production
                   - !Sub repo:${GitHubOwner}/${GitHubRepository}:environment:staging
       Policies:
-        - PolicyName: DeployFrontendToLightsail
+        - PolicyName: DeployFrontendToEc2
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -101,25 +101,51 @@ Resources:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:CompleteLayerUpload
                   - ecr:GetDownloadUrlForLayer
-                  - ecr:GetRepositoryPolicy
                   - ecr:InitiateLayerUpload
                   - ecr:ListImages
                   - ecr:PutImage
-                  - ecr:SetRepositoryPolicy
                   - ecr:UploadLayerPart
                 Resource: !GetAtt FrontendRepository.Arn
-              - Sid: ManageFrontendContainerServices
+              - Sid: InspectFrontendInstances
                 Effect: Allow
                 Action:
-                  - lightsail:CreateContainerService
-                  - lightsail:CreateContainerServiceDeployment
-                  - lightsail:DeleteContainerService
-                  - lightsail:GetContainerServices
-                  - lightsail:UpdateContainerService
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
                 Resource: "*"
-              - Sid: UpdateFrontendDnsAliases
+              - Sid: StartAndStopFrontendInstances
                 Effect: Allow
-                Action: route53:ChangeResourceRecordSets
+                Action:
+                  - ec2:StartInstances
+                  - ec2:StopInstances
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ec2:ResourceTag/Project: hanbuddy
+                    ec2:ResourceTag/Service: frontend
+              - Sid: RunCommandsOnFrontendInstances
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ssm:resourceTag/Project: hanbuddy
+                    ssm:resourceTag/Service: frontend
+              - Sid: UseAwsRunShellScriptDocument
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+              - Sid: ReadFrontendCommandStatus
+                Effect: Allow
+                Action:
+                  - ssm:DescribeInstanceInformation
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: "*"
+              - Sid: ManageFrontendDnsRecords
+                Effect: Allow
+                Action:
+                  - route53:ChangeResourceRecordSets
+                  - route53:ListResourceRecordSets
                 Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
 
 Outputs:

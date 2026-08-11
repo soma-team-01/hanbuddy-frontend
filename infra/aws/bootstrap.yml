@@ -17,6 +17,10 @@ Parameters:
   Route53HostedZoneId:
     Type: String
     Description: Route 53 hosted zone ID that contains the frontend domains
+  FrontendRecordNames:
+    Type: CommaDelimitedList
+    Default: hanbuddy.kr,staging.hanbuddy.kr
+    Description: Lowercase frontend DNS record names without trailing dots
 Resources:
   FrontendRepository:
     Type: AWS::ECR::Repository
@@ -27,7 +31,10 @@ Resources:
       EmptyOnDelete: false
       ImageScanningConfiguration:
         ScanOnPush: true
-      ImageTagMutability: MUTABLE
+      ImageTagMutability: IMMUTABLE_WITH_EXCLUSION
+      ImageTagMutabilityExclusionFilters:
+        - ImageTagMutabilityExclusionFilterType: WILDCARD
+          ImageTagMutabilityExclusionFilterValue: "*-latest"
       LifecyclePolicy:
         LifecyclePolicyText: |
           {
@@ -100,6 +107,7 @@ Resources:
                 Action:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:CompleteLayerUpload
+                  - ecr:DescribeImages
                   - ecr:GetDownloadUrlForLayer
                   - ecr:InitiateLayerUpload
                   - ecr:ListImages
@@ -143,9 +151,19 @@ Resources:
                 Resource: "*"
               - Sid: ManageFrontendDnsRecords
                 Effect: Allow
-                Action:
-                  - route53:ChangeResourceRecordSets
-                  - route53:ListResourceRecordSets
+                Action: route53:ChangeResourceRecordSets
+                Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
+                Condition:
+                  ForAllValues:StringEquals:
+                    route53:ChangeResourceRecordSetsNormalizedRecordNames: !Ref FrontendRecordNames
+                    route53:ChangeResourceRecordSetsRecordTypes:
+                      - A
+                    route53:ChangeResourceRecordSetsActions:
+                      - UPSERT
+                      - DELETE
+              - Sid: ReadFrontendDnsRecords
+                Effect: Allow
+                Action: route53:ListResourceRecordSets
                 Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
 
 Outputs:

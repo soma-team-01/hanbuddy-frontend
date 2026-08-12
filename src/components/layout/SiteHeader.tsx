@@ -171,11 +171,11 @@ export function SiteHeader({
               className="size-11 animate-pulse rounded-full border border-line-soft bg-panel"
             />
           ) : null}
-          {!isMinimalHeader && effectiveAuthenticated ? <ChatNavIcon /> : null}
-          {/* 정산은 버디에게만 있는 화면이다 */}
+          {/* 정산은 버디에게만 있는 화면이다 — 채팅 아이콘 왼쪽에 둔다 */}
           {!isMinimalHeader && effectiveAuthenticated && effectiveRole === "buddy" ? (
             <SettlementNavIcon />
           ) : null}
+          {!isMinimalHeader && effectiveAuthenticated ? <ChatNavIcon /> : null}
           {(!isMinimalHeader || isBuddyHostingPage) && effectiveAuthenticated ? (
             <Link
               href="/my-page"
@@ -208,10 +208,10 @@ export function SiteHeader({
                 className="size-10 animate-pulse rounded-full border border-line-soft bg-panel"
               />
             ) : null}
-            {effectiveAuthenticated ? <ChatNavIcon compact /> : null}
             {effectiveAuthenticated && effectiveRole === "buddy" ? (
               <SettlementNavIcon compact />
             ) : null}
+            {effectiveAuthenticated ? <ChatNavIcon compact /> : null}
             {effectiveAuthenticated ? (
               <Link
                 href="/my-page"

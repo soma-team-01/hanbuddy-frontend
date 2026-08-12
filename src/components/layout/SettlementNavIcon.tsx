@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { BanknoteIcon } from "@/components/ui/icons";
+import { WonCoinIcon } from "@/components/ui/icons";
 import { Link, usePathname } from "@/i18n/navigation";
 
 /** 상단바의 정산 진입점. 채팅 아이콘과 같은 테두리 없는 아이콘 스타일 */
@@ -21,7 +21,7 @@ export function SettlementNavIcon({ compact = false }: Readonly<{ compact?: bool
         active ? "text-primary" : "text-ink hover:text-primary"
       }`}
     >
-      <BanknoteIcon className="size-6" />
+      <WonCoinIcon className="size-6" />
     </Link>
   );
 }

@@ -131,16 +131,17 @@ describe("locale messages", () => {
 
   it("contains the complete Buddy message contract", () => {
     const requiredKeys = [
-      "BuddyDashboard.quickActions",
       "BuddyDashboard.createActivity",
-      "BuddyDashboard.upcoming",
-      "BuddyDashboard.loadingSchedule",
-      "BuddyDashboard.noUpcoming",
-      "BuddyDashboard.previousDates",
-      "BuddyDashboard.nextDates",
+      "Settlement.title",
+      "Settlement.expectedThisMonth",
+      "BuddyDashboard.previousWeek",
+      "BuddyDashboard.nextWeek",
+      "BuddyDashboard.openCalendar",
+      "BuddyDashboard.today",
       "BuddyDashboard.scheduleDates",
       "BuddyDashboard.loadingApplicants",
       "BuddyDashboard.applicantCount",
+      "BuddyDashboard.myActivitiesHeading",
       "MyActivities.title",
       "MyActivities.description",
       "MyActivities.loading",

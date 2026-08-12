@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { PencilIcon, TrashIcon, UsersIcon } from "@/components/ui/icons";
+import { PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { deleteMyActivity } from "@/lib/api/buddy";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
@@ -148,13 +148,6 @@ export function MyActivitiesContent() {
               </h2>
             </Link>
             <p className="line-clamp-2 text-base text-muted">{activity.description}</p>
-            <Link
-              href={`/my-activities/${activity.activityId}/applicants`}
-              className="flex items-center gap-1.5 pt-1 text-xs font-semibold text-primary-strong hover:underline"
-            >
-              <UsersIcon className="size-3.5" />
-              {t("viewApplicants")}
-            </Link>
           </article>
         ))}
       </div>

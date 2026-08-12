@@ -124,6 +124,8 @@ export interface BuddyApplicationApplicantSummaryResponse {
   applicantContactMethod: "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
   applicantContactCountryCode: string | null;
   applicantContactIdentifier: string;
+  /** 신청 시 남긴 요청 사항. 없으면 null */
+  specialRequest?: string | null;
 }
 
 export interface BuddyDateScheduleApplicationsResponse {
@@ -146,6 +148,10 @@ export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicatio
   status: "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   specialRequest: string | null;
   appliedAt: string;
+  /** 취소된 신청의 사유. 취소가 아니면 null */
+  cancellationReason?: "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER" | null;
+  /** OTHER일 때 남긴 상세 사유 */
+  cancellationDetail?: string | null;
 }
 
 export interface BuddyActivityApplicationsResponse {

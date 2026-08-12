@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { EyeIcon, PencilIcon, UsersIcon } from "@/components/ui/icons";
+import { EyeIcon, PencilIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { mapMyActivityDetailToPreviewActivity } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -101,13 +101,6 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
             >
               <PencilIcon className="size-3.5" />
               {t("edit")}
-            </Link>
-            <Link
-              href={`/my-activities/${detail.activityId}/applicants`}
-              className="flex min-h-10 items-center gap-1.5 rounded-full border border-line-strong bg-canvas-soft px-4 font-display text-xs font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong"
-            >
-              <UsersIcon className="size-3.5" />
-              {t("viewApplicants")}
             </Link>
           </div>
         </div>

@@ -230,6 +230,12 @@ describe("buddy API client", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedule-dates", {
       credentials: "same-origin",
     });
+
+    await getBuddyScheduleDates({ from: "2026-08-01", to: "2026-08-31" });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/applications/buddy/schedule-dates?from=2026-08-01&to=2026-08-31",
+      { credentials: "same-origin" },
+    );
   });
 
   it("loads buddy date activity applications through the internal API", async () => {

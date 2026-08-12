@@ -13,7 +13,6 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ChatBubbleDotsIcon,
-  ChevronDownIcon,
   MapPinIcon,
   PencilIcon,
   PlusIcon,
@@ -71,8 +70,6 @@ export function DashboardContent() {
   const [selectedDate, setSelectedDate] = useState("");
   // 주간 스트립이 보여주는 주. 화살표로만 움직이고 날짜 선택과는 분리되어 있다
   const [weekAnchor, setWeekAnchor] = useState("");
-  // 요청 사항을 펼쳐 둔 신청 ID 목록
-  const [expandedRequestIds, setExpandedRequestIds] = useState<ReadonlySet<number>>(new Set());
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [profileApplicant, setProfileApplicant] =
     useState<BuddyApplicationApplicantSummaryResponse | null>(null);
@@ -133,15 +130,6 @@ export function DashboardContent() {
       applicationsQuery.error ??
       myActivitiesQuery.error,
   );
-
-  function toggleRequest(applicationId: number) {
-    setExpandedRequestIds((current) => {
-      const next = new Set(current);
-      if (next.has(applicationId)) next.delete(applicationId);
-      else next.add(applicationId);
-      return next;
-    });
-  }
 
   function selectDate(date: string) {
     setSelectedDate(date);
@@ -251,7 +239,6 @@ export function DashboardContent() {
                     <ul className="ml-2 flex flex-col gap-3 border-l border-line-soft pl-4">
                       {schedule.applicants.map((applicant) => {
                         const hasRequest = Boolean(applicant.specialRequest?.trim());
-                        const requestOpen = expandedRequestIds.has(applicant.applicationId);
 
                         return (
                           <li key={applicant.applicationId} className="flex flex-col gap-1.5">
@@ -286,24 +273,6 @@ export function DashboardContent() {
                                   </span>
                                 </span>
                               </button>
-                              {hasRequest ? (
-                                // 요청 사항이 있는 사람만 펼침 버튼이 생긴다
-                                <button
-                                  type="button"
-                                  aria-expanded={requestOpen}
-                                  aria-label={t("specialRequestToggle", {
-                                    name: applicant.applicantName,
-                                  })}
-                                  onClick={() => toggleRequest(applicant.applicationId)}
-                                  className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors ${
-                                    requestOpen ? "text-primary" : "text-muted hover:text-primary"
-                                  }`}
-                                >
-                                  <ChevronDownIcon
-                                    className={`size-4 transition-transform ${requestOpen ? "rotate-180" : ""}`}
-                                  />
-                                </button>
-                              ) : null}
                               <StartChatButton
                                 target={{
                                   kind: "direct",
@@ -317,8 +286,8 @@ export function DashboardContent() {
                                 className="flex size-8 shrink-0 items-center justify-center text-muted transition-colors enabled:hover:text-primary disabled:opacity-60"
                               />
                             </div>
-                            {hasRequest && requestOpen ? (
-                              // 계단식 — 이름 아래로 들여쓰인 블록이 펼쳐진다
+                            {hasRequest ? (
+                              // 요청 사항은 놓치면 안 되는 정보라 접지 않고 바로 보여준다
                               <div className="ml-10 border-l-2 border-primary/40 pl-3">
                                 <p className="text-[10px] font-bold tracking-[0.1em] text-primary uppercase">
                                   {t("specialRequestLabel")}

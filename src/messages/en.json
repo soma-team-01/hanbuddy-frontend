@@ -811,7 +811,6 @@
     "applicantsLoadError": "Could not load applicants.",
     "noApplicants": "No applicants for this date yet.",
     "applicantCount": "{count, plural, one {# Applicant} other {# Applicants}}",
-    "specialRequestToggle": "Special request from {name}",
     "specialRequestLabel": "Special request",
     "profileContact": "Contact",
     "profileGuestCount": "Guests",

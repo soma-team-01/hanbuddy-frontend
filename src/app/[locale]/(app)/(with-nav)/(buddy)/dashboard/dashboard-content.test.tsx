@@ -216,7 +216,7 @@ describe("DashboardContent", () => {
     expect(within(calendar).getByText("June 2026")).toBeInTheDocument();
   });
 
-  it("unfolds a special request only for applicants who left one", async () => {
+  it("shows a special request inline only for applicants who left one", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
       dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
@@ -252,20 +252,11 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />);
 
     await screen.findByText("Sophie Martin");
-    // 요청 사항이 없는 사람에게는 펼침 버튼 자체가 없다
-    expect(
-      screen.queryByRole("button", { name: "Special request from Liam Park" }),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByText("Vegan meal, please. No peanuts.")).not.toBeInTheDocument();
-
-    const toggle = screen.getByRole("button", { name: "Special request from Sophie Martin" });
-    fireEvent.click(toggle);
-
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    // 요청 사항은 접지 않고 바로 보인다 — 남긴 사람에게만 블록이 생긴다
     expect(screen.getByText("Vegan meal, please. No peanuts.")).toBeInTheDocument();
-
-    fireEvent.click(toggle);
-    expect(screen.queryByText("Vegan meal, please. No peanuts.")).not.toBeInTheDocument();
+    expect(screen.getByText("Special request")).toBeInTheDocument();
+    const liamRow = screen.getByText("Liam Park").closest("li")!;
+    expect(within(liamRow).queryByText("Special request")).not.toBeInTheDocument();
   });
 
   it("opens the applicant profile with contact, guests, and a chat entry", async () => {

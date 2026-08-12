@@ -811,7 +811,6 @@
     "applicantsLoadError": "신청자를 불러오지 못했습니다.",
     "noApplicants": "이 날짜에는 아직 신청자가 없습니다.",
     "applicantCount": "{count, plural, other {신청자 #명}}",
-    "specialRequestToggle": "{name} 님의 요청 사항",
     "specialRequestLabel": "요청 사항",
     "profileContact": "연락처",
     "profileGuestCount": "신청 인원",

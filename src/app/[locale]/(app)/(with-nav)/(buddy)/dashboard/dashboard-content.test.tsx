@@ -1,8 +1,7 @@
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getBuddyApplications, getBuddyScheduleDates } from "@/lib/api/buddy";
+import { getBuddyApplications, getBuddyScheduleDates, getMyActivities } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
-import { buddyKeys } from "@/lib/query/buddy";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { DashboardContent } from "./dashboard-content";
 
@@ -22,18 +21,58 @@ vi.mock("@/lib/api/chat", () => ({
 vi.mock("@/lib/api/buddy", () => ({
   getBuddyApplications: vi.fn(),
   getBuddyScheduleDates: vi.fn(),
+  getMyActivities: vi.fn(),
+}));
+
+// 주간 스트립은 오늘 날짜를 기준으로 그려지므로 시각을 고정한다 (2026-07-15은 수요일)
+vi.mock("@/lib/datetime", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/datetime")>()),
+  getSeoulNowParts: () => ({ date: "2026-07-15", time: "12:00" }),
 }));
 
 const mockedGetBuddyApplications = vi.mocked(getBuddyApplications);
 const mockedGetBuddyScheduleDates = vi.mocked(getBuddyScheduleDates);
+const mockedGetMyActivities = vi.mocked(getMyActivities);
+
+const teaTastingActivities = [
+  {
+    activityId: 42,
+    activityTitle: "Traditional Tea Tasting",
+    thumbnailImageUrl:
+      "https://hanbuddy-bucket-526958954481-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/activities/tea.webp",
+    totalApplicantCount: 1,
+    schedules: [
+      {
+        activityScheduleId: 99,
+        startAt: "2026-07-20T10:00:00+09:00",
+        applicantCount: 1,
+        applicants: [
+          {
+            applicationId: 11,
+            applicantUserId: 3,
+            applicantName: "Sophie Martin",
+            applicantProfileImageUrl: null,
+            applicantNationalityCode: "FR",
+            guestCount: 2,
+            applicantContactMethod: "WHATSAPP" as const,
+            applicantContactCountryCode: "+33",
+            applicantContactIdentifier: "612345678",
+          },
+        ],
+      },
+    ],
+  },
+];
 
 describe("DashboardContent", () => {
   beforeEach(() => {
     mockedGetBuddyApplications.mockReset();
     mockedGetBuddyScheduleDates.mockReset();
+    mockedGetMyActivities.mockReset();
+    mockedGetMyActivities.mockResolvedValue({ status: "success", activities: [] });
   });
 
-  it("renders upcoming activities and applicants loaded from the API", async () => {
+  it("shows the week of the first activity date and its applicants", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
       dates: [
@@ -43,35 +82,7 @@ describe("DashboardContent", () => {
     });
     mockedGetBuddyApplications.mockResolvedValue({
       status: "success",
-      activities: [
-        {
-          activityId: 42,
-          activityTitle: "Traditional Tea Tasting",
-          thumbnailImageUrl:
-            "https://hanbuddy-bucket-526958954481-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/activities/tea.webp",
-          totalApplicantCount: 1,
-          schedules: [
-            {
-              activityScheduleId: 99,
-              startAt: "2026-07-20T10:00:00+09:00",
-              applicantCount: 1,
-              applicants: [
-                {
-                  applicationId: 11,
-                  applicantUserId: 3,
-                  applicantName: "Sophie Martin",
-                  applicantProfileImageUrl: null,
-                  applicantNationalityCode: "FR",
-                  guestCount: 2,
-                  applicantContactMethod: "WHATSAPP",
-                  applicantContactCountryCode: "+33",
-                  applicantContactIdentifier: "612345678",
-                },
-              ],
-            },
-          ],
-        },
-      ],
+      activities: teaTastingActivities,
     });
 
     renderWithQueryClient(<DashboardContent />);
@@ -86,117 +97,108 @@ describe("DashboardContent", () => {
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Schedule dates" }).tagName).toBe("FIELDSET");
-    expect(screen.getByText("19").closest("button")).not.toHaveAccessibleName(/has activity/i);
-    expect(screen.getByText("20").closest("button")).toHaveAccessibleName(/has activity/i);
-    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");
-  });
 
-  it("keeps boundary instants on the Seoul date and localizes the weekday", async () => {
-    mockedGetBuddyScheduleDates.mockResolvedValue({
-      status: "success",
-      dates: [{ dateStartAt: "2026-07-18T16:30:00Z", hasActivity: true }],
-    });
-    mockedGetBuddyApplications.mockResolvedValue({
-      status: "success",
-      activities: [
-        {
-          activityId: 42,
-          activityTitle: "Midnight Seoul Walk",
-          thumbnailImageUrl: null,
-          totalApplicantCount: 0,
-          schedules: [
-            {
-              activityScheduleId: 99,
-              startAt: "2026-07-18T16:30:00Z",
-              applicantCount: 0,
-              applicants: [],
-            },
-          ],
-        },
-      ],
-    });
-
-    renderWithQueryClient(<DashboardContent />, { locale: "en" });
-
-    expect(await screen.findByRole("button", { name: "Sun 19, has activity" })).toBeInTheDocument();
-    expect(await screen.findByText("1:30 AM")).toBeInTheDocument();
-    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-19");
-  });
-
-  it("shows the localized date-time fallback when every schedule date is invalid", async () => {
-    mockedGetBuddyScheduleDates.mockResolvedValue({
-      status: "success",
-      dates: [{ dateStartAt: "2026-07-19T01:30", hasActivity: true }],
-    });
-
-    renderWithQueryClient(<DashboardContent />);
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Time unavailable.");
-    expect(screen.getByRole("button", { name: "Time unavailable., has activity" })).toHaveAttribute(
+    // 선택된 날짜(7/20 월)가 속한 주: 일 19 ~ 토 25
+    const dateGroup = screen.getByRole("group", { name: "Schedule dates" });
+    expect(dateGroup.tagName).toBe("FIELDSET");
+    expect(within(dateGroup).getAllByRole("button")).toHaveLength(7);
+    expect(within(dateGroup).getByRole("button", { name: "Sun 19" })).toBeInTheDocument();
+    expect(within(dateGroup).getByRole("button", { name: "Mon 20, has activity" })).toHaveAttribute(
       "aria-pressed",
-      "false",
+      "true",
     );
-    expect(screen.queryByText("Loading applicants...")).not.toBeInTheDocument();
-    expect(mockedGetBuddyApplications).not.toHaveBeenCalled();
+    expect(within(dateGroup).getByText("25")).toBeInTheDocument();
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20"));
   });
 
-  it("chooses a valid default when invalid and valid schedule dates are mixed", async () => {
+  it("keeps boundary instants on the Seoul date", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
-      dates: [
-        { dateStartAt: "2026-07-19T01:30", hasActivity: true },
-        { dateStartAt: "2026-07-18T16:30:00Z", hasActivity: true },
-      ],
+      // UTC 16:30 = 서울 다음날 새벽 1:30
+      dates: [{ dateStartAt: "2026-07-18T16:30:00Z", hasActivity: true }],
     });
     mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
 
-    renderWithQueryClient(<DashboardContent />);
+    renderWithQueryClient(<DashboardContent />, { locale: "en" });
 
     expect(await screen.findByRole("button", { name: "Sun 19, has activity" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    expect(screen.getByRole("button", { name: "Time unavailable., has activity" })).toBeDisabled();
     await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-19"));
-    expect(screen.getByText("No applicants for this date yet.")).toBeInTheDocument();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("paginates schedule dates in groups of five", async () => {
+  it("moves week by week without touching the selected date", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
-      dates: Array.from({ length: 11 }, (_, index) => ({
-        dateStartAt: `2026-07-${String(index + 20).padStart(2, "0")}T00:00:00+09:00`,
-        hasActivity: index === 0,
-      })),
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
     });
     mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
 
     renderWithQueryClient(<DashboardContent />);
 
-    const dateGroup = await screen.findByRole("group", { name: "Schedule dates" });
-    expect(within(dateGroup).getAllByRole("button")).toHaveLength(5);
-    expect(within(dateGroup).getByText("20")).toBeInTheDocument();
-    expect(within(dateGroup).getByText("24")).toBeInTheDocument();
-    expect(within(dateGroup).queryByText("25")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Previous 5 dates" })).toBeDisabled();
+    // 일정이 로드되면 활동이 있는 7/20 주(일 19~)로 자리 잡는다
+    await screen.findByRole("button", { name: "Mon 20, has activity" });
+    const dateGroup = screen.getByRole("group", { name: "Schedule dates" });
+    expect(within(dateGroup).getByText("19")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Next 5 dates" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next week" }));
+    // 다음 주: 일 26 ~ 토 8/1
+    expect(within(dateGroup).getByText("26")).toBeInTheDocument();
+    expect(within(dateGroup).queryByText("19")).not.toBeInTheDocument();
 
-    expect(within(dateGroup).getAllByRole("button")).toHaveLength(5);
-    expect(within(dateGroup).getByText("25")).toBeInTheDocument();
-    expect(within(dateGroup).getByText("29")).toBeInTheDocument();
-    expect(within(dateGroup).queryByText("24")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
+    // 오늘(7/15)이 속한 주 — 오늘 칸은 요일 대신 Today를 단다
+    expect(within(dateGroup).getByRole("button", { name: "Wed 15" })).toHaveTextContent("Today");
 
-    fireEvent.click(screen.getByRole("button", { name: "Next 5 dates" }));
+    // 주만 옮겼으므로 신청자 조회는 처음 선택(7/20) 한 번뿐이다
+    expect(mockedGetBuddyApplications).toHaveBeenCalledTimes(1);
+    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");
+  });
 
-    expect(within(dateGroup).getAllByRole("button")).toHaveLength(1);
-    expect(within(dateGroup).getByText("30")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Next 5 dates" })).toBeDisabled();
+  it("jumps to the week of a date picked in the month calendar", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
 
-    fireEvent.click(screen.getByRole("button", { name: "Previous 5 dates" }));
-    expect(within(dateGroup).getByText("25")).toBeInTheDocument();
+    renderWithQueryClient(<DashboardContent />);
+
+    await screen.findByRole("group", { name: "Schedule dates" });
+    fireEvent.click(screen.getByRole("button", { name: "Open calendar" }));
+
+    const calendar = await screen.findByRole("dialog", { name: "Open calendar" });
+    expect(within(calendar).getByText("July 2026")).toBeInTheDocument();
+
+    fireEvent.click(within(calendar).getByRole("button", { name: /July 31/ }));
+
+    // 팝오버가 닫히고, 선택과 주간 스트립이 함께 7/31 주로 넘어간다
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const dateGroup = screen.getByRole("group", { name: "Schedule dates" });
+    expect(within(dateGroup).getByRole("button", { name: "Fri 31" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-31"));
+  });
+
+  it("pages the month calendar across months", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
+    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Open calendar" }));
+    const calendar = await screen.findByRole("dialog", { name: "Open calendar" });
+
+    fireEvent.click(within(calendar).getByRole("button", { name: "Next month" }));
+    expect(within(calendar).getByText("August 2026")).toBeInTheDocument();
+
+    fireEvent.click(within(calendar).getByRole("button", { name: "Previous month" }));
+    fireEvent.click(within(calendar).getByRole("button", { name: "Previous month" }));
+    expect(within(calendar).getByText("June 2026")).toBeInTheDocument();
   });
 
   it("keeps date selection available when applicant loading fails", async () => {
@@ -234,167 +236,103 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />);
 
     await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20"));
-    fireEvent.click(screen.getByText("21").closest("button")!);
+    await screen.findByRole("button", { name: "Tue 21, has activity" });
+    fireEvent.click(screen.getByRole("button", { name: "Tue 21, has activity" }));
     await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21"));
-    fireEvent.click(screen.getByText("20").closest("button")!);
+    fireEvent.click(screen.getByRole("button", { name: "Mon 20, has activity" }));
 
     await waitFor(() =>
-      expect(screen.getByText("20").closest("button")).toHaveAttribute("aria-pressed", "true"),
+      expect(screen.getByRole("button", { name: "Mon 20, has activity" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      ),
     );
     expect(mockedGetBuddyApplications).toHaveBeenCalledTimes(2);
   });
 
-  it("falls back when the selected date disappears from refreshed schedules", async () => {
-    mockedGetBuddyScheduleDates.mockResolvedValue({
-      status: "success",
-      dates: [
-        { dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true },
-        { dateStartAt: "2026-07-21T00:00:00+09:00", hasActivity: true },
-      ],
-    });
-    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
-
-    const { queryClient } = renderWithQueryClient(<DashboardContent />);
-
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20"));
-    fireEvent.click(screen.getByText("21").closest("button")!);
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21"));
-
-    act(() => {
-      queryClient.setQueryData(buddyKeys.scheduleDates(), [
-        { dateStartAt: "2026-07-22T00:00:00+09:00", hasActivity: true },
-      ]);
-    });
-
-    await waitFor(() =>
-      expect(screen.getByText("22").closest("button")).toHaveAttribute("aria-pressed", "true"),
-    );
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-22"));
-  });
-
-  it("localizes upcoming schedule controls and applicant counts in Korean", async () => {
-    mockedGetBuddyScheduleDates.mockResolvedValue({
-      status: "success",
-      dates: [
-        { dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true },
-        { dateStartAt: "2026-07-21T00:00:00+09:00", hasActivity: false },
-      ],
-    });
-    mockedGetBuddyApplications.mockResolvedValue({
-      status: "success",
-      activities: [
-        {
-          activityId: 42,
-          activityTitle: "Traditional Tea Tasting",
-          thumbnailImageUrl: null,
-          totalApplicantCount: 2,
-          schedules: [
-            {
-              activityScheduleId: 99,
-              startAt: "2026-07-20T10:00:00+09:00",
-              applicantCount: 2,
-              applicants: [
-                {
-                  applicationId: 11,
-                  applicantUserId: 3,
-                  applicantName: "Sophie Martin",
-                  applicantProfileImageUrl: null,
-                  applicantNationalityCode: "FR",
-                  guestCount: 1,
-                  applicantContactMethod: "PHONE",
-                  applicantContactCountryCode: "+33",
-                  applicantContactIdentifier: "612345678",
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-
-    renderWithQueryClient(<DashboardContent />, { locale: "ko" });
-
-    expect(await screen.findByRole("heading", { name: "예정 일정" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "일정 날짜" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "이전 날짜 5개" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "다음 날짜 5개" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /월 20, 액티비티 있음/ })).toBeInTheDocument();
-    expect((await screen.findAllByText("신청자 2명")).length).toBeGreaterThan(0);
-    expect(screen.getByText("오전 10:00")).toBeInTheDocument();
-    expect(screen.getByText("프랑스")).toBeInTheDocument();
-    expect(screen.getByText("전화 +33 612345678")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Traditional Tea Tasting/ })).toHaveAttribute(
-      "href",
-      "/ko/my-activities/42/applicants?scheduleId=99",
-    );
-  });
-
-  it("localizes the schedule loading state in Korean", () => {
-    mockedGetBuddyScheduleDates.mockReturnValue(new Promise(() => {}));
-
-    renderWithQueryClient(<DashboardContent />, { locale: "ko" });
-
-    expect(screen.getByText("일정을 불러오는 중...")).toBeInTheDocument();
-  });
-
-  it("localizes the empty schedule state in Korean", async () => {
-    mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
-
-    renderWithQueryClient(<DashboardContent />, { locale: "ko" });
-
-    expect(await screen.findByText("예정된 일정이 없습니다.")).toBeInTheDocument();
-  });
-
-  it("maps the buddy-role schedule error in Korean", async () => {
-    mockedGetBuddyScheduleDates.mockResolvedValue({
-      status: "error",
-      error: new ApiClientError({
-        code: "USER403_BUDDY",
-        status: 403,
-        details: null,
-        backendMessage: "raw schedule service failure",
-      }),
-    });
-
-    renderWithQueryClient(<DashboardContent />, { locale: "ko" });
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "버디 사용자만 이용할 수 있는 기능입니다.",
-    );
-    expect(screen.queryByText("raw schedule service failure")).not.toBeInTheDocument();
-  });
-
-  it("explains that the group chat keeps absorbing later bookings", async () => {
+  it("summarizes activities and lists them without deleted ones", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
       dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
     });
-    mockedGetBuddyApplications.mockResolvedValue({
+    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
+    mockedGetMyActivities.mockResolvedValue({
       status: "success",
       activities: [
         {
           activityId: 42,
-          activityTitle: "Traditional Tea Tasting",
+          title: "Traditional Tea Tasting",
+          description: "",
           thumbnailImageUrl: null,
-          totalApplicantCount: 1,
-          schedules: [
-            {
-              activityScheduleId: 99,
-              startAt: "2026-07-20T10:00:00+09:00",
-              applicantCount: 1,
-              applicants: [],
-            },
-          ],
+          status: "ACTIVE",
+        },
+        {
+          activityId: 43,
+          title: "Bukchon Hidden Gems",
+          description: "",
+          thumbnailImageUrl: null,
+          status: "DRAFT",
+        },
+        {
+          activityId: 44,
+          title: "Gone Walk",
+          description: "",
+          thumbnailImageUrl: null,
+          status: "DELETED",
         },
       ],
     });
 
     renderWithQueryClient(<DashboardContent />);
 
-    const button = await screen.findByRole("button", { name: /group chat/i });
-    // 누르기 전에, 한 번만 만들면 된다는 걸 알려 준다
-    expect(button.parentElement).toHaveTextContent(
-      "every guest who completes payment joins automatically",
+    // 목록이 로드된 뒤에 요약 지표가 채워진다
+    expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(screen.getByText("Upcoming activity days")).toBeInTheDocument();
+    // 공개 중인 활동은 ACTIVE 하나만 센다
+    expect(screen.getByText("Active activities").previousElementSibling).toHaveTextContent("1");
+    expect(screen.getByText("Expected payout")).toBeInTheDocument();
+    expect(screen.getByText("Coming soon")).toBeInTheDocument();
+
+    // 내 활동 — 삭제된 것은 빼고, 카드가 상세로 연결된다
+    const list = screen.getByText("Bukchon Hidden Gems").closest("ul")!;
+    expect(within(list).getAllByRole("link")).toHaveLength(2);
+    expect(screen.queryByText("Gone Walk")).not.toBeInTheDocument();
+    expect(screen.getByText("Bukchon Hidden Gems").closest("a")).toHaveAttribute(
+      "href",
+      "/en/my-activities/43",
     );
+    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute(
+      "href",
+      "/en/my-activities",
+    );
+    expect(screen.getByRole("link", { name: /Create Activity/ })).toHaveAttribute(
+      "href",
+      "/en/my-activities/create",
+    );
+  });
+
+  it("localizes the dashboard in Korean", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: teaTastingActivities,
+    });
+
+    renderWithQueryClient(<DashboardContent />, { locale: "ko" });
+
+    expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
+    expect(screen.getByText("다가오는 활동일")).toBeInTheDocument();
+    expect(screen.getByText("정산 예정 금액")).toBeInTheDocument();
+    expect(screen.getByText("집계 준비 중")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "일정 날짜" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "이전 주" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다음 주" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "달력 열기" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "날짜별 신청자" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "내 활동" })).toBeInTheDocument();
+    expect(screen.getAllByText("신청자 1명").length).toBeGreaterThan(0);
   });
 });

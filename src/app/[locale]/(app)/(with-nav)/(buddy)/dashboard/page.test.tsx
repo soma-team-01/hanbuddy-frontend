@@ -28,21 +28,19 @@ vi.mock("./dashboard-content", () => ({
 
 describe("DashboardPage", () => {
   it.each([
-    ["en", "Quick Actions", "Create Activity"],
-    ["ko", "빠른 작업", "액티비티 만들기"],
-  ] as const)("renders localized quick actions for %s", async (locale, heading, action) => {
+    ["en", "Buddy dashboard"],
+    ["ko", "버디 대시보드"],
+  ] as const)("renders a single condensed column for %s", async (locale, title) => {
     renderWithIntl(await DashboardPage({ params: Promise.resolve({ locale }) } as never), {
       locale,
     });
 
-    expect(screen.queryByText("Hello, Ji-hun 👋")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: action })).toHaveAttribute(
-      "href",
-      `/${locale}/my-activities/create`,
-    );
-    expect(screen.getByTestId("dashboard-layout")).toHaveClass(
-      "lg:grid-cols-[minmax(0,1fr)_320px]",
-    );
+    expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
+    // 사이드 패널 없이 한 컬럼으로 좁혀 담는다
+    const layout = screen.getByTestId("dashboard-layout");
+    expect(layout).toHaveClass("max-w-4xl");
+    expect(layout.className).not.toContain("grid-cols");
+    expect(screen.queryByText("Quick Actions")).not.toBeInTheDocument();
+    expect(screen.queryByText("빠른 작업")).not.toBeInTheDocument();
   });
 });

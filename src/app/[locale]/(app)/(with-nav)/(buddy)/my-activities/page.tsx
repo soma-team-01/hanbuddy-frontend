@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { BuddyShell } from "@/components/layout/BuddyShell";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PlusIcon } from "@/components/ui/icons";
@@ -14,7 +13,7 @@ export default async function MyActivitiesPage({
   const t = await getTranslations({ locale, namespace: "MyActivities" });
 
   return (
-    <BuddyShell>
+    <>
       <PageHeader
         title={t("title")}
         description={t("description")}
@@ -34,6 +33,6 @@ export default async function MyActivitiesPage({
           <MyActivitiesContent />
         </main>
       </PageContainer>
-    </BuddyShell>
+    </>
   );
 }

@@ -127,7 +127,8 @@ export function DashboardContent() {
     scheduleDatesQuery.error ??
       weekDatesQuery.error ??
       applicationsQuery.error ??
-      myActivitiesQuery.error,
+      myActivitiesQuery.error ??
+      deleteActivityMutation.error,
   );
 
   function selectDate(date: string) {

@@ -86,6 +86,8 @@ export function ApplicantsContent({
     !initialScheduleId && activityQuery.isSuccess && !scheduleId && !selectedDate;
   const isLoading =
     (!initialScheduleId && activityQuery.isPending) ||
+    // 날짜를 골랐는데 회차 목록이 아직이면 "일정 없음"으로 잘못 판정하지 않게 기다린다
+    (Boolean(selectedDate) && activityQuery.isPending) ||
     (Boolean(scheduleId) && applicationsQuery.isPending);
 
   if (isLoading) {

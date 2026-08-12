@@ -59,6 +59,22 @@ describe("buddy view helpers", () => {
     expect(formatApplicantContact(applicant, "ko")).toBe("WhatsApp +33 612345678");
   });
 
+  it("keeps the country code off ID-based messengers", () => {
+    // LINE·WeChat은 ID 체계라 국가번호가 의미 없다 — 붙이면 엉뚱한 연락처처럼 보인다
+    expect(
+      formatApplicantContact(
+        { ...applicant, applicantContactMethod: "LINE", applicantContactIdentifier: "sophie_m" },
+        "en",
+      ),
+    ).toBe("Line sophie_m");
+    expect(
+      formatApplicantContact(
+        { ...applicant, applicantContactMethod: "WECHAT", applicantContactIdentifier: "sophie-m" },
+        "en",
+      ),
+    ).toBe("WeChat sophie-m");
+  });
+
   it("falls back gracefully for unknown nationality and missing country code", () => {
     expect(formatNationalityCode("XX", "en")).toBe("XX");
     expect(

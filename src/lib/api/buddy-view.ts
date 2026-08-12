@@ -137,7 +137,13 @@ export function formatApplicantContact(
   locale: Locale,
 ) {
   const methodLabel = CONTACT_METHOD_LABELS[locale][applicant.applicantContactMethod];
-  const contactValue = [applicant.applicantContactCountryCode, applicant.applicantContactIdentifier]
+  // 국가번호는 전화 기반 수단에만 의미가 있다 — LINE·WeChat ID에 붙이면 엉뚱한 표기가 된다
+  const usesCountryCode =
+    applicant.applicantContactMethod === "WHATSAPP" || applicant.applicantContactMethod === "PHONE";
+  const contactValue = [
+    usesCountryCode ? applicant.applicantContactCountryCode : null,
+    applicant.applicantContactIdentifier,
+  ]
     .filter(Boolean)
     .join(" ");
 

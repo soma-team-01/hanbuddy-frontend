@@ -115,10 +115,7 @@ describe("MyActivityDetailContent", () => {
       "href",
       "/en/my-activities/42/edit",
     );
-    expect(screen.getByRole("link", { name: /View applicants/ })).toHaveAttribute(
-      "href",
-      "/en/my-activities/42/applicants",
-    );
+    expect(screen.queryByRole("link", { name: /View applicants/ })).not.toBeInTheDocument();
     // 게스트 화면과 동일한 본문: 버디 프로필이 호스트로 노출된다
     expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
     expect(

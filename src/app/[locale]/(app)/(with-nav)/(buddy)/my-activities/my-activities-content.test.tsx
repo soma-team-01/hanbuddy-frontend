@@ -61,10 +61,8 @@ describe("MyActivitiesContent", () => {
       "href",
       "/en/my-activities/42/edit",
     );
-    expect(screen.getByRole("link", { name: "View applicants" })).toHaveAttribute(
-      "href",
-      "/en/my-activities/42/applicants",
-    );
+    // 신청자 확인은 대시보드에서 하므로 카드에는 신청자 보기가 없다
+    expect(screen.queryByRole("link", { name: "View applicants" })).not.toBeInTheDocument();
   });
 
   it("labels a soft-deleted activity instead of falling back to a blank status", async () => {
@@ -251,10 +249,7 @@ describe("MyActivitiesContent", () => {
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getByText("Learn Korean tea etiquette.")).toBeInTheDocument();
     expect(screen.getByText("게시 중")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "신청자 보기" })).toHaveAttribute(
-      "href",
-      "/ko/my-activities/42/applicants",
-    );
+    expect(screen.queryByRole("link", { name: "신청자 보기" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Traditional Tea Tasting 삭제" }));
 

@@ -796,8 +796,6 @@
     "title": "버디 대시보드",
     "description": "예정 일정과 게스트 신청 현황을 한눈에 확인하세요.",
     "createActivity": "액티비티 만들기",
-    "settlementStat": "정산 예정 금액",
-    "settlementPending": "집계 준비 중",
     "previousWeek": "이전 주",
     "nextWeek": "다음 주",
     "openCalendar": "달력 열기",
@@ -822,6 +820,20 @@
     "loadingActivities": "활동을 불러오는 중...",
     "activitiesLoadError": "활동을 불러오지 못했습니다.",
     "noActivities": "아직 등록한 활동이 없습니다."
+  },
+  "Settlement": {
+    "title": "정산 내역",
+    "expectedThisMonth": "이번 달 정산 예정 금액",
+    "basedOn": "{count, plural, other {확정 신청 #건 기준}}",
+    "payoutDate": "다음 지급일 {date}",
+    "viewDetail": "상세 보기",
+    "upcoming": "지급 예정",
+    "paidOut": "지급 완료",
+    "guests": "{count, plural, other {#명}}",
+    "total": "합계",
+    "statusScheduled": "예정",
+    "statusPaid": "완료",
+    "mockNotice": "예시 금액입니다. 곧 실제 정산 데이터와 연결됩니다."
   },
   "MyActivities": {
     "title": "내 액티비티",

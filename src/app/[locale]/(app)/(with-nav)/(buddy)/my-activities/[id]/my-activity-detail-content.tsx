@@ -97,7 +97,7 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
           <div className="flex shrink-0 gap-2">
             <Link
               href={`/my-activities/${detail.activityId}/edit`}
-              className="flex min-h-10 items-center gap-1.5 rounded-xl bg-primary px-4 font-display text-xs font-bold text-on-primary transition-colors hover:bg-primary-hover"
+              className="flex min-h-10 items-center gap-1.5 rounded-full bg-primary px-4 font-display text-xs font-bold text-on-primary transition-colors hover:bg-primary-hover"
             >
               <PencilIcon className="size-3.5" />
               {t("edit")}

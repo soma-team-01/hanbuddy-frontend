@@ -796,8 +796,6 @@
     "title": "Buddy dashboard",
     "description": "Stay on top of upcoming schedules and guest applications.",
     "createActivity": "Create Activity",
-    "settlementStat": "Expected payout",
-    "settlementPending": "Coming soon",
     "previousWeek": "Previous week",
     "nextWeek": "Next week",
     "openCalendar": "Open calendar",
@@ -822,6 +820,20 @@
     "loadingActivities": "Loading activities...",
     "activitiesLoadError": "Could not load activities.",
     "noActivities": "No activities yet."
+  },
+  "Settlement": {
+    "title": "Payouts",
+    "expectedThisMonth": "Expected this month",
+    "basedOn": "{count, plural, one {Based on # confirmed booking} other {Based on # confirmed bookings}}",
+    "payoutDate": "Next payout on {date}",
+    "viewDetail": "View details",
+    "upcoming": "Upcoming payouts",
+    "paidOut": "Paid out",
+    "guests": "{count, plural, one {# guest} other {# guests}}",
+    "total": "Total",
+    "statusScheduled": "Scheduled",
+    "statusPaid": "Paid",
+    "mockNotice": "Sample figures — payouts will connect to real data soon."
   },
   "MyActivities": {
     "title": "My Activities",

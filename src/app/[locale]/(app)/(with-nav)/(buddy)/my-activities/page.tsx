@@ -21,7 +21,7 @@ export default async function MyActivitiesPage({
         action={
           <Link
             href="/my-activities/create"
-            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
           >
             <PlusIcon className="size-4" />
             <span className="hidden sm:inline">{t("createActivity")}</span>

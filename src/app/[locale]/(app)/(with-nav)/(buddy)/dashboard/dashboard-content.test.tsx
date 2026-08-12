@@ -96,7 +96,9 @@ describe("DashboardContent", () => {
     expect(screen.getByText("10:00 AM")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
-    expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
+    // 연락처는 줄에서 빠지고 프로필에서만 보여준다
+    expect(screen.queryByText(/WhatsApp/)).not.toBeInTheDocument();
+    expect(screen.getByText("2 guests")).toBeInTheDocument();
 
     // 선택된 날짜(7/20 월)가 속한 주: 일 19 ~ 토 25
     const dateGroup = screen.getByRole("group", { name: "Schedule dates" });
@@ -270,7 +272,9 @@ describe("DashboardContent", () => {
 
     const profile = await screen.findByRole("dialog", { name: "Sophie Martin" });
     expect(within(profile).getByText("France")).toBeInTheDocument();
-    expect(within(profile).getByText("WhatsApp +33 612345678")).toBeInTheDocument();
+    // 연락 수단은 칩으로, 값은 본문으로 분리된다
+    expect(within(profile).getByText("WhatsApp")).toBeInTheDocument();
+    expect(within(profile).getByText("+33 612345678")).toBeInTheDocument();
     expect(within(profile).getByText("2 guests")).toBeInTheDocument();
     expect(
       within(profile).getByRole("button", { name: "Message Sophie Martin" }),
@@ -362,9 +366,12 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    // 정산 스트립은 API 연동 전까지 자리만 잡는다
-    expect(screen.getByText("Expected payout")).toBeInTheDocument();
-    expect(screen.getByText("Coming soon")).toBeInTheDocument();
+    // 정산 카드 — 목업 금액이 상세로 연결된다
+    expect(screen.getByText("Expected this month")).toBeInTheDocument();
+    expect(screen.getByText("₩1,284,000").closest("a")).toHaveAttribute(
+      "href",
+      "/en/dashboard/settlement",
+    );
 
     // 내 활동 — 삭제된 것은 빼고, 카드가 상세로 연결된다
     const list = screen.getByText("Bukchon Hidden Gems").closest("ul")!;
@@ -404,8 +411,7 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />, { locale: "ko" });
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByText("정산 예정 금액")).toBeInTheDocument();
-    expect(screen.getByText("집계 준비 중")).toBeInTheDocument();
+    expect(screen.getByText("이번 달 정산 예정 금액")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "일정 날짜" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "이전 주" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다음 주" })).toBeInTheDocument();

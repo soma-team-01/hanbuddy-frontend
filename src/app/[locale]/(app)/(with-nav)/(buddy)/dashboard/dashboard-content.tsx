@@ -357,23 +357,23 @@ export function DashboardContent() {
         {myActivities.map((activity) => (
           <li
             key={activity.activityId}
-            className="flex items-center gap-1 rounded-xl border border-line-soft p-2.5 transition-colors hover:border-primary"
+            className="flex items-center gap-1.5 rounded-xl border border-line-soft p-3.5 transition-colors hover:border-primary"
           >
             <Link
               href={`/my-activities/${activity.activityId}`}
-              className="flex min-w-0 flex-1 items-center gap-2.5"
+              className="flex min-w-0 flex-1 items-center gap-3"
             >
-              <div className="relative size-9 shrink-0 overflow-hidden rounded-lg">
+              <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
                 <Image
                   src={getActivityThumbnail(activity.thumbnailImageUrl)}
                   alt=""
                   fill
-                  sizes="36px"
+                  sizes="48px"
                   className="object-cover"
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-display text-xs font-bold text-ink">{activity.title}</p>
+                {/* 상태를 먼저 보여주고 그 아래에 활동명을 둔다 */}
                 <p
                   className={`text-[11px] font-semibold ${ACTIVITY_STATUS_TEXT_CLASS[activity.status]}`}
                 >
@@ -381,6 +381,7 @@ export function DashboardContent() {
                     `status.${activity.status.toLowerCase() as Lowercase<MyActivityStatus>}`,
                   )}
                 </p>
+                <p className="truncate font-display text-sm font-bold text-ink">{activity.title}</p>
               </div>
             </Link>
             {/* 홈에서 바로 고치고 지운다 — 내 활동 화면과 같은 흐름 */}

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
@@ -47,6 +47,12 @@ import {
   ReviewStep,
   ScheduleStep,
 } from "./activity-create-steps";
+import {
+  clearActivityCreateDraft,
+  getActivityCreateDraftScope,
+  loadActivityCreateDraft,
+  saveActivityCreateDraft,
+} from "./activity-create-draft-storage";
 
 const MAX_EXPERIENCE_PHOTOS = ACTIVITY_CREATE_LIMITS.photos.max;
 
@@ -287,6 +293,8 @@ export function CreateActivityForm({
     storedSnapshot && storedSnapshot.mode === mode && storedSnapshot.activityId === activityId
       ? storedSnapshot
       : null;
+  const initialSnapshotRef = useRef(initialSnapshot);
+  const persistenceScope = getActivityCreateDraftScope(mode, activityId);
   const [currentStep, setCurrentStep] = useState<ActivityCreateStep>(
     initialSnapshot?.currentStep ?? "host",
   );
@@ -308,6 +316,8 @@ export function CreateActivityForm({
   const fileSequence = useRef(initialSnapshot?.fileSequence ?? 0);
   const scheduleSequence = useRef(initialSnapshot?.scheduleSequence ?? 0);
   const objectUrls = useRef(initialSnapshot?.objectUrls ?? new Set<string>());
+  const draftWasDiscarded = useRef(false);
+  const [isDraftPersistenceReady, setIsDraftPersistenceReady] = useState(initialSnapshot !== null);
   const contentRef = useRef<HTMLDivElement>(null);
   const currentIndex = getStepIndex(currentStep);
   const progressIndex = reviewing ? ACTIVITY_CREATE_STEPS.length : currentIndex + 1;
@@ -354,6 +364,61 @@ export function CreateActivityForm({
     };
   }, []);
 
+  useEffect(() => {
+    if (initialSnapshotRef.current) return;
+
+    let cancelled = false;
+    void loadActivityCreateDraft(persistenceScope).then((restored) => {
+      if (cancelled) {
+        restored?.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+        return;
+      }
+
+      if (restored) {
+        setCurrentStep(restored.snapshot.currentStep);
+        setFurthestStepIndex(restored.snapshot.furthestStepIndex);
+        setDraft(restored.snapshot.draft);
+        setErrorKey(restored.snapshot.errorKey);
+        setReviewing(restored.snapshot.reviewing);
+        fileSequence.current = restored.snapshot.fileSequence;
+        scheduleSequence.current = restored.snapshot.scheduleSequence;
+        restored.objectUrls.forEach((url) => objectUrls.current.add(url));
+      }
+      setIsDraftPersistenceReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [persistenceScope]);
+
+  useEffect(() => {
+    if (!isDraftPersistenceReady || draftWasDiscarded.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      if (draftWasDiscarded.current) return;
+      void saveActivityCreateDraft(persistenceScope, {
+        currentStep,
+        furthestStepIndex,
+        draft,
+        errorKey,
+        reviewing,
+        fileSequence: fileSequence.current,
+        scheduleSequence: scheduleSequence.current,
+      }).catch(() => undefined);
+    }, 200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    currentStep,
+    draft,
+    errorKey,
+    furthestStepIndex,
+    isDraftPersistenceReady,
+    persistenceScope,
+    reviewing,
+  ]);
+
   function preserveForLocaleChange() {
     activityCreateLocaleSnapshot = {
       mode,
@@ -369,11 +434,18 @@ export function CreateActivityForm({
     };
   }
 
-  function clearPreservedDraft() {
+  const clearPreservedDraft = useCallback(() => {
     activityCreateLocaleSnapshot = null;
+    draftWasDiscarded.current = true;
+    void clearActivityCreateDraft(persistenceScope).catch(() => undefined);
     objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
     objectUrls.current.clear();
-  }
+  }, [persistenceScope]);
+
+  useEffect(() => {
+    window.addEventListener("popstate", clearPreservedDraft);
+    return () => window.removeEventListener("popstate", clearPreservedDraft);
+  }, [clearPreservedDraft]);
 
   function updateField(field: DraftTextField, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -859,7 +931,7 @@ export function CreateActivityForm({
             />
             <Link
               href={exitHref}
-              onClick={clearPreservedDraft}
+              onNavigate={clearPreservedDraft}
               className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong bg-white px-3 text-sm font-bold text-ink transition hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
             >
               <LogOutIcon className="size-4" />

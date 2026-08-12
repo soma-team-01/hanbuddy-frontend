@@ -132,20 +132,30 @@ export function formatNationalityCode(countryCode: string, locale: Locale) {
   return regionDisplayNames[locale]?.of(countryCode) ?? countryCode;
 }
 
+/** 연락 수단 이름과 값(국가번호 포함)을 분리해서 준다 — 라벨/값을 나눠 그릴 때 쓴다 */
+export function getApplicantContactParts(
+  applicant: BuddyApplicationApplicantSummaryResponse,
+  locale: Locale,
+): { method: string; value: string } {
+  const usesCountryCode =
+    applicant.applicantContactMethod === "WHATSAPP" || applicant.applicantContactMethod === "PHONE";
+
+  return {
+    method: CONTACT_METHOD_LABELS[locale][applicant.applicantContactMethod],
+    value: [
+      usesCountryCode ? applicant.applicantContactCountryCode : null,
+      applicant.applicantContactIdentifier,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
 export function formatApplicantContact(
   applicant: BuddyApplicationApplicantSummaryResponse,
   locale: Locale,
 ) {
-  const methodLabel = CONTACT_METHOD_LABELS[locale][applicant.applicantContactMethod];
   // 국가번호는 전화 기반 수단에만 의미가 있다 — LINE·WeChat ID에 붙이면 엉뚱한 표기가 된다
-  const usesCountryCode =
-    applicant.applicantContactMethod === "WHATSAPP" || applicant.applicantContactMethod === "PHONE";
-  const contactValue = [
-    usesCountryCode ? applicant.applicantContactCountryCode : null,
-    applicant.applicantContactIdentifier,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return `${methodLabel} ${contactValue}`.trim();
+  const { method, value } = getApplicantContactParts(applicant, locale);
+  return `${method} ${value}`.trim();
 }

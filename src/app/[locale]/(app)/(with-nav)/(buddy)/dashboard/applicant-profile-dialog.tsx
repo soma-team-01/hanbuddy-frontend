@@ -12,7 +12,7 @@ import {
   XIcon,
 } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
-import { formatApplicantContact, formatNationalityCode } from "@/lib/api/buddy-view";
+import { formatNationalityCode, getApplicantContactParts } from "@/lib/api/buddy-view";
 import type { BuddyApplicationApplicantSummaryResponse } from "@/types/buddy";
 
 /** 신청자를 눌렀을 때 뜨는 프로필. 연락처·인원과 함께 바로 1:1 대화로 이어진다 */
@@ -30,6 +30,7 @@ export function ApplicantProfileDialog({
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const specialRequest = applicant.specialRequest?.trim();
+  const contact = getApplicantContactParts(applicant, locale);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -73,8 +74,12 @@ export function ApplicantProfileDialog({
             <MessageSquareIcon className="size-3.5" />
             {t("profileContact")}
           </dt>
-          <dd className="min-w-0 truncate font-semibold text-ink">
-            {formatApplicantContact(applicant, locale)}
+          <dd className="flex min-w-0 items-center gap-1.5">
+            {/* 수단과 값이 한 덩어리로 읽히지 않게 수단은 칩으로 뗀다 */}
+            <span className="shrink-0 rounded-full border border-line-strong px-2 py-0.5 font-display text-[11px] font-bold text-muted">
+              {contact.method}
+            </span>
+            <span className="min-w-0 truncate font-semibold text-ink">{contact.value}</span>
           </dd>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -102,7 +107,7 @@ export function ApplicantProfileDialog({
         label={tChat("messageApplicant", { name: applicant.applicantName })}
         icon={<ChatBubbleDotsIcon className="size-4" />}
         onOpened={onClose}
-        className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+        className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
       />
     </dialog>
   );

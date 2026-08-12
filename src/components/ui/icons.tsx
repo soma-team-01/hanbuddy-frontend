@@ -462,6 +462,18 @@ export function MoreHorizontalIcon(props: IconProps) {
 }
 
 /** 둥근 말풍선 — 내비게이션의 채팅 진입점 */
+/** 대화 걸기 — 말풍선 안에 입력 중 점 3개를 넣어 "채팅"으로 바로 읽히게 한다 */
+export function ChatBubbleDotsIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+      <circle cx="8" cy="12" r="0.6" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="0.6" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="12" r="0.6" fill="currentColor" stroke="none" />
+    </IconBase>
+  );
+}
+
 export function MessageCircleIcon(props: IconProps) {
   return (
     <IconBase {...props}>

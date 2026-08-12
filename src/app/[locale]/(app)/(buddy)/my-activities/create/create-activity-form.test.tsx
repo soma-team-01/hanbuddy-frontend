@@ -10,6 +10,11 @@ import {
 } from "@/lib/google/places";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
 import { buildDraftFromMyActivityDetail, EMPTY_ACTIVITY_DRAFT } from "./activity-create-wizard";
+import {
+  clearActivityCreateDraft,
+  loadActivityCreateDraft,
+  saveActivityCreateDraft,
+} from "./activity-create-draft-storage";
 import { buildActivityUpsertRequest, CreateActivityForm } from "./create-activity-form";
 
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -57,6 +62,14 @@ vi.mock("@/lib/api/useMyProfile", () => ({
   }),
 }));
 
+vi.mock("./activity-create-draft-storage", () => ({
+  clearActivityCreateDraft: vi.fn().mockResolvedValue(undefined),
+  getActivityCreateDraftScope: (mode: "create" | "edit", activityId?: string) =>
+    mode === "edit" ? `edit:${activityId ?? "unknown"}` : "create",
+  loadActivityCreateDraft: vi.fn().mockResolvedValue(null),
+  saveActivityCreateDraft: vi.fn().mockResolvedValue(undefined),
+}));
+
 const mockedUsePathname = vi.mocked(usePathname);
 const mockedUseRouter = vi.mocked(useRouter);
 const mockedSearchGooglePlacePredictions = vi.mocked(searchGooglePlacePredictionsViaBff);
@@ -64,6 +77,9 @@ const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetailsViaBff);
 const mockedUploadActivityImageSet = vi.mocked(uploadActivityImageSet);
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
 const mockedUpdateMyActivity = vi.mocked(updateMyActivity);
+const mockedClearActivityCreateDraft = vi.mocked(clearActivityCreateDraft);
+const mockedLoadActivityCreateDraft = vi.mocked(loadActivityCreateDraft);
+const mockedSaveActivityCreateDraft = vi.mocked(saveActivityCreateDraft);
 
 const createObjectUrlMock = vi.fn((file: Blob) =>
   file instanceof File ? `blob:${file.name}` : "blob:preview",
@@ -207,6 +223,12 @@ describe("CreateActivityForm", () => {
     );
     mockedUpdateMyActivity.mockReset();
     mockedCreateMyActivity.mockReset();
+    mockedClearActivityCreateDraft.mockReset();
+    mockedClearActivityCreateDraft.mockResolvedValue(undefined);
+    mockedLoadActivityCreateDraft.mockReset();
+    mockedLoadActivityCreateDraft.mockResolvedValue(null);
+    mockedSaveActivityCreateDraft.mockReset();
+    mockedSaveActivityCreateDraft.mockResolvedValue(undefined);
     mockedCreateMyActivity.mockResolvedValue({
       status: "success",
       activity: {
@@ -266,6 +288,65 @@ describe("CreateActivityForm", () => {
     expect(container.querySelector('img[src*="logo-borderless"]')).toBeInTheDocument();
     expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+  });
+
+  it("restores the saved step and fields after the form remounts", async () => {
+    mockedLoadActivityCreateDraft.mockResolvedValue({
+      snapshot: {
+        currentStep: "name",
+        furthestStepIndex: 1,
+        draft: {
+          ...EMPTY_ACTIVITY_DRAFT,
+          hostIntroduction: "I have guided sports fans around Seoul for many years.",
+          experienceName: "Seoul stadium night",
+        },
+        errorKey: null,
+        reviewing: false,
+        fileSequence: 4,
+        scheduleSequence: 2,
+      },
+      objectUrls: new Set(),
+    });
+
+    renderWithQueryClient(<CreateActivityForm />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Name your experience" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Experience name" })).toHaveValue(
+      "Seoul stadium night",
+    );
+    expect(mockedLoadActivityCreateDraft).toHaveBeenCalledWith("create");
+  });
+
+  it("saves changed fields for refresh recovery", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await waitFor(() => expect(mockedLoadActivityCreateDraft).toHaveBeenCalledWith("create"));
+
+    fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
+      target: { value: "I have guided sports fans around Seoul for many years." },
+    });
+
+    await waitFor(() =>
+      expect(mockedSaveActivityCreateDraft).toHaveBeenCalledWith(
+        "create",
+        expect.objectContaining({
+          currentStep: "host",
+          draft: expect.objectContaining({
+            hostIntroduction: "I have guided sports fans around Seoul for many years.",
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("discards the saved draft when browser history leaves the form", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await waitFor(() => expect(mockedLoadActivityCreateDraft).toHaveBeenCalledWith("create"));
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+
+    expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("create");
   });
 
   it("keeps the current step and shows guidance when a required value is missing", () => {

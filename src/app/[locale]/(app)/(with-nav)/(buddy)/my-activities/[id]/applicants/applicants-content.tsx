@@ -189,6 +189,19 @@ export function ApplicantsContent({
                           </span>
                         </span>
                       </button>
+                      {applicant.cancellationReason ? (
+                        // 취소 사유는 채팅 아이콘 바로 왼쪽에서 읽힌다. OTHER면 남긴 상세도 함께
+                        <span className="min-w-0 text-right text-xs text-muted">
+                          {tApplications("cancelledReason", {
+                            reason: tApplications(
+                              `cancellationReasons.${CANCELLATION_REASON_KEY[applicant.cancellationReason]}`,
+                            ),
+                          })}
+                          {applicant.cancellationDetail ? (
+                            <span className="block text-ink">{applicant.cancellationDetail}</span>
+                          ) : null}
+                        </span>
+                      ) : null}
                       <StartChatButton
                         target={{ kind: "direct", targetUserId: applicant.applicantUserId }}
                         label={tChat("messageApplicant", { name: applicant.applicantName })}
@@ -207,23 +220,10 @@ export function ApplicantsContent({
                       </span>
                     </div>
                     {applicant.specialRequest ? (
-                      <p className="border-l-2 border-primary/40 pl-3 text-sm text-ink md:col-span-2">
+                      // 이름 시작 위치(아바타 48 + 간격 16)에 맞춰 라벨과 함께 적는다
+                      <p className="ml-16 text-sm text-ink md:col-span-2">
+                        <span className="font-semibold text-primary">{t("guestNoteLabel")} </span>
                         {applicant.specialRequest}
-                      </p>
-                    ) : null}
-                    {applicant.cancellationReason ? (
-                      // 취소 사유 — OTHER면 남긴 상세 설명도 함께 보여준다
-                      <p className="border-l-2 border-line-strong pl-3 text-sm text-muted md:col-span-2">
-                        {tApplications("cancelledReason", {
-                          reason: tApplications(
-                            `cancellationReasons.${CANCELLATION_REASON_KEY[applicant.cancellationReason]}`,
-                          ),
-                        })}
-                        {applicant.cancellationDetail ? (
-                          <span className="mt-0.5 block text-ink">
-                            {applicant.cancellationDetail}
-                          </span>
-                        ) : null}
                       </p>
                     ) : null}
                   </article>

@@ -424,7 +424,7 @@ describe("DashboardContent", () => {
     expect(screen.getByRole("button", { name: "이전 주" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다음 주" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "달력 열기" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "날짜별 신청자" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "신청자" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "내 활동" })).toBeInTheDocument();
     expect(screen.getAllByText("신청자 1명").length).toBeGreaterThan(0);
     // 몇 명이 오는지 신청자 줄에서 바로 보인다

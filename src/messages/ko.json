@@ -806,7 +806,7 @@
     "today": "오늘",
     "scheduleDates": "일정 날짜",
     "dateWithActivity": "{date}, 액티비티 있음",
-    "applicantsHeading": "날짜별 신청자",
+    "applicantsHeading": "신청자",
     "loadingApplicants": "신청자를 불러오는 중...",
     "applicantsLoadError": "신청자를 불러오지 못했습니다.",
     "noApplicants": "이 날짜에는 아직 신청자가 없습니다.",

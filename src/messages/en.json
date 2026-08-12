@@ -806,7 +806,7 @@
     "today": "Today",
     "scheduleDates": "Schedule dates",
     "dateWithActivity": "{date}, has activity",
-    "applicantsHeading": "Applicants by date",
+    "applicantsHeading": "Applicants",
     "loadingApplicants": "Loading applicants...",
     "applicantsLoadError": "Could not load applicants.",
     "noApplicants": "No applicants for this date yet.",

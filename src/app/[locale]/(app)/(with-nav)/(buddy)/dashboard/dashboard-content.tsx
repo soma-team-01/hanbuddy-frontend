@@ -47,13 +47,9 @@ import {
 } from "./calendar";
 import { MonthCalendarButton } from "./month-calendar";
 
-/** 섹션 머리글 — 작은 대문자 눈썹 스타일로 위계만 잡고 자리는 아낀다 */
+/** 섹션 머리글 */
 function SectionHeading({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <h2 className="font-display text-[11px] font-bold tracking-[0.14em] text-muted uppercase">
-      {children}
-    </h2>
-  );
+  return <h2 className="font-display text-lg font-bold text-ink">{children}</h2>;
 }
 
 const ACTIVITY_STATUS_TEXT_CLASS: Record<MyActivityStatus, string> = {
@@ -421,8 +417,15 @@ export function DashboardContent() {
 
   return (
     <div className="flex flex-col gap-7">
-      {/* 주간 스트립 — 한 주를 통째로 보고 화살표나 달력으로 옮겨 다닌다 */}
+      {/* 신청자 — 주간 스트립과 선택한 날짜의 신청자 목록을 한 섹션으로 묶는다 */}
       <section className="flex flex-col gap-2.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <SectionHeading>{t("applicantsHeading")}</SectionHeading>
+          <p className="font-display text-xs font-bold text-primary">
+            {formatDateKeyLong(activeDate, locale)}
+          </p>
+        </div>
+
         <div className="flex items-center justify-between gap-2">
           <p className="font-display text-sm font-bold text-ink">
             {formatMonthKeyTitle(monthKeyOf(anchor), locale)}
@@ -500,17 +503,8 @@ export function DashboardContent() {
             );
           })}
         </fieldset>
-      </section>
 
-      {/* 선택한 날짜의 신청자 */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <SectionHeading>{t("applicantsHeading")}</SectionHeading>
-          <p className="font-display text-xs font-bold text-primary">
-            {formatDateKeyLong(activeDate, locale)}
-          </p>
-        </div>
-        {applicationsContent}
+        <div className="mt-1.5">{applicationsContent}</div>
       </section>
 
       {/* 내 활동 — 정산은 상단바의 지폐 아이콘으로 옮겼다 */}

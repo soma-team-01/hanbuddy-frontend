@@ -7,7 +7,7 @@ import {
   startOfWeek,
   weekDateKeys,
   weekdayIndexOf,
-} from "./calendar";
+} from "./buddy-calendar";
 
 describe("dashboard calendar math", () => {
   it("adds days across month and year edges", () => {

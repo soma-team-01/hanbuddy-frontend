@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { Locale } from "@/i18n/routing";
 import { formatKrw } from "@/lib/format";
-import { formatDateKeyLong } from "../calendar";
+import { formatDateKeyLong } from "@/lib/buddy-calendar";
 import { SETTLEMENT_MOCK, type SettlementItem } from "../settlement-mock";
 
 /**

@@ -873,6 +873,7 @@
     "loading": "Loading applicants...",
     "loadError": "Could not load applicants.",
     "noSchedule": "No schedules are registered for this activity.",
+    "noScheduleOnDate": "No schedule on this date.",
     "empty": "No applicants for this schedule yet.",
     "sectionCompleted": "Completed bookings",
     "sectionConfirmed": "Confirmed bookings",

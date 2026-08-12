@@ -873,6 +873,7 @@
     "loading": "신청자를 불러오는 중...",
     "loadError": "신청자를 불러오지 못했습니다.",
     "noSchedule": "등록된 일정이 없습니다.",
+    "noScheduleOnDate": "이 날짜에는 일정이 없습니다.",
     "empty": "이 일정에는 아직 신청자가 없습니다.",
     "sectionCompleted": "진행 완료",
     "sectionConfirmed": "예약 완료",

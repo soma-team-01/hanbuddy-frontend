@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ApplicantProfileDialog } from "./applicant-profile-dialog";
+import { ApplicantProfileDialog } from "@/components/buddy/ApplicantProfileDialog";
 import { Avatar } from "@/components/ui/Avatar";
 import {
   ArrowLeftIcon,
@@ -42,8 +42,8 @@ import {
   formatMonthKeyTitle,
   monthKeyOf,
   weekDateKeys,
-} from "./calendar";
-import { MonthCalendarButton } from "./month-calendar";
+} from "@/lib/buddy-calendar";
+import { MonthCalendarButton } from "@/components/buddy/MonthCalendarButton";
 
 /** 섹션 머리글 */
 function SectionHeading({ children }: Readonly<{ children: ReactNode }>) {

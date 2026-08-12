@@ -15,7 +15,7 @@ import {
   monthGridDateKeys,
   monthKeyOf,
   weekDateKeys,
-} from "./calendar";
+} from "@/lib/buddy-calendar";
 
 /**
  * 주간 스트립 옆의 달력 버튼과 월 캘린더 팝오버.
@@ -26,11 +26,14 @@ export function MonthCalendarButton({
   selectedDate,
   todayDate,
   onSelectDate,
+  fixedActivityDates,
 }: Readonly<{
   locale: Locale;
   selectedDate: string;
   todayDate: string;
   onSelectDate: (dateKey: string) => void;
+  /** 주어지면 버디 전체 일정 대신 이 날짜 목록으로 점을 찍는다 (활동 하나만 볼 때) */
+  fixedActivityDates?: ReadonlySet<string>;
 }>) {
   const t = useTranslations("BuddyDashboard");
   const [open, setOpen] = useState(false);
@@ -44,14 +47,16 @@ export function MonthCalendarButton({
       from: monthDates[0],
       to: monthDates.at(-1) ?? monthDates[0],
     }),
-    enabled: open && monthDates.length > 0,
+    enabled: open && monthDates.length > 0 && fixedActivityDates === undefined,
   });
-  const activityDates = new Set(
-    (monthQuery.data ?? [])
-      .filter(({ hasActivity }) => hasActivity)
-      .map(({ dateStartAt }) => getSeoulDateTimeParts(dateStartAt)?.date ?? "")
-      .filter((dateKey) => dateKey.length > 0),
-  );
+  const activityDates =
+    fixedActivityDates ??
+    new Set(
+      (monthQuery.data ?? [])
+        .filter(({ hasActivity }) => hasActivity)
+        .map(({ dateStartAt }) => getSeoulDateTimeParts(dateStartAt)?.date ?? "")
+        .filter((dateKey) => dateKey.length > 0),
+    );
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 

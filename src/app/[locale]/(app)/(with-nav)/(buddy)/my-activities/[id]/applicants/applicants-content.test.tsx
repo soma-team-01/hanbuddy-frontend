@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
@@ -62,13 +62,24 @@ describe("ApplicantsContent", () => {
     expect(screen.getByRole("heading", { name: "Confirmed bookings" })).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
-    expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
-    expect(screen.getByText("• 1 guest")).toBeInTheDocument();
+    // 연락처는 목록에서 빠지고 프로필 팝업에서만 보여준다
+    expect(screen.queryByText(/WhatsApp/)).not.toBeInTheDocument();
+    expect(screen.getByText("1 guest")).toBeInTheDocument();
     expect(screen.getByText("Applied on Jul 19, 2026, 1:30 AM")).toBeInTheDocument();
-    expect(screen.queryByText("• 1 guests")).not.toBeInTheDocument();
     expect(screen.getByText("No pork")).toBeInTheDocument();
+
+    // 이름을 누르면 프로필 팝업에 연락 수단·값이 뜬다
+    fireEvent.click(screen.getByRole("button", { name: /^Sophie Martin/ }));
+    const profile = await screen.findByRole("dialog", { name: "Sophie Martin" });
+    expect(within(profile).getByText("WhatsApp")).toBeInTheDocument();
+    expect(within(profile).getByText("+33 612345678")).toBeInTheDocument();
+    // 대화 걸기 진입점도 함께 있다
+    expect(
+      within(profile).getByRole("button", { name: "Message Sophie Martin" }),
+    ).toBeInTheDocument();
     expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith("99");
-    expect(mockedGetMyActivity).not.toHaveBeenCalled();
+    // 달력에 이 활동의 회차 날짜를 찍기 위해 상세도 함께 불러온다
+    expect(mockedGetMyActivity).toHaveBeenCalled();
   });
 
   it("labels a superseded application as cancelled instead of rendering an empty status", async () => {
@@ -293,13 +304,17 @@ describe("ApplicantsContent", () => {
     expect(screen.getByText("2026. 7. 19. 오전 1:30")).toBeInTheDocument();
     expect(screen.queryByText("확정 1명")).not.toBeInTheDocument();
     expect(screen.getByText("2026. 7. 19. 오전 1:30에 신청")).toBeInTheDocument();
-    expect(screen.getByText("• 1명")).toBeInTheDocument();
+    expect(screen.getAllByText("1명").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "예약 취소" })).toBeInTheDocument();
     expect(screen.getByText("취소 사유: 일정 충돌")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("프랑스")).toBeInTheDocument();
-    expect(screen.getByText("전화 +33 612345678")).toBeInTheDocument();
-    expect(screen.getByText("No pork")).toBeInTheDocument();
+    // 연락처는 목록에 없고 프로필 팝업에서 수단·값으로 나뉘어 보인다
+    fireEvent.click(screen.getByRole("button", { name: /Sophie Martin.*프랑스/ }));
+    const profile = await screen.findByRole("dialog", { name: "Sophie Martin" });
+    expect(within(profile).getByText("전화")).toBeInTheDocument();
+    expect(within(profile).getByText("+33 612345678")).toBeInTheDocument();
+    expect(screen.getAllByText("No pork").length).toBeGreaterThan(0);
   });
 
   it("localizes applicant loading and maps the activity-owner error in Korean", async () => {

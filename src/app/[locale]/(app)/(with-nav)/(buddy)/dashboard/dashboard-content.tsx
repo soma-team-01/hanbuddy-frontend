@@ -1,18 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ApplicantProfileDialog } from "./applicant-profile-dialog";
 import { Avatar } from "@/components/ui/Avatar";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  ChatBubbleDotsIcon,
+  ChevronDownIcon,
   MapPinIcon,
   MessageSquareIcon,
+  PencilIcon,
   PlusIcon,
+  TrashIcon,
   UsersIcon,
 } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
@@ -24,14 +30,17 @@ import {
 } from "@/lib/api/buddy-view";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulTime, getSeoulDateTimeParts, getSeoulNowParts } from "@/lib/datetime";
+import { deleteMyActivity } from "@/lib/api/buddy";
 import {
   buddyApplicationsQueryOptions,
+  buddyKeys,
   buddyScheduleDatesQueryOptions,
   myActivitiesQueryOptions,
 } from "@/lib/query/buddy";
+import { unwrapApiResult } from "@/lib/query/result";
 import { myChatRoomsQueryOptions } from "@/lib/query/chat";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { MyActivityStatus } from "@/types/buddy";
+import type { BuddyApplicationApplicantSummaryResponse, MyActivityStatus } from "@/types/buddy";
 import {
   addDaysToDateKey,
   dayNumberOf,
@@ -65,11 +74,17 @@ export function DashboardContent() {
   const tMyActivities = useTranslations("MyActivities");
   const tChat = useTranslations("Chat");
   const getApiErrorMessage = useApiErrorMessage();
+  const queryClient = useQueryClient();
 
   const todayDate = getSeoulNowParts().date;
   const [selectedDate, setSelectedDate] = useState("");
   // 주간 스트립이 보여주는 주. 화살표로만 움직이고 날짜 선택과는 분리되어 있다
   const [weekAnchor, setWeekAnchor] = useState("");
+  // 요청 사항을 펼쳐 둔 신청 ID 목록
+  const [expandedRequestIds, setExpandedRequestIds] = useState<ReadonlySet<number>>(new Set());
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [profileApplicant, setProfileApplicant] =
+    useState<BuddyApplicationApplicantSummaryResponse | null>(null);
 
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
   const myActivitiesQuery = useQuery(myActivitiesQueryOptions());
@@ -104,11 +119,26 @@ export function DashboardContent() {
   });
   const activities = applicationsQuery.data ?? [];
   const myActivities = (myActivitiesQuery.data ?? []).filter(({ status }) => status !== "DELETED");
-  const activeActivityCount = myActivities.filter(({ status }) => status === "ACTIVE").length;
+
+  const deleteActivityMutation = useMutation({
+    mutationFn: async (activityId: number) =>
+      unwrapApiResult(await deleteMyActivity(activityId), "message"),
+    // 활동이 사라지면 일정·신청자 목록도 함께 달라진다
+    onSettled: () => queryClient.invalidateQueries({ queryKey: buddyKeys.all() }),
+  });
 
   useAuthQueryRedirect(
     scheduleDatesQuery.error ?? applicationsQuery.error ?? myActivitiesQuery.error,
   );
+
+  function toggleRequest(applicationId: number) {
+    setExpandedRequestIds((current) => {
+      const next = new Set(current);
+      if (next.has(applicationId)) next.delete(applicationId);
+      else next.add(applicationId);
+      return next;
+    });
+  }
 
   function selectDate(date: string) {
     setSelectedDate(date);
@@ -199,7 +229,7 @@ export function DashboardContent() {
                               : tChat("createGroupChat")
                           }
                           icon={<UsersIcon className="size-3.5" />}
-                          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-primary px-2.5 font-display text-[11px] font-bold text-primary transition-colors enabled:hover:bg-primary-soft disabled:opacity-60"
+                          className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-primary px-2.5 font-display text-[11px] font-bold text-primary transition-colors enabled:hover:bg-primary-soft disabled:opacity-60"
                         />
                         <span
                           role="tooltip"
@@ -213,37 +243,88 @@ export function DashboardContent() {
 
                   {schedule.applicants.length > 0 ? (
                     <ul className="ml-2 flex flex-col gap-3 border-l border-line-soft pl-4">
-                      {schedule.applicants.map((applicant) => (
-                        <li key={applicant.applicationId} className="flex items-center gap-2.5">
-                          <Avatar
-                            name={applicant.applicantName}
-                            src={applicant.applicantProfileImageUrl}
-                            size={32}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-display text-xs font-semibold text-ink">
-                              {applicant.applicantName}
-                            </p>
-                            <p className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted">
-                              <span className="flex items-center gap-1">
-                                <MapPinIcon className="size-3" />
-                                {formatNationalityCode(applicant.applicantNationalityCode, locale)}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MessageSquareIcon className="size-3" />
-                                {formatApplicantContact(applicant, locale)}
-                              </span>
-                            </p>
-                          </div>
-                          <StartChatButton
-                            target={{ kind: "direct", targetUserId: applicant.applicantUserId }}
-                            label={tChat("messageApplicant", { name: applicant.applicantName })}
-                            icon={<MessageSquareIcon className="size-3.5" />}
-                            labelHidden
-                            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-transparent text-muted transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-60"
-                          />
-                        </li>
-                      ))}
+                      {schedule.applicants.map((applicant) => {
+                        const hasRequest = Boolean(applicant.specialRequest?.trim());
+                        const requestOpen = expandedRequestIds.has(applicant.applicationId);
+
+                        return (
+                          <li key={applicant.applicationId} className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-2.5">
+                              {/* 이름을 누르면 신청자 프로필이 뜬다 */}
+                              <button
+                                type="button"
+                                onClick={() => setProfileApplicant(applicant)}
+                                className="flex min-w-0 flex-1 items-center gap-2.5 text-left transition-opacity hover:opacity-80"
+                              >
+                                <Avatar
+                                  name={applicant.applicantName}
+                                  src={applicant.applicantProfileImageUrl}
+                                  size={32}
+                                />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate font-display text-xs font-semibold text-ink">
+                                    {applicant.applicantName}
+                                  </span>
+                                  <span className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted">
+                                    <span className="flex items-center gap-1">
+                                      <MapPinIcon className="size-3" />
+                                      {formatNationalityCode(
+                                        applicant.applicantNationalityCode,
+                                        locale,
+                                      )}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <MessageSquareIcon className="size-3" />
+                                      {formatApplicantContact(applicant, locale)}
+                                    </span>
+                                  </span>
+                                </span>
+                              </button>
+                              {hasRequest ? (
+                                // 요청 사항이 있는 사람만 펼침 버튼이 생긴다
+                                <button
+                                  type="button"
+                                  aria-expanded={requestOpen}
+                                  aria-label={t("specialRequestToggle", {
+                                    name: applicant.applicantName,
+                                  })}
+                                  onClick={() => toggleRequest(applicant.applicationId)}
+                                  className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-colors ${
+                                    requestOpen ? "text-primary" : "text-muted hover:text-primary"
+                                  }`}
+                                >
+                                  <ChevronDownIcon
+                                    className={`size-4 transition-transform ${requestOpen ? "rotate-180" : ""}`}
+                                  />
+                                </button>
+                              ) : null}
+                              <StartChatButton
+                                target={{
+                                  kind: "direct",
+                                  targetUserId: applicant.applicantUserId,
+                                }}
+                                label={tChat("messageApplicant", {
+                                  name: applicant.applicantName,
+                                })}
+                                icon={<ChatBubbleDotsIcon className="size-4" />}
+                                labelHidden
+                                className="flex size-8 shrink-0 items-center justify-center text-muted transition-colors enabled:hover:text-primary disabled:opacity-60"
+                              />
+                            </div>
+                            {hasRequest && requestOpen ? (
+                              // 계단식 — 이름 아래로 들여쓰인 블록이 펼쳐진다
+                              <div className="ml-10 border-l-2 border-primary/40 pl-3">
+                                <p className="text-[10px] font-bold tracking-[0.1em] text-primary uppercase">
+                                  {t("specialRequestLabel")}
+                                </p>
+                                <p className="mt-0.5 text-xs leading-5 whitespace-pre-line text-ink">
+                                  {applicant.specialRequest}
+                                </p>
+                              </div>
+                            ) : null}
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : null}
                 </section>
@@ -276,10 +357,13 @@ export function DashboardContent() {
     myActivitiesContent = (
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {myActivities.map((activity) => (
-          <li key={activity.activityId}>
+          <li
+            key={activity.activityId}
+            className="flex items-center gap-1 rounded-xl border border-line-soft p-2.5 transition-colors hover:border-primary"
+          >
             <Link
               href={`/my-activities/${activity.activityId}`}
-              className="flex items-center gap-2.5 rounded-xl border border-line-soft p-2.5 transition-colors hover:border-primary"
+              className="flex min-w-0 flex-1 items-center gap-2.5"
             >
               <div className="relative size-9 shrink-0 overflow-hidden rounded-lg">
                 <Image
@@ -301,6 +385,23 @@ export function DashboardContent() {
                 </p>
               </div>
             </Link>
+            {/* 홈에서 바로 고치고 지운다 — 내 활동 화면과 같은 흐름 */}
+            <Link
+              href={`/my-activities/${activity.activityId}/edit`}
+              aria-label={tMyActivities("editActivity", { title: activity.title })}
+              className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
+            >
+              <PencilIcon className="size-3.5" />
+            </Link>
+            <button
+              type="button"
+              aria-label={tMyActivities("deleteActivity", { title: activity.title })}
+              disabled={deleteActivityMutation.isPending}
+              onClick={() => setDeleteTargetId(activity.activityId)}
+              className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-danger disabled:opacity-50"
+            >
+              <TrashIcon className="size-3.5" />
+            </button>
           </li>
         ))}
       </ul>
@@ -309,28 +410,10 @@ export function DashboardContent() {
 
   return (
     <div className="flex flex-col gap-7">
-      {/* 운영 요약 — 숫자 세 개로 오늘 상태를 먼저 잡는다 */}
-      <section aria-label={t("upcomingDaysStat")} className="grid grid-cols-3 gap-2">
-        <div className="rounded-2xl border border-line-soft px-4 py-3">
-          <p className="font-display text-lg font-bold text-primary tabular-nums">
-            {scheduleDatesQuery.isPending ? "—" : activityDates.size}
-          </p>
-          <p className="text-[11px] leading-4 text-muted">{t("upcomingDaysStat")}</p>
-        </div>
-        <Link
-          href="/my-activities"
-          className="rounded-2xl border border-line-soft px-4 py-3 transition-colors hover:border-primary"
-        >
-          <p className="font-display text-lg font-bold text-ink tabular-nums">
-            {myActivitiesQuery.isPending ? "—" : activeActivityCount}
-          </p>
-          <p className="text-[11px] leading-4 text-muted">{t("activeActivitiesStat")}</p>
-        </Link>
-        <div className="rounded-2xl border border-line-soft px-4 py-3">
-          {/* 정산 API가 아직 없다 — 자리만 잡아 두고 연동되면 값을 채운다 */}
-          <p className="font-display text-lg font-bold text-muted">{t("settlementPending")}</p>
-          <p className="text-[11px] leading-4 text-muted">{t("settlementStat")}</p>
-        </div>
+      {/* 정산 예정 금액 — API가 아직 없어 자리만 잡아 두고 연동되면 금액을 오렌지로 채운다 */}
+      <section className="flex items-center justify-between gap-3 rounded-xl border border-line-soft px-4 py-2.5">
+        <p className="font-display text-xs font-bold text-ink">{t("settlementStat")}</p>
+        <p className="text-xs font-semibold text-muted">{t("settlementPending")}</p>
       </section>
 
       {/* 주간 스트립 — 한 주를 통째로 보고 화살표나 달력으로 옮겨 다닌다 */}
@@ -389,13 +472,13 @@ export function DashboardContent() {
                 onClick={() => selectDate(date)}
                 className={`flex min-w-0 flex-col items-center gap-0.5 rounded-xl border py-2 transition-colors ${
                   isActive
-                    ? "border-primary text-primary"
+                    ? "border-primary bg-primary text-on-primary"
                     : "border-line-soft text-ink hover:border-primary/50"
                 }`}
               >
                 <span
                   className={`text-[10px] leading-4 font-semibold ${
-                    isToday ? "text-primary" : isActive ? "text-primary" : "text-muted"
+                    isActive ? "text-on-primary" : isToday ? "text-primary" : "text-muted"
                   }`}
                 >
                   {weekdayLabel}
@@ -405,7 +488,9 @@ export function DashboardContent() {
                 </span>
                 <span
                   aria-hidden
-                  className={`size-1 rounded-full ${hasActivity ? "bg-primary" : "bg-transparent"}`}
+                  className={`size-1 rounded-full ${
+                    hasActivity ? (isActive ? "bg-on-primary" : "bg-primary") : "bg-transparent"
+                  }`}
                 />
               </button>
             );
@@ -431,7 +516,7 @@ export function DashboardContent() {
           <div className="flex items-center gap-3">
             <Link
               href="/my-activities/create"
-              className="flex h-8 items-center gap-1 rounded-full border border-primary px-3 font-display text-[11px] font-bold text-primary transition-colors hover:bg-primary-soft"
+              className="flex h-8 items-center gap-1 rounded-lg bg-primary px-3 font-display text-[11px] font-bold text-on-primary transition-colors hover:bg-primary-hover"
             >
               <PlusIcon className="size-3.5" />
               {t("createActivity")}
@@ -444,8 +529,36 @@ export function DashboardContent() {
             </Link>
           </div>
         </div>
+        {deleteActivityMutation.error ? (
+          <p role="alert" className="border-l-2 border-danger py-1 pl-3 text-sm text-danger">
+            {getApiErrorMessage(deleteActivityMutation.error, tMyActivities("deleteError"))}
+          </p>
+        ) : null}
         {myActivitiesContent}
       </section>
+
+      {profileApplicant ? (
+        <ApplicantProfileDialog
+          applicant={profileApplicant}
+          locale={locale}
+          onClose={() => setProfileApplicant(null)}
+        />
+      ) : null}
+
+      {deleteTargetId !== null ? (
+        <ConfirmDialog
+          title={tMyActivities("deleteTitle")}
+          description={tMyActivities("deleteDescription")}
+          confirmLabel={tMyActivities("delete")}
+          tone="danger"
+          onConfirm={() => {
+            const activityId = deleteTargetId;
+            setDeleteTargetId(null);
+            deleteActivityMutation.mutate(activityId);
+          }}
+          onClose={() => setDeleteTargetId(null)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -201,6 +201,82 @@ describe("DashboardContent", () => {
     expect(within(calendar).getByText("June 2026")).toBeInTheDocument();
   });
 
+  it("unfolds a special request only for applicants who left one", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          ...teaTastingActivities[0],
+          schedules: [
+            {
+              ...teaTastingActivities[0].schedules[0],
+              applicantCount: 2,
+              applicants: [
+                {
+                  ...teaTastingActivities[0].schedules[0].applicants[0],
+                  specialRequest: "Vegan meal, please. No peanuts.",
+                },
+                {
+                  ...teaTastingActivities[0].schedules[0].applicants[0],
+                  applicationId: 12,
+                  applicantUserId: 4,
+                  applicantName: "Liam Park",
+                  specialRequest: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    await screen.findByText("Sophie Martin");
+    // 요청 사항이 없는 사람에게는 펼침 버튼 자체가 없다
+    expect(
+      screen.queryByRole("button", { name: "Special request from Liam Park" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Vegan meal, please. No peanuts.")).not.toBeInTheDocument();
+
+    const toggle = screen.getByRole("button", { name: "Special request from Sophie Martin" });
+    fireEvent.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Vegan meal, please. No peanuts.")).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(screen.queryByText("Vegan meal, please. No peanuts.")).not.toBeInTheDocument();
+  });
+
+  it("opens the applicant profile with contact, guests, and a chat entry", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({
+      status: "success",
+      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
+    });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: teaTastingActivities,
+    });
+
+    renderWithQueryClient(<DashboardContent />);
+
+    // 채팅 버튼(Message Sophie Martin)과 겹치지 않게 이름으로 시작하는 버튼을 고른다
+    fireEvent.click(await screen.findByRole("button", { name: /^Sophie Martin/ }));
+
+    const profile = await screen.findByRole("dialog", { name: "Sophie Martin" });
+    expect(within(profile).getByText("France")).toBeInTheDocument();
+    expect(within(profile).getByText("WhatsApp +33 612345678")).toBeInTheDocument();
+    expect(within(profile).getByText("2 guests")).toBeInTheDocument();
+    expect(
+      within(profile).getByRole("button", { name: "Message Sophie Martin" }),
+    ).toBeInTheDocument();
+  });
+
   it("keeps date selection available when applicant loading fails", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",
@@ -285,17 +361,15 @@ describe("DashboardContent", () => {
 
     renderWithQueryClient(<DashboardContent />);
 
-    // 목록이 로드된 뒤에 요약 지표가 채워진다
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(screen.getByText("Upcoming activity days")).toBeInTheDocument();
-    // 공개 중인 활동은 ACTIVE 하나만 센다
-    expect(screen.getByText("Active activities").previousElementSibling).toHaveTextContent("1");
+    // 정산 스트립은 API 연동 전까지 자리만 잡는다
     expect(screen.getByText("Expected payout")).toBeInTheDocument();
     expect(screen.getByText("Coming soon")).toBeInTheDocument();
 
     // 내 활동 — 삭제된 것은 빼고, 카드가 상세로 연결된다
     const list = screen.getByText("Bukchon Hidden Gems").closest("ul")!;
-    expect(within(list).getAllByRole("link")).toHaveLength(2);
+    // 카드마다 상세 링크와 수정 링크가 하나씩이다
+    expect(within(list).getAllByRole("link")).toHaveLength(4);
     expect(screen.queryByText("Gone Walk")).not.toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems").closest("a")).toHaveAttribute(
       "href",
@@ -309,6 +383,12 @@ describe("DashboardContent", () => {
       "href",
       "/en/my-activities/create",
     );
+    // 홈에서 바로 수정·삭제로 이어진다
+    expect(screen.getByRole("link", { name: "Edit Bukchon Hidden Gems" })).toHaveAttribute(
+      "href",
+      "/en/my-activities/43/edit",
+    );
+    expect(screen.getByRole("button", { name: "Delete Bukchon Hidden Gems" })).toBeInTheDocument();
   });
 
   it("localizes the dashboard in Korean", async () => {
@@ -324,7 +404,6 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />, { locale: "ko" });
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByText("다가오는 활동일")).toBeInTheDocument();
     expect(screen.getByText("정산 예정 금액")).toBeInTheDocument();
     expect(screen.getByText("집계 준비 중")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "일정 날짜" })).toBeInTheDocument();

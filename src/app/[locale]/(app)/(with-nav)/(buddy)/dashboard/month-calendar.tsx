@@ -131,7 +131,7 @@ export function MonthCalendarButton({
               const isToday = dateKey === todayDate;
               const hasActivity = activityDates.has(dateKey);
               let dayClass = "border-transparent text-ink hover:border-line-strong";
-              if (isSelected) dayClass = "border-primary font-bold text-primary";
+              if (isSelected) dayClass = "border-primary bg-primary font-bold text-on-primary";
               else if (isToday) dayClass = "border-line-strong font-bold text-ink";
 
               return (
@@ -154,7 +154,9 @@ export function MonthCalendarButton({
                   <span className="tabular-nums">{dayNumberOf(dateKey)}</span>
                   <span
                     aria-hidden
-                    className={`size-1 rounded-full ${hasActivity ? "bg-primary" : "bg-transparent"}`}
+                    className={`size-1 rounded-full ${
+                      hasActivity ? (isSelected ? "bg-on-primary" : "bg-primary") : "bg-transparent"
+                    }`}
                   />
                 </button>
               );

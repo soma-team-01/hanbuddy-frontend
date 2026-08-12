@@ -27,20 +27,14 @@ vi.mock("./dashboard-content", () => ({
 }));
 
 describe("DashboardPage", () => {
-  it.each([
-    ["en", "Buddy dashboard"],
-    ["ko", "버디 대시보드"],
-  ] as const)("renders a single condensed column for %s", async (locale, title) => {
-    renderWithIntl(await DashboardPage({ params: Promise.resolve({ locale }) } as never), {
-      locale,
-    });
+  it("renders a single condensed column without a page title", () => {
+    renderWithIntl(<DashboardPage />, { locale: "en" });
 
-    expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
-    // 사이드 패널 없이 한 컬럼으로 좁혀 담는다
+    // 페이지 제목·사이드 패널 없이 콘텐츠 한 컬럼으로 좁혀 담는다
+    expect(screen.queryByRole("heading", { name: /dashboard/i })).not.toBeInTheDocument();
     const layout = screen.getByTestId("dashboard-layout");
     expect(layout).toHaveClass("max-w-4xl");
     expect(layout.className).not.toContain("grid-cols");
     expect(screen.queryByText("Quick Actions")).not.toBeInTheDocument();
-    expect(screen.queryByText("빠른 작업")).not.toBeInTheDocument();
   });
 });

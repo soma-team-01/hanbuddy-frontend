@@ -33,7 +33,6 @@ import {
   myActivitiesQueryOptions,
 } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
-import { formatKrw } from "@/lib/format";
 import { myChatRoomsQueryOptions } from "@/lib/query/chat";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { BuddyApplicationApplicantSummaryResponse, MyActivityStatus } from "@/types/buddy";
@@ -47,7 +46,6 @@ import {
   weekDateKeys,
 } from "./calendar";
 import { MonthCalendarButton } from "./month-calendar";
-import { SETTLEMENT_MOCK } from "./settlement-mock";
 
 /** 섹션 머리글 — 작은 대문자 눈썹 스타일로 위계만 잡고 자리는 아낀다 */
 function SectionHeading({ children }: Readonly<{ children: ReactNode }>) {
@@ -70,7 +68,6 @@ export function DashboardContent() {
   const t = useTranslations("BuddyDashboard");
   const tMyActivities = useTranslations("MyActivities");
   const tChat = useTranslations("Chat");
-  const tSettlement = useTranslations("Settlement");
   const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
 
@@ -504,64 +501,33 @@ export function DashboardContent() {
         {applicationsContent}
       </section>
 
-      {/* 내 활동과 정산이 반씩 나눠 갖는다 */}
-      <div className="grid gap-7 md:grid-cols-2 md:gap-6">
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-2">
-            <SectionHeading>{t("myActivitiesHeading")}</SectionHeading>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/my-activities/create"
-                className="flex h-8 items-center gap-1 rounded-full bg-primary px-3 font-display text-[11px] font-bold text-on-primary transition-colors hover:bg-primary-hover"
-              >
-                <PlusIcon className="size-3.5" />
-                {t("createActivity")}
-              </Link>
-              <Link
-                href="/my-activities"
-                className="font-display text-xs font-semibold text-muted transition-colors hover:text-primary"
-              >
-                {t("viewAllActivities")}
-              </Link>
-            </div>
-          </div>
-          {deleteActivityMutation.error ? (
-            <p role="alert" className="border-l-2 border-danger py-1 pl-3 text-sm text-danger">
-              {getApiErrorMessage(deleteActivityMutation.error, tMyActivities("deleteError"))}
-            </p>
-          ) : null}
-          {myActivitiesContent}
-        </section>
-
-        {/* 정산 — 아직 목업 금액. 백엔드 연동 시 settlement-mock을 응답으로 대체한다 */}
-        <section className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between gap-2">
-            <SectionHeading>{tSettlement("title")}</SectionHeading>
+      {/* 내 활동 — 정산은 상단바의 지폐 아이콘으로 옮겼다 */}
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <SectionHeading>{t("myActivitiesHeading")}</SectionHeading>
+          <div className="flex items-center gap-3">
             <Link
-              href="/dashboard/settlement"
+              href="/my-activities/create"
+              className="flex h-8 items-center gap-1 rounded-full bg-primary px-3 font-display text-[11px] font-bold text-on-primary transition-colors hover:bg-primary-hover"
+            >
+              <PlusIcon className="size-3.5" />
+              {t("createActivity")}
+            </Link>
+            <Link
+              href="/my-activities"
               className="font-display text-xs font-semibold text-muted transition-colors hover:text-primary"
             >
-              {tSettlement("viewDetail")}
+              {t("viewAllActivities")}
             </Link>
           </div>
-          <Link
-            href="/dashboard/settlement"
-            className="flex flex-col gap-1 rounded-2xl border border-line-soft p-4 transition-colors hover:border-primary"
-          >
-            <p className="text-[11px] leading-4 text-muted">{tSettlement("expectedThisMonth")}</p>
-            <p className="font-display text-2xl font-bold text-primary tabular-nums">
-              {formatKrw(SETTLEMENT_MOCK.expectedAmount, locale)}
-            </p>
-            <p className="text-[11px] leading-4 text-muted">
-              {tSettlement("basedOn", { count: SETTLEMENT_MOCK.confirmedCount })}
-              {" · "}
-              {tSettlement("payoutDate", {
-                date: formatDateKeyLong(SETTLEMENT_MOCK.payoutDate, locale),
-              })}
-            </p>
-          </Link>
-        </section>
-      </div>
+        </div>
+        {deleteActivityMutation.error ? (
+          <p role="alert" className="border-l-2 border-danger py-1 pl-3 text-sm text-danger">
+            {getApiErrorMessage(deleteActivityMutation.error, tMyActivities("deleteError"))}
+          </p>
+        ) : null}
+        {myActivitiesContent}
+      </section>
 
       {profileApplicant ? (
         <ApplicantProfileDialog

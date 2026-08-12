@@ -9,6 +9,7 @@ import { getUserTypeNavRole } from "@/lib/auth/routes";
 import type { MyProfile } from "@/types/user";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
+import { SettlementNavIcon } from "@/components/layout/SettlementNavIcon";
 import { Avatar } from "../ui/Avatar";
 import { UserIcon } from "../ui/icons";
 import { LocaleSwitcher } from "./LocaleSwitcher";
@@ -171,6 +172,10 @@ export function SiteHeader({
             />
           ) : null}
           {!isMinimalHeader && effectiveAuthenticated ? <ChatNavIcon /> : null}
+          {/* 정산은 버디에게만 있는 화면이다 */}
+          {!isMinimalHeader && effectiveAuthenticated && effectiveRole === "buddy" ? (
+            <SettlementNavIcon />
+          ) : null}
           {(!isMinimalHeader || isBuddyHostingPage) && effectiveAuthenticated ? (
             <Link
               href="/my-page"
@@ -204,6 +209,9 @@ export function SiteHeader({
               />
             ) : null}
             {effectiveAuthenticated ? <ChatNavIcon compact /> : null}
+            {effectiveAuthenticated && effectiveRole === "buddy" ? (
+              <SettlementNavIcon compact />
+            ) : null}
             {effectiveAuthenticated ? (
               <Link
                 href="/my-page"

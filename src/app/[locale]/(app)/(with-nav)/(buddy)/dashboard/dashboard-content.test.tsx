@@ -366,12 +366,8 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    // 정산 카드 — 목업 금액이 상세로 연결된다
-    expect(screen.getByText("Expected this month")).toBeInTheDocument();
-    expect(screen.getByText("₩1,284,000").closest("a")).toHaveAttribute(
-      "href",
-      "/en/dashboard/settlement",
-    );
+    // 정산은 홈 화면이 아니라 상단바 아이콘에서 들어간다
+    expect(screen.queryByText("Expected this month")).not.toBeInTheDocument();
 
     // 내 활동 — 삭제된 것은 빼고, 카드가 상세로 연결된다
     const list = screen.getByText("Bukchon Hidden Gems").closest("ul")!;
@@ -411,7 +407,6 @@ describe("DashboardContent", () => {
     renderWithQueryClient(<DashboardContent />, { locale: "ko" });
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByText("이번 달 정산 예정 금액")).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "일정 날짜" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "이전 주" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다음 주" })).toBeInTheDocument();

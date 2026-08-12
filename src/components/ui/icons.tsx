@@ -393,6 +393,17 @@ export function CalendarIcon(props: IconProps) {
 }
 
 // 카카오톡 공식 로고 실루엣 (Simple Icons, CC0) — 말풍선 속 TALK 워드마크까지 포함한다
+export function BanknoteIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 12h.01" />
+      <path d="M18 12h.01" />
+    </IconBase>
+  );
+}
+
 export function KakaoTalkIcon(props: IconProps) {
   return (
     <IconBase fill="currentColor" stroke="none" {...props}>

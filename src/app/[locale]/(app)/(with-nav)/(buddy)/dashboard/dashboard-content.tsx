@@ -38,7 +38,6 @@ import type { BuddyApplicationApplicantSummaryResponse, MyActivityStatus } from 
 import {
   addDaysToDateKey,
   dayNumberOf,
-  formatDateKeyLong,
   formatDateKeyWeekday,
   formatMonthKeyTitle,
   monthKeyOf,
@@ -388,12 +387,7 @@ export function DashboardContent() {
     <div className="flex flex-col gap-7">
       {/* 신청자 — 주간 스트립과 선택한 날짜의 신청자 목록을 한 섹션으로 묶는다 */}
       <section className="flex flex-col gap-2.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <SectionHeading>{t("applicantsHeading")}</SectionHeading>
-          <p className="font-display text-xs font-bold text-primary">
-            {formatDateKeyLong(activeDate, locale)}
-          </p>
-        </div>
+        <SectionHeading>{t("applicantsHeading")}</SectionHeading>
 
         <div className="flex items-center justify-between gap-2">
           <p className="font-display text-sm font-bold text-ink">

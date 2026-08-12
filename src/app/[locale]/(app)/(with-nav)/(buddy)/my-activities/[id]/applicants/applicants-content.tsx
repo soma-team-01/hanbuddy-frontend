@@ -79,9 +79,6 @@ export function ApplicantsContent({
 
   if (!applications) return null;
 
-  const confirmedCount =
-    applications.statusCounts.CONFIRMED ??
-    applications.applicants.filter((applicant) => applicant.status === "CONFIRMED").length;
   const scheduleLabel =
     formatSeoulDateTime(applications.startAt, locale) ?? tErrors("dateTimeUnavailable");
   // 결제 대기는 아직 자리가 확정되지 않아 목록에서 뺀다
@@ -98,11 +95,7 @@ export function ApplicantsContent({
         <h2 className="font-display text-3xl leading-8 font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
           {applications.activityTitle}
         </h2>
-        <p className="mt-2 flex flex-wrap items-center gap-1 text-muted">
-          <span>{scheduleLabel}</span>
-          <span aria-hidden>•</span>
-          <span>{t("confirmedCount", { count: confirmedCount })}</span>
-        </p>
+        <p className="mt-2 text-muted">{scheduleLabel}</p>
       </div>
 
       {sections.length === 0 ? (

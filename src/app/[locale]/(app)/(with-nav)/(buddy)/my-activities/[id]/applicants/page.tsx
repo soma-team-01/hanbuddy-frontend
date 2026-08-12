@@ -21,7 +21,7 @@ export default async function ApplicantsPage({
 
   return (
     <>
-      <PageHeader title={t("title")} backHref="/my-activities" />
+      <PageHeader title={t("title")} backHref="/dashboard" />
       <PageContainer className="flex-1 py-6 md:py-10">
         <main>
           <ApplicantsContent activityId={id} initialScheduleId={initialScheduleId} />

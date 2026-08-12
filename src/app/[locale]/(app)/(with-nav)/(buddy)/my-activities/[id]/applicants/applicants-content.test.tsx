@@ -56,11 +56,10 @@ describe("ApplicantsContent", () => {
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getByText("Jul 19, 2026, 1:30 AM")).toBeInTheDocument();
-    expect(screen.getByText("1 confirmed")).toBeInTheDocument();
-    // 결제 대기는 아예 노출하지 않는다
+    // 확정 인원·결제 대기 수는 제목 줄에서 뺐다 — 영역 제목이 대신한다
+    expect(screen.queryByText(/confirmed$/)).not.toBeInTheDocument();
     expect(screen.queryByText(/pending payment/)).not.toBeInTheDocument();
-    // 상태별 영역 제목 아래에 신청자가 담긴다
-    expect(screen.getByRole("heading", { name: "Confirmed" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Confirmed bookings" })).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
@@ -104,7 +103,7 @@ describe("ApplicantsContent", () => {
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     expect(await screen.findByText("Liam Brown")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Cancelled" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cancelled bookings" })).toBeInTheDocument();
   });
 
   it("splits applicants into status sections and shows cancellation reasons", async () => {
@@ -165,9 +164,9 @@ describe("ApplicantsContent", () => {
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     // 진행 완료 → 예약 완료 → 예약 취소 순서
-    expect(await screen.findByRole("heading", { name: "Completed" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Completed bookings" })).toBeInTheDocument();
     const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(["Completed", "Confirmed", "Cancelled"]);
+    expect(headings).toEqual(["Completed bookings", "Confirmed bookings", "Cancelled bookings"]);
     // 결제 대기 신청자는 어디에도 없다
     expect(screen.queryByText("Wait Choi")).not.toBeInTheDocument();
     // 취소 사유와 OTHER 상세가 함께 보인다
@@ -292,7 +291,7 @@ describe("ApplicantsContent", () => {
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getByText("2026. 7. 19. 오전 1:30")).toBeInTheDocument();
-    expect(screen.getByText("확정 1명")).toBeInTheDocument();
+    expect(screen.queryByText("확정 1명")).not.toBeInTheDocument();
     expect(screen.getByText("2026. 7. 19. 오전 1:30에 신청")).toBeInTheDocument();
     expect(screen.getByText("• 1명")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "예약 취소" })).toBeInTheDocument();

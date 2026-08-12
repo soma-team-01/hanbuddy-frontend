@@ -713,7 +713,7 @@
     "unreadLabel": "{count, plural, one {# unread message} other {# unread messages}}",
     "contactBuddy": "Message {name}",
     "messageApplicant": "Message {name}",
-    "openGroupChat": "Group chat with guests",
+    "openGroupChat": "Enter group chat",
     "openingChat": "Opening...",
     "leave": "Leave conversation",
     "leaveTitle": "Leave this conversation?",
@@ -761,8 +761,9 @@
     "removeMemberDescription": "They will not be able to rejoin, even if they book again. Their messages stay in the conversation.",
     "removingMember": "Removing...",
     "removeMemberError": "Could not remove this member.",
-    "createGroupChat": "Start group chat",
-    "autoJoinNotice": "Create it once — every guest who completes payment joins automatically, including later bookings."
+    "createGroupChat": "Create group chat",
+    "autoJoinNoticeCreate": "Opens a group chat with every confirmed guest for this time slot. You only create it once — guests who pay later are added automatically.",
+    "autoJoinNoticeOpen": "A group chat for this time slot is already open — click to jump in. Guests who pay later are added automatically."
   },
   "MyPage": {
     "title": "My Page",

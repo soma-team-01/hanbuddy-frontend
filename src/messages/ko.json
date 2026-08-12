@@ -713,7 +713,7 @@
     "unreadLabel": "{count, plural, other {안 읽은 메시지 #개}}",
     "contactBuddy": "{name} 님에게 메시지",
     "messageApplicant": "{name} 님에게 메시지",
-    "openGroupChat": "참여자 단체 채팅",
+    "openGroupChat": "단체 채팅방 입장",
     "openingChat": "여는 중...",
     "leave": "채팅방 나가기",
     "leaveTitle": "이 대화를 나갈까요?",
@@ -761,8 +761,9 @@
     "removeMemberDescription": "내보낸 참여자는 다시 신청해도 돌아오지 않습니다. 남긴 메시지는 대화에 그대로 남습니다.",
     "removingMember": "내보내는 중...",
     "removeMemberError": "참여자를 내보내지 못했습니다.",
-    "createGroupChat": "단체 채팅 만들기",
-    "autoJoinNotice": "한 번만 만들면 됩니다. 이후에 신청·결제를 마친 사람도 자동으로 참여합니다."
+    "createGroupChat": "단체 채팅방 만들기",
+    "autoJoinNoticeCreate": "이 회차의 확정 게스트 전원과 단체 채팅방을 만들어요. 한 번만 만들면 이후에 결제를 마친 게스트도 자동으로 초대됩니다.",
+    "autoJoinNoticeOpen": "이 회차의 단체 채팅방이 이미 열려 있어요. 누르면 바로 들어갑니다. 이후에 결제를 마친 게스트도 자동으로 초대돼요."
   },
   "MyPage": {
     "title": "마이페이지",

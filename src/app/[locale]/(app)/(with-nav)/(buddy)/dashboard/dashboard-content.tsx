@@ -216,7 +216,8 @@ export function DashboardContent() {
                       </span>
                     </Link>
                     {schedule.applicantCount > 0 ? (
-                      // 한 번 만들면 이후 신청자는 자동으로 들어온다는 걸 누르기 전에 알려 준다
+                      // 이미 열린 방인지에 따라 문구와 안내를 나눈다 — 만들기 전엔 무엇이 생기는지,
+                      // 만든 뒤엔 누르면 들어간다는 걸 분명히 한다
                       <span className="group relative inline-flex shrink-0">
                         <StartChatButton
                           target={{
@@ -233,9 +234,11 @@ export function DashboardContent() {
                         />
                         <span
                           role="tooltip"
-                          className="pointer-events-none absolute right-0 bottom-full z-40 mb-2 hidden w-60 rounded-xl border border-primary/30 bg-canvas-soft p-3 text-left text-xs leading-5 text-muted shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:block group-hover:block"
+                          className="pointer-events-none absolute right-0 bottom-full z-40 mb-2 hidden w-64 rounded-xl border border-primary/30 bg-canvas-soft p-3 text-left text-xs leading-5 text-muted shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:block group-hover:block"
                         >
-                          {tChat("autoJoinNotice")}
+                          {groupRoomScheduleIds.has(schedule.activityScheduleId)
+                            ? tChat("autoJoinNoticeOpen")
+                            : tChat("autoJoinNoticeCreate")}
                         </span>
                       </span>
                     ) : null}
@@ -276,6 +279,10 @@ export function DashboardContent() {
                                     <span className="flex items-center gap-1">
                                       <MessageSquareIcon className="size-3" />
                                       {formatApplicantContact(applicant, locale)}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <UsersIcon className="size-3" />
+                                      {t("profileGuests", { count: applicant.guestCount })}
                                     </span>
                                   </span>
                                 </span>

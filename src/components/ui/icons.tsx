@@ -393,13 +393,12 @@ export function CalendarIcon(props: IconProps) {
 }
 
 // 카카오톡 공식 로고 실루엣 (Simple Icons, CC0) — 말풍선 속 TALK 워드마크까지 포함한다
-/** 원화 동전 — 원 안에 ₩. 정산(원화) 진입점에 쓴다 */
-export function WonCoinIcon(props: IconProps) {
+/** 원화 기호 ₩ — 정산(원화) 진입점에 쓴다 */
+export function WonSignIcon(props: IconProps) {
   return (
-    <IconBase strokeWidth={1.8} {...props}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="m8 8.5 1.5 7L12 9.8l2.5 5.7 1.5-7" />
-      <path d="M7.2 11.6h9.6" />
+    <IconBase {...props}>
+      <path d="m5 6 2.5 12L12 8.5l4.5 9.5L19 6" />
+      <path d="M4 12h16" />
     </IconBase>
   );
 }

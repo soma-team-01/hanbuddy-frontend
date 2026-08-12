@@ -81,6 +81,7 @@ export function DashboardContent() {
   const [profileApplicant, setProfileApplicant] =
     useState<BuddyApplicationApplicantSummaryResponse | null>(null);
 
+  // 기본 창(오늘~15일) — 처음 보여줄 날짜를 고르는 데 쓴다
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
   const myActivitiesQuery = useQuery(myActivitiesQueryOptions());
   // 단체 채팅방이 이미 있는 회차 — 버튼 문구를 만들기/열기로 나눈다
@@ -97,15 +98,23 @@ export function DashboardContent() {
       hasActivity,
     }))
     .filter(({ date }) => date.length > 0);
-  const activityDates = new Set(
-    scheduleDates.filter(({ hasActivity }) => hasActivity).map(({ date }) => date),
-  );
 
   // 아직 고르지 않았으면 활동이 있는 첫 날짜, 없으면 오늘
   const defaultDate = scheduleDates.find(({ hasActivity }) => hasActivity)?.date ?? todayDate;
   const activeDate = selectedDate || defaultDate;
   const anchor = weekAnchor || activeDate;
   const weekDates = weekDateKeys(anchor);
+
+  // 보고 있는 주의 활동 점 — 주를 옮길 때마다 그 주만 조회한다 (과거·먼 미래 포함)
+  const weekDatesQuery = useQuery(
+    buddyScheduleDatesQueryOptions({ from: weekDates[0], to: weekDates[6] }),
+  );
+  const weekActivityDates = new Set(
+    (weekDatesQuery.data ?? [])
+      .filter(({ hasActivity }) => hasActivity)
+      .map(({ dateStartAt }) => getSeoulDateTimeParts(dateStartAt)?.date ?? "")
+      .filter((date) => date.length > 0),
+  );
 
   // 일정이 로드되기 전에는 기본 날짜가 확정되지 않았으므로 신청자 조회를 미뤄 헛요청을 막는다
   const applicationsQuery = useQuery({
@@ -123,7 +132,10 @@ export function DashboardContent() {
   });
 
   useAuthQueryRedirect(
-    scheduleDatesQuery.error ?? applicationsQuery.error ?? myActivitiesQuery.error,
+    scheduleDatesQuery.error ??
+      weekDatesQuery.error ??
+      applicationsQuery.error ??
+      myActivitiesQuery.error,
   );
 
   function toggleRequest(applicationId: number) {
@@ -428,7 +440,6 @@ export function DashboardContent() {
               locale={locale}
               selectedDate={activeDate}
               todayDate={todayDate}
-              activityDates={activityDates}
               onSelectDate={selectDate}
             />
             <button
@@ -442,9 +453,9 @@ export function DashboardContent() {
           </div>
         </div>
 
-        {scheduleDatesQuery.error ? (
+        {weekDatesQuery.error ? (
           <p role="alert" className="border-l-2 border-danger py-1 pl-3 text-sm text-danger">
-            {getApiErrorMessage(scheduleDatesQuery.error, t("scheduleLoadError"))}
+            {getApiErrorMessage(weekDatesQuery.error, t("scheduleLoadError"))}
           </p>
         ) : null}
 
@@ -452,7 +463,7 @@ export function DashboardContent() {
           {weekDates.map((date) => {
             const isActive = date === activeDate;
             const isToday = date === todayDate;
-            const hasActivity = activityDates.has(date);
+            const hasActivity = weekActivityDates.has(date);
             const weekdayLabel = isToday ? t("today") : formatDateKeyWeekday(date, locale);
             const plainLabel = `${formatDateKeyWeekday(date, locale)} ${dayNumberOf(date)}`;
 

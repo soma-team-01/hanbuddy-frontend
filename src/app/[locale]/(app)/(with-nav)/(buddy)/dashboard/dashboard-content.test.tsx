@@ -145,9 +145,15 @@ describe("DashboardContent", () => {
     expect(within(dateGroup).getByText("19")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next week" }));
-    // 다음 주: 일 26 ~ 토 8/1
+    // 다음 주: 일 26 ~ 토 8/1 — 그 주의 점을 새로 조회한다
     expect(within(dateGroup).getByText("26")).toBeInTheDocument();
     expect(within(dateGroup).queryByText("19")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(mockedGetBuddyScheduleDates).toHaveBeenCalledWith({
+        from: "2026-07-26",
+        to: "2026-08-01",
+      }),
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
     fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
@@ -197,6 +203,13 @@ describe("DashboardContent", () => {
 
     fireEvent.click(within(calendar).getByRole("button", { name: "Next month" }));
     expect(within(calendar).getByText("August 2026")).toBeInTheDocument();
+    // 넘겨 본 달의 점도 그 달 범위로 조회한다
+    await waitFor(() =>
+      expect(mockedGetBuddyScheduleDates).toHaveBeenCalledWith({
+        from: "2026-08-01",
+        to: "2026-08-31",
+      }),
+    );
 
     fireEvent.click(within(calendar).getByRole("button", { name: "Previous month" }));
     fireEvent.click(within(calendar).getByRole("button", { name: "Previous month" }));

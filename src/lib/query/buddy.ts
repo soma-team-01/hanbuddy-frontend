@@ -15,7 +15,8 @@ export const buddyKeys = {
   activityDetail: (activityId: number | string) =>
     [...buddyKeys.activities(), "detail", String(activityId)] as const,
   applications: () => [...buddyKeys.all(), "applications"] as const,
-  scheduleDates: () => [...buddyKeys.applications(), "schedule-dates"] as const,
+  scheduleDates: (from?: string, to?: string) =>
+    [...buddyKeys.applications(), "schedule-dates", from ?? "", to ?? ""] as const,
   applicationsByDate: (date: string) => [...buddyKeys.applications(), "date", date] as const,
   applicationsBySchedule: (activityScheduleId: number | string) =>
     [...buddyKeys.applications(), "schedule", String(activityScheduleId)] as const,
@@ -35,10 +36,10 @@ export function myActivityQueryOptions(activityId: number | string) {
   });
 }
 
-export function buddyScheduleDatesQueryOptions() {
+export function buddyScheduleDatesQueryOptions(range?: { from: string; to: string }) {
   return queryOptions({
-    queryKey: buddyKeys.scheduleDates(),
-    queryFn: async () => unwrapApiResult(await getBuddyScheduleDates(), "dates"),
+    queryKey: buddyKeys.scheduleDates(range?.from, range?.to),
+    queryFn: async () => unwrapApiResult(await getBuddyScheduleDates(range), "dates"),
   });
 }
 

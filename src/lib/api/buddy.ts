@@ -105,9 +105,13 @@ export async function deleteMyActivity(
   );
 }
 
-export async function getBuddyScheduleDates(): Promise<BuddyScheduleDatesResult> {
+export async function getBuddyScheduleDates(
+  /** YYYY-MM-DD, 양 끝 포함. 생략하면 오늘부터 15일 */
+  range?: { from: string; to: string },
+): Promise<BuddyScheduleDatesResult> {
+  const query = range ? `?from=${range.from}&to=${range.to}` : "";
   return requestApiResult<BuddyScheduleDateResponse[], "dates">(
-    "/api/applications/buddy/schedule-dates",
+    `/api/applications/buddy/schedule-dates${query}`,
     "dates",
     undefined,
     DEFAULT_BUDDY_SCHEDULE_DATES_ERROR_MESSAGE,

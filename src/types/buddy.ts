@@ -124,7 +124,7 @@ export interface BuddyApplicationApplicantSummaryResponse {
   applicantContactMethod: "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
   applicantContactCountryCode: string | null;
   applicantContactIdentifier: string;
-  /** 신청 시 남긴 요청 사항. 백엔드 반영 전이거나 없으면 표시하지 않는다 */
+  /** 신청 시 남긴 요청 사항. 없으면 null */
   specialRequest?: string | null;
 }
 

@@ -1,9 +1,12 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
+import { buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
 import {
   addMonthsToMonthKey,
   dayNumberOf,
@@ -22,19 +25,33 @@ export function MonthCalendarButton({
   locale,
   selectedDate,
   todayDate,
-  activityDates,
   onSelectDate,
 }: Readonly<{
   locale: Locale;
   selectedDate: string;
   todayDate: string;
-  /** 활동이 잡혀 있는 날짜 키 목록 — 점으로 표시한다 */
-  activityDates: ReadonlySet<string>;
   onSelectDate: (dateKey: string) => void;
 }>) {
   const t = useTranslations("BuddyDashboard");
   const [open, setOpen] = useState(false);
   const [monthKey, setMonthKey] = useState(() => monthKeyOf(selectedDate));
+
+  // 보고 있는 달의 활동 점 — 달을 넘길 때마다 그 달만 조회한다 (백엔드 상한 42일 안)
+  const monthGrid = monthGridDateKeys(monthKey);
+  const monthDates = monthGrid.filter((dateKey): dateKey is string => dateKey !== null);
+  const monthQuery = useQuery({
+    ...buddyScheduleDatesQueryOptions({
+      from: monthDates[0],
+      to: monthDates.at(-1) ?? monthDates[0],
+    }),
+    enabled: open && monthDates.length > 0,
+  });
+  const activityDates = new Set(
+    (monthQuery.data ?? [])
+      .filter(({ hasActivity }) => hasActivity)
+      .map(({ dateStartAt }) => getSeoulDateTimeParts(dateStartAt)?.date ?? "")
+      .filter((dateKey) => dateKey.length > 0),
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -124,7 +141,7 @@ export function MonthCalendarButton({
           </div>
 
           <div className="grid grid-cols-7 gap-y-0.5">
-            {monthGridDateKeys(monthKey).map((dateKey, index) => {
+            {monthGrid.map((dateKey, index) => {
               if (!dateKey) return <span key={`pad-${index}`} aria-hidden />;
 
               const isSelected = dateKey === selectedDate;

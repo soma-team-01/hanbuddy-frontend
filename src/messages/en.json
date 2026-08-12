@@ -26,6 +26,8 @@
     "applicationNotApplicable": "This activity is not accepting applications.",
     "applicationScheduleNotOpen": "The selected schedule is not open for applications.",
     "applicationCapacityExceeded": "Not enough spots are available.",
+    "scheduleDateRangeInvalid": "The end date cannot be before the start date.",
+    "scheduleDateRangeTooLong": "That date range is too long to load at once.",
     "applicationNotCancellable": "This application can no longer be cancelled.",
     "applicationOwner": "You can only access your own applications.",
     "applicationNotFound": "This application could not be found.",

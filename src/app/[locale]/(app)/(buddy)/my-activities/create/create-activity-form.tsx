@@ -658,6 +658,8 @@ export function CreateActivityForm({
 
   async function submitActivity() {
     if (isSubmitting) return;
+    // 새 시도를 시작하므로 지난 제출 오류부터 비운다 — 검증에 걸려 되돌아갈 때 두 오류가 겹치지 않게
+    setSubmissionError(null);
 
     // 제출 직전 전체 단계를 한 번 더 검증해 리뷰 중 유실된 값이 있으면 해당 단계로 되돌린다
     const invalidStep = ACTIVITY_CREATE_STEPS.find(
@@ -671,7 +673,6 @@ export function CreateActivityForm({
       return;
     }
 
-    setSubmissionError(null);
     setSubmissionPhase("uploading");
     try {
       // 기존 이미지는 발급받았던 key를 그대로 쓰고, 새로 고른 파일만 업로드한다

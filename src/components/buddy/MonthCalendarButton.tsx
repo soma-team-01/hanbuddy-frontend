@@ -37,7 +37,8 @@ export function MonthCalendarButton({
 }>) {
   const t = useTranslations("BuddyDashboard");
   const [open, setOpen] = useState(false);
-  const [monthKey, setMonthKey] = useState(() => monthKeyOf(selectedDate));
+  // 선택된 날짜가 아직 없으면 오늘이 속한 달부터 보여준다 (빈 문자열이면 격자가 비고 제목이 깨진다)
+  const [monthKey, setMonthKey] = useState(() => monthKeyOf(selectedDate || todayDate));
 
   // 보고 있는 달의 활동 점 — 달을 넘길 때마다 그 달만 조회한다 (백엔드 상한 42일 안)
   const monthGrid = monthGridDateKeys(monthKey);
@@ -95,7 +96,7 @@ export function MonthCalendarButton({
         aria-label={t("openCalendar")}
         onClick={() => {
           // 다시 열 때는 선택된 날짜의 달부터 보여준다
-          if (!open) setMonthKey(monthKeyOf(selectedDate));
+          if (!open) setMonthKey(monthKeyOf(selectedDate || todayDate));
           setOpen((current) => !current);
         }}
         className={`flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors ${

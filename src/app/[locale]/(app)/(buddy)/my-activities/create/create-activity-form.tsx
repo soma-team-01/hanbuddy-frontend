@@ -899,13 +899,18 @@ export function CreateActivityForm({
     STEP_GROUPS.find((group) => group.steps.some((step) => step === currentStep)) ?? STEP_GROUPS[0];
   const exitHref =
     isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/dashboard";
+  let phaseLabel: string | null = null;
+  if (submissionPhase === "uploading") phaseLabel = t("actions.submitUploading");
+  if (submissionPhase === "registering") {
+    phaseLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
+  }
+
   let primaryActionLabel = reviewing
     ? t(isEdit ? "actions.save" : "actions.finish")
     : t("actions.next");
-  if (submissionPhase === "uploading") primaryActionLabel = t("actions.submitUploading");
-  if (submissionPhase === "registering") {
-    primaryActionLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
-  }
+  if (reviewing && phaseLabel) primaryActionLabel = phaseLabel;
+  // 수정 모드에는 단계마다 저장 버튼이 있어 진행 문구는 그쪽에 싣는다
+  const stepSaveLabel = phaseLabel ?? t("actions.save");
 
   return (
     <div className="fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-[#fff] text-ink">
@@ -1024,8 +1029,20 @@ export function CreateActivityForm({
               }`}
             >
               <p aria-live="polite" className="sr-only">
-                {isSubmitting ? primaryActionLabel : ""}
+                {isSubmitting ? (phaseLabel ?? primaryActionLabel) : ""}
               </p>
+              {isEdit && !reviewing ? (
+                // 마지막 화면까지 가지 않아도 지금까지의 변경을 바로 저장한다.
+                // 저장 전에 전체 단계를 검증하므로, 비어 있는 단계가 있으면 그리로 데려간다
+                <button
+                  type="button"
+                  onClick={() => void submitActivity()}
+                  disabled={isSubmitting}
+                  className="flex min-h-11 items-center justify-center rounded-full border border-primary px-6 text-sm font-bold text-primary transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {stepSaveLabel}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={goNext}

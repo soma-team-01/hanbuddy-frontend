@@ -857,6 +857,36 @@ describe("CreateActivityForm", () => {
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
   });
 
+  it("saves from any step in edit mode without walking to the review screen", async () => {
+    const detail = buildEditDetail();
+    mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+
+    renderEditForm(detail);
+
+    // 리뷰에서 첫 단계로 돌아가면 단계 전용 저장 버튼이 생긴다
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(
+      screen.queryByRole("heading", { name: "Preview your experience" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
+    const [calledActivityId, request] = mockedUpdateMyActivity.mock.calls[0];
+    expect(calledActivityId).toBe("42");
+    expect(request).toMatchObject({ title: "Seoul market walk", status: "ACTIVE" });
+    await waitFor(() => expect(routerPush).toHaveBeenCalled());
+    expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+  });
+
+  it("keeps the per-step save away from create mode", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+
+    // 생성 모드 첫 단계에는 다음 버튼만 있다
+    expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+  });
+
   it("uploads only newly added photos in edit mode and appends their keys", async () => {
     const detail = buildEditDetail();
     mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });

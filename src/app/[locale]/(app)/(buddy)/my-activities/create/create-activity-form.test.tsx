@@ -62,10 +62,9 @@ vi.mock("@/lib/api/useMyProfile", () => ({
   }),
 }));
 
-vi.mock("./activity-create-draft-storage", () => ({
+vi.mock("./activity-create-draft-storage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./activity-create-draft-storage")>()),
   clearActivityCreateDraft: vi.fn().mockResolvedValue(undefined),
-  getActivityCreateDraftScope: (mode: "create" | "edit", activityId?: string) =>
-    mode === "edit" ? `edit:${activityId ?? "unknown"}` : "create",
   loadActivityCreateDraft: vi.fn().mockResolvedValue(null),
   saveActivityCreateDraft: vi.fn().mockResolvedValue(undefined),
 }));
@@ -291,32 +290,57 @@ describe("CreateActivityForm", () => {
   });
 
   it("restores the saved step and fields after the form remounts", async () => {
+    const restoredFile = new File([new Uint8Array([1])], "restored.webp", {
+      type: "image/webp",
+    });
     mockedLoadActivityCreateDraft.mockResolvedValue({
       snapshot: {
-        currentStep: "name",
-        furthestStepIndex: 1,
+        currentStep: "photos",
+        furthestStepIndex: 3,
         draft: {
           ...EMPTY_ACTIVITY_DRAFT,
           hostIntroduction: "I have guided sports fans around Seoul for many years.",
           experienceName: "Seoul stadium night",
+          photos: [
+            {
+              id: "restored-photo",
+              file: restoredFile,
+              previewUrl: "blob:restored.webp",
+            },
+          ],
         },
         errorKey: null,
         reviewing: false,
         fileSequence: 4,
         scheduleSequence: 2,
       },
-      objectUrls: new Set(),
+      objectUrls: new Set(["blob:restored.webp"]),
     });
 
     renderWithQueryClient(<CreateActivityForm />);
 
     expect(
-      await screen.findByRole("heading", { name: "Name your experience" }),
+      await screen.findByRole("heading", { name: "Show what guests can expect" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Experience name" })).toHaveValue(
-      "Seoul stadium night",
+    expect(screen.getByRole("img", { name: "Experience photo 1" })).toHaveAttribute(
+      "src",
+      "blob:restored.webp",
     );
     expect(mockedLoadActivityCreateDraft).toHaveBeenCalledWith("create");
+    await waitFor(() =>
+      expect(mockedSaveActivityCreateDraft).toHaveBeenCalledWith(
+        "create",
+        expect.objectContaining({
+          currentStep: "photos",
+          furthestStepIndex: 3,
+          fileSequence: 4,
+          scheduleSequence: 2,
+          draft: expect.objectContaining({
+            photos: [expect.objectContaining({ file: restoredFile })],
+          }),
+        }),
+      ),
+    );
   });
 
   it("saves changed fields for refresh recovery", async () => {
@@ -384,7 +408,7 @@ describe("CreateActivityForm", () => {
       "Seoul stadium night",
     );
 
-    fireEvent.click(screen.getByRole("link", { name: "Exit" }));
+    window.dispatchEvent(new PopStateEvent("popstate"));
   });
 
   it("starts directly with the host introduction step", () => {
@@ -634,6 +658,7 @@ describe("CreateActivityForm", () => {
     expect(request).not.toHaveProperty("discountEndDate");
 
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
+    expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("create");
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities");
   });
 

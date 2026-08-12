@@ -202,7 +202,9 @@
       "instagramLabel": "Instagram",
       "responseNote": "여러분의 이야기를 기다리고 있어요.",
       "emailIconLabel": "HanBuddy에 이메일 보내기",
-      "instagramIconLabel": "HanBuddy Instagram 열기"
+      "instagramIconLabel": "HanBuddy Instagram 열기",
+      "whatsappIconLabel": "왓츠앱으로 HanBuddy와 대화하기",
+      "kakaoIconLabel": "카카오톡으로 HanBuddy와 대화하기"
     }
   },
   "BuddyHosting": {
@@ -792,20 +794,30 @@
   "BuddyDashboard": {
     "title": "버디 대시보드",
     "description": "예정 일정과 게스트 신청 현황을 한눈에 확인하세요.",
-    "quickActions": "빠른 작업",
     "createActivity": "액티비티 만들기",
-    "upcoming": "예정 일정",
-    "loadingSchedule": "일정을 불러오는 중...",
-    "scheduleLoadError": "일정을 불러오지 못했습니다.",
-    "noUpcoming": "예정된 일정이 없습니다.",
-    "previousDates": "이전 날짜 {count, number}개",
-    "nextDates": "다음 날짜 {count, number}개",
+    "upcomingDaysStat": "다가오는 활동일",
+    "activeActivitiesStat": "공개 중인 활동",
+    "settlementStat": "정산 예정 금액",
+    "settlementPending": "집계 준비 중",
+    "previousWeek": "이전 주",
+    "nextWeek": "다음 주",
+    "openCalendar": "달력 열기",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "today": "오늘",
     "scheduleDates": "일정 날짜",
     "dateWithActivity": "{date}, 액티비티 있음",
+    "applicantsHeading": "날짜별 신청자",
     "loadingApplicants": "신청자를 불러오는 중...",
     "applicantsLoadError": "신청자를 불러오지 못했습니다.",
     "noApplicants": "이 날짜에는 아직 신청자가 없습니다.",
-    "applicantCount": "{count, plural, other {신청자 #명}}"
+    "applicantCount": "{count, plural, other {신청자 #명}}",
+    "scheduleLoadError": "일정을 불러오지 못했습니다.",
+    "myActivitiesHeading": "내 활동",
+    "viewAllActivities": "전체 보기",
+    "loadingActivities": "활동을 불러오는 중...",
+    "activitiesLoadError": "활동을 불러오지 못했습니다.",
+    "noActivities": "아직 등록한 활동이 없습니다."
   },
   "MyActivities": {
     "title": "내 액티비티",

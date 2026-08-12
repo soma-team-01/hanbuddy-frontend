@@ -42,4 +42,19 @@ describe("SiteFooter", () => {
       );
     },
   );
+
+  it.each([
+    ["en", "Chat with HanBuddy on WhatsApp", "Chat with HanBuddy on KakaoTalk"],
+    ["ko", "왓츠앱으로 HanBuddy와 대화하기", "카카오톡으로 HanBuddy와 대화하기"],
+  ] as const)("links messenger contacts in a new tab for %s", async (locale, whatsapp, kakao) => {
+    renderWithIntl(await SiteFooter({ locale }), { locale });
+
+    const whatsappLink = screen.getByRole("link", { name: whatsapp });
+    expect(whatsappLink).toHaveAttribute("href", "https://wa.me/821082970110");
+    expect(whatsappLink).toHaveAttribute("target", "_blank");
+
+    const kakaoLink = screen.getByRole("link", { name: kakao });
+    expect(kakaoLink).toHaveAttribute("href", "https://open.kakao.com/me/hanbuddy");
+    expect(kakaoLink).toHaveAttribute("target", "_blank");
+  });
 });

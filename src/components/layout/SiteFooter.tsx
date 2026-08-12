@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { InstagramIcon, MailIcon } from "@/components/ui/icons";
+import { InstagramIcon, KakaoTalkIcon, MailIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -12,6 +12,8 @@ interface SiteFooterProps {
 const CONTACT_DETAILS = {
   email: "zeroone.soma@gmail.com",
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
+  whatsappUrl: "https://wa.me/821082970110",
+  kakaoUrl: "https://open.kakao.com/me/hanbuddy",
 } as const;
 
 export async function SiteFooter({ locale }: SiteFooterProps) {
@@ -48,6 +50,24 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
               className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
             >
               <MailIcon className="size-5" />
+            </a>
+            <a
+              href={CONTACT_DETAILS.whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={landingT("contact.whatsappIconLabel")}
+              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+            >
+              <WhatsAppIcon className="size-5" />
+            </a>
+            <a
+              href={CONTACT_DETAILS.kakaoUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={landingT("contact.kakaoIconLabel")}
+              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+            >
+              <KakaoTalkIcon className="size-5" />
             </a>
             <a
               href={CONTACT_DETAILS.instagramUrl}

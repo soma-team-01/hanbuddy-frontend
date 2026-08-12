@@ -381,6 +381,15 @@ export function LineIcon(props: IconProps) {
   );
 }
 
+export function KakaoTalkIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      {/* 카카오톡 말풍선 — 꼬리가 왼쪽 아래로 빠지는 형태 */}
+      <path d="M12 4c-5 0-9 3.1-9 7 0 2.5 1.6 4.6 4 5.9L6 21l4.3-2.2c.6.1 1.1.2 1.7.2 5 0 9-3.1 9-7s-4-8-9-8Z" />
+    </IconBase>
+  );
+}
+
 export function WeChatIcon(props: IconProps) {
   return (
     <IconBase {...props}>

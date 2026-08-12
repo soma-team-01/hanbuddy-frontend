@@ -27,4 +27,14 @@ describe("getGooglePlacesReferrer", () => {
 
     expect(getGooglePlacesReferrer(request)).toBe("https://preview.hanbuddy.kr/");
   });
+
+  it.each(["file:///tmp/callback", "mailto:callback@example.com"])(
+    "falls back to the request origin for the non-HTTP URL %s",
+    (configuredRedirectUri) => {
+      vi.stubEnv("GOOGLE_REDIRECT_URI", configuredRedirectUri);
+      const request = new NextRequest("https://preview.hanbuddy.kr/api/google/places/autocomplete");
+
+      expect(getGooglePlacesReferrer(request)).toBe("https://preview.hanbuddy.kr/");
+    },
+  );
 });

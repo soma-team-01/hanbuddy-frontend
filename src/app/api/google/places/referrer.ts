@@ -5,7 +5,10 @@ export function getGooglePlacesReferrer(request: NextRequest) {
 
   if (configuredRedirectUri) {
     try {
-      return `${new URL(configuredRedirectUri).origin}/`;
+      const configuredUrl = new URL(configuredRedirectUri);
+      if (configuredUrl.protocol === "http:" || configuredUrl.protocol === "https:") {
+        return `${configuredUrl.origin}/`;
+      }
     } catch {
       // 잘못된 로컬 설정에서는 요청 origin을 사용한다.
     }

@@ -43,6 +43,17 @@ describe("SiteFooter", () => {
     },
   );
 
+  it("routes the logo home by role", async () => {
+    renderWithIntl(await SiteFooter({ locale: "en", role: "buddy" }), { locale: "en" });
+    // 버디의 홈은 대시보드 — 헤더 로고와 같은 규칙
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/dashboard");
+  });
+
+  it("keeps the tourist logo on the landing page", async () => {
+    renderWithIntl(await SiteFooter({ locale: "en", role: "tourist" }), { locale: "en" });
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
+  });
+
   it.each([
     ["en", "Chat with HanBuddy on WhatsApp", "Chat with HanBuddy on KakaoTalk"],
     ["ko", "왓츠앱으로 HanBuddy와 대화하기", "카카오톡으로 HanBuddy와 대화하기"],

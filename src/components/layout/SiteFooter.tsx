@@ -4,9 +4,11 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { InstagramIcon, KakaoTalkIcon, MailIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import type { SiteNavRole } from "@/lib/auth/routes";
 
 interface SiteFooterProps {
   readonly locale: Locale;
+  readonly role?: SiteNavRole | null;
 }
 
 const CONTACT_DETAILS = {
@@ -16,7 +18,9 @@ const CONTACT_DETAILS = {
   kakaoUrl: "https://open.kakao.com/me/hanbuddy",
 } as const;
 
-export async function SiteFooter({ locale }: SiteFooterProps) {
+export async function SiteFooter({ locale, role }: SiteFooterProps) {
+  // 버디의 홈은 대시보드다 — 헤더 로고와 같은 규칙
+  const logoHref = role === "buddy" ? "/dashboard" : "/";
   const [authT, landingT] = await Promise.all([
     getTranslations({ locale, namespace: "Auth" }),
     getTranslations({ locale, namespace: "Landing" }),
@@ -26,7 +30,7 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
     <footer className="border-t border-line-soft bg-canvas-soft py-6 text-sm text-muted">
       <PageContainer className="flex flex-col gap-4">
         <div className="relative flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-          <Link href="/" aria-label="HanBuddy" className="flex items-center gap-2">
+          <Link href={logoHref} aria-label="HanBuddy" className="flex items-center gap-2">
             <Image
               src="/images/brand/logo-borderless.webp"
               alt=""

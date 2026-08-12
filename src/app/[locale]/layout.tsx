@@ -97,7 +97,7 @@ export default async function LocaleLayout({
                   mayHaveSession={mayHaveSession}
                 />
               }
-              footer={<SiteFooter locale={locale} />}
+              footer={<SiteFooter locale={locale} role={role} />}
             >
               {children}
             </RouteShell>

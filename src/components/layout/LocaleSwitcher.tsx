@@ -58,7 +58,9 @@ export function LocaleSwitcher({
     setIsOpen(false);
     if (nextLocale !== locale) {
       onBeforeLocaleChange?.();
-      router.replace(pathname, { locale: nextLocale });
+      // usePathname은 쿼리를 뺀 경로만 준다 — ?scheduleId= 같은 파라미터가 유실되지 않게 붙여 준다
+      const { search, hash } = window.location;
+      router.replace(`${pathname}${search}${hash}`, { locale: nextLocale });
     }
   };
 

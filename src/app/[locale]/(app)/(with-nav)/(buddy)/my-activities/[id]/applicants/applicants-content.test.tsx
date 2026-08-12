@@ -55,10 +55,12 @@ describe("ApplicantsContent", () => {
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByTestId("applicant-records")).toHaveClass("md:divide-y");
     expect(screen.getByText("Jul 19, 2026, 1:30 AM")).toBeInTheDocument();
     expect(screen.getByText("1 confirmed")).toBeInTheDocument();
-    expect(screen.getByText("0 pending payment")).toBeInTheDocument();
+    // 결제 대기는 아예 노출하지 않는다
+    expect(screen.queryByText(/pending payment/)).not.toBeInTheDocument();
+    // 상태별 영역 제목 아래에 신청자가 담긴다
+    expect(screen.getByRole("heading", { name: "Confirmed" })).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp +33 612345678")).toBeInTheDocument();
@@ -102,7 +104,75 @@ describe("ApplicantsContent", () => {
     renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
 
     expect(await screen.findByText("Liam Brown")).toBeInTheDocument();
-    expect(screen.getByText("• Cancelled")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cancelled" })).toBeInTheDocument();
+  });
+
+  it("splits applicants into status sections and shows cancellation reasons", async () => {
+    const base = {
+      applicantProfileImageUrl: null,
+      applicantNationalityCode: "FR",
+      guestCount: 1,
+      applicantContactMethod: "WHATSAPP" as const,
+      applicantContactCountryCode: "+33",
+      applicantContactIdentifier: "612345678",
+      specialRequest: null,
+      appliedAt: "2026-07-18T16:30:00Z",
+    };
+    mockedGetBuddyActivityApplications.mockResolvedValue({
+      status: "success",
+      applications: {
+        activityId: 42,
+        activityScheduleId: 99,
+        activityTitle: "Traditional Tea Tasting",
+        startAt: "2026-07-18T16:30:00Z",
+        applicantCount: 4,
+        statusCounts: { COMPLETED: 1, CONFIRMED: 1, CANCELLED: 1, PENDING_PAYMENT: 1 },
+        applicants: [
+          {
+            ...base,
+            applicationId: 1,
+            applicantUserId: 1,
+            applicantName: "Done Kim",
+            status: "COMPLETED" as const,
+          },
+          {
+            ...base,
+            applicationId: 2,
+            applicantUserId: 2,
+            applicantName: "Sure Lee",
+            status: "CONFIRMED" as const,
+          },
+          {
+            ...base,
+            applicationId: 3,
+            applicantUserId: 3,
+            applicantName: "Gone Park",
+            status: "CANCELLED" as const,
+            cancellationReason: "OTHER" as const,
+            cancellationDetail: "My flight was cancelled.",
+          },
+          {
+            ...base,
+            applicationId: 4,
+            applicantUserId: 4,
+            applicantName: "Wait Choi",
+            status: "PENDING_PAYMENT" as const,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
+
+    // 진행 완료 → 예약 완료 → 예약 취소 순서
+    expect(await screen.findByRole("heading", { name: "Completed" })).toBeInTheDocument();
+    const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    expect(headings).toEqual(["Completed", "Confirmed", "Cancelled"]);
+    // 결제 대기 신청자는 어디에도 없다
+    expect(screen.queryByText("Wait Choi")).not.toBeInTheDocument();
+    // 취소 사유와 OTHER 상세가 함께 보인다
+    expect(screen.getByText(/Cancellation reason: Other reason/)).toBeInTheDocument();
+    expect(screen.getByText("My flight was cancelled.")).toBeInTheDocument();
   });
 
   it("falls back to the first activity schedule when no schedule query is provided", async () => {
@@ -207,9 +277,10 @@ describe("ApplicantsContent", () => {
             applicantContactMethod: "PHONE",
             applicantContactCountryCode: "+33",
             applicantContactIdentifier: "612345678",
-            status: "PENDING_PAYMENT",
+            status: "CANCELLED",
             specialRequest: "No pork",
             appliedAt: "2026-07-18T16:30:00Z",
+            cancellationReason: "SCHEDULE_CONFLICT",
           },
         ],
       },
@@ -222,10 +293,10 @@ describe("ApplicantsContent", () => {
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getByText("2026. 7. 19. 오전 1:30")).toBeInTheDocument();
     expect(screen.getByText("확정 1명")).toBeInTheDocument();
-    expect(screen.getByText("결제 대기 1명")).toBeInTheDocument();
     expect(screen.getByText("2026. 7. 19. 오전 1:30에 신청")).toBeInTheDocument();
     expect(screen.getByText("• 1명")).toBeInTheDocument();
-    expect(screen.getByText("• 결제 대기")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "예약 취소" })).toBeInTheDocument();
+    expect(screen.getByText("취소 사유: 일정 충돌")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("프랑스")).toBeInTheDocument();
     expect(screen.getByText("전화 +33 612345678")).toBeInTheDocument();

@@ -148,6 +148,10 @@ export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicatio
   status: "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   specialRequest: string | null;
   appliedAt: string;
+  /** 취소된 신청의 사유. 백엔드 반영 전이거나 취소가 아니면 없다 */
+  cancellationReason?: "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER" | null;
+  /** OTHER일 때 남긴 상세 사유 */
+  cancellationDetail?: string | null;
 }
 
 export interface BuddyActivityApplicationsResponse {

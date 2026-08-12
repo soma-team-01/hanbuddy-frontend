@@ -48,7 +48,7 @@ import { MonthCalendarButton } from "./month-calendar";
 
 /** 섹션 머리글 */
 function SectionHeading({ children }: Readonly<{ children: ReactNode }>) {
-  return <h2 className="font-display text-lg font-bold text-ink">{children}</h2>;
+  return <h2 className="font-display text-lg font-bold text-primary">{children}</h2>;
 }
 
 const ACTIVITY_STATUS_TEXT_CLASS: Record<MyActivityStatus, string> = {

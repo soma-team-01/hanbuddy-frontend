@@ -20,13 +20,21 @@ function toActivityId(value: string) {
   return Number.isFinite(parsed) ? parsed : value;
 }
 
-const STATUS_MESSAGE_KEY = {
-  PENDING_PAYMENT: "pendingPayment",
-  // 새 신청으로 대체된 신청은 버디에게 취소된 신청과 동일하게 보인다
-  SUPERSEDED: "cancelled",
-  CONFIRMED: "confirmed",
-  CANCELLED: "cancelled",
-  COMPLETED: "completed",
+/**
+ * 상태별 영역. 결제 대기는 아직 확정된 자리가 아니라 버디에게 보여주지 않고,
+ * 새 신청으로 대체된 신청(SUPERSEDED)은 취소와 같이 묶는다.
+ */
+const STATUS_SECTIONS = [
+  { key: "sectionCompleted", statuses: ["COMPLETED"] },
+  { key: "sectionConfirmed", statuses: ["CONFIRMED"] },
+  { key: "sectionCancelled", statuses: ["CANCELLED", "SUPERSEDED"] },
+] as const;
+
+const CANCELLATION_REASON_KEY = {
+  SCHEDULE_CONFLICT: "scheduleConflict",
+  ILLNESS: "illness",
+  FOUND_OTHER: "foundOther",
+  OTHER: "other",
 } as const;
 
 export function ApplicantsContent({
@@ -35,6 +43,7 @@ export function ApplicantsContent({
 }: Readonly<ApplicantsContentProps>) {
   const locale = useLocale();
   const t = useTranslations("Applicants");
+  const tApplications = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
   const activityQuery = useQuery({
@@ -73,11 +82,15 @@ export function ApplicantsContent({
   const confirmedCount =
     applications.statusCounts.CONFIRMED ??
     applications.applicants.filter((applicant) => applicant.status === "CONFIRMED").length;
-  const pendingCount =
-    applications.statusCounts.PENDING_PAYMENT ??
-    applications.applicants.filter((applicant) => applicant.status === "PENDING_PAYMENT").length;
   const scheduleLabel =
     formatSeoulDateTime(applications.startAt, locale) ?? tErrors("dateTimeUnavailable");
+  // 결제 대기는 아직 자리가 확정되지 않아 목록에서 뺀다
+  const sections = STATUS_SECTIONS.map(({ key, statuses }) => ({
+    key,
+    applicants: applications.applicants.filter((applicant) =>
+      (statuses as readonly string[]).includes(applicant.status),
+    ),
+  })).filter(({ applicants }) => applicants.length > 0);
 
   return (
     <>
@@ -89,62 +102,83 @@ export function ApplicantsContent({
           <span>{scheduleLabel}</span>
           <span aria-hidden>•</span>
           <span>{t("confirmedCount", { count: confirmedCount })}</span>
-          <span aria-hidden>•</span>
-          <span>{t("pendingCount", { count: pendingCount })}</span>
         </p>
       </div>
 
-      {applications.applicants.length === 0 ? (
-        <p className="rounded-2xl border border-line-soft bg-panel px-4 py-8 text-center text-muted">
+      {sections.length === 0 ? (
+        <p className="mt-6 rounded-2xl border border-dashed border-line-soft px-4 py-8 text-center text-muted">
           {t("empty")}
         </p>
       ) : (
-        <div
-          data-testid="applicant-records"
-          className="mt-6 overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft md:divide-y md:divide-line-soft"
-        >
-          {applications.applicants.map((applicant) => (
-            <article
-              key={applicant.applicationId}
-              className="flex flex-col gap-4 border-b border-line-soft p-4 last:border-b-0 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:border-b-0 md:p-5"
-            >
-              <div className="flex items-center gap-4">
-                <Avatar
-                  name={applicant.applicantName}
-                  src={applicant.applicantProfileImageUrl}
-                  size={48}
-                />
-                <div className="min-w-0 text-sm">
-                  <p className="font-display text-lg font-semibold text-ink">
-                    {applicant.applicantName}
-                  </p>
-                  <p className="flex items-center gap-1 text-muted">
-                    <MapPinIcon className="size-3.5" />
-                    {formatNationalityCode(applicant.applicantNationalityCode, locale)}
-                  </p>
-                  <p className="flex items-center gap-1 text-muted">
-                    <MessageSquareIcon className="size-3.5" />
-                    {formatApplicantContact(applicant, locale)}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs text-muted md:max-w-72 md:justify-end md:text-right">
-                <span>
-                  {t("appliedOn", {
-                    date:
-                      formatSeoulDateTime(applicant.appliedAt, locale) ??
-                      tErrors("dateTimeUnavailable"),
-                  })}
+        <div data-testid="applicant-records" className="mt-6 flex flex-col gap-8">
+          {sections.map(({ key, applicants }) => (
+            <section key={key} className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-2">
+                <h3 className="font-display text-lg font-bold text-primary">{t(key)}</h3>
+                <span className="font-display text-sm font-semibold text-muted tabular-nums">
+                  {t("guestApplicantCount", { count: applicants.length })}
                 </span>
-                <span>• {t("guestCount", { count: applicant.guestCount })}</span>
-                <span>• {t(`status.${STATUS_MESSAGE_KEY[applicant.status]}`)}</span>
               </div>
-              {applicant.specialRequest ? (
-                <p className="rounded-xl bg-primary-soft p-4 text-sm text-ink md:col-span-2">
-                  {applicant.specialRequest}
-                </p>
-              ) : null}
-            </article>
+              <div className="overflow-hidden rounded-3xl border border-line-soft md:divide-y md:divide-line-soft">
+                {applicants.map((applicant) => (
+                  <article
+                    key={applicant.applicationId}
+                    className="flex flex-col gap-4 border-b border-line-soft p-4 last:border-b-0 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:border-b-0 md:p-5"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar
+                        name={applicant.applicantName}
+                        src={applicant.applicantProfileImageUrl}
+                        size={48}
+                      />
+                      <div className="min-w-0 text-sm">
+                        <p className="font-display text-lg font-semibold text-ink">
+                          {applicant.applicantName}
+                        </p>
+                        <p className="flex items-center gap-1 text-muted">
+                          <MapPinIcon className="size-3.5" />
+                          {formatNationalityCode(applicant.applicantNationalityCode, locale)}
+                        </p>
+                        <p className="flex items-center gap-1 text-muted">
+                          <MessageSquareIcon className="size-3.5" />
+                          {formatApplicantContact(applicant, locale)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs text-muted md:max-w-72 md:justify-end md:text-right">
+                      <span>
+                        {t("appliedOn", {
+                          date:
+                            formatSeoulDateTime(applicant.appliedAt, locale) ??
+                            tErrors("dateTimeUnavailable"),
+                        })}
+                      </span>
+                      <span>• {t("guestCount", { count: applicant.guestCount })}</span>
+                    </div>
+                    {applicant.specialRequest ? (
+                      <p className="border-l-2 border-primary/40 pl-3 text-sm text-ink md:col-span-2">
+                        {applicant.specialRequest}
+                      </p>
+                    ) : null}
+                    {applicant.cancellationReason ? (
+                      // 취소 사유 — OTHER면 남긴 상세 설명도 함께 보여준다
+                      <p className="border-l-2 border-line-strong pl-3 text-sm text-muted md:col-span-2">
+                        {tApplications("cancelledReason", {
+                          reason: tApplications(
+                            `cancellationReasons.${CANCELLATION_REASON_KEY[applicant.cancellationReason]}`,
+                          ),
+                        })}
+                        {applicant.cancellationDetail ? (
+                          <span className="mt-0.5 block text-ink">
+                            {applicant.cancellationDetail}
+                          </span>
+                        ) : null}
+                      </p>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

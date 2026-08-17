@@ -21,7 +21,12 @@ export function mapApplicationResponseToApplication(
   dateTimeUnavailable: string,
   locale: Locale = "en",
 ): Application {
-  const subtotal = response.price * response.guestCount;
+  const originalUnitPrice = response.originalUnitPrice ?? response.price;
+  const discountedUnitPrice = response.discountedUnitPrice ?? response.price;
+  const originalTotalPrice = response.originalTotalPrice ?? originalUnitPrice * response.guestCount;
+  const finalTotalPrice = response.totalPrice;
+  const discountAmount =
+    response.discountAmount ?? Math.max(0, originalTotalPrice - finalTotalPrice);
   const dateWithWeekday = formatSeoulDateWithWeekday(response.startAt, locale);
   const startTime = formatSeoulTime(response.startAt, locale);
   const endTime = formatSeoulTime(response.endAt, locale);
@@ -42,9 +47,15 @@ export function mapApplicationResponseToApplication(
     holdExpiresAt: response.holdExpiresAt,
     myReview: response.myReview ?? null,
     breakdown: {
-      unitPrice: response.price,
+      unitPrice: discountedUnitPrice,
       guests: response.guestCount,
-      serviceFee: Math.max(0, response.totalPrice - subtotal),
+      serviceFee: 0,
+      originalUnitPrice,
+      discountedUnitPrice,
+      originalTotalPrice,
+      discountPercent: response.discountPercent,
+      discountAmount,
+      finalTotalPrice,
     },
     paymentAmount: response.paymentAmount,
     paymentCurrency: response.paymentCurrency,

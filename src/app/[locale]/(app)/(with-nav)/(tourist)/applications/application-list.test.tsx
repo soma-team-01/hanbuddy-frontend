@@ -158,6 +158,31 @@ describe("ApplicationList", () => {
     expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
   });
 
+  it("shows the stored discount snapshot in the price breakdown", () => {
+    const discountedApplication: Application = {
+      ...paidApplication,
+      paymentAmount: 80000,
+      breakdown: {
+        unitPrice: 40000,
+        guests: 2,
+        serviceFee: 0,
+        originalUnitPrice: 50000,
+        discountedUnitPrice: 40000,
+        originalTotalPrice: 100000,
+        discountPercent: 20,
+        discountAmount: 20000,
+        finalTotalPrice: 80000,
+      },
+    };
+
+    renderList({ applications: [discountedApplication] });
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+
+    expect(screen.getByText("Discount (20%)").parentElement).toHaveTextContent("-₩20,000");
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("₩80,000");
+    expect(screen.getByText("Paid").parentElement).toHaveTextContent("₩80,000");
+  });
+
   it("shows a localized error when opening the payment fails", async () => {
     const onContinuePayment = vi.fn().mockRejectedValue(
       new ApiClientError({

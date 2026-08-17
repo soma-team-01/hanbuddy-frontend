@@ -46,9 +46,45 @@ describe("application view adapters", () => {
         unitPrice: 45000,
         guests: 2,
         serviceFee: 0,
+        originalUnitPrice: 45000,
+        discountedUnitPrice: 45000,
+        originalTotalPrice: 90000,
+        discountPercent: undefined,
+        discountAmount: 0,
+        finalTotalPrice: 90000,
       },
       paymentAmount: 68.97,
       paymentCurrency: "USD",
+    });
+  });
+
+  it("maps the stored discount snapshot instead of recalculating the current activity price", () => {
+    expect(
+      mapApplicationResponseToApplication(
+        {
+          ...application,
+          price: 50000,
+          totalPrice: 80000,
+          originalUnitPrice: 50000,
+          discountPercent: 20,
+          discountedUnitPrice: 40000,
+          originalTotalPrice: 100000,
+          discountAmount: 20000,
+          paymentAmount: 80000,
+          paymentCurrency: "KRW",
+        },
+        "Time unavailable.",
+      ).breakdown,
+    ).toEqual({
+      unitPrice: 40000,
+      guests: 2,
+      serviceFee: 0,
+      originalUnitPrice: 50000,
+      discountedUnitPrice: 40000,
+      originalTotalPrice: 100000,
+      discountPercent: 20,
+      discountAmount: 20000,
+      finalTotalPrice: 80000,
     });
   });
 

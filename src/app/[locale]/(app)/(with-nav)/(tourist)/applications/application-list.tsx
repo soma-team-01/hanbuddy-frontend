@@ -51,8 +51,12 @@ function PriceBreakdown({
   const breakdown = application.breakdown;
   if (!breakdown) return null;
 
-  const subtotal = breakdown.unitPrice * breakdown.guests;
-  const total = subtotal + breakdown.serviceFee;
+  const originalUnitPrice = breakdown.originalUnitPrice ?? breakdown.unitPrice;
+  const originalTotalPrice = breakdown.originalTotalPrice ?? originalUnitPrice * breakdown.guests;
+  const total =
+    breakdown.finalTotalPrice ?? breakdown.unitPrice * breakdown.guests + breakdown.serviceFee;
+  const discountAmount = breakdown.discountAmount ?? Math.max(0, originalTotalPrice - total);
+  const hasDiscount = discountAmount > 0;
   const hasCompletedPayment =
     application.status === "confirmed" || application.status === "completed";
 
@@ -67,7 +71,11 @@ function PriceBreakdown({
         <span>{t("priceBreakdown")}</span>
         {/* 접혀 있어도 총액은 보이게 둔다 — 카드에서 금액을 따로 반복하지 않기 위해 */}
         <span className="flex items-center gap-1.5">
-          <span className="font-display font-bold text-ink">{formatKrw(total, locale)}</span>
+          <span className="font-display font-bold text-ink">
+            {paymentCharge
+              ? formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)
+              : formatKrw(total, locale)}
+          </span>
           <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </span>
       </button>
@@ -76,12 +84,24 @@ function PriceBreakdown({
           <div className="flex justify-between">
             <span>
               {t("subtotal", {
-                price: formatKrw(breakdown.unitPrice, locale),
+                price: formatKrw(originalUnitPrice, locale),
                 count: breakdown.guests,
               })}
             </span>
-            <span className="tabular-nums">{formatKrw(subtotal, locale)}</span>
+            <span className={`tabular-nums ${hasDiscount ? "text-muted line-through" : ""}`}>
+              {formatKrw(originalTotalPrice, locale)}
+            </span>
           </div>
+          {hasDiscount ? (
+            <div className="flex justify-between font-semibold text-primary">
+              <span>
+                {breakdown.discountPercent
+                  ? t("discount", { percent: breakdown.discountPercent })
+                  : t("discountAmount")}
+              </span>
+              <span className="tabular-nums">-{formatKrw(discountAmount, locale)}</span>
+            </div>
+          ) : null}
           <div className="flex justify-end gap-2 font-display font-semibold">
             <span>{t("total")}</span>
             <span className="tabular-nums">{formatKrw(total, locale)}</span>

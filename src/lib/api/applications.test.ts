@@ -5,6 +5,7 @@ import {
   confirmApplicationPayment,
   continueApplicationPayment,
   createApplication,
+  getApplicationConflicts,
   getMyApplications,
 } from "./applications";
 
@@ -51,6 +52,38 @@ function createJsonResponse(body: unknown, status = 200) {
 describe("application API client", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("checks schedule conflicts through the internal API", async () => {
+    const conflicts = {
+      blocking: false,
+      conflicts: [],
+      sameDayWarnings: [
+        {
+          type: "OTHER_ACTIVITY_SAME_DAY",
+          applicationId: 10,
+          activityId: 41,
+          activityScheduleId: 100,
+          activityTitle: "Palace Walk",
+          startAt: "2026-07-20T08:00:00+09:00",
+          endAt: "2026-07-20T09:00:00+09:00",
+        },
+      ],
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ isSuccess: true, code: "200", message: "ok", result: conflicts }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getApplicationConflicts(101)).resolves.toEqual({
+      status: "success",
+      conflicts,
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/conflicts?activityScheduleId=101", {
+      credentials: "same-origin",
+    });
   });
 
   it("creates an application and returns the PayPal payment info", async () => {

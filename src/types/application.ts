@@ -10,6 +10,18 @@ export interface PriceBreakdown {
   unitPrice: number;
   guests: number;
   serviceFee: number;
+  /** 결제 생성 시점의 정상 1인 단가 */
+  originalUnitPrice?: number | null;
+  /** 결제 생성 시점의 할인 적용 1인 단가 */
+  discountedUnitPrice?: number | null;
+  /** 결제 생성 시점의 정상가 총합 */
+  originalTotalPrice?: number | null;
+  /** 적용 할인율. 할인이 없으면 null */
+  discountPercent?: number | null;
+  /** 총 할인 금액 */
+  discountAmount?: number | null;
+  /** 할인 후 최종 결제 금액 */
+  finalTotalPrice?: number | null;
 }
 
 export interface Application {
@@ -76,6 +88,11 @@ export interface ApplicationResponse {
   price: number;
   totalPrice: number;
   currency: string;
+  originalUnitPrice?: number | null;
+  discountPercent?: number | null;
+  discountedUnitPrice?: number | null;
+  originalTotalPrice?: number | null;
+  discountAmount?: number | null;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;
   status: BackendApplicationStatus;
@@ -98,10 +115,34 @@ export interface PaymentReadyResponse {
   clientKey: string;
   /** 토스 결제창에 표시할 주문명(활동 제목) */
   orderName: string;
+  originalUnitPrice?: number | null;
+  discountPercent?: number | null;
+  discountedUnitPrice?: number | null;
+  originalTotalPrice?: number | null;
+  discountAmount?: number | null;
   paymentStatus: PaymentStatus;
   /** 결제 금액 (KRW 정수) — 결제창 요청·승인 금액과 같아야 한다 */
   paymentAmount: number;
   paymentCurrency: string;
   /** 현재 주문번호를 재사용할 수 있는 백엔드 기준 만료 시각 (Asia/Seoul 오프셋 포함) */
   orderExpiresAt: string;
+}
+
+export type ApplicationConflictType =
+  "SAME_SCHEDULE" | "TIME_OVERLAP" | "SAME_ACTIVITY_SAME_DAY" | "OTHER_ACTIVITY_SAME_DAY";
+
+export interface ApplicationConflictItemResponse {
+  type: ApplicationConflictType;
+  applicationId: number;
+  activityId: number;
+  activityScheduleId: number;
+  activityTitle: string;
+  startAt: string;
+  endAt: string;
+}
+
+export interface ApplicationConflictCheckResponse {
+  blocking: boolean;
+  conflicts: ApplicationConflictItemResponse[];
+  sameDayWarnings: ApplicationConflictItemResponse[];
 }

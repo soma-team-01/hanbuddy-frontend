@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createApplication } from "@/lib/api/applications";
+import { createApplication, getApplicationConflicts } from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
 import { activityKeys } from "@/lib/query/activities";
@@ -18,6 +18,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 vi.mock("@/lib/api/applications", () => ({
   createApplication: vi.fn(),
+  getApplicationConflicts: vi.fn(),
 }));
 
 vi.mock("@/lib/payments/toss", async (importOriginal) => ({
@@ -26,6 +27,7 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
 }));
 
 const mockedCreateApplication = vi.mocked(createApplication);
+const mockedGetApplicationConflicts = vi.mocked(getApplicationConflicts);
 const mockedRequestTossPayment = vi.mocked(requestTossPayment);
 
 const activity: Activity = {
@@ -69,12 +71,12 @@ const pendingApplication: ApplicationResponse = {
   activityTitle: "Bukchon Hidden Gems",
   thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
   buddyName: "Jihoon Kim",
-  guestCount: 2,
+  guestCount: 1,
   specialRequest: "Vegetarian snacks, please.",
   startAt: "2026-07-20T10:00:00+09:00",
   endAt: "2026-07-20T10:00:00+09:00",
   price: 45000,
-  totalPrice: 90000,
+  totalPrice: 45000,
   currency: "KRW",
   status: "PENDING_PAYMENT",
   cancellationReason: null,
@@ -92,7 +94,7 @@ const paymentReady: PaymentReadyResponse = {
   clientKey: "test_ck_client-key",
   orderName: "Bukchon Hidden Gems",
   paymentStatus: "CREATED",
-  paymentAmount: 90000,
+  paymentAmount: 45000,
   paymentCurrency: "KRW",
   orderExpiresAt: "2026-07-14T13:00:00+09:00",
 };
@@ -105,6 +107,10 @@ async function agreeAndSubmit(submitLabel = "Apply & Pay") {
 describe("BookingForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetApplicationConflicts.mockResolvedValue({
+      status: "success",
+      conflicts: { blocking: false, conflicts: [], sameDayWarnings: [] },
+    });
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
     mockedRequestTossPayment.mockResolvedValue(undefined);
   });
@@ -178,6 +184,7 @@ describe("BookingForm", () => {
       "Vegetarian snacks, please.",
     );
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
+    expect(mockedGetApplicationConflicts).toHaveBeenCalledWith(101);
     // 기본 인원은 1명이다
     expect(mockedCreateApplication).toHaveBeenCalledWith({
       activityScheduleId: 101,
@@ -185,6 +192,135 @@ describe("BookingForm", () => {
       specialRequest: "Vegetarian snacks, please.",
     });
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
+  });
+
+  it("blocks an application when the selected schedule was already booked", async () => {
+    mockedGetApplicationConflicts.mockResolvedValue({
+      status: "success",
+      conflicts: {
+        blocking: true,
+        conflicts: [
+          {
+            type: "SAME_SCHEDULE",
+            applicationId: 10,
+            activityId: 42,
+            activityScheduleId: 101,
+            activityTitle: "Bukchon Hidden Gems",
+            startAt: "2026-07-20T10:00:00+09:00",
+            endAt: "2026-07-20T11:00:00+09:00",
+          },
+        ],
+        sameDayWarnings: [],
+      },
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+
+    const dialog = await screen.findByRole("dialog", {
+      name: "You already booked this schedule",
+    });
+    expect(within(dialog).getByText(/Existing schedule: Bukchon Hidden Gems/)).toBeInTheDocument();
+    expect(within(dialog).getByRole("link", { name: "View existing schedule" })).toHaveAttribute(
+      "href",
+      "/en/applications",
+    );
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+  });
+
+  it("warns about another same-day activity and continues only after confirmation", async () => {
+    mockedGetApplicationConflicts.mockResolvedValue({
+      status: "success",
+      conflicts: {
+        blocking: false,
+        conflicts: [],
+        sameDayWarnings: [
+          {
+            type: "OTHER_ACTIVITY_SAME_DAY",
+            applicationId: 10,
+            activityId: 41,
+            activityScheduleId: 100,
+            activityTitle: "Palace Walk",
+            startAt: "2026-07-20T08:00:00+09:00",
+            endAt: "2026-07-20T09:00:00+09:00",
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+
+    const dialog = await screen.findByRole("dialog", {
+      name: "You have another activity on the same day",
+    });
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Continue booking" }));
+
+    await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
+    expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
+  });
+
+  it("shows the same blocking UX when the create request detects a race", async () => {
+    mockedCreateApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "APPLICATION409_TIME_CONFLICT",
+        status: 409,
+        details: null,
+        backendMessage: "기존 예약과 시간이 겹칩니다.",
+      }),
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+
+    expect(
+      await screen.findByRole("dialog", { name: "This time overlaps another booking" }),
+    ).toBeInTheDocument();
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+  });
+
+  it("shows the active discount and opens Toss with the matching server amount", async () => {
+    const discountedActivity = {
+      ...activity,
+      price: 40000,
+      originalPrice: 50000,
+      discountPercent: 20,
+    };
+    const discountedPayment = {
+      ...paymentReady,
+      originalUnitPrice: 50000,
+      discountPercent: 20,
+      discountedUnitPrice: 40000,
+      originalTotalPrice: 50000,
+      discountAmount: 10000,
+      paymentAmount: 40000,
+    };
+    mockedCreateApplication.mockResolvedValue({ status: "success", payment: discountedPayment });
+
+    renderWithQueryClient(<BookingForm activity={discountedActivity} />);
+
+    expect(screen.getByText("Discount (20%)")).toBeInTheDocument();
+    expect(screen.getByText("-₩10,000")).toBeInTheDocument();
+    await agreeAndSubmit();
+
+    await waitFor(() =>
+      expect(mockedRequestTossPayment).toHaveBeenCalledWith(discountedPayment, "en"),
+    );
+  });
+
+  it("does not open Toss when the displayed amount differs from the server snapshot", async () => {
+    mockedCreateApplication.mockResolvedValue({
+      status: "success",
+      payment: { ...paymentReady, paymentAmount: 40000 },
+    });
+
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("The payable amount changed");
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
   });
 
   it("refreshes the activity detail so the held seat is reflected", async () => {

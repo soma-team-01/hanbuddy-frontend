@@ -152,22 +152,24 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
             </span>
           </div>
         </section>
-        <BottomActionBar>
-          <div className="flex w-full flex-col gap-2">
-            <Link
-              href="/applications"
-              className="flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-on-primary"
-            >
-              {t("viewApplications")}
-            </Link>
-            <Link
-              href="/explore"
-              className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary"
-            >
-              {t("exploreMore")}
-            </Link>
-          </div>
-        </BottomActionBar>
+        <div className="lg:mt-6">
+          <BottomActionBar>
+            <div className="flex w-full flex-col gap-2">
+              <Link
+                href="/applications"
+                className="flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-on-primary"
+              >
+                {t("viewApplications")}
+              </Link>
+              <Link
+                href="/explore"
+                className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary"
+              >
+                {t("exploreMore")}
+              </Link>
+            </div>
+          </BottomActionBar>
+        </div>
       </main>
     </PageContainer>
   );

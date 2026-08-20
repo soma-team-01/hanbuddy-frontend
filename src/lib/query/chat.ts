@@ -15,7 +15,7 @@ export const CHAT_MESSAGE_POLL_INTERVAL = 2_500;
  * 목록·안 읽은 수 배지 주기. 대화방 밖에서는 소켓이 없어 이 값이 곧 반응 속도가 된다.
  * 탭이 백그라운드면 TanStack이 자동으로 멈춘다.
  */
-export const CHAT_ROOM_LIST_POLL_INTERVAL = 3_000;
+export const CHAT_ROOM_LIST_POLL_INTERVAL = 15_000;
 
 export const chatKeys = {
   all: () => ["chat"] as const,

@@ -53,7 +53,10 @@ function stubChatImageUploads() {
     });
   });
   vi.stubGlobal("fetch", fetchMock);
-  return fetchMock;
+  return {
+    fetchMock,
+    expectAllUploadsUsed: () => expect([...expectedUploadUrls]).toEqual([]),
+  };
 }
 
 const presignedSuccessBody = {
@@ -345,7 +348,7 @@ describe("uploadChatImages", () => {
   });
 
   it("uploads mixed supported formats in separate batches and preserves selection order", async () => {
-    const fetchMock = stubChatImageUploads();
+    const { fetchMock, expectAllUploadsUsed } = stubChatImageUploads();
 
     const files = [
       new File([new Uint8Array([1])], "first.png", { type: "image/png" }),
@@ -376,10 +379,11 @@ describe("uploadChatImages", () => {
       expect(uploadCall?.[1]?.headers).toMatchObject({ "Content-Type": file.type });
       expect(uploaded[index]).toBeDefined();
     }
+    expectAllUploadsUsed();
   });
 
   it("issues batches only for the supported formats that were selected", async () => {
-    const fetchMock = stubChatImageUploads();
+    const { fetchMock, expectAllUploadsUsed } = stubChatImageUploads();
     const files = [
       new File([new Uint8Array([1])], "first.jpg", { type: "image/jpeg" }),
       new File([new Uint8Array([2])], "second.webp", { type: "image/webp" }),
@@ -400,5 +404,6 @@ describe("uploadChatImages", () => {
       "chats/webp-0",
       "chats/jpeg-1",
     ]);
+    expectAllUploadsUsed();
   });
 });

@@ -9,7 +9,6 @@ import {
   CalendarDaysIcon,
   CameraIcon,
   CheckIcon,
-  ChevronRightIcon,
   CompassIcon,
   ImagePlusIcon,
   MapPinIcon,
@@ -416,7 +415,7 @@ export function ItineraryStep({
                 aria-label={t("itinerary.edit", { index: index + 1 })}
                 className="flex size-10 items-center justify-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
               >
-                <ChevronRightIcon className="size-5" />
+                <PencilIcon className="size-5" />
               </button>
               <button
                 type="button"

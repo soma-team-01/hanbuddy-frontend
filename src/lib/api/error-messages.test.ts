@@ -17,7 +17,7 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(63);
+    expect(BACKEND_ERROR_CODES).toHaveLength(65);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
   });
 
@@ -40,6 +40,15 @@ describe("API error message registry", () => {
   it("explains that an unfinished booking blocks a new one", () => {
     expect(resolveApiErrorMessageKey(apiError("APPLICATION409_PAYMENT_PENDING", 409))).toBe(
       "applicationPaymentPending",
+    );
+  });
+
+  it("distinguishes duplicate schedules from overlapping reservations", () => {
+    expect(resolveApiErrorMessageKey(apiError("APPLICATION409_SAME_SCHEDULE", 409))).toBe(
+      "applicationSameSchedule",
+    );
+    expect(resolveApiErrorMessageKey(apiError("APPLICATION409_TIME_CONFLICT", 409))).toBe(
+      "applicationTimeConflict",
     );
   });
 

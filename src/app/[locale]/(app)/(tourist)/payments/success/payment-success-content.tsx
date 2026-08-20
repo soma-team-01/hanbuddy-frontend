@@ -62,6 +62,10 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
       : application.totalPrice;
   // 실제 결제 통화로 표기한다 — 원화가 아닌 결제를 ₩로 적으면 금액을 잘못 읽는다
   const paidCurrency = application.paymentCurrency ?? application.currency;
+  const originalTotalPrice = application.originalTotalPrice ?? application.totalPrice;
+  const discountAmount =
+    application.discountAmount ?? Math.max(0, originalTotalPrice - application.totalPrice);
+  const hasDiscount = discountAmount > 0;
 
   return (
     <PageContainer className="flex flex-1 items-center justify-center py-10 pb-44 md:py-16 lg:pb-16">
@@ -124,11 +128,22 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
           </dl>
 
           <div className="flex items-center justify-between border-t border-line-soft pt-4 text-sm">
-            <span className="text-muted">{t("totalLabel")}</span>
-            <span className="font-semibold text-ink">
-              {formatKrw(application.totalPrice, locale)}
+            <span className="text-muted">
+              {hasDiscount ? t("originalAmountLabel") : t("totalLabel")}
             </span>
+            <span className="font-semibold text-ink">{formatKrw(originalTotalPrice, locale)}</span>
           </div>
+
+          {hasDiscount ? (
+            <div className="flex items-center justify-between text-sm font-semibold text-primary">
+              <span>
+                {application.discountPercent
+                  ? t("discountLabel", { percent: application.discountPercent })
+                  : t("discountAmountLabel")}
+              </span>
+              <span>-{formatKrw(discountAmount, locale)}</span>
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-between border-t border-line-soft pt-4">
             <span className="font-display text-base font-bold text-ink">{t("paidLabel")}</span>
@@ -137,22 +152,24 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
             </span>
           </div>
         </section>
-        <BottomActionBar>
-          <div className="flex w-full flex-col gap-2">
-            <Link
-              href="/applications"
-              className="flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-on-primary"
-            >
-              {t("viewApplications")}
-            </Link>
-            <Link
-              href="/explore"
-              className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary"
-            >
-              {t("exploreMore")}
-            </Link>
-          </div>
-        </BottomActionBar>
+        <div className="lg:mt-6">
+          <BottomActionBar>
+            <div className="flex w-full flex-col gap-2">
+              <Link
+                href="/applications"
+                className="flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-on-primary"
+              >
+                {t("viewApplications")}
+              </Link>
+              <Link
+                href="/explore"
+                className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary"
+              >
+                {t("exploreMore")}
+              </Link>
+            </div>
+          </BottomActionBar>
+        </div>
       </main>
     </PageContainer>
   );

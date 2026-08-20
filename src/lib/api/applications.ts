@@ -1,5 +1,6 @@
 import type {
   ApplicationCancellationReason,
+  ApplicationConflictCheckResponse,
   ApplicationResponse,
   CancelApplicationRequest,
   ConfirmPaymentRequest,
@@ -11,6 +12,7 @@ import { requestApiResult, type ApiResult } from "./result";
 export type ApplicationResult = ApiResult<ApplicationResponse, "application">;
 export type ApplicationsResult = ApiResult<ApplicationResponse[], "applications">;
 export type PaymentReadyResult = ApiResult<PaymentReadyResponse, "payment">;
+export type ApplicationConflictResult = ApiResult<ApplicationConflictCheckResponse, "conflicts">;
 
 const DEFAULT_APPLICATION_CREATE_ERROR_MESSAGE = "신청을 완료하지 못했습니다.";
 const DEFAULT_APPLICATION_LIST_ERROR_MESSAGE = "신청 목록을 불러오지 못했습니다.";
@@ -18,6 +20,18 @@ const DEFAULT_APPLICATION_CANCEL_ERROR_MESSAGE = "신청을 취소하지 못했�
 const DEFAULT_PAYMENT_CANCEL_ERROR_MESSAGE = "신청을 취소하지 못했습니다.";
 const DEFAULT_PAYMENT_CONTINUE_ERROR_MESSAGE = "결제를 이어가지 못했습니다.";
 const DEFAULT_PAYMENT_CONFIRM_ERROR_MESSAGE = "결제를 완료하지 못했습니다.";
+const DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE = "예약 일정 중복 여부를 확인하지 못했습니다.";
+
+export async function getApplicationConflicts(
+  activityScheduleId: number | string,
+): Promise<ApplicationConflictResult> {
+  return requestApiResult<ApplicationConflictCheckResponse, "conflicts">(
+    `/api/applications/conflicts?activityScheduleId=${encodeURIComponent(activityScheduleId)}`,
+    "conflicts",
+    undefined,
+    DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE,
+  );
+}
 
 export async function createApplication(
   request: CreateApplicationRequest,

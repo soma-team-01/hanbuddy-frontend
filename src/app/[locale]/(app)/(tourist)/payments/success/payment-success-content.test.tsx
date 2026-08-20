@@ -95,6 +95,30 @@ describe("PaymentSuccessContent", () => {
     // 신청 총액은 원화, 실제 결제는 결제 통화로 적는다
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
     expect(screen.getByText("$62.50")).toBeInTheDocument();
+    expect(screen.queryByText(/^Discount/)).not.toBeInTheDocument();
+  });
+
+  it("shows the stored original total, discount, and paid amount", async () => {
+    mockedConfirmApplicationPayment.mockResolvedValue({
+      status: "success",
+      application: {
+        ...confirmedApplication,
+        price: 50000,
+        totalPrice: 80000,
+        originalUnitPrice: 50000,
+        discountPercent: 20,
+        discountedUnitPrice: 40000,
+        originalTotalPrice: 100000,
+        discountAmount: 20000,
+        paymentAmount: 80000,
+      },
+    });
+
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
+
+    expect(await screen.findByText("Original total")).toBeInTheDocument();
+    expect(screen.getByText("Discount (20%)").parentElement).toHaveTextContent("-₩20,000");
+    expect(screen.getByText("Paid").parentElement).toHaveTextContent("₩80,000");
   });
 
   it("shows a confirming status while the approval call is in flight", () => {

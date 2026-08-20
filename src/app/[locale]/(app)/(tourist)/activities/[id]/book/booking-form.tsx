@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -22,7 +22,7 @@ import {
 } from "@/components/activity/AvailabilityCalendarDialog";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
-import { createApplication } from "@/lib/api/applications";
+import { createApplication, getApplicationConflicts } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatKrw } from "@/lib/format";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
@@ -32,10 +32,27 @@ import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { Activity } from "@/types/activity";
+import type {
+  ApplicationConflictItemResponse,
+  ApplicationConflictType,
+  CreateApplicationRequest,
+} from "@/types/application";
+import { BookingConflictDialog } from "./booking-conflict-dialog";
 
 const MAX_GUESTS = 8;
 
-type BookingErrorKey = "scheduleRequired" | "paymentProcessFailed" | "paymentCancelled";
+type BookingErrorKey =
+  | "scheduleRequired"
+  | "paymentProcessFailed"
+  | "paymentCancelled"
+  | "paymentAmountChanged"
+  | "conflictCheckFailed";
+
+interface ConflictDialogState {
+  type: ApplicationConflictType;
+  item?: ApplicationConflictItemResponse;
+  blocking: boolean;
+}
 
 function validateBookingSession(sessionId: string): BookingErrorKey | null {
   return sessionId ? null : "scheduleRequired";
@@ -69,7 +86,14 @@ export function BookingForm({
   // 토스 결제창이 열려 있는 동안 제출 버튼을 잠근다
   const [paymentInFlight, setPaymentInFlight] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  // 재시도 시에도 매번 신청을 새로 생성한다 — 백엔드가 기존 PENDING_PAYMENT 신청을 대체(SUPERSEDED)한다
+  const [conflictDialog, setConflictDialog] = useState<ConflictDialogState | null>(null);
+  // React Query 상태가 화면에 반영되기 전의 연속 클릭도 동기적으로 차단한다
+  const submissionLockRef = useRef(false);
+  const conflictCheckMutation = useMutation({
+    mutationFn: async (activityScheduleId: number) =>
+      unwrapApiResult(await getApplicationConflicts(activityScheduleId), "conflicts"),
+  });
+  // 사전 확인 뒤에도 생성 시점의 좌석·일정 충돌은 백엔드가 다시 검증한다
   const createApplicationMutation = useMutation({
     mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
       unwrapApiResult(await createApplication(request), "payment"),
@@ -82,33 +106,44 @@ export function BookingForm({
       ]);
     },
   });
-  useAuthQueryRedirect(createApplicationMutation.error);
-  const isSubmitting = createApplicationMutation.isPending || paymentInFlight;
+  useAuthQueryRedirect(conflictCheckMutation.error ?? createApplicationMutation.error);
+  const isSubmitting =
+    conflictCheckMutation.isPending || createApplicationMutation.isPending || paymentInFlight;
 
-  const subtotal = activity.price * guests;
-  const total = subtotal;
+  const discountedUnitPrice = activity.price;
+  const originalUnitPrice = activity.originalPrice ?? discountedUnitPrice;
+  const originalSubtotal = originalUnitPrice * guests;
+  const total = discountedUnitPrice * guests;
+  const discountAmount = Math.max(0, originalSubtotal - total);
+  const hasDiscount = discountAmount > 0;
 
-  async function handleSubmitClick() {
-    const validationError = validateBookingSession(sessionId);
-    if (validationError) {
-      setRequestFailure(null);
-      setErrorKey(validationError);
-      return;
+  function toBlockingDialog(error: unknown): ConflictDialogState | null {
+    if (!(error instanceof ApiClientError)) return null;
+    if (error.code === "APPLICATION409_SAME_SCHEDULE") {
+      return { type: "SAME_SCHEDULE", blocking: true };
     }
-    setErrorKey(null);
-    setRequestFailure(null);
+    if (error.code === "APPLICATION409_TIME_CONFLICT") {
+      return { type: "TIME_OVERLAP", blocking: true };
+    }
+    return null;
+  }
+
+  async function createAndOpenPayment(request: CreateApplicationRequest) {
     try {
-      const payment = await createApplicationMutation.mutateAsync({
-        activityScheduleId: Number(sessionId),
-        guestCount: guests,
-        specialRequest: specialRequest.trim() || undefined,
-      });
+      const payment = await createApplicationMutation.mutateAsync(request);
+      if (payment.paymentCurrency !== "KRW" || payment.paymentAmount !== total) {
+        setErrorKey("paymentAmountChanged");
+        return;
+      }
       setPaymentInFlight(true);
       // 결제 인증이 끝나면 successUrl(/payments/success)로 리다이렉트되어 승인 API를 호출한다
       await requestTossPayment(payment, locale as Locale);
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      if (isTossUserCancel(error)) {
+      const blockingDialog = toBlockingDialog(error);
+      if (blockingDialog) {
+        setConflictDialog(blockingDialog);
+      } else if (isTossUserCancel(error)) {
         setErrorKey("paymentCancelled");
       } else {
         setRequestFailure({ error, fallbackKey: "paymentProcessFailed" });
@@ -116,6 +151,68 @@ export function BookingForm({
     } finally {
       setPaymentInFlight(false);
     }
+  }
+
+  async function runWithSubmissionLock(action: () => Promise<void>) {
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
+    try {
+      await action();
+    } finally {
+      submissionLockRef.current = false;
+    }
+  }
+
+  function handleSubmitClick() {
+    void runWithSubmissionLock(async () => {
+      const validationError = validateBookingSession(sessionId);
+      if (validationError) {
+        setRequestFailure(null);
+        setErrorKey(validationError);
+        return;
+      }
+      setErrorKey(null);
+      setRequestFailure(null);
+      const request: CreateApplicationRequest = {
+        activityScheduleId: Number(sessionId),
+        guestCount: guests,
+        specialRequest: specialRequest.trim() || undefined,
+      };
+      try {
+        const conflicts = await conflictCheckMutation.mutateAsync(Number(sessionId));
+        const blockingItem = conflicts.conflicts[0];
+        if (conflicts.blocking) {
+          setConflictDialog({
+            type: blockingItem?.type ?? "TIME_OVERLAP",
+            item: blockingItem,
+            blocking: true,
+          });
+          return;
+        }
+        const warningItem = conflicts.sameDayWarnings[0];
+        if (warningItem) {
+          setConflictDialog({ type: warningItem.type, item: warningItem, blocking: false });
+          return;
+        }
+        await createAndOpenPayment(request);
+      } catch (error) {
+        if (error instanceof UnauthenticatedQueryError) return;
+        setRequestFailure({ error, fallbackKey: "conflictCheckFailed" });
+      }
+    });
+  }
+
+  function handleContinueApplication() {
+    void runWithSubmissionLock(async () => {
+      setConflictDialog(null);
+      setErrorKey(null);
+      setRequestFailure(null);
+      await createAndOpenPayment({
+        activityScheduleId: Number(sessionId),
+        guestCount: guests,
+        specialRequest: specialRequest.trim() || undefined,
+      });
+    });
   }
 
   let errorMessage: string | null = null;
@@ -315,10 +412,22 @@ export function BookingForm({
                 <h2 className="font-display text-sm font-bold text-ink">{t("priceDetails")}</h2>
                 <div className="flex items-center justify-between text-muted">
                   <span>
-                    {t("subtotal", { price: formatKrw(activity.price, locale), count: guests })}
+                    {t("subtotal", { price: formatKrw(originalUnitPrice, locale), count: guests })}
                   </span>
-                  <span>{formatKrw(subtotal, locale)}</span>
+                  <span className={hasDiscount ? "line-through" : undefined}>
+                    {formatKrw(originalSubtotal, locale)}
+                  </span>
                 </div>
+                {hasDiscount ? (
+                  <div className="flex items-center justify-between font-semibold text-primary">
+                    <span>
+                      {activity.discountPercent
+                        ? t("discount", { percent: activity.discountPercent })
+                        : t("discountAmount")}
+                    </span>
+                    <span>-{formatKrw(discountAmount, locale)}</span>
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex items-center justify-between border-t border-line-soft pt-4">
@@ -373,6 +482,16 @@ export function BookingForm({
             setCalendarOpen(false);
           }}
           onClose={() => setCalendarOpen(false)}
+        />
+      ) : null}
+
+      {conflictDialog ? (
+        <BookingConflictDialog
+          type={conflictDialog.type}
+          item={conflictDialog.item}
+          blocking={conflictDialog.blocking}
+          onClose={() => setConflictDialog(null)}
+          onContinue={handleContinueApplication}
         />
       ) : null}
     </>

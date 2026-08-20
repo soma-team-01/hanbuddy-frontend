@@ -13,6 +13,43 @@ function createJsonResponse(body: unknown, status = 200) {
   });
 }
 
+function stubChatImageUploads() {
+  const issuedCounts = new Map<string, number>();
+  const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
+    if (input !== "/api/images/presigned-urls") {
+      return new Response(null, { status: 200 });
+    }
+
+    const body = JSON.parse(String(init?.body)) as {
+      purpose: string;
+      contentType: string;
+      imageCount: number;
+    };
+    const issued = issuedCounts.get(body.contentType) ?? 0;
+    issuedCounts.set(body.contentType, issued + body.imageCount);
+
+    return createJsonResponse({
+      isSuccess: true,
+      code: "200",
+      message: "요청이 성공했습니다.",
+      result: {
+        images: Array.from({ length: body.imageCount }, (_, index) => {
+          const sequence = issued + index;
+          const extension = body.contentType.split("/")[1];
+          return {
+            uploadUrl: `https://bucket.s3.amazonaws.com/chats/${extension}-${sequence}?signed`,
+            imageKey: `chats/${extension}-${sequence}`,
+            imageUrl: `https://static.hanbuddy.com/chats/${extension}-${sequence}`,
+            expiresInSeconds: 300,
+          };
+        }),
+      },
+    });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
 const presignedSuccessBody = {
   isSuccess: true,
   code: "200",
@@ -302,39 +339,7 @@ describe("uploadChatImages", () => {
   });
 
   it("uploads mixed supported formats in separate batches and preserves selection order", async () => {
-    const issuedCounts = new Map<string, number>();
-    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
-      if (input !== "/api/images/presigned-urls") {
-        return new Response(null, { status: 200 });
-      }
-
-      const body = JSON.parse(String(init?.body)) as {
-        purpose: string;
-        contentType: string;
-        imageCount: number;
-      };
-      const issued = issuedCounts.get(body.contentType) ?? 0;
-      issuedCounts.set(body.contentType, issued + body.imageCount);
-
-      return createJsonResponse({
-        isSuccess: true,
-        code: "200",
-        message: "요청이 성공했습니다.",
-        result: {
-          images: Array.from({ length: body.imageCount }, (_, index) => {
-            const sequence = issued + index;
-            const extension = body.contentType.split("/")[1];
-            return {
-              uploadUrl: `https://bucket.s3.amazonaws.com/chats/${extension}-${sequence}?signed`,
-              imageKey: `chats/${extension}-${sequence}`,
-              imageUrl: `https://static.hanbuddy.com/chats/${extension}-${sequence}`,
-              expiresInSeconds: 300,
-            };
-          }),
-        },
-      });
-    });
-    vi.stubGlobal("fetch", fetchMock);
+    const fetchMock = stubChatImageUploads();
 
     const files = [
       new File([new Uint8Array([1])], "first.png", { type: "image/png" }),
@@ -365,5 +370,29 @@ describe("uploadChatImages", () => {
       expect(uploadCall?.[1]?.headers).toMatchObject({ "Content-Type": file.type });
       expect(uploaded[index]).toBeDefined();
     }
+  });
+
+  it("issues batches only for the supported formats that were selected", async () => {
+    const fetchMock = stubChatImageUploads();
+    const files = [
+      new File([new Uint8Array([1])], "first.jpg", { type: "image/jpeg" }),
+      new File([new Uint8Array([2])], "second.webp", { type: "image/webp" }),
+      new File([new Uint8Array([3])], "third.jpg", { type: "image/jpeg" }),
+    ];
+
+    const uploaded = await uploadChatImages(files);
+
+    const presignedBodies = fetchMock.mock.calls
+      .filter(([input]) => input === "/api/images/presigned-urls")
+      .map(([, init]) => JSON.parse(String(init?.body)));
+    expect(presignedBodies).toEqual([
+      { purpose: "CHAT", contentType: "image/jpeg", imageCount: 2 },
+      { purpose: "CHAT", contentType: "image/webp", imageCount: 1 },
+    ]);
+    expect(uploaded.map((item) => item.imageKey)).toEqual([
+      "chats/jpeg-0",
+      "chats/webp-0",
+      "chats/jpeg-1",
+    ]);
   });
 });

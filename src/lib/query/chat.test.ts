@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { mergeChatMessages } from "./chat";
+import {
+  CHAT_ROOM_LIST_POLL_INTERVAL,
+  chatRoomQueryOptions,
+  latestChatMessagesQueryOptions,
+  mergeChatMessages,
+  myChatRoomsQueryOptions,
+} from "./chat";
 import type { ChatMessageResponse } from "@/types/chat";
 
 function message(messageId: number): ChatMessageResponse {
@@ -28,5 +34,17 @@ describe("mergeChatMessages", () => {
 
   it("returns an empty list when there is nothing to merge", () => {
     expect(mergeChatMessages([], [])).toEqual([]);
+  });
+});
+
+describe("chat polling", () => {
+  it("checks room-list unread counts every 15 seconds", () => {
+    expect(CHAT_ROOM_LIST_POLL_INTERVAL).toBe(15_000);
+    expect(myChatRoomsQueryOptions().refetchInterval).toBe(15_000);
+  });
+
+  it("never replaces the room WebSocket with REST polling", () => {
+    expect(chatRoomQueryOptions(1).refetchInterval).toBe(false);
+    expect(latestChatMessagesQueryOptions(1).refetchInterval).toBe(false);
   });
 });

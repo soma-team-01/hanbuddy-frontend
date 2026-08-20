@@ -15,9 +15,10 @@ async function resolveTicket() {
 export interface ChatStreamHandlers {
   onMessage: (message: ChatMessageResponse) => void;
   onRead: (event: ChatReadEvent) => void;
-  /** 연결이 살아 있는 동안만 true. 끊기면 폴링으로 되돌리기 위해 알린다 */
-  onConnectedChange: (connected: boolean) => void;
+  onStatusChange: (status: ChatStreamStatus) => void;
 }
+
+export type ChatStreamStatus = "connecting" | "connected" | "reconnecting" | "failed";
 
 function parseFrame<T>(frame: IMessage): T | null {
   try {
@@ -31,7 +32,7 @@ function parseFrame<T>(frame: IMessage): T | null {
  * 한 채팅방의 실시간 구독을 연다. 정리 함수를 호출하면 연결을 닫는다.
  *
  * 티켓은 1회용이라 재연결할 때마다 새로 받아야 하고, 실패가 반복되면 서버 발급 제한에 걸리므로
- * 재시도 간격을 늘려 가며 정해진 횟수까지만 시도한 뒤 폴링에 맡긴다.
+ * 재시도 간격을 늘려 가며 정해진 횟수까지만 시도하고, 모두 실패하면 오류 상태로 전환한다.
  */
 export function openChatRoomStream(
   chatRoomId: string,
@@ -68,7 +69,7 @@ export function openChatRoomStream(
           return;
         }
         attempt = 0;
-        handlers.onConnectedChange(true);
+        handlers.onStatusChange("connected");
         stompClient.subscribe(`/topic/chat/rooms/${chatRoomId}`, (frame) => {
           const message = parseFrame<ChatMessageResponse>(frame);
           if (message) handlers.onMessage(message);
@@ -80,12 +81,10 @@ export function openChatRoomStream(
       },
       onWebSocketClose: () => {
         if (disposed || client !== stompClient) return;
-        handlers.onConnectedChange(false);
         scheduleRetry();
       },
       onStompError: () => {
         if (disposed || client !== stompClient) return;
-        handlers.onConnectedChange(false);
         scheduleRetry();
       },
     });
@@ -97,9 +96,13 @@ export function openChatRoomStream(
   function scheduleRetry() {
     if (disposed || retryTimer !== null) return;
     attempt += 1;
-    if (attempt > maxAttempts) return;
+    if (attempt > maxAttempts) {
+      handlers.onStatusChange("failed");
+      return;
+    }
 
     // 지수 백오프 — 발급 제한(60초 30회)에 닿지 않도록 간격을 벌린다
+    handlers.onStatusChange("reconnecting");
     const delay = Math.min(1_000 * 2 ** (attempt - 1), 30_000);
     retryTimer = setTimeout(() => {
       retryTimer = null;
@@ -112,7 +115,6 @@ export function openChatRoomStream(
   return () => {
     disposed = true;
     if (retryTimer !== null) clearTimeout(retryTimer);
-    handlers.onConnectedChange(false);
     void client?.deactivate();
     client = null;
   };

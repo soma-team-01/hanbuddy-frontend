@@ -260,27 +260,12 @@ const CHAT_UPLOAD_TIMEOUT_ERROR_MESSAGE =
   "사진 업로드가 지연되어 중단되었습니다. 잠시 후 다시 시도해 주세요.";
 
 /**
- * 채팅에 보낼 사진을 업로드하고 발급받은 key를 돌려준다.
- * 발급 후 1시간 안에 전송해야 하므로, 보내기 직전에 호출한다.
+ * 같은 형식의 채팅 사진 묶음에 Presigned URL을 발급하고 S3에 업로드한다.
  */
-export async function uploadChatImages(files: File[]): Promise<PresignedImageItem[]> {
-  if (files.length === 0) return [];
-  if (files.length > MAX_CHAT_IMAGE_COUNT) {
-    throw new Error(`사진은 한 번에 ${MAX_CHAT_IMAGE_COUNT}장까지 보낼 수 있습니다.`);
-  }
-
-  const contentType = files[0].type;
-  if (!isSupportedProfileImageType(contentType)) {
-    throw new Error("JPEG, PNG, WebP 형식의 이미지만 보낼 수 있습니다.");
-  }
-  // presigned는 요청당 contentType이 하나라 형식이 섞이면 나눠 올려야 한다
-  if (files.some((file) => file.type !== contentType)) {
-    throw new Error("같은 형식의 사진끼리 보내 주세요.");
-  }
-  if (files.some((file) => file.size > MAX_CHAT_IMAGE_BYTES)) {
-    throw new Error(CHAT_IMAGE_SIZE_ERROR_MESSAGE);
-  }
-
+async function uploadChatImageBatch(
+  files: File[],
+  contentType: ProfileImageContentType,
+): Promise<PresignedImageItem[]> {
   const presignedResponse = await fetchWithTimeoutMessage(
     "/api/images/presigned-urls",
     {
@@ -332,4 +317,43 @@ export async function uploadChatImages(files: File[]): Promise<PresignedImageIte
   );
 
   return targets;
+}
+
+/**
+ * 채팅에 보낼 사진을 업로드하고 발급받은 key를 돌려준다.
+ * 형식이 섞인 사진은 Presigned 계약에 맞춰 형식별로 나눠 올리고 입력 순서로 다시 합친다.
+ * 발급 후 1시간 안에 전송해야 하므로, 보내기 직전에 호출한다.
+ */
+export async function uploadChatImages(files: File[]): Promise<PresignedImageItem[]> {
+  if (files.length === 0) return [];
+  if (files.length > MAX_CHAT_IMAGE_COUNT) {
+    throw new Error(`사진은 한 번에 ${MAX_CHAT_IMAGE_COUNT}장까지 보낼 수 있습니다.`);
+  }
+
+  const indexesByContentType = new Map<ProfileImageContentType, number[]>();
+  files.forEach((file, index) => {
+    if (!isSupportedProfileImageType(file.type)) {
+      throw new Error("JPEG, PNG, WebP 형식의 이미지만 보낼 수 있습니다.");
+    }
+    if (file.size > MAX_CHAT_IMAGE_BYTES) {
+      throw new Error(CHAT_IMAGE_SIZE_ERROR_MESSAGE);
+    }
+
+    const indexes = indexesByContentType.get(file.type) ?? [];
+    indexes.push(index);
+    indexesByContentType.set(file.type, indexes);
+  });
+
+  const results = new Array<PresignedImageItem>(files.length);
+  for (const [contentType, indexes] of indexesByContentType) {
+    const uploaded = await uploadChatImageBatch(
+      indexes.map((index) => files[index]),
+      contentType,
+    );
+    indexes.forEach((originalIndex, position) => {
+      results[originalIndex] = uploaded[position];
+    });
+  }
+
+  return results;
 }

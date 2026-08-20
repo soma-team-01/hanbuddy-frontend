@@ -15,8 +15,12 @@ function createJsonResponse(body: unknown, status = 200) {
 
 function stubChatImageUploads() {
   const issuedCounts = new Map<string, number>();
+  const expectedUploadUrls = new Set<string>();
   const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
     if (input !== "/api/images/presigned-urls") {
+      if (!expectedUploadUrls.delete(input)) {
+        throw new Error(`Unexpected fetch target: ${input}`);
+      }
       return new Response(null, { status: 200 });
     }
 
@@ -36,8 +40,10 @@ function stubChatImageUploads() {
         images: Array.from({ length: body.imageCount }, (_, index) => {
           const sequence = issued + index;
           const extension = body.contentType.split("/")[1];
+          const uploadUrl = `https://bucket.s3.amazonaws.com/chats/${extension}-${sequence}?signed`;
+          expectedUploadUrls.add(uploadUrl);
           return {
-            uploadUrl: `https://bucket.s3.amazonaws.com/chats/${extension}-${sequence}?signed`,
+            uploadUrl,
             imageKey: `chats/${extension}-${sequence}`,
             imageUrl: `https://static.hanbuddy.com/chats/${extension}-${sequence}`,
             expiresInSeconds: 300,

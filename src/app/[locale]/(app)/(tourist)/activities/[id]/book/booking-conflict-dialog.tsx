@@ -1,30 +1,43 @@
 "use client";
 
+import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ClockIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { formatSeoulDateTime } from "@/lib/datetime";
+import { getActivityThumbnail } from "@/lib/api/buddy-view";
+import {
+  formatSeoulDateTime,
+  formatSeoulDateWithWeekday,
+  formatSeoulTime,
+  getSeoulDateTimeParts,
+} from "@/lib/datetime";
+import { myApplicationsQueryOptions } from "@/lib/query/applications";
 import type { ApplicationConflictItemResponse, ApplicationConflictType } from "@/types/application";
 
-const COPY_KEY_BY_TYPE = {
-  SAME_SCHEDULE: {
-    title: "sameScheduleTitle",
-    description: "sameScheduleDescription",
-  },
-  TIME_OVERLAP: {
-    title: "timeConflictTitle",
-    description: "timeConflictDescription",
-  },
-  SAME_ACTIVITY_SAME_DAY: {
-    title: "sameActivitySameDayTitle",
-    description: "sameActivitySameDayDescription",
-  },
-  OTHER_ACTIVITY_SAME_DAY: {
-    title: "otherActivitySameDayTitle",
-    description: "otherActivitySameDayDescription",
-  },
+const TITLE_KEY_BY_TYPE = {
+  SAME_SCHEDULE: "sameScheduleTitle",
+  TIME_OVERLAP: "timeConflictTitle",
+  SAME_ACTIVITY_SAME_DAY: "sameActivitySameDayTitle",
+  OTHER_ACTIVITY_SAME_DAY: "otherActivitySameDayTitle",
 } as const;
+
+function formatScheduleRange(item: ApplicationConflictItemResponse, locale: Locale) {
+  const date = formatSeoulDateWithWeekday(item.startAt, locale);
+  const startTime = formatSeoulTime(item.startAt, locale);
+  const endTime = formatSeoulTime(item.endAt, locale);
+  if (!date || !startTime || !endTime) return null;
+
+  const startParts = getSeoulDateTimeParts(item.startAt);
+  const endParts = getSeoulDateTimeParts(item.endAt);
+  const endLabel =
+    startParts?.date === endParts?.date
+      ? endTime
+      : (formatSeoulDateTime(item.endAt, locale) ?? endTime);
+  return `${date} · ${startTime} ~ ${endLabel}`;
+}
 
 export function BookingConflictDialog({
   type,
@@ -41,19 +54,27 @@ export function BookingConflictDialog({
 }>) {
   const locale = useLocale() as Locale;
   const t = useTranslations("Booking");
-  const copy = COPY_KEY_BY_TYPE[type];
-  const existingDateTime = item ? formatSeoulDateTime(item.startAt, locale) : null;
+  const applicationsQuery = useQuery({
+    ...myApplicationsQueryOptions(),
+    enabled: item !== undefined,
+  });
+  const existingApplication = item
+    ? applicationsQuery.data?.find(
+        (application) => application.applicationId === item.applicationId,
+      )
+    : undefined;
+  const existingDateTime = item ? formatScheduleRange(item, locale) : null;
+  const thumbnailImageUrl = getActivityThumbnail(existingApplication?.thumbnailImageUrl ?? null);
 
   return (
     <ConfirmDialog
-      title={t(copy.title)}
-      description={t(copy.description)}
+      title={t(TITLE_KEY_BY_TYPE[type])}
       onClose={onClose}
       confirmSlot={
         <div className="flex flex-col-reverse gap-3 sm:flex-row">
           <Link
             href="/applications"
-            className="flex h-12 flex-1 items-center justify-center rounded-xl border border-line-strong bg-panel px-4 font-display text-sm font-semibold text-ink transition-colors hover:bg-panel-raised"
+            className="flex h-12 flex-1 items-center justify-center rounded-xl border border-ink px-4 font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
           >
             {t("viewExistingSchedule")}
           </Link>
@@ -70,12 +91,24 @@ export function BookingConflictDialog({
       }
     >
       {item && existingDateTime ? (
-        <p className="rounded-xl border border-line-soft bg-panel px-4 py-3 text-sm text-ink">
-          {t("existingSchedule", {
-            title: item.activityTitle,
-            dateTime: existingDateTime,
-          })}
-        </p>
+        <div className="flex items-center gap-3 rounded-2xl border border-l-2 border-line-soft border-l-primary p-3.5">
+          <Image
+            src={thumbnailImageUrl}
+            alt={item.activityTitle}
+            width={64}
+            height={64}
+            className="size-16 shrink-0 rounded-xl object-cover"
+          />
+          <div className="min-w-0">
+            <p className="truncate font-display text-sm font-bold text-ink sm:text-base">
+              {item.activityTitle}
+            </p>
+            <p className="mt-1 flex items-start gap-1.5 text-xs leading-5 text-muted sm:text-sm">
+              <ClockIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+              <span>{existingDateTime}</span>
+            </p>
+          </div>
+        </div>
       ) : null}
     </ConfirmDialog>
   );

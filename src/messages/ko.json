@@ -600,7 +600,7 @@
     "timeConflictDescription": "다른 시간을 선택하기 전에 기존 일정을 확인해 주세요.",
     "sameActivitySameDayTitle": "같은 날 이 활동의 다른 신청이 있어요",
     "sameActivitySameDayDescription": "계속 신청할 수 있지만 원하는 시간대가 맞는지 확인해 주세요.",
-    "otherActivitySameDayTitle": "같은 날 다른 활동 신청이 있어요",
+    "otherActivitySameDayTitle": "같은 날 다른 활동이 있어요",
     "otherActivitySameDayDescription": "계속하기 전에 활동 사이의 이동 시간과 일정을 확인해 주세요.",
     "existingSchedule": "기존 일정: {title}, {dateTime}",
     "viewExistingSchedule": "기존 일정 보기",

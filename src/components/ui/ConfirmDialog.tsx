@@ -8,6 +8,7 @@ interface ConfirmDialogBaseProps {
   title: string;
   description?: string;
   cancelLabel?: string;
+  cancelVariant?: "soft" | "outline";
   tone?: "default" | "danger";
   isPending?: boolean;
   onClose: () => void;
@@ -38,6 +39,7 @@ export function ConfirmDialog({
   confirmLabel,
   pendingLabel,
   cancelLabel,
+  cancelVariant = "soft",
   tone = "default",
   isPending = false,
   onConfirm,
@@ -92,7 +94,11 @@ export function ConfirmDialog({
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="h-12 flex-1 rounded-xl border border-line-strong bg-panel font-display text-sm font-semibold text-ink transition-colors enabled:hover:bg-panel-raised disabled:opacity-60"
+              className={`h-12 flex-1 rounded-xl border font-display text-sm font-semibold text-ink transition-colors disabled:opacity-60 ${
+                cancelVariant === "outline"
+                  ? "border-ink enabled:hover:border-primary enabled:hover:text-primary"
+                  : "border-line-strong bg-panel enabled:hover:bg-panel-raised"
+              }`}
             >
               {cancelLabel ?? tCommon("cancel")}
             </button>

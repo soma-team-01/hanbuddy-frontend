@@ -600,7 +600,7 @@
     "timeConflictDescription": "Review your existing schedule before choosing another time.",
     "sameActivitySameDayTitle": "You have this activity booked on the same day",
     "sameActivitySameDayDescription": "You can continue, but please confirm that you selected the intended time.",
-    "otherActivitySameDayTitle": "You have another activity on the same day",
+    "otherActivitySameDayTitle": "Another activity on the same day",
     "otherActivitySameDayDescription": "Check the travel time between activities before continuing.",
     "existingSchedule": "Existing schedule: {title}, {dateTime}",
     "viewExistingSchedule": "View existing schedule",

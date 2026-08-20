@@ -1,6 +1,10 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createApplication, getApplicationConflicts } from "@/lib/api/applications";
+import {
+  createApplication,
+  getApplicationConflicts,
+  getMyApplications,
+} from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
 import { activityKeys } from "@/lib/query/activities";
@@ -19,6 +23,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 vi.mock("@/lib/api/applications", () => ({
   createApplication: vi.fn(),
   getApplicationConflicts: vi.fn(),
+  getMyApplications: vi.fn(),
 }));
 
 vi.mock("@/lib/payments/toss", async (importOriginal) => ({
@@ -28,6 +33,7 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
 
 const mockedCreateApplication = vi.mocked(createApplication);
 const mockedGetApplicationConflicts = vi.mocked(getApplicationConflicts);
+const mockedGetMyApplications = vi.mocked(getMyApplications);
 const mockedRequestTossPayment = vi.mocked(requestTossPayment);
 
 const activity: Activity = {
@@ -112,6 +118,10 @@ describe("BookingForm", () => {
       conflicts: { blocking: false, conflicts: [], sameDayWarnings: [] },
     });
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: paymentReady });
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [{ ...pendingApplication, applicationId: 10 }],
+    });
     mockedRequestTossPayment.mockResolvedValue(undefined);
   });
 
@@ -220,7 +230,21 @@ describe("BookingForm", () => {
     const dialog = await screen.findByRole("dialog", {
       name: "You already booked this schedule",
     });
-    expect(within(dialog).getByText(/Existing schedule: Bukchon Hidden Gems/)).toBeInTheDocument();
+    expect(
+      within(dialog).queryByText("Check your existing application before making another booking."),
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("img", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
+      "src",
+      expect.stringContaining("hanok-hero.jpg"),
+    );
+    expect(within(dialog).getByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(within(dialog).getByText("Mon, Jul 20 · 10:00 AM ~ 11:00 AM")).toBeInTheDocument();
+    expect(within(dialog).getByRole("link", { name: "View existing schedule" })).toHaveClass(
+      "border-ink",
+      "text-ink",
+      "hover:border-primary",
+      "hover:text-primary",
+    );
     expect(within(dialog).getByRole("link", { name: "View existing schedule" })).toHaveAttribute(
       "href",
       "/en/applications",
@@ -252,8 +276,11 @@ describe("BookingForm", () => {
     await agreeAndSubmit();
 
     const dialog = await screen.findByRole("dialog", {
-      name: "You have another activity on the same day",
+      name: "Another activity on the same day",
     });
+    expect(
+      within(dialog).queryByText("Check the travel time between activities before continuing."),
+    ).not.toBeInTheDocument();
     expect(mockedCreateApplication).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole("button", { name: "Continue booking" }));
 

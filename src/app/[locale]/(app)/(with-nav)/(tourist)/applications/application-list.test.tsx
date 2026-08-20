@@ -400,9 +400,16 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
+    expect(screen.getByRole("dialog", { name: "Cancel this application?" })).toBeInTheDocument();
     expect(
-      screen.getByText("The seat we're holding for you will be released right away."),
-    ).toBeInTheDocument();
+      screen.queryByText("The seat we're holding for you will be released right away."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Keep application" })).toHaveClass(
+      "border-ink",
+      "text-ink",
+      "enabled:hover:border-primary",
+      "enabled:hover:text-primary",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
 
     await waitFor(() => expect(onCancelPendingPayment).toHaveBeenCalledWith("1"));
@@ -432,8 +439,8 @@ describe("ApplicationList", () => {
       "This payment needs administrator review before it can continue.",
     );
     expect(
-      screen.getByText("The seat we're holding for you will be released right away."),
-    ).toBeInTheDocument();
+      screen.queryByText("The seat we're holding for you will be released right away."),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the cancellation reason on a cancelled application", () => {

@@ -392,9 +392,9 @@ export function ApplicationList({
       {pendingCancelTargetId ? (
         <ConfirmDialog
           title={t("cancelPendingTitle")}
-          description={t("cancelPendingDescription")}
           confirmLabel={t("cancelPendingConfirm")}
           cancelLabel={t("keepPendingApplication")}
+          cancelVariant="outline"
           pendingLabel={t("cancelling")}
           tone="danger"
           onConfirm={async () => {

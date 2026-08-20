@@ -71,7 +71,7 @@ export function BookingConflictDialog({
       title={t(TITLE_KEY_BY_TYPE[type])}
       onClose={onClose}
       confirmSlot={
-        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+        <div className="flex flex-col-reverse gap-3 md:flex-row">
           <Link
             href="/applications"
             className="flex h-12 flex-1 items-center justify-center rounded-xl border border-ink px-4 font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
@@ -100,10 +100,10 @@ export function BookingConflictDialog({
             className="size-16 shrink-0 rounded-xl object-cover"
           />
           <div className="min-w-0">
-            <p className="truncate font-display text-sm font-bold text-ink sm:text-base">
+            <p className="truncate font-display text-sm font-bold text-ink md:text-base">
               {item.activityTitle}
             </p>
-            <p className="mt-1 flex items-start gap-1.5 text-xs leading-5 text-muted sm:text-sm">
+            <p className="mt-1 flex items-start gap-1.5 text-xs leading-5 text-muted md:text-sm">
               <ClockIcon className="mt-0.5 size-4 shrink-0 text-primary" />
               <span>{existingDateTime}</span>
             </p>

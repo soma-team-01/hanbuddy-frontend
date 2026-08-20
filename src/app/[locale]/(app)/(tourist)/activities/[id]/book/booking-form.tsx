@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -87,6 +87,8 @@ export function BookingForm({
   const [paymentInFlight, setPaymentInFlight] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [conflictDialog, setConflictDialog] = useState<ConflictDialogState | null>(null);
+  // React Query 상태가 화면에 반영되기 전의 연속 클릭도 동기적으로 차단한다
+  const submissionLockRef = useRef(false);
   const conflictCheckMutation = useMutation({
     mutationFn: async (activityScheduleId: number) =>
       unwrapApiResult(await getApplicationConflicts(activityScheduleId), "conflicts"),
@@ -151,41 +153,66 @@ export function BookingForm({
     }
   }
 
-  async function handleSubmitClick() {
-    const validationError = validateBookingSession(sessionId);
-    if (validationError) {
-      setRequestFailure(null);
-      setErrorKey(validationError);
-      return;
-    }
-    setErrorKey(null);
-    setRequestFailure(null);
-    const request: CreateApplicationRequest = {
-      activityScheduleId: Number(sessionId),
-      guestCount: guests,
-      specialRequest: specialRequest.trim() || undefined,
-    };
+  async function runWithSubmissionLock(action: () => Promise<void>) {
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
     try {
-      const conflicts = await conflictCheckMutation.mutateAsync(Number(sessionId));
-      const blockingItem = conflicts.conflicts[0];
-      if (conflicts.blocking) {
-        setConflictDialog({
-          type: blockingItem?.type ?? "TIME_OVERLAP",
-          item: blockingItem,
-          blocking: true,
-        });
-        return;
-      }
-      const warningItem = conflicts.sameDayWarnings[0];
-      if (warningItem) {
-        setConflictDialog({ type: warningItem.type, item: warningItem, blocking: false });
-        return;
-      }
-      await createAndOpenPayment(request);
-    } catch (error) {
-      if (error instanceof UnauthenticatedQueryError) return;
-      setRequestFailure({ error, fallbackKey: "conflictCheckFailed" });
+      await action();
+    } finally {
+      submissionLockRef.current = false;
     }
+  }
+
+  function handleSubmitClick() {
+    void runWithSubmissionLock(async () => {
+      const validationError = validateBookingSession(sessionId);
+      if (validationError) {
+        setRequestFailure(null);
+        setErrorKey(validationError);
+        return;
+      }
+      setErrorKey(null);
+      setRequestFailure(null);
+      const request: CreateApplicationRequest = {
+        activityScheduleId: Number(sessionId),
+        guestCount: guests,
+        specialRequest: specialRequest.trim() || undefined,
+      };
+      try {
+        const conflicts = await conflictCheckMutation.mutateAsync(Number(sessionId));
+        const blockingItem = conflicts.conflicts[0];
+        if (conflicts.blocking) {
+          setConflictDialog({
+            type: blockingItem?.type ?? "TIME_OVERLAP",
+            item: blockingItem,
+            blocking: true,
+          });
+          return;
+        }
+        const warningItem = conflicts.sameDayWarnings[0];
+        if (warningItem) {
+          setConflictDialog({ type: warningItem.type, item: warningItem, blocking: false });
+          return;
+        }
+        await createAndOpenPayment(request);
+      } catch (error) {
+        if (error instanceof UnauthenticatedQueryError) return;
+        setRequestFailure({ error, fallbackKey: "conflictCheckFailed" });
+      }
+    });
+  }
+
+  function handleContinueApplication() {
+    void runWithSubmissionLock(async () => {
+      setConflictDialog(null);
+      setErrorKey(null);
+      setRequestFailure(null);
+      await createAndOpenPayment({
+        activityScheduleId: Number(sessionId),
+        guestCount: guests,
+        specialRequest: specialRequest.trim() || undefined,
+      });
+    });
   }
 
   let errorMessage: string | null = null;
@@ -464,16 +491,7 @@ export function BookingForm({
           item={conflictDialog.item}
           blocking={conflictDialog.blocking}
           onClose={() => setConflictDialog(null)}
-          onContinue={() => {
-            setConflictDialog(null);
-            setErrorKey(null);
-            setRequestFailure(null);
-            void createAndOpenPayment({
-              activityScheduleId: Number(sessionId),
-              guestCount: guests,
-              specialRequest: specialRequest.trim() || undefined,
-            });
-          }}
+          onContinue={handleContinueApplication}
         />
       ) : null}
     </>

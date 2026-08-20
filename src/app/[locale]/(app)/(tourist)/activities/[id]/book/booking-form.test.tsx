@@ -204,6 +204,28 @@ describe("BookingForm", () => {
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
   });
 
+  it("runs only one conflict check when the submit button is clicked rapidly", async () => {
+    let resolveConflicts!: (result: Awaited<ReturnType<typeof getApplicationConflicts>>) => void;
+    mockedGetApplicationConflicts.mockReturnValue(
+      new Promise((resolve) => {
+        resolveConflicts = resolve;
+      }),
+    );
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    fireEvent.click(screen.getByRole("checkbox"));
+    const submitButton = screen.getByRole("button", { name: /Apply & Pay/ });
+
+    fireEvent.click(submitButton);
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(mockedGetApplicationConflicts).toHaveBeenCalledTimes(1));
+    resolveConflicts({
+      status: "success",
+      conflicts: { blocking: false, conflicts: [], sameDayWarnings: [] },
+    });
+    await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
+  });
+
   it("blocks an application when the selected schedule was already booked", async () => {
     mockedGetApplicationConflicts.mockResolvedValue({
       status: "success",
@@ -286,6 +308,46 @@ describe("BookingForm", () => {
 
     await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
+  });
+
+  it("creates only one application when continue booking is clicked rapidly", async () => {
+    mockedGetApplicationConflicts.mockResolvedValue({
+      status: "success",
+      conflicts: {
+        blocking: false,
+        conflicts: [],
+        sameDayWarnings: [
+          {
+            type: "OTHER_ACTIVITY_SAME_DAY",
+            applicationId: 10,
+            activityId: 41,
+            activityScheduleId: 100,
+            activityTitle: "Palace Walk",
+            startAt: "2026-07-20T08:00:00+09:00",
+            endAt: "2026-07-20T09:00:00+09:00",
+          },
+        ],
+      },
+    });
+    let resolveApplication!: (result: Awaited<ReturnType<typeof createApplication>>) => void;
+    mockedCreateApplication.mockReturnValue(
+      new Promise((resolve) => {
+        resolveApplication = resolve;
+      }),
+    );
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+    const dialog = await screen.findByRole("dialog", {
+      name: "Another activity on the same day",
+    });
+    const continueButton = within(dialog).getByRole("button", { name: "Continue booking" });
+
+    fireEvent.click(continueButton);
+    fireEvent.click(continueButton);
+
+    await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
+    resolveApplication({ status: "success", payment: paymentReady });
+    await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
   });
 
   it("shows the same blocking UX when the create request detects a race", async () => {

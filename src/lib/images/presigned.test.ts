@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { extractImageKeyFromUrl, uploadActivityImages, uploadProfileImage } from "./presigned";
+import {
+  extractImageKeyFromUrl,
+  uploadActivityImages,
+  uploadChatImages,
+  uploadProfileImage,
+} from "./presigned";
 
 function createJsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -287,5 +292,78 @@ describe("uploadActivityImages", () => {
     expect(extractImageKeyFromUrl("/activities/relative.webp")).toBe("activities/relative.webp");
     expect(extractImageKeyFromUrl("/profiles/photo%20one.png")).toBe("profiles/photo one.png");
     expect(extractImageKeyFromUrl("/activities/broken%2.webp")).toBe("activities/broken%2.webp");
+  });
+});
+
+describe("uploadChatImages", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("uploads mixed supported formats in separate batches and preserves selection order", async () => {
+    const issuedCounts = new Map<string, number>();
+    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
+      if (input !== "/api/images/presigned-urls") {
+        return new Response(null, { status: 200 });
+      }
+
+      const body = JSON.parse(String(init?.body)) as {
+        purpose: string;
+        contentType: string;
+        imageCount: number;
+      };
+      const issued = issuedCounts.get(body.contentType) ?? 0;
+      issuedCounts.set(body.contentType, issued + body.imageCount);
+
+      return createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "요청이 성공했습니다.",
+        result: {
+          images: Array.from({ length: body.imageCount }, (_, index) => {
+            const sequence = issued + index;
+            const extension = body.contentType.split("/")[1];
+            return {
+              uploadUrl: `https://bucket.s3.amazonaws.com/chats/${extension}-${sequence}?signed`,
+              imageKey: `chats/${extension}-${sequence}`,
+              imageUrl: `https://static.hanbuddy.com/chats/${extension}-${sequence}`,
+              expiresInSeconds: 300,
+            };
+          }),
+        },
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const files = [
+      new File([new Uint8Array([1])], "first.png", { type: "image/png" }),
+      new File([new Uint8Array([2])], "second.jpg", { type: "image/jpeg" }),
+      new File([new Uint8Array([3])], "third.png", { type: "image/png" }),
+      new File([new Uint8Array([4])], "fourth.webp", { type: "image/webp" }),
+    ];
+
+    const uploaded = await uploadChatImages(files);
+
+    const presignedBodies = fetchMock.mock.calls
+      .filter(([input]) => input === "/api/images/presigned-urls")
+      .map(([, init]) => JSON.parse(String(init?.body)));
+    expect(presignedBodies).toEqual([
+      { purpose: "CHAT", contentType: "image/png", imageCount: 2 },
+      { purpose: "CHAT", contentType: "image/jpeg", imageCount: 1 },
+      { purpose: "CHAT", contentType: "image/webp", imageCount: 1 },
+    ]);
+    expect(uploaded.map((item) => item.imageKey)).toEqual([
+      "chats/png-0",
+      "chats/jpeg-0",
+      "chats/png-1",
+      "chats/webp-0",
+    ]);
+
+    for (const [index, file] of files.entries()) {
+      const uploadCall = fetchMock.mock.calls.find(([, init]) => init?.body === file);
+      expect(uploadCall?.[1]?.headers).toMatchObject({ "Content-Type": file.type });
+      expect(uploaded[index]).toBeDefined();
+    }
   });
 });

@@ -1,7 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createChatWsTicket,
   removeChatRoomMember,
   updateChatRoomTitle,
   getChatMessages,
@@ -15,6 +14,7 @@ import { getMyProfile } from "@/lib/api/users";
 import { uploadChatImages } from "@/lib/images/presigned";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ChatMessageResponse } from "@/types/chat";
+import { useChatRoomStream } from "./use-chat-room-stream";
 import { ChatRoomView } from "./ChatRoomView";
 
 const routerMock = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }));
@@ -35,7 +35,6 @@ vi.mock("@/lib/api/chat", () => ({
   buildChatImageDownloadUrl: (roomId: string, messageId: number) =>
     `/api/chat/rooms/${roomId}/images/${messageId}/download`,
   getChatRoomImages: vi.fn(),
-  createChatWsTicket: vi.fn(),
   getChatRoom: vi.fn(),
   getChatMessages: vi.fn(),
   getMyChatRooms: vi.fn(),
@@ -45,8 +44,8 @@ vi.mock("@/lib/api/chat", () => ({
 }));
 
 vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn() }));
+vi.mock("./use-chat-room-stream", () => ({ useChatRoomStream: vi.fn() }));
 
-const mockedCreateChatWsTicket = vi.mocked(createChatWsTicket);
 const mockedGetChatRoom = vi.mocked(getChatRoom);
 const mockedRemoveChatRoomMember = vi.mocked(removeChatRoomMember);
 const mockedUpdateChatRoomTitle = vi.mocked(updateChatRoomTitle);
@@ -57,6 +56,7 @@ const mockedUpdateChatRead = vi.mocked(updateChatRead);
 const mockedLeaveChatRoom = vi.mocked(leaveChatRoom);
 const mockedGetMyProfile = vi.mocked(getMyProfile);
 const mockedUploadChatImages = vi.mocked(uploadChatImages);
+const mockedUseChatRoomStream = vi.mocked(useChatRoomStream);
 
 function message(messageId: number, senderId: number, content: string): ChatMessageResponse {
   return {
@@ -100,10 +100,7 @@ function mockDirectRoom(lastReadMessageId: number | null = null) {
 describe("ChatRoomView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // 실시간 구독은 테스트 대상이 아니므로 티켓 발급을 실패시켜 폴링 경로만 확인한다
-    mockedCreateChatWsTicket.mockResolvedValue({
-      status: "unauthenticated",
-    });
+    mockedUseChatRoomStream.mockReturnValue({ status: "connected", retry: vi.fn() });
     mockedGetMyProfile.mockResolvedValue({
       status: "success",
       profile: { userId: 11, displayName: "Nelli" } as never,
@@ -278,6 +275,33 @@ describe("ChatRoomView", () => {
 
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
     expect(mockedSendChatMessage).not.toHaveBeenCalled();
+  });
+
+  it("keeps the conversation read-only while the WebSocket reconnects", async () => {
+    mockedUseChatRoomStream.mockReturnValue({ status: "reconnecting", retry: vi.fn() });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Reconnecting to the chat server...",
+    );
+    expect(screen.getByLabelText("Message")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Attach photos" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
+  it("shows a manual retry after automatic WebSocket reconnects fail", async () => {
+    const retry = vi.fn();
+    mockedUseChatRoomStream.mockReturnValue({ status: "failed", retry });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Chat is unavailable because the real-time connection failed.",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Message")).toBeDisabled();
   });
 
   it("uploads picked photos and sends them as image messages", async () => {

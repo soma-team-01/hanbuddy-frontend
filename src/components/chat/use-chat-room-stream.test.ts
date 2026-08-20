@@ -1,10 +1,19 @@
-import { describe, expect, it } from "vitest";
-import { appendMessage, applyReadEvent } from "./use-chat-room-stream";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { openChatRoomStream } from "@/lib/chat/stomp-client";
+import { chatKeys } from "@/lib/query/chat";
+import { appendMessage, applyReadEvent, useChatRoomStream } from "./use-chat-room-stream";
 import type {
   ChatMessagePageResponse,
   ChatMessageResponse,
   ChatRoomDetailResponse,
 } from "@/types/chat";
+
+vi.mock("@/lib/chat/stomp-client", () => ({ openChatRoomStream: vi.fn() }));
+
+const mockedOpenChatRoomStream = vi.mocked(openChatRoomStream);
 
 function message(messageId: number): ChatMessageResponse {
   return {
@@ -33,6 +42,48 @@ const room: ChatRoomDetailResponse = {
     { userId: 6, userName: "SeoulMate", profileImageUrl: null, lastReadMessageId: 21, left: false },
   ],
 };
+
+describe("useChatRoomStream", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("stays read-only after automatic retries fail and lets the user retry", async () => {
+    const close = vi.fn();
+    mockedOpenChatRoomStream.mockReturnValue(close);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: queryClient }, children);
+
+    const { result } = renderHook(() => useChatRoomStream("1"), { wrapper });
+    const firstHandlers = mockedOpenChatRoomStream.mock.calls[0][1];
+
+    act(() => firstHandlers.onStatusChange("failed"));
+    expect(result.current.status).toBe("failed");
+
+    act(() => result.current.retry());
+    expect(result.current.status).toBe("connecting");
+    await waitFor(() => expect(mockedOpenChatRoomStream).toHaveBeenCalledTimes(2));
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it("synchronizes messages and read positions once the socket connects", () => {
+    mockedOpenChatRoomStream.mockReturnValue(vi.fn());
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: queryClient }, children);
+
+    const { result } = renderHook(() => useChatRoomStream("1"), { wrapper });
+    const streamHandlers = mockedOpenChatRoomStream.mock.calls[0][1];
+
+    act(() => streamHandlers.onStatusChange("connected"));
+
+    expect(result.current.status).toBe("connected");
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.latestMessages("1") });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.room("1") });
+  });
+});
 
 describe("appendMessage", () => {
   it("puts a broadcast message at the front of the latest page", () => {

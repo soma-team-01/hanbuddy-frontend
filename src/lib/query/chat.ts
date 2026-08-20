@@ -7,11 +7,6 @@ import { unwrapApiResult } from "./result";
 export const CHAT_MESSAGE_PAGE_SIZE = 30;
 
 /**
- * 실시간 구독(STOMP)이 끊겼을 때만 쓰는 대비책이다.
- * 연결되어 있는 동안에는 폴링을 멈추고 브로드캐스트로 받는다.
- */
-export const CHAT_MESSAGE_POLL_INTERVAL = 2_500;
-/**
  * 목록·안 읽은 수 배지 주기. 대화방 밖에서는 소켓이 없어 이 값이 곧 반응 속도가 된다.
  * 탭이 백그라운드면 TanStack이 자동으로 멈춘다.
  */
@@ -42,30 +37,27 @@ export function myChatRoomsQueryOptions() {
 }
 
 /**
- * 방 상세(참여자·읽음 위치).
- * 말풍선 옆 "안 읽은 사람 수"가 여기서 나오므로, 실시간 구독이 끊겼을 때는 메시지와 같은 주기로
- * 다시 받아 숫자가 멈춰 있지 않게 한다.
+ * 방 상세(참여자·읽음 위치). 최초 조회와 WebSocket 연결·재연결 직후 동기화에만 사용한다.
  */
-export function chatRoomQueryOptions(chatRoomId: number | string, live = false) {
+export function chatRoomQueryOptions(chatRoomId: number | string) {
   return queryOptions({
     queryKey: chatKeys.room(chatRoomId),
     queryFn: async () => unwrapApiResult(await getChatRoom(chatRoomId), "room"),
-    refetchInterval: live ? false : CHAT_MESSAGE_POLL_INTERVAL,
+    refetchInterval: false,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
 }
 
 /**
- * 대화방의 최신 묶음.
- * 실시간 구독이 살아 있으면(`live`) 폴링을 끄고, 끊겼을 때만 주기적으로 다시 받는다.
+ * 대화방의 최신 묶음. 최초 조회와 WebSocket 연결·재연결 직후 동기화에만 사용한다.
  */
-export function latestChatMessagesQueryOptions(chatRoomId: number | string, live = false) {
+export function latestChatMessagesQueryOptions(chatRoomId: number | string) {
   return queryOptions({
     queryKey: chatKeys.latestMessages(chatRoomId),
     queryFn: async () =>
       unwrapApiResult(await getChatMessages(chatRoomId, null, CHAT_MESSAGE_PAGE_SIZE), "messages"),
-    refetchInterval: live ? false : CHAT_MESSAGE_POLL_INTERVAL,
+    refetchInterval: false,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });

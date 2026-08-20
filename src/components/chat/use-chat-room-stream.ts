@@ -1,8 +1,8 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { openChatRoomStream } from "@/lib/chat/stomp-client";
+import { useCallback, useEffect, useState } from "react";
+import { openChatRoomStream, type ChatStreamStatus } from "@/lib/chat/stomp-client";
 import { chatKeys } from "@/lib/query/chat";
 import type {
   ChatMessagePageResponse,
@@ -13,11 +13,15 @@ import type {
 
 /**
  * 열려 있는 채팅방의 실시간 구독.
- * 연결되면 폴링을 멈추고, 끊기면 다시 폴링으로 돌아가도록 연결 상태를 돌려준다.
+ * 연결이 끊기면 제한된 횟수만 자동 재시도하고, 실패 후에는 사용자가 직접 다시 시도한다.
  */
 export function useChatRoomStream(chatRoomId: string) {
   const queryClient = useQueryClient();
-  const [connected, setConnected] = useState(false);
+  const [connection, setConnection] = useState<{
+    chatRoomId: string;
+    status: ChatStreamStatus;
+  }>({ chatRoomId, status: "connecting" });
+  const [retryVersion, setRetryVersion] = useState(0);
 
   useEffect(() => {
     const close = openChatRoomStream(chatRoomId, {
@@ -34,13 +38,30 @@ export function useChatRoomStream(chatRoomId: string) {
           applyReadEvent(current, event),
         );
       },
-      onConnectedChange: setConnected,
+      onStatusChange: (status) => {
+        setConnection({ chatRoomId, status });
+        if (status === "connected") {
+          // REST 조회와 구독 시작 사이 또는 재연결 중 놓친 메시지·읽음 위치를 한 번 맞춘다
+          void Promise.all([
+            queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
+            queryClient.invalidateQueries({ queryKey: chatKeys.room(chatRoomId) }),
+          ]);
+        }
+      },
     });
 
     return close;
-  }, [chatRoomId, queryClient]);
+  }, [chatRoomId, queryClient, retryVersion]);
 
-  return connected;
+  const retry = useCallback(() => {
+    setConnection({ chatRoomId, status: "connecting" });
+    setRetryVersion((current) => current + 1);
+  }, [chatRoomId]);
+
+  return {
+    status: connection.chatRoomId === chatRoomId ? connection.status : "connecting",
+    retry,
+  };
 }
 
 /** 최신 묶음 앞에 새 메시지를 끼운다. 내가 보낸 메시지는 REST 응답으로 이미 들어와 있을 수 있다 */

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  CHAT_MESSAGE_POLL_INTERVAL,
   CHAT_ROOM_LIST_POLL_INTERVAL,
   chatRoomQueryOptions,
+  latestChatMessagesQueryOptions,
   mergeChatMessages,
   myChatRoomsQueryOptions,
 } from "./chat";
@@ -43,8 +43,8 @@ describe("chat polling", () => {
     expect(myChatRoomsQueryOptions().refetchInterval).toBe(15_000);
   });
 
-  it("keeps the short fallback poll only while the room socket is disconnected", () => {
-    expect(chatRoomQueryOptions(1, false).refetchInterval).toBe(CHAT_MESSAGE_POLL_INTERVAL);
-    expect(chatRoomQueryOptions(1, true).refetchInterval).toBe(false);
+  it("never replaces the room WebSocket with REST polling", () => {
+    expect(chatRoomQueryOptions(1).refetchInterval).toBe(false);
+    expect(latestChatMessagesQueryOptions(1).refetchInterval).toBe(false);
   });
 });

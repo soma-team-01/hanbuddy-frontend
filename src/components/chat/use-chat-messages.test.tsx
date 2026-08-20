@@ -29,7 +29,7 @@ function page(newestId: number, count: number, hasNext = true): ChatMessagePageR
 }
 
 function Probe({ chatRoomId = "1" }: Readonly<{ chatRoomId?: string }>) {
-  const { messages, hasOlder, loadOlder } = useChatMessages(chatRoomId, false);
+  const { messages, hasOlder, loadOlder } = useChatMessages(chatRoomId);
 
   return (
     <div>

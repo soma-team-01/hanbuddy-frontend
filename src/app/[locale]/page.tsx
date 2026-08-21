@@ -31,7 +31,7 @@ const BOOKING_STEPS = ["experience", "schedule", "payment"] as const;
 const REVIEW_KEYS = ["cheerTogether", "localBuddy", "lookedAfter"] as const;
 
 const CONTACT_DETAILS = {
-  email: "zeroone.soma@gmail.com",
+  email: "contact@hanbuddy.kr",
   instagramLabel: "@hanbuddy_kr",
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
 } as const;

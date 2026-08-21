@@ -87,7 +87,7 @@ describe("LandingPage", () => {
       "The moments that stay with you.",
       "Want to learn more about HanBuddy",
       "Email us anything",
-      "mailto:zeroone.soma@gmail.com",
+      "mailto:contact@hanbuddy.kr",
     ],
     [
       "ko",
@@ -95,7 +95,7 @@ describe("LandingPage", () => {
       "오래 기억에 남는 순간.",
       "HanBuddy에 대해 더 궁금하다면",
       "무엇이든 이메일로 물어보세요",
-      "mailto:zeroone.soma@gmail.com",
+      "mailto:contact@hanbuddy.kr",
     ],
   ] as const)(
     "renders the service, review, and contact sections for %s",

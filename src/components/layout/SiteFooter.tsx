@@ -12,7 +12,7 @@ interface SiteFooterProps {
 }
 
 const CONTACT_DETAILS = {
-  email: "zeroone.soma@gmail.com",
+  email: "contact@hanbuddy.kr",
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
   whatsappUrl: "https://wa.me/821082970110",
   kakaoUrl: "https://open.kakao.com/me/hanbuddy",

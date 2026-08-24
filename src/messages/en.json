@@ -520,7 +520,7 @@
     "mapUnavailable": "Map unavailable",
     "mapTitle": "Map of {place}",
     "kstNotice": "All times are in Korea Standard Time (KST).",
-    "hostedActivities": "Experiences hosted by this buddy",
+    "hostedActivities": "Other experiences from this buddy",
     "noOtherActivities": "No other experiences yet.",
     "viewHostProfile": "View {name}'s profile"
   },

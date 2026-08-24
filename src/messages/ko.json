@@ -520,7 +520,7 @@
     "mapUnavailable": "지도를 이용할 수 없습니다",
     "mapTitle": "{place} 지도",
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",
-    "hostedActivities": "이 버디가 호스팅 중인 체험",
+    "hostedActivities": "이 버디의 다른 체험",
     "noOtherActivities": "아직 다른 체험이 없습니다.",
     "viewHostProfile": "{name} 프로필 보기"
   },

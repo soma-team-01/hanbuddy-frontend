@@ -1636,7 +1636,11 @@ export function RestrictionsStep({
   );
 }
 
-export function ReviewStep({ draft, t }: Readonly<{ draft: ActivityCreateDraft; t: Translator }>) {
+export function ReviewStep({
+  draft,
+  activityId,
+  t,
+}: Readonly<{ draft: ActivityCreateDraft; activityId?: string; t: Translator }>) {
   const locale = useLocale() as Locale;
   const tActivityDetail = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
@@ -1646,6 +1650,7 @@ export function ReviewStep({ draft, t }: Readonly<{ draft: ActivityCreateDraft; 
   const activity = buildPreviewActivityFromDraft(draft, {
     locale,
     dateTimeUnavailable: tErrors("dateTimeUnavailable"),
+    activityId,
     hostId: profile?.userId,
     hostName: profile?.displayName ?? profile?.name ?? t("review.hostName"),
     hostBio: tActivityDetail("localHost"),

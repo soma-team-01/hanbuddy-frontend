@@ -785,7 +785,7 @@ export function CreateActivityForm({
   }
 
   function renderStep() {
-    if (reviewing) return <ReviewStep draft={draft} t={t} />;
+    if (reviewing) return <ReviewStep draft={draft} activityId={activityId} t={t} />;
 
     switch (currentStep) {
       case "host":

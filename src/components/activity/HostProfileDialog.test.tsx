@@ -18,6 +18,22 @@ const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedGetBuddyProfile = vi.mocked(getBuddyProfile);
 const mockedGetBuddyReviews = vi.mocked(getBuddyReviews);
 
+function createActivity(activityId: number, buddyId = 17) {
+  return {
+    activityId,
+    buddyId,
+    title: `Activity ${activityId}`,
+    description: "A local experience.",
+    thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+    buddyName: "Seoul Buddy",
+    buddyProfileImageUrl: null,
+    meetingPointName: "Anguk Station",
+    meetingPlaceId: "place-1",
+    price: 45000,
+    currency: "KRW",
+  };
+}
+
 describe("HostProfileDialog", () => {
   beforeEach(() => {
     mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
@@ -57,8 +73,29 @@ describe("HostProfileDialog", () => {
       />,
     );
 
-    expect(await screen.findByText("Experiences hosted by this buddy")).toBeInTheDocument();
+    expect(await screen.findByText("Other experiences from this buddy")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Message Seoul Buddy" })).toBeDisabled();
     expect(screen.getByText("I know this neighborhood well.")).toBeInTheDocument();
+  });
+
+  it("does not repeat the activity currently being previewed", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [createActivity(42), createActivity(43), createActivity(44, 99)],
+    });
+
+    renderWithQueryClient(
+      <HostProfileDialog
+        host={{ id: 17, name: "Seoul Buddy", bio: "Local HanBuddy host", avatarUrl: null }}
+        currentActivityId="42"
+        showHostedActivities
+        canContact={false}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText("Activity 43")).toBeInTheDocument();
+    expect(screen.queryByText("Activity 42")).not.toBeInTheDocument();
+    expect(screen.queryByText("Activity 44")).not.toBeInTheDocument();
   });
 });

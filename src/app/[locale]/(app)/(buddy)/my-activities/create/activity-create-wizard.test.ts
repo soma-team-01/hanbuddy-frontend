@@ -5,6 +5,7 @@ import {
   ACTIVITY_CREATE_STEPS,
   EMPTY_ACTIVITY_DRAFT,
   buildDraftFromMyActivityDetail,
+  buildPreviewActivityFromDraft,
   getNextActivityCreateStep,
   getPreviousActivityCreateStep,
   isPastSchedule,
@@ -58,6 +59,18 @@ function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): Acti
 }
 
 describe("activity creation wizard", () => {
+  it("keeps the edited activity id in the guest preview", () => {
+    const activity = buildPreviewActivityFromDraft(createCompleteDraft(), {
+      locale: "en",
+      dateTimeUnavailable: "Unavailable",
+      activityId: "42",
+      hostName: "Seoul Buddy",
+      hostBio: "Local host",
+    });
+
+    expect(activity.id).toBe("42");
+  });
+
   it("keeps the requested fields in twelve focused steps", () => {
     expect(ACTIVITY_CREATE_STEPS).toEqual([
       "host",

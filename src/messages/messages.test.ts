@@ -65,7 +65,6 @@ describe("locale messages", () => {
       "ActivityDetail.weatherTemperature",
       "ActivityDetail.weatherPrecipitation",
       "ActivityDetail.weatherPrecipitationUnavailable",
-      "ActivityDetail.weatherForecastTime",
       "ActivityDetail.weatherConditions.clear",
       "ActivityDetail.weatherConditions.partlyCloudy",
       "ActivityDetail.weatherConditions.cloudy",

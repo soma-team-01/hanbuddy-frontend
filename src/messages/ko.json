@@ -520,7 +520,6 @@
     "weatherTemperature": "{temperature}°C",
     "weatherPrecipitation": "강수확률 {percent}%",
     "weatherPrecipitationUnavailable": "강수확률 정보 없음",
-    "weatherForecastTime": "{time} 예보",
     "weatherConditions": {
       "clear": "맑음",
       "partlyCloudy": "구름 많음",

@@ -261,7 +261,6 @@ export function AvailabilityCalendarDialog({
     (dateKey) => toMonthKey(dateKey) === viewMonth,
   );
   const selectedSessions = selectedDate ? (sessionsByDate.get(selectedDate) ?? []) : [];
-  const selectedDateLabel = selectedSessions[0]?.dateLabel ?? "";
   const weatherConditionLabels: Record<WeatherCondition, string> = {
     CLEAR: t("weatherConditions.clear"),
     PARTLY_CLOUDY: t("weatherConditions.partlyCloudy"),
@@ -381,14 +380,7 @@ export function AvailabilityCalendarDialog({
 
       {selectedDate ? (
         <div className="mt-5 border-t border-line-soft pt-4">
-          <p className="font-display text-sm font-bold text-ink">
-            {t("availableTimes")}
-            {selectedDateLabel ? (
-              <span className="ml-2 font-sans text-xs font-medium text-muted">
-                {selectedDateLabel}
-              </span>
-            ) : null}
-          </p>
+          <p className="font-display text-sm font-bold text-ink">{t("availableTimes")}</p>
           <ul className="mt-3 flex flex-col gap-2">
             {selectedSessions.map((session) => {
               const slotSelected = session.id === selectedSessionId;
@@ -445,13 +437,6 @@ export function AvailabilityCalendarDialog({
                                 : t("weatherPrecipitation", {
                                     percent: sessionWeather.precipitationProbability,
                                   })}
-                            </span>
-                            <span className="block text-white/65">
-                              {t("weatherForecastTime", {
-                                time:
-                                  formatSeoulTime(sessionWeather.forecastAt, locale) ??
-                                  session.timeLabel,
-                              })}
                             </span>
                           </span>
                         </span>

@@ -518,9 +518,8 @@
     "remaining": "{count, plural, =0 {No spots left} one {# spot left} other {# spots left}}",
     "weatherAttribution": "Weather data from KMA",
     "weatherTemperature": "{temperature}°C",
-    "weatherPrecipitation": "Precipitation {percent}%",
-    "weatherPrecipitationUnavailable": "Precipitation data unavailable",
-    "weatherForecastTime": "Forecast at {time}",
+    "weatherPrecipitation": "Chance of precipitation {percent}%",
+    "weatherPrecipitationUnavailable": "Chance of precipitation unavailable",
     "weatherConditions": {
       "clear": "Clear",
       "partlyCloudy": "Partly cloudy",

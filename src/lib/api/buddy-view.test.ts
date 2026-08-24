@@ -145,7 +145,7 @@ describe("buddy view helpers", () => {
         },
       ],
     };
-    const host = { name: "Jihoon Kim", avatarUrl: null };
+    const host = { id: 17, name: "Tea Buddy", avatarUrl: null };
 
     it("maps the buddy detail to the guest-facing view model", () => {
       const activity = mapMyActivityDetailToPreviewActivity(
@@ -162,7 +162,8 @@ describe("buddy view helpers", () => {
       expect(activity.originalPrice).toBe(45000);
       expect(activity.discountPercent).toBe(20);
       expect(activity.host).toEqual({
-        name: "Jihoon Kim",
+        id: 17,
+        name: "Tea Buddy",
         bio: "Local HanBuddy host",
         avatarUrl: null,
       });

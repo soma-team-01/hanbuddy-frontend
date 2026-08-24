@@ -54,6 +54,7 @@ export function getMyActivityStatusLabel(status: MyActivityStatus) {
 }
 
 export interface PreviewHost {
+  id?: number;
   name: string;
   avatarUrl: string | null;
 }
@@ -103,6 +104,7 @@ export function mapMyActivityDetailToPreviewActivity(
     durationMinutes: itineraryMinutes > 0 ? Math.ceil(itineraryMinutes / 30) * 30 : undefined,
     isSoldOut: sessions.length > 0 && sessions.every((session) => session.spotsLeft === 0),
     host: {
+      id: host.id,
       name: host.name,
       bio: hostBio,
       avatarUrl: host.avatarUrl,

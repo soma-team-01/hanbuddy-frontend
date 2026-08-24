@@ -58,7 +58,12 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
 vi.mock("@/lib/api/useMyProfile", () => ({
   useMyProfile: () => ({
     status: "success",
-    profile: { name: "Jihoon Kim", profileImageUrl: null },
+    profile: {
+      userId: 17,
+      name: "Jihoon Kim",
+      displayName: "Seoul Buddy",
+      profileImageUrl: null,
+    },
   }),
 }));
 
@@ -486,6 +491,13 @@ describe("CreateActivityForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const editItineraryButton = screen.getByRole("button", { name: "Edit activity 1" });
+    const removeItineraryButton = screen.getByRole("button", { name: "Remove activity 1" });
+    const itineraryActions = editItineraryButton.parentElement;
+    expect(itineraryActions).not.toBeNull();
+    expect(itineraryActions?.querySelectorAll("svg")).toHaveLength(2);
+    expect(editItineraryButton.querySelector("svg")).toHaveClass("size-4");
+    expect(removeItineraryButton.querySelector("svg")).toHaveClass("size-4");
     clickNext();
 
     const meetingPlaceInput = screen.getByRole("textbox", { name: "Meeting place name" });
@@ -584,7 +596,8 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
     expect(screen.getByText("Seoul market walk")).toBeInTheDocument();
     // 미리보기의 호스트는 버디 본인 프로필로 표시된다
-    expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getByText("Host: Seoul Buddy")).toBeInTheDocument();
+    expect(screen.queryByText("Host: Jihoon Kim")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What's included" })).toBeInTheDocument();
     expect(screen.getByText("Equipment rental")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Before you join" })).not.toBeInTheDocument();

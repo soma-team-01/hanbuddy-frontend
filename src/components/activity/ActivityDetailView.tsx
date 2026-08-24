@@ -560,7 +560,7 @@ export function ActivityDetailView({
           host={activity.host}
           hostIntroduction={activity.hostIntroduction}
           currentActivityId={activity.id}
-          showHostedActivities={!preview}
+          showHostedActivities
           canContact={!preview}
           onClose={() => setHostProfileOpen(false)}
         />

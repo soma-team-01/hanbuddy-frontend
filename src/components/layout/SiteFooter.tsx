@@ -1,7 +1,13 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { InstagramIcon, KakaoTalkIcon, MailIcon, WhatsAppIcon } from "@/components/ui/icons";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  KakaoTalkIcon,
+  MailIcon,
+  WhatsAppIcon,
+} from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { SiteNavRole } from "@/lib/auth/routes";
@@ -14,6 +20,7 @@ interface SiteFooterProps {
 const CONTACT_DETAILS = {
   email: "contact@hanbuddy.kr",
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
+  facebookUrl: "https://www.facebook.com/profile.php?id=61593105057939",
   whatsappUrl: "https://wa.me/821082970110",
   kakaoUrl: "https://open.kakao.com/me/hanbuddy",
 } as const;
@@ -63,6 +70,15 @@ export async function SiteFooter({ locale, role }: SiteFooterProps) {
               className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
             >
               <WhatsAppIcon className="size-5" />
+            </a>
+            <a
+              href={CONTACT_DETAILS.facebookUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={landingT("contact.facebookIconLabel")}
+              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+            >
+              <FacebookIcon className="size-5" />
             </a>
             <a
               href={CONTACT_DETAILS.kakaoUrl}

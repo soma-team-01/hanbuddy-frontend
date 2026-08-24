@@ -517,6 +517,10 @@
     "selectDate": "{date} 선택",
     "remaining": "{count, plural, =0 {마감} other {#자리 남음}}",
     "weatherAttribution": "기상청 제공 날씨",
+    "weatherTemperature": "{temperature}°C",
+    "weatherPrecipitation": "강수확률 {percent}%",
+    "weatherPrecipitationUnavailable": "강수확률 정보 없음",
+    "weatherForecastTime": "{time} 예보",
     "weatherConditions": {
       "clear": "맑음",
       "partlyCloudy": "구름 많음",

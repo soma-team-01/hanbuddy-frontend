@@ -99,6 +99,25 @@ function WeatherConditionIcon({
   }
 }
 
+export function getWeatherIconColor(condition: WeatherCondition) {
+  switch (condition) {
+    case "CLEAR":
+      return "text-amber-500";
+    case "PARTLY_CLOUDY":
+      return "text-sky-500";
+    case "CLOUDY":
+      return "text-zinc-500";
+    case "RAIN":
+      return "text-blue-600";
+    case "RAIN_SNOW":
+      return "text-cyan-600";
+    case "SNOW":
+      return "text-sky-400";
+    case "SHOWER":
+      return "text-indigo-600";
+  }
+}
+
 function toMonthKey(dateKey: string) {
   return dateKey.slice(0, 7);
 }
@@ -219,6 +238,13 @@ export function AvailabilityCalendarDialog({
       new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
         timeZone: "UTC",
         weekday: "short",
+      }),
+    [locale],
+  );
+  const weatherTemperatureFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US", {
+        maximumFractionDigits: 1,
       }),
     [locale],
   );
@@ -367,6 +393,7 @@ export function AvailabilityCalendarDialog({
             {selectedSessions.map((session) => {
               const slotSelected = session.id === selectedSessionId;
               const sessionWeather = getSessionWeather(session, weather);
+              const weatherTooltipId = `weather-tooltip-${session.id}`;
 
               return (
                 <li key={session.id}>
@@ -374,8 +401,9 @@ export function AvailabilityCalendarDialog({
                     type="button"
                     disabled={session.spotsLeft === 0}
                     aria-pressed={slotSelected}
+                    aria-describedby={sessionWeather ? weatherTooltipId : undefined}
                     onClick={() => onSelectSession(session.id)}
-                    className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 transition-colors disabled:cursor-not-allowed ${
+                    className={`group/slot flex w-full items-center justify-between rounded-xl border px-4 py-3 transition-colors disabled:cursor-not-allowed ${
                       slotSelected
                         ? "border-primary bg-primary text-on-primary"
                         : "border-line-soft bg-canvas-soft text-ink enabled:hover:border-primary enabled:hover:text-primary disabled:bg-panel disabled:text-muted"
@@ -383,15 +411,49 @@ export function AvailabilityCalendarDialog({
                   >
                     <span className="flex min-w-0 items-center gap-2.5">
                       {sessionWeather ? (
-                        <span
-                          role="img"
-                          aria-label={weatherConditionLabels[sessionWeather.condition]}
-                          className={slotSelected ? "text-white" : "text-primary"}
-                        >
-                          <WeatherConditionIcon
-                            condition={sessionWeather.condition}
-                            className="size-5 shrink-0"
-                          />
+                        <span className="group/weather relative flex shrink-0 items-center">
+                          <span
+                            role="img"
+                            aria-label={weatherConditionLabels[sessionWeather.condition]}
+                            className={`flex items-center justify-center ${
+                              slotSelected ? "size-7 rounded-full bg-white shadow-sm" : "size-5"
+                            } ${getWeatherIconColor(sessionWeather.condition)}`}
+                          >
+                            <WeatherConditionIcon
+                              condition={sessionWeather.condition}
+                              className="size-5 shrink-0"
+                            />
+                          </span>
+                          <span
+                            id={weatherTooltipId}
+                            role="tooltip"
+                            className="invisible absolute bottom-full left-0 z-20 mb-2 w-max max-w-56 rounded-lg bg-ink px-3 py-2 text-left font-sans text-xs text-white opacity-0 shadow-lg transition-opacity group-hover/weather:visible group-hover/weather:opacity-100 group-focus-visible/slot:visible group-focus-visible/slot:opacity-100"
+                          >
+                            <span className="block font-bold">
+                              {weatherConditionLabels[sessionWeather.condition]}
+                            </span>
+                            <span className="mt-1 block text-white/85">
+                              {t("weatherTemperature", {
+                                temperature: weatherTemperatureFormatter.format(
+                                  sessionWeather.temperatureCelsius,
+                                ),
+                              })}
+                            </span>
+                            <span className="block text-white/85">
+                              {sessionWeather.precipitationProbability === null
+                                ? t("weatherPrecipitationUnavailable")
+                                : t("weatherPrecipitation", {
+                                    percent: sessionWeather.precipitationProbability,
+                                  })}
+                            </span>
+                            <span className="block text-white/65">
+                              {t("weatherForecastTime", {
+                                time:
+                                  formatSeoulTime(sessionWeather.forecastAt, locale) ??
+                                  session.timeLabel,
+                              })}
+                            </span>
+                          </span>
                         </span>
                       ) : null}
                       <span className="font-display text-sm font-bold">

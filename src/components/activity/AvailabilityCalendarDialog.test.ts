@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ActivityWeatherResult, Session } from "@/types/activity";
-import { getSessionWeather } from "./AvailabilityCalendarDialog";
+import { getSessionWeather, getWeatherIconColor } from "./AvailabilityCalendarDialog";
 
 const weather: ActivityWeatherResult = {
   available: true,
@@ -63,5 +63,15 @@ describe("activity schedule weather matching", () => {
     expect(
       getSessionWeather(session("2026-08-24T10:00:00+09:00"), { ...weather, available: false }),
     ).toBeNull();
+  });
+
+  it("uses a semantic color for every weather condition", () => {
+    expect(getWeatherIconColor("CLEAR")).toBe("text-amber-500");
+    expect(getWeatherIconColor("PARTLY_CLOUDY")).toBe("text-sky-500");
+    expect(getWeatherIconColor("CLOUDY")).toBe("text-zinc-500");
+    expect(getWeatherIconColor("RAIN")).toBe("text-blue-600");
+    expect(getWeatherIconColor("RAIN_SNOW")).toBe("text-cyan-600");
+    expect(getWeatherIconColor("SNOW")).toBe("text-sky-400");
+    expect(getWeatherIconColor("SHOWER")).toBe("text-indigo-600");
   });
 });

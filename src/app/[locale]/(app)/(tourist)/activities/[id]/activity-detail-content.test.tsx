@@ -260,9 +260,12 @@ describe("ActivityDetailContent", () => {
     fireEvent.click(await screen.findByTestId("date-select-box"));
 
     const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getAllByLabelText("Partly cloudy").length).toBeGreaterThan(0);
-    expect(within(dialog).queryByText("29°")).not.toBeInTheDocument();
-    expect(within(dialog).queryByText("Rain 20%")).not.toBeInTheDocument();
+    const weatherIcons = within(dialog).getAllByLabelText("Partly cloudy");
+    expect(weatherIcons.length).toBeGreaterThan(0);
+    expect(weatherIcons[0]).toHaveClass("text-sky-500");
+    expect(within(dialog).getAllByText("29°C").length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByText("Precipitation 20%").length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByText("Forecast at 2:00 PM").length).toBeGreaterThan(0);
     expect(within(dialog).getByText("Weather data from KMA")).toBeInTheDocument();
     expect(mockedGetActivityWeather).toHaveBeenCalledTimes(1);
     expect(mockedGetActivityWeather).toHaveBeenCalledWith("42");

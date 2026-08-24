@@ -34,7 +34,7 @@ describe("SiteFooter", () => {
 
       expect(screen.getByRole("link", { name: emailLabel })).toHaveAttribute(
         "href",
-        "mailto:zeroone.soma@gmail.com",
+        "mailto:contact@hanbuddy.kr",
       );
       expect(screen.getByRole("link", { name: instagramLabel })).toHaveAttribute(
         "href",

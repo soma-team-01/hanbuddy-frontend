@@ -7,6 +7,7 @@ import {
   getMyApplications,
 } from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
+import { getActivityWeather } from "@/lib/api/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ApplicationResponse } from "@/types/application";
@@ -27,11 +28,17 @@ vi.mock("@/lib/api/applications", () => ({
   getMyApplications: vi.fn(),
 }));
 
+vi.mock("@/lib/api/activities", () => ({
+  getActivityWeather: vi.fn(),
+  getTouristActivities: vi.fn(),
+}));
+
 vi.mock("@/lib/payments/toss", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/payments/toss")>()),
   requestTossPayment: vi.fn(),
 }));
 
+const mockedGetActivityWeather = vi.mocked(getActivityWeather);
 const mockedCancelMyApplication = vi.mocked(cancelMyApplication);
 const mockedCancelPendingPayment = vi.mocked(cancelPendingPayment);
 const mockedContinueApplicationPayment = vi.mocked(continueApplicationPayment);
@@ -72,6 +79,19 @@ describe("ApplicationsContent", () => {
     mockedGetMyApplications.mockReset();
     mockedRequestTossPayment.mockReset();
     mockedRequestTossPayment.mockResolvedValue(undefined);
+    mockedGetActivityWeather.mockReset();
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: false,
+        unavailableReason: "LOCATION_UNAVAILABLE",
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
+        baseDate: "2099-07-20",
+        forecasts: [],
+      },
+    });
   });
 
   it("continues a pending payment through the Toss window", async () => {

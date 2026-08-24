@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivities } from "@/lib/api/activities";
+import { getActivityWeather, getTouristActivities } from "@/lib/api/activities";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
 import { IntlTestProvider } from "@/test/render-with-intl";
@@ -18,6 +18,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/activities", () => ({
+  getActivityWeather: vi.fn(),
   getTouristActivities: vi.fn(),
 }));
 
@@ -29,6 +30,7 @@ vi.mock("@/lib/api/reviews", () => ({
   deleteReview: vi.fn(),
 }));
 
+const mockedGetActivityWeather = vi.mocked(getActivityWeather);
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedCreateReview = vi.mocked(createReview);
 const mockedUpdateReview = vi.mocked(updateReview);
@@ -113,6 +115,18 @@ function renderList(
 describe("ApplicationList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: false,
+        unavailableReason: "LOCATION_UNAVAILABLE",
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
+        baseDate: "2099-07-20",
+        forecasts: [],
+      },
+    });
   });
 
   it("shows a continue-payment action for pending applications", () => {
@@ -132,6 +146,38 @@ describe("ApplicationList", () => {
     expect(screen.getByText(/^D-\d+$/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue Payment" })).toBeEnabled();
     expect(onContinuePayment).not.toHaveBeenCalled();
+    expect(mockedGetActivityWeather).not.toHaveBeenCalled();
+  });
+
+  it("shows the forecast on a confirmed upcoming application", async () => {
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: true,
+        unavailableReason: null,
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: "2099-07-19T23:00:00+09:00",
+        baseDate: "2099-07-20",
+        forecasts: [
+          {
+            forecastAt: "2099-07-20T10:00:00+09:00",
+            temperatureCelsius: 28,
+            condition: "CLEAR",
+            precipitationProbability: 10,
+          },
+        ],
+      },
+    });
+
+    renderList({ applications: [paidApplication] });
+
+    const weatherIcon = await screen.findByRole("img", { name: "Clear" });
+    expect(weatherIcon).toHaveClass("size-7", "text-amber-500");
+    expect(screen.getByText("28°C")).toBeInTheDocument();
+    expect(screen.getByText("Chance of precipitation 10%")).toBeInTheDocument();
+    expect(screen.getByText("Weather data from KMA")).toBeInTheDocument();
+    expect(mockedGetActivityWeather).toHaveBeenCalledWith(42);
   });
 
   it("opens the Toss payment window when continuing a pending payment", async () => {

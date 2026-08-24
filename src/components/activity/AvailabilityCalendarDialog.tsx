@@ -47,37 +47,10 @@ export function getSessionWeather(
   session: Session,
   weather: ActivityWeatherResult | undefined,
 ): ActivityWeatherForecast | null {
-  if (!weather?.available || !session.startAt) return null;
-
-  const scheduleMillis = new Date(session.startAt).getTime();
-  if (Number.isNaN(scheduleMillis)) return null;
-
-  const scheduleDate = session.startAt.slice(0, 10);
-  let selected: ActivityWeatherForecast | null = null;
-  let selectedMillis = 0;
-  let selectedDistance = Number.POSITIVE_INFINITY;
-
-  for (const candidate of weather.forecasts) {
-    if (candidate.forecastAt.slice(0, 10) !== scheduleDate) continue;
-
-    const candidateMillis = new Date(candidate.forecastAt).getTime();
-    if (Number.isNaN(candidateMillis)) continue;
-
-    const candidateDistance = Math.abs(candidateMillis - scheduleMillis);
-    if (
-      candidateDistance < selectedDistance ||
-      (candidateDistance === selectedDistance && candidateMillis < selectedMillis)
-    ) {
-      selected = candidate;
-      selectedMillis = candidateMillis;
-      selectedDistance = candidateDistance;
-    }
-  }
-
-  return selected;
+  return session.startAt ? getWeatherForStartAt(session.startAt, weather) : null;
 }
 
-function WeatherConditionIcon({
+export function WeatherConditionIcon({
   condition,
   className,
 }: Readonly<{ condition: WeatherCondition; className?: string }>) {
@@ -116,6 +89,40 @@ export function getWeatherIconColor(condition: WeatherCondition) {
     case "SHOWER":
       return "text-indigo-600";
   }
+}
+
+export function getWeatherForStartAt(
+  startAt: string,
+  weather: ActivityWeatherResult | undefined,
+): ActivityWeatherForecast | null {
+  if (!weather?.available) return null;
+
+  const scheduleMillis = new Date(startAt).getTime();
+  if (Number.isNaN(scheduleMillis)) return null;
+
+  const scheduleDate = startAt.slice(0, 10);
+  let selected: ActivityWeatherForecast | null = null;
+  let selectedMillis = 0;
+  let selectedDistance = Number.POSITIVE_INFINITY;
+
+  for (const candidate of weather.forecasts) {
+    if (candidate.forecastAt.slice(0, 10) !== scheduleDate) continue;
+
+    const candidateMillis = new Date(candidate.forecastAt).getTime();
+    if (Number.isNaN(candidateMillis)) continue;
+
+    const candidateDistance = Math.abs(candidateMillis - scheduleMillis);
+    if (
+      candidateDistance < selectedDistance ||
+      (candidateDistance === selectedDistance && candidateMillis < selectedMillis)
+    ) {
+      selected = candidate;
+      selectedMillis = candidateMillis;
+      selectedDistance = candidateDistance;
+    }
+  }
+
+  return selected;
 }
 
 function toMonthKey(dateKey: string) {

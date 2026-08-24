@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivities, getTouristActivity } from "./activities";
+import { getActivityWeather, getTouristActivities, getTouristActivity } from "./activities";
 
 const activitySummary = {
   activityId: 42,
@@ -82,6 +82,31 @@ describe("tourist activity API client", () => {
       activity: activityDetail,
     });
     expect(fetchMock).toHaveBeenCalledWith("/api/activities/42", {
+      credentials: "same-origin",
+    });
+  });
+
+  it("loads localized activity weather through the internal API", async () => {
+    const weather = {
+      available: true,
+      unavailableReason: null,
+      provider: "GOOGLE",
+      timeZone: "Asia/Seoul",
+      baseDate: "2026-08-24",
+      forecasts: [],
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ isSuccess: true, code: "200", message: "ok", result: weather }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getActivityWeather(42, "ko")).resolves.toEqual({
+      status: "success",
+      weather,
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42/weather?languageCode=ko", {
       credentials: "same-origin",
     });
   });

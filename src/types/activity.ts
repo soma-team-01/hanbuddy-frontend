@@ -134,3 +134,33 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   /** 활동 일정표 목록 (UI 반영은 후속 작업) */
   itineraries?: ActivityItineraryResponse[];
 }
+
+export type WeatherLanguage = "en" | "ko";
+
+export type ActivityWeatherUnavailableReason =
+  "LOCATION_UNAVAILABLE" | "WEATHER_SERVICE_DISABLED" | "WEATHER_SERVICE_UNAVAILABLE";
+
+export interface ActivityWeatherDayPart {
+  condition: string | null;
+  description: string | null;
+  iconUrl: string | null;
+  precipitationProbability: number | null;
+}
+
+export interface ActivityWeatherDay {
+  /** 활동 장소 현지 날짜 (YYYY-MM-DD) */
+  date: string;
+  minTemperatureCelsius: number;
+  maxTemperatureCelsius: number;
+  daytime: ActivityWeatherDayPart | null;
+  nighttime: ActivityWeatherDayPart | null;
+}
+
+export interface ActivityWeatherResult {
+  available: boolean;
+  unavailableReason: ActivityWeatherUnavailableReason | null;
+  provider: "GOOGLE";
+  timeZone: string | null;
+  baseDate: string;
+  forecasts: ActivityWeatherDay[];
+}

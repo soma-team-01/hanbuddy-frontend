@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getTouristActivities, getTouristActivity } from "@/lib/api/activities";
+import { getActivityWeather, getTouristActivities, getTouristActivity } from "@/lib/api/activities";
+import type { WeatherLanguage } from "@/types/activity";
 import { unwrapApiResult } from "./result";
 
 export const activityKeys = {
@@ -7,6 +8,8 @@ export const activityKeys = {
   list: () => [...activityKeys.all(), "list"] as const,
   detail: (activityId: number | string) =>
     [...activityKeys.all(), "detail", String(activityId)] as const,
+  weather: (activityId: number | string, languageCode: WeatherLanguage) =>
+    [...activityKeys.all(), "weather", String(activityId), languageCode] as const,
 };
 
 export function touristActivitiesQueryOptions() {
@@ -14,6 +17,19 @@ export function touristActivitiesQueryOptions() {
     queryKey: activityKeys.list(),
     queryFn: async () => unwrapApiResult(await getTouristActivities(), "activities"),
     staleTime: 60_000,
+  });
+}
+
+export function activityWeatherQueryOptions(
+  activityId: number | string,
+  languageCode: WeatherLanguage,
+) {
+  return queryOptions({
+    queryKey: activityKeys.weather(activityId, languageCode),
+    queryFn: async () =>
+      unwrapApiResult(await getActivityWeather(activityId, languageCode), "weather"),
+    staleTime: 60_000,
+    retry: false,
   });
 }
 

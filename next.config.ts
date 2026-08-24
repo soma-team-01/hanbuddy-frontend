@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       new URL("https://lh3.googleusercontent.com/**"),
+      {
+        protocol: "https",
+        hostname: "maps.gstatic.com",
+        pathname: "/weather/**",
+        search: "",
+      },
       // 백엔드가 프로필 이미지를 HanBuddy S3 공개 URL로 내려준다
       {
         protocol: "https",

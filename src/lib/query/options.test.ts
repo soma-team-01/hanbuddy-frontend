@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { activityKeys, touristActivityQueryOptions } from "./activities";
+import {
+  activityKeys,
+  activityWeatherQueryOptions,
+  touristActivityQueryOptions,
+} from "./activities";
 import { applicationKeys, myApplicationsQueryOptions } from "./applications";
 import {
   buddyActivityApplicationsQueryOptions,
@@ -15,6 +19,10 @@ describe("domain query options", () => {
     expect(activityKeys.detail("42")).toEqual(["activities", "detail", "42"]);
     expect(touristActivityQueryOptions("42").queryKey).toEqual(activityKeys.detail("42"));
     expect(activityKeys.detail(42)).toEqual(activityKeys.detail("42"));
+    expect(activityKeys.weather(42, "ko")).toEqual(["activities", "weather", "42", "ko"]);
+    expect(activityWeatherQueryOptions("42", "ko").queryKey).toEqual(
+      activityKeys.weather(42, "ko"),
+    );
   });
 
   it("builds stable application keys", () => {

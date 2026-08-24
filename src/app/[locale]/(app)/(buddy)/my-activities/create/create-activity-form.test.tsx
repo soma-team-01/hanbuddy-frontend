@@ -997,4 +997,21 @@ describe("buildActivityUpsertRequest", () => {
 
     expect(request.schedules).toHaveLength(1);
   });
+
+  it("rounds Google meeting coordinates to the backend precision", () => {
+    const request = buildActivityUpsertRequest(
+      {
+        ...baseDraft,
+        meetingLatitude: 37.566535123,
+        meetingLongitude: 126.977969987,
+      },
+      [],
+      [],
+    );
+
+    expect(request).toMatchObject({
+      meetingLatitude: 37.566535,
+      meetingLongitude: 126.97797,
+    });
+  });
 });

@@ -106,6 +106,10 @@ function splitDraftLines(value: string) {
     .filter(Boolean);
 }
 
+function roundMeetingCoordinate(value: number) {
+  return Number(value.toFixed(6));
+}
+
 export function buildActivityUpsertRequest(
   draft: ActivityCreateDraft,
   imageKeys: string[],
@@ -140,10 +144,13 @@ export function buildActivityUpsertRequest(
       : {}),
     meetingPointName: draft.meetingPlace.trim(),
     meetingPlaceId: draft.meetingPlaceId,
-    ...(typeof draft.meetingLatitude === "number" && typeof draft.meetingLongitude === "number"
+    ...(typeof draft.meetingLatitude === "number" &&
+    Number.isFinite(draft.meetingLatitude) &&
+    typeof draft.meetingLongitude === "number" &&
+    Number.isFinite(draft.meetingLongitude)
       ? {
-          meetingLatitude: draft.meetingLatitude,
-          meetingLongitude: draft.meetingLongitude,
+          meetingLatitude: roundMeetingCoordinate(draft.meetingLatitude),
+          meetingLongitude: roundMeetingCoordinate(draft.meetingLongitude),
         }
       : {}),
     status,

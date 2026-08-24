@@ -206,6 +206,7 @@
       "instagramLabel": "Instagram",
       "responseNote": "We would love to hear from you.",
       "emailIconLabel": "Email HanBuddy",
+      "facebookIconLabel": "Open HanBuddy on Facebook",
       "instagramIconLabel": "Open HanBuddy on Instagram",
       "whatsappIconLabel": "Chat with HanBuddy on WhatsApp",
       "kakaoIconLabel": "Chat with HanBuddy on KakaoTalk"
@@ -519,7 +520,7 @@
     "mapUnavailable": "Map unavailable",
     "mapTitle": "Map of {place}",
     "kstNotice": "All times are in Korea Standard Time (KST).",
-    "hostedActivities": "Experiences hosted by this buddy",
+    "hostedActivities": "Other experiences from this buddy",
     "noOtherActivities": "No other experiences yet.",
     "viewHostProfile": "View {name}'s profile"
   },
@@ -891,6 +892,7 @@
     "loadError": "Could not load the activity.",
     "edit": "Edit activity",
     "viewApplicants": "View applicants",
+    "fallbackHostName": "HanBuddy host",
     "previewTitle": "Guest preview",
     "previewNotice": "This is exactly what guests see. Booking steps are disabled in this preview."
   },

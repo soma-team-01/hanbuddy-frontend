@@ -62,7 +62,8 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
     tErrors("dateTimeUnavailable"),
     locale,
     {
-      name: profile?.name ?? "HanBuddy",
+      id: profile?.userId,
+      name: profile?.displayName ?? profile?.name ?? t("fallbackHostName"),
       avatarUrl: profile?.profileImageUrl ?? null,
     },
     tActivityDetail("localHost"),

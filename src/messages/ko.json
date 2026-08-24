@@ -206,6 +206,7 @@
       "instagramLabel": "Instagram",
       "responseNote": "여러분의 이야기를 기다리고 있어요.",
       "emailIconLabel": "HanBuddy에 이메일 보내기",
+      "facebookIconLabel": "HanBuddy Facebook 열기",
       "instagramIconLabel": "HanBuddy Instagram 열기",
       "whatsappIconLabel": "왓츠앱으로 HanBuddy와 대화하기",
       "kakaoIconLabel": "카카오톡으로 HanBuddy와 대화하기"
@@ -519,7 +520,7 @@
     "mapUnavailable": "지도를 이용할 수 없습니다",
     "mapTitle": "{place} 지도",
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",
-    "hostedActivities": "이 버디가 호스팅 중인 체험",
+    "hostedActivities": "이 버디의 다른 체험",
     "noOtherActivities": "아직 다른 체험이 없습니다.",
     "viewHostProfile": "{name} 프로필 보기"
   },
@@ -891,6 +892,7 @@
     "loadError": "활동 정보를 불러오지 못했습니다.",
     "edit": "활동 수정",
     "viewApplicants": "신청자 보기",
+    "fallbackHostName": "한버디 호스트",
     "previewTitle": "고객 화면 미리보기",
     "previewNotice": "고객에게 보이는 활동 상세와 동일한 화면입니다. 미리보기에서는 예약 단계로 이동할 수 없습니다."
   },

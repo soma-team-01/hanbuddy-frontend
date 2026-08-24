@@ -372,12 +372,22 @@ export function buildPreviewActivityFromDraft(
   options: Readonly<{
     locale: Locale;
     dateTimeUnavailable: string;
+    activityId?: string;
+    hostId?: number;
     hostName: string;
     hostBio: string;
     hostAvatarUrl?: string | null;
   }>,
 ): Activity {
-  const { locale, dateTimeUnavailable, hostName, hostBio, hostAvatarUrl = null } = options;
+  const {
+    locale,
+    dateTimeUnavailable,
+    activityId,
+    hostId,
+    hostName,
+    hostBio,
+    hostAvatarUrl = null,
+  } = options;
   const images = draft.photos.map((photo) => photo.previewUrl);
   const maxGuests = Number(draft.maxGuests) || 1;
   const sessions = draft.schedules
@@ -405,7 +415,7 @@ export function buildPreviewActivityFromDraft(
   const discountedPrice = Math.round(price * (1 - discountPercent / 100));
 
   return {
-    id: "preview",
+    id: activityId ?? "preview",
     title: draft.experienceName,
     description: draft.experienceDescription,
     location: draft.meetingPlace,
@@ -419,6 +429,7 @@ export function buildPreviewActivityFromDraft(
     durationMinutes: itineraryMinutes > 0 ? Math.ceil(itineraryMinutes / 30) * 30 : undefined,
     isSoldOut: false,
     host: {
+      id: hostId,
       name: hostName,
       bio: hostBio,
       avatarUrl: hostAvatarUrl,

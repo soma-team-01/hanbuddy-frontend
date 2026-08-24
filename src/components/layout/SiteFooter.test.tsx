@@ -25,21 +25,35 @@ import { SiteFooter } from "./SiteFooter";
 
 describe("SiteFooter", () => {
   it.each([
-    ["en", "Email HanBuddy", "Open HanBuddy on Instagram"],
-    ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Instagram 열기"],
+    ["en", "Email HanBuddy", "Open HanBuddy on Facebook", "Open HanBuddy on Instagram"],
+    ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Facebook 열기", "HanBuddy Instagram 열기"],
   ] as const)(
     "connects the shared contact icons for %s",
-    async (locale, emailLabel, instagramLabel) => {
+    async (locale, emailLabel, facebookLabel, instagramLabel) => {
       renderWithIntl(await SiteFooter({ locale }), { locale });
 
-      expect(screen.getByRole("link", { name: emailLabel })).toHaveAttribute(
+      const emailLink = screen.getByRole("link", { name: emailLabel });
+      const facebookLink = screen.getByRole("link", { name: facebookLabel });
+      const instagramLink = screen.getByRole("link", { name: instagramLabel });
+
+      expect(emailLink).toHaveAttribute("href", "mailto:contact@hanbuddy.kr");
+      expect(facebookLink).toHaveAttribute(
         "href",
-        "mailto:contact@hanbuddy.kr",
+        "https://www.facebook.com/profile.php?id=61593105057939",
       );
-      expect(screen.getByRole("link", { name: instagramLabel })).toHaveAttribute(
-        "href",
-        "https://www.instagram.com/hanbuddy_kr/",
-      );
+      expect(facebookLink).toHaveAttribute("target", "_blank");
+      expect(facebookLink).toHaveAttribute("rel", "noreferrer");
+      expect(instagramLink).toHaveAttribute("href", "https://www.instagram.com/hanbuddy_kr/");
+
+      const whatsappLink = screen.getByRole("link", {
+        name: locale === "ko" ? "왓츠앱으로 HanBuddy와 대화하기" : "Chat with HanBuddy on WhatsApp",
+      });
+      expect(
+        emailLink.compareDocumentPosition(whatsappLink) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        whatsappLink.compareDocumentPosition(facebookLink) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
     },
   );
 

@@ -1003,7 +1003,7 @@ describe("buildActivityUpsertRequest", () => {
       {
         ...baseDraft,
         meetingLatitude: 37.566535123,
-        meetingLongitude: 126.977969987,
+        meetingLongitude: 126.977964987,
       },
       [],
       [],
@@ -1011,7 +1011,7 @@ describe("buildActivityUpsertRequest", () => {
 
     expect(request).toMatchObject({
       meetingLatitude: 37.566535,
-      meetingLongitude: 126.97797,
+      meetingLongitude: 126.977965,
     });
   });
 });

@@ -52,6 +52,9 @@ export interface ActivityUpsertRequest {
   discountEndDate?: string;
   meetingPointName: string;
   meetingPlaceId: string;
+  /** Google Place 미팅 장소 좌표. 둘 다 있을 때만 전송 */
+  meetingLatitude?: number;
+  meetingLongitude?: number;
   status: MyActivityStatus;
   /** 최대 30개 */
   schedules: ActivityScheduleRequest[];
@@ -103,6 +106,8 @@ export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
   discountedPrice: number | null;
   meetingPointName: string;
   meetingPlaceId: string;
+  meetingLatitude?: number | null;
+  meetingLongitude?: number | null;
   images: ActivityImageResponse[];
   schedules: ActivityScheduleResponse[];
   itineraries: ActivityItineraryResponse[];

@@ -672,7 +672,13 @@ export function MeetingStep({
   t,
 }: Readonly<{
   draft: ActivityCreateDraft;
-  onChange: (field: "meetingAddress" | "meetingPlaceId" | "meetingPlace", value: string) => void;
+  onChange: <
+    Field extends
+      "meetingAddress" | "meetingPlaceId" | "meetingPlace" | "meetingLatitude" | "meetingLongitude",
+  >(
+    field: Field,
+    value: ActivityCreateDraft[Field],
+  ) => void;
   t: Translator;
 }>) {
   const locale = useLocale() as Locale;
@@ -716,6 +722,8 @@ export function MeetingStep({
     if (draft.meetingPlaceId || draft.meetingAddress) {
       onChange("meetingPlaceId", "");
       onChange("meetingAddress", "");
+      onChange("meetingLatitude", null);
+      onChange("meetingLongitude", null);
     }
   }
 
@@ -728,6 +736,8 @@ export function MeetingStep({
       setPredictions([]);
       onChange("meetingPlaceId", prediction.placeId);
       onChange("meetingAddress", address);
+      onChange("meetingLatitude", details.latitude ?? null);
+      onChange("meetingLongitude", details.longitude ?? null);
       setStatus("idle");
     } catch {
       setStatus("error");

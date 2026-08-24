@@ -67,7 +67,7 @@ const STEP_GROUPS = [
   steps: ReadonlyArray<ActivityCreateStep>;
 }>;
 
-type DraftTextField = Exclude<
+type DraftScalarField = Exclude<
   keyof ActivityCreateDraft,
   "photos" | "itinerary" | "schedules" | "discountType" | "hasNoRestrictions"
 >;
@@ -140,6 +140,12 @@ export function buildActivityUpsertRequest(
       : {}),
     meetingPointName: draft.meetingPlace.trim(),
     meetingPlaceId: draft.meetingPlaceId,
+    ...(typeof draft.meetingLatitude === "number" && typeof draft.meetingLongitude === "number"
+      ? {
+          meetingLatitude: draft.meetingLatitude,
+          meetingLongitude: draft.meetingLongitude,
+        }
+      : {}),
     status,
     schedules,
     itineraries: draft.itinerary.map((item, index) => ({
@@ -447,7 +453,10 @@ export function CreateActivityForm({
     return () => window.removeEventListener("popstate", clearPreservedDraft);
   }, [clearPreservedDraft]);
 
-  function updateField(field: DraftTextField, value: string) {
+  function updateField<Field extends DraftScalarField>(
+    field: Field,
+    value: ActivityCreateDraft[Field],
+  ) {
     setDraft((current) => ({ ...current, [field]: value }));
     setErrorKey(null);
   }

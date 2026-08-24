@@ -199,6 +199,8 @@ describe("activity creation wizard", () => {
       discountedPrice: null,
       meetingPointName: "Gwangjang Market Gate 2",
       meetingPlaceId: "ChIJ-gwangjang",
+      meetingLatitude: 37.5701,
+      meetingLongitude: 126.9996,
       images: [
         { imageUrl: "https://cdn.example.test/activities/two.webp", imageOrder: 1 },
         { imageUrl: "https://cdn.example.test/activities/cover.webp", imageOrder: 0 },
@@ -263,6 +265,8 @@ describe("activity creation wizard", () => {
       });
       expect(draft.meetingPlace).toBe("Gwangjang Market Gate 2");
       expect(draft.meetingPlaceId).toBe("ChIJ-gwangjang");
+      expect(draft.meetingLatitude).toBe(37.5701);
+      expect(draft.meetingLongitude).toBe(126.9996);
       expect(draft.meetingAddress).toBe("Gwangjang Market Gate 2");
       expect(draft.maxGuests).toBe("4");
       expect(draft.pricePerPerson).toBe("50000");

@@ -110,6 +110,8 @@ export interface TouristActivitySummary {
   buddyProfileImageUrl: string | null;
   meetingPointName: string;
   meetingPlaceId: string;
+  meetingLatitude?: number | null;
+  meetingLongitude?: number | null;
   price: number;
   currency: string;
   /** 진행 중인 할인율(%). 백엔드는 항상 내려주며 할인이 없으면 null (UI 반영은 후속 작업) */

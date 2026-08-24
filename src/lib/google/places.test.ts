@@ -14,11 +14,15 @@ describe("Google Places helpers", () => {
     );
   });
 
-  it("fetches only the formatted address in the requested language and Korean region", async () => {
+  it("fetches the formatted address and coordinates in the requested language and Korean region", async () => {
     const fetcher = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ formattedAddress: "Jongno-gu, Seoul" }), {
-        status: 200,
-      }),
+      new Response(
+        JSON.stringify({
+          formattedAddress: "Jongno-gu, Seoul",
+          location: { latitude: 37.579617, longitude: 126.977041 },
+        }),
+        { status: 200 },
+      ),
     );
 
     await expect(
@@ -30,6 +34,8 @@ describe("Google Places helpers", () => {
       }),
     ).resolves.toEqual({
       formattedAddress: "Jongno-gu, Seoul",
+      latitude: 37.579617,
+      longitude: 126.977041,
     });
 
     const [requestUrl, requestInit] = fetcher.mock.calls[0];
@@ -45,7 +51,7 @@ describe("Google Places helpers", () => {
         headers: {
           Referer: "http://localhost:3000/",
           "X-Goog-Api-Key": "test-key",
-          "X-Goog-FieldMask": "formattedAddress",
+          "X-Goog-FieldMask": "formattedAddress,location",
         },
       }),
     );
@@ -138,15 +144,23 @@ describe("Google Places helpers", () => {
 
   it("loads formatted address details through the same-origin BFF", async () => {
     const fetcher = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ formattedAddress: "Jongno-gu, Seoul" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
+      new Response(
+        JSON.stringify({
+          formattedAddress: "Jongno-gu, Seoul",
+          latitude: 37.579617,
+          longitude: 126.977041,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     await expect(
       fetchGooglePlaceDetailsViaBff("places/ChIJ-anguk", "ko", fetcher),
-    ).resolves.toEqual({ formattedAddress: "Jongno-gu, Seoul" });
+    ).resolves.toEqual({
+      formattedAddress: "Jongno-gu, Seoul",
+      latitude: 37.579617,
+      longitude: 126.977041,
+    });
     expect(fetcher).toHaveBeenCalledWith("/api/google/places/ChIJ-anguk?locale=ko");
   });
 });

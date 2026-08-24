@@ -275,6 +275,92 @@ export function ClockIcon(props: IconProps) {
   );
 }
 
+export function SunIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.93 4.93 1.42 1.42" />
+      <path d="m17.66 17.66 1.41 1.41" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.34 17.66-1.41 1.41" />
+      <path d="m19.07 4.93-1.41 1.41" />
+    </IconBase>
+  );
+}
+
+export function CloudIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M17.5 19H6a4 4 0 1 1 1.05-7.86A6 6 0 0 1 18.7 9.5 4.8 4.8 0 0 1 17.5 19Z" />
+    </IconBase>
+  );
+}
+
+export function PartlyCloudyIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M7 5V3" />
+      <path d="M3.8 6.3 2.4 4.9" />
+      <path d="M10.2 6.3 11.6 4.9" />
+      <path d="M3 10H1" />
+      <path d="M7 7a3 3 0 0 0-2.83 4" />
+      <path d="M17.5 20H7a4 4 0 1 1 1.05-7.86A6 6 0 0 1 19.7 10.5 4.8 4.8 0 0 1 17.5 20Z" />
+    </IconBase>
+  );
+}
+
+export function CloudRainIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M17.5 14H6a4 4 0 1 1 1.05-7.86A6 6 0 0 1 18.7 4.5 4.8 4.8 0 0 1 17.5 14Z" />
+      <path d="m8 18-1 2" />
+      <path d="m13 18-1 2" />
+      <path d="m18 18-1 2" />
+    </IconBase>
+  );
+}
+
+export function CloudShowerIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M17.5 13H6a4 4 0 1 1 1.05-7.86A6 6 0 0 1 18.7 3.5 4.8 4.8 0 0 1 17.5 13Z" />
+      <path d="m7 17-1.5 3" />
+      <path d="m12 17-1.5 3" />
+      <path d="m17 17-1.5 3" />
+      <path d="m21 16-1 2" />
+    </IconBase>
+  );
+}
+
+export function CloudSnowIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M17.5 13H6a4 4 0 1 1 1.05-7.86A6 6 0 0 1 18.7 3.5 4.8 4.8 0 0 1 17.5 13Z" />
+      <path d="M8 17v4" />
+      <path d="m6.3 18 3.4 2" />
+      <path d="m9.7 18-3.4 2" />
+      <path d="M16 17v4" />
+      <path d="m14.3 18 3.4 2" />
+      <path d="m17.7 18-3.4 2" />
+    </IconBase>
+  );
+}
+
+export function CloudRainSnowIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M17.5 13H6a4 4 0 1 1 1.05-7.86A6 6 0 0 1 18.7 3.5 4.8 4.8 0 0 1 17.5 13Z" />
+      <path d="m8 17-1 2" />
+      <path d="M16 17v4" />
+      <path d="m14.3 18 3.4 2" />
+      <path d="m17.7 18-3.4 2" />
+    </IconBase>
+  );
+}
+
 export function GlobeIcon(props: IconProps) {
   return (
     <IconBase {...props}>

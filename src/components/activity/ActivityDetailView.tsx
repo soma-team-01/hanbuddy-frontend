@@ -22,7 +22,7 @@ import {
   fetchGooglePlaceDetails,
   getGoogleMapsApiKey,
 } from "@/lib/google/places";
-import type { Activity } from "@/types/activity";
+import type { Activity, ActivityWeatherResult } from "@/types/activity";
 
 const SECTION_IDS = {
   aboutHost: "about-host",
@@ -48,11 +48,13 @@ interface GoogleMeetingAddress {
  */
 export function ActivityDetailView({
   activity,
+  weather,
   preview = false,
   bottomBar = "fixed",
   unoptimizedImages = false,
 }: Readonly<{
   activity: Activity;
+  weather?: ActivityWeatherResult;
   preview?: boolean;
   /** inline이면 하단 바를 고정하지 않고 본문 아래 카드로 렌더링한다 (위저드 검토 화면용) */
   bottomBar?: "fixed" | "inline";
@@ -550,6 +552,7 @@ export function ActivityDetailView({
           sessions={activity.sessions}
           selectedSessionId={selectedSessionId}
           durationMinutes={activity.durationMinutes}
+          weather={weather}
           onSelectSession={handleCalendarSelect}
           onClose={() => setCalendarOpen(false)}
         />

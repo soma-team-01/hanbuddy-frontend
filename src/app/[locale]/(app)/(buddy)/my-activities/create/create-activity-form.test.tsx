@@ -38,9 +38,13 @@ vi.mock("@/lib/google/places", async (importOriginal) => ({
   ]),
   fetchGooglePlaceDetailsViaBff: vi.fn().mockResolvedValue({
     formattedAddress: "88 Changgyeonggung-ro, Jongno-gu, Seoul",
+    latitude: 37.5701,
+    longitude: 126.9996,
   }),
   fetchGooglePlaceDetails: vi.fn().mockResolvedValue({
     formattedAddress: "88 Changgyeonggung-ro, Jongno-gu, Seoul",
+    latitude: 37.5701,
+    longitude: 126.9996,
   }),
 }));
 
@@ -655,6 +659,8 @@ describe("CreateActivityForm", () => {
       currency: "KRW",
       meetingPointName: "Gwangjang Market Gate 2",
       meetingPlaceId: "ChIJ-gwangjang",
+      meetingLatitude: 37.5701,
+      meetingLongitude: 126.9996,
       status: "ACTIVE",
       schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00` }],
       itineraries: [
@@ -948,6 +954,8 @@ describe("buildActivityUpsertRequest", () => {
     hostIntroduction: "I have guided friends through this market for years.",
     meetingPlace: "Gwangjang Market Gate 2",
     meetingPlaceId: "ChIJ-gwangjang",
+    meetingLatitude: 37.5701,
+    meetingLongitude: 126.9996,
     maxGuests: "4",
     pricePerPerson: "50000",
     inclusions: "Breakfast tasting",
@@ -970,6 +978,10 @@ describe("buildActivityUpsertRequest", () => {
       { startAt: "2099-07-20T10:00:00+09:00" },
       { startAt: "2020-01-01T10:00:00+09:00" },
     ]);
+    expect(request).toMatchObject({
+      meetingLatitude: 37.5701,
+      meetingLongitude: 126.9996,
+    });
   });
 
   it("does not send the same moment twice", () => {
@@ -984,5 +996,22 @@ describe("buildActivityUpsertRequest", () => {
     );
 
     expect(request.schedules).toHaveLength(1);
+  });
+
+  it("rounds Google meeting coordinates to the backend precision", () => {
+    const request = buildActivityUpsertRequest(
+      {
+        ...baseDraft,
+        meetingLatitude: 37.566535123,
+        meetingLongitude: 126.977964987,
+      },
+      [],
+      [],
+    );
+
+    expect(request).toMatchObject({
+      meetingLatitude: 37.566535,
+      meetingLongitude: 126.977965,
+    });
   });
 });

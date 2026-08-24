@@ -1,8 +1,14 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import {
+  getWeatherForStartAt,
+  getWeatherIconColor,
+  WeatherConditionIcon,
+} from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
 import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
@@ -14,7 +20,9 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { daysUntilSeoulDate, hasDateTimePassed } from "@/lib/datetime";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel } from "@/lib/payments/toss";
+import { activityWeatherQueryOptions } from "@/lib/query/activities";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
+import type { WeatherCondition } from "@/types/activity";
 import type { Application, ApplicationCancellationReason } from "@/types/application";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
@@ -117,6 +125,70 @@ function PriceBreakdown({
         </div>
       )}
     </div>
+  );
+}
+
+function ApplicationWeatherIndicator({
+  activityId,
+  applicationId,
+  startAt,
+}: Readonly<{
+  activityId: number;
+  applicationId: string;
+  startAt: string;
+}>) {
+  const locale = useLocale();
+  const t = useTranslations("ActivityDetail");
+  const weatherQuery = useQuery(activityWeatherQueryOptions(activityId));
+  const forecast = getWeatherForStartAt(startAt, weatherQuery.data);
+
+  if (!forecast) return null;
+
+  const conditionLabels: Record<WeatherCondition, string> = {
+    CLEAR: t("weatherConditions.clear"),
+    PARTLY_CLOUDY: t("weatherConditions.partlyCloudy"),
+    CLOUDY: t("weatherConditions.cloudy"),
+    RAIN: t("weatherConditions.rain"),
+    RAIN_SNOW: t("weatherConditions.rainSnow"),
+    SNOW: t("weatherConditions.snow"),
+    SHOWER: t("weatherConditions.shower"),
+  };
+  const conditionLabel = conditionLabels[forecast.condition];
+  const temperature = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    maximumFractionDigits: 1,
+  }).format(forecast.temperatureCelsius);
+  const tooltipId = `application-weather-tooltip-${applicationId}`;
+
+  return (
+    <>
+      <span aria-hidden="true" className="h-3.5 w-px bg-line-strong" />
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label={conditionLabel}
+        aria-describedby={tooltipId}
+        className={`group/weather relative inline-flex size-7 shrink-0 items-center justify-center outline-none ${getWeatherIconColor(forecast.condition)}`}
+      >
+        <WeatherConditionIcon condition={forecast.condition} className="size-[22px]" />
+        <span
+          id={tooltipId}
+          role="tooltip"
+          className="invisible absolute right-0 bottom-full z-20 mb-2 w-max max-w-56 rounded-lg bg-ink px-3 py-2 text-left font-sans text-xs text-white opacity-0 shadow-lg transition-opacity group-hover/weather:visible group-hover/weather:opacity-100 group-focus-visible/weather:visible group-focus-visible/weather:opacity-100"
+        >
+          <span className="block font-bold">
+            {conditionLabel} · {t("weatherTemperature", { temperature })}
+          </span>
+          <span className="mt-1 block text-white/80">
+            {forecast.precipitationProbability === null
+              ? t("weatherPrecipitationUnavailable")
+              : t("weatherPrecipitation", { percent: forecast.precipitationProbability })}
+          </span>
+          <span className="mt-3 block text-right text-[10px] text-white/55">
+            {t("weatherAttribution")}
+          </span>
+        </span>
+      </span>
+    </>
   );
 }
 
@@ -253,7 +325,16 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <p className="text-sm text-muted sm:col-start-1">{application.dateLabel}</p>
+          <p className="flex items-center gap-2 text-sm text-muted sm:col-start-1">
+            <span>{application.dateLabel}</span>
+            {application.status === "confirmed" && !hasEnded ? (
+              <ApplicationWeatherIndicator
+                activityId={application.activityId}
+                applicationId={application.id}
+                startAt={application.startAt}
+              />
+            ) : null}
+          </p>
           <button
             type="button"
             aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}

@@ -73,6 +73,8 @@ export interface ActivityCreateDraft {
   meetingAddress: string;
   meetingPlaceId: string;
   meetingPlace: string;
+  meetingLatitude: number | null;
+  meetingLongitude: number | null;
   schedules: ScheduleDraft[];
   /**
    * 편집 화면에 띄우지 않지만 그대로 유지해야 하는 지난 일정의 시작 시각.
@@ -122,6 +124,8 @@ export const EMPTY_ACTIVITY_DRAFT: ActivityCreateDraft = {
   meetingAddress: "",
   meetingPlaceId: "",
   meetingPlace: "",
+  meetingLatitude: null,
+  meetingLongitude: null,
   schedules: [],
   retainedScheduleStartAts: [],
   itinerary: [],
@@ -335,6 +339,8 @@ export function buildDraftFromMyActivityDetail(
     meetingAddress: detail.meetingPointName,
     meetingPlaceId: detail.meetingPlaceId,
     meetingPlace: detail.meetingPointName,
+    meetingLatitude: detail.meetingLatitude ?? null,
+    meetingLongitude: detail.meetingLongitude ?? null,
     schedules,
     itinerary: [...detail.itineraries]
       .sort((left, right) => left.itemOrder - right.itemOrder)

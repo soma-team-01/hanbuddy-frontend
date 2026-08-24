@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivities, getTouristActivity } from "@/lib/api/activities";
+import { getActivityWeather, getTouristActivities, getTouristActivity } from "@/lib/api/activities";
 import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
@@ -18,6 +18,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/activities", () => ({
+  getActivityWeather: vi.fn(),
   getTouristActivity: vi.fn(),
   getTouristActivities: vi.fn(),
 }));
@@ -38,6 +39,7 @@ vi.mock("@/lib/google/places", async () => {
 });
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
+const mockedGetActivityWeather = vi.mocked(getActivityWeather);
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedGetActivityReviews = vi.mocked(getActivityReviews);
 const mockedGetBuddyProfile = vi.mocked(getBuddyProfile);
@@ -124,6 +126,19 @@ describe("ActivityDetailContent", () => {
     routerMock.back.mockReset();
     routerMock.push.mockReset();
     mockedGetTouristActivity.mockReset();
+    mockedGetActivityWeather.mockReset();
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: false,
+        unavailableReason: "LOCATION_UNAVAILABLE",
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
+        baseDate: futureDateKey,
+        forecasts: [],
+      },
+    });
     mockedGetTouristActivities.mockReset();
     mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
     mockedFetchGooglePlaceDetails.mockReset();
@@ -211,6 +226,72 @@ describe("ActivityDetailContent", () => {
       "href",
       "/en/activities/42/book?scheduleId=102",
     );
+  });
+
+  it("shows only the forecast icon matching each schedule start time", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: true,
+        unavailableReason: null,
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: "2026-08-24T14:00:00+09:00",
+        baseDate: futureDateKey,
+        forecasts: [
+          {
+            forecastAt: `${futureDateKey}T14:00:00+09:00`,
+            temperatureCelsius: 29,
+            condition: "PARTLY_CLOUDY",
+            precipitationProbability: 20,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+    fireEvent.click(await screen.findByTestId("date-select-box"));
+
+    const dialog = await screen.findByRole("dialog");
+    const weatherIcons = within(dialog).getAllByLabelText("Partly cloudy");
+    expect(weatherIcons.length).toBeGreaterThan(0);
+    expect(weatherIcons[0]).toHaveClass("text-sky-500");
+    expect(within(dialog).getAllByText("29°C").length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByText("Chance of precipitation 20%").length).toBeGreaterThan(0);
+    expect(within(dialog).getByText("Weather data from KMA")).toBeInTheDocument();
+    expect(mockedGetActivityWeather).toHaveBeenCalledTimes(1);
+    expect(mockedGetActivityWeather).toHaveBeenCalledWith("42");
+  });
+
+  it("keeps booking available when the weather request fails", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({ formattedAddress: "Anguk Station" });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: null,
+        status: 502,
+        details: null,
+        backendMessage: "weather unavailable",
+      }),
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+
+    fireEvent.click(await screen.findByTestId("date-select-box"));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByText("Weather data from KMA")).not.toBeInTheDocument();
+    expect(screen.getByText("Available times")).toBeInTheDocument();
   });
 
   it("shows start and end times in the calendar when a duration is provided", async () => {

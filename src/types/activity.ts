@@ -110,6 +110,8 @@ export interface TouristActivitySummary {
   buddyProfileImageUrl: string | null;
   meetingPointName: string;
   meetingPlaceId: string;
+  meetingLatitude?: number | null;
+  meetingLongitude?: number | null;
   price: number;
   currency: string;
   /** 진행 중인 할인율(%). 백엔드는 항상 내려주며 할인이 없으면 null (UI 반영은 후속 작업) */
@@ -131,4 +133,29 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   schedules: TouristActivitySchedule[];
   /** 활동 일정표 목록 (UI 반영은 후속 작업) */
   itineraries?: ActivityItineraryResponse[];
+}
+
+export type ActivityWeatherUnavailableReason =
+  "LOCATION_UNAVAILABLE" | "WEATHER_SERVICE_DISABLED" | "WEATHER_SERVICE_UNAVAILABLE";
+
+export type WeatherCondition =
+  "CLEAR" | "PARTLY_CLOUDY" | "CLOUDY" | "RAIN" | "RAIN_SNOW" | "SNOW" | "SHOWER";
+
+export interface ActivityWeatherForecast {
+  /** 예보 대상 Asia/Seoul 일시 */
+  forecastAt: string;
+  temperatureCelsius: number;
+  condition: WeatherCondition;
+  precipitationProbability: number | null;
+}
+
+export interface ActivityWeatherResult {
+  available: boolean;
+  unavailableReason: ActivityWeatherUnavailableReason | null;
+  provider: "KMA";
+  timeZone: "Asia/Seoul";
+  /** 기상청 예보 묶음 발표 시각 */
+  issuedAt: string | null;
+  baseDate: string;
+  forecasts: ActivityWeatherForecast[];
 }

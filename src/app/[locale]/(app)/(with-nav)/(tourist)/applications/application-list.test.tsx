@@ -177,7 +177,21 @@ describe("ApplicationList", () => {
     expect(screen.getByText("Clear · 28°C")).toBeInTheDocument();
     expect(screen.getByText("Chance of precipitation 10%")).toBeInTheDocument();
     expect(screen.getByText("Weather data from KMA")).toHaveClass("mt-3", "text-right");
+    expect(
+      screen.getByText("Jul 20, 2026").parentElement?.querySelector('[aria-hidden="true"]'),
+    ).not.toBeNull();
     expect(mockedGetActivityWeather).toHaveBeenCalledWith(42);
+  });
+
+  it("hides the weather divider when the forecast is unavailable", async () => {
+    renderList({ applications: [paidApplication] });
+
+    await waitFor(() => expect(mockedGetActivityWeather).toHaveBeenCalledWith(42));
+
+    expect(screen.queryByRole("img", { name: "Clear" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Jul 20, 2026").parentElement?.querySelector('[aria-hidden="true"]'),
+    ).toBeNull();
   });
 
   it("opens the Toss payment window when continuing a pending payment", async () => {

@@ -63,7 +63,7 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
     locale,
     {
       id: profile?.userId,
-      name: profile?.displayName ?? profile?.name ?? "HanBuddy",
+      name: profile?.displayName ?? profile?.name ?? t("fallbackHostName"),
       avatarUrl: profile?.profileImageUrl ?? null,
     },
     tActivityDetail("localHost"),

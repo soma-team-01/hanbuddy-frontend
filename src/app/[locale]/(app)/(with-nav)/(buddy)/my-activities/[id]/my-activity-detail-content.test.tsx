@@ -173,6 +173,18 @@ describe("MyActivityDetailContent", () => {
     expect(screen.getByText("1인당 ₩36,000")).toBeInTheDocument();
   });
 
+  it.each([
+    ["en", "Host: HanBuddy host"],
+    ["ko", "호스트: 한버디 호스트"],
+  ] as const)("localizes the fallback host name for %s", async (locale, expectedName) => {
+    mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
+    mockedUseMyProfile.mockReturnValue(null);
+
+    renderWithQueryClient(<MyActivityDetailContent activityId="42" />, { locale });
+
+    expect(await screen.findByText(expectedName)).toBeInTheDocument();
+  });
+
   it("maps a not-owner error to a localized message", async () => {
     mockedGetMyActivity.mockResolvedValue({
       status: "error",

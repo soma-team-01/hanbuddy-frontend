@@ -892,6 +892,7 @@
     "loadError": "Could not load the activity.",
     "edit": "Edit activity",
     "viewApplicants": "View applicants",
+    "fallbackHostName": "HanBuddy host",
     "previewTitle": "Guest preview",
     "previewNotice": "This is exactly what guests see. Booking steps are disabled in this preview."
   },

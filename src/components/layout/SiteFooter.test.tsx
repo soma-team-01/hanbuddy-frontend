@@ -42,6 +42,7 @@ describe("SiteFooter", () => {
         "https://www.facebook.com/profile.php?id=61593105057939",
       );
       expect(facebookLink).toHaveAttribute("target", "_blank");
+      expect(facebookLink).toHaveAttribute("rel", "noreferrer");
       expect(instagramLink).toHaveAttribute("href", "https://www.instagram.com/hanbuddy_kr/");
 
       const whatsappLink = screen.getByRole("link", {

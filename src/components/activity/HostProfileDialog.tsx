@@ -90,6 +90,30 @@ export function HostProfileDialog({
     void reviewsQuery.fetchNextPage();
   }, canLoadMoreReviews);
 
+  let contactAction = null;
+  if (hasBuddyId && canContact) {
+    contactAction = (
+      <StartChatButton
+        target={{ kind: "direct", targetUserId: buddyId }}
+        label={tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
+        icon={<MessageSquareIcon className="size-4" />}
+        onOpened={onClose}
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+      />
+    );
+  } else if (hasBuddyId) {
+    contactAction = (
+      <button
+        type="button"
+        disabled
+        className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary opacity-60"
+      >
+        <MessageSquareIcon className="size-4" />
+        {tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
+      </button>
+    );
+  }
+
   return (
     <dialog
       ref={dialogRef}
@@ -131,26 +155,7 @@ export function HostProfileDialog({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 md:p-7">
-        {hasBuddyId ? (
-          canContact ? (
-            <StartChatButton
-              target={{ kind: "direct", targetUserId: buddyId }}
-              label={tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
-              icon={<MessageSquareIcon className="size-4" />}
-              onOpened={onClose}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
-            />
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary opacity-60"
-            >
-              <MessageSquareIcon className="size-4" />
-              {tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
-            </button>
-          )
-        ) : null}
+        {contactAction}
 
         {hostIntroduction ? (
           <p className="mt-5 text-sm leading-7 whitespace-pre-line text-ink">{hostIntroduction}</p>

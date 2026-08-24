@@ -892,6 +892,7 @@
     "loadError": "활동 정보를 불러오지 못했습니다.",
     "edit": "활동 수정",
     "viewApplicants": "신청자 보기",
+    "fallbackHostName": "한버디 호스트",
     "previewTitle": "고객 화면 미리보기",
     "previewNotice": "고객에게 보이는 활동 상세와 동일한 화면입니다. 미리보기에서는 예약 단계로 이동할 수 없습니다."
   },

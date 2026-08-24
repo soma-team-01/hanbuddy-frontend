@@ -6,6 +6,7 @@ import { ApiClientError } from "@/lib/api/errors";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Locale } from "@/i18n/routing";
+import { activityKeys } from "@/lib/query/activities";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
@@ -184,9 +185,14 @@ describe("ApplicationList", () => {
   });
 
   it("hides the weather divider when the forecast is unavailable", async () => {
-    renderList({ applications: [paidApplication] });
+    const { queryClient } = renderList({ applications: [paidApplication] });
 
-    await waitFor(() => expect(mockedGetActivityWeather).toHaveBeenCalledWith(42));
+    await waitFor(() => {
+      expect(mockedGetActivityWeather).toHaveBeenCalledWith(42);
+      expect(queryClient.getQueryData(activityKeys.weather(42))).toMatchObject({
+        available: false,
+      });
+    });
 
     expect(screen.queryByRole("img", { name: "Clear" })).not.toBeInTheDocument();
     expect(

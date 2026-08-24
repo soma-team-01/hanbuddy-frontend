@@ -167,20 +167,23 @@ function ApplicationWeatherIndicator({
       aria-describedby={tooltipId}
       className={`group/weather relative inline-flex size-7 shrink-0 items-center justify-center outline-none ${getWeatherIconColor(forecast.condition)}`}
     >
-      <WeatherConditionIcon condition={forecast.condition} className="size-6" />
+      <WeatherConditionIcon condition={forecast.condition} className="size-[22px]" />
       <span
         id={tooltipId}
         role="tooltip"
-        className="invisible absolute bottom-full left-0 z-20 mb-2 w-max max-w-56 rounded-lg bg-ink px-3 py-2 text-left font-sans text-xs text-white opacity-0 shadow-lg transition-opacity group-hover/weather:visible group-hover/weather:opacity-100 group-focus-visible/weather:visible group-focus-visible/weather:opacity-100"
+        className="invisible absolute right-0 bottom-full z-20 mb-2 w-max max-w-56 rounded-lg bg-ink px-3 py-2 text-left font-sans text-xs text-white opacity-0 shadow-lg transition-opacity group-hover/weather:visible group-hover/weather:opacity-100 group-focus-visible/weather:visible group-focus-visible/weather:opacity-100"
       >
-        <span className="block font-bold">{conditionLabel}</span>
-        <span className="mt-1 block text-white/85">{t("weatherTemperature", { temperature })}</span>
-        <span className="block text-white/85">
+        <span className="block font-bold">
+          {conditionLabel} · {t("weatherTemperature", { temperature })}
+        </span>
+        <span className="mt-1 block text-white/80">
           {forecast.precipitationProbability === null
             ? t("weatherPrecipitationUnavailable")
             : t("weatherPrecipitation", { percent: forecast.precipitationProbability })}
         </span>
-        <span className="mt-1 block text-white/65">{t("weatherAttribution")}</span>
+        <span className="mt-3 block text-right text-[10px] text-white/55">
+          {t("weatherAttribution")}
+        </span>
       </span>
     </span>
   );
@@ -320,14 +323,17 @@ function ApplicationCard({
           </div>
 
           <p className="flex items-center gap-2 text-sm text-muted sm:col-start-1">
-            {application.status === "confirmed" && !hasEnded ? (
-              <ApplicationWeatherIndicator
-                activityId={application.activityId}
-                applicationId={application.id}
-                startAt={application.startAt}
-              />
-            ) : null}
             <span>{application.dateLabel}</span>
+            {application.status === "confirmed" && !hasEnded ? (
+              <>
+                <span aria-hidden="true" className="h-3.5 w-px bg-line-strong" />
+                <ApplicationWeatherIndicator
+                  activityId={application.activityId}
+                  applicationId={application.id}
+                  startAt={application.startAt}
+                />
+              </>
+            ) : null}
           </p>
           <button
             type="button"

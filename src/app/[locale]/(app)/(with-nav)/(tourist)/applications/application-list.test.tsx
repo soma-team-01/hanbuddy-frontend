@@ -174,9 +174,9 @@ describe("ApplicationList", () => {
 
     const weatherIcon = await screen.findByRole("img", { name: "Clear" });
     expect(weatherIcon).toHaveClass("size-7", "text-amber-500");
-    expect(screen.getByText("28°C")).toBeInTheDocument();
+    expect(screen.getByText("Clear · 28°C")).toBeInTheDocument();
     expect(screen.getByText("Chance of precipitation 10%")).toBeInTheDocument();
-    expect(screen.getByText("Weather data from KMA")).toBeInTheDocument();
+    expect(screen.getByText("Weather data from KMA")).toHaveClass("mt-3", "text-right");
     expect(mockedGetActivityWeather).toHaveBeenCalledWith(42);
   });
 

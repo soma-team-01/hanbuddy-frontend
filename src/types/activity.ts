@@ -135,32 +135,27 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   itineraries?: ActivityItineraryResponse[];
 }
 
-export type WeatherLanguage = "en" | "ko";
-
 export type ActivityWeatherUnavailableReason =
   "LOCATION_UNAVAILABLE" | "WEATHER_SERVICE_DISABLED" | "WEATHER_SERVICE_UNAVAILABLE";
 
-export interface ActivityWeatherDayPart {
-  condition: string | null;
-  description: string | null;
-  iconUrl: string | null;
-  precipitationProbability: number | null;
-}
+export type WeatherCondition =
+  "CLEAR" | "PARTLY_CLOUDY" | "CLOUDY" | "RAIN" | "RAIN_SNOW" | "SNOW" | "SHOWER";
 
-export interface ActivityWeatherDay {
-  /** 활동 장소 현지 날짜 (YYYY-MM-DD) */
-  date: string;
-  minTemperatureCelsius: number;
-  maxTemperatureCelsius: number;
-  daytime: ActivityWeatherDayPart | null;
-  nighttime: ActivityWeatherDayPart | null;
+export interface ActivityWeatherForecast {
+  /** 예보 대상 Asia/Seoul 일시 */
+  forecastAt: string;
+  temperatureCelsius: number;
+  condition: WeatherCondition;
+  precipitationProbability: number | null;
 }
 
 export interface ActivityWeatherResult {
   available: boolean;
   unavailableReason: ActivityWeatherUnavailableReason | null;
-  provider: "GOOGLE";
-  timeZone: string | null;
+  provider: "KMA";
+  timeZone: "Asia/Seoul";
+  /** 기상청 예보 묶음 발표 시각 */
+  issuedAt: string | null;
   baseDate: string;
-  forecasts: ActivityWeatherDay[];
+  forecasts: ActivityWeatherForecast[];
 }

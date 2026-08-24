@@ -5,26 +5,28 @@ import { getSessionWeather } from "./AvailabilityCalendarDialog";
 const weather: ActivityWeatherResult = {
   available: true,
   unavailableReason: null,
-  provider: "GOOGLE",
+  provider: "KMA",
   timeZone: "Asia/Seoul",
+  issuedAt: "2026-08-24T14:00:00+09:00",
   baseDate: "2026-08-24",
   forecasts: [
     {
-      date: "2026-08-24",
-      minTemperatureCelsius: 22,
-      maxTemperatureCelsius: 29,
-      daytime: {
-        condition: "PARTLY_CLOUDY",
-        description: "Partly cloudy",
-        iconUrl: "https://maps.gstatic.com/weather/v1/partly_cloudy.svg",
-        precipitationProbability: 20,
-      },
-      nighttime: {
-        condition: "CLEAR",
-        description: "Clear",
-        iconUrl: "https://maps.gstatic.com/weather/v1/clear.svg",
-        precipitationProbability: 10,
-      },
+      forecastAt: "2026-08-24T14:00:00+09:00",
+      temperatureCelsius: 28,
+      condition: "PARTLY_CLOUDY",
+      precipitationProbability: 20,
+    },
+    {
+      forecastAt: "2026-08-24T15:00:00+09:00",
+      temperatureCelsius: 29,
+      condition: "RAIN",
+      precipitationProbability: 60,
+    },
+    {
+      forecastAt: "2026-08-25T14:00:00+09:00",
+      temperatureCelsius: 27,
+      condition: "CLOUDY",
+      precipitationProbability: null,
     },
   ],
 };
@@ -41,23 +43,23 @@ function session(startAt: string): Session {
 }
 
 describe("activity schedule weather matching", () => {
-  it("uses daytime from 07:00 through 18:59 and nighttime otherwise", () => {
-    expect(
-      getSessionWeather(session("2026-08-24T07:00:00+09:00"), weather)?.dayPart.condition,
-    ).toBe("PARTLY_CLOUDY");
-    expect(
-      getSessionWeather(session("2026-08-24T18:59:00+09:00"), weather)?.dayPart.condition,
-    ).toBe("PARTLY_CLOUDY");
-    expect(
-      getSessionWeather(session("2026-08-24T19:00:00+09:00"), weather)?.dayPart.condition,
-    ).toBe("CLEAR");
-    expect(
-      getSessionWeather(session("2026-08-24T06:59:00+09:00"), weather)?.dayPart.condition,
-    ).toBe("CLEAR");
+  it("selects the nearest forecast on the same Seoul date", () => {
+    expect(getSessionWeather(session("2026-08-24T14:20:00+09:00"), weather)?.condition).toBe(
+      "PARTLY_CLOUDY",
+    );
+    expect(getSessionWeather(session("2026-08-24T14:40:00+09:00"), weather)?.condition).toBe(
+      "RAIN",
+    );
   });
 
-  it("hides weather when the forecast is unavailable or outside the returned dates", () => {
-    expect(getSessionWeather(session("2026-08-25T10:00:00+09:00"), weather)).toBeNull();
+  it("selects the earlier forecast when two forecasts are equally close", () => {
+    expect(getSessionWeather(session("2026-08-24T14:30:00+09:00"), weather)?.condition).toBe(
+      "PARTLY_CLOUDY",
+    );
+  });
+
+  it("hides weather when the forecast is unavailable or absent on the schedule date", () => {
+    expect(getSessionWeather(session("2026-08-26T10:00:00+09:00"), weather)).toBeNull();
     expect(
       getSessionWeather(session("2026-08-24T10:00:00+09:00"), { ...weather, available: false }),
     ).toBeNull();

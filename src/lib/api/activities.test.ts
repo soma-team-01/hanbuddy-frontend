@@ -86,12 +86,13 @@ describe("tourist activity API client", () => {
     });
   });
 
-  it("loads localized activity weather through the internal API", async () => {
+  it("loads activity weather through the internal API", async () => {
     const weather = {
       available: true,
       unavailableReason: null,
-      provider: "GOOGLE",
+      provider: "KMA",
       timeZone: "Asia/Seoul",
+      issuedAt: "2026-08-24T14:00:00+09:00",
       baseDate: "2026-08-24",
       forecasts: [],
     };
@@ -102,11 +103,11 @@ describe("tourist activity API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getActivityWeather(42, "ko")).resolves.toEqual({
+    await expect(getActivityWeather(42)).resolves.toEqual({
       status: "success",
       weather,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42/weather?languageCode=ko", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42/weather", {
       credentials: "same-origin",
     });
   });

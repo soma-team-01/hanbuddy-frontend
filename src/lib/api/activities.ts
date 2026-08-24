@@ -2,7 +2,6 @@ import type {
   ActivityWeatherResult,
   TouristActivityDetail,
   TouristActivitySummary,
-  WeatherLanguage,
 } from "@/types/activity";
 import { requestApiResult, type ApiResult } from "./result";
 
@@ -36,11 +35,9 @@ export async function getTouristActivity(
 
 export async function getActivityWeather(
   activityId: number | string,
-  languageCode: WeatherLanguage,
 ): Promise<ActivityWeatherApiResult> {
-  const params = new URLSearchParams({ languageCode });
   return requestApiResult<ActivityWeatherResult, "weather">(
-    `/api/activities/${activityId}/weather?${params.toString()}`,
+    `/api/activities/${activityId}/weather`,
     "weather",
     undefined,
     DEFAULT_ACTIVITY_WEATHER_ERROR_MESSAGE,

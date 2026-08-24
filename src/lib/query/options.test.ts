@@ -19,10 +19,8 @@ describe("domain query options", () => {
     expect(activityKeys.detail("42")).toEqual(["activities", "detail", "42"]);
     expect(touristActivityQueryOptions("42").queryKey).toEqual(activityKeys.detail("42"));
     expect(activityKeys.detail(42)).toEqual(activityKeys.detail("42"));
-    expect(activityKeys.weather(42, "ko")).toEqual(["activities", "weather", "42", "ko"]);
-    expect(activityWeatherQueryOptions("42", "ko").queryKey).toEqual(
-      activityKeys.weather(42, "ko"),
-    );
+    expect(activityKeys.weather(42)).toEqual(["activities", "weather", "42"]);
+    expect(activityWeatherQueryOptions("42").queryKey).toEqual(activityKeys.weather(42));
   });
 
   it("builds stable application keys", () => {

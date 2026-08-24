@@ -132,8 +132,9 @@ describe("ActivityDetailContent", () => {
       weather: {
         available: false,
         unavailableReason: "LOCATION_UNAVAILABLE",
-        provider: "GOOGLE",
-        timeZone: null,
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
         baseDate: futureDateKey,
         forecasts: [],
       },
@@ -227,7 +228,7 @@ describe("ActivityDetailContent", () => {
     );
   });
 
-  it("shows the forecast matching each schedule date and start time", async () => {
+  it("shows only the forecast icon matching each schedule start time", async () => {
     mockedFetchGooglePlaceDetails.mockResolvedValue({
       formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
     });
@@ -240,26 +241,16 @@ describe("ActivityDetailContent", () => {
       weather: {
         available: true,
         unavailableReason: null,
-        provider: "GOOGLE",
+        provider: "KMA",
         timeZone: "Asia/Seoul",
+        issuedAt: "2026-08-24T14:00:00+09:00",
         baseDate: futureDateKey,
         forecasts: [
           {
-            date: futureDateKey,
-            minTemperatureCelsius: 22.4,
-            maxTemperatureCelsius: 29.1,
-            daytime: {
-              condition: "PARTLY_CLOUDY",
-              description: "Partly cloudy",
-              iconUrl: "https://maps.gstatic.com/weather/v1/partly_cloudy.svg",
-              precipitationProbability: 20,
-            },
-            nighttime: {
-              condition: "CLEAR",
-              description: "Clear",
-              iconUrl: "https://maps.gstatic.com/weather/v1/clear.svg",
-              precipitationProbability: 10,
-            },
+            forecastAt: `${futureDateKey}T14:00:00+09:00`,
+            temperatureCelsius: 29,
+            condition: "PARTLY_CLOUDY",
+            precipitationProbability: 20,
           },
         ],
       },
@@ -269,12 +260,12 @@ describe("ActivityDetailContent", () => {
     fireEvent.click(await screen.findByTestId("date-select-box"));
 
     const dialog = await screen.findByRole("dialog");
-    expect((await within(dialog).findAllByText("Partly cloudy")).length).toBeGreaterThan(0);
-    expect(within(dialog).getAllByText("22°–29°").length).toBeGreaterThan(0);
-    expect(within(dialog).getAllByText("Rain 20%").length).toBeGreaterThan(0);
-    expect(within(dialog).getByText("Weather by Google")).toBeInTheDocument();
+    expect(within(dialog).getAllByLabelText("Partly cloudy").length).toBeGreaterThan(0);
+    expect(within(dialog).queryByText("29°")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("Rain 20%")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Weather data from KMA")).toBeInTheDocument();
     expect(mockedGetActivityWeather).toHaveBeenCalledTimes(1);
-    expect(mockedGetActivityWeather).toHaveBeenCalledWith("42", "en");
+    expect(mockedGetActivityWeather).toHaveBeenCalledWith("42");
   });
 
   it("keeps booking available when the weather request fails", async () => {
@@ -297,7 +288,7 @@ describe("ActivityDetailContent", () => {
 
     fireEvent.click(await screen.findByTestId("date-select-box"));
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(screen.queryByText("Weather by Google")).not.toBeInTheDocument();
+    expect(screen.queryByText("Weather data from KMA")).not.toBeInTheDocument();
     expect(screen.getByText("Available times")).toBeInTheDocument();
   });
 

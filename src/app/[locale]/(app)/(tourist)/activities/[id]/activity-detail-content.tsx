@@ -8,16 +8,14 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { activityWeatherQueryOptions, touristActivityQueryOptions } from "@/lib/query/activities";
-import type { WeatherLanguage } from "@/types/activity";
 import { useHistoryBack } from "@/lib/navigation/use-history-back";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
   const activityQuery = useQuery(touristActivityQueryOptions(activityId));
   const locale = useLocale();
-  const weatherLanguage: WeatherLanguage = locale === "ko" ? "ko" : "en";
   const weatherQuery = useQuery({
-    ...activityWeatherQueryOptions(activityId, weatherLanguage),
+    ...activityWeatherQueryOptions(activityId),
     enabled: activityQuery.isSuccess,
   });
   const t = useTranslations("ActivityDetail");

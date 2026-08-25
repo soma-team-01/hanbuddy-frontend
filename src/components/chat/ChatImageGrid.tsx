@@ -12,14 +12,20 @@ import type { ChatMessageResponse } from "@/types/chat";
 export function ChatImageGrid({
   images,
   mine,
+  caption,
+  captionAction,
   onOpen,
 }: Readonly<{
   images: ChatMessageResponse[];
   mine: boolean;
+  /** 번역 표시 상태를 반영한 캡션. 생략하면 응답 content를 그대로 쓴다 */
+  caption?: string | null;
+  captionAction?: React.ReactNode;
   onOpen: (index: number) => void;
 }>) {
   const t = useTranslations("Chat");
-  const caption = images.find((image) => image.content)?.content;
+  const resolvedCaption =
+    caption === undefined ? images.find((image) => image.content)?.content : caption;
   // 줄마다 칸을 나눠 가져 마지막 줄에도 빈칸이 남지 않는다
   const rows = chatPhotoRows(images.length).reduce<
     { startIndex: number; images: ChatMessageResponse[] }[]
@@ -36,7 +42,7 @@ export function ChatImageGrid({
     const single = images[0];
 
     return (
-      <ImageFigure mine={mine} caption={caption}>
+      <ImageFigure mine={mine} caption={resolvedCaption} captionAction={captionAction}>
         <button
           type="button"
           onClick={() => onOpen(0)}
@@ -56,7 +62,7 @@ export function ChatImageGrid({
   }
 
   return (
-    <ImageFigure mine={mine} caption={caption}>
+    <ImageFigure mine={mine} caption={resolvedCaption} captionAction={captionAction}>
       <div
         data-testid="chat-photo-grid"
         className="flex w-full flex-col gap-0.5 overflow-hidden rounded-2xl border border-line-soft"
@@ -93,21 +99,30 @@ export function ChatImageGrid({
 function ImageFigure({
   mine,
   caption,
+  captionAction,
   children,
-}: Readonly<{ mine: boolean; caption?: string | null; children: React.ReactNode }>) {
+}: Readonly<{
+  mine: boolean;
+  caption?: string | null;
+  captionAction?: React.ReactNode;
+  children: React.ReactNode;
+}>) {
   return (
     <figure
       className={`flex w-[min(18rem,64vw)] flex-col gap-1 ${mine ? "items-end" : "items-start"}`}
     >
       {children}
       {caption ? (
-        <figcaption
-          className={`max-w-full rounded-2xl px-3.5 py-2 text-sm leading-6 whitespace-pre-wrap text-ink ${
-            mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
-          }`}
-        >
-          {caption}
-        </figcaption>
+        <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
+          <figcaption
+            className={`max-w-full rounded-2xl px-3.5 py-2 text-sm leading-6 whitespace-pre-wrap text-ink ${
+              mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
+            }`}
+          >
+            {caption}
+          </figcaption>
+          {captionAction}
+        </div>
       ) : null}
     </figure>
   );

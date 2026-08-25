@@ -26,16 +26,19 @@ import type { ContentLanguage } from "@/types/content-language";
  */
 export function useChatMessages(chatRoomId: string, language: ContentLanguage) {
   const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, language));
+  const scope = `${chatRoomId}:${language}`;
 
   // 과거 조회의 시작점. 최신 창이 밀려도 따라가지 않는다
+  const [activeScope, setActiveScope] = useState(scope);
   const [historyBoundaryId, setHistoryBoundaryId] = useState(0);
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
+  const scopeChanged = activeScope !== scope;
 
   // 경계가 잡히면 첫 과거 묶음은 미리 받아 둔다 — 목록 위쪽 감시 요소가 화면 240px 앞에서 이미
   // 다음 묶음을 요청하므로, 여기서 미루면 위로 올릴 때마다 빈 화면을 먼저 보게 된다
   const historyQuery = useInfiniteQuery({
-    ...chatMessageHistoryQueryOptions(chatRoomId, historyBoundaryId, language),
-    enabled: historyBoundaryId > 0 && Boolean(latestQuery.data?.hasNext),
+    ...chatMessageHistoryQueryOptions(chatRoomId, scopeChanged ? 0 : historyBoundaryId, language),
+    enabled: !scopeChanged && historyBoundaryId > 0 && Boolean(latestQuery.data?.hasNext),
   });
 
   // 받아 온 묶음이 갈렸을 때만 다시 합친다. 페이지 배열은 렌더마다 새로 만들어지므로 원본으로 비교한다
@@ -44,7 +47,16 @@ export function useChatMessages(chatRoomId: string, language: ContentLanguage) {
     history: undefined,
   });
 
-  if (mergedSources.latest !== latestQuery.data || mergedSources.history !== historyQuery.data) {
+  if (scopeChanged) {
+    // 언어 또는 방이 바뀌면 이전 언어 메시지를 잠깐이라도 노출하지 않는다.
+    setActiveScope(scope);
+    setHistoryBoundaryId(0);
+    setMessages([]);
+    setMergedSources({ latest: undefined, history: undefined });
+  } else if (
+    mergedSources.latest !== latestQuery.data ||
+    mergedSources.history !== historyQuery.data
+  ) {
     const latestMessages = latestQuery.data?.messages ?? [];
     const historyMessages = (historyQuery.data?.pages ?? []).flatMap((page) => page.messages);
     const known = new Set(messages.map((item) => item.messageId));
@@ -69,7 +81,7 @@ export function useChatMessages(chatRoomId: string, language: ContentLanguage) {
   }
 
   return {
-    messages,
+    messages: scopeChanged ? [] : messages,
     isPending: latestQuery.isPending,
     isError: latestQuery.isError,
     // 과거를 받기 시작했으면 그쪽이 기준이다. 최신 창의 hasNext는 마지막 묶음까지 받은 뒤에도

@@ -750,6 +750,8 @@
     "connectionFailed": "由于实时连接失败，无法聊天。",
     "retryConnection": "再试一次",
     "messagesLoadError": "无法加载消息。",
+    "showOriginal": "查看原文",
+    "showTranslation": "查看翻译",
     "loadingOlder": "正在加载...",
     "unreadCount": "{count, plural, other {#}}",
     "unreadLabel": "{count, plural, one {# 未读消息} other {# 未读消息}}",

@@ -31,8 +31,11 @@ function page(newestId: number, count: number, hasNext = true): ChatMessagePageR
   return { messages, nextCursor: messages.at(-1)?.messageId ?? null, hasNext };
 }
 
-function Probe({ chatRoomId = "1" }: Readonly<{ chatRoomId?: string }>) {
-  const { messages, hasOlder, loadOlder } = useChatMessages(chatRoomId, "EN");
+function Probe({
+  chatRoomId = "1",
+  language = "EN",
+}: Readonly<{ chatRoomId?: string; language?: "EN" | "KO" }>) {
+  const { messages, hasOlder, loadOlder } = useChatMessages(chatRoomId, language);
 
   return (
     <div>
@@ -175,5 +178,27 @@ describe("useChatMessages", () => {
     act(() => screen.getByRole("button", { name: "older" }).click());
 
     await waitFor(() => expect(ids()).toBe("95,96,97,98,99,100"));
+  });
+
+  it("clears the previous translation while a changed language is loading", async () => {
+    mockedGetChatMessages.mockImplementation(async (_roomId, _before, _size, language) => ({
+      status: "success",
+      messages: {
+        messages: [message(21), ...(language === "EN" ? [message(20)] : [])],
+        nextCursor: null,
+        hasNext: false,
+      },
+    }));
+
+    const queryClient = createQueryClient();
+    function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    }
+    const view = render(<Probe language="EN" />, { wrapper: Wrapper });
+    await waitFor(() => expect(ids()).toBe("20,21"));
+
+    view.rerender(<Probe language="KO" />);
+    expect(ids()).toBe("");
+    await waitFor(() => expect(ids()).toBe("21"));
   });
 });

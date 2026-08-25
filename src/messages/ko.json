@@ -750,6 +750,8 @@
     "connectionFailed": "실시간 연결에 실패해 채팅을 사용할 수 없습니다.",
     "retryConnection": "다시 시도",
     "messagesLoadError": "메시지를 불러오지 못했습니다.",
+    "showOriginal": "원문 보기",
+    "showTranslation": "번역 보기",
     "loadingOlder": "불러오는 중...",
     "unreadCount": "{count, plural, other {#}}",
     "unreadLabel": "{count, plural, other {안 읽은 메시지 #개}}",

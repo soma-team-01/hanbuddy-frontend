@@ -318,10 +318,12 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       </header>
 
       <ChatMessageList
+        key={language}
         messages={messages}
         members={room.members}
         myUserId={myUserId}
         locale={locale}
+        language={language}
         isPending={chatMessages.isPending}
         isError={chatMessages.isError}
         hasOlder={chatMessages.hasOlder}

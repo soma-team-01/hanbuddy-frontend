@@ -750,6 +750,8 @@
     "connectionFailed": "由於即時連線失敗，無法聊天。",
     "retryConnection": "再試一次",
     "messagesLoadError": "無法載入訊息。",
+    "showOriginal": "查看原文",
+    "showTranslation": "查看翻譯",
     "loadingOlder": "正在加載...",
     "unreadCount": "{count, plural, other {#}}",
     "unreadLabel": "{count, plural, one {# 未讀訊息} other {# 未讀訊息}}",

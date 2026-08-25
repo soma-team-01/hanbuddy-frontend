@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChatImageGrid } from "@/components/chat/ChatImageGrid";
 import { useInfiniteScrollSentinel } from "@/components/ui/use-infinite-scroll-sentinel";
@@ -9,6 +9,7 @@ import type { Locale } from "@/i18n/routing";
 import { formatChatDateSeparator, groupChatMessages, toChatBubbles } from "@/lib/chat/format";
 import { formatSeoulTime } from "@/lib/datetime";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
+import type { ContentLanguage } from "@/types/content-language";
 
 /** 오래된 순으로 쌓인 메시지 목록. 새 메시지가 오면 바닥으로 붙는다 */
 export function ChatMessageList({
@@ -16,6 +17,7 @@ export function ChatMessageList({
   members,
   myUserId,
   locale,
+  language,
   isPending,
   isError,
   hasOlder,
@@ -27,6 +29,7 @@ export function ChatMessageList({
   members: ChatRoomMemberResponse[];
   myUserId: number | undefined;
   locale: Locale;
+  language: ContentLanguage;
   isPending: boolean;
   isError: boolean;
   hasOlder: boolean;
@@ -39,6 +42,9 @@ export function ChatMessageList({
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const heightBeforeLoadRef = useRef(0);
+  const [showOriginalByMessageId, setShowOriginalByMessageId] = useState<Record<number, boolean>>(
+    {},
+  );
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
   const oldestMessageId = messages[0]?.messageId ?? 0;
 
@@ -64,6 +70,41 @@ export function ChatMessageList({
   const olderSentinelRef = useInfiniteScrollSentinel(loadOlder, hasOlder && !isLoadingOlder);
 
   const others = members.filter((member) => member.userId !== myUserId && !member.left);
+
+  function hasTranslation(message: ChatMessageResponse) {
+    return (
+      message.sourceLanguage !== "UNKNOWN" &&
+      message.contentLanguage === language &&
+      message.contentLanguage !== message.sourceLanguage &&
+      message.originalContent != null
+    );
+  }
+
+  function displayedContent(message: ChatMessageResponse) {
+    return hasTranslation(message) && showOriginalByMessageId[message.messageId]
+      ? message.originalContent
+      : message.content;
+  }
+
+  function translationToggle(message: ChatMessageResponse) {
+    if (!hasTranslation(message)) return null;
+    const showingOriginal = Boolean(showOriginalByMessageId[message.messageId]);
+
+    return (
+      <button
+        type="button"
+        onClick={() =>
+          setShowOriginalByMessageId((current) => ({
+            ...current,
+            [message.messageId]: !showingOriginal,
+          }))
+        }
+        className="px-1 text-[11px] font-medium text-muted underline-offset-2 transition-colors hover:text-primary hover:underline"
+      >
+        {showingOriginal ? t("showTranslation") : t("showOriginal")}
+      </button>
+    );
+  }
 
   // 합류 이전 메시지는 그 사람에게 보이지 않으므로 안 읽은 사람으로 세지 않는다
   function countUnread(messageId: number) {
@@ -146,16 +187,28 @@ export function ChatMessageList({
                           <ChatImageGrid
                             images={bubble.images}
                             mine={mine}
+                            caption={bubble.images
+                              .map((image) => displayedContent(image))
+                              .find((content) => content)}
+                            captionAction={(() => {
+                              const captionMessage = bubble.images.find(
+                                (image) => image.originalContent || image.content,
+                              );
+                              return captionMessage ? translationToggle(captionMessage) : null;
+                            })()}
                             onOpen={(index) => onOpenImage(bubble.images, index)}
                           />
                         ) : (
-                          <p
-                            className={`max-w-[min(30rem,72vw)] rounded-2xl px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap text-ink ${
-                              mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
-                            }`}
-                          >
-                            {bubble.message.content}
-                          </p>
+                          <div className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+                            <p
+                              className={`max-w-[min(30rem,72vw)] rounded-2xl px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap text-ink ${
+                                mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
+                              }`}
+                            >
+                              {displayedContent(bubble.message)}
+                            </p>
+                            {translationToggle(bubble.message)}
+                          </div>
                         )}
                         {unread > 0 ? (
                           <span

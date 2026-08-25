@@ -357,6 +357,11 @@ describe("ChatRoomView", () => {
       "1",
       expect.objectContaining({ messageType: "IMAGE", imageKey: "chats/a.webp" }),
     );
+    expect(mockedSendChatMessage).toHaveBeenNthCalledWith(
+      1,
+      "1",
+      expect.objectContaining({ sourceLanguage: "EN" }),
+    );
   });
 
   it("lets a photo be removed before sending", async () => {

@@ -41,6 +41,7 @@ const activityDetail = {
 };
 
 const activityRequest: ActivityUpsertRequest = {
+  sourceLanguage: "EN",
   title: "Traditional Tea Tasting",
   description: "Learn Korean tea etiquette.",
   hostIntroduction: "A tea sommelier hosting hanok tea ceremonies in Seoul.",
@@ -260,11 +261,11 @@ describe("buddy API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getBuddyApplications("2026-07-20")).resolves.toEqual({
+    await expect(getBuddyApplications("2026-07-20", "EN")).resolves.toEqual({
       status: "success",
       activities: [response],
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy?date=2026-07-20", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy?date=2026-07-20&language=EN", {
       credentials: "same-origin",
     });
   });
@@ -293,11 +294,11 @@ describe("buddy API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getBuddyActivityApplications(99)).resolves.toEqual({
+    await expect(getBuddyActivityApplications(99, "EN")).resolves.toEqual({
       status: "success",
       applications: response,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedules/99", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedules/99?language=EN", {
       credentials: "same-origin",
     });
   });

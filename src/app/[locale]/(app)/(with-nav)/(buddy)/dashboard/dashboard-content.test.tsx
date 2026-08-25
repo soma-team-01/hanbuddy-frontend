@@ -110,7 +110,9 @@ describe("DashboardContent", () => {
       "true",
     );
     expect(within(dateGroup).getByText("25")).toBeInTheDocument();
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20"));
+    await waitFor(() =>
+      expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20", "EN"),
+    );
   });
 
   it("keeps boundary instants on the Seoul date", async () => {
@@ -127,7 +129,9 @@ describe("DashboardContent", () => {
       "aria-pressed",
       "true",
     );
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-19"));
+    await waitFor(() =>
+      expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-19", "EN"),
+    );
   });
 
   it("moves week by week without touching the selected date", async () => {
@@ -162,7 +166,7 @@ describe("DashboardContent", () => {
 
     // 주만 옮겼으므로 신청자 조회는 처음 선택(7/20) 한 번뿐이다
     expect(mockedGetBuddyApplications).toHaveBeenCalledTimes(1);
-    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20");
+    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20", "EN");
   });
 
   it("jumps to the week of a date picked in the month calendar", async () => {
@@ -189,7 +193,9 @@ describe("DashboardContent", () => {
       "aria-pressed",
       "true",
     );
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-31"));
+    await waitFor(() =>
+      expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-31", "EN"),
+    );
   });
 
   it("pages the month calendar across months", async () => {
@@ -319,10 +325,14 @@ describe("DashboardContent", () => {
 
     renderWithQueryClient(<DashboardContent />);
 
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20"));
+    await waitFor(() =>
+      expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20", "EN"),
+    );
     await screen.findByRole("button", { name: "Tue 21, has activity" });
     fireEvent.click(screen.getByRole("button", { name: "Tue 21, has activity" }));
-    await waitFor(() => expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21"));
+    await waitFor(() =>
+      expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-21", "EN"),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Mon 20, has activity" }));
 
     await waitFor(() =>

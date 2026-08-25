@@ -71,11 +71,15 @@ describe("PaymentSuccessContent", () => {
 
     expect(await screen.findByRole("heading", { name: "Payment complete" })).toBeInTheDocument();
     expect(mockedConfirmApplicationPayment).toHaveBeenCalledTimes(1);
-    expect(mockedConfirmApplicationPayment).toHaveBeenCalledWith("11", {
-      paymentKey: "tviva20260809abcdef",
-      orderId: "hanbuddy-11-order",
-      amount: 90000,
-    });
+    expect(mockedConfirmApplicationPayment).toHaveBeenCalledWith(
+      "11",
+      {
+        paymentKey: "tviva20260809abcdef",
+        orderId: "hanbuddy-11-order",
+        amount: 90000,
+      },
+      "EN",
+    );
     expect(mockedGetMyApplications).not.toHaveBeenCalled();
     // 예약 요약과 같은 구성 — 라벨과 금액이 좌우로 나뉜다
     expect(screen.getByText("Application total")).toBeInTheDocument();

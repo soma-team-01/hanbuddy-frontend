@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import { formatNationalityCode, getActivityThumbnail } from "@/lib/api/buddy-view";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulTime, getSeoulDateTimeParts, getSeoulNowParts } from "@/lib/datetime";
@@ -59,6 +60,7 @@ const ACTIVITY_STATUS_TEXT_CLASS: Record<MyActivityStatus, string> = {
 
 export function DashboardContent() {
   const locale = useLocale() as Locale;
+  const language = getContentLanguage(locale);
   const t = useTranslations("BuddyDashboard");
   const tMyActivities = useTranslations("MyActivities");
   const tChat = useTranslations("Chat");
@@ -77,7 +79,7 @@ export function DashboardContent() {
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
   const myActivitiesQuery = useQuery(myActivitiesQueryOptions());
   // 단체 채팅방이 이미 있는 회차 — 버튼 문구를 만들기/열기로 나눈다
-  const chatRoomsQuery = useQuery(myChatRoomsQueryOptions());
+  const chatRoomsQuery = useQuery(myChatRoomsQueryOptions(language));
   const groupRoomScheduleIds = new Set(
     (chatRoomsQuery.data ?? [])
       .map((room) => room.activityScheduleId)
@@ -110,7 +112,7 @@ export function DashboardContent() {
 
   // 일정이 로드되기 전에는 기본 날짜가 확정되지 않았으므로 신청자 조회를 미뤄 헛요청을 막는다
   const applicationsQuery = useQuery({
-    ...buddyApplicationsQueryOptions(activeDate),
+    ...buddyApplicationsQueryOptions(activeDate, language),
     enabled: Boolean(selectedDate) || !scheduleDatesQuery.isPending,
   });
   const activities = applicationsQuery.data ?? [];

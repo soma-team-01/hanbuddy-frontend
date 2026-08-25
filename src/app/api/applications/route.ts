@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { proxyAuthenticatedPost, readJsonBody } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type { CreateApplicationRequest, PaymentReadyResponse } from "@/types/application";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   return proxyAuthenticatedPost<CreateApplicationRequest, PaymentReadyResponse>(
     request,
-    "/applications",
+    appendRequestedContentLanguage(request, "/applications"),
     parsed.body,
     "신청 서버에 연결할 수 없습니다.",
   );

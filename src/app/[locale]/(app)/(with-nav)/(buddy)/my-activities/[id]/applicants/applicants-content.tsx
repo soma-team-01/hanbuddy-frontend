@@ -11,6 +11,7 @@ import { ChatBubbleDotsIcon, MapPinIcon, UsersIcon } from "@/components/ui/icons
 import type { Locale } from "@/i18n/routing";
 import { formatNationalityCode } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import { formatSeoulDateTime, getSeoulDateTimeParts, getSeoulNowParts } from "@/lib/datetime";
 import { buddyActivityApplicationsQueryOptions, myActivityQueryOptions } from "@/lib/query/buddy";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
@@ -48,6 +49,7 @@ export function ApplicantsContent({
   initialScheduleId,
 }: Readonly<ApplicantsContentProps>) {
   const locale = useLocale() as Locale;
+  const language = getContentLanguage(locale);
   const t = useTranslations("Applicants");
   const tApplications = useTranslations("Applications");
   const tChat = useTranslations("Chat");
@@ -75,7 +77,7 @@ export function ApplicantsContent({
   const scheduleId = selectedDate ? (dateSchedule?.scheduleId ?? "") : fallbackScheduleId;
   const noScheduleOnSelectedDate = Boolean(selectedDate) && !dateSchedule;
 
-  const applicationsQuery = useQuery(buddyActivityApplicationsQueryOptions(scheduleId));
+  const applicationsQuery = useQuery(buddyActivityApplicationsQueryOptions(scheduleId, language));
   // 쿼리 파라미터로 바로 들어온 첫 화면에서는 활동 상세 오류가 조회를 막지 않는다
   const relevantActivityError = initialScheduleId && !selectedDate ? null : activityQuery.error;
   useAuthQueryRedirect(relevantActivityError ?? applicationsQuery.error);

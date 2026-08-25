@@ -8,6 +8,7 @@ import { ClockIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
+import { getContentLanguage } from "@/lib/content-language";
 import {
   formatSeoulDateTime,
   formatSeoulDateWithWeekday,
@@ -53,9 +54,10 @@ export function BookingConflictDialog({
   onClose: () => void;
 }>) {
   const locale = useLocale() as Locale;
+  const language = getContentLanguage(locale);
   const t = useTranslations("Booking");
   const applicationsQuery = useQuery({
-    ...myApplicationsQueryOptions(),
+    ...myApplicationsQueryOptions(language),
     enabled: item !== undefined,
   });
   const existingApplication = item

@@ -58,6 +58,12 @@ describe("role-specific My Page", () => {
     expect(screen.getAllByText("Coming soon")).toHaveLength(2);
   });
 
+  it("does not offer a language preference to buddies", () => {
+    renderRoleMyPage(<BuddyMyPage />, "BUDDY", "ko");
+
+    expect(screen.queryByRole("combobox", { name: "언어" })).not.toBeInTheDocument();
+  });
+
   it("translates the My Page menu in Korean", () => {
     renderRoleMyPage(<TouristMyPage />, "TOURIST", "ko");
 

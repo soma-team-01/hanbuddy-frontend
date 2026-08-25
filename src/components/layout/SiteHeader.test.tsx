@@ -81,6 +81,7 @@ describe("SiteHeader", () => {
       "href",
       "/en/my-activities",
     );
+    expect(screen.queryByRole("button", { name: /Select language/ })).not.toBeInTheDocument();
   });
 
   it("shows the payout entry only to buddies", () => {
@@ -203,23 +204,23 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
-  it("shows the brand, locale switcher, and buddy login dialog on the hosting landing page", () => {
+  it("shows the brand and buddy login dialog without a locale switcher on the hosting landing page", () => {
     mockedUsePathname.mockReturnValue("/buddy");
-    renderWithQueryClient(<SiteHeader />);
+    renderWithQueryClient(<SiteHeader />, { locale: "ko" });
 
     expect(
-      screen.getByRole("button", { name: "Select language, current language: English" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/buddy");
+      screen.queryByRole("button", { name: /언어 선택|Select language/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/ko/buddy");
     expect(
       screen.queryByRole("navigation", { name: "Primary navigation" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
-    expect(screen.getByRole("dialog", { name: "Start your buddy journey" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Continue as a buddy with Google" })).toHaveAttribute(
+    fireEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.getByRole("dialog", { name: "버디 여정을 시작해 보세요" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Google로 버디 시작하기" })).toHaveAttribute(
       "href",
-      "/api/auth/google/start?locale=en&intent=buddy",
+      "/api/auth/google/start?locale=ko&intent=buddy",
     );
   });
 

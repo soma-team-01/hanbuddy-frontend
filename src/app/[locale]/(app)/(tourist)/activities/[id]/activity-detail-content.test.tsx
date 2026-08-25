@@ -512,7 +512,7 @@ describe("ActivityDetailContent", () => {
     ).toBeInTheDocument();
     expect(within(dialog).getByText("2 live experiences")).toBeInTheDocument();
     expect(mockedGetBuddyProfile).toHaveBeenCalledWith(7);
-    expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 12, null);
+    expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 12, "EN", null);
   });
 
   it("lists the buddy's reviews across activities in the host profile", async () => {
@@ -620,7 +620,9 @@ describe("ActivityDetailContent", () => {
       "en",
       "ko",
     ]);
-    expect(mockedGetTouristActivity).toHaveBeenCalledTimes(1);
+    expect(mockedGetTouristActivity).toHaveBeenCalledTimes(2);
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(1, "42", "EN");
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(2, "42", "KO");
   });
 
   it("ignores a late Google address response from the previous locale", async () => {

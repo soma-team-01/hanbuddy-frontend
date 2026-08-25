@@ -68,7 +68,7 @@ describe("BookingContent", () => {
 
   it("reuses activity detail already cached by the detail screen", async () => {
     const queryClient = createQueryClient();
-    queryClient.setQueryData(activityKeys.detail("42"), activityDetail);
+    queryClient.setQueryData(activityKeys.detail("42", "EN"), activityDetail);
 
     renderWithQueryClient(<BookingContent activityId="42" />, { queryClient });
 

@@ -4,6 +4,7 @@ import {
   proxyPublicGet,
   readJsonBody,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type { TouristActivitySummary } from "@/types/activity";
 import type { ActivityUpsertRequest, MyActivityDetailResponse } from "@/types/buddy";
 
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   return proxyPublicGet<TouristActivitySummary[]>(
     request,
-    "/activities",
+    appendRequestedContentLanguage(request, "/activities"),
     "활동 목록 서버에 연결할 수 없습니다.",
   );
 }

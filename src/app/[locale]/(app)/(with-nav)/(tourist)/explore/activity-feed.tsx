@@ -1,17 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ActivityCard } from "@/components/ui/ActivityCard";
 import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 
 export function ActivityFeed() {
   const t = useTranslations("Explore");
+  const language = getContentLanguage(useLocale());
   const getApiErrorMessage = useApiErrorMessage();
-  const activitiesQuery = useQuery(touristActivitiesQueryOptions());
+  const activitiesQuery = useQuery(touristActivitiesQueryOptions(language));
 
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import { touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import { BookingForm } from "./booking-form";
@@ -13,8 +14,9 @@ export function BookingContent({
   activityId,
   initialScheduleId,
 }: Readonly<{ activityId: string; initialScheduleId?: string }>) {
-  const activityQuery = useQuery(touristActivityQueryOptions(activityId));
   const locale = useLocale();
+  const language = getContentLanguage(locale);
+  const activityQuery = useQuery(touristActivityQueryOptions(activityId, language));
   const t = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();

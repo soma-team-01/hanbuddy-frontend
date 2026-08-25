@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
@@ -10,12 +10,14 @@ import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/componen
 import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { toSeoulStartAt } from "@/lib/datetime";
+import { getContentLanguage } from "@/lib/content-language";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
 import { activityKeys } from "@/lib/query/activities";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
+import type { ContentLanguage, ResolvedContentLanguage } from "@/types/content-language";
 import {
   ACTIVITY_CREATE_LIMITS,
   ACTIVITY_CREATE_STEPS,
@@ -114,6 +116,7 @@ export function buildActivityUpsertRequest(
   draft: ActivityCreateDraft,
   imageKeys: string[],
   itineraryImageKeys: string[],
+  sourceLanguage: ContentLanguage,
   status: MyActivityStatus = "ACTIVE",
 ): ActivityUpsertRequest {
   // 화면에서 편집한 일정과, 편집 대상이 아닌 지난 일정을 함께 보낸다.
@@ -127,6 +130,7 @@ export function buildActivityUpsertRequest(
   const schedules = [...new Set(startAts)].map((startAt) => ({ startAt }));
 
   return {
+    sourceLanguage,
     title: draft.experienceName.trim(),
     description: draft.experienceDescription.trim(),
     hostIntroduction: draft.hostIntroduction.trim(),
@@ -288,6 +292,8 @@ export interface CreateActivityFormProps {
   initialDraft?: ActivityCreateDraft;
   /** edit 모드에서 유지할 기존 활동 상태 */
   initialStatus?: MyActivityStatus;
+  /** edit 모드에서 기존 활동 원문의 언어를 유지한다 */
+  initialSourceLanguage?: ResolvedContentLanguage;
 }
 
 export function CreateActivityForm({
@@ -295,8 +301,14 @@ export function CreateActivityForm({
   activityId,
   initialDraft,
   initialStatus,
+  initialSourceLanguage,
 }: Readonly<CreateActivityFormProps> = {}) {
   const t = useTranslations("CreateActivity");
+  const currentLanguage = getContentLanguage(useLocale());
+  const sourceLanguage =
+    initialSourceLanguage && initialSourceLanguage !== "UNKNOWN"
+      ? initialSourceLanguage
+      : currentLanguage;
   const router = useRouter();
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
@@ -726,7 +738,13 @@ export function CreateActivityForm({
 
       setSubmissionPhase("registering");
       await submitActivityMutation.mutateAsync(
-        buildActivityUpsertRequest(draft, imageKeys, itineraryImageKeys, initialStatus ?? "ACTIVE"),
+        buildActivityUpsertRequest(
+          draft,
+          imageKeys,
+          itineraryImageKeys,
+          sourceLanguage,
+          initialStatus ?? "ACTIVE",
+        ),
       );
       clearPreservedDraft();
       router.push(

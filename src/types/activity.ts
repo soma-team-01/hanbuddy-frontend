@@ -1,3 +1,5 @@
+import type { ResolvedContentLanguage } from "./content-language";
+
 export interface Host {
   /** 백엔드 버디 식별자. 동명이인이 있어도 이 값으로 호스트를 구분한다 */
   id?: number;
@@ -99,6 +101,8 @@ export interface TouristActivitySummary {
   buddyId: number;
   title: string;
   description: string;
+  /** 번역 폴백까지 반영해 현재 응답 본문에 실제로 사용된 언어 */
+  contentLanguage?: ResolvedContentLanguage;
   /** 소수 첫째 자리 반올림 평균 별점. 리뷰가 없으면 null */
   averageRating?: number | null;
   /** 이 활동에 달린 리뷰 수 */

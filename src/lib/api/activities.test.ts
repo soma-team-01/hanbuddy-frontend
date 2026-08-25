@@ -59,11 +59,13 @@ describe("tourist activity API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivities()).resolves.toEqual({
+    await expect(getTouristActivities("EN")).resolves.toEqual({
       status: "success",
       activities: [activitySummary],
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities", { credentials: "same-origin" });
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities?language=EN", {
+      credentials: "same-origin",
+    });
   });
 
   it("loads a tourist activity detail through the internal API", async () => {
@@ -77,11 +79,11 @@ describe("tourist activity API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivity(42)).resolves.toEqual({
+    await expect(getTouristActivity(42, "KO")).resolves.toEqual({
       status: "success",
       activity: activityDetail,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42?language=KO", {
       credentials: "same-origin",
     });
   });
@@ -119,7 +121,7 @@ describe("tourist activity API client", () => {
       .mockResolvedValueOnce(createJsonResponse({ isSuccess: false }, 401));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivities()).resolves.toEqual({ status: "unauthenticated" });
+    await expect(getTouristActivities("EN")).resolves.toEqual({ status: "unauthenticated" });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/auth/refresh", {
       method: "POST",
       credentials: "same-origin",

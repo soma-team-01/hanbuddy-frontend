@@ -740,7 +740,7 @@
     "groupBadge": "集團",
     "memberCount": "{count, plural, one {# 會員} other {# 會員}}",
     "leftMember": "左",
-    "messagePlaceholder": "訊息 · 自動翻譯成對方語言",
+    "messagePlaceholder": "對方將看到自動翻譯後的訊息。",
     "messageLabel": "留言",
     "send": "傳送",
     "sending": "正在發送...",

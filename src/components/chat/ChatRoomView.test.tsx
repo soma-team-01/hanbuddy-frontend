@@ -258,7 +258,10 @@ describe("ChatRoomView", () => {
 
     const input = await screen.findByLabelText("Message");
     const composer = screen.getByTestId("chat-composer");
-    expect(input).toHaveAttribute("placeholder", "Message · Auto-translated for recipients");
+    expect(input).toHaveAttribute(
+      "placeholder",
+      "Recipients see an automatically translated message.",
+    );
     expect(within(composer).queryByRole("combobox")).not.toBeInTheDocument();
     const photoButton = within(composer).getByRole("button", { name: "Attach photos" });
     expect(photoButton).toHaveClass("shrink-0");

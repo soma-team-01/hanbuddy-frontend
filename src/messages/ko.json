@@ -740,7 +740,7 @@
     "groupBadge": "단체",
     "memberCount": "{count, plural, other {참여자 #명}}",
     "leftMember": "나감",
-    "messagePlaceholder": "메시지 · 상대방 언어로 자동 번역",
+    "messagePlaceholder": "상대방에게는 자동 번역된 메시지가 표시됩니다.",
     "messageLabel": "메시지",
     "send": "보내기",
     "sending": "보내는 중...",

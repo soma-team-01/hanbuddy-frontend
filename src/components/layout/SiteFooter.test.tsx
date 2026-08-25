@@ -24,6 +24,23 @@ vi.mock("next-intl/server", async () => {
 import { SiteFooter } from "./SiteFooter";
 
 describe("SiteFooter", () => {
+  it.each(["en", "ko", "ja", "zh-Hans", "zh-Hant"] as const)(
+    "shows the unchanged Korean business information for %s",
+    async (locale) => {
+      renderWithIntl(await SiteFooter({ locale }), { locale });
+
+      expect(screen.getByRole("heading", { name: "사업자 정보" })).toBeInTheDocument();
+      expect(screen.getByText("제로원")).toBeInTheDocument();
+      expect(screen.getByText("김민형")).toBeInTheDocument();
+      expect(screen.getByText("597-05-03957")).toBeInTheDocument();
+      expect(screen.getByText("서울특별시 동대문구 전농로34길 15-4 404호")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "+82 10-8297-0110" })).toHaveAttribute(
+        "href",
+        "tel:+821082970110",
+      );
+    },
+  );
+
   it.each([
     ["en", "© 2026 HanBuddy. All rights reserved."],
     ["ko", "© 2026 HanBuddy. 모든 권리를 보유합니다."],

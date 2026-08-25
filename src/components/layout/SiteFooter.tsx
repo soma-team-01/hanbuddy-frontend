@@ -25,6 +25,15 @@ const CONTACT_DETAILS = {
   kakaoUrl: "https://open.kakao.com/me/hanbuddy",
 } as const;
 
+const BUSINESS_DETAILS = {
+  name: "제로원",
+  representative: "김민형",
+  registrationNumber: "597-05-03957",
+  address: "서울특별시 동대문구 전농로34길 15-4 404호",
+  phone: "+82 10-8297-0110",
+  phoneHref: "tel:+821082970110",
+} as const;
+
 export async function SiteFooter({ locale, role }: SiteFooterProps) {
   // 버디의 홈은 대시보드다 — 헤더 로고와 같은 규칙
   const logoHref = role === "buddy" ? "/dashboard" : "/";
@@ -34,9 +43,9 @@ export async function SiteFooter({ locale, role }: SiteFooterProps) {
   ]);
 
   return (
-    <footer className="border-t border-line-soft bg-canvas-soft py-6 text-sm text-muted">
-      <PageContainer className="flex flex-col gap-4">
-        <div className="relative flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+    <footer className="border-t border-line-soft bg-canvas-soft py-8 text-sm text-muted">
+      <PageContainer className="flex flex-col gap-6">
+        <div className="grid w-full items-center gap-5 text-center sm:grid-cols-[auto_1fr_auto] sm:text-left">
           <Link href={logoHref} aria-label="HanBuddy" className="flex items-center gap-2">
             <Image
               src="/images/brand/logo-borderless.webp"
@@ -48,13 +57,12 @@ export async function SiteFooter({ locale, role }: SiteFooterProps) {
             <span className="font-display font-bold text-ink">HanBuddy</span>
           </Link>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-xs text-muted sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-            <p>© 2026 HanBuddy. {authT("rightsReserved")}</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted">
             <span className="underline">{authT("privacyPolicy")}</span>
             <span className="underline">{authT("termsOfService")}</span>
           </div>
 
-          <div className="flex items-center gap-2 sm:ml-auto">
+          <div className="flex items-center justify-center gap-2 sm:justify-end">
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}
@@ -99,6 +107,48 @@ export async function SiteFooter({ locale, role }: SiteFooterProps) {
               <InstagramIcon className="size-5" />
             </a>
           </div>
+        </div>
+
+        <div className="grid gap-4 border-t border-line-soft pt-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <section aria-labelledby="business-information-heading" className="min-w-0 text-xs">
+            <h2
+              id="business-information-heading"
+              className="font-semibold tracking-[-0.01em] text-ink"
+            >
+              사업자 정보
+            </h2>
+            <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 leading-5">
+              <div className="flex gap-1.5">
+                <dt className="font-medium text-ink/70">상호명</dt>
+                <dd>{BUSINESS_DETAILS.name}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="font-medium text-ink/70">대표자명</dt>
+                <dd>{BUSINESS_DETAILS.representative}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="font-medium text-ink/70">사업자등록번호</dt>
+                <dd>{BUSINESS_DETAILS.registrationNumber}</dd>
+              </div>
+              <div className="flex basis-full gap-1.5">
+                <dt className="shrink-0 font-medium text-ink/70">사업장 주소</dt>
+                <dd>{BUSINESS_DETAILS.address}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="font-medium text-ink/70">전화번호</dt>
+                <dd>
+                  <a
+                    href={BUSINESS_DETAILS.phoneHref}
+                    className="underline decoration-line-strong underline-offset-2 transition-colors hover:text-primary"
+                  >
+                    {BUSINESS_DETAILS.phone}
+                  </a>
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <p className="text-xs lg:text-right">© 2026 HanBuddy. {authT("rightsReserved")}</p>
         </div>
       </PageContainer>
     </footer>

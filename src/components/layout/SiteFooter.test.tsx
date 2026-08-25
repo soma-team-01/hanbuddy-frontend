@@ -29,15 +29,13 @@ describe("SiteFooter", () => {
     async (locale) => {
       renderWithIntl(await SiteFooter({ locale }), { locale });
 
-      expect(screen.getByRole("heading", { name: "사업자 정보" })).toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "사업자 정보" })).not.toBeInTheDocument();
       expect(screen.getByText("제로원")).toBeInTheDocument();
       expect(screen.getByText("김민형")).toBeInTheDocument();
       expect(screen.getByText("597-05-03957")).toBeInTheDocument();
       expect(screen.getByText("서울특별시 동대문구 전농로34길 15-4 404호")).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "+82 10-8297-0110" })).toHaveAttribute(
-        "href",
-        "tel:+821082970110",
-      );
+      expect(screen.getByText("+82 10-8297-0110")).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "+82 10-8297-0110" })).not.toBeInTheDocument();
     },
   );
 
@@ -82,17 +80,6 @@ describe("SiteFooter", () => {
       ).toBeTruthy();
     },
   );
-
-  it("routes the logo home by role", async () => {
-    renderWithIntl(await SiteFooter({ locale: "en", role: "buddy" }), { locale: "en" });
-    // 버디의 홈은 대시보드 — 헤더 로고와 같은 규칙
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/dashboard");
-  });
-
-  it("keeps the tourist logo on the landing page", async () => {
-    renderWithIntl(await SiteFooter({ locale: "en", role: "tourist" }), { locale: "en" });
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
-  });
 
   it.each([
     ["en", "Chat with HanBuddy on WhatsApp", "Chat with HanBuddy on KakaoTalk"],

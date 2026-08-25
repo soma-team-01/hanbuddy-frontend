@@ -57,4 +57,26 @@ describe("LocaleSwitcher", () => {
     expect(screen.getByRole("button", { expanded: false })).toHaveClass("text-xs", "font-medium");
     expect(screen.getByRole("button", { expanded: false })).not.toHaveClass("text-sm", "font-bold");
   });
+
+  it("opens the compact footer menu upward without a heading", () => {
+    renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" variant="footer" />, { locale: "en" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("bottom-[calc(100%+10px)]", "min-w-44");
+    expect(screen.getByRole("menuitemradio", { name: "English" })).toHaveClass(
+      "text-xs",
+      "font-semibold",
+    );
+    expect(screen.queryByText("Language")).not.toBeInTheDocument();
+  });
+
+  it("keeps the default menu below the trigger with its heading", () => {
+    renderWithIntl(<LocaleSwitcher />, { locale: "en" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("top-[calc(100%+10px)]");
+    expect(screen.getByText("Language")).toBeInTheDocument();
+  });
 });

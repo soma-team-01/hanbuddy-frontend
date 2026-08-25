@@ -31,7 +31,7 @@ export function TranslatedReviewContent({
           type="button"
           aria-pressed={showOriginal}
           onClick={() => setShowOriginal((current) => !current)}
-          className="mt-1.5 text-xs font-medium text-muted transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="mt-1 px-1 text-[11px] font-medium text-muted/55 underline-offset-2 transition-colors hover:text-muted hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           {showOriginal ? t("showTranslation") : t("showOriginal")}
         </button>

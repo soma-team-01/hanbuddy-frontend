@@ -27,7 +27,10 @@ describe("ReviewCard", () => {
     expect(screen.getByText("It was a wonderful experience.")).toBeInTheDocument();
     expect(screen.queryByText("정말 좋은 경험이었어요.")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Show original" }));
+    const originalButton = screen.getByRole("button", { name: "Show original" });
+    expect(originalButton).toHaveClass("text-[11px]", "text-muted/55");
+
+    fireEvent.click(originalButton);
 
     expect(screen.getByText("정말 좋은 경험이었어요.")).toBeInTheDocument();
     expect(screen.queryByText("It was a wonderful experience.")).not.toBeInTheDocument();

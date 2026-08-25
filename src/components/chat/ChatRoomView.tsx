@@ -14,14 +14,7 @@ import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
-import {
-  ArrowLeftIcon,
-  ChevronDownIcon,
-  CircleHelpIcon,
-  ImagePlusIcon,
-  UsersIcon,
-  XIcon,
-} from "@/components/ui/icons";
+import { ArrowLeftIcon, ImagePlusIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -32,7 +25,6 @@ import {
 } from "@/lib/api/chat";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatChatScheduleLabel } from "@/lib/chat/format";
-import { resolveChatSourceLanguage } from "@/lib/chat/source-language";
 import { getContentLanguage } from "@/lib/content-language";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
 import { readImageSize } from "@/lib/chat/image-size";
@@ -41,7 +33,6 @@ import { chatKeys, chatRoomQueryOptions, myChatRoomsQueryOptions } from "@/lib/q
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
-import type { ContentLanguage } from "@/types/content-language";
 
 /** 보내기 전 미리보기용으로만 쓰는 첨부 항목 */
 interface ChatAttachment {
@@ -50,21 +41,8 @@ interface ChatAttachment {
   previewUrl: string;
 }
 
-const CHAT_SOURCE_LANGUAGE_OPTIONS = [
-  { value: "KO", label: "한국어" },
-  { value: "EN", label: "English" },
-  { value: "JA", label: "日本語" },
-  { value: "ZH_HANS", label: "简体中文" },
-  { value: "ZH_HANT", label: "繁體中文" },
-] as const satisfies ReadonlyArray<{ value: ContentLanguage; label: string }>;
-
 /** 고른 사진을 올린 뒤 한 장씩 보낸다. 여러 장이면 같은 batchId로 묶어 화면에서 한 덩어리가 되게 한다 */
-async function sendChatPhotos(
-  chatRoomId: string,
-  files: File[],
-  content: string,
-  sourceLanguage: ContentLanguage,
-) {
+async function sendChatPhotos(chatRoomId: string, files: File[], content: string) {
   // 발급받은 key는 1시간 안에 써야 하므로 보내기 직전에 올린다
   const uploaded = await uploadChatImages(files);
   const sizes = await Promise.all(files.map(readImageSize));
@@ -74,7 +52,6 @@ async function sendChatPhotos(
     unwrapApiResult(
       await sendChatMessage(chatRoomId, {
         messageType: "IMAGE",
-        sourceLanguage,
         imageKey: target.imageKey,
         // 캡션은 첫 장에만 붙인다
         content: index === 0 && content ? content : null,
@@ -95,9 +72,6 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
   const [draft, setDraft] = useState("");
-  const [selectedSourceLanguage, setSelectedSourceLanguage] = useState<ContentLanguage | null>(
-    null,
-  );
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachNotice, setAttachNotice] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -128,11 +102,6 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const messages = chatMessages.messages;
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
   const myUserId = profileQuery.data?.userId;
-  const detectedSourceLanguage = resolveChatSourceLanguage(
-    draft,
-    language,
-    profileQuery.data?.userType,
-  );
 
   const readMutation = useMutation({
     mutationFn: async (lastReadMessageId: number) =>
@@ -160,16 +129,10 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   const sendMutation = useMutation({
     mutationFn: async ({ content, files }: { content: string; files: File[] }) => {
-      const sourceLanguage =
-        selectedSourceLanguage ??
-        resolveChatSourceLanguage(content, language, profileQuery.data?.userType);
       if (files.length === 0) {
-        return unwrapApiResult(
-          await sendChatMessage(chatRoomId, { content, sourceLanguage }),
-          "message",
-        );
+        return unwrapApiResult(await sendChatMessage(chatRoomId, { content }), "message");
       }
-      await sendChatPhotos(chatRoomId, files, content, sourceLanguage);
+      await sendChatPhotos(chatRoomId, files, content);
       return null;
     },
     onSuccess: async () => {
@@ -421,82 +384,41 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         ) : null}
         <form
           data-testid="chat-composer"
-          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2"
+          className="flex items-end gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             submitDraft();
           }}
         >
-          <div
-            data-testid="chat-translation-guide"
-            className="col-start-1 row-start-1 grid w-full max-w-xs grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5"
-          >
-            <label className="relative block min-w-0">
-              <span className="sr-only">{t("sourceLanguage")}</span>
-              <select
-                aria-label={t("sourceLanguage")}
-                value={selectedSourceLanguage ?? detectedSourceLanguage}
-                disabled={sendMutation.isPending}
-                onChange={(event) =>
-                  setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
-                }
-                className="h-8 w-full cursor-pointer appearance-none rounded-lg border border-line-soft bg-canvas-soft px-2.5 pr-7 text-[11px] font-medium text-ink shadow-[0_3px_10px_rgba(38,27,24,0.05)] transition-colors outline-none hover:border-line-strong focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-2.5 size-3 -translate-y-1/2 text-muted" />
-            </label>
-
-            <span aria-hidden="true" className="text-xs text-primary/55">
-              →
-            </span>
-
-            <div className="flex h-8 min-w-0 items-center rounded-lg border border-line-soft bg-canvas-soft px-2.5 text-[11px] font-medium text-muted shadow-[0_3px_10px_rgba(38,27,24,0.05)]">
-              <span className="truncate">{t("translationTarget")}</span>
-              <span className="group/help relative ml-1.5 shrink-0">
-                <button
-                  type="button"
-                  aria-label={t("translationHelpLabel")}
-                  aria-describedby="chat-translation-tooltip"
-                  className="flex size-4 items-center justify-center rounded-full text-muted/70 transition-colors hover:text-primary focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
-                >
-                  <CircleHelpIcon className="size-3.5" />
-                </button>
-                <span
-                  id="chat-translation-tooltip"
-                  role="tooltip"
-                  className="invisible absolute right-0 bottom-full z-20 mb-2 w-60 rounded-lg bg-ink px-3 py-2 font-sans text-xs leading-5 font-normal text-white opacity-0 shadow-lg transition-opacity group-focus-within/help:visible group-focus-within/help:opacity-100 group-hover/help:visible group-hover/help:opacity-100"
-                >
-                  {t("translationHelp")}
-                </span>
-              </span>
-            </div>
-          </div>
-
           <label htmlFor="chat-draft" className="sr-only">
             {t("messageLabel")}
           </label>
-          <div
-            data-testid="chat-message-input"
-            className="relative col-start-1 row-start-2 min-w-0"
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            disabled={!chatConnected || sendMutation.isPending}
+            className="hidden"
+            onChange={(event) => {
+              attachFiles(event.target.files);
+              // 같은 파일을 다시 고를 수 있도록 값을 비운다
+              event.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            title={t("attachPhoto")}
+            aria-label={t("attachPhoto")}
+            disabled={
+              !chatConnected || sendMutation.isPending || attachments.length >= MAX_CHAT_IMAGE_COUNT
+            }
+            onClick={() => fileInputRef.current?.click()}
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-primary disabled:opacity-40"
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              disabled={!chatConnected || sendMutation.isPending}
-              className="hidden"
-              onChange={(event) => {
-                attachFiles(event.target.files);
-                // 같은 파일을 다시 고를 수 있도록 값을 비운다
-                event.target.value = "";
-              }}
-            />
+            <ImagePlusIcon className="size-5" />
+          </button>
+          <div data-testid="chat-message-input" className="min-w-0 flex-1">
             <textarea
               id="chat-draft"
               rows={1}
@@ -514,22 +436,8 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
                   submitDraft();
                 }
               }}
-              className="focus-border-only block max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft py-2.5 pr-12 pl-4 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
+              className="focus-border-only block max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
             />
-            <button
-              type="button"
-              title={t("attachPhoto")}
-              aria-label={t("attachPhoto")}
-              disabled={
-                !chatConnected ||
-                sendMutation.isPending ||
-                attachments.length >= MAX_CHAT_IMAGE_COUNT
-              }
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute top-1/2 right-1 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors enabled:hover:bg-primary-soft enabled:hover:text-primary disabled:opacity-40"
-            >
-              <ImagePlusIcon className="size-5" />
-            </button>
           </div>
           <button
             type="submit"
@@ -538,7 +446,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
               sendMutation.isPending ||
               (draft.trim().length === 0 && attachments.length === 0)
             }
-            className="col-start-2 row-start-2 h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+            className="h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
           >
             {sendLabel()}
           </button>

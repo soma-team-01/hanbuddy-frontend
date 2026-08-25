@@ -102,8 +102,6 @@ export interface SendChatMessageRequest {
   messageType?: ChatMessageType;
   /** TEXT면 필수, IMAGE면 캡션(선택) */
   content?: string | null;
-  /** 작성 시점의 사이트 언어 */
-  sourceLanguage: ContentLanguage;
   /** IMAGE면 필수. presigned 발급 후 1시간 안에 보내야 한다 */
   imageKey?: string;
   imageWidth?: number;

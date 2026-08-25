@@ -248,81 +248,22 @@ describe("ChatRoomView", () => {
     await waitFor(() =>
       expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
         content: "내일 3시 어때요?",
-        sourceLanguage: "EN",
       }),
     );
     await waitFor(() => expect(input).toHaveValue(""));
   });
 
-  it("detects an English message sent by a buddy", async () => {
-    mockedGetMyProfile.mockResolvedValue({
-      status: "success",
-      profile: { userId: 11, displayName: "Nelli", userType: "BUDDY" } as never,
-    });
-    mockedSendChatMessage.mockResolvedValue({
-      status: "success",
-      message: message(22, 11, "See you at 3 PM!"),
-    });
-
-    renderWithQueryClient(<ChatRoomView chatRoomId="1" />, { locale: "ko" });
-
-    const input = await screen.findByLabelText("메시지");
-    fireEvent.change(input, { target: { value: "See you at 3 PM!" } });
-    expect(screen.getByRole("combobox", { name: "원문 언어" })).toHaveValue("EN");
-    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
-
-    await waitFor(() =>
-      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
-        content: "See you at 3 PM!",
-        sourceLanguage: "EN",
-      }),
-    );
-  });
-
-  it("shows the source language and automatic translation direction", async () => {
-    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
-
-    const sourceSelect = await screen.findByRole("combobox", { name: "Original language" });
-    const translationGuide = screen.getByTestId("chat-translation-guide");
-    const composer = screen.getByTestId("chat-composer");
-    expect(sourceSelect).toHaveValue("EN");
-    expect(within(sourceSelect).getAllByRole("option")).toHaveLength(5);
-    expect(within(translationGuide).getByText("Automatic translation")).toBeInTheDocument();
-    expect(within(composer).getByTestId("chat-translation-guide")).toBe(translationGuide);
-    expect(translationGuide).toHaveClass("col-start-1", "max-w-xs");
-    expect(sourceSelect.closest("form")).toBe(composer);
-    const translationHelp = screen.getByRole("button", { name: "About automatic translation" });
-    expect(translationHelp).toHaveAttribute("aria-describedby", "chat-translation-tooltip");
-    expect(screen.getByRole("tooltip")).toHaveTextContent(
-      "Messages you send are automatically translated into each recipient's language.",
-    );
-    const messageInput = screen.getByTestId("chat-message-input");
-    expect(within(messageInput).getByRole("textbox", { name: "Message" })).toBeInTheDocument();
-    expect(within(messageInput).getByRole("button", { name: "Attach photos" })).toHaveClass(
-      "absolute",
-      "right-1",
-    );
-  });
-
-  it("lets the sender override the detected source language", async () => {
-    mockedSendChatMessage.mockResolvedValue({
-      status: "success",
-      message: message(22, 11, "내일 만나요"),
-    });
-
+  it("uses server-side language detection and explains automatic translation in the input", async () => {
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
 
     const input = await screen.findByLabelText("Message");
-    const sourceSelect = screen.getByRole("combobox", { name: "Original language" });
-    fireEvent.change(sourceSelect, { target: { value: "KO" } });
-    fireEvent.change(input, { target: { value: "내일 만나요" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-
-    await waitFor(() =>
-      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
-        content: "내일 만나요",
-        sourceLanguage: "KO",
-      }),
+    const composer = screen.getByTestId("chat-composer");
+    expect(input).toHaveAttribute("placeholder", "Message · Auto-translated for recipients");
+    expect(within(composer).queryByRole("combobox")).not.toBeInTheDocument();
+    const photoButton = within(composer).getByRole("button", { name: "Attach photos" });
+    expect(photoButton).toHaveClass("shrink-0");
+    expect(photoButton.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(
+      0,
     );
   });
 
@@ -343,7 +284,6 @@ describe("ChatRoomView", () => {
     await waitFor(() =>
       expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
         content: "네!",
-        sourceLanguage: "EN",
       }),
     );
   });
@@ -432,7 +372,7 @@ describe("ChatRoomView", () => {
     expect(mockedSendChatMessage).toHaveBeenNthCalledWith(
       1,
       "1",
-      expect.objectContaining({ sourceLanguage: "EN" }),
+      expect.not.objectContaining({ sourceLanguage: expect.anything() }),
     );
   });
 

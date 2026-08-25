@@ -268,6 +268,7 @@ describe("ChatRoomView", () => {
 
     const input = await screen.findByLabelText("메시지");
     fireEvent.change(input, { target: { value: "See you at 3 PM!" } });
+    expect(screen.getByRole("combobox", { name: "원문 언어" })).toHaveValue("EN");
     fireEvent.click(screen.getByRole("button", { name: "보내기" }));
 
     await waitFor(() =>
@@ -278,12 +279,35 @@ describe("ChatRoomView", () => {
     );
   });
 
-  it("explains that chat messages are translated automatically", async () => {
+  it("shows the source language and automatic translation direction", async () => {
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
 
-    expect(
-      await screen.findByText("Messages are automatically translated for each participant."),
-    ).toBeInTheDocument();
+    const sourceSelect = await screen.findByRole("combobox", { name: "Original language" });
+    expect(sourceSelect).toHaveValue("EN");
+    expect(within(sourceSelect).getAllByRole("option")).toHaveLength(5);
+    expect(screen.getByText("Auto-translated for recipients")).toBeInTheDocument();
+  });
+
+  it("lets the sender override the detected source language", async () => {
+    mockedSendChatMessage.mockResolvedValue({
+      status: "success",
+      message: message(22, 11, "내일 만나요"),
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    const input = await screen.findByLabelText("Message");
+    const sourceSelect = screen.getByRole("combobox", { name: "Original language" });
+    fireEvent.change(sourceSelect, { target: { value: "KO" } });
+    fireEvent.change(input, { target: { value: "내일 만나요" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() =>
+      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
+        content: "내일 만나요",
+        sourceLanguage: "KO",
+      }),
+    );
   });
 
   it("sends on Enter but keeps Shift+Enter for a new line", async () => {

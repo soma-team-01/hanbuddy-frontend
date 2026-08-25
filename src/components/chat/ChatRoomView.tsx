@@ -14,7 +14,13 @@ import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
-import { ArrowLeftIcon, ImagePlusIcon, UsersIcon, XIcon } from "@/components/ui/icons";
+import {
+  ArrowLeftIcon,
+  ChevronDownIcon,
+  ImagePlusIcon,
+  UsersIcon,
+  XIcon,
+} from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -42,6 +48,14 @@ interface ChatAttachment {
   /** createObjectURL 결과 — 목록에서 빠질 때 반드시 해제한다 */
   previewUrl: string;
 }
+
+const CHAT_SOURCE_LANGUAGE_OPTIONS = [
+  { value: "KO", label: "한국어" },
+  { value: "EN", label: "English" },
+  { value: "JA", label: "日本語" },
+  { value: "ZH_HANS", label: "简体中文" },
+  { value: "ZH_HANT", label: "繁體中文" },
+] as const satisfies ReadonlyArray<{ value: ContentLanguage; label: string }>;
 
 /** 고른 사진을 올린 뒤 한 장씩 보낸다. 여러 장이면 같은 batchId로 묶어 화면에서 한 덩어리가 되게 한다 */
 async function sendChatPhotos(
@@ -80,6 +94,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
   const [draft, setDraft] = useState("");
+  const [selectedSourceLanguage, setSelectedSourceLanguage] = useState<ContentLanguage | null>(
+    null,
+  );
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachNotice, setAttachNotice] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -110,6 +127,11 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const messages = chatMessages.messages;
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
   const myUserId = profileQuery.data?.userId;
+  const detectedSourceLanguage = resolveChatSourceLanguage(
+    draft,
+    language,
+    profileQuery.data?.userType,
+  );
 
   const readMutation = useMutation({
     mutationFn: async (lastReadMessageId: number) =>
@@ -137,11 +159,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   const sendMutation = useMutation({
     mutationFn: async ({ content, files }: { content: string; files: File[] }) => {
-      const sourceLanguage = resolveChatSourceLanguage(
-        content,
-        language,
-        profileQuery.data?.userType,
-      );
+      const sourceLanguage =
+        selectedSourceLanguage ??
+        resolveChatSourceLanguage(content, language, profileQuery.data?.userType);
       if (files.length === 0) {
         return unwrapApiResult(
           await sendChatMessage(chatRoomId, { content, sourceLanguage }),
@@ -398,7 +418,31 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             ))}
           </ul>
         ) : null}
-        <p className="mb-2 px-1 text-[11px] leading-4 text-muted">{t("translationNotice")}</p>
+        <div className="mb-2 flex flex-wrap items-center gap-1.5 px-1 text-[11px] leading-4 text-muted">
+          <span>{t("sourceLanguage")}:</span>
+          <span className="relative inline-flex items-center">
+            <select
+              aria-label={t("sourceLanguage")}
+              value={selectedSourceLanguage ?? detectedSourceLanguage}
+              disabled={sendMutation.isPending}
+              onChange={(event) =>
+                setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
+              }
+              className="cursor-pointer appearance-none bg-transparent py-0.5 pr-4 font-medium text-ink/70 transition-colors outline-none hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDownIcon className="pointer-events-none absolute right-0 size-3 text-muted" />
+          </span>
+          <span aria-hidden="true" className="text-line-strong">
+            →
+          </span>
+          <span>{t("translationTarget")}</span>
+        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(event) => {

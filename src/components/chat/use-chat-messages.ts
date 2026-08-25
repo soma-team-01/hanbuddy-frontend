@@ -8,6 +8,7 @@ import {
   mergeChatMessages,
 } from "@/lib/query/chat";
 import type { ChatMessageResponse } from "@/types/chat";
+import type { ContentLanguage } from "@/types/content-language";
 
 /**
  * 대화방의 메시지를 모아 주는 훅.
@@ -23,8 +24,8 @@ import type { ChatMessageResponse } from "@/types/chat";
  * 그 사이 메시지는 어디서도 받을 수 없으므로, 겹침이 없으면 누적분을 버리고 새 경계에서 다시 시작한다.
  * 경계가 바뀌면 쿼리 키도 바뀌어 이어 붙일 수 없게 된 과거 페이지가 함께 정리된다.
  */
-export function useChatMessages(chatRoomId: string) {
-  const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId));
+export function useChatMessages(chatRoomId: string, language: ContentLanguage) {
+  const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, language));
 
   // 과거 조회의 시작점. 최신 창이 밀려도 따라가지 않는다
   const [historyBoundaryId, setHistoryBoundaryId] = useState(0);
@@ -33,7 +34,7 @@ export function useChatMessages(chatRoomId: string) {
   // 경계가 잡히면 첫 과거 묶음은 미리 받아 둔다 — 목록 위쪽 감시 요소가 화면 240px 앞에서 이미
   // 다음 묶음을 요청하므로, 여기서 미루면 위로 올릴 때마다 빈 화면을 먼저 보게 된다
   const historyQuery = useInfiniteQuery({
-    ...chatMessageHistoryQueryOptions(chatRoomId, historyBoundaryId),
+    ...chatMessageHistoryQueryOptions(chatRoomId, historyBoundaryId, language),
     enabled: historyBoundaryId > 0 && Boolean(latestQuery.data?.hasNext),
   });
 

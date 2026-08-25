@@ -28,7 +28,7 @@ export function useChatRoomStream(chatRoomId: string, language: ContentLanguage)
     const close = openChatRoomStream(chatRoomId, {
       onMessage: (message) => {
         queryClient.setQueryData<ChatMessagePageResponse>(
-          chatKeys.latestMessages(chatRoomId),
+          chatKeys.latestMessages(chatRoomId, language),
           (current) => appendMessage(current, message),
         );
         // 목록의 마지막 메시지·안 읽은 수를 갱신한다
@@ -45,7 +45,9 @@ export function useChatRoomStream(chatRoomId: string, language: ContentLanguage)
         if (status === "connected") {
           // REST 조회와 구독 시작 사이 또는 재연결 중 놓친 메시지·읽음 위치를 한 번 맞춘다
           void Promise.all([
-            queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
+            queryClient.invalidateQueries({
+              queryKey: chatKeys.latestMessages(chatRoomId, language),
+            }),
             queryClient.invalidateQueries({ queryKey: chatKeys.room(chatRoomId, language) }),
           ]);
         }

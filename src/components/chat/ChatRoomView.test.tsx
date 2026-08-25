@@ -65,6 +65,9 @@ function message(messageId: number, senderId: number, content: string): ChatMess
     senderName: senderId === 11 ? "Nelli" : "SeoulMate",
     senderProfileImageUrl: null,
     content,
+    sourceLanguage: "KO",
+    contentLanguage: "KO",
+    originalContent: content,
     createdAt: "2026-08-09T13:00:00+09:00",
   };
 }
@@ -243,7 +246,10 @@ describe("ChatRoomView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     await waitFor(() =>
-      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", { content: "내일 3시 어때요?" }),
+      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
+        content: "내일 3시 어때요?",
+        sourceLanguage: "EN",
+      }),
     );
     await waitFor(() => expect(input).toHaveValue(""));
   });
@@ -263,7 +269,10 @@ describe("ChatRoomView", () => {
 
     fireEvent.keyDown(input, { key: "Enter" });
     await waitFor(() =>
-      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", { content: "네!" }),
+      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
+        content: "네!",
+        sourceLanguage: "EN",
+      }),
     );
   });
 

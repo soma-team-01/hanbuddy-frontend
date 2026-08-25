@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createGroupChatRoom, getChatRoom, getMyChatRooms, updateChatRoomTitle } from "./chat";
+import {
+  createGroupChatRoom,
+  getChatMessages,
+  getChatRoom,
+  getMyChatRooms,
+  updateChatRoomTitle,
+} from "./chat";
 
 function createJsonResponse(result: unknown) {
   return new Response(JSON.stringify({ isSuccess: true, code: "200", message: "ok", result }), {
@@ -49,6 +55,29 @@ describe("translated chat room API client", () => {
       2,
       "/api/chat/rooms/4?language=EN",
       expect.objectContaining({ method: "PATCH" }),
+    );
+  });
+
+  it("adds the requested language to latest and cursor message requests", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        messages: [],
+        nextCursor: null,
+        hasNext: false,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getChatMessages(4, null, 30, "JA");
+    await getChatMessages(4, 120, 30, "ZH_HANT");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/chat/rooms/4/messages?size=30&language=JA", {
+      credentials: "same-origin",
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/chat/rooms/4/messages?size=30&beforeMessageId=120&language=ZH_HANT",
+      { credentials: "same-origin" },
     );
   });
 });

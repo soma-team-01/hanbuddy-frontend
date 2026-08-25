@@ -22,6 +22,9 @@ function message(messageId: number): ChatMessageResponse {
     senderName: "SeoulMate",
     senderProfileImageUrl: null,
     content: `message ${messageId}`,
+    sourceLanguage: "KO",
+    contentLanguage: "KO",
+    originalContent: `message ${messageId}`,
     createdAt: "2026-08-10T13:00:00+09:00",
   };
 }
@@ -80,7 +83,7 @@ describe("useChatRoomStream", () => {
     act(() => streamHandlers.onStatusChange("connected"));
 
     expect(result.current.status).toBe("connected");
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.latestMessages("1") });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.latestMessages("1", "EN") });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.room("1", "EN") });
   });
 });

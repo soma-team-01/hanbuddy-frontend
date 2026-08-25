@@ -12,11 +12,13 @@ import {
   isValidChatMessageContent,
   isValidChatRoomId,
 } from "@/app/api/_utils/chat-input";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type {
   ChatMessagePageResponse,
   ChatMessageResponse,
   SendChatMessageRequest,
 } from "@/types/chat";
+import { isContentLanguage } from "@/types/content-language";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +32,10 @@ export async function GET(request: NextRequest, context: ChatMessagesRouteContex
     return badRequestResponse("잘못된 채팅방 ID입니다.");
   }
 
+  const backendPath = `/chat/rooms/${chatRoomId}/messages${buildChatMessageQuery(request.nextUrl.searchParams)}`;
   return proxyAuthenticatedGet<ChatMessagePageResponse>(
     request,
-    `/chat/rooms/${chatRoomId}/messages${buildChatMessageQuery(request.nextUrl.searchParams)}`,
+    appendRequestedContentLanguage(request, backendPath),
     "채팅 서버에 연결할 수 없습니다.",
   );
 }
@@ -47,6 +50,9 @@ export async function POST(request: NextRequest, context: ChatMessagesRouteConte
   if (!parsed.ok) return parsed.response;
 
   const body = parsed.body;
+  if (!isContentLanguage(body?.sourceLanguage)) {
+    return badRequestResponse("메시지 언어가 올바르지 않습니다.");
+  }
   // 모르는 값을 조용히 TEXT로 처리하면 계약이 어긋난 요청이 성공한 것처럼 보인다
   const requestedType = body?.messageType;
   if (requestedType !== undefined && requestedType !== "TEXT" && requestedType !== "IMAGE") {
@@ -68,6 +74,7 @@ export async function POST(request: NextRequest, context: ChatMessagesRouteConte
       `/chat/rooms/${chatRoomId}/messages`,
       {
         messageType: "IMAGE",
+        sourceLanguage: body.sourceLanguage,
         imageKey: body.imageKey,
         content: body.content ?? null,
         imageWidth: toPositiveInteger(body.imageWidth),
@@ -85,7 +92,7 @@ export async function POST(request: NextRequest, context: ChatMessagesRouteConte
   return proxyAuthenticatedPost<SendChatMessageRequest, ChatMessageResponse>(
     request,
     `/chat/rooms/${chatRoomId}/messages`,
-    { content: body.content },
+    { messageType: "TEXT", content: body.content, sourceLanguage: body.sourceLanguage },
     "채팅 서버에 연결할 수 없습니다.",
   );
 }

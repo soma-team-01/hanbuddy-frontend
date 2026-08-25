@@ -50,6 +50,9 @@ function message(messageId: number, senderId: number, createdAt: string): ChatMe
     senderName: senderId === 11 ? "Nelli" : "SeoulMate",
     senderProfileImageUrl: null,
     content: `message ${messageId}`,
+    sourceLanguage: "KO",
+    contentLanguage: "KO",
+    originalContent: `message ${messageId}`,
     createdAt,
   };
 }
@@ -117,6 +120,7 @@ function imageMessage(
     ...message(messageId, senderId, createdAt),
     messageType: "IMAGE",
     content: null,
+    originalContent: null,
     imageUrl: `https://cdn/chats/${messageId}.webp`,
     batchId: batchId ?? null,
   };

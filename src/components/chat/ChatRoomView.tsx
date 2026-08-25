@@ -33,6 +33,7 @@ import { chatKeys, chatRoomQueryOptions, myChatRoomsQueryOptions } from "@/lib/q
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
+import type { ContentLanguage } from "@/types/content-language";
 
 /** 보내기 전 미리보기용으로만 쓰는 첨부 항목 */
 interface ChatAttachment {
@@ -42,7 +43,12 @@ interface ChatAttachment {
 }
 
 /** 고른 사진을 올린 뒤 한 장씩 보낸다. 여러 장이면 같은 batchId로 묶어 화면에서 한 덩어리가 되게 한다 */
-async function sendChatPhotos(chatRoomId: string, files: File[], content: string) {
+async function sendChatPhotos(
+  chatRoomId: string,
+  files: File[],
+  content: string,
+  sourceLanguage: ContentLanguage,
+) {
   // 발급받은 key는 1시간 안에 써야 하므로 보내기 직전에 올린다
   const uploaded = await uploadChatImages(files);
   const sizes = await Promise.all(files.map(readImageSize));
@@ -52,6 +58,7 @@ async function sendChatPhotos(chatRoomId: string, files: File[], content: string
     unwrapApiResult(
       await sendChatMessage(chatRoomId, {
         messageType: "IMAGE",
+        sourceLanguage,
         imageKey: target.imageKey,
         // 캡션은 첫 장에만 붙인다
         content: index === 0 && content ? content : null,
@@ -97,7 +104,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const profileQuery = useQuery(myProfileQueryOptions());
   const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, language));
   const roomsQuery = useQuery(myChatRoomsQueryOptions(language));
-  const chatMessages = useChatMessages(chatRoomId);
+  const chatMessages = useChatMessages(chatRoomId, language);
 
   const messages = chatMessages.messages;
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
@@ -130,9 +137,12 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const sendMutation = useMutation({
     mutationFn: async ({ content, files }: { content: string; files: File[] }) => {
       if (files.length === 0) {
-        return unwrapApiResult(await sendChatMessage(chatRoomId, { content }), "message");
+        return unwrapApiResult(
+          await sendChatMessage(chatRoomId, { content, sourceLanguage: language }),
+          "message",
+        );
       }
-      await sendChatPhotos(chatRoomId, files, content);
+      await sendChatPhotos(chatRoomId, files, content, language);
       return null;
     },
     onSuccess: async () => {
@@ -144,7 +154,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       setAttachNotice(null);
       setError(null);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId, language) }),
         queryClient.invalidateQueries({ queryKey: chatKeys.images(chatRoomId) }),
         queryClient.invalidateQueries({ queryKey: chatKeys.rooms() }),
       ]);
@@ -152,7 +162,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     // 묶음 전송은 한 장씩 보내므로 도중에 끊겨도 앞선 장은 이미 서버에 있다
     onError: async (sendError) => {
       setError(sendError);
-      await queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) });
+      await queryClient.invalidateQueries({
+        queryKey: chatKeys.latestMessages(chatRoomId, language),
+      });
     },
   });
 

@@ -568,6 +568,8 @@
     "ratingRequired": "Please choose a rating.",
     "contentRequired": "Please write a few words about the experience.",
     "yourReview": "Your review",
+    "showOriginal": "Show original",
+    "showTranslation": "Show translation",
     "saveError": "Could not save your review.",
     "deleteError": "Could not delete your review.",
     "filterByRating": "Show only {rating}-star reviews",

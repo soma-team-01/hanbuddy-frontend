@@ -568,6 +568,8 @@
     "ratingRequired": "별점을 선택해 주세요.",
     "contentRequired": "체험에 대한 후기를 한두 문장이라도 적어 주세요.",
     "yourReview": "내가 남긴 후기",
+    "showOriginal": "원문 보기",
+    "showTranslation": "번역 보기",
     "saveError": "후기를 저장하지 못했습니다.",
     "deleteError": "후기를 삭제하지 못했습니다.",
     "filterByRating": "{rating}점 후기만 보기",

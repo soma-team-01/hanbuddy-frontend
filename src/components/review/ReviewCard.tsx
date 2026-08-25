@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { ReviewStars } from "@/components/review/ReviewStars";
+import { TranslatedReviewContent } from "@/components/review/TranslatedReviewContent";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatSeoulDate } from "@/lib/datetime";
 import type { Locale } from "@/i18n/routing";
@@ -40,7 +41,7 @@ export function ReviewCard({
         <p className="truncate text-xs font-semibold text-primary">{review.activityTitle}</p>
       ) : null}
 
-      <p className="text-sm leading-6 whitespace-pre-line text-ink">{review.content}</p>
+      <TranslatedReviewContent review={review} />
     </article>
   );
 }

@@ -17,10 +17,14 @@ function createReview(reviewId: number): ReviewResponse {
     applicationId: reviewId + 100,
     activityId: 42,
     activityTitle: "Bukchon Hidden Gems",
+    activityTitleLanguage: "EN",
     reviewerName: `Reviewer ${reviewId}`,
     reviewerProfileImageUrl: null,
     rating: 5,
     content: `Loved every minute of it (${reviewId}).`,
+    contentLanguage: "EN",
+    sourceLanguage: "EN",
+    originalContent: `Loved every minute of it (${reviewId}).`,
     createdAt: "2026-08-01T13:00:00+09:00",
   };
 }

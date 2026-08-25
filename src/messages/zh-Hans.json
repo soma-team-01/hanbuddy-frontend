@@ -568,6 +568,8 @@
     "ratingRequired": "请选择一个评级。",
     "contentRequired": "请写几句话谈谈经历。",
     "yourReview": "您的评论",
+    "showOriginal": "查看原文",
+    "showTranslation": "查看翻译",
     "saveError": "无法保存您的评论。",
     "deleteError": "无法删除您的评论。",
     "filterByRating": "仅显示 {rating}-星级评论",

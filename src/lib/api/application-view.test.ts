@@ -93,6 +93,9 @@ describe("application view adapters", () => {
       reviewId: 9,
       rating: 5,
       content: "Loved it.",
+      contentLanguage: "EN" as const,
+      sourceLanguage: "EN" as const,
+      originalContent: "Loved it.",
       createdAt: "2026-07-19T13:00:00+09:00",
     };
 

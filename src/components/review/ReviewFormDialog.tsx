@@ -22,7 +22,7 @@ export function ReviewFormDialog({
   onClose,
 }: Readonly<{
   /** 수정 모드일 때 기존 후기. 새로 작성하면 null */
-  review?: { rating: number; content: string } | null;
+  review?: { rating: number; originalContent: string } | null;
   activityTitle: string;
   isSaving?: boolean;
   errorMessage?: string | null;
@@ -34,7 +34,7 @@ export function ReviewFormDialog({
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [rating, setRating] = useState(review?.rating ?? 0);
-  const [content, setContent] = useState(review?.content ?? "");
+  const [content, setContent] = useState(review?.originalContent ?? "");
   const [validationKey, setValidationKey] = useState<"ratingRequired" | "contentRequired" | null>(
     null,
   );

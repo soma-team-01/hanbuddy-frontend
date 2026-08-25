@@ -9,7 +9,7 @@ vi.mock("@/i18n/navigation", async (importOriginal) => ({
   usePathname: vi.fn(),
 }));
 
-vi.mock("./LocaleSwitcher", () => ({
+vi.mock("@/components/layout/LocaleSwitcher", () => ({
   LocaleSwitcher: () => <button type="button">Language switcher</button>,
 }));
 

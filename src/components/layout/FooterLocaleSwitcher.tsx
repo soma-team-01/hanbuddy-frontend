@@ -2,7 +2,7 @@
 
 import { usePathname } from "@/i18n/navigation";
 import type { SiteNavRole } from "@/lib/auth/routes";
-import { LocaleSwitcher } from "./LocaleSwitcher";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 
 interface FooterLocaleSwitcherProps {
   readonly role?: SiteNavRole | null;

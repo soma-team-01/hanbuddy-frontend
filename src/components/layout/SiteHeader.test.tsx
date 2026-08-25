@@ -178,9 +178,15 @@ describe("SiteHeader", () => {
     renderWithQueryClient(<SiteHeader mayHaveSession />);
 
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Select language, current language: English" }),
+    ).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
     });
+    expect(
+      screen.getByRole("button", { name: "Select language, current language: English" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Open my account" })[0]).toHaveAttribute(
       "href",
       "/en/my-page",

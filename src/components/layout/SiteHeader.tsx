@@ -112,7 +112,10 @@ export function SiteHeader({
   const isBuddyArea = pathname === "/buddy" || pathname.startsWith("/buddy/");
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
-  const showLanguageSwitcher = effectiveRole !== "buddy" && !isBuddyArea;
+  const showLanguageSwitcher =
+    (effectiveRole !== null || currentResolution !== undefined || !mayHaveSession) &&
+    effectiveRole !== "buddy" &&
+    !isBuddyArea;
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
   const logoHref = isBuddyArea ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");

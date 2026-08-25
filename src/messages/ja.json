@@ -740,7 +740,7 @@
     "groupBadge": "グループ",
     "memberCount": "{count, plural, one {# メンバー} other {# メンバー}}",
     "leftMember": "左",
-    "messagePlaceholder": "相手には自動翻訳されたメッセージが表示されます。",
+    "messagePlaceholder": "相手には翻訳文が表示され、翻訳できない場合は原文が表示されます。",
     "messageLabel": "メッセージ",
     "send": "送信",
     "sending": "送信中...",

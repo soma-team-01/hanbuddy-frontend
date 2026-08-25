@@ -740,7 +740,7 @@
     "groupBadge": "Group",
     "memberCount": "{count, plural, one {# member} other {# members}}",
     "leftMember": "left",
-    "messagePlaceholder": "Recipients see an automatically translated message.",
+    "messagePlaceholder": "Recipients see a translation when available; otherwise, they see the original.",
     "messageLabel": "Message",
     "send": "Send",
     "sending": "Sending...",

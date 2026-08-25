@@ -38,4 +38,23 @@ describe("LocaleSwitcher", () => {
 
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["en", "English(en)"],
+    ["ko", "한국어(ko)"],
+    ["ja", "日本語(ja)"],
+    ["zh-Hans", "简体中文(zh-Hans)"],
+    ["zh-Hant", "繁體中文(zh-Hant)"],
+  ] as const)("shows the language name and code for %s", (locale, label) => {
+    renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" />, { locale });
+
+    expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(label);
+  });
+
+  it("uses lighter compact typography in the footer", () => {
+    renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" variant="footer" />, { locale: "en" });
+
+    expect(screen.getByRole("button", { expanded: false })).toHaveClass("text-xs", "font-medium");
+    expect(screen.getByRole("button", { expanded: false })).not.toHaveClass("text-sm", "font-bold");
+  });
 });

@@ -49,7 +49,7 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
           </div>
 
           <div className="flex items-center gap-4 sm:justify-end">
-            <LocaleSwitcher className="min-h-8 border-transparent bg-transparent px-0 shadow-none hover:border-transparent" />
+            <LocaleSwitcher labelStyle="nameWithCode" variant="footer" />
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}

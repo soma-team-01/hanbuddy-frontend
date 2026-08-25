@@ -22,7 +22,11 @@ vi.mock("next-intl/server", async () => {
 });
 
 vi.mock("@/components/layout/LocaleSwitcher", () => ({
-  LocaleSwitcher: () => <button type="button">EN</button>,
+  LocaleSwitcher: ({ labelStyle, variant }: { labelStyle?: string; variant?: string }) => (
+    <button type="button" data-variant={variant}>
+      {labelStyle === "nameWithCode" ? "English(en)" : "EN"}
+    </button>
+  ),
 }));
 
 import { SiteFooter } from "./SiteFooter";
@@ -50,7 +54,10 @@ describe("SiteFooter", () => {
 
       expect(screen.getByText("© 2026 HanBuddy")).toBeInTheDocument();
       expect(screen.queryByText(/rights reserved|권리를 보유/i)).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "EN" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "English(en)" })).toHaveAttribute(
+        "data-variant",
+        "footer",
+      );
     },
   );
 

@@ -106,6 +106,26 @@ export function ChatMessageList({
     );
   }
 
+  function messageMeta(message: ChatMessageResponse | undefined, timestamp: string | null) {
+    const toggle = message ? translationToggle(message) : null;
+    if (!toggle && !timestamp) return null;
+
+    return (
+      <div
+        data-testid="chat-message-meta"
+        className="mt-0.5 flex min-h-4 items-center gap-1 text-[11px]"
+      >
+        {timestamp ? <span className="text-muted">{timestamp}</span> : null}
+        {timestamp && toggle ? (
+          <span aria-hidden="true" className="text-line-strong">
+            ·
+          </span>
+        ) : null}
+        {toggle}
+      </div>
+    );
+  }
+
   // 합류 이전 메시지는 그 사람에게 보이지 않으므로 안 읽은 사람으로 세지 않는다
   function countUnread(messageId: number) {
     return others.filter(
@@ -170,13 +190,17 @@ export function ChatMessageList({
                     <p className="text-xs font-semibold text-muted">{group.senderName}</p>
                   )}
 
-                  {toChatBubbles(group.messages).map((bubble) => {
+                  {toChatBubbles(group.messages).map((bubble, bubbleIndex, bubbles) => {
                     // 사진 묶음은 가장 마지막 사진 기준으로 안 읽은 사람 수를 센다
                     const anchorId =
                       bubble.kind === "images"
                         ? (bubble.images.at(-1)?.messageId ?? 0)
                         : bubble.message.messageId;
                     const unread = mine ? countUnread(anchorId) : 0;
+                    const timestamp =
+                      bubbleIndex === bubbles.length - 1
+                        ? formatSeoulTime(group.timestamp, locale)
+                        : null;
 
                     return (
                       <div
@@ -194,7 +218,7 @@ export function ChatMessageList({
                               const captionMessage = bubble.images.find(
                                 (image) => image.originalContent || image.content,
                               );
-                              return captionMessage ? translationToggle(captionMessage) : null;
+                              return messageMeta(captionMessage, timestamp);
                             })()}
                             onOpen={(index) => onOpenImage(bubble.images, index)}
                           />
@@ -207,7 +231,7 @@ export function ChatMessageList({
                             >
                               {displayedContent(bubble.message)}
                             </p>
-                            {translationToggle(bubble.message)}
+                            {messageMeta(bubble.message, timestamp)}
                           </div>
                         )}
                         {unread > 0 ? (
@@ -221,11 +245,6 @@ export function ChatMessageList({
                       </div>
                     );
                   })}
-
-                  {/* 묶음당 시각은 한 번만 — 같은 사람이 같은 분에 보낸 메시지 아래에 붙는다 */}
-                  <p className="mt-0.5 text-[11px] text-muted">
-                    {formatSeoulTime(group.timestamp, locale) ?? ""}
-                  </p>
                 </div>
               </div>
             </li>

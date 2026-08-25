@@ -285,6 +285,7 @@ describe("ChatRoomView", () => {
     const sourceSelect = await screen.findByRole("combobox", { name: "Original language" });
     expect(sourceSelect).toHaveValue("EN");
     expect(within(sourceSelect).getAllByRole("option")).toHaveLength(5);
+    expect(sourceSelect.closest("div")).toHaveClass("pl-[52px]");
     expect(screen.getByText("Auto-translated for recipients")).toBeInTheDocument();
   });
 

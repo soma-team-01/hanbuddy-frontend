@@ -112,15 +112,17 @@ function ImageFigure({
       className={`flex w-[min(18rem,64vw)] flex-col gap-1 ${mine ? "items-end" : "items-start"}`}
     >
       {children}
-      {caption ? (
+      {caption || captionAction ? (
         <div className={`flex max-w-full flex-col ${mine ? "items-end" : "items-start"}`}>
-          <figcaption
-            className={`max-w-full rounded-2xl px-3.5 py-2 text-sm leading-6 whitespace-pre-wrap text-ink ${
-              mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
-            }`}
-          >
-            {caption}
-          </figcaption>
+          {caption ? (
+            <figcaption
+              className={`max-w-full rounded-2xl px-3.5 py-2 text-sm leading-6 whitespace-pre-wrap text-ink ${
+                mine ? "border border-primary/25 bg-primary-soft" : "bg-panel"
+              }`}
+            >
+              {caption}
+            </figcaption>
+          ) : null}
           {captionAction}
         </div>
       ) : null}

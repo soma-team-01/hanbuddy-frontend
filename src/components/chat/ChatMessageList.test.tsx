@@ -44,6 +44,7 @@ describe("ChatMessageList translation", () => {
     expect(screen.getByText("See you tomorrow")).toBeInTheDocument();
     const originalButton = screen.getByRole("button", { name: "Show original" });
     expect(originalButton).toHaveClass("text-muted/55");
+    expect(originalButton.parentElement).toHaveTextContent(/1:00 PM.*Show original/);
     fireEvent.click(originalButton);
 
     expect(screen.getByText("내일 만나요")).toBeInTheDocument();

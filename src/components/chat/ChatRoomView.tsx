@@ -418,9 +418,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             ))}
           </ul>
         ) : null}
-        <div className="mb-2 flex flex-wrap items-center gap-1.5 px-1 text-[11px] leading-4 text-muted">
-          <span>{t("sourceLanguage")}:</span>
-          <span className="relative inline-flex items-center">
+        <div className="mb-2 flex flex-wrap items-center gap-2 pl-[52px] text-xs leading-5 text-muted">
+          <span className="font-medium">{t("sourceLanguage")}</span>
+          <span className="relative inline-flex items-center rounded-full border border-line-soft bg-canvas-soft px-2.5 py-1 shadow-[0_2px_8px_rgba(38,27,24,0.04)]">
             <select
               aria-label={t("sourceLanguage")}
               value={selectedSourceLanguage ?? detectedSourceLanguage}
@@ -428,7 +428,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
               onChange={(event) =>
                 setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
               }
-              className="cursor-pointer appearance-none bg-transparent py-0.5 pr-4 font-medium text-ink/70 transition-colors outline-none hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+              className="cursor-pointer appearance-none bg-transparent pr-4 font-medium text-ink/75 transition-colors outline-none hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
             >
               {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -438,10 +438,10 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             </select>
             <ChevronDownIcon className="pointer-events-none absolute right-0 size-3 text-muted" />
           </span>
-          <span aria-hidden="true" className="text-line-strong">
+          <span aria-hidden="true" className="text-primary/50">
             →
           </span>
-          <span>{t("translationTarget")}</span>
+          <span className="text-muted/75">{t("translationTarget")}</span>
         </div>
         <form
           className="flex items-end gap-2"

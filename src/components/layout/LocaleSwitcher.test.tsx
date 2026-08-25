@@ -38,4 +38,57 @@ describe("LocaleSwitcher", () => {
 
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["en", "English(en)"],
+    ["ko", "한국어(ko)"],
+    ["ja", "日本語(ja)"],
+    ["zh-Hans", "简体中文(zh-Hans)"],
+    ["zh-Hant", "繁體中文(zh-Hant)"],
+  ] as const)("shows the language name and code for %s", (locale, label) => {
+    renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" />, { locale });
+
+    expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(label);
+  });
+
+  it.each([
+    ["en", "English"],
+    ["ko", "한국어"],
+    ["ja", "日本語"],
+    ["zh-Hans", "简体中文"],
+    ["zh-Hant", "繁體中文"],
+  ] as const)("shows only the language name in the simple trigger for %s", (locale, label) => {
+    renderWithIntl(<LocaleSwitcher labelStyle="name" />, { locale });
+
+    expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(label);
+  });
+
+  it("uses lighter compact typography in the footer", () => {
+    renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" variant="footer" />, { locale: "en" });
+
+    expect(screen.getByRole("button", { expanded: false })).toHaveClass("text-xs", "font-medium");
+    expect(screen.getByRole("button", { expanded: false })).not.toHaveClass("text-sm", "font-bold");
+  });
+
+  it("opens the compact footer menu upward without a heading", () => {
+    renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" variant="footer" />, { locale: "en" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("bottom-[calc(100%+10px)]", "min-w-44");
+    expect(screen.getByRole("menuitemradio", { name: "English" })).toHaveClass(
+      "text-xs",
+      "font-semibold",
+    );
+    expect(screen.queryByText("Language")).not.toBeInTheDocument();
+  });
+
+  it("keeps the default menu below the trigger without a heading", () => {
+    renderWithIntl(<LocaleSwitcher />, { locale: "en" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("top-[calc(100%+10px)]", "min-w-44");
+    expect(screen.queryByText("Language")).not.toBeInTheDocument();
+  });
 });

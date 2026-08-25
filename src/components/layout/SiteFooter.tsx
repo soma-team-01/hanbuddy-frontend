@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
   FacebookIcon,
@@ -8,7 +8,6 @@ import {
   MailIcon,
   WhatsAppIcon,
 } from "@/components/ui/icons";
-import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { SiteNavRole } from "@/lib/auth/routes";
 
@@ -25,80 +24,103 @@ const CONTACT_DETAILS = {
   kakaoUrl: "https://open.kakao.com/me/hanbuddy",
 } as const;
 
-export async function SiteFooter({ locale, role }: SiteFooterProps) {
-  // 버디의 홈은 대시보드다 — 헤더 로고와 같은 규칙
-  const logoHref = role === "buddy" ? "/dashboard" : "/";
+const BUSINESS_DETAILS = {
+  name: "제로원",
+  representative: "김민형",
+  registrationNumber: "597-05-03957",
+  address: "서울특별시 동대문구 전농로34길 15-4 404호",
+  phone: "+82 10-8297-0110",
+} as const;
+
+export async function SiteFooter({ locale }: SiteFooterProps) {
   const [authT, landingT] = await Promise.all([
     getTranslations({ locale, namespace: "Auth" }),
     getTranslations({ locale, namespace: "Landing" }),
   ]);
 
   return (
-    <footer className="border-t border-line-soft bg-canvas-soft py-6 text-sm text-muted">
-      <PageContainer className="flex flex-col gap-4">
-        <div className="relative flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-          <Link href={logoHref} aria-label="HanBuddy" className="flex items-center gap-2">
-            <Image
-              src="/images/brand/logo-borderless.webp"
-              alt=""
-              width={28}
-              height={28}
-              className="size-7"
-            />
-            <span className="font-display font-bold text-ink">HanBuddy</span>
-          </Link>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-xs text-muted sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-            <p>© 2026 HanBuddy. {authT("rightsReserved")}</p>
-            <span className="underline">{authT("privacyPolicy")}</span>
-            <span className="underline">{authT("termsOfService")}</span>
+    <footer className="border-t border-line-soft bg-canvas-soft py-8 text-sm text-muted">
+      <PageContainer className="flex flex-col gap-3">
+        <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+            <p>© 2026 HanBuddy</p>
+            <span>{authT("privacyPolicy")}</span>
+            <span>{authT("termsOfService")}</span>
           </div>
 
-          <div className="flex items-center gap-2 sm:ml-auto">
+          <div className="flex items-center gap-4 sm:justify-end">
+            <LocaleSwitcher labelStyle="nameWithCode" variant="footer" />
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+              className="text-muted transition-colors hover:text-primary"
             >
-              <MailIcon className="size-5" />
+              <MailIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.whatsappUrl}
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.whatsappIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+              className="text-muted transition-colors hover:text-primary"
             >
-              <WhatsAppIcon className="size-5" />
+              <WhatsAppIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.facebookUrl}
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.facebookIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+              className="text-muted transition-colors hover:text-primary"
             >
-              <FacebookIcon className="size-5" />
+              <FacebookIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.kakaoUrl}
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.kakaoIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+              className="text-muted transition-colors hover:text-primary"
             >
-              <KakaoTalkIcon className="size-5" />
+              <KakaoTalkIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.instagramUrl}
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.instagramIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+              className="text-muted transition-colors hover:text-primary"
             >
-              <InstagramIcon className="size-5" />
+              <InstagramIcon className="size-[18px]" />
             </a>
           </div>
+        </div>
+
+        <div className="space-y-1 border-t border-line-soft/70 pt-3 text-[11px] leading-5 text-muted/50">
+          <dl className="flex flex-wrap gap-x-5 gap-y-1">
+            <div className="flex gap-1.5">
+              <dt className="font-medium">상호명</dt>
+              <dd>{BUSINESS_DETAILS.name}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">대표자명</dt>
+              <dd>{BUSINESS_DETAILS.representative}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">사업자등록번호</dt>
+              <dd>{BUSINESS_DETAILS.registrationNumber}</dd>
+            </div>
+          </dl>
+          <dl className="flex flex-wrap gap-x-5 gap-y-1">
+            <div className="flex gap-1.5">
+              <dt className="shrink-0 font-medium">사업장 주소</dt>
+              <dd>{BUSINESS_DETAILS.address}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">전화번호</dt>
+              <dd>{BUSINESS_DETAILS.phone}</dd>
+            </div>
+          </dl>
         </div>
       </PageContainer>
     </footer>

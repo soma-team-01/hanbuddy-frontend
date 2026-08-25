@@ -21,17 +21,45 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
+vi.mock("@/components/layout/LocaleSwitcher", () => ({
+  LocaleSwitcher: ({ labelStyle, variant }: { labelStyle?: string; variant?: string }) => (
+    <button type="button" data-variant={variant}>
+      {labelStyle === "nameWithCode" ? "English(en)" : "EN"}
+    </button>
+  ),
+}));
+
 import { SiteFooter } from "./SiteFooter";
 
 describe("SiteFooter", () => {
-  it.each([
-    ["en", "© 2026 HanBuddy. All rights reserved."],
-    ["ko", "© 2026 HanBuddy. 모든 권리를 보유합니다."],
-  ] as const)("keeps the HanBuddy legal name unchanged for %s", async (locale, copyright) => {
-    renderWithIntl(await SiteFooter({ locale }), { locale });
+  it.each(["en", "ko", "ja", "zh-Hans", "zh-Hant"] as const)(
+    "shows the unchanged Korean business information for %s",
+    async (locale) => {
+      renderWithIntl(await SiteFooter({ locale }), { locale });
 
-    expect(screen.getByText(copyright)).toBeInTheDocument();
-  });
+      expect(screen.queryByRole("heading", { name: "사업자 정보" })).not.toBeInTheDocument();
+      expect(screen.getByText("제로원")).toBeInTheDocument();
+      expect(screen.getByText("김민형")).toBeInTheDocument();
+      expect(screen.getByText("597-05-03957")).toBeInTheDocument();
+      expect(screen.getByText("서울특별시 동대문구 전농로34길 15-4 404호")).toBeInTheDocument();
+      expect(screen.getByText("+82 10-8297-0110")).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "+82 10-8297-0110" })).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(["en", "ko"] as const)(
+    "keeps the HanBuddy legal name unchanged for %s",
+    async (locale) => {
+      renderWithIntl(await SiteFooter({ locale }), { locale });
+
+      expect(screen.getByText("© 2026 HanBuddy")).toBeInTheDocument();
+      expect(screen.queryByText(/rights reserved|권리를 보유/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "English(en)" })).toHaveAttribute(
+        "data-variant",
+        "footer",
+      );
+    },
+  );
 
   it.each([
     ["en", "Email HanBuddy", "Open HanBuddy on Facebook", "Open HanBuddy on Instagram"],
@@ -65,17 +93,6 @@ describe("SiteFooter", () => {
       ).toBeTruthy();
     },
   );
-
-  it("routes the logo home by role", async () => {
-    renderWithIntl(await SiteFooter({ locale: "en", role: "buddy" }), { locale: "en" });
-    // 버디의 홈은 대시보드 — 헤더 로고와 같은 규칙
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en/dashboard");
-  });
-
-  it("keeps the tourist logo on the landing page", async () => {
-    renderWithIntl(await SiteFooter({ locale: "en", role: "tourist" }), { locale: "en" });
-    expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
-  });
 
   it.each([
     ["en", "Chat with HanBuddy on WhatsApp", "Chat with HanBuddy on KakaoTalk"],

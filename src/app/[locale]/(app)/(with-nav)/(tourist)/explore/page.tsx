@@ -12,7 +12,7 @@ export default async function ExplorePage({
 
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} />
       <PageContainer className="flex-1 py-6 md:py-10">
         <main>
           <ActivityFeed />

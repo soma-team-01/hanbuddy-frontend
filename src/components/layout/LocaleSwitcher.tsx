@@ -21,11 +21,15 @@ const LOCALE_OPTIONS = [
 export function LocaleSwitcher({
   className,
   dismissMenu = false,
+  labelStyle = "short",
   onBeforeLocaleChange,
+  variant = "default",
 }: Readonly<{
   className?: string;
   dismissMenu?: boolean;
+  labelStyle?: "short" | "name" | "nameWithCode";
   onBeforeLocaleChange?: () => void;
+  variant?: "default" | "footer";
 }>) {
   const locale = useLocale();
   const t = useTranslations("Navigation");
@@ -36,6 +40,12 @@ export function LocaleSwitcher({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const currentOption =
     LOCALE_OPTIONS.find((option) => option.code === locale) ?? LOCALE_OPTIONS[0];
+  const currentLabel =
+    labelStyle === "nameWithCode"
+      ? `${currentOption.label}(${currentOption.code})`
+      : labelStyle === "name"
+        ? currentOption.label
+        : currentOption.shortLabel;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -76,10 +86,14 @@ export function LocaleSwitcher({
         aria-expanded={isOpen}
         aria-label={t("selectLanguage", { language: currentOption.label })}
         onClick={() => setIsOpen((open) => !open)}
-        className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line-soft bg-white px-4 text-sm font-bold text-ink shadow-[0_6px_18px_rgba(38,27,24,0.04)] transition-colors hover:border-primary hover:text-primary-strong focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${className ?? ""}`}
+        className={`inline-flex cursor-pointer items-center gap-2 rounded-full transition-colors hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+          variant === "footer"
+            ? "min-h-8 border border-transparent bg-transparent px-0 text-xs font-medium text-muted hover:border-transparent"
+            : "min-h-11 border border-line-soft bg-white px-4 text-sm font-bold text-ink shadow-[0_6px_18px_rgba(38,27,24,0.04)] hover:border-primary focus-visible:border-primary"
+        } ${className ?? ""}`}
       >
         <GlobeIcon className="size-[18px]" />
-        <span>{currentOption.shortLabel}</span>
+        <span>{currentLabel}</span>
         <ChevronDownIcon
           aria-hidden
           className={`size-3.5 text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -90,11 +104,10 @@ export function LocaleSwitcher({
         <div
           role="menu"
           aria-label={t("languageMenu")}
-          className="absolute top-[calc(100%+10px)] right-0 z-50 min-w-48 overflow-hidden rounded-2xl border border-line-soft bg-white p-2 shadow-[0_18px_48px_rgba(38,27,24,0.14)]"
+          className={`absolute right-0 z-50 min-w-44 overflow-hidden rounded-2xl border border-line-soft bg-white p-1.5 shadow-[0_18px_48px_rgba(38,27,24,0.14)] ${
+            variant === "footer" ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+10px)]"
+          }`}
         >
-          <p className="px-3 pt-2 pb-1 text-[11px] font-bold tracking-[0.16em] text-muted uppercase">
-            {t("language")}
-          </p>
           {LOCALE_OPTIONS.map((option) => {
             const isSelected = option.code === locale;
             return (
@@ -106,13 +119,19 @@ export function LocaleSwitcher({
                 aria-label={option.label}
                 data-menu-dismiss={dismissMenu || undefined}
                 onClick={() => selectLocale(option.code)}
-                className={`flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary ${
-                  isSelected ? "font-bold text-primary-strong" : "font-semibold text-ink"
+                className={`flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-3 py-2 text-left text-xs transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary ${
+                  isSelected ? "font-semibold text-primary-strong" : "font-medium text-ink"
                 }`}
               >
                 <span className="flex items-center gap-3">
-                  <span className="w-6 text-xs font-bold text-muted">{option.shortLabel}</span>
-                  <span>{option.label}</span>
+                  {labelStyle === "short" ? (
+                    <>
+                      <span className="w-6 text-xs font-bold text-muted">{option.shortLabel}</span>
+                      <span>{option.label}</span>
+                    </>
+                  ) : (
+                    <span>{`${option.label}(${option.code})`}</span>
+                  )}
                 </span>
                 {isSelected ? <CheckIcon aria-hidden className="size-4 text-primary" /> : null}
               </button>

@@ -51,7 +51,7 @@ interface SiteHeaderProps {
 interface SessionResolution {
   key: string;
   profile: MyProfile | null;
-  status: "authenticated" | "guest";
+  status: "authenticated" | "guest" | "unresolved";
 }
 
 export function SiteHeader({
@@ -93,7 +93,7 @@ export function SiteHeader({
       setSessionResolution({
         key: sessionKey,
         profile: null,
-        status: authenticated ? "authenticated" : "guest",
+        status: "unresolved",
       });
     });
 
@@ -113,7 +113,7 @@ export function SiteHeader({
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
   const showLanguageSwitcher =
-    (effectiveRole !== null || currentResolution !== undefined || !mayHaveSession) &&
+    (effectiveRole !== null || sessionStatus === "guest") &&
     effectiveRole !== "buddy" &&
     !isBuddyArea;
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];

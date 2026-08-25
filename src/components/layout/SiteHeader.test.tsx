@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -193,6 +193,23 @@ describe("SiteHeader", () => {
     );
     expect(screen.getAllByAltText("June")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
+  });
+
+  it("keeps the language switcher hidden when a possible session cannot resolve its role", async () => {
+    apiMocks.getMyProfile.mockResolvedValue({
+      status: "error",
+      error: new Error("Profile request failed"),
+    });
+
+    renderWithQueryClient(<SiteHeader mayHaveSession />);
+
+    await waitFor(() => expect(apiMocks.getMyProfile).toHaveBeenCalledTimes(1));
+    await act(async () => undefined);
+
+    expect(
+      screen.queryByRole("button", { name: "Select language, current language: English" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
   it("shows only the brand and locale switcher on authentication pages", () => {

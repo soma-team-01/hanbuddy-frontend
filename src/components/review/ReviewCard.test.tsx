@@ -24,7 +24,7 @@ describe("ReviewCard", () => {
   it("shows the requested translation first and lets the reader switch to the original", () => {
     renderWithQueryClient(<ReviewCard review={translatedReview} />);
 
-    expect(screen.getByText("It was a wonderful experience.")).toBeInTheDocument();
+    expect(screen.getByText("It was a wonderful experience.")).toHaveAttribute("lang", "en");
     expect(screen.queryByText("정말 좋은 경험이었어요.")).not.toBeInTheDocument();
 
     const originalButton = screen.getByRole("button", { name: "Show original" });
@@ -32,7 +32,7 @@ describe("ReviewCard", () => {
 
     fireEvent.click(originalButton);
 
-    expect(screen.getByText("정말 좋은 경험이었어요.")).toBeInTheDocument();
+    expect(screen.getByText("정말 좋은 경험이었어요.")).toHaveAttribute("lang", "ko");
     expect(screen.queryByText("It was a wonderful experience.")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show translation" })).toBeInTheDocument();
   });

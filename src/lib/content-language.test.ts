@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getContentLanguage, withContentLanguage } from "./content-language";
+import { getContentLanguage, getContentLanguageTag, withContentLanguage } from "./content-language";
 
 describe("content language", () => {
   it.each([
@@ -17,5 +17,16 @@ describe("content language", () => {
     expect(withContentLanguage("/api/applications/conflicts?activityScheduleId=1", "KO")).toBe(
       "/api/applications/conflicts?activityScheduleId=1&language=KO",
     );
+  });
+
+  it.each([
+    ["KO", "ko"],
+    ["EN", "en"],
+    ["JA", "ja"],
+    ["ZH_HANS", "zh-Hans"],
+    ["ZH_HANT", "zh-Hant"],
+    ["UNKNOWN", undefined],
+  ] as const)("maps %s content language to the %s language tag", (language, expected) => {
+    expect(getContentLanguageTag(language)).toBe(expected);
   });
 });

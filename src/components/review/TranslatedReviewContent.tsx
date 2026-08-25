@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import type { Locale } from "@/i18n/routing";
-import { getContentLanguage } from "@/lib/content-language";
+import { getContentLanguage, getContentLanguageTag } from "@/lib/content-language";
 import type { MyReviewResponse } from "@/types/review";
 
 type ReviewContent = Pick<
@@ -22,10 +22,15 @@ export function TranslatedReviewContent({
   const hasTranslation =
     review.contentLanguage === currentLanguage && review.contentLanguage !== review.sourceLanguage;
   const visibleContent = hasTranslation && showOriginal ? review.originalContent : review.content;
+  const visibleLanguage =
+    hasTranslation && showOriginal ? review.sourceLanguage : review.contentLanguage;
 
   return (
     <div className={className}>
-      <p className="text-sm leading-6 [overflow-wrap:anywhere] break-words whitespace-pre-line text-ink">
+      <p
+        lang={getContentLanguageTag(visibleLanguage)}
+        className="text-sm leading-6 [overflow-wrap:anywhere] break-words whitespace-pre-line text-ink"
+      >
         {visibleContent}
       </p>
       {hasTranslation ? (

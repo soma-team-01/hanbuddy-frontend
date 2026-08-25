@@ -51,4 +51,21 @@ describe("ReviewCard", () => {
     expect(screen.getByText("정말 좋은 경험이었어요.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Show original" })).not.toBeInTheDocument();
   });
+
+  it("wraps a long review without spaces inside the card", () => {
+    const longContent = "review".repeat(80);
+
+    renderWithQueryClient(
+      <ReviewCard
+        review={{
+          ...translatedReview,
+          content: longContent,
+          originalContent: longContent,
+          sourceLanguage: "EN",
+        }}
+      />,
+    );
+
+    expect(screen.getByText(longContent)).toHaveClass("break-words", "[overflow-wrap:anywhere]");
+  });
 });

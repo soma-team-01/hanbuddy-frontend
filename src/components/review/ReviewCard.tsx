@@ -21,7 +21,7 @@ export function ReviewCard({
   const writtenOn = formatSeoulDate(review.createdAt, locale);
 
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-line-soft bg-canvas-soft p-5">
+    <article className="flex min-w-0 flex-col gap-3 rounded-2xl border border-line-soft bg-canvas-soft p-5">
       <div className="flex items-center gap-3">
         <Avatar name={review.reviewerName} src={review.reviewerProfileImageUrl} size={40} />
         <div className="min-w-0">

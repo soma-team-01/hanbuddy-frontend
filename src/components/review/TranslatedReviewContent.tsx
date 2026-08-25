@@ -25,7 +25,9 @@ export function TranslatedReviewContent({
 
   return (
     <div className={className}>
-      <p className="text-sm leading-6 whitespace-pre-line text-ink">{visibleContent}</p>
+      <p className="text-sm leading-6 [overflow-wrap:anywhere] break-words whitespace-pre-line text-ink">
+        {visibleContent}
+      </p>
       {hasTranslation ? (
         <button
           type="button"

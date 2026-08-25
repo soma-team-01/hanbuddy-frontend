@@ -11,7 +11,7 @@ import { getContentLanguage } from "@/lib/content-language";
 
 /**
  * 활동 상세의 후기 섹션.
- * 본문에는 최신 6건만 두고, 전체 목록은 다이얼로그에서 12건씩 이어 붙인다.
+ * 본문에는 최신 3건만 한 열로 두고, 전체 목록은 다이얼로그에서 12건씩 이어 붙인다.
  */
 export function ActivityReviewsSection({
   activityId,
@@ -48,9 +48,9 @@ export function ActivityReviewsSection({
       ) : null}
 
       {reviews.length > 0 ? (
-        <ul className="grid gap-4 md:grid-cols-2">
+        <ul className="flex flex-col gap-4">
           {reviews.map((review) => (
-            <li key={review.reviewId}>
+            <li key={review.reviewId} className="min-w-0">
               <ReviewCard review={review} />
             </li>
           ))}

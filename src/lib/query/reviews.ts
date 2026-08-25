@@ -3,8 +3,8 @@ import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/
 import type { ContentLanguage } from "@/types/content-language";
 import { unwrapApiResult } from "./result";
 
-/** 활동 상세 본문의 미리보기는 6건만 보여준다 */
-export const REVIEW_PREVIEW_SIZE = 6;
+/** 활동 상세 본문의 미리보기는 한 열에 최신 3건만 보여준다 */
+export const REVIEW_PREVIEW_SIZE = 3;
 /** 전체 후기 목록(다이얼로그·호스트 프로필)은 12건씩 이어 붙인다 */
 export const REVIEW_PAGE_SIZE = 12;
 

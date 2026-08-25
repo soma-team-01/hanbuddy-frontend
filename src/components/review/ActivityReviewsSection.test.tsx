@@ -46,10 +46,10 @@ describe("ActivityReviewsSection", () => {
     vi.clearAllMocks();
   });
 
-  it("previews six reviews with the average rating and total count", async () => {
+  it("previews three reviews in one column with the average rating and total count", async () => {
     mockedGetActivityReviews.mockResolvedValue({
       status: "success",
-      reviews: createPage(0, 6, true),
+      reviews: createPage(0, 3, true),
     });
 
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
@@ -57,7 +57,8 @@ describe("ActivityReviewsSection", () => {
     expect(await screen.findByRole("img", { name: "Rated 4.8 out of 5" })).toBeInTheDocument();
     expect(screen.getByText("31 reviews")).toBeInTheDocument();
     expect(screen.getByText("Loved every minute of it (1).")).toBeInTheDocument();
-    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 6, "EN");
+    expect(screen.getByRole("list")).toHaveClass("flex-col");
+    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 3, "EN");
   });
 
   it("opens the full list in a dialog that pages twelve at a time", async () => {
@@ -122,7 +123,7 @@ describe("ActivityReviewsSection", () => {
         totalCount: 2,
         reviews: [createReview(1), createReview(2)],
         page: 0,
-        size: 6,
+        size: 3,
         hasNext: false,
       },
     });
@@ -141,7 +142,7 @@ describe("ActivityReviewsSection", () => {
         totalCount: 0,
         reviews: [],
         page: 0,
-        size: 6,
+        size: 3,
         hasNext: false,
       },
     });

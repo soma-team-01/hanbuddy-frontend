@@ -39,7 +39,7 @@ describe("domain query options", () => {
       "42",
       "EN",
       "summary",
-      6,
+      3,
     ]);
     expect(buddyReviewsQueryOptions(7, "KO").queryKey).toEqual([
       "reviews",

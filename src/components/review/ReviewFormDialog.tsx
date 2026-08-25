@@ -33,6 +33,8 @@ export function ReviewFormDialog({
   const tCommon = useTranslations("Common");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const submissionLockedRef = useRef(false);
+  const hasStartedSavingRef = useRef(false);
   const [rating, setRating] = useState(review?.rating ?? 0);
   const [content, setContent] = useState(review?.originalContent ?? "");
   const [validationKey, setValidationKey] = useState<"ratingRequired" | "contentRequired" | null>(
@@ -44,7 +46,20 @@ export function ReviewFormDialog({
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
 
+  useEffect(() => {
+    if (isSaving) {
+      hasStartedSavingRef.current = true;
+      return;
+    }
+    if (hasStartedSavingRef.current) {
+      submissionLockedRef.current = false;
+      hasStartedSavingRef.current = false;
+    }
+  }, [isSaving]);
+
   function handleSubmit() {
+    // React가 pending 상태를 반영하기 전 연속 클릭이 들어와도 생성 요청은 한 번만 보낸다.
+    if (submissionLockedRef.current) return;
     if (rating < 1) {
       setValidationKey("ratingRequired");
       return;
@@ -54,6 +69,7 @@ export function ReviewFormDialog({
       return;
     }
     setValidationKey(null);
+    submissionLockedRef.current = true;
     onSubmit({ rating, content: content.trim() });
   }
 

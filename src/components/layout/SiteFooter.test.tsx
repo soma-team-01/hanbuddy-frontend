@@ -21,6 +21,10 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
+vi.mock("@/components/layout/LocaleSwitcher", () => ({
+  LocaleSwitcher: () => <button type="button">EN</button>,
+}));
+
 import { SiteFooter } from "./SiteFooter";
 
 describe("SiteFooter", () => {
@@ -39,14 +43,16 @@ describe("SiteFooter", () => {
     },
   );
 
-  it.each([
-    ["en", "© 2026 HanBuddy. All rights reserved."],
-    ["ko", "© 2026 HanBuddy. 모든 권리를 보유합니다."],
-  ] as const)("keeps the HanBuddy legal name unchanged for %s", async (locale, copyright) => {
-    renderWithIntl(await SiteFooter({ locale }), { locale });
+  it.each(["en", "ko"] as const)(
+    "keeps the HanBuddy legal name unchanged for %s",
+    async (locale) => {
+      renderWithIntl(await SiteFooter({ locale }), { locale });
 
-    expect(screen.getByText(copyright)).toBeInTheDocument();
-  });
+      expect(screen.getByText("© 2026 HanBuddy")).toBeInTheDocument();
+      expect(screen.queryByText(/rights reserved|권리를 보유/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "EN" })).toBeInTheDocument();
+    },
+  );
 
   it.each([
     ["en", "Email HanBuddy", "Open HanBuddy on Facebook", "Open HanBuddy on Instagram"],

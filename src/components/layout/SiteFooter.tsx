@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
   FacebookIcon,
@@ -39,21 +40,22 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
 
   return (
     <footer className="border-t border-line-soft bg-canvas-soft py-8 text-sm text-muted">
-      <PageContainer className="flex flex-col gap-4">
+      <PageContainer className="flex flex-col gap-3">
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted">
-            <p>© 2026 HanBuddy. {authT("rightsReserved")}</p>
-            <span className="underline">{authT("privacyPolicy")}</span>
-            <span className="underline">{authT("termsOfService")}</span>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+            <p>© 2026 HanBuddy</p>
+            <span>{authT("privacyPolicy")}</span>
+            <span>{authT("termsOfService")}</span>
           </div>
 
-          <div className="flex items-center gap-3 sm:justify-end">
+          <div className="flex items-center gap-4 sm:justify-end">
+            <LocaleSwitcher className="min-h-8 border-transparent bg-transparent px-0 shadow-none hover:border-transparent" />
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}
               className="text-muted transition-colors hover:text-primary"
             >
-              <MailIcon className="size-4" />
+              <MailIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.whatsappUrl}
@@ -62,7 +64,7 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
               aria-label={landingT("contact.whatsappIconLabel")}
               className="text-muted transition-colors hover:text-primary"
             >
-              <WhatsAppIcon className="size-4" />
+              <WhatsAppIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.facebookUrl}
@@ -71,7 +73,7 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
               aria-label={landingT("contact.facebookIconLabel")}
               className="text-muted transition-colors hover:text-primary"
             >
-              <FacebookIcon className="size-4" />
+              <FacebookIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.kakaoUrl}
@@ -80,7 +82,7 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
               aria-label={landingT("contact.kakaoIconLabel")}
               className="text-muted transition-colors hover:text-primary"
             >
-              <KakaoTalkIcon className="size-4" />
+              <KakaoTalkIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.instagramUrl}
@@ -89,33 +91,37 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
               aria-label={landingT("contact.instagramIconLabel")}
               className="text-muted transition-colors hover:text-primary"
             >
-              <InstagramIcon className="size-4" />
+              <InstagramIcon className="size-[18px]" />
             </a>
           </div>
         </div>
 
-        <dl className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs leading-5">
-          <div className="flex gap-1.5">
-            <dt className="font-medium text-ink/70">상호명</dt>
-            <dd>{BUSINESS_DETAILS.name}</dd>
-          </div>
-          <div className="flex gap-1.5">
-            <dt className="font-medium text-ink/70">대표자명</dt>
-            <dd>{BUSINESS_DETAILS.representative}</dd>
-          </div>
-          <div className="flex gap-1.5">
-            <dt className="font-medium text-ink/70">사업자등록번호</dt>
-            <dd>{BUSINESS_DETAILS.registrationNumber}</dd>
-          </div>
-          <div className="flex gap-1.5">
-            <dt className="shrink-0 font-medium text-ink/70">사업장 주소</dt>
-            <dd>{BUSINESS_DETAILS.address}</dd>
-          </div>
-          <div className="flex gap-1.5">
-            <dt className="font-medium text-ink/70">전화번호</dt>
-            <dd>{BUSINESS_DETAILS.phone}</dd>
-          </div>
-        </dl>
+        <div className="space-y-1 border-t border-line-soft/70 pt-3 text-[11px] leading-5 text-muted/70">
+          <dl className="flex flex-wrap gap-x-5 gap-y-1">
+            <div className="flex gap-1.5">
+              <dt className="font-medium">상호명</dt>
+              <dd>{BUSINESS_DETAILS.name}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">대표자명</dt>
+              <dd>{BUSINESS_DETAILS.representative}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">사업자등록번호</dt>
+              <dd>{BUSINESS_DETAILS.registrationNumber}</dd>
+            </div>
+          </dl>
+          <dl className="flex flex-wrap gap-x-5 gap-y-1">
+            <div className="flex gap-1.5">
+              <dt className="shrink-0 font-medium">사업장 주소</dt>
+              <dd>{BUSINESS_DETAILS.address}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">전화번호</dt>
+              <dd>{BUSINESS_DETAILS.phone}</dd>
+            </div>
+          </dl>
+        </div>
       </PageContainer>
     </footer>
   );

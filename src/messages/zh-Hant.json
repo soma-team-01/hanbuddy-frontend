@@ -96,6 +96,9 @@
     "login": "登入",
     "account": "帳戶",
     "openAccount": "開啟我的帳戶",
+    "accountMenu": "帳戶選單",
+    "openAccountMenu": "開啟帳戶選單",
+    "viewProfile": "查看個人資料",
     "chat": "訊息"
   },
   "Accessibility": {

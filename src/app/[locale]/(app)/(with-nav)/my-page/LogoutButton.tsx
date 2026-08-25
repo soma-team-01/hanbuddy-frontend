@@ -1,12 +1,11 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LogOutIcon } from "@/components/ui/icons";
-import { useRouter } from "@/i18n/navigation";
 import type { UserType } from "@/lib/auth/types";
+import { useLogout } from "@/lib/auth/useLogout";
 
 interface LogoutButtonProps {
   userType: UserType;
@@ -14,27 +13,8 @@ interface LogoutButtonProps {
 
 export function LogoutButton({ userType }: Readonly<LogoutButtonProps>) {
   const t = useTranslations("MyPage");
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  async function handleLogout() {
-    setIsLoggingOut(true);
-
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "same-origin",
-      });
-    } catch {
-      // Logout is best-effort; still return the user to the signed-out screen.
-    } finally {
-      queryClient.clear();
-      router.replace(userType === "BUDDY" ? "/buddy" : "/");
-      router.refresh();
-    }
-  }
+  const { isLoggingOut, logout } = useLogout(userType);
 
   return (
     <>
@@ -54,7 +34,7 @@ export function LogoutButton({ userType }: Readonly<LogoutButtonProps>) {
           confirmLabel={t("logOut")}
           pendingLabel={t("loggingOut")}
           isPending={isLoggingOut}
-          onConfirm={() => void handleLogout()}
+          onConfirm={() => void logout()}
           onClose={() => setShowConfirm(false)}
         />
       )}

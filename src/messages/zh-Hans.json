@@ -96,6 +96,9 @@
     "login": "登录",
     "account": "账户",
     "openAccount": "打开我的账户",
+    "accountMenu": "账户菜单",
+    "openAccountMenu": "打开账户菜单",
+    "viewProfile": "查看个人资料",
     "chat": "消息"
   },
   "Accessibility": {

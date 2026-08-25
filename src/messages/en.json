@@ -96,6 +96,9 @@
     "login": "Log in",
     "account": "Account",
     "openAccount": "Open my account",
+    "accountMenu": "Account menu",
+    "openAccountMenu": "Open account menu",
+    "viewProfile": "View profile",
     "chat": "Messages"
   },
   "Accessibility": {

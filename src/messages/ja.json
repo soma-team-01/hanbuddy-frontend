@@ -96,6 +96,9 @@
     "login": "ログイン",
     "account": "アカウント",
     "openAccount": "アカウントを開く",
+    "accountMenu": "アカウントメニュー",
+    "openAccountMenu": "アカウントメニューを開く",
+    "viewProfile": "プロフィールを見る",
     "chat": "メッセージ"
   },
   "Accessibility": {

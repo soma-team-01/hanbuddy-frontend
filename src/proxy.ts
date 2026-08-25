@@ -1,13 +1,12 @@
 import createMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import {
-  getLocaleFromLocation,
   getLocaleFromPathname,
   hasUnsupportedLanguageSegment,
   localizePathname,
   stripLocaleFromPathname,
 } from "@/i18n/pathname";
-import { routing } from "@/i18n/routing";
+import { isLocale, LOCALE_COOKIE_NAME, routing, type Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getRouteAccessRedirect, parseUserType } from "@/lib/auth/routes";
@@ -21,16 +20,16 @@ export function proxy(request: NextRequest) {
   }
   if (hasUnsupportedLanguageSegment(pathname)) return NextResponse.next();
 
-  const intlResponse = handleI18nRouting(request);
+  const pathnameLocale = getLocaleFromPathname(pathname);
+  const userType = parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value);
+  const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
   const locale =
-    getLocaleFromPathname(pathname) ??
-    getLocaleFromLocation(intlResponse.headers.get("location")) ??
-    routing.defaultLocale;
+    pathnameLocale ?? resolveUnprefixedLocale(request, pathname, accessToken, userType);
   const redirectPath = getRouteAccessRedirect({
     pathname: stripLocaleFromPathname(pathname),
-    accessToken: request.cookies.get(AUTH_COOKIES.accessToken)?.value,
+    accessToken,
     signupToken: request.cookies.get(AUTH_COOKIES.signupToken)?.value,
-    userType: parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value),
+    userType,
   });
 
   if (redirectPath) {
@@ -45,7 +44,27 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  return intlResponse;
+  if (pathnameLocale) return handleI18nRouting(request);
+
+  const redirectUrl = new URL(localizePathname(pathname, locale), request.url);
+  redirectUrl.search = request.nextUrl.search;
+  return NextResponse.redirect(redirectUrl);
+}
+
+function resolveUnprefixedLocale(
+  request: NextRequest,
+  pathname: string,
+  accessToken: string | undefined,
+  userType: ReturnType<typeof parseUserType>,
+): Locale {
+  const savedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
+  if (accessToken && userType && isLocale(savedLocale)) return savedLocale;
+  if (userType === "BUDDY" || isBuddyEntryPath(pathname)) return "ko";
+  return routing.defaultLocale;
+}
+
+function isBuddyEntryPath(pathname: string) {
+  return pathname === "/buddy" || pathname.startsWith("/buddy/");
 }
 
 function handleAdminRoute(request: NextRequest) {

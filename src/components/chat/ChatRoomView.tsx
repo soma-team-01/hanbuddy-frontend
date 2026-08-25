@@ -343,41 +343,6 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         />
       </header>
 
-      <div
-        data-testid="chat-translation-guide"
-        className="border-b border-line-soft bg-canvas px-4 py-2.5 md:px-6"
-      >
-        <div className="mx-auto grid w-full max-w-md grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-          <label className="relative block min-w-0">
-            <span className="sr-only">{t("sourceLanguage")}</span>
-            <select
-              aria-label={t("sourceLanguage")}
-              value={selectedSourceLanguage ?? detectedSourceLanguage}
-              disabled={sendMutation.isPending}
-              onChange={(event) =>
-                setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
-              }
-              className="h-9 w-full cursor-pointer appearance-none rounded-xl border border-line-soft bg-canvas-soft px-3 pr-8 text-xs font-medium text-ink transition-colors outline-none hover:border-line-strong focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-3 -translate-y-1/2 text-muted" />
-          </label>
-
-          <span aria-hidden="true" className="text-sm text-primary/55">
-            →
-          </span>
-
-          <div className="flex h-9 min-w-0 items-center rounded-xl border border-line-soft bg-panel-raised px-3 text-xs font-medium text-muted">
-            <span className="truncate">{t("translationTarget")}</span>
-          </div>
-        </div>
-      </div>
-
       <ChatMessageList
         key={language}
         messages={messages}
@@ -453,72 +418,109 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             ))}
           </ul>
         ) : null}
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submitDraft();
-          }}
-        >
-          <label htmlFor="chat-draft" className="sr-only">
-            {t("messageLabel")}
-          </label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            disabled={!chatConnected || sendMutation.isPending}
-            className="hidden"
-            onChange={(event) => {
-              attachFiles(event.target.files);
-              // 같은 파일을 다시 고를 수 있도록 값을 비운다
-              event.target.value = "";
-            }}
-          />
-          <button
-            type="button"
-            title={t("attachPhoto")}
-            aria-label={t("attachPhoto")}
-            disabled={
-              !chatConnected || sendMutation.isPending || attachments.length >= MAX_CHAT_IMAGE_COUNT
-            }
-            onClick={() => fileInputRef.current?.click()}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-primary disabled:opacity-40"
+        <div data-testid="chat-composer" className="relative">
+          <div
+            data-testid="chat-translation-guide"
+            className="absolute bottom-full left-[52px] z-10 mb-3 grid w-[calc(100%_-_52px)] max-w-md grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
           >
-            <ImagePlusIcon className="size-5" />
-          </button>
-          <textarea
-            id="chat-draft"
-            rows={1}
-            value={draft}
-            maxLength={CHAT_MESSAGE_MAX_LENGTH}
-            placeholder={t("messagePlaceholder")}
-            disabled={!chatConnected || sendMutation.isPending}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
-              if (event.nativeEvent.isComposing) return;
-              // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                submitDraft();
+            <label className="relative block min-w-0">
+              <span className="sr-only">{t("sourceLanguage")}</span>
+              <select
+                aria-label={t("sourceLanguage")}
+                value={selectedSourceLanguage ?? detectedSourceLanguage}
+                disabled={sendMutation.isPending}
+                onChange={(event) =>
+                  setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
+                }
+                className="h-9 w-full cursor-pointer appearance-none rounded-xl border border-line-soft bg-canvas-soft px-3 pr-8 text-xs font-medium text-ink shadow-[0_4px_14px_rgba(38,27,24,0.06)] transition-colors outline-none hover:border-line-strong focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-3 -translate-y-1/2 text-muted" />
+            </label>
+
+            <span aria-hidden="true" className="text-sm text-primary/55">
+              →
+            </span>
+
+            <div className="flex h-9 min-w-0 items-center rounded-xl border border-line-soft bg-canvas-soft px-3 text-xs font-medium text-muted shadow-[0_4px_14px_rgba(38,27,24,0.06)]">
+              <span className="truncate">{t("translationTarget")}</span>
+            </div>
+          </div>
+
+          <form
+            className="flex items-end gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submitDraft();
+            }}
+          >
+            <label htmlFor="chat-draft" className="sr-only">
+              {t("messageLabel")}
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              disabled={!chatConnected || sendMutation.isPending}
+              className="hidden"
+              onChange={(event) => {
+                attachFiles(event.target.files);
+                // 같은 파일을 다시 고를 수 있도록 값을 비운다
+                event.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              title={t("attachPhoto")}
+              aria-label={t("attachPhoto")}
+              disabled={
+                !chatConnected ||
+                sendMutation.isPending ||
+                attachments.length >= MAX_CHAT_IMAGE_COUNT
               }
-            }}
-            className="focus-border-only max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
-          />
-          <button
-            type="submit"
-            disabled={
-              !chatConnected ||
-              sendMutation.isPending ||
-              (draft.trim().length === 0 && attachments.length === 0)
-            }
-            className="h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
-          >
-            {sendLabel()}
-          </button>
-        </form>
+              onClick={() => fileInputRef.current?.click()}
+              className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-primary disabled:opacity-40"
+            >
+              <ImagePlusIcon className="size-5" />
+            </button>
+            <textarea
+              id="chat-draft"
+              rows={1}
+              value={draft}
+              maxLength={CHAT_MESSAGE_MAX_LENGTH}
+              placeholder={t("messagePlaceholder")}
+              disabled={!chatConnected || sendMutation.isPending}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
+                if (event.nativeEvent.isComposing) return;
+                // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  submitDraft();
+                }
+              }}
+              className="focus-border-only max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={
+                !chatConnected ||
+                sendMutation.isPending ||
+                (draft.trim().length === 0 && attachments.length === 0)
+              }
+              className="h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+            >
+              {sendLabel()}
+            </button>
+          </form>
+        </div>
       </div>
 
       {titleDialogOpen ? (

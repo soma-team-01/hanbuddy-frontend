@@ -343,6 +343,41 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         />
       </header>
 
+      <div
+        data-testid="chat-translation-guide"
+        className="border-b border-line-soft bg-canvas px-4 py-2.5 md:px-6"
+      >
+        <div className="mx-auto grid w-full max-w-md grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+          <label className="relative block min-w-0">
+            <span className="sr-only">{t("sourceLanguage")}</span>
+            <select
+              aria-label={t("sourceLanguage")}
+              value={selectedSourceLanguage ?? detectedSourceLanguage}
+              disabled={sendMutation.isPending}
+              onChange={(event) =>
+                setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
+              }
+              className="h-9 w-full cursor-pointer appearance-none rounded-xl border border-line-soft bg-canvas-soft px-3 pr-8 text-xs font-medium text-ink transition-colors outline-none hover:border-line-strong focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-3 -translate-y-1/2 text-muted" />
+          </label>
+
+          <span aria-hidden="true" className="text-sm text-primary/55">
+            →
+          </span>
+
+          <div className="flex h-9 min-w-0 items-center rounded-xl border border-line-soft bg-panel-raised px-3 text-xs font-medium text-muted">
+            <span className="truncate">{t("translationTarget")}</span>
+          </div>
+        </div>
+      </div>
+
       <ChatMessageList
         key={language}
         messages={messages}
@@ -418,31 +453,6 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             ))}
           </ul>
         ) : null}
-        <div className="mb-2 flex flex-wrap items-center gap-2 pl-[52px] text-xs leading-5 text-muted">
-          <span className="font-medium">{t("sourceLanguage")}</span>
-          <span className="relative inline-flex items-center rounded-full border border-line-soft bg-canvas-soft px-2.5 py-1 shadow-[0_2px_8px_rgba(38,27,24,0.04)]">
-            <select
-              aria-label={t("sourceLanguage")}
-              value={selectedSourceLanguage ?? detectedSourceLanguage}
-              disabled={sendMutation.isPending}
-              onChange={(event) =>
-                setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
-              }
-              className="cursor-pointer appearance-none bg-transparent pr-4 font-medium text-ink/75 transition-colors outline-none hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon className="pointer-events-none absolute right-0 size-3 text-muted" />
-          </span>
-          <span aria-hidden="true" className="text-primary/50">
-            →
-          </span>
-          <span className="text-muted/75">{t("translationTarget")}</span>
-        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(event) => {

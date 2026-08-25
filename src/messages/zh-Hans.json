@@ -743,7 +743,7 @@
     "messagePlaceholder": "写留言",
     "messageLabel": "留言",
     "sourceLanguage": "原文语言",
-    "translationTarget": "自动翻译为对方的语言",
+    "translationTarget": "自动翻译",
     "send": "发送",
     "sending": "正在发送...",
     "sendError": "无法发送您的消息。",

@@ -743,7 +743,7 @@
     "messagePlaceholder": "메시지를 입력하세요",
     "messageLabel": "메시지",
     "sourceLanguage": "원문 언어",
-    "translationTarget": "상대방 언어로 자동 번역",
+    "translationTarget": "자동 번역",
     "send": "보내기",
     "sending": "보내는 중...",
     "sendError": "메시지를 보내지 못했습니다.",

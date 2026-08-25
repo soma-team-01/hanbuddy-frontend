@@ -743,7 +743,7 @@
     "messagePlaceholder": "Write a message",
     "messageLabel": "Message",
     "sourceLanguage": "Original language",
-    "translationTarget": "Auto-translated for recipients",
+    "translationTarget": "Automatic translation",
     "send": "Send",
     "sending": "Sending...",
     "sendError": "Could not send your message.",

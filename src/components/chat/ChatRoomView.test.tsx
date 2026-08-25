@@ -283,10 +283,11 @@ describe("ChatRoomView", () => {
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
 
     const sourceSelect = await screen.findByRole("combobox", { name: "Original language" });
+    const translationGuide = screen.getByTestId("chat-translation-guide");
     expect(sourceSelect).toHaveValue("EN");
     expect(within(sourceSelect).getAllByRole("option")).toHaveLength(5);
-    expect(sourceSelect.closest("div")).toHaveClass("pl-[52px]");
-    expect(screen.getByText("Auto-translated for recipients")).toBeInTheDocument();
+    expect(within(translationGuide).getByText("Automatic translation")).toBeInTheDocument();
+    expect(sourceSelect.closest("form")).toBeNull();
   });
 
   it("lets the sender override the detected source language", async () => {

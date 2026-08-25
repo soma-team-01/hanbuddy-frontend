@@ -743,7 +743,7 @@
     "messagePlaceholder": "メッセージを書く",
     "messageLabel": "メッセージ",
     "sourceLanguage": "原文の言語",
-    "translationTarget": "相手の言語に自動翻訳",
+    "translationTarget": "自動翻訳",
     "send": "送信",
     "sending": "送信中...",
     "sendError": "メッセージを送信できませんでした。",

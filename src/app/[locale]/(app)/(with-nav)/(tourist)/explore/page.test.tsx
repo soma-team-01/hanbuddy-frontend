@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
-import ApplicationsPage from "./page";
+import ExplorePage from "./page";
 
 vi.mock("next-intl/server", async () => {
   const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
@@ -12,23 +12,21 @@ vi.mock("next-intl/server", async () => {
   ]);
 
   return {
-    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: "Applications" }) =>
+    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: "Explore" }) =>
       createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
   };
 });
 
-vi.mock("./applications-content", () => ({
-  ApplicationsContent: () => <div>application content</div>,
+vi.mock("./activity-feed", () => ({
+  ActivityFeed: () => <div>activity feed</div>,
 }));
 
-describe("ApplicationsPage", () => {
+describe("ExplorePage", () => {
   it.each([
-    ["en", "My Applications", "Review upcoming experiences, payments, and past applications."],
-    ["ko", "내 신청", "예정된 경험과 결제, 지난 신청 내역을 확인하세요."],
-  ] as const)("renders the localized title for %s", async (locale, title, description) => {
-    renderWithIntl(await ApplicationsPage({ params: Promise.resolve({ locale }) } as never), {
-      locale,
-    });
+    ["en", "Explore experiences", "Discover Korea with a local buddy by your side."],
+    ["ko", "액티비티 탐색", "현지 버디와 함께할 한국의 특별한 경험을 찾아보세요."],
+  ] as const)("renders only the localized title for %s", async (locale, title, description) => {
+    renderWithIntl(await ExplorePage({ params: Promise.resolve({ locale }) }), { locale });
 
     expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
     expect(screen.queryByText(description)).not.toBeInTheDocument();

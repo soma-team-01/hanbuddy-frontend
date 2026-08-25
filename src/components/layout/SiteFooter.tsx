@@ -96,7 +96,7 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
           </div>
         </div>
 
-        <div className="space-y-1 border-t border-line-soft/70 pt-3 text-[11px] leading-5 text-muted/70">
+        <div className="space-y-1 border-t border-line-soft/70 pt-3 text-[11px] leading-5 text-muted/50">
           <dl className="flex flex-wrap gap-x-5 gap-y-1">
             <div className="flex gap-1.5">
               <dt className="font-medium">상호명</dt>

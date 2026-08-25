@@ -12,7 +12,7 @@ export interface ChatMessageResponse {
   messageType?: ChatMessageType;
   /** IMAGE에서는 캡션이라 비어 있을 수 있다 */
   content: string | null;
-  /** 작성자가 메시지를 입력한 언어. 판별할 수 없는 이전 메시지는 UNKNOWN */
+  /** 번역 시 자동 감지된 원문 언어. 최초 감지 전이거나 판별할 수 없으면 UNKNOWN */
   sourceLanguage: ResolvedContentLanguage;
   /** content에 실제로 담긴 언어 */
   contentLanguage: ResolvedContentLanguage;

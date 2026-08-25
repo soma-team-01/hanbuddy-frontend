@@ -138,9 +138,17 @@ describe("appendMessage", () => {
 });
 
 describe("applyTranslationEvent", () => {
-  it("updates only the translated content while preserving the original", () => {
+  it("updates the translated content and detected source language while preserving the original", () => {
+    const pageBeforeDetection: ChatMessagePageResponse = {
+      ...page,
+      messages: page.messages.map((item) =>
+        item.messageId === 21
+          ? { ...item, sourceLanguage: "UNKNOWN", contentLanguage: "UNKNOWN" }
+          : item,
+      ),
+    };
     const next = applyTranslationEvent(
-      page,
+      pageBeforeDetection,
       {
         chatRoomId: 1,
         messageId: 21,
@@ -154,6 +162,7 @@ describe("applyTranslationEvent", () => {
     expect(next?.messages[0]).toMatchObject({
       messageId: 21,
       content: "See you tomorrow",
+      sourceLanguage: "KO",
       contentLanguage: "EN",
       originalContent: "message 21",
     });
@@ -193,6 +202,8 @@ describe("applyTranslationToHistory", () => {
     expect(next?.pages[0].messages[1]).toMatchObject({
       messageId: 20,
       content: "Translated history",
+      sourceLanguage: "KO",
+      contentLanguage: "EN",
       originalContent: "message 20",
     });
   });

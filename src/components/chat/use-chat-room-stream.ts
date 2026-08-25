@@ -115,6 +115,7 @@ export function applyTranslationEvent(
         ? {
             ...message,
             content: event.content,
+            sourceLanguage: event.sourceLanguage,
             contentLanguage: event.contentLanguage,
           }
         : message,

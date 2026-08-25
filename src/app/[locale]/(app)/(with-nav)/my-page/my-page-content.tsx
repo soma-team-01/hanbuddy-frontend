@@ -31,13 +31,15 @@ export function MyPageContent({ backHref, userType }: Readonly<MyPageContentProp
         <ProfileCard />
         <main className="flex flex-col gap-6">
           <section className="flex flex-col overflow-hidden rounded-3xl border border-line-soft bg-panel shadow-sm">
-            <LanguagePreference />
-            {UNAVAILABLE_MENU_ITEMS.map(({ messageKey, Icon }) => (
+            {userType === "TOURIST" ? <LanguagePreference /> : null}
+            {UNAVAILABLE_MENU_ITEMS.map(({ messageKey, Icon }, index) => (
               <button
                 key={messageKey}
                 type="button"
                 disabled
-                className="flex cursor-not-allowed items-center gap-4 border-t border-line-soft px-5 py-5 text-left opacity-60"
+                className={`flex cursor-not-allowed items-center gap-4 px-5 py-5 text-left opacity-60 ${
+                  userType === "TOURIST" || index > 0 ? "border-t border-line-soft" : ""
+                }`}
               >
                 <Icon className="size-5 text-ink" />
                 <span className="flex-1 text-base text-ink">{t(messageKey)}</span>

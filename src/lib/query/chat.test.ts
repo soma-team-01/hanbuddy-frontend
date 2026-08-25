@@ -15,6 +15,9 @@ function message(messageId: number): ChatMessageResponse {
     senderName: "SeoulMate",
     senderProfileImageUrl: null,
     content: `message ${messageId}`,
+    sourceLanguage: "KO",
+    contentLanguage: "KO",
+    originalContent: `message ${messageId}`,
     createdAt: "2026-08-09T13:00:00+09:00",
   };
 }
@@ -45,6 +48,6 @@ describe("chat polling", () => {
 
   it("never replaces the room WebSocket with REST polling", () => {
     expect(chatRoomQueryOptions(1, "EN").refetchInterval).toBe(false);
-    expect(latestChatMessagesQueryOptions(1).refetchInterval).toBe(false);
+    expect(latestChatMessagesQueryOptions(1, "EN").refetchInterval).toBe(false);
   });
 });

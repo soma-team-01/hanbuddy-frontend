@@ -23,14 +23,16 @@ export const chatKeys = {
     language
       ? ([...chatKeys.all(), "room", String(chatRoomId), language] as const)
       : ([...chatKeys.all(), "room", String(chatRoomId)] as const),
-  messages: (chatRoomId: number | string) =>
-    [...chatKeys.all(), "messages", String(chatRoomId)] as const,
+  messages: (chatRoomId: number | string, language?: ContentLanguage) =>
+    language
+      ? ([...chatKeys.all(), "messages", String(chatRoomId), language] as const)
+      : ([...chatKeys.all(), "messages", String(chatRoomId)] as const),
   images: (chatRoomId: number | string) =>
     [...chatKeys.all(), "images", String(chatRoomId)] as const,
-  latestMessages: (chatRoomId: number | string) =>
-    [...chatKeys.messages(chatRoomId), "latest"] as const,
-  messageHistory: (chatRoomId: number | string, boundaryId: number) =>
-    [...chatKeys.messages(chatRoomId), "history", boundaryId] as const,
+  latestMessages: (chatRoomId: number | string, language: ContentLanguage) =>
+    [...chatKeys.messages(chatRoomId, language), "latest"] as const,
+  messageHistory: (chatRoomId: number | string, boundaryId: number, language: ContentLanguage) =>
+    [...chatKeys.messages(chatRoomId, language), "history", boundaryId] as const,
 };
 
 export function myChatRoomsQueryOptions(language: ContentLanguage) {
@@ -59,11 +61,17 @@ export function chatRoomQueryOptions(chatRoomId: number | string, language: Cont
 /**
  * 대화방의 최신 묶음. 최초 조회와 WebSocket 연결·재연결 직후 동기화에만 사용한다.
  */
-export function latestChatMessagesQueryOptions(chatRoomId: number | string) {
+export function latestChatMessagesQueryOptions(
+  chatRoomId: number | string,
+  language: ContentLanguage,
+) {
   return queryOptions({
-    queryKey: chatKeys.latestMessages(chatRoomId),
+    queryKey: chatKeys.latestMessages(chatRoomId, language),
     queryFn: async () =>
-      unwrapApiResult(await getChatMessages(chatRoomId, null, CHAT_MESSAGE_PAGE_SIZE), "messages"),
+      unwrapApiResult(
+        await getChatMessages(chatRoomId, null, CHAT_MESSAGE_PAGE_SIZE, language),
+        "messages",
+      ),
     refetchInterval: false,
     refetchOnWindowFocus: true,
     staleTime: 0,
@@ -79,12 +87,16 @@ export function latestChatMessagesQueryOptions(chatRoomId: number | string) {
  * 경계가 바뀌는 건 이어 붙일 수 없을 만큼 창이 멀어져 다시 시작해야 할 때뿐이고,
  * 그때는 키가 함께 바뀌어 낡은 페이지가 정리되는 편이 맞다.
  */
-export function chatMessageHistoryQueryOptions(chatRoomId: number | string, boundaryId: number) {
+export function chatMessageHistoryQueryOptions(
+  chatRoomId: number | string,
+  boundaryId: number,
+  language: ContentLanguage,
+) {
   return infiniteQueryOptions({
-    queryKey: chatKeys.messageHistory(chatRoomId, boundaryId),
+    queryKey: chatKeys.messageHistory(chatRoomId, boundaryId, language),
     queryFn: async ({ pageParam }) =>
       unwrapApiResult(
-        await getChatMessages(chatRoomId, pageParam, CHAT_MESSAGE_PAGE_SIZE),
+        await getChatMessages(chatRoomId, pageParam, CHAT_MESSAGE_PAGE_SIZE, language),
         "messages",
       ),
     initialPageParam: boundaryId,

@@ -65,6 +65,9 @@ function message(messageId: number, senderId: number, content: string): ChatMess
     senderName: senderId === 11 ? "Nelli" : "SeoulMate",
     senderProfileImageUrl: null,
     content,
+    sourceLanguage: "KO",
+    contentLanguage: "KO",
+    originalContent: content,
     createdAt: "2026-08-09T13:00:00+09:00",
   };
 }
@@ -103,7 +106,7 @@ describe("ChatRoomView", () => {
     mockedUseChatRoomStream.mockReturnValue({ status: "connected", retry: vi.fn() });
     mockedGetMyProfile.mockResolvedValue({
       status: "success",
-      profile: { userId: 11, displayName: "Nelli" } as never,
+      profile: { userId: 11, displayName: "Nelli", userType: "TOURIST" } as never,
     });
     mockedGetMyChatRooms.mockResolvedValue({
       status: "success",
@@ -243,9 +246,28 @@ describe("ChatRoomView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     await waitFor(() =>
-      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", { content: "내일 3시 어때요?" }),
+      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
+        content: "내일 3시 어때요?",
+      }),
     );
     await waitFor(() => expect(input).toHaveValue(""));
+  });
+
+  it("uses server-side language detection and explains automatic translation in the input", async () => {
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    const input = await screen.findByLabelText("Message");
+    const composer = screen.getByTestId("chat-composer");
+    expect(input).toHaveAttribute(
+      "placeholder",
+      "Recipients see a translation when available; otherwise, they see the original.",
+    );
+    expect(within(composer).queryByRole("combobox")).not.toBeInTheDocument();
+    const photoButton = within(composer).getByRole("button", { name: "Attach photos" });
+    expect(photoButton).toHaveClass("shrink-0");
+    expect(photoButton.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(
+      0,
+    );
   });
 
   it("sends on Enter but keeps Shift+Enter for a new line", async () => {
@@ -263,7 +285,9 @@ describe("ChatRoomView", () => {
 
     fireEvent.keyDown(input, { key: "Enter" });
     await waitFor(() =>
-      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", { content: "네!" }),
+      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
+        content: "네!",
+      }),
     );
   });
 
@@ -347,6 +371,11 @@ describe("ChatRoomView", () => {
       1,
       "1",
       expect.objectContaining({ messageType: "IMAGE", imageKey: "chats/a.webp" }),
+    );
+    expect(mockedSendChatMessage).toHaveBeenNthCalledWith(
+      1,
+      "1",
+      expect.not.objectContaining({ sourceLanguage: expect.anything() }),
     );
   });
 

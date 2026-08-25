@@ -1,4 +1,4 @@
-import type { ResolvedContentLanguage } from "./content-language";
+import type { ContentLanguage, ResolvedContentLanguage } from "./content-language";
 
 export type ChatRoomType = "DIRECT" | "GROUP";
 export type ChatMessageType = "TEXT" | "IMAGE";
@@ -12,6 +12,12 @@ export interface ChatMessageResponse {
   messageType?: ChatMessageType;
   /** IMAGE에서는 캡션이라 비어 있을 수 있다 */
   content: string | null;
+  /** 번역 시 자동 감지된 원문 언어. 최초 감지 전이거나 판별할 수 없으면 UNKNOWN */
+  sourceLanguage: ResolvedContentLanguage;
+  /** content에 실제로 담긴 언어 */
+  contentLanguage: ResolvedContentLanguage;
+  /** 원문. IMAGE의 캡션이 없으면 null */
+  originalContent: string | null;
   imageUrl?: string | null;
   /** 있으면 로딩 중 레이아웃이 튀지 않는다 */
   imageWidth?: number | null;
@@ -139,4 +145,13 @@ export interface ChatReadEvent {
   chatRoomId: number;
   userId: number;
   lastReadMessageId: number;
+}
+
+/** `/topic/chat/rooms/{id}/translations`로 오는 지연 번역 완료 알림 */
+export interface ChatTranslationEvent {
+  chatRoomId: number;
+  messageId: number;
+  sourceLanguage: ResolvedContentLanguage;
+  contentLanguage: ContentLanguage;
+  content: string;
 }

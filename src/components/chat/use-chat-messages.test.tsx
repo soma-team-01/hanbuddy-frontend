@@ -18,6 +18,9 @@ function message(messageId: number): ChatMessageResponse {
     senderName: "SeoulMate",
     senderProfileImageUrl: null,
     content: `message ${messageId}`,
+    sourceLanguage: "KO",
+    contentLanguage: "KO",
+    originalContent: `message ${messageId}`,
     createdAt: "2026-08-10T13:00:00+09:00",
   };
 }
@@ -28,8 +31,11 @@ function page(newestId: number, count: number, hasNext = true): ChatMessagePageR
   return { messages, nextCursor: messages.at(-1)?.messageId ?? null, hasNext };
 }
 
-function Probe({ chatRoomId = "1" }: Readonly<{ chatRoomId?: string }>) {
-  const { messages, hasOlder, loadOlder } = useChatMessages(chatRoomId);
+function Probe({
+  chatRoomId = "1",
+  language = "EN",
+}: Readonly<{ chatRoomId?: string; language?: "EN" | "KO" }>) {
+  const { messages, hasOlder, loadOlder } = useChatMessages(chatRoomId, language);
 
   return (
     <div>
@@ -83,7 +89,9 @@ describe("useChatMessages", () => {
         beforeMessageId == null ? page(101, 5) : { ...page(95, 5), hasNext: false, nextCursor: 91 },
     }));
     await act(async () => {
-      await queryClient.refetchQueries({ queryKey: ["chat", "messages", "1", "latest"] });
+      await queryClient.refetchQueries({
+        queryKey: ["chat", "messages", "1", "EN", "latest"],
+      });
     });
 
     // 창에서 밀려난 96도 남고, 쌓아 둔 과거도 그대로다
@@ -144,7 +152,9 @@ describe("useChatMessages", () => {
           : { ...page(195, 5), hasNext: false, nextCursor: 191 },
     }));
     await act(async () => {
-      await queryClient.refetchQueries({ queryKey: ["chat", "messages", "1", "latest"] });
+      await queryClient.refetchQueries({
+        queryKey: ["chat", "messages", "1", "EN", "latest"],
+      });
     });
 
     // 이어 붙일 수 없으므로 옛 누적분을 버린다 — 91~100이 새 창 아래 붙어 구멍을 감추지 않는다
@@ -168,5 +178,27 @@ describe("useChatMessages", () => {
     act(() => screen.getByRole("button", { name: "older" }).click());
 
     await waitFor(() => expect(ids()).toBe("95,96,97,98,99,100"));
+  });
+
+  it("clears the previous translation while a changed language is loading", async () => {
+    mockedGetChatMessages.mockImplementation(async (_roomId, _before, _size, language) => ({
+      status: "success",
+      messages: {
+        messages: [message(21), ...(language === "EN" ? [message(20)] : [])],
+        nextCursor: null,
+        hasNext: false,
+      },
+    }));
+
+    const queryClient = createQueryClient();
+    function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    }
+    const view = render(<Probe language="EN" />, { wrapper: Wrapper });
+    await waitFor(() => expect(ids()).toBe("20,21"));
+
+    view.rerender(<Probe language="KO" />);
+    expect(ids()).toBe("");
+    await waitFor(() => expect(ids()).toBe("21"));
   });
 });

@@ -90,11 +90,12 @@ export async function getChatMessages(
   /** 이 메시지보다 과거만 불러온다. 첫 조회면 생략 */
   beforeMessageId: number | null,
   size: number,
+  language: ContentLanguage,
 ): Promise<ChatMessagesResult> {
   const cursor = beforeMessageId === null ? "" : `&beforeMessageId=${beforeMessageId}`;
 
   return requestApiResult<ChatMessagePageResponse, "messages">(
-    `/api/chat/rooms/${chatRoomId}/messages?size=${size}${cursor}`,
+    withContentLanguage(`/api/chat/rooms/${chatRoomId}/messages?size=${size}${cursor}`, language),
     "messages",
     undefined,
     DEFAULT_MESSAGE_LIST_ERROR_MESSAGE,

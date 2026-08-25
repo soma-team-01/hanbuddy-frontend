@@ -21,12 +21,16 @@ export function proxy(request: NextRequest) {
   if (hasUnsupportedLanguageSegment(pathname)) return NextResponse.next();
 
   const pathnameLocale = getLocaleFromPathname(pathname);
+  const pathnameWithoutLocale = stripLocaleFromPathname(pathname);
   const userType = parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value);
   const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
-  const locale =
-    pathnameLocale ?? resolveUnprefixedLocale(request, pathname, accessToken, userType);
+  const isKoreanOnly = userType === "BUDDY" || isBuddyEntryPath(pathnameWithoutLocale);
+  const locale = isKoreanOnly
+    ? "ko"
+    : (pathnameLocale ??
+      resolveUnprefixedLocale(request, pathnameWithoutLocale, accessToken, userType));
   const redirectPath = getRouteAccessRedirect({
-    pathname: stripLocaleFromPathname(pathname),
+    pathname: pathnameWithoutLocale,
     accessToken,
     signupToken: request.cookies.get(AUTH_COOKIES.signupToken)?.value,
     userType,
@@ -36,11 +40,15 @@ export function proxy(request: NextRequest) {
     const redirectUrl = new URL(localizePathname(redirectPath, locale), request.url);
     // 로그인 후 원래 가려던 화면으로 돌아올 수 있도록 목적지를 넘긴다
     if (redirectPath === "/login") {
-      const returnTo = sanitizeReturnToPath(
-        `${stripLocaleFromPathname(pathname)}${request.nextUrl.search}`,
-      );
+      const returnTo = sanitizeReturnToPath(`${pathnameWithoutLocale}${request.nextUrl.search}`);
       if (returnTo) redirectUrl.searchParams.set("next", returnTo);
     }
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (pathnameLocale && pathnameLocale !== locale) {
+    const redirectUrl = new URL(localizePathname(pathnameWithoutLocale, locale), request.url);
+    redirectUrl.search = request.nextUrl.search;
     return NextResponse.redirect(redirectUrl);
   }
 

@@ -97,7 +97,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const profileQuery = useQuery(myProfileQueryOptions());
   const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, language));
   const roomsQuery = useQuery(myChatRoomsQueryOptions(language));
-  const chatMessages = useChatMessages(chatRoomId);
+  const chatMessages = useChatMessages(chatRoomId, language);
 
   const messages = chatMessages.messages;
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
@@ -144,7 +144,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       setAttachNotice(null);
       setError(null);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId, language) }),
         queryClient.invalidateQueries({ queryKey: chatKeys.images(chatRoomId) }),
         queryClient.invalidateQueries({ queryKey: chatKeys.rooms() }),
       ]);
@@ -152,7 +152,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     // 묶음 전송은 한 장씩 보내므로 도중에 끊겨도 앞선 장은 이미 서버에 있다
     onError: async (sendError) => {
       setError(sendError);
-      await queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) });
+      await queryClient.invalidateQueries({
+        queryKey: chatKeys.latestMessages(chatRoomId, language),
+      });
     },
   });
 
@@ -306,10 +308,12 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       </header>
 
       <ChatMessageList
+        key={language}
         messages={messages}
         members={room.members}
         myUserId={myUserId}
         locale={locale}
+        language={language}
         isPending={chatMessages.isPending}
         isError={chatMessages.isError}
         hasOlder={chatMessages.hasOlder}
@@ -379,6 +383,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           </ul>
         ) : null}
         <form
+          data-testid="chat-composer"
           className="flex items-end gap-2"
           onSubmit={(event) => {
             event.preventDefault();
@@ -413,25 +418,27 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           >
             <ImagePlusIcon className="size-5" />
           </button>
-          <textarea
-            id="chat-draft"
-            rows={1}
-            value={draft}
-            maxLength={CHAT_MESSAGE_MAX_LENGTH}
-            placeholder={t("messagePlaceholder")}
-            disabled={!chatConnected || sendMutation.isPending}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
-              if (event.nativeEvent.isComposing) return;
-              // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                submitDraft();
-              }
-            }}
-            className="focus-border-only max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
-          />
+          <div data-testid="chat-message-input" className="min-w-0 flex-1">
+            <textarea
+              id="chat-draft"
+              rows={1}
+              value={draft}
+              maxLength={CHAT_MESSAGE_MAX_LENGTH}
+              placeholder={t("messagePlaceholder")}
+              disabled={!chatConnected || sendMutation.isPending}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
+                if (event.nativeEvent.isComposing) return;
+                // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  submitDraft();
+                }
+              }}
+              className="focus-border-only block max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
+            />
+          </div>
           <button
             type="submit"
             disabled={

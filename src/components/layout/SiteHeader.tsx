@@ -51,7 +51,7 @@ interface SiteHeaderProps {
 interface SessionResolution {
   key: string;
   profile: MyProfile | null;
-  status: "authenticated" | "guest";
+  status: "authenticated" | "guest" | "unresolved";
 }
 
 export function SiteHeader({
@@ -93,7 +93,7 @@ export function SiteHeader({
       setSessionResolution({
         key: sessionKey,
         profile: null,
-        status: authenticated ? "authenticated" : "guest",
+        status: "unresolved",
       });
     });
 
@@ -112,6 +112,10 @@ export function SiteHeader({
   const isBuddyArea = pathname === "/buddy" || pathname.startsWith("/buddy/");
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
+  const showLanguageSwitcher =
+    (effectiveRole !== null || sessionStatus === "guest") &&
+    effectiveRole !== "buddy" &&
+    !isBuddyArea;
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
   const logoHref = isBuddyArea ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");
@@ -161,7 +165,7 @@ export function SiteHeader({
         ) : null}
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
-          <LocaleSwitcher labelStyle="name" />
+          {showLanguageSwitcher ? <LocaleSwitcher labelStyle="name" /> : null}
           {isBuddyHostingPage && !effectiveAuthenticated ? (
             <BuddyGoogleAuthDialog variant="header" />
           ) : null}
@@ -234,17 +238,21 @@ export function SiteHeader({
               <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
                 {navigationLinks}
               </nav>
-              <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
-                <LocaleSwitcher labelStyle="name" dismissMenu className="justify-start px-1" />
-                {sessionStatus === "guest" ? (
-                  <Link
-                    href="/login"
-                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
-                  >
-                    {t("login")}
-                  </Link>
-                ) : null}
-              </div>
+              {showLanguageSwitcher || sessionStatus === "guest" ? (
+                <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
+                  {showLanguageSwitcher ? (
+                    <LocaleSwitcher labelStyle="name" dismissMenu className="justify-start px-1" />
+                  ) : null}
+                  {sessionStatus === "guest" ? (
+                    <Link
+                      href="/login"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+                    >
+                      {t("login")}
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
             </MobileMenu>
           </div>
         ) : null}

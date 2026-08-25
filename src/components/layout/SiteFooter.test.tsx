@@ -21,12 +21,13 @@ vi.mock("next-intl/server", async () => {
   };
 });
 
-vi.mock("@/components/layout/LocaleSwitcher", () => ({
-  LocaleSwitcher: ({ labelStyle, variant }: { labelStyle?: string; variant?: string }) => (
-    <button type="button" data-variant={variant}>
-      {labelStyle === "nameWithCode" ? "English(en)" : "EN"}
-    </button>
-  ),
+vi.mock("@/components/layout/FooterLocaleSwitcher", () => ({
+  FooterLocaleSwitcher: ({ role }: { role?: string | null }) =>
+    role === "buddy" ? null : (
+      <button type="button" data-variant="footer">
+        English(en)
+      </button>
+    ),
 }));
 
 import { SiteFooter } from "./SiteFooter";
@@ -60,6 +61,12 @@ describe("SiteFooter", () => {
       );
     },
   );
+
+  it("hides the language switcher for buddies", async () => {
+    renderWithIntl(await SiteFooter({ locale: "ko", role: "buddy" }), { locale: "ko" });
+
+    expect(screen.queryByRole("button", { name: "English(en)" })).not.toBeInTheDocument();
+  });
 
   it.each([
     ["en", "Email HanBuddy", "Open HanBuddy on Facebook", "Open HanBuddy on Instagram"],

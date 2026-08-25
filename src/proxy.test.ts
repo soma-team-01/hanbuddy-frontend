@@ -132,7 +132,27 @@ describe("route access proxy", () => {
     });
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/en/dashboard");
+    expect(response.headers.get("location")).toBe("http://localhost/ko/dashboard");
+  });
+
+  it.each([
+    ["/en/dashboard", "/ko/dashboard"],
+    ["/ja/chat/12?from=dashboard", "/ko/chat/12?from=dashboard"],
+  ] as const)("forces an authenticated buddy route %s to Korean", async (pathname, target) => {
+    const response = await runProxy(pathname, {
+      [AUTH_COOKIES.accessToken]: "access-token",
+      [AUTH_COOKIES.userType]: "BUDDY",
+    });
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(`http://localhost${target}`);
+  });
+
+  it("forces the public buddy entry route to Korean", async () => {
+    const response = await runProxy("/en/buddy");
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ko/buddy");
   });
 
   it("allows an unauthenticated Korean request to browse Explore", async () => {
@@ -172,7 +192,7 @@ describe("route access proxy", () => {
 
   it.each([
     ["TOURIST", "/ko/dashboard", "/ko"],
-    ["BUDDY", "/en/activities/1/book", "/en/dashboard"],
+    ["BUDDY", "/en/activities/1/book", "/ko/dashboard"],
   ] as const)(
     "preserves locale when redirecting %s away from %s",
     async (userType, pathname, home) => {
@@ -213,7 +233,7 @@ describe("route access proxy", () => {
 
   it.each([
     ["/", "ko", "TOURIST", "/ko"],
-    ["/dashboard", "en", "BUDDY", "/en/dashboard"],
+    ["/dashboard", "en", "BUDDY", "/ko/dashboard"],
   ] as const)(
     "preserves the saved locale for an authenticated %s request",
     async (path, locale, userType, target) => {

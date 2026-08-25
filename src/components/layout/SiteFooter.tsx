@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { FooterLocaleSwitcher } from "@/components/layout/FooterLocaleSwitcher";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
   FacebookIcon,
@@ -32,7 +32,7 @@ const BUSINESS_DETAILS = {
   phone: "+82 10-8297-0110",
 } as const;
 
-export async function SiteFooter({ locale }: SiteFooterProps) {
+export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
   const [authT, landingT] = await Promise.all([
     getTranslations({ locale, namespace: "Auth" }),
     getTranslations({ locale, namespace: "Landing" }),
@@ -49,7 +49,7 @@ export async function SiteFooter({ locale }: SiteFooterProps) {
           </div>
 
           <div className="flex items-center gap-4 sm:justify-end">
-            <LocaleSwitcher labelStyle="nameWithCode" variant="footer" />
+            <FooterLocaleSwitcher role={role} />
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}

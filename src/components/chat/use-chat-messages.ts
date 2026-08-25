@@ -8,6 +8,7 @@ import {
   mergeChatMessages,
 } from "@/lib/query/chat";
 import type { ChatMessageResponse } from "@/types/chat";
+import type { ContentLanguage } from "@/types/content-language";
 
 /**
  * 대화방의 메시지를 모아 주는 훅.
@@ -23,18 +24,21 @@ import type { ChatMessageResponse } from "@/types/chat";
  * 그 사이 메시지는 어디서도 받을 수 없으므로, 겹침이 없으면 누적분을 버리고 새 경계에서 다시 시작한다.
  * 경계가 바뀌면 쿼리 키도 바뀌어 이어 붙일 수 없게 된 과거 페이지가 함께 정리된다.
  */
-export function useChatMessages(chatRoomId: string) {
-  const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId));
+export function useChatMessages(chatRoomId: string, language: ContentLanguage) {
+  const latestQuery = useQuery(latestChatMessagesQueryOptions(chatRoomId, language));
+  const scope = `${chatRoomId}:${language}`;
 
   // 과거 조회의 시작점. 최신 창이 밀려도 따라가지 않는다
+  const [activeScope, setActiveScope] = useState(scope);
   const [historyBoundaryId, setHistoryBoundaryId] = useState(0);
   const [messages, setMessages] = useState<ChatMessageResponse[]>([]);
+  const scopeChanged = activeScope !== scope;
 
   // 경계가 잡히면 첫 과거 묶음은 미리 받아 둔다 — 목록 위쪽 감시 요소가 화면 240px 앞에서 이미
   // 다음 묶음을 요청하므로, 여기서 미루면 위로 올릴 때마다 빈 화면을 먼저 보게 된다
   const historyQuery = useInfiniteQuery({
-    ...chatMessageHistoryQueryOptions(chatRoomId, historyBoundaryId),
-    enabled: historyBoundaryId > 0 && Boolean(latestQuery.data?.hasNext),
+    ...chatMessageHistoryQueryOptions(chatRoomId, scopeChanged ? 0 : historyBoundaryId, language),
+    enabled: !scopeChanged && historyBoundaryId > 0 && Boolean(latestQuery.data?.hasNext),
   });
 
   // 받아 온 묶음이 갈렸을 때만 다시 합친다. 페이지 배열은 렌더마다 새로 만들어지므로 원본으로 비교한다
@@ -43,7 +47,16 @@ export function useChatMessages(chatRoomId: string) {
     history: undefined,
   });
 
-  if (mergedSources.latest !== latestQuery.data || mergedSources.history !== historyQuery.data) {
+  if (scopeChanged) {
+    // 언어 또는 방이 바뀌면 이전 언어 메시지를 잠깐이라도 노출하지 않는다.
+    setActiveScope(scope);
+    setHistoryBoundaryId(0);
+    setMessages([]);
+    setMergedSources({ latest: undefined, history: undefined });
+  } else if (
+    mergedSources.latest !== latestQuery.data ||
+    mergedSources.history !== historyQuery.data
+  ) {
     const latestMessages = latestQuery.data?.messages ?? [];
     const historyMessages = (historyQuery.data?.pages ?? []).flatMap((page) => page.messages);
     const known = new Set(messages.map((item) => item.messageId));
@@ -68,7 +81,7 @@ export function useChatMessages(chatRoomId: string) {
   }
 
   return {
-    messages,
+    messages: scopeChanged ? [] : messages,
     isPending: latestQuery.isPending,
     isError: latestQuery.isError,
     // 과거를 받기 시작했으면 그쪽이 기준이다. 최신 창의 hasNext는 마지막 묶음까지 받은 뒤에도

@@ -643,7 +643,7 @@ describe("ChatRoomView", () => {
     fireEvent.click(within(renameDialog).getByRole("button", { name: "Save" }));
 
     await waitFor(() =>
-      expect(mockedUpdateChatRoomTitle).toHaveBeenCalledWith("1", { title: "Aug 14 walk" }),
+      expect(mockedUpdateChatRoomTitle).toHaveBeenCalledWith("1", { title: "Aug 14 walk" }, "EN"),
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Conversation menu" }));

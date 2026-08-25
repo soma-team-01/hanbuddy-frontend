@@ -55,7 +55,7 @@ describe("useChatRoomStream", () => {
     const wrapper = ({ children }: { children: ReactNode }) =>
       createElement(QueryClientProvider, { client: queryClient }, children);
 
-    const { result } = renderHook(() => useChatRoomStream("1"), { wrapper });
+    const { result } = renderHook(() => useChatRoomStream("1", "EN"), { wrapper });
     const firstHandlers = mockedOpenChatRoomStream.mock.calls[0][1];
 
     act(() => firstHandlers.onStatusChange("failed"));
@@ -74,14 +74,14 @@ describe("useChatRoomStream", () => {
     const wrapper = ({ children }: { children: ReactNode }) =>
       createElement(QueryClientProvider, { client: queryClient }, children);
 
-    const { result } = renderHook(() => useChatRoomStream("1"), { wrapper });
+    const { result } = renderHook(() => useChatRoomStream("1", "EN"), { wrapper });
     const streamHandlers = mockedOpenChatRoomStream.mock.calls[0][1];
 
     act(() => streamHandlers.onStatusChange("connected"));
 
     expect(result.current.status).toBe("connected");
     expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.latestMessages("1") });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.room("1") });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.room("1", "EN") });
   });
 });
 

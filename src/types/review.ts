@@ -1,8 +1,11 @@
+import type { ResolvedContentLanguage } from "./content-language";
+
 export interface ReviewResponse {
   reviewId: number;
   applicationId: number;
   activityId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   reviewerName: string;
   reviewerProfileImageUrl: string | null;
   /** 1~5 정수 */

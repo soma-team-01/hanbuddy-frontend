@@ -65,7 +65,7 @@ describe("StartChatButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Group chat with guests" }));
 
     await waitFor(() =>
-      expect(mockedCreateGroup).toHaveBeenCalledWith({ activityScheduleId: 101 }),
+      expect(mockedCreateGroup).toHaveBeenCalledWith({ activityScheduleId: 101 }, "EN"),
     );
     await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/en/chat/9"));
   });

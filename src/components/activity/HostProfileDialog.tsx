@@ -12,6 +12,7 @@ import { MessageSquareIcon, XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatKrw } from "@/lib/format";
+import { getContentLanguage } from "@/lib/content-language";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { buddyProfileQueryOptions, buddyReviewsQueryOptions } from "@/lib/query/reviews";
 import type { Host } from "@/types/activity";
@@ -41,13 +42,14 @@ export function HostProfileDialog({
   onClose: () => void;
 }>) {
   const locale = useLocale();
+  const language = getContentLanguage(locale);
   const t = useTranslations("ActivityDetail");
   const tReviews = useTranslations("Reviews");
   const tChat = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const activitiesQuery = useQuery({
-    ...touristActivitiesQueryOptions(),
+    ...touristActivitiesQueryOptions(language),
     enabled: showHostedActivities,
   });
 
@@ -63,7 +65,7 @@ export function HostProfileDialog({
     enabled: hasBuddyId,
   });
   const reviewsQuery = useInfiniteQuery({
-    ...buddyReviewsQueryOptions(buddyId ?? NO_BUDDY_ID),
+    ...buddyReviewsQueryOptions(buddyId ?? NO_BUDDY_ID, language),
     enabled: hasBuddyId,
   });
 

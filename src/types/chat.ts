@@ -1,3 +1,5 @@
+import type { ResolvedContentLanguage } from "./content-language";
+
 export type ChatRoomType = "DIRECT" | "GROUP";
 export type ChatMessageType = "TEXT" | "IMAGE";
 
@@ -39,6 +41,8 @@ export interface ChatRoomSummaryResponse {
   roomType: ChatRoomType;
   /** 1:1은 상대 닉네임, 단체는 활동 제목 */
   title: string;
+  /** 기본 활동 제목일 때 실제 표시 언어. 직접 지정한 제목과 1:1 방은 null */
+  contentLanguage?: ResolvedContentLanguage | null;
   /** 1:1은 상대 프로필, 단체는 활동 대표 이미지 */
   imageUrl: string | null;
   /** 단체 채팅방이 속한 활동 회차 ID. 1:1이면 null */
@@ -54,6 +58,8 @@ export interface ChatRoomDetailResponse {
   chatRoomId: number;
   roomType: ChatRoomType;
   title: string;
+  /** 기본 활동 제목일 때 실제 표시 언어. 직접 지정한 제목과 1:1 방은 null */
+  contentLanguage?: ResolvedContentLanguage | null;
   /** 단체는 활동 대표 이미지, 1:1은 상대 프로필 */
   imageUrl?: string | null;
   /** 단체 채팅방을 만든 버디의 사용자 ID. 1:1이면 null */

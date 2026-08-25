@@ -51,6 +51,18 @@ describe("LocaleSwitcher", () => {
     expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(label);
   });
 
+  it.each([
+    ["en", "English"],
+    ["ko", "한국어"],
+    ["ja", "日本語"],
+    ["zh-Hans", "简体中文"],
+    ["zh-Hant", "繁體中文"],
+  ] as const)("shows only the language name in the simple trigger for %s", (locale, label) => {
+    renderWithIntl(<LocaleSwitcher labelStyle="name" />, { locale });
+
+    expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(label);
+  });
+
   it("uses lighter compact typography in the footer", () => {
     renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" variant="footer" />, { locale: "en" });
 
@@ -71,12 +83,12 @@ describe("LocaleSwitcher", () => {
     expect(screen.queryByText("Language")).not.toBeInTheDocument();
   });
 
-  it("keeps the default menu below the trigger with its heading", () => {
+  it("keeps the default menu below the trigger without a heading", () => {
     renderWithIntl(<LocaleSwitcher />, { locale: "en" });
 
     fireEvent.click(screen.getByRole("button", { expanded: false }));
 
-    expect(screen.getByRole("menu")).toHaveClass("top-[calc(100%+10px)]");
-    expect(screen.getByText("Language")).toBeInTheDocument();
+    expect(screen.getByRole("menu")).toHaveClass("top-[calc(100%+10px)]", "min-w-44");
+    expect(screen.queryByText("Language")).not.toBeInTheDocument();
   });
 });

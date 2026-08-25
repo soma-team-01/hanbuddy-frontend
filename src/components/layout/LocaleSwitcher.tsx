@@ -27,7 +27,7 @@ export function LocaleSwitcher({
 }: Readonly<{
   className?: string;
   dismissMenu?: boolean;
-  labelStyle?: "short" | "nameWithCode";
+  labelStyle?: "short" | "name" | "nameWithCode";
   onBeforeLocaleChange?: () => void;
   variant?: "default" | "footer";
 }>) {
@@ -43,7 +43,9 @@ export function LocaleSwitcher({
   const currentLabel =
     labelStyle === "nameWithCode"
       ? `${currentOption.label}(${currentOption.code})`
-      : currentOption.shortLabel;
+      : labelStyle === "name"
+        ? currentOption.label
+        : currentOption.shortLabel;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -102,17 +104,10 @@ export function LocaleSwitcher({
         <div
           role="menu"
           aria-label={t("languageMenu")}
-          className={`absolute right-0 z-50 overflow-hidden rounded-2xl border border-line-soft bg-white shadow-[0_18px_48px_rgba(38,27,24,0.14)] ${
-            variant === "footer"
-              ? "bottom-[calc(100%+10px)] min-w-44 p-1.5"
-              : "top-[calc(100%+10px)] min-w-48 p-2"
+          className={`absolute right-0 z-50 min-w-44 overflow-hidden rounded-2xl border border-line-soft bg-white p-1.5 shadow-[0_18px_48px_rgba(38,27,24,0.14)] ${
+            variant === "footer" ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+10px)]"
           }`}
         >
-          {variant === "default" ? (
-            <p className="px-3 pt-2 pb-1 text-[11px] font-bold tracking-[0.16em] text-muted uppercase">
-              {t("language")}
-            </p>
-          ) : null}
           {LOCALE_OPTIONS.map((option) => {
             const isSelected = option.code === locale;
             return (
@@ -124,12 +119,8 @@ export function LocaleSwitcher({
                 aria-label={option.label}
                 data-menu-dismiss={dismissMenu || undefined}
                 onClick={() => selectLocale(option.code)}
-                className={`flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-3 text-left transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary ${
-                  variant === "footer" ? "py-2 text-xs" : "py-2.5 text-sm"
-                } ${
-                  isSelected
-                    ? `${variant === "footer" ? "font-semibold" : "font-bold"} text-primary-strong`
-                    : `${variant === "footer" ? "font-medium" : "font-semibold"} text-ink`
+                className={`flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-3 py-2 text-left text-xs transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary ${
+                  isSelected ? "font-semibold text-primary-strong" : "font-medium text-ink"
                 }`}
               >
                 <span className="flex items-center gap-3">

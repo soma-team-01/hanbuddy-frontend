@@ -286,7 +286,7 @@ describe("SiteHeader", () => {
     const trigger = screen.getByRole("button", {
       name: "Select language, current language: English",
     });
-    expect(within(trigger).getByText("EN")).toBeInTheDocument();
+    expect(within(trigger).getByText("English")).toBeInTheDocument();
     expect(screen.queryByRole("menu", { name: "Language selection" })).not.toBeInTheDocument();
 
     fireEvent.click(trigger);

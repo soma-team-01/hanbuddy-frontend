@@ -161,7 +161,7 @@ export function SiteHeader({
         ) : null}
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
-          <LocaleSwitcher />
+          <LocaleSwitcher labelStyle="name" />
           {isBuddyHostingPage && !effectiveAuthenticated ? (
             <BuddyGoogleAuthDialog variant="header" />
           ) : null}
@@ -235,7 +235,7 @@ export function SiteHeader({
                 {navigationLinks}
               </nav>
               <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
-                <LocaleSwitcher dismissMenu className="justify-start px-1" />
+                <LocaleSwitcher labelStyle="name" dismissMenu className="justify-start px-1" />
                 {sessionStatus === "guest" ? (
                   <Link
                     href="/login"

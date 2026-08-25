@@ -17,6 +17,7 @@ import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import {
   ArrowLeftIcon,
   ChevronDownIcon,
+  CircleHelpIcon,
   ImagePlusIcon,
   UsersIcon,
   XIcon,
@@ -428,7 +429,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         >
           <div
             data-testid="chat-translation-guide"
-            className="col-start-1 row-start-1 grid w-full max-w-sm grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
+            className="col-start-1 row-start-1 grid w-full max-w-xs grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5"
           >
             <label className="relative block min-w-0">
               <span className="sr-only">{t("sourceLanguage")}</span>
@@ -439,7 +440,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
                 onChange={(event) =>
                   setSelectedSourceLanguage(event.currentTarget.value as ContentLanguage)
                 }
-                className="h-9 w-full cursor-pointer appearance-none rounded-xl border border-line-soft bg-canvas-soft px-3 pr-8 text-xs font-medium text-ink shadow-[0_4px_14px_rgba(38,27,24,0.06)] transition-colors outline-none hover:border-line-strong focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                className="h-8 w-full cursor-pointer appearance-none rounded-lg border border-line-soft bg-canvas-soft px-2.5 pr-7 text-[11px] font-medium text-ink shadow-[0_3px_10px_rgba(38,27,24,0.05)] transition-colors outline-none hover:border-line-strong focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {CHAT_SOURCE_LANGUAGE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -447,15 +448,32 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
                   </option>
                 ))}
               </select>
-              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-3 -translate-y-1/2 text-muted" />
+              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-2.5 size-3 -translate-y-1/2 text-muted" />
             </label>
 
-            <span aria-hidden="true" className="text-sm text-primary/55">
+            <span aria-hidden="true" className="text-xs text-primary/55">
               →
             </span>
 
-            <div className="flex h-9 min-w-0 items-center rounded-xl border border-line-soft bg-canvas-soft px-3 text-xs font-medium text-muted shadow-[0_4px_14px_rgba(38,27,24,0.06)]">
+            <div className="flex h-8 min-w-0 items-center rounded-lg border border-line-soft bg-canvas-soft px-2.5 text-[11px] font-medium text-muted shadow-[0_3px_10px_rgba(38,27,24,0.05)]">
               <span className="truncate">{t("translationTarget")}</span>
+              <span className="group/help relative ml-1.5 shrink-0">
+                <button
+                  type="button"
+                  aria-label={t("translationHelpLabel")}
+                  aria-describedby="chat-translation-tooltip"
+                  className="flex size-4 items-center justify-center rounded-full text-muted/70 transition-colors hover:text-primary focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+                >
+                  <CircleHelpIcon className="size-3.5" />
+                </button>
+                <span
+                  id="chat-translation-tooltip"
+                  role="tooltip"
+                  className="invisible absolute right-0 bottom-full z-20 mb-2 w-60 rounded-lg bg-ink px-3 py-2 font-sans text-xs leading-5 font-normal text-white opacity-0 shadow-lg transition-opacity group-focus-within/help:visible group-focus-within/help:opacity-100 group-hover/help:visible group-hover/help:opacity-100"
+                >
+                  {t("translationHelp")}
+                </span>
+              </span>
             </div>
           </div>
 

@@ -744,6 +744,8 @@
     "messageLabel": "留言",
     "sourceLanguage": "原文语言",
     "translationTarget": "自动翻译",
+    "translationHelpLabel": "关于自动翻译",
+    "translationHelp": "您发送的消息会自动翻译成对方设置的语言并显示。",
     "send": "发送",
     "sending": "正在发送...",
     "sendError": "无法发送您的消息。",

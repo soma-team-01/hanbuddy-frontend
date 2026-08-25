@@ -289,8 +289,13 @@ describe("ChatRoomView", () => {
     expect(within(sourceSelect).getAllByRole("option")).toHaveLength(5);
     expect(within(translationGuide).getByText("Automatic translation")).toBeInTheDocument();
     expect(within(composer).getByTestId("chat-translation-guide")).toBe(translationGuide);
-    expect(translationGuide).toHaveClass("col-start-1", "max-w-sm");
+    expect(translationGuide).toHaveClass("col-start-1", "max-w-xs");
     expect(sourceSelect.closest("form")).toBe(composer);
+    const translationHelp = screen.getByRole("button", { name: "About automatic translation" });
+    expect(translationHelp).toHaveAttribute("aria-describedby", "chat-translation-tooltip");
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "Messages you send are automatically translated into each recipient's language.",
+    );
     const messageInput = screen.getByTestId("chat-message-input");
     expect(within(messageInput).getByRole("textbox", { name: "Message" })).toBeInTheDocument();
     expect(within(messageInput).getByRole("button", { name: "Attach photos" })).toHaveClass(

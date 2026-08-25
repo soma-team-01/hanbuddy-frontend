@@ -744,6 +744,8 @@
     "messageLabel": "메시지",
     "sourceLanguage": "원문 언어",
     "translationTarget": "자동 번역",
+    "translationHelpLabel": "자동 번역 안내",
+    "translationHelp": "보낸 메시지는 상대방이 설정한 언어로 자동 번역되어 표시됩니다.",
     "send": "보내기",
     "sending": "보내는 중...",
     "sendError": "메시지를 보내지 못했습니다.",

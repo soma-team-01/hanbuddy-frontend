@@ -744,6 +744,8 @@
     "messageLabel": "Message",
     "sourceLanguage": "Original language",
     "translationTarget": "Automatic translation",
+    "translationHelpLabel": "About automatic translation",
+    "translationHelp": "Messages you send are automatically translated into each recipient's language.",
     "send": "Send",
     "sending": "Sending...",
     "sendError": "Could not send your message.",

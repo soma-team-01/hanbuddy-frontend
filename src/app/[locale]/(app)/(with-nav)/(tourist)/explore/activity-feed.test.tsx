@@ -148,4 +148,21 @@ describe("ActivityFeed", () => {
       "/ko/activities/42",
     );
   });
+
+  it.each([
+    ["ja", "JA", "/ja/activities/42"],
+    ["zh-Hans", "ZH_HANS", "/zh-Hans/activities/42"],
+    ["zh-Hant", "ZH_HANT", "/zh-Hant/activities/42"],
+  ] as const)("requests and routes activity content in %s", async (locale, language, href) => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [touristActivity],
+    });
+
+    renderWithQueryClient(<ActivityFeed />, { locale });
+
+    expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith(language);
+    expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute("href", href);
+  });
 });

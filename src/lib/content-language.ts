@@ -4,6 +4,9 @@ import type { ContentLanguage } from "@/types/content-language";
 const CONTENT_LANGUAGE_BY_LOCALE: Record<Locale, ContentLanguage> = {
   en: "EN",
   ko: "KO",
+  ja: "JA",
+  "zh-Hans": "ZH_HANS",
+  "zh-Hant": "ZH_HANT",
 };
 
 export function getContentLanguage(locale: Locale): ContentLanguage {

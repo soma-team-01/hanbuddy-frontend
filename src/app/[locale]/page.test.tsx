@@ -157,6 +157,9 @@ describe("LandingPage", () => {
         languages: {
           en: "https://hanbuddy-frontend.vercel.app/en",
           ko: "https://hanbuddy-frontend.vercel.app/ko",
+          ja: "https://hanbuddy-frontend.vercel.app/ja",
+          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans",
+          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant",
         },
       },
     });

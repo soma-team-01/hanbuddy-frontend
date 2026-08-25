@@ -9,6 +9,9 @@ import type { Locale } from "@/i18n/routing";
 const LOCALE_OPTIONS = [
   { code: "en", shortLabel: "EN", label: "English" },
   { code: "ko", shortLabel: "KO", label: "한국어" },
+  { code: "ja", shortLabel: "JA", label: "日本語" },
+  { code: "zh-Hans", shortLabel: "简", label: "简体中文" },
+  { code: "zh-Hant", shortLabel: "繁", label: "繁體中文" },
 ] as const satisfies ReadonlyArray<{
   code: Locale;
   shortLabel: string;

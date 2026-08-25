@@ -54,6 +54,9 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
       languages: {
         en: `${APP_ORIGIN}/en`,
         ko: `${APP_ORIGIN}/ko`,
+        ja: `${APP_ORIGIN}/ja`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant`,
       },
     },
   };

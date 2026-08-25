@@ -5,6 +5,9 @@ import { isLocale, routing } from "./routing";
 const messageLoaders = {
   en: () => import("../messages/en.json").then((module) => module.default),
   ko: () => import("../messages/ko.json").then((module) => module.default),
+  ja: () => import("../messages/en.json").then((module) => module.default),
+  "zh-Hans": () => import("../messages/en.json").then((module) => module.default),
+  "zh-Hant": () => import("../messages/en.json").then((module) => module.default),
 } as const;
 
 export default getRequestConfig(async ({ requestLocale }) => {

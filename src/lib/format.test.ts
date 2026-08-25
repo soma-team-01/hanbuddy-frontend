@@ -12,7 +12,7 @@ describe("formatCurrency", () => {
 });
 
 describe("formatKrw", () => {
-  it.each(["en", "ko"] as const)(
+  it.each(["en", "ko", "ja", "zh-Hans", "zh-Hant"] as const)(
     "uses the narrow won symbol without fraction digits for %s",
     (locale) => {
       expect(formatKrw(45000.4, locale)).toBe("₩45,000");

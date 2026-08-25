@@ -5,6 +5,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/countries";
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "@/components/ui/icons";
+import { getIntlLocale } from "@/i18n/routing";
 
 interface CountrySelectProps {
   /** ISO 3166-1 alpha-2 코드 */
@@ -43,7 +44,7 @@ export function CountrySelect({
   const listboxId = useId();
 
   const localizedCountries = useMemo(() => {
-    const displayNames = new Intl.DisplayNames(locale === "ko" ? "ko-KR" : "en-US", {
+    const displayNames = new Intl.DisplayNames(getIntlLocale(locale), {
       type: "region",
     });
 

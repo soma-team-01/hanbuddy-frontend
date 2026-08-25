@@ -300,6 +300,9 @@ describe("SiteHeader", () => {
       "aria-checked",
       "false",
     );
+    expect(within(menu).getByRole("menuitemradio", { name: "日本語" })).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitemradio", { name: "简体中文" })).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitemradio", { name: "繁體中文" })).toBeInTheDocument();
   });
 
   it("localizes the site navigation and mobile menu in Korean", () => {
@@ -311,5 +314,18 @@ describe("SiteHeader", () => {
       "/ko/applications",
     );
     expect(screen.getByRole("button", { name: "메뉴 열기" })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["ja", "/ja/explore", "日本語"],
+    ["zh-Hans", "/zh-Hans/explore", "简体中文"],
+    ["zh-Hant", "/zh-Hant/explore", "繁體中文"],
+  ] as const)("routes navigation and content requests through %s", (locale, exploreHref, label) => {
+    renderWithQueryClient(<SiteHeader role="tourist" />, { locale });
+
+    expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("href", exploreHref);
+    expect(
+      screen.getByRole("button", { name: `Select language, current language: ${label}` }),
+    ).toBeInTheDocument();
   });
 });

@@ -160,6 +160,16 @@ describe("route access proxy", () => {
     }
   });
 
+  it.each(["ja", "zh-Hans", "zh-Hant"] as const)(
+    "keeps the explicit %s locale when browsing Explore",
+    async (locale) => {
+      const response = await runProxy(`/${locale}/explore`);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("location")).toBeNull();
+    },
+  );
+
   it.each([
     ["TOURIST", "/ko/dashboard", "/ko"],
     ["BUDDY", "/en/activities/1/book", "/en/dashboard"],

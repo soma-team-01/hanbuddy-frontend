@@ -57,6 +57,9 @@ describe("buddy view helpers", () => {
       ),
     ).toBe("전화 +33 612345678");
     expect(formatApplicantContact(applicant, "ko")).toBe("WhatsApp +33 612345678");
+    expect(formatNationalityCode("FR", "ja")).toBe("フランス");
+    expect(formatNationalityCode("FR", "zh-Hans")).toBe("法国");
+    expect(formatNationalityCode("FR", "zh-Hant")).toBe("法國");
   });
 
   it("keeps the country code off ID-based messengers", () => {

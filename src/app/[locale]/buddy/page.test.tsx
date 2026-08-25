@@ -102,6 +102,9 @@ describe("BuddyHostingPage", () => {
         languages: {
           en: "https://hanbuddy-frontend.vercel.app/en/buddy",
           ko: "https://hanbuddy-frontend.vercel.app/ko/buddy",
+          ja: "https://hanbuddy-frontend.vercel.app/ja/buddy",
+          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/buddy",
+          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/buddy",
         },
       },
     });

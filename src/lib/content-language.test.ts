@@ -5,6 +5,9 @@ describe("content language", () => {
   it.each([
     ["ko", "KO"],
     ["en", "EN"],
+    ["ja", "JA"],
+    ["zh-Hans", "ZH_HANS"],
+    ["zh-Hant", "ZH_HANT"],
   ] as const)("maps %s locale to %s", (locale, expected) => {
     expect(getContentLanguage(locale)).toBe(expected);
   });

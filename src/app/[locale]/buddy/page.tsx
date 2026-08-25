@@ -62,6 +62,9 @@ export async function generateMetadata({ params }: BuddyHostingPageProps): Promi
       languages: {
         en: `${APP_ORIGIN}/en/buddy`,
         ko: `${APP_ORIGIN}/ko/buddy`,
+        ja: `${APP_ORIGIN}/ja/buddy`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans/buddy`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant/buddy`,
       },
     },
   };

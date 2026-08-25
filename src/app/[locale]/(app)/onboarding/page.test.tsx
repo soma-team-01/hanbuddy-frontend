@@ -789,6 +789,9 @@ describe("onboarding metadata", () => {
         languages: {
           en: "https://hanbuddy-frontend.vercel.app/en/onboarding",
           ko: "https://hanbuddy-frontend.vercel.app/ko/onboarding",
+          ja: "https://hanbuddy-frontend.vercel.app/ja/onboarding",
+          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/onboarding",
+          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/onboarding",
         },
       },
     });

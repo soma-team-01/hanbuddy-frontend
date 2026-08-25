@@ -1,0 +1,1230 @@
+{
+  "Common": {
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "comingSoon": "近日公開予定",
+    "loading": "読み込み中...",
+    "unavailable": "利用不可"
+  },
+  "ApiErrors": {
+    "authenticationRequired": "続行するには、もう一度サインインしてください。",
+    "googleAuthenticationInvalid": "Google認証が確認できませんでした。もう一度サインインしてください。",
+    "signupAgreementsInvalid": "サインアップ規約を確認して、もう一度お試しください。",
+    "signupAgreementsOutdated": "サインアップ規約が更新されました。続行するには、もう一度確認してください。",
+    "emailAlreadyRegistered": "このメールアドレスはすでに登録されています。代わりにサインインしてください。",
+    "validationRequired": "必須フィールドを確認して、再試行してください。",
+    "validationFormat": "入力した情報の形式を確認してください。",
+    "validationRange": "入力値の許容範囲を確認してください。",
+    "validationInvalid": "入力した情報を確認して、もう一度やり直してください。",
+    "imageContentType": "JPEG、PNG、または WebP 画像のみをアップロードできます。",
+    "imageCount": "アップロードするために選択された画像が多すぎます。",
+    "activityCurrency": "現在、アクティビティの価格は KRW のみで設定できます。",
+    "activityScheduleFuture": "アクティビティのスケジュールは将来的に開始する必要があります。",
+    "activityOwner": "自分が作成したアクティビティのみにアクセスできます。",
+    "activityNotFound": "このアクティビティは見つかりませんでした。",
+    "activityScheduleNotFound": "このアクティビティ スケジュールは見つかりませんでした。",
+    "applicationNotApplicable": "このアクティビティは申し込みを受け付けていません。",
+    "applicationScheduleNotOpen": "選択されたスケジュールは申し込みを受け付けていません。",
+    "applicationCapacityExceeded": "十分なスポットがありません。",
+    "scheduleDateRangeInvalid": "終了日を開始日より前にすることはできません。",
+    "scheduleDateRangeTooLong": "その日付範囲は長すぎて一度に読み込むことができません。",
+    "applicationNotCancellable": "この申し込みはもうキャンセルできません。",
+    "applicationOwner": "アクセスできるのは自分のアプリケーションのみです。",
+    "applicationNotFound": "このアプリケーションは見つかりませんでした。",
+    "paymentOrderMismatch": "支払い命令がこのアプリケーションと一致しません。",
+    "paymentState": "この支払いは現在の状態では処理できません。",
+    "paymentNotFound": "支払い情報が見つかりませんでした。",
+    "paymentReviewRequired": "この支払いを続行するには、管理者の審査が必要です。",
+    "paymentCaptureMismatch": "承認された金額または通貨がこの支払いと一致しません。",
+    "paymentServiceUnavailable": "決済サービスが一時的にご利用いただけません。しばらくしてからもう一度お試しください。",
+    "exchangeRateUnavailable": "為替レート情報は一時的に利用できなくなります。しばらくしてからもう一度お試しください。",
+    "buddyRequired": "この機能はバディのみが利用できます。",
+    "touristRequired": "この機能は観光客のみが利用できます。",
+    "userNotFound": "ユーザープロフィールが見つかりませんでした。",
+    "buddyProfileInvalid": "続行する前に、必要なバディ プロファイル設定を完了してください。",
+    "permissionDenied": "このアクションを実行する権限がありません。",
+    "resourceNotFound": "要求された情報が見つかりませんでした。",
+    "conflict": "このアクションは現在の状態では完了できません。",
+    "serverUnavailable": "サービスは一時的にご利用いただけません。しばらくしてからもう一度お試しください。",
+    "activityDiscountInvalid": "割引率と終了日を一緒に設定します。",
+    "activityDiscountEndDate": "割引終了日は今日またはそれ以降である必要があります。",
+    "reviewNotReviewable": "アクティビティ終了後にレビューを残すことができます。",
+    "reviewOwner": "編集できるのは自分が書いたレビューのみです。",
+    "reviewNotFound": "このレビューは見つかりませんでした。",
+    "reviewDuplicate": "この予約はすでにレビュー済みです。",
+    "chatOwnerLeave": "作成したグループ チャットから退席することはできません。",
+    "chatInvalidTarget": "この人とはチャットを開始できません。",
+    "chatForbidden": "あなたはもうこの会話に参加していません。",
+    "chatNotFound": "この会話は見つかりませんでした。",
+    "chatMessageNotFound": "この写真は見つかりませんでした。",
+    "chatInvalidMessage": "このメッセージは送信できませんでした。",
+    "chatInvalidImage": "この写真は添付できませんでした。もう一度選んでください。",
+    "chatTooManyMessages": "メッセージの送信が速すぎます。減速してください。",
+    "activityScheduleHasApplications": "既存の予約がある日付は削除できません。",
+    "dataConflict": "このリクエストはすでに処理されました。更新してもう一度お試しください。",
+    "paymentAlreadyCreated": "この予約はすでに支払いが行われています。 「マイアプリケーション」をご確認ください。",
+    "paymentOrderConflict": "支払いを開始できませんでした。もう一度試してください。",
+    "paymentKeyConflict": "この支払いはすでに処理されています。再試行する前に、マイ アプリケーションを確認してください。",
+    "applicationPaymentPending": "すでに支払い待ちの予約があります。マイアプリケーションで終了またはキャンセルしてから、再度予約してください。",
+    "applicationSameSchedule": "このスケジュールにはすでにお申し込みいただきました。",
+    "applicationTimeConflict": "このスケジュールは別の予約と重なっています。",
+    "chatNotGroup": "これはグループ チャットでのみ機能します。",
+    "chatSelfTarget": "自分自身を削除することはできません。",
+    "chatOwnerOnly": "このチャットを作成した仲間だけがそれを行うことができます。"
+  },
+  "Navigation": {
+    "primaryNavigation": "プライマリナビゲーション",
+    "navigationMenu": "ナビゲーションメニュー",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる",
+    "changeLanguageToKorean": "韓国語に切り替える",
+    "changeLanguageToEnglish": "英語に切り替える",
+    "selectLanguage": "言語を選択、現在の言語: {language}",
+    "languageMenu": "言語の選択",
+    "language": "言語",
+    "home": "ホーム",
+    "explore": "体験を探す",
+    "applications": "予約一覧",
+    "dashboard": "ダッシュボード",
+    "buddyWorkspace": "バディ管理",
+    "myActivities": "マイアクティビティ",
+    "applicants": "申請者",
+    "createActivity": "アクティビティの作成",
+    "createActivityInSidebar": "サイドバーからアクティビティを作成",
+    "myPage": "マイページ",
+    "hostAnExperience": "体験を主催する",
+    "login": "ログイン",
+    "account": "アカウント",
+    "openAccount": "アカウントを開く",
+    "chat": "メッセージ"
+  },
+  "Accessibility": {
+    "goBack": "戻る",
+    "close": "閉じる",
+    "closeDialog": "ダイアログを閉じる"
+  },
+  "Status": {
+    "pendingPayment": "支払い保留中",
+    "confirmed": "確認済み",
+    "cancelled": "キャンセルされました",
+    "completed": "完了"
+  },
+  "Landing": {
+    "metadataTitle": "HanBuddy | 韓国をローカルのように体験しよう",
+    "metadataDescription": "現地のバディと出会い、ありのままの韓国を体験しましょう。",
+    "eyebrow": "ソウル · 現地のバディがご案内",
+    "headline": "韓国をローカルのように体験しよう",
+    "description": "定番の旅程を越えて、韓国をよく知るバディと一緒に、心に残る食や場所、ささやかな瞬間を見つけましょう。",
+    "exploreExperiences": "体験を探す",
+    "highlights": {
+      "localPerspective": {
+        "title": "地元の視点",
+        "description": "バディの視点で韓国を楽しみましょう。"
+      },
+      "realConnection": {
+        "title": "心が通う出会い",
+        "description": "場所だけでなく、人との出会いも楽しみましょう。"
+      },
+      "sharedMoments": {
+        "title": "分かち合う思い出",
+        "description": "帰ってからも話したくなる思い出を持ち帰りましょう。"
+      }
+    },
+    "booking": {
+      "eyebrow": "仕組み",
+      "title": "3つの簡単なステップで韓国体験を予約",
+      "description": "体験と日程を選び、現地のバディに会いましょう。",
+      "steps": {
+        "experience": {
+          "title": "体験を選ぶ",
+          "description": "あなたらしい韓国の楽しみ方が見つかるアクティビティを探しましょう。"
+        },
+        "schedule": {
+          "title": "日程を選ぶ",
+          "description": "参加可能な日程と人数を選択してください。"
+        },
+        "payment": {
+          "title": "申し込みとお支払い",
+          "description": "申し込みとお支払いを完了して予約を確定します。"
+        }
+      },
+      "cta": "ログインして予約する"
+    },
+    "recommended": {
+      "eyebrow": "ハンバディと一緒に探検しよう",
+      "title": "おすすめ体験",
+      "description": "韓国を体験したい方法に合ったアクティビティを見つけてください。",
+      "viewAll": "すべての体験を見る",
+      "loading": "おすすめの体験を読み込み中...",
+      "emptyTitle": "まだ利用可能な体験はありません。",
+      "emptyDescription": "地元の仲間たちが何か特別なものを準備しています。すぐにまたチェックしてください!",
+      "errorTitle": "現在エクスペリエンスをロードできません。",
+      "errorDescription": "一時的な接続の問題が発生しました。もう一度試してください。",
+      "retry": "もう一度試してください"
+    },
+    "visuals": {
+      "ariaLabel": "ソウルでの本物のハンバディの瞬間",
+      "mainAlt": "漢江のほとりでピクニックを楽しむ友人たち",
+      "marketAlt": "ソウルの照明の下で野球の試合",
+      "teaAlt": "野球の試合を一緒に応援する旅行者と地元の仲間",
+      "fountainAlt": "夕暮れに輝く漢江噴水",
+      "mainCaption": "あなたの韓国を個人的なものにしましょう。"
+    },
+    "reviews": {
+      "cheerTogether": {
+        "rating": "5.0",
+        "starLabel": "星5つ中5つ",
+        "event": "KBOベースボールナイト",
+        "meta": "ゲストレビュー · 2026 年 7 月",
+        "quote": "一緒に試合を見て応援できて楽しかったです！"
+      },
+      "localBuddy": {
+        "rating": "5.0",
+        "starLabel": "星5つ中5つ",
+        "event": "KBOベースボールナイト",
+        "meta": "ゲストレビュー · 2026 年 7 月",
+        "quote": "地元の人々と一緒に野球の試合を楽しむのは素晴らしい経験です。"
+      },
+      "lookedAfter": {
+        "rating": "5.0",
+        "starLabel": "星5つ中5つ",
+        "event": "KBOベースボールナイト",
+        "meta": "ゲストレビュー · 2026 年 8 月",
+        "quote": "ハンバディと野球の試合でとても楽しい時間を過ごしました!私たちは経験全体を通してとてもよく世話を受けました。"
+      }
+    },
+    "reviewsSection": {
+      "eyebrow": "コミュニティからのストーリー",
+      "title": "あなたとともに残る瞬間。",
+      "description": "HanBuddyで韓国を体験したゲストからの一言。"
+    },
+    "contact": {
+      "eyebrow": "連絡を取り合う",
+      "title": "ハンバディについてもっと知りたい",
+      "description": "体験を主催したり、アイデアを共有したり、HanBuddy についてもっと知りたいですか?メッセージをお送りください。折り返しご連絡させていただきます。",
+      "emailLabel": "何でもメールでご連絡ください",
+      "instagramLabel": "インスタグラム",
+      "responseNote": "ぜひご連絡ください。",
+      "emailIconLabel": "ハンバディにメールする",
+      "facebookIconLabel": "Facebook で HanBuddy を開く",
+      "instagramIconLabel": "InstagramでHanBuddyを開く",
+      "whatsappIconLabel": "WhatsApp で HanBuddy とチャットする",
+      "kakaoIconLabel": "カカオトークでハンバディとチャットする"
+    }
+  },
+  "BuddyHosting": {
+    "metadataTitle": "バディホストになる |ハンバディ",
+    "metadataDescription": "HanBuddy を使って、あなたが知っている大好きな韓国を旅行者のための個人的な体験に変えましょう。",
+    "hero": {
+      "eyebrow": "HanBuddy によるホスト",
+      "title": "あなたの日常の韓国が誰かのお気に入りの思い出になるかもしれません。",
+      "description": "本当に好きな場所、味、瞬間を共有しましょう。小規模で個人的な体験を作成し、旅行者が地元の視点から韓国を発見できるように支援します。",
+      "primaryCta": "仲間として始める",
+      "secondaryCta": "どのように機能するか見てみましょう",
+      "imageAlt": "ソウルの少人数の旅行者に韓国市場の食べ物を紹介する地元の友人"
+    },
+    "benefits": {
+      "eyebrow": "HanBuddy でホストする理由",
+      "title": "韓国旅行者が探しているのはすでにご存知でしょう。",
+      "description": "プロのガイドである必要はありません。まずは気になる韓国の一角やシェアしたいストーリーから始めましょう。",
+      "items": {
+        "share": {
+          "title": "本当にローカルに感じられるものを共有する",
+          "description": "あなたのお気に入りの地域、食べ物、趣味、文化を、地元の人だけが作り出すことができる体験に変えましょう。"
+        },
+        "connect": {
+          "title": "文化を超えた人々と出会う",
+          "description": "好奇心旺盛な旅行者を歓迎し、視点を交換し、誰もが個人的に感じられる瞬間を作りましょう。"
+        },
+        "schedule": {
+          "title": "自分のリズムでホストする",
+          "description": "望む体験を創造し、日常生活に合わせて自然にスケジュールを立てましょう。"
+        }
+      }
+    },
+    "ideas": {
+      "eyebrow": "それをあなたのものにしてください",
+      "title": "最高の体験は、愛するものから始まります。",
+      "description": "思い出に残るアクティビティは簡単なものでも構いません。重要なのは、地元の視点と、ゲストが参加していると感じられるようどのようにサポートするかです。",
+      "items": {
+        "baseball": {
+          "title": "地元の人のように応援しましょう",
+          "description": "チャントを教えたり、スタジアムのお気に入りを注文したり、韓国野球の夜のエネルギーを共有したりしましょう。",
+          "imageAlt": "旅行者と地元の仲間が一緒に韓国野球の試合を楽しむ"
+        },
+        "picnic": {
+          "title": "お気に入りのソウルの夜を共有しましょう",
+          "description": "地元の人だけが知っている情報をもとに、漢江のピクニック、近所の散歩、日没のルートを計画しましょう。",
+          "imageAlt": "漢江のほとりで一緒にピクニックを楽しむ友人たち"
+        },
+        "food": {
+          "title": "食べ物の背後にあるストーリーを伝える",
+          "description": "市場、カフェ、家庭料理を、それを意味あるものにする思い出や習慣を通して紹介します。",
+          "imageAlt": "韓国市場の食べ物を旅行者と共有する地元の友人"
+        }
+      }
+    },
+    "steps": {
+      "eyebrow": "仕組み",
+      "title": "地元のアイデアからホスト型の体験まで。",
+      "description": "友達のプロフィールを作成し、アクティビティを形成し、エクスペリエンスを 1 か所から管理します。",
+      "items": {
+        "profile": {
+          "title": "友達プロフィールを作成する",
+          "description": "旅行者にあなたが誰なのか、また連絡を取り合う方法を伝えてください。"
+        },
+        "design": {
+          "title": "体験をデザインする",
+          "description": "ストーリー、集合場所、料金、写真、ゲストが決定する必要がある詳細を追加します。"
+        },
+        "publish": {
+          "title": "スケジュールを開く",
+          "description": "ご都合のよい日付と定員を選択し、旅行者がそのアクティビティを利用できるようにします。"
+        },
+        "host": {
+          "title": "ミーティングとホスト",
+          "description": "申請書を確認し、ゲストを歓迎し、記憶に残る韓国のストーリーを作成しましょう。"
+        }
+      }
+    },
+    "support": {
+      "eyebrow": "あなたの仲間のワークスペース",
+      "title": "最初のアイデアから最終的な交流会まで、わかりやすく司会を務めます。",
+      "description": "HanBuddy は実用的な部分をまとめているので、ユーザーは人々と体験そのものに集中できます。",
+      "items": {
+        "manage": {
+          "title": "アクティビティとスケジュールを整理しておく",
+          "description": "バディワークスペースでアクティビティを作成し、そのステータスを確認し、今後のスケジュールを管理します。"
+        },
+        "communicate": {
+          "title": "誰が参加しているかを知る",
+          "description": "体験を開始する前に、ゲストの申し込みと必要な詳細を確認してください。"
+        },
+        "grow": {
+          "title": "ホストするたびに改善",
+          "description": "ゲストがより歓迎され、つながりを感じられるようにするために何が役立つかを学びながら、アクティビティを更新してください。"
+        }
+      }
+    },
+    "finalCta": {
+      "title": "韓国のどの部分を共有したいですか?",
+      "description": "バディ アカウントを開始して、場所、味、日常の情熱を HanBuddy 体験に変えましょう。",
+      "button": "仲間として始める"
+    }
+  },
+  "Auth": {
+    "metadataTitle": "ログイン |ハンバディ",
+    "metadataDescription": "地元の友達と出会い、旅程を超えて韓国を体験してください。",
+    "eyebrow": "ハンバディへようこそ",
+    "welcome": "地元の人のように韓国を体験してください。",
+    "introduction": "地元の友達と出会い、韓国を自分のものだと感じる瞬間を見つけてください。",
+    "continueWithGoogle": "Google を続ける",
+    "legalNoticeStart": "続行すると、HanBuddy の内容に同意したことになります。",
+    "legalNoticeMiddle": "そして",
+    "legalNoticeEnd": ".",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約",
+    "helpCenter": "ヘルプセンター",
+    "copyright": "© 2026 ハンバディ。無断転載を禁じます。",
+    "visualAlt": "HanBuddy のゲストと仲間が野球の試合で一緒に笑顔",
+    "visualCaption": "新しい友達、7月26日 ⚾",
+    "visualRightAlt": "野球スタンドで笑顔を見せるゲストと仲間たち",
+    "visualRightCaption": "初めての野球の夜⚾",
+    "visualBottomLeftAlt": "漢江を照らす盤浦大橋の虹の噴水",
+    "visualBottomLeftCaption": "盤浦虹🌈",
+    "visualBottomRightAlt": "漢江沿いでシェアするフライドチキン、麺類、ドリンク",
+    "visualBottomRightCaption": "川沿いのチメク🍗",
+    "errors": {
+      "googleCancelled": "Google サインインがキャンセルされました。",
+      "missingCode": "Google は認証コードを返しませんでした。",
+      "invalidState": "Google サインイン セッションを確認できませんでした。",
+      "backendRejected": "Google サインインが拒否されました。もう一度試してください。",
+      "invalidLoginResponse": "ログイン応答が不完全でした。もう一度試してください。",
+      "missingSignupToken": "登録を開始できませんでした。もう一度試してください。",
+      "serverUnavailable": "認証サーバーが利用できません。もう一度試してください。",
+      "configuration": "Google サインインが一時的に利用できなくなりました。",
+      "unknown": "サインイン中に問題が発生しました。もう一度試してください。"
+    }
+  },
+  "BuddyAuth": {
+    "trigger": "仲間として始める",
+    "loginTrigger": "ログイン",
+    "close": "友達のサインインを閉じる",
+    "eyebrow": "HanBuddy によるホスト",
+    "title": "仲間の旅を始めましょう",
+    "description": "Google を使用して友達アカウントを作成し、大好きな韓国を居心地の良い現地体験に変えましょう。",
+    "continueWithGoogle": "Google との友達として継続する"
+  },
+  "Onboarding": {
+    "title": "旅行者プロフィールを完成させましょう",
+    "metadataTitle": "プロフィールを完成させてください |ハンバディ",
+    "metadataDescription": "旅行者プロフィールを完成させて、HanBuddy と一緒に韓国の探索を始めましょう。",
+    "eyebrow": "ようこそ、旅行者さん",
+    "headline": "いくつかの詳細を説明したら、韓国を探索してみましょう。",
+    "description": "地元の仲間があなたを歓迎し、体験が確定したら連絡が取れるようにしてください。",
+    "displayName": "ニックネーム",
+    "personalInformation": "あなたについて",
+    "nationality": "国籍",
+    "birthDate": "生年月日",
+    "contactMethods": "友達はどのようにあなたに連絡を取るべきですか?",
+    "contactDescription": "最も頻繁にチェックするメッセンジャーを選択してください。",
+    "preferredMessagingApp": "優先メッセージング アプリ",
+    "addProfilePhoto": "プロフィール写真を追加",
+    "profilePhotoHint": "プロフィール写真",
+    "profilePhotoOptional": "会ったときに友達があなたを認識できるように、鮮明な顔写真を選択してください。",
+    "selectedProfilePhotoPreview": "選択したプロフィール写真のプレビュー",
+    "defaultProfilePhoto": "HanBuddy のデフォルトのプロフィール画像",
+    "steps": {
+      "progress": "ステップ {current} の {total}",
+      "aboutYou": "あなたについて",
+      "aboutYouDescription": "友達があなたを歓迎するために使用する詳細を追加します。",
+      "contact": "お問い合わせ",
+      "agreements": "協定",
+      "continue": "次へ",
+      "back": "戻る"
+    },
+    "agreements": {
+      "title": "協定",
+      "description": "アカウントを作成する前に、必要な項目を確認してください。",
+      "agreeAll": "すべてに同意する",
+      "required": "必須",
+      "optional": "オプション",
+      "items": {
+        "adultConfirmation": "私は19歳以上であることを確認します。",
+        "termsOfService": "ハンバディ利用規約",
+        "privacyCollectionUse": "個人情報の収集と利用",
+        "buddyPrivacyCollectionUse": "個人情報の収集・利用・バディ申請の審査について",
+        "buddyOperationTerms": "バディ運営規約",
+        "buddyCommissionPolicy": "手数料と決済ポリシー",
+        "buddyProfileContactProvision": "プロフィールの公開と確認されたゲストとの連絡先の共有",
+        "marketingCommunication": "イベントやマーケティングの最新情報を受け取る"
+      }
+    },
+    "validation": {
+      "unsupportedImageType": "JPEG、PNG、または WebP 画像のみをアップロードできます。",
+      "imageTooLarge": "プロフィール写真は 5MB 以下である必要があります。",
+      "displayNameInvalid": "ニックネームを 2 ～ 30 文字で先頭または末尾にスペースを入れずに入力します。",
+      "nationalityRequired": "国籍を選択してください。",
+      "birthDateInvalid": "19 ～ 120 歳の有効な生年月日を入力してください。",
+      "contactInvalid": "選択した方法に有効な連絡先 ID または電話番号を入力します。",
+      "agreementsRequired": "続行するには必須項目すべてに同意します。"
+    },
+    "profileUploadFailed": "プロフィール写真をアップロードできませんでした。もう一度試してください。",
+    "signupFailed": "登録を完了できませんでした。もう一度試してください。",
+    "serverUnavailable": "認証サーバーが利用できません。もう一度試してください。",
+    "completing": "完了中...",
+    "completeRegistration": "サインアップ"
+  },
+  "BuddyOnboarding": {
+    "title": "友達のプロフィールを完成させましょう",
+    "metadataTitle": "友達のプロフィールを作成する |ハンバディ",
+    "metadataDescription": "バディのプロフィールを完成させ、HanBuddy でローカル体験のホストを始めましょう。",
+    "eyebrow": "ようこそ、未来の相棒",
+    "headline": "いくつかの詳細を説明してから、あなたの地元の物語を始めましょう。",
+    "description": "現時点では、ゲストがどのようにしてあなたを認識し、連絡を取ることができるかを教えてください。ホスティングの詳細は後で追加できます。",
+    "profilePhotoOptional": "ゲストが会ったときにあなたを認識できるように、鮮明な顔写真を選択してください。",
+    "contactMethods": "ゲストはどのように連絡すればよいでしょうか?",
+    "contactDescription": "最も頻繁にチェックするメッセンジャーを選択してください。",
+    "completing": "友達アカウントを作成中...",
+    "completeRegistration": "友達として登録する"
+  },
+  "AccountStatus": {
+    "metadataTitle": "アカウントのステータス |ハンバディ",
+    "metadataDescription": "HanBuddy アカウントの審査ステータスを確認してください。",
+    "pending": {
+      "title": "バディ申請は審査中",
+      "description": "レビューが完了したらメールでお知らせします。",
+      "reviewTime": "通常 1 ～ 3 営業日"
+    },
+    "rejected": {
+      "title": "バディ申請は承認されませんでした",
+      "description": "以下の理由を確認し、サポートが必要な場合はご連絡ください。"
+    },
+    "suspended": {
+      "title": "バディアカウントが停止されました",
+      "description": "バディ機能は利用できません。サポートが必要な場合は、お問い合わせください。"
+    },
+    "reasonLabel": "提供された理由",
+    "contactHelp": "質問がありますか?お問い合わせ <email>zeroone.soma@gmail.com</email>.",
+    "backToBuddy": "友達のページに戻る"
+  },
+  "Profile": {
+    "title": "プロフィールの編集",
+    "metadataTitle": "プロフィールを編集 |ハンバディ",
+    "metadataDescription": "HanBuddy のプロフィールと連絡先の詳細を更新します。",
+    "fullName": "ニックネーム",
+    "nationality": "国籍",
+    "age": "生年月日",
+    "contactDetails": "連絡先の詳細",
+    "preferredMessagingApp": "優先メッセージング アプリ",
+    "addProfilePhoto": "プロフィール写真を追加",
+    "selectedProfilePhotoPreview": "選択したプロフィール写真のプレビュー",
+    "validation": {
+      "nameRequired": "ニックネームを 2 ～ 30 文字で先頭または末尾にスペースを入れずに入力します。",
+      "nationalityRequired": "国籍を選択してください。",
+      "ageInvalid": "有効な生年月日を入力してください。",
+      "contactInvalid": "連絡先 ID または番号を 2 文字以上で入力します。",
+      "unsupportedImageType": "JPEG、PNG、または WebP 画像のみをアップロードできます。",
+      "imageTooLarge": "プロフィール写真は 5MB 以下である必要があります。"
+    },
+    "profileUploadFailed": "プロフィール写真をアップロードできませんでした。もう一度試してください。",
+    "saveFailed": "プロフィールを保存できませんでした。もう一度試してください。",
+    "loadFailed": "プロフィールを読み込めませんでした。",
+    "save": "保存",
+    "saveOnMobile": "プロファイルの保存",
+    "saving": "保存中..."
+  },
+  "Explore": {
+    "title": "体験を探索する",
+    "description": "地元の友達と一緒に韓国を発見しましょう。",
+    "loading": "アクティビティを読み込んでいます...",
+    "empty": "利用できるアクティビティはまだありません。",
+    "emptyDescription": "地元の仲間たちが新しい体験を準備中です。すぐにまたチェックしてください!",
+    "loadError": "アクティビティを読み込めませんでした。",
+    "perPersonLabel": "1人あたり",
+    "durationHours": "{hours, plural, one {# 時間} other {# 時間}}",
+    "durationMinutes": "{minutes}分",
+    "discountBadge": "{percent}%オフ",
+    "soldOut": "売り切れ"
+  },
+  "ActivityDetail": {
+    "loading": "アクティビティを読み込み中...",
+    "loadError": "アクティビティの詳細を読み込めませんでした。",
+    "notFound": "このアクティビティは見つかりませんでした。",
+    "perPerson": "{price} 1人あたり",
+    "bookNow": "今すぐ予約する",
+    "host": "ホスト: {name}",
+    "localHost": "バディ",
+    "duration": "期間",
+    "viewPhoto": "写真を見る {number}",
+    "morePhotos": "+{count}",
+    "photoCounter": "{current} / {total}",
+    "previousPhoto": "前の写真",
+    "nextPhoto": "次の写真",
+    "aboutHost": "友達に会いましょう",
+    "whatYoullDo": "何をしますか",
+    "itineraryStep": "ステップ {number}",
+    "itineraryMinutes": "{minutes} 分",
+    "included": "含まれるもの",
+    "cannotJoin": "参加する前に",
+    "availability": "可用性",
+    "selectDatePlaceholder": "日付を選択してください",
+    "noDates": "まだ利用可能な日付はありません",
+    "availableTimes": "利用可能時間",
+    "noDatesThisMonth": "今月はご利用可能な日程がありません。",
+    "previousMonth": "前月",
+    "nextMonth": "来月",
+    "selectDate": "選択 {date}",
+    "remaining": "{count, plural, =0 {斑点は残りません} one {# スポット左} other {# 斑点が残っている}}",
+    "weatherAttribution": "KMA からの気象データ",
+    "weatherTemperature": "{temperature}℃",
+    "weatherPrecipitation": "降水確率 {percent}%",
+    "weatherPrecipitationUnavailable": "降水確率は不明",
+    "weatherConditions": {
+      "clear": "クリア",
+      "partlyCloudy": "曇り",
+      "cloudy": "曇り",
+      "rain": "雨",
+      "rainSnow": "雨と雪",
+      "snow": "雪",
+      "shower": "シャワー"
+    },
+    "meetingPoint": "ミーティングポイント",
+    "mapUnavailable": "地図が利用できません",
+    "mapTitle": "の地図 {place}",
+    "kstNotice": "時間はすべて韓国標準時 (KST) です。",
+    "hostedActivities": "この仲間の他の経験",
+    "noOtherActivities": "他の経験はまだありません。",
+    "viewHostProfile": "見る {name}さんのプロフィール"
+  },
+  "Reviews": {
+    "sectionTitle": "レビュー",
+    "ratingAria": "評価済み {rating} 5つのうち",
+    "countLabel": "{count, plural, =0 {まだレビューはありません} one {# レビュー} other {# レビュー}}",
+    "none": "まだレビューはありません",
+    "noneDescription": "この経験がどうだったかを誰よりも早く共有してください。",
+    "showAll": "すべて表示 {count, plural, one {# レビュー} other {# レビュー}}",
+    "loading": "レビューを読み込んでいます...",
+    "loadError": "レビューを読み込めませんでした。",
+    "loadMore": "さらにレビューを読み込む",
+    "hostReviews": "のレビュー {name}",
+    "hostedCount": "{count, plural, =0 {ライブ経験なし} one {# ライブ体験} other {# ライブ体験}}",
+    "write": "レビューを書く",
+    "edit": "レビューを編集する",
+    "delete": "削除",
+    "createTitle": "レビューを書く",
+    "editTitle": "レビューを編集する",
+    "yourRating": "あなたの評価",
+    "starLabel": "{rating, plural, one {# スター} other {# 星}}",
+    "contentLabel": "あなたのレビュー",
+    "contentPlaceholder": "体験はどうでしたか？何が目立ったのでしょうか？",
+    "contentCount": "{count} / {max}",
+    "submit": "レビューを送信する",
+    "save": "変更を保存する",
+    "saving": "保存中...",
+    "deleteTitle": "このレビューを削除しますか?",
+    "deleteDescription": "これを元に戻すことはできません。この予約については、後で新しいレビューを書くことができます。",
+    "deleting": "削除中...",
+    "ratingRequired": "評価を選択してください。",
+    "contentRequired": "その経験について一言書いてください。",
+    "yourReview": "あなたのレビュー",
+    "saveError": "レビューを保存できませんでした。",
+    "deleteError": "レビューを削除できませんでした。",
+    "filterByRating": "表示のみ {rating}-スターレビュー",
+    "clearFilter": "すべての評価を表示",
+    "filteredCount": "{count, plural, =0 {この評価のレビューはありません} one {# レビュー} other {# レビュー}}",
+    "noneForRating": "この評価のレビューはまだありません。",
+    "ratingWithCountAria": "評価済み {rating} 5つ中から {count, plural, one {# レビュー} other {# レビュー}}"
+  },
+  "Booking": {
+    "title": "書籍活動",
+    "loading": "予約を読み込んでいます...",
+    "loadError": "予約の詳細を読み込めませんでした。",
+    "notFound": "このアクティビティは予約できません。",
+    "hostedBy": "と {name}",
+    "reviewCount": "{count, plural, =0 {(レビューはありません)} one {(# レビュー)} other {(# レビュー）}}",
+    "dateTimeHeading": "いつ行きますか？",
+    "dateTime": "日付と時刻",
+    "guestsHeading": "何人ですか？",
+    "guestCount": "宿泊人数",
+    "guests": "{count, plural, one {# ゲスト} other {# ゲスト}}",
+    "decreaseGuests": "ゲストを減らす",
+    "increaseGuests": "ゲストを増やす",
+    "specialRequest": "特別なリクエスト",
+    "specialRequestDescription": "食事制限、アクセシビリティのニーズなど（オプション）",
+    "specialRequestPlaceholder": "友達に知らせてください...",
+    "priceDetails": "価格詳細",
+    "subtotal": "{price} × {count, plural, one {# ゲスト} other {# ゲスト}}",
+    "discount": "割引（{percent}%)",
+    "discountAmount": "割引",
+    "totalKrw": "合計(KRW): {amount}",
+    "refundPolicy": "を確認してください。 <policy>キャンセルと返金ポリシー</policy> 申請する前に。",
+    "agreement": "上記の条件に同意します。",
+    "submit": "申し込みと支払い",
+    "processing": "処理中...",
+    "kstNotice": "時間はすべて韓国標準時 (KST) です。",
+    "scheduleRequired": "空いているスケジュールを選択してください。",
+    "paymentProcessFailed": "支払いの処理中に問題が発生しました。しばらくしてからもう一度お試しください。",
+    "paymentCancelled": "支払いが完了していませんでした。マイアプリケーションからお支払いを継続できます。",
+    "paymentAmountChanged": "支払金額が変更されたため、支払いが開始されませんでした。 [マイ アプリケーション] で最新の金額を確認し、そこから続行します。",
+    "conflictCheckFailed": "既存のスケジュールを確認できませんでした。もう一度試してください。",
+    "sameScheduleTitle": "このスケジュールはすでに予約済みです",
+    "sameScheduleDescription": "別の予約をする前に、既存の申し込みを確認してください。",
+    "timeConflictTitle": "今回は別の予約と重なっています",
+    "timeConflictDescription": "別の時間を選択する前に、既存のスケジュールを確認してください。",
+    "sameActivitySameDayTitle": "このアクティビティは同日に予約されています",
+    "sameActivitySameDayDescription": "続行できますが、意図した時間を選択したことを確認してください。",
+    "otherActivitySameDayTitle": "同日の別のアクティビティ",
+    "otherActivitySameDayDescription": "続行する前に、アクティビティ間の移動時間を確認してください。",
+    "existingSchedule": "既存のスケジュール: {title}, {dateTime}",
+    "viewExistingSchedule": "既存のスケジュールを表示する",
+    "continueApplication": "予約を続ける",
+    "totalLabel": "合計(ウォン)",
+    "refundRules": {
+      "full": {
+        "label": "アクティビティの 48 時間以上前",
+        "value": "全額返金"
+      },
+      "half": {
+        "label": "24 ～ 48 時間前",
+        "value": "50%返金"
+      },
+      "none": {
+        "label": "24時間以内",
+        "value": "返金不可"
+      }
+    },
+    "goToApplications": "「マイアプリケーション」に移動"
+  },
+  "Applications": {
+    "title": "私のアプリケーション",
+    "description": "今後のエクスペリエンス、支払い、過去のアプリケーションを確認します。",
+    "upcoming": "今後の予定",
+    "past": "過去",
+    "loading": "アプリケーションをロード中...",
+    "empty": "ここにはまだ申し込みがありません。",
+    "loadError": "アプリケーションをロードできませんでした。",
+    "priceBreakdown": "価格の内訳",
+    "subtotal": "{price} × {count, plural, one {# ゲスト} other {# ゲスト}}",
+    "total": "合計",
+    "continuePayment": "支払いを続ける",
+    "cancel": "キャンセル",
+    "paymentFailed": "支払いを完了できませんでした。",
+    "cancelFailed": "申請をキャンセルできませんでした。",
+    "cancellationTitle": "申し込みをキャンセルしますか?",
+    "cancellationPrompt": "この予約をキャンセルしてもよろしいですか?この操作は元に戻すことができません。",
+    "cancellationQuestion": "なぜキャンセルするのですか？",
+    "cancellationReasons": {
+      "scheduleConflict": "スケジュールの競合",
+      "illness": "病気や予期せぬ緊急事態",
+      "foundOther": "別の選択肢を見つけました",
+      "other": "その他の理由"
+    },
+    "cancellationDetailLabel": "何が起こったのか教えてください",
+    "cancellationDetailPlaceholder": "短いメモは相手の理解に役立ちます。",
+    "cancellationDetailRequired": "キャンセルする理由を教えてください。",
+    "cancellationDetailCount": "{count}/{max}",
+    "keepApplication": "いいえ、そのままにしてください",
+    "confirmCancellation": "はい、キャンセルします",
+    "cancelling": "キャンセル中...",
+    "paidAmount": "有料",
+    "discount": "割引（{percent}%)",
+    "discountAmount": "割引",
+    "paymentProcessing": "支払いを開始しています...",
+    "dDay": "D-{count}",
+    "dDayToday": "D-DAY",
+    "exploreCta": "アクティビティを探索する",
+    "cancelledReason": "キャンセル理由: {reason}",
+    "cancelPendingTitle": "このアプリケーションをキャンセルしますか?",
+    "cancelPendingDescription": "私たちがあなたのために確保している席はすぐに解放されます。",
+    "cancelPendingConfirm": "はい、キャンセルします",
+    "keepPendingApplication": "アプリケーションを保持する",
+    "holdRemaining": "{time} 支払い完了まで残っています"
+  },
+  "Payment": {
+    "unavailable": "支払いは利用できません",
+    "complete": "支払い完了",
+    "confirmed": "お申し込みが確認されました。",
+    "experience": "あなたの経験",
+    "totalApplicationAmount": "申請総額： {amount}",
+    "loading": "支払いを読み込み中...",
+    "loadError": "支払い確認を読み込めませんでした。",
+    "confirmationNotFound": "この支払い確認が見つかりませんでした。",
+    "notPaid": "この申請書はまだ支払われていません。",
+    "viewApplications": "私のアプリケーションを見る",
+    "exploreMore": "アクティビティをもっと見る",
+    "paidAmount": "支払った金額: {amount}",
+    "originalAmountLabel": "元の合計",
+    "discountLabel": "割引（{percent}%)",
+    "discountAmountLabel": "割引",
+    "confirming": "お支払いを確認しています...",
+    "confirmFailed": "お支払いを確認できませんでした。マイアプリケーションから再度お試しください。",
+    "failTitle": "支払いに失敗しました",
+    "failDescription": "支払いは完了しておらず、何も請求されていません。",
+    "retryFromApplications": "マイアプリケーションで再試行してください",
+    "failReasons": {
+      "cancelled": "支払いが完了する前にキャンセルしました。",
+      "aborted": "支払いが中断されました。もう一度試してください。",
+      "rejectedByCardCompany": "カード発行会社が支払いを拒否しました。別のカードをお試しください。",
+      "cardIssue": "このカードは使用できません。カードの詳細を確認して、もう一度お試しください。",
+      "exceededLimit": "お支払いがカードの限度額を超えています。"
+    },
+    "totalLabel": "申請合計",
+    "paidLabel": "有料"
+  },
+  "Country": {
+    "select": "国を選択してください",
+    "search": "国を検索する",
+    "noResults": "国が見つかりませんでした"
+  },
+  "Messaging": {
+    "phoneNumber": "電話番号",
+    "countryCode": "メッセージの国コード",
+    "phonePlaceholder": "電話番号",
+    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "phoneInputLabel": "メッセージの電話番号",
+    "appIdPlaceholder": "{app} ID",
+    "appIdInputLabel": "メッセージングアプリID"
+  },
+  "Chat": {
+    "title": "メッセージ",
+    "description": "友達やゲストと話しましょう。",
+    "loading": "会話を読み込んでいます...",
+    "loadError": "会話を読み込めませんでした。",
+    "empty": "まだ会話はありません",
+    "emptyDescription": "アクティビティ ページから友達にメッセージを送信したり、ゲストとグループ チャットを開始したりできます。",
+    "noMessagesYet": "まだメッセージはありません",
+    "selectConversation": "会話を選択してください",
+    "selectConversationDescription": "左側の会話を選択して読み始めてください。",
+    "backToList": "会話に戻る",
+    "groupBadge": "グループ",
+    "memberCount": "{count, plural, one {# メンバー} other {# メンバー}}",
+    "leftMember": "左",
+    "messagePlaceholder": "メッセージを書く",
+    "messageLabel": "メッセージ",
+    "send": "送信",
+    "sending": "送信中...",
+    "sendError": "メッセージを送信できませんでした。",
+    "connectionConnecting": "チャットサーバーに接続しています...",
+    "connectionReconnecting": "チャットサーバーに再接続しています...",
+    "connectionFailed": "リアルタイム接続に失敗したため、チャットは利用できません。",
+    "retryConnection": "もう一度試してください",
+    "messagesLoadError": "メッセージを読み込めませんでした。",
+    "loadingOlder": "読み込み中...",
+    "unreadCount": "{count, plural, other {#}}",
+    "unreadLabel": "{count, plural, one {# 未読メッセージ} other {# 未読メッセージ}}",
+    "contactBuddy": "メッセージ {name}",
+    "messageApplicant": "メッセージ {name}",
+    "openGroupChat": "グループチャットに入る",
+    "openingChat": "オープニング...",
+    "leave": "会話を離れる",
+    "leaveTitle": "この会話をやめますか?",
+    "leaveDescription": "ここでメッセージの受信を停止します。アクティビティから再度開くと、場所が復元されます。",
+    "leaving": "出発中...",
+    "leaveError": "この会話を離れることができませんでした。",
+    "today": "今日",
+    "yesterday": "昨日",
+    "you": "あなた",
+    "unreadByCount": "{count, plural, one {# 人はこれを読んでいません} other {# 人々はこれを読んでいません}}",
+    "photo": "写真",
+    "openPhoto": "写真を開く",
+    "photoMessage": "写真",
+    "attachPhoto": "写真を添付する",
+    "attachedPhotos": "{count, plural, one {# 写真添付} other {# 写真添付}}",
+    "removePhoto": "写真を削除",
+    "uploadingPhotos": "写真をアップロードしています...",
+    "photoTooMany": "まで送信できます {max} 写真を一度に。",
+    "photoPanel": "このチャット内の写真",
+    "photoPanelEmpty": "写真はまだありません",
+    "openPhotoPanel": "写真",
+    "closePhotoPanel": "写真を閉じる",
+    "download": "ダウンロード",
+    "loadMorePhotos": "さらに写真をロードする",
+    "photosLoadError": "写真を読み込めませんでした。",
+    "sentBy": "送信者 {name}",
+    "markAllRead": "すべて既読としてマークする",
+    "markingAllRead": "マーキング...",
+    "listMenu": "会話オプション",
+    "downloadAll": "すべて保存",
+    "openPhotoAt": "写真を開く {index} の {total}",
+    "downloadTitle": "写真を保存する",
+    "downloadOne": "この写真を保存します",
+    "photoUnavailable": "写真が利用できません",
+    "roomMenu": "会話メニュー",
+    "startDirectChat": "直接チャットを開始する",
+    "renameRoom": "チャットの名前を変更する",
+    "renameLabel": "チャット名",
+    "renamePlaceholder": "アクティビティ名を使用するには空のままにしてください",
+    "renameSave": "保存",
+    "renameSaving": "保存中...",
+    "renameError": "このチャットの名前を変更できませんでした。",
+    "removeMember": "チャットから削除する",
+    "removeMemberTitle": "削除 {name}?",
+    "removeMemberDescription": "再度ご予約いただいても再参加はできません。彼らのメッセージは会話に残ります。",
+    "removingMember": "削除中...",
+    "removeMemberError": "このメンバーを削除できませんでした。",
+    "createGroupChat": "グループチャットを作成する",
+    "autoJoinNoticeCreate": "この時間帯に確認されたすべてのゲストとのグループ チャットを開きます。作成は一度だけです。後で支払うゲストは自動的に追加されます。",
+    "autoJoinNoticeOpen": "この時間帯のグループ チャットはすでに開いています。クリックして参加してください。後で支払うゲストは自動的に追加されます。"
+  },
+  "MyPage": {
+    "title": "マイページ",
+    "language": "言語",
+    "languageSheetTitle": "言語",
+    "english": "英語",
+    "korean": "한국어",
+    "helpCenter": "ヘルプセンター",
+    "deleteAccount": "アカウントの削除",
+    "editProfile": "プロフィールの編集",
+    "tourist": "観光客",
+    "buddy": "バディ",
+    "accountSettings": "アカウント",
+    "accountSettingsTitle": "アカウントの同期を保つ",
+    "accountSettingsDescription": "必要に応じて、プロフィールの詳細と言語設定を更新してください。",
+    "profileLoadFailed": "プロフィールを読み込めませんでした。",
+    "logOut": "ログアウト",
+    "loggingOut": "ログアウト中...",
+    "logoutTitle": "ログアウトしますか?",
+    "logoutDescription": "いつでも再度ログインできます。"
+  },
+  "Errors": {
+    "generic": "何か問題が発生しました。もう一度試してください。",
+    "dateTimeUnavailable": "時間が利用できません。"
+  },
+  "DateTime": {
+    "kstNotice": "時間はすべて韓国標準時 (KST) です。"
+  },
+  "BuddyDashboard": {
+    "title": "バディダッシュボード",
+    "description": "今後のスケジュールやゲストの申し込みを常に把握してください。",
+    "createActivity": "アクティビティの作成",
+    "previousWeek": "前の週",
+    "nextWeek": "来週",
+    "openCalendar": "カレンダーを開く",
+    "previousMonth": "前月",
+    "nextMonth": "来月",
+    "today": "今日",
+    "scheduleDates": "日付をスケジュールする",
+    "dateWithActivity": "{date}、アクティビティがあります",
+    "applicantsHeading": "申請者",
+    "loadingApplicants": "応募者を読み込み中...",
+    "applicantsLoadError": "応募者をロードできませんでした。",
+    "noApplicants": "この日付にはまだ応募者がいません。",
+    "applicantCount": "{count, plural, one {# 申請者} other {# 申請者}}",
+    "specialRequestLabel": "特別なリクエスト",
+    "profileContact": "お問い合わせ",
+    "profileGuestCount": "ゲスト",
+    "profileGuests": "{count, plural, one {# ゲスト} other {# ゲスト}}",
+    "scheduleLoadError": "スケジュールを読み込めませんでした。",
+    "myActivitiesHeading": "私の活動",
+    "viewAllActivities": "すべて見る",
+    "loadingActivities": "アクティビティを読み込んでいます...",
+    "activitiesLoadError": "アクティビティを読み込めませんでした。",
+    "noActivities": "まだアクティビティはありません。"
+  },
+  "Settlement": {
+    "title": "支払い",
+    "expectedThisMonth": "今月予定されている",
+    "basedOn": "{count, plural, one {に基づいて # 予約確認済み} other {に基づいて # 予約確認済み}}",
+    "payoutDate": "次回の支払い日 {date}",
+    "viewDetail": "詳細を見る",
+    "upcoming": "今後の支払い",
+    "paidOut": "支払い済み",
+    "guests": "{count, plural, one {# ゲスト} other {# ゲスト}}",
+    "total": "合計",
+    "statusScheduled": "予定されている",
+    "statusPaid": "有料",
+    "mockNotice": "サンプル数値 — 支払いはすぐに実際のデータに関連付けられます。"
+  },
+  "MyActivities": {
+    "title": "私の活動",
+    "description": "主催する文化体験を管理します。",
+    "createActivity": "アクティビティの作成",
+    "loading": "アクティビティを読み込んでいます...",
+    "loadError": "アクティビティを読み込めませんでした。",
+    "deleteError": "アクティビティを削除できませんでした。",
+    "empty": "まだアクティビティはありません。",
+    "edit": "編集",
+    "editActivity": "編集 {title}",
+    "viewApplicants": "応募者を見る",
+    "delete": "削除",
+    "deleteActivity": "削除 {title}",
+    "deleteTitle": "このアクティビティを削除しますか?",
+    "deleteDescription": "この操作は元に戻すことができません。",
+    "deleting": "削除中...",
+    "status": {
+      "active": "アクティブ",
+      "draft": "草案",
+      "inactive": "非アクティブ",
+      "deleted": "削除されました"
+    }
+  },
+  "MyActivityDetail": {
+    "title": "活動内容",
+    "loading": "アクティビティを読み込み中...",
+    "loadError": "アクティビティをロードできませんでした。",
+    "edit": "アクティビティの編集",
+    "viewApplicants": "応募者を見る",
+    "fallbackHostName": "ハンバディのホスト",
+    "previewTitle": "ゲストプレビュー",
+    "previewNotice": "これはまさにゲストが見ているものです。このプレビューでは予約ステップは無効になっています。"
+  },
+  "Applicants": {
+    "title": "申請者",
+    "loading": "応募者を読み込み中...",
+    "loadError": "応募者をロードできませんでした。",
+    "noSchedule": "このアクティビティにはスケジュールが登録されていません。",
+    "noScheduleOnDate": "この日は予定がありません。",
+    "guestNoteLabel": "ゲストメモ:",
+    "empty": "このスケジュールにはまだ応募者がいません。",
+    "sectionCompleted": "予約完了",
+    "sectionConfirmed": "予約確認済み",
+    "sectionCancelled": "キャンセルされた予約",
+    "guestApplicantCount": "{count, plural, one {# 申請者} other {# 申請者}}",
+    "appliedOn": "適用日 {date}",
+    "confirmedCount": "{count, plural, one {# 確認された} other {# 確認された}}",
+    "pendingCount": "{count, plural, one {# 支払い保留中} other {# 支払い保留中}}",
+    "guestCount": "{count, plural, one {# ゲスト} other {# ゲスト}}",
+    "status": {
+      "pendingPayment": "支払い保留中",
+      "confirmed": "確認済み",
+      "cancelled": "キャンセルされました",
+      "completed": "完了"
+    }
+  },
+  "CreateActivity": {
+    "eyebrow": "体験を作成する",
+    "title": "HanBuddy 体験をデザインする",
+    "progress": "ステップ {current, number} の {total, number}",
+    "progressLabel": "アクティビティ作成の進捗状況",
+    "steps": {
+      "category": {
+        "title": "カテゴリを選択してください",
+        "description": "あなたの経験を最もよく表すカテゴリを選択してください。"
+      },
+      "host": {
+        "title": "自己紹介",
+        "description": "ゲストにあなたが誰であるかを短く個人的に紹介してください。"
+      },
+      "name": {
+        "title": "あなたの経験に名前を付けてください",
+        "description": "何が特別なのかをゲストに伝える、明確で覚えやすい名前を付けてください。"
+      },
+      "description": {
+        "title": "あなたの経験を詳しく説明してください",
+        "description": "ゲストが体験が始まった瞬間から終わるまでイメージできるようにサポートします。"
+      },
+      "photos": {
+        "title": "ゲストが期待できることを示す",
+        "description": "体験を捉えた鮮明な写真を 3 ～ 10 枚追加します。"
+      },
+      "itinerary": {
+        "title": "旅程を立てる",
+        "description": "ゲストが体験の開始から終了まで行うアクティビティを追加します。"
+      },
+      "meeting": {
+        "title": "集合場所を設定する",
+        "description": "当日ゲストがあなたを簡単に見つけられるようにします。"
+      },
+      "schedule": {
+        "title": "日付と開始時刻を設定する",
+        "description": "ゲストが予約できるすべての日付を選択し、それぞれの開始時間を設定します。"
+      },
+      "capacity": {
+        "title": "最大グループサイズを設定する",
+        "description": "一度に快適にホストできるゲストの数を選択してください。"
+      },
+      "price": {
+        "title": "1人あたりの料金を設定する",
+        "description": "各ゲストが支払う金額を韓国ウォンで入力します。"
+      },
+      "inclusions": {
+        "title": "何が含まれているかをゲストに伝える",
+        "description": "価格の範囲を正確に把握してください。"
+      },
+      "discount": {
+        "title": "割引を追加する",
+        "description": "必要に応じて、終了日のある期間限定割引を設定します。"
+      },
+      "restrictions": {
+        "title": "ゲストが参加する前に",
+        "description": "アクティビティに参加する前にゲストが知っておくべきことを選択してください。"
+      }
+    },
+    "groups": {
+      "intro": "イントロ",
+      "activity": "アクティビティ",
+      "operation": "運営",
+      "pricing": "価格設定",
+      "policy": "ポリシー"
+    },
+    "categories": {
+      "food": "食べ物と飲み物",
+      "culture": "文化と歴史",
+      "sports": "スポーツ",
+      "nature": "自然とアウトドア",
+      "nightlife": "ナイトライフ",
+      "wellness": "ウェルネス"
+    },
+    "fields": {
+      "hostIntroduction": "あなたについて",
+      "qualifications": "資格と経験",
+      "pressHistory": "受賞歴やマスコミ報道",
+      "experienceName": "体験名",
+      "experienceDescription": "詳細な説明",
+      "meetingAddress": "住所検索",
+      "meetingPlace": "集合場所名",
+      "scheduleDate": "体験日",
+      "scheduleStartTime": "開始時間",
+      "itineraryTitle": "活動タイトル",
+      "itineraryDescription": "ゲストが行うこと",
+      "duration": "期間（分）",
+      "itineraryPhoto": "活動写真",
+      "maxGuests": "最大ゲスト数",
+      "pricePerPerson": "お一人様あたりの料金",
+      "inclusions": "含まれるもの",
+      "discount": "割引率",
+      "discountEndsAt": "割引は次の日に終了します",
+      "restrictions": "参加する前に知っておくべきこと"
+    },
+    "hints": {
+      "optional": "オプション",
+      "experienceName": "何が特別なのかをゲストに伝える、短くて具体的な名前を使用します。",
+      "meetingAddress": "住所を検索し、候補から選択します。",
+      "meetingPlace": "アドレスとは別に、認識可能な短い名前を使用します。",
+      "onePerLine": "1 行に 1 つの項目を入力します。",
+      "restrictionsList": "ゲストが知っておくべきことを一度に 1 つ追加します。",
+      "characters": "{count, number} 入力された文字",
+      "hostIntroductionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}",
+      "experienceNameCharacters": "{count, number}/{max, number} キャラクター",
+      "experienceDescriptionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}"
+    },
+    "placeholders": {
+      "hostIntroduction": "自己紹介と、この体験を主催したい理由を説明します。",
+      "qualifications": "関連する仕事、勉強、資格、または実際の経験を共有します。",
+      "pressHistory": "賞、出版物、インタビュー、または注目すべき表彰を追加します。",
+      "experienceName": "例: 韓国野球の夜を応援する",
+      "experienceDescription": "最初から最後まで体験がどのような感じかをゲストに伝えます。",
+      "meetingAddress": "例: ソウル特別市松坡区オリンピック路25",
+      "meetingPlace": "例：ゲート1チケットブース",
+      "itineraryTitle": "例: チームのチャントを学ぶ",
+      "itineraryDescription": "このアクティビティを 5 ～ 50 文字で説明してください。",
+      "duration": "例: 30",
+      "maxGuests": "例: 8",
+      "pricePerPerson": "例: 50000",
+      "inclusionsCustom": "例: チームキャップ",
+      "inclusions": "チケット\nウェルカムスナック\n応援キット",
+      "discount": "例: 10",
+      "restrictions": "例: 歩きやすい靴をお勧めします"
+    },
+    "photos": {
+      "upload": "体験写真を追加",
+      "hint": "JPG、PNG、または WebP · 少なくとも 3、最大 10",
+      "label": "体験写真をアップロードする",
+      "count": "{count, plural, one {# 写真が選択されました} other {# 選択された写真}}",
+      "minimum": "最低3枚の写真",
+      "cover": "カバー写真",
+      "makeCover": "カバーとして設定",
+      "preview": "体験写真 {index, number}",
+      "remove": "体験写真を削除 {index, number}"
+    },
+    "itinerary": {
+      "item": "アクティビティ {index, number}",
+      "remove": "アクティビティを削除する {index, number}",
+      "titleCount": "{count, number}/{max, number} キャラクター",
+      "descriptionCount": "{count, number}/{max, number} 文字数・最小値 {min, number}",
+      "addPhoto": "アクティビティの写真を追加する",
+      "photoLabel": "アクティビティ用の写真をアップロードする {index, number}",
+      "add": "アクティビティを追加する",
+      "edit": "アクティビティの編集 {index, number}",
+      "untitled": "新しいアクティビティ",
+      "incomplete": "詳細を追加",
+      "durationSummary": "{minutes, number} 分",
+      "editor": {
+        "progress": "{current, number} の {total, number}",
+        "close": "アクティビティエディタを閉じる",
+        "photoTitle": "アクティビティの写真を選択してください",
+        "photoDescription": "体験のこの部分を表す鮮明な写真を 1 枚使用してください。",
+        "changePhoto": "写真を変更する",
+        "descriptionTitle": "ゲストは何をしますか？",
+        "durationTitle": "どのくらい時間がかかりますか?",
+        "titleTitle": "このアクティビティに名前を付けます",
+        "minutes": "分",
+        "decreaseDuration": "持続時間を短縮する",
+        "increaseDuration": "持続時間を長くする",
+        "done": "完了",
+        "errors": {
+          "photo": "続行するには写真を追加してください。",
+          "description": "5文字から50文字まで書きます。",
+          "duration": "少なくとも 1 分間の継続時間を設定します。",
+          "title": "アクティビティのタイトルを 1 ～ 20 文字で入力します。"
+        }
+      }
+    },
+    "capacity": {
+      "decrease": "最大ゲスト数を減らす",
+      "increase": "最大ゲスト数を増やす",
+      "guests": "{count, plural, one {# ゲストの最大数} other {# 最大ゲスト数}}"
+    },
+    "meeting": {
+      "searching": "住所を検索中…",
+      "selecting": "選択したアドレスをロードしています…",
+      "searchError": "住所検索に失敗しました。もう一度試してください。",
+      "apiUnavailable": "Google Maps API キーが欠落しているため、住所検索は利用できません。",
+      "mapTitle": "選択した会議住所の地図"
+    },
+    "schedule": {
+      "notice": "必要なだけ日付を選択してください。すべての開始時間は韓国標準時 (KST) で表示されます。",
+      "calendarLabel": "体験日カレンダー",
+      "previousMonth": "前月",
+      "nextMonth": "来月",
+      "selectDate": "選択 {date}",
+      "editDate": "の開始時間を編集する {date}",
+      "selectedTitle": "選択されたセッション",
+      "selectedCount": "{count, plural, one {# 日付} other {# 日付}} 選択された",
+      "sessionCount": "{count, plural, one {# セッション} other {# セッション}}",
+      "empty": "予約可能なセッションを追加するには、カレンダーで日付を選択します。",
+      "editingDate": "開始時間の編集",
+      "customTime": "開始時刻を追加する",
+      "addTime": "時間を追加する",
+      "addedTimes": "開始時間を追加しました",
+      "noTimes": "開始時間はまだありません。上から時間を選択して追加します。",
+      "removeTime": "削除 {time} から {date}",
+      "applyDateTimesToAll": "これらの時間をすべてに適用します {count, number} 日付",
+      "removeDate": "削除 {date}",
+      "pastTimeHint": "今日の開始時刻は現在時刻 (KST) より遅くする必要があります。"
+    },
+    "price": {
+      "notice": "この金額は、韓国ウォンでの 1 人あたりの料金としてゲストに表示されます。"
+    },
+    "inclusions": {
+      "custom": "その他の同梱品",
+      "customHint": "上記に記載されていないものを追加します。",
+      "add": "アイテムの追加",
+      "remove": "含まれているアイテムを削除します: {item}",
+      "options": {
+        "tickets": "入場券",
+        "meal": "食事",
+        "snacks": "スナック",
+        "drinks": "スペシャルティドリンク",
+        "transport": "公共交通機関",
+        "parking": "駐車場",
+        "equipment": "器材レンタル",
+        "souvenir": "特別なお土産"
+      }
+    },
+    "discount": {
+      "policyNotice": "割引は、設定した終了日まですべてのセッションに適用されます。",
+      "options": {
+        "none": {
+          "title": "割引なし",
+          "description": "体験を標準価格で掲載します。"
+        },
+        "limited": {
+          "title": "期間限定割引",
+          "description": "プロモーション期間限定で低価格を提供します。"
+        }
+      }
+    },
+    "restrictions": {
+      "none": "ゲストが知っておくべきことは何もありません",
+      "noneDescription": "参加前にゲストが確認する必要がある追加の詳細はありません。",
+      "custom": "その他知っておくべきこと",
+      "customHint": "上記に記載されていないもので、参加前にゲストが確認する必要があるものを追加します。",
+      "add": "情報を追加する",
+      "remove": "情報を削除します: {item}",
+      "options": {
+        "age": "ゲストは19歳以上である必要があります",
+        "activity": "活動には、歩く、長時間立つ、またはその他の身体活動が含まれる場合があります。",
+        "accessibility": "車椅子やベビーカーでのアクセスは難しい場合があります",
+        "allergy": "食物アレルギーがある場合は、予約前にホストに確認してください。"
+      }
+    },
+    "review": {
+      "title": "体験をプレビューする",
+      "description": "入力した情報がアクティビティの詳細ページでゲストにどのように表示されるかを確認します。",
+      "hostName": "ハンバディのホスト"
+    },
+    "actions": {
+      "exit": "終了",
+      "back": "戻る",
+      "next": "次へ",
+      "finish": "経験を登録する",
+      "save": "変更を保存する",
+      "submitUploading": "写真をアップロードしています…",
+      "submitRegistering": "登録中…",
+      "submitSaving": "保存中…"
+    },
+    "edit": {
+      "loading": "エクスペリエンスを読み込んでいます…",
+      "loadError": "編集するアクティビティをロードできませんでした。",
+      "backToActivity": "アクティビティに戻る"
+    },
+    "errors": {
+      "categoryRequired": "続行するにはカテゴリを選択してください。",
+      "hostIntroductionRequired": "30 文字から 200 文字の間で紹介文を書きます。",
+      "photosMinimum": "体験写真を 3 ～ 10 枚追加します。",
+      "experienceNameRequired": "エクスペリエンス名を 1 ～ 20 文字で入力します。",
+      "experienceDescriptionRequired": "詳細な説明を 30 ～ 200 文字で入力します。",
+      "meetingAddressRequired": "会議のアドレスを入力します。",
+      "meetingPlaceRequired": "短い集合場所の名前を入力します。",
+      "scheduleInvalid": "少なくとも 1 つの日付を選択し、選択した日付ごとに開始時刻を設定します。",
+      "itineraryRequired": "少なくとも 1 つの旅程アクティビティを追加します。",
+      "itineraryTitleRequired": "すべてのアクティビティには 1 ～ 20 文字のタイトルが必要です。",
+      "itineraryDescriptionTooShort": "各アクティビティの説明は 5 ～ 50 文字にする必要があります。",
+      "itineraryDurationInvalid": "すべてのアクティビティに 0 より大きい期間を入力します。",
+      "itineraryPhotoRequired": "すべてのアクティビティに写真を追加します。",
+      "maxGuestsInvalid": "0 より大きい整数の容量を入力します。",
+      "priceInvalid": "0 より大きい整数の価格を入力します。",
+      "inclusionsRequired": "少なくとも 1 つの付属アイテムを追加します。",
+      "discountInvalid": "終了日を選択し、1 ～ 100 の整数の割引を入力します。",
+      "restrictionsRequired": "ゲストが知っておくべきことを少なくとも 1 つ選択するか、特筆すべき事項がないことを確認します。",
+      "imageUploadFailed": "写真をアップロードできませんでした。もう一度試してください。",
+      "submissionFailed": "あなたの体験を登録できませんでした。もう一度試してください。",
+      "scheduleInPast": "選択した日付または開始時刻の一部がすでに過ぎています。今後のセッションのみを選択してください。",
+      "maxGuestsTooMany": "収容人数は最大 100 名です。",
+      "schedulesTooMany": "最大 30 個のセッションを追加できます。",
+      "itineraryTooMany": "旅程アクティビティは最大 20 件追加できます。"
+    }
+  }
+}

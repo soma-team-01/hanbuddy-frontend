@@ -1,7 +1,18 @@
 import { isStructurallySame, parse } from "@formatjs/icu-messageformat-parser";
 import { describe, expect, it } from "vitest";
 import en from "./en.json";
+import ja from "./ja.json";
 import ko from "./ko.json";
+import zhHans from "./zh-Hans.json";
+import zhHant from "./zh-Hant.json";
+
+const localeMessages = [
+  ["en", en],
+  ["ko", ko],
+  ["ja", ja],
+  ["zh-Hans", zhHans],
+  ["zh-Hant", zhHant],
+] as const;
 
 function flatten(value: unknown, prefix = ""): Record<string, string> {
   if (typeof value === "string") return { [prefix]: value };
@@ -17,28 +28,30 @@ function flatten(value: unknown, prefix = ""): Record<string, string> {
 }
 
 describe("locale messages", () => {
-  it("keeps the Korean key contract identical to English", () => {
-    expect(Object.keys(flatten(ko)).sort()).toEqual(Object.keys(flatten(en)).sort());
+  it.each(localeMessages)("keeps the %s key contract identical to English", (_, messages) => {
+    expect(Object.keys(flatten(messages)).sort()).toEqual(Object.keys(flatten(en)).sort());
   });
 
-  it.each([
-    ["en", flatten(en)],
-    ["ko", flatten(ko)],
-  ] as const)("contains non-empty valid ICU messages for %s", (_, messages) => {
-    for (const [key, message] of Object.entries(messages)) {
-      expect(message.trim(), key).not.toBe("");
-      expect(() => parse(message), key).not.toThrow();
-    }
-  });
+  it.each(localeMessages.map(([locale, messages]) => [locale, flatten(messages)] as const))(
+    "contains non-empty valid ICU messages for %s",
+    (_, messages) => {
+      for (const [key, message] of Object.entries(messages)) {
+        expect(message.trim(), key).not.toBe("");
+        expect(() => parse(message), key).not.toThrow();
+      }
+    },
+  );
 
   it("keeps ICU argument names and types identical across locales", () => {
     const english = flatten(en);
-    const korean = flatten(ko);
 
-    for (const [key, englishMessage] of Object.entries(english)) {
-      const comparison = isStructurallySame(parse(englishMessage), parse(korean[key]));
-      const detail = comparison.error?.message ?? "ICU mismatch";
-      expect(comparison.success, `${key}: ${detail}`).toBe(true);
+    for (const [locale, messages] of localeMessages) {
+      const localized = flatten(messages);
+      for (const [key, englishMessage] of Object.entries(english)) {
+        const comparison = isStructurallySame(parse(englishMessage), parse(localized[key]));
+        const detail = comparison.error?.message ?? "ICU mismatch";
+        expect(comparison.success, `${locale}:${key}: ${detail}`).toBe(true);
+      }
     }
   });
 
@@ -115,10 +128,8 @@ describe("locale messages", () => {
       "Payment.loading",
     ];
 
-    for (const [locale, messages] of [
-      ["en", flatten(en)],
-      ["ko", flatten(ko)],
-    ] as const) {
+    for (const [locale, localeCatalog] of localeMessages) {
+      const messages = flatten(localeCatalog);
       for (const key of requiredKeys) {
         expect(messages[key], `${locale}:${key}`).toBeTypeOf("string");
       }
@@ -126,7 +137,7 @@ describe("locale messages", () => {
   });
 
   it("uses ICU variables and plurals for Tourist amounts and counts", () => {
-    for (const messages of [en, ko]) {
+    for (const [, messages] of localeMessages) {
       expect(messages.ActivityDetail.perPerson).toContain("{price}");
       expect(messages.ActivityDetail.remaining).toContain("plural");
       expect(messages.Booking.guests).toContain("plural");
@@ -303,10 +314,8 @@ describe("locale messages", () => {
       "CreateActivity.errors.discountInvalid",
     ];
 
-    for (const [locale, messages] of [
-      ["en", flatten(en)],
-      ["ko", flatten(ko)],
-    ] as const) {
+    for (const [locale, localeCatalog] of localeMessages) {
+      const messages = flatten(localeCatalog);
       for (const key of requiredKeys) {
         expect(messages[key], `${locale}:${key}`).toBeTypeOf("string");
       }
@@ -314,7 +323,8 @@ describe("locale messages", () => {
   });
 
   it("uses ICU numbers and plurals for Buddy counts and payout values", () => {
-    for (const messages of [flatten(en), flatten(ko)]) {
+    for (const [, localeCatalog] of localeMessages) {
+      const messages = flatten(localeCatalog);
       expect(messages["BuddyDashboard.applicantCount"]).toContain("plural");
       expect(messages["Applicants.confirmedCount"]).toContain("plural");
       expect(messages["Applicants.pendingCount"]).toContain("plural");

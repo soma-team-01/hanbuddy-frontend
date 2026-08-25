@@ -25,6 +25,15 @@ import { SiteFooter } from "./SiteFooter";
 
 describe("SiteFooter", () => {
   it.each([
+    ["en", "© 2026 HanBuddy. All rights reserved."],
+    ["ko", "© 2026 HanBuddy. 모든 권리를 보유합니다."],
+  ] as const)("keeps the HanBuddy legal name unchanged for %s", async (locale, copyright) => {
+    renderWithIntl(await SiteFooter({ locale }), { locale });
+
+    expect(screen.getByText(copyright)).toBeInTheDocument();
+  });
+
+  it.each([
     ["en", "Email HanBuddy", "Open HanBuddy on Facebook", "Open HanBuddy on Instagram"],
     ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Facebook 열기", "HanBuddy Instagram 열기"],
   ] as const)(

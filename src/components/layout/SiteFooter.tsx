@@ -49,7 +49,7 @@ export async function SiteFooter({ locale, role }: SiteFooterProps) {
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-xs text-muted sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-            <p>{authT("copyright")}</p>
+            <p>© 2026 HanBuddy. {authT("rightsReserved")}</p>
             <span className="underline">{authT("privacyPolicy")}</span>
             <span className="underline">{authT("termsOfService")}</span>
           </div>

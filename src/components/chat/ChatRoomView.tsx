@@ -420,7 +420,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         ) : null}
         <form
           data-testid="chat-composer"
-          className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2"
+          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2"
           onSubmit={(event) => {
             event.preventDefault();
             submitDraft();
@@ -428,7 +428,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         >
           <div
             data-testid="chat-translation-guide"
-            className="col-start-2 row-start-1 grid w-full max-w-sm grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
+            className="col-start-1 row-start-1 grid w-full max-w-sm grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
           >
             <label className="relative block min-w-0">
               <span className="sr-only">{t("sourceLanguage")}</span>
@@ -462,50 +462,57 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           <label htmlFor="chat-draft" className="sr-only">
             {t("messageLabel")}
           </label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            disabled={!chatConnected || sendMutation.isPending}
-            className="hidden"
-            onChange={(event) => {
-              attachFiles(event.target.files);
-              // 같은 파일을 다시 고를 수 있도록 값을 비운다
-              event.target.value = "";
-            }}
-          />
-          <button
-            type="button"
-            title={t("attachPhoto")}
-            aria-label={t("attachPhoto")}
-            disabled={
-              !chatConnected || sendMutation.isPending || attachments.length >= MAX_CHAT_IMAGE_COUNT
-            }
-            onClick={() => fileInputRef.current?.click()}
-            className="col-start-1 row-span-2 row-start-1 flex size-11 shrink-0 items-center justify-center self-center rounded-full text-muted transition-colors enabled:hover:text-primary disabled:opacity-40"
+          <div
+            data-testid="chat-message-input"
+            className="relative col-start-1 row-start-2 min-w-0"
           >
-            <ImagePlusIcon className="size-5" />
-          </button>
-          <textarea
-            id="chat-draft"
-            rows={1}
-            value={draft}
-            maxLength={CHAT_MESSAGE_MAX_LENGTH}
-            placeholder={t("messagePlaceholder")}
-            disabled={!chatConnected || sendMutation.isPending}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
-              if (event.nativeEvent.isComposing) return;
-              // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                submitDraft();
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              disabled={!chatConnected || sendMutation.isPending}
+              className="hidden"
+              onChange={(event) => {
+                attachFiles(event.target.files);
+                // 같은 파일을 다시 고를 수 있도록 값을 비운다
+                event.target.value = "";
+              }}
+            />
+            <textarea
+              id="chat-draft"
+              rows={1}
+              value={draft}
+              maxLength={CHAT_MESSAGE_MAX_LENGTH}
+              placeholder={t("messagePlaceholder")}
+              disabled={!chatConnected || sendMutation.isPending}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
+                if (event.nativeEvent.isComposing) return;
+                // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  submitDraft();
+                }
+              }}
+              className="focus-border-only block max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft py-2.5 pr-12 pl-4 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
+            />
+            <button
+              type="button"
+              title={t("attachPhoto")}
+              aria-label={t("attachPhoto")}
+              disabled={
+                !chatConnected ||
+                sendMutation.isPending ||
+                attachments.length >= MAX_CHAT_IMAGE_COUNT
               }
-            }}
-            className="focus-border-only col-start-2 row-start-2 max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
-          />
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute top-1/2 right-1 flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors enabled:hover:bg-primary-soft enabled:hover:text-primary disabled:opacity-40"
+            >
+              <ImagePlusIcon className="size-5" />
+            </button>
+          </div>
           <button
             type="submit"
             disabled={
@@ -513,7 +520,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
               sendMutation.isPending ||
               (draft.trim().length === 0 && attachments.length === 0)
             }
-            className="col-start-3 row-start-2 h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+            className="col-start-2 row-start-2 h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
           >
             {sendLabel()}
           </button>

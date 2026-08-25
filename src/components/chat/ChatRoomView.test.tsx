@@ -289,9 +289,14 @@ describe("ChatRoomView", () => {
     expect(within(sourceSelect).getAllByRole("option")).toHaveLength(5);
     expect(within(translationGuide).getByText("Automatic translation")).toBeInTheDocument();
     expect(within(composer).getByTestId("chat-translation-guide")).toBe(translationGuide);
-    expect(translationGuide).toHaveClass("col-start-2", "max-w-sm");
+    expect(translationGuide).toHaveClass("col-start-1", "max-w-sm");
     expect(sourceSelect.closest("form")).toBe(composer);
-    expect(screen.getByRole("button", { name: "Attach photos" })).toHaveClass("row-span-2");
+    const messageInput = screen.getByTestId("chat-message-input");
+    expect(within(messageInput).getByRole("textbox", { name: "Message" })).toBeInTheDocument();
+    expect(within(messageInput).getByRole("button", { name: "Attach photos" })).toHaveClass(
+      "absolute",
+      "right-1",
+    );
   });
 
   it("lets the sender override the detected source language", async () => {

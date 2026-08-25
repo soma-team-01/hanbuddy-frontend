@@ -40,11 +40,11 @@ describe("mergeChatMessages", () => {
 describe("chat polling", () => {
   it("checks room-list unread counts every 15 seconds", () => {
     expect(CHAT_ROOM_LIST_POLL_INTERVAL).toBe(15_000);
-    expect(myChatRoomsQueryOptions().refetchInterval).toBe(15_000);
+    expect(myChatRoomsQueryOptions("EN").refetchInterval).toBe(15_000);
   });
 
   it("never replaces the room WebSocket with REST polling", () => {
-    expect(chatRoomQueryOptions(1).refetchInterval).toBe(false);
+    expect(chatRoomQueryOptions(1, "EN").refetchInterval).toBe(false);
     expect(latestChatMessagesQueryOptions(1).refetchInterval).toBe(false);
   });
 });

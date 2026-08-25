@@ -8,11 +8,14 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
 const LANGUAGE_OPTIONS = [
-  { locale: "en", messageKey: "english" },
-  { locale: "ko", messageKey: "korean" },
+  { locale: "en", label: "English" },
+  { locale: "ko", label: "한국어" },
+  { locale: "ja", label: "日本語" },
+  { locale: "zh-Hans", label: "简体中文" },
+  { locale: "zh-Hant", label: "繁體中文" },
 ] as const satisfies ReadonlyArray<{
   locale: Locale;
-  messageKey: "english" | "korean";
+  label: string;
 }>;
 
 function buildLocaleSwitchHref(pathname: string, query: string, hash: string) {
@@ -58,7 +61,7 @@ export function LanguagePreference() {
         >
           {LANGUAGE_OPTIONS.map((option) => (
             <option key={option.locale} value={option.locale}>
-              {t(option.messageKey)}
+              {option.label}
             </option>
           ))}
         </select>

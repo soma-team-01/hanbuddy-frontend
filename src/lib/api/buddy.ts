@@ -8,6 +8,8 @@ import type {
   MyActivityDetailResponse,
   MyActivitySummaryResponse,
 } from "@/types/buddy";
+import { withContentLanguage } from "@/lib/content-language";
+import type { ContentLanguage } from "@/types/content-language";
 import { requestApiResult, type ApiResult } from "./result";
 
 export type MyActivitiesResult = ApiResult<MyActivitySummaryResponse[], "activities">;
@@ -118,9 +120,12 @@ export async function getBuddyScheduleDates(
   );
 }
 
-export async function getBuddyApplications(date: string): Promise<BuddyApplicationsResult> {
+export async function getBuddyApplications(
+  date: string,
+  language: ContentLanguage,
+): Promise<BuddyApplicationsResult> {
   return requestApiResult<BuddyDateActivityApplicationsResponse[], "activities">(
-    `/api/applications/buddy?date=${encodeURIComponent(date)}`,
+    withContentLanguage(`/api/applications/buddy?date=${encodeURIComponent(date)}`, language),
     "activities",
     undefined,
     DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE,
@@ -129,9 +134,10 @@ export async function getBuddyApplications(date: string): Promise<BuddyApplicati
 
 export async function getBuddyActivityApplications(
   activityScheduleId: number | string,
+  language: ContentLanguage,
 ): Promise<BuddyActivityApplicationsResult> {
   return requestApiResult<BuddyActivityApplicationsResponse, "applications">(
-    `/api/applications/buddy/schedules/${activityScheduleId}`,
+    withContentLanguage(`/api/applications/buddy/schedules/${activityScheduleId}`, language),
     "applications",
     undefined,
     DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE,

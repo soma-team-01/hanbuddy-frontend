@@ -1,0 +1,1230 @@
+{
+  "Common": {
+    "cancel": "取消",
+    "close": "關閉",
+    "comingSoon": "即將推出",
+    "loading": "正在加載...",
+    "unavailable": "不可用"
+  },
+  "ApiErrors": {
+    "authenticationRequired": "請重新登入以繼續。",
+    "googleAuthenticationInvalid": "無法驗證 Google 身份驗證。請嘗試重新登入。",
+    "signupAgreementsInvalid": "查看註冊協議並重試。",
+    "signupAgreementsOutdated": "註冊協議已更新。再次查看它們以繼續。",
+    "emailAlreadyRegistered": "該電子郵件已註冊。請改為登入。",
+    "validationRequired": "檢查必填欄位並重試。",
+    "validationFormat": "檢查輸入資訊的格式。",
+    "validationRange": "檢查輸入值的允許範圍。",
+    "validationInvalid": "檢查輸入的資訊並重試。",
+    "imageContentType": "只能上傳 JPEG、PNG 或 WebP 映像。",
+    "imageCount": "選擇上傳的圖像太多。",
+    "activityCurrency": "活動目前只能以韓元定價。",
+    "activityScheduleFuture": "活動行程必須在未來開始。",
+    "activityOwner": "您只能存取您建立的活動。",
+    "activityNotFound": "無法找到此活動。",
+    "activityScheduleNotFound": "找不到該活動時間表。",
+    "applicationNotApplicable": "本活動不接受報名。",
+    "applicationScheduleNotOpen": "所選時間表尚未開放申請。",
+    "applicationCapacityExceeded": "沒有足夠的可用名額。",
+    "scheduleDateRangeInvalid": "結束日期不能早於開始日期。",
+    "scheduleDateRangeTooLong": "該日期範圍太長，無法一次載入。",
+    "applicationNotCancellable": "此申請無法再取消。",
+    "applicationOwner": "您只能存取您自己的應用程式。",
+    "applicationNotFound": "找不到該應用程式。",
+    "paymentOrderMismatch": "付款訂單與此申請不符。",
+    "paymentState": "該付款在目前狀態下無法處理。",
+    "paymentNotFound": "無法找到付款資訊。",
+    "paymentReviewRequired": "此付款需要管理員審核才能繼續。",
+    "paymentCaptureMismatch": "核准的金額或貨幣與此付款不符。",
+    "paymentServiceUnavailable": "支付服務暫時無法使用。請稍後重試。",
+    "exchangeRateUnavailable": "暫時無法取得匯率資訊。請稍後重試。",
+    "buddyRequired": "此功能僅供好友使用。",
+    "touristRequired": "此功能僅供遊客使用。",
+    "userNotFound": "找不到您的用戶個人資料。",
+    "buddyProfileInvalid": "在繼續之前完成所需的好友設定檔設定。",
+    "permissionDenied": "您沒有執行此操作的權限。",
+    "resourceNotFound": "無法找到所請求的資訊。",
+    "conflict": "此操作在目前狀態下無法完成。",
+    "serverUnavailable": "該服務暫時無法使用。請稍後重試。",
+    "activityDiscountInvalid": "將折扣率和結束日期一起設定。",
+    "activityDiscountEndDate": "折扣結束日期必須是今天或以後的日期。",
+    "reviewNotReviewable": "活動結束後您可以留下評論。",
+    "reviewOwner": "您只能編輯您撰寫的評論。",
+    "reviewNotFound": "無法找到該評論。",
+    "reviewDuplicate": "您已經查看過此預訂。",
+    "chatOwnerLeave": "您無法離開您建立的群組聊天。",
+    "chatInvalidTarget": "您無法與此人開始聊天。",
+    "chatForbidden": "您不再參與此對話。",
+    "chatNotFound": "無法找到此對話。",
+    "chatMessageNotFound": "找不到這張照片。",
+    "chatInvalidMessage": "該訊息無法發送。",
+    "chatInvalidImage": "無法附上這張照片。請再選一次。",
+    "chatTooManyMessages": "您發送訊息的速度太快。請減速慢行。",
+    "activityScheduleHasApplications": "無法刪除現有預訂的日期。",
+    "dataConflict": "該請求已被處理。請刷新並重試。",
+    "paymentAlreadyCreated": "該預訂已付款。請檢查我的應用程式。",
+    "paymentOrderConflict": "無法開始付款。請再試一次。",
+    "paymentKeyConflict": "這筆款項已被處理。請在重試之前檢查我的應用程式。",
+    "applicationPaymentPending": "您已有預訂等待付款。在“我的申請”中完成或取消，然後重新預訂。",
+    "applicationSameSchedule": "您已經申請了此時間表。",
+    "applicationTimeConflict": "此時間表與另一個預訂重疊。",
+    "chatNotGroup": "這僅適用於群組聊天。",
+    "chatSelfTarget": "你無法將自己移除。",
+    "chatOwnerOnly": "只有建立此聊天的好友才能執行此操作。"
+  },
+  "Navigation": {
+    "primaryNavigation": "主要導航",
+    "navigationMenu": "導航選單",
+    "openMenu": "開啟選單",
+    "closeMenu": "關閉選單",
+    "changeLanguageToKorean": "切換到韓語",
+    "changeLanguageToEnglish": "切換到英語",
+    "selectLanguage": "選擇語言，當前語言： {language}",
+    "languageMenu": "語言選擇",
+    "language": "語言",
+    "home": "首頁",
+    "explore": "探索",
+    "applications": "我的預訂",
+    "dashboard": "儀表板",
+    "buddyWorkspace": "夥伴管理",
+    "myActivities": "我的活動",
+    "applicants": "申請人",
+    "createActivity": "建立活動",
+    "createActivityInSidebar": "從側邊欄建立活動",
+    "myPage": "個人中心",
+    "hostAnExperience": "主持體驗",
+    "login": "登入",
+    "account": "帳戶",
+    "openAccount": "開啟我的帳戶",
+    "chat": "訊息"
+  },
+  "Accessibility": {
+    "goBack": "返回",
+    "close": "關閉",
+    "closeDialog": "關閉對話框"
+  },
+  "Status": {
+    "pendingPayment": "待付款",
+    "confirmed": "已確認",
+    "cancelled": "取消",
+    "completed": "已完成"
+  },
+  "Landing": {
+    "metadataTitle": "HanBuddy | 像當地人一樣體驗韓國",
+    "metadataDescription": "認識當地夥伴，體驗真實的韓國生活。",
+    "eyebrow": "首爾 · 當地夥伴帶你體驗",
+    "headline": "像當地人一樣體驗韓國！",
+    "description": "不只走訪一般行程。與熟悉韓國的當地夥伴一起，發現更有意義的美食、地點與日常時刻。",
+    "exploreExperiences": "探索體驗",
+    "highlights": {
+      "localPerspective": {
+        "title": "本地視角",
+        "description": "從當地夥伴的視角感受韓國。"
+      },
+      "realConnection": {
+        "title": "真誠相遇",
+        "description": "不只造訪景點，也與當地人相遇。"
+      },
+      "sharedMoments": {
+        "title": "共享時光",
+        "description": "帶回一段值得分享的故事。"
+      }
+    },
+    "booking": {
+      "eyebrow": "預訂方式",
+      "title": "三個簡單步驟，預訂韓國體驗",
+      "description": "選擇體驗與日期，然後與當地夥伴見面。",
+      "steps": {
+        "experience": {
+          "title": "選擇體驗",
+          "description": "尋找符合你心中韓國旅程的活動。"
+        },
+        "schedule": {
+          "title": "選擇日期",
+          "description": "選擇可預訂日期和參加人數。"
+        },
+        "payment": {
+          "title": "申請並付款",
+          "description": "提交申請並完成付款，即可確認預訂。"
+        }
+      },
+      "cta": "登入預訂"
+    },
+    "recommended": {
+      "eyebrow": "與 HanBuddy 一起探索",
+      "title": "推薦體驗",
+      "description": "找到適合您想要體驗韓國的方式的活動。",
+      "viewAll": "查看所有體驗",
+      "loading": "正在加載推薦體驗...",
+      "emptyTitle": "還沒有可用的經驗。",
+      "emptyDescription": "當地的朋友正在準備一些特別的東西。請盡快回來查看！",
+      "errorTitle": "我們現在無法加載體驗。",
+      "errorDescription": "出現臨時連線問題。請再試一次。",
+      "retry": "再試一次"
+    },
+    "visuals": {
+      "ariaLabel": "首爾真正的 HanBuddy 時刻",
+      "mainAlt": "朋友們在漢江邊享受野餐",
+      "marketAlt": "首爾燈光下的棒球比賽",
+      "teaAlt": "旅客和當地好友在棒球比賽中一起歡呼",
+      "fountainAlt": "漢江噴泉在黃昏時閃閃發光",
+      "mainCaption": "您的韓國，個性化。"
+    },
+    "reviews": {
+      "cheerTogether": {
+        "rating": "5.0",
+        "starLabel": "5 顆星（滿分為 5 顆星）",
+        "event": "KBO 棒球之夜",
+        "meta": "賓客評論 · 2026 年 7 月",
+        "quote": "一起看比賽、一起加油真是太有趣了！"
+      },
+      "localBuddy": {
+        "rating": "5.0",
+        "starLabel": "5 顆星（滿分為 5 顆星）",
+        "event": "KBO 棒球之夜",
+        "meta": "賓客評論 · 2026 年 7 月",
+        "quote": "與當地人一起享受棒球比賽的絕佳體驗。"
+      },
+      "lookedAfter": {
+        "rating": "5.0",
+        "starLabel": "5 顆星（滿分為 5 顆星）",
+        "event": "KBO 棒球之夜",
+        "meta": "賓客評論 · 2026 年 8 月",
+        "quote": "和 HanBuddy 一起觀看棒球比賽，玩得很開心！在整個體驗過程中我們都得到了很好的照顧。"
+      }
+    },
+    "reviewsSection": {
+      "eyebrow": "來自社區的故事",
+      "title": "那些與你同在的時刻。",
+      "description": "與 HanBuddy 一起體驗韓國的客人的幾句話。"
+    },
+    "contact": {
+      "eyebrow": "保持聯繫",
+      "title": "想了解更多關於HanBuddy的信息",
+      "description": "想要舉辦一次體驗、分享想法或了解更多關於 HanBuddy 的資訊嗎？請給我們留言，我們會盡快回覆您。",
+      "emailLabel": "給我們發電子郵件任何東西",
+      "instagramLabel": "Instagram",
+      "responseNote": "我們很樂意聽取您的意見。",
+      "emailIconLabel": "電子郵件 HanBuddy",
+      "facebookIconLabel": "在 Facebook 上開啟 HanBuddy",
+      "instagramIconLabel": "在 Instagram 上開啟 HanBuddy",
+      "whatsappIconLabel": "在 WhatsApp 上與 HanBuddy 聊天",
+      "kakaoIconLabel": "在 KakaoTalk 上與 HanBuddy 聊天"
+    }
+  },
+  "BuddyHosting": {
+    "metadataTitle": "成為好友主持人 |漢巴迪",
+    "metadataDescription": "透過 HanBuddy，將您所了解和喜愛的韓國變成旅行者的個人體驗。",
+    "hero": {
+      "eyebrow": "與 HanBuddy 一起主持",
+      "title": "您的日常生活韓國可能會成為某人最喜歡的記憶。",
+      "description": "分享您真正喜歡的地方、風味和時刻。打造小型的個人化體驗，幫助旅客從當地人的角度探索韓國。",
+      "primaryCta": "從好友開始",
+      "secondaryCta": "看看它是如何工作的",
+      "imageAlt": "一位當地好友向首爾的一小群遊客介紹韓國市集美食"
+    },
+    "benefits": {
+      "eyebrow": "為什麼選擇 HanBuddy 主持",
+      "title": "您已經知道韓國遊客正在尋找的飯店。",
+      "description": "您不需要成為專業導遊。從您關心的韓國一角和您想分享的故事開始。",
+      "items": {
+        "share": {
+          "title": "分享真正在地化的感受",
+          "description": "將您最喜歡的社區、美食、嗜好或文化變成只有當地人才能創造的體驗。"
+        },
+        "connect": {
+          "title": "認識跨文化的人",
+          "description": "歡迎好奇的旅行者，交流觀點，創造一個讓每個人都感到個性化的時刻。"
+        },
+        "schedule": {
+          "title": "按照自己的步調主持",
+          "description": "創造您想要的體驗並開放適合您日常生活的時間表。"
+        }
+      }
+    },
+    "ideas": {
+      "eyebrow": "讓它成為你的",
+      "title": "最好的體驗始於您喜愛的事物。",
+      "description": "令人難忘的活動可以很簡單。重要的是您對當地的看法以及您如何幫助客人感受到融入感。",
+      "items": {
+        "baseball": {
+          "title": "像當地人一樣歡呼",
+          "description": "教授口號，訂購體育場最愛的歌曲，並分享韓國棒球之夜的活力。",
+          "imageAlt": "遊客和當地朋友一起觀看韓國棒球比賽"
+        },
+        "picnic": {
+          "title": "分享您最喜歡的首爾之夜",
+          "description": "規劃漢江野餐、街區散步或日落路線，以了解只有當地人知道的詳細資訊。",
+          "imageAlt": "朋友們一起在漢江邊享受野餐"
+        },
+        "food": {
+          "title": "講述美食背後的故事",
+          "description": "透過使其有意義的記憶和習俗來介紹市場、咖啡館或休閒食品。",
+          "imageAlt": "當地小夥伴與遊客分享韓國市集美食"
+        }
+      }
+    },
+    "steps": {
+      "eyebrow": "它是如何運作的",
+      "title": "從本地創意到託管體驗。",
+      "description": "從一個地方建立您的好友檔案、塑造您的活動並管理體驗。",
+      "items": {
+        "profile": {
+          "title": "建立您的好友個人資料",
+          "description": "告訴旅行者您是誰以及他們如何與您保持聯繫。"
+        },
+        "design": {
+          "title": "設計您的體驗",
+          "description": "添加故事、聚會地點、價格、照片以及客人需要決定的細節。"
+        },
+        "publish": {
+          "title": "開啟日程表",
+          "description": "選擇適合您的日期和容量，然後向旅行者提供活動。"
+        },
+        "host": {
+          "title": "見面並主持",
+          "description": "審核申請，歡迎您的客人，並創造一個值得記住的韓國故事。"
+        }
+      }
+    },
+    "support": {
+      "eyebrow": "你的好友工作空間",
+      "title": "從第一個想法到最終的聚會，主持都清晰明了。",
+      "description": "HanBuddy 將實用部分整合在一起，以便您可以專注於人員和體驗本身。",
+      "items": {
+        "manage": {
+          "title": "讓活動和日程井井有條",
+          "description": "在好友工作區中建立活動、檢查其狀態並管理即將到來的日程安排。"
+        },
+        "communicate": {
+          "title": "知道誰正在加入",
+          "description": "在體驗開始之前查看訪客申請和所需的詳細資訊。"
+        },
+        "grow": {
+          "title": "每次主持都有進步",
+          "description": "當您了解什麼可以幫助客人感到更受歡迎和更緊密聯繫時，請更新您的活動。"
+        }
+      }
+    },
+    "finalCta": {
+      "title": "您想分享韓國的哪一部分？",
+      "description": "啟動您的好友帳戶，將某個地點、品味或日常熱情轉化為 HanBuddy 體驗。",
+      "button": "從好友開始"
+    }
+  },
+  "Auth": {
+    "metadataTitle": "登入 |漢巴迪",
+    "metadataDescription": "認識當地好友，體驗行程之外的韓國。",
+    "eyebrow": "歡迎來到漢友",
+    "welcome": "像當地人一樣體驗韓國。",
+    "introduction": "認識當地好友，發現讓韓國感覺跟您一樣的時刻。",
+    "continueWithGoogle": "繼續使用谷歌",
+    "legalNoticeStart": "繼續即表示您同意 HanBuddy 的",
+    "legalNoticeMiddle": "和",
+    "legalNoticeEnd": ".",
+    "privacyPolicy": "隱私權政策",
+    "termsOfService": "服務條款",
+    "helpCenter": "幫助中心",
+    "rightsReserved": "保留所有權利。",
+    "visualAlt": "HanBuddy 嘉賓和好友一起微笑觀看棒球比賽",
+    "visualCaption": "新朋友，7 月 26 日 ⚾",
+    "visualRightAlt": "嘉賓和好友在棒球看台上一起微笑",
+    "visualRightCaption": "第一個棒球之夜⚾",
+    "visualBottomLeftAlt": "半坡大橋彩虹噴泉點亮漢江",
+    "visualBottomLeftCaption": "半坡彩虹🌈",
+    "visualBottomRightAlt": "漢江邊共享的炸雞、麵條、飲料",
+    "visualBottomRightCaption": "河邊的奇美克🍗",
+    "errors": {
+      "googleCancelled": "Google 登入已取消。",
+      "missingCode": "Google 沒有回傳授權碼。",
+      "invalidState": "我們無法驗證您的 Google 登入工作階段。",
+      "backendRejected": "Google 登入被拒絕。請再試一次。",
+      "invalidLoginResponse": "登入回應不完整。請再試一次。",
+      "missingSignupToken": "我們無法開始註冊。請再試一次。",
+      "serverUnavailable": "認證伺服器不可用。請再試一次。",
+      "configuration": "Google 登入暫時無法使用。",
+      "unknown": "登入期間出現問題。請再試一次。"
+    }
+  },
+  "BuddyAuth": {
+    "trigger": "從好友開始",
+    "loginTrigger": "登入",
+    "close": "關閉好友登入",
+    "eyebrow": "與 HanBuddy 一起主持",
+    "title": "開始你的朋友之旅",
+    "description": "使用 Google 建立您的好友帳戶，將您喜愛的韓國變成溫馨的在地體驗。",
+    "continueWithGoogle": "繼續成為 Google 朋友"
+  },
+  "Onboarding": {
+    "title": "填寫您的旅行者資料",
+    "metadataTitle": "完成您的個人資料 |漢巴迪",
+    "metadataDescription": "填寫您的旅客資料並開始與 HanBuddy 一起探索韓國。",
+    "eyebrow": "歡迎，旅行者",
+    "headline": "一些細節，然後您就可以探索韓國了。",
+    "description": "幫助當地好友熱情歡迎您，並在體驗得到確認後與您聯繫。",
+    "displayName": "暱稱",
+    "personalInformation": "關於你",
+    "nationality": "國籍",
+    "birthDate": "出生日期",
+    "contactMethods": "好友該如何聯絡您？",
+    "contactDescription": "選擇您最常查看的信差。",
+    "preferredMessagingApp": "首選訊息應用程式",
+    "addProfilePhoto": "新增個人資料照片",
+    "profilePhotoHint": "個人資料照片",
+    "profilePhotoOptional": "選擇一張清晰的臉部照片，以便您的好友在見面時能夠認出您。",
+    "selectedProfilePhotoPreview": "選定的個人資料照片預覽",
+    "defaultProfilePhoto": "HanBuddy預設頭像",
+    "steps": {
+      "progress": "步驟 {current} 的 {total}",
+      "aboutYou": "關於你",
+      "aboutYouDescription": "添加您的好友將用來歡迎您的詳細資訊。",
+      "contact": "聯絡方式",
+      "agreements": "協定",
+      "continue": "下一步",
+      "back": "返回"
+    },
+    "agreements": {
+      "title": "協定",
+      "description": "在建立帳戶之前檢查所需的項目。",
+      "agreeAll": "同意全部",
+      "required": "必填",
+      "optional": "可選",
+      "items": {
+        "adultConfirmation": "我確認我已年滿 19 歲。",
+        "termsOfService": "漢友服務條款",
+        "privacyCollectionUse": "個人資訊的收集和使用",
+        "buddyPrivacyCollectionUse": "個人資料蒐集、使用及好友申請審核",
+        "buddyOperationTerms": "好友操作條款",
+        "buddyCommissionPolicy": "佣金及結算政策",
+        "buddyProfileContactProvision": "與已確認的客人的個人資料可見性和聯繫共享",
+        "marketingCommunication": "接收活動和行銷更新"
+      }
+    },
+    "validation": {
+      "unsupportedImageType": "只能上傳 JPEG、PNG 或 WebP 映像。",
+      "imageTooLarge": "個人資料照片必須為 5MB 或更小。",
+      "displayNameInvalid": "輸入 2 到 30 個字元的暱稱，開頭或結尾不得有空格。",
+      "nationalityRequired": "請選擇國籍。",
+      "birthDateInvalid": "輸入 19 歲至 120 歲之間的有效出生日期。",
+      "contactInvalid": "輸入所選方法的有效聯絡 ID 或電話號碼。",
+      "agreementsRequired": "同意所有必需的項目才能繼續。"
+    },
+    "profileUploadFailed": "無法上傳個人資料照片。請再試一次。",
+    "signupFailed": "無法完成註冊。請再試一次。",
+    "serverUnavailable": "認證伺服器不可用。請再試一次。",
+    "completing": "正在完成...",
+    "completeRegistration": "註冊"
+  },
+  "BuddyOnboarding": {
+    "title": "完成您的好友個人資料",
+    "metadataTitle": "建立您的好友個人資料 |漢巴迪",
+    "metadataDescription": "完成您的好友資料並開始與 HanBuddy 一起舉辦本地體驗。",
+    "eyebrow": "歡迎，未來的夥伴",
+    "headline": "一些細節，然後您的本地故事就可以開始了。",
+    "description": "現在，請告訴我們客人如何認出並聯絡您。您可以稍後添加託管詳細資訊。",
+    "profilePhotoOptional": "選擇一張清晰的臉部照片，以便客人在見面時能夠認出您。",
+    "contactMethods": "客人該如何聯絡您？",
+    "contactDescription": "選擇您最常查看的信差。",
+    "completing": "正在建立好友帳戶...",
+    "completeRegistration": "註冊成為好友"
+  },
+  "AccountStatus": {
+    "metadataTitle": "帳戶狀態 |漢巴迪",
+    "metadataDescription": "查看您的HanBuddy帳號的審核狀態。",
+    "pending": {
+      "title": "好友申請正在審核中",
+      "description": "審核完成後，我們會向您發送電子郵件。",
+      "reviewTime": "通常 1-3 個工作天"
+    },
+    "rejected": {
+      "title": "好友申請未獲批准",
+      "description": "檢查以下原因，如果需要協助，請聯絡我們。"
+    },
+    "suspended": {
+      "title": "好友帳號暫停",
+      "description": "好友功能不可用。如果您需要協助，請聯絡我們。"
+    },
+    "reasonLabel": "提供原因",
+    "contactHelp": "有問題嗎？聯絡方式 <email>zeroone.soma@gmail.com</email>.",
+    "backToBuddy": "返回好友頁面"
+  },
+  "Profile": {
+    "title": "編輯個人資料",
+    "metadataTitle": "編輯個人資料 |漢巴迪",
+    "metadataDescription": "更新您的 HanBuddy 個人資料和聯絡資訊。",
+    "fullName": "暱稱",
+    "nationality": "國籍",
+    "age": "出生日期",
+    "contactDetails": "聯絡方式",
+    "preferredMessagingApp": "首選訊息應用程式",
+    "addProfilePhoto": "新增個人資料照片",
+    "selectedProfilePhotoPreview": "選定的個人資料照片預覽",
+    "validation": {
+      "nameRequired": "輸入 2 到 30 個字元的暱稱，開頭或結尾不得有空格。",
+      "nationalityRequired": "請選擇國籍。",
+      "ageInvalid": "請輸入有效的出生日期。",
+      "contactInvalid": "輸入至少 2 個字元的聯絡人 ID 或號碼。",
+      "unsupportedImageType": "只能上傳 JPEG、PNG 或 WebP 映像。",
+      "imageTooLarge": "個人資料照片必須為 5MB 或更小。"
+    },
+    "profileUploadFailed": "無法上傳個人資料照片。請再試一次。",
+    "saveFailed": "無法儲存您的個人資料。請再試一次。",
+    "loadFailed": "無法載入您的個人資料。",
+    "save": "儲存",
+    "saveOnMobile": "儲存個人資料",
+    "saving": "正在儲存..."
+  },
+  "Explore": {
+    "title": "探索體驗",
+    "description": "與身邊的當地好友一起探索韓國。",
+    "loading": "正在加載活動...",
+    "empty": "尚無活動。",
+    "emptyDescription": "當地的小夥伴正在準備新的體驗。請盡快回來查看！",
+    "loadError": "無法載入活動。",
+    "perPersonLabel": "每人",
+    "durationHours": "{hours, plural, one {# 小時} other {# 小時}}",
+    "durationMinutes": "{minutes}分鐘",
+    "discountBadge": "{percent}% 折扣",
+    "soldOut": "已售完"
+  },
+  "ActivityDetail": {
+    "loading": "正在加載活動...",
+    "loadError": "無法載入活動詳細資訊。",
+    "notFound": "無法找到此活動。",
+    "perPerson": "{price} 每人",
+    "bookNow": "立即預訂",
+    "host": "主持人： {name}",
+    "localHost": "巴迪",
+    "duration": "持續時間",
+    "viewPhoto": "查看照片 {number}",
+    "morePhotos": "+{count}",
+    "photoCounter": "{current} / {total}",
+    "previousPhoto": "上一張照片",
+    "nextPhoto": "下一張照片",
+    "aboutHost": "認識你的好友",
+    "whatYoullDo": "你會做什麼",
+    "itineraryStep": "步驟 {number}",
+    "itineraryMinutes": "{minutes} 分鐘",
+    "included": "包含什麼",
+    "cannotJoin": "加入之前",
+    "availability": "可用性",
+    "selectDatePlaceholder": "選擇日期",
+    "noDates": "尚無可用日期",
+    "availableTimes": "可用時間",
+    "noDatesThisMonth": "本月無可用日期。",
+    "previousMonth": "上個月",
+    "nextMonth": "下個月",
+    "selectDate": "選擇 {date}",
+    "remaining": "{count, plural, =0 {沒有留下任何斑點} one {# 留下點} other {# 剩餘名額}}",
+    "weatherAttribution": "來自 KMA 的天氣數據",
+    "weatherTemperature": "{temperature}℃",
+    "weatherPrecipitation": "降水機會 {percent}%",
+    "weatherPrecipitationUnavailable": "無法獲得降水的可能性",
+    "weatherConditions": {
+      "clear": "清除",
+      "partlyCloudy": "晴間多雲",
+      "cloudy": "多雲",
+      "rain": "雨",
+      "rainSnow": "雨雪",
+      "snow": "雪",
+      "shower": "陣雨"
+    },
+    "meetingPoint": "集合點",
+    "mapUnavailable": "地圖不可用",
+    "mapTitle": "地圖 {place}",
+    "kstNotice": "所有時間均採用韓國標準時間 (KST)。",
+    "hostedActivities": "這位朋友的其他經歷",
+    "noOtherActivities": "還沒有其他經驗。",
+    "viewHostProfile": "查看 {name}的個人資料"
+  },
+  "Reviews": {
+    "sectionTitle": "評論",
+    "ratingAria": "額定 {rating} 滿分 5",
+    "countLabel": "{count, plural, =0 {還沒有評論} one {# 評論} other {# 評論}}",
+    "none": "還沒有評論",
+    "noneDescription": "成為第一個分享這段經歷的人。",
+    "showAll": "顯示全部 {count, plural, one {# 評論} other {# 評論}}",
+    "loading": "正在加載評論...",
+    "loadError": "無法加載評論。",
+    "loadMore": "加載更多評論",
+    "hostReviews": "評論 {name}",
+    "hostedCount": "{count, plural, =0 {沒有現場體驗} one {# 現場體驗} other {# 現場體驗}}",
+    "write": "寫評論",
+    "edit": "編輯評論",
+    "delete": "刪除",
+    "createTitle": "寫評論",
+    "editTitle": "編輯您的評論",
+    "yourRating": "您的評價",
+    "starLabel": "{rating, plural, one {# 明星} other {# 星星}}",
+    "contentLabel": "您的評論",
+    "contentPlaceholder": "體驗如何？什麼突出？",
+    "contentCount": "{count} / {max}",
+    "submit": "提交評論",
+    "save": "儲存變更",
+    "saving": "正在儲存...",
+    "deleteTitle": "刪除此評論？",
+    "deleteDescription": "此操作無法撤銷。您可以稍後為此預訂撰寫新評論。",
+    "deleting": "正在刪除...",
+    "ratingRequired": "請選擇一個評級。",
+    "contentRequired": "請寫幾句話談談經驗。",
+    "yourReview": "您的評論",
+    "saveError": "無法儲存您的評論。",
+    "deleteError": "無法刪除您的評論。",
+    "filterByRating": "僅顯示 {rating}-星級評論",
+    "clearFilter": "顯示所有評分",
+    "filteredCount": "{count, plural, =0 {沒有此評級的評論} one {# 評論} other {# 評論}}",
+    "noneForRating": "尚未有此評級的評論。",
+    "ratingWithCountAria": "額定 {rating} 滿分 5 來自 {count, plural, one {# 評論} other {# 評論}}"
+  },
+  "Booking": {
+    "title": "預約活動",
+    "loading": "正在加載預訂...",
+    "loadError": "無法加載預訂詳細資訊。",
+    "notFound": "此活動不接受預約。",
+    "hostedBy": "與 {name}",
+    "reviewCount": "{count, plural, =0 {(暫無評論)} one {(# 則評論)} other {(# 則評論)}}",
+    "dateTimeHeading": "你什麼時候去？",
+    "dateTime": "日期和時間",
+    "guestsHeading": "有多少人？",
+    "guestCount": "入住人數",
+    "guests": "{count, plural, one {# 客人} other {# 客人}}",
+    "decreaseGuests": "減少客人",
+    "increaseGuests": "增加客人",
+    "specialRequest": "特殊要求",
+    "specialRequestDescription": "飲食限制、無障礙需求等（可選擇）",
+    "specialRequestPlaceholder": "讓你的朋友知道...",
+    "priceDetails": "價格詳情",
+    "subtotal": "{price} × {count, plural, one {# 客人} other {# 客人}}",
+    "discount": "折扣（{percent}%)",
+    "discountAmount": "折扣",
+    "totalKrw": "總計（韓元）： {amount}",
+    "refundPolicy": "請查看 <policy>取消和退款政策</policy> 申請之前。",
+    "agreement": "我同意以上條款。",
+    "submit": "申請並付款",
+    "processing": "處理中...",
+    "kstNotice": "所有時間均採用韓國標準時間 (KST)。",
+    "scheduleRequired": "請選擇可用的時間表。",
+    "paymentProcessFailed": "處理付款時出現問題。請稍後重試。",
+    "paymentCancelled": "付款未完成。您可以從“我的應用程式”繼續付款。",
+    "paymentAmountChanged": "應付金額發生變化，因此未開通付款。在“我的申請”中檢查最新金額並繼續。",
+    "conflictCheckFailed": "無法檢查您現有的日程安排。請再試一次。",
+    "sameScheduleTitle": "您已經預訂了此時間表",
+    "sameScheduleDescription": "在進行另一次預訂之前，請檢查您現有的申請。",
+    "timeConflictTitle": "這次與另一次預訂重疊",
+    "timeConflictDescription": "在選擇其他時間之前查看您現有的日程安排。",
+    "sameActivitySameDayTitle": "您當天預訂了此活動",
+    "sameActivitySameDayDescription": "您可以繼續，但請確認您選擇了預定時間。",
+    "otherActivitySameDayTitle": "同一天的另一項活動",
+    "otherActivitySameDayDescription": "在繼續之前檢查活動之間的行程時間。",
+    "existingSchedule": "現有時間表： {title}, {dateTime}",
+    "viewExistingSchedule": "查看現有時間表",
+    "continueApplication": "繼續預訂",
+    "totalLabel": "總計（韓元）",
+    "refundRules": {
+      "full": {
+        "label": "活動前48小時以上",
+        "value": "全額退款"
+      },
+      "half": {
+        "label": "24–48 小時前",
+        "value": "50% 退款"
+      },
+      "none": {
+        "label": "不到 24 小時前",
+        "value": "不予退款"
+      }
+    },
+    "goToApplications": "轉到我的應用程式"
+  },
+  "Applications": {
+    "title": "我的應用程式",
+    "description": "查看即將到來的體驗、付款和過去的申請。",
+    "upcoming": "即將推出",
+    "past": "過去",
+    "loading": "正在載入應用程式...",
+    "empty": "這裡還沒有應用程式。",
+    "loadError": "無法載入應用程式。",
+    "priceBreakdown": "價格細目",
+    "subtotal": "{price} × {count, plural, one {# 客人} other {# 客人}}",
+    "total": "總計",
+    "continuePayment": "繼續付款",
+    "cancel": "取消",
+    "paymentFailed": "無法完成付款。",
+    "cancelFailed": "無法取消申請。",
+    "cancellationTitle": "取消申請？",
+    "cancellationPrompt": "您確定要取消此預訂嗎？此操作無法撤銷。",
+    "cancellationQuestion": "為什麼要取消？",
+    "cancellationReasons": {
+      "scheduleConflict": "行程衝突",
+      "illness": "生病或意外的緊急情況",
+      "foundOther": "找到了另一個選擇",
+      "other": "其他原因"
+    },
+    "cancellationDetailLabel": "告訴我們發生了什麼",
+    "cancellationDetailPlaceholder": "簡短的說明可以幫助您的好友理解。",
+    "cancellationDetailRequired": "請告訴我們您取消的原因。",
+    "cancellationDetailCount": "{count}/{max}",
+    "keepApplication": "不，保留它",
+    "confirmCancellation": "是，取消",
+    "cancelling": "正在取消...",
+    "paidAmount": "付費",
+    "discount": "折扣（{percent}%)",
+    "discountAmount": "折扣",
+    "paymentProcessing": "開通付款...",
+    "dDay": "D-{count}",
+    "dDayToday": "登陸日",
+    "exploreCta": "探索活動",
+    "cancelledReason": "取消原因： {reason}",
+    "cancelPendingTitle": "取消此申請嗎？",
+    "cancelPendingDescription": "我們為您保留的座位將立即釋放。",
+    "cancelPendingConfirm": "是的，取消",
+    "keepPendingApplication": "保留申請",
+    "holdRemaining": "{time} 剩下完成付款"
+  },
+  "Payment": {
+    "unavailable": "無法付款",
+    "complete": "付款完成",
+    "confirmed": "您的申請已得到確認。",
+    "experience": "您的經歷",
+    "totalApplicationAmount": "申請總額： {amount}",
+    "loading": "正在加載付款...",
+    "loadError": "無法載入付款確認訊息。",
+    "confirmationNotFound": "我們找不到此付款確認資訊。",
+    "notPaid": "此申請尚未付款。",
+    "viewApplications": "查看我的應用程式",
+    "exploreMore": "探索更多活動",
+    "paidAmount": "支付金額： {amount}",
+    "originalAmountLabel": "原總計",
+    "discountLabel": "折扣（{percent}%)",
+    "discountAmountLabel": "折扣",
+    "confirming": "正在確認您的付款...",
+    "confirmFailed": "我們無法確認您的付款。請從「我的應用程式」重試。",
+    "failTitle": "付款失敗",
+    "failDescription": "付款尚未完成，也未收取任何費用。",
+    "retryFromApplications": "在“我的應用程式”中重試",
+    "failReasons": {
+      "cancelled": "您在付款完成之前取消了付款。",
+      "aborted": "付款被中斷。請再試一次。",
+      "rejectedByCardCompany": "您的發卡機構拒絕付款。請嘗試另一張卡。",
+      "cardIssue": "這張卡不能使用。檢查卡片詳細資訊並重試。",
+      "exceededLimit": "付款超出了您的卡的限額。"
+    },
+    "totalLabel": "申請總數",
+    "paidLabel": "付費"
+  },
+  "Country": {
+    "select": "選擇國家",
+    "search": "搜尋國家",
+    "noResults": "沒有找到國家"
+  },
+  "Messaging": {
+    "phoneNumber": "電話號碼",
+    "countryCode": "簡訊國家代碼",
+    "phonePlaceholder": "電話號碼",
+    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "phoneInputLabel": "簡訊電話號碼",
+    "appIdPlaceholder": "{app} 身分證號",
+    "appIdInputLabel": "訊息應用程式 ID"
+  },
+  "Chat": {
+    "title": "留言",
+    "description": "與您的好友或客人交談。",
+    "loading": "正在加載對話...",
+    "loadError": "無法載入您的對話。",
+    "empty": "還沒有對話",
+    "emptyDescription": "從活動頁面向好友發送訊息，或與您的客人發起群組聊天。",
+    "noMessagesYet": "還沒有消息",
+    "selectConversation": "選擇一個對話",
+    "selectConversationDescription": "選擇左側的對話開始閱讀。",
+    "backToList": "回到對話",
+    "groupBadge": "集團",
+    "memberCount": "{count, plural, one {# 會員} other {# 會員}}",
+    "leftMember": "左",
+    "messagePlaceholder": "寫留言",
+    "messageLabel": "留言",
+    "send": "傳送",
+    "sending": "正在發送...",
+    "sendError": "無法發送您的訊息。",
+    "connectionConnecting": "正在連接到聊天伺服器...",
+    "connectionReconnecting": "正在重新連接到聊天伺服器...",
+    "connectionFailed": "由於即時連線失敗，無法聊天。",
+    "retryConnection": "再試一次",
+    "messagesLoadError": "無法載入訊息。",
+    "loadingOlder": "正在加載...",
+    "unreadCount": "{count, plural, other {#}}",
+    "unreadLabel": "{count, plural, one {# 未讀訊息} other {# 未讀訊息}}",
+    "contactBuddy": "留言 {name}",
+    "messageApplicant": "留言 {name}",
+    "openGroupChat": "進入群聊",
+    "openingChat": "開幕...",
+    "leave": "離開對話",
+    "leaveTitle": "離開這個對話嗎？",
+    "leaveDescription": "您將在這裡停止接收訊息。從活動中再次打開它可以恢復您的位置。",
+    "leaving": "離開...",
+    "leaveError": "無法離開此對話。",
+    "today": "今天",
+    "yesterday": "昨天",
+    "you": "你",
+    "unreadByCount": "{count, plural, one {# 此人還沒有讀過這篇文章} other {# 人們還沒有讀過這篇文章}}",
+    "photo": "照片",
+    "openPhoto": "打開照片",
+    "photoMessage": "照片",
+    "attachPhoto": "附上照片",
+    "attachedPhotos": "{count, plural, one {# 附照片} other {# 附照片}}",
+    "removePhoto": "刪除照片",
+    "uploadingPhotos": "正在上傳照片...",
+    "photoTooMany": "您最多可以發送 {max} 立即照片。",
+    "photoPanel": "本次聊天中的照片",
+    "photoPanelEmpty": "還沒有照片",
+    "openPhotoPanel": "照片",
+    "closePhotoPanel": "關閉照片",
+    "download": "下載",
+    "loadMorePhotos": "載入更多照片",
+    "photosLoadError": "無法載入照片。",
+    "sentBy": "發送者 {name}",
+    "markAllRead": "全部標記為已讀",
+    "markingAllRead": "標記...",
+    "listMenu": "對話選項",
+    "downloadAll": "全部保存",
+    "openPhotoAt": "打開照片 {index} 的 {total}",
+    "downloadTitle": "保存照片",
+    "downloadOne": "儲存這張照片",
+    "photoUnavailable": "照片不可用",
+    "roomMenu": "對話選單",
+    "startDirectChat": "開始直接聊天",
+    "renameRoom": "重新命名聊天",
+    "renameLabel": "聊天名稱",
+    "renamePlaceholder": "留空以使用活動名稱",
+    "renameSave": "儲存",
+    "renameSaving": "正在儲存...",
+    "renameError": "無法重命名此聊天。",
+    "removeMember": "從聊天中刪除",
+    "removeMemberTitle": "刪除 {name}?",
+    "removeMemberDescription": "即使他們再次預訂，他們也將無法重新加入。他們的訊息保留在對話中。",
+    "removingMember": "正在刪除...",
+    "removeMemberError": "無法刪除該成員。",
+    "createGroupChat": "建立群聊",
+    "autoJoinNoticeCreate": "與該時間段內每位已確認的訪客開啟群組聊天。您只需建立一次 - 稍後付款的客人會自動新增。",
+    "autoJoinNoticeOpen": "該時段的群組聊天已開放 - 點擊即可加入。稍後付款的客人將自動添加。"
+  },
+  "MyPage": {
+    "title": "我的頁面",
+    "language": "語言",
+    "languageSheetTitle": "語言",
+    "english": "英語",
+    "korean": "한국어",
+    "helpCenter": "幫助中心",
+    "deleteAccount": "刪除帳戶",
+    "editProfile": "編輯個人資料",
+    "tourist": "遊客",
+    "buddy": "巴迪",
+    "accountSettings": "帳戶",
+    "accountSettingsTitle": "保持您的帳戶同步",
+    "accountSettingsDescription": "隨時更新您的個人資料詳細資訊和語言首選項。",
+    "profileLoadFailed": "無法載入您的個人資料。",
+    "logOut": "退出",
+    "loggingOut": "正在退出...",
+    "logoutTitle": "退出？",
+    "logoutDescription": "您可以隨時重新登入。"
+  },
+  "Errors": {
+    "generic": "出了點問題。請再試一次。",
+    "dateTimeUnavailable": "時間不可用。"
+  },
+  "DateTime": {
+    "kstNotice": "所有時間均採用韓國標準時間 (KST)。"
+  },
+  "BuddyDashboard": {
+    "title": "好友儀表板",
+    "description": "隨時掌握即將到來的日程安排和訪客申請。",
+    "createActivity": "建立活動",
+    "previousWeek": "上週",
+    "nextWeek": "下週",
+    "openCalendar": "打開日曆",
+    "previousMonth": "上個月",
+    "nextMonth": "下個月",
+    "today": "今天",
+    "scheduleDates": "安排日期",
+    "dateWithActivity": "{date}, 有活動",
+    "applicantsHeading": "申請人",
+    "loadingApplicants": "正在載入申請人...",
+    "applicantsLoadError": "無法載入申請人。",
+    "noApplicants": "該日期尚未有申請人。",
+    "applicantCount": "{count, plural, one {# 申請人} other {# 申請人}}",
+    "specialRequestLabel": "特別要求",
+    "profileContact": "聯絡方式",
+    "profileGuestCount": "嘉賓",
+    "profileGuests": "{count, plural, one {# 客人} other {# 客人}}",
+    "scheduleLoadError": "無法加載時間表。",
+    "myActivitiesHeading": "我的活動",
+    "viewAllActivities": "看全部",
+    "loadingActivities": "正在加載活動...",
+    "activitiesLoadError": "無法載入活動。",
+    "noActivities": "還沒有活動。"
+  },
+  "Settlement": {
+    "title": "支出",
+    "expectedThisMonth": "預計本月",
+    "basedOn": "{count, plural, one {基於 # 確認預訂} other {基於 # 確認預訂}}",
+    "payoutDate": "下次付款日期 {date}",
+    "viewDetail": "看詳情",
+    "upcoming": "即將支付的款項",
+    "paidOut": "已支付",
+    "guests": "{count, plural, one {# 客人} other {# 客人}}",
+    "total": "總計",
+    "statusScheduled": "預定",
+    "statusPaid": "付費",
+    "mockNotice": "範例數據－支出很快就會與真實數據連結。"
+  },
+  "MyActivities": {
+    "title": "我的活動",
+    "description": "管理您主辦的文化體驗。",
+    "createActivity": "建立活動",
+    "loading": "正在加載活動...",
+    "loadError": "無法載入活動。",
+    "deleteError": "無法刪除該活動。",
+    "empty": "還沒有活動。",
+    "edit": "編輯",
+    "editActivity": "編輯 {title}",
+    "viewApplicants": "查看申請人",
+    "delete": "刪除",
+    "deleteActivity": "刪除 {title}",
+    "deleteTitle": "刪除此活動？",
+    "deleteDescription": "此操作無法撤銷。",
+    "deleting": "正在刪除...",
+    "status": {
+      "active": "活躍",
+      "draft": "吃水",
+      "inactive": "不活躍",
+      "deleted": "已刪除"
+    }
+  },
+  "MyActivityDetail": {
+    "title": "活動詳情",
+    "loading": "正在加載活動...",
+    "loadError": "無法載入活動。",
+    "edit": "編輯活動",
+    "viewApplicants": "查看申請人",
+    "fallbackHostName": "漢友主持人",
+    "previewTitle": "嘉賓預覽",
+    "previewNotice": "這正是客人所看到的。在此預覽中停用了預訂步驟。"
+  },
+  "Applicants": {
+    "title": "申請人",
+    "loading": "正在載入申請人...",
+    "loadError": "無法載入申請人。",
+    "noSchedule": "沒有為此活動登記任何時間表。",
+    "noScheduleOnDate": "該日期沒有時間表。",
+    "guestNoteLabel": "賓客須知：",
+    "empty": "尚未申請此時間表。",
+    "sectionCompleted": "已完成預訂",
+    "sectionConfirmed": "已確認預訂",
+    "sectionCancelled": "取消預訂",
+    "guestApplicantCount": "{count, plural, one {# 申請人} other {# 申請人}}",
+    "appliedOn": "應用於 {date}",
+    "confirmedCount": "{count, plural, one {# 已確認} other {# 已確認}}",
+    "pendingCount": "{count, plural, one {# 待付款} other {# 待付款}}",
+    "guestCount": "{count, plural, one {# 客人} other {# 客人}}",
+    "status": {
+      "pendingPayment": "待付款",
+      "confirmed": "已確認",
+      "cancelled": "取消",
+      "completed": "已完成"
+    }
+  },
+  "CreateActivity": {
+    "eyebrow": "創造體驗",
+    "title": "設計您的 HanBuddy 體驗",
+    "progress": "步驟 {current, number} 的 {total, number}",
+    "progressLabel": "活動建立進度",
+    "steps": {
+      "category": {
+        "title": "選擇一個類別",
+        "description": "選擇最能描述您的體驗的類別。"
+      },
+      "host": {
+        "title": "自我介紹一下",
+        "description": "向客人簡要介紹您的個人情況。"
+      },
+      "name": {
+        "title": "說出你的經歷",
+        "description": "使用清晰易記的名稱，告訴客人它的特別之處。"
+      },
+      "description": {
+        "title": "詳細描述您的經歷",
+        "description": "幫助客人想像從開始到結束的體驗。"
+      },
+      "photos": {
+        "title": "展現客人的期望",
+        "description": "加入 3 到 10 張清晰的照片來記錄體驗。"
+      },
+      "itinerary": {
+        "title": "制定行程",
+        "description": "添加賓客從體驗開始到結束將遵循的活動。"
+      },
+      "meeting": {
+        "title": "設定集合地點",
+        "description": "幫助客人當天輕鬆找到您。"
+      },
+      "schedule": {
+        "title": "設定日期和開始時間",
+        "description": "選擇客人可以預訂的每個日期並為每個日期設定開始時間。"
+      },
+      "capacity": {
+        "title": "設定最大組大小",
+        "description": "選擇您一次可以舒適地接待多少位客人。"
+      },
+      "price": {
+        "title": "設定每人的價格",
+        "description": "輸入每位客人需要支付的韓元金額。"
+      },
+      "inclusions": {
+        "title": "告訴客人包含什麼",
+        "description": "準確說明價格涵蓋的範圍。"
+      },
+      "discount": {
+        "title": "添加折扣",
+        "description": "可選擇設定限時折扣和結束日期。"
+      },
+      "restrictions": {
+        "title": "嘉賓加入前",
+        "description": "選擇客人在參加活動之前應了解的任何資訊。"
+      }
+    },
+    "groups": {
+      "intro": "簡介",
+      "activity": "活動",
+      "operation": "營運",
+      "pricing": "定價",
+      "policy": "政策"
+    },
+    "categories": {
+      "food": "食物和飲料",
+      "culture": "文化與歷史",
+      "sports": "體育運動",
+      "nature": "自然與戶外",
+      "nightlife": "夜生活",
+      "wellness": "健康"
+    },
+    "fields": {
+      "hostIntroduction": "關於你",
+      "qualifications": "資格和經驗",
+      "pressHistory": "獎項或新聞報道",
+      "experienceName": "體驗名稱",
+      "experienceDescription": "詳細說明",
+      "meetingAddress": "搜尋地址",
+      "meetingPlace": "集合地點名稱",
+      "scheduleDate": "體驗日期",
+      "scheduleStartTime": "開始時間",
+      "itineraryTitle": "活動標題",
+      "itineraryDescription": "客人會做什麼",
+      "duration": "持續時間（分鐘）",
+      "itineraryPhoto": "活動照片",
+      "maxGuests": "最多入住人數",
+      "pricePerPerson": "每人價格",
+      "inclusions": "包含什麼",
+      "discount": "折扣百分比",
+      "discountEndsAt": "折扣截止日期",
+      "restrictions": "加入之前需要了解的事情"
+    },
+    "hints": {
+      "optional": "可選",
+      "experienceName": "使用簡短而具體的名稱，告訴客人它的特別之處。",
+      "meetingAddress": "搜尋地址並從建議中選擇它。",
+      "meetingPlace": "使用易於識別的簡短名稱，與地址分開。",
+      "onePerLine": "每行輸入一項。",
+      "restrictionsList": "增加客人一次應該知道的一件事。",
+      "characters": "{count, number} 輸入的字符",
+      "hostIntroductionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}",
+      "experienceNameCharacters": "{count, number}/{max, number} 人物",
+      "experienceDescriptionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}"
+    },
+    "placeholders": {
+      "hostIntroduction": "介紹一下你自己以及為什麼你想舉辦這次體驗。",
+      "qualifications": "分享相關的工作、學習、認證或生活經驗。",
+      "pressHistory": "添加獎項、出版物、採訪或顯著認可。",
+      "experienceName": "例如，在韓國棒球之夜歡呼",
+      "experienceDescription": "告訴客人從開始到結束的體驗感覺如何。",
+      "meetingAddress": "例如，首爾特別市松坡區奧林匹克路25號",
+      "meetingPlace": "例如，1號門售票亭",
+      "itineraryTitle": "例如，學習團隊口號",
+      "itineraryDescription": "用 5 到 50 個字元描述此活動。",
+      "duration": "例如，30",
+      "maxGuests": "例如，8",
+      "pricePerPerson": "例如，50000",
+      "inclusionsCustom": "例如，團隊上限",
+      "inclusions": "門票\n歡迎小吃\n啦啦隊套裝",
+      "discount": "例如，10",
+      "restrictions": "例如，建議穿著舒適的鞋子"
+    },
+    "photos": {
+      "upload": "新增體驗照片",
+      "hint": "JPG、PNG 或 WebP · 至少 3 個，最多 10 個",
+      "label": "上傳體驗照片",
+      "count": "{count, plural, one {# 已選擇照片} other {# 已選擇照片}}",
+      "minimum": "至少 3 張照片",
+      "cover": "封面照片",
+      "makeCover": "設定為封面",
+      "preview": "體驗照 {index, number}",
+      "remove": "刪除體驗照片 {index, number}"
+    },
+    "itinerary": {
+      "item": "活動 {index, number}",
+      "remove": "刪除活動 {index, number}",
+      "titleCount": "{count, number}/{max, number} 人物",
+      "descriptionCount": "{count, number}/{max, number} 字元·最少 {min, number}",
+      "addPhoto": "新增活動照片",
+      "photoLabel": "上傳活動照片 {index, number}",
+      "add": "新增活動",
+      "edit": "編輯活動 {index, number}",
+      "untitled": "新活動",
+      "incomplete": "添加詳細信息",
+      "durationSummary": "{minutes, number} 分鐘",
+      "editor": {
+        "progress": "{current, number} 的 {total, number}",
+        "close": "關閉活動編輯器",
+        "photoTitle": "選擇一張活動照片",
+        "photoDescription": "使用一張清晰的照片來代表這部分體驗。",
+        "changePhoto": "更改照片",
+        "descriptionTitle": "客人會做什麼？",
+        "durationTitle": "需要多長時間？",
+        "titleTitle": "命名此活動",
+        "minutes": "分鐘",
+        "decreaseDuration": "減少持續時間",
+        "increaseDuration": "增加持續時間",
+        "done": "完成",
+        "errors": {
+          "photo": "添加照片以繼續。",
+          "description": "寫5到50個字元。",
+          "duration": "設定至少 1 分鐘的持續時間。",
+          "title": "輸入 1 到 20 個字元的活動標題。"
+        }
+      }
+    },
+    "capacity": {
+      "decrease": "減少最大賓客人數",
+      "increase": "增加最大賓客人數",
+      "guests": "{count, plural, one {# 最多賓客人數} other {# 最多客人數}}"
+    },
+    "meeting": {
+      "searching": "正在搜尋地址...",
+      "selecting": "正在載入所選地址...",
+      "searchError": "地址搜尋失敗。請再試一次。",
+      "apiUnavailable": "由於缺少 Google 地圖 API 金鑰，地址搜尋不可用。",
+      "mapTitle": "所選會議地址的地圖"
+    },
+    "schedule": {
+      "notice": "根據需要選擇任意數量的日期。所有開始時間均以韓國標準時間 (KST) 顯示。",
+      "calendarLabel": "體驗日期日曆",
+      "previousMonth": "上個月",
+      "nextMonth": "下個月",
+      "selectDate": "選擇 {date}",
+      "editDate": "編輯開始時間 {date}",
+      "selectedTitle": "選定的會議",
+      "selectedCount": "{count, plural, one {# 日期} other {# 日期}} 已選擇",
+      "sessionCount": "{count, plural, one {# 會話} other {# 會議}}",
+      "empty": "選擇日曆上的日期以新增可預訂的課程。",
+      "editingDate": "編輯開始時間",
+      "customTime": "新增開始時間",
+      "addTime": "添加時間",
+      "addedTimes": "新增了開始時間",
+      "noTimes": "還沒開始時間。在上面選擇一個時間並添加它。",
+      "removeTime": "刪除 {time} 來自 {date}",
+      "applyDateTimesToAll": "將這些時間應用於所有 {count, number} 日期",
+      "removeDate": "刪除 {date}",
+      "pastTimeHint": "今天的開始時間必須晚於目前時間 (KST)。"
+    },
+    "price": {
+      "notice": "該金額以每人韓元的價格顯示給客人。"
+    },
+    "inclusions": {
+      "custom": "其他包含項目",
+      "customHint": "添加上面未列出的所有內容。",
+      "add": "新增項目",
+      "remove": "刪除包含的項目： {item}",
+      "options": {
+        "tickets": "門票",
+        "meal": "餐點",
+        "snacks": "點心",
+        "drinks": "特色飲品",
+        "transport": "大眾運輸",
+        "parking": "停車",
+        "equipment": "設備租賃",
+        "souvenir": "特別紀念品"
+      }
+    },
+    "discount": {
+      "policyNotice": "折扣適用於您設定的結束日期之前的每個會話。",
+      "options": {
+        "none": {
+          "title": "無折扣",
+          "description": "按標準價格列出體驗。"
+        },
+        "limited": {
+          "title": "限時折扣",
+          "description": "在有限的促銷期內提供更低的價格。"
+        }
+      }
+    },
+    "restrictions": {
+      "none": "客人不需要知道什麼",
+      "noneDescription": "客人在加入前無需檢查任何其他詳細資訊。",
+      "custom": "其他需要了解的事情",
+      "customHint": "添加客人在加入之前應檢查的、上面未列出的任何內容。",
+      "add": "添加訊息",
+      "remove": "刪除訊息： {item}",
+      "options": {
+        "age": "客人必須年滿 19 歲",
+        "activity": "活動可能涉及步行、長時間站立或其他身體活動",
+        "accessibility": "輪椅或嬰兒車可能難以通行",
+        "allergy": "如果您有任何食物過敏，請在預訂前諮詢房東"
+      }
+    },
+    "review": {
+      "title": "預覽您的體驗",
+      "description": "查看您輸入的資訊將如何在活動詳細資料頁面上向客人顯示。",
+      "hostName": "漢友主持人"
+    },
+    "actions": {
+      "exit": "退出",
+      "back": "返回",
+      "next": "下一步",
+      "finish": "註冊體驗",
+      "save": "儲存變更",
+      "submitUploading": "正在上傳照片...",
+      "submitRegistering": "正在註冊...",
+      "submitSaving": "正在儲存..."
+    },
+    "edit": {
+      "loading": "正在加載您的體驗...",
+      "loadError": "無法載入要編輯的活動。",
+      "backToActivity": "返回活動"
+    },
+    "errors": {
+      "categoryRequired": "選擇一個類別以繼續。",
+      "hostIntroductionRequired": "寫一個 30 到 200 個字元的簡介。",
+      "photosMinimum": "新增 3 到 10 張體驗照片。",
+      "experienceNameRequired": "輸入 1 到 20 個字元之間的體驗名稱。",
+      "experienceDescriptionRequired": "寫下 30 到 200 個字符的詳細描述。",
+      "meetingAddressRequired": "輸入會議地址。",
+      "meetingPlaceRequired": "輸入簡短的會議地點名稱。",
+      "scheduleInvalid": "至少選擇一個日期並為每個選定日期設定開始時間。",
+      "itineraryRequired": "增加至少一項行程活動。",
+      "itineraryTitleRequired": "每個活動都需要一個 1 到 20 個字元的標題。",
+      "itineraryDescriptionTooShort": "每項活動描述必須在 5 到 50 個字元之間。",
+      "itineraryDurationInvalid": "每項活動輸入大於 0 的持續時間。",
+      "itineraryPhotoRequired": "為每項活動新增照片。",
+      "maxGuestsInvalid": "輸入大於 0 的整數容量。",
+      "priceInvalid": "輸入大於 0 的整數價格。",
+      "inclusionsRequired": "至少增加一項包含的物品。",
+      "discountInvalid": "選擇結束日期並輸入 1 到 100 之間的整數折扣。",
+      "restrictionsRequired": "至少選擇一件事客人應該知道，或確認沒有什麼需要注意的。",
+      "imageUploadFailed": "我們無法上傳您的照片。請再試一次。",
+      "submissionFailed": "我們無法登記您的經驗。請再試一次。",
+      "scheduleInPast": "某些選定的日期或開始時間已經過去。僅選擇未來的會話。",
+      "maxGuestsTooMany": "最多可容納 100 位客人。",
+      "schedulesTooMany": "您最多可以新增 30 個會話。",
+      "itineraryTooMany": "您最多可以新增 20 項行程活動。"
+    }
+  }
+}

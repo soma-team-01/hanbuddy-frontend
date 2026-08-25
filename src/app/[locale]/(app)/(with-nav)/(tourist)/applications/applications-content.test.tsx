@@ -129,7 +129,7 @@ describe("ApplicationsContent", () => {
     await waitFor(() => {
       expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
     });
-    expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11");
+    expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11", "EN");
   });
 
   it("shows the seat-hold countdown from the application response", async () => {
@@ -176,7 +176,7 @@ describe("ApplicationsContent", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
 
-    await waitFor(() => expect(mockedCancelPendingPayment).toHaveBeenCalledWith("11"));
+    await waitFor(() => expect(mockedCancelPendingPayment).toHaveBeenCalledWith("11", "EN"));
     await waitFor(() => expect(screen.queryByText("Bukchon Hidden Gems")).not.toBeInTheDocument());
   });
 
@@ -237,7 +237,12 @@ describe("ApplicationsContent", () => {
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     await waitFor(() =>
-      expect(mockedCancelMyApplication).toHaveBeenCalledWith("11", "SCHEDULE_CONFLICT", undefined),
+      expect(mockedCancelMyApplication).toHaveBeenCalledWith(
+        "11",
+        "SCHEDULE_CONFLICT",
+        "EN",
+        undefined,
+      ),
     );
     await waitFor(() => expect(screen.queryByText("Bukchon Hidden Gems")).not.toBeInTheDocument());
 
@@ -245,7 +250,7 @@ describe("ApplicationsContent", () => {
 
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Cancelled")).toBeInTheDocument();
-    expect(queryClient.getQueryData(applicationKeys.mine())).toEqual([
+    expect(queryClient.getQueryData(applicationKeys.mine("EN"))).toEqual([
       expect.objectContaining({ applicationId: 11, status: "CANCELLED" }),
     ]);
   });

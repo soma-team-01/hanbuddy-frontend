@@ -21,6 +21,9 @@ export async function generateMetadata({ params }: EditProfilePageProps): Promis
       languages: {
         en: `${APP_ORIGIN}/en/my-page/edit`,
         ko: `${APP_ORIGIN}/ko/my-page/edit`,
+        ja: `${APP_ORIGIN}/ja/my-page/edit`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans/my-page/edit`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant/my-page/edit`,
       },
     },
   };

@@ -55,11 +55,11 @@ describe("review API client", () => {
       result: reviewPage,
     });
 
-    await expect(getActivityReviews(42, 1, 6)).resolves.toEqual({
+    await expect(getActivityReviews(42, 1, 6, "EN")).resolves.toEqual({
       status: "success",
       reviews: reviewPage,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42/reviews?page=1&size=6", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42/reviews?page=1&size=6&language=EN", {
       credentials: "same-origin",
     });
   });
@@ -71,8 +71,8 @@ describe("review API client", () => {
       message: "ok",
       result: reviewPage,
     });
-    await getBuddyReviews(6, 0, 6);
-    expect(fetchMock).toHaveBeenCalledWith("/api/buddies/6/reviews?page=0&size=6", {
+    await getBuddyReviews(6, 0, 6, "KO");
+    expect(fetchMock).toHaveBeenCalledWith("/api/buddies/6/reviews?page=0&size=6&language=KO", {
       credentials: "same-origin",
     });
 
@@ -102,9 +102,9 @@ describe("review API client", () => {
       result: review,
     });
     await expect(
-      createReview({ applicationId: 10, rating: 5, content: "정말 좋았어요." }),
+      createReview({ applicationId: 10, rating: 5, content: "정말 좋았어요." }, "KO"),
     ).resolves.toEqual({ status: "success", review });
-    expect(createFetch).toHaveBeenCalledWith("/api/reviews", {
+    expect(createFetch).toHaveBeenCalledWith("/api/reviews?language=KO", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ applicationId: 10, rating: 5, content: "정말 좋았어요." }),
@@ -117,8 +117,8 @@ describe("review API client", () => {
       message: "ok",
       result: { ...review, rating: 4 },
     });
-    await updateReview(1, { rating: 4, content: "수정했어요." });
-    expect(updateFetch).toHaveBeenCalledWith("/api/reviews/1", {
+    await updateReview(1, { rating: 4, content: "수정했어요." }, "KO");
+    expect(updateFetch).toHaveBeenCalledWith("/api/reviews/1?language=KO", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rating: 4, content: "수정했어요." }),
@@ -144,7 +144,7 @@ describe("review API client", () => {
     );
 
     await expect(
-      createReview({ applicationId: 10, rating: 5, content: "또 씁니다." }),
+      createReview({ applicationId: 10, rating: 5, content: "또 씁니다." }, "KO"),
     ).resolves.toEqual({
       status: "error",
       error: expect.objectContaining({ code: "REVIEW409_DUPLICATE", status: 409 }),

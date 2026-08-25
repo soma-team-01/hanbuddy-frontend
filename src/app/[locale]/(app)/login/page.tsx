@@ -29,6 +29,9 @@ export async function generateMetadata({
       languages: {
         en: `${APP_ORIGIN}/en/login`,
         ko: `${APP_ORIGIN}/ko/login`,
+        ja: `${APP_ORIGIN}/ja/login`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans/login`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant/login`,
       },
     },
   };

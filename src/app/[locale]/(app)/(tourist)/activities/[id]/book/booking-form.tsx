@@ -32,6 +32,7 @@ import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { Activity } from "@/types/activity";
+import { getContentLanguage } from "@/lib/content-language";
 import type {
   ApplicationConflictItemResponse,
   ApplicationConflictType,
@@ -64,6 +65,7 @@ export function BookingForm({
 }: Readonly<{ activity: Activity; initialSessionId?: string }>) {
   const queryClient = useQueryClient();
   const locale = useLocale();
+  const contentLanguage = getContentLanguage(locale);
   const t = useTranslations("Booking");
   const getApiErrorMessage = useApiErrorMessage();
   const [sessionId, setSessionId] = useState(() => {
@@ -91,12 +93,15 @@ export function BookingForm({
   const submissionLockRef = useRef(false);
   const conflictCheckMutation = useMutation({
     mutationFn: async (activityScheduleId: number) =>
-      unwrapApiResult(await getApplicationConflicts(activityScheduleId), "conflicts"),
+      unwrapApiResult(
+        await getApplicationConflicts(activityScheduleId, contentLanguage),
+        "conflicts",
+      ),
   });
   // 사전 확인 뒤에도 생성 시점의 좌석·일정 충돌은 백엔드가 다시 검증한다
   const createApplicationMutation = useMutation({
     mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
-      unwrapApiResult(await createApplication(request), "payment"),
+      unwrapApiResult(await createApplication(request, contentLanguage), "payment"),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),

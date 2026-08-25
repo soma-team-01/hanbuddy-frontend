@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGoogleMapsApiKey, searchGooglePlacePredictions } from "@/lib/google/places";
-import type { Locale } from "@/i18n/routing";
+import { isLocale, routing } from "@/i18n/routing";
 import { getGooglePlacesReferrer } from "../referrer";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
   const body = parsed as AutocompleteBody;
 
   const input = typeof body.input === "string" ? body.input.trim() : "";
-  const locale: Locale = body.locale === "ko" ? "ko" : "en";
+  const locale =
+    typeof body.locale === "string" && isLocale(body.locale) ? body.locale : routing.defaultLocale;
   const apiKey = getGoogleMapsApiKey();
   if (!input) return NextResponse.json([]);
   if (!apiKey) {

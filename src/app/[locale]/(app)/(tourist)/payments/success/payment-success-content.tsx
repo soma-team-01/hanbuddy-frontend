@@ -11,6 +11,7 @@ import { Link } from "@/i18n/navigation";
 import { confirmApplicationPayment } from "@/lib/api/applications";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import { formatSeoulDateTime } from "@/lib/datetime";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { activityKeys } from "@/lib/query/activities";
@@ -182,17 +183,22 @@ export function PaymentSuccessContent({
   amount,
 }: Readonly<PaymentSuccessContentProps>) {
   const queryClient = useQueryClient();
+  const language = getContentLanguage(useLocale());
   const t = useTranslations("Payment");
   const getApiErrorMessage = useApiErrorMessage();
   const hasConfirmParams = paymentKey.length > 0 && orderId.length > 0 && amount !== null;
   const confirmMutation = useMutation({
     mutationFn: async () =>
       unwrapApiResult(
-        await confirmApplicationPayment(applicationId, {
-          paymentKey,
-          orderId,
-          amount: amount ?? 0,
-        }),
+        await confirmApplicationPayment(
+          applicationId,
+          {
+            paymentKey,
+            orderId,
+            amount: amount ?? 0,
+          },
+          language,
+        ),
         "application",
       ),
     onSuccess: async () => {
@@ -205,7 +211,7 @@ export function PaymentSuccessContent({
   });
   const confirmStartedRef = useRef(false);
   const applicationsQuery = useQuery({
-    ...myApplicationsQueryOptions(),
+    ...myApplicationsQueryOptions(language),
     enabled: applicationId.length > 0 && !hasConfirmParams,
   });
   useAuthQueryRedirect(applicationsQuery.error ?? confirmMutation.error);

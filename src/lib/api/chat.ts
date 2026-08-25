@@ -11,6 +11,8 @@ import type {
   UpdateChatReadRequest,
   UpdateChatRoomTitleRequest,
 } from "@/types/chat";
+import { withContentLanguage } from "@/lib/content-language";
+import type { ContentLanguage } from "@/types/content-language";
 import { requestApiResult, type ApiResult } from "./result";
 
 export type ChatRoomsResult = ApiResult<ChatRoomSummaryResponse[], "rooms">;
@@ -37,18 +39,21 @@ function jsonRequest(method: string, body: unknown): RequestInit {
   };
 }
 
-export async function getMyChatRooms(): Promise<ChatRoomsResult> {
+export async function getMyChatRooms(language: ContentLanguage): Promise<ChatRoomsResult> {
   return requestApiResult<ChatRoomSummaryResponse[], "rooms">(
-    "/api/chat/rooms",
+    withContentLanguage("/api/chat/rooms", language),
     "rooms",
     undefined,
     DEFAULT_ROOM_LIST_ERROR_MESSAGE,
   );
 }
 
-export async function getChatRoom(chatRoomId: number | string): Promise<ChatRoomResult> {
+export async function getChatRoom(
+  chatRoomId: number | string,
+  language: ContentLanguage,
+): Promise<ChatRoomResult> {
   return requestApiResult<ChatRoomDetailResponse, "room">(
-    `/api/chat/rooms/${chatRoomId}`,
+    withContentLanguage(`/api/chat/rooms/${chatRoomId}`, language),
     "room",
     undefined,
     DEFAULT_ROOM_ERROR_MESSAGE,
@@ -70,9 +75,10 @@ export async function createDirectChatRoom(
 /** 회차당 단체방은 하나뿐이며, 조회 시점의 확정 신청자가 자동으로 합류한다 */
 export async function createGroupChatRoom(
   request: CreateGroupChatRoomRequest,
+  language: ContentLanguage,
 ): Promise<ChatRoomResult> {
   return requestApiResult<ChatRoomDetailResponse, "room">(
-    "/api/chat/rooms/group",
+    withContentLanguage("/api/chat/rooms/group", language),
     "room",
     jsonRequest("POST", request),
     DEFAULT_ROOM_CREATE_ERROR_MESSAGE,
@@ -133,9 +139,10 @@ export async function leaveChatRoom(chatRoomId: number | string): Promise<ChatVo
 export async function updateChatRoomTitle(
   chatRoomId: number | string,
   request: UpdateChatRoomTitleRequest,
+  language: ContentLanguage,
 ): Promise<ChatRoomResult> {
   return requestApiResult<ChatRoomDetailResponse, "room">(
-    `/api/chat/rooms/${chatRoomId}`,
+    withContentLanguage(`/api/chat/rooms/${chatRoomId}`, language),
     "room",
     jsonRequest("PATCH", request),
     "채팅방 이름을 바꾸지 못했습니다.",

@@ -3,7 +3,7 @@ import type {
   MyActivityDetailResponse,
   MyActivityStatus,
 } from "@/types/buddy";
-import type { Locale } from "@/i18n/routing";
+import { getIntlLocale, type Locale } from "@/i18n/routing";
 import { formatSeoulDate, formatSeoulTime, getSeoulDateTimeParts } from "@/lib/datetime";
 import type { Activity, Session } from "@/types/activity";
 
@@ -32,6 +32,24 @@ const CONTACT_METHOD_LABELS: Record<
     WECHAT: "WeChat",
     WHATSAPP: "WhatsApp",
   },
+  ja: {
+    LINE: "LINE",
+    PHONE: "電話",
+    WECHAT: "WeChat",
+    WHATSAPP: "WhatsApp",
+  },
+  "zh-Hans": {
+    LINE: "LINE",
+    PHONE: "电话",
+    WECHAT: "微信",
+    WHATSAPP: "WhatsApp",
+  },
+  "zh-Hant": {
+    LINE: "LINE",
+    PHONE: "電話",
+    WECHAT: "微信",
+    WHATSAPP: "WhatsApp",
+  },
 };
 
 function createRegionDisplayNames(locale: string) {
@@ -43,6 +61,9 @@ function createRegionDisplayNames(locale: string) {
 const regionDisplayNames: Record<Locale, Intl.DisplayNames | null> = {
   en: createRegionDisplayNames("en-US"),
   ko: createRegionDisplayNames("ko-KR"),
+  ja: createRegionDisplayNames(getIntlLocale("ja")),
+  "zh-Hans": createRegionDisplayNames(getIntlLocale("zh-Hans")),
+  "zh-Hant": createRegionDisplayNames(getIntlLocale("zh-Hant")),
 };
 
 export function getActivityThumbnail(thumbnailImageUrl: string | null) {

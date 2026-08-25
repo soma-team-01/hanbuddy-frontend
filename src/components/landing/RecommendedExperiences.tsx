@@ -1,19 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ActivityCard } from "@/components/ui/ActivityCard";
 import { CompassIcon, MapIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
+import { getContentLanguage } from "@/lib/content-language";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 
 const RECOMMENDED_LIMIT = 4;
 
 export function RecommendedExperiences() {
   const t = useTranslations("Landing");
-  const activitiesQuery = useQuery(touristActivitiesQueryOptions());
+  const language = getContentLanguage(useLocale());
+  const activitiesQuery = useQuery(touristActivitiesQueryOptions(language));
 
   if (activitiesQuery.isPending) {
     return (

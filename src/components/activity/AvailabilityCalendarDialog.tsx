@@ -15,7 +15,7 @@ import {
   XIcon,
 } from "@/components/ui/icons";
 import { formatSeoulTime, getSeoulNowParts } from "@/lib/datetime";
-import type { Locale } from "@/i18n/routing";
+import { getIntlLocale, type Locale } from "@/i18n/routing";
 import type {
   ActivityWeatherForecast,
   ActivityWeatherResult,
@@ -223,7 +223,7 @@ export function AvailabilityCalendarDialog({
 
   const cellDateFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+      new Intl.DateTimeFormat(getIntlLocale(locale), {
         timeZone: "UTC",
         year: "numeric",
         month: "long",
@@ -233,7 +233,7 @@ export function AvailabilityCalendarDialog({
   );
   const monthTitleFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+      new Intl.DateTimeFormat(getIntlLocale(locale), {
         timeZone: "UTC",
         year: "numeric",
         month: "long",
@@ -242,7 +242,7 @@ export function AvailabilityCalendarDialog({
   );
   const weekdayFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+      new Intl.DateTimeFormat(getIntlLocale(locale), {
         timeZone: "UTC",
         weekday: "short",
       }),
@@ -250,7 +250,7 @@ export function AvailabilityCalendarDialog({
   );
   const weatherTemperatureFormatter = useMemo(
     () =>
-      new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US", {
+      new Intl.NumberFormat(getIntlLocale(locale), {
         maximumFractionDigits: 1,
       }),
     [locale],

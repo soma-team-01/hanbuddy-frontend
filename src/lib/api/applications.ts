@@ -7,6 +7,8 @@ import type {
   CreateApplicationRequest,
   PaymentReadyResponse,
 } from "@/types/application";
+import { withContentLanguage } from "@/lib/content-language";
+import type { ContentLanguage } from "@/types/content-language";
 import { requestApiResult, type ApiResult } from "./result";
 
 export type ApplicationResult = ApiResult<ApplicationResponse, "application">;
@@ -24,9 +26,13 @@ const DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE = "예약 일정 중복 여부�
 
 export async function getApplicationConflicts(
   activityScheduleId: number | string,
+  language: ContentLanguage,
 ): Promise<ApplicationConflictResult> {
   return requestApiResult<ApplicationConflictCheckResponse, "conflicts">(
-    `/api/applications/conflicts?activityScheduleId=${encodeURIComponent(activityScheduleId)}`,
+    withContentLanguage(
+      `/api/applications/conflicts?activityScheduleId=${encodeURIComponent(activityScheduleId)}`,
+      language,
+    ),
     "conflicts",
     undefined,
     DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE,
@@ -35,9 +41,10 @@ export async function getApplicationConflicts(
 
 export async function createApplication(
   request: CreateApplicationRequest,
+  language: ContentLanguage,
 ): Promise<PaymentReadyResult> {
   return requestApiResult<PaymentReadyResponse, "payment">(
-    "/api/applications",
+    withContentLanguage("/api/applications", language),
     "payment",
     {
       method: "POST",
@@ -50,9 +57,10 @@ export async function createApplication(
 
 export async function continueApplicationPayment(
   applicationId: number | string,
+  language: ContentLanguage,
 ): Promise<PaymentReadyResult> {
   return requestApiResult<PaymentReadyResponse, "payment">(
-    `/api/applications/me/${applicationId}/payment/continue`,
+    withContentLanguage(`/api/applications/me/${applicationId}/payment/continue`, language),
     "payment",
     { method: "POST" },
     DEFAULT_PAYMENT_CONTINUE_ERROR_MESSAGE,
@@ -62,9 +70,10 @@ export async function continueApplicationPayment(
 export async function confirmApplicationPayment(
   applicationId: number | string,
   request: ConfirmPaymentRequest,
+  language: ContentLanguage,
 ): Promise<ApplicationResult> {
   return requestApiResult<ApplicationResponse, "application">(
-    `/api/applications/me/${applicationId}/payment/confirm`,
+    withContentLanguage(`/api/applications/me/${applicationId}/payment/confirm`, language),
     "application",
     {
       method: "POST",
@@ -78,18 +87,19 @@ export async function confirmApplicationPayment(
 /** 결제 전 신청을 취소한다. 좌석 선점과 결제 주문이 함께 해제된다. */
 export async function cancelPendingPayment(
   applicationId: number | string,
+  language: ContentLanguage,
 ): Promise<ApplicationResult> {
   return requestApiResult<ApplicationResponse, "application">(
-    `/api/applications/me/${applicationId}/payment/cancel`,
+    withContentLanguage(`/api/applications/me/${applicationId}/payment/cancel`, language),
     "application",
     { method: "PATCH" },
     DEFAULT_PAYMENT_CANCEL_ERROR_MESSAGE,
   );
 }
 
-export async function getMyApplications(): Promise<ApplicationsResult> {
+export async function getMyApplications(language: ContentLanguage): Promise<ApplicationsResult> {
   return requestApiResult<ApplicationResponse[], "applications">(
-    "/api/applications/me",
+    withContentLanguage("/api/applications/me", language),
     "applications",
     undefined,
     DEFAULT_APPLICATION_LIST_ERROR_MESSAGE,
@@ -99,6 +109,7 @@ export async function getMyApplications(): Promise<ApplicationsResult> {
 export async function cancelMyApplication(
   applicationId: number | string,
   cancellationReason: ApplicationCancellationReason,
+  language: ContentLanguage,
   /** OTHER 사유의 상세 설명. 다른 사유에 붙이면 백엔드가 거절하므로 그때는 넘기지 않는다 */
   cancellationDetail?: string,
 ): Promise<ApplicationResult> {
@@ -109,7 +120,7 @@ export async function cancelMyApplication(
       : { cancellationReason };
 
   return requestApiResult<ApplicationResponse, "application">(
-    `/api/applications/me/${applicationId}/cancel`,
+    withContentLanguage(`/api/applications/me/${applicationId}/cancel`, language),
     "application",
     {
       method: "PATCH",

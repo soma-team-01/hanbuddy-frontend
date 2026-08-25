@@ -1,4 +1,4 @@
-import type { Locale } from "@/i18n/routing";
+import { getIntlLocale, type Locale } from "@/i18n/routing";
 
 /**
  * 대시보드 주간 스트립·월 캘린더용 날짜 계산.
@@ -64,7 +64,7 @@ export function monthGridDateKeys(monthKey: string): (string | null)[] {
 }
 
 function localeTag(locale: Locale) {
-  return locale === "ko" ? "ko-KR" : "en-US";
+  return getIntlLocale(locale);
 }
 
 /** 키는 순수 달력 날짜라 UTC로 포맷해야 시간대에 밀리지 않는다 */

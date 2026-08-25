@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { getChatMessages, getChatRoom, getChatRoomImages, getMyChatRooms } from "@/lib/api/chat";
 import type { ChatMessageResponse } from "@/types/chat";
+import type { ContentLanguage } from "@/types/content-language";
 import { unwrapApiResult } from "./result";
 
 /** 위로 스크롤하며 과거를 불러오는 흐름이라 한 번에 30건씩 가져온다 */
@@ -14,8 +15,14 @@ export const CHAT_ROOM_LIST_POLL_INTERVAL = 15_000;
 
 export const chatKeys = {
   all: () => ["chat"] as const,
-  rooms: () => [...chatKeys.all(), "rooms"] as const,
-  room: (chatRoomId: number | string) => [...chatKeys.all(), "room", String(chatRoomId)] as const,
+  rooms: (language?: ContentLanguage) =>
+    language
+      ? ([...chatKeys.all(), "rooms", language] as const)
+      : ([...chatKeys.all(), "rooms"] as const),
+  room: (chatRoomId: number | string, language?: ContentLanguage) =>
+    language
+      ? ([...chatKeys.all(), "room", String(chatRoomId), language] as const)
+      : ([...chatKeys.all(), "room", String(chatRoomId)] as const),
   messages: (chatRoomId: number | string) =>
     [...chatKeys.all(), "messages", String(chatRoomId)] as const,
   images: (chatRoomId: number | string) =>
@@ -26,10 +33,10 @@ export const chatKeys = {
     [...chatKeys.messages(chatRoomId), "history", boundaryId] as const,
 };
 
-export function myChatRoomsQueryOptions() {
+export function myChatRoomsQueryOptions(language: ContentLanguage) {
   return queryOptions({
-    queryKey: chatKeys.rooms(),
-    queryFn: async () => unwrapApiResult(await getMyChatRooms(), "rooms"),
+    queryKey: chatKeys.rooms(language),
+    queryFn: async () => unwrapApiResult(await getMyChatRooms(language), "rooms"),
     refetchInterval: CHAT_ROOM_LIST_POLL_INTERVAL,
     refetchOnWindowFocus: true,
     staleTime: 5_000,
@@ -39,10 +46,10 @@ export function myChatRoomsQueryOptions() {
 /**
  * 방 상세(참여자·읽음 위치). 최초 조회와 WebSocket 연결·재연결 직후 동기화에만 사용한다.
  */
-export function chatRoomQueryOptions(chatRoomId: number | string) {
+export function chatRoomQueryOptions(chatRoomId: number | string, language: ContentLanguage) {
   return queryOptions({
-    queryKey: chatKeys.room(chatRoomId),
-    queryFn: async () => unwrapApiResult(await getChatRoom(chatRoomId), "room"),
+    queryKey: chatKeys.room(chatRoomId, language),
+    queryFn: async () => unwrapApiResult(await getChatRoom(chatRoomId, language), "room"),
     refetchInterval: false,
     refetchOnWindowFocus: true,
     staleTime: 0,

@@ -582,11 +582,14 @@ describe("ApplicationList", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Submit review" }));
 
     await waitFor(() =>
-      expect(mockedCreateReview).toHaveBeenCalledWith({
-        applicationId: 2,
-        rating: 5,
-        content: "The tea master was wonderful.",
-      }),
+      expect(mockedCreateReview).toHaveBeenCalledWith(
+        {
+          applicationId: 2,
+          rating: 5,
+          content: "The tea master was wonderful.",
+        },
+        "EN",
+      ),
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
@@ -631,10 +634,14 @@ describe("ApplicationList", () => {
     fireEvent.click(within(editDialog).getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
-      expect(mockedUpdateReview).toHaveBeenCalledWith(9, {
-        rating: 4,
-        content: "Slightly rushed at the end.",
-      }),
+      expect(mockedUpdateReview).toHaveBeenCalledWith(
+        9,
+        {
+          rating: 4,
+          content: "Slightly rushed at the end.",
+        },
+        "EN",
+      ),
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));

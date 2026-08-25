@@ -10,6 +10,7 @@ import { CornerDownRightIcon, PencilIcon, TrashIcon } from "@/components/ui/icon
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDate } from "@/lib/datetime";
+import { getContentLanguage } from "@/lib/content-language";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { unwrapApiResult } from "@/lib/query/result";
@@ -33,6 +34,7 @@ export function ApplicationReviewActions({
 }>) {
   const t = useTranslations("Reviews");
   const locale = useLocale() as Locale;
+  const language = getContentLanguage(locale);
   const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
@@ -54,9 +56,9 @@ export function ApplicationReviewActions({
   const saveMutation = useMutation({
     mutationFn: async (values: { rating: number; content: string }) =>
       review
-        ? unwrapApiResult(await updateReview(review.reviewId, values), "review")
+        ? unwrapApiResult(await updateReview(review.reviewId, values, language), "review")
         : unwrapApiResult(
-            await createReview({ applicationId: Number(applicationId), ...values }),
+            await createReview({ applicationId: Number(applicationId), ...values }, language),
             "review",
           ),
     onSuccess: async () => {

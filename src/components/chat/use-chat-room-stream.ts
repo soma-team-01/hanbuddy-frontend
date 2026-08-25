@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { openChatRoomStream, type ChatStreamStatus } from "@/lib/chat/stomp-client";
 import { chatKeys } from "@/lib/query/chat";
+import type { ContentLanguage } from "@/types/content-language";
 import type {
   ChatMessagePageResponse,
   ChatMessageResponse,
@@ -15,7 +16,7 @@ import type {
  * 열려 있는 채팅방의 실시간 구독.
  * 연결이 끊기면 제한된 횟수만 자동 재시도하고, 실패 후에는 사용자가 직접 다시 시도한다.
  */
-export function useChatRoomStream(chatRoomId: string) {
+export function useChatRoomStream(chatRoomId: string, language: ContentLanguage) {
   const queryClient = useQueryClient();
   const [connection, setConnection] = useState<{
     chatRoomId: string;
@@ -34,8 +35,9 @@ export function useChatRoomStream(chatRoomId: string) {
         void queryClient.invalidateQueries({ queryKey: chatKeys.rooms() });
       },
       onRead: (event) => {
-        queryClient.setQueryData<ChatRoomDetailResponse>(chatKeys.room(chatRoomId), (current) =>
-          applyReadEvent(current, event),
+        queryClient.setQueryData<ChatRoomDetailResponse>(
+          chatKeys.room(chatRoomId, language),
+          (current) => applyReadEvent(current, event),
         );
       },
       onStatusChange: (status) => {
@@ -44,14 +46,14 @@ export function useChatRoomStream(chatRoomId: string) {
           // REST 조회와 구독 시작 사이 또는 재연결 중 놓친 메시지·읽음 위치를 한 번 맞춘다
           void Promise.all([
             queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
-            queryClient.invalidateQueries({ queryKey: chatKeys.room(chatRoomId) }),
+            queryClient.invalidateQueries({ queryKey: chatKeys.room(chatRoomId, language) }),
           ]);
         }
       },
     });
 
     return close;
-  }, [chatRoomId, queryClient, retryVersion]);
+  }, [chatRoomId, language, queryClient, retryVersion]);
 
   const retry = useCallback(() => {
     setConnection({ chatRoomId, status: "connecting" });

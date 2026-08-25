@@ -1,4 +1,5 @@
 import type { MyReviewResponse } from "./review";
+import type { ResolvedContentLanguage } from "./content-language";
 
 export type ApplicationStatus = "pending_payment" | "confirmed" | "cancelled" | "completed";
 export type BackendApplicationStatus =
@@ -77,6 +78,7 @@ export interface ApplicationResponse {
   activityId: number;
   activityScheduleId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   buddyName: string;
   guestCount: number;
@@ -137,6 +139,7 @@ export interface ApplicationConflictItemResponse {
   activityId: number;
   activityScheduleId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   startAt: string;
   endAt: string;
 }

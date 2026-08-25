@@ -53,7 +53,7 @@ describe("ActivityReviewsSection", () => {
     expect(await screen.findByRole("img", { name: "Rated 4.8 out of 5" })).toBeInTheDocument();
     expect(screen.getByText("31 reviews")).toBeInTheDocument();
     expect(screen.getByText("Loved every minute of it (1).")).toBeInTheDocument();
-    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 6);
+    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 6, "EN");
   });
 
   it("opens the full list in a dialog that pages twelve at a time", async () => {
@@ -67,23 +67,29 @@ describe("ActivityReviewsSection", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Show all 31 reviews" }));
 
     const dialog = await screen.findByRole("dialog");
-    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, null));
+    await waitFor(() =>
+      expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, "EN", null),
+    );
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Load more reviews" }));
 
-    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenLastCalledWith(42, 1, 12, null));
+    await waitFor(() =>
+      expect(mockedGetActivityReviews).toHaveBeenLastCalledWith(42, 1, 12, "EN", null),
+    );
     expect(await within(dialog).findByText("Loved every minute of it (101).")).toBeInTheDocument();
   });
 
   it("filters the dialog list by the star level the reader picks", async () => {
-    mockedGetActivityReviews.mockImplementation(async (_activityId, page, size, rating) => ({
-      status: "success",
-      reviews: {
-        ...createPage(page, size, false),
-        totalCount: rating === 5 ? 24 : 31,
-        reviews: [createReview(rating === 5 ? 500 : 1)],
-      },
-    }));
+    mockedGetActivityReviews.mockImplementation(
+      async (_activityId, page, size, _language, rating) => ({
+        status: "success",
+        reviews: {
+          ...createPage(page, size, false),
+          totalCount: rating === 5 ? 24 : 31,
+          reviews: [createReview(rating === 5 ? 500 : 1)],
+        },
+      }),
+    );
 
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
 
@@ -92,7 +98,7 @@ describe("ActivityReviewsSection", () => {
 
     fireEvent.click(within(dialog).getByRole("button", { name: /Show only 5-star reviews/ }));
 
-    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, 5));
+    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, "EN", 5));
     expect(await within(dialog).findByText("Loved every minute of it (500).")).toBeInTheDocument();
     // 필터를 걸어도 평균 별점과 분포는 전체 기준으로 남는다
     expect(within(dialog).getByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();

@@ -77,13 +77,14 @@ describe("application API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getApplicationConflicts(101)).resolves.toEqual({
+    await expect(getApplicationConflicts(101, "EN")).resolves.toEqual({
       status: "success",
       conflicts,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/conflicts?activityScheduleId=101", {
-      credentials: "same-origin",
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/conflicts?activityScheduleId=101&language=EN",
+      { credentials: "same-origin" },
+    );
   });
 
   it("creates an application and returns the PayPal payment info", async () => {
@@ -101,14 +102,17 @@ describe("application API client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      createApplication({
-        activityScheduleId: 101,
-        guestCount: 2,
-        specialRequest: "Vegetarian snacks, please.",
-      }),
+      createApplication(
+        {
+          activityScheduleId: 101,
+          guestCount: 2,
+          specialRequest: "Vegetarian snacks, please.",
+        },
+        "EN",
+      ),
     ).resolves.toEqual({ status: "success", payment: paymentReady });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications?language=EN", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -131,12 +135,12 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(continueApplicationPayment(11)).resolves.toEqual({
+    await expect(continueApplicationPayment(11, "EN")).resolves.toEqual({
       status: "success",
       payment: paymentReady,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/continue", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/continue?language=EN", {
       method: "POST",
       credentials: "same-origin",
     });
@@ -159,12 +163,12 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(confirmApplicationPayment(11, confirmRequest)).resolves.toEqual({
+    await expect(confirmApplicationPayment(11, confirmRequest, "EN")).resolves.toEqual({
       status: "success",
       application: confirmed,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/confirm", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/confirm?language=EN", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(confirmRequest),
@@ -183,11 +187,11 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getMyApplications()).resolves.toEqual({
+    await expect(getMyApplications("EN")).resolves.toEqual({
       status: "success",
       applications: [application],
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me?language=EN", {
       credentials: "same-origin",
     });
   });
@@ -208,12 +212,12 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(cancelMyApplication(11, "SCHEDULE_CONFLICT")).resolves.toEqual({
+    await expect(cancelMyApplication(11, "SCHEDULE_CONFLICT", "EN")).resolves.toEqual({
       status: "success",
       application: cancelled,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/cancel", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/cancel?language=EN", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cancellationReason: "SCHEDULE_CONFLICT" }),
@@ -234,7 +238,9 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(createApplication({ activityScheduleId: 101, guestCount: 9 })).resolves.toEqual({
+    await expect(
+      createApplication({ activityScheduleId: 101, guestCount: 9 }, "EN"),
+    ).resolves.toEqual({
       status: "error",
       error: expect.objectContaining({
         code: "APPLICATION400_CAPACITY_EXCEEDED",
@@ -256,12 +262,12 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(cancelPendingPayment(11)).resolves.toEqual({
+    await expect(cancelPendingPayment(11, "EN")).resolves.toEqual({
       status: "success",
       application: cancelled,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/cancel", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/cancel?language=EN", {
       method: "PATCH",
       credentials: "same-origin",
     });
@@ -281,11 +287,15 @@ describe("application API client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      confirmApplicationPayment(11, {
-        paymentKey: "tviva20260809abcdef",
-        orderId: "WRONG_ORDER_ID",
-        amount: 90000,
-      }),
+      confirmApplicationPayment(
+        11,
+        {
+          paymentKey: "tviva20260809abcdef",
+          orderId: "WRONG_ORDER_ID",
+          amount: 90000,
+        },
+        "EN",
+      ),
     ).resolves.toEqual({
       status: "error",
       error: expect.objectContaining({

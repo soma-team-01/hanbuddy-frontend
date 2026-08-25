@@ -23,6 +23,9 @@ export async function generateMetadata({ params }: OnboardingPageProps): Promise
       languages: {
         en: `${APP_ORIGIN}/en/onboarding`,
         ko: `${APP_ORIGIN}/ko/onboarding`,
+        ja: `${APP_ORIGIN}/ja/onboarding`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans/onboarding`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant/onboarding`,
       },
     },
   };

@@ -77,7 +77,7 @@ describe("ApplicantsContent", () => {
     expect(
       within(profile).getByRole("button", { name: "Message Sophie Martin" }),
     ).toBeInTheDocument();
-    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith("99");
+    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith("99", "EN");
     // 달력에 이 활동의 회차 날짜를 찍기 위해 상세도 함께 불러온다
     expect(mockedGetMyActivity).toHaveBeenCalled();
   });
@@ -234,7 +234,7 @@ describe("ApplicantsContent", () => {
 
     expect(await screen.findByText("No applicants for this schedule yet.")).toBeInTheDocument();
     expect(mockedGetMyActivity).toHaveBeenCalledWith(42);
-    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith(99);
+    expect(mockedGetBuddyActivityApplications).toHaveBeenCalledWith(99, "EN");
   });
 
   it("ignores a cached activity error when a schedule is provided", async () => {

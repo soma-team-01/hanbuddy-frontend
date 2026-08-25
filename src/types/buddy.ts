@@ -1,3 +1,5 @@
+import type { ContentLanguage, ResolvedContentLanguage } from "./content-language";
+
 /** DELETED는 soft delete된 활동 — 목록·상세 응답에서 제외되지만 계약상 존재한다 */
 export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
 export type ActivityScheduleStatus = "OPEN" | "CLOSED";
@@ -32,6 +34,8 @@ export interface ActivityPricePreviewResponse {
 }
 
 export interface ActivityUpsertRequest {
+  /** 사용자가 작성한 원문의 주 언어 */
+  sourceLanguage: ContentLanguage;
   /** 1~20자 */
   title: string;
   /** 30~200자 */
@@ -88,6 +92,7 @@ export interface MyActivitySummaryResponse {
   activityId: number;
   title: string;
   description: string;
+  sourceLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   status: MyActivityStatus;
 }
@@ -144,6 +149,7 @@ export interface BuddyDateScheduleApplicationsResponse {
 export interface BuddyDateActivityApplicationsResponse {
   activityId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   totalApplicantCount: number;
   schedules: BuddyDateScheduleApplicationsResponse[];
@@ -163,6 +169,7 @@ export interface BuddyActivityApplicationsResponse {
   activityId: number;
   activityScheduleId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   startAt: string;
   applicantCount: number;

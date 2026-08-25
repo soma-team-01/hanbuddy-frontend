@@ -23,6 +23,9 @@ export async function generateMetadata({ params }: BuddyOnboardingPageProps): Pr
       languages: {
         en: `${APP_ORIGIN}/en/buddy/onboarding`,
         ko: `${APP_ORIGIN}/ko/buddy/onboarding`,
+        ja: `${APP_ORIGIN}/ja/buddy/onboarding`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans/buddy/onboarding`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant/buddy/onboarding`,
       },
     },
   };

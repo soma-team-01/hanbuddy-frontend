@@ -9,6 +9,7 @@ import {
 } from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import type { Locale } from "@/i18n/routing";
 import { activityKeys } from "@/lib/query/activities";
 import { requestTossPayment } from "@/lib/payments/toss";
@@ -23,10 +24,11 @@ import type { CancelDialogOutcome } from "./cancel-dialog";
 export function ApplicationsContent() {
   const queryClient = useQueryClient();
   const locale = useLocale();
+  const language = getContentLanguage(locale);
   const t = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
-  const applicationsQuery = useQuery(myApplicationsQueryOptions());
+  const applicationsQuery = useQuery(myApplicationsQueryOptions(language));
   const cancelApplicationMutation = useMutation({
     mutationFn: async ({
       applicationId,
@@ -36,12 +38,18 @@ export function ApplicationsContent() {
       applicationId: string;
       reason: ApplicationCancellationReason;
       detail?: string;
-    }) => unwrapApiResult(await cancelMyApplication(applicationId, reason, detail), "application"),
+    }) =>
+      unwrapApiResult(
+        await cancelMyApplication(applicationId, reason, language, detail),
+        "application",
+      ),
     onSuccess: async (application) => {
-      queryClient.setQueryData<ApplicationResponse[]>(applicationKeys.mine(), (current = []) =>
-        current.map((item) =>
-          item.applicationId === application.applicationId ? application : item,
-        ),
+      queryClient.setQueryData<ApplicationResponse[]>(
+        applicationKeys.mine(language),
+        (current = []) =>
+          current.map((item) =>
+            item.applicationId === application.applicationId ? application : item,
+          ),
       );
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
@@ -52,7 +60,7 @@ export function ApplicationsContent() {
   });
   const cancelPendingPaymentMutation = useMutation({
     mutationFn: async (applicationId: string) =>
-      unwrapApiResult(await cancelPendingPayment(applicationId), "application"),
+      unwrapApiResult(await cancelPendingPayment(applicationId, language), "application"),
     onSuccess: async () => {
       // 결제 전 취소된 신청은 백엔드 목록에서 제외되므로 다시 불러온다
       await Promise.all([
@@ -65,7 +73,7 @@ export function ApplicationsContent() {
   });
   const continuePaymentMutation = useMutation({
     mutationFn: async (applicationId: string) =>
-      unwrapApiResult(await continueApplicationPayment(applicationId), "payment"),
+      unwrapApiResult(await continueApplicationPayment(applicationId, language), "payment"),
   });
   useAuthQueryRedirect(
     applicationsQuery.error ??

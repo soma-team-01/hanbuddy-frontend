@@ -117,6 +117,9 @@ describe("LoginPage", () => {
         languages: {
           en: "https://hanbuddy-frontend.vercel.app/en/login",
           ko: "https://hanbuddy-frontend.vercel.app/ko/login",
+          ja: "https://hanbuddy-frontend.vercel.app/ja/login",
+          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/login",
+          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/login",
         },
       },
     });

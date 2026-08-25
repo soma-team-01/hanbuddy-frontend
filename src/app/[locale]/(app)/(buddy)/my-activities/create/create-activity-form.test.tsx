@@ -644,6 +644,7 @@ describe("CreateActivityForm", () => {
     ]);
 
     expect(mockedCreateMyActivity).toHaveBeenCalledWith({
+      sourceLanguage: "EN",
       title: "Seoul market walk",
       description: "Meet local vendors and taste a neighborhood breakfast together.",
       hostIntroduction: "I have guided friends through this market for years.",
@@ -780,6 +781,7 @@ describe("CreateActivityForm", () => {
   function buildEditDetail(): MyActivityDetailResponse {
     return {
       activityId: 42,
+      sourceLanguage: "KO",
       title: "Seoul market walk",
       description: "Meet local vendors and taste a neighborhood breakfast together.",
       thumbnailImageUrl: "https://cdn.example.test/activities/cover.webp",
@@ -828,6 +830,7 @@ describe("CreateActivityForm", () => {
         activityId="42"
         initialDraft={buildDraftFromMyActivityDetail(detail)}
         initialStatus={detail.status}
+        initialSourceLanguage={detail.sourceLanguage}
       />,
     );
   }
@@ -850,6 +853,7 @@ describe("CreateActivityForm", () => {
     const [calledActivityId, request] = mockedUpdateMyActivity.mock.calls[0];
     expect(calledActivityId).toBe("42");
     expect(request).toMatchObject({
+      sourceLanguage: "KO",
       title: "Seoul market walk",
       hostIntroduction: "I have guided friends through this market for years.",
       imageKeys: ["activities/cover.webp", "activities/two.webp", "activities/three.webp"],
@@ -971,6 +975,7 @@ describe("buildActivityUpsertRequest", () => {
       },
       [],
       [],
+      "EN",
     );
 
     // 지난 일정이 빠지면 백엔드가 삭제로 보고, 신청 내역이 있으면 수정을 거절한다
@@ -993,6 +998,7 @@ describe("buildActivityUpsertRequest", () => {
       },
       [],
       [],
+      "EN",
     );
 
     expect(request.schedules).toHaveLength(1);
@@ -1007,9 +1013,11 @@ describe("buildActivityUpsertRequest", () => {
       },
       [],
       [],
+      "EN",
     );
 
     expect(request).toMatchObject({
+      sourceLanguage: "EN",
       meetingLatitude: 37.566535,
       meetingLongitude: 126.977965,
     });

@@ -41,6 +41,9 @@ describe("LanguagePreference", () => {
   it.each([
     ["en", "Language", "English"],
     ["ko", "언어", "한국어"],
+    ["ja", "Language", "日本語"],
+    ["zh-Hans", "Language", "简体中文"],
+    ["zh-Hant", "Language", "繁體中文"],
   ] as const)("shows the current language for %s", (locale, label, value) => {
     renderWithIntl(<LanguagePreference />, { locale });
 
@@ -50,20 +53,23 @@ describe("LanguagePreference", () => {
     expect((screen.getByRole("option", { name: value }) as HTMLOptionElement).selected).toBe(true);
   });
 
-  it("uses a native language selector with both options", () => {
+  it("uses a native language selector with all supported options", () => {
     renderWithIntl(<LanguagePreference />);
 
     const select = screen.getByRole("combobox", { name: "Language" });
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(select.tagName).toBe("SELECT");
-    expect(screen.getAllByRole("option")).toHaveLength(2);
+    expect(screen.getAllByRole("option")).toHaveLength(5);
     expect((screen.getByRole("option", { name: "English" }) as HTMLOptionElement).selected).toBe(
       true,
     );
     expect((screen.getByRole("option", { name: "한국어" }) as HTMLOptionElement).selected).toBe(
       false,
     );
+    expect(screen.getByRole("option", { name: "日本語" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "简体中文" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "繁體中文" })).toBeInTheDocument();
   });
 
   it("preserves the pathname, query, and hash when switching to Korean", () => {

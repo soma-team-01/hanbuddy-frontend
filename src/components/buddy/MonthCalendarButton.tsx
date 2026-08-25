@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeftIcon, ArrowRightIcon, CalendarIcon } from "@/components/ui/icons";
-import type { Locale } from "@/i18n/routing";
+import { getIntlLocale, type Locale } from "@/i18n/routing";
 import { getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyScheduleDatesQueryOptions } from "@/lib/query/buddy";
 import {
@@ -193,7 +193,7 @@ export function MonthCalendarButton({
 
 // aria-label에는 팝오버 밖 표기와 같은 긴 형식을 쓴다
 function formatDateKeyLongLabel(dateKey: string, locale: Locale): string {
-  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
     year: "numeric",
     month: "long",
     day: "numeric",

@@ -25,6 +25,7 @@ import {
 } from "@/lib/api/chat";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatChatScheduleLabel } from "@/lib/chat/format";
+import { getContentLanguage } from "@/lib/content-language";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
 import { readImageSize } from "@/lib/chat/image-size";
 import { MAX_CHAT_IMAGE_COUNT, uploadChatImages } from "@/lib/images/presigned";
@@ -66,6 +67,7 @@ async function sendChatPhotos(chatRoomId: string, files: File[], content: string
 export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const t = useTranslations("Chat");
   const locale = useLocale() as Locale;
+  const language = getContentLanguage(locale);
   const router = useRouter();
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
@@ -86,15 +88,15 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const attachmentsRef = useRef<ChatAttachment[]>([]);
   const notifiedReadRef = useRef<number>(0);
 
-  const stream = useChatRoomStream(chatRoomId);
+  const stream = useChatRoomStream(chatRoomId, language);
   const chatConnected = stream.status === "connected";
   useEffect(() => {
     attachmentsRef.current = attachments;
   }, [attachments]);
 
   const profileQuery = useQuery(myProfileQueryOptions());
-  const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId));
-  const roomsQuery = useQuery(myChatRoomsQueryOptions());
+  const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, language));
+  const roomsQuery = useQuery(myChatRoomsQueryOptions(language));
   const chatMessages = useChatMessages(chatRoomId);
 
   const messages = chatMessages.messages;

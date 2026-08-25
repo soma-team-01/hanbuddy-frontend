@@ -53,8 +53,8 @@ describe("route access proxy", () => {
   });
 
   it.each([
-    ["TOURIST", "/dashboard", ""],
-    ["BUDDY", "/activities/1/book", "/dashboard"],
+    ["TOURIST", "/dashboard", "/en"],
+    ["BUDDY", "/activities/1/book", "/ko/dashboard"],
   ] as const)("redirects %s away from %s", async (userType, pathname, homePath) => {
     const response = await runProxy(pathname, {
       [AUTH_COOKIES.accessToken]: "access-token",
@@ -62,7 +62,7 @@ describe("route access proxy", () => {
     });
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(`http://localhost/en${homePath}`);
+    expect(response.headers.get("location")).toBe(`http://localhost${homePath}`);
   });
 
   it("allows a tourist to enter tourist and shared routes", async () => {
@@ -160,6 +160,16 @@ describe("route access proxy", () => {
     }
   });
 
+  it.each(["ja", "zh-Hans", "zh-Hant"] as const)(
+    "keeps the explicit %s locale when browsing Explore",
+    async (locale) => {
+      const response = await runProxy(`/${locale}/explore`);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("location")).toBeNull();
+    },
+  );
+
   it.each([
     ["TOURIST", "/ko/dashboard", "/ko"],
     ["BUDDY", "/en/activities/1/book", "/en/dashboard"],
@@ -186,6 +196,50 @@ describe("route access proxy", () => {
     expect([200, 307]).toContain(response.status);
     expect(response.headers.get("location") ?? "").not.toContain("/login");
   });
+
+  it("defaults an unprefixed tourist landing request to English", async () => {
+    const response = await runProxy("/", {}, { "accept-language": "ko-KR,ko;q=0.9" });
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/en");
+  });
+
+  it("defaults an unprefixed buddy landing request to Korean", async () => {
+    const response = await runProxy("/buddy", {}, { "accept-language": "en-US,en;q=0.9" });
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ko/buddy");
+  });
+
+  it.each([
+    ["/", "ko", "TOURIST", "/ko"],
+    ["/dashboard", "en", "BUDDY", "/en/dashboard"],
+  ] as const)(
+    "preserves the saved locale for an authenticated %s request",
+    async (path, locale, userType, target) => {
+      const response = await runProxy(path, {
+        NEXT_LOCALE: locale,
+        [AUTH_COOKIES.accessToken]: "access-token",
+        [AUTH_COOKIES.userType]: userType,
+      });
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(`http://localhost${target}`);
+    },
+  );
+
+  it.each([
+    ["/", "ko", "/en"],
+    ["/buddy", "en", "/ko/buddy"],
+  ] as const)(
+    "uses the public landing default for an unauthenticated %s request",
+    async (path, savedLocale, target) => {
+      const response = await runProxy(path, { NEXT_LOCALE: savedLocale });
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(`http://localhost${target}`);
+    },
+  );
 
   it("lets an unsupported language segment reach the locale 404 boundary", async () => {
     const response = await runProxy("/fr/explore");

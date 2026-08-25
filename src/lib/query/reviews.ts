@@ -1,5 +1,6 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
+import type { ContentLanguage } from "@/types/content-language";
 import { unwrapApiResult } from "./result";
 
 /** 활동 상세 본문의 미리보기는 6건만 보여준다 */
@@ -9,9 +10,14 @@ export const REVIEW_PAGE_SIZE = 12;
 
 export const reviewKeys = {
   all: () => ["reviews"] as const,
-  activity: (activityId: number | string) =>
-    [...reviewKeys.all(), "activity", String(activityId)] as const,
-  buddy: (buddyId: number | string) => [...reviewKeys.all(), "buddy", String(buddyId)] as const,
+  activity: (activityId: number | string, language?: ContentLanguage) =>
+    language
+      ? ([...reviewKeys.all(), "activity", String(activityId), language] as const)
+      : ([...reviewKeys.all(), "activity", String(activityId)] as const),
+  buddy: (buddyId: number | string, language?: ContentLanguage) =>
+    language
+      ? ([...reviewKeys.all(), "buddy", String(buddyId), language] as const)
+      : ([...reviewKeys.all(), "buddy", String(buddyId)] as const),
 };
 
 export const buddyProfileKeys = {
@@ -25,25 +31,31 @@ export const buddyProfileKeys = {
  */
 export function activityReviewSummaryQueryOptions(
   activityId: number | string,
+  language: ContentLanguage,
   size: number = REVIEW_PREVIEW_SIZE,
 ) {
   return queryOptions({
-    queryKey: [...reviewKeys.activity(activityId), "summary", size],
-    queryFn: async () => unwrapApiResult(await getActivityReviews(activityId, 0, size), "reviews"),
+    queryKey: [...reviewKeys.activity(activityId, language), "summary", size],
+    queryFn: async () =>
+      unwrapApiResult(await getActivityReviews(activityId, 0, size, language), "reviews"),
     staleTime: 60_000,
   });
 }
 
 export function activityReviewsQueryOptions(
   activityId: number | string,
+  language: ContentLanguage,
   size: number = REVIEW_PAGE_SIZE,
   /** 1~5. 지정하면 그 별점의 후기만 이어 붙인다 */
   rating: number | null = null,
 ) {
   return infiniteQueryOptions({
-    queryKey: [...reviewKeys.activity(activityId), size, rating],
+    queryKey: [...reviewKeys.activity(activityId, language), size, rating],
     queryFn: async ({ pageParam }) =>
-      unwrapApiResult(await getActivityReviews(activityId, pageParam, size, rating), "reviews"),
+      unwrapApiResult(
+        await getActivityReviews(activityId, pageParam, size, language, rating),
+        "reviews",
+      ),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
     staleTime: 60_000,
@@ -52,13 +64,14 @@ export function activityReviewsQueryOptions(
 
 export function buddyReviewsQueryOptions(
   buddyId: number | string,
+  language: ContentLanguage,
   size: number = REVIEW_PAGE_SIZE,
   rating: number | null = null,
 ) {
   return infiniteQueryOptions({
-    queryKey: [...reviewKeys.buddy(buddyId), size, rating],
+    queryKey: [...reviewKeys.buddy(buddyId, language), size, rating],
     queryFn: async ({ pageParam }) =>
-      unwrapApiResult(await getBuddyReviews(buddyId, pageParam, size, rating), "reviews"),
+      unwrapApiResult(await getBuddyReviews(buddyId, pageParam, size, language, rating), "reviews"),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
     staleTime: 60_000,

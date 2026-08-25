@@ -13,6 +13,7 @@ import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
 import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
+import { getIntlLocale } from "@/i18n/routing";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
@@ -154,7 +155,7 @@ function ApplicationWeatherIndicator({
     SHOWER: t("weatherConditions.shower"),
   };
   const conditionLabel = conditionLabels[forecast.condition];
-  const temperature = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  const temperature = new Intl.NumberFormat(getIntlLocale(locale), {
     maximumFractionDigits: 1,
   }).format(forecast.temperatureCelsius);
   const tooltipId = `application-weather-tooltip-${applicationId}`;

@@ -194,13 +194,16 @@ describe("BookingForm", () => {
       "Vegetarian snacks, please.",
     );
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
-    expect(mockedGetApplicationConflicts).toHaveBeenCalledWith(101);
+    expect(mockedGetApplicationConflicts).toHaveBeenCalledWith(101, "EN");
     // 기본 인원은 1명이다
-    expect(mockedCreateApplication).toHaveBeenCalledWith({
-      activityScheduleId: 101,
-      guestCount: 1,
-      specialRequest: "Vegetarian snacks, please.",
-    });
+    expect(mockedCreateApplication).toHaveBeenCalledWith(
+      {
+        activityScheduleId: 101,
+        guestCount: 1,
+        specialRequest: "Vegetarian snacks, please.",
+      },
+      "EN",
+    );
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
   });
 
@@ -414,13 +417,13 @@ describe("BookingForm", () => {
 
   it("refreshes the activity detail so the held seat is reflected", async () => {
     const { queryClient } = renderWithQueryClient(<BookingForm activity={activity} />);
-    queryClient.setQueryData(activityKeys.detail("42"), { activityId: 42 });
+    queryClient.setQueryData(activityKeys.detail("42", "EN"), { activityId: 42 });
 
     await agreeAndSubmit();
 
     // 좌석을 선점했으므로 잔여 좌석이 담긴 활동 상세 캐시를 무효화해야 한다
     await waitFor(() =>
-      expect(queryClient.getQueryState(activityKeys.detail("42"))?.isInvalidated).toBe(true),
+      expect(queryClient.getQueryState(activityKeys.detail("42", "EN"))?.isInvalidated).toBe(true),
     );
   });
 
@@ -436,6 +439,7 @@ describe("BookingForm", () => {
     await waitFor(() =>
       expect(mockedCreateApplication).toHaveBeenCalledWith(
         expect.objectContaining({ guestCount: 2 }),
+        "EN",
       ),
     );
   });
@@ -524,6 +528,7 @@ describe("BookingForm", () => {
     await waitFor(() =>
       expect(mockedCreateApplication).toHaveBeenCalledWith(
         expect.objectContaining({ activityScheduleId: 102 }),
+        "EN",
       ),
     );
   });

@@ -99,7 +99,7 @@ export function ChatMessageList({
             [message.messageId]: !showingOriginal,
           }))
         }
-        className="px-1 text-[11px] font-medium text-muted underline-offset-2 transition-colors hover:text-primary hover:underline"
+        className="px-1 text-[11px] font-medium text-muted/55 underline-offset-2 transition-colors hover:text-muted hover:underline"
       >
         {showingOriginal ? t("showTranslation") : t("showOriginal")}
       </button>

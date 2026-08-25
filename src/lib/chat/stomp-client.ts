@@ -1,7 +1,7 @@
 import { Client, type IMessage } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { createChatWsTicket } from "@/lib/api/chat";
-import type { ChatMessageResponse, ChatReadEvent } from "@/types/chat";
+import type { ChatMessageResponse, ChatReadEvent, ChatTranslationEvent } from "@/types/chat";
 
 /** 재사용된 티켓은 거절되므로, 재연결할 때마다 새로 받는다 */
 async function resolveTicket() {
@@ -14,6 +14,7 @@ async function resolveTicket() {
 
 export interface ChatStreamHandlers {
   onMessage: (message: ChatMessageResponse) => void;
+  onTranslation: (event: ChatTranslationEvent) => void;
   onRead: (event: ChatReadEvent) => void;
   onStatusChange: (status: ChatStreamStatus) => void;
 }
@@ -73,6 +74,10 @@ export function openChatRoomStream(
         stompClient.subscribe(`/topic/chat/rooms/${chatRoomId}`, (frame) => {
           const message = parseFrame<ChatMessageResponse>(frame);
           if (message) handlers.onMessage(message);
+        });
+        stompClient.subscribe(`/topic/chat/rooms/${chatRoomId}/translations`, (frame) => {
+          const event = parseFrame<ChatTranslationEvent>(frame);
+          if (event) handlers.onTranslation(event);
         });
         stompClient.subscribe(`/topic/chat/rooms/${chatRoomId}/read`, (frame) => {
           const event = parseFrame<ChatReadEvent>(frame);

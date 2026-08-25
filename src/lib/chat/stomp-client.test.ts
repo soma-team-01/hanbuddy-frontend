@@ -38,6 +38,7 @@ import { openChatRoomStream } from "./stomp-client";
 function handlers(): ChatStreamHandlers {
   return {
     onMessage: vi.fn(),
+    onTranslation: vi.fn(),
     onRead: vi.fn(),
     onStatusChange: vi.fn(),
   };
@@ -92,6 +93,43 @@ describe("openChatRoomStream", () => {
 
     client.config.onWebSocketClose();
     expect(streamHandlers.onStatusChange).toHaveBeenLastCalledWith("reconnecting");
+
+    close();
+  });
+
+  it("subscribes to delayed translation events for the open room", async () => {
+    mocks.createChatWsTicket.mockResolvedValue({
+      status: "success",
+      ticket: { socketUrl: "https://chat.test/ws", ticket: "ticket" },
+    });
+    const streamHandlers = handlers();
+    const close = openChatRoomStream("7", streamHandlers);
+
+    await flushTicketRequest();
+    const client = mocks.clients[0];
+    client.config.onConnect();
+
+    const translationSubscription = client.subscribe.mock.calls.find(
+      ([destination]) => destination === "/topic/chat/rooms/7/translations",
+    );
+    expect(translationSubscription).toBeDefined();
+
+    translationSubscription?.[1]({
+      body: JSON.stringify({
+        chatRoomId: 7,
+        messageId: 21,
+        sourceLanguage: "KO",
+        contentLanguage: "EN",
+        content: "See you tomorrow",
+      }),
+    });
+    expect(streamHandlers.onTranslation).toHaveBeenCalledWith({
+      chatRoomId: 7,
+      messageId: 21,
+      sourceLanguage: "KO",
+      contentLanguage: "EN",
+      content: "See you tomorrow",
+    });
 
     close();
   });

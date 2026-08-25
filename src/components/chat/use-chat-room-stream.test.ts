@@ -4,7 +4,13 @@ import { createElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { openChatRoomStream } from "@/lib/chat/stomp-client";
 import { chatKeys } from "@/lib/query/chat";
-import { appendMessage, applyReadEvent, useChatRoomStream } from "./use-chat-room-stream";
+import {
+  appendMessage,
+  applyReadEvent,
+  applyTranslationEvent,
+  applyTranslationToHistory,
+  useChatRoomStream,
+} from "./use-chat-room-stream";
 import type {
   ChatMessagePageResponse,
   ChatMessageResponse,
@@ -86,6 +92,33 @@ describe("useChatRoomStream", () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.latestMessages("1", "EN") });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: chatKeys.room("1", "EN") });
   });
+
+  it("debounces a translated latest-page refresh after live messages arrive", async () => {
+    vi.useFakeTimers();
+    mockedOpenChatRoomStream.mockReturnValue(vi.fn());
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(QueryClientProvider, { client: queryClient }, children);
+
+    renderHook(() => useChatRoomStream("1", "EN"), { wrapper });
+    const streamHandlers = mockedOpenChatRoomStream.mock.calls[0][1];
+
+    act(() => {
+      streamHandlers.onMessage(message(22));
+      streamHandlers.onMessage(message(23));
+    });
+    expect(invalidate).not.toHaveBeenCalledWith({
+      queryKey: chatKeys.latestMessages("1", "EN"),
+    });
+
+    await vi.advanceTimersByTimeAsync(300);
+    expect(invalidate).toHaveBeenCalledTimes(3);
+    expect(invalidate).toHaveBeenLastCalledWith({
+      queryKey: chatKeys.latestMessages("1", "EN"),
+    });
+    vi.useRealTimers();
+  });
 });
 
 describe("appendMessage", () => {
@@ -101,6 +134,67 @@ describe("appendMessage", () => {
 
   it("leaves an unloaded page alone", () => {
     expect(appendMessage(undefined, message(22))).toBeUndefined();
+  });
+});
+
+describe("applyTranslationEvent", () => {
+  it("updates only the translated content while preserving the original", () => {
+    const next = applyTranslationEvent(
+      page,
+      {
+        chatRoomId: 1,
+        messageId: 21,
+        sourceLanguage: "KO",
+        contentLanguage: "EN",
+        content: "See you tomorrow",
+      },
+      "EN",
+    );
+
+    expect(next?.messages[0]).toMatchObject({
+      messageId: 21,
+      content: "See you tomorrow",
+      contentLanguage: "EN",
+      originalContent: "message 21",
+    });
+  });
+
+  it("ignores an event translated for another site language", () => {
+    const next = applyTranslationEvent(
+      page,
+      {
+        chatRoomId: 1,
+        messageId: 21,
+        sourceLanguage: "KO",
+        contentLanguage: "JA",
+        content: "また明日",
+      },
+      "EN",
+    );
+
+    expect(next).toBe(page);
+  });
+});
+
+describe("applyTranslationToHistory", () => {
+  it("updates a translated message inside loaded history pages", () => {
+    const next = applyTranslationToHistory(
+      { pages: [page], pageParams: [30] },
+      {
+        chatRoomId: 1,
+        messageId: 20,
+        sourceLanguage: "KO",
+        contentLanguage: "EN",
+        content: "Translated history",
+      },
+      "EN",
+    );
+
+    expect(next?.pages[0].messages[1]).toMatchObject({
+      messageId: 20,
+      content: "Translated history",
+      originalContent: "message 20",
+    });
   });
 });
 

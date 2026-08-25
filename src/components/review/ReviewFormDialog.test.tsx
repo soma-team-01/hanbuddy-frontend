@@ -8,11 +8,7 @@ describe("ReviewFormDialog", () => {
     const onSubmit = vi.fn();
 
     renderWithIntl(
-      <ReviewFormDialog
-        activityTitle="Han River Tour"
-        onSubmit={onSubmit}
-        onClose={vi.fn()}
-      />,
+      <ReviewFormDialog activityTitle="Han River Tour" onSubmit={onSubmit} onClose={vi.fn()} />,
     );
 
     const dialog = await screen.findByRole("dialog");

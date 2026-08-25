@@ -289,7 +289,7 @@ describe("ChatRoomView", () => {
     expect(within(sourceSelect).getAllByRole("option")).toHaveLength(5);
     expect(within(translationGuide).getByText("Automatic translation")).toBeInTheDocument();
     expect(within(composer).getByTestId("chat-translation-guide")).toBe(translationGuide);
-    expect(translationGuide).toHaveClass("absolute", "bottom-full");
+    expect(translationGuide).toHaveClass("absolute", "bottom-full", "mb-5", "max-w-sm");
     expect(sourceSelect.closest("form")).toBeNull();
   });
 

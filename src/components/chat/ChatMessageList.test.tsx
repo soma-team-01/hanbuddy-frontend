@@ -38,6 +38,12 @@ function renderList(messages: ChatMessageResponse[]) {
 }
 
 describe("ChatMessageList translation", () => {
+  it("keeps the latest message above the floating translation guide", () => {
+    renderList([message()]);
+
+    expect(screen.getByTestId("chat-message-list")).toHaveClass("pb-20");
+  });
+
   it("shows the requested translation first and lets the reader switch to the original", () => {
     renderList([message()]);
 

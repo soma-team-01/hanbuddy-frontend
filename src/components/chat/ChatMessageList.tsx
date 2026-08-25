@@ -150,7 +150,11 @@ export function ChatMessageList({
   const groups = groupChatMessages(messages);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto bg-canvas px-4 py-5 md:px-6">
+    <div
+      ref={scrollRef}
+      data-testid="chat-message-list"
+      className="flex-1 overflow-y-auto bg-canvas px-4 pt-5 pb-20 md:px-6"
+    >
       {/* 위로 끝까지 올리면 이전 메시지를 알아서 이어 붙인다 */}
       <div ref={olderSentinelRef} aria-hidden="true" className="h-px" />
       {isLoadingOlder ? (

@@ -421,7 +421,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         <div data-testid="chat-composer" className="relative">
           <div
             data-testid="chat-translation-guide"
-            className="absolute bottom-full left-[52px] z-10 mb-3 grid w-[calc(100%_-_52px)] max-w-md grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
+            className="absolute bottom-full left-[52px] z-10 mb-5 grid w-[calc(100%_-_52px)] max-w-sm grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2"
           >
             <label className="relative block min-w-0">
               <span className="sr-only">{t("sourceLanguage")}</span>

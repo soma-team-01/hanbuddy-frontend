@@ -742,6 +742,7 @@
     "leftMember": "나감",
     "messagePlaceholder": "메시지를 입력하세요",
     "messageLabel": "메시지",
+    "translationNotice": "메시지는 각 참여자의 언어에 맞게 자동 번역돼요.",
     "send": "보내기",
     "sending": "보내는 중...",
     "sendError": "메시지를 보내지 못했습니다.",

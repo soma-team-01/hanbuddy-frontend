@@ -742,6 +742,7 @@
     "leftMember": "左",
     "messagePlaceholder": "メッセージを書く",
     "messageLabel": "メッセージ",
+    "translationNotice": "メッセージは参加者の言語に合わせて自動翻訳されます。",
     "send": "送信",
     "sending": "送信中...",
     "sendError": "メッセージを送信できませんでした。",

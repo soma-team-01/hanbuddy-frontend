@@ -742,6 +742,7 @@
     "leftMember": "left",
     "messagePlaceholder": "Write a message",
     "messageLabel": "Message",
+    "translationNotice": "Messages are automatically translated for each participant.",
     "send": "Send",
     "sending": "Sending...",
     "sendError": "Could not send your message.",

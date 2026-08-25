@@ -25,6 +25,7 @@ import {
 } from "@/lib/api/chat";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatChatScheduleLabel } from "@/lib/chat/format";
+import { resolveChatSourceLanguage } from "@/lib/chat/source-language";
 import { getContentLanguage } from "@/lib/content-language";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
 import { readImageSize } from "@/lib/chat/image-size";
@@ -136,13 +137,18 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   const sendMutation = useMutation({
     mutationFn: async ({ content, files }: { content: string; files: File[] }) => {
+      const sourceLanguage = resolveChatSourceLanguage(
+        content,
+        language,
+        profileQuery.data?.userType,
+      );
       if (files.length === 0) {
         return unwrapApiResult(
-          await sendChatMessage(chatRoomId, { content, sourceLanguage: language }),
+          await sendChatMessage(chatRoomId, { content, sourceLanguage }),
           "message",
         );
       }
-      await sendChatPhotos(chatRoomId, files, content, language);
+      await sendChatPhotos(chatRoomId, files, content, sourceLanguage);
       return null;
     },
     onSuccess: async () => {
@@ -392,6 +398,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             ))}
           </ul>
         ) : null}
+        <p className="mb-2 px-1 text-[11px] leading-4 text-muted">{t("translationNotice")}</p>
         <form
           className="flex items-end gap-2"
           onSubmit={(event) => {

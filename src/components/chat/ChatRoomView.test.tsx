@@ -106,7 +106,7 @@ describe("ChatRoomView", () => {
     mockedUseChatRoomStream.mockReturnValue({ status: "connected", retry: vi.fn() });
     mockedGetMyProfile.mockResolvedValue({
       status: "success",
-      profile: { userId: 11, displayName: "Nelli" } as never,
+      profile: { userId: 11, displayName: "Nelli", userType: "TOURIST" } as never,
     });
     mockedGetMyChatRooms.mockResolvedValue({
       status: "success",
@@ -252,6 +252,38 @@ describe("ChatRoomView", () => {
       }),
     );
     await waitFor(() => expect(input).toHaveValue(""));
+  });
+
+  it("detects an English message sent by a buddy", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: { userId: 11, displayName: "Nelli", userType: "BUDDY" } as never,
+    });
+    mockedSendChatMessage.mockResolvedValue({
+      status: "success",
+      message: message(22, 11, "See you at 3 PM!"),
+    });
+
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />, { locale: "ko" });
+
+    const input = await screen.findByLabelText("메시지");
+    fireEvent.change(input, { target: { value: "See you at 3 PM!" } });
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+
+    await waitFor(() =>
+      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", {
+        content: "See you at 3 PM!",
+        sourceLanguage: "EN",
+      }),
+    );
+  });
+
+  it("explains that chat messages are translated automatically", async () => {
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+
+    expect(
+      await screen.findByText("Messages are automatically translated for each participant."),
+    ).toBeInTheDocument();
   });
 
   it("sends on Enter but keeps Shift+Enter for a new line", async () => {

@@ -28,6 +28,7 @@ describe("domain query options", () => {
   it("builds stable application keys", () => {
     expect(applicationKeys.mine()).toEqual(["applications", "me"]);
     expect(myApplicationsQueryOptions("EN").queryKey).toEqual(applicationKeys.mine("EN"));
+    expect(applicationKeys.mine("EN")).not.toEqual(applicationKeys.mine("KO"));
   });
 
   it("polls my applications only while a pending payment can expire", () => {
@@ -56,6 +57,9 @@ describe("domain query options", () => {
     ]);
     expect(buddyApplicationsQueryOptions("2026-07-20", "EN").queryKey).toEqual(
       buddyKeys.applicationsByDate("2026-07-20", "EN"),
+    );
+    expect(buddyKeys.applicationsByDate("2026-07-20", "EN")).not.toEqual(
+      buddyKeys.applicationsByDate("2026-07-20", "KO"),
     );
     expect(myActivityQueryOptions(7).queryKey).toEqual(["buddy", "activities", "detail", "7"]);
     expect(buddyActivityApplicationsQueryOptions(101, "KO").queryKey).toEqual([

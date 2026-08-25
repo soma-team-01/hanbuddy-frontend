@@ -55,6 +55,22 @@ describe("locale messages", () => {
     }
   });
 
+  it("keeps localized review parentheses and Traditional Chinese minute units valid", () => {
+    for (const reviewCount of [
+      ja.Booking.reviewCount,
+      zhHans.Booking.reviewCount,
+      zhHant.Booking.reviewCount,
+    ]) {
+      expect(reviewCount).not.toContain("（");
+      expect(reviewCount).not.toContain("）");
+    }
+
+    expect(zhHant.Explore.durationMinutes).toBe("{minutes}分鐘");
+    expect(zhHant.ActivityDetail.itineraryMinutes).toBe("{minutes} 分鐘");
+    expect(zhHant.CreateActivity.itinerary.durationSummary).toBe("{minutes, number} 分鐘");
+    expect(zhHant.CreateActivity.itinerary.editor.minutes).toBe("分鐘");
+  });
+
   it("contains the complete Tourist message contract", () => {
     const requiredKeys = [
       "Explore.loading",

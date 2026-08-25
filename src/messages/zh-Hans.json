@@ -582,7 +582,7 @@
     "loadError": "无法加载预订详细信息。",
     "notFound": "此活动不接受预订。",
     "hostedBy": "与 {name}",
-    "reviewCount": "{count, plural, =0 {（没有评论）} one {(# 审查）} other {(# 评论）}}",
+    "reviewCount": "{count, plural, =0 {(暂无评论)} one {(# 条评论)} other {(# 条评论)}}",
     "dateTimeHeading": "你什么时候去？",
     "dateTime": "日期和时间",
     "guestsHeading": "有多少人？",

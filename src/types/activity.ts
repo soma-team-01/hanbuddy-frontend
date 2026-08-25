@@ -1,4 +1,4 @@
-import type { ResolvedContentLanguage } from "./content-language";
+import type { ResolvedContentLanguage } from "@/types/content-language";
 
 export interface Host {
   /** 백엔드 버디 식별자. 동명이인이 있어도 이 값으로 호스트를 구분한다 */

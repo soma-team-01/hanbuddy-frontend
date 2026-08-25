@@ -582,7 +582,7 @@
     "loadError": "予約の詳細を読み込めませんでした。",
     "notFound": "このアクティビティは予約できません。",
     "hostedBy": "と {name}",
-    "reviewCount": "{count, plural, =0 {(レビューはありません)} one {(# レビュー)} other {(# レビュー）}}",
+    "reviewCount": "{count, plural, =0 {(レビューはありません)} one {(# レビュー)} other {(# レビュー)}}",
     "dateTimeHeading": "いつ行きますか？",
     "dateTime": "日付と時刻",
     "guestsHeading": "何人ですか？",

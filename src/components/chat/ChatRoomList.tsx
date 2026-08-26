@@ -8,7 +8,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { formatChatScheduleLabel, formatChatTimestamp } from "@/lib/chat/format";
 import { getContentLanguage } from "@/lib/content-language";
-import { myChatRoomsQueryOptions } from "@/lib/query/chat";
+import { myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 
 /** 내 채팅방 목록. 대화 화면 옆에도 그대로 붙는다 */
 export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string }>) {
@@ -16,7 +16,7 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
   const locale = useLocale() as Locale;
   const language = getContentLanguage(locale);
   const pathname = usePathname() ?? "";
-  const roomsQuery = useQuery(myChatRoomsQueryOptions(language));
+  const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
   const rooms = roomsQuery.data ?? [];
 
   if (roomsQuery.isPending) {

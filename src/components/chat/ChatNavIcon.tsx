@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { MessageCircleIcon } from "@/components/ui/icons";
 import { Link, usePathname } from "@/i18n/navigation";
-import { myChatRoomsQueryOptions } from "@/lib/query/chat";
+import { myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 import { getContentLanguage } from "@/lib/content-language";
 
 /** 전역 내비게이션의 채팅 진입점. 안 읽은 메시지가 있으면 점으로 알린다 */
@@ -12,7 +12,7 @@ export function ChatNavIcon({ compact = false }: Readonly<{ compact?: boolean }>
   const t = useTranslations("Chat");
   const language = getContentLanguage(useLocale());
   const pathname = usePathname() ?? "";
-  const roomsQuery = useQuery(myChatRoomsQueryOptions(language));
+  const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
   const unreadCount = (roomsQuery.data ?? []).reduce((sum, room) => sum + room.unreadCount, 0);
   const active = pathname === "/chat" || pathname.startsWith("/chat/");
   const size = compact ? "size-10" : "size-11";

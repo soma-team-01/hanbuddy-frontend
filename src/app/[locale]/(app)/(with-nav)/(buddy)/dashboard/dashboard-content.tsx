@@ -33,7 +33,7 @@ import {
   myActivitiesQueryOptions,
 } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
-import { myChatRoomsQueryOptions } from "@/lib/query/chat";
+import { myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { BuddyApplicationApplicantSummaryResponse, MyActivityStatus } from "@/types/buddy";
 import {
@@ -79,7 +79,7 @@ export function DashboardContent() {
   const scheduleDatesQuery = useQuery(buddyScheduleDatesQueryOptions());
   const myActivitiesQuery = useQuery(myActivitiesQueryOptions());
   // 단체 채팅방이 이미 있는 회차 — 버튼 문구를 만들기/열기로 나눈다
-  const chatRoomsQuery = useQuery(myChatRoomsQueryOptions(language));
+  const chatRoomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
   const groupRoomScheduleIds = new Set(
     (chatRoomsQuery.data ?? [])
       .map((room) => room.activityScheduleId)

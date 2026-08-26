@@ -29,7 +29,7 @@ import { getContentLanguage } from "@/lib/content-language";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
 import { readImageSize } from "@/lib/chat/image-size";
 import { MAX_CHAT_IMAGE_COUNT, uploadChatImages } from "@/lib/images/presigned";
-import { chatKeys, chatRoomQueryOptions, myChatRoomsQueryOptions } from "@/lib/query/chat";
+import { chatKeys, chatRoomQueryOptions, myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
@@ -96,7 +96,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   const profileQuery = useQuery(myProfileQueryOptions());
   const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, language));
-  const roomsQuery = useQuery(myChatRoomsQueryOptions(language));
+  const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
   const chatMessages = useChatMessages(chatRoomId, language);
 
   const messages = chatMessages.messages;

@@ -4,7 +4,8 @@ import {
   chatRoomQueryOptions,
   latestChatMessagesQueryOptions,
   mergeChatMessages,
-  myChatRoomsQueryOptions,
+  myChatRoomsCacheQueryOptions,
+  myChatRoomsPollingQueryOptions,
 } from "./chat";
 import type { ChatMessageResponse } from "@/types/chat";
 
@@ -41,9 +42,18 @@ describe("mergeChatMessages", () => {
 });
 
 describe("chat polling", () => {
-  it("checks room-list unread counts every 15 seconds", () => {
+  it("checks room-list unread counts every 15 seconds from the polling owner", () => {
     expect(CHAT_ROOM_LIST_POLL_INTERVAL).toBe(15_000);
-    expect(myChatRoomsQueryOptions("EN").refetchInterval).toBe(15_000);
+    expect(myChatRoomsPollingQueryOptions("EN").refetchInterval).toBe(15_000);
+    expect(myChatRoomsPollingQueryOptions("EN").refetchOnWindowFocus).toBe(true);
+  });
+
+  it("lets room-list consumers observe the shared cache without starting another timer", () => {
+    const options = myChatRoomsCacheQueryOptions("EN");
+
+    expect(options.refetchInterval).toBe(false);
+    expect(options.refetchOnWindowFocus).toBe(false);
+    expect(options.refetchOnMount).toBe(false);
   });
 
   it("never replaces the room WebSocket with REST polling", () => {

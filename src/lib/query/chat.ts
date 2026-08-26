@@ -35,13 +35,30 @@ export const chatKeys = {
     [...chatKeys.messages(chatRoomId, language), "history", boundaryId] as const,
 };
 
-export function myChatRoomsQueryOptions(language: ContentLanguage) {
-  return queryOptions({
+function chatRoomsQueryConfig(language: ContentLanguage) {
+  return {
     queryKey: chatKeys.rooms(language),
     queryFn: async () => unwrapApiResult(await getMyChatRooms(language), "rooms"),
+    staleTime: 5_000,
+  } as const;
+}
+
+/** 전역 폴링 소유자만 사용한다. 화면 컴포넌트는 캐시 전용 옵션을 사용해야 한다. */
+export function myChatRoomsPollingQueryOptions(language: ContentLanguage) {
+  return queryOptions({
+    ...chatRoomsQueryConfig(language),
     refetchInterval: CHAT_ROOM_LIST_POLL_INTERVAL,
     refetchOnWindowFocus: true,
-    staleTime: 5_000,
+  });
+}
+
+/** 폴링 타이머 없이 전역 채팅방 목록 캐시를 구독한다. */
+export function myChatRoomsCacheQueryOptions(language: ContentLanguage) {
+  return queryOptions({
+    ...chatRoomsQueryConfig(language),
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 

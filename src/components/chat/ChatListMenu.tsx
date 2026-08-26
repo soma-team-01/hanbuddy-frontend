@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { CheckIcon, MoreHorizontalIcon } from "@/components/ui/icons";
 import { updateChatRead } from "@/lib/api/chat";
-import { chatKeys, myChatRoomsQueryOptions } from "@/lib/query/chat";
+import { chatKeys, myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { getContentLanguage } from "@/lib/content-language";
 
@@ -20,7 +20,7 @@ export function ChatListMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const roomsQuery = useQuery(myChatRoomsQueryOptions(language));
+  const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
   // 대화가 없는 방은 올릴 위치가 없어 건너뛴다
   const unreadRooms = (roomsQuery.data ?? []).filter(
     (room) => room.unreadCount > 0 && room.lastMessage !== null,

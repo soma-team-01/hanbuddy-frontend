@@ -126,6 +126,26 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
+  it("runs one room-list polling request for both desktop and mobile chat indicators", async () => {
+    vi.useFakeTimers();
+    const { unmount } = renderWithQueryClient(<SiteHeader role="tourist" authenticated />);
+
+    try {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(apiMocks.getMyChatRooms).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000);
+      });
+      expect(apiMocks.getMyChatRooms).toHaveBeenCalledTimes(2);
+    } finally {
+      unmount();
+      vi.useRealTimers();
+    }
+  });
+
   it("replaces a stale account indicator with login when the session is cleared", async () => {
     const { rerender } = renderWithQueryClient(
       <SiteHeader role="tourist" authenticated mayHaveSession />,

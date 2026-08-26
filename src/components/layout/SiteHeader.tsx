@@ -9,6 +9,7 @@ import { getUserTypeNavRole } from "@/lib/auth/routes";
 import type { MyProfile } from "@/types/user";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
+import { ChatRoomsPoller } from "@/components/chat/ChatRoomsPoller";
 import { SettlementNavIcon } from "@/components/layout/SettlementNavIcon";
 import { Avatar } from "../ui/Avatar";
 import { UserIcon } from "../ui/icons";
@@ -141,6 +142,7 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft bg-canvas/95 backdrop-blur">
+      {!isMinimalHeader && effectiveAuthenticated ? <ChatRoomsPoller /> : null}
       <PageContainer className="flex h-[76px] items-center justify-between gap-5">
         <Link href={logoHref} aria-label="HanBuddy" className="flex shrink-0 items-center gap-2">
           <Image

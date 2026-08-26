@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ReviewFormDialog } from "@/components/review/ReviewFormDialog";
 import { ReviewStars } from "@/components/review/ReviewStars";
+import { TranslatedReviewContent } from "@/components/review/TranslatedReviewContent";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CornerDownRightIcon, PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
@@ -135,7 +136,7 @@ export function ApplicationReviewActions({
                 </button>
               </div>
             </div>
-            <p className="mt-3 text-sm leading-6 whitespace-pre-line text-ink">{review.content}</p>
+            <TranslatedReviewContent review={review} className="mt-3" />
           </section>
         </div>
       ) : (

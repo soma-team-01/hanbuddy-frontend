@@ -84,6 +84,9 @@ const reviewedApplication: Application = {
     reviewId: 9,
     rating: 5,
     content: "The tea master was wonderful.",
+    contentLanguage: "EN",
+    sourceLanguage: "KO",
+    originalContent: "차를 설명해 주신 선생님이 정말 좋았어요.",
     createdAt: "2026-07-11T13:00:00+09:00",
   },
 };
@@ -559,10 +562,14 @@ describe("ApplicationList", () => {
         applicationId: 2,
         activityId: 43,
         activityTitle: "Traditional Tea Tasting",
+        activityTitleLanguage: "EN",
         reviewerName: "Nelli",
         reviewerProfileImageUrl: null,
         rating: 5,
         content: "The tea master was wonderful.",
+        contentLanguage: "EN",
+        sourceLanguage: "EN",
+        originalContent: "The tea master was wonderful.",
         createdAt: "2026-07-11T13:00:00+09:00",
       },
     });
@@ -602,10 +609,14 @@ describe("ApplicationList", () => {
         applicationId: 2,
         activityId: 43,
         activityTitle: "Traditional Tea Tasting",
+        activityTitleLanguage: "EN",
         reviewerName: "Nelli",
         reviewerProfileImageUrl: null,
         rating: 4,
         content: "Slightly rushed at the end.",
+        contentLanguage: "EN",
+        sourceLanguage: "EN",
+        originalContent: "Slightly rushed at the end.",
         createdAt: "2026-07-11T13:00:00+09:00",
       },
     });
@@ -621,11 +632,15 @@ describe("ApplicationList", () => {
     expect(screen.getByLabelText("Rated 5 out of 5")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Edit review" })).toHaveTextContent("");
 
+    fireEvent.click(screen.getByRole("button", { name: "Show original" }));
+    expect(screen.getByText("차를 설명해 주신 선생님이 정말 좋았어요.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show translation" }));
+
     fireEvent.click(screen.getByRole("button", { name: "Edit review" }));
     const editDialog = await screen.findByRole("dialog");
-    // 수정 폼은 백엔드가 내려준 후기 내용으로 채워진다
+    // 카드에는 번역문이 보여도 수정 폼은 저장된 원문으로 채워진다
     expect(within(editDialog).getByLabelText("Your review")).toHaveValue(
-      "The tea master was wonderful.",
+      "차를 설명해 주신 선생님이 정말 좋았어요.",
     );
     fireEvent.click(within(editDialog).getByRole("button", { name: "4 stars" }));
     fireEvent.change(within(editDialog).getByLabelText("Your review"), {

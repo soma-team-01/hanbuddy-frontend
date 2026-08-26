@@ -568,6 +568,8 @@
     "ratingRequired": "評価を選択してください。",
     "contentRequired": "その経験について一言書いてください。",
     "yourReview": "あなたのレビュー",
+    "showOriginal": "原文を見る",
+    "showTranslation": "翻訳を見る",
     "saveError": "レビューを保存できませんでした。",
     "deleteError": "レビューを削除できませんでした。",
     "filterByRating": "表示のみ {rating}-スターレビュー",

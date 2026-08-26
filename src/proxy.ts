@@ -6,7 +6,7 @@ import {
   localizePathname,
   stripLocaleFromPathname,
 } from "@/i18n/pathname";
-import { isLocale, LOCALE_COOKIE_NAME, routing, type Locale } from "@/i18n/routing";
+import { isLocale, LOCALE_COOKIE_NAME, routing } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getRouteAccessRedirect, parseUserType } from "@/lib/auth/routes";
@@ -25,10 +25,12 @@ export function proxy(request: NextRequest) {
   const userType = parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value);
   const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
   const isKoreanOnly = userType === "BUDDY" || isBuddyEntryPath(pathnameWithoutLocale);
+  const savedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
   const locale = isKoreanOnly
     ? "ko"
-    : (pathnameLocale ??
-      resolveUnprefixedLocale(request, pathnameWithoutLocale, accessToken, userType));
+    : isLocale(savedLocale)
+      ? savedLocale
+      : (pathnameLocale ?? routing.defaultLocale);
   const redirectPath = getRouteAccessRedirect({
     pathname: pathnameWithoutLocale,
     accessToken,
@@ -57,18 +59,6 @@ export function proxy(request: NextRequest) {
   const redirectUrl = new URL(localizePathname(pathname, locale), request.url);
   redirectUrl.search = request.nextUrl.search;
   return NextResponse.redirect(redirectUrl);
-}
-
-function resolveUnprefixedLocale(
-  request: NextRequest,
-  pathname: string,
-  accessToken: string | undefined,
-  userType: ReturnType<typeof parseUserType>,
-): Locale {
-  const savedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
-  if (accessToken && userType && isLocale(savedLocale)) return savedLocale;
-  if (userType === "BUDDY" || isBuddyEntryPath(pathname)) return "ko";
-  return routing.defaultLocale;
 }
 
 function isBuddyEntryPath(pathname: string) {

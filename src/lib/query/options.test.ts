@@ -11,6 +11,7 @@ import {
   buddyKeys,
   myActivityQueryOptions,
 } from "./buddy";
+import { activityReviewSummaryQueryOptions, buddyReviewsQueryOptions, reviewKeys } from "./reviews";
 import { myProfileQueryOptions, userKeys } from "./users";
 
 describe("domain query options", () => {
@@ -29,6 +30,26 @@ describe("domain query options", () => {
     expect(applicationKeys.mine()).toEqual(["applications", "me"]);
     expect(myApplicationsQueryOptions("EN").queryKey).toEqual(applicationKeys.mine("EN"));
     expect(applicationKeys.mine("EN")).not.toEqual(applicationKeys.mine("KO"));
+  });
+
+  it("separates review caches by the requested content language", () => {
+    expect(activityReviewSummaryQueryOptions(42, "EN").queryKey).toEqual([
+      "reviews",
+      "activity",
+      "42",
+      "EN",
+      "summary",
+      3,
+    ]);
+    expect(buddyReviewsQueryOptions(7, "KO").queryKey).toEqual([
+      "reviews",
+      "buddy",
+      "7",
+      "KO",
+      12,
+      null,
+    ]);
+    expect(reviewKeys.activity(42, "EN")).not.toEqual(reviewKeys.activity(42, "JA"));
   });
 
   it("polls my applications only while a pending payment can expire", () => {

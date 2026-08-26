@@ -13,10 +13,14 @@ const review = {
   applicationId: 10,
   activityId: 42,
   activityTitle: "Bukchon Hidden Gems",
+  activityTitleLanguage: "EN",
   reviewerName: "Nelli",
   reviewerProfileImageUrl: null,
   rating: 5,
   content: "정말 좋았어요.",
+  contentLanguage: "KO",
+  sourceLanguage: "KO",
+  originalContent: "정말 좋았어요.",
   createdAt: "2026-08-01T13:00:00+09:00",
 };
 

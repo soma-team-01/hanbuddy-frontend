@@ -190,6 +190,24 @@ describe("route access proxy", () => {
     },
   );
 
+  it("keeps the saved tourist locale when a navigation points at another locale", async () => {
+    const response = await runProxy("/en/explore", {
+      NEXT_LOCALE: "ja",
+      [AUTH_COOKIES.accessToken]: "access-token",
+      [AUTH_COOKIES.userType]: "TOURIST",
+    });
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/ja/explore");
+  });
+
+  it("keeps a guest's selected locale across unprefixed page navigation", async () => {
+    const response = await runProxy("/explore", { NEXT_LOCALE: "zh-Hant" });
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/zh-Hant/explore");
+  });
+
   it.each([
     ["TOURIST", "/ko/dashboard", "/ko"],
     ["BUDDY", "/en/activities/1/book", "/ko/dashboard"],
@@ -249,10 +267,10 @@ describe("route access proxy", () => {
   );
 
   it.each([
-    ["/", "ko", "/en"],
+    ["/", "ko", "/ko"],
     ["/buddy", "en", "/ko/buddy"],
   ] as const)(
-    "uses the public landing default for an unauthenticated %s request",
+    "keeps the saved public locale for an unauthenticated %s request",
     async (path, savedLocale, target) => {
       const response = await runProxy(path, { NEXT_LOCALE: savedLocale });
 

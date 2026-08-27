@@ -59,7 +59,7 @@ function ContactValue({
       aria-label={`${methodLabel}: ${value}`}
       className="inline-flex max-w-full items-center justify-end gap-2.5"
     >
-      <span className="shrink-0 text-xs font-bold tracking-[0.08em] text-[#D86632] uppercase sm:text-sm">
+      <span className="shrink-0 text-xs font-bold tracking-[0.08em] text-primary uppercase sm:text-sm">
         {methodLabel}
       </span>
       <span

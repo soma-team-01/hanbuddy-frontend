@@ -3,11 +3,14 @@ import type {
   ApplicationConflictCheckResponse,
   ApplicationResponse,
   CancelApplicationRequest,
+  CapturePayPalPaymentRequest,
   ConfirmPaymentRequest,
   CreateApplicationRequest,
+  PaymentProvider,
   PaymentReadyResponse,
 } from "@/types/application";
 import { withContentLanguage } from "@/lib/content-language";
+import { withPaymentProvider } from "@/lib/payment-provider";
 import type { ContentLanguage } from "@/types/content-language";
 import { requestApiResult, type ApiResult } from "./result";
 
@@ -22,6 +25,7 @@ const DEFAULT_APPLICATION_CANCEL_ERROR_MESSAGE = "신청을 취소하지 못했�
 const DEFAULT_PAYMENT_CANCEL_ERROR_MESSAGE = "신청을 취소하지 못했습니다.";
 const DEFAULT_PAYMENT_CONTINUE_ERROR_MESSAGE = "결제를 이어가지 못했습니다.";
 const DEFAULT_PAYMENT_CONFIRM_ERROR_MESSAGE = "결제를 완료하지 못했습니다.";
+const DEFAULT_PAYPAL_CAPTURE_ERROR_MESSAGE = "PayPal 결제를 완료하지 못했습니다.";
 const DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE = "예약 일정 중복 여부를 확인하지 못했습니다.";
 
 export async function getApplicationConflicts(
@@ -42,9 +46,10 @@ export async function getApplicationConflicts(
 export async function createApplication(
   request: CreateApplicationRequest,
   language: ContentLanguage,
+  paymentProvider: PaymentProvider,
 ): Promise<PaymentReadyResult> {
   return requestApiResult<PaymentReadyResponse, "payment">(
-    withContentLanguage("/api/applications", language),
+    withContentLanguage(withPaymentProvider("/api/applications", paymentProvider), language),
     "payment",
     {
       method: "POST",
@@ -58,12 +63,36 @@ export async function createApplication(
 export async function continueApplicationPayment(
   applicationId: number | string,
   language: ContentLanguage,
+  paymentProvider: PaymentProvider,
 ): Promise<PaymentReadyResult> {
   return requestApiResult<PaymentReadyResponse, "payment">(
-    withContentLanguage(`/api/applications/me/${applicationId}/payment/continue`, language),
+    withContentLanguage(
+      withPaymentProvider(
+        `/api/applications/me/${applicationId}/payment/continue`,
+        paymentProvider,
+      ),
+      language,
+    ),
     "payment",
     { method: "POST" },
     DEFAULT_PAYMENT_CONTINUE_ERROR_MESSAGE,
+  );
+}
+
+export async function capturePayPalApplicationPayment(
+  applicationId: number | string,
+  request: CapturePayPalPaymentRequest,
+  language: ContentLanguage,
+): Promise<ApplicationResult> {
+  return requestApiResult<ApplicationResponse, "application">(
+    withContentLanguage(`/api/applications/me/${applicationId}/payment/paypal/capture`, language),
+    "application",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    },
+    DEFAULT_PAYPAL_CAPTURE_ERROR_MESSAGE,
   );
 }
 

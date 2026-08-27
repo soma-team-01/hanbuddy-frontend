@@ -65,12 +65,19 @@ export interface CancelApplicationRequest {
 export type PaymentStatus =
   "CREATED" | "CONFIRMED" | "REVIEW_REQUIRED" | "FAILED" | "CANCELLED" | "EXPIRED";
 
+export type PaymentProvider = "TOSS" | "PAYPAL";
+
 /** 토스 successUrl 쿼리 파라미터를 그대로 전달하는 결제 승인 요청 */
 export interface ConfirmPaymentRequest {
   paymentKey: string;
   orderId: string;
   /** KRW 정수 금액 — 결제창 요청 금액과 같아야 한다 */
   amount: number;
+}
+
+export interface CapturePayPalPaymentRequest {
+  /** PayPal 승인 콜백 또는 success URL의 token 값 */
+  orderId: string;
 }
 
 export interface ApplicationResponse {
@@ -111,10 +118,16 @@ export interface ApplicationResponse {
 export interface PaymentReadyResponse {
   application: ApplicationResponse;
   paymentId: number;
+  paymentProvider: PaymentProvider;
+  paymentAttemptId: number;
+  /** 토스 주문번호 또는 PayPal order ID */
+  providerOrderId: string;
+  /** PayPal 전체 페이지 결제의 대체 이동 URL. 토스는 null */
+  approvalUrl: string | null;
   /** 토스 결제창 requestPayment의 orderId로 전달할 주문번호 */
   orderNumber: string;
-  /** 토스 결제창 SDK 초기화에 사용할 클라이언트 키 */
-  clientKey: string;
+  /** 토스 결제창 SDK 초기화에 사용할 클라이언트 키. PayPal은 null */
+  clientKey: string | null;
   /** 토스 결제창에 표시할 주문명(활동 제목) */
   orderName: string;
   originalUnitPrice?: number | null;
@@ -123,7 +136,7 @@ export interface PaymentReadyResponse {
   originalTotalPrice?: number | null;
   discountAmount?: number | null;
   paymentStatus: PaymentStatus;
-  /** 결제 금액 (KRW 정수) — 결제창 요청·승인 금액과 같아야 한다 */
+  /** 결제 공급자 통화 기준의 결제 금액 */
   paymentAmount: number;
   paymentCurrency: string;
   /** 현재 주문번호를 재사용할 수 있는 백엔드 기준 만료 시각 (Asia/Seoul 오프셋 포함) */

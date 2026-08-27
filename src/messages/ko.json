@@ -1259,7 +1259,6 @@
     "description": "PayPal에서 {amount} 결제를 확인하고 승인해 주세요.",
     "loading": "PayPal을 불러오는 중입니다...",
     "continueWithPayPal": "PayPal로 계속하기",
-    "openInNewPage": "새 페이지에서 PayPal 열기",
     "redirectFallback": "PayPal 웹사이트에서 계속하기",
     "captureFailed": "PayPal 결제를 확인하지 못했습니다. 다시 결제하기 전에 내 신청을 확인해 주세요.",
     "unavailable": "현재 PayPal을 이용할 수 없습니다. 토스페이먼츠를 선택해 주세요."

@@ -7,10 +7,10 @@ import {
   usePayPal,
 } from "@paypal/react-paypal-js/sdk-v6";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Locale } from "@/i18n/routing";
-import { capturePayPalApplicationPayment } from "@/lib/api/applications";
+import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import {
@@ -40,12 +40,14 @@ function PayPalCheckoutAction({
   const { loadingStatus } = usePayPal();
   const [captureError, setCaptureError] = useState<unknown>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [popupUnavailable, setPopupUnavailable] = useState(false);
+  const approvalStartedRef = useRef(false);
 
   if (loadingStatus === INSTANCE_LOADING_STATE.PENDING) {
     return <p className="py-3 text-center text-sm text-muted">{t("loading")}</p>;
   }
 
-  const showFallback = loadingStatus === INSTANCE_LOADING_STATE.REJECTED;
+  const showFallback = loadingStatus === INSTANCE_LOADING_STATE.REJECTED || popupUnavailable;
 
   return (
     <div className="flex flex-col gap-3">
@@ -56,6 +58,7 @@ function PayPalCheckoutAction({
           disabled={isCapturing}
           presentationMode="popup"
           onApprove={async ({ orderId }) => {
+            approvalStartedRef.current = true;
             setCaptureError(null);
             setIsCapturing(true);
             try {
@@ -72,6 +75,23 @@ function PayPalCheckoutAction({
               }
               onConfirmed(application);
             } catch (error) {
+              try {
+                const applications = unwrapApiResult(
+                  await getMyApplications(language),
+                  "applications",
+                );
+                const confirmedApplication = applications.find(
+                  (application) =>
+                    application.applicationId === payment.application.applicationId &&
+                    application.status === "CONFIRMED",
+                );
+                if (confirmedApplication) {
+                  onConfirmed(confirmedApplication);
+                  return;
+                }
+              } catch {
+                // 캡처 오류를 우선 안내한다. 신청 목록 조회 실패로 원인을 덮어쓰지 않는다.
+              }
               setCaptureError(error);
               throw error;
             } finally {
@@ -79,11 +99,17 @@ function PayPalCheckoutAction({
             }
           }}
           onCancel={onClose}
-          onError={(error) => setCaptureError(error)}
+          onError={(error) => {
+            if (!approvalStartedRef.current) {
+              setPopupUnavailable(true);
+              return;
+            }
+            setCaptureError(error);
+          }}
         />
       ) : null}
 
-      {payment.approvalUrl ? (
+      {showFallback && payment.approvalUrl ? (
         <a
           href={payment.approvalUrl}
           onClick={() =>
@@ -94,8 +120,17 @@ function PayPalCheckoutAction({
           }
           className="flex h-11 items-center justify-center rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
         >
-          {showFallback ? t("redirectFallback") : t("openInNewPage")}
+          {t("redirectFallback")}
         </a>
+      ) : null}
+
+      {showFallback && !payment.approvalUrl ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger"
+        >
+          {t("unavailable")}
+        </p>
       ) : null}
 
       {captureError ? (

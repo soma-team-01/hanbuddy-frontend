@@ -1259,7 +1259,6 @@
     "description": "請在PayPal中確認並核准{amount}付款。",
     "loading": "正在載入PayPal...",
     "continueWithPayPal": "使用PayPal繼續",
-    "openInNewPage": "在新頁面開啟PayPal",
     "redirectFallback": "前往PayPal網站繼續",
     "captureFailed": "無法確認PayPal付款。再次付款前，請先查看我的申請。",
     "unavailable": "PayPal暫時無法使用。請選擇Toss Payments。"

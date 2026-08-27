@@ -66,4 +66,32 @@ describe("PayPalReturnContent", () => {
     );
     expect(mockedCapture).not.toHaveBeenCalled();
   });
+
+  it("does not complete when capture succeeds without a confirmed application", async () => {
+    mockedCapture.mockResolvedValue({
+      status: "success",
+      application: {
+        applicationId: 11,
+        status: "PENDING_PAYMENT",
+      } as never,
+    });
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [
+        {
+          applicationId: 11,
+          status: "PENDING_PAYMENT",
+        } as never,
+      ],
+    });
+
+    renderWithQueryClient(<PayPalReturnContent token="ORDER-123" />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "We couldn't confirm your payment. Please try again from My Applications.",
+    );
+    expect(mockedGetMyApplications).toHaveBeenCalledWith("EN");
+    expect(replace).not.toHaveBeenCalled();
+    expect(mockedClearContext).not.toHaveBeenCalled();
+  });
 });

@@ -1259,7 +1259,6 @@
     "description": "PayPalで{amount}のお支払いを確認して承認してください。",
     "loading": "PayPalを読み込んでいます...",
     "continueWithPayPal": "PayPalで続ける",
-    "openInNewPage": "新しいページでPayPalを開く",
     "redirectFallback": "PayPalウェブサイトで続ける",
     "captureFailed": "PayPalのお支払いを確認できませんでした。再試行する前に申込履歴をご確認ください。",
     "unavailable": "現在PayPalをご利用いただけません。Toss Paymentsを選択してください。"

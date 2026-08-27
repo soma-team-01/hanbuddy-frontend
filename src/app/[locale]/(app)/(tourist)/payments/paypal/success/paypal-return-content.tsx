@@ -37,11 +37,16 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   );
   const startedRef = useRef(false);
   const captureMutation = useMutation({
-    mutationFn: async (resolvedApplicationId: string) =>
-      unwrapApiResult(
+    mutationFn: async (resolvedApplicationId: string) => {
+      const application = unwrapApiResult(
         await capturePayPalApplicationPayment(resolvedApplicationId, { orderId: token }, language),
         "application",
-      ),
+      );
+      if (application.status !== "CONFIRMED") {
+        throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
+      }
+      return application;
+    },
     onSuccess: async (application) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),

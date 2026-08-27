@@ -461,6 +461,7 @@
     "viewDescription": "HanBuddy에서 다른 사람에게 보이는 내 프로필입니다.",
     "viewDetails": "프로필 정보",
     "viewDetailsDescription": "회원가입할 때 입력한 정보입니다.",
+    "summaryLabel": "프로필 요약",
     "editAction": "수정",
     "email": "이메일",
     "fullName": "닉네임",

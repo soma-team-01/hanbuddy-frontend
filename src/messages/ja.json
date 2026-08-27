@@ -461,6 +461,7 @@
     "viewDescription": "HanBuddyで他のユーザーに表示されるプロフィールです。",
     "viewDetails": "プロフィール情報",
     "viewDetailsDescription": "HanBuddyへの登録時に入力した情報です。",
+    "summaryLabel": "プロフィール概要",
     "editAction": "編集",
     "email": "メール",
     "fullName": "ニックネーム",

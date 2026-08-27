@@ -461,6 +461,7 @@
     "viewDescription": "This is how your profile appears across HanBuddy.",
     "viewDetails": "Profile details",
     "viewDetailsDescription": "The information you shared when you joined HanBuddy.",
+    "summaryLabel": "Profile summary",
     "editAction": "Edit",
     "email": "Email",
     "fullName": "Nickname",

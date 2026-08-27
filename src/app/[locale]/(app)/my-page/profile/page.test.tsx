@@ -57,6 +57,7 @@ describe("ProfilePage", () => {
     expect(screen.getByText("United States")).toBeInTheDocument();
     expect(screen.getByText("April 12, 1998")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp · +1 5550198")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Profile summary" })).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 

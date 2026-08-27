@@ -71,6 +71,7 @@ interface EditProfileFormProps {
 
 export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const t = useTranslations("Profile");
+  const tMyPage = useTranslations("MyPage");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -212,13 +213,18 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     <Image
       src={profileImagePreview}
       alt={t("selectedProfilePhotoPreview")}
-      width={112}
-      height={112}
+      width={144}
+      height={144}
       unoptimized
-      className="size-28 shrink-0 rounded-full border border-line-strong object-cover"
+      className="size-36 shrink-0 rounded-full border border-line-strong object-cover ring-1 ring-line-soft ring-offset-8 ring-offset-white"
     />
   ) : (
-    <Avatar name={profile.displayName} src={profile.profileImageUrl} size={112} />
+    <Avatar
+      name={profile.displayName}
+      src={profile.profileImageUrl}
+      size={144}
+      className="ring-1 ring-line-soft ring-offset-8 ring-offset-white"
+    />
   );
   let errorMessage: string | null = null;
   if (requestFailure) {
@@ -250,12 +256,15 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             aria-label={t("title")}
             noValidate
             onSubmit={handleSubmit}
-            className="mx-auto grid w-full max-w-[800px] gap-8 md:grid-cols-2"
+            className="mx-auto w-full max-w-[680px] rounded-[2rem] border border-line-soft bg-white px-6 py-8 shadow-[0_24px_70px_rgba(38,27,24,0.09)] sm:px-10 sm:py-10 md:rounded-[2.5rem]"
           >
-            <section className="flex flex-col items-center gap-3 md:col-span-2">
+            <section className="relative flex flex-col items-center pt-5 text-center">
+              <span className="absolute top-0 right-0 inline-flex items-center rounded-full border border-line-soft px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-primary-strong uppercase">
+                {tMyPage(profile.userType === "BUDDY" ? "buddy" : "tourist")}
+              </span>
               <div className="relative">
                 {profilePhoto}
-                <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
+                <label className="absolute -right-2 -bottom-2 flex size-10 cursor-pointer items-center justify-center rounded-full border border-line-strong bg-white text-primary-strong shadow-sm transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:border-primary hover:text-primary">
                   <CameraIcon className="size-4" />
                   <span className="sr-only">{t("addProfilePhoto")}</span>
                   <input
@@ -266,10 +275,25 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                   />
                 </label>
               </div>
+              <h2 className="mt-8 font-display text-2xl font-extrabold tracking-[-0.03em] text-ink">
+                {profile.displayName}
+              </h2>
+              <p className="mt-1 text-sm break-all text-muted">{profile.email}</p>
             </section>
 
-            <section className="contents">
-              <label className="flex flex-col gap-2 md:col-span-2">
+            <section
+              aria-labelledby="profile-fields-title"
+              className="mt-10 border-t border-line-soft pt-8"
+            >
+              <h2
+                id="profile-fields-title"
+                className="font-display text-xl font-bold tracking-tight text-ink"
+              >
+                {t("viewDetails")}
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-muted">{t("viewDetailsDescription")}</p>
+
+              <label className="mt-6 flex flex-col gap-2">
                 <span className="text-sm font-medium text-ink">{t("fullName")}</span>
                 <input
                   name="displayName"
@@ -278,16 +302,17 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                   minLength={2}
                   maxLength={30}
                   defaultValue={profile.displayName}
-                  className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink"
+                  className="w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </label>
-              <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
                   <span className="text-sm font-medium text-ink">{t("nationality")}</span>
                   <CountrySelect
                     value={nationality}
                     onChange={handleNationalityChange}
                     ariaLabel={t("nationality")}
+                    triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink outline-none transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
                   />
                 </div>
                 <label className="flex flex-col gap-2">
@@ -298,14 +323,16 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                     max={getLocalDateInputValue(new Date())}
                     required
                     defaultValue={profile.birthDate}
-                    className="w-full rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink"
+                    className="w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                   />
                 </label>
               </div>
             </section>
 
-            <section className="flex flex-col gap-4 border-t border-line-soft pt-8 md:col-span-2">
-              <h2 className="font-display text-xl font-semibold text-ink">{t("contactDetails")}</h2>
+            <section className="mt-8 flex flex-col gap-4 border-t border-line-soft pt-8">
+              <h2 className="font-display text-xl font-bold tracking-tight text-ink">
+                {t("contactDetails")}
+              </h2>
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
                 <MessagingAppField
@@ -317,6 +344,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                   onContactChange={setMessagingContact}
                   inputRequired
                   koreanOnly={isBuddy}
+                  variant="cards"
                 />
               </div>
             </section>
@@ -324,13 +352,13 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
             {errorMessage ? (
               <p
                 role="alert"
-                className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger md:col-span-2"
+                className="mt-8 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
               >
                 {errorMessage}
               </p>
             ) : null}
           </form>
-          <div className="mx-auto mt-6 w-full max-w-[800px] lg:hidden">
+          <div className="mx-auto mt-6 w-full max-w-[680px] lg:hidden">
             <BottomActionBar>
               <button
                 form="edit-profile-form"

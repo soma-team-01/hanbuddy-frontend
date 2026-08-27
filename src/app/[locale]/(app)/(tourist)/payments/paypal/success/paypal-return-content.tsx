@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link, useRouter } from "@/i18n/navigation";
 import { capturePayPalApplicationPayment } from "@/lib/api/applications";
@@ -16,6 +16,8 @@ import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { unwrapApiResult } from "@/lib/query/result";
 
+const subscribeToBrowserState = () => () => undefined;
+
 export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   const locale = useLocale();
   const language = getContentLanguage(locale);
@@ -23,8 +25,16 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   const queryClient = useQueryClient();
   const t = useTranslations("Payment");
   const getApiErrorMessage = useApiErrorMessage();
-  const [applicationId, setApplicationId] = useState<string | null>(null);
-  const [contextChecked, setContextChecked] = useState(false);
+  const applicationId = useSyncExternalStore(
+    subscribeToBrowserState,
+    () => readPayPalRedirectContext(token)?.applicationId ?? null,
+    () => null,
+  );
+  const browserReady = useSyncExternalStore(
+    subscribeToBrowserState,
+    () => true,
+    () => false,
+  );
   const startedRef = useRef(false);
   const captureMutation = useMutation({
     mutationFn: async (resolvedApplicationId: string) =>
@@ -41,12 +51,6 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
       router.replace(`/payments/success?applicationId=${application.applicationId}`);
     },
   });
-
-  useEffect(() => {
-    const context = readPayPalRedirectContext(token);
-    setApplicationId(context?.applicationId ?? null);
-    setContextChecked(true);
-  }, [token]);
 
   const capture = captureMutation.mutate;
   useEffect(() => {
@@ -71,7 +75,7 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
     router.replace(`/payments/success?applicationId=${applicationId}`);
   }, [applicationId, applicationsQuery.data, router]);
 
-  if (!contextChecked) {
+  if (!browserReady) {
     return (
       <p role="status" className="flex flex-1 items-center justify-center text-muted">
         {t("confirming")}

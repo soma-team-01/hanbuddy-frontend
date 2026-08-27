@@ -99,6 +99,9 @@ describe("EditProfilePage", () => {
 
     expect(await screen.findByRole("form")).toHaveClass("max-w-[900px]", "rounded-[2rem]");
     expect(screen.getByLabelText("Nickname")).toHaveValue("Sarah");
+    expect(screen.getByLabelText("Email")).toHaveValue("user@example.com");
+    expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Email")).toHaveClass("bg-panel-raised");
     expect(screen.queryByRole("heading", { name: "Sarah" })).not.toBeInTheDocument();
     expect(screen.getByTestId("edit-profile-layout")).toHaveClass(
       "lg:grid-cols-[180px_minmax(0,1fr)]",

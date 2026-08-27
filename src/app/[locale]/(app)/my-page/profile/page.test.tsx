@@ -57,7 +57,7 @@ describe("ProfilePage", () => {
     expect(screen.getByText("United States")).toBeInTheDocument();
     expect(screen.getByText("April 12, 1998")).toBeInTheDocument();
     expect(screen.getByText("+1 5550198")).toBeInTheDocument();
-    expect(screen.getByText("WhatsApp")).toHaveClass("text-primary-strong");
+    expect(screen.getByText("WhatsApp")).toHaveClass("text-[#D86632]");
     expect(screen.getByTestId("contact-method-divider")).toBeInTheDocument();
     expect(document.querySelector("[data-contact-method-icon]")).not.toBeInTheDocument();
     expect(
@@ -92,7 +92,7 @@ describe("ProfilePage", () => {
 
     renderWithQueryClient(<ProfilePage />);
 
-    expect(await screen.findByText("LINE")).toHaveClass("text-primary-strong");
+    expect(await screen.findByText("LINE")).toHaveClass("text-[#D86632]");
     expect(screen.getByText("test")).toHaveClass("text-ink");
     expect(screen.getByTestId("contact-method-divider")).toBeInTheDocument();
     expect(document.querySelector("[data-contact-method-icon]")).not.toBeInTheDocument();

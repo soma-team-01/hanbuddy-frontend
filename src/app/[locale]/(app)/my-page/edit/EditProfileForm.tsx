@@ -15,7 +15,7 @@ import {
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
-import { CameraIcon, MailIcon } from "@/components/ui/icons";
+import { CameraIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useMyProfile } from "@/lib/api/useMyProfile";
@@ -262,10 +262,6 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                     />
                   </label>
                 </div>
-                <p className="flex min-w-0 items-center gap-2 text-sm break-all text-muted lg:justify-center">
-                  <MailIcon aria-hidden className="size-4 shrink-0" />
-                  {profile.email}
-                </p>
               </section>
 
               <div className="min-w-0">
@@ -277,18 +273,29 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                     {t("viewDetails")}
                   </h2>
 
-                  <label className="mt-4 flex flex-col gap-1.5">
-                    <span className="text-sm font-medium text-ink">{t("fullName")}</span>
-                    <input
-                      name="displayName"
-                      type="text"
-                      required
-                      minLength={2}
-                      maxLength={30}
-                      defaultValue={profile.displayName}
-                      className="w-full rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                    />
-                  </label>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <label className="flex min-w-0 flex-col gap-1.5">
+                      <span className="text-sm font-medium text-ink">{t("fullName")}</span>
+                      <input
+                        name="displayName"
+                        type="text"
+                        required
+                        minLength={2}
+                        maxLength={30}
+                        defaultValue={profile.displayName}
+                        className="w-full rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                      />
+                    </label>
+                    <label className="flex min-w-0 flex-col gap-1.5">
+                      <span className="text-sm font-medium text-ink">{t("email")}</span>
+                      <input
+                        type="email"
+                        readOnly
+                        value={profile.email}
+                        className="w-full cursor-default rounded-xl border border-line-soft bg-panel-raised px-4 py-2.5 text-base text-muted outline-none"
+                      />
+                    </label>
+                  </div>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div className="flex flex-col gap-1.5">
                       <span className="text-sm font-medium text-ink">{t("nationality")}</span>

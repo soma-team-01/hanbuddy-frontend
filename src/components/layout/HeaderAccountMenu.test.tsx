@@ -72,6 +72,20 @@ describe("HeaderAccountMenu", () => {
     expect(screen.queryByRole("dialog", { name: "Language" })).not.toBeInTheDocument();
   });
 
+  it("hides language selection for a buddy account", () => {
+    renderWithQueryClient(
+      <HeaderAccountMenu accountTitle="Buddy" profile={null} userType="BUDDY" />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
+
+    const menu = screen.getByRole("menu", { name: "Account menu" });
+    expect(within(menu).getAllByRole("menuitem")).toHaveLength(2);
+    expect(within(menu).getByRole("menuitem", { name: "View profile" })).toBeInTheDocument();
+    expect(within(menu).queryByRole("menuitem", { name: "Language" })).not.toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: "Log Out" })).toBeInTheDocument();
+  });
+
   it("closes on Escape and restores focus to the profile trigger", () => {
     renderWithQueryClient(
       <HeaderAccountMenu accountTitle="June" profile={null} userType="TOURIST" />,

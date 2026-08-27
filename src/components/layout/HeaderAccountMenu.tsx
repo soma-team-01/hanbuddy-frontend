@@ -101,18 +101,20 @@ export function HeaderAccountMenu({
               <UserIcon className="size-4 text-muted" />
               {t("viewProfile")}
             </Link>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setIsOpen(false);
-                setShowLanguageDialog(true);
-              }}
-              className="flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"
-            >
-              <GlobeIcon className="size-4 text-muted" />
-              {t("language")}
-            </button>
+            {userType !== "BUDDY" ? (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setIsOpen(false);
+                  setShowLanguageDialog(true);
+                }}
+                className="flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"
+              >
+                <GlobeIcon className="size-4 text-muted" />
+                {t("language")}
+              </button>
+            ) : null}
             <button
               type="button"
               role="menuitem"
@@ -130,7 +132,7 @@ export function HeaderAccountMenu({
         ) : null}
       </div>
 
-      {showLanguageDialog ? (
+      {userType !== "BUDDY" && showLanguageDialog ? (
         <LocaleDialog
           onClose={() => {
             setShowLanguageDialog(false);

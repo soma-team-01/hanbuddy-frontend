@@ -81,6 +81,9 @@ describe("SiteHeader", () => {
       "href",
       "/en/my-activities",
     );
+    expect(
+      within(mobileNavigation).queryByRole("link", { name: "My Page" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Select language/ })).not.toBeInTheDocument();
   });
 
@@ -122,7 +125,10 @@ describe("SiteHeader", () => {
   it("replaces the login action with an account indicator for authenticated users", () => {
     renderWithQueryClient(<SiteHeader role="tourist" authenticated />);
 
-    expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Open account menu" })).toHaveLength(2);
+    expect(
+      screen.queryByRole("button", { name: "Select language, current language: English" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
 
@@ -151,14 +157,14 @@ describe("SiteHeader", () => {
       <SiteHeader role="tourist" authenticated mayHaveSession />,
     );
 
-    expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Open account menu" })).toHaveLength(2);
 
     rerender(<SiteHeader role={null} authenticated={false} mayHaveSession={false} />);
 
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Log in" })).toBeInTheDocument();
     });
-    expect(screen.queryByRole("link", { name: "Open my account" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open account menu" })).not.toBeInTheDocument();
   });
 
   it("shows an account indicator immediately when a new session becomes authenticated", async () => {
@@ -171,7 +177,7 @@ describe("SiteHeader", () => {
     rerender(<SiteHeader role="tourist" authenticated mayHaveSession />);
 
     await waitFor(() => {
-      expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+      expect(screen.getAllByRole("button", { name: "Open account menu" })).toHaveLength(2);
     });
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
   });
@@ -202,14 +208,12 @@ describe("SiteHeader", () => {
       screen.queryByRole("button", { name: "Select language, current language: English" }),
     ).not.toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getAllByRole("link", { name: "Open my account" })).toHaveLength(2);
+      expect(screen.getAllByRole("button", { name: "Open account menu" })).toHaveLength(2);
     });
-    expect(
-      screen.getByRole("button", { name: "Select language, current language: English" }),
-    ).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Open my account" })[0]).toHaveAttribute(
+    fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
+    expect(screen.getByRole("menuitem", { name: "View profile" })).toHaveAttribute(
       "href",
-      "/en/my-page",
+      "/en/my-page/profile",
     );
     expect(screen.getAllByAltText("June")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
@@ -278,7 +282,7 @@ describe("SiteHeader", () => {
     mockedUsePathname.mockReturnValue("/buddy");
     renderWithQueryClient(<SiteHeader role="buddy" authenticated mayHaveSession />);
 
-    expect(screen.getByRole("link", { name: "Open my account" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open account menu" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Log in" })).not.toBeInTheDocument();
   });
 
@@ -316,37 +320,40 @@ describe("SiteHeader", () => {
     mockedUsePathname.mockReturnValue("/applications");
     renderWithQueryClient(<SiteHeader role="tourist" />);
 
+    fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Language" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Select language, current language: English" }),
+      within(screen.getByRole("dialog", { name: "Language" })).getByRole("radio", {
+        name: "한국어",
+      }),
     );
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
 
     expect(replace).toHaveBeenCalledWith("/ko/applications");
   });
 
-  it("shows only the current locale until the language menu opens", () => {
+  it("shows only the language action until the language dialog opens", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />);
 
-    const trigger = screen.getByRole("button", {
-      name: "Select language, current language: English",
-    });
-    expect(within(trigger).getByText("English")).toBeInTheDocument();
-    expect(screen.queryByRole("menu", { name: "Language selection" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
+    const trigger = screen.getByRole("menuitem", { name: "Language" });
+    expect(trigger).toHaveTextContent(/^Language$/);
+    expect(trigger).not.toHaveTextContent("English");
+    expect(screen.queryByRole("dialog", { name: "Language" })).not.toBeInTheDocument();
 
     fireEvent.click(trigger);
 
-    const menu = screen.getByRole("menu", { name: "Language selection" });
-    expect(within(menu).getByRole("menuitemradio", { name: "English" })).toHaveAttribute(
+    const dialog = screen.getByRole("dialog", { name: "Language" });
+    expect(within(dialog).getByRole("radio", { name: "English" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
-    expect(within(menu).getByRole("menuitemradio", { name: "한국어" })).toHaveAttribute(
+    expect(within(dialog).getByRole("radio", { name: "한국어" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
-    expect(within(menu).getByRole("menuitemradio", { name: "日本語" })).toBeInTheDocument();
-    expect(within(menu).getByRole("menuitemradio", { name: "简体中文" })).toBeInTheDocument();
-    expect(within(menu).getByRole("menuitemradio", { name: "繁體中文" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "日本語" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "简体中文" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "繁體中文" })).toBeInTheDocument();
   });
 
   it("localizes the site navigation and mobile menu in Korean", () => {
@@ -368,8 +375,8 @@ describe("SiteHeader", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />, { locale });
 
     expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("href", exploreHref);
-    expect(
-      screen.getByRole("button", { name: `Select language, current language: ${label}` }),
-    ).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Language" }));
+    expect(screen.getByRole("radio", { name: label })).toHaveAttribute("aria-checked", "true");
   });
 });

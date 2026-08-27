@@ -6,7 +6,7 @@ import { CheckIcon, ChevronDownIcon, GlobeIcon } from "@/components/ui/icons";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-const LOCALE_OPTIONS = [
+export const LOCALE_OPTIONS = [
   { code: "en", shortLabel: "EN", label: "English" },
   { code: "ko", shortLabel: "KO", label: "한국어" },
   { code: "ja", shortLabel: "JA", label: "日本語" },
@@ -104,8 +104,10 @@ export function LocaleSwitcher({
         <div
           role="menu"
           aria-label={t("languageMenu")}
-          className={`absolute right-0 z-50 min-w-44 overflow-hidden rounded-2xl border border-line-soft bg-white p-1.5 shadow-[0_18px_48px_rgba(38,27,24,0.14)] ${
-            variant === "footer" ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+10px)]"
+          className={`right-0 z-50 min-w-44 overflow-hidden rounded-2xl border border-line-soft bg-white p-1.5 shadow-[0_18px_48px_rgba(38,27,24,0.14)] ${
+            variant === "footer"
+              ? "absolute bottom-[calc(100%+10px)]"
+              : "absolute top-[calc(100%+10px)]"
           }`}
         >
           {LOCALE_OPTIONS.map((option) => {

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { ApiClientError } from "@/lib/api/errors";
@@ -97,8 +97,19 @@ describe("EditProfilePage", () => {
   it("populates the form with the loaded profile", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
-    expect(await screen.findByRole("form")).toHaveClass("md:grid-cols-2", "max-w-[800px]");
+    expect(await screen.findByRole("form")).toHaveClass("max-w-[900px]", "rounded-[2rem]");
     expect(screen.getByLabelText("Nickname")).toHaveValue("Sarah");
+    expect(screen.getByLabelText("Email")).toHaveValue("user@example.com");
+    expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Email")).toHaveClass("bg-panel-raised");
+    expect(screen.queryByRole("heading", { name: "Sarah" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("edit-profile-layout")).toHaveClass(
+      "lg:grid-cols-[180px_minmax(0,1fr)]",
+    );
+    expect(within(screen.getByRole("form")).getByRole("button", { name: "Save" })).toBeVisible();
+    expect(screen.getByTestId("page-header")).not.toContainElement(
+      screen.getByRole("button", { name: "Save" }),
+    );
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });
@@ -126,7 +137,7 @@ describe("EditProfilePage", () => {
       "Nickname",
       "Nationality",
       "Date of birth",
-      "Contact Details",
+      "Contact",
       "Preferred Messaging App",
       "Add profile photo",
       "Save",
@@ -137,7 +148,7 @@ describe("EditProfilePage", () => {
       "닉네임",
       "국적",
       "생년월일",
-      "연락처 정보",
+      "연락처",
       "선호하는 메신저",
       "프로필 사진 추가",
       "저장",
@@ -157,7 +168,7 @@ describe("EditProfilePage", () => {
       expect(screen.getByRole("button", { name: save })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: back })).toHaveAttribute(
         "href",
-        `/${locale}/my-page`,
+        `/${locale}/my-page/profile`,
       );
     },
   );
@@ -275,7 +286,7 @@ describe("EditProfilePage", () => {
       });
     });
     expect(uploadProfileImage).not.toHaveBeenCalled();
-    expect(replace).toHaveBeenCalledWith("/en/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page/profile");
     expect(queryClient.getQueryData(userKeys.me())).toEqual(
       expect.objectContaining({ displayName: "Sarah J." }),
     );
@@ -316,7 +327,7 @@ describe("EditProfilePage", () => {
         profileImageKey: "profiles/2026/07/07/uuid.png",
       }),
     );
-    expect(replace).toHaveBeenCalledWith("/en/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page/profile");
   });
 
   it("shows the upload error and skips saving when the image upload fails", async () => {
@@ -399,7 +410,7 @@ describe("EditProfilePage", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Check the format of the entered information.");
     expect(alert).not.toHaveTextContent("국적 코드는 영문 대문자 2자리여야 합니다");
-    expect(replace).not.toHaveBeenCalledWith("/en/my-page");
+    expect(replace).not.toHaveBeenCalledWith("/en/my-page/profile");
   });
 
   it("uses the current locale when an in-flight save fails", async () => {

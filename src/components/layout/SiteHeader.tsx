@@ -10,9 +10,8 @@ import type { MyProfile } from "@/types/user";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
 import { ChatRoomsPoller } from "@/components/chat/ChatRoomsPoller";
+import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { SettlementNavIcon } from "@/components/layout/SettlementNavIcon";
-import { Avatar } from "../ui/Avatar";
-import { UserIcon } from "../ui/icons";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileMenu } from "./MobileMenu";
 import { PageContainer } from "./PageContainer";
@@ -29,7 +28,6 @@ const DESTINATIONS = {
     { href: "/home", labelKey: "home" },
     { href: "/dashboard", labelKey: "dashboard" },
     { href: "/my-activities", labelKey: "myActivities" },
-    { href: "/my-page", labelKey: "myPage" },
   ],
   guest: [
     { href: "/", labelKey: "home" },
@@ -120,6 +118,7 @@ export function SiteHeader({
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
   const logoHref = isBuddyArea ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");
+  const accountUserType = profile?.userType ?? (effectiveRole === "buddy" ? "BUDDY" : "TOURIST");
 
   const navigationLinks = destinations.map(({ href, labelKey }) => {
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
@@ -167,7 +166,9 @@ export function SiteHeader({
         ) : null}
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
-          {showLanguageSwitcher ? <LocaleSwitcher labelStyle="name" /> : null}
+          {showLanguageSwitcher && !effectiveAuthenticated ? (
+            <LocaleSwitcher labelStyle="name" />
+          ) : null}
           {isBuddyHostingPage && !effectiveAuthenticated ? (
             <BuddyGoogleAuthDialog variant="header" />
           ) : null}
@@ -183,18 +184,11 @@ export function SiteHeader({
           ) : null}
           {!isMinimalHeader && effectiveAuthenticated ? <ChatNavIcon /> : null}
           {(!isMinimalHeader || isBuddyHostingPage) && effectiveAuthenticated ? (
-            <Link
-              href="/my-page"
-              aria-label={t("openAccount")}
-              title={accountTitle}
-              className="inline-flex size-11 items-center justify-center rounded-full border border-line-strong bg-canvas-soft transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              {profile ? (
-                <Avatar name={accountTitle} src={profile.profileImageUrl} size={36} eagerImage />
-              ) : (
-                <UserIcon className="size-5 text-primary-strong" />
-              )}
-            </Link>
+            <HeaderAccountMenu
+              accountTitle={accountTitle}
+              profile={profile}
+              userType={accountUserType}
+            />
           ) : null}
           {!isMinimalHeader && sessionStatus === "guest" ? (
             <Link
@@ -219,18 +213,12 @@ export function SiteHeader({
             ) : null}
             {effectiveAuthenticated ? <ChatNavIcon compact /> : null}
             {effectiveAuthenticated ? (
-              <Link
-                href="/my-page"
-                aria-label={t("openAccount")}
-                title={accountTitle}
-                className="inline-flex size-10 items-center justify-center rounded-full border border-line-strong bg-canvas-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                {profile ? (
-                  <Avatar name={accountTitle} src={profile.profileImageUrl} size={32} eagerImage />
-                ) : (
-                  <UserIcon className="size-5 text-primary-strong" />
-                )}
-              </Link>
+              <HeaderAccountMenu
+                accountTitle={accountTitle}
+                compact
+                profile={profile}
+                userType={accountUserType}
+              />
             ) : null}
             <MobileMenu
               title={t("navigationMenu")}
@@ -240,9 +228,9 @@ export function SiteHeader({
               <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
                 {navigationLinks}
               </nav>
-              {showLanguageSwitcher || sessionStatus === "guest" ? (
+              {(showLanguageSwitcher && !effectiveAuthenticated) || sessionStatus === "guest" ? (
                 <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
-                  {showLanguageSwitcher ? (
+                  {showLanguageSwitcher && !effectiveAuthenticated ? (
                     <LocaleSwitcher labelStyle="name" dismissMenu className="justify-start px-1" />
                   ) : null}
                   {sessionStatus === "guest" ? (

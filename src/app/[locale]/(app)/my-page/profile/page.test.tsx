@@ -52,11 +52,15 @@ describe("ProfilePage", () => {
 
     expect(screen.getByRole("heading", { name: "Profile" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Sarah" })).toBeInTheDocument();
-    expect(screen.getByText("Tourist")).toBeInTheDocument();
+    expect(screen.queryByText("Tourist")).not.toBeInTheDocument();
     expect(screen.getByText("user@example.com")).toBeInTheDocument();
     expect(screen.getByText("United States")).toBeInTheDocument();
     expect(screen.getByText("April 12, 1998")).toBeInTheDocument();
-    expect(screen.getByText("WhatsApp · +1 5550198")).toBeInTheDocument();
+    expect(screen.getByText("+1 5550198")).toBeInTheDocument();
+    expect(document.querySelector('[data-contact-method-icon="whatsapp"]')).toBeInTheDocument();
+    expect(
+      screen.queryByText("This is how your profile appears across HanBuddy."),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Profile summary" })).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
@@ -64,18 +68,35 @@ describe("ProfilePage", () => {
   it("links to the separate profile editing screen", async () => {
     renderWithQueryClient(<ProfilePage />);
 
-    expect(await screen.findByRole("link", { name: "Edit Profile" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Edit" })).toHaveAttribute(
       "href",
       "/en/my-page/edit",
     );
+  });
+
+  it("shows the saved messaging service as an icon beside the contact ID", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: createMockProfile({
+        contactMethod: "LINE",
+        contactCountryCode: null,
+        contactIdentifier: "test",
+      }),
+    });
+
+    renderWithQueryClient(<ProfilePage />);
+
+    expect(await screen.findByText("test")).toBeInTheDocument();
+    expect(document.querySelector('[data-contact-method-icon="line"]')).toBeInTheDocument();
+    expect(screen.queryByText("LINE · test")).not.toBeInTheDocument();
   });
 
   it("localizes the profile information in Korean", async () => {
     renderWithQueryClient(<ProfilePage />, { locale: "ko" });
 
     expect(screen.getByRole("heading", { name: "프로필" })).toBeInTheDocument();
-    expect(await screen.findByText("여행자")).toBeInTheDocument();
-    expect(screen.getByText("미국")).toBeInTheDocument();
+    expect(await screen.findByText("미국")).toBeInTheDocument();
+    expect(screen.queryByText("여행자")).not.toBeInTheDocument();
     expect(screen.getByText("1998년 4월 12일")).toBeInTheDocument();
   });
 });

@@ -4,12 +4,12 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Avatar } from "@/components/ui/Avatar";
-import { ChevronDownIcon, LogOutIcon, UserIcon } from "@/components/ui/icons";
+import { ChevronDownIcon, GlobeIcon, LogOutIcon, UserIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { UserType } from "@/lib/auth/types";
 import { useLogout } from "@/lib/auth/useLogout";
 import type { MyProfile } from "@/types/user";
-import { LocaleSwitcher } from "./LocaleSwitcher";
+import { LocaleDialog } from "./LocaleDialog";
 
 export function HeaderAccountMenu({
   accountTitle,
@@ -27,6 +27,7 @@ export function HeaderAccountMenu({
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isLoggingOut, logout } = useLogout(userType);
 
@@ -100,11 +101,18 @@ export function HeaderAccountMenu({
               <UserIcon className="size-[18px] text-muted" />
               {t("viewProfile")}
             </Link>
-            <LocaleSwitcher
-              labelStyle="name"
-              variant="accountMenu"
-              onBeforeLocaleChange={() => setIsOpen(false)}
-            />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setIsOpen(false);
+                setShowLanguageDialog(true);
+              }}
+              className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              <GlobeIcon className="size-[18px] text-muted" />
+              {t("language")}
+            </button>
             <button
               type="button"
               role="menuitem"
@@ -121,6 +129,15 @@ export function HeaderAccountMenu({
           </div>
         ) : null}
       </div>
+
+      {showLanguageDialog ? (
+        <LocaleDialog
+          onClose={() => {
+            setShowLanguageDialog(false);
+            triggerRef.current?.focus();
+          }}
+        />
+      ) : null}
 
       {showLogoutConfirm ? (
         <ConfirmDialog

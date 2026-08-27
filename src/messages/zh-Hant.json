@@ -82,6 +82,7 @@
     "selectLanguage": "選擇語言，當前語言： {language}",
     "languageMenu": "語言選擇",
     "language": "語言",
+    "languageDialogDescription": "請選擇在 HanBuddy 中使用的語言。",
     "home": "首頁",
     "explore": "探索",
     "applications": "我的預訂",

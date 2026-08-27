@@ -318,38 +318,39 @@ describe("SiteHeader", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Language" }));
     fireEvent.click(
-      screen.getByRole("menuitem", { name: "Select language, current language: English" }),
+      within(screen.getByRole("dialog", { name: "Language" })).getByRole("radio", {
+        name: "한국어",
+      }),
     );
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
 
     expect(replace).toHaveBeenCalledWith("/ko/applications");
   });
 
-  it("shows only the current locale until the language menu opens", () => {
+  it("shows only the language action until the language dialog opens", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
-    const trigger = screen.getByRole("menuitem", {
-      name: "Select language, current language: English",
-    });
-    expect(within(trigger).getByText("English")).toBeInTheDocument();
-    expect(screen.queryByRole("menu", { name: "Language selection" })).not.toBeInTheDocument();
+    const trigger = screen.getByRole("menuitem", { name: "Language" });
+    expect(trigger).toHaveTextContent(/^Language$/);
+    expect(trigger).not.toHaveTextContent("English");
+    expect(screen.queryByRole("dialog", { name: "Language" })).not.toBeInTheDocument();
 
     fireEvent.click(trigger);
 
-    const menu = screen.getByRole("menu", { name: "Language selection" });
-    expect(within(menu).getByRole("menuitemradio", { name: "English" })).toHaveAttribute(
+    const dialog = screen.getByRole("dialog", { name: "Language" });
+    expect(within(dialog).getByRole("radio", { name: "English" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
-    expect(within(menu).getByRole("menuitemradio", { name: "한국어" })).toHaveAttribute(
+    expect(within(dialog).getByRole("radio", { name: "한국어" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
-    expect(within(menu).getByRole("menuitemradio", { name: "日本語" })).toBeInTheDocument();
-    expect(within(menu).getByRole("menuitemradio", { name: "简体中文" })).toBeInTheDocument();
-    expect(within(menu).getByRole("menuitemradio", { name: "繁體中文" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "日本語" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "简体中文" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("radio", { name: "繁體中文" })).toBeInTheDocument();
   });
 
   it("localizes the site navigation and mobile menu in Korean", () => {
@@ -372,8 +373,7 @@ describe("SiteHeader", () => {
 
     expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("href", exploreHref);
     fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
-    expect(
-      screen.getByRole("menuitem", { name: `Select language, current language: ${label}` }),
-    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Language" }));
+    expect(screen.getByRole("radio", { name: label })).toHaveAttribute("aria-checked", "true");
   });
 });

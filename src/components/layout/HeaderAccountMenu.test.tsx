@@ -44,27 +44,32 @@ describe("HeaderAccountMenu", () => {
       "href",
       "/en/my-page/profile",
     );
-    expect(
-      within(menu).getByRole("menuitem", {
-        name: "Select language, current language: English",
-      }),
-    ).toBeInTheDocument();
+    const languageItem = within(menu).getByRole("menuitem", { name: "Language" });
+    expect(languageItem).toHaveTextContent(/^Language$/);
+    expect(languageItem).not.toHaveTextContent("English");
     expect(within(menu).getByRole("menuitem", { name: "Log Out" })).toBeInTheDocument();
   });
 
-  it("switches language from inside the account menu", () => {
+  it("opens a separate language dialog and switches locale", () => {
     renderWithQueryClient(
       <HeaderAccountMenu accountTitle="June" profile={null} userType="TOURIST" />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
-    fireEvent.click(
-      screen.getByRole("menuitem", { name: "Select language, current language: English" }),
+    fireEvent.click(screen.getByRole("menuitem", { name: "Language" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Language" });
+    expect(screen.queryByRole("menu", { name: "Account menu" })).not.toBeInTheDocument();
+    expect(within(dialog).getAllByRole("radio")).toHaveLength(5);
+    expect(within(dialog).getByRole("radio", { name: "English" })).toHaveAttribute(
+      "aria-checked",
+      "true",
     );
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
+
+    fireEvent.click(within(dialog).getByRole("radio", { name: "한국어" }));
 
     expect(replace).toHaveBeenCalledWith("/ko/explore");
-    expect(screen.queryByRole("menu", { name: "Account menu" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Language" })).not.toBeInTheDocument();
   });
 
   it("closes on Escape and restores focus to the profile trigger", () => {

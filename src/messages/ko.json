@@ -82,6 +82,7 @@
     "selectLanguage": "언어 선택, 현재 언어: {language}",
     "languageMenu": "언어 선택",
     "language": "언어",
+    "languageDialogDescription": "HanBuddy에서 사용할 언어를 선택하세요.",
     "home": "홈",
     "explore": "탐색",
     "applications": "내 신청",

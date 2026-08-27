@@ -58,16 +58,15 @@ describe("ProfilePage", () => {
     expect(screen.getByText("April 12, 1998")).toBeInTheDocument();
     expect(screen.getByText("Contact")).toBeInTheDocument();
     expect(screen.getByText("+1 5550198")).toBeInTheDocument();
-    expect(screen.getByText("WhatsApp")).toHaveClass("text-primary");
+    expect(screen.getByText("WhatsApp")).toHaveClass("text-primary", "md:text-sm");
     expect(screen.getByTestId("contact-method-divider")).toBeInTheDocument();
     expect(document.querySelector("[data-contact-method-icon]")).not.toBeInTheDocument();
     expect(
       screen.queryByText("This is how your profile appears across HanBuddy."),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Profile summary" })).toHaveClass(
-      "max-w-[520px]",
-      "py-6",
-    );
+    const profileSummary = screen.getByRole("region", { name: "Profile summary" });
+    expect(profileSummary).toHaveClass("max-w-[520px]", "py-6", "md:px-8", "md:py-7");
+    expect(profileSummary).not.toHaveClass("sm:px-8", "sm:py-7");
     expect(screen.queryByRole("link", { name: "Go back" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });

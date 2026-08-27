@@ -1,7 +1,7 @@
 import { fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LocaleDialog } from "@/components/layout/LocaleDialog";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { LocaleDialog } from "./LocaleDialog";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
 

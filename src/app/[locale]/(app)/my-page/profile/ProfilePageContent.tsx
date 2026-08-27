@@ -59,7 +59,7 @@ function ContactValue({
       aria-label={`${methodLabel}: ${value}`}
       className="inline-flex max-w-full items-center justify-end gap-2.5"
     >
-      <span className="shrink-0 text-xs font-bold tracking-[0.08em] text-primary uppercase sm:text-sm">
+      <span className="shrink-0 text-xs font-bold tracking-[0.08em] text-primary uppercase md:text-sm">
         {methodLabel}
       </span>
       <span
@@ -82,12 +82,12 @@ function ProfileDetail({
   value: ReactNode;
 }>) {
   return (
-    <div className="flex items-start justify-between gap-5 border-t border-line-soft py-3.5 first:border-t-0 sm:py-4">
+    <div className="flex items-start justify-between gap-5 border-t border-line-soft py-3.5 first:border-t-0 md:py-4">
       <dt className="flex items-center gap-3 text-sm font-medium text-muted">
         <Icon aria-hidden className="size-[18px] shrink-0" />
         {label}
       </dt>
-      <dd className="min-w-0 text-right text-sm font-semibold break-words text-ink sm:text-base">
+      <dd className="min-w-0 text-right text-sm font-semibold break-words text-ink md:text-base">
         {value}
       </dd>
     </div>
@@ -107,7 +107,7 @@ function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
         <PageContainer className="flex flex-1 justify-center py-4 md:py-6">
           <section
             aria-label={t("summaryLabel")}
-            className="relative w-full max-w-[520px] self-start overflow-hidden rounded-[2rem] border border-line-soft bg-white px-6 py-6 shadow-[0_20px_55px_rgba(38,27,24,0.08)] sm:px-8 sm:py-7"
+            className="relative w-full max-w-[520px] self-start overflow-hidden rounded-[2rem] border border-line-soft bg-white px-6 py-6 shadow-[0_20px_55px_rgba(38,27,24,0.08)] md:px-8 md:py-7"
           >
             <Link
               href="/my-page/edit"
@@ -117,7 +117,7 @@ function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
               {t("editAction")}
             </Link>
 
-            <div className="flex justify-center pt-5 sm:pt-3">
+            <div className="flex justify-center pt-5 md:pt-3">
               <Avatar
                 name={profile.displayName}
                 src={profile.profileImageUrl}
@@ -128,10 +128,10 @@ function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
             </div>
 
             <div className="mt-7 min-w-0">
-              <h2 className="truncate font-display text-2xl font-extrabold tracking-[-0.04em] text-ink sm:text-3xl">
+              <h2 className="truncate font-display text-2xl font-extrabold tracking-[-0.04em] text-ink md:text-3xl">
                 {profile.displayName}
               </h2>
-              <p className="mt-2 flex items-center gap-2 text-sm break-all text-muted sm:text-base">
+              <p className="mt-2 flex items-center gap-2 text-sm break-all text-muted md:text-base">
                 <MailIcon aria-hidden className="size-4 shrink-0" />
                 {profile.email}
               </p>

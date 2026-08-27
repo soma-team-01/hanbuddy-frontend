@@ -157,7 +157,7 @@ describe("EditProfilePage", () => {
       expect(screen.getByRole("button", { name: save })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: back })).toHaveAttribute(
         "href",
-        `/${locale}/my-page`,
+        `/${locale}/my-page/profile`,
       );
     },
   );
@@ -275,7 +275,7 @@ describe("EditProfilePage", () => {
       });
     });
     expect(uploadProfileImage).not.toHaveBeenCalled();
-    expect(replace).toHaveBeenCalledWith("/en/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page/profile");
     expect(queryClient.getQueryData(userKeys.me())).toEqual(
       expect.objectContaining({ displayName: "Sarah J." }),
     );
@@ -316,7 +316,7 @@ describe("EditProfilePage", () => {
         profileImageKey: "profiles/2026/07/07/uuid.png",
       }),
     );
-    expect(replace).toHaveBeenCalledWith("/en/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page/profile");
   });
 
   it("shows the upload error and skips saving when the image upload fails", async () => {
@@ -399,7 +399,7 @@ describe("EditProfilePage", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Check the format of the entered information.");
     expect(alert).not.toHaveTextContent("국적 코드는 영문 대문자 2자리여야 합니다");
-    expect(replace).not.toHaveBeenCalledWith("/en/my-page");
+    expect(replace).not.toHaveBeenCalledWith("/en/my-page/profile");
   });
 
   it("uses the current locale when an in-flight save fails", async () => {

@@ -97,7 +97,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       unwrapApiResult(await updateMyProfile(request), "profile"),
     onSuccess: (updatedProfile) => {
       queryClient.setQueryData(userKeys.me(), updatedProfile);
-      router.replace("/my-page");
+      router.replace("/my-page/profile");
     },
   });
   useAuthQueryRedirect(
@@ -231,7 +231,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     <div className="flex flex-1 flex-col">
       <PageHeader
         title={t("title")}
-        backHref="/my-page"
+        backHref="/my-page/profile"
         action={
           <button
             form="edit-profile-form"
@@ -360,7 +360,7 @@ export function EditProfilePageContent() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title={t("title")} backHref="/my-page" />
+      <PageHeader title={t("title")} backHref="/my-page/profile" />
       <PageContainer className="flex flex-1 flex-col items-center gap-4 py-8">
         {result?.status === "error" ? (
           <p role="alert" className="text-sm text-danger">

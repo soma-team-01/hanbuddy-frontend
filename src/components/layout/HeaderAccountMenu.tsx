@@ -90,15 +90,15 @@ export function HeaderAccountMenu({
           <div
             role="menu"
             aria-label={t("accountMenu")}
-            className="absolute top-[calc(100%+10px)] right-0 z-50 w-64 overflow-hidden rounded-2xl border border-line-soft bg-white p-2 shadow-[0_18px_48px_rgba(38,27,24,0.16)]"
+            className="absolute top-[calc(100%+8px)] right-0 z-50 w-52 overflow-hidden rounded-xl border border-line-soft bg-white p-1.5 shadow-[0_14px_36px_rgba(38,27,24,0.14)]"
           >
             <Link
               href="/my-page/profile"
               role="menuitem"
               onClick={() => setIsOpen(false)}
-              className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex min-h-10 items-center gap-2.5 rounded-lg px-2.5 text-[13px] font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"
             >
-              <UserIcon className="size-[18px] text-muted" />
+              <UserIcon className="size-4 text-muted" />
               {t("viewProfile")}
             </Link>
             <button
@@ -108,9 +108,9 @@ export function HeaderAccountMenu({
                 setIsOpen(false);
                 setShowLanguageDialog(true);
               }}
-              className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"
             >
-              <GlobeIcon className="size-[18px] text-muted" />
+              <GlobeIcon className="size-4 text-muted" />
               {t("language")}
             </button>
             <button
@@ -121,9 +121,9 @@ export function HeaderAccountMenu({
                 setIsOpen(false);
                 setShowLogoutConfirm(true);
               }}
-              className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-danger transition-colors enabled:hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex min-h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] font-semibold text-danger transition-colors enabled:hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <LogOutIcon className="size-[18px]" />
+              <LogOutIcon className="size-4" />
               {isLoggingOut ? tMyPage("loggingOut") : tMyPage("logOut")}
             </button>
           </div>

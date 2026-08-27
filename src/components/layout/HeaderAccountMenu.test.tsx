@@ -39,11 +39,11 @@ describe("HeaderAccountMenu", () => {
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     const menu = screen.getByRole("menu", { name: "Account menu" });
+    expect(menu).toHaveClass("w-52", "p-1.5", "rounded-xl");
     expect(within(menu).getAllByRole("menuitem")).toHaveLength(3);
-    expect(within(menu).getByRole("menuitem", { name: "View profile" })).toHaveAttribute(
-      "href",
-      "/en/my-page/profile",
-    );
+    const profileItem = within(menu).getByRole("menuitem", { name: "View profile" });
+    expect(profileItem).toHaveAttribute("href", "/en/my-page/profile");
+    expect(profileItem).toHaveClass("min-h-10", "gap-2.5", "px-2.5");
     const languageItem = within(menu).getByRole("menuitem", { name: "Language" });
     expect(languageItem).toHaveTextContent(/^Language$/);
     expect(languageItem).not.toHaveTextContent("English");

@@ -56,6 +56,7 @@ describe("ProfilePage", () => {
     expect(screen.getByText("user@example.com")).toBeInTheDocument();
     expect(screen.getByText("United States")).toBeInTheDocument();
     expect(screen.getByText("April 12, 1998")).toBeInTheDocument();
+    expect(screen.getByText("Contact")).toBeInTheDocument();
     expect(screen.getByText("+1 5550198")).toBeInTheDocument();
     expect(screen.getByText("WhatsApp")).toHaveClass("text-primary");
     expect(screen.getByTestId("contact-method-divider")).toBeInTheDocument();
@@ -105,6 +106,7 @@ describe("ProfilePage", () => {
     expect(await screen.findByText("미국")).toBeInTheDocument();
     expect(screen.queryByText("여행자")).not.toBeInTheDocument();
     expect(screen.getByText("1998년 4월 12일")).toBeInTheDocument();
+    expect(screen.getByText("연락처")).toBeInTheDocument();
   });
 });
 

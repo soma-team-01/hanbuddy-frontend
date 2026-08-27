@@ -61,7 +61,10 @@ describe("ProfilePage", () => {
     expect(
       screen.queryByText("This is how your profile appears across HanBuddy."),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Profile summary" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Profile summary" })).toHaveClass(
+      "max-w-[520px]",
+      "py-6",
+    );
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 

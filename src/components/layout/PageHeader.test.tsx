@@ -24,6 +24,13 @@ describe("PageHeader", () => {
     expect(screen.getByText("Manage your experiences.")).toHaveClass("text-muted");
   });
 
+  it("supports a compact layout for focused profile screens", () => {
+    renderWithIntl(<PageHeader title="Profile" compact />);
+
+    expect(screen.getByTestId("page-header-content")).toHaveClass("min-h-20", "md:min-h-24");
+    expect(screen.getByRole("heading", { name: "Profile" })).toHaveClass("text-2xl", "md:text-3xl");
+  });
+
   it("renders a back button instead of a link when onLeftClick is provided", () => {
     const onLeftClick = vi.fn();
     renderWithIntl(<PageHeader title="Create" onLeftClick={onLeftClick} />);

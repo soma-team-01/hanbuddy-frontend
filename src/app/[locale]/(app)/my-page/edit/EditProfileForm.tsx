@@ -15,7 +15,7 @@ import {
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
-import { CameraIcon } from "@/components/ui/icons";
+import { CameraIcon, MailIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useMyProfile } from "@/lib/api/useMyProfile";
@@ -71,7 +71,6 @@ interface EditProfileFormProps {
 
 export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const t = useTranslations("Profile");
-  const tMyPage = useTranslations("MyPage");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -213,17 +212,17 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     <Image
       src={profileImagePreview}
       alt={t("selectedProfilePhotoPreview")}
-      width={144}
-      height={144}
+      width={112}
+      height={112}
       unoptimized
-      className="size-36 shrink-0 rounded-full border border-line-strong object-cover ring-1 ring-line-soft ring-offset-8 ring-offset-white"
+      className="size-28 shrink-0 rounded-full border border-line-strong object-cover ring-1 ring-line-soft ring-offset-5 ring-offset-white"
     />
   ) : (
     <Avatar
       name={profile.displayName}
       src={profile.profileImageUrl}
-      size={144}
-      className="ring-1 ring-line-soft ring-offset-8 ring-offset-white"
+      size={112}
+      className="ring-1 ring-line-soft ring-offset-5 ring-offset-white"
     />
   );
   let errorMessage: string | null = null;
@@ -238,6 +237,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       <PageHeader
         title={t("title")}
         backHref="/my-page/profile"
+        compact
         action={
           <button
             form="edit-profile-form"
@@ -249,116 +249,118 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
           </button>
         }
       />
-      <main className="flex-1 py-6 md:py-10">
+      <main className="flex-1 py-4 md:py-6">
         <PageContainer>
           <form
             id="edit-profile-form"
             aria-label={t("title")}
             noValidate
             onSubmit={handleSubmit}
-            className="mx-auto w-full max-w-[680px] rounded-[2rem] border border-line-soft bg-white px-6 py-8 shadow-[0_24px_70px_rgba(38,27,24,0.09)] sm:px-10 sm:py-10 md:rounded-[2.5rem]"
+            className="mx-auto w-full max-w-[900px] rounded-[2rem] border border-line-soft bg-white px-5 py-6 shadow-[0_20px_55px_rgba(38,27,24,0.08)] sm:px-7 lg:px-8"
           >
-            <section className="relative flex flex-col items-center pt-5 text-center">
-              <span className="absolute top-0 right-0 inline-flex items-center rounded-full border border-line-soft px-3 py-1.5 text-xs font-bold tracking-[0.12em] text-primary-strong uppercase">
-                {tMyPage(profile.userType === "BUDDY" ? "buddy" : "tourist")}
-              </span>
-              <div className="relative">
-                {profilePhoto}
-                <label className="absolute -right-2 -bottom-2 flex size-10 cursor-pointer items-center justify-center rounded-full border border-line-strong bg-white text-primary-strong shadow-sm transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:border-primary hover:text-primary">
-                  <CameraIcon className="size-4" />
-                  <span className="sr-only">{t("addProfilePhoto")}</span>
-                  <input
-                    type="file"
-                    accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
-                    className="sr-only"
-                    onChange={handleProfileImageChange}
-                  />
-                </label>
-              </div>
-              <h2 className="mt-8 font-display text-2xl font-extrabold tracking-[-0.03em] text-ink">
-                {profile.displayName}
-              </h2>
-              <p className="mt-1 text-sm break-all text-muted">{profile.email}</p>
-            </section>
-
-            <section
-              aria-labelledby="profile-fields-title"
-              className="mt-10 border-t border-line-soft pt-8"
+            <div
+              data-testid="edit-profile-layout"
+              className="grid gap-7 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-8"
             >
-              <h2
-                id="profile-fields-title"
-                className="font-display text-xl font-bold tracking-tight text-ink"
-              >
-                {t("viewDetails")}
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-muted">{t("viewDetailsDescription")}</p>
-
-              <label className="mt-6 flex flex-col gap-2">
-                <span className="text-sm font-medium text-ink">{t("fullName")}</span>
-                <input
-                  name="displayName"
-                  type="text"
-                  required
-                  minLength={2}
-                  maxLength={30}
-                  defaultValue={profile.displayName}
-                  className="w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
-              </label>
-              <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-ink">{t("nationality")}</span>
-                  <CountrySelect
-                    value={nationality}
-                    onChange={handleNationalityChange}
-                    ariaLabel={t("nationality")}
-                    triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink outline-none transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
-                  />
+              <section className="flex items-center gap-5 lg:flex-col lg:pt-2 lg:text-center">
+                <div className="relative">
+                  {profilePhoto}
+                  <label className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center rounded-full border border-line-strong bg-white text-primary-strong shadow-sm transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:border-primary hover:text-primary">
+                    <CameraIcon className="size-4" />
+                    <span className="sr-only">{t("addProfilePhoto")}</span>
+                    <input
+                      type="file"
+                      accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
+                      className="sr-only"
+                      onChange={handleProfileImageChange}
+                    />
+                  </label>
                 </div>
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-ink">{t("age")}</span>
-                  <input
-                    name="birthDate"
-                    type="date"
-                    max={getLocalDateInputValue(new Date())}
-                    required
-                    defaultValue={profile.birthDate}
-                    className="w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  />
-                </label>
-              </div>
-            </section>
+                <p className="flex min-w-0 items-center gap-2 text-sm break-all text-muted lg:justify-center">
+                  <MailIcon aria-hidden className="size-4 shrink-0" />
+                  {profile.email}
+                </p>
+              </section>
 
-            <section className="mt-8 flex flex-col gap-4 border-t border-line-soft pt-8">
-              <h2 className="font-display text-xl font-bold tracking-tight text-ink">
-                {t("contactDetails")}
-              </h2>
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-ink">{t("preferredMessagingApp")}</span>
-                <MessagingAppField
-                  app={messagingApp}
-                  onAppChange={handleMessagingAppChange}
-                  country={messagingCountry}
-                  onCountryChange={handleMessagingCountryChange}
-                  contactValue={messagingContact}
-                  onContactChange={setMessagingContact}
-                  inputRequired
-                  koreanOnly={isBuddy}
-                  variant="cards"
-                />
-              </div>
-            </section>
+              <div className="min-w-0">
+                <section aria-labelledby="profile-fields-title">
+                  <h2
+                    id="profile-fields-title"
+                    className="font-display text-lg font-bold tracking-tight text-ink"
+                  >
+                    {t("viewDetails")}
+                  </h2>
 
-            {errorMessage ? (
-              <p
-                role="alert"
-                className="mt-8 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-              >
-                {errorMessage}
-              </p>
-            ) : null}
+                  <label className="mt-4 flex flex-col gap-1.5">
+                    <span className="text-sm font-medium text-ink">{t("fullName")}</span>
+                    <input
+                      name="displayName"
+                      type="text"
+                      required
+                      minLength={2}
+                      maxLength={30}
+                      defaultValue={profile.displayName}
+                      className="w-full rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    />
+                  </label>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium text-ink">{t("nationality")}</span>
+                      <CountrySelect
+                        value={nationality}
+                        onChange={handleNationalityChange}
+                        ariaLabel={t("nationality")}
+                        triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink outline-none transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
+                      />
+                    </div>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium text-ink">{t("age")}</span>
+                      <input
+                        name="birthDate"
+                        type="date"
+                        max={getLocalDateInputValue(new Date())}
+                        required
+                        defaultValue={profile.birthDate}
+                        className="w-full rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                      />
+                    </label>
+                  </div>
+                </section>
+
+                <section className="mt-5 flex flex-col gap-3 border-t border-line-soft pt-5">
+                  <h2 className="font-display text-lg font-bold tracking-tight text-ink">
+                    {t("contactDetails")}
+                  </h2>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-ink">
+                      {t("preferredMessagingApp")}
+                    </span>
+                    <MessagingAppField
+                      app={messagingApp}
+                      onAppChange={handleMessagingAppChange}
+                      country={messagingCountry}
+                      onCountryChange={handleMessagingCountryChange}
+                      contactValue={messagingContact}
+                      onContactChange={setMessagingContact}
+                      inputRequired
+                      koreanOnly={isBuddy}
+                      variant="cards"
+                    />
+                  </div>
+                </section>
+
+                {errorMessage ? (
+                  <p
+                    role="alert"
+                    className="mt-5 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+                  >
+                    {errorMessage}
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </form>
-          <div className="mx-auto mt-6 w-full max-w-[680px] lg:hidden">
+          <div className="mx-auto mt-6 w-full max-w-[900px] lg:hidden">
             <BottomActionBar>
               <button
                 form="edit-profile-form"
@@ -388,8 +390,8 @@ export function EditProfilePageContent() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title={t("title")} backHref="/my-page/profile" />
-      <PageContainer className="flex flex-1 flex-col items-center gap-4 py-8">
+      <PageHeader title={t("title")} backHref="/my-page/profile" compact />
+      <PageContainer className="flex flex-1 flex-col items-center gap-4 py-4 md:py-6">
         {result?.status === "error" ? (
           <p role="alert" className="text-sm text-danger">
             {getApiErrorMessage(result.error, t("loadFailed"))}

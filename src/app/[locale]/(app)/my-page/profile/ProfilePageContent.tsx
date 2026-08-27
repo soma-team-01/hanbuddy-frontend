@@ -93,7 +93,7 @@ function ProfileDetail({
   value: ReactNode;
 }>) {
   return (
-    <div className="flex items-start justify-between gap-5 border-t border-line-soft py-5 first:border-t-0">
+    <div className="flex items-start justify-between gap-5 border-t border-line-soft py-3.5 first:border-t-0 sm:py-4">
       <dt className="flex items-center gap-3 text-sm font-medium text-muted">
         <Icon aria-hidden className="size-[18px] shrink-0" />
         {label}
@@ -112,34 +112,34 @@ function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title={t("viewTitle")} backHref="/my-page" />
+      <PageHeader title={t("viewTitle")} backHref="/my-page" compact />
 
       <main className="flex flex-1 flex-col">
-        <PageContainer className="flex flex-1 justify-center py-8 md:py-12">
+        <PageContainer className="flex flex-1 justify-center py-4 md:py-6">
           <section
             aria-label={t("summaryLabel")}
-            className="relative w-full max-w-[560px] self-start overflow-hidden rounded-[2rem] border border-line-soft bg-white px-6 py-8 shadow-[0_24px_70px_rgba(38,27,24,0.09)] sm:px-10 sm:py-10 md:rounded-[2.5rem]"
+            className="relative w-full max-w-[520px] self-start overflow-hidden rounded-[2rem] border border-line-soft bg-white px-6 py-6 shadow-[0_20px_55px_rgba(38,27,24,0.08)] sm:px-8 sm:py-7"
           >
             <Link
               href="/my-page/edit"
-              className="absolute top-6 right-6 inline-flex min-h-10 items-center gap-2 rounded-full border border-line-strong bg-white px-4 text-sm font-bold text-primary-strong shadow-[0_6px_18px_rgba(38,27,24,0.06)] transition-colors hover:border-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="absolute top-5 right-5 inline-flex min-h-9 items-center gap-2 rounded-full border border-line-strong bg-white px-3.5 text-sm font-bold text-primary-strong shadow-[0_6px_18px_rgba(38,27,24,0.06)] transition-colors hover:border-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <PencilIcon aria-hidden className="size-4" />
               {t("editAction")}
             </Link>
 
-            <div className="flex justify-center pt-8 sm:pt-6">
+            <div className="flex justify-center pt-5 sm:pt-3">
               <Avatar
                 name={profile.displayName}
                 src={profile.profileImageUrl}
-                size={160}
+                size={120}
                 eagerImage
-                className="ring-1 ring-line-soft ring-offset-8 ring-offset-white"
+                className="ring-1 ring-line-soft ring-offset-6 ring-offset-white"
               />
             </div>
 
-            <div className="mt-10 min-w-0">
-              <h2 className="truncate font-display text-3xl font-extrabold tracking-[-0.04em] text-ink sm:text-4xl">
+            <div className="mt-7 min-w-0">
+              <h2 className="truncate font-display text-2xl font-extrabold tracking-[-0.04em] text-ink sm:text-3xl">
                 {profile.displayName}
               </h2>
               <p className="mt-2 flex items-center gap-2 text-sm break-all text-muted sm:text-base">
@@ -148,7 +148,7 @@ function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
               </p>
             </div>
 
-            <div className="mt-8 border-t border-line-soft pt-2">
+            <div className="mt-5 border-t border-line-soft pt-1">
               <h3 className="sr-only">{t("viewDetails")}</h3>
               <p className="sr-only">{t("viewDetailsDescription")}</p>
               <dl>
@@ -187,8 +187,8 @@ export function ProfilePageContent() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title={t("viewTitle")} backHref="/my-page" />
-      <PageContainer className="flex max-w-[900px] flex-1 flex-col py-8 md:py-12">
+      <PageHeader title={t("viewTitle")} backHref="/my-page" compact />
+      <PageContainer className="flex max-w-[900px] flex-1 flex-col py-4 md:py-6">
         {result?.status === "error" ? (
           <p role="alert" className="text-sm text-danger">
             {getApiErrorMessage(result.error, t("loadFailed"))}

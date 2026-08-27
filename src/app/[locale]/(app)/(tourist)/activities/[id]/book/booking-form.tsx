@@ -340,7 +340,7 @@ export function BookingForm({
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
-                  className="w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm text-ink transition-colors outline-none placeholder:text-muted/60 focus:border-primary"
+                  className="focus-border-only w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm text-ink transition-colors placeholder:text-muted/60 focus:border-primary"
                 />
               </label>
             </section>

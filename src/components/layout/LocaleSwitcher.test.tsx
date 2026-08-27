@@ -67,6 +67,10 @@ describe("LocaleSwitcher", () => {
     renderWithIntl(<LocaleSwitcher labelStyle="nameWithCode" variant="footer" />, { locale: "en" });
 
     expect(screen.getByRole("button", { expanded: false })).toHaveClass("text-xs", "font-medium");
+    expect(screen.getByRole("button", { expanded: false })).toHaveClass("hover:text-primary");
+    expect(screen.getByRole("button", { expanded: false })).not.toHaveClass(
+      "hover:text-primary-strong",
+    );
     expect(screen.getByRole("button", { expanded: false })).not.toHaveClass("text-sm", "font-bold");
   });
 

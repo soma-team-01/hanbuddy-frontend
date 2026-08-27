@@ -157,6 +157,10 @@ describe("BookingForm", () => {
     ).toBeInTheDocument();
     // 특별 요청 칸은 처음부터 표시되고 비어 있으면 대시로 보인다
     expect(screen.getByTestId("summary-special-request")).toHaveTextContent("—");
+    expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveClass(
+      "focus-border-only",
+      "focus:border-primary",
+    );
     const tooltip = screen.getByRole("tooltip");
     expect(tooltip).toHaveTextContent("48+ hours before the activity");
     expect(tooltip).toHaveTextContent("Full refund");

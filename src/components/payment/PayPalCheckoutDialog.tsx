@@ -18,6 +18,7 @@ import {
   getPayPalEnvironment,
   getPayPalLocale,
 } from "@/lib/payments/paypal";
+import { storePayPalRedirectContext } from "@/lib/payments/paypal-redirect-context";
 import { unwrapApiResult } from "@/lib/query/result";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
 
@@ -85,6 +86,12 @@ function PayPalCheckoutAction({
       {payment.approvalUrl ? (
         <a
           href={payment.approvalUrl}
+          onClick={() =>
+            storePayPalRedirectContext({
+              applicationId: String(payment.application.applicationId),
+              orderId: payment.providerOrderId,
+            })
+          }
           className="flex h-11 items-center justify-center rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
         >
           {showFallback ? t("redirectFallback") : t("openInNewPage")}
@@ -138,6 +145,12 @@ export function PayPalCheckoutDialog({
         ) : payment.approvalUrl ? (
           <a
             href={payment.approvalUrl}
+            onClick={() =>
+              storePayPalRedirectContext({
+                applicationId: String(payment.application.applicationId),
+                orderId: payment.providerOrderId,
+              })
+            }
             className="flex h-12 w-full items-center justify-center rounded-xl bg-[#ffc439] font-display text-sm font-bold text-[#111] transition-opacity hover:opacity-90"
           >
             {t("continueWithPayPal")}

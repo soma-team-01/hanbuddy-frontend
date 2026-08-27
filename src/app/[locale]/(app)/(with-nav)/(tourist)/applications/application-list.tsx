@@ -24,7 +24,11 @@ import { isTossUserCancel } from "@/lib/payments/toss";
 import { activityWeatherQueryOptions } from "@/lib/query/activities";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { WeatherCondition } from "@/types/activity";
-import type { Application, ApplicationCancellationReason } from "@/types/application";
+import type {
+  Application,
+  ApplicationCancellationReason,
+  PaymentProvider,
+} from "@/types/application";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
@@ -204,14 +208,14 @@ function ApplicationCard({
   application: Application;
   onCancel: () => void;
   onCancelPending: () => void;
-  onContinuePayment: (applicationId: string) => Promise<void>;
+  onContinuePayment: (applicationId: string, paymentProvider: PaymentProvider) => Promise<void>;
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
-  const [paymentInFlight, setPaymentInFlight] = useState(false);
+  const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
   const getApiErrorMessage = useApiErrorMessage();
@@ -224,7 +228,7 @@ function ApplicationCard({
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
-  const isPaymentBusy = isPaymentPending || paymentInFlight;
+  const isPaymentBusy = isPaymentPending || paymentInFlight !== null;
   // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 내린다 (조회 후 종료 시각이 지난 경우)
   const hasEnded = hasDateTimePassed(application.endAt);
 
@@ -282,19 +286,37 @@ function ApplicationCard({
                   disabled={isPaymentBusy}
                   onClick={async () => {
                     setPaymentError(null);
-                    setPaymentInFlight(true);
+                    setPaymentInFlight("TOSS");
                     try {
                       // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
-                      await onContinuePayment(application.id);
+                      await onContinuePayment(application.id, "TOSS");
                     } catch (error) {
                       if (!isTossUserCancel(error)) showPaymentError(error);
                     } finally {
-                      setPaymentInFlight(false);
+                      setPaymentInFlight(null);
                     }
                   }}
                   className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
                 >
-                  {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
+                  {paymentInFlight === "TOSS" ? t("paymentProcessing") : t("continueWithToss")}
+                </button>
+                <button
+                  type="button"
+                  disabled={isPaymentBusy}
+                  onClick={async () => {
+                    setPaymentError(null);
+                    setPaymentInFlight("PAYPAL");
+                    try {
+                      await onContinuePayment(application.id, "PAYPAL");
+                    } catch (error) {
+                      showPaymentError(error);
+                    } finally {
+                      setPaymentInFlight(null);
+                    }
+                  }}
+                  className={`${CARD_ACTION_CLASS} bg-[#ffc439] text-[#111] enabled:hover:opacity-90`}
+                >
+                  {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : t("continueWithPayPal")}
                 </button>
                 <button
                   type="button"
@@ -403,7 +425,7 @@ export function ApplicationList({
     detail?: string,
   ) => Promise<CancelDialogOutcome>;
   onCancelPendingPayment: (applicationId: string) => Promise<CancelDialogOutcome>;
-  onContinuePayment: (applicationId: string) => Promise<void>;
+  onContinuePayment: (applicationId: string, paymentProvider: PaymentProvider) => Promise<void>;
   /** 좌석 선점이 만료되면 목록을 다시 불러오도록 알린다 */
   onHoldExpired?: () => void;
   isPaymentPending: boolean;

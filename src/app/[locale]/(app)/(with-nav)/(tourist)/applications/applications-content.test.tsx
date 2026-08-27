@@ -10,7 +10,7 @@ import { ApiClientError } from "@/lib/api/errors";
 import { getActivityWeather } from "@/lib/api/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import type { ApplicationResponse } from "@/types/application";
+import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
 import { requestTossPayment } from "@/lib/payments/toss";
 import { ApplicationsContent } from "./applications-content";
 
@@ -36,6 +36,12 @@ vi.mock("@/lib/api/activities", () => ({
 vi.mock("@/lib/payments/toss", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/payments/toss")>()),
   requestTossPayment: vi.fn(),
+}));
+
+vi.mock("@/components/payment/PayPalCheckoutDialog", () => ({
+  PayPalCheckoutDialog: ({ payment }: { payment: PaymentReadyResponse }) => (
+    <div data-testid="paypal-checkout">{payment.providerOrderId}</div>
+  ),
 }));
 
 const mockedGetActivityWeather = vi.mocked(getActivityWeather);
@@ -104,6 +110,10 @@ describe("ApplicationsContent", () => {
     const paymentReady = {
       application: pendingApplication,
       paymentId: 7,
+      paymentProvider: "TOSS" as const,
+      paymentAttemptId: 12,
+      providerOrderId: "hanbuddy-11-order",
+      approvalUrl: null,
       orderNumber: "hanbuddy-11-order",
       clientKey: "test_ck_client-key",
       orderName: "Bukchon Hidden Gems",
@@ -124,12 +134,53 @@ describe("ApplicationsContent", () => {
     renderWithQueryClient(<ApplicationsContent />);
 
     expect(await screen.findByText("₩90,000")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
     await waitFor(() => {
       expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
     });
-    expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11", "EN");
+    expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11", "EN", "TOSS");
+  });
+
+  it("switches a pending application to PayPal payment", async () => {
+    const pendingApplication: ApplicationResponse = {
+      ...confirmedApplication,
+      status: "PENDING_PAYMENT",
+      paymentAmount: null,
+      paymentCurrency: null,
+    };
+    const payPalPayment = {
+      application: pendingApplication,
+      paymentId: 7,
+      paymentProvider: "PAYPAL" as const,
+      paymentAttemptId: 13,
+      providerOrderId: "5O190127TN364715T",
+      approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
+      orderNumber: "hanbuddy-11-paypal",
+      clientKey: null,
+      orderName: "Bukchon Hidden Gems",
+      paymentStatus: "CREATED" as const,
+      paymentAmount: 68.97,
+      paymentCurrency: "USD",
+      orderExpiresAt: "2026-07-14T13:00:00+09:00",
+    };
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [pendingApplication],
+    });
+    mockedContinueApplicationPayment.mockResolvedValue({
+      status: "success",
+      payment: payPalPayment,
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Pay with PayPal" }));
+
+    await waitFor(() =>
+      expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11", "EN", "PAYPAL"),
+    );
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+    expect(await screen.findByTestId("paypal-checkout")).toHaveTextContent("5O190127TN364715T");
   });
 
   it("shows the seat-hold countdown from the application response", async () => {

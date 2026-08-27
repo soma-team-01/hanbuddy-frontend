@@ -28,7 +28,6 @@ const DESTINATIONS = {
     { href: "/home", labelKey: "home" },
     { href: "/dashboard", labelKey: "dashboard" },
     { href: "/my-activities", labelKey: "myActivities" },
-    { href: "/my-page", labelKey: "myPage" },
   ],
   guest: [
     { href: "/", labelKey: "home" },

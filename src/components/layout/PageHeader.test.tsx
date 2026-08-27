@@ -8,7 +8,12 @@ describe("PageHeader", () => {
     renderWithIntl(<PageHeader title="Applicants" />);
 
     expect(screen.getByTestId("page-header")).not.toHaveClass("sticky", "top-0");
-    expect(screen.getByRole("heading", { name: "Applicants" })).toHaveClass("text-ink");
+    expect(screen.getByTestId("page-header-content")).toHaveClass("min-h-24", "md:min-h-28");
+    expect(screen.getByRole("heading", { name: "Applicants" })).toHaveClass(
+      "text-2xl",
+      "md:text-3xl",
+      "text-ink",
+    );
   });
 
   it("keeps custom titles as plain headings", () => {
@@ -28,7 +33,8 @@ describe("PageHeader", () => {
     renderWithIntl(<PageHeader title="Profile" compact />);
 
     expect(screen.getByTestId("page-header-content")).toHaveClass("min-h-20", "md:min-h-24");
-    expect(screen.getByRole("heading", { name: "Profile" })).toHaveClass("text-2xl", "md:text-3xl");
+    expect(screen.getByRole("heading", { name: "Profile" })).toHaveClass("text-2xl");
+    expect(screen.getByRole("heading", { name: "Profile" })).not.toHaveClass("md:text-3xl");
   });
 
   it("renders a back button instead of a link when onLeftClick is provided", () => {

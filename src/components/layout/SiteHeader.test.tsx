@@ -81,6 +81,9 @@ describe("SiteHeader", () => {
       "href",
       "/en/my-activities",
     );
+    expect(
+      within(mobileNavigation).queryByRole("link", { name: "My Page" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Select language/ })).not.toBeInTheDocument();
   });
 

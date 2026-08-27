@@ -57,7 +57,7 @@ export function PageHeader({
       <PageContainer
         data-testid="page-header-content"
         className={`flex items-end gap-3 ${
-          compact ? "min-h-20 py-4 md:min-h-24 md:py-5" : "min-h-28 py-6 md:min-h-36 md:py-8"
+          compact ? "min-h-20 py-4 md:min-h-24 md:py-5" : "min-h-24 py-5 md:min-h-28 md:py-6"
         }`}
       >
         {leftSlot}
@@ -65,7 +65,7 @@ export function PageHeader({
           {title ? (
             <h1
               className={`font-display font-extrabold tracking-[-0.04em] text-ink ${
-                compact ? "text-2xl md:text-3xl" : "text-3xl md:text-4xl"
+                compact ? "text-2xl" : "text-2xl md:text-3xl"
               }`}
             >
               {title}

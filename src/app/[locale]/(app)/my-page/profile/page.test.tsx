@@ -65,6 +65,7 @@ describe("ProfilePage", () => {
       "max-w-[520px]",
       "py-6",
     );
+    expect(screen.queryByRole("link", { name: "Go back" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 

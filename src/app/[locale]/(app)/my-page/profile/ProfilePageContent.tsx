@@ -112,7 +112,7 @@ function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title={t("viewTitle")} backHref="/my-page" compact />
+      <PageHeader title={t("viewTitle")} compact />
 
       <main className="flex flex-1 flex-col">
         <PageContainer className="flex flex-1 justify-center py-4 md:py-6">
@@ -187,7 +187,7 @@ export function ProfilePageContent() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title={t("viewTitle")} backHref="/my-page" compact />
+      <PageHeader title={t("viewTitle")} compact />
       <PageContainer className="flex max-w-[900px] flex-1 flex-col py-4 md:py-6">
         {result?.status === "error" ? (
           <p role="alert" className="text-sm text-danger">

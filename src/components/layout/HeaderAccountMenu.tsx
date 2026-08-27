@@ -92,7 +92,7 @@ export function HeaderAccountMenu({
             className="absolute top-[calc(100%+10px)] right-0 z-50 w-64 overflow-hidden rounded-2xl border border-line-soft bg-white p-2 shadow-[0_18px_48px_rgba(38,27,24,0.16)]"
           >
             <Link
-              href="/my-page"
+              href="/my-page/edit"
               role="menuitem"
               onClick={() => setIsOpen(false)}
               className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-ink transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary"

@@ -42,7 +42,7 @@ describe("HeaderAccountMenu", () => {
     expect(within(menu).getAllByRole("menuitem")).toHaveLength(3);
     expect(within(menu).getByRole("menuitem", { name: "View profile" })).toHaveAttribute(
       "href",
-      "/en/my-page",
+      "/en/my-page/edit",
     );
     expect(
       within(menu).getByRole("menuitem", {

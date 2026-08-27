@@ -210,7 +210,7 @@ describe("SiteHeader", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Open account menu" })[0]);
     expect(screen.getByRole("menuitem", { name: "View profile" })).toHaveAttribute(
       "href",
-      "/en/my-page",
+      "/en/my-page/edit",
     );
     expect(screen.getAllByAltText("June")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");

@@ -1243,5 +1243,15 @@
       "schedulesTooMany": "You can add up to 30 sessions.",
       "itineraryTooMany": "You can add up to 20 itinerary activities."
     }
+  },
+  "PayPalPayment": {
+    "title": "Complete payment with PayPal",
+    "description": "Review and approve the {amount} payment in PayPal.",
+    "loading": "Loading PayPal...",
+    "continueWithPayPal": "Continue with PayPal",
+    "openInNewPage": "Open PayPal in a new page",
+    "redirectFallback": "Continue on the PayPal website",
+    "captureFailed": "We could not verify the PayPal payment. Check My Applications before trying again.",
+    "unavailable": "PayPal is temporarily unavailable. Please choose Toss Payments."
   }
 }

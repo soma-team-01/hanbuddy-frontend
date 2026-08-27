@@ -31,6 +31,9 @@ export async function requestTossPayment(
   ready: PaymentReadyResponse,
   locale: Locale,
 ): Promise<void> {
+  if (ready.paymentProvider !== "TOSS" || !ready.clientKey) {
+    throw new Error("토스 결제 준비 정보가 올바르지 않습니다.");
+  }
   const tossPayments = await loadTossPayments(ready.clientKey);
   const payment = tossPayments.payment({ customerKey: ANONYMOUS });
   const origin = window.location.origin;

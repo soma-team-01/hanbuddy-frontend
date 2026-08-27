@@ -37,6 +37,10 @@ const paymentReady: PaymentReadyResponse = {
     createdAt: "2026-08-09T10:00:00Z",
   },
   paymentId: 7,
+  paymentProvider: "TOSS",
+  paymentAttemptId: 12,
+  providerOrderId: "hanbuddy-11-order",
+  approvalUrl: null,
   orderNumber: "hanbuddy-11-order",
   clientKey: "test_ck_client-key",
   orderName: "Bukchon Hidden Gems",
@@ -84,6 +88,13 @@ describe("requestTossPayment", () => {
     );
     const request = requestPayment.mock.calls[0][0];
     expect(request.successUrl).toContain("/en/payments/success?applicationId=11");
+  });
+
+  it("rejects payment data created for another provider", async () => {
+    await expect(
+      requestTossPayment({ ...paymentReady, paymentProvider: "PAYPAL", clientKey: null }, "en"),
+    ).rejects.toThrow("토스 결제 준비 정보가 올바르지 않습니다.");
+    expect(mockedLoadTossPayments).not.toHaveBeenCalled();
   });
 });
 

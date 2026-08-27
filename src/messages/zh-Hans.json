@@ -1243,5 +1243,15 @@
       "schedulesTooMany": "您最多可以添加 30 个会话。",
       "itineraryTooMany": "您最多可以添加 20 项行程活动。"
     }
+  },
+  "PayPalPayment": {
+    "title": "使用PayPal完成付款",
+    "description": "请在PayPal中确认并批准{amount}付款。",
+    "loading": "正在加载PayPal...",
+    "continueWithPayPal": "使用PayPal继续",
+    "openInNewPage": "在新页面打开PayPal",
+    "redirectFallback": "前往PayPal网站继续",
+    "captureFailed": "无法确认PayPal付款。再次付款前，请先查看我的申请。",
+    "unavailable": "PayPal暂时无法使用。请选择Toss Payments。"
   }
 }

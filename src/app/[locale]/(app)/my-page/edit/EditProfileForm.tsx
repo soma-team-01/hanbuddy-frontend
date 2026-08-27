@@ -234,21 +234,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader
-        title={t("title")}
-        backHref="/my-page/profile"
-        compact
-        action={
-          <button
-            form="edit-profile-form"
-            type="submit"
-            disabled={isSaving}
-            className="hidden rounded-lg px-3 py-2 font-display text-sm font-bold text-primary-strong enabled:hover:bg-primary-soft disabled:opacity-60 lg:block"
-          >
-            {isSaving ? t("saving") : t("save")}
-          </button>
-        }
-      />
+      <PageHeader title={t("title")} backHref="/my-page/profile" compact />
       <main className="flex-1 py-4 md:py-6">
         <PageContainer>
           <form
@@ -345,6 +331,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                       inputRequired
                       koreanOnly={isBuddy}
                       variant="cards"
+                      singleRowOnDesktop
                     />
                   </div>
                 </section>
@@ -357,6 +344,16 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                     {errorMessage}
                   </p>
                 ) : null}
+
+                <div className="mt-4 hidden justify-end lg:flex">
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex min-h-10 items-center justify-center rounded-xl bg-primary px-6 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+                  >
+                    {isSaving ? t("saving") : t("save")}
+                  </button>
+                </div>
               </div>
             </div>
           </form>

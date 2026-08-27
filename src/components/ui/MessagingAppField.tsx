@@ -44,7 +44,16 @@ interface MessagingAppFieldProps {
   koreanOnly?: boolean;
   /** 온보딩에서는 한눈에 비교할 수 있는 카드형 선택지를 사용한다. */
   variant?: "list" | "cards";
+  /** 넓은 편집 폼에서는 네 가지 선택지를 한 줄에 배치한다. */
+  singleRowOnDesktop?: boolean;
 }
+
+const BRAND_MARK_CLASS: Record<MessagingAppKey, string> = {
+  whatsapp: "bg-[#25D366]",
+  line: "bg-[#06C755]",
+  wechat: "bg-[#07C160]",
+  phone: "bg-primary-strong",
+};
 
 /** 메시징 앱 단일 선택 + 앱 특성에 맞는 연락처 입력(온보딩·프로필 수정 공용) */
 export function MessagingAppField({
@@ -58,15 +67,17 @@ export function MessagingAppField({
   inputRequired = false,
   koreanOnly = false,
   variant = "list",
+  singleRowOnDesktop = false,
 }: Readonly<MessagingAppFieldProps>) {
   const t = useTranslations("Messaging");
 
   return (
     <>
       <div
+        data-testid="messaging-app-options"
         className={
           variant === "cards"
-            ? "grid grid-cols-2 gap-2"
+            ? `grid grid-cols-2 gap-2 ${singleRowOnDesktop ? "lg:grid-cols-4" : ""}`
             : "flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel"
         }
       >
@@ -91,18 +102,31 @@ export function MessagingAppField({
                     }`
               }`}
             >
-              <span
-                aria-hidden
-                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                  isSelected ? "border-primary-strong" : "border-line-strong"
-                }`}
-              >
-                {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
-              </span>
-              <Icon
-                data-messaging-icon={key}
-                className={`size-5 shrink-0 ${variant === "cards" ? "text-primary" : "text-success"}`}
-              />
+              {variant === "list" ? (
+                <span
+                  aria-hidden
+                  className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                    isSelected ? "border-primary-strong" : "border-line-strong"
+                  }`}
+                >
+                  {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
+                </span>
+              ) : null}
+              {variant === "cards" ? (
+                <span
+                  aria-hidden
+                  data-messaging-brand={key}
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-white ${BRAND_MARK_CLASS[key]}`}
+                >
+                  {key === "line" ? (
+                    <span className="text-[7px] font-black tracking-[-0.04em]">LINE</span>
+                  ) : (
+                    <Icon data-messaging-icon={key} className="size-4.5 shrink-0" />
+                  )}
+                </span>
+              ) : (
+                <Icon data-messaging-icon={key} className="size-5 shrink-0 text-success" />
+              )}
               <span className="text-sm font-semibold text-inherit">{displayLabel}</span>
             </button>
           );

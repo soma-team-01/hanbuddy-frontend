@@ -71,16 +71,22 @@ describe("MessagingAppField", () => {
   });
 
   it.each([
-    ["whatsapp", "WhatsApp"],
-    ["line", "Line"],
-    ["wechat", "WeChat"],
-    ["phone", "Phone Number"],
-  ] as const)("renders the dedicated %s contact icon", (icon, label) => {
+    ["whatsapp", "WhatsApp", "bg-[#25D366]"],
+    ["line", "Line", "bg-[#06C755]"],
+    ["wechat", "WeChat", "bg-[#07C160]"],
+    ["phone", "Phone Number", "bg-primary-strong"],
+  ] as const)("renders the recognizable %s brand mark", (app, label, brandClass) => {
     renderField({ variant: "cards" });
 
     expect(
-      screen.getByRole("button", { name: label }).querySelector(`[data-messaging-icon="${icon}"]`),
-    ).toBeInTheDocument();
+      screen.getByRole("button", { name: label }).querySelector(`[data-messaging-brand="${app}"]`),
+    ).toHaveClass(brandClass);
+  });
+
+  it("can place all contact methods in one desktop row", () => {
+    renderField({ variant: "cards", singleRowOnDesktop: true });
+
+    expect(screen.getByTestId("messaging-app-options")).toHaveClass("lg:grid-cols-4");
   });
 
   it.each([

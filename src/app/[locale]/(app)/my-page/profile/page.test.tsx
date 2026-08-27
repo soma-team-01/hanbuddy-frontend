@@ -57,7 +57,9 @@ describe("ProfilePage", () => {
     expect(screen.getByText("United States")).toBeInTheDocument();
     expect(screen.getByText("April 12, 1998")).toBeInTheDocument();
     expect(screen.getByText("+1 5550198")).toBeInTheDocument();
-    expect(document.querySelector('[data-contact-method-icon="whatsapp"]')).toBeInTheDocument();
+    expect(screen.getByText("WhatsApp")).toHaveClass("text-primary-strong");
+    expect(screen.getByTestId("contact-method-divider")).toBeInTheDocument();
+    expect(document.querySelector("[data-contact-method-icon]")).not.toBeInTheDocument();
     expect(
       screen.queryByText("This is how your profile appears across HanBuddy."),
     ).not.toBeInTheDocument();
@@ -78,7 +80,7 @@ describe("ProfilePage", () => {
     );
   });
 
-  it("shows the saved messaging service as an icon beside the contact ID", async () => {
+  it("separates the saved messaging service name from the contact ID", async () => {
     mockedGetMyProfile.mockResolvedValue({
       status: "success",
       profile: createMockProfile({
@@ -90,9 +92,10 @@ describe("ProfilePage", () => {
 
     renderWithQueryClient(<ProfilePage />);
 
-    expect(await screen.findByText("test")).toBeInTheDocument();
-    expect(document.querySelector('[data-contact-method-icon="line"]')).toBeInTheDocument();
-    expect(screen.queryByText("LINE · test")).not.toBeInTheDocument();
+    expect(await screen.findByText("LINE")).toHaveClass("text-primary-strong");
+    expect(screen.getByText("test")).toHaveClass("text-ink");
+    expect(screen.getByTestId("contact-method-divider")).toBeInTheDocument();
+    expect(document.querySelector("[data-contact-method-icon]")).not.toBeInTheDocument();
   });
 
   it("localizes the profile information in Korean", async () => {

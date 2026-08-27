@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { ApiClientError } from "@/lib/api/errors";
@@ -102,6 +102,10 @@ describe("EditProfilePage", () => {
     expect(screen.queryByRole("heading", { name: "Sarah" })).not.toBeInTheDocument();
     expect(screen.getByTestId("edit-profile-layout")).toHaveClass(
       "lg:grid-cols-[180px_minmax(0,1fr)]",
+    );
+    expect(within(screen.getByRole("form")).getByRole("button", { name: "Save" })).toBeVisible();
+    expect(screen.getByTestId("page-header")).not.toContainElement(
+      screen.getByRole("button", { name: "Save" }),
     );
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");

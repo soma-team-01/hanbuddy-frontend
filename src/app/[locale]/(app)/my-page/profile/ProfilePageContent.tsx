@@ -8,13 +8,9 @@ import { Avatar } from "@/components/ui/Avatar";
 import {
   CalendarIcon,
   GlobeIcon,
-  LineIcon,
   MailIcon,
   MessageCircleIcon,
   PencilIcon,
-  PhoneIcon,
-  WeChatIcon,
-  WhatsAppIcon,
 } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { getIntlLocale, type Locale } from "@/i18n/routing";
@@ -25,13 +21,6 @@ import type { ContactMethod } from "@/lib/auth/types";
 import type { MyProfile } from "@/types/user";
 
 type DetailIcon = ComponentType<SVGProps<SVGSVGElement>>;
-
-const CONTACT_METHOD_ICONS: Record<ContactMethod, DetailIcon> = {
-  WHATSAPP: WhatsAppIcon,
-  LINE: LineIcon,
-  WECHAT: WeChatIcon,
-  PHONE: PhoneIcon,
-};
 
 function formatBirthDate(birthDate: string, locale: Locale) {
   return new Intl.DateTimeFormat(getIntlLocale(locale), {
@@ -62,7 +51,6 @@ function ContactValue({
   profile,
   phoneLabel,
 }: Readonly<{ profile: MyProfile; phoneLabel: string }>) {
-  const ContactIcon = CONTACT_METHOD_ICONS[profile.contactMethod];
   const methodLabel = getContactMethodLabel(profile.contactMethod, phoneLabel);
   const value = formatContactValue(profile);
 
@@ -71,14 +59,15 @@ function ContactValue({
       aria-label={`${methodLabel}: ${value}`}
       className="inline-flex max-w-full items-center justify-end gap-2.5"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-panel text-success">
-        <ContactIcon
-          aria-hidden
-          data-contact-method-icon={profile.contactMethod.toLowerCase()}
-          className="size-5"
-        />
+      <span className="shrink-0 text-xs font-bold tracking-[0.08em] text-primary-strong uppercase sm:text-sm">
+        {methodLabel}
       </span>
-      <span className="min-w-0 break-all">{value}</span>
+      <span
+        aria-hidden
+        data-testid="contact-method-divider"
+        className="h-4 w-px shrink-0 bg-line-strong"
+      />
+      <span className="min-w-0 break-all text-ink">{value}</span>
     </span>
   );
 }

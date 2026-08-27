@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -7,7 +7,11 @@ import { PayPalCheckoutDialog } from "./PayPalCheckoutDialog";
 
 const sdkState = vi.hoisted(() => ({
   loadingStatus: "resolved",
-  buttonProps: null as Record<string, unknown> | null,
+  isHydrated: true,
+  sessionOptions: null as Record<string, unknown> | null,
+  createSession: vi.fn(),
+  start: vi.fn(),
+  destroy: vi.fn(),
 }));
 
 vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
@@ -17,11 +21,14 @@ vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
     RESOLVED: "resolved",
   },
   PayPalProvider: ({ children }: { children: React.ReactNode }) => children,
-  PayPalOneTimePaymentButton: (props: Record<string, unknown>) => {
-    sdkState.buttonProps = props;
-    return <button type="button">PayPal SDK</button>;
-  },
-  usePayPal: () => ({ loadingStatus: sdkState.loadingStatus }),
+  usePayPal: () => ({
+    isHydrated: sdkState.isHydrated,
+    loadingStatus: sdkState.loadingStatus,
+    sdkInstance:
+      sdkState.loadingStatus === "resolved"
+        ? { createPayPalOneTimePaymentSession: sdkState.createSession }
+        : null,
+  }),
 }));
 
 vi.mock("@/lib/api/applications", () => ({
@@ -94,23 +101,50 @@ function apiApplicationsResult(applications: ApplicationResponse[]) {
 describe("PayPalCheckoutDialog", () => {
   beforeEach(() => {
     sdkState.loadingStatus = "resolved";
-    sdkState.buttonProps = null;
+    sdkState.isHydrated = true;
+    sdkState.sessionOptions = null;
+    sdkState.start.mockReset().mockResolvedValue(undefined);
+    sdkState.destroy.mockReset();
+    sdkState.createSession.mockReset().mockImplementation((options: Record<string, unknown>) => {
+      sdkState.sessionOptions = options;
+      return {
+        start: sdkState.start,
+        destroy: sdkState.destroy,
+        cancel: vi.fn(),
+      };
+    });
     vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "sandbox-client-id");
     vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENVIRONMENT", "sandbox");
     mockedCapture.mockReset();
     mockedGetMyApplications.mockReset();
   });
 
-  it("uses the backend order in the PayPal SDK popup without showing redirect by default", () => {
+  it("creates one SDK session with the backend order without showing redirect by default", () => {
     renderWithIntl(
       <PayPalCheckoutDialog payment={payment} onConfirmed={vi.fn()} onClose={vi.fn()} />,
     );
 
-    expect(screen.getByRole("button", { name: "PayPal SDK" })).toBeInTheDocument();
-    expect(sdkState.buttonProps).toMatchObject({
+    expect(screen.getByTestId("paypal-sdk-button")).toBeInTheDocument();
+    expect(sdkState.createSession).toHaveBeenCalledTimes(1);
+    expect(sdkState.sessionOptions).toMatchObject({
       orderId: payment.providerOrderId,
-      presentationMode: "popup",
     });
+    expect(screen.queryByRole("link", { name: "Continue on the PayPal website" })).toBeNull();
+  });
+
+  it("tries the modal first and falls back to a popup for a recoverable presentation error", async () => {
+    sdkState.start
+      .mockRejectedValueOnce(Object.assign(new Error("modal unavailable"), { isRecoverable: true }))
+      .mockResolvedValueOnce(undefined);
+    renderWithIntl(
+      <PayPalCheckoutDialog payment={payment} onConfirmed={vi.fn()} onClose={vi.fn()} />,
+    );
+
+    fireEvent.click(screen.getByTestId("paypal-sdk-button"));
+
+    await waitFor(() => expect(sdkState.start).toHaveBeenCalledTimes(2));
+    expect(sdkState.start).toHaveBeenNthCalledWith(1, { presentationMode: "modal" });
+    expect(sdkState.start).toHaveBeenNthCalledWith(2, { presentationMode: "popup" });
     expect(screen.queryByRole("link", { name: "Continue on the PayPal website" })).toBeNull();
   });
 
@@ -120,7 +154,7 @@ describe("PayPalCheckoutDialog", () => {
       <PayPalCheckoutDialog payment={payment} onConfirmed={vi.fn()} onClose={vi.fn()} />,
     );
 
-    expect(screen.queryByRole("button", { name: "PayPal SDK" })).toBeNull();
+    expect(screen.queryByTestId("paypal-sdk-button")).toBeNull();
     expect(screen.getByRole("link", { name: "Continue on the PayPal website" })).toHaveAttribute(
       "href",
       payment.approvalUrl,
@@ -136,7 +170,7 @@ describe("PayPalCheckoutDialog", () => {
     );
 
     await act(async () => {
-      await (sdkState.buttonProps?.onApprove as (data: { orderId: string }) => Promise<void>)({
+      await (sdkState.sessionOptions?.onApprove as (data: { orderId: string }) => Promise<void>)({
         orderId: "APPROVED-ORDER-ID",
       });
     });
@@ -159,7 +193,7 @@ describe("PayPalCheckoutDialog", () => {
     );
 
     await act(async () => {
-      await (sdkState.buttonProps?.onApprove as (data: { orderId: string }) => Promise<void>)({
+      await (sdkState.sessionOptions?.onApprove as (data: { orderId: string }) => Promise<void>)({
         orderId: payment.providerOrderId,
       });
     });
@@ -179,7 +213,7 @@ describe("PayPalCheckoutDialog", () => {
     let captureError: unknown;
     await act(async () => {
       try {
-        await (sdkState.buttonProps?.onApprove as (data: { orderId: string }) => Promise<void>)({
+        await (sdkState.sessionOptions?.onApprove as (data: { orderId: string }) => Promise<void>)({
           orderId: payment.providerOrderId,
         });
       } catch (error) {
@@ -194,19 +228,22 @@ describe("PayPalCheckoutDialog", () => {
     );
   });
 
-  it("offers redirect fallback when the popup cannot be opened before approval", async () => {
+  it("offers redirect fallback when neither modal nor popup can be opened", async () => {
+    sdkState.start.mockRejectedValue(
+      Object.assign(new Error("presentation unavailable"), { isRecoverable: true }),
+    );
     renderWithIntl(
       <PayPalCheckoutDialog payment={payment} onConfirmed={vi.fn()} onClose={vi.fn()} />,
     );
 
-    act(() => {
-      (sdkState.buttonProps?.onError as (error: Error) => void)(new Error("popup blocked"));
-    });
+    fireEvent.click(screen.getByTestId("paypal-sdk-button"));
 
     await waitFor(() =>
       expect(
         screen.getByRole("link", { name: "Continue on the PayPal website" }),
       ).toBeInTheDocument(),
     );
+    expect(sdkState.start).toHaveBeenNthCalledWith(1, { presentationMode: "modal" });
+    expect(sdkState.start).toHaveBeenNthCalledWith(2, { presentationMode: "popup" });
   });
 });

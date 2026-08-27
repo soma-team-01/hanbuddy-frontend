@@ -1,13 +1,13 @@
 "use client";
 
-import {
-  INSTANCE_LOADING_STATE,
-  PayPalOneTimePaymentButton,
-  PayPalProvider,
-  usePayPal,
+import { INSTANCE_LOADING_STATE, PayPalProvider, usePayPal } from "@paypal/react-paypal-js/sdk-v6";
+import type {
+  OneTimePaymentSession,
+  OnApproveDataOneTimePayments,
+  OnErrorData,
 } from "@paypal/react-paypal-js/sdk-v6";
 import { useLocale, useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Locale } from "@/i18n/routing";
 import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
@@ -28,6 +28,15 @@ interface PayPalCheckoutDialogProps {
   onClose: () => void;
 }
 
+function isRecoverablePayPalError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "isRecoverable" in error &&
+    error.isRecoverable === true
+  );
+}
+
 function PayPalCheckoutAction({
   payment,
   onConfirmed,
@@ -37,11 +46,117 @@ function PayPalCheckoutAction({
   const language = getContentLanguage(locale);
   const t = useTranslations("PayPalPayment");
   const getApiErrorMessage = useApiErrorMessage();
-  const { loadingStatus } = usePayPal();
+  const { isHydrated, loadingStatus, sdkInstance } = usePayPal();
   const [captureError, setCaptureError] = useState<unknown>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [popupUnavailable, setPopupUnavailable] = useState(false);
   const approvalStartedRef = useRef(false);
+  const sessionRef = useRef<OneTimePaymentSession | null>(null);
+
+  const handleApprove = useCallback(
+    async ({ orderId }: OnApproveDataOneTimePayments) => {
+      approvalStartedRef.current = true;
+      setCaptureError(null);
+      setIsCapturing(true);
+      try {
+        const application = unwrapApiResult(
+          await capturePayPalApplicationPayment(
+            payment.application.applicationId,
+            { orderId },
+            language,
+          ),
+          "application",
+        );
+        if (application.status !== "CONFIRMED") {
+          throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
+        }
+        onConfirmed(application);
+      } catch (error) {
+        try {
+          const applications = unwrapApiResult(await getMyApplications(language), "applications");
+          const confirmedApplication = applications.find(
+            (application) =>
+              application.applicationId === payment.application.applicationId &&
+              application.status === "CONFIRMED",
+          );
+          if (confirmedApplication) {
+            onConfirmed(confirmedApplication);
+            return;
+          }
+        } catch {
+          // 캡처 오류를 우선 안내한다. 신청 목록 조회 실패로 원인을 덮어쓰지 않는다.
+        }
+        setCaptureError(error);
+        throw error;
+      } finally {
+        setIsCapturing(false);
+      }
+    },
+    [language, onConfirmed, payment.application.applicationId],
+  );
+
+  useEffect(() => {
+    if (!sdkInstance) return;
+
+    let isDisposed = false;
+    let session: OneTimePaymentSession | null = null;
+    try {
+      session = sdkInstance.createPayPalOneTimePaymentSession({
+        orderId: payment.providerOrderId,
+        onApprove: handleApprove,
+        onCancel: onClose,
+        onError: (error: OnErrorData) => {
+          if (approvalStartedRef.current) setCaptureError(error);
+        },
+      });
+      sessionRef.current = session;
+    } catch (error) {
+      queueMicrotask(() => {
+        if (isDisposed) return;
+        setCaptureError(error);
+        setPopupUnavailable(true);
+      });
+    }
+
+    return () => {
+      isDisposed = true;
+      session?.destroy();
+      if (sessionRef.current === session) sessionRef.current = null;
+    };
+  }, [handleApprove, onClose, payment.providerOrderId, sdkInstance]);
+
+  const startPayPalCheckout = useCallback(async () => {
+    const session = sessionRef.current;
+    if (!session || isStarting || isCapturing) return;
+
+    setCaptureError(null);
+    setIsStarting(true);
+    approvalStartedRef.current = false;
+
+    try {
+      for (const presentationMode of ["modal", "popup"] as const) {
+        try {
+          await session.start({ presentationMode });
+          return;
+        } catch (error) {
+          if (approvalStartedRef.current) {
+            setCaptureError(error);
+            return;
+          }
+
+          if (!isRecoverablePayPalError(error)) {
+            setCaptureError(error);
+            return;
+          }
+        }
+      }
+
+      setPopupUnavailable(true);
+    } finally {
+      setIsStarting(false);
+    }
+  }, [isCapturing, isStarting]);
 
   if (loadingStatus === INSTANCE_LOADING_STATE.PENDING) {
     return <p className="py-3 text-center text-sm text-muted">{t("loading")}</p>;
@@ -52,60 +167,12 @@ function PayPalCheckoutAction({
   return (
     <div className="flex flex-col gap-3">
       {!showFallback ? (
-        <PayPalOneTimePaymentButton
+        <paypal-button
+          data-testid="paypal-sdk-button"
           type="pay"
-          orderId={payment.providerOrderId}
-          disabled={isCapturing}
-          presentationMode="popup"
-          onApprove={async ({ orderId }) => {
-            approvalStartedRef.current = true;
-            setCaptureError(null);
-            setIsCapturing(true);
-            try {
-              const application = unwrapApiResult(
-                await capturePayPalApplicationPayment(
-                  payment.application.applicationId,
-                  { orderId },
-                  language,
-                ),
-                "application",
-              );
-              if (application.status !== "CONFIRMED") {
-                throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
-              }
-              onConfirmed(application);
-            } catch (error) {
-              try {
-                const applications = unwrapApiResult(
-                  await getMyApplications(language),
-                  "applications",
-                );
-                const confirmedApplication = applications.find(
-                  (application) =>
-                    application.applicationId === payment.application.applicationId &&
-                    application.status === "CONFIRMED",
-                );
-                if (confirmedApplication) {
-                  onConfirmed(confirmedApplication);
-                  return;
-                }
-              } catch {
-                // 캡처 오류를 우선 안내한다. 신청 목록 조회 실패로 원인을 덮어쓰지 않는다.
-              }
-              setCaptureError(error);
-              throw error;
-            } finally {
-              setIsCapturing(false);
-            }
-          }}
-          onCancel={onClose}
-          onError={(error) => {
-            if (!approvalStartedRef.current) {
-              setPopupUnavailable(true);
-              return;
-            }
-            setCaptureError(error);
-          }}
+          aria-label="PayPal"
+          disabled={!isHydrated || isStarting || isCapturing}
+          onClick={() => void startPayPalCheckout()}
         />
       ) : null}
 

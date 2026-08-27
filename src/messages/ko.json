@@ -616,6 +616,8 @@
     "refundPolicy": "신청 전에 <policy>취소 및 환불 정책</policy>을 확인해 주세요.",
     "agreement": "위 약관에 동의합니다.",
     "submit": "신청 및 결제",
+    "payWithToss": "토스페이먼츠로 결제",
+    "payWithPayPal": "PayPal로 결제",
     "processing": "처리 중...",
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",
     "scheduleRequired": "신청 가능한 일정을 선택해 주세요.",

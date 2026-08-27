@@ -616,6 +616,8 @@
     "refundPolicy": "Please review the <policy>cancellation & refund policy</policy> before applying.",
     "agreement": "I agree to the terms above.",
     "submit": "Apply & Pay",
+    "payWithToss": "Pay with Toss Payments",
+    "payWithPayPal": "Pay with PayPal",
     "processing": "Processing...",
     "kstNotice": "All times are in Korea Standard Time (KST).",
     "scheduleRequired": "Please select an available schedule.",

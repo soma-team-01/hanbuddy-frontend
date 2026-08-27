@@ -616,6 +616,8 @@
     "refundPolicy": "請查看 <policy>取消和退款政策</policy> 申請之前。",
     "agreement": "我同意以上條款。",
     "submit": "申請並付款",
+    "payWithToss": "使用Toss Payments付款",
+    "payWithPayPal": "使用PayPal付款",
     "processing": "處理中...",
     "kstNotice": "所有時間均採用韓國標準時間 (KST)。",
     "scheduleRequired": "請選擇可用的時間表。",

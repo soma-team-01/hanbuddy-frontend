@@ -31,6 +31,12 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
   requestTossPayment: vi.fn(),
 }));
 
+vi.mock("@/components/payment/PayPalCheckoutDialog", () => ({
+  PayPalCheckoutDialog: ({ payment }: { payment: PaymentReadyResponse }) => (
+    <div data-testid="paypal-checkout">{payment.providerOrderId}</div>
+  ),
+}));
+
 const mockedCreateApplication = vi.mocked(createApplication);
 const mockedGetApplicationConflicts = vi.mocked(getApplicationConflicts);
 const mockedGetMyApplications = vi.mocked(getMyApplications);
@@ -96,6 +102,10 @@ const pendingApplication: ApplicationResponse = {
 const paymentReady: PaymentReadyResponse = {
   application: pendingApplication,
   paymentId: 7,
+  paymentProvider: "TOSS",
+  paymentAttemptId: 12,
+  providerOrderId: "hanbuddy-11-550e8400-e29b-41d4-a716-446655440000",
+  approvalUrl: null,
   orderNumber: "hanbuddy-11-550e8400-e29b-41d4-a716-446655440000",
   clientKey: "test_ck_client-key",
   orderName: "Bukchon Hidden Gems",
@@ -105,7 +115,7 @@ const paymentReady: PaymentReadyResponse = {
   orderExpiresAt: "2026-07-14T13:00:00+09:00",
 };
 
-async function agreeAndSubmit(submitLabel = "Apply & Pay") {
+async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: new RegExp(submitLabel) }));
 }
@@ -203,6 +213,7 @@ describe("BookingForm", () => {
         specialRequest: "Vegetarian snacks, please.",
       },
       "EN",
+      "TOSS",
     );
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
   });
@@ -216,7 +227,7 @@ describe("BookingForm", () => {
     );
     renderWithQueryClient(<BookingForm activity={activity} />);
     fireEvent.click(screen.getByRole("checkbox"));
-    const submitButton = screen.getByRole("button", { name: /Apply & Pay/ });
+    const submitButton = screen.getByRole("button", { name: /Pay with Toss Payments/ });
 
     fireEvent.click(submitButton);
     fireEvent.click(submitButton);
@@ -227,6 +238,32 @@ describe("BookingForm", () => {
       conflicts: { blocking: false, conflicts: [], sameDayWarnings: [] },
     });
     await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
+  });
+
+  it("creates a PayPal order from the separate PayPal action", async () => {
+    const payPalPayment = {
+      ...paymentReady,
+      paymentProvider: "PAYPAL" as const,
+      providerOrderId: "5O190127TN364715T",
+      approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
+      clientKey: null,
+      paymentAmount: 32.5,
+      paymentCurrency: "USD",
+    };
+    mockedCreateApplication.mockResolvedValue({ status: "success", payment: payPalPayment });
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    await agreeAndSubmit("Pay with PayPal");
+
+    await waitFor(() =>
+      expect(mockedCreateApplication).toHaveBeenCalledWith(
+        expect.objectContaining({ activityScheduleId: 101, guestCount: 1 }),
+        "EN",
+        "PAYPAL",
+      ),
+    );
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+    expect(await screen.findByTestId("paypal-checkout")).toHaveTextContent("5O190127TN364715T");
   });
 
   it("blocks an application when the selected schedule was already booked", async () => {
@@ -440,6 +477,7 @@ describe("BookingForm", () => {
       expect(mockedCreateApplication).toHaveBeenCalledWith(
         expect.objectContaining({ guestCount: 2 }),
         "EN",
+        "TOSS",
       ),
     );
   });
@@ -473,7 +511,7 @@ describe("BookingForm", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Payment was not completed.");
     // 신청은 이미 생성됐고, 같은 화면에서 다시 제출할 수 있다
-    expect(screen.getByRole("button", { name: /Apply & Pay/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Pay with Toss Payments/ })).toBeEnabled();
   });
 
   it("surfaces an error when the Toss window fails to open", async () => {
@@ -523,12 +561,13 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
 
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /Apply & Pay/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Pay with Toss Payments/ }));
 
     await waitFor(() =>
       expect(mockedCreateApplication).toHaveBeenCalledWith(
         expect.objectContaining({ activityScheduleId: 102 }),
         "EN",
+        "TOSS",
       ),
     );
   });
@@ -538,7 +577,7 @@ describe("BookingForm", () => {
 
     expect(screen.getByText("가격 상세")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: /신청 및 결제/ }));
+    fireEvent.click(screen.getByRole("button", { name: /토스페이먼츠로 결제/ }));
 
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "ko");

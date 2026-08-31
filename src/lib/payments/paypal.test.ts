@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { PaymentReadyResponse } from "@/types/application";
-import { assertPayPalPaymentReady, getPayPalEnvironment, getPayPalLocale } from "./paypal";
+import { getPayPalEnvironment, getPayPalLocale, isPayPalPaymentReady } from "./paypal";
 
 const paymentReady = {
   paymentProvider: "PAYPAL",
@@ -25,10 +25,11 @@ describe("PayPal payment helpers", () => {
     vi.unstubAllEnvs();
   });
 
-  it("accepts only complete PayPal USD payment data", () => {
-    expect(() => assertPayPalPaymentReady(paymentReady)).not.toThrow();
-    expect(() => assertPayPalPaymentReady({ ...paymentReady, paymentCurrency: "KRW" })).toThrow(
-      "PayPal 결제 준비 정보가 올바르지 않습니다.",
-    );
+  it("validates complete PayPal payment data without restricting the currency", () => {
+    expect(isPayPalPaymentReady(paymentReady)).toBe(true);
+    expect(isPayPalPaymentReady({ ...paymentReady, paymentCurrency: "EUR" })).toBe(true);
+    expect(isPayPalPaymentReady({ ...paymentReady, paymentProvider: "TOSS" })).toBe(false);
+    expect(isPayPalPaymentReady({ ...paymentReady, providerOrderId: "" })).toBe(false);
+    expect(isPayPalPaymentReady({ ...paymentReady, paymentCurrency: "US" })).toBe(false);
   });
 });

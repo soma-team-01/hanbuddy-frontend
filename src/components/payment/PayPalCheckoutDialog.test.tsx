@@ -141,6 +141,31 @@ describe("PayPalCheckoutDialog", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("shows an unavailable message instead of throwing for invalid payment data", () => {
+    renderWithIntl(
+      <PayPalCheckoutDialog
+        payment={{ ...payment, providerOrderId: "" }}
+        onConfirmed={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("PayPal is temporarily unavailable.");
+    expect(sdkState.createSession).not.toHaveBeenCalled();
+  });
+
+  it("formats the approval amount using the backend payment currency", () => {
+    renderWithIntl(
+      <PayPalCheckoutDialog
+        payment={{ ...payment, paymentAmount: 28.5, paymentCurrency: "EUR" }}
+        onConfirmed={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/€28\.50/)).toBeInTheDocument();
+  });
+
   it("opens the PayPal modal automatically without rendering an intermediate button", async () => {
     renderWithIntl(
       <PayPalCheckoutButton payment={payment} autoStart onConfirmed={vi.fn()} onCancel={vi.fn()} />,

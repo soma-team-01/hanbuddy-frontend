@@ -35,12 +35,17 @@ vi.mock("@/components/payment/PayPalCheckoutDialog", () => ({
   PayPalCheckoutButton: ({
     payment,
     autoStart,
+    onCancel,
   }: {
     payment: PaymentReadyResponse;
     autoStart?: boolean;
+    onCancel?: () => void;
   }) => (
     <div data-testid="paypal-checkout" data-auto-start={String(autoStart)}>
       {payment.providerOrderId}
+      <button type="button" onClick={onCancel}>
+        Cancel PayPal checkout
+      </button>
     </div>
   ),
 }));
@@ -286,6 +291,26 @@ describe("BookingForm", () => {
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
     expect(await screen.findByTestId("paypal-checkout")).toHaveTextContent("5O190127TN364715T");
     expect(screen.getByTestId("paypal-checkout")).toHaveAttribute("data-auto-start", "true");
+  });
+
+  it("restores the PayPal action when the checkout is cancelled", async () => {
+    const payPalPayment = {
+      ...paymentReady,
+      paymentProvider: "PAYPAL" as const,
+      providerOrderId: "5O190127TN364715T",
+      approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
+      clientKey: null,
+      paymentAmount: 32.5,
+      paymentCurrency: "USD",
+    };
+    mockedCreateApplication.mockResolvedValue({ status: "success", payment: payPalPayment });
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    await agreeAndSubmit("Pay with PayPal");
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel PayPal checkout" }));
+
+    expect(screen.queryByTestId("paypal-checkout")).toBeNull();
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeEnabled();
   });
 
   it("blocks an application when the selected schedule was already booked", async () => {

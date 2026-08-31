@@ -487,6 +487,7 @@ export function BookingForm({
                     <PayPalCheckoutButton
                       payment={payPalPayment}
                       autoStart
+                      onCancel={() => setPayPalPayment(null)}
                       onConfirmed={() => {
                         const applicationId = payPalPayment.application.applicationId;
                         setPayPalPayment(null);

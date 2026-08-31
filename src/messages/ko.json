@@ -1255,7 +1255,7 @@
     }
   },
   "PayPalPayment": {
-    "title": "PayPal 결제 완료",
+    "title": "PayPal로 결제하기",
     "description": "PayPal에서 {amount} 결제를 확인하고 승인해 주세요.",
     "loading": "PayPal을 불러오는 중입니다...",
     "continueWithPayPal": "PayPal로 계속하기",

@@ -17,12 +17,10 @@ export function getPayPalEnvironment(): "sandbox" | "production" {
   return process.env.NEXT_PUBLIC_PAYPAL_ENVIRONMENT === "production" ? "production" : "sandbox";
 }
 
-export function assertPayPalPaymentReady(ready: PaymentReadyResponse): void {
-  if (
-    ready.paymentProvider !== "PAYPAL" ||
-    ready.paymentCurrency !== "USD" ||
-    !ready.providerOrderId
-  ) {
-    throw new Error("PayPal 결제 준비 정보가 올바르지 않습니다.");
-  }
+export function isPayPalPaymentReady(ready: PaymentReadyResponse): boolean {
+  return (
+    ready.paymentProvider === "PAYPAL" &&
+    ready.providerOrderId.trim().length > 0 &&
+    /^[A-Z]{3}$/.test(ready.paymentCurrency)
+  );
 }

@@ -13,11 +13,7 @@ import type { Locale } from "@/i18n/routing";
 import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
-import {
-  assertPayPalPaymentReady,
-  getPayPalEnvironment,
-  getPayPalLocale,
-} from "@/lib/payments/paypal";
+import { getPayPalEnvironment, getPayPalLocale, isPayPalPaymentReady } from "@/lib/payments/paypal";
 import { storePayPalRedirectContext } from "@/lib/payments/paypal-redirect-context";
 import { unwrapApiResult } from "@/lib/query/result";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
@@ -256,18 +252,21 @@ export function PayPalCheckoutDialog({
 }: Readonly<PayPalCheckoutDialogProps>) {
   const locale = useLocale() as Locale;
   const t = useTranslations("PayPalPayment");
-
-  assertPayPalPaymentReady(payment);
+  const paymentReady = isPayPalPaymentReady(payment);
 
   return (
     <ConfirmDialog
       title={t("title")}
-      description={t("description", {
-        amount: new Intl.NumberFormat(locale, {
-          style: "currency",
-          currency: "USD",
-        }).format(payment.paymentAmount),
-      })}
+      description={
+        paymentReady
+          ? t("description", {
+              amount: new Intl.NumberFormat(locale, {
+                style: "currency",
+                currency: payment.paymentCurrency,
+              }).format(payment.paymentAmount),
+            })
+          : undefined
+      }
       onClose={onClose}
       confirmSlot={
         <PayPalCheckoutButton payment={payment} onConfirmed={onConfirmed} onCancel={onClose} />
@@ -286,7 +285,13 @@ export function PayPalCheckoutButton({
   const t = useTranslations("PayPalPayment");
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
-  assertPayPalPaymentReady(payment);
+  if (!isPayPalPaymentReady(payment)) {
+    return (
+      <p role="alert" className="rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger">
+        {t("unavailable")}
+      </p>
+    );
+  }
 
   if (!clientId) {
     return payment.approvalUrl ? (

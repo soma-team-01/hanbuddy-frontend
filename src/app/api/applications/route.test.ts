@@ -36,22 +36,39 @@ describe("POST /api/applications", () => {
         isSuccess: true,
         code: "201",
         message: "created",
-        result: { paymentId: 7, paypalOrderId: "5O190127TN364715T" },
+        result: { paymentId: 7, providerOrderId: "5O190127TN364715T" },
       },
       setCookies: [],
     });
 
     const response = await POST(
-      new NextRequest("http://localhost/api/applications", {
+      new NextRequest("http://localhost/api/applications?paymentProvider=PAYPAL&language=EN", {
         method: "POST",
         body: JSON.stringify(createRequest),
         headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
       }),
     );
 
-    expect(mockedPostBackend).toHaveBeenCalledWith("/applications", createRequest, {
-      bearerToken: "access-token",
-    });
+    expect(mockedPostBackend).toHaveBeenCalledWith(
+      "/applications?paymentProvider=PAYPAL&language=EN",
+      createRequest,
+      {
+        bearerToken: "access-token",
+      },
+    );
     expect(response.status).toBe(201);
+  });
+
+  it("rejects unsupported payment providers before proxying", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/applications?paymentProvider=CARD", {
+        method: "POST",
+        body: JSON.stringify(createRequest),
+        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 });

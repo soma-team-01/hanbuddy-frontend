@@ -38,6 +38,9 @@
     "paymentCaptureMismatch": "核准的金額或貨幣與此付款不符。",
     "paymentServiceUnavailable": "支付服務暫時無法使用。請稍後重試。",
     "exchangeRateUnavailable": "暫時無法取得匯率資訊。請稍後重試。",
+    "paypalOrderCreateFailed": "無法開始PayPal付款。請從我的申請中再次嘗試。",
+    "paypalCaptureFailed": "無法確認PayPal付款結果。再次付款前，請先查看我的申請。",
+    "paypalUnavailable": "PayPal暫時無法使用。請使用Toss Payments。",
     "buddyRequired": "此功能僅供好友使用。",
     "touristRequired": "此功能僅供遊客使用。",
     "userNotFound": "找不到您的用戶個人資料。",
@@ -616,6 +619,8 @@
     "refundPolicy": "請查看 <policy>取消和退款政策</policy> 申請之前。",
     "agreement": "我同意以上條款。",
     "submit": "申請並付款",
+    "payWithToss": "使用Toss Payments付款",
+    "payWithPayPal": "使用PayPal付款",
     "processing": "處理中...",
     "kstNotice": "所有時間均採用韓國標準時間 (KST)。",
     "scheduleRequired": "請選擇可用的時間表。",
@@ -663,6 +668,8 @@
     "subtotal": "{price} × {count, plural, one {# 客人} other {# 客人}}",
     "total": "總計",
     "continuePayment": "繼續付款",
+    "continueWithToss": "使用Toss Payments付款",
+    "continueWithPayPal": "使用PayPal付款",
     "cancel": "取消",
     "paymentFailed": "無法完成付款。",
     "cancelFailed": "無法取消申請。",
@@ -705,6 +712,9 @@
     "loading": "正在加載付款...",
     "loadError": "無法載入付款確認訊息。",
     "confirmationNotFound": "我們找不到此付款確認資訊。",
+    "paypalReturnNotFound": "無法識別此PayPal付款。再次付款前，請先在我的申請中確認狀態。",
+    "paypalCancelled": "PayPal付款已取消",
+    "paypalCancelledDescription": "您的申請仍處於待付款狀態。您可以在我的申請中重新選擇付款方式。",
     "notPaid": "此申請尚未付款。",
     "viewApplications": "查看我的應用程式",
     "exploreMore": "探索更多活動",
@@ -1243,5 +1253,14 @@
       "schedulesTooMany": "您最多可以新增 30 個會話。",
       "itineraryTooMany": "您最多可以新增 20 項行程活動。"
     }
+  },
+  "PayPalPayment": {
+    "title": "使用PayPal完成付款",
+    "description": "請在PayPal中確認並核准{amount}付款。",
+    "loading": "正在載入PayPal...",
+    "continueWithPayPal": "使用PayPal繼續",
+    "redirectFallback": "前往PayPal網站繼續",
+    "captureFailed": "無法確認PayPal付款。再次付款前，請先查看我的申請。",
+    "unavailable": "PayPal暫時無法使用。請選擇Toss Payments。"
   }
 }

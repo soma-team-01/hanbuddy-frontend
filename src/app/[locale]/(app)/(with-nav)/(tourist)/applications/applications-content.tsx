@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import {
   cancelMyApplication,
   cancelPendingPayment,
@@ -17,7 +19,12 @@ import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applica
 import { buddyKeys } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { ApplicationCancellationReason, ApplicationResponse } from "@/types/application";
+import type {
+  ApplicationCancellationReason,
+  ApplicationResponse,
+  PaymentProvider,
+  PaymentReadyResponse,
+} from "@/types/application";
 import { ApplicationList } from "./application-list";
 import type { CancelDialogOutcome } from "./cancel-dialog";
 
@@ -28,6 +35,7 @@ export function ApplicationsContent() {
   const t = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
+  const [payPalPayment, setPayPalPayment] = useState<PaymentReadyResponse | null>(null);
   const applicationsQuery = useQuery(myApplicationsQueryOptions(language));
   const cancelApplicationMutation = useMutation({
     mutationFn: async ({
@@ -72,8 +80,17 @@ export function ApplicationsContent() {
     },
   });
   const continuePaymentMutation = useMutation({
-    mutationFn: async (applicationId: string) =>
-      unwrapApiResult(await continueApplicationPayment(applicationId, language), "payment"),
+    mutationFn: async ({
+      applicationId,
+      paymentProvider,
+    }: {
+      applicationId: string;
+      paymentProvider: PaymentProvider;
+    }) =>
+      unwrapApiResult(
+        await continueApplicationPayment(applicationId, language, paymentProvider),
+        "payment",
+      ),
   });
   useAuthQueryRedirect(
     applicationsQuery.error ??
@@ -114,8 +131,15 @@ export function ApplicationsContent() {
     }
   }
 
-  async function handleContinuePayment(applicationId: string) {
-    const payment = await continuePaymentMutation.mutateAsync(applicationId);
+  async function handleContinuePayment(applicationId: string, paymentProvider: PaymentProvider) {
+    const payment = await continuePaymentMutation.mutateAsync({
+      applicationId,
+      paymentProvider,
+    });
+    if (paymentProvider === "PAYPAL") {
+      setPayPalPayment(payment);
+      return;
+    }
     // 결제 인증이 끝나면 successUrl(/payments/success)로 리다이렉트되어 승인 API를 호출한다
     await requestTossPayment(payment, locale as Locale);
   }
@@ -136,15 +160,34 @@ export function ApplicationsContent() {
   }
 
   return (
-    <ApplicationList
-      applications={applications}
-      onCancelApplication={handleCancelApplication}
-      onCancelPendingPayment={handleCancelPendingPayment}
-      onContinuePayment={handleContinuePayment}
-      onHoldExpired={() => {
-        void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
-      }}
-      isPaymentPending={continuePaymentMutation.isPending}
-    />
+    <>
+      <ApplicationList
+        applications={applications}
+        onCancelApplication={handleCancelApplication}
+        onCancelPendingPayment={handleCancelPendingPayment}
+        onContinuePayment={handleContinuePayment}
+        onHoldExpired={() => {
+          void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+        }}
+        isPaymentPending={continuePaymentMutation.isPending}
+      />
+      {payPalPayment ? (
+        <PayPalCheckoutButton
+          payment={payPalPayment}
+          autoStart
+          onCancel={() => setPayPalPayment(null)}
+          onConfirmed={(application) => {
+            queryClient.setQueryData<ApplicationResponse[]>(
+              applicationKeys.mine(language),
+              (current = []) =>
+                current.map((item) =>
+                  item.applicationId === application.applicationId ? application : item,
+                ),
+            );
+            setPayPalPayment(null);
+          }}
+        />
+      ) : null}
+    </>
   );
 }

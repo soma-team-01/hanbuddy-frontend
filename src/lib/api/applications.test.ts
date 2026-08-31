@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   cancelMyApplication,
   cancelPendingPayment,
+  capturePayPalApplicationPayment,
   confirmApplicationPayment,
   continueApplicationPayment,
   createApplication,
@@ -34,8 +35,13 @@ const application = {
 const paymentReady = {
   application: { ...application, status: "PENDING_PAYMENT" },
   paymentId: 7,
-  paypalOrderId: "5O190127TN364715T",
+  paymentProvider: "PAYPAL",
+  paymentAttemptId: 12,
+  providerOrderId: "5O190127TN364715T",
   approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
+  orderNumber: "hanbuddy-11-paypal",
+  clientKey: null,
+  orderName: "Bukchon Hidden Gems",
   paymentStatus: "CREATED",
   paymentAmount: 68.97,
   paymentCurrency: "USD",
@@ -109,10 +115,11 @@ describe("application API client", () => {
           specialRequest: "Vegetarian snacks, please.",
         },
         "EN",
+        "PAYPAL",
       ),
     ).resolves.toEqual({ status: "success", payment: paymentReady });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications?language=EN", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications?paymentProvider=PAYPAL&language=EN", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -135,15 +142,45 @@ describe("application API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(continueApplicationPayment(11, "EN")).resolves.toEqual({
+    await expect(continueApplicationPayment(11, "EN", "PAYPAL")).resolves.toEqual({
       status: "success",
       payment: paymentReady,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/payment/continue?language=EN", {
-      method: "POST",
-      credentials: "same-origin",
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/me/11/payment/continue?paymentProvider=PAYPAL&language=EN",
+      {
+        method: "POST",
+        credentials: "same-origin",
+      },
+    );
+  });
+
+  it("captures an approved PayPal order through the internal API", async () => {
+    const confirmed = { ...application, status: "CONFIRMED" };
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: confirmed,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      capturePayPalApplicationPayment(11, { orderId: "5O190127TN364715T" }, "EN"),
+    ).resolves.toEqual({ status: "success", application: confirmed });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/me/11/payment/paypal/capture?language=EN",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: "5O190127TN364715T" }),
+        credentials: "same-origin",
+      },
+    );
   });
 
   it("confirms an authorized payment through the internal API", async () => {
@@ -239,7 +276,7 @@ describe("application API client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      createApplication({ activityScheduleId: 101, guestCount: 9 }, "EN"),
+      createApplication({ activityScheduleId: 101, guestCount: 9 }, "EN", "TOSS"),
     ).resolves.toEqual({
       status: "error",
       error: expect.objectContaining({

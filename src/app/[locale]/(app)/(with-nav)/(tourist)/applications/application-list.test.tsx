@@ -148,7 +148,23 @@ describe("ApplicationList", () => {
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
     // 미래 일정에는 디데이 배지가 붙는다
     expect(screen.getByText(/^D-\d+$/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue Payment" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
+      "bg-[#3182f6]",
+      "text-white",
+    );
+    expect(screen.getByText("Toss")).toBeInTheDocument();
+    expect(screen.getByText("PayPal")).toBeInTheDocument();
+    const paymentActions = screen.getByText("Toss").closest("div")?.parentElement;
+    expect(paymentActions).toHaveClass("sm:row-start-1", "sm:row-span-2", "sm:self-center");
+    const scheduleAndHost = screen.getByRole("button", {
+      name: "View Jihoon Kim's profile",
+    }).parentElement;
+    expect(scheduleAndHost).toHaveClass("flex-col", "gap-1.5");
+    expect(within(scheduleAndHost as HTMLElement).getByText("Jul 20, 2026")).toBeInTheDocument();
+    expect(
+      within(scheduleAndHost as HTMLElement).getByRole("heading", { name: "Bukchon Hidden Gems" }),
+    ).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
     expect(mockedGetActivityWeather).not.toHaveBeenCalled();
   });
@@ -207,9 +223,9 @@ describe("ApplicationList", () => {
     const onContinuePayment = vi.fn().mockResolvedValue(undefined);
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
-    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1"));
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -264,7 +280,7 @@ describe("ApplicationList", () => {
     );
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The payment service is temporarily unavailable. Please try again shortly.",
@@ -281,7 +297,7 @@ describe("ApplicationList", () => {
     );
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
     // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
     await waitFor(() =>
@@ -292,7 +308,7 @@ describe("ApplicationList", () => {
       resolvePayment();
     });
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Continue Payment" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled(),
     );
     expect(onContinuePayment).toHaveBeenCalledTimes(1);
   });
@@ -303,9 +319,9 @@ describe("ApplicationList", () => {
       .mockRejectedValue({ code: "PAY_PROCESS_CANCELED", message: "결제가 취소되었습니다." });
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
-    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1"));
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -322,7 +338,7 @@ describe("ApplicationList", () => {
     );
     const { rerender } = render(<IntlTestProvider locale="en">{applicationList}</IntlTestProvider>);
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
 
     rerender(<IntlTestProvider locale="ko">{applicationList}</IntlTestProvider>);
@@ -334,7 +350,8 @@ describe("ApplicationList", () => {
   it("disables the payment action while a payment request is pending", () => {
     renderList({ isPaymentPending: true });
 
-    expect(screen.getByRole("button", { name: "Opening payment..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
   });
 
   it("opens the host profile popup from the application card", async () => {
@@ -577,7 +594,9 @@ describe("ApplicationList", () => {
     renderList();
 
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
-    fireEvent.click(screen.getByRole("button", { name: "Write a review" }));
+    const writeReviewButton = screen.getByRole("button", { name: "Write a review" });
+    expect(writeReviewButton).toHaveClass("h-9", "sm:min-w-32");
+    fireEvent.click(writeReviewButton);
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Traditional Tea Tasting")).toBeInTheDocument();
@@ -743,7 +762,8 @@ describe("ApplicationList", () => {
   it("localizes the continue-payment action in Korean", () => {
     renderList({}, "ko");
 
-    expect(screen.getByRole("button", { name: "결제 이어서 하기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "토스페이먼츠로 결제" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "PayPal로 결제" })).toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
   });
 });

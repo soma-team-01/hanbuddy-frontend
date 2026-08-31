@@ -22,7 +22,19 @@ runs:
         DEPLOYMENT_ENVIRONMENT: ${{ inputs.environment-name }}
         REGISTRY: ${{ inputs.registry }}
       run: |
-        image_tag="${DEPLOYMENT_ENVIRONMENT}-sha-${COMMIT_SHA}"
+        paypal_environment="sandbox"
+        if [[ "${DEPLOYMENT_ENVIRONMENT}" == "production" ]]; then
+          paypal_environment="production"
+        fi
+        build_config_hash="$(
+          printf '%s\n%s\n%s\n' \
+            "${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}" \
+            "${PAYPAL_CLIENT_ID}" \
+            "${paypal_environment}" \
+            | sha256sum \
+            | cut -c1-12
+        )"
+        image_tag="${DEPLOYMENT_ENVIRONMENT}-sha-${COMMIT_SHA}-config-${build_config_hash}"
         image_uri="${REGISTRY}/${ECR_REPOSITORY}:${image_tag}"
         latest_image_uri="${REGISTRY}/${ECR_REPOSITORY}:${DEPLOYMENT_ENVIRONMENT}-latest"
 
@@ -34,6 +46,8 @@ runs:
         else
           docker build \
             --build-arg "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}" \
+            --build-arg "NEXT_PUBLIC_PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}" \
+            --build-arg "NEXT_PUBLIC_PAYPAL_ENVIRONMENT=${paypal_environment}" \
             --tag "${image_uri}" \
             .
           docker push "${image_uri}"

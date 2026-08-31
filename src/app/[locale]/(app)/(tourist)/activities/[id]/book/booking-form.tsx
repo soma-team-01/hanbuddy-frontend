@@ -7,15 +7,10 @@ import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Link } from "@/i18n/navigation";
+import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
-import {
-  ArrowRightIcon,
-  CalendarDaysIcon,
-  MinusIcon,
-  PlusIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { CalendarDaysIcon, MinusIcon, PlusIcon, UserIcon } from "@/components/ui/icons";
 import {
   AvailabilityCalendarDialog,
   formatSessionTimeRange,
@@ -37,6 +32,8 @@ import type {
   ApplicationConflictItemResponse,
   ApplicationConflictType,
   CreateApplicationRequest,
+  PaymentProvider,
+  PaymentReadyResponse,
 } from "@/types/application";
 import { BookingConflictDialog } from "./booking-conflict-dialog";
 
@@ -53,6 +50,7 @@ interface ConflictDialogState {
   type: ApplicationConflictType;
   item?: ApplicationConflictItemResponse;
   blocking: boolean;
+  paymentProvider: PaymentProvider;
 }
 
 function validateBookingSession(sessionId: string): BookingErrorKey | null {
@@ -64,6 +62,7 @@ export function BookingForm({
   initialSessionId,
 }: Readonly<{ activity: Activity; initialSessionId?: string }>) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const locale = useLocale();
   const contentLanguage = getContentLanguage(locale);
   const t = useTranslations("Booking");
@@ -85,8 +84,9 @@ export function BookingForm({
     error: unknown;
     fallbackKey: BookingErrorKey;
   } | null>(null);
-  // 토스 결제창이 열려 있는 동안 제출 버튼을 잠근다
+  // 외부 결제창이 열려 있는 동안 제출 버튼을 잠근다
   const [paymentInFlight, setPaymentInFlight] = useState(false);
+  const [payPalPayment, setPayPalPayment] = useState<PaymentReadyResponse | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [conflictDialog, setConflictDialog] = useState<ConflictDialogState | null>(null);
   // React Query 상태가 화면에 반영되기 전의 연속 클릭도 동기적으로 차단한다
@@ -100,8 +100,17 @@ export function BookingForm({
   });
   // 사전 확인 뒤에도 생성 시점의 좌석·일정 충돌은 백엔드가 다시 검증한다
   const createApplicationMutation = useMutation({
-    mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
-      unwrapApiResult(await createApplication(request, contentLanguage), "payment"),
+    mutationFn: async ({
+      request,
+      paymentProvider,
+    }: {
+      request: CreateApplicationRequest;
+      paymentProvider: PaymentProvider;
+    }) =>
+      unwrapApiResult(
+        await createApplication(request, contentLanguage, paymentProvider),
+        "payment",
+      ),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
@@ -122,20 +131,30 @@ export function BookingForm({
   const discountAmount = Math.max(0, originalSubtotal - total);
   const hasDiscount = discountAmount > 0;
 
-  function toBlockingDialog(error: unknown): ConflictDialogState | null {
+  function toBlockingDialog(
+    error: unknown,
+    paymentProvider: PaymentProvider,
+  ): ConflictDialogState | null {
     if (!(error instanceof ApiClientError)) return null;
     if (error.code === "APPLICATION409_SAME_SCHEDULE") {
-      return { type: "SAME_SCHEDULE", blocking: true };
+      return { type: "SAME_SCHEDULE", blocking: true, paymentProvider };
     }
     if (error.code === "APPLICATION409_TIME_CONFLICT") {
-      return { type: "TIME_OVERLAP", blocking: true };
+      return { type: "TIME_OVERLAP", blocking: true, paymentProvider };
     }
     return null;
   }
 
-  async function createAndOpenPayment(request: CreateApplicationRequest) {
+  async function createAndOpenPayment(
+    request: CreateApplicationRequest,
+    paymentProvider: PaymentProvider,
+  ) {
     try {
-      const payment = await createApplicationMutation.mutateAsync(request);
+      const payment = await createApplicationMutation.mutateAsync({ request, paymentProvider });
+      if (paymentProvider === "PAYPAL") {
+        setPayPalPayment(payment);
+        return;
+      }
       if (payment.paymentCurrency !== "KRW" || payment.paymentAmount !== total) {
         setErrorKey("paymentAmountChanged");
         return;
@@ -145,10 +164,10 @@ export function BookingForm({
       await requestTossPayment(payment, locale as Locale);
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      const blockingDialog = toBlockingDialog(error);
+      const blockingDialog = toBlockingDialog(error, paymentProvider);
       if (blockingDialog) {
         setConflictDialog(blockingDialog);
-      } else if (isTossUserCancel(error)) {
+      } else if (paymentProvider === "TOSS" && isTossUserCancel(error)) {
         setErrorKey("paymentCancelled");
       } else {
         setRequestFailure({ error, fallbackKey: "paymentProcessFailed" });
@@ -168,7 +187,7 @@ export function BookingForm({
     }
   }
 
-  function handleSubmitClick() {
+  function handleSubmitClick(paymentProvider: PaymentProvider) {
     void runWithSubmissionLock(async () => {
       const validationError = validateBookingSession(sessionId);
       if (validationError) {
@@ -191,15 +210,21 @@ export function BookingForm({
             type: blockingItem?.type ?? "TIME_OVERLAP",
             item: blockingItem,
             blocking: true,
+            paymentProvider,
           });
           return;
         }
         const warningItem = conflicts.sameDayWarnings[0];
         if (warningItem) {
-          setConflictDialog({ type: warningItem.type, item: warningItem, blocking: false });
+          setConflictDialog({
+            type: warningItem.type,
+            item: warningItem,
+            blocking: false,
+            paymentProvider,
+          });
           return;
         }
-        await createAndOpenPayment(request);
+        await createAndOpenPayment(request, paymentProvider);
       } catch (error) {
         if (error instanceof UnauthenticatedQueryError) return;
         setRequestFailure({ error, fallbackKey: "conflictCheckFailed" });
@@ -209,14 +234,18 @@ export function BookingForm({
 
   function handleContinueApplication() {
     void runWithSubmissionLock(async () => {
+      const paymentProvider = conflictDialog?.paymentProvider ?? "TOSS";
       setConflictDialog(null);
       setErrorKey(null);
       setRequestFailure(null);
-      await createAndOpenPayment({
-        activityScheduleId: Number(sessionId),
-        guestCount: guests,
-        specialRequest: specialRequest.trim() || undefined,
-      });
+      await createAndOpenPayment(
+        {
+          activityScheduleId: Number(sessionId),
+          guestCount: guests,
+          specialRequest: specialRequest.trim() || undefined,
+        },
+        paymentProvider,
+      );
     });
   }
 
@@ -305,7 +334,7 @@ export function BookingForm({
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
-                  className="w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm text-ink transition-colors outline-none placeholder:text-muted/60 focus:border-primary"
+                  className="focus-border-only w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm text-ink transition-colors placeholder:text-muted/60 focus:border-primary"
                 />
               </label>
             </section>
@@ -445,15 +474,40 @@ export function BookingForm({
 
             <div className="lg:pt-6">
               <BottomActionBar>
-                <button
-                  type="button"
-                  disabled={!agreed || isSubmitting}
-                  onClick={handleSubmitClick}
-                  className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-transparent font-display text-base font-bold text-primary transition-colors enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
-                >
-                  {isSubmitting ? t("processing") : t("submit")}
-                  <ArrowRightIcon className="size-4" />
-                </button>
+                <div className="grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                  <button
+                    type="button"
+                    disabled={!agreed || isSubmitting}
+                    onClick={() => handleSubmitClick("TOSS")}
+                    className="flex h-13 w-full items-center justify-center rounded-full bg-[#3182f6] px-4 font-display text-sm font-bold text-white transition-colors enabled:hover:bg-[#1b64da] disabled:opacity-40"
+                  >
+                    {isSubmitting ? t("processing") : t("payWithToss")}
+                  </button>
+                  {payPalPayment ? (
+                    <PayPalCheckoutButton
+                      payment={payPalPayment}
+                      autoStart
+                      onCancel={() => setPayPalPayment(null)}
+                      onConfirmed={() => {
+                        const applicationId = payPalPayment.application.applicationId;
+                        setPayPalPayment(null);
+                        void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+                        router.push(
+                          `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
+                        );
+                      }}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!agreed || isSubmitting}
+                      onClick={() => handleSubmitClick("PAYPAL")}
+                      className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                    >
+                      {isSubmitting ? t("processing") : t("payWithPayPal")}
+                    </button>
+                  )}
+                </div>
               </BottomActionBar>
             </div>
 

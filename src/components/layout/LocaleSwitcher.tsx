@@ -86,17 +86,19 @@ export function LocaleSwitcher({
         aria-expanded={isOpen}
         aria-label={t("selectLanguage", { language: currentOption.label })}
         onClick={() => setIsOpen((open) => !open)}
-        className={`inline-flex cursor-pointer items-center gap-2 rounded-full transition-colors hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+        className={`group inline-flex cursor-pointer items-center gap-2 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
           variant === "footer"
-            ? "min-h-8 border border-transparent bg-transparent px-0 text-xs font-medium text-muted hover:border-transparent"
-            : "min-h-11 border border-line-soft bg-white px-4 text-sm font-bold text-ink shadow-[0_6px_18px_rgba(38,27,24,0.04)] hover:border-primary focus-visible:border-primary"
+            ? "min-h-8 border border-transparent bg-transparent px-0 text-xs font-medium text-muted hover:border-transparent hover:text-primary"
+            : "min-h-11 border border-line-soft bg-white px-4 text-sm font-bold text-ink shadow-[0_6px_18px_rgba(38,27,24,0.04)] hover:border-primary hover:text-primary-strong focus-visible:border-primary"
         } ${className ?? ""}`}
       >
         <GlobeIcon className="size-[18px]" />
         <span>{currentLabel}</span>
         <ChevronDownIcon
           aria-hidden
-          className={`size-3.5 text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`size-3.5 text-muted transition-colors transition-transform group-hover:text-primary ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </button>
 

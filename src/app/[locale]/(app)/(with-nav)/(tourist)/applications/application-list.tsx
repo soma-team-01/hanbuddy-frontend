@@ -24,7 +24,11 @@ import { isTossUserCancel } from "@/lib/payments/toss";
 import { activityWeatherQueryOptions } from "@/lib/query/activities";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { WeatherCondition } from "@/types/activity";
-import type { Application, ApplicationCancellationReason } from "@/types/application";
+import type {
+  Application,
+  ApplicationCancellationReason,
+  PaymentProvider,
+} from "@/types/application";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
@@ -204,14 +208,14 @@ function ApplicationCard({
   application: Application;
   onCancel: () => void;
   onCancelPending: () => void;
-  onContinuePayment: (applicationId: string) => Promise<void>;
+  onContinuePayment: (applicationId: string, paymentProvider: PaymentProvider) => Promise<void>;
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
-  const [paymentInFlight, setPaymentInFlight] = useState(false);
+  const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
   const getApiErrorMessage = useApiErrorMessage();
@@ -224,7 +228,7 @@ function ApplicationCard({
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
-  const isPaymentBusy = isPaymentPending || paymentInFlight;
+  const isPaymentBusy = isPaymentPending || paymentInFlight !== null;
   // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 내린다 (조회 후 종료 시각이 지난 경우)
   const hasEnded = hasDateTimePassed(application.endAt);
 
@@ -254,7 +258,7 @@ function ApplicationCard({
         </Link>
         {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
         <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
+          <div className="flex flex-wrap items-center gap-2 sm:col-start-1">
             <StatusBadge status={application.status} />
             {dDay !== null && dDay >= 0 ? (
               <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
@@ -263,17 +267,39 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <Link href={`/activities/${application.activityId}`} className="min-w-0 sm:col-start-1">
-            <h3
-              className={`line-clamp-2 font-display text-base leading-6 font-bold ${
-                isCancelled ? "text-muted" : "text-ink"
-              }`}
+          <div className="flex min-w-0 flex-col gap-1.5 sm:col-start-1">
+            <Link href={`/activities/${application.activityId}`} className="min-w-0">
+              <h3
+                className={`line-clamp-2 font-display text-base leading-6 font-bold ${
+                  isCancelled ? "text-muted" : "text-ink"
+                }`}
+              >
+                {application.activityTitle}
+              </h3>
+            </Link>
+            <p className="flex items-center gap-2 text-sm text-muted">
+              <span>{application.dateLabel}</span>
+              {application.status === "confirmed" && !hasEnded ? (
+                <ApplicationWeatherIndicator
+                  activityId={application.activityId}
+                  applicationId={application.id}
+                  startAt={application.startAt}
+                />
+              ) : null}
+            </p>
+            <button
+              type="button"
+              aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
+              onClick={() => setHostProfileOpen(true)}
+              className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
             >
-              {application.activityTitle}
-            </h3>
-          </Link>
-          {/* 넓은 화면에서는 제목 줄에서 시작해 호스트 줄까지 걸쳐 실행 버튼과 취소 사유를 담는다 */}
-          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-3 sm:items-end sm:text-right">
+              <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
+              <span>{application.hostName}</span>
+            </button>
+          </div>
+
+          {/* 넓은 화면에서는 제목·일정·버디 묶음 옆에 실행 버튼과 취소 사유를 담는다 */}
+          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:self-center sm:text-right">
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
               <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
@@ -282,19 +308,43 @@ function ApplicationCard({
                   disabled={isPaymentBusy}
                   onClick={async () => {
                     setPaymentError(null);
-                    setPaymentInFlight(true);
+                    setPaymentInFlight("TOSS");
                     try {
                       // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
-                      await onContinuePayment(application.id);
+                      await onContinuePayment(application.id, "TOSS");
                     } catch (error) {
                       if (!isTossUserCancel(error)) showPaymentError(error);
                     } finally {
-                      setPaymentInFlight(false);
+                      setPaymentInFlight(null);
                     }
                   }}
-                  className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
+                  aria-label={
+                    paymentInFlight === "TOSS" ? t("paymentProcessing") : t("continueWithToss")
+                  }
+                  className={`${CARD_ACTION_CLASS} bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]`}
                 >
-                  {isPaymentBusy ? t("paymentProcessing") : t("continuePayment")}
+                  {paymentInFlight === "TOSS" ? t("paymentProcessing") : "Toss"}
+                </button>
+                <button
+                  type="button"
+                  disabled={isPaymentBusy}
+                  onClick={async () => {
+                    setPaymentError(null);
+                    setPaymentInFlight("PAYPAL");
+                    try {
+                      await onContinuePayment(application.id, "PAYPAL");
+                    } catch (error) {
+                      showPaymentError(error);
+                    } finally {
+                      setPaymentInFlight(null);
+                    }
+                  }}
+                  aria-label={
+                    paymentInFlight === "PAYPAL" ? t("paymentProcessing") : t("continueWithPayPal")
+                  }
+                  className={`${CARD_ACTION_CLASS} bg-[#ffc439] text-[#111] enabled:hover:opacity-90`}
+                >
+                  {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : "PayPal"}
                 </button>
                 <button
                   type="button"
@@ -315,6 +365,14 @@ function ApplicationCard({
                 {t("cancel")}
               </button>
             ) : null}
+            {isCompleted && !application.myReview ? (
+              <ApplicationReviewActions
+                applicationId={application.id}
+                activityTitle={application.activityTitle}
+                review={null}
+                variant="compact"
+              />
+            ) : null}
             {isCancelled && application.cancellationReason ? (
               <p className="mt-auto text-xs text-muted">
                 {t("cancelledReason", {
@@ -325,26 +383,6 @@ function ApplicationCard({
               </p>
             ) : null}
           </div>
-
-          <p className="flex items-center gap-2 text-sm text-muted sm:col-start-1">
-            <span>{application.dateLabel}</span>
-            {application.status === "confirmed" && !hasEnded ? (
-              <ApplicationWeatherIndicator
-                activityId={application.activityId}
-                applicationId={application.id}
-                startAt={application.startAt}
-              />
-            ) : null}
-          </p>
-          <button
-            type="button"
-            aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
-            onClick={() => setHostProfileOpen(true)}
-            className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary sm:col-start-1"
-          >
-            <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-            <span>{application.hostName}</span>
-          </button>
         </div>
       </div>
       <PriceBreakdown application={application} paymentCharge={paymentCharge} />
@@ -366,13 +404,13 @@ function ApplicationCard({
           )}
         </div>
       )}
-      {isCompleted && (
+      {isCompleted && application.myReview ? (
         <ApplicationReviewActions
           applicationId={application.id}
           activityTitle={application.activityTitle}
           review={application.myReview}
         />
-      )}
+      ) : null}
       {hostProfileOpen ? (
         <HostProfileDialog
           host={{
@@ -403,7 +441,7 @@ export function ApplicationList({
     detail?: string,
   ) => Promise<CancelDialogOutcome>;
   onCancelPendingPayment: (applicationId: string) => Promise<CancelDialogOutcome>;
-  onContinuePayment: (applicationId: string) => Promise<void>;
+  onContinuePayment: (applicationId: string, paymentProvider: PaymentProvider) => Promise<void>;
   /** 좌석 선점이 만료되면 목록을 다시 불러오도록 알린다 */
   onHoldExpired?: () => void;
   isPaymentPending: boolean;

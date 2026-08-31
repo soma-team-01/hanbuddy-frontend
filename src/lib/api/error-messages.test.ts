@@ -17,7 +17,7 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(65);
+    expect(BACKEND_ERROR_CODES).toHaveLength(68);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
   });
 
@@ -72,6 +72,18 @@ describe("API error message registry", () => {
     ]) {
       expect(resolveApiErrorMessageKey(apiError(code, 502))).toBe("paymentServiceUnavailable");
     }
+  });
+
+  it("maps PayPal availability, order, and capture failures to safe retry guidance", () => {
+    expect(resolveApiErrorMessageKey(apiError("PAYMENT503_PROVIDER", 503))).toBe(
+      "paypalUnavailable",
+    );
+    expect(resolveApiErrorMessageKey(apiError("PAYMENT502_PAYPAL_ORDER_CREATE", 502))).toBe(
+      "paypalOrderCreateFailed",
+    );
+    expect(resolveApiErrorMessageKey(apiError("PAYMENT502_PAYPAL_CAPTURE", 502))).toBe(
+      "paypalCaptureFailed",
+    );
   });
 
   it("prefers a known code over its HTTP category", () => {

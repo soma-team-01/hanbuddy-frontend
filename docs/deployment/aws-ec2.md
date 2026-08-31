@@ -158,6 +158,7 @@ Repository variables:
 | `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                          |
 | `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                         |
 | `GOOGLE_REDIRECT_URI`    | `https://staging.hanbuddy.kr/auth/google/callback` |
+| `PAYPAL_CLIENT_ID`       | PayPal Sandbox 공개 Client ID                      |
 
 Environment secret:
 
@@ -177,6 +178,7 @@ Environment secret:
 | `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                        |
 | `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                       |
 | `GOOGLE_REDIRECT_URI`    | 운영 frontend domain의 Google OAuth callback URL |
+| `PAYPAL_CLIENT_ID`       | PayPal Live 공개 Client ID                       |
 
 Production environment secret:
 
@@ -187,6 +189,9 @@ Production environment secret:
 `AWS_ROLE_ARN`, `AWS_REGION`, `ECR_REPOSITORY`, `PRODUCTION_DEPLOYMENT_ENABLED`는 두 환경이 공유하는 repository variable이다. `PRODUCTION_DEPLOYMENT_ENABLED`는 production job의 실행 여부만 제어하며 environment variable을 대신하지 않는다.
 
 토스 결제용 frontend 환경변수는 없다. 결제 준비 API가 `clientKey`, 주문번호, 금액을 내려준다.
+PayPal `PAYPAL_CLIENT_ID`는 브라우저 SDK에 공개되는 값이므로 environment variable로 관리한다.
+배포 workflow는 staging에서 `sandbox`, production에서 `production`을 선택해 Docker image 빌드 시
+`NEXT_PUBLIC_PAYPAL_CLIENT_ID`와 함께 주입한다. Client Secret과 Webhook ID는 백엔드에만 둔다.
 
 ## 6. 외부 허용 목록
 
@@ -252,6 +257,8 @@ Production의 Elastic IP는 주소 안정성을 위한 것이며 EC2를 정지�
 ```bash
 docker build \
   --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=test \
+  --build-arg NEXT_PUBLIC_PAYPAL_CLIENT_ID=test \
+  --build-arg NEXT_PUBLIC_PAYPAL_ENVIRONMENT=sandbox \
   -t hanbuddy-frontend:local \
   .
 container_id="$(docker run --rm -d \

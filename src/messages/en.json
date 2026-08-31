@@ -38,6 +38,9 @@
     "paymentCaptureMismatch": "The approved amount or currency does not match this payment.",
     "paymentServiceUnavailable": "The payment service is temporarily unavailable. Please try again shortly.",
     "exchangeRateUnavailable": "Exchange-rate information is temporarily unavailable. Please try again shortly.",
+    "paypalOrderCreateFailed": "PayPal could not start the payment. Try PayPal again from My Applications.",
+    "paypalCaptureFailed": "We could not verify the PayPal result. Check My Applications before making another payment.",
+    "paypalUnavailable": "PayPal is temporarily unavailable. Please use Toss Payments.",
     "buddyRequired": "This feature is only available to buddies.",
     "touristRequired": "This feature is only available to tourists.",
     "userNotFound": "Your user profile could not be found.",
@@ -616,6 +619,8 @@
     "refundPolicy": "Please review the <policy>cancellation & refund policy</policy> before applying.",
     "agreement": "I agree to the terms above.",
     "submit": "Apply & Pay",
+    "payWithToss": "Pay with Toss Payments",
+    "payWithPayPal": "Pay with PayPal",
     "processing": "Processing...",
     "kstNotice": "All times are in Korea Standard Time (KST).",
     "scheduleRequired": "Please select an available schedule.",
@@ -663,6 +668,8 @@
     "subtotal": "{price} × {count, plural, one {# guest} other {# guests}}",
     "total": "Total",
     "continuePayment": "Continue Payment",
+    "continueWithToss": "Pay with Toss Payments",
+    "continueWithPayPal": "Pay with PayPal",
     "cancel": "Cancel",
     "paymentFailed": "Could not complete the payment.",
     "cancelFailed": "Could not cancel the application.",
@@ -705,6 +712,9 @@
     "loading": "Loading payment...",
     "loadError": "Could not load the payment confirmation.",
     "confirmationNotFound": "We couldn't find this payment confirmation.",
+    "paypalReturnNotFound": "We couldn't identify this PayPal payment. Check its status in My Applications before trying again.",
+    "paypalCancelled": "PayPal payment cancelled",
+    "paypalCancelledDescription": "Your application is still waiting for payment. You can choose a payment method again in My Applications.",
     "notPaid": "This application has not been paid yet.",
     "viewApplications": "View My Applications",
     "exploreMore": "Explore More Activities",
@@ -1243,5 +1253,14 @@
       "schedulesTooMany": "You can add up to 30 sessions.",
       "itineraryTooMany": "You can add up to 20 itinerary activities."
     }
+  },
+  "PayPalPayment": {
+    "title": "Complete payment with PayPal",
+    "description": "Review and approve the {amount} payment in PayPal.",
+    "loading": "Loading PayPal...",
+    "continueWithPayPal": "Continue with PayPal",
+    "redirectFallback": "Continue on the PayPal website",
+    "captureFailed": "We could not verify the PayPal payment. Check My Applications before trying again.",
+    "unavailable": "PayPal is temporarily unavailable. Please choose Toss Payments."
   }
 }

@@ -96,7 +96,7 @@ export function LocaleSwitcher({
         <span>{currentLabel}</span>
         <ChevronDownIcon
           aria-hidden
-          className={`size-3.5 text-muted transition-colors group-hover:text-primary ${
+          className={`size-3.5 text-muted transition-colors transition-transform group-hover:text-primary ${
             isOpen ? "rotate-180" : ""
           }`}
         />

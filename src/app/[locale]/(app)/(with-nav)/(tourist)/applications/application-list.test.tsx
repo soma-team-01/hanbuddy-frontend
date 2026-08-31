@@ -149,6 +149,10 @@ describe("ApplicationList", () => {
     // 미래 일정에는 디데이 배지가 붙는다
     expect(screen.getByText(/^D-\d+$/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
+      "bg-[#3182f6]",
+      "text-white",
+    );
     expect(onContinuePayment).not.toHaveBeenCalled();
     expect(mockedGetActivityWeather).not.toHaveBeenCalled();
   });

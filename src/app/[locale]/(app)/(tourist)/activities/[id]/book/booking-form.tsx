@@ -10,13 +10,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
-import {
-  ArrowRightIcon,
-  CalendarDaysIcon,
-  MinusIcon,
-  PlusIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { CalendarDaysIcon, MinusIcon, PlusIcon, UserIcon } from "@/components/ui/icons";
 import {
   AvailabilityCalendarDialog,
   formatSessionTimeRange,
@@ -485,10 +479,9 @@ export function BookingForm({
                     type="button"
                     disabled={!agreed || isSubmitting}
                     onClick={() => handleSubmitClick("TOSS")}
-                    className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-transparent px-4 font-display text-sm font-bold text-primary transition-colors enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
+                    className="flex h-13 w-full items-center justify-center rounded-full bg-[#3182f6] px-4 font-display text-sm font-bold text-white transition-colors enabled:hover:bg-[#1b64da] disabled:opacity-40"
                   >
                     {isSubmitting ? t("processing") : t("payWithToss")}
-                    <ArrowRightIcon className="size-4" />
                   </button>
                   {payPalPayment ? (
                     <PayPalCheckoutButton

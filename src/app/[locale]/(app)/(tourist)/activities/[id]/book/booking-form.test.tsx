@@ -244,6 +244,15 @@ describe("BookingForm", () => {
     await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
   });
 
+  it("uses the Toss Payments blue treatment for its payment action", () => {
+    renderWithQueryClient(<BookingForm activity={activity} />);
+
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
+      "bg-[#3182f6]",
+      "text-white",
+    );
+  });
+
   it("places the PayPal SDK action directly in the booking panel after creating the order", async () => {
     const payPalPayment = {
       ...paymentReady,

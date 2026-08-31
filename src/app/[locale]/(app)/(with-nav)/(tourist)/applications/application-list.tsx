@@ -296,7 +296,7 @@ function ApplicationCard({
                       setPaymentInFlight(null);
                     }
                   }}
-                  className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
+                  className={`${CARD_ACTION_CLASS} bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]`}
                 >
                   {paymentInFlight === "TOSS" ? t("paymentProcessing") : t("continueWithToss")}
                 </button>

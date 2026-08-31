@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { PayPalCheckoutDialog } from "@/components/payment/PayPalCheckoutDialog";
+import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
 import {
@@ -490,14 +490,28 @@ export function BookingForm({
                     {isSubmitting ? t("processing") : t("payWithToss")}
                     <ArrowRightIcon className="size-4" />
                   </button>
-                  <button
-                    type="button"
-                    disabled={!agreed || isSubmitting}
-                    onClick={() => handleSubmitClick("PAYPAL")}
-                    className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
-                  >
-                    {isSubmitting ? t("processing") : t("payWithPayPal")}
-                  </button>
+                  {payPalPayment ? (
+                    <PayPalCheckoutButton
+                      payment={payPalPayment}
+                      onConfirmed={() => {
+                        const applicationId = payPalPayment.application.applicationId;
+                        setPayPalPayment(null);
+                        void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+                        router.push(
+                          `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
+                        );
+                      }}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!agreed || isSubmitting}
+                      onClick={() => handleSubmitClick("PAYPAL")}
+                      className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                    >
+                      {isSubmitting ? t("processing") : t("payWithPayPal")}
+                    </button>
+                  )}
                 </div>
               </BottomActionBar>
             </div>
@@ -542,20 +556,6 @@ export function BookingForm({
           blocking={conflictDialog.blocking}
           onClose={() => setConflictDialog(null)}
           onContinue={handleContinueApplication}
-        />
-      ) : null}
-
-      {payPalPayment ? (
-        <PayPalCheckoutDialog
-          payment={payPalPayment}
-          onClose={() => setPayPalPayment(null)}
-          onConfirmed={() => {
-            setPayPalPayment(null);
-            void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
-            router.push(
-              `/payments/paypal/success?applicationId=${payPalPayment.application.applicationId}&captured=1`,
-            );
-          }}
         />
       ) : null}
     </>

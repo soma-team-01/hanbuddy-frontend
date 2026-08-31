@@ -32,7 +32,7 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
 }));
 
 vi.mock("@/components/payment/PayPalCheckoutDialog", () => ({
-  PayPalCheckoutDialog: ({ payment }: { payment: PaymentReadyResponse }) => (
+  PayPalCheckoutButton: ({ payment }: { payment: PaymentReadyResponse }) => (
     <div data-testid="paypal-checkout">{payment.providerOrderId}</div>
   ),
 }));
@@ -244,7 +244,7 @@ describe("BookingForm", () => {
     await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
   });
 
-  it("creates a PayPal order from the separate PayPal action", async () => {
+  it("places the PayPal SDK action directly in the booking panel after creating the order", async () => {
     const payPalPayment = {
       ...paymentReady,
       paymentProvider: "PAYPAL" as const,

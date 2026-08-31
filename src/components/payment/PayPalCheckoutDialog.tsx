@@ -28,6 +28,12 @@ interface PayPalCheckoutDialogProps {
   onClose: () => void;
 }
 
+interface PayPalCheckoutButtonProps {
+  payment: PaymentReadyResponse;
+  onConfirmed: (application: ApplicationResponse) => void;
+  onCancel?: () => void;
+}
+
 function isRecoverablePayPalError(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -169,6 +175,7 @@ function PayPalCheckoutAction({
       {!showFallback ? (
         <paypal-button
           data-testid="paypal-sdk-button"
+          className="block w-full"
           type="pay"
           aria-label="PayPal"
           disabled={!isHydrated || isStarting || isCapturing}
@@ -219,7 +226,6 @@ export function PayPalCheckoutDialog({
 }: Readonly<PayPalCheckoutDialogProps>) {
   const locale = useLocale() as Locale;
   const t = useTranslations("PayPalPayment");
-  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
   assertPayPalPaymentReady(payment);
 
@@ -234,38 +240,53 @@ export function PayPalCheckoutDialog({
       })}
       onClose={onClose}
       confirmSlot={
-        clientId ? (
-          <PayPalProvider
-            clientId={clientId}
-            environment={getPayPalEnvironment()}
-            components={["paypal-payments"]}
-            pageType="checkout"
-            locale={getPayPalLocale(locale)}
-          >
-            <PayPalCheckoutAction payment={payment} onConfirmed={onConfirmed} onClose={onClose} />
-          </PayPalProvider>
-        ) : payment.approvalUrl ? (
-          <a
-            href={payment.approvalUrl}
-            onClick={() =>
-              storePayPalRedirectContext({
-                applicationId: String(payment.application.applicationId),
-                orderId: payment.providerOrderId,
-              })
-            }
-            className="flex h-12 w-full items-center justify-center rounded-xl bg-[#ffc439] font-display text-sm font-bold text-[#111] transition-opacity hover:opacity-90"
-          >
-            {t("continueWithPayPal")}
-          </a>
-        ) : (
-          <p
-            role="alert"
-            className="rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger"
-          >
-            {t("unavailable")}
-          </p>
-        )
+        <PayPalCheckoutButton payment={payment} onConfirmed={onConfirmed} onCancel={onClose} />
       }
     />
+  );
+}
+
+export function PayPalCheckoutButton({
+  payment,
+  onConfirmed,
+  onCancel = () => undefined,
+}: Readonly<PayPalCheckoutButtonProps>) {
+  const locale = useLocale() as Locale;
+  const t = useTranslations("PayPalPayment");
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+
+  assertPayPalPaymentReady(payment);
+
+  if (!clientId) {
+    return payment.approvalUrl ? (
+      <a
+        href={payment.approvalUrl}
+        onClick={() =>
+          storePayPalRedirectContext({
+            applicationId: String(payment.application.applicationId),
+            orderId: payment.providerOrderId,
+          })
+        }
+        className="flex h-12 w-full items-center justify-center rounded-xl bg-[#ffc439] font-display text-sm font-bold text-[#111] transition-opacity hover:opacity-90"
+      >
+        {t("continueWithPayPal")}
+      </a>
+    ) : (
+      <p role="alert" className="rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger">
+        {t("unavailable")}
+      </p>
+    );
+  }
+
+  return (
+    <PayPalProvider
+      clientId={clientId}
+      environment={getPayPalEnvironment()}
+      components={["paypal-payments"]}
+      pageType="checkout"
+      locale={getPayPalLocale(locale)}
+    >
+      <PayPalCheckoutAction payment={payment} onConfirmed={onConfirmed} onClose={onCancel} />
+    </PayPalProvider>
   );
 }

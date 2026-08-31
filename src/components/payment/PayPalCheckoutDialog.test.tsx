@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
-import { PayPalCheckoutDialog } from "./PayPalCheckoutDialog";
+import { PayPalCheckoutButton, PayPalCheckoutDialog } from "./PayPalCheckoutDialog";
 
 const sdkState = vi.hoisted(() => ({
   loadingStatus: "resolved",
@@ -130,6 +130,15 @@ describe("PayPalCheckoutDialog", () => {
       orderId: payment.providerOrderId,
     });
     expect(screen.queryByRole("link", { name: "Continue on the PayPal website" })).toBeNull();
+  });
+
+  it("renders the SDK action directly without an intermediate HanBuddy dialog", () => {
+    renderWithIntl(
+      <PayPalCheckoutButton payment={payment} onConfirmed={vi.fn()} onCancel={vi.fn()} />,
+    );
+
+    expect(screen.getByTestId("paypal-sdk-button")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("tries the modal first and falls back to a popup for a recoverable presentation error", async () => {

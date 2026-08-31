@@ -160,6 +160,9 @@ describe("ApplicationList", () => {
     }).parentElement;
     expect(scheduleAndHost).toHaveClass("flex-col", "gap-1.5");
     expect(within(scheduleAndHost as HTMLElement).getByText("Jul 20, 2026")).toBeInTheDocument();
+    expect(
+      within(scheduleAndHost as HTMLElement).getByRole("heading", { name: "Bukchon Hidden Gems" }),
+    ).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
     expect(mockedGetActivityWeather).not.toHaveBeenCalled();
   });

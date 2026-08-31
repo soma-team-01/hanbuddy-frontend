@@ -267,17 +267,39 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <Link href={`/activities/${application.activityId}`} className="min-w-0 sm:col-start-1">
-            <h3
-              className={`line-clamp-2 font-display text-base leading-6 font-bold ${
-                isCancelled ? "text-muted" : "text-ink"
-              }`}
+          <div className="flex min-w-0 flex-col gap-1.5 sm:col-start-1">
+            <Link href={`/activities/${application.activityId}`} className="min-w-0">
+              <h3
+                className={`line-clamp-2 font-display text-base leading-6 font-bold ${
+                  isCancelled ? "text-muted" : "text-ink"
+                }`}
+              >
+                {application.activityTitle}
+              </h3>
+            </Link>
+            <p className="flex items-center gap-2 text-sm text-muted">
+              <span>{application.dateLabel}</span>
+              {application.status === "confirmed" && !hasEnded ? (
+                <ApplicationWeatherIndicator
+                  activityId={application.activityId}
+                  applicationId={application.id}
+                  startAt={application.startAt}
+                />
+              ) : null}
+            </p>
+            <button
+              type="button"
+              aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
+              onClick={() => setHostProfileOpen(true)}
+              className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
             >
-              {application.activityTitle}
-            </h3>
-          </Link>
-          {/* 넓은 화면에서는 제목과 일정·버디 정보 옆에 실행 버튼과 취소 사유를 담는다 */}
-          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:items-end sm:text-right">
+              <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
+              <span>{application.hostName}</span>
+            </button>
+          </div>
+
+          {/* 넓은 화면에서는 제목·일정·버디 묶음 옆에 실행 버튼과 취소 사유를 담는다 */}
+          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:items-end sm:text-right">
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
               <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
@@ -352,28 +374,6 @@ function ApplicationCard({
                 })}
               </p>
             ) : null}
-          </div>
-
-          <div className="flex min-w-0 flex-col gap-1.5 sm:col-start-1">
-            <p className="flex items-center gap-2 text-sm text-muted">
-              <span>{application.dateLabel}</span>
-              {application.status === "confirmed" && !hasEnded ? (
-                <ApplicationWeatherIndicator
-                  activityId={application.activityId}
-                  applicationId={application.id}
-                  startAt={application.startAt}
-                />
-              ) : null}
-            </p>
-            <button
-              type="button"
-              aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
-              onClick={() => setHostProfileOpen(true)}
-              className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
-            >
-              <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-              <span>{application.hostName}</span>
-            </button>
           </div>
         </div>
       </div>

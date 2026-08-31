@@ -8,14 +8,19 @@ import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
+import { useDisplayCurrency } from "@/lib/display-currency-context";
 
 export function ActivityFeed() {
   const t = useTranslations("Explore");
   const language = getContentLanguage(useLocale());
+  const { displayCurrency } = useDisplayCurrency();
   const getApiErrorMessage = useApiErrorMessage();
-  const activitiesQuery = useQuery(touristActivitiesQueryOptions(language));
+  const activitiesQuery = useQuery(touristActivitiesQueryOptions(language, displayCurrency));
 
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
+  const hasCurrencyFallback = (activitiesQuery.data ?? []).some(
+    (activity) => (activity.displayPrice?.currency ?? "KRW") !== displayCurrency,
+  );
 
   if (activitiesQuery.isPending) {
     return (
@@ -65,20 +70,29 @@ export function ActivityFeed() {
   }
 
   return (
-    <div
-      data-testid="activity-grid"
-      className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    >
-      {activities.map((activity, index) => (
-        <Link
-          key={activity.id}
-          href={`/activities/${activity.id}`}
-          className="motion-reveal motion-press block rounded-2xl"
-          style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
-        >
-          <ActivityCard activity={activity} eagerImage={index === 0} />
-        </Link>
-      ))}
+    <div className="flex flex-col gap-4">
+      {hasCurrencyFallback ? (
+        <p role="status" className="text-sm text-muted">
+          {t("currencyFallback", {
+            currency: activities[0]?.priceCurrency ?? "KRW",
+          })}
+        </p>
+      ) : null}
+      <div
+        data-testid="activity-grid"
+        className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        {activities.map((activity, index) => (
+          <Link
+            key={activity.id}
+            href={`/activities/${activity.id}`}
+            className="motion-reveal motion-press block rounded-2xl"
+            style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
+          >
+            <ActivityCard activity={activity} eagerImage={index === 0} />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

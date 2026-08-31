@@ -11,6 +11,13 @@ const activitySummary = {
   meetingPointName: "Anguk Station Exit 2",
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 32.5,
+    discountedPrice: null,
+    currency: "USD",
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
+  },
 };
 
 const activityDetail = {
@@ -59,11 +66,11 @@ describe("tourist activity API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivities("EN")).resolves.toEqual({
+    await expect(getTouristActivities("EN", "USD")).resolves.toEqual({
       status: "success",
       activities: [activitySummary],
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities?language=EN", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities?language=EN&displayCurrency=USD", {
       credentials: "same-origin",
     });
   });
@@ -79,11 +86,11 @@ describe("tourist activity API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivity(42, "KO")).resolves.toEqual({
+    await expect(getTouristActivity(42, "KO", "KRW")).resolves.toEqual({
       status: "success",
       activity: activityDetail,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42?language=KO", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42?language=KO&displayCurrency=KRW", {
       credentials: "same-origin",
     });
   });
@@ -121,7 +128,9 @@ describe("tourist activity API client", () => {
       .mockResolvedValueOnce(createJsonResponse({ isSuccess: false }, 401));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivities("EN")).resolves.toEqual({ status: "unauthenticated" });
+    await expect(getTouristActivities("EN", "USD")).resolves.toEqual({
+      status: "unauthenticated",
+    });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/auth/refresh", {
       method: "POST",
       credentials: "same-origin",

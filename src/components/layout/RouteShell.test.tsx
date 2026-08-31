@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithIntl } from "@/test/render-with-intl";
 
 const navigation = vi.hoisted(() => ({ pathname: "/explore" as string }));
 
@@ -15,7 +16,7 @@ describe("RouteShell", () => {
   });
 
   it("keeps the shared site chrome on regular routes", () => {
-    render(
+    renderWithIntl(
       <RouteShell header={<div>Header</div>} footer={<div>Footer</div>}>
         <main>Content</main>
       </RouteShell>,
@@ -29,7 +30,7 @@ describe("RouteShell", () => {
   it("removes the shared header and footer from activity creation", () => {
     navigation.pathname = "/my-activities/create";
 
-    render(
+    renderWithIntl(
       <RouteShell header={<div>Header</div>} footer={<div>Footer</div>}>
         <main>Creation flow</main>
       </RouteShell>,
@@ -43,7 +44,7 @@ describe("RouteShell", () => {
   it("removes the shared header and footer from activity editing", () => {
     navigation.pathname = "/my-activities/42/edit";
 
-    render(
+    renderWithIntl(
       <RouteShell header={<div>Header</div>} footer={<div>Footer</div>}>
         <main>Edit flow</main>
       </RouteShell>,
@@ -57,7 +58,7 @@ describe("RouteShell", () => {
   it("keeps the site chrome on the buddy activity detail route", () => {
     navigation.pathname = "/my-activities/42";
 
-    render(
+    renderWithIntl(
       <RouteShell header={<div>Header</div>} footer={<div>Footer</div>}>
         <main>Detail</main>
       </RouteShell>,

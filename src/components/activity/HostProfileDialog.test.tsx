@@ -31,6 +31,13 @@ function createActivity(activityId: number, buddyId = 17) {
     meetingPlaceId: "place-1",
     price: 45000,
     currency: "KRW",
+    displayPrice: {
+      price: 45000,
+      discountedPrice: null,
+      currency: "KRW" as const,
+      exchangeRateDate: null,
+      estimated: false,
+    },
   };
 }
 

@@ -9,13 +9,15 @@ import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { getContentLanguage } from "@/lib/content-language";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
+import { useDisplayCurrency } from "@/lib/display-currency-context";
 
 const RECOMMENDED_LIMIT = 4;
 
 export function RecommendedExperiences() {
   const t = useTranslations("Landing");
   const language = getContentLanguage(useLocale());
-  const activitiesQuery = useQuery(touristActivitiesQueryOptions(language));
+  const { displayCurrency } = useDisplayCurrency();
+  const activitiesQuery = useQuery(touristActivitiesQueryOptions(language, displayCurrency));
 
   if (activitiesQuery.isPending) {
     return (

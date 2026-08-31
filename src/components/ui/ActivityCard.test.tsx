@@ -50,6 +50,23 @@ describe("ActivityCard", () => {
     ).toBeTruthy();
   });
 
+  it("formats estimated display prices with the response currency", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{
+          ...activity,
+          price: 32.5,
+          priceCurrency: "USD",
+          priceEstimated: true,
+          priceExchangeRateDate: "2026-08-31",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("≈ $32.50")).toBeInTheDocument();
+    expect(screen.getByText("Estimated · per person")).toBeInTheDocument();
+  });
+
   it("replaces the discount chip with a sold-out chip when sold out", () => {
     renderWithIntl(
       <ActivityCard

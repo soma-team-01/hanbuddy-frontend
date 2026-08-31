@@ -1,4 +1,5 @@
 import type { ResolvedContentLanguage } from "@/types/content-language";
+import type { ActivityDisplayPrice, DisplayCurrency } from "@/types/display-currency";
 
 export interface Host {
   /** 백엔드 버디 식별자. 동명이인이 있어도 이 값으로 호스트를 구분한다 */
@@ -53,6 +54,12 @@ export interface Activity {
   reviewCount?: number;
   /** 원화(₩) 기준 1인당 가격 (진행 중인 할인이 있으면 할인 적용가) */
   price: number;
+  /** 현재 화면에 표시할 참고 통화. 직접 생성한 미리보기 데이터는 생략할 수 있다. */
+  priceCurrency?: DisplayCurrency;
+  /** 환율을 적용한 참고 가격인지 여부 */
+  priceEstimated?: boolean;
+  /** 참고 가격에 사용한 환율 기준일 */
+  priceExchangeRateDate?: string | null;
   /** 할인 전 가격 (있을 때만 취소선으로 노출) */
   originalPrice?: number;
   /** 진행 중인 할인율(%) — 카드 할인 배지에 사용 */
@@ -124,6 +131,8 @@ export interface TouristActivitySummary {
   discountEndDate?: string | null;
   /** 할인 적용가 (KRW 정수 반올림). 진행 중인 할인이 없으면 null */
   discountedPrice?: number | null;
+  /** 사용자가 요청한 통화로 환산한 참고 가격 */
+  displayPrice?: ActivityDisplayPrice;
   /** 모든 일정이 예약 마감이면 true */
   isSoldOut?: boolean;
 }

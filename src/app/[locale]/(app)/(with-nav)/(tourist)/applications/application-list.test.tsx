@@ -370,6 +370,13 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-bukchon",
           price: 45000,
           currency: "KRW",
+          displayPrice: {
+            price: 45000,
+            discountedPrice: null,
+            currency: "KRW",
+            exchangeRateDate: null,
+            estimated: false,
+          },
         },
         {
           activityId: 77,
@@ -383,6 +390,13 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-gwangjang",
           price: 30000,
           currency: "KRW",
+          displayPrice: {
+            price: 30000,
+            discountedPrice: null,
+            currency: "KRW",
+            exchangeRateDate: null,
+            estimated: false,
+          },
         },
       ],
     });
@@ -424,6 +438,13 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-hongdae",
           price: 20000,
           currency: "KRW",
+          displayPrice: {
+            price: 20000,
+            discountedPrice: null,
+            currency: "KRW",
+            exchangeRateDate: null,
+            estimated: false,
+          },
         },
       ],
     });

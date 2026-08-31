@@ -16,7 +16,7 @@ import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/com
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetails,
@@ -120,6 +120,10 @@ export function ActivityDetailView({
     : "";
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
+  const priceCurrency = activity.priceCurrency ?? "KRW";
+  const estimatedPriceTitle = activity.priceExchangeRateDate
+    ? tExplore("estimatedPriceWithDate", { date: activity.priceExchangeRateDate })
+    : tExplore("estimatedPrice");
   const totalDurationLabel =
     activity.durationMinutes !== undefined
       ? activity.durationMinutes < 60
@@ -209,12 +213,21 @@ export function ActivityDetailView({
       <div className="flex shrink-0 flex-col items-end">
         {hasDiscount ? (
           <span className="text-sm text-muted line-through">
-            {formatKrw(activity.originalPrice ?? activity.price, locale)}
+            {formatDisplayCurrency(activity.originalPrice ?? activity.price, priceCurrency, locale)}
           </span>
         ) : null}
-        <span className="font-display text-xl font-bold text-primary">
-          {t("perPerson", { price: formatKrw(activity.price, locale) })}
+        <span
+          className="font-display text-xl font-bold text-primary"
+          title={activity.priceEstimated ? estimatedPriceTitle : undefined}
+        >
+          {activity.priceEstimated ? "≈ " : ""}
+          {t("perPerson", {
+            price: formatDisplayCurrency(activity.price, priceCurrency, locale),
+          })}
         </span>
+        {activity.priceEstimated ? (
+          <span className="text-xs text-muted">{tExplore("estimatedPrice")}</span>
+        ) : null}
       </div>
       {preview || !selectedSession ? (
         <button

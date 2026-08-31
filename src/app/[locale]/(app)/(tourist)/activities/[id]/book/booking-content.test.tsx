@@ -35,6 +35,13 @@ const activityDetail: TouristActivityDetail = {
   restrictionNotes: [],
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 45000,
+    discountedPrice: null,
+    currency: "KRW",
+    exchangeRateDate: null,
+    estimated: false,
+  },
   meetingPointName: "Anguk Station Exit 2",
   meetingPlaceId: "ChIJ-bukchon",
   images: [],

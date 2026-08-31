@@ -18,6 +18,13 @@ const summary = {
   meetingPlaceId: "ChIJ-bukchon",
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 32.5,
+    discountedPrice: null,
+    currency: "USD" as const,
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
+  },
 };
 
 describe("activity view adapters", () => {
@@ -35,7 +42,20 @@ describe("activity view adapters", () => {
       meetingPoint: {
         placeId: "ChIJ-bukchon",
       },
+      price: 32.5,
+      priceCurrency: "USD",
+      priceEstimated: true,
+      priceExchangeRateDate: "2026-08-31",
+    });
+  });
+
+  it("falls back to the existing KRW fields during a rolling backend deployment", () => {
+    const legacySummary = { ...summary, displayPrice: undefined };
+
+    expect(mapTouristActivitySummaryToActivity(legacySummary)).toMatchObject({
       price: 45000,
+      priceCurrency: "KRW",
+      priceEstimated: false,
     });
   });
 
@@ -46,9 +66,10 @@ describe("activity view adapters", () => {
         discountPercent: null,
         discountEndDate: null,
         discountedPrice: null,
+        displayPrice: { ...summary.displayPrice, discountedPrice: null },
       }),
     ).toMatchObject({
-      price: 45000,
+      price: 32.5,
       originalPrice: undefined,
       discountPercent: undefined,
     });
@@ -60,11 +81,12 @@ describe("activity view adapters", () => {
       discountPercent: 20,
       discountEndDate: "2026-08-31",
       discountedPrice: 36000,
+      displayPrice: { ...summary.displayPrice, discountedPrice: 26 },
       isSoldOut: false,
     });
 
-    expect(activity.price).toBe(36000);
-    expect(activity.originalPrice).toBe(45000);
+    expect(activity.price).toBe(26);
+    expect(activity.originalPrice).toBe(32.5);
     expect(activity.discountPercent).toBe(20);
     expect(activity.isSoldOut).toBe(false);
   });

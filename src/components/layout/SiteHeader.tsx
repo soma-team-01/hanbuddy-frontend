@@ -12,6 +12,7 @@ import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
 import { ChatRoomsPoller } from "@/components/chat/ChatRoomsPoller";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { SettlementNavIcon } from "@/components/layout/SettlementNavIcon";
+import { CurrencySwitcher } from "./CurrencySwitcher";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileMenu } from "./MobileMenu";
 import { PageContainer } from "./PageContainer";
@@ -115,6 +116,7 @@ export function SiteHeader({
     (effectiveRole !== null || sessionStatus === "guest") &&
     effectiveRole !== "buddy" &&
     !isBuddyArea;
+  const showCurrencySwitcher = effectiveRole !== "buddy" && !isBuddyArea && !isMinimalHeader;
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
   const logoHref = isBuddyArea ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");
@@ -166,6 +168,7 @@ export function SiteHeader({
         ) : null}
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
+          {showCurrencySwitcher ? <CurrencySwitcher /> : null}
           {showLanguageSwitcher && !effectiveAuthenticated ? (
             <LocaleSwitcher labelStyle="name" />
           ) : null}
@@ -228,8 +231,11 @@ export function SiteHeader({
               <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
                 {navigationLinks}
               </nav>
-              {(showLanguageSwitcher && !effectiveAuthenticated) || sessionStatus === "guest" ? (
+              {showCurrencySwitcher ||
+              (showLanguageSwitcher && !effectiveAuthenticated) ||
+              sessionStatus === "guest" ? (
                 <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
+                  {showCurrencySwitcher ? <CurrencySwitcher className="justify-start" /> : null}
                   {showLanguageSwitcher && !effectiveAuthenticated ? (
                     <LocaleSwitcher labelStyle="name" dismissMenu className="justify-start px-1" />
                   ) : null}

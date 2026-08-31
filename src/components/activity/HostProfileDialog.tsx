@@ -16,6 +16,7 @@ import { getContentLanguage } from "@/lib/content-language";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { buddyProfileQueryOptions, buddyReviewsQueryOptions } from "@/lib/query/reviews";
 import type { Host } from "@/types/activity";
+import { useDisplayCurrency } from "@/lib/display-currency-context";
 
 /** 버디를 특정할 수 없을 때 프로필·후기 조회를 끄기 위한 자리 표시자 */
 const NO_BUDDY_ID = 0;
@@ -43,13 +44,14 @@ export function HostProfileDialog({
 }>) {
   const locale = useLocale();
   const language = getContentLanguage(locale);
+  const { displayCurrency } = useDisplayCurrency();
   const t = useTranslations("ActivityDetail");
   const tReviews = useTranslations("Reviews");
   const tChat = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const activitiesQuery = useQuery({
-    ...touristActivitiesQueryOptions(language),
+    ...touristActivitiesQueryOptions(language, displayCurrency),
     enabled: showHostedActivities,
   });
 

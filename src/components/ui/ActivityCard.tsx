@@ -2,7 +2,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
 export function ActivityCard({
@@ -13,6 +13,10 @@ export function ActivityCard({
   const t = useTranslations("Explore");
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
+  const priceCurrency = activity.priceCurrency ?? "KRW";
+  const estimatedPriceTitle = activity.priceExchangeRateDate
+    ? t("estimatedPriceWithDate", { date: activity.priceExchangeRateDate })
+    : t("estimatedPrice");
 
   return (
     <article className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)] transition duration-200 hover:shadow-[0_14px_32px_rgba(61,45,43,0.1)]">
@@ -56,17 +60,26 @@ export function ActivityCard({
           <div className="ml-auto flex flex-col items-end gap-0.5 text-right">
             {hasDiscount ? (
               <s className="text-xs leading-4 text-muted">
-                {formatKrw(activity.originalPrice ?? activity.price, locale)}
+                {formatDisplayCurrency(
+                  activity.originalPrice ?? activity.price,
+                  priceCurrency,
+                  locale,
+                )}
               </s>
             ) : null}
             <p
+              title={activity.priceEstimated ? estimatedPriceTitle : undefined}
               className={`font-display text-xl leading-7 ${
                 hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
               }`}
             >
-              {formatKrw(activity.price, locale)}
+              {activity.priceEstimated ? "≈ " : ""}
+              {formatDisplayCurrency(activity.price, priceCurrency, locale)}
             </p>
-            <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
+            <p className="text-xs leading-4 text-muted">
+              {activity.priceEstimated ? `${t("estimatedPrice")} · ` : ""}
+              {t("perPersonLabel")}
+            </p>
           </div>
         </div>
       </div>

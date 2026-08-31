@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { appendRequestedContentLanguage } from "./content-language";
+import {
+  appendRequestedActivityDisplayOptions,
+  appendRequestedContentLanguage,
+} from "./content-language";
 
 describe("appendRequestedContentLanguage", () => {
   it("forwards a supported language while preserving existing query parameters", () => {
@@ -19,5 +22,27 @@ describe("appendRequestedContentLanguage", () => {
 
     expect(appendRequestedContentLanguage(unknownRequest, "/activities")).toBe("/activities");
     expect(appendRequestedContentLanguage(invalidRequest, "/activities")).toBe("/activities");
+  });
+});
+
+describe("appendRequestedActivityDisplayOptions", () => {
+  it("forwards language and a supported display currency", () => {
+    const request = new NextRequest(
+      "http://localhost/api/activities?language=JA&displayCurrency=JPY",
+    );
+
+    expect(appendRequestedActivityDisplayOptions(request, "/activities")).toBe(
+      "/activities?language=JA&displayCurrency=JPY",
+    );
+  });
+
+  it("drops an unsupported display currency", () => {
+    const request = new NextRequest(
+      "http://localhost/api/activities?language=EN&displayCurrency=EUR",
+    );
+
+    expect(appendRequestedActivityDisplayOptions(request, "/activities")).toBe(
+      "/activities?language=EN",
+    );
   });
 });

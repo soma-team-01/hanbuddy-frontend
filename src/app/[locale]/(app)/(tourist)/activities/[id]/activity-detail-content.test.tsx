@@ -6,6 +6,7 @@ import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
+import { DisplayCurrencyProvider } from "@/lib/display-currency-context";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { ActivityDetailContent } from "./activity-detail-content";
@@ -94,6 +95,13 @@ function buildActivityDetail() {
     restrictionNotes: ["Comfortable shoes recommended"],
     price: 45000,
     currency: "KRW",
+    displayPrice: {
+      price: 45000,
+      discountedPrice: null,
+      currency: "KRW" as const,
+      exchangeRateDate: null,
+      estimated: false,
+    },
     meetingPointName: "Anguk Station Exit 2",
     meetingPlaceId: "ChIJ-bukchon",
     images: [],
@@ -460,6 +468,13 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-bukchon",
           price: 45000,
           currency: "KRW",
+          displayPrice: {
+            price: 45000,
+            discountedPrice: null,
+            currency: "KRW",
+            exchangeRateDate: null,
+            estimated: false,
+          },
         },
         {
           activityId: 77,
@@ -473,6 +488,13 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-gwangjang",
           price: 30000,
           currency: "KRW",
+          displayPrice: {
+            price: 30000,
+            discountedPrice: null,
+            currency: "KRW",
+            exchangeRateDate: null,
+            estimated: false,
+          },
         },
         {
           activityId: 88,
@@ -486,6 +508,13 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-hongdae",
           price: 20000,
           currency: "KRW",
+          displayPrice: {
+            price: 20000,
+            discountedPrice: null,
+            currency: "KRW",
+            exchangeRateDate: null,
+            estimated: false,
+          },
         },
       ],
     });
@@ -597,7 +626,9 @@ describe("ActivityDetailContent", () => {
     const renderContent = (locale: "en" | "ko") => (
       <QueryClientProvider client={queryClient}>
         <IntlTestProvider locale={locale}>
-          <ActivityDetailContent activityId="42" />
+          <DisplayCurrencyProvider>
+            <ActivityDetailContent activityId="42" />
+          </DisplayCurrencyProvider>
         </IntlTestProvider>
       </QueryClientProvider>
     );
@@ -625,8 +656,8 @@ describe("ActivityDetailContent", () => {
       "ko",
     ]);
     expect(mockedGetTouristActivity).toHaveBeenCalledTimes(2);
-    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(1, "42", "EN");
-    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(2, "42", "KO");
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(1, "42", "EN", "USD");
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(2, "42", "KO", "KRW");
   });
 
   it("ignores a late Google address response from the previous locale", async () => {
@@ -640,7 +671,9 @@ describe("ActivityDetailContent", () => {
     const renderContent = (locale: "en" | "ko") => (
       <QueryClientProvider client={queryClient}>
         <IntlTestProvider locale={locale}>
-          <ActivityDetailContent activityId="42" />
+          <DisplayCurrencyProvider>
+            <ActivityDetailContent activityId="42" />
+          </DisplayCurrencyProvider>
         </IntlTestProvider>
       </QueryClientProvider>
     );
@@ -672,7 +705,9 @@ describe("ActivityDetailContent", () => {
     const renderContent = () => (
       <QueryClientProvider client={queryClient}>
         <IntlTestProvider locale="en">
-          <ActivityDetailContent activityId="42" />
+          <DisplayCurrencyProvider>
+            <ActivityDetailContent activityId="42" />
+          </DisplayCurrencyProvider>
         </IntlTestProvider>
       </QueryClientProvider>
     );

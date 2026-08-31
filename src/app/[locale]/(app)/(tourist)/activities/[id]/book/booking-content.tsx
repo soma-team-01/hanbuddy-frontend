@@ -16,7 +16,8 @@ export function BookingContent({
 }: Readonly<{ activityId: string; initialScheduleId?: string }>) {
   const locale = useLocale();
   const language = getContentLanguage(locale);
-  const activityQuery = useQuery(touristActivityQueryOptions(activityId, language));
+  // 참고 통화 선택과 무관하게 실제 신청·결제 금액은 항상 원화 계약을 사용한다.
+  const activityQuery = useQuery(touristActivityQueryOptions(activityId, language, "KRW"));
   const t = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();

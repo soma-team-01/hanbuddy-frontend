@@ -4,7 +4,9 @@ import type {
   TouristActivitySummary,
 } from "@/types/activity";
 import { withContentLanguage } from "@/lib/content-language";
+import { withDisplayCurrency } from "@/lib/display-currency";
 import type { ContentLanguage } from "@/types/content-language";
+import type { DisplayCurrency } from "@/types/display-currency";
 import { requestApiResult, type ApiResult } from "./result";
 
 export type TouristActivitiesResult = ApiResult<TouristActivitySummary[], "activities">;
@@ -17,9 +19,10 @@ const DEFAULT_ACTIVITY_WEATHER_ERROR_MESSAGE = "활동 날씨를 불러오지 �
 
 export async function getTouristActivities(
   language: ContentLanguage,
+  displayCurrency: DisplayCurrency = "KRW",
 ): Promise<TouristActivitiesResult> {
   return requestApiResult<TouristActivitySummary[], "activities">(
-    withContentLanguage("/api/activities", language),
+    withDisplayCurrency(withContentLanguage("/api/activities", language), displayCurrency),
     "activities",
     undefined,
     DEFAULT_ACTIVITY_LIST_ERROR_MESSAGE,
@@ -29,9 +32,13 @@ export async function getTouristActivities(
 export async function getTouristActivity(
   activityId: number | string,
   language: ContentLanguage,
+  displayCurrency: DisplayCurrency = "KRW",
 ): Promise<TouristActivityResult> {
   return requestApiResult<TouristActivityDetail, "activity">(
-    withContentLanguage(`/api/activities/${activityId}`, language),
+    withDisplayCurrency(
+      withContentLanguage(`/api/activities/${activityId}`, language),
+      displayCurrency,
+    ),
     "activity",
     undefined,
     DEFAULT_ACTIVITY_DETAIL_ERROR_MESSAGE,

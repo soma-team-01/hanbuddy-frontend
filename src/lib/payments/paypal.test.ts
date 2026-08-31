@@ -10,11 +10,11 @@ const paymentReady = {
 
 describe("PayPal payment helpers", () => {
   it("maps every supported site locale to a PayPal locale", () => {
-    expect(getPayPalLocale("en")).toBe("en_US");
-    expect(getPayPalLocale("ko")).toBe("ko_KR");
-    expect(getPayPalLocale("ja")).toBe("ja_JP");
-    expect(getPayPalLocale("zh-Hans")).toBe("zh_CN");
-    expect(getPayPalLocale("zh-Hant")).toBe("zh_TW");
+    expect(getPayPalLocale("en")).toBe("en-US");
+    expect(getPayPalLocale("ko")).toBe("ko-KR");
+    expect(getPayPalLocale("ja")).toBe("ja-JP");
+    expect(getPayPalLocale("zh-Hans")).toBe("zh-CN");
+    expect(getPayPalLocale("zh-Hant")).toBe("zh-TW");
   });
 
   it("uses sandbox unless production is explicitly configured", () => {

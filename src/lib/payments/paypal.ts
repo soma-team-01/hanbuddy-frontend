@@ -2,11 +2,11 @@ import type { Locale } from "@/i18n/routing";
 import type { PaymentReadyResponse } from "@/types/application";
 
 const PAYPAL_LOCALE_BY_LOCALE: Record<Locale, string> = {
-  en: "en_US",
-  ko: "ko_KR",
-  ja: "ja_JP",
-  "zh-Hans": "zh_CN",
-  "zh-Hant": "zh_TW",
+  en: "en-US",
+  ko: "ko-KR",
+  ja: "ja-JP",
+  "zh-Hans": "zh-CN",
+  "zh-Hant": "zh-TW",
 };
 
 export function getPayPalLocale(locale: Locale): string {

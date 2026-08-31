@@ -365,6 +365,14 @@ function ApplicationCard({
                 {t("cancel")}
               </button>
             ) : null}
+            {isCompleted && !application.myReview ? (
+              <ApplicationReviewActions
+                applicationId={application.id}
+                activityTitle={application.activityTitle}
+                review={null}
+                variant="compact"
+              />
+            ) : null}
             {isCancelled && application.cancellationReason ? (
               <p className="mt-auto text-xs text-muted">
                 {t("cancelledReason", {
@@ -396,13 +404,13 @@ function ApplicationCard({
           )}
         </div>
       )}
-      {isCompleted && (
+      {isCompleted && application.myReview ? (
         <ApplicationReviewActions
           applicationId={application.id}
           activityTitle={application.activityTitle}
           review={application.myReview}
         />
-      )}
+      ) : null}
       {hostProfileOpen ? (
         <HostProfileDialog
           host={{

@@ -594,7 +594,9 @@ describe("ApplicationList", () => {
     renderList();
 
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
-    fireEvent.click(screen.getByRole("button", { name: "Write a review" }));
+    const writeReviewButton = screen.getByRole("button", { name: "Write a review" });
+    expect(writeReviewButton).toHaveClass("h-9", "sm:min-w-32");
+    fireEvent.click(writeReviewButton);
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Traditional Tea Tasting")).toBeInTheDocument();

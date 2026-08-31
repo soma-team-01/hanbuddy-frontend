@@ -83,6 +83,7 @@ describe("HostProfileDialog", () => {
     expect(await screen.findByText("Other experiences from this buddy")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Message Seoul Buddy" })).toBeDisabled();
     expect(screen.getByText("I know this neighborhood well.")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
   });
 
   it("does not repeat the activity currently being previewed", async () => {

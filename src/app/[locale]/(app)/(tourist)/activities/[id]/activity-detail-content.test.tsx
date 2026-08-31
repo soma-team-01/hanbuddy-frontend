@@ -6,7 +6,6 @@ import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
-import { DisplayCurrencyProvider } from "@/lib/display-currency-context";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { ActivityDetailContent } from "./activity-detail-content";
@@ -626,9 +625,7 @@ describe("ActivityDetailContent", () => {
     const renderContent = (locale: "en" | "ko") => (
       <QueryClientProvider client={queryClient}>
         <IntlTestProvider locale={locale}>
-          <DisplayCurrencyProvider>
-            <ActivityDetailContent activityId="42" />
-          </DisplayCurrencyProvider>
+          <ActivityDetailContent activityId="42" />
         </IntlTestProvider>
       </QueryClientProvider>
     );
@@ -671,9 +668,7 @@ describe("ActivityDetailContent", () => {
     const renderContent = (locale: "en" | "ko") => (
       <QueryClientProvider client={queryClient}>
         <IntlTestProvider locale={locale}>
-          <DisplayCurrencyProvider>
-            <ActivityDetailContent activityId="42" />
-          </DisplayCurrencyProvider>
+          <ActivityDetailContent activityId="42" />
         </IntlTestProvider>
       </QueryClientProvider>
     );
@@ -705,9 +700,7 @@ describe("ActivityDetailContent", () => {
     const renderContent = () => (
       <QueryClientProvider client={queryClient}>
         <IntlTestProvider locale="en">
-          <DisplayCurrencyProvider>
-            <ActivityDetailContent activityId="42" />
-          </DisplayCurrencyProvider>
+          <ActivityDetailContent activityId="42" />
         </IntlTestProvider>
       </QueryClientProvider>
     );

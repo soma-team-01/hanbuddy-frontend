@@ -13,9 +13,11 @@ export function ActivityCard({
   const t = useTranslations("Explore");
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
-  const priceCurrency = activity.priceCurrency ?? "KRW";
-  const estimatedPriceTitle = activity.priceExchangeRateDate
-    ? t("estimatedPriceWithDate", { date: activity.priceExchangeRateDate })
+  const displayedPrice = activity.referencePrice ?? activity.price;
+  const displayedOriginalPrice = activity.referenceOriginalPrice ?? activity.originalPrice;
+  const displayedCurrency = activity.referenceCurrency ?? "KRW";
+  const estimatedPriceTitle = activity.referencePriceExchangeRateDate
+    ? t("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
     : t("estimatedPrice");
 
   return (
@@ -61,23 +63,25 @@ export function ActivityCard({
             {hasDiscount ? (
               <s className="text-xs leading-4 text-muted">
                 {formatDisplayCurrency(
-                  activity.originalPrice ?? activity.price,
-                  priceCurrency,
+                  displayedOriginalPrice ?? displayedPrice,
+                  displayedCurrency,
                   locale,
                 )}
               </s>
             ) : null}
             <p
-              title={activity.priceEstimated ? estimatedPriceTitle : undefined}
               className={`font-display text-xl leading-7 ${
                 hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
               }`}
             >
-              {activity.priceEstimated ? "≈ " : ""}
-              {formatDisplayCurrency(activity.price, priceCurrency, locale)}
+              {activity.referencePriceEstimated ? "≈ " : ""}
+              {formatDisplayCurrency(displayedPrice, displayedCurrency, locale)}
             </p>
-            <p className="text-xs leading-4 text-muted">
-              {activity.priceEstimated ? `${t("estimatedPrice")} · ` : ""}
+            <p
+              className="text-xs leading-4 text-muted"
+              title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+            >
+              {activity.referencePriceEstimated ? `${t("estimatedPrice")} · ` : ""}
               {t("perPersonLabel")}
             </p>
           </div>

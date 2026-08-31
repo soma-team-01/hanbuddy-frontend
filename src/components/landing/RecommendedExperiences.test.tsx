@@ -53,6 +53,7 @@ describe("RecommendedExperiences", () => {
       "/en/activities/1",
     );
     expect(screen.getByText("HanBuddy activity 4")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
   });
 
   it("keeps the recommendation section visible when no activities are available", async () => {

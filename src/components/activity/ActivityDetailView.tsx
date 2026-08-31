@@ -120,9 +120,11 @@ export function ActivityDetailView({
     : "";
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
-  const priceCurrency = activity.priceCurrency ?? "KRW";
-  const estimatedPriceTitle = activity.priceExchangeRateDate
-    ? tExplore("estimatedPriceWithDate", { date: activity.priceExchangeRateDate })
+  const displayedPrice = activity.referencePrice ?? activity.price;
+  const displayedOriginalPrice = activity.referenceOriginalPrice ?? activity.originalPrice;
+  const displayedCurrency = activity.referenceCurrency ?? "KRW";
+  const estimatedPriceTitle = activity.referencePriceExchangeRateDate
+    ? tExplore("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
     : tExplore("estimatedPrice");
   const totalDurationLabel =
     activity.durationMinutes !== undefined
@@ -213,21 +215,22 @@ export function ActivityDetailView({
       <div className="flex shrink-0 flex-col items-end">
         {hasDiscount ? (
           <span className="text-sm text-muted line-through">
-            {formatDisplayCurrency(activity.originalPrice ?? activity.price, priceCurrency, locale)}
+            {formatDisplayCurrency(
+              displayedOriginalPrice ?? displayedPrice,
+              displayedCurrency,
+              locale,
+            )}
           </span>
         ) : null}
         <span
           className="font-display text-xl font-bold text-primary"
-          title={activity.priceEstimated ? estimatedPriceTitle : undefined}
+          title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
         >
-          {activity.priceEstimated ? "≈ " : ""}
+          {activity.referencePriceEstimated ? "≈ " : ""}
           {t("perPerson", {
-            price: formatDisplayCurrency(activity.price, priceCurrency, locale),
+            price: formatDisplayCurrency(displayedPrice, displayedCurrency, locale),
           })}
         </span>
-        {activity.priceEstimated ? (
-          <span className="text-xs text-muted">{tExplore("estimatedPrice")}</span>
-        ) : null}
       </div>
       {preview || !selectedSession ? (
         <button

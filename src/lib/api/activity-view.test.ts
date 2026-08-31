@@ -42,10 +42,12 @@ describe("activity view adapters", () => {
       meetingPoint: {
         placeId: "ChIJ-bukchon",
       },
-      price: 32.5,
-      priceCurrency: "USD",
-      priceEstimated: true,
-      priceExchangeRateDate: "2026-08-31",
+      price: 45000,
+      referencePrice: 32.5,
+      referenceOriginalPrice: undefined,
+      referenceCurrency: "USD",
+      referencePriceEstimated: true,
+      referencePriceExchangeRateDate: "2026-08-31",
     });
   });
 
@@ -54,8 +56,8 @@ describe("activity view adapters", () => {
 
     expect(mapTouristActivitySummaryToActivity(legacySummary)).toMatchObject({
       price: 45000,
-      priceCurrency: "KRW",
-      priceEstimated: false,
+      referencePrice: undefined,
+      referenceCurrency: undefined,
     });
   });
 
@@ -69,8 +71,9 @@ describe("activity view adapters", () => {
         displayPrice: { ...summary.displayPrice, discountedPrice: null },
       }),
     ).toMatchObject({
-      price: 32.5,
+      price: 45000,
       originalPrice: undefined,
+      referencePrice: 32.5,
       discountPercent: undefined,
     });
   });
@@ -85,8 +88,10 @@ describe("activity view adapters", () => {
       isSoldOut: false,
     });
 
-    expect(activity.price).toBe(26);
-    expect(activity.originalPrice).toBe(32.5);
+    expect(activity.price).toBe(36000);
+    expect(activity.originalPrice).toBe(45000);
+    expect(activity.referencePrice).toBe(26);
+    expect(activity.referenceOriginalPrice).toBe(32.5);
     expect(activity.discountPercent).toBe(20);
     expect(activity.isSoldOut).toBe(false);
   });

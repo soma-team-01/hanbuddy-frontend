@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { usePathname } from "@/i18n/navigation";
 import type { SiteNavRole } from "@/lib/auth/routes";
 import { SessionRoleProvider } from "@/lib/auth/session-role-context";
-import { DisplayCurrencyProvider } from "@/lib/display-currency-context";
 
 export function RouteShell({
   header,
@@ -23,20 +22,14 @@ export function RouteShell({
     pathname === "/my-activities/create" || /^\/my-activities\/[^/]+\/edit$/.test(pathname);
 
   if (isFullScreenActivityForm) {
-    return (
-      <DisplayCurrencyProvider>
-        <SessionRoleProvider role={sessionRole}>{children}</SessionRoleProvider>
-      </DisplayCurrencyProvider>
-    );
+    return <SessionRoleProvider role={sessionRole}>{children}</SessionRoleProvider>;
   }
 
   return (
-    <DisplayCurrencyProvider>
-      <SessionRoleProvider role={sessionRole}>
-        {header}
-        <div className="flex flex-1 flex-col">{children}</div>
-        {footer}
-      </SessionRoleProvider>
-    </DisplayCurrencyProvider>
+    <SessionRoleProvider role={sessionRole}>
+      {header}
+      <div className="flex flex-1 flex-col">{children}</div>
+      {footer}
+    </SessionRoleProvider>
   );
 }

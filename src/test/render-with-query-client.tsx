@@ -5,7 +5,6 @@ import type { NextIntlClientProvider } from "next-intl";
 import type { Locale } from "@/i18n/routing";
 import { createQueryClient } from "@/lib/query/client";
 import { IntlTestProvider } from "@/test/render-with-intl";
-import { DisplayCurrencyProvider } from "@/lib/display-currency-context";
 
 interface QueryRenderOptions extends Omit<RenderOptions, "wrapper"> {
   queryClient?: QueryClient;
@@ -21,7 +20,7 @@ export function renderWithQueryClient(ui: ReactElement, options: QueryRenderOpti
     return (
       <QueryClientProvider client={queryClient}>
         <IntlTestProvider locale={locale} messages={messages}>
-          <DisplayCurrencyProvider>{children}</DisplayCurrencyProvider>
+          {children}
         </IntlTestProvider>
       </QueryClientProvider>
     );

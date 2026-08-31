@@ -50,21 +50,22 @@ describe("ActivityCard", () => {
     ).toBeTruthy();
   });
 
-  it("formats estimated display prices with the response currency", () => {
+  it("shows the locale currency returned by the activity API", () => {
     renderWithIntl(
       <ActivityCard
         activity={{
           ...activity,
-          price: 32.5,
-          priceCurrency: "USD",
-          priceEstimated: true,
-          priceExchangeRateDate: "2026-08-31",
+          referencePrice: 32.5,
+          referenceCurrency: "USD",
+          referencePriceEstimated: true,
+          referencePriceExchangeRateDate: "2026-08-31",
         }}
       />,
     );
 
-    expect(screen.getByText("≈ $32.50")).toBeInTheDocument();
+    expect(screen.getByText("≈ $32.50")).toHaveClass("text-ink");
     expect(screen.getByText("Estimated · per person")).toBeInTheDocument();
+    expect(screen.queryByText("₩35,000")).not.toBeInTheDocument();
   });
 
   it("replaces the discount chip with a sold-out chip when sold out", () => {

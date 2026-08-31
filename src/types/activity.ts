@@ -54,12 +54,16 @@ export interface Activity {
   reviewCount?: number;
   /** 원화(₩) 기준 1인당 가격 (진행 중인 할인이 있으면 할인 적용가) */
   price: number;
-  /** 현재 화면에 표시할 참고 통화. 직접 생성한 미리보기 데이터는 생략할 수 있다. */
-  priceCurrency?: DisplayCurrency;
+  /** 사용자가 선택한 통화로 환산한 참고 가격. KRW 선택·fallback이면 생략한다. */
+  referencePrice?: number;
+  /** 참고 통화 기준 할인 전 가격 */
+  referenceOriginalPrice?: number;
+  /** 참고 가격의 응답 통화 */
+  referenceCurrency?: DisplayCurrency;
   /** 환율을 적용한 참고 가격인지 여부 */
-  priceEstimated?: boolean;
+  referencePriceEstimated?: boolean;
   /** 참고 가격에 사용한 환율 기준일 */
-  priceExchangeRateDate?: string | null;
+  referencePriceExchangeRateDate?: string | null;
   /** 할인 전 가격 (있을 때만 취소선으로 노출) */
   originalPrice?: number;
   /** 진행 중인 할인율(%) — 카드 할인 배지에 사용 */

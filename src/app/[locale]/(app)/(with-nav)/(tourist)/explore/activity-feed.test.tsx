@@ -82,6 +82,7 @@ describe("ActivityFeed", () => {
     renderWithQueryClient(<ActivityFeed />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
     expect(screen.getByText("1.5 hours")).toBeInTheDocument();
     expect(screen.getByText("₩45,000")).toBeInTheDocument();
     expect(screen.getByText("per person")).toBeInTheDocument();

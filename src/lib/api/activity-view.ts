@@ -18,7 +18,9 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     exchangeRateDate: null,
     estimated: false,
   };
-  const hasActiveDiscount = displayPrice.discountedPrice !== null;
+  const hasActiveDiscount =
+    summary.discountedPrice !== null && summary.discountedPrice !== undefined;
+  const hasReferencePrice = displayPrice.currency !== "KRW";
 
   return {
     id: String(summary.activityId),
@@ -29,11 +31,15 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     imageUrl: summary.thumbnailImageUrl,
     heroImageUrl: summary.thumbnailImageUrl,
     images: summary.thumbnailImageUrl ? [summary.thumbnailImageUrl] : [],
-    price: displayPrice.discountedPrice ?? displayPrice.price,
-    originalPrice: hasActiveDiscount ? displayPrice.price : undefined,
-    priceCurrency: displayPrice.currency,
-    priceEstimated: displayPrice.estimated,
-    priceExchangeRateDate: displayPrice.exchangeRateDate,
+    price: summary.discountedPrice ?? summary.price,
+    originalPrice: hasActiveDiscount ? summary.price : undefined,
+    referencePrice: hasReferencePrice
+      ? (displayPrice.discountedPrice ?? displayPrice.price)
+      : undefined,
+    referenceOriginalPrice: hasReferencePrice && hasActiveDiscount ? displayPrice.price : undefined,
+    referenceCurrency: hasReferencePrice ? displayPrice.currency : undefined,
+    referencePriceEstimated: hasReferencePrice ? displayPrice.estimated : undefined,
+    referencePriceExchangeRateDate: hasReferencePrice ? displayPrice.exchangeRateDate : undefined,
     discountPercent: summary.discountPercent ?? undefined,
     durationMinutes:
       summary.totalDurationHours != null && summary.totalDurationHours > 0

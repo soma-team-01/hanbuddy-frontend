@@ -39,8 +39,16 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
 }));
 
 vi.mock("@/components/payment/PayPalCheckoutDialog", () => ({
-  PayPalCheckoutDialog: ({ payment }: { payment: PaymentReadyResponse }) => (
-    <div data-testid="paypal-checkout">{payment.providerOrderId}</div>
+  PayPalCheckoutButton: ({
+    payment,
+    autoStart,
+  }: {
+    payment: PaymentReadyResponse;
+    autoStart?: boolean;
+  }) => (
+    <div data-testid="paypal-checkout" data-auto-start={String(autoStart)}>
+      {payment.providerOrderId}
+    </div>
   ),
 }));
 
@@ -181,6 +189,7 @@ describe("ApplicationsContent", () => {
     );
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
     expect(await screen.findByTestId("paypal-checkout")).toHaveTextContent("5O190127TN364715T");
+    expect(screen.getByTestId("paypal-checkout")).toHaveAttribute("data-auto-start", "true");
   });
 
   it("shows the seat-hold countdown from the application response", async () => {

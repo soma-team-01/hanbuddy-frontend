@@ -141,6 +141,16 @@ describe("PayPalCheckoutDialog", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("opens the PayPal modal automatically without rendering an intermediate button", async () => {
+    renderWithIntl(
+      <PayPalCheckoutButton payment={payment} autoStart onConfirmed={vi.fn()} onCancel={vi.fn()} />,
+    );
+
+    await waitFor(() => expect(sdkState.start).toHaveBeenCalledWith({ presentationMode: "modal" }));
+    expect(screen.queryByTestId("paypal-sdk-button")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
   it("tries the modal first and falls back to a popup for a recoverable presentation error", async () => {
     sdkState.start
       .mockRejectedValueOnce(Object.assign(new Error("modal unavailable"), { isRecoverable: true }))

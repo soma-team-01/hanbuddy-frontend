@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { PayPalCheckoutDialog } from "@/components/payment/PayPalCheckoutDialog";
+import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import {
   cancelMyApplication,
   cancelPendingPayment,
@@ -172,9 +172,10 @@ export function ApplicationsContent() {
         isPaymentPending={continuePaymentMutation.isPending}
       />
       {payPalPayment ? (
-        <PayPalCheckoutDialog
+        <PayPalCheckoutButton
           payment={payPalPayment}
-          onClose={() => setPayPalPayment(null)}
+          autoStart
+          onCancel={() => setPayPalPayment(null)}
           onConfirmed={(application) => {
             queryClient.setQueryData<ApplicationResponse[]>(
               applicationKeys.mine(language),

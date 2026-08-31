@@ -153,6 +153,13 @@ describe("ApplicationList", () => {
       "bg-[#3182f6]",
       "text-white",
     );
+    expect(screen.getByText("Toss")).toBeInTheDocument();
+    expect(screen.getByText("PayPal")).toBeInTheDocument();
+    const scheduleAndHost = screen.getByRole("button", {
+      name: "View Jihoon Kim's profile",
+    }).parentElement;
+    expect(scheduleAndHost).toHaveClass("flex-col", "gap-1.5");
+    expect(within(scheduleAndHost as HTMLElement).getByText("Jul 20, 2026")).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
     expect(mockedGetActivityWeather).not.toHaveBeenCalled();
   });

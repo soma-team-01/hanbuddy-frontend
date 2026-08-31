@@ -276,8 +276,8 @@ function ApplicationCard({
               {application.activityTitle}
             </h3>
           </Link>
-          {/* 넓은 화면에서는 제목 줄에서 시작해 호스트 줄까지 걸쳐 실행 버튼과 취소 사유를 담는다 */}
-          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-3 sm:items-end sm:text-right">
+          {/* 넓은 화면에서는 제목과 일정·버디 정보 옆에 실행 버튼과 취소 사유를 담는다 */}
+          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:items-end sm:text-right">
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
               <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
@@ -296,9 +296,12 @@ function ApplicationCard({
                       setPaymentInFlight(null);
                     }
                   }}
+                  aria-label={
+                    paymentInFlight === "TOSS" ? t("paymentProcessing") : t("continueWithToss")
+                  }
                   className={`${CARD_ACTION_CLASS} bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]`}
                 >
-                  {paymentInFlight === "TOSS" ? t("paymentProcessing") : t("continueWithToss")}
+                  {paymentInFlight === "TOSS" ? t("paymentProcessing") : "Toss"}
                 </button>
                 <button
                   type="button"
@@ -314,9 +317,12 @@ function ApplicationCard({
                       setPaymentInFlight(null);
                     }
                   }}
+                  aria-label={
+                    paymentInFlight === "PAYPAL" ? t("paymentProcessing") : t("continueWithPayPal")
+                  }
                   className={`${CARD_ACTION_CLASS} bg-[#ffc439] text-[#111] enabled:hover:opacity-90`}
                 >
-                  {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : t("continueWithPayPal")}
+                  {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : "PayPal"}
                 </button>
                 <button
                   type="button"
@@ -348,25 +354,27 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <p className="flex items-center gap-2 text-sm text-muted sm:col-start-1">
-            <span>{application.dateLabel}</span>
-            {application.status === "confirmed" && !hasEnded ? (
-              <ApplicationWeatherIndicator
-                activityId={application.activityId}
-                applicationId={application.id}
-                startAt={application.startAt}
-              />
-            ) : null}
-          </p>
-          <button
-            type="button"
-            aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
-            onClick={() => setHostProfileOpen(true)}
-            className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary sm:col-start-1"
-          >
-            <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-            <span>{application.hostName}</span>
-          </button>
+          <div className="flex min-w-0 flex-col gap-1.5 sm:col-start-1">
+            <p className="flex items-center gap-2 text-sm text-muted">
+              <span>{application.dateLabel}</span>
+              {application.status === "confirmed" && !hasEnded ? (
+                <ApplicationWeatherIndicator
+                  activityId={application.activityId}
+                  applicationId={application.id}
+                  startAt={application.startAt}
+                />
+              ) : null}
+            </p>
+            <button
+              type="button"
+              aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
+              onClick={() => setHostProfileOpen(true)}
+              className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
+            >
+              <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
+              <span>{application.hostName}</span>
+            </button>
+          </div>
         </div>
       </div>
       <PriceBreakdown application={application} paymentCharge={paymentCharge} />

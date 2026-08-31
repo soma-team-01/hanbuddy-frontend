@@ -19,7 +19,7 @@ import type { Locale } from "@/i18n/routing";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { createApplication, getApplicationConflicts } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys } from "@/lib/query/applications";
@@ -130,6 +130,10 @@ export function BookingForm({
   const total = discountedUnitPrice * guests;
   const discountAmount = Math.max(0, originalSubtotal - total);
   const hasDiscount = discountAmount > 0;
+  const estimatedPayPalTotal =
+    activity.referenceCurrency === "USD" && activity.referencePrice !== undefined
+      ? activity.referencePrice * guests
+      : null;
 
   function toBlockingDialog(
     error: unknown,
@@ -483,30 +487,43 @@ export function BookingForm({
                   >
                     {isSubmitting ? t("processing") : t("payWithToss")}
                   </button>
-                  {payPalPayment ? (
-                    <PayPalCheckoutButton
-                      payment={payPalPayment}
-                      autoStart
-                      onCancel={() => setPayPalPayment(null)}
-                      onConfirmed={() => {
-                        const applicationId = payPalPayment.application.applicationId;
-                        setPayPalPayment(null);
-                        void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
-                        router.push(
-                          `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
-                        );
-                      }}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={!agreed || isSubmitting}
-                      onClick={() => handleSubmitClick("PAYPAL")}
-                      className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
-                    >
-                      {isSubmitting ? t("processing") : t("payWithPayPal")}
-                    </button>
-                  )}
+                  <div className="flex min-w-0 flex-col items-center gap-1.5">
+                    {payPalPayment ? (
+                      <PayPalCheckoutButton
+                        payment={payPalPayment}
+                        autoStart
+                        onCancel={() => setPayPalPayment(null)}
+                        onConfirmed={() => {
+                          const applicationId = payPalPayment.application.applicationId;
+                          setPayPalPayment(null);
+                          void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+                          router.push(
+                            `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
+                          );
+                        }}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={!agreed || isSubmitting}
+                        onClick={() => handleSubmitClick("PAYPAL")}
+                        className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                      >
+                        {isSubmitting ? t("processing") : t("payWithPayPal")}
+                      </button>
+                    )}
+                    <p className="text-center text-[11px] leading-4 text-muted">
+                      {t("paypalCurrencyNotice")}
+                      {estimatedPayPalTotal !== null ? (
+                        <>
+                          {" · "}
+                          {t("paypalEstimatedTotal", {
+                            amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
+                          })}
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
                 </div>
               </BottomActionBar>
             </div>

@@ -36,11 +36,11 @@ const activityDetail: TouristActivityDetail = {
   price: 45000,
   currency: "KRW",
   displayPrice: {
-    price: 45000,
+    price: 32.5,
     discountedPrice: null,
-    currency: "KRW",
-    exchangeRateDate: null,
-    estimated: false,
+    currency: "USD",
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
   },
   meetingPointName: "Anguk Station Exit 2",
   meetingPlaceId: "ChIJ-bukchon",
@@ -71,11 +71,12 @@ describe("BookingContent", () => {
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("10:00 AM");
     expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
+    expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "EN", "USD");
   });
 
   it("reuses activity detail already cached by the detail screen", async () => {
     const queryClient = createQueryClient();
-    queryClient.setQueryData(activityKeys.detail("42", "EN"), activityDetail);
+    queryClient.setQueryData(activityKeys.detail("42", "EN", "USD"), activityDetail);
 
     renderWithQueryClient(<BookingContent activityId="42" />, { queryClient });
 

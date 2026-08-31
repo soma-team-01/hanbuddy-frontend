@@ -67,6 +67,10 @@ const activity: Activity = {
   rating: 5,
   reviewCount: 0,
   price: 45000,
+  referencePrice: 32.5,
+  referenceCurrency: "USD",
+  referencePriceEstimated: true,
+  referencePriceExchangeRateDate: "2026-08-31",
   host: {
     name: "Jihoon Kim",
     bio: "Local HanBuddy host",
@@ -164,6 +168,7 @@ describe("BookingForm", () => {
     // 요약 카드: 선택한 일정과 총액이 보인다
     expect(screen.getByText("2026-07-20")).toBeInTheDocument();
     expect(screen.getByText("Total (KRW)")).toBeInTheDocument();
+    expect(screen.getByText(/PayPal charges in USD.*Estimated \$32\.50/)).toBeInTheDocument();
     // 취소·환불 정책은 밑줄 트리거에 호버 툴팁으로 제공된다
     expect(
       screen.getByRole("button", { name: "cancellation & refund policy" }),

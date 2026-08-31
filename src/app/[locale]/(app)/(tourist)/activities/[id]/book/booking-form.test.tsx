@@ -32,8 +32,16 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
 }));
 
 vi.mock("@/components/payment/PayPalCheckoutDialog", () => ({
-  PayPalCheckoutButton: ({ payment }: { payment: PaymentReadyResponse }) => (
-    <div data-testid="paypal-checkout">{payment.providerOrderId}</div>
+  PayPalCheckoutButton: ({
+    payment,
+    autoStart,
+  }: {
+    payment: PaymentReadyResponse;
+    autoStart?: boolean;
+  }) => (
+    <div data-testid="paypal-checkout" data-auto-start={String(autoStart)}>
+      {payment.providerOrderId}
+    </div>
   ),
 }));
 
@@ -253,7 +261,7 @@ describe("BookingForm", () => {
     );
   });
 
-  it("places the PayPal SDK action directly in the booking panel after creating the order", async () => {
+  it("opens PayPal automatically after creating the order", async () => {
     const payPalPayment = {
       ...paymentReady,
       paymentProvider: "PAYPAL" as const,
@@ -277,6 +285,7 @@ describe("BookingForm", () => {
     );
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
     expect(await screen.findByTestId("paypal-checkout")).toHaveTextContent("5O190127TN364715T");
+    expect(screen.getByTestId("paypal-checkout")).toHaveAttribute("data-auto-start", "true");
   });
 
   it("blocks an application when the selected schedule was already booked", async () => {

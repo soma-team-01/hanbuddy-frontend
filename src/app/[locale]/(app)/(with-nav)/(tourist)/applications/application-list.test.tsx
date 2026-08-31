@@ -155,6 +155,8 @@ describe("ApplicationList", () => {
     );
     expect(screen.getByText("Toss")).toBeInTheDocument();
     expect(screen.getByText("PayPal")).toBeInTheDocument();
+    const paymentActions = screen.getByText("Toss").closest("div")?.parentElement;
+    expect(paymentActions).toHaveClass("sm:row-start-1", "sm:row-span-2", "sm:self-center");
     const scheduleAndHost = screen.getByRole("button", {
       name: "View Jihoon Kim's profile",
     }).parentElement;

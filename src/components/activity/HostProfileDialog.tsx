@@ -46,6 +46,7 @@ export function HostProfileDialog({
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const t = useTranslations("ActivityDetail");
+  const tExplore = useTranslations("Explore");
   const tReviews = useTranslations("Reviews");
   const tChat = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
@@ -177,45 +178,58 @@ export function HostProfileDialog({
               <p className="mt-3 text-sm text-muted">{t("noOtherActivities")}</p>
             ) : null}
             <ul className="mt-3 flex flex-col gap-2">
-              {hostedActivities.map((activity) => (
-                <li key={activity.activityId}>
-                  <Link
-                    href={`/activities/${activity.activityId}`}
-                    onClick={onClose}
-                    className="flex items-center gap-3 rounded-xl border border-line-soft bg-canvas-soft p-2.5 transition-colors hover:border-primary"
-                  >
-                    <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-panel">
-                      <Image
-                        src={activity.thumbnailImageUrl}
-                        alt=""
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="line-clamp-2 block font-display text-sm font-bold text-ink">
-                        {activity.title}
+              {hostedActivities.map((activity) => {
+                const estimatedPriceTitle = activity.displayPrice?.exchangeRateDate
+                  ? tExplore("estimatedPriceWithDate", {
+                      date: activity.displayPrice.exchangeRateDate,
+                    })
+                  : tExplore("estimatedPrice");
+
+                return (
+                  <li key={activity.activityId}>
+                    <Link
+                      href={`/activities/${activity.activityId}`}
+                      onClick={onClose}
+                      className="flex items-center gap-3 rounded-xl border border-line-soft bg-canvas-soft p-2.5 transition-colors hover:border-primary"
+                    >
+                      <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-panel">
+                        <Image
+                          src={activity.thumbnailImageUrl}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
                       </span>
-                      <span className="mt-0.5 block text-xs font-semibold text-primary">
-                        {t("perPerson", {
-                          price: formatKrw(activity.discountedPrice ?? activity.price, locale),
-                        })}
-                      </span>
-                      {activity.displayPrice && activity.displayPrice.currency !== "KRW" ? (
-                        <span className="block text-xs text-muted">
-                          ≈{" "}
-                          {formatDisplayCurrency(
-                            activity.displayPrice.discountedPrice ?? activity.displayPrice.price,
-                            activity.displayPrice.currency,
-                            locale,
-                          )}
+                      <span className="min-w-0 flex-1">
+                        <span className="line-clamp-2 block font-display text-sm font-bold text-ink">
+                          {activity.title}
                         </span>
-                      ) : null}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                        <span className="mt-0.5 block text-xs font-semibold text-primary">
+                          {t("perPerson", {
+                            price: formatKrw(activity.discountedPrice ?? activity.price, locale),
+                          })}
+                        </span>
+                        {activity.displayPrice && activity.displayPrice.currency !== "KRW" ? (
+                          <span
+                            className="block text-xs text-muted"
+                            title={
+                              activity.displayPrice.estimated ? estimatedPriceTitle : undefined
+                            }
+                          >
+                            ≈{" "}
+                            {formatDisplayCurrency(
+                              activity.displayPrice.discountedPrice ?? activity.displayPrice.price,
+                              activity.displayPrice.currency,
+                              locale,
+                            )}
+                          </span>
+                        ) : null}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ) : null}

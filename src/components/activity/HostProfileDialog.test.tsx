@@ -117,6 +117,9 @@ describe("HostProfileDialog", () => {
     expect(screen.queryByText("Activity 44")).not.toBeInTheDocument();
     const hostedActivityLink = screen.getByRole("link", { name: /Activity 43/ });
     expect(within(hostedActivityLink).getByText("₩45,000 per person")).toBeInTheDocument();
-    expect(within(hostedActivityLink).getByText("≈ $32.50")).toBeInTheDocument();
+    expect(within(hostedActivityLink).getByText("≈ $32.50")).toHaveAttribute(
+      "title",
+      "Estimated using exchange rates from 2026-08-31",
+    );
   });
 });

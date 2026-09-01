@@ -11,8 +11,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MessageSquareIcon, XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import { getContentLanguage } from "@/lib/content-language";
+import { getDefaultDisplayCurrency } from "@/lib/display-currency";
+import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { buddyProfileQueryOptions, buddyReviewsQueryOptions } from "@/lib/query/reviews";
 import type { Host } from "@/types/activity";
@@ -41,15 +43,16 @@ export function HostProfileDialog({
   canContact?: boolean;
   onClose: () => void;
 }>) {
-  const locale = useLocale();
+  const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const t = useTranslations("ActivityDetail");
+  const tExplore = useTranslations("Explore");
   const tReviews = useTranslations("Reviews");
   const tChat = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const activitiesQuery = useQuery({
-    ...touristActivitiesQueryOptions(language),
+    ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
     enabled: showHostedActivities,
   });
 
@@ -175,35 +178,58 @@ export function HostProfileDialog({
               <p className="mt-3 text-sm text-muted">{t("noOtherActivities")}</p>
             ) : null}
             <ul className="mt-3 flex flex-col gap-2">
-              {hostedActivities.map((activity) => (
-                <li key={activity.activityId}>
-                  <Link
-                    href={`/activities/${activity.activityId}`}
-                    onClick={onClose}
-                    className="flex items-center gap-3 rounded-xl border border-line-soft bg-canvas-soft p-2.5 transition-colors hover:border-primary"
-                  >
-                    <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-panel">
-                      <Image
-                        src={activity.thumbnailImageUrl}
-                        alt=""
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="line-clamp-2 block font-display text-sm font-bold text-ink">
-                        {activity.title}
+              {hostedActivities.map((activity) => {
+                const estimatedPriceTitle = activity.displayPrice?.exchangeRateDate
+                  ? tExplore("estimatedPriceWithDate", {
+                      date: activity.displayPrice.exchangeRateDate,
+                    })
+                  : tExplore("estimatedPrice");
+
+                return (
+                  <li key={activity.activityId}>
+                    <Link
+                      href={`/activities/${activity.activityId}`}
+                      onClick={onClose}
+                      className="flex items-center gap-3 rounded-xl border border-line-soft bg-canvas-soft p-2.5 transition-colors hover:border-primary"
+                    >
+                      <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-panel">
+                        <Image
+                          src={activity.thumbnailImageUrl}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
                       </span>
-                      <span className="mt-0.5 block text-xs font-semibold text-primary">
-                        {t("perPerson", {
-                          price: formatKrw(activity.discountedPrice ?? activity.price, locale),
-                        })}
+                      <span className="min-w-0 flex-1">
+                        <span className="line-clamp-2 block font-display text-sm font-bold text-ink">
+                          {activity.title}
+                        </span>
+                        <span className="mt-0.5 block text-xs font-semibold text-primary">
+                          {t("perPerson", {
+                            price: formatKrw(activity.discountedPrice ?? activity.price, locale),
+                          })}
+                        </span>
+                        {activity.displayPrice && activity.displayPrice.currency !== "KRW" ? (
+                          <span
+                            className="block text-xs text-muted"
+                            title={
+                              activity.displayPrice.estimated ? estimatedPriceTitle : undefined
+                            }
+                          >
+                            ≈{" "}
+                            {formatDisplayCurrency(
+                              activity.displayPrice.discountedPrice ?? activity.displayPrice.price,
+                              activity.displayPrice.currency,
+                              locale,
+                            )}
+                          </span>
+                        ) : null}
                       </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ) : null}

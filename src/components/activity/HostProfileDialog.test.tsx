@@ -1,8 +1,10 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
+import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
+import type { ActivityDisplayPrice } from "@/types/display-currency";
 import { HostProfileDialog } from "./HostProfileDialog";
 
 vi.mock("@/lib/api/activities", () => ({
@@ -18,7 +20,11 @@ const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedGetBuddyProfile = vi.mocked(getBuddyProfile);
 const mockedGetBuddyReviews = vi.mocked(getBuddyReviews);
 
-function createActivity(activityId: number, buddyId = 17) {
+function createActivity(
+  activityId: number,
+  buddyId = 17,
+  displayPrice: ActivityDisplayPrice = createKrwDisplayPrice(45000),
+) {
   return {
     activityId,
     buddyId,
@@ -31,6 +37,7 @@ function createActivity(activityId: number, buddyId = 17) {
     meetingPlaceId: "place-1",
     price: 45000,
     currency: "KRW",
+    displayPrice,
   };
 }
 
@@ -76,12 +83,23 @@ describe("HostProfileDialog", () => {
     expect(await screen.findByText("Other experiences from this buddy")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Message Seoul Buddy" })).toBeDisabled();
     expect(screen.getByText("I know this neighborhood well.")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
   });
 
   it("does not repeat the activity currently being previewed", async () => {
     mockedGetTouristActivities.mockResolvedValue({
       status: "success",
-      activities: [createActivity(42), createActivity(43), createActivity(44, 99)],
+      activities: [
+        createActivity(42),
+        createActivity(43, 17, {
+          price: 32.5,
+          discountedPrice: null,
+          currency: "USD",
+          exchangeRateDate: "2026-08-31",
+          estimated: true,
+        }),
+        createActivity(44, 99),
+      ],
     });
 
     renderWithQueryClient(
@@ -97,5 +115,11 @@ describe("HostProfileDialog", () => {
     expect(await screen.findByText("Activity 43")).toBeInTheDocument();
     expect(screen.queryByText("Activity 42")).not.toBeInTheDocument();
     expect(screen.queryByText("Activity 44")).not.toBeInTheDocument();
+    const hostedActivityLink = screen.getByRole("link", { name: /Activity 43/ });
+    expect(within(hostedActivityLink).getByText("₩45,000 per person")).toBeInTheDocument();
+    expect(within(hostedActivityLink).getByText("≈ $32.50")).toHaveAttribute(
+      "title",
+      "Estimated using exchange rates from 2026-08-31",
+    );
   });
 });

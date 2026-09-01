@@ -16,8 +16,9 @@ import { myProfileQueryOptions, userKeys } from "./users";
 
 describe("domain query options", () => {
   it("builds stable activity keys", () => {
-    expect(activityKeys.list("EN")).toEqual(["activities", "list", "EN"]);
-    expect(activityKeys.detail("42", "EN")).toEqual(["activities", "detail", "42", "EN"]);
+    expect(activityKeys.list("EN")).toEqual(["activities", "list", "EN", "KRW"]);
+    expect(activityKeys.list("EN", "USD")).not.toEqual(activityKeys.list("EN", "KRW"));
+    expect(activityKeys.detail("42", "EN")).toEqual(["activities", "detail", "42", "EN", "KRW"]);
     expect(touristActivityQueryOptions("42", "EN").queryKey).toEqual(
       activityKeys.detail("42", "EN"),
     );

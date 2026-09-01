@@ -7,13 +7,18 @@ import { Link } from "@/i18n/navigation";
 import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
+import { getDefaultDisplayCurrency } from "@/lib/display-currency";
+import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 
 export function ActivityFeed() {
   const t = useTranslations("Explore");
-  const language = getContentLanguage(useLocale());
+  const locale = getLocaleOrDefault(useLocale());
+  const language = getContentLanguage(locale);
   const getApiErrorMessage = useApiErrorMessage();
-  const activitiesQuery = useQuery(touristActivitiesQueryOptions(language));
+  const activitiesQuery = useQuery(
+    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
+  );
 
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 
@@ -65,20 +70,22 @@ export function ActivityFeed() {
   }
 
   return (
-    <div
-      data-testid="activity-grid"
-      className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    >
-      {activities.map((activity, index) => (
-        <Link
-          key={activity.id}
-          href={`/activities/${activity.id}`}
-          className="motion-reveal motion-press block rounded-2xl"
-          style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
-        >
-          <ActivityCard activity={activity} eagerImage={index === 0} />
-        </Link>
-      ))}
+    <div className="flex flex-col gap-4">
+      <div
+        data-testid="activity-grid"
+        className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        {activities.map((activity, index) => (
+          <Link
+            key={activity.id}
+            href={`/activities/${activity.id}`}
+            className="motion-reveal motion-press block rounded-2xl"
+            style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
+          >
+            <ActivityCard activity={activity} eagerImage={index === 0} />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

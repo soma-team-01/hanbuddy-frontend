@@ -50,6 +50,29 @@ describe("ActivityCard", () => {
     ).toBeTruthy();
   });
 
+  it("keeps KRW as the main price and shows the locale currency as a reference", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{
+          ...activity,
+          referencePrice: 32.5,
+          referenceCurrency: "USD",
+          referencePriceEstimated: true,
+          referencePriceExchangeRateDate: "2026-08-31",
+        }}
+      />,
+    );
+
+    const krwPrice = screen.getByText("₩35,000");
+    const referencePrice = screen.getByText("≈ $32.50");
+    expect(krwPrice).toHaveClass("text-ink");
+    expect(referencePrice).toHaveClass("text-muted");
+    expect(
+      referencePrice.compareDocumentPosition(krwPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText("per person")).toBeInTheDocument();
+  });
+
   it("replaces the discount chip with a sold-out chip when sold out", () => {
     renderWithIntl(
       <ActivityCard

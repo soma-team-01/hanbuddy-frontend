@@ -16,7 +16,8 @@ export function BookingContent({
 }: Readonly<{ activityId: string; initialScheduleId?: string }>) {
   const locale = useLocale();
   const language = getContentLanguage(locale);
-  const activityQuery = useQuery(touristActivityQueryOptions(activityId, language));
+  // 원화 계약 가격과 함께 PayPal 결제 예정 금액을 안내할 USD 참고 가격을 받는다.
+  const activityQuery = useQuery(touristActivityQueryOptions(activityId, language, "USD"));
   const t = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();

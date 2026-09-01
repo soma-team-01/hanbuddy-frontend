@@ -125,7 +125,8 @@ describe("MyActivityDetailContent", () => {
       screen.getByText("I have hosted tea ceremonies in Insadong for five years."),
     ).toBeInTheDocument();
     expect(screen.getByText("Tea tasting")).toBeInTheDocument();
-    expect(screen.getByText("₩36,000 per person")).toBeInTheDocument();
+    expect(screen.getByText("₩36,000")).toBeInTheDocument();
+    expect(screen.getByText("per person")).toBeInTheDocument();
     expect(screen.getByText("₩45,000")).toBeInTheDocument();
   });
 
@@ -170,7 +171,8 @@ describe("MyActivityDetailContent", () => {
       "href",
       "/ko/my-activities/42/edit",
     );
-    expect(screen.getByText("1인당 ₩36,000")).toBeInTheDocument();
+    expect(screen.getByText("₩36,000")).toBeInTheDocument();
+    expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 
   it.each([

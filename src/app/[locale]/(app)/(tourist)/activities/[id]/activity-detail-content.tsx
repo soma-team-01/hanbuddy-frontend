@@ -8,14 +8,18 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
+import { getDefaultDisplayCurrency } from "@/lib/display-currency";
+import { getLocaleOrDefault } from "@/i18n/routing";
 import { activityWeatherQueryOptions, touristActivityQueryOptions } from "@/lib/query/activities";
 import { useHistoryBack } from "@/lib/navigation/use-history-back";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
-  const locale = useLocale();
+  const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
-  const activityQuery = useQuery(touristActivityQueryOptions(activityId, language));
+  const activityQuery = useQuery(
+    touristActivityQueryOptions(activityId, language, getDefaultDisplayCurrency(locale)),
+  );
   const weatherQuery = useQuery({
     ...activityWeatherQueryOptions(activityId),
     enabled: activityQuery.isSuccess,

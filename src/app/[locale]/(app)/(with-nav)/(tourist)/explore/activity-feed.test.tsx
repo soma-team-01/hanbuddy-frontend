@@ -24,6 +24,13 @@ const touristActivity = {
   meetingPointName: "Anguk Station Exit 2",
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 45000,
+    discountedPrice: null,
+    currency: "KRW",
+    exchangeRateDate: null,
+    estimated: false,
+  },
 } as const;
 
 describe("ActivityFeed", () => {
@@ -75,6 +82,7 @@ describe("ActivityFeed", () => {
     renderWithQueryClient(<ActivityFeed />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
     expect(screen.getByText("1.5 hours")).toBeInTheDocument();
     expect(screen.getByText("₩45,000")).toBeInTheDocument();
     expect(screen.getByText("per person")).toBeInTheDocument();
@@ -162,7 +170,8 @@ describe("ActivityFeed", () => {
     renderWithQueryClient(<ActivityFeed />, { locale });
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(mockedGetTouristActivities).toHaveBeenCalledWith(language);
+    const displayCurrency = locale === "ja" ? "JPY" : "CNY";
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith(language, displayCurrency);
     expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute("href", href);
   });
 });

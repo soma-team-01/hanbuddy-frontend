@@ -6,6 +6,7 @@ import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
+import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { ActivityDetailContent } from "./activity-detail-content";
@@ -94,6 +95,7 @@ function buildActivityDetail() {
     restrictionNotes: ["Comfortable shoes recommended"],
     price: 45000,
     currency: "KRW",
+    displayPrice: createKrwDisplayPrice(45000),
     meetingPointName: "Anguk Station Exit 2",
     meetingPlaceId: "ChIJ-bukchon",
     images: [],
@@ -168,7 +170,16 @@ describe("ActivityDetailContent", () => {
     });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
-      activity: buildActivityDetail(),
+      activity: {
+        ...buildActivityDetail(),
+        displayPrice: {
+          price: 32.5,
+          discountedPrice: null,
+          currency: "USD" as const,
+          exchangeRateDate: "2026-08-31",
+          estimated: true,
+        },
+      },
     });
 
     renderWithQueryClient(<ActivityDetailContent activityId="42" />);
@@ -179,7 +190,13 @@ describe("ActivityDetailContent", () => {
       "eager",
     );
     expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
-    expect(screen.getByText("₩45,000 per person")).toBeInTheDocument();
+    const krwPrice = screen.getByText("₩45,000");
+    const referencePrice = screen.getByText("(≈ $32.50)");
+    expect(referencePrice).toHaveClass("text-muted");
+    expect(
+      krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText("per person")).toHaveClass("text-right");
     // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
@@ -331,7 +348,8 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByRole("heading", { name: "포함 사항" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "신청 전 확인사항" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "만나는 장소" })).toBeInTheDocument();
-    expect(screen.getByText("1인당 ₩45,000")).toBeInTheDocument();
+    expect(screen.getByText("₩45,000")).toBeInTheDocument();
+    expect(screen.getByText("1인당")).toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: "지금 예약하기" })).toBeDisabled();
     const dateBox = screen.getByTestId("date-select-box");
@@ -460,6 +478,7 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-bukchon",
           price: 45000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(45000),
         },
         {
           activityId: 77,
@@ -473,6 +492,7 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-gwangjang",
           price: 30000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(30000),
         },
         {
           activityId: 88,
@@ -486,6 +506,7 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-hongdae",
           price: 20000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(20000),
         },
       ],
     });
@@ -625,8 +646,8 @@ describe("ActivityDetailContent", () => {
       "ko",
     ]);
     expect(mockedGetTouristActivity).toHaveBeenCalledTimes(2);
-    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(1, "42", "EN");
-    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(2, "42", "KO");
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(1, "42", "EN", "USD");
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(2, "42", "KO", "KRW");
   });
 
   it("ignores a late Google address response from the previous locale", async () => {

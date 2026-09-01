@@ -16,7 +16,7 @@ import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/com
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetails,
@@ -120,6 +120,11 @@ export function ActivityDetailView({
     : "";
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
+  const hasReferencePrice =
+    activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
+  const estimatedPriceTitle = activity.referencePriceExchangeRateDate
+    ? tExplore("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
+    : tExplore("estimatedPrice");
   const totalDurationLabel =
     activity.durationMinutes !== undefined
       ? activity.durationMinutes < 60
@@ -206,15 +211,28 @@ export function ActivityDetailView({
         <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
         <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
       </button>
-      <div className="flex shrink-0 flex-col items-end">
+      <div className="flex shrink-0 flex-col items-end text-right">
         {hasDiscount ? (
           <span className="text-sm text-muted line-through">
             {formatKrw(activity.originalPrice ?? activity.price, locale)}
           </span>
         ) : null}
-        <span className="font-display text-xl font-bold text-primary">
-          {t("perPerson", { price: formatKrw(activity.price, locale) })}
-        </span>
+        <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
+          <span className="font-display text-xl font-bold text-primary">
+            {formatKrw(activity.price, locale)}
+          </span>
+          {hasReferencePrice ? (
+            <span
+              className="text-xs font-medium text-muted"
+              title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+            >
+              (≈{" "}
+              {formatDisplayCurrency(activity.referencePrice!, activity.referenceCurrency!, locale)}
+              )
+            </span>
+          ) : null}
+        </div>
+        <span className="text-right text-xs text-muted">{tExplore("perPersonLabel")}</span>
       </div>
       {preview || !selectedSession ? (
         <button

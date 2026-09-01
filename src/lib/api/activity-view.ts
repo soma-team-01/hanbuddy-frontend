@@ -10,8 +10,17 @@ import type {
 } from "@/types/activity";
 
 export function mapTouristActivitySummaryToActivity(summary: TouristActivitySummary): Activity {
+  // 프론트·백엔드의 순차 배포 중에도 기존 응답은 원화 가격으로 안전하게 표시한다.
+  const displayPrice = summary.displayPrice ?? {
+    price: summary.price,
+    discountedPrice: summary.discountedPrice ?? null,
+    currency: "KRW" as const,
+    exchangeRateDate: null,
+    estimated: false,
+  };
   const hasActiveDiscount =
-    summary.discountedPrice !== undefined && summary.discountedPrice !== null;
+    summary.discountedPrice !== null && summary.discountedPrice !== undefined;
+  const hasReferencePrice = displayPrice.currency !== "KRW";
 
   return {
     id: String(summary.activityId),
@@ -24,6 +33,13 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     images: summary.thumbnailImageUrl ? [summary.thumbnailImageUrl] : [],
     price: summary.discountedPrice ?? summary.price,
     originalPrice: hasActiveDiscount ? summary.price : undefined,
+    referencePrice: hasReferencePrice
+      ? (displayPrice.discountedPrice ?? displayPrice.price)
+      : undefined,
+    referenceOriginalPrice: hasReferencePrice && hasActiveDiscount ? displayPrice.price : undefined,
+    referenceCurrency: hasReferencePrice ? displayPrice.currency : undefined,
+    referencePriceEstimated: hasReferencePrice ? displayPrice.estimated : undefined,
+    referencePriceExchangeRateDate: hasReferencePrice ? displayPrice.exchangeRateDate : undefined,
     discountPercent: summary.discountPercent ?? undefined,
     durationMinutes:
       summary.totalDurationHours != null && summary.totalDurationHours > 0

@@ -50,7 +50,7 @@ describe("ActivityCard", () => {
     ).toBeTruthy();
   });
 
-  it("shows the locale currency returned by the activity API", () => {
+  it("keeps KRW as the main price and shows the locale currency as a reference", () => {
     renderWithIntl(
       <ActivityCard
         activity={{
@@ -63,9 +63,14 @@ describe("ActivityCard", () => {
       />,
     );
 
-    expect(screen.getByText("≈ $32.50")).toHaveClass("text-ink");
-    expect(screen.getByText("Estimated · per person")).toBeInTheDocument();
-    expect(screen.queryByText("₩35,000")).not.toBeInTheDocument();
+    const krwPrice = screen.getByText("₩35,000");
+    const referencePrice = screen.getByText("≈ $32.50");
+    expect(krwPrice).toHaveClass("text-ink");
+    expect(referencePrice).toHaveClass("text-muted");
+    expect(
+      referencePrice.compareDocumentPosition(krwPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText("per person")).toBeInTheDocument();
   });
 
   it("replaces the discount chip with a sold-out chip when sold out", () => {

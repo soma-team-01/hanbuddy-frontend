@@ -13,9 +13,8 @@ export function ActivityCard({
   const t = useTranslations("Explore");
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
-  const displayedPrice = activity.referencePrice ?? activity.price;
-  const displayedOriginalPrice = activity.referenceOriginalPrice ?? activity.originalPrice;
-  const displayedCurrency = activity.referenceCurrency ?? "KRW";
+  const hasReferencePrice =
+    activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
   const estimatedPriceTitle = activity.referencePriceExchangeRateDate
     ? t("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
     : t("estimatedPrice");
@@ -62,28 +61,30 @@ export function ActivityCard({
           <div className="ml-auto flex flex-col items-end gap-0.5 text-right">
             {hasDiscount ? (
               <s className="text-xs leading-4 text-muted">
+                {formatDisplayCurrency(activity.originalPrice ?? activity.price, "KRW", locale)}
+              </s>
+            ) : null}
+            {hasReferencePrice ? (
+              <p
+                className="text-xs leading-4 font-medium text-muted"
+                title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+              >
+                ≈{" "}
                 {formatDisplayCurrency(
-                  displayedOriginalPrice ?? displayedPrice,
-                  displayedCurrency,
+                  activity.referencePrice!,
+                  activity.referenceCurrency!,
                   locale,
                 )}
-              </s>
+              </p>
             ) : null}
             <p
               className={`font-display text-xl leading-7 ${
                 hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
               }`}
             >
-              {activity.referencePriceEstimated ? "≈ " : ""}
-              {formatDisplayCurrency(displayedPrice, displayedCurrency, locale)}
+              {formatDisplayCurrency(activity.price, "KRW", locale)}
             </p>
-            <p
-              className="text-xs leading-4 text-muted"
-              title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
-            >
-              {activity.referencePriceEstimated ? `${t("estimatedPrice")} · ` : ""}
-              {t("perPersonLabel")}
-            </p>
+            <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
           </div>
         </div>
       </div>

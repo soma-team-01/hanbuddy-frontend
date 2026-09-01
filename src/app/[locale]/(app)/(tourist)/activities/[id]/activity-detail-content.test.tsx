@@ -175,7 +175,16 @@ describe("ActivityDetailContent", () => {
     });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
-      activity: buildActivityDetail(),
+      activity: {
+        ...buildActivityDetail(),
+        displayPrice: {
+          price: 32.5,
+          discountedPrice: null,
+          currency: "USD" as const,
+          exchangeRateDate: "2026-08-31",
+          estimated: true,
+        },
+      },
     });
 
     renderWithQueryClient(<ActivityDetailContent activityId="42" />);
@@ -186,7 +195,12 @@ describe("ActivityDetailContent", () => {
       "eager",
     );
     expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
-    expect(screen.getByText("₩45,000 per person")).toBeInTheDocument();
+    const krwPrice = screen.getByText("₩45,000 per person");
+    const referencePrice = screen.getByText("≈ $32.50");
+    expect(referencePrice).toHaveClass("text-muted");
+    expect(
+      referencePrice.compareDocumentPosition(krwPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();

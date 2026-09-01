@@ -120,9 +120,8 @@ export function ActivityDetailView({
     : "";
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
-  const displayedPrice = activity.referencePrice ?? activity.price;
-  const displayedOriginalPrice = activity.referenceOriginalPrice ?? activity.originalPrice;
-  const displayedCurrency = activity.referenceCurrency ?? "KRW";
+  const hasReferencePrice =
+    activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
   const estimatedPriceTitle = activity.referencePriceExchangeRateDate
     ? tExplore("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
     : tExplore("estimatedPrice");
@@ -215,20 +214,20 @@ export function ActivityDetailView({
       <div className="flex shrink-0 flex-col items-end">
         {hasDiscount ? (
           <span className="text-sm text-muted line-through">
-            {formatDisplayCurrency(
-              displayedOriginalPrice ?? displayedPrice,
-              displayedCurrency,
-              locale,
-            )}
+            {formatDisplayCurrency(activity.originalPrice ?? activity.price, "KRW", locale)}
           </span>
         ) : null}
-        <span
-          className="font-display text-xl font-bold text-primary"
-          title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
-        >
-          {activity.referencePriceEstimated ? "≈ " : ""}
+        {hasReferencePrice ? (
+          <span
+            className="text-xs font-medium text-muted"
+            title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+          >
+            ≈ {formatDisplayCurrency(activity.referencePrice!, activity.referenceCurrency!, locale)}
+          </span>
+        ) : null}
+        <span className="font-display text-xl font-bold text-primary">
           {t("perPerson", {
-            price: formatDisplayCurrency(displayedPrice, displayedCurrency, locale),
+            price: formatDisplayCurrency(activity.price, "KRW", locale),
           })}
         </span>
       </div>

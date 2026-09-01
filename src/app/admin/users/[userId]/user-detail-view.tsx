@@ -99,6 +99,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
     );
 
   const user = userQuery.data;
+  const auditLogs = auditQuery.data?.logs ?? [];
   const canSuspend = user.userType !== "ADMIN" && user.accountStatus === "ACTIVE";
   const canReactivate = user.userType !== "ADMIN" && user.accountStatus === "SUSPENDED";
 
@@ -238,11 +239,20 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
         {auditQuery.isPending ? (
           <p className="mt-4 text-sm text-muted">작업 이력을 불러오는 중입니다.</p>
         ) : null}
-        {auditQuery.data?.content.length === 0 ? (
+        {auditQuery.error ? (
+          <div className="mt-4">
+            <AdminState
+              title="작업 이력을 불러오지 못했습니다."
+              description="잠시 후 다시 시도해 주세요."
+              action={() => auditQuery.refetch()}
+            />
+          </div>
+        ) : null}
+        {!auditQuery.isPending && !auditQuery.error && auditLogs.length === 0 ? (
           <p className="mt-4 text-sm text-muted">기록된 관리자 작업이 없습니다.</p>
         ) : null}
         <ol className="mt-5 space-y-3">
-          {auditQuery.data?.content.map((log) => (
+          {auditLogs.map((log) => (
             <li
               key={log.auditLogId}
               className="rounded-xl border border-line-soft bg-white px-4 py-3"

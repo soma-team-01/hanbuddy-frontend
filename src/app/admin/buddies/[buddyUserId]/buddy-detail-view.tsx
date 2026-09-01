@@ -32,7 +32,11 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
   const [actionError, setActionError] = useState("");
   const buddyQuery = useQuery(adminBuddyQueryOptions(buddyId));
   const performanceQuery = useQuery(adminBuddyPerformanceQueryOptions(buddyId));
-  const auditQuery = useQuery(adminAuditLogsQueryOptions(buddyId));
+  const auditTargetUserId = buddyQuery.data?.user.userId;
+  const auditQuery = useQuery({
+    ...adminAuditLogsQueryOptions(auditTargetUserId ?? "pending"),
+    enabled: auditTargetUserId !== undefined,
+  });
   const mutation = useMutation({
     mutationFn: async () => {
       if (!nextPolicy) throw new Error("변경할 수수료 정책을 선택해 주세요.");
@@ -91,6 +95,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
   const buddy = buddyQuery.data;
   const user = buddy.user;
   const performance = performanceQuery.data;
+  const auditLogs = auditQuery.data?.logs ?? [];
 
   return (
     <main className="mx-auto w-full max-w-[1200px] px-5 py-10 md:px-8 md:py-14">
@@ -245,11 +250,23 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
 
       <section className="mt-8 rounded-3xl border border-line-soft bg-panel-raised p-6 md:p-8">
         <h2 className="font-display text-xl font-extrabold">관리자 작업 이력</h2>
-        {auditQuery.data?.content.length === 0 ? (
+        {auditQuery.isPending ? (
+          <p className="mt-4 text-sm text-muted">작업 이력을 불러오는 중입니다.</p>
+        ) : null}
+        {auditQuery.error ? (
+          <div className="mt-4">
+            <AdminState
+              title="작업 이력을 불러오지 못했습니다."
+              description="잠시 후 다시 시도해 주세요."
+              action={() => auditQuery.refetch()}
+            />
+          </div>
+        ) : null}
+        {!auditQuery.isPending && !auditQuery.error && auditLogs.length === 0 ? (
           <p className="mt-4 text-sm text-muted">기록된 관리자 작업이 없습니다.</p>
         ) : null}
         <ol className="mt-5 space-y-3">
-          {auditQuery.data?.content.map((log) => (
+          {auditLogs.map((log) => (
             <li
               key={log.auditLogId}
               className="rounded-xl border border-line-soft bg-white px-4 py-3"

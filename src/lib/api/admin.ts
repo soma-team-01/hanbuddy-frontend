@@ -1,5 +1,5 @@
 import type {
-  AdminAuditLog,
+  AdminAuditLogPageResponse,
   AdminBuddyDetail,
   AdminBuddyFilters,
   AdminBuddyPerformance,
@@ -180,7 +180,7 @@ export function updateAdminBuddyCommission(
 }
 
 export function getAdminAuditLogs(targetId: number | string, page = 0, size = 20) {
-  return requestApiResult<AdminPageResponse<AdminAuditLog>, "auditLogs">(
+  return requestApiResult<AdminAuditLogPageResponse, "auditLogs">(
     withQuery("/api/admin/audit-logs", { targetType: "USER", targetId, page, size }),
     "auditLogs",
     undefined,

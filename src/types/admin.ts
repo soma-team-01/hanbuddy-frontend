@@ -212,3 +212,14 @@ export interface AdminAuditLog {
   reason: string | null;
   createdAt: string;
 }
+
+export type AdminAuditLogSummary = Omit<AdminAuditLog, "beforeState" | "afterState">;
+
+export interface AdminAuditLogPageResponse {
+  logs: AdminAuditLogSummary[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+  hasNext: boolean;
+}

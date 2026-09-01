@@ -5,7 +5,7 @@ import {
   requireAdmin,
 } from "@/app/api/_utils/authenticated-backend";
 import { getAdminResourceId, getAllowedAdminQuery } from "@/app/api/admin/_utils/management-route";
-import type { AdminAuditLog, AdminPageResponse } from "@/types/admin";
+import type { AdminAuditLog, AdminAuditLogPageResponse } from "@/types/admin";
 
 const LIST_QUERY_KEYS = new Set(["targetType", "targetId", "page", "size"]);
 
@@ -17,7 +17,7 @@ export async function GET(
   if (forbidden) return forbidden;
   const { segments = [] } = await params;
   if (segments.length === 0) {
-    return proxyAuthenticatedGet<AdminPageResponse<AdminAuditLog>>(
+    return proxyAuthenticatedGet<AdminAuditLogPageResponse>(
       request,
       `/admin/audit-logs${getAllowedAdminQuery(request, LIST_QUERY_KEYS)}`,
       "관리자 작업 이력을 불러오지 못했습니다.",

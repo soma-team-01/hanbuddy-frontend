@@ -195,12 +195,13 @@ describe("ActivityDetailContent", () => {
       "eager",
     );
     expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
-    const krwPrice = screen.getByText("₩45,000 per person");
-    const referencePrice = screen.getByText("≈ $32.50");
+    const krwPrice = screen.getByText("₩45,000");
+    const referencePrice = screen.getByText("(≈ $32.50)");
     expect(referencePrice).toHaveClass("text-muted");
     expect(
-      referencePrice.compareDocumentPosition(krwPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+      krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    expect(screen.getByText("per person")).toHaveClass("text-right");
     // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
@@ -352,7 +353,8 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByRole("heading", { name: "포함 사항" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "신청 전 확인사항" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "만나는 장소" })).toBeInTheDocument();
-    expect(screen.getByText("1인당 ₩45,000")).toBeInTheDocument();
+    expect(screen.getByText("₩45,000")).toBeInTheDocument();
+    expect(screen.getByText("1인당")).toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: "지금 예약하기" })).toBeDisabled();
     const dateBox = screen.getByTestId("date-select-box");

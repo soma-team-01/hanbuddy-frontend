@@ -211,25 +211,28 @@ export function ActivityDetailView({
         <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
         <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
       </button>
-      <div className="flex shrink-0 flex-col items-start">
+      <div className="flex shrink-0 flex-col items-end text-right">
         {hasDiscount ? (
           <span className="text-sm text-muted line-through">
             {formatDisplayCurrency(activity.originalPrice ?? activity.price, "KRW", locale)}
           </span>
         ) : null}
-        {hasReferencePrice ? (
-          <span
-            className="mb-0.5 text-xs font-medium text-muted"
-            title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
-          >
-            ≈ {formatDisplayCurrency(activity.referencePrice!, activity.referenceCurrency!, locale)}
+        <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
+          <span className="font-display text-xl font-bold text-primary">
+            {formatDisplayCurrency(activity.price, "KRW", locale)}
           </span>
-        ) : null}
-        <span className="font-display text-xl font-bold text-primary">
-          {t("perPerson", {
-            price: formatDisplayCurrency(activity.price, "KRW", locale),
-          })}
-        </span>
+          {hasReferencePrice ? (
+            <span
+              className="text-xs font-medium text-muted"
+              title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+            >
+              (≈{" "}
+              {formatDisplayCurrency(activity.referencePrice!, activity.referenceCurrency!, locale)}
+              )
+            </span>
+          ) : null}
+        </div>
+        <span className="text-right text-xs text-muted">{tExplore("perPersonLabel")}</span>
       </div>
       {preview || !selectedSession ? (
         <button

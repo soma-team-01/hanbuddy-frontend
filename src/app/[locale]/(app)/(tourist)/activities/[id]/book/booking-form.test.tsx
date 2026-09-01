@@ -134,7 +134,7 @@ const paymentReady: PaymentReadyResponse = {
 
 async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
   fireEvent.click(screen.getByRole("checkbox"));
-  fireEvent.click(screen.getByRole("button", { name: new RegExp(submitLabel) }));
+  fireEvent.click(screen.getByRole("button", { name: submitLabel }));
 }
 
 describe("BookingForm", () => {
@@ -168,7 +168,9 @@ describe("BookingForm", () => {
     // 요약 카드: 선택한 일정과 총액이 보인다
     expect(screen.getByText("2026-07-20")).toBeInTheDocument();
     expect(screen.getByText("Total (KRW)")).toBeInTheDocument();
-    expect(screen.getByText(/PayPal charges in USD.*Estimated \$32\.50/)).toBeInTheDocument();
+    expect(screen.getByText("≈ $32.50")).toHaveClass("text-muted");
+    expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toBeInTheDocument();
+    expect(screen.getByText("PayPal charges in USD.")).toBeInTheDocument();
     // 취소·환불 정책은 밑줄 트리거에 호버 툴팁으로 제공된다
     expect(
       screen.getByRole("button", { name: "cancellation & refund policy" }),
@@ -284,7 +286,7 @@ describe("BookingForm", () => {
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: payPalPayment });
     renderWithQueryClient(<BookingForm activity={activity} />);
 
-    await agreeAndSubmit("Pay with PayPal");
+    await agreeAndSubmit("Pay $32.50 with PayPal");
 
     await waitFor(() =>
       expect(mockedCreateApplication).toHaveBeenCalledWith(
@@ -311,11 +313,11 @@ describe("BookingForm", () => {
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: payPalPayment });
     renderWithQueryClient(<BookingForm activity={activity} />);
 
-    await agreeAndSubmit("Pay with PayPal");
+    await agreeAndSubmit("Pay $32.50 with PayPal");
     fireEvent.click(await screen.findByRole("button", { name: "Cancel PayPal checkout" }));
 
     expect(screen.queryByTestId("paypal-checkout")).toBeNull();
-    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toBeEnabled();
   });
 
   it("blocks an application when the selected schedule was already booked", async () => {

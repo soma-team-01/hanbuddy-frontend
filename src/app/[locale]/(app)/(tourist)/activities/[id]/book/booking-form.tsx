@@ -468,11 +468,18 @@ export function BookingForm({
                 ) : null}
               </div>
 
-              <div className="flex items-center justify-between border-t border-line-soft pt-4">
+              <div className="flex items-end justify-between border-t border-line-soft pt-4">
                 <span className="font-display text-base font-bold text-ink">{t("totalLabel")}</span>
-                <span className="font-display text-xl font-bold text-primary">
-                  {formatKrw(total, locale)}
-                </span>
+                <div className="flex flex-col items-end gap-0.5">
+                  {estimatedPayPalTotal !== null ? (
+                    <span className="text-xs font-medium text-muted">
+                      ≈ {formatDisplayCurrency(estimatedPayPalTotal, "USD", locale)}
+                    </span>
+                  ) : null}
+                  <span className="font-display text-xl font-bold text-primary">
+                    {formatKrw(total, locale)}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -509,19 +516,17 @@ export function BookingForm({
                         onClick={() => handleSubmitClick("PAYPAL")}
                         className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
                       >
-                        {isSubmitting ? t("processing") : t("payWithPayPal")}
+                        {isSubmitting
+                          ? t("processing")
+                          : estimatedPayPalTotal !== null
+                            ? t("payWithPayPalAmount", {
+                                amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
+                              })
+                            : t("payWithPayPal")}
                       </button>
                     )}
                     <p className="text-center text-[11px] leading-4 text-muted">
                       {t("paypalCurrencyNotice")}
-                      {estimatedPayPalTotal !== null ? (
-                        <>
-                          {" · "}
-                          {t("paypalEstimatedTotal", {
-                            amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
-                          })}
-                        </>
-                      ) : null}
                     </p>
                   </div>
                 </div>

@@ -211,7 +211,7 @@ export function ActivityDetailView({
         <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
         <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
       </button>
-      <div className="flex shrink-0 flex-col items-end">
+      <div className="flex shrink-0 flex-col items-start">
         {hasDiscount ? (
           <span className="text-sm text-muted line-through">
             {formatDisplayCurrency(activity.originalPrice ?? activity.price, "KRW", locale)}
@@ -219,7 +219,7 @@ export function ActivityDetailView({
         ) : null}
         {hasReferencePrice ? (
           <span
-            className="text-xs font-medium text-muted"
+            className="mb-0.5 text-xs font-medium text-muted"
             title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
           >
             ≈ {formatDisplayCurrency(activity.referencePrice!, activity.referenceCurrency!, locale)}

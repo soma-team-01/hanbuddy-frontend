@@ -6,6 +6,7 @@ import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
+import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { ActivityDetailContent } from "./activity-detail-content";
@@ -94,13 +95,7 @@ function buildActivityDetail() {
     restrictionNotes: ["Comfortable shoes recommended"],
     price: 45000,
     currency: "KRW",
-    displayPrice: {
-      price: 45000,
-      discountedPrice: null,
-      currency: "KRW" as const,
-      exchangeRateDate: null,
-      estimated: false,
-    },
+    displayPrice: createKrwDisplayPrice(45000),
     meetingPointName: "Anguk Station Exit 2",
     meetingPlaceId: "ChIJ-bukchon",
     images: [],
@@ -483,13 +478,7 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-bukchon",
           price: 45000,
           currency: "KRW",
-          displayPrice: {
-            price: 45000,
-            discountedPrice: null,
-            currency: "KRW",
-            exchangeRateDate: null,
-            estimated: false,
-          },
+          displayPrice: createKrwDisplayPrice(45000),
         },
         {
           activityId: 77,
@@ -503,13 +492,7 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-gwangjang",
           price: 30000,
           currency: "KRW",
-          displayPrice: {
-            price: 30000,
-            discountedPrice: null,
-            currency: "KRW",
-            exchangeRateDate: null,
-            estimated: false,
-          },
+          displayPrice: createKrwDisplayPrice(30000),
         },
         {
           activityId: 88,
@@ -523,13 +506,7 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-hongdae",
           price: 20000,
           currency: "KRW",
-          displayPrice: {
-            price: 20000,
-            discountedPrice: null,
-            currency: "KRW",
-            exchangeRateDate: null,
-            estimated: false,
-          },
+          displayPrice: createKrwDisplayPrice(20000),
         },
       ],
     });

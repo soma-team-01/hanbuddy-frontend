@@ -7,6 +7,7 @@ import { IntlTestProvider } from "@/test/render-with-intl";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Locale } from "@/i18n/routing";
 import { activityKeys } from "@/lib/query/activities";
+import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
@@ -370,13 +371,7 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-bukchon",
           price: 45000,
           currency: "KRW",
-          displayPrice: {
-            price: 45000,
-            discountedPrice: null,
-            currency: "KRW",
-            exchangeRateDate: null,
-            estimated: false,
-          },
+          displayPrice: createKrwDisplayPrice(45000),
         },
         {
           activityId: 77,
@@ -390,13 +385,7 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-gwangjang",
           price: 30000,
           currency: "KRW",
-          displayPrice: {
-            price: 30000,
-            discountedPrice: null,
-            currency: "KRW",
-            exchangeRateDate: null,
-            estimated: false,
-          },
+          displayPrice: createKrwDisplayPrice(30000),
         },
       ],
     });
@@ -438,13 +427,7 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-hongdae",
           price: 20000,
           currency: "KRW",
-          displayPrice: {
-            price: 20000,
-            discountedPrice: null,
-            currency: "KRW",
-            exchangeRateDate: null,
-            estimated: false,
-          },
+          displayPrice: createKrwDisplayPrice(20000),
         },
       ],
     });

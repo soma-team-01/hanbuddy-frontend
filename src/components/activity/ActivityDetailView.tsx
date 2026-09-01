@@ -16,7 +16,7 @@ import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/com
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
-import { formatDisplayCurrency } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetails,
@@ -214,12 +214,12 @@ export function ActivityDetailView({
       <div className="flex shrink-0 flex-col items-end text-right">
         {hasDiscount ? (
           <span className="text-sm text-muted line-through">
-            {formatDisplayCurrency(activity.originalPrice ?? activity.price, "KRW", locale)}
+            {formatKrw(activity.originalPrice ?? activity.price, locale)}
           </span>
         ) : null}
         <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
           <span className="font-display text-xl font-bold text-primary">
-            {formatDisplayCurrency(activity.price, "KRW", locale)}
+            {formatKrw(activity.price, locale)}
           </span>
           {hasReferencePrice ? (
             <span

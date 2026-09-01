@@ -2,7 +2,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
-import { formatDisplayCurrency } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
 export function ActivityCard({
@@ -61,7 +61,7 @@ export function ActivityCard({
           <div className="ml-auto flex flex-col items-end gap-0.5 text-right">
             {hasDiscount ? (
               <s className="text-xs leading-4 text-muted">
-                {formatDisplayCurrency(activity.originalPrice ?? activity.price, "KRW", locale)}
+                {formatKrw(activity.originalPrice ?? activity.price, locale)}
               </s>
             ) : null}
             {hasReferencePrice ? (
@@ -82,7 +82,7 @@ export function ActivityCard({
                 hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
               }`}
             >
-              {formatDisplayCurrency(activity.price, "KRW", locale)}
+              {formatKrw(activity.price, locale)}
             </p>
             <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
           </div>

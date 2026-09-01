@@ -11,7 +11,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MessageSquareIcon, XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import { getContentLanguage } from "@/lib/content-language";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
@@ -202,6 +202,16 @@ export function HostProfileDialog({
                           price: formatKrw(activity.discountedPrice ?? activity.price, locale),
                         })}
                       </span>
+                      {activity.displayPrice && activity.displayPrice.currency !== "KRW" ? (
+                        <span className="block text-xs text-muted">
+                          ≈{" "}
+                          {formatDisplayCurrency(
+                            activity.displayPrice.discountedPrice ?? activity.displayPrice.price,
+                            activity.displayPrice.currency,
+                            locale,
+                          )}
+                        </span>
+                      ) : null}
                     </span>
                   </Link>
                 </li>

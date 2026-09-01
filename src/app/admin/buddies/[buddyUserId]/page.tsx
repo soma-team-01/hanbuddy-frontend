@@ -1,16 +1,14 @@
 import { AdminHeader } from "../../admin-header";
-import { BuddyApplicationReview } from "./buddy-application-review";
+import { AdminBuddyDetailView } from "./buddy-detail-view";
 
-export default async function BuddyApplicationPage({
+export default async function AdminBuddyDetailPage({
   params,
-}: {
-  params: Promise<{ buddyUserId: string }>;
-}) {
+}: PageProps<"/admin/buddies/[buddyUserId]">) {
   const { buddyUserId } = await params;
   return (
     <>
       <AdminHeader />
-      <BuddyApplicationReview userId={buddyUserId} />
+      <AdminBuddyDetailView buddyId={buddyUserId} />
     </>
   );
 }

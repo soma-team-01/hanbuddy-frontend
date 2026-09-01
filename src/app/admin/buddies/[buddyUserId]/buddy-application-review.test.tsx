@@ -82,7 +82,7 @@ describe("BuddyApplicationReview", () => {
     fireEvent.click(screen.getByRole("button", { name: "승인하기" }));
 
     await waitFor(() => expect(mockedApprove).toHaveBeenCalledWith("42"));
-    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddies"));
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddy-applications"));
   });
 
   it("requires a reason before rejecting and returns to the list after success", async () => {
@@ -103,6 +103,6 @@ describe("BuddyApplicationReview", () => {
         reason: "프로필 확인이 필요합니다.",
       }),
     );
-    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddies"));
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddy-applications"));
   });
 });

@@ -131,7 +131,7 @@ export function BuddyApplicationsDashboard() {
                 </span>
                 <time className="text-sm text-muted">{formatDate(item.appliedAt)}</time>
                 <Link
-                  href={`/admin/buddies/${item.userId}`}
+                  href={`/admin/buddy-applications/${item.userId}`}
                   className="w-fit rounded-full border border-primary px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-white"
                 >
                   프로필 보기

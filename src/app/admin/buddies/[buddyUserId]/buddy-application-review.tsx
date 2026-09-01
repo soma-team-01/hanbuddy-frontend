@@ -27,10 +27,9 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
             "message",
           ),
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: adminKeys.applications });
-      await client.invalidateQueries({ queryKey: adminKeys.application(userId) });
+      await client.invalidateQueries({ queryKey: adminKeys.all });
       setMode(null);
-      router.push("/admin/buddies");
+      router.push("/admin/buddy-applications");
     },
     onError: (error) =>
       setActionError(error instanceof Error ? error.message : "처리하지 못했습니다."),
@@ -60,7 +59,7 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
     return (
       <main className="mx-auto max-w-[1000px] px-5 py-24 text-center md:px-8">
         <h1 className="font-display text-2xl font-bold">신청 정보를 불러오지 못했습니다.</h1>
-        <Link href="/admin/buddies" className="mt-6 inline-block text-primary underline">
+        <Link href="/admin/buddy-applications" className="mt-6 inline-block text-primary underline">
           목록으로 돌아가기
         </Link>
       </main>
@@ -71,7 +70,7 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
   return (
     <main className="mx-auto w-full max-w-[1000px] px-5 py-10 md:px-8 md:py-14">
       <Link
-        href="/admin/buddies"
+        href="/admin/buddy-applications"
         className="text-sm font-bold text-muted transition-colors hover:text-primary"
       >
         ← 신청 목록

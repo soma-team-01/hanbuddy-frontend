@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function AdminHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,14 +26,20 @@ export function AdminHeader() {
       setPending(false);
     }
   }
+  const navigation = [
+    { href: "/admin/users", label: "회원" },
+    { href: "/admin/buddies", label: "버디" },
+    { href: "/admin/buddy-applications", label: "승인 관리" },
+  ];
+
   return (
-    <header className="border-b border-line-soft bg-white">
-      <div className="mx-auto flex h-18 max-w-[1200px] items-center justify-between px-5 md:px-8">
+    <header className="sticky top-0 z-40 border-b border-line-soft bg-white/95 backdrop-blur">
+      <div className="mx-auto flex min-h-18 max-w-[1200px] flex-wrap items-center justify-between gap-x-5 px-5 md:px-8">
         <Link
-          href="/admin/buddies"
+          href="/admin/users"
           className="flex items-center gap-3 font-display text-lg font-extrabold"
         >
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm text-white">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary font-display text-sm text-white shadow-sm">
             H
           </span>
           HanBuddy{" "}
@@ -40,6 +47,21 @@ export function AdminHeader() {
             Admin
           </span>
         </Link>
+        <nav className="order-3 flex w-full gap-1 overflow-x-auto border-t border-line-soft py-2 md:order-none md:w-auto md:border-0 md:py-0">
+          {navigation.map((item) => {
+            const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors ${active ? "bg-primary-soft text-primary-strong" : "text-muted hover:text-primary"}`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
         <div className="flex items-center gap-3">
           {error ? (
             <p role="alert" className="text-xs font-medium text-danger">

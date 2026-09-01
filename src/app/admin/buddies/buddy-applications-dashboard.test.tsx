@@ -63,7 +63,7 @@ describe("BuddyApplicationsDashboard", () => {
     expect(screen.getByText("2026년 8월 6일")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "프로필 보기" })).toHaveAttribute(
       "href",
-      "/admin/buddies/42",
+      "/admin/buddy-applications/42",
     );
     expect(screen.getByText("1")).toBeInTheDocument();
   });

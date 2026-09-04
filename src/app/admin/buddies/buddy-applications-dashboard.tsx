@@ -7,14 +7,19 @@ import { useState } from "react";
 import { isUnauthenticatedError } from "@/lib/api/errors";
 import { SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { adminBuddyApplicationsQueryOptions } from "@/lib/query/admin";
-import { AdminMemberNavigation } from "../admin-member-navigation";
-import { AdminLoadingRows, AdminPagination, AdminState, AdminStatusBadge } from "../admin-ui";
+import { AdminMemberNavigation } from "@/app/admin/admin-member-navigation";
+import {
+  AdminLoadingRows,
+  AdminPagination,
+  AdminState,
+  AdminStatusBadge,
+} from "@/app/admin/admin-ui";
 
 const PAGE_SIZE = 20;
 
 export function BuddyApplicationsDashboard() {
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-5 py-6 md:px-6 md:py-7 xl:px-8">
+    <main className="mx-auto w-full max-w-[1200px] px-5 py-6 md:px-6 md:py-7 xl:px-8">
       <AdminMemberNavigation />
       <BuddyApplicationsSection />
     </main>

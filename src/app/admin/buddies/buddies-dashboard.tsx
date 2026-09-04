@@ -9,14 +9,16 @@ import { isUnauthenticatedError } from "@/lib/api/errors";
 import { adminBuddiesQueryOptions, adminBuddyApplicationsQueryOptions } from "@/lib/query/admin";
 import type { AdminAccountStatus, AdminBuddyFilters } from "@/types/admin";
 import {
+  AdminFilterInput,
+  AdminFilterSelect,
   AdminLoadingRows,
   AdminPagination,
   AdminState,
   AdminStatusBadge,
   formatAdminDate,
-} from "../admin-ui";
-import { AdminMemberNavigation } from "../admin-member-navigation";
-import { BuddyApplicationsSection } from "./buddy-applications-dashboard";
+} from "@/app/admin/admin-ui";
+import { AdminMemberNavigation } from "@/app/admin/admin-member-navigation";
+import { BuddyApplicationsSection } from "@/app/admin/buddies/buddy-applications-dashboard";
 
 const EMPTY_FILTERS: AdminBuddyFilters = { page: 0, size: 20 };
 type BuddyManagementTab = "list" | "approvals";
@@ -49,7 +51,7 @@ export function AdminBuddiesDashboard({
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-4 py-5 md:px-5 md:py-6 xl:px-6">
+    <main className="mx-auto w-full max-w-[1200px] px-4 py-5 md:px-5 md:py-6 xl:px-6">
       <AdminMemberNavigation />
       <BuddyManagementTabs activeTab={activeTab} pendingCount={pendingCount} onTab={setActiveTab} />
 
@@ -65,9 +67,13 @@ export function AdminBuddiesDashboard({
             className="rounded-xl border border-line-soft bg-white p-3 shadow-[0_8px_24px_rgba(38,27,24,0.04)]"
           >
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_auto] lg:items-end">
-              <FilterInput name="email" label="로그인 이메일" placeholder="Google 계정 이메일" />
-              <FilterInput name="displayName" label="닉네임" placeholder="닉네임 일부" />
-              <FilterSelect
+              <AdminFilterInput
+                name="email"
+                label="로그인 이메일"
+                placeholder="Google 계정 이메일"
+              />
+              <AdminFilterInput name="displayName" label="닉네임" placeholder="닉네임 일부" />
+              <AdminFilterSelect
                 name="accountStatus"
                 label="계정 상태"
                 options={[
@@ -253,58 +259,6 @@ function TabCount({ children, pending = false }: { children: number; pending?: b
     >
       {children}
     </span>
-  );
-}
-
-function FilterInput({
-  name,
-  label,
-  type = "text",
-  placeholder,
-}: {
-  name: string;
-  label: string;
-  type?: string;
-  placeholder?: string;
-}) {
-  return (
-    <label className="text-xs font-bold text-muted">
-      {label}
-      <input
-        name={name}
-        type={type}
-        min={type === "number" ? 1 : undefined}
-        placeholder={placeholder}
-        className="focus-border-only mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
-      />
-    </label>
-  );
-}
-
-function FilterSelect({
-  name,
-  label,
-  options,
-}: {
-  name: string;
-  label: string;
-  options: string[][];
-}) {
-  return (
-    <label className="text-xs font-bold text-muted">
-      {label}
-      <select
-        name={name}
-        className="focus-border-only mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
-      >
-        <option value="">전체</option>
-        {options.map(([value, text]) => (
-          <option key={value} value={value}>
-            {text}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }
 

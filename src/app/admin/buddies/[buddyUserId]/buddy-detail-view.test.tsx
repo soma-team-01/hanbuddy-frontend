@@ -162,7 +162,7 @@ describe("AdminBuddyDetailView", () => {
     expect(screen.getByText("+82")).toBeInTheDocument();
     expect(screen.getByText("01012345678")).toBeInTheDocument();
     expect(screen.getByText("초기 버디 10%")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "계정 정지" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "계정 정지" })).toHaveLength(2);
     expect(screen.queryByRole("link", { name: "회원 정보 보기" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "운영 정보" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "등록 활동 이력 2건" })).toBeInTheDocument();

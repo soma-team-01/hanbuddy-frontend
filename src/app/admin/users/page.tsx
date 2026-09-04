@@ -1,5 +1,5 @@
-import { AdminShell } from "../admin-shell";
-import { AdminUsersDashboard } from "./users-dashboard";
+import { AdminShell } from "@/app/admin/admin-shell";
+import { AdminUsersDashboard } from "@/app/admin/users/users-dashboard";
 
 export default function AdminUsersPage() {
   return (

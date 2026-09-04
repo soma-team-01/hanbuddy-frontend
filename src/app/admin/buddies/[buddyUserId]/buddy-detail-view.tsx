@@ -4,7 +4,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { HistoryIcon, UserIcon } from "@/components/ui/icons";
+import {
+  AdminAccountActionButtons,
+  AdminAuditLogSection,
+  AdminHistoryTable,
+} from "@/app/admin/admin-detail-ui";
+import {
+  AdminLoadingRows,
+  AdminPagination,
+  AdminReasonDialog,
+  AdminState,
+  AdminStatusBadge,
+  formatAdminCountry,
+  formatAdminDate,
+} from "@/app/admin/admin-ui";
+import { Avatar } from "@/components/ui/Avatar";
+import { HistoryIcon } from "@/components/ui/icons";
 import { reactivateAdminUser, suspendAdminUser, updateAdminBuddyCommission } from "@/lib/api/admin";
 import { ApiClientError, isUnauthenticatedError } from "@/lib/api/errors";
 import { formatKrw } from "@/lib/format";
@@ -16,17 +31,7 @@ import {
   adminUserHistoryQueryOptions,
 } from "@/lib/query/admin";
 import { unwrapApiResult } from "@/lib/query/result";
-import type { AdminCommissionPolicy, AdminUserHistory, AdminUserHistoryType } from "@/types/admin";
-import {
-  AdminLoadingRows,
-  AdminPagination,
-  AdminReasonDialog,
-  AdminState,
-  AdminStatusBadge,
-  formatAdminActor,
-  formatAdminCountry,
-  formatAdminDate,
-} from "../../admin-ui";
+import type { AdminCommissionPolicy, AdminUserHistoryType } from "@/types/admin";
 
 export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
   const router = useRouter();
@@ -135,17 +140,23 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
   const canSuspend = user.accountStatus === "ACTIVE";
   const canReactivate = user.accountStatus === "SUSPENDED";
 
+  function openAccountAction(nextAction: "suspend" | "reactivate") {
+    setCommissionDialogOpen(false);
+    setNextPolicy(null);
+    setReason("");
+    setActionError("");
+    setAccountAction(nextAction);
+  }
+
   return (
-    <main className="mx-auto w-full max-w-[1200px] px-5 py-10 md:px-8 md:py-14">
+    <main className="mx-auto w-full max-w-[1200px] px-5 pt-10 pb-28 md:px-8 md:py-14">
       <Link href="/admin/buddies" className="text-sm font-bold text-muted hover:text-primary">
         ← 버디 목록
       </Link>
       <section className="mt-6 rounded-3xl border border-line-soft bg-white p-6 shadow-[0_18px_60px_rgba(38,27,24,0.06)] md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 items-center gap-4">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-              <UserIcon className="size-6" />
-            </span>
+            <Avatar name={user.displayName} size={56} className="rounded-2xl" />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs font-bold text-muted">버디 #{buddyId}</p>
@@ -157,7 +168,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
               <p className="mt-1 truncate text-sm text-muted">{user.email}</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="hidden flex-wrap gap-2 md:flex">
             {user.accountStatus === "PENDING_APPROVAL" ? (
               <Link
                 href={`/admin/buddy-applications/${user.userId}`}
@@ -166,36 +177,12 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
                 승인 검토
               </Link>
             ) : null}
-            {canSuspend ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setCommissionDialogOpen(false);
-                  setNextPolicy(null);
-                  setReason("");
-                  setActionError("");
-                  setAccountAction("suspend");
-                }}
-                className="rounded-full border border-danger px-5 py-2.5 text-sm font-bold text-danger hover:bg-primary-soft"
-              >
-                계정 정지
-              </button>
-            ) : null}
-            {canReactivate ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setCommissionDialogOpen(false);
-                  setNextPolicy(null);
-                  setReason("");
-                  setActionError("");
-                  setAccountAction("reactivate");
-                }}
-                className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-hover"
-              >
-                계정 재활성화
-              </button>
-            ) : null}
+            <AdminAccountActionButtons
+              canSuspend={canSuspend}
+              canReactivate={canReactivate}
+              onSuspend={() => openAccountAction("suspend")}
+              onReactivate={() => openAccountAction("reactivate")}
+            />
           </div>
         </div>
         <div className="mt-8 grid gap-8 border-t border-line-soft pt-7 lg:grid-cols-3">
@@ -338,7 +325,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
         ) : null}
         {historyQuery.data ? (
           <>
-            <HistoryTable type={historyType} items={historyQuery.data.content ?? []} />
+            <AdminHistoryTable type={historyType} items={historyQuery.data.content ?? []} />
             <AdminPagination
               page={historyQuery.data.page}
               totalPages={historyQuery.data.totalPages}
@@ -348,53 +335,33 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
         ) : null}
       </section>
 
-      <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
-        <h2 className="font-display text-xl font-extrabold">관리자 작업 이력</h2>
-        {auditQuery.isPending ? (
-          <p className="mt-4 text-sm text-muted">작업 이력을 불러오는 중입니다.</p>
-        ) : null}
-        {auditQuery.error ? (
-          <div className="mt-4">
-            <AdminState
-              title="작업 이력을 불러오지 못했습니다."
-              description="잠시 후 다시 시도해 주세요."
-              action={() => auditQuery.refetch()}
+      <AdminAuditLogSection
+        logs={auditLogs}
+        isPending={auditQuery.isPending}
+        hasError={Boolean(auditQuery.error)}
+        onRetry={() => auditQuery.refetch()}
+      />
+
+      {canSuspend || canReactivate || user.accountStatus === "PENDING_APPROVAL" ? (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-white/95 px-5 py-3 shadow-[0_-12px_30px_rgba(38,27,24,0.08)] backdrop-blur md:hidden">
+          <div className="mx-auto flex max-w-[1200px] justify-end gap-2">
+            {user.accountStatus === "PENDING_APPROVAL" ? (
+              <Link
+                href={`/admin/buddy-applications/${user.userId}`}
+                className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white"
+              >
+                승인 검토
+              </Link>
+            ) : null}
+            <AdminAccountActionButtons
+              canSuspend={canSuspend}
+              canReactivate={canReactivate}
+              onSuspend={() => openAccountAction("suspend")}
+              onReactivate={() => openAccountAction("reactivate")}
             />
           </div>
-        ) : null}
-        {!auditQuery.isPending && !auditQuery.error && auditLogs.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">기록된 관리자 작업이 없습니다.</p>
-        ) : null}
-        <ol className="mt-5 space-y-3">
-          {auditLogs.map((log) => (
-            <li
-              key={log.auditLogId}
-              className="rounded-xl border border-line-soft bg-white px-4 py-3"
-            >
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                <div className="grid min-w-0 gap-1.5">
-                  <strong className="block text-sm leading-5 text-ink">
-                    {auditLabel(log.action)}
-                  </strong>
-                  <p className="text-sm leading-5">
-                    <span className="mr-1.5 text-muted">사유:</span>
-                    <span className="text-ink/80">{log.reason || "없음"}</span>
-                  </p>
-                </div>
-                <div className="grid max-w-full gap-1.5 text-xs sm:text-right">
-                  <time className="block leading-5 text-muted/80">
-                    {formatAdminDate(log.createdAt, true)}
-                  </time>
-                  <p className="leading-5 break-all">
-                    <span className="mr-1.5 text-muted">작업자:</span>
-                    <span className="font-semibold text-ink/80">{formatAdminActor(log)}</span>
-                  </p>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
+        </div>
+      ) : null}
 
       {commissionDialogOpen ? (
         <AdminReasonDialog
@@ -496,80 +463,10 @@ function Metric({ label, value, detail }: { label: string; value: string; detail
   );
 }
 
-function HistoryTable({ type, items }: { type: AdminUserHistoryType; items: AdminUserHistory[] }) {
-  if (items.length === 0)
-    return (
-      <p className="mt-6 rounded-2xl bg-panel-raised px-5 py-10 text-center text-sm text-muted">
-        해당 이력이 없습니다.
-      </p>
-    );
-  return (
-    <ul className="mt-6 divide-y divide-line-soft border-y border-line-soft">
-      {items.map((item) => (
-        <li
-          key={historyKey(type, item)}
-          className="grid gap-2 py-4 md:grid-cols-[1fr_auto] md:items-center"
-        >
-          <div>
-            <p className="font-semibold">{historyTitle(type, item)}</p>
-            <p className="mt-1 text-sm text-muted">{historyDescription(type, item)}</p>
-          </div>
-          <time className="text-xs text-muted">
-            {formatAdminDate("createdAt" in item ? item.createdAt : item.decidedAt, true)}
-          </time>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function historyKey(type: AdminUserHistoryType, item: AdminUserHistory) {
-  if (type === "activities" && "activityId" in item) return `${type}-${item.activityId}`;
-  if (type === "agreements" && "userAgreementId" in item) return `${type}-${item.userAgreementId}`;
-  return `${type}-unknown`;
-}
-
-function historyTitle(type: AdminUserHistoryType, item: AdminUserHistory) {
-  if (type === "activities" && "title" in item) return item.title;
-  if (type === "agreements" && "type" in item) return `${item.type} · ${item.version}`;
-  return type === "activities" ? "활동 정보 없음" : "약관 정보 없음";
-}
-
-function historyDescription(type: AdminUserHistoryType, item: AdminUserHistory) {
-  if (type === "activities" && "price" in item)
-    return `${activityStatusLabel(item.status)} · ${formatKrw(item.price, "ko")}`;
-  if (type === "agreements" && "agreed" in item) return item.agreed ? "동의" : "미동의";
-  return "";
-}
-
-function activityStatusLabel(status: string) {
-  return (
-    (
-      { DRAFT: "작성 중", ACTIVE: "운영 중", INACTIVE: "비활성", DELETED: "삭제" } as Record<
-        string,
-        string
-      >
-    )[status] ?? status
-  );
-}
-
 function commissionLabel(policy: AdminCommissionPolicy | null) {
   return policy === "EARLY_10"
     ? "초기 버디 10%"
     : policy === "STANDARD_20"
       ? "일반 20%"
       : "승인 후 설정";
-}
-function auditLabel(action: string) {
-  return (
-    (
-      {
-        BUDDY_APPLICATION_APPROVED: "버디 가입 승인",
-        BUDDY_APPLICATION_REJECTED: "버디 가입 거절",
-        USER_SUSPENDED: "계정 정지",
-        USER_REACTIVATED: "계정 재활성화",
-        BUDDY_COMMISSION_CHANGED: "수수료 정책 변경",
-      } as Record<string, string>
-    )[action] ?? action
-  );
 }

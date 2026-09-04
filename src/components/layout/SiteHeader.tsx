@@ -11,12 +11,13 @@ import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
 import { ChatRoomsPoller } from "@/components/chat/ChatRoomsPoller";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
+import { AdminSiteHeader } from "@/components/layout/AdminSiteHeader";
 import { SettlementNavIcon } from "@/components/layout/SettlementNavIcon";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileMenu } from "./MobileMenu";
 import { PageContainer } from "./PageContainer";
 
-export type SiteRole = "tourist" | "buddy" | null;
+export type SiteRole = "tourist" | "buddy" | "admin" | null;
 
 const DESTINATIONS = {
   tourist: [
@@ -58,6 +59,22 @@ export function SiteHeader({
   authenticated = Boolean(role),
   mayHaveSession = authenticated,
 }: Readonly<SiteHeaderProps>) {
+  if (role === "admin") return <AdminSiteHeader authenticated={authenticated} />;
+
+  return (
+    <LocalizedSiteHeader
+      role={role}
+      authenticated={authenticated}
+      mayHaveSession={mayHaveSession}
+    />
+  );
+}
+
+function LocalizedSiteHeader({
+  role,
+  authenticated,
+  mayHaveSession,
+}: Readonly<Required<SiteHeaderProps> & { role: Exclude<SiteRole, "admin"> }>) {
   const t = useTranslations("Navigation");
   const pathname = usePathname();
   const sessionKey = `${authenticated}:${mayHaveSession}`;

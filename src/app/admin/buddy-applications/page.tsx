@@ -1,5 +1,5 @@
-import { AdminShell } from "../admin-shell";
-import { AdminBuddiesDashboard } from "../buddies/buddies-dashboard";
+import { AdminShell } from "@/app/admin/admin-shell";
+import { AdminBuddiesDashboard } from "@/app/admin/buddies/buddies-dashboard";
 
 export default function AdminBuddyApplicationsPage() {
   return (

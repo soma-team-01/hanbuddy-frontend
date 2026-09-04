@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { GoogleIcon } from "@/components/ui/icons";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -17,28 +17,9 @@ export default async function AdminLoginPage({
   const { error } = await searchParams;
 
   return (
-    <main className="min-h-screen bg-canvas text-ink">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1200px] flex-col px-5 py-6 md:px-8 md:py-8">
-        <header className="flex items-center justify-between">
-          <Link
-            href="/admin/login"
-            className="flex items-center gap-3 font-display text-xl font-extrabold tracking-[-0.025em]"
-          >
-            <Image
-              src="/images/brand/logo-borderless.webp"
-              alt=""
-              width={36}
-              height={36}
-              className="size-9"
-              priority
-            />
-            HanBuddy
-          </Link>
-          <span className="rounded-full border border-line-soft bg-white px-3 py-1.5 text-xs font-semibold tracking-[0.14em] text-muted uppercase">
-            Admin
-          </span>
-        </header>
-
+    <main className="min-h-screen bg-white text-ink">
+      <SiteHeader role="admin" authenticated={false} mayHaveSession={false} />
+      <div className="mx-auto flex min-h-[calc(100vh-76px)] w-full max-w-[1200px] flex-col px-5 md:px-8">
         <div className="flex flex-1 items-center justify-center py-14 md:py-20">
           <section
             aria-labelledby="admin-login-heading"

@@ -116,6 +116,58 @@ export function AdminLoadingRows() {
   );
 }
 
+export function AdminFilterInput({
+  name,
+  label,
+  type = "text",
+  placeholder,
+}: Readonly<{
+  name: string;
+  label: string;
+  type?: string;
+  placeholder?: string;
+}>) {
+  return (
+    <label className="text-xs font-bold text-muted">
+      {label}
+      <input
+        name={name}
+        type={type}
+        min={type === "number" ? 1 : undefined}
+        placeholder={placeholder}
+        className="focus-border-only mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink transition-colors outline-none focus:border-primary"
+      />
+    </label>
+  );
+}
+
+export function AdminFilterSelect({
+  name,
+  label,
+  options,
+}: Readonly<{
+  name: string;
+  label: string;
+  options: string[][];
+}>) {
+  return (
+    <label className="text-xs font-bold text-muted">
+      {label}
+      <select
+        name={name}
+        className="focus-border-only mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
+      >
+        <option value="">전체</option>
+        {options.map(([value, text]) => (
+          <option key={value} value={value}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function formatAdminDate(value: string | null | undefined, includeTime = false) {
   if (!value) return "-";
   const date = new Date(value);
@@ -174,7 +226,10 @@ export function AdminReasonDialog({
   onConfirm: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  useEffect(() => dialogRef.current?.showModal(), []);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+  }, []);
   const valid = reason.trim().length > 0 && reason.trim().length <= 500 && !confirmDisabled;
   return (
     <dialog

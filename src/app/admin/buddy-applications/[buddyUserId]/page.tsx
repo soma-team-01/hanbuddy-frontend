@@ -1,5 +1,5 @@
-import { AdminShell } from "../../admin-shell";
-import { BuddyApplicationReview } from "../../buddies/[buddyUserId]/buddy-application-review";
+import { AdminShell } from "@/app/admin/admin-shell";
+import { BuddyApplicationReview } from "@/app/admin/buddies/[buddyUserId]/buddy-application-review";
 
 export default async function BuddyApplicationPage({
   params,

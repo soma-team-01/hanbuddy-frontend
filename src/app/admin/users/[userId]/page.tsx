@@ -1,5 +1,5 @@
-import { AdminShell } from "../../admin-shell";
-import { AdminUserDetailView } from "./user-detail-view";
+import { AdminShell } from "@/app/admin/admin-shell";
+import { AdminUserDetailView } from "@/app/admin/users/[userId]/user-detail-view";
 
 export default async function AdminUserDetailPage({
   params,

@@ -10,7 +10,7 @@ import { isUnauthenticatedError } from "@/lib/api/errors";
 import { SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { adminBuddyApplicationQueryOptions, adminKeys } from "@/lib/query/admin";
 import { unwrapApiResult } from "@/lib/query/result";
-import { formatAdminCountry } from "../../admin-ui";
+import { formatAdminCountry } from "@/app/admin/admin-ui";
 
 export function BuddyApplicationReview({ userId }: { userId: string }) {
   const router = useRouter();

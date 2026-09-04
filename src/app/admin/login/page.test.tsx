@@ -24,6 +24,10 @@ vi.mock("next/image", () => ({
   default: ({ alt }: { alt: string }) => <span data-image-alt={alt} />,
 }));
 
+vi.mock("@/components/layout/SiteHeader", () => ({
+  SiteHeader: () => <header>HanBuddy Admin</header>,
+}));
+
 async function renderPage(error?: string) {
   render(await AdminLoginPage({ searchParams: Promise.resolve({ error }) }));
 }

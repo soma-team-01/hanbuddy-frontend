@@ -1,8 +1,10 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getAdminAuditLogs,
   getAdminBuddy,
+  getAdminBuddyPerformance,
+  getAdminUserHistory,
   reactivateAdminUser,
   suspendAdminUser,
   updateAdminBuddyCommission,
@@ -13,6 +15,8 @@ import { AdminBuddyDetailView } from "./buddy-detail-view";
 vi.mock("@/lib/api/admin", () => ({
   getAdminAuditLogs: vi.fn(),
   getAdminBuddy: vi.fn(),
+  getAdminBuddyPerformance: vi.fn(),
+  getAdminUserHistory: vi.fn(),
   reactivateAdminUser: vi.fn(),
   suspendAdminUser: vi.fn(),
   updateAdminBuddyCommission: vi.fn(),
@@ -26,6 +30,8 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 const mockedGetBuddy = vi.mocked(getAdminBuddy);
+const mockedGetBuddyPerformance = vi.mocked(getAdminBuddyPerformance);
+const mockedGetUserHistory = vi.mocked(getAdminUserHistory);
 const mockedGetAuditLogs = vi.mocked(getAdminAuditLogs);
 const mockedUpdateCommission = vi.mocked(updateAdminBuddyCommission);
 const mockedSuspendUser = vi.mocked(suspendAdminUser);
@@ -68,11 +74,66 @@ function mockBuddyRequests(logs: Awaited<ReturnType<typeof getAdminAuditLogs>>) 
     },
   });
   mockedGetAuditLogs.mockResolvedValue(logs);
+  mockedGetBuddyPerformance.mockResolvedValue({
+    status: "success",
+    performance: {
+      buddyId: 9,
+      totalActivityCount: 2,
+      activeActivityCount: 1,
+      applicationCounts: {
+        PENDING_PAYMENT: 0,
+        SUPERSEDED: 0,
+        CONFIRMED: 2,
+        CANCELLED: 1,
+        COMPLETED: 0,
+      },
+      confirmedPaymentCount: 2,
+      confirmedPaymentAmountKrw: 80000,
+      guidePayoutAmountKrw: 72000,
+      averageRating: 5,
+      reviewCount: 1,
+    },
+  });
+  mockedGetUserHistory.mockImplementation(async (_userId, type) => ({
+    status: "success",
+    history: {
+      content:
+        type === "activities"
+          ? [
+              {
+                activityId: 41,
+                title: "한강 야경 투어",
+                status: "ACTIVE" as const,
+                price: 40000,
+                currency: "KRW",
+                createdAt: "2026-08-03T10:00:00+09:00",
+              },
+            ]
+          : [
+              {
+                userAgreementId: 52,
+                type: "TERMS_OF_SERVICE",
+                version: "v1.0",
+                required: true,
+                agreed: true,
+                decidedAt: "2026-08-01T10:00:00+09:00",
+                withdrawnAt: null,
+              },
+            ],
+      totalElements: 1,
+      totalPages: 1,
+      page: 0,
+      size: 20,
+      hasNext: false,
+    },
+  }));
 }
 
 describe("AdminBuddyDetailView", () => {
   beforeEach(() => {
     mockedGetBuddy.mockReset();
+    mockedGetBuddyPerformance.mockReset();
+    mockedGetUserHistory.mockReset();
     mockedGetAuditLogs.mockReset();
     mockedUpdateCommission.mockReset();
     mockedSuspendUser.mockReset();
@@ -103,8 +164,49 @@ describe("AdminBuddyDetailView", () => {
     expect(screen.getByText("초기 버디 10%")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "계정 정지" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "회원 정보 보기" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "운영 성과" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "운영 정보" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "등록 활동 이력 2건" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "약관 이력 2건" })).toBeInTheDocument();
+    expect(screen.getByText("한강 야경 투어")).toBeInTheDocument();
     expect(mockedGetAuditLogs).toHaveBeenCalledWith(27, 0);
+  });
+
+  it("수수료 정책을 10%와 20% 중 직접 선택하게 한다", async () => {
+    mockBuddyRequests({
+      status: "success",
+      auditLogs: {
+        logs: [],
+        totalElements: 0,
+        totalPages: 0,
+        page: 0,
+        size: 20,
+        hasNext: false,
+      },
+    });
+
+    renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "변경" }));
+
+    expect(screen.getByRole("heading", { name: "수수료 정책 변경" })).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "변경 이후 새로 생성되는 결제부터 적용되며 기존 결제와 정산 금액은 바뀌지 않습니다.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "초기 버디 10%" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "수수료 정책 변경" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("radio", { name: "일반 20%" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "변경 사유" }), {
+      target: { value: "초기 운영 정책 종료" },
+    });
+
+    expect(screen.getByRole("radio", { name: "일반 20%" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("button", { name: "수수료 정책 변경" })).toBeEnabled();
   });
 
   it("감사 로그 목록을 표시한다", async () => {

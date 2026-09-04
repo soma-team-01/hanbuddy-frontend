@@ -4,14 +4,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { UserIcon } from "@/components/ui/icons";
+import { HistoryIcon, UserIcon } from "@/components/ui/icons";
 import { reactivateAdminUser, suspendAdminUser, updateAdminBuddyCommission } from "@/lib/api/admin";
 import { ApiClientError, isUnauthenticatedError } from "@/lib/api/errors";
-import { adminAuditLogsQueryOptions, adminBuddyQueryOptions, adminKeys } from "@/lib/query/admin";
+import { formatKrw } from "@/lib/format";
+import {
+  adminAuditLogsQueryOptions,
+  adminBuddyPerformanceQueryOptions,
+  adminBuddyQueryOptions,
+  adminKeys,
+  adminUserHistoryQueryOptions,
+} from "@/lib/query/admin";
 import { unwrapApiResult } from "@/lib/query/result";
-import type { AdminCommissionPolicy } from "@/types/admin";
+import type { AdminCommissionPolicy, AdminUserHistory, AdminUserHistoryType } from "@/types/admin";
 import {
   AdminLoadingRows,
+  AdminPagination,
   AdminReasonDialog,
   AdminState,
   AdminStatusBadge,
@@ -22,12 +30,20 @@ import {
 export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
   const router = useRouter();
   const client = useQueryClient();
+  const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
   const [nextPolicy, setNextPolicy] = useState<AdminCommissionPolicy | null>(null);
+  const [historyType, setHistoryType] = useState<AdminUserHistoryType>("activities");
+  const [historyPage, setHistoryPage] = useState(0);
   const [accountAction, setAccountAction] = useState<"suspend" | "reactivate" | null>(null);
   const [reason, setReason] = useState("");
   const [actionError, setActionError] = useState("");
   const buddyQuery = useQuery(adminBuddyQueryOptions(buddyId));
+  const performanceQuery = useQuery(adminBuddyPerformanceQueryOptions(buddyId));
   const auditTargetUserId = buddyQuery.data?.user.userId;
+  const historyQuery = useQuery({
+    ...adminUserHistoryQueryOptions(auditTargetUserId ?? "pending", historyType, historyPage),
+    enabled: auditTargetUserId !== undefined,
+  });
   const auditQuery = useQuery({
     ...adminAuditLogsQueryOptions(auditTargetUserId ?? "pending"),
     enabled: auditTargetUserId !== undefined,
@@ -48,6 +64,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
         client.invalidateQueries({ queryKey: adminKeys.buddy(buddyId) }),
         client.invalidateQueries({ queryKey: adminKeys.all }),
       ]);
+      setCommissionDialogOpen(false);
       setNextPolicy(null);
       setReason("");
     },
@@ -152,6 +169,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
               <button
                 type="button"
                 onClick={() => {
+                  setCommissionDialogOpen(false);
                   setNextPolicy(null);
                   setReason("");
                   setActionError("");
@@ -166,6 +184,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
               <button
                 type="button"
                 onClick={() => {
+                  setCommissionDialogOpen(false);
                   setNextPolicy(null);
                   setReason("");
                   setActionError("");
@@ -206,9 +225,8 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
                         setAccountAction(null);
                         setReason("");
                         setActionError("");
-                        setNextPolicy(
-                          buddy.commissionPolicy === "EARLY_10" ? "STANDARD_20" : "EARLY_10",
-                        );
+                        setNextPolicy(buddy.commissionPolicy);
+                        setCommissionDialogOpen(true);
                       }}
                       className="rounded-full border border-primary/45 px-3 py-1 text-xs font-bold text-primary hover:border-primary hover:bg-primary-soft"
                     >
@@ -220,6 +238,113 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
             />
           </InfoSection>
         </div>
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
+        <h2 className="font-display text-xl font-extrabold">운영 정보</h2>
+        {performanceQuery.isPending ? (
+          <div className="mt-5">
+            <AdminLoadingRows />
+          </div>
+        ) : null}
+        {performanceQuery.error ? (
+          <div className="mt-5">
+            <AdminState
+              title="운영 정보를 불러오지 못했습니다."
+              description="잠시 후 다시 시도해 주세요."
+              action={() => performanceQuery.refetch()}
+            />
+          </div>
+        ) : null}
+        {performanceQuery.data ? (
+          <dl className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <Metric label="등록 활동" value={`${performanceQuery.data.totalActivityCount}개`} />
+            <Metric label="운영 중" value={`${performanceQuery.data.activeActivityCount}개`} />
+            <Metric
+              label="확정 결제"
+              value={`${performanceQuery.data.confirmedPaymentCount}건`}
+              detail={formatKrw(performanceQuery.data.confirmedPaymentAmountKrw, "ko")}
+            />
+            <Metric
+              label="정산 예정"
+              value={formatKrw(performanceQuery.data.guidePayoutAmountKrw, "ko")}
+            />
+            <Metric
+              label="평점"
+              value={
+                performanceQuery.data.averageRating === null
+                  ? "-"
+                  : performanceQuery.data.averageRating.toFixed(1)
+              }
+              detail={`리뷰 ${performanceQuery.data.reviewCount}개`}
+            />
+          </dl>
+        ) : null}
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
+        <div className="flex items-center gap-3">
+          <HistoryIcon className="size-5 text-primary" />
+          <h2 className="font-display text-xl font-extrabold">서비스 이용 이력</h2>
+        </div>
+        <div
+          role="tablist"
+          aria-label="버디 이용 이력 유형"
+          className="mt-5 grid grid-cols-2 gap-3"
+        >
+          {(
+            [
+              ["activities", "등록 활동", user.activityCount],
+              ["agreements", "약관", user.agreementCount],
+            ] as const
+          ).map(([type, label, count]) => (
+            <button
+              key={type}
+              type="button"
+              role="tab"
+              aria-selected={historyType === type}
+              aria-label={`${label} 이력 ${count.toLocaleString("ko-KR")}건`}
+              onClick={() => {
+                setHistoryType(type);
+                setHistoryPage(0);
+              }}
+              className={`min-w-0 rounded-2xl border px-4 py-4 text-left transition-all ${historyType === type ? "border-primary/45 bg-primary-soft shadow-[0_10px_28px_rgba(209,63,50,0.09)]" : "border-line-soft bg-panel-raised hover:border-line-strong hover:bg-white"}`}
+            >
+              <span
+                className={`block text-xs font-bold ${historyType === type ? "text-primary" : "text-muted"}`}
+              >
+                {label}
+              </span>
+              <span className="mt-1 block font-display text-2xl font-extrabold text-ink">
+                {count.toLocaleString("ko-KR")}
+              </span>
+            </button>
+          ))}
+        </div>
+        {historyQuery.isPending ? (
+          <div className="mt-6">
+            <AdminLoadingRows />
+          </div>
+        ) : null}
+        {historyQuery.error ? (
+          <div className="mt-6">
+            <AdminState
+              title="이력을 불러오지 못했습니다."
+              description="잠시 후 다시 시도해 주세요."
+              action={() => historyQuery.refetch()}
+            />
+          </div>
+        ) : null}
+        {historyQuery.data ? (
+          <>
+            <HistoryTable type={historyType} items={historyQuery.data.content ?? []} />
+            <AdminPagination
+              page={historyQuery.data.page}
+              totalPages={historyQuery.data.totalPages}
+              onPage={setHistoryPage}
+            />
+          </>
+        ) : null}
       </section>
 
       <section className="mt-8 rounded-3xl border border-line-soft bg-panel-raised p-6 md:p-8">
@@ -255,18 +380,49 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
         </ol>
       </section>
 
-      {nextPolicy ? (
+      {commissionDialogOpen ? (
         <AdminReasonDialog
-          title={`${commissionLabel(nextPolicy)} 정책으로 변경할까요?`}
-          description="변경 이후 새로 생성되는 결제부터 적용되며 기존 결제와 정산 금액은 바뀌지 않습니다."
+          title="수수료 정책 변경"
           confirmLabel="수수료 정책 변경"
           reason={reason}
           error={actionError}
           pending={mutation.isPending}
+          confirmDisabled={!nextPolicy || nextPolicy === buddy.commissionPolicy}
           onReason={setReason}
-          onClose={() => !mutation.isPending && setNextPolicy(null)}
+          onClose={() => {
+            if (!mutation.isPending) {
+              setCommissionDialogOpen(false);
+              setNextPolicy(null);
+            }
+          }}
           onConfirm={() => mutation.mutate()}
-        />
+        >
+          <div role="radiogroup" aria-label="수수료 정책" className="grid grid-cols-2 gap-3">
+            {(["EARLY_10", "STANDARD_20"] as const).map((policy) => {
+              const selected = nextPolicy === policy;
+              return (
+                <button
+                  key={policy}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={policy === "EARLY_10" ? "초기 버디 10%" : "일반 20%"}
+                  onClick={() => setNextPolicy(policy)}
+                  className={`rounded-2xl border p-4 text-left transition-all ${selected ? "border-primary bg-primary-soft shadow-[0_8px_24px_rgba(209,63,50,0.1)]" : "border-line-strong hover:border-primary/60"}`}
+                >
+                  <span
+                    className={`block text-xs font-bold ${selected ? "text-primary" : "text-muted"}`}
+                  >
+                    {policy === "EARLY_10" ? "초기 버디" : "일반"}
+                  </span>
+                  <span className="mt-1 block font-display text-2xl font-extrabold">
+                    {policy === "EARLY_10" ? "10%" : "20%"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </AdminReasonDialog>
       ) : null}
       {accountAction ? (
         <AdminReasonDialog
@@ -311,6 +467,76 @@ function Info({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
+
+function Metric({ label, value, detail }: { label: string; value: string; detail?: string }) {
+  return (
+    <div className="rounded-2xl border border-line-soft bg-panel-raised px-4 py-4">
+      <dt className="text-xs font-semibold text-muted">{label}</dt>
+      <dd className="mt-1">
+        <span className="block font-display text-xl font-extrabold text-ink">{value}</span>
+        {detail ? <span className="mt-1 block text-xs text-muted">{detail}</span> : null}
+      </dd>
+    </div>
+  );
+}
+
+function HistoryTable({ type, items }: { type: AdminUserHistoryType; items: AdminUserHistory[] }) {
+  if (items.length === 0)
+    return (
+      <p className="mt-6 rounded-2xl bg-panel-raised px-5 py-10 text-center text-sm text-muted">
+        해당 이력이 없습니다.
+      </p>
+    );
+  return (
+    <ul className="mt-6 divide-y divide-line-soft border-y border-line-soft">
+      {items.map((item) => (
+        <li
+          key={historyKey(type, item)}
+          className="grid gap-2 py-4 md:grid-cols-[1fr_auto] md:items-center"
+        >
+          <div>
+            <p className="font-semibold">{historyTitle(type, item)}</p>
+            <p className="mt-1 text-sm text-muted">{historyDescription(type, item)}</p>
+          </div>
+          <time className="text-xs text-muted">
+            {formatAdminDate("createdAt" in item ? item.createdAt : item.decidedAt, true)}
+          </time>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function historyKey(type: AdminUserHistoryType, item: AdminUserHistory) {
+  if (type === "activities" && "activityId" in item) return `${type}-${item.activityId}`;
+  if (type === "agreements" && "userAgreementId" in item) return `${type}-${item.userAgreementId}`;
+  return `${type}-unknown`;
+}
+
+function historyTitle(type: AdminUserHistoryType, item: AdminUserHistory) {
+  if (type === "activities" && "title" in item) return item.title;
+  if (type === "agreements" && "type" in item) return `${item.type} · ${item.version}`;
+  return type === "activities" ? "활동 정보 없음" : "약관 정보 없음";
+}
+
+function historyDescription(type: AdminUserHistoryType, item: AdminUserHistory) {
+  if (type === "activities" && "price" in item)
+    return `${activityStatusLabel(item.status)} · ${formatKrw(item.price, "ko")}`;
+  if (type === "agreements" && "agreed" in item) return item.agreed ? "동의" : "미동의";
+  return "";
+}
+
+function activityStatusLabel(status: string) {
+  return (
+    (
+      { DRAFT: "작성 중", ACTIVE: "운영 중", INACTIVE: "비활성", DELETED: "삭제" } as Record<
+        string,
+        string
+      >
+    )[status] ?? status
+  );
+}
+
 function commissionLabel(policy: AdminCommissionPolicy | null) {
   return policy === "EARLY_10"
     ? "초기 버디 10%"

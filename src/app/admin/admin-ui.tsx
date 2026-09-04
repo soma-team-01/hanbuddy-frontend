@@ -142,29 +142,33 @@ export function formatAdminCountry(countryCode: string | null | undefined) {
 export function AdminReasonDialog({
   title,
   description,
+  children,
   confirmLabel,
   reason,
   error,
   pending,
   danger = false,
+  confirmDisabled = false,
   onReason,
   onClose,
   onConfirm,
 }: {
   title: string;
-  description: string;
+  description?: string;
+  children?: React.ReactNode;
   confirmLabel: string;
   reason: string;
   error?: string;
   pending: boolean;
   danger?: boolean;
+  confirmDisabled?: boolean;
   onReason: (value: string) => void;
   onClose: () => void;
   onConfirm: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   useEffect(() => dialogRef.current?.showModal(), []);
-  const valid = reason.trim().length > 0 && reason.trim().length <= 500;
+  const valid = reason.trim().length > 0 && reason.trim().length <= 500 && !confirmDisabled;
   return (
     <dialog
       ref={dialogRef}
@@ -179,7 +183,9 @@ export function AdminReasonDialog({
             <h2 id="admin-reason-title" className="font-display text-2xl font-extrabold">
               {title}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-muted">{description}</p>
+            {description ? (
+              <p className="mt-3 text-sm leading-6 text-muted">{description}</p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -191,6 +197,7 @@ export function AdminReasonDialog({
             <XIcon className="size-5" />
           </button>
         </div>
+        {children ? <div className="mt-6">{children}</div> : null}
         <label htmlFor="admin-reason" className="mt-6 block text-sm font-bold">
           변경 사유
         </label>

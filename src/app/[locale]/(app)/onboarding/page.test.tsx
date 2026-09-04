@@ -98,9 +98,11 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" })).toHaveValue(
         "Google Traveler",
       );
-      expect(
-        screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" }),
-      ).toHaveAttribute("pattern", "[A-Za-z]+(?:[ '-][A-Za-z]+)*");
+      const displayNameInput = screen.getByRole("textbox", {
+        name: locale === "ko" ? "이름" : "Name",
+      });
+      expect(displayNameInput).toHaveAttribute("pattern", "[A-Za-z]+(?:[ '-][A-Za-z]+)*");
+      expect(displayNameInput).toHaveClass("focus-border-only");
       expect(
         screen.getByText(
           locale === "ko"
@@ -113,6 +115,8 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
       expect(screen.getByText(nationality)).toBeInTheDocument();
       expect(screen.getByLabelText(birthDate)).toHaveAttribute("type", "date");
+      expect(screen.getByLabelText(birthDate)).toHaveClass("focus-border-only");
+      expect(screen.getByRole("button", { name: nationality })).toHaveClass("focus-border-only");
       expect(screen.getByTestId("onboarding-personal-fields")).not.toHaveClass("sm:grid-cols-2");
       expect(
         screen.queryByText(

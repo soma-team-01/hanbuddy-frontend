@@ -94,7 +94,7 @@ export function MessagingAppField({
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => onAppChange(key)}
-                className={`flex items-center gap-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong ${
+                className={`focus-border-only flex items-center gap-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${
                   variant === "cards"
                     ? `min-h-14 gap-2 rounded-xl border px-3 py-2.5 ${
                         isSelected
@@ -168,7 +168,7 @@ export function MessagingAppField({
             }}
             placeholder={koreanOnly ? t("koreanPhonePlaceholder") : t("phonePlaceholder")}
             aria-label={t("phoneInputLabel")}
-            className={`w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 ${
+            className={`focus-border-only w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${
               variant === "cards" ? "bg-canvas-soft" : "bg-panel"
             }`}
           />
@@ -184,7 +184,7 @@ export function MessagingAppField({
             app: MESSAGING_APPS.find((item) => item.key === app)?.label ?? t("phoneNumber"),
           })}
           aria-label={t("appIdInputLabel")}
-          className={`mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 ${
+          className={`focus-border-only mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${
             variant === "cards" ? "bg-canvas-soft" : "bg-panel"
           }`}
         />

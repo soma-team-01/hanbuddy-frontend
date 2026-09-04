@@ -715,7 +715,7 @@ export function OnboardingForm({
                             onChange={(event) => setDisplayName(event.target.value)}
                             aria-label={t("displayName")}
                             aria-describedby="onboarding-display-name-hint"
-                            className="h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                            className="focus-border-only h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                           />
                         </label>
                         <p
@@ -737,7 +737,7 @@ export function OnboardingForm({
                           value={nationality}
                           onChange={handleNationalityChange}
                           ariaLabel={t("nationality")}
-                          triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong"
+                          triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary-soft"
                         />
                       </div>
                       <label className="flex flex-col gap-1.5">
@@ -751,7 +751,7 @@ export function OnboardingForm({
                           value={birthDate}
                           onChange={(event) => setBirthDate(event.target.value)}
                           aria-label={t("birthDate")}
-                          className="w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                          className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                         />
                       </label>
                     </div>

@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import type { AuthStatus } from "@/lib/auth/types";
 import { ArrowLeftIcon, CircleHelpIcon, ClockIcon, UserMinusIcon } from "@/components/ui/icons";
 
-const CONTACT_EMAIL = "zeroone.soma@gmail.com";
+const CONTACT_EMAIL = "contact@hanbuddy.kr";
 
 type InactiveAuthStatus = Extract<AuthStatus, "PENDING_APPROVAL" | "REJECTED" | "SUSPENDED">;
 

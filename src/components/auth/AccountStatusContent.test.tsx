@@ -11,9 +11,9 @@ describe("AccountStatusContent", () => {
       screen.getByRole("heading", { name: "Buddy application under review" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Usually 1–3 business days")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "zeroone.soma@gmail.com" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "contact@hanbuddy.kr" })).toHaveAttribute(
       "href",
-      "mailto:zeroone.soma@gmail.com",
+      "mailto:contact@hanbuddy.kr",
     );
     expect(screen.getByRole("link", { name: "Back to buddy page" })).toHaveAttribute(
       "href",

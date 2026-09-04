@@ -447,6 +447,7 @@
     "contactDescription": "Review your contact method and update it if needed.",
     "googleName": "Google account name",
     "email": "Login email",
+    "rejectionReason": "Reason for the previous rejection",
     "removeProfilePhoto": "Remove profile photo",
     "submit": "Submit again",
     "submitting": "Submitting...",

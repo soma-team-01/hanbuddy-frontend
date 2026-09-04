@@ -221,7 +221,7 @@ describe("OnboardingForm", () => {
       email: "buddy@example.com",
       name: "Google Buddy",
       displayName: "Old Buddy",
-      profileImageKey: "profiles/old.webp",
+      profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
       profileImageUrl: "https://cdn.test/profiles/old.webp",
       nationalityCode: "KR",
       birthDate: "1995-02-03",
@@ -251,6 +251,8 @@ describe("OnboardingForm", () => {
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1995-02-03");
     expect(screen.getByText("Google Buddy")).toBeInTheDocument();
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Reason for the previous rejection")).toBeInTheDocument();
+    expect(screen.getByText("Please update your profile.")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Step 1 of 2" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -265,7 +267,7 @@ describe("OnboardingForm", () => {
     );
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       displayName: "Old Buddy",
-      profileImageKey: "profiles/old.webp",
+      profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
       nationalityCode: "KR",
       birthDate: "1995-02-03",
       contactMethod: "LINE",
@@ -559,6 +561,46 @@ describe("OnboardingForm profile image", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
   }
 
+  function createRejectedApplication(): BuddyResubmission {
+    return {
+      userId: 7,
+      email: "buddy@example.com",
+      name: "Google Buddy",
+      displayName: "Old Buddy",
+      profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
+      profileImageUrl: "https://cdn.test/profiles/old.webp",
+      nationalityCode: "KR",
+      birthDate: "1995-02-03",
+      contactMethod: "LINE",
+      contactCountryCode: "",
+      contactIdentifier: "old-buddy",
+      accountStatus: "REJECTED",
+      reviewedAt: "2026-09-03T12:00:00+09:00",
+      rejectionReason: "Please update your profile.",
+    };
+  }
+
+  function mockSuccessfulResubmission(application: BuddyResubmission) {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "200",
+          message: "OK",
+          result: { ...application, accountStatus: "PENDING_APPROVAL", rejectionReason: null },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  function submitResubmission() {
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit again" }));
+  }
+
   it("shows a local preview after selecting a profile image", () => {
     renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
 
@@ -567,6 +609,46 @@ describe("OnboardingForm profile image", () => {
     });
 
     expect(screen.getByAltText("Selected profile photo preview")).toBeInTheDocument();
+  });
+
+  it("removes the existing profile image when resubmitting", async () => {
+    const application = createRejectedApplication();
+    const fetchMock = mockSuccessfulResubmission(application);
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove profile photo" }));
+    submitResubmission();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      profileImageKey: null,
+    });
+    expect(uploadProfileImage).not.toHaveBeenCalled();
+  });
+
+  it("replaces the existing profile image when resubmitting", async () => {
+    const application = createRejectedApplication();
+    const newImageKey = "profiles/2026/09/04/123e4567-e89b-12d3-a456-426614174001.png";
+    vi.mocked(uploadProfileImage).mockResolvedValue({
+      uploadUrl: "https://bucket.s3.amazonaws.com/new?signed",
+      imageKey: newImageKey,
+      imageUrl: "https://cdn.test/profiles/new.png",
+      expiresInSeconds: 300,
+    });
+    const fetchMock = mockSuccessfulResubmission(application);
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+
+    const replacement = createImageFile("replacement.png");
+    fireEvent.change(screen.getByLabelText("Add profile photo"), {
+      target: { files: [replacement] },
+    });
+    submitResubmission();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(uploadProfileImage).toHaveBeenCalledWith(replacement);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      profileImageKey: newImageKey,
+    });
   });
 
   it("shows the HanBuddy default image instead of the Google profile picture", () => {

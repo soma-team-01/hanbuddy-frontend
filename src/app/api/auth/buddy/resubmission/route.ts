@@ -15,7 +15,10 @@ import type {
 export const dynamic = "force-dynamic";
 
 const CONTACT_METHODS = new Set<ContactMethod>(["WHATSAPP", "LINE", "WECHAT", "PHONE"]);
-const PROFILE_IMAGE_KEY_PATTERN = /^profiles\/.+/;
+const PROFILE_IMAGE_KEY_PATTERN =
+  /^profiles\/\d{4}\/\d{2}\/\d{2}\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\.(?:jpg|png|webp)$/;
+const CONTACT_COUNTRY_CODE_PATTERN = /^(?:|\+\d{1,4})$/;
+const CONTACT_IDENTIFIER_PATTERN = /^[A-Za-z0-9가-힣@._+\- ]{2,100}$/;
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIES.resubmissionToken)?.value;
@@ -118,7 +121,7 @@ function isBuddyResubmissionRequest(value: unknown): value is BuddyResubmissionR
     typeof request.contactMethod === "string" &&
     CONTACT_METHODS.has(request.contactMethod as ContactMethod) &&
     typeof request.contactCountryCode === "string" &&
-    contactIdentifier.length > 0 &&
-    contactIdentifier.length <= 100
+    CONTACT_COUNTRY_CODE_PATTERN.test(request.contactCountryCode) &&
+    CONTACT_IDENTIFIER_PATTERN.test(contactIdentifier)
   );
 }

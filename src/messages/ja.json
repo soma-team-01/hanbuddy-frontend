@@ -447,6 +447,7 @@
     "contactDescription": "連絡方法を確認し、必要に応じて修正してください。",
     "googleName": "Googleアカウント名",
     "email": "ログインメール",
+    "rejectionReason": "前回の不承認理由",
     "removeProfilePhoto": "プロフィール写真を削除",
     "submit": "再審査を依頼",
     "submitting": "送信中...",

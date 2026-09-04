@@ -447,6 +447,7 @@
     "contactDescription": "기존 연락 수단을 확인하고 필요한 부분을 수정해 주세요.",
     "googleName": "Google 계정 이름",
     "email": "로그인 이메일",
+    "rejectionReason": "이전 미승인 사유",
     "removeProfilePhoto": "프로필 사진 삭제",
     "submit": "다시 심사 요청",
     "submitting": "재신청 처리 중...",

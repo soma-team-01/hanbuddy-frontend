@@ -671,6 +671,16 @@ export function OnboardingForm({
                   </div>
 
                   <div className="mt-8 max-w-2xl space-y-6">
+                    {resubmission?.rejectionReason ? (
+                      <div className="rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3">
+                        <p className="text-xs font-bold text-primary-strong">
+                          {resubmissionT("rejectionReason")}
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-ink">
+                          {resubmission.rejectionReason}
+                        </p>
+                      </div>
+                    ) : null}
                     <div className="grid items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
                       <div className="relative shrink-0">
                         {profilePhoto}

@@ -447,6 +447,7 @@
     "contactDescription": "请确认联系方式，并按需修改。",
     "googleName": "Google账号名称",
     "email": "登录邮箱",
+    "rejectionReason": "上次未通过的原因",
     "removeProfilePhoto": "删除头像",
     "submit": "再次提交审核",
     "submitting": "正在提交...",

@@ -18,7 +18,7 @@ const application: BuddyResubmission = {
   email: "buddy@example.com",
   name: "Google Name",
   displayName: "Old Buddy",
-  profileImageKey: "profiles/old.webp",
+  profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
   profileImageUrl: "https://cdn.test/profiles/old.webp",
   nationalityCode: "KR",
   birthDate: "1995-02-03",
@@ -32,7 +32,7 @@ const application: BuddyResubmission = {
 
 const updateRequest: BuddyResubmissionRequest = {
   displayName: "Updated Buddy",
-  profileImageKey: "profiles/new.webp",
+  profileImageKey: "profiles/2026/09/04/123e4567-e89b-12d3-a456-426614174001.webp",
   nationalityCode: "KR",
   birthDate: "1995-02-03",
   contactMethod: "LINE",

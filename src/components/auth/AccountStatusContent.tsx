@@ -5,25 +5,31 @@ import { Link } from "@/i18n/navigation";
 import type { AuthStatus } from "@/lib/auth/types";
 import { ArrowLeftIcon, CircleHelpIcon, ClockIcon, UserMinusIcon } from "@/components/ui/icons";
 
-const CONTACT_EMAIL = "zeroone.soma@gmail.com";
+const CONTACT_EMAIL = "contact@hanbuddy.kr";
 
 type InactiveAuthStatus = Extract<AuthStatus, "PENDING_APPROVAL" | "REJECTED" | "SUSPENDED">;
 
 interface AccountStatusContentProps {
   status: InactiveAuthStatus;
   reason?: string;
+  userType: "TOURIST" | "BUDDY";
 }
 
-export function AccountStatusContent({ status, reason }: Readonly<AccountStatusContentProps>) {
+export function AccountStatusContent({
+  status,
+  reason,
+  userType,
+}: Readonly<AccountStatusContentProps>) {
   const t = useTranslations("AccountStatus");
-  const copy = getStatusCopy(status, t);
+  const copy = getStatusCopy(status, userType, t);
+  const isBuddy = userType === "BUDDY";
 
   return (
     <main className="flex flex-1 items-center justify-center bg-white px-4 py-8 md:px-6 md:py-10">
       <div className="w-full max-w-[680px]">
         <Link
-          href="/buddy"
-          aria-label={t("backToBuddy")}
+          href={isBuddy ? "/buddy" : "/"}
+          aria-label={t(isBuddy ? "backToBuddy" : "backToHome")}
           className="mb-4 inline-flex size-10 items-center justify-center rounded-full border border-line-soft bg-white text-ink transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <ArrowLeftIcon className="size-5" />
@@ -38,9 +44,11 @@ export function AccountStatusContent({ status, reason }: Readonly<AccountStatusC
             <h1 className="max-w-[540px] font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-[30px]">
               {copy.title}
             </h1>
-            <p className="mt-3 max-w-[540px] text-sm leading-6 text-muted md:text-base">
-              {copy.description}
-            </p>
+            {copy.description ? (
+              <p className="mt-3 max-w-[540px] text-sm leading-6 text-muted md:text-base">
+                {copy.description}
+              </p>
+            ) : null}
 
             {reason ? (
               <div className="mt-5 w-full rounded-2xl border border-line-soft bg-panel-raised p-4 text-left">
@@ -82,11 +90,15 @@ function AccountStatusIcon({ status }: Readonly<{ status: InactiveAuthStatus }>)
   return <UserMinusIcon className="size-7" />;
 }
 
-function getStatusCopy(status: InactiveAuthStatus, t: ReturnType<typeof useTranslations>) {
+function getStatusCopy(
+  status: InactiveAuthStatus,
+  userType: "TOURIST" | "BUDDY",
+  t: ReturnType<typeof useTranslations>,
+) {
   if (status === "PENDING_APPROVAL") {
     return {
       title: t("pending.title"),
-      description: t("pending.description"),
+      description: null,
       note: t("pending.reviewTime"),
     };
   }
@@ -98,8 +110,8 @@ function getStatusCopy(status: InactiveAuthStatus, t: ReturnType<typeof useTrans
     };
   }
   return {
-    title: t("suspended.title"),
-    description: t("suspended.description"),
+    title: t(userType === "BUDDY" ? "suspended.title" : "suspended.touristTitle"),
+    description: t(userType === "BUDDY" ? "suspended.description" : "suspended.touristDescription"),
     note: null,
   };
 }

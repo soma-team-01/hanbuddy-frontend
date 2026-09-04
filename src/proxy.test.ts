@@ -122,7 +122,7 @@ describe("route access proxy", () => {
       [AUTH_COOKIES.accessToken]: "access-token",
       [AUTH_COOKIES.userType]: "ADMIN",
     });
-    expect(response.headers.get("location")).toBe("http://localhost/admin/buddies");
+    expect(response.headers.get("location")).toBe("http://localhost/admin/users");
   });
 
   it("redirects authenticated users away from login", async () => {

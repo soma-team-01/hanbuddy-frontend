@@ -449,11 +449,14 @@
     },
     "suspended": {
       "title": "バディアカウントが停止されました",
-      "description": "バディ機能は利用できません。サポートが必要な場合は、お問い合わせください。"
+      "description": "バディ機能は利用できません。サポートが必要な場合は、お問い合わせください。",
+      "touristTitle": "旅行者アカウントが停止されました",
+      "touristDescription": "HanBuddyのサービスは利用できません。サポートが必要な場合はお問い合わせください。"
     },
     "reasonLabel": "提供された理由",
-    "contactHelp": "質問がありますか?お問い合わせ <email>zeroone.soma@gmail.com</email>.",
-    "backToBuddy": "友達のページに戻る"
+    "contactHelp": "ご質問がありますか？<email>contact@hanbuddy.kr</email>までお問い合わせください。",
+    "backToBuddy": "バディページに戻る",
+    "backToHome": "ホームに戻る"
   },
   "Profile": {
     "title": "プロフィールの編集",

@@ -269,7 +269,7 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest(undefined, undefined, "admin"));
 
-    expect(response.headers.get("location")).toBe("http://localhost/admin/buddies");
+    expect(response.headers.get("location")).toBe("http://localhost/admin/users");
     expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.userType}=ADMIN`);
   });
 
@@ -394,6 +394,30 @@ describe("GET /auth/google/callback", () => {
 
     expect(response.headers.get("location")).toBe(
       "http://localhost/en/buddy/auth/status?status=SUSPENDED",
+    );
+  });
+
+  it("redirects suspended tourist accounts to the general account status screen", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "SUSPENDED",
+          userId: 10,
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("ko"));
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/ko/auth/status?status=SUSPENDED",
     );
   });
 

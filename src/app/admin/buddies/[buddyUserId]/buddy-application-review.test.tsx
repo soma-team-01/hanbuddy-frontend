@@ -69,7 +69,10 @@ describe("BuddyApplicationReview", () => {
 
     expect(await screen.findByRole("heading", { name: "김버디" })).toBeInTheDocument();
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
+    expect(screen.getByText("대한민국")).toBeInTheDocument();
     expect(screen.getByText(/^2026년 8월 6일 .*12:30$/)).toBeInTheDocument();
+    expect(screen.queryByText("사용자 ID")).not.toBeInTheDocument();
+    expect(screen.queryByText("검토자")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "버디 승인" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "거절" })).toBeInTheDocument();
   });
@@ -82,7 +85,7 @@ describe("BuddyApplicationReview", () => {
     fireEvent.click(screen.getByRole("button", { name: "승인하기" }));
 
     await waitFor(() => expect(mockedApprove).toHaveBeenCalledWith("42"));
-    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddies"));
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddy-applications"));
   });
 
   it("requires a reason before rejecting and returns to the list after success", async () => {
@@ -103,6 +106,6 @@ describe("BuddyApplicationReview", () => {
         reason: "프로필 확인이 필요합니다.",
       }),
     );
-    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddies"));
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/admin/buddy-applications"));
   });
 });

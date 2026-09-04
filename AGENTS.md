@@ -17,7 +17,7 @@ This version has breaking changes - APIs, conventions, and file structure may al
 
 - **Next.js 16** (App Router) · **React 19** · **TypeScript** · **Tailwind CSS v4** · **ESLint** · **npm**
 - `src/` 디렉토리 + `@/*` 임포트 별칭
-- 배포: **Vercel** (Production + Preview)
+- 배포: **AWS EC2** (Production + Staging)
 - 개발 명령: `npm run dev`, 빌드: `npm run build`, 린트: `npm run lint`, 타입체크: `npm run typecheck`
 
 > **주의 (Next.js 16 / React 19 / Tailwind v4):** 이 버전들은 에이전트 학습 데이터보다 최신이라 API·관례가 다를 수 있다. 실제 Next.js 코드를 작성하기 전 `node_modules/next/dist/docs/`(특히 `01-app/`)를 참고할 것. Tailwind v4는 `tailwind.config.js` 대신 `src/app/globals.css`의 `@import "tailwindcss"` + PostCSS 기반 설정을 쓴다.
@@ -52,9 +52,9 @@ src/
 ## Branching And Deployment
 
 ```text
-main     - Vercel Production Branch -> 실서비스 (직접 push 금지, PR로만 병합)
-develop  - 고정 Preview URL = 통합 스테이징 (팀 QA·데모)
-feature/*- PR 단위 임시 Preview URL (리뷰용)
+main     - Production 배포 기준 브랜치 (직접 push 금지, PR로만 병합)
+develop  - Staging 수동 배포 기준 브랜치 (팀 QA·데모)
+feature/*- PR과 CI 검증용 브랜치 (별도 Preview 배포 없음)
 ```
 
 - **흐름**: `feature/xxx`(develop에서 분기) -> PR -> `develop` -> 배포 준비되면 PR -> `main`.
@@ -68,19 +68,16 @@ feature/*- PR 단위 임시 Preview URL (리뷰용)
   ```bash
   npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
   ```
-- **Vercel**: Production Branch=`main`. 그 외 브랜치/PR은 자동 Preview 배포. 환경변수는 Production / Preview로 분리 관리(실 키는 Production 전용).
+- **AWS EC2**: GitHub Actions가 private ECR에 이미지를 올리고 Systems Manager Run Command로 환경별 EC2 컨테이너를 교체한다.
 
-### Vercel Status
+### AWS EC2 Deployment Status
 
-- 프로젝트: `hanbuddy-frontend` (team `soma-zeroone` / `team_2lOTZrUA6WOT5y80kaL9bfa9`, project `prj_N2tGWFSGPTsLxlZz2XnsSjzBKOiM`).
-- 배포는 SOMA 팀 Vercel Team `soma-zeroone` 소속으로 동작 중(PR #14~#20 배포에서 확인, 2026-07-09 Vercel MCP로 프로젝트 accountId 일치 확인). 과거에는 개인(Hobby) 팀 `minbros-projects`(`team_5xpcSletzWjNA6mWCYKBd4qG`) 소속이었고, 팀이 바뀐 뒤에도 projectId는 동일하다.
-- Vercel API/MCP 호출 시에는 teamId 대신 team slug(`soma-zeroone`)로도 조회 가능.
-- GitHub 저장소 연결 유지 -> **`main` push 시 프로덕션 자동 배포**, PR별 Preview 배포 정상 동작.
-- 프로덕션 URL: https://hanbuddy-frontend.vercel.app (공개, 정상 서빙 - 2026-07-09 확인).
-- **Deployment Protection ON**: Preview/브랜치 URL은 Vercel 로그인 필요(팀원 초대 시 접근). 이 정책 유지하기로 결정.
-- Vercel 조작은 Vercel MCP로 가능(팀/프로젝트/배포 조회 등). 단, 공식 `vercel` 플러그인이 머신에 설치·인증되어 있어야 하며, 세션에 따라 없을 수 있다.
-- Vercel CLI는 설치되어 있지 않을 수 있다. 로컬에서 `vercel env pull`, `vercel deploy`, `vercel logs`가 필요하면 `npm i -g vercel` 설치가 필요하다.
-- 팀 전환 관련 확인 필요 항목: 팀원 초대 상태, 팀 플랜 비용/크레딧.
+- `main` push는 CI 성공 후 `PRODUCTION_DEPLOYMENT_ENABLED=true`일 때 Production에 자동 배포한다.
+- Staging은 `develop` 브랜치에서 `Deploy staging` workflow를 수동 실행해 배포한다.
+- 사용하지 않는 Staging은 `Stop staging` workflow로 중지하며, 다음 배포 시 다시 시작한다.
+- Feature 브랜치와 PR에는 개별 Preview 환경이 생성되지 않는다. PR에서는 CI와 로컬 반응형 검증 결과를 확인한다.
+- Production과 Staging은 별도 EC2, EBS, IAM instance role, security group과 GitHub environment 설정을 사용한다.
+- 세부 구성과 운영 절차는 `docs/deployment/aws-ec2.md`를 따른다.
 
 ## Commit Rules
 

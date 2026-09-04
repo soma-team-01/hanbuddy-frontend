@@ -8,5 +8,5 @@ export default async function AdminPage() {
     store.get(AUTH_COOKIES.accessToken)?.value &&
     store.get(AUTH_COOKIES.userType)?.value === "ADMIN",
   );
-  redirect(isAdmin ? "/admin/buddies" : "/admin/login");
+  redirect(isAdmin ? "/admin/users" : "/admin/login");
 }

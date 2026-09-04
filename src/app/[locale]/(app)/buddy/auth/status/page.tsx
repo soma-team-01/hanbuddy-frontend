@@ -34,7 +34,7 @@ export default async function AccountStatusPage({ params, searchParams }: Accoun
   }
 
   const reason = cookieStore.get(AUTH_COOKIES.statusReason)?.value;
-  return <AccountStatusContent status={status} reason={reason} />;
+  return <AccountStatusContent status={status} reason={reason} userType="BUDDY" />;
 }
 
 function parseInactiveAuthStatus(value?: string | string[]): InactiveAuthStatus | null {

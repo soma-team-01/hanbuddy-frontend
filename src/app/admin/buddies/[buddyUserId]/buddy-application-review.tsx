@@ -10,6 +10,7 @@ import { isUnauthenticatedError } from "@/lib/api/errors";
 import { SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { adminBuddyApplicationQueryOptions, adminKeys } from "@/lib/query/admin";
 import { unwrapApiResult } from "@/lib/query/result";
+import { formatAdminCountry } from "@/app/admin/admin-ui";
 
 export function BuddyApplicationReview({ userId }: { userId: string }) {
   const router = useRouter();
@@ -27,10 +28,9 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
             "message",
           ),
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: adminKeys.applications });
-      await client.invalidateQueries({ queryKey: adminKeys.application(userId) });
+      await client.invalidateQueries({ queryKey: adminKeys.all });
       setMode(null);
-      router.push("/admin/buddies");
+      router.push("/admin/buddy-applications");
     },
     onError: (error) =>
       setActionError(error instanceof Error ? error.message : "처리하지 못했습니다."),
@@ -60,7 +60,7 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
     return (
       <main className="mx-auto max-w-[1000px] px-5 py-24 text-center md:px-8">
         <h1 className="font-display text-2xl font-bold">신청 정보를 불러오지 못했습니다.</h1>
-        <Link href="/admin/buddies" className="mt-6 inline-block text-primary underline">
+        <Link href="/admin/buddy-applications" className="mt-6 inline-block text-primary underline">
           목록으로 돌아가기
         </Link>
       </main>
@@ -71,7 +71,7 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
   return (
     <main className="mx-auto w-full max-w-[1000px] px-5 py-10 md:px-8 md:py-14">
       <Link
-        href="/admin/buddies"
+        href="/admin/buddy-applications"
         className="text-sm font-bold text-muted transition-colors hover:text-primary"
       >
         ← 신청 목록
@@ -95,8 +95,7 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
       </div>
       <div className="grid gap-10 py-9 lg:grid-cols-2">
         <Section title="기본 정보">
-          <Info label="사용자 ID" value={String(application.userId)} />
-          <Info label="국적" value={application.nationalityCode} />
+          <Info label="국적" value={formatAdminCountry(application.nationalityCode)} />
           <Info label="생년월일" value={application.birthDate} />
           <Info label="신청일" value={formatDateTime(application.appliedAt)} />
         </Section>
@@ -104,7 +103,6 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
           <Info label="연락 수단" value={application.contactMethod} />
           <Info label="국가 코드" value={application.contactCountryCode || "-"} />
           <Info label="연락처" value={application.contactIdentifier} />
-          <Info label="검토자" value={application.reviewedByName || "아직 검토되지 않음"} />
         </Section>
       </div>
       {application.rejectionReason ? (
@@ -241,7 +239,7 @@ function ReviewDialog({
               onChange={(event) => onReason(event.target.value)}
               maxLength={500}
               rows={5}
-              className="mt-2 w-full resize-none rounded-xl border border-line-strong p-3 outline-none focus:border-primary"
+              className="focus-border-only mt-2 w-full resize-none rounded-xl border border-line-strong p-3 outline-none focus:border-primary"
               placeholder="거절 사유를 입력해 주세요."
             />
             <p className="mt-1 text-right text-xs text-muted">{reason.length}/500</p>

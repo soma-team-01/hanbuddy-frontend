@@ -27,8 +27,8 @@ labels: [bug]
 
 - 화면/경로:
 - 브라우저/기기:
-- 배포 환경: (로컬 / Preview / Production)
+- 배포 환경: (로컬 / Staging / Production)
 
 ## 참고 (선택)
 
-<!-- 관련 Figma nodeId, Preview URL, 로그 등 -->
+<!-- 관련 디자인 문서, Staging URL, 스크린샷, 로그 등 -->

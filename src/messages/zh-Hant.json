@@ -449,11 +449,14 @@
     },
     "suspended": {
       "title": "好友帳號暫停",
-      "description": "好友功能不可用。如果您需要協助，請聯絡我們。"
+      "description": "好友功能不可用。如果您需要協助，請聯絡我們。",
+      "touristTitle": "旅客帳號已被暫停",
+      "touristDescription": "您暫時無法使用HanBuddy服務。如需協助，請聯絡我們。"
     },
     "reasonLabel": "提供原因",
-    "contactHelp": "有問題嗎？聯絡方式 <email>zeroone.soma@gmail.com</email>.",
-    "backToBuddy": "返回好友頁面"
+    "contactHelp": "有問題嗎？聯絡方式 <email>contact@hanbuddy.kr</email>.",
+    "backToBuddy": "返回好友頁面",
+    "backToHome": "返回首頁"
   },
   "Profile": {
     "title": "編輯個人資料",

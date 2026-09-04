@@ -6,6 +6,7 @@ const routerMock = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
+  usePathname: () => "/admin/users",
   useRouter: () => routerMock,
 }));
 
@@ -39,5 +40,14 @@ describe("AdminHeader", () => {
 
     await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/admin/login"));
     expect(routerMock.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a single member management navigation item", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    render(<AdminHeader />);
+
+    expect(screen.getByRole("link", { name: "회원 관리" })).toHaveAttribute("href", "/admin/users");
+    expect(screen.queryByRole("link", { name: "버디" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "승인 관리" })).not.toBeInTheDocument();
   });
 });

@@ -51,7 +51,7 @@ describe("BuddyResubmissionContent", () => {
     renderWithIntl(<BuddyResubmissionContent />);
 
     expect(screen.getByText("Loading your previous application...")).toBeInTheDocument();
-    expect(await screen.findByRole("textbox", { name: "Nickname" })).toHaveValue("Old Buddy");
+    expect(await screen.findByRole("textbox", { name: "Name" })).toHaveValue("Old Buddy");
   });
 
   it("asks for Google login again when the resubmission session expired", async () => {

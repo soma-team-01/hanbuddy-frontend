@@ -95,9 +95,19 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("heading", { name: headline })).toHaveClass("lg:whitespace-nowrap");
       expect(screen.getByText(description)).toHaveClass("lg:whitespace-nowrap");
       expect(screen.getByText(profilePhotoHint)).toBeInTheDocument();
+      expect(screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" })).toHaveValue(
+        "Google Traveler",
+      );
       expect(
-        screen.getByRole("textbox", { name: locale === "ko" ? "닉네임" : "Nickname" }),
-      ).toHaveValue("Google Traveler");
+        screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" }),
+      ).toHaveAttribute("pattern", "[A-Za-z]+(?:[ '-][A-Za-z]+)*");
+      expect(
+        screen.getByText(
+          locale === "ko"
+            ? "영문 2~30자 · 단어 사이는 공백, 하이픈(-), 작은따옴표(')만 사용할 수 있어요."
+            : "Use 2–30 English letters. Separate words with one space, hyphen (-), or apostrophe (').",
+        ),
+      ).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Tourist" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
@@ -160,6 +170,30 @@ describe("OnboardingForm", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(message);
   });
 
+  it.each([
+    [
+      "en",
+      "한글",
+      "Enter a name using 2–30 English letters, with only a single space, hyphen (-), or apostrophe (') between words.",
+    ],
+    [
+      "ko",
+      "John--Smith",
+      "이름은 2~30자의 영문으로 입력하고, 단어 사이에는 공백, 하이픈(-), 작은따옴표(')만 사용해 주세요.",
+    ],
+  ] as const)("blocks invalid names during %s signup", (locale, value, message) => {
+    renderWithIntl(<OnboardingForm googleProfile={{ name: value }} />, { locale });
+
+    clickContinue(locale);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(message);
+    expect(
+      screen.getByRole("navigation", {
+        name: locale === "ko" ? "총 3단계 중 1단계" : "Step 1 of 3",
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("keeps profile details when moving between steps", () => {
     renderWithIntl(<OnboardingForm googleProfile={{ name: "Google Traveler" }} />);
     fillAboutYou("en", { birthDate: "1998-04-12" });
@@ -170,7 +204,7 @@ describe("OnboardingForm", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
 
-    expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Google Traveler");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Traveler");
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
   });
 
@@ -190,7 +224,7 @@ describe("OnboardingForm", () => {
     renderWithIntl(<OnboardingForm userType="BUDDY" googleProfile={{ name: "Google Buddy" }} />);
 
     expect(screen.getByText("Welcome, future buddy")).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Google Buddy");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Buddy");
     expect(
       screen.getByText("Choose a clear face photo so guests can recognize you when you meet."),
     ).toBeInTheDocument();
@@ -259,12 +293,17 @@ describe("OnboardingForm", () => {
 
     renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
 
-    expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Old Buddy");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Old Buddy");
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1995-02-03");
-    expect(screen.getByText("Google Buddy")).toBeInTheDocument();
-    expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
+    expect(screen.queryByText("Google Buddy")).not.toBeInTheDocument();
+    expect(screen.queryByText("buddy@example.com")).not.toBeInTheDocument();
     expect(screen.getByText("Reason for the previous rejection")).toBeInTheDocument();
     expect(screen.getByText("Please update your profile.")).toBeInTheDocument();
+    const personalFields = screen.getByTestId("onboarding-personal-fields");
+    const rejectionReason = screen.getByTestId("resubmission-rejection-reason");
+    expect(
+      personalFields.compareDocumentPosition(rejectionReason) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "Step 1 of 2" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -274,7 +313,7 @@ describe("OnboardingForm", () => {
     fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "01012345678" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Submit again" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request another review" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith(
@@ -504,7 +543,7 @@ function getStepLabels(locale: "en" | "ko") {
         searchCountry: "국가 검색",
         country: "미국",
         birthDate: "생년월일",
-        displayName: "닉네임",
+        displayName: "이름",
         appId: "메신저 앱 ID",
         continue: "다음",
       }
@@ -513,7 +552,7 @@ function getStepLabels(locale: "en" | "ko") {
         searchCountry: "Search country",
         country: "United States",
         birthDate: "Date of birth",
-        displayName: "Nickname",
+        displayName: "Name",
         appId: "Messaging app ID",
         continue: "Next",
       };
@@ -528,7 +567,7 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }) {
   const labels = getStepLabels(locale);
   const displayName = screen.getByRole("textbox", { name: labels.displayName });
   if (!(displayName as HTMLInputElement).value) {
-    fireEvent.change(displayName, { target: { value: locale === "ko" ? "여행자" : "Traveler" } });
+    fireEvent.change(displayName, { target: { value: "Traveler" } });
   }
 
   fireEvent.click(screen.getByRole("button", { name: labels.nationality }));
@@ -622,7 +661,7 @@ describe("OnboardingForm profile image", () => {
     fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "01012345678" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Submit again" }));
+    fireEvent.click(screen.getByRole("button", { name: "Request another review" }));
   }
 
   it("shows a local preview after selecting a profile image", () => {

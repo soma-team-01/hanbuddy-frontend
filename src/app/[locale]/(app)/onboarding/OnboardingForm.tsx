@@ -22,6 +22,7 @@ import {
   hasAllRequiredSignupAgreements,
 } from "@/lib/auth/signup-agreements";
 import { COUNTRIES, findCountry } from "@/lib/countries";
+import { DISPLAY_NAME_PATTERN, isValidDisplayName } from "@/lib/display-name";
 import {
   MAX_PROFILE_IMAGE_BYTES,
   PROFILE_IMAGE_CONTENT_TYPES,
@@ -259,12 +260,7 @@ export function OnboardingForm({
   }
 
   function validateAboutYou() {
-    const trimmedDisplayName = displayName.trim();
-    if (
-      trimmedDisplayName.length < 2 ||
-      trimmedDisplayName.length > 30 ||
-      trimmedDisplayName !== displayName
-    ) {
+    if (!isValidDisplayName(displayName)) {
       setErrorKey("validation.displayNameInvalid");
       return false;
     }
@@ -681,16 +677,6 @@ export function OnboardingForm({
                   </div>
 
                   <div className="mt-8 max-w-2xl space-y-6">
-                    {resubmission?.rejectionReason ? (
-                      <div className="rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3">
-                        <p className="text-xs font-bold text-primary-strong">
-                          {resubmissionT("rejectionReason")}
-                        </p>
-                        <p className="mt-1 text-sm leading-6 text-ink">
-                          {resubmission.rejectionReason}
-                        </p>
-                      </div>
-                    ) : null}
                     <div className="grid items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
                       <div className="relative shrink-0">
                         {profilePhoto}
@@ -724,38 +710,25 @@ export function OnboardingForm({
                             required
                             minLength={2}
                             maxLength={30}
+                            pattern={DISPLAY_NAME_PATTERN}
                             value={displayName}
                             onChange={(event) => setDisplayName(event.target.value)}
                             aria-label={t("displayName")}
+                            aria-describedby="onboarding-display-name-hint"
                             className="h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                           />
                         </label>
-                        <p className="mt-2 text-xs leading-5 text-muted">
+                        <p
+                          id="onboarding-display-name-hint"
+                          className="mt-2 text-xs leading-5 text-muted"
+                        >
+                          {t("displayNameHint")}
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-muted">
                           {roleCopy.photoGuidance}
                         </p>
                       </div>
                     </div>
-
-                    {resubmission ? (
-                      <dl className="grid gap-3 rounded-2xl border border-line-soft bg-panel-raised p-4 text-sm sm:grid-cols-2">
-                        <div className="min-w-0">
-                          <dt className="text-xs font-semibold text-muted">
-                            {resubmissionT("googleName")}
-                          </dt>
-                          <dd className="mt-1 truncate font-medium text-ink">
-                            {resubmission.name}
-                          </dd>
-                        </div>
-                        <div className="min-w-0">
-                          <dt className="text-xs font-semibold text-muted">
-                            {resubmissionT("email")}
-                          </dt>
-                          <dd className="mt-1 truncate font-medium text-ink">
-                            {resubmission.email}
-                          </dd>
-                        </div>
-                      </dl>
-                    ) : null}
 
                     <div data-testid="onboarding-personal-fields" className="grid gap-4">
                       <div className="flex flex-col gap-1.5">
@@ -782,6 +755,20 @@ export function OnboardingForm({
                         />
                       </label>
                     </div>
+
+                    {resubmission?.rejectionReason ? (
+                      <div
+                        data-testid="resubmission-rejection-reason"
+                        className="rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3"
+                      >
+                        <p className="text-xs font-bold text-primary-strong">
+                          {resubmissionT("rejectionReason")}
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-ink">
+                          {resubmission.rejectionReason}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 </section>
               ) : null}

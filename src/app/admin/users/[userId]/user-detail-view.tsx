@@ -22,6 +22,7 @@ import {
   AdminReasonDialog,
   AdminState,
   AdminStatusBadge,
+  formatAdminCountry,
   formatAdminDate,
 } from "../../admin-ui";
 
@@ -170,20 +171,23 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             ) : null}
           </div>
         </div>
-        <div className="mt-8 grid gap-8 border-t border-line-soft pt-7 lg:grid-cols-2">
+        <div className="mt-8 grid gap-8 border-t border-line-soft pt-7 lg:grid-cols-3">
           <InfoSection title="기본 정보">
             <Info label="Google 계정 이름" value={user.name} />
             <Info label="역할" value={roleLabel(user.userType)} />
-            <Info label="국적" value={user.nationalityCode || "-"} />
+            <Info label="국적" value={formatAdminCountry(user.nationalityCode)} />
             <Info label="출생 연도" value={user.birthYear ? String(user.birthYear) : "-"} />
             <Info label="가입일" value={formatAdminDate(user.createdAt, true)} />
           </InfoSection>
-          <InfoSection title="연락 및 상태">
+          <InfoSection title="연락">
             <Info label="연락 수단" value={user.contactMethod} />
             <Info label="국가 코드" value={user.contactCountryCode || "-"} />
             <Info label="연락처" value={user.contactIdentifier || "-"} />
+          </InfoSection>
+          <InfoSection title="상태">
+            <Info label="계정 상태" value={<AdminStatusBadge status={user.accountStatus} />} />
             <Info label="정지 사유" value={user.suspensionReason || "-"} />
-            <Info label="최근 수정" value={formatAdminDate(user.updatedAt, true)} />
+            <Info label="상태 변경일" value={formatAdminDate(user.updatedAt, true)} />
           </InfoSection>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-3 border-t border-line-soft pt-7 sm:grid-cols-5">
@@ -310,10 +314,10 @@ function InfoSection({ title, children }: { title: string; children: React.React
     </section>
   );
 }
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[100px_1fr] gap-4 py-3">
-      <dt className="text-sm text-muted">{label}</dt>
+    <div className="grid grid-cols-[116px_minmax(0,1fr)] gap-4 py-3">
+      <dt className="text-sm whitespace-nowrap text-muted">{label}</dt>
       <dd className="min-w-0 text-sm font-semibold break-words">{value}</dd>
     </div>
   );

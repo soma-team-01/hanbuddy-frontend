@@ -21,6 +21,7 @@ import {
   AdminReasonDialog,
   AdminState,
   AdminStatusBadge,
+  formatAdminCountry,
   formatAdminDate,
 } from "../../admin-ui";
 
@@ -141,7 +142,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
             <h2 className="font-display text-lg font-extrabold">기본 정보</h2>
             <dl className="mt-4 divide-y divide-line-soft">
               <Info label="Google 계정 이름" value={user.name} />
-              <Info label="국적" value={user.nationalityCode || "-"} />
+              <Info label="국적" value={formatAdminCountry(user.nationalityCode)} />
               <Info label="가입일" value={formatAdminDate(user.createdAt, true)} />
               <Info label="연락 수단" value={user.contactMethod} />
             </dl>

@@ -136,6 +136,8 @@ describe("AdminBuddiesDashboard", () => {
 
     renderWithQueryClient(<AdminBuddiesDashboard />);
     await screen.findByText("서울버디");
+    expect(screen.queryByText("국적")).not.toBeInTheDocument();
+    expect(screen.queryByText("KR")).not.toBeInTheDocument();
     mockedGetAdminBuddies.mockClear();
 
     fireEvent.click(screen.getByRole("button", { name: "다음 페이지" }));

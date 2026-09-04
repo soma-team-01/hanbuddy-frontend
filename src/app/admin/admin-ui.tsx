@@ -127,6 +127,18 @@ export function formatAdminDate(value: string | null | undefined, includeTime = 
   }).format(date);
 }
 
+export function formatAdminCountry(countryCode: string | null | undefined) {
+  if (!countryCode) return "-";
+  try {
+    return (
+      new Intl.DisplayNames(["ko-KR"], { type: "region" }).of(countryCode.toUpperCase()) ??
+      countryCode
+    );
+  } catch {
+    return countryCode;
+  }
+}
+
 export function AdminReasonDialog({
   title,
   description,

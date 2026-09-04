@@ -112,6 +112,7 @@ describe("AdminBuddyDetailView", () => {
     renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
 
     expect(await screen.findByText("기록된 관리자 작업이 없습니다.")).toBeInTheDocument();
+    expect(screen.getByText("대한민국")).toBeInTheDocument();
     expect(mockedGetAuditLogs).toHaveBeenCalledWith(27, 0);
   });
 

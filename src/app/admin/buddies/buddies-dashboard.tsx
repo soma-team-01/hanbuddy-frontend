@@ -119,11 +119,10 @@ export function AdminBuddiesDashboard({
             ) : null}
             {page && page.content.length > 0 ? (
               <div className="overflow-hidden rounded-xl border border-line-soft bg-white">
-                <div className="hidden grid-cols-[64px_1.3fr_0.75fr_0.6fr_0.7fr_0.8fr] gap-3 border-b border-line-soft bg-panel-raised px-4 py-2.5 text-[11px] font-bold tracking-[0.08em] text-muted uppercase lg:grid">
+                <div className="hidden grid-cols-[64px_1.4fr_0.75fr_0.7fr_0.8fr] gap-3 border-b border-line-soft bg-panel-raised px-4 py-2.5 text-[11px] font-bold tracking-[0.08em] text-muted uppercase lg:grid">
                   <span>내부 ID</span>
                   <span>버디</span>
                   <span>상태</span>
-                  <span>국적</span>
                   <span>수수료</span>
                   <span>가입일</span>
                 </div>
@@ -136,7 +135,7 @@ export function AdminBuddiesDashboard({
                             ? `/admin/buddy-applications/${buddy.buddyId}`
                             : `/admin/buddies/${buddy.buddyId}`
                         }
-                        className="grid gap-2 px-4 py-2 transition-colors hover:bg-primary-soft/30 lg:grid-cols-[64px_1.3fr_0.75fr_0.6fr_0.7fr_0.8fr] lg:items-center lg:gap-3"
+                        className="grid gap-2 px-4 py-2 transition-colors hover:bg-primary-soft/30 lg:grid-cols-[64px_1.4fr_0.75fr_0.7fr_0.8fr] lg:items-center lg:gap-3"
                       >
                         <span className="text-xs font-bold text-muted">#{buddy.buddyId}</span>
                         <span className="min-w-0">
@@ -148,7 +147,6 @@ export function AdminBuddiesDashboard({
                           </span>
                         </span>
                         <AdminStatusBadge status={buddy.accountStatus} />
-                        <span className="text-xs">{buddy.nationalityCode || "-"}</span>
                         <span className="text-xs font-semibold">
                           {commissionLabel(buddy.commissionPolicy)}
                         </span>

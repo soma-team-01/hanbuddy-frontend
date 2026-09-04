@@ -110,11 +110,10 @@ export function AdminUsersDashboard() {
         ) : null}
         {page && page.content.length > 0 ? (
           <div className="overflow-hidden rounded-xl border border-line-soft bg-white">
-            <div className="hidden grid-cols-[64px_1.5fr_0.75fr_0.55fr_0.8fr] gap-3 border-b border-line-soft bg-panel-raised px-4 py-2.5 text-[11px] font-bold tracking-[0.08em] text-muted uppercase lg:grid">
+            <div className="hidden grid-cols-[64px_1.6fr_0.75fr_0.8fr] gap-3 border-b border-line-soft bg-panel-raised px-4 py-2.5 text-[11px] font-bold tracking-[0.08em] text-muted uppercase lg:grid">
               <span>내부 ID</span>
               <span>관광객</span>
               <span>상태</span>
-              <span>국적</span>
               <span>가입일</span>
             </div>
             <ul className="divide-y divide-line-soft">
@@ -122,7 +121,7 @@ export function AdminUsersDashboard() {
                 <li key={user.userId}>
                   <Link
                     href={`/admin/users/${user.userId}`}
-                    className="grid gap-2 px-4 py-2 transition-colors hover:bg-primary-soft/30 lg:grid-cols-[64px_1.5fr_0.75fr_0.55fr_0.8fr] lg:items-center lg:gap-3"
+                    className="grid gap-2 px-4 py-2 transition-colors hover:bg-primary-soft/30 lg:grid-cols-[64px_1.6fr_0.75fr_0.8fr] lg:items-center lg:gap-3"
                   >
                     <span className="text-xs font-bold text-muted">#{user.userId}</span>
                     <span className="min-w-0">
@@ -132,7 +131,6 @@ export function AdminUsersDashboard() {
                       <span className="mt-0.5 block truncate text-xs text-muted">{user.email}</span>
                     </span>
                     <AdminStatusBadge status={user.accountStatus} />
-                    <span className="text-xs">{user.nationalityCode || "-"}</span>
                     <time className="text-xs text-muted">{formatAdminDate(user.createdAt)}</time>
                   </Link>
                 </li>

@@ -100,7 +100,7 @@ export function BuddyApplicationsSection({ showHeader = true }: { showHeader?: b
               </div>
               <div className="flex items-center justify-between gap-3 sm:justify-end">
                 <span className="text-[11px] font-semibold text-muted">
-                  {item.nationalityCode} · <time>{formatDate(item.appliedAt)}</time>
+                  <time>{formatDate(item.appliedAt)}</time>
                 </span>
                 <Link
                   href={`/admin/buddy-applications/${item.userId}`}

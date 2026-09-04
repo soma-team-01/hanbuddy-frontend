@@ -83,6 +83,12 @@ describe("AdminUserDetailView", () => {
     );
     expect(screen.getByRole("button", { name: "결제" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "등록 활동" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "연락" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "상태" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "연락 및 상태" })).not.toBeInTheDocument();
+    expect(screen.getByText("대한민국")).toBeInTheDocument();
+    expect(screen.getByText("1998")).toBeInTheDocument();
+    expect(screen.getByText("상태 변경일")).toBeInTheDocument();
     expect(mockedGetAdminUserHistory).toHaveBeenCalledWith("11", "applications", 0);
   });
 

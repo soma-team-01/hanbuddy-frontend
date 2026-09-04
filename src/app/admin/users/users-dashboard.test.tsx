@@ -75,4 +75,33 @@ describe("AdminUsersDashboard", () => {
       }),
     );
   });
+
+  it("does not show nationality in the tourist list", async () => {
+    mockedGetAdminUsers.mockResolvedValue({
+      status: "success",
+      users: {
+        ...EMPTY_PAGE,
+        content: [
+          {
+            userId: 11,
+            email: "member@example.com",
+            name: "Google Name",
+            displayName: "관광객",
+            userType: "TOURIST",
+            accountStatus: "ACTIVE",
+            nationalityCode: "KR",
+            createdAt: "2026-08-01T10:00:00+09:00",
+          },
+        ],
+        totalElements: 1,
+        totalPages: 1,
+      },
+    });
+
+    renderWithQueryClient(<AdminUsersDashboard />);
+
+    expect(await screen.findByText("관광객")).toBeInTheDocument();
+    expect(screen.queryByText("국적")).not.toBeInTheDocument();
+    expect(screen.queryByText("KR")).not.toBeInTheDocument();
+  });
 });

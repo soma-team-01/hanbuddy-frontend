@@ -10,6 +10,7 @@ import { isUnauthenticatedError } from "@/lib/api/errors";
 import { SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { adminBuddyApplicationQueryOptions, adminKeys } from "@/lib/query/admin";
 import { unwrapApiResult } from "@/lib/query/result";
+import { formatAdminCountry } from "../../admin-ui";
 
 export function BuddyApplicationReview({ userId }: { userId: string }) {
   const router = useRouter();
@@ -95,7 +96,7 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
       <div className="grid gap-10 py-9 lg:grid-cols-2">
         <Section title="기본 정보">
           <Info label="사용자 ID" value={String(application.userId)} />
-          <Info label="국적" value={application.nationalityCode} />
+          <Info label="국적" value={formatAdminCountry(application.nationalityCode)} />
           <Info label="생년월일" value={application.birthDate} />
           <Info label="신청일" value={formatDateTime(application.appliedAt)} />
         </Section>

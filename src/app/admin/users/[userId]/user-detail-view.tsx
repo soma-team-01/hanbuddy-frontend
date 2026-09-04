@@ -190,13 +190,6 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             <Info label="상태 변경일" value={formatAdminDate(user.updatedAt, true)} />
           </InfoSection>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-3 border-t border-line-soft pt-7 sm:grid-cols-5">
-          <Metric label="활동" value={user.activityCount} />
-          <Metric label="신청" value={user.applicationCount} />
-          <Metric label="결제" value={user.paymentCount} />
-          <Metric label="리뷰" value={user.reviewCount} />
-          <Metric label="약관" value={user.agreementCount} />
-        </div>
       </section>
 
       <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
@@ -204,22 +197,39 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
           <HistoryIcon className="size-5 text-primary" />
           <div>
             <h2 className="font-display text-xl font-extrabold">서비스 이용 이력</h2>
-            <p className="mt-1 text-sm text-muted">탭을 선택할 때 해당 이력을 조회합니다.</p>
+            <p className="mt-1 text-sm text-muted">유형별 기록과 누적 건수를 확인합니다.</p>
           </div>
         </div>
-        <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+        <div
+          role="tablist"
+          aria-label="서비스 이용 이력 유형"
+          className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]"
+        >
           {historyTabs.map((tab) => (
             <button
               key={tab.value}
               type="button"
-              aria-pressed={activeHistoryType === tab.value}
+              role="tab"
+              aria-selected={activeHistoryType === tab.value}
+              aria-label={`${tab.label} 이력 ${historyCount(user, tab.value).toLocaleString("ko-KR")}건`}
               onClick={() => {
                 setHistoryType(tab.value);
                 setHistoryPage(0);
               }}
-              className={`shrink-0 rounded-full border px-4 py-2 text-sm font-bold ${activeHistoryType === tab.value ? "border-primary bg-primary text-white" : "border-line-strong text-muted hover:border-primary hover:text-primary"}`}
+              className={`group relative min-w-0 rounded-2xl border px-4 py-4 text-left transition-all ${activeHistoryType === tab.value ? "border-primary bg-primary-soft shadow-[0_8px_24px_rgba(209,63,50,0.1)]" : "border-line-soft bg-panel-raised hover:border-primary/45 hover:bg-white"}`}
             >
-              {tab.label}
+              <span
+                className={`block text-xs font-bold ${activeHistoryType === tab.value ? "text-primary" : "text-muted"}`}
+              >
+                {tab.label}
+              </span>
+              <span className="mt-1 block truncate font-display text-2xl font-extrabold text-ink">
+                {historyCount(user, tab.value).toLocaleString("ko-KR")}
+              </span>
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${activeHistoryType === tab.value ? "opacity-100" : "opacity-0 group-hover:opacity-40"}`}
+              />
             </button>
           ))}
         </div>
@@ -322,15 +332,6 @@ function Info({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-2xl bg-panel-raised px-4 py-4">
-      <p className="text-xs text-muted">{label}</p>
-      <p className="mt-1 font-display text-2xl font-extrabold">{value.toLocaleString("ko-KR")}</p>
-    </div>
-  );
-}
-
 function HistoryTable({ type, items }: { type: AdminUserHistoryType; items: AdminUserHistory[] }) {
   if (items.length === 0)
     return (
@@ -356,6 +357,25 @@ function HistoryTable({ type, items }: { type: AdminUserHistoryType; items: Admi
       ))}
     </ul>
   );
+}
+
+function historyCount(
+  user: {
+    activityCount: number;
+    applicationCount: number;
+    paymentCount: number;
+    reviewCount: number;
+    agreementCount: number;
+  },
+  type: AdminUserHistoryType,
+) {
+  return {
+    activities: user.activityCount,
+    applications: user.applicationCount,
+    payments: user.paymentCount,
+    reviews: user.reviewCount,
+    agreements: user.agreementCount,
+  }[type];
 }
 
 function historyKey(type: AdminUserHistoryType, item: AdminUserHistory) {

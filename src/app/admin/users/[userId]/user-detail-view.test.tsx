@@ -77,12 +77,12 @@ describe("AdminUserDetailView", () => {
 
     renderWithQueryClient(<AdminUserDetailView userId="11" />);
 
-    expect(await screen.findByRole("button", { name: "신청" })).toHaveAttribute(
-      "aria-pressed",
+    expect(await screen.findByRole("tab", { name: "신청 이력 1건" })).toHaveAttribute(
+      "aria-selected",
       "true",
     );
-    expect(screen.getByRole("button", { name: "결제" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "등록 활동" })).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "결제 이력 1건" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: /등록 활동/ })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "연락" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "상태" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "연락 및 상태" })).not.toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("AdminUserDetailView", () => {
     renderWithQueryClient(<AdminUserDetailView userId="11" />);
 
     expect(await screen.findByText("한강 투어")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "결제" }));
+    fireEvent.click(screen.getByRole("tab", { name: "결제 이력 1건" }));
 
     expect(screen.queryByText("이력")).not.toBeInTheDocument();
     expect(screen.getByLabelText("불러오는 중")).toBeInTheDocument();
@@ -135,11 +135,11 @@ describe("AdminUserDetailView", () => {
 
     renderWithQueryClient(<AdminUserDetailView userId="11" />);
 
-    expect(await screen.findByRole("button", { name: "등록 활동" })).toHaveAttribute(
-      "aria-pressed",
+    expect(await screen.findByRole("tab", { name: "등록 활동 이력 2건" })).toHaveAttribute(
+      "aria-selected",
       "true",
     );
-    expect(screen.queryByRole("button", { name: "신청" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: /신청 이력/ })).not.toBeInTheDocument();
     expect(mockedGetAdminUserHistory).toHaveBeenCalledWith("11", "activities", 0);
   });
 });

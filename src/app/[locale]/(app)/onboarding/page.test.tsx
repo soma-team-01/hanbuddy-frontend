@@ -194,7 +194,16 @@ describe("OnboardingForm", () => {
     expect(
       screen.getByText("Choose a clear face photo so guests can recognize you when you meet."),
     ).toBeInTheDocument();
-    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "line_user" });
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    expect(
+      screen.getByRole("heading", { name: "What phone number should we use?" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "2025550114" },
+    });
+    clickContinue("en");
     expect(screen.getByRole("heading", { name: "Agreements" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign up as a buddy" }));
@@ -203,6 +212,9 @@ describe("OnboardingForm", () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
       userType: "BUDDY",
       displayName: "Google Buddy",
+      contactMethod: "PHONE",
+      contactCountryCode: "+1",
+      contactIdentifier: "2025550114",
       agreements: expect.arrayContaining([
         expect.objectContaining({ type: "BUDDY_OPERATION_TERMS", agreed: true }),
         expect.objectContaining({ type: "BUDDY_COMMISSION_POLICY", agreed: true }),
@@ -256,8 +268,12 @@ describe("OnboardingForm", () => {
     expect(screen.getByRole("navigation", { name: "Step 1 of 2" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.getByRole("textbox", { name: "Messaging app ID" })).toHaveValue("old-buddy");
+    expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Phone number" })).toHaveValue("");
     expect(screen.queryByText("Agreements")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "01012345678" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Submit again" }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -270,9 +286,9 @@ describe("OnboardingForm", () => {
       profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
       nationalityCode: "KR",
       birthDate: "1995-02-03",
-      contactMethod: "LINE",
-      contactCountryCode: "",
-      contactIdentifier: "old-buddy",
+      contactMethod: "PHONE",
+      contactCountryCode: "+82",
+      contactIdentifier: "01012345678",
     });
     expect(routerMocks.replace).toHaveBeenCalledWith(
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
@@ -293,7 +309,12 @@ describe("OnboardingForm", () => {
 
   it("shows the additional buddy agreements on buddy onboarding", () => {
     renderWithIntl(<OnboardingForm userType="BUDDY" />);
-    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "line_user" });
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "2025550114" },
+    });
+    clickContinue("en");
 
     expect(
       screen.getByText("Personal information collection, use, and buddy application review"),
@@ -414,7 +435,7 @@ describe("OnboardingForm", () => {
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
+    expect(screen.getByLabelText("Country code")).toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
   });
 
@@ -426,7 +447,7 @@ describe("OnboardingForm", () => {
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "2025550123" },
     });
 
@@ -463,7 +484,7 @@ describe("OnboardingForm", () => {
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "12-ab" },
     });
 
@@ -598,6 +619,9 @@ describe("OnboardingForm profile image", () => {
 
   function submitResubmission() {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "01012345678" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Submit again" }));
   }
 

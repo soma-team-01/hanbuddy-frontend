@@ -428,10 +428,10 @@
     "metadataDescription": "完成您的好友資料並開始與 HanBuddy 一起舉辦本地體驗。",
     "eyebrow": "歡迎，未來的夥伴",
     "headline": "一些細節，然後您的本地故事就可以開始了。",
-    "description": "現在，請告訴我們客人如何認出並聯絡您。您可以稍後添加託管詳細資訊。",
+    "description": "請填寫夥伴註冊指引所需的基本資訊。註冊後可繼續補充活動營運資訊。",
     "profilePhotoOptional": "選擇一張清晰的臉部照片，以便客人在見面時能夠認出您。",
-    "contactMethods": "客人該如何聯絡您？",
-    "contactDescription": "選擇您最常查看的信差。",
+    "contactMethods": "請填寫可聯絡您的電話號碼。",
+    "contactDescription": "請輸入工作人員可用於說明夥伴註冊流程的電話號碼。",
     "completing": "正在建立好友帳戶...",
     "completeRegistration": "註冊成為好友"
   },
@@ -443,8 +443,8 @@
     "headline": "完善資料並再次請求審核。",
     "description": "之前填寫的資料已載入。已有同意事項將繼續有效。",
     "profilePhotoOptional": "可以保留、替換或刪除目前照片。",
-    "contactMethods": "旅客如何聯絡您？",
-    "contactDescription": "請確認聯絡方式，並按需修改。",
+    "contactMethods": "請填寫可聯絡您的電話號碼。",
+    "contactDescription": "請輸入工作人員可用於說明夥伴註冊流程的電話號碼。",
     "googleName": "Google帳戶名稱",
     "email": "登入電子郵件",
     "rejectionReason": "上次未通過的原因",
@@ -464,9 +464,9 @@
     "metadataTitle": "帳戶狀態 |漢巴迪",
     "metadataDescription": "查看您的HanBuddy帳號的審核狀態。",
     "pending": {
-      "title": "好友申請正在審核中",
-      "description": "審核完成後，我們會向您發送電子郵件。",
-      "reviewTime": "通常 1-3 個工作天"
+      "title": "等待夥伴註冊指引",
+      "description": "工作人員將透過您註冊時填寫的電子郵件或電話號碼與您聯絡，並說明後續註冊流程。",
+      "reviewTime": "我們將在1至3個工作天內聯絡您"
     },
     "rejected": {
       "title": "好友申請未獲批准",
@@ -777,10 +777,10 @@
   },
   "Messaging": {
     "phoneNumber": "電話號碼",
-    "countryCode": "簡訊國家代碼",
+    "countryCode": "國家或地區代碼",
     "phonePlaceholder": "電話號碼",
     "koreanPhonePlaceholder": "010-XXXX-XXXX",
-    "phoneInputLabel": "簡訊電話號碼",
+    "phoneInputLabel": "電話號碼",
     "appIdPlaceholder": "{app} 身分證號",
     "appIdInputLabel": "訊息應用程式 ID"
   },

@@ -111,7 +111,7 @@ function getStatusCopy(
   if (status === "PENDING_APPROVAL") {
     return {
       title: t("pending.title"),
-      description: null,
+      description: t("pending.description"),
       note: t("pending.reviewTime"),
     };
   }

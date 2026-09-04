@@ -115,10 +115,12 @@ export function OnboardingForm({
   const t = useTranslations("Onboarding");
   const buddyT = useTranslations("BuddyOnboarding");
   const resubmissionT = useTranslations("BuddyResubmission");
+  const messagingT = useTranslations("Messaging");
   const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
   const isResubmission = Boolean(resubmission);
+  const isBuddyFlow = userType === "BUDDY";
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
   const [displayName, setDisplayName] = useState(
@@ -126,9 +128,17 @@ export function OnboardingForm({
   );
   const [birthDate, setBirthDate] = useState(resubmission?.birthDate ?? "");
   const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
-    resubmission ? APP_BY_CONTACT_METHOD[resubmission.contactMethod] : "line",
+    isBuddyFlow
+      ? "phone"
+      : resubmission
+        ? APP_BY_CONTACT_METHOD[resubmission.contactMethod]
+        : "line",
   );
-  const [messagingContact, setMessagingContact] = useState(resubmission?.contactIdentifier ?? "");
+  const [messagingContact, setMessagingContact] = useState(
+    resubmission && (!isBuddyFlow || resubmission.contactMethod === "PHONE")
+      ? resubmission.contactIdentifier
+      : "",
+  );
   const [agreementDecisions, setAgreementDecisions] = useState<
     Partial<Record<SignupAgreementType, boolean>>
   >({});
@@ -790,7 +800,7 @@ export function OnboardingForm({
                   </div>
                   <div className="mt-8 flex max-w-3xl flex-col gap-1.5">
                     <span className="text-sm font-medium text-ink">
-                      {t("preferredMessagingApp")}
+                      {isBuddyFlow ? messagingT("phoneNumber") : t("preferredMessagingApp")}
                     </span>
                     <MessagingAppField
                       app={messagingApp}
@@ -802,6 +812,7 @@ export function OnboardingForm({
                       inputName="contactIdentifier"
                       inputRequired
                       variant="cards"
+                      showAppSelector={!isBuddyFlow}
                     />
                   </div>
                 </section>

@@ -227,13 +227,8 @@ describe("EditProfilePage", () => {
   );
 
   it.each([
-    [
-      "en",
-      "Messaging phone number",
-      "Save",
-      "Enter a contact ID or number with at least 2 characters.",
-    ],
-    ["ko", "메신저 전화번호", "저장", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
+    ["en", "Phone number", "Save", "Enter a contact ID or number with at least 2 characters."],
+    ["ko", "전화번호", "저장", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
   ] as const)(
     "shows localized contact validation after a real %s submit",
     async (locale, contactLabel, save, message) => {
@@ -260,7 +255,7 @@ describe("EditProfilePage", () => {
     renderWithQueryClient(<EditProfilePage />);
 
     // 프로필의 연락 수단이 WHATSAPP이므로 국가 선택이 바로 렌더된다
-    expect(await screen.findByLabelText("Messaging country code")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Country code")).toBeInTheDocument();
   });
 
   it("submits the updated profile and returns to my page", async () => {

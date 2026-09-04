@@ -428,10 +428,10 @@
     "metadataDescription": "버디 프로필을 완성하고 HanBuddy에서 로컬 경험 호스팅을 시작하세요.",
     "eyebrow": "예비 버디님, 반가워요",
     "headline": "몇 가지만 알려주면, 나만의 로컬 이야기를 시작할 수 있어요.",
-    "description": "지금은 게스트가 버디를 알아보고 연락할 수 있는 기본 정보만 알려주세요. 호스팅 정보는 나중에 추가할 수 있어요.",
+    "description": "버디 가입 안내에 필요한 기본 정보를 알려주세요. 호스팅 정보는 가입 후 추가할 수 있어요.",
     "profilePhotoOptional": "만날 때 게스트가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
-    "contactMethods": "게스트가 어떻게 연락하면 될까요?",
-    "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",
+    "contactMethods": "연락받을 전화번호를 알려주세요.",
+    "contactDescription": "담당자가 버디 가입 절차를 안내해 드릴 번호를 입력해 주세요.",
     "completing": "버디 계정 생성 중...",
     "completeRegistration": "버디로 회원가입"
   },
@@ -443,8 +443,8 @@
     "headline": "정보를 보완하고 다시 검토를 요청해 주세요.",
     "description": "이전에 입력한 정보를 불러왔어요. 기존 동의 항목은 그대로 유지됩니다.",
     "profilePhotoOptional": "현재 사진을 유지하거나 새 사진으로 바꾸고, 필요하면 삭제할 수 있어요.",
-    "contactMethods": "게스트가 어떻게 연락하면 될까요?",
-    "contactDescription": "기존 연락 수단을 확인하고 필요한 부분을 수정해 주세요.",
+    "contactMethods": "연락받을 전화번호를 알려주세요.",
+    "contactDescription": "담당자가 버디 가입 절차를 안내해 드릴 번호를 입력해 주세요.",
     "googleName": "Google 계정 이름",
     "email": "로그인 이메일",
     "rejectionReason": "이전 미승인 사유",
@@ -464,9 +464,9 @@
     "metadataTitle": "계정 상태 | HanBuddy",
     "metadataDescription": "HanBuddy 계정 상태를 확인하세요.",
     "pending": {
-      "title": "버디 가입 요청 검토 중",
-      "description": "검토가 끝나면 이메일로 알려드릴게요.",
-      "reviewTime": "영업일 기준 1~3일 소요"
+      "title": "버디 가입 안내 대기 중",
+      "description": "회원가입 시 입력한 이메일과 전화번호로 담당자가 버디 가입 절차를 안내해 드립니다.",
+      "reviewTime": "영업일 기준 1~3일 내 연락"
     },
     "rejected": {
       "title": "버디 가입 요청 미승인",
@@ -777,10 +777,10 @@
   },
   "Messaging": {
     "phoneNumber": "전화번호",
-    "countryCode": "메신저 국가번호",
+    "countryCode": "국가번호",
     "phonePlaceholder": "전화번호",
     "koreanPhonePlaceholder": "010-XXXX-XXXX",
-    "phoneInputLabel": "메신저 전화번호",
+    "phoneInputLabel": "전화번호",
     "appIdPlaceholder": "{app} ID",
     "appIdInputLabel": "메신저 앱 ID"
   },

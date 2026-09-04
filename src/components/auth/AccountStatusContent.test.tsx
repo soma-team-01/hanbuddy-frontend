@@ -8,12 +8,14 @@ describe("AccountStatusContent", () => {
     renderWithIntl(<AccountStatusContent status="PENDING_APPROVAL" userType="BUDDY" />);
 
     expect(
-      screen.getByRole("heading", { name: "Buddy application under review" }),
+      screen.getByRole("heading", { name: "Buddy signup guidance pending" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("We'll email you when the review is complete."),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Usually 1–3 business days")).toBeInTheDocument();
+      screen.getByText(
+        "Our team will contact you at the email address or phone number you entered during signup and guide you through the next steps.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("We'll contact you within 1–3 business days")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "contact@hanbuddy.kr" })).toHaveAttribute(
       "href",
       "mailto:contact@hanbuddy.kr",

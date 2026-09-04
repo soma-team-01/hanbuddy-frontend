@@ -428,10 +428,10 @@
     "metadataDescription": "Complete your buddy profile and begin hosting local experiences with HanBuddy.",
     "eyebrow": "Welcome, future buddy",
     "headline": "A few details, then your local story can begin.",
-    "description": "For now, tell us how guests can recognize and reach you. You can add hosting details later.",
+    "description": "Tell us the basic information needed to guide you through buddy signup. You can add hosting details after signup.",
     "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
-    "contactMethods": "How should guests reach you?",
-    "contactDescription": "Choose the messenger you check most often.",
+    "contactMethods": "What phone number should we use?",
+    "contactDescription": "Enter the number where our team can reach you about the buddy signup process.",
     "completing": "Creating buddy account...",
     "completeRegistration": "Sign up as a buddy"
   },
@@ -443,8 +443,8 @@
     "headline": "Update your details and request another review.",
     "description": "Your previous answers are ready to edit. Existing agreements will remain in effect.",
     "profilePhotoOptional": "Keep your current photo, replace it, or remove it before resubmitting.",
-    "contactMethods": "How should guests reach you?",
-    "contactDescription": "Review your contact method and update it if needed.",
+    "contactMethods": "What phone number should we use?",
+    "contactDescription": "Enter the number where our team can reach you about the buddy signup process.",
     "googleName": "Google account name",
     "email": "Login email",
     "rejectionReason": "Reason for the previous rejection",
@@ -464,9 +464,9 @@
     "metadataTitle": "Account status | HanBuddy",
     "metadataDescription": "Check the review status of your HanBuddy account.",
     "pending": {
-      "title": "Buddy application under review",
-      "description": "We'll email you when the review is complete.",
-      "reviewTime": "Usually 1–3 business days"
+      "title": "Buddy signup guidance pending",
+      "description": "Our team will contact you at the email address or phone number you entered during signup and guide you through the next steps.",
+      "reviewTime": "We'll contact you within 1–3 business days"
     },
     "rejected": {
       "title": "Buddy application not approved",
@@ -777,10 +777,10 @@
   },
   "Messaging": {
     "phoneNumber": "Phone Number",
-    "countryCode": "Messaging country code",
+    "countryCode": "Country code",
     "phonePlaceholder": "Phone number",
     "koreanPhonePlaceholder": "010-XXXX-XXXX",
-    "phoneInputLabel": "Messaging phone number",
+    "phoneInputLabel": "Phone number",
     "appIdPlaceholder": "{app} ID",
     "appIdInputLabel": "Messaging app ID"
   },

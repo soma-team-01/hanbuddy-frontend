@@ -46,6 +46,8 @@ interface MessagingAppFieldProps {
   variant?: "list" | "cards";
   /** 넓은 편집 폼에서는 네 가지 선택지를 한 줄에 배치한다. */
   singleRowOnDesktop?: boolean;
+  /** 연락 수단이 정책상 고정된 화면에서는 선택지를 숨기고 입력란만 표시한다. */
+  showAppSelector?: boolean;
 }
 
 const BRAND_MARK_CLASS: Record<MessagingAppKey, string> = {
@@ -68,70 +70,73 @@ export function MessagingAppField({
   koreanOnly = false,
   variant = "list",
   singleRowOnDesktop = false,
+  showAppSelector = true,
 }: Readonly<MessagingAppFieldProps>) {
   const t = useTranslations("Messaging");
 
   return (
     <>
-      <div
-        data-testid="messaging-app-options"
-        className={
-          variant === "cards"
-            ? `grid grid-cols-2 gap-2 ${singleRowOnDesktop ? "lg:grid-cols-4" : ""}`
-            : "flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel"
-        }
-      >
-        {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
-          const isSelected = app === key;
-          const displayLabel = label ?? t("phoneNumber");
-          return (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={isSelected}
-              onClick={() => onAppChange(key)}
-              className={`flex items-center gap-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong ${
-                variant === "cards"
-                  ? `min-h-14 gap-2 rounded-xl border px-3 py-2.5 ${
-                      isSelected
-                        ? "border-primary bg-primary-soft text-primary-strong"
-                        : "border-line-soft bg-canvas-soft text-ink hover:border-line-strong"
-                    }`
-                  : `px-4 py-3.5 hover:bg-primary-soft/60 ${
-                      index > 0 ? "border-t border-line-soft" : ""
-                    }`
-              }`}
-            >
-              {variant === "list" ? (
-                <span
-                  aria-hidden
-                  className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                    isSelected ? "border-primary-strong" : "border-line-strong"
-                  }`}
-                >
-                  {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
-                </span>
-              ) : null}
-              {variant === "cards" ? (
-                <span
-                  aria-hidden
-                  data-messaging-brand={key}
-                  className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-white ${BRAND_MARK_CLASS[key]}`}
-                >
-                  {key === "line" ? (
-                    <span className="text-[7px] font-black tracking-[-0.04em]">LINE</span>
-                  ) : (
-                    <Icon data-messaging-icon={key} className="size-4.5 shrink-0" />
-                  )}
-                </span>
-              ) : (
-                <Icon data-messaging-icon={key} className="size-5 shrink-0 text-success" />
-              )}
-              <span className="text-sm font-semibold text-inherit">{displayLabel}</span>
-            </button>
-          );
-        })}
-      </div>
+      {showAppSelector ? (
+        <div
+          data-testid="messaging-app-options"
+          className={
+            variant === "cards"
+              ? `grid grid-cols-2 gap-2 ${singleRowOnDesktop ? "lg:grid-cols-4" : ""}`
+              : "flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel"
+          }
+        >
+          {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
+            const isSelected = app === key;
+            const displayLabel = label ?? t("phoneNumber");
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => onAppChange(key)}
+                className={`flex items-center gap-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong ${
+                  variant === "cards"
+                    ? `min-h-14 gap-2 rounded-xl border px-3 py-2.5 ${
+                        isSelected
+                          ? "border-primary bg-primary-soft text-primary-strong"
+                          : "border-line-soft bg-canvas-soft text-ink hover:border-line-strong"
+                      }`
+                    : `px-4 py-3.5 hover:bg-primary-soft/60 ${
+                        index > 0 ? "border-t border-line-soft" : ""
+                      }`
+                }`}
+              >
+                {variant === "list" ? (
+                  <span
+                    aria-hidden
+                    className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                      isSelected ? "border-primary-strong" : "border-line-strong"
+                    }`}
+                  >
+                    {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
+                  </span>
+                ) : null}
+                {variant === "cards" ? (
+                  <span
+                    aria-hidden
+                    data-messaging-brand={key}
+                    className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-white ${BRAND_MARK_CLASS[key]}`}
+                  >
+                    {key === "line" ? (
+                      <span className="text-[7px] font-black tracking-[-0.04em]">LINE</span>
+                    ) : (
+                      <Icon data-messaging-icon={key} className="size-4.5 shrink-0" />
+                    )}
+                  </span>
+                ) : (
+                  <Icon data-messaging-icon={key} className="size-5 shrink-0 text-success" />
+                )}
+                <span className="text-sm font-semibold text-inherit">{displayLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
       {/* WhatsApp·전화번호는 번호 기반, LINE·WeChat은 ID 기반으로 연락처를 교환한다 */}
       {app === "whatsapp" || app === "phone" ? (
         <div className="mt-1 flex gap-2">

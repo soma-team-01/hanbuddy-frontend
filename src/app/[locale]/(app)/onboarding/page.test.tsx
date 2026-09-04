@@ -716,6 +716,25 @@ describe("OnboardingForm profile image", () => {
     expect(uploadProfileImage).not.toHaveBeenCalled();
   });
 
+  it("allows the same profile image file to be selected again after removal", () => {
+    const application = createRejectedApplication();
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+    const fileInput = screen.getByLabelText("Add profile photo") as HTMLInputElement;
+    const image = createImageFile("same-profile.png");
+
+    fireEvent.change(fileInput, { target: { files: [image] } });
+    Object.defineProperty(fileInput, "value", {
+      configurable: true,
+      value: "C:\\fakepath\\same-profile.png",
+      writable: true,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Remove profile photo" }));
+
+    expect(fileInput).toHaveValue("");
+    fireEvent.change(fileInput, { target: { files: [image] } });
+    expect(screen.getByAltText("Selected profile photo preview")).toBeInTheDocument();
+  });
+
   it("replaces the existing profile image when resubmitting", async () => {
     const application = createRejectedApplication();
     const newImageKey = "profiles/2026/09/04/123e4567-e89b-12d3-a456-426614174001.png";

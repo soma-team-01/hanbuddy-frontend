@@ -11,13 +11,14 @@ import type {
   ContactMethod,
   ErrorApiResponse,
 } from "@/lib/auth/types";
+import { isValidDisplayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
 const CONTACT_METHODS = new Set<ContactMethod>(["WHATSAPP", "LINE", "WECHAT", "PHONE"]);
 const PROFILE_IMAGE_KEY_PATTERN =
   /^profiles\/\d{4}\/\d{2}\/\d{2}\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\.(?:jpg|png|webp)$/;
-const CONTACT_COUNTRY_CODE_PATTERN = /^(?:|\+\d{1,4})$/;
+const CONTACT_COUNTRY_CODE_PATTERN = /^(?:\+\d{1,4})?$/;
 const CONTACT_IDENTIFIER_PATTERN = /^[A-Za-z0-9가-힣@._+\- ]{2,100}$/;
 
 export async function GET(request: NextRequest) {
@@ -107,9 +108,7 @@ function isBuddyResubmissionRequest(value: unknown): value is BuddyResubmissionR
     typeof request.contactIdentifier === "string" ? request.contactIdentifier : "";
 
   return (
-    displayName.length >= 2 &&
-    displayName.length <= 30 &&
-    displayName.trim() === displayName &&
+    isValidDisplayName(displayName) &&
     (request.profileImageKey === null ||
       (typeof request.profileImageKey === "string" &&
         request.profileImageKey.length <= 500 &&

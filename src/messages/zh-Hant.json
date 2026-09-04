@@ -465,6 +465,7 @@
     "pending": {
       "title": "等待夥伴註冊指引",
       "description": "工作人員將透過您註冊時填寫的電子郵件或電話號碼與您聯絡，並提供夥伴註冊說明。",
+      "touristDescription": "您的帳戶正在審核中。審核完成後即可使用HanBuddy。",
       "reviewTime": "我們將在1至3個工作天內聯絡您"
     },
     "rejected": {

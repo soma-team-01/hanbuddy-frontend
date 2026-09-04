@@ -27,6 +27,17 @@ describe("AccountStatusContent", () => {
     expect(screen.queryByText("Email HanBuddy")).not.toBeInTheDocument();
   });
 
+  it("shows tourist-specific guidance for a pending tourist account", () => {
+    renderWithIntl(<AccountStatusContent status="PENDING_APPROVAL" userType="TOURIST" />);
+
+    expect(
+      screen.getByText(
+        "Your account is awaiting review. You can use HanBuddy once the review is complete.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/buddy registration/i)).not.toBeInTheDocument();
+  });
+
   it("shows a rejection reason supplied by the backend", () => {
     renderWithIntl(
       <AccountStatusContent

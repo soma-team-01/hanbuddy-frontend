@@ -111,7 +111,7 @@ function getStatusCopy(
   if (status === "PENDING_APPROVAL") {
     return {
       title: t("pending.title"),
-      description: t("pending.description"),
+      description: t(userType === "TOURIST" ? "pending.touristDescription" : "pending.description"),
       note: t("pending.reviewTime"),
     };
   }

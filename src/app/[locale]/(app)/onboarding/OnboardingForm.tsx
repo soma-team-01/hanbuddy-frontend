@@ -108,6 +108,21 @@ function getInitialMessagingCountry(nationalityCode: string, contactCountryCode?
   return COUNTRIES.find((country) => country.dialCode === contactCountryCode)?.code ?? "US";
 }
 
+function getInitialMessagingApp(
+  isBuddyFlow: boolean,
+  resubmission: BuddyResubmission | undefined,
+): MessagingAppKey {
+  if (isBuddyFlow) return "phone";
+  if (resubmission) return APP_BY_CONTACT_METHOD[resubmission.contactMethod];
+  return "line";
+}
+
+function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
+  if (isResubmission) return "/buddy/auth/status?status=REJECTED" as const;
+  if (isBuddyFlow) return "/buddy" as const;
+  return "/login" as const;
+}
+
 export function OnboardingForm({
   googleProfile,
   userType = "TOURIST",
@@ -128,12 +143,8 @@ export function OnboardingForm({
     resubmission?.displayName ?? googleProfile?.name ?? "",
   );
   const [birthDate, setBirthDate] = useState(resubmission?.birthDate ?? "");
-  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
-    isBuddyFlow
-      ? "phone"
-      : resubmission
-        ? APP_BY_CONTACT_METHOD[resubmission.contactMethod]
-        : "line",
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(() =>
+    getInitialMessagingApp(isBuddyFlow, resubmission),
   );
   const [messagingContact, setMessagingContact] = useState(
     resubmission && (!isBuddyFlow || resubmission.contactMethod === "PHONE")
@@ -168,6 +179,7 @@ export function OnboardingForm({
   const [existingProfileImageUrl, setExistingProfileImageUrl] = useState<string | null>(
     resubmission?.profileImageUrl ?? null,
   );
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
   const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -219,6 +231,7 @@ export function OnboardingForm({
 
   function handleProfileImageRemove() {
     if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    if (profileImageInputRef.current) profileImageInputRef.current.value = "";
     setProfileImageFile(null);
     setProfileImagePreview("");
     setExistingProfileImageKey(null);
@@ -498,53 +511,47 @@ export function OnboardingForm({
     errorMessage = t(errorKey);
   }
 
-  const roleCopy = {
-    title: isResubmission
-      ? resubmissionT("title")
-      : userType === "BUDDY"
-        ? buddyT("title")
-        : t("title"),
-    eyebrow: isResubmission
-      ? resubmissionT("eyebrow")
-      : userType === "BUDDY"
-        ? buddyT("eyebrow")
-        : t("eyebrow"),
-    headline: isResubmission
-      ? resubmissionT("headline")
-      : userType === "BUDDY"
-        ? buddyT("headline")
-        : t("headline"),
-    description: isResubmission
-      ? resubmissionT("description")
-      : userType === "BUDDY"
-        ? buddyT("description")
-        : t("description"),
-    photoGuidance: isResubmission
-      ? resubmissionT("profilePhotoOptional")
-      : userType === "BUDDY"
-        ? buddyT("profilePhotoOptional")
-        : t("profilePhotoOptional"),
-    contactMethods: isResubmission
-      ? resubmissionT("contactMethods")
-      : userType === "BUDDY"
-        ? buddyT("contactMethods")
-        : t("contactMethods"),
-    contactDescription: isResubmission
-      ? resubmissionT("contactDescription")
-      : userType === "BUDDY"
-        ? buddyT("contactDescription")
-        : t("contactDescription"),
-    submit: isResubmission
-      ? resubmissionT("submit")
-      : userType === "BUDDY"
-        ? buddyT("completeRegistration")
-        : t("completeRegistration"),
-    submitting: isResubmission
-      ? resubmissionT("submitting")
-      : userType === "BUDDY"
-        ? buddyT("completing")
-        : t("completing"),
-  };
+  function getRoleCopy() {
+    if (isResubmission) {
+      return {
+        title: resubmissionT("title"),
+        eyebrow: resubmissionT("eyebrow"),
+        headline: resubmissionT("headline"),
+        description: resubmissionT("description"),
+        photoGuidance: resubmissionT("profilePhotoOptional"),
+        contactMethods: resubmissionT("contactMethods"),
+        contactDescription: resubmissionT("contactDescription"),
+        submit: resubmissionT("submit"),
+        submitting: resubmissionT("submitting"),
+      };
+    }
+    if (isBuddyFlow) {
+      return {
+        title: buddyT("title"),
+        eyebrow: buddyT("eyebrow"),
+        headline: buddyT("headline"),
+        description: buddyT("description"),
+        photoGuidance: buddyT("profilePhotoOptional"),
+        contactMethods: buddyT("contactMethods"),
+        contactDescription: buddyT("contactDescription"),
+        submit: buddyT("completeRegistration"),
+        submitting: buddyT("completing"),
+      };
+    }
+    return {
+      title: t("title"),
+      eyebrow: t("eyebrow"),
+      headline: t("headline"),
+      description: t("description"),
+      photoGuidance: t("profilePhotoOptional"),
+      contactMethods: t("contactMethods"),
+      contactDescription: t("contactDescription"),
+      submit: t("completeRegistration"),
+      submitting: t("completing"),
+    };
+  }
+
+  const roleCopy = getRoleCopy();
 
   const agreementItems: Array<{
     type: SignupAgreementType;
@@ -604,13 +611,7 @@ export function OnboardingForm({
         <PageContainer>
           <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4">
             <Link
-              href={
-                isResubmission
-                  ? "/buddy/auth/status?status=REJECTED"
-                  : userType === "BUDDY"
-                    ? "/buddy"
-                    : "/login"
-              }
+              href={getOnboardingBackHref(isResubmission, isBuddyFlow)}
               aria-label={accessibilityT("close")}
               className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
@@ -699,6 +700,7 @@ export function OnboardingForm({
                           <CameraIcon className="size-4" />
                           <span className="sr-only">{t("addProfilePhoto")}</span>
                           <input
+                            ref={profileImageInputRef}
                             type="file"
                             accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
                             className="sr-only"

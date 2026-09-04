@@ -57,6 +57,202 @@ const BRAND_MARK_CLASS: Record<MessagingAppKey, string> = {
   phone: "bg-primary-strong",
 };
 
+type MessagingVariant = NonNullable<MessagingAppFieldProps["variant"]>;
+
+function getSelectorClassName(variant: MessagingVariant, singleRowOnDesktop: boolean) {
+  if (variant === "cards") {
+    return `grid grid-cols-2 gap-2 ${singleRowOnDesktop ? "lg:grid-cols-4" : ""}`;
+  }
+  return "flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel";
+}
+
+function getOptionClassName(variant: MessagingVariant, isSelected: boolean, index: number) {
+  const base =
+    "focus-border-only flex items-center gap-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary/30";
+  if (variant === "cards") {
+    const state = isSelected
+      ? "border-primary bg-primary-soft text-primary-strong"
+      : "border-line-soft bg-canvas-soft text-ink hover:border-line-strong";
+    return `${base} min-h-14 gap-2 rounded-xl border px-3 py-2.5 ${state}`;
+  }
+  const divider = index > 0 ? "border-t border-line-soft" : "";
+  return `${base} px-4 py-3.5 hover:bg-primary-soft/60 ${divider}`;
+}
+
+interface MessagingAppSelectorProps {
+  app: MessagingAppKey;
+  onAppChange: (key: MessagingAppKey) => void;
+  phoneLabel: string;
+  variant: MessagingVariant;
+  singleRowOnDesktop: boolean;
+}
+
+function MessagingAppSelector({
+  app,
+  onAppChange,
+  phoneLabel,
+  variant,
+  singleRowOnDesktop,
+}: Readonly<MessagingAppSelectorProps>) {
+  return (
+    <div
+      data-testid="messaging-app-options"
+      className={getSelectorClassName(variant, singleRowOnDesktop)}
+    >
+      {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
+        const isSelected = app === key;
+        const displayLabel = label ?? phoneLabel;
+        let appIcon = <Icon data-messaging-icon={key} className="size-5 shrink-0 text-success" />;
+
+        if (variant === "cards") {
+          appIcon = (
+            <span
+              aria-hidden
+              data-messaging-brand={key}
+              className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-white ${BRAND_MARK_CLASS[key]}`}
+            >
+              {key === "line" ? (
+                <span className="text-[7px] font-black tracking-[-0.04em]">LINE</span>
+              ) : (
+                <Icon data-messaging-icon={key} className="size-4.5 shrink-0" />
+              )}
+            </span>
+          );
+        }
+
+        return (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={isSelected}
+            onClick={() => onAppChange(key)}
+            className={getOptionClassName(variant, isSelected, index)}
+          >
+            {variant === "list" ? (
+              <span
+                aria-hidden
+                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                  isSelected ? "border-primary-strong" : "border-line-strong"
+                }`}
+              >
+                {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
+              </span>
+            ) : null}
+            {appIcon}
+            <span className="text-sm font-semibold text-inherit">{displayLabel}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+interface PhoneContactInputProps {
+  country: string;
+  onCountryChange: (code: string) => void;
+  contactValue: string;
+  onContactChange: (value: string) => void;
+  inputName?: string;
+  inputRequired: boolean;
+  koreanOnly: boolean;
+  variant: MessagingVariant;
+  countryCodeLabel: string;
+  phoneInputLabel: string;
+  phonePlaceholder: string;
+  koreanPhonePlaceholder: string;
+}
+
+function PhoneContactInput({
+  country,
+  onCountryChange,
+  contactValue,
+  onContactChange,
+  inputName,
+  inputRequired,
+  koreanOnly,
+  variant,
+  countryCodeLabel,
+  phoneInputLabel,
+  phonePlaceholder,
+  koreanPhonePlaceholder,
+}: Readonly<PhoneContactInputProps>) {
+  const inputBackground = variant === "cards" ? "bg-canvas-soft" : "bg-panel";
+  const countryBackground = variant === "cards" ? "bg-canvas-soft" : "bg-panel-raised";
+
+  return (
+    <div className="mt-1 flex gap-2">
+      {koreanOnly ? (
+        <span className="flex shrink-0 items-center rounded-xl border border-line-soft bg-panel-raised px-4 py-3.5 text-base text-ink">
+          +82
+        </span>
+      ) : (
+        <div className="shrink-0">
+          <CountrySelect
+            value={country}
+            onChange={onCountryChange}
+            display="dialCode"
+            ariaLabel={countryCodeLabel}
+            triggerClassName={`flex items-center gap-2 rounded-xl border border-line-soft py-3 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong ${countryBackground}`}
+          />
+        </div>
+      )}
+      <input
+        name={inputName}
+        type="tel"
+        required={inputRequired}
+        value={koreanOnly ? formatKoreanPhone(contactValue) : contactValue}
+        onChange={(event) => {
+          const digits = toDigits(event.target.value);
+          onContactChange(koreanOnly ? digits.slice(0, 11) : digits);
+        }}
+        placeholder={koreanOnly ? koreanPhonePlaceholder : phonePlaceholder}
+        aria-label={phoneInputLabel}
+        className={`focus-border-only w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${inputBackground}`}
+      />
+    </div>
+  );
+}
+
+interface AppIdContactInputProps {
+  app: MessagingAppKey;
+  contactValue: string;
+  onContactChange: (value: string) => void;
+  inputName?: string;
+  inputRequired: boolean;
+  variant: MessagingVariant;
+  phoneLabel: string;
+  inputLabel: string;
+  getPlaceholder: (appLabel: string) => string;
+}
+
+function AppIdContactInput({
+  app,
+  contactValue,
+  onContactChange,
+  inputName,
+  inputRequired,
+  variant,
+  phoneLabel,
+  inputLabel,
+  getPlaceholder,
+}: Readonly<AppIdContactInputProps>) {
+  const appLabel = MESSAGING_APPS.find((item) => item.key === app)?.label ?? phoneLabel;
+  const inputBackground = variant === "cards" ? "bg-canvas-soft" : "bg-panel";
+
+  return (
+    <input
+      name={inputName}
+      type="text"
+      required={inputRequired}
+      value={contactValue}
+      onChange={(event) => onContactChange(event.target.value)}
+      placeholder={getPlaceholder(appLabel)}
+      aria-label={inputLabel}
+      className={`focus-border-only mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${inputBackground}`}
+    />
+  );
+}
+
 /** 메시징 앱 단일 선택 + 앱 특성에 맞는 연락처 입력(온보딩·프로필 수정 공용) */
 export function MessagingAppField({
   app,
@@ -73,120 +269,46 @@ export function MessagingAppField({
   showAppSelector = true,
 }: Readonly<MessagingAppFieldProps>) {
   const t = useTranslations("Messaging");
+  const usesPhoneNumber = app === "whatsapp" || app === "phone";
 
   return (
     <>
       {showAppSelector ? (
-        <div
-          data-testid="messaging-app-options"
-          className={
-            variant === "cards"
-              ? `grid grid-cols-2 gap-2 ${singleRowOnDesktop ? "lg:grid-cols-4" : ""}`
-              : "flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel"
-          }
-        >
-          {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
-            const isSelected = app === key;
-            const displayLabel = label ?? t("phoneNumber");
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => onAppChange(key)}
-                className={`focus-border-only flex items-center gap-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${
-                  variant === "cards"
-                    ? `min-h-14 gap-2 rounded-xl border px-3 py-2.5 ${
-                        isSelected
-                          ? "border-primary bg-primary-soft text-primary-strong"
-                          : "border-line-soft bg-canvas-soft text-ink hover:border-line-strong"
-                      }`
-                    : `px-4 py-3.5 hover:bg-primary-soft/60 ${
-                        index > 0 ? "border-t border-line-soft" : ""
-                      }`
-                }`}
-              >
-                {variant === "list" ? (
-                  <span
-                    aria-hidden
-                    className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                      isSelected ? "border-primary-strong" : "border-line-strong"
-                    }`}
-                  >
-                    {isSelected && <span className="size-2 rounded-full bg-primary-strong" />}
-                  </span>
-                ) : null}
-                {variant === "cards" ? (
-                  <span
-                    aria-hidden
-                    data-messaging-brand={key}
-                    className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-white ${BRAND_MARK_CLASS[key]}`}
-                  >
-                    {key === "line" ? (
-                      <span className="text-[7px] font-black tracking-[-0.04em]">LINE</span>
-                    ) : (
-                      <Icon data-messaging-icon={key} className="size-4.5 shrink-0" />
-                    )}
-                  </span>
-                ) : (
-                  <Icon data-messaging-icon={key} className="size-5 shrink-0 text-success" />
-                )}
-                <span className="text-sm font-semibold text-inherit">{displayLabel}</span>
-              </button>
-            );
-          })}
-        </div>
+        <MessagingAppSelector
+          app={app}
+          onAppChange={onAppChange}
+          phoneLabel={t("phoneNumber")}
+          variant={variant}
+          singleRowOnDesktop={singleRowOnDesktop}
+        />
       ) : null}
       {/* WhatsApp·전화번호는 번호 기반, LINE·WeChat은 ID 기반으로 연락처를 교환한다 */}
-      {app === "whatsapp" || app === "phone" ? (
-        <div className="mt-1 flex gap-2">
-          {koreanOnly ? (
-            <span className="flex shrink-0 items-center rounded-xl border border-line-soft bg-panel-raised px-4 py-3.5 text-base text-ink">
-              +82
-            </span>
-          ) : (
-            <div className="shrink-0">
-              <CountrySelect
-                value={country}
-                onChange={onCountryChange}
-                display="dialCode"
-                ariaLabel={t("countryCode")}
-                triggerClassName={`flex items-center gap-2 rounded-xl border border-line-soft py-3 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong ${
-                  variant === "cards" ? "bg-canvas-soft" : "bg-panel-raised"
-                }`}
-              />
-            </div>
-          )}
-          <input
-            name={inputName}
-            type="tel"
-            required={inputRequired}
-            value={koreanOnly ? formatKoreanPhone(contactValue) : contactValue}
-            onChange={(e) => {
-              const digits = toDigits(e.target.value);
-              onContactChange(koreanOnly ? digits.slice(0, 11) : digits);
-            }}
-            placeholder={koreanOnly ? t("koreanPhonePlaceholder") : t("phonePlaceholder")}
-            aria-label={t("phoneInputLabel")}
-            className={`focus-border-only w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${
-              variant === "cards" ? "bg-canvas-soft" : "bg-panel"
-            }`}
-          />
-        </div>
+      {usesPhoneNumber ? (
+        <PhoneContactInput
+          country={country}
+          onCountryChange={onCountryChange}
+          contactValue={contactValue}
+          onContactChange={onContactChange}
+          inputName={inputName}
+          inputRequired={inputRequired}
+          koreanOnly={koreanOnly}
+          variant={variant}
+          countryCodeLabel={t("countryCode")}
+          phoneInputLabel={t("phoneInputLabel")}
+          phonePlaceholder={t("phonePlaceholder")}
+          koreanPhonePlaceholder={t("koreanPhonePlaceholder")}
+        />
       ) : (
-        <input
-          name={inputName}
-          type="text"
-          required={inputRequired}
-          value={contactValue}
-          onChange={(e) => onContactChange(e.target.value)}
-          placeholder={t("appIdPlaceholder", {
-            app: MESSAGING_APPS.find((item) => item.key === app)?.label ?? t("phoneNumber"),
-          })}
-          aria-label={t("appIdInputLabel")}
-          className={`focus-border-only mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${
-            variant === "cards" ? "bg-canvas-soft" : "bg-panel"
-          }`}
+        <AppIdContactInput
+          app={app}
+          contactValue={contactValue}
+          onContactChange={onContactChange}
+          inputName={inputName}
+          inputRequired={inputRequired}
+          variant={variant}
+          phoneLabel={t("phoneNumber")}
+          inputLabel={t("appIdInputLabel")}
+          getPlaceholder={(appLabel) => t("appIdPlaceholder", { app: appLabel })}
         />
       )}
     </>

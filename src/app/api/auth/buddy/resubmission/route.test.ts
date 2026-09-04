@@ -94,24 +94,28 @@ describe("/api/auth/buddy/resubmission", () => {
     expect(setCookie).toContain(`${AUTH_COOKIES.statusReason}=;`);
   });
 
-  it.each([undefined, null, [], { ...updateRequest, displayName: " Buddy " }])(
-    "rejects an invalid PUT body before calling the backend",
-    async (body) => {
-      const invalidRequest =
-        body === undefined
-          ? new NextRequest("http://localhost/api/auth/buddy/resubmission", {
-              method: "PUT",
-              headers: { cookie: `${AUTH_COOKIES.resubmissionToken}=resubmit-token` },
-              body: "not-json",
-            })
-          : request("PUT", body);
+  it.each([
+    undefined,
+    null,
+    [],
+    { ...updateRequest, displayName: " Buddy " },
+    { ...updateRequest, displayName: "가가" },
+    { ...updateRequest, displayName: "ab\ncd" },
+  ])("rejects an invalid PUT body before calling the backend", async (body) => {
+    const invalidRequest =
+      body === undefined
+        ? new NextRequest("http://localhost/api/auth/buddy/resubmission", {
+            method: "PUT",
+            headers: { cookie: `${AUTH_COOKIES.resubmissionToken}=resubmit-token` },
+            body: "not-json",
+          })
+        : request("PUT", body);
 
-      const response = await PUT(invalidRequest);
+    const response = await PUT(invalidRequest);
 
-      expect(response.status).toBe(400);
-      expect(mockedPutBackend).not.toHaveBeenCalled();
-    },
-  );
+    expect(response.status).toBe(400);
+    expect(mockedPutBackend).not.toHaveBeenCalled();
+  });
 
   it("returns 401 without a resubmission token", async () => {
     const response = await GET(request("GET", undefined, false));

@@ -465,6 +465,7 @@
     "pending": {
       "title": "バディ登録のご案内待ち",
       "description": "登録時に入力したメールアドレスまたは電話番号へ担当者から連絡し、バディ登録についてご案内します。",
+      "touristDescription": "アカウントを審査中です。審査が完了するとHanBuddyをご利用いただけます。",
       "reviewTime": "1〜3営業日以内にご連絡します"
     },
     "rejected": {

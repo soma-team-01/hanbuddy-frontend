@@ -449,11 +449,14 @@
     },
     "suspended": {
       "title": "Buddy account suspended",
-      "description": "Buddy features are unavailable. Contact us if you need help."
+      "description": "Buddy features are unavailable. Contact us if you need help.",
+      "touristTitle": "Tourist account suspended",
+      "touristDescription": "HanBuddy services are unavailable. Contact us if you need help."
     },
     "reasonLabel": "Reason provided",
     "contactHelp": "Questions? Contact <email>zeroone.soma@gmail.com</email>.",
-    "backToBuddy": "Back to buddy page"
+    "backToBuddy": "Back to buddy page",
+    "backToHome": "Back to home"
   },
   "Profile": {
     "title": "Edit profile",

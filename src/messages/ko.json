@@ -437,7 +437,7 @@
   },
   "AccountStatus": {
     "metadataTitle": "계정 상태 | HanBuddy",
-    "metadataDescription": "HanBuddy 버디 계정의 검토 상태를 확인하세요.",
+    "metadataDescription": "HanBuddy 계정 상태를 확인하세요.",
     "pending": {
       "title": "버디 가입 요청 검토 중",
       "description": "검토가 끝나면 이메일로 알려드릴게요.",
@@ -449,11 +449,14 @@
     },
     "suspended": {
       "title": "버디 계정 이용 정지",
-      "description": "버디 기능을 이용할 수 없습니다. 도움이 필요하면 문의해 주세요."
+      "description": "버디 기능을 이용할 수 없습니다. 도움이 필요하면 문의해 주세요.",
+      "touristTitle": "관광객 계정 이용 정지",
+      "touristDescription": "HanBuddy 서비스를 이용할 수 없습니다. 도움이 필요하면 문의해 주세요."
     },
     "reasonLabel": "안내된 사유",
     "contactHelp": "문의: <email>zeroone.soma@gmail.com</email>",
-    "backToBuddy": "버디 페이지로 돌아가기"
+    "backToBuddy": "버디 페이지로 돌아가기",
+    "backToHome": "홈으로 돌아가기"
   },
   "Profile": {
     "title": "프로필 수정",

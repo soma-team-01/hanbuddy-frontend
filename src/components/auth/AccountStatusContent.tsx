@@ -12,18 +12,24 @@ type InactiveAuthStatus = Extract<AuthStatus, "PENDING_APPROVAL" | "REJECTED" | 
 interface AccountStatusContentProps {
   status: InactiveAuthStatus;
   reason?: string;
+  userType: "TOURIST" | "BUDDY";
 }
 
-export function AccountStatusContent({ status, reason }: Readonly<AccountStatusContentProps>) {
+export function AccountStatusContent({
+  status,
+  reason,
+  userType,
+}: Readonly<AccountStatusContentProps>) {
   const t = useTranslations("AccountStatus");
-  const copy = getStatusCopy(status, t);
+  const copy = getStatusCopy(status, userType, t);
+  const isBuddy = userType === "BUDDY";
 
   return (
     <main className="flex flex-1 items-center justify-center bg-white px-4 py-8 md:px-6 md:py-10">
       <div className="w-full max-w-[680px]">
         <Link
-          href="/buddy"
-          aria-label={t("backToBuddy")}
+          href={isBuddy ? "/buddy" : "/"}
+          aria-label={t(isBuddy ? "backToBuddy" : "backToHome")}
           className="mb-4 inline-flex size-10 items-center justify-center rounded-full border border-line-soft bg-white text-ink transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <ArrowLeftIcon className="size-5" />
@@ -82,7 +88,11 @@ function AccountStatusIcon({ status }: Readonly<{ status: InactiveAuthStatus }>)
   return <UserMinusIcon className="size-7" />;
 }
 
-function getStatusCopy(status: InactiveAuthStatus, t: ReturnType<typeof useTranslations>) {
+function getStatusCopy(
+  status: InactiveAuthStatus,
+  userType: "TOURIST" | "BUDDY",
+  t: ReturnType<typeof useTranslations>,
+) {
   if (status === "PENDING_APPROVAL") {
     return {
       title: t("pending.title"),
@@ -98,8 +108,8 @@ function getStatusCopy(status: InactiveAuthStatus, t: ReturnType<typeof useTrans
     };
   }
   return {
-    title: t("suspended.title"),
-    description: t("suspended.description"),
+    title: t(userType === "BUDDY" ? "suspended.title" : "suspended.touristTitle"),
+    description: t(userType === "BUDDY" ? "suspended.description" : "suspended.touristDescription"),
     note: null,
   };
 }

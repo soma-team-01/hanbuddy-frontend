@@ -158,7 +158,8 @@ function createInactiveAccountRedirect(request: NextRequest, result: GoogleLogin
     return redirectToLoginWithError(request, "invalidLoginResponse");
   }
 
-  const statusUrl = createLocalizedUrl(request, "/buddy/auth/status");
+  const statusPath = result.userType === "BUDDY" ? "/buddy/auth/status" : "/auth/status";
+  const statusUrl = createLocalizedUrl(request, statusPath);
   statusUrl.searchParams.set("status", result.authStatus);
   const response = NextResponse.redirect(statusUrl);
   clearAuthenticatedSessionCookies(response);

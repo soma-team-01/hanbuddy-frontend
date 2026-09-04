@@ -397,6 +397,30 @@ describe("GET /auth/google/callback", () => {
     );
   });
 
+  it("redirects suspended tourist accounts to the general account status screen", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "SUSPENDED",
+          userId: 10,
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("ko"));
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/ko/auth/status?status=SUSPENDED",
+    );
+  });
+
   it("redirects unregistered users to onboarding with signup cookies", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,

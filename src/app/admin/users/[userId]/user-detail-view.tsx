@@ -216,7 +216,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
                 setHistoryType(tab.value);
                 setHistoryPage(0);
               }}
-              className={`group relative min-w-0 rounded-2xl border px-4 py-4 text-left transition-all ${activeHistoryType === tab.value ? "border-primary bg-primary-soft shadow-[0_8px_24px_rgba(209,63,50,0.1)]" : "border-line-soft bg-panel-raised hover:border-primary/45 hover:bg-white"}`}
+              className={`min-w-0 rounded-2xl border px-4 py-4 text-left transition-all ${activeHistoryType === tab.value ? "border-primary/45 bg-primary-soft shadow-[0_10px_28px_rgba(209,63,50,0.09)]" : "border-line-soft bg-panel-raised hover:border-line-strong hover:bg-white"}`}
             >
               <span
                 className={`block text-xs font-bold ${activeHistoryType === tab.value ? "text-primary" : "text-muted"}`}
@@ -226,10 +226,6 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
               <span className="mt-1 block truncate font-display text-2xl font-extrabold text-ink">
                 {historyCount(user, tab.value).toLocaleString("ko-KR")}
               </span>
-              <span
-                aria-hidden="true"
-                className={`absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary transition-opacity ${activeHistoryType === tab.value ? "opacity-100" : "opacity-0 group-hover:opacity-40"}`}
-              />
             </button>
           ))}
         </div>
@@ -389,7 +385,7 @@ function historyKey(type: AdminUserHistoryType, item: AdminUserHistory) {
 function historyTitle(type: AdminUserHistoryType, item: AdminUserHistory) {
   if (type === "activities" && "title" in item) return item.title;
   if (type === "applications" && "activityTitle" in item) return item.activityTitle;
-  if (type === "payments" && "orderNumber" in item) return item.orderNumber;
+  if (type === "payments" && "paymentId" in item) return `신청 #${item.applicationId} 결제`;
   if (type === "reviews" && "content" in item) return item.activityTitle;
   if (type === "agreements" && "type" in item) return `${item.type} · ${item.version}`;
   return historyFallbackTitle(type, item);
@@ -419,14 +415,54 @@ function historyFallbackTitle(type: AdminUserHistoryType, item: AdminUserHistory
 }
 function historyDescription(type: AdminUserHistoryType, item: AdminUserHistory) {
   if (type === "activities" && "price" in item)
-    return `${item.status} · ${formatKrw(item.price, "ko")}`;
+    return `${activityStatusLabel(item.status)} · ${formatKrw(item.price, "ko")}`;
   if (type === "applications" && "guestCount" in item)
-    return `${item.status} · ${item.guestCount}명 · ${formatAdminDate(item.scheduleStartAt, true)}`;
+    return `${applicationStatusLabel(item.status)} · ${item.guestCount}명 · ${formatAdminDate(item.scheduleStartAt, true)}`;
   if (type === "payments" && "amount" in item)
-    return `${item.status} · ${formatKrw(item.amount, "ko")}`;
+    return `${formatKrw(item.amount, "ko")} · ${paymentStatusLabel(item.status)} · 주문번호 ${item.orderNumber}`;
   if (type === "reviews" && "content" in item) return `★ ${item.rating} · ${item.content}`;
   if (type === "agreements" && "agreed" in item) return item.agreed ? "동의" : "미동의";
   return "";
+}
+
+function activityStatusLabel(status: string) {
+  return (
+    (
+      { DRAFT: "작성 중", ACTIVE: "운영 중", INACTIVE: "비활성", DELETED: "삭제" } as Record<
+        string,
+        string
+      >
+    )[status] ?? status
+  );
+}
+
+function applicationStatusLabel(status: string) {
+  return (
+    (
+      {
+        PENDING_PAYMENT: "결제 대기",
+        SUPERSEDED: "새 신청으로 대체",
+        CONFIRMED: "예약 확정",
+        CANCELLED: "취소",
+        COMPLETED: "이용 완료",
+      } as Record<string, string>
+    )[status] ?? status
+  );
+}
+
+function paymentStatusLabel(status: string) {
+  return (
+    (
+      {
+        CREATED: "결제 대기",
+        CONFIRMED: "결제 완료",
+        REVIEW_REQUIRED: "확인 필요",
+        FAILED: "결제 실패",
+        CANCELLED: "결제 취소",
+        EXPIRED: "결제 만료",
+      } as Record<string, string>
+    )[status] ?? status
+  );
 }
 function roleLabel(role: string) {
   return (

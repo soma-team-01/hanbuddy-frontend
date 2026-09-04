@@ -130,6 +130,44 @@ describe("AdminUserDetailView", () => {
     expect(screen.getByLabelText("불러오는 중")).toBeInTheDocument();
   });
 
+  it("shows a payment as a related application instead of using the provider order number as its title", async () => {
+    mockedGetAdminUser.mockResolvedValue({ status: "success", user: user("TOURIST") });
+    mockedGetAdminUserHistory.mockImplementation((_userId, type) =>
+      Promise.resolve({
+        status: "success",
+        history:
+          type === "payments"
+            ? {
+                ...PAGE,
+                content: [
+                  {
+                    paymentId: 44,
+                    applicationId: 31,
+                    activityId: 2,
+                    orderNumber: "hanbuddy-31-long-provider-order-number",
+                    amount: 50000,
+                    currency: "KRW",
+                    commissionRate: 0.2,
+                    guidePayoutAmountKrw: 40000,
+                    status: "CONFIRMED",
+                    approvedAt: "2026-09-04T13:31:00+09:00",
+                    createdAt: "2026-09-04T13:30:00+09:00",
+                  },
+                ],
+                totalElements: 1,
+              }
+            : PAGE,
+      }),
+    );
+
+    renderWithQueryClient(<AdminUserDetailView userId="11" />);
+    fireEvent.click(await screen.findByRole("tab", { name: "결제 이력 1건" }));
+
+    expect(await screen.findByText("신청 #31 결제")).toBeInTheDocument();
+    expect(screen.getByText(/₩50,000 · 결제 완료/)).toBeInTheDocument();
+    expect(screen.getByText(/주문번호 hanbuddy-31-long-provider-order-number/)).toBeInTheDocument();
+  });
+
   it("shows and immediately loads buddy histories", async () => {
     mockedGetAdminUser.mockResolvedValue({ status: "success", user: user("BUDDY") });
 

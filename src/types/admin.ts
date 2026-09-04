@@ -199,7 +199,11 @@ export interface AdminCommissionUpdateRequest extends AdminReasonRequest {
 }
 
 export type AdminUserAuditAction =
-  "USER_SUSPENDED" | "USER_REACTIVATED" | "BUDDY_COMMISSION_CHANGED";
+  | "BUDDY_APPLICATION_APPROVED"
+  | "BUDDY_APPLICATION_REJECTED"
+  | "USER_SUSPENDED"
+  | "USER_REACTIVATED"
+  | "BUDDY_COMMISSION_CHANGED";
 
 export interface AdminAuditLog {
   auditLogId: number;

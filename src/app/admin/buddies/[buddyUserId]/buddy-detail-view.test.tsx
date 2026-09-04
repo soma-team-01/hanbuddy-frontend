@@ -225,8 +225,19 @@ describe("AdminBuddyDetailView", () => {
             reason: "운영 정책 변경",
             createdAt: "2026-09-01T15:00:00+09:00",
           },
+          {
+            auditLogId: 105,
+            adminId: 1,
+            adminName: "김관리",
+            adminEmail: "admin@hanbuddy.kr",
+            action: "BUDDY_APPLICATION_APPROVED",
+            targetType: "USER",
+            targetId: 27,
+            reason: null,
+            createdAt: "2026-09-01T14:00:00+09:00",
+          },
         ],
-        totalElements: 1,
+        totalElements: 2,
         totalPages: 1,
         page: 0,
         size: 20,
@@ -237,9 +248,10 @@ describe("AdminBuddyDetailView", () => {
     renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
 
     expect(await screen.findByText("수수료 정책 변경")).toBeInTheDocument();
-    expect(screen.getByText("사유:")).toBeInTheDocument();
+    expect(screen.getByText("버디 가입 승인")).toBeInTheDocument();
+    expect(screen.getAllByText("사유:")).toHaveLength(2);
     expect(screen.getByText("운영 정책 변경")).toBeInTheDocument();
-    expect(screen.getByText("작업자:")).toBeInTheDocument();
-    expect(screen.getByText("김관리(admin@hanbuddy.kr)")).toBeInTheDocument();
+    expect(screen.getAllByText("작업자:")).toHaveLength(2);
+    expect(screen.getAllByText("김관리(admin@hanbuddy.kr)")).toHaveLength(2);
   });
 });

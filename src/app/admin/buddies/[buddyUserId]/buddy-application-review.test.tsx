@@ -71,6 +71,8 @@ describe("BuddyApplicationReview", () => {
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
     expect(screen.getByText("대한민국")).toBeInTheDocument();
     expect(screen.getByText(/^2026년 8월 6일 .*12:30$/)).toBeInTheDocument();
+    expect(screen.queryByText("사용자 ID")).not.toBeInTheDocument();
+    expect(screen.queryByText("검토자")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "버디 승인" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "거절" })).toBeInTheDocument();
   });

@@ -44,9 +44,11 @@ export function AccountStatusContent({
             <h1 className="max-w-[540px] font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-[30px]">
               {copy.title}
             </h1>
-            <p className="mt-3 max-w-[540px] text-sm leading-6 text-muted md:text-base">
-              {copy.description}
-            </p>
+            {copy.description ? (
+              <p className="mt-3 max-w-[540px] text-sm leading-6 text-muted md:text-base">
+                {copy.description}
+              </p>
+            ) : null}
 
             {reason ? (
               <div className="mt-5 w-full rounded-2xl border border-line-soft bg-panel-raised p-4 text-left">
@@ -96,7 +98,7 @@ function getStatusCopy(
   if (status === "PENDING_APPROVAL") {
     return {
       title: t("pending.title"),
-      description: t("pending.description"),
+      description: null,
       note: t("pending.reviewTime"),
     };
   }

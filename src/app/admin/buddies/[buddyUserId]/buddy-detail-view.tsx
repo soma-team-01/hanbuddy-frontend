@@ -564,6 +564,8 @@ function auditLabel(action: string) {
   return (
     (
       {
+        BUDDY_APPLICATION_APPROVED: "버디 가입 승인",
+        BUDDY_APPLICATION_REJECTED: "버디 가입 거절",
         USER_SUSPENDED: "계정 정지",
         USER_REACTIVATED: "계정 재활성화",
         BUDDY_COMMISSION_CHANGED: "수수료 정책 변경",

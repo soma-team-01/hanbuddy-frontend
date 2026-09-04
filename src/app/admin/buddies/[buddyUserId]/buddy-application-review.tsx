@@ -95,7 +95,6 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
       </div>
       <div className="grid gap-10 py-9 lg:grid-cols-2">
         <Section title="기본 정보">
-          <Info label="사용자 ID" value={String(application.userId)} />
           <Info label="국적" value={formatAdminCountry(application.nationalityCode)} />
           <Info label="생년월일" value={application.birthDate} />
           <Info label="신청일" value={formatDateTime(application.appliedAt)} />
@@ -104,7 +103,6 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
           <Info label="연락 수단" value={application.contactMethod} />
           <Info label="국가 코드" value={application.contactCountryCode || "-"} />
           <Info label="연락처" value={application.contactIdentifier} />
-          <Info label="검토자" value={application.reviewedByName || "아직 검토되지 않음"} />
         </Section>
       </div>
       {application.rejectionReason ? (

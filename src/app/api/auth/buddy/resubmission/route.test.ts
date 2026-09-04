@@ -35,9 +35,9 @@ const updateRequest: BuddyResubmissionRequest = {
   profileImageKey: "profiles/2026/09/04/123e4567-e89b-12d3-a456-426614174001.webp",
   nationalityCode: "KR",
   birthDate: "1995-02-03",
-  contactMethod: "LINE",
-  contactCountryCode: "",
-  contactIdentifier: "updated-buddy",
+  contactMethod: "PHONE",
+  contactCountryCode: "+82",
+  contactIdentifier: "01012345678",
 };
 
 function request(method: "GET" | "PUT", body?: unknown, withToken = true) {
@@ -101,6 +101,9 @@ describe("/api/auth/buddy/resubmission", () => {
     { ...updateRequest, displayName: " Buddy " },
     { ...updateRequest, displayName: "가가" },
     { ...updateRequest, displayName: "ab\ncd" },
+    { ...updateRequest, contactMethod: "LINE" },
+    { ...updateRequest, contactIdentifier: "invalid-phone" },
+    { ...updateRequest, contactCountryCode: "" },
   ])("rejects an invalid PUT body before calling the backend", async (body) => {
     const invalidRequest =
       body === undefined

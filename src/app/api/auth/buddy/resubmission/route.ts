@@ -8,18 +8,16 @@ import {
 import type {
   BuddyResubmission,
   BuddyResubmissionRequest,
-  ContactMethod,
   ErrorApiResponse,
 } from "@/lib/auth/types";
 import { isValidDisplayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
-const CONTACT_METHODS = new Set<ContactMethod>(["WHATSAPP", "LINE", "WECHAT", "PHONE"]);
 const PROFILE_IMAGE_KEY_PATTERN =
   /^profiles\/\d{4}\/\d{2}\/\d{2}\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\.(?:jpg|png|webp)$/;
-const CONTACT_COUNTRY_CODE_PATTERN = /^(?:\+\d{1,4})?$/;
-const CONTACT_IDENTIFIER_PATTERN = /^[A-Za-z0-9가-힣@._+\- ]{2,100}$/;
+const CONTACT_COUNTRY_CODE_PATTERN = /^\+\d{1,4}$/;
+const PHONE_CONTACT_PATTERN = /^\d{6,15}$/;
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIES.resubmissionToken)?.value;
@@ -106,6 +104,7 @@ function isBuddyResubmissionRequest(value: unknown): value is BuddyResubmissionR
   const displayName = typeof request.displayName === "string" ? request.displayName : "";
   const contactIdentifier =
     typeof request.contactIdentifier === "string" ? request.contactIdentifier : "";
+  const normalizedPhone = contactIdentifier.replace(/[ -]/g, "");
 
   return (
     isValidDisplayName(displayName) &&
@@ -117,10 +116,10 @@ function isBuddyResubmissionRequest(value: unknown): value is BuddyResubmissionR
     /^[A-Z]{2}$/.test(request.nationalityCode) &&
     typeof request.birthDate === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(request.birthDate) &&
-    typeof request.contactMethod === "string" &&
-    CONTACT_METHODS.has(request.contactMethod as ContactMethod) &&
+    request.contactMethod === "PHONE" &&
     typeof request.contactCountryCode === "string" &&
     CONTACT_COUNTRY_CODE_PATTERN.test(request.contactCountryCode) &&
-    CONTACT_IDENTIFIER_PATTERN.test(contactIdentifier)
+    contactIdentifier.length <= 100 &&
+    PHONE_CONTACT_PATTERN.test(normalizedPhone)
   );
 }

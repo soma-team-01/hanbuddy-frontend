@@ -104,12 +104,12 @@ describe("OnboardingForm", () => {
       expect(displayNameInput).toHaveAttribute("pattern", "[A-Za-z]+(?:[ '-][A-Za-z]+)*");
       expect(displayNameInput).toHaveClass("focus-border-only");
       expect(
-        screen.getByText(
+        screen.queryByText(
           locale === "ko"
             ? "영문 2~30자 · 단어 사이는 공백, 하이픈(-), 작은따옴표(')만 사용할 수 있어요."
             : "Use 2–30 English letters. Separate words with one space, hyphen (-), or apostrophe (').",
         ),
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Tourist" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
@@ -178,12 +178,12 @@ describe("OnboardingForm", () => {
     [
       "en",
       "한글",
-      "Enter a name using 2–30 English letters, with only a single space, hyphen (-), or apostrophe (') between words.",
+      "Use 2–30 English letters. Separate words with one space, hyphen (-), or apostrophe (').",
     ],
     [
       "ko",
       "John--Smith",
-      "이름은 2~30자의 영문으로 입력하고, 단어 사이에는 공백, 하이픈(-), 작은따옴표(')만 사용해 주세요.",
+      "영문 2~30자 · 단어 사이는 공백, 하이픈(-), 작은따옴표(')만 사용할 수 있어요.",
     ],
   ] as const)("blocks invalid names during %s signup", (locale, value, message) => {
     renderWithIntl(<OnboardingForm googleProfile={{ name: value }} />, { locale });
@@ -191,11 +191,34 @@ describe("OnboardingForm", () => {
     clickContinue(locale);
 
     expect(screen.getByRole("alert")).toHaveTextContent(message);
+    expect(screen.getByRole("alert")).toHaveClass("text-danger");
+    expect(
+      screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" }),
+    ).toHaveAttribute("aria-invalid", "true");
     expect(
       screen.getByRole("navigation", {
         name: locale === "ko" ? "총 3단계 중 1단계" : "Step 1 of 3",
       }),
     ).toBeInTheDocument();
+  });
+
+  it("shows the name rule after blur and clears it as soon as the value is valid", () => {
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />, { locale: "ko" });
+    const input = screen.getByRole("textbox", { name: "이름" });
+    const message = "영문 2~30자 · 단어 사이는 공백, 하이픈(-), 작은따옴표(')만 사용할 수 있어요.";
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: "한글" } });
+    fireEvent.blur(input);
+
+    expect(screen.getByText(message)).toHaveClass("text-danger");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+
+    fireEvent.change(input, { target: { value: "John Smith" } });
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-invalid", "false");
   });
 
   it("keeps profile details when moving between steps", () => {

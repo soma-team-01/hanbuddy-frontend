@@ -248,6 +248,20 @@ export function OnboardingForm({
     setErrorKey(null);
   }
 
+  function handleDisplayNameChange(value: string) {
+    setDisplayName(value);
+    if (errorKey === "validation.displayNameInvalid" && isValidDisplayName(value)) {
+      setErrorKey(null);
+    }
+  }
+
+  function handleDisplayNameBlur() {
+    if (!isValidDisplayName(displayName)) {
+      setRequestFailure(null);
+      setErrorKey("validation.displayNameInvalid");
+    }
+  }
+
   async function resolveProfileImageKey(): Promise<string | null | undefined> {
     if (!profileImageFile) return isResubmission ? existingProfileImageKey : undefined;
     if (uploadedProfileImageRef.current?.file === profileImageFile) {
@@ -472,6 +486,7 @@ export function OnboardingForm({
     );
   }
 
+  const hasDisplayNameError = errorKey === "validation.displayNameInvalid";
   let errorMessage: string | null = null;
   if (requestFailure) {
     if (requestFailure.fallbackKey === "resubmissionFailed") {
@@ -479,7 +494,7 @@ export function OnboardingForm({
     } else {
       errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
     }
-  } else if (errorKey) {
+  } else if (errorKey && !hasDisplayNameError) {
     errorMessage = t(errorKey);
   }
 
@@ -712,19 +727,28 @@ export function OnboardingForm({
                             maxLength={30}
                             pattern={DISPLAY_NAME_PATTERN}
                             value={displayName}
-                            onChange={(event) => setDisplayName(event.target.value)}
+                            onChange={(event) => handleDisplayNameChange(event.target.value)}
+                            onBlur={handleDisplayNameBlur}
                             aria-label={t("displayName")}
-                            aria-describedby="onboarding-display-name-hint"
+                            aria-describedby={
+                              hasDisplayNameError ? "onboarding-display-name-error" : undefined
+                            }
+                            aria-invalid={hasDisplayNameError}
                             className="focus-border-only h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                           />
                         </label>
+                        {hasDisplayNameError ? (
+                          <p
+                            id="onboarding-display-name-error"
+                            role="alert"
+                            className="mt-2 text-xs leading-5 text-danger"
+                          >
+                            {t("displayNameHint")}
+                          </p>
+                        ) : null}
                         <p
-                          id="onboarding-display-name-hint"
-                          className="mt-2 text-xs leading-5 text-muted"
+                          className={`${hasDisplayNameError ? "mt-1" : "mt-2"} text-xs leading-5 text-muted`}
                         >
-                          {t("displayNameHint")}
-                        </p>
-                        <p className="mt-1 text-xs leading-5 text-muted">
                           {roleCopy.photoGuidance}
                         </p>
                       </div>

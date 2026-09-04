@@ -241,7 +241,7 @@ function ReviewDialog({
               onChange={(event) => onReason(event.target.value)}
               maxLength={500}
               rows={5}
-              className="mt-2 w-full resize-none rounded-xl border border-line-strong p-3 outline-none focus:border-primary"
+              className="focus-border-only mt-2 w-full resize-none rounded-xl border border-line-strong p-3 outline-none focus:border-primary"
               placeholder="거절 사유를 입력해 주세요."
             />
             <p className="mt-1 text-right text-xs text-muted">{reason.length}/500</p>

@@ -275,7 +275,7 @@ function FilterInput({
         type={type}
         min={type === "number" ? 1 : undefined}
         placeholder={placeholder}
-        className="mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
+        className="focus-border-only mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
       />
     </label>
   );
@@ -295,7 +295,7 @@ function FilterSelect({
       {label}
       <select
         name={name}
-        className="mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
+        className="focus-border-only mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
       >
         <option value="">전체</option>
         {options.map(([value, text]) => (

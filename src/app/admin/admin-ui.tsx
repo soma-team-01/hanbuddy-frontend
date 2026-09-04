@@ -208,7 +208,7 @@ export function AdminReasonDialog({
           rows={5}
           onChange={(event) => onReason(event.target.value)}
           placeholder="관리자 작업 이력에 남길 사유를 입력해 주세요."
-          className="mt-2 w-full resize-none rounded-xl border border-line-strong p-3 transition-colors outline-none focus:border-primary"
+          className="focus-border-only mt-2 w-full resize-none rounded-xl border border-line-strong p-3 transition-colors outline-none focus:border-primary"
         />
         <p className="mt-1 text-right text-xs text-muted">{reason.length}/500</p>
         {error ? (

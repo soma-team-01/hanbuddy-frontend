@@ -33,6 +33,12 @@ const HISTORY_TABS: Array<{ value: AdminUserHistoryType; label: string }> = [
   { value: "agreements", label: "약관" },
 ];
 
+const ROLE_HISTORY_TYPES: Record<string, AdminUserHistoryType[]> = {
+  TOURIST: ["applications", "payments", "reviews", "agreements"],
+  BUDDY: ["activities", "agreements"],
+  ADMIN: ["agreements"],
+};
+
 export function AdminUserDetailView({ userId }: { userId: string }) {
   const router = useRouter();
   const client = useQueryClient();
@@ -42,9 +48,13 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
   const [reason, setReason] = useState("");
   const [actionError, setActionError] = useState("");
   const userQuery = useQuery(adminUserQueryOptions(userId));
+  const defaultHistoryType = userQuery.data
+    ? (ROLE_HISTORY_TYPES[userQuery.data.userType]?.[0] ?? "agreements")
+    : null;
+  const activeHistoryType = historyType ?? defaultHistoryType;
   const historyQuery = useQuery({
-    ...adminUserHistoryQueryOptions(userId, historyType ?? "activities", historyPage),
-    enabled: historyType !== null,
+    ...adminUserHistoryQueryOptions(userId, activeHistoryType ?? "agreements", historyPage),
+    enabled: activeHistoryType !== null,
   });
   const auditQuery = useQuery(adminAuditLogsQueryOptions(userId));
   const mutation = useMutation({
@@ -99,14 +109,20 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
     );
 
   const user = userQuery.data;
+  const historyTabs = HISTORY_TABS.filter((tab) =>
+    (ROLE_HISTORY_TYPES[user.userType] ?? ["agreements"]).includes(tab.value),
+  );
   const auditLogs = auditQuery.data?.logs ?? [];
   const canSuspend = user.userType !== "ADMIN" && user.accountStatus === "ACTIVE";
   const canReactivate = user.userType !== "ADMIN" && user.accountStatus === "SUSPENDED";
 
   return (
     <main className="mx-auto w-full max-w-[1200px] px-5 py-10 md:px-8 md:py-14">
-      <Link href="/admin/users" className="text-sm font-bold text-muted hover:text-primary">
-        ← 회원 목록
+      <Link
+        href={user.userType === "BUDDY" ? "/admin/buddies" : "/admin/users"}
+        className="text-sm font-bold text-muted hover:text-primary"
+      >
+        ← {user.userType === "BUDDY" ? "버디 목록" : "관광객 목록"}
       </Link>
       <section className="mt-6 rounded-3xl border border-line-soft bg-white p-6 shadow-[0_18px_60px_rgba(38,27,24,0.06)] md:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -116,7 +132,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-bold text-muted">회원 #{user.userId}</p>
+                <p className="text-xs font-bold text-muted">내부 ID #{user.userId}</p>
                 <AdminStatusBadge status={user.accountStatus} />
               </div>
               <h1 className="mt-2 truncate font-display text-3xl font-extrabold tracking-[-0.04em]">
@@ -156,7 +172,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
         </div>
         <div className="mt-8 grid gap-8 border-t border-line-soft pt-7 lg:grid-cols-2">
           <InfoSection title="기본 정보">
-            <Info label="실명" value={user.name} />
+            <Info label="Google 계정 이름" value={user.name} />
             <Info label="역할" value={roleLabel(user.userType)} />
             <Info label="국적" value={user.nationalityCode || "-"} />
             <Info label="출생 연도" value={user.birthYear ? String(user.birthYear) : "-"} />
@@ -188,32 +204,27 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
           </div>
         </div>
         <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-          {HISTORY_TABS.map((tab) => (
+          {historyTabs.map((tab) => (
             <button
               key={tab.value}
               type="button"
-              aria-pressed={historyType === tab.value}
+              aria-pressed={activeHistoryType === tab.value}
               onClick={() => {
                 setHistoryType(tab.value);
                 setHistoryPage(0);
               }}
-              className={`shrink-0 rounded-full border px-4 py-2 text-sm font-bold ${historyType === tab.value ? "border-primary bg-primary text-white" : "border-line-strong text-muted hover:border-primary hover:text-primary"}`}
+              className={`shrink-0 rounded-full border px-4 py-2 text-sm font-bold ${activeHistoryType === tab.value ? "border-primary bg-primary text-white" : "border-line-strong text-muted hover:border-primary hover:text-primary"}`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-        {!historyType ? (
-          <div className="mt-6 rounded-2xl bg-panel-raised px-5 py-10 text-center text-sm text-muted">
-            확인할 이력 항목을 선택해 주세요.
-          </div>
-        ) : null}
-        {historyType && historyQuery.isPending ? (
+        {activeHistoryType && historyQuery.isPending ? (
           <div className="mt-6">
             <AdminLoadingRows />
           </div>
         ) : null}
-        {historyType && historyQuery.error ? (
+        {activeHistoryType && historyQuery.error ? (
           <div className="mt-6">
             <AdminState
               title="이력을 불러오지 못했습니다."
@@ -222,9 +233,9 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             />
           </div>
         ) : null}
-        {historyType && historyQuery.data ? (
+        {activeHistoryType && historyQuery.data ? (
           <>
-            <HistoryTable type={historyType} items={historyQuery.data.content} />
+            <HistoryTable type={activeHistoryType} items={historyQuery.data.content ?? []} />
             <AdminPagination
               page={historyQuery.data.page}
               totalPages={historyQuery.data.totalPages}

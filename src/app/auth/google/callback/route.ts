@@ -93,7 +93,7 @@ function createAdminRedirect(request: NextRequest, result: GoogleLoginResponse) 
     return redirectToAdminLoginWithError(request, "adminOnly");
   }
 
-  const response = NextResponse.redirect(createPublicUrl(request, "/admin/buddies"));
+  const response = NextResponse.redirect(createPublicUrl(request, "/admin/users"));
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
   clearAuthStatusReasonCookie(response);

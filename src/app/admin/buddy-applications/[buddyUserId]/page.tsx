@@ -1,4 +1,4 @@
-import { AdminHeader } from "../../admin-header";
+import { AdminShell } from "../../admin-shell";
 import { BuddyApplicationReview } from "../../buddies/[buddyUserId]/buddy-application-review";
 
 export default async function BuddyApplicationPage({
@@ -8,9 +8,8 @@ export default async function BuddyApplicationPage({
 }) {
   const { buddyUserId } = await params;
   return (
-    <>
-      <AdminHeader />
+    <AdminShell>
       <BuddyApplicationReview userId={buddyUserId} />
-    </>
+    </AdminShell>
   );
 }

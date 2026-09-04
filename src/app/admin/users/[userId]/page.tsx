@@ -1,4 +1,4 @@
-import { AdminHeader } from "../../admin-header";
+import { AdminShell } from "../../admin-shell";
 import { AdminUserDetailView } from "./user-detail-view";
 
 export default async function AdminUserDetailPage({
@@ -8,9 +8,8 @@ export default async function AdminUserDetailPage({
 }) {
   const { userId } = await params;
   return (
-    <>
-      <AdminHeader />
+    <AdminShell>
       <AdminUserDetailView userId={userId} />
-    </>
+    </AdminShell>
   );
 }

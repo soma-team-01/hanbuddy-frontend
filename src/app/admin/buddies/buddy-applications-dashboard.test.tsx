@@ -13,6 +13,7 @@ const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
+  usePathname: () => "/admin/buddy-applications",
   useRouter: () => routerMock,
 }));
 
@@ -38,6 +39,8 @@ describe("BuddyApplicationsDashboard", () => {
     renderWithQueryClient(<BuddyApplicationsDashboard />);
 
     expect(await screen.findByText("새로운 버디 신청이 없습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "승인 관리" })).toBeInTheDocument();
+    expect(screen.queryByText("Buddy approval")).not.toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
   });
 
@@ -61,14 +64,14 @@ describe("BuddyApplicationsDashboard", () => {
     expect(await screen.findByText("김버디")).toBeInTheDocument();
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
     expect(screen.getByText("2026년 8월 6일")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "프로필 보기" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "신청서 검토" })).toHaveAttribute(
       "href",
       "/admin/buddy-applications/42",
     );
     expect(screen.getByText("1")).toBeInTheDocument();
   });
 
-  it("filters applications by account status", async () => {
+  it("shows only the approval queue provided by the backend", async () => {
     mockedGetApplications.mockResolvedValue({
       status: "success",
       applications: [
@@ -80,24 +83,13 @@ describe("BuddyApplicationsDashboard", () => {
           accountStatus: "PENDING_APPROVAL",
           appliedAt: "2026-08-06T10:00:00+09:00",
         },
-        {
-          userId: 43,
-          email: "active@example.com",
-          name: "승인완료 버디",
-          nationalityCode: "KR",
-          accountStatus: "ACTIVE",
-          appliedAt: "2026-08-05T10:00:00+09:00",
-        },
       ],
     });
 
     renderWithQueryClient(<BuddyApplicationsDashboard />);
 
     expect(await screen.findByText("승인대기 버디")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "승인" }));
-
-    expect(screen.queryByText("승인대기 버디")).not.toBeInTheDocument();
-    expect(screen.getByText("승인완료 버디")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "승인" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: "승인" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "거절" })).not.toBeInTheDocument();
   });
 });

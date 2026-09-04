@@ -1,11 +1,10 @@
-import { AdminHeader } from "../admin-header";
+import { AdminShell } from "../admin-shell";
 import { AdminBuddiesDashboard } from "./buddies-dashboard";
 
 export default function AdminBuddiesPage() {
   return (
-    <>
-      <AdminHeader />
+    <AdminShell>
       <AdminBuddiesDashboard />
-    </>
+    </AdminShell>
   );
 }

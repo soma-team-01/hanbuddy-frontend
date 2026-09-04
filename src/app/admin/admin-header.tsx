@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { UsersIcon } from "@/components/ui/icons";
 
 export function AdminHeader() {
   const router = useRouter();
@@ -26,45 +28,53 @@ export function AdminHeader() {
       setPending(false);
     }
   }
-  const navigation = [
-    { href: "/admin/users", label: "회원" },
-    { href: "/admin/buddies", label: "버디" },
-    { href: "/admin/buddy-applications", label: "승인 관리" },
-  ];
+  const memberActive =
+    pathname.startsWith("/admin/users") ||
+    pathname.startsWith("/admin/buddies") ||
+    pathname.startsWith("/admin/buddy-applications");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line-soft bg-white/95 backdrop-blur">
-      <div className="mx-auto flex min-h-18 max-w-[1200px] flex-wrap items-center justify-between gap-x-5 px-5 md:px-8">
+    <aside className="z-40 flex min-h-[68px] items-center justify-between gap-2 border-b border-line-soft bg-white px-5 sm:gap-4 lg:sticky lg:top-0 lg:h-screen lg:flex-col lg:items-stretch lg:border-r lg:border-b-0 lg:px-5 lg:py-5">
+      <div>
         <Link
           href="/admin/users"
-          className="flex items-center gap-3 font-display text-lg font-extrabold"
+          aria-label="HanBuddy Admin"
+          className="flex items-center gap-2.5 font-display text-lg font-extrabold tracking-[-0.04em]"
         >
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary font-display text-sm text-white shadow-sm">
-            H
-          </span>
-          HanBuddy{" "}
-          <span className="font-sans text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-            Admin
-          </span>
+          <Image
+            src="/images/brand/logo-borderless.webp"
+            alt=""
+            width={36}
+            height={36}
+            priority
+            className="size-9"
+          />
+          <span>HanBuddy</span>
         </Link>
-        <nav className="order-3 flex w-full gap-1 overflow-x-auto border-t border-line-soft py-2 md:order-none md:w-auto md:border-0 md:py-0">
-          {navigation.map((item) => {
-            const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors ${active ? "bg-primary-soft text-primary-strong" : "text-muted hover:text-primary"}`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="flex items-center gap-3">
+      </div>
+
+      <nav aria-label="관리자 메뉴" className="ml-auto lg:ml-0 lg:flex-1 lg:pt-8">
+        <Link
+          href="/admin/users"
+          aria-current={memberActive ? "page" : undefined}
+          className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors lg:gap-3 ${
+            memberActive
+              ? "bg-primary-soft text-primary-strong"
+              : "text-muted hover:bg-panel hover:text-ink"
+          }`}
+        >
+          <UsersIcon className="hidden size-5 lg:block" />
+          회원 관리
+        </Link>
+      </nav>
+
+      <div className="flex items-center gap-2 lg:block lg:border-t lg:border-line-soft lg:pt-4">
+        <div className="lg:mt-2">
           {error ? (
-            <p role="alert" className="text-xs font-medium text-danger">
+            <p
+              role="alert"
+              className="fixed inset-x-4 top-20 rounded-xl border border-danger/20 bg-white px-4 py-3 text-xs font-medium text-danger shadow-lg lg:static lg:mb-2 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none"
+            >
               {error}
             </p>
           ) : null}
@@ -72,12 +82,12 @@ export function AdminHeader() {
             type="button"
             onClick={logout}
             disabled={pending}
-            className="rounded-full border border-line-strong px-4 py-2 text-sm font-semibold transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+            className="rounded-full border border-line-strong px-4 py-2 text-sm font-semibold text-muted transition-colors hover:border-primary hover:text-primary disabled:opacity-50 lg:w-full lg:rounded-xl"
           >
             {pending ? "로그아웃 중" : "로그아웃"}
           </button>
         </div>
       </div>
-    </header>
+    </aside>
   );
 }

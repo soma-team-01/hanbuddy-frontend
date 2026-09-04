@@ -1,11 +1,10 @@
-import { AdminHeader } from "../admin-header";
+import { AdminShell } from "../admin-shell";
 import { AdminUsersDashboard } from "./users-dashboard";
 
 export default function AdminUsersPage() {
   return (
-    <>
-      <AdminHeader />
+    <AdminShell>
       <AdminUsersDashboard />
-    </>
+    </AdminShell>
   );
 }

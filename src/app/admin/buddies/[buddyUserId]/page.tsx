@@ -1,4 +1,4 @@
-import { AdminHeader } from "../../admin-header";
+import { AdminShell } from "../../admin-shell";
 import { AdminBuddyDetailView } from "./buddy-detail-view";
 
 export default async function AdminBuddyDetailPage({
@@ -6,9 +6,8 @@ export default async function AdminBuddyDetailPage({
 }: PageProps<"/admin/buddies/[buddyUserId]">) {
   const { buddyUserId } = await params;
   return (
-    <>
-      <AdminHeader />
+    <AdminShell>
       <AdminBuddyDetailView buddyId={buddyUserId} />
-    </>
+    </AdminShell>
   );
 }

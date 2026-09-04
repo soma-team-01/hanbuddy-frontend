@@ -269,7 +269,7 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest(undefined, undefined, "admin"));
 
-    expect(response.headers.get("location")).toBe("http://localhost/admin/buddies");
+    expect(response.headers.get("location")).toBe("http://localhost/admin/users");
     expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.userType}=ADMIN`);
   });
 

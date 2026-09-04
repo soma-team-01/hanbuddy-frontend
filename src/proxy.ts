@@ -73,7 +73,7 @@ function handleAdminRoute(request: NextRequest) {
 
   if (pathname === "/admin/login") {
     return authenticatedAdmin
-      ? NextResponse.redirect(new URL("/admin/buddies", request.url))
+      ? NextResponse.redirect(new URL("/admin/users", request.url))
       : NextResponse.next();
   }
   if (!accessToken) return NextResponse.redirect(new URL("/admin/login", request.url));

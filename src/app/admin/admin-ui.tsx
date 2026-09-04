@@ -29,26 +29,12 @@ export function AdminStatusBadge({ status }: { status: AdminAccountStatus }) {
   );
 }
 
-export function AdminPageTitle({
-  eyebrow,
-  title,
-  description,
-  aside,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  aside?: React.ReactNode;
-}) {
+export function AdminPageTitle({ title, aside }: { title: string; aside?: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-6 border-b border-line-soft pb-8 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <p className="text-xs font-bold tracking-[0.2em] text-primary uppercase">{eyebrow}</p>
-        <h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.04em] md:text-4xl">
-          {title}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted md:text-base">{description}</p>
-      </div>
+    <div className="mt-5 flex items-end justify-between gap-4 border-b border-line-soft pb-4">
+      <h1 className="font-display text-2xl font-extrabold tracking-[-0.04em] md:text-3xl">
+        {title}
+      </h1>
       {aside}
     </div>
   );
@@ -65,13 +51,13 @@ export function AdminPagination({
 }) {
   if (totalPages <= 1) return null;
   return (
-    <nav aria-label="페이지 이동" className="mt-6 flex items-center justify-end gap-3">
+    <nav aria-label="페이지 이동" className="mt-4 flex items-center justify-end gap-2">
       <button
         type="button"
         aria-label="이전 페이지"
         disabled={page <= 0}
         onClick={() => onPage(page - 1)}
-        className="flex size-10 items-center justify-center rounded-full border border-line-strong text-muted transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+        className="flex size-9 items-center justify-center rounded-full border border-line-strong text-muted transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
       >
         <ArrowLeftIcon className="size-4" />
       </button>
@@ -83,7 +69,7 @@ export function AdminPagination({
         aria-label="다음 페이지"
         disabled={page >= totalPages - 1}
         onClick={() => onPage(page + 1)}
-        className="flex size-10 items-center justify-center rounded-full border border-line-strong text-muted transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
+        className="flex size-9 items-center justify-center rounded-full border border-line-strong text-muted transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-35"
       >
         <ArrowRightIcon className="size-4" />
       </button>
@@ -103,15 +89,15 @@ export function AdminState({
   actionLabel?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-line-soft bg-panel-raised px-6 py-16 text-center">
-      <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-primary" />
-      <h2 className="font-display text-lg font-bold">{title}</h2>
-      <p className="mt-2 text-sm text-muted">{description}</p>
+    <div className="rounded-xl border border-line-soft bg-panel-raised px-5 py-9 text-center">
+      <div className="mx-auto mb-3 h-1 w-8 rounded-full bg-primary" />
+      <h2 className="font-display text-base font-bold">{title}</h2>
+      <p className="mt-1.5 text-sm text-muted">{description}</p>
       {action ? (
         <button
           type="button"
           onClick={action}
-          className="mt-5 rounded-full border border-primary px-5 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-white"
+          className="mt-4 rounded-full border border-primary px-4 py-1.5 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-white"
         >
           {actionLabel}
         </button>
@@ -122,9 +108,9 @@ export function AdminState({
 
 export function AdminLoadingRows() {
   return (
-    <div aria-label="불러오는 중" className="space-y-3">
+    <div aria-label="불러오는 중" className="space-y-2">
       {[1, 2, 3, 4].map((item) => (
-        <div key={item} className="h-20 animate-pulse rounded-2xl bg-panel" />
+        <div key={item} className="h-14 animate-pulse rounded-xl bg-panel" />
       ))}
     </div>
   );

@@ -12,7 +12,7 @@ describe("AccountStatusContent", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Our team will contact you at the email address or phone number you entered during signup and guide you through the next steps.",
+        "Our team will contact you at the email address or phone number you entered during signup about your buddy registration.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("We'll contact you within 1–3 business days")).toBeInTheDocument();

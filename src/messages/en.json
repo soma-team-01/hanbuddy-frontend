@@ -428,10 +428,10 @@
     "metadataDescription": "Complete your buddy profile and begin hosting local experiences with HanBuddy.",
     "eyebrow": "Welcome, future buddy",
     "headline": "A few details, then your local story can begin.",
-    "description": "Tell us the basic information needed to guide you through buddy signup. You can add hosting details after signup.",
+    "description": "Tell us the basic information needed for buddy signup guidance. You can add hosting details after signup.",
     "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
     "contactMethods": "What phone number should we use?",
-    "contactDescription": "Enter the number where our team can reach you about the buddy signup process.",
+    "contactDescription": "Enter the number where our team can reach you about your buddy signup.",
     "completing": "Creating buddy account...",
     "completeRegistration": "Sign up as a buddy"
   },
@@ -444,7 +444,7 @@
     "description": "Your previous answers are ready to edit. Existing agreements will remain in effect.",
     "profilePhotoOptional": "Keep your current photo, replace it, or remove it before resubmitting.",
     "contactMethods": "What phone number should we use?",
-    "contactDescription": "Enter the number where our team can reach you about the buddy signup process.",
+    "contactDescription": "Enter the number where our team can reach you about your buddy signup.",
     "googleName": "Google account name",
     "email": "Login email",
     "rejectionReason": "Reason for the previous rejection",
@@ -465,7 +465,7 @@
     "metadataDescription": "Check the review status of your HanBuddy account.",
     "pending": {
       "title": "Buddy signup guidance pending",
-      "description": "Our team will contact you at the email address or phone number you entered during signup and guide you through the next steps.",
+      "description": "Our team will contact you at the email address or phone number you entered during signup about your buddy registration.",
       "reviewTime": "We'll contact you within 1–3 business days"
     },
     "rejected": {

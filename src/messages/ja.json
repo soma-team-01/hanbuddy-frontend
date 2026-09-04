@@ -431,7 +431,7 @@
     "description": "バディ登録のご案内に必要な基本情報を入力してください。ホスティング情報は登録後に追加できます。",
     "profilePhotoOptional": "ゲストが会ったときにあなたを認識できるように、鮮明な顔写真を選択してください。",
     "contactMethods": "連絡先の電話番号を入力してください。",
-    "contactDescription": "担当者がバディ登録の手続きをご案内するための電話番号を入力してください。",
+    "contactDescription": "担当者がバディ登録についてご案内するための電話番号を入力してください。",
     "completing": "友達アカウントを作成中...",
     "completeRegistration": "友達として登録する"
   },
@@ -444,7 +444,7 @@
     "description": "以前の入力内容を編集できます。既存の同意事項はそのまま維持されます。",
     "profilePhotoOptional": "現在の写真を維持、変更、または削除できます。",
     "contactMethods": "連絡先の電話番号を入力してください。",
-    "contactDescription": "担当者がバディ登録の手続きをご案内するための電話番号を入力してください。",
+    "contactDescription": "担当者がバディ登録についてご案内するための電話番号を入力してください。",
     "googleName": "Googleアカウント名",
     "email": "ログインメール",
     "rejectionReason": "前回の不承認理由",
@@ -465,7 +465,7 @@
     "metadataDescription": "HanBuddy アカウントの審査ステータスを確認してください。",
     "pending": {
       "title": "バディ登録のご案内待ち",
-      "description": "登録時に入力したメールアドレスまたは電話番号へ担当者から連絡し、バディ登録の手続きをご案内します。",
+      "description": "登録時に入力したメールアドレスまたは電話番号へ担当者から連絡し、バディ登録についてご案内します。",
       "reviewTime": "1〜3営業日以内にご連絡します"
     },
     "rejected": {

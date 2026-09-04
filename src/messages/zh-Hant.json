@@ -431,7 +431,7 @@
     "description": "請填寫夥伴註冊指引所需的基本資訊。註冊後可繼續補充活動營運資訊。",
     "profilePhotoOptional": "選擇一張清晰的臉部照片，以便客人在見面時能夠認出您。",
     "contactMethods": "請填寫可聯絡您的電話號碼。",
-    "contactDescription": "請輸入工作人員可用於說明夥伴註冊流程的電話號碼。",
+    "contactDescription": "請輸入工作人員可用於提供夥伴註冊說明的電話號碼。",
     "completing": "正在建立好友帳戶...",
     "completeRegistration": "註冊成為好友"
   },
@@ -444,7 +444,7 @@
     "description": "之前填寫的資料已載入。已有同意事項將繼續有效。",
     "profilePhotoOptional": "可以保留、替換或刪除目前照片。",
     "contactMethods": "請填寫可聯絡您的電話號碼。",
-    "contactDescription": "請輸入工作人員可用於說明夥伴註冊流程的電話號碼。",
+    "contactDescription": "請輸入工作人員可用於提供夥伴註冊說明的電話號碼。",
     "googleName": "Google帳戶名稱",
     "email": "登入電子郵件",
     "rejectionReason": "上次未通過的原因",
@@ -465,7 +465,7 @@
     "metadataDescription": "查看您的HanBuddy帳號的審核狀態。",
     "pending": {
       "title": "等待夥伴註冊指引",
-      "description": "工作人員將透過您註冊時填寫的電子郵件或電話號碼與您聯絡，並說明後續註冊流程。",
+      "description": "工作人員將透過您註冊時填寫的電子郵件或電話號碼與您聯絡，並提供夥伴註冊說明。",
       "reviewTime": "我們將在1至3個工作天內聯絡您"
     },
     "rejected": {

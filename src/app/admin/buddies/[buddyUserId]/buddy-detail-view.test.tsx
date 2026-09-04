@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getAdminAuditLogs,
   getAdminBuddy,
-  getAdminBuddyPerformance,
+  reactivateAdminUser,
+  suspendAdminUser,
   updateAdminBuddyCommission,
 } from "@/lib/api/admin";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -12,7 +13,8 @@ import { AdminBuddyDetailView } from "./buddy-detail-view";
 vi.mock("@/lib/api/admin", () => ({
   getAdminAuditLogs: vi.fn(),
   getAdminBuddy: vi.fn(),
-  getAdminBuddyPerformance: vi.fn(),
+  reactivateAdminUser: vi.fn(),
+  suspendAdminUser: vi.fn(),
   updateAdminBuddyCommission: vi.fn(),
 }));
 
@@ -24,9 +26,10 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 const mockedGetBuddy = vi.mocked(getAdminBuddy);
-const mockedGetPerformance = vi.mocked(getAdminBuddyPerformance);
 const mockedGetAuditLogs = vi.mocked(getAdminAuditLogs);
 const mockedUpdateCommission = vi.mocked(updateAdminBuddyCommission);
+const mockedSuspendUser = vi.mocked(suspendAdminUser);
+const mockedReactivateUser = vi.mocked(reactivateAdminUser);
 
 function mockBuddyRequests(logs: Awaited<ReturnType<typeof getAdminAuditLogs>>) {
   mockedGetBuddy.mockResolvedValue({
@@ -64,35 +67,16 @@ function mockBuddyRequests(logs: Awaited<ReturnType<typeof getAdminAuditLogs>>) 
       reviewCount: 1,
     },
   });
-  mockedGetPerformance.mockResolvedValue({
-    status: "success",
-    performance: {
-      buddyId: 9,
-      totalActivityCount: 2,
-      activeActivityCount: 1,
-      applicationCounts: {
-        PENDING_PAYMENT: 0,
-        SUPERSEDED: 0,
-        CONFIRMED: 2,
-        CANCELLED: 1,
-        COMPLETED: 0,
-      },
-      confirmedPaymentCount: 2,
-      confirmedPaymentAmountKrw: 80000,
-      guidePayoutAmountKrw: 72000,
-      averageRating: 5,
-      reviewCount: 1,
-    },
-  });
   mockedGetAuditLogs.mockResolvedValue(logs);
 }
 
 describe("AdminBuddyDetailView", () => {
   beforeEach(() => {
     mockedGetBuddy.mockReset();
-    mockedGetPerformance.mockReset();
     mockedGetAuditLogs.mockReset();
     mockedUpdateCommission.mockReset();
+    mockedSuspendUser.mockReset();
+    mockedReactivateUser.mockReset();
     routerMock.replace.mockReset();
   });
 
@@ -114,6 +98,12 @@ describe("AdminBuddyDetailView", () => {
     expect(await screen.findByText("기록된 관리자 작업이 없습니다.")).toBeInTheDocument();
     expect(screen.getByText("대한민국")).toBeInTheDocument();
     expect(screen.getByText("1998. 4. 12.")).toBeInTheDocument();
+    expect(screen.getByText("+82")).toBeInTheDocument();
+    expect(screen.getByText("01012345678")).toBeInTheDocument();
+    expect(screen.getByText("초기 버디 10%")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "계정 정지" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "회원 정보 보기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "운영 성과" })).not.toBeInTheDocument();
     expect(mockedGetAuditLogs).toHaveBeenCalledWith(27, 0);
   });
 

@@ -4,7 +4,7 @@ import { AdminBuddiesDashboard } from "../buddies/buddies-dashboard";
 export default function AdminBuddyApplicationsPage() {
   return (
     <AdminShell>
-      <AdminBuddiesDashboard />
+      <AdminBuddiesDashboard initialTab="approvals" />
     </AdminShell>
   );
 }

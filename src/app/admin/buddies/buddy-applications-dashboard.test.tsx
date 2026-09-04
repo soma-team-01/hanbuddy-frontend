@@ -62,6 +62,7 @@ describe("BuddyApplicationsDashboard", () => {
     renderWithQueryClient(<BuddyApplicationsDashboard />);
 
     expect(await screen.findByText("김버디")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "승인 대기 목록" })).not.toHaveClass("xl:grid-cols-2");
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
     expect(screen.getByText("2026년 8월 6일")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "신청서 검토" })).toHaveAttribute(
@@ -91,5 +92,29 @@ describe("BuddyApplicationsDashboard", () => {
     expect(await screen.findByText("승인대기 버디")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "승인" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "거절" })).not.toBeInTheDocument();
+  });
+
+  it("shows 20 approval requests per page and moves with arrows", async () => {
+    mockedGetApplications.mockResolvedValue({
+      status: "success",
+      applications: Array.from({ length: 21 }, (_, index) => ({
+        userId: index + 1,
+        email: `pending${index + 1}@example.com`,
+        name: `승인대기 ${index + 1}`,
+        nationalityCode: "KR",
+        accountStatus: "PENDING_APPROVAL" as const,
+        appliedAt: "2026-08-06T10:00:00+09:00",
+      })),
+    });
+
+    renderWithQueryClient(<BuddyApplicationsDashboard />);
+
+    expect(await screen.findByText("승인대기 1")).toBeInTheDocument();
+    expect(screen.queryByText("승인대기 21")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "다음 페이지" }));
+
+    expect(await screen.findByText("승인대기 21")).toBeInTheDocument();
+    expect(screen.queryByText("승인대기 1")).not.toBeInTheDocument();
   });
 });

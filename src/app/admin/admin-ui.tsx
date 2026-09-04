@@ -22,7 +22,7 @@ const STATUS_LABELS: Record<AdminAccountStatus, string> = {
 export function AdminStatusBadge({ status }: { status: AdminAccountStatus }) {
   return (
     <span
-      className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-bold ${STATUS_STYLES[status]}`}
+      className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[11px] font-bold ${STATUS_STYLES[status]}`}
     >
       {STATUS_LABELS[status]}
     </span>
@@ -31,8 +31,8 @@ export function AdminStatusBadge({ status }: { status: AdminAccountStatus }) {
 
 export function AdminPageTitle({ title, aside }: { title: string; aside?: React.ReactNode }) {
   return (
-    <div className="mt-5 flex items-end justify-between gap-4 border-b border-line-soft pb-4">
-      <h1 className="font-display text-2xl font-extrabold tracking-[-0.04em] md:text-3xl">
+    <div className="mt-4 flex items-end justify-between gap-4 border-b border-line-soft pb-3">
+      <h1 className="font-display text-xl font-extrabold tracking-[-0.04em] md:text-2xl">
         {title}
       </h1>
       {aside}

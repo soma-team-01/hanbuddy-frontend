@@ -89,6 +89,7 @@ describe("AdminUserDetailView", () => {
     expect(screen.getByText("대한민국")).toBeInTheDocument();
     expect(screen.getByText("1998. 4. 12.")).toBeInTheDocument();
     expect(screen.getByText("상태 변경일")).toBeInTheDocument();
+    expect(screen.queryByText("유형별 기록과 누적 건수를 확인합니다.")).not.toBeInTheDocument();
     expect(mockedGetAdminUserHistory).toHaveBeenCalledWith("11", "applications", 0);
   });
 

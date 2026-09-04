@@ -195,15 +195,12 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
       <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
         <div className="flex items-center gap-3">
           <HistoryIcon className="size-5 text-primary" />
-          <div>
-            <h2 className="font-display text-xl font-extrabold">서비스 이용 이력</h2>
-            <p className="mt-1 text-sm text-muted">유형별 기록과 누적 건수를 확인합니다.</p>
-          </div>
+          <h2 className="font-display text-xl font-extrabold">서비스 이용 이력</h2>
         </div>
         <div
           role="tablist"
           aria-label="서비스 이용 이력 유형"
-          className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]"
+          className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]"
         >
           {historyTabs.map((tab) => (
             <button

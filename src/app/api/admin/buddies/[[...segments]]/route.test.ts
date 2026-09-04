@@ -95,4 +95,19 @@ describe("admin buddies BFF", () => {
     expect(response.status).toBe(400);
     expect(mockedPatchBackend).not.toHaveBeenCalled();
   });
+
+  it("rejects a non-string commission reason without calling the backend mutation", async () => {
+    mockedGetBackend.mockResolvedValueOnce(adminProfile);
+
+    const response = await PATCH(
+      adminRequest("http://localhost/api/admin/buddies/7/commission", {
+        method: "PATCH",
+        body: JSON.stringify({ commissionPolicy: "STANDARD_20", reason: 123 }),
+      }),
+      { params: Promise.resolve({ segments: ["7", "commission"] }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPatchBackend).not.toHaveBeenCalled();
+  });
 });

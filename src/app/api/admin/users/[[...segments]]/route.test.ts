@@ -113,4 +113,19 @@ describe("admin users BFF", () => {
     expect(response.status).toBe(400);
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
+
+  it("rejects a non-string state-change reason without calling the backend mutation", async () => {
+    mockedGetBackend.mockResolvedValueOnce(adminProfile);
+
+    const response = await POST(
+      adminRequest("http://localhost/api/admin/users/42/suspend", {
+        method: "POST",
+        body: JSON.stringify({ reason: 123 }),
+      }),
+      { params: Promise.resolve({ segments: ["42", "suspend"] }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  });
 });

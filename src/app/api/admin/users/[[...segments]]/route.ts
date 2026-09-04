@@ -94,7 +94,7 @@ export async function POST(
   }
   const parsed = await readJsonBody<AdminReasonRequest>(request, "변경 사유가 필요합니다.");
   if (!parsed.ok) return parsed.response;
-  const reason = parsed.body.reason?.trim();
+  const reason = typeof parsed.body.reason === "string" ? parsed.body.reason.trim() : "";
   if (!reason || reason.length > 500) {
     return badRequestResponse("변경 사유를 1자 이상 500자 이하로 입력해 주세요.");
   }

@@ -38,6 +38,16 @@ describe("AccountStatusContent", () => {
     expect(
       screen.getByText("The submitted hosting information could not be verified."),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Update and apply again" })).not.toBeInTheDocument();
+  });
+
+  it("offers resubmission only when the rejected buddy has a resubmission session", () => {
+    renderWithIntl(<AccountStatusContent status="REJECTED" userType="BUDDY" canResubmit />);
+
+    expect(screen.getByRole("link", { name: "Update and apply again" })).toHaveAttribute(
+      "href",
+      "/en/buddy/resubmission",
+    );
   });
 
   it("localizes the suspended account guidance in Korean", () => {

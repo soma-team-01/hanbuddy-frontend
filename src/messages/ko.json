@@ -435,6 +435,30 @@
     "completing": "버디 계정 생성 중...",
     "completeRegistration": "버디로 회원가입"
   },
+  "BuddyResubmission": {
+    "metadataTitle": "버디 가입 재신청 | HanBuddy",
+    "metadataDescription": "버디 프로필을 수정하고 다시 심사를 요청하세요.",
+    "title": "버디 가입 재신청",
+    "eyebrow": "다시 신청하기",
+    "headline": "정보를 보완하고 다시 검토를 요청해 주세요.",
+    "description": "이전에 입력한 정보를 불러왔어요. 기존 동의 항목은 그대로 유지됩니다.",
+    "profilePhotoOptional": "현재 사진을 유지하거나 새 사진으로 바꾸고, 필요하면 삭제할 수 있어요.",
+    "contactMethods": "게스트가 어떻게 연락하면 될까요?",
+    "contactDescription": "기존 연락 수단을 확인하고 필요한 부분을 수정해 주세요.",
+    "googleName": "Google 계정 이름",
+    "email": "로그인 이메일",
+    "removeProfilePhoto": "프로필 사진 삭제",
+    "submit": "다시 심사 요청",
+    "submitting": "재신청 처리 중...",
+    "resubmissionFailed": "재신청을 완료하지 못했습니다. 다시 시도해 주세요.",
+    "loading": "기존 신청 정보를 불러오는 중입니다...",
+    "loadFailedTitle": "신청 정보를 불러오지 못했습니다",
+    "loadFailedDescription": "일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+    "sessionExpiredTitle": "Google 로그인이 다시 필요합니다",
+    "sessionExpiredDescription": "재신청 세션이 만료되었거나 현재 재신청할 수 없는 상태입니다.",
+    "loginAgain": "Google로 다시 로그인",
+    "retry": "다시 시도"
+  },
   "AccountStatus": {
     "metadataTitle": "계정 상태 | HanBuddy",
     "metadataDescription": "HanBuddy 계정 상태를 확인하세요.",
@@ -445,7 +469,8 @@
     },
     "rejected": {
       "title": "버디 가입 요청 미승인",
-      "description": "아래 사유를 확인하고 도움이 필요하면 문의해 주세요."
+      "description": "아래 사유를 확인하고 도움이 필요하면 문의해 주세요.",
+      "resubmit": "정보 수정 후 다시 신청"
     },
     "suspended": {
       "title": "버디 계정 이용 정지",

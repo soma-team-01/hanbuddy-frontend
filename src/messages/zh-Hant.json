@@ -435,6 +435,30 @@
     "completing": "正在建立好友帳戶...",
     "completeRegistration": "註冊成為好友"
   },
+  "BuddyResubmission": {
+    "metadataTitle": "重新提交夥伴申請 | HanBuddy",
+    "metadataDescription": "修改夥伴資料並再次提交審核。",
+    "title": "重新提交夥伴申請",
+    "eyebrow": "再次申請",
+    "headline": "完善資料並再次請求審核。",
+    "description": "之前填寫的資料已載入。已有同意事項將繼續有效。",
+    "profilePhotoOptional": "可以保留、替換或刪除目前照片。",
+    "contactMethods": "旅客如何聯絡您？",
+    "contactDescription": "請確認聯絡方式，並按需修改。",
+    "googleName": "Google帳戶名稱",
+    "email": "登入電子郵件",
+    "removeProfilePhoto": "刪除個人照片",
+    "submit": "再次提交審核",
+    "submitting": "正在提交...",
+    "resubmissionFailed": "無法重新提交申請，請重試。",
+    "loading": "正在載入之前的申請資料...",
+    "loadFailedTitle": "無法載入申請資料",
+    "loadFailedDescription": "發生暫時性問題，請稍後重試。",
+    "sessionExpiredTitle": "請重新登入",
+    "sessionExpiredDescription": "重新申請工作階段已過期，或目前狀態無法重新申請。",
+    "loginAgain": "使用Google重新登入",
+    "retry": "重試"
+  },
   "AccountStatus": {
     "metadataTitle": "帳戶狀態 |漢巴迪",
     "metadataDescription": "查看您的HanBuddy帳號的審核狀態。",
@@ -445,7 +469,8 @@
     },
     "rejected": {
       "title": "好友申請未獲批准",
-      "description": "檢查以下原因，如果需要協助，請聯絡我們。"
+      "description": "檢查以下原因，如果需要協助，請聯絡我們。",
+      "resubmit": "修改資料後重新申請"
     },
     "suspended": {
       "title": "好友帳號暫停",

@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendBackendSetCookies, postBackend } from "@/lib/auth/backend";
 import {
   AUTH_COOKIES,
+  RESUBMISSION_COOKIE_OPTIONS,
   SIGNUP_COOKIE_OPTIONS,
   clearAuthenticatedSessionCookies,
   clearAuthStatusReasonCookie,
+  clearResubmissionCookie,
   clearSignupCookies,
   encodeGoogleProfile,
   setAuthStatusReasonCookie,
@@ -97,6 +99,7 @@ function createAdminRedirect(request: NextRequest, result: GoogleLoginResponse) 
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
   clearAuthStatusReasonCookie(response);
+  clearResubmissionCookie(response);
   return response;
 }
 
@@ -127,6 +130,7 @@ function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginRe
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
   clearAuthStatusReasonCookie(response);
+  clearResubmissionCookie(response);
   return response;
 }
 
@@ -142,6 +146,7 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
   const response = NextResponse.redirect(createLocalizedUrl(request, onboardingPath));
   clearAuthenticatedSessionCookies(response);
   clearAuthStatusReasonCookie(response);
+  clearResubmissionCookie(response);
   response.cookies.set(AUTH_COOKIES.signupToken, result.signupToken, SIGNUP_COOKIE_OPTIONS);
   if (result.googleProfile) {
     response.cookies.set(
@@ -165,6 +170,15 @@ function createInactiveAccountRedirect(request: NextRequest, result: GoogleLogin
   clearAuthenticatedSessionCookies(response);
   clearSignupCookies(response);
   setAuthStatusReasonCookie(response, result.statusReason);
+  if (result.authStatus === "REJECTED" && result.userType === "BUDDY" && result.resubmissionToken) {
+    response.cookies.set(
+      AUTH_COOKIES.resubmissionToken,
+      result.resubmissionToken,
+      RESUBMISSION_COOKIE_OPTIONS,
+    );
+  } else {
+    clearResubmissionCookie(response);
+  }
   return response;
 }
 
@@ -188,6 +202,7 @@ function redirectToAdminLoginWithError(request: NextRequest, code: string) {
   response.cookies.delete(AUTH_COOKIES.oauthLocale);
   response.cookies.delete(AUTH_COOKIES.oauthIntent);
   clearSignupCookies(response);
+  clearResubmissionCookie(response);
   return response;
 }
 

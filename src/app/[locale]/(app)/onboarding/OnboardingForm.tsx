@@ -6,11 +6,12 @@ import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalSto
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
+  APP_BY_CONTACT_METHOD,
   CONTACT_METHOD_BY_APP,
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
-import { ArrowRightIcon, CameraIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, CameraIcon, TrashIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -20,7 +21,7 @@ import {
   getSignupAgreementTypes,
   hasAllRequiredSignupAgreements,
 } from "@/lib/auth/signup-agreements";
-import { findCountry } from "@/lib/countries";
+import { COUNTRIES, findCountry } from "@/lib/countries";
 import {
   MAX_PROFILE_IMAGE_BYTES,
   PROFILE_IMAGE_CONTENT_TYPES,
@@ -31,6 +32,8 @@ import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 import type messages from "@/messages/en.json";
 import type {
   ApiResponse,
+  BuddyResubmission,
+  BuddyResubmissionRequest,
   ErrorApiResponse,
   GoogleLoginResponse,
   GoogleProfile,
@@ -45,10 +48,13 @@ type OnboardingErrorKey =
   | "profileUploadFailed"
   | "signupFailed"
   | "serverUnavailable";
+type RequestFailureKey =
+  "profileUploadFailed" | "resubmissionFailed" | "signupFailed" | "serverUnavailable";
 
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
   userType?: UserType;
+  resubmission?: BuddyResubmission;
 }
 
 type OnboardingStep = 1 | 2 | 3;
@@ -94,30 +100,42 @@ function isValidDateInputValue(value: string) {
   );
 }
 
+function getInitialMessagingCountry(nationalityCode: string, contactCountryCode?: string | null) {
+  if (!contactCountryCode) return nationalityCode || "US";
+  const nationality = findCountry(nationalityCode);
+  if (nationality?.dialCode === contactCountryCode) return nationality.code;
+  return COUNTRIES.find((country) => country.dialCode === contactCountryCode)?.code ?? "US";
+}
+
 export function OnboardingForm({
   googleProfile,
   userType = "TOURIST",
+  resubmission,
 }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
   const buddyT = useTranslations("BuddyOnboarding");
+  const resubmissionT = useTranslations("BuddyResubmission");
   const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
+  const isResubmission = Boolean(resubmission);
+  const finalStep: OnboardingStep = isResubmission ? 2 : 3;
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
-  const [displayName, setDisplayName] = useState(googleProfile?.name ?? "");
-  const [birthDate, setBirthDate] = useState("");
-  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
-  const [messagingContact, setMessagingContact] = useState("");
+  const [displayName, setDisplayName] = useState(
+    resubmission?.displayName ?? googleProfile?.name ?? "",
+  );
+  const [birthDate, setBirthDate] = useState(resubmission?.birthDate ?? "");
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
+    resubmission ? APP_BY_CONTACT_METHOD[resubmission.contactMethod] : "line",
+  );
+  const [messagingContact, setMessagingContact] = useState(resubmission?.contactIdentifier ?? "");
   const [agreementDecisions, setAgreementDecisions] = useState<
     Partial<Record<SignupAgreementType, boolean>>
   >({});
   const [errorKey, setErrorKey] = useState<OnboardingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
     error: unknown;
-    fallbackKey: Extract<
-      OnboardingErrorKey,
-      "profileUploadFailed" | "signupFailed" | "serverUnavailable"
-    >;
+    fallbackKey: RequestFailureKey;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentLocalDate = useSyncExternalStore(
@@ -133,11 +151,22 @@ export function OnboardingForm({
     : "";
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
+  const [existingProfileImageKey, setExistingProfileImageKey] = useState<string | null>(
+    resubmission?.profileImageKey ?? null,
+  );
+  const [existingProfileImageUrl, setExistingProfileImageUrl] = useState<string | null>(
+    resubmission?.profileImageUrl ?? null,
+  );
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
   const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const initialNationality = resubmission?.nationalityCode ?? "";
+  const initialMessagingCountry = getInitialMessagingCountry(
+    initialNationality,
+    resubmission?.contactCountryCode,
+  );
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
-    useMessagingCountrySync("");
+    useMessagingCountrySync(initialNationality, initialMessagingCountry);
   const agreementTypes = getSignupAgreementTypes(userType);
   const requiredAgreementTypes = getRequiredSignupAgreementTypes(userType);
   const allAgreementsSelected = agreementTypes.every(
@@ -177,6 +206,17 @@ export function OnboardingForm({
     setProfileImagePreview(URL.createObjectURL(file));
   }
 
+  function handleProfileImageRemove() {
+    if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    setProfileImageFile(null);
+    setProfileImagePreview("");
+    setExistingProfileImageKey(null);
+    setExistingProfileImageUrl(null);
+    uploadedProfileImageRef.current = null;
+    setErrorKey(null);
+    setRequestFailure(null);
+  }
+
   function handleMessagingAppChange(nextApp: MessagingAppKey) {
     setMessagingApp(nextApp);
     // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
@@ -197,8 +237,8 @@ export function OnboardingForm({
     setErrorKey(null);
   }
 
-  async function resolveProfileImageKey(): Promise<string | undefined> {
-    if (!profileImageFile) return undefined;
+  async function resolveProfileImageKey(): Promise<string | null | undefined> {
+    if (!profileImageFile) return isResubmission ? existingProfileImageKey : undefined;
     if (uploadedProfileImageRef.current?.file === profileImageFile) {
       return uploadedProfileImageRef.current.imageKey;
     }
@@ -276,7 +316,7 @@ export function OnboardingForm({
     setRequestFailure(null);
 
     if (currentStep === 1 && validateAboutYou()) goToStep(2);
-    if (currentStep === 2 && validateContact()) goToStep(3);
+    if (currentStep === 2 && !isResubmission && validateContact()) goToStep(3);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -284,7 +324,7 @@ export function OnboardingForm({
     setErrorKey(null);
     setRequestFailure(null);
 
-    if (currentStep !== 3) {
+    if (currentStep !== finalStep) {
       handleContinue();
       return;
     }
@@ -297,7 +337,7 @@ export function OnboardingForm({
       setCurrentStep(2);
       return;
     }
-    if (!validateAgreements()) return;
+    if (!isResubmission && !validateAgreements()) return;
 
     const contactIdentifier = messagingContact.trim();
     const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
@@ -307,7 +347,7 @@ export function OnboardingForm({
 
     setIsSubmitting(true);
     try {
-      let profileImageKey: string | undefined;
+      let profileImageKey: string | null | undefined;
       try {
         profileImageKey = await resolveProfileImageKey();
       } catch (error) {
@@ -315,35 +355,59 @@ export function OnboardingForm({
         return;
       }
 
-      const payload: GoogleSignupRequest = {
-        userType,
+      const commonProfile = {
         displayName: displayName.trim(),
-        ...(profileImageKey ? { profileImageKey } : {}),
         nationalityCode: nationality,
         birthDate,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-        contactCountryCode,
+        contactCountryCode: contactCountryCode ?? "",
         contactIdentifier,
-        agreements: buildSignupAgreements(userType, agreementDecisions),
       };
+      const payload: GoogleSignupRequest | BuddyResubmissionRequest = isResubmission
+        ? {
+            ...commonProfile,
+            profileImageKey: profileImageKey ?? null,
+          }
+        : {
+            ...commonProfile,
+            userType,
+            ...(profileImageKey ? { profileImageKey } : {}),
+            agreements: buildSignupAgreements(userType, agreementDecisions),
+          };
 
-      const response = await fetch("/api/auth/google/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        isResubmission ? "/api/auth/buddy/resubmission" : "/api/auth/google/signup",
+        {
+          method: isResubmission ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const body = (await response.json().catch(() => undefined)) as
-        ApiResponse<GoogleLoginResponse> | ErrorApiResponse | undefined;
+        ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
         setRequestFailure({
           error: createApiClientError(response.status, body && !body.isSuccess ? body : undefined),
-          fallbackKey: "signupFailed",
+          fallbackKey: isResubmission ? "resubmissionFailed" : "signupFailed",
         });
         return;
       }
 
-      const authStatus = body.result.authStatus;
+      if (isResubmission) {
+        if ((body.result as BuddyResubmission).accountStatus !== "PENDING_APPROVAL") {
+          setRequestFailure({
+            error: createApiClientError(502, undefined),
+            fallbackKey: "resubmissionFailed",
+          });
+          return;
+        }
+        router.replace("/buddy/auth/status?status=PENDING_APPROVAL");
+        router.refresh();
+        return;
+      }
+
+      const authStatus = (body.result as GoogleLoginResponse).authStatus;
       if (authStatus === "ACTIVE") {
         router.replace(userType === "BUDDY" ? "/dashboard" : "/");
       } else if (
@@ -389,27 +453,76 @@ export function OnboardingForm({
         className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
       />
     );
+  } else if (existingProfileImageUrl) {
+    profilePhoto = (
+      <Image
+        src={existingProfileImageUrl}
+        alt={t("selectedProfilePhotoPreview")}
+        width={64}
+        height={64}
+        unoptimized
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
+      />
+    );
   }
 
   let errorMessage: string | null = null;
   if (requestFailure) {
-    errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
+    if (requestFailure.fallbackKey === "resubmissionFailed") {
+      errorMessage = getApiErrorMessage(requestFailure.error, resubmissionT("resubmissionFailed"));
+    } else {
+      errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
+    }
   } else if (errorKey) {
     errorMessage = t(errorKey);
   }
 
   const roleCopy = {
-    title: userType === "BUDDY" ? buddyT("title") : t("title"),
-    eyebrow: userType === "BUDDY" ? buddyT("eyebrow") : t("eyebrow"),
-    headline: userType === "BUDDY" ? buddyT("headline") : t("headline"),
-    description: userType === "BUDDY" ? buddyT("description") : t("description"),
-    photoGuidance:
-      userType === "BUDDY" ? buddyT("profilePhotoOptional") : t("profilePhotoOptional"),
-    contactMethods: userType === "BUDDY" ? buddyT("contactMethods") : t("contactMethods"),
-    contactDescription:
-      userType === "BUDDY" ? buddyT("contactDescription") : t("contactDescription"),
-    submit: userType === "BUDDY" ? buddyT("completeRegistration") : t("completeRegistration"),
-    submitting: userType === "BUDDY" ? buddyT("completing") : t("completing"),
+    title: isResubmission
+      ? resubmissionT("title")
+      : userType === "BUDDY"
+        ? buddyT("title")
+        : t("title"),
+    eyebrow: isResubmission
+      ? resubmissionT("eyebrow")
+      : userType === "BUDDY"
+        ? buddyT("eyebrow")
+        : t("eyebrow"),
+    headline: isResubmission
+      ? resubmissionT("headline")
+      : userType === "BUDDY"
+        ? buddyT("headline")
+        : t("headline"),
+    description: isResubmission
+      ? resubmissionT("description")
+      : userType === "BUDDY"
+        ? buddyT("description")
+        : t("description"),
+    photoGuidance: isResubmission
+      ? resubmissionT("profilePhotoOptional")
+      : userType === "BUDDY"
+        ? buddyT("profilePhotoOptional")
+        : t("profilePhotoOptional"),
+    contactMethods: isResubmission
+      ? resubmissionT("contactMethods")
+      : userType === "BUDDY"
+        ? buddyT("contactMethods")
+        : t("contactMethods"),
+    contactDescription: isResubmission
+      ? resubmissionT("contactDescription")
+      : userType === "BUDDY"
+        ? buddyT("contactDescription")
+        : t("contactDescription"),
+    submit: isResubmission
+      ? resubmissionT("submit")
+      : userType === "BUDDY"
+        ? buddyT("completeRegistration")
+        : t("completeRegistration"),
+    submitting: isResubmission
+      ? resubmissionT("submitting")
+      : userType === "BUDDY"
+        ? buddyT("completing")
+        : t("completing"),
   };
 
   const agreementItems: Array<{
@@ -460,7 +573,9 @@ export function OnboardingForm({
       isDocument: false,
     },
   ];
-  const stepLabels = [t("steps.aboutYou"), t("steps.contact"), t("steps.agreements")];
+  const stepLabels = isResubmission
+    ? [t("steps.aboutYou"), t("steps.contact")]
+    : [t("steps.aboutYou"), t("steps.contact"), t("steps.agreements")];
 
   return (
     <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
@@ -468,7 +583,13 @@ export function OnboardingForm({
         <PageContainer>
           <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4">
             <Link
-              href={userType === "BUDDY" ? "/buddy" : "/login"}
+              href={
+                isResubmission
+                  ? "/buddy/auth/status?status=REJECTED"
+                  : userType === "BUDDY"
+                    ? "/buddy"
+                    : "/login"
+              }
               aria-label={accessibilityT("close")}
               className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
@@ -501,7 +622,9 @@ export function OnboardingForm({
               <p className="mb-4 hidden text-xs font-bold tracking-[0.18em] text-primary uppercase lg:block">
                 {t("steps.progress", { current: currentStep, total: stepLabels.length })}
               </p>
-              <ol className="grid grid-cols-3 gap-2 lg:flex lg:flex-col lg:gap-5">
+              <ol
+                className={`${isResubmission ? "grid-cols-2" : "grid-cols-3"} grid gap-2 lg:flex lg:flex-col lg:gap-5`}
+              >
                 {stepLabels.map((label, index) => {
                   const step = (index + 1) as OnboardingStep;
                   const isActive = currentStep === step;
@@ -561,6 +684,16 @@ export function OnboardingForm({
                             onChange={handleProfileImageChange}
                           />
                         </label>
+                        {isResubmission && (profileImagePreview || existingProfileImageUrl) ? (
+                          <button
+                            type="button"
+                            onClick={handleProfileImageRemove}
+                            aria-label={resubmissionT("removeProfilePhoto")}
+                            className="absolute -top-2 -left-2 flex size-8 items-center justify-center rounded-full border border-line-soft bg-white text-muted transition-colors hover:border-danger hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+                          >
+                            <TrashIcon className="size-4" />
+                          </button>
+                        ) : null}
                       </div>
                       <div className="min-w-0">
                         <label className="flex min-w-0 flex-col gap-1.5">
@@ -582,6 +715,27 @@ export function OnboardingForm({
                         </p>
                       </div>
                     </div>
+
+                    {resubmission ? (
+                      <dl className="grid gap-3 rounded-2xl border border-line-soft bg-panel-raised p-4 text-sm sm:grid-cols-2">
+                        <div className="min-w-0">
+                          <dt className="text-xs font-semibold text-muted">
+                            {resubmissionT("googleName")}
+                          </dt>
+                          <dd className="mt-1 truncate font-medium text-ink">
+                            {resubmission.name}
+                          </dd>
+                        </div>
+                        <div className="min-w-0">
+                          <dt className="text-xs font-semibold text-muted">
+                            {resubmissionT("email")}
+                          </dt>
+                          <dd className="mt-1 truncate font-medium text-ink">
+                            {resubmission.email}
+                          </dd>
+                        </div>
+                      </dl>
+                    ) : null}
 
                     <div data-testid="onboarding-personal-fields" className="grid gap-4">
                       <div className="flex flex-col gap-1.5">
@@ -643,7 +797,7 @@ export function OnboardingForm({
                 </section>
               ) : null}
 
-              {currentStep === 3 ? (
+              {!isResubmission && currentStep === 3 ? (
                 <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -731,12 +885,12 @@ export function OnboardingForm({
                 ) : null}
                 <button
                   form="google-onboarding-form"
-                  type={currentStep === 3 ? "submit" : "button"}
-                  onClick={currentStep === 3 ? undefined : handleContinue}
+                  type={currentStep === finalStep ? "submit" : "button"}
+                  onClick={currentStep === finalStep ? undefined : handleContinue}
                   disabled={isSubmitting}
                   className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60 lg:min-w-32 lg:flex-none"
                 >
-                  {currentStep === 3
+                  {currentStep === finalStep
                     ? isSubmitting
                       ? roleCopy.submitting
                       : roleCopy.submit

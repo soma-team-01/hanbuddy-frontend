@@ -435,6 +435,30 @@
     "completing": "Creating buddy account...",
     "completeRegistration": "Sign up as a buddy"
   },
+  "BuddyResubmission": {
+    "metadataTitle": "Update your buddy application | HanBuddy",
+    "metadataDescription": "Update your buddy profile and submit it for review again.",
+    "title": "Update your buddy application",
+    "eyebrow": "Apply again",
+    "headline": "Update your details and request another review.",
+    "description": "Your previous answers are ready to edit. Existing agreements will remain in effect.",
+    "profilePhotoOptional": "Keep your current photo, replace it, or remove it before resubmitting.",
+    "contactMethods": "How should guests reach you?",
+    "contactDescription": "Review your contact method and update it if needed.",
+    "googleName": "Google account name",
+    "email": "Login email",
+    "removeProfilePhoto": "Remove profile photo",
+    "submit": "Submit again",
+    "submitting": "Submitting...",
+    "resubmissionFailed": "Could not submit your application again. Please try again.",
+    "loading": "Loading your previous application...",
+    "loadFailedTitle": "We couldn't load your application",
+    "loadFailedDescription": "A temporary problem occurred. Please try again.",
+    "sessionExpiredTitle": "Please sign in again",
+    "sessionExpiredDescription": "Your resubmission session has expired or the application is no longer eligible.",
+    "loginAgain": "Sign in with Google",
+    "retry": "Try again"
+  },
   "AccountStatus": {
     "metadataTitle": "Account status | HanBuddy",
     "metadataDescription": "Check the review status of your HanBuddy account.",
@@ -445,7 +469,8 @@
     },
     "rejected": {
       "title": "Buddy application not approved",
-      "description": "Check the reason below and contact us if you need help."
+      "description": "Check the reason below and contact us if you need help.",
+      "resubmit": "Update and apply again"
     },
     "suspended": {
       "title": "Buddy account suspended",

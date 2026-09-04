@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import type { BuddyResubmission } from "@/lib/auth/types";
 import * as countries from "@/lib/countries";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
@@ -212,6 +213,68 @@ describe("OnboardingForm", () => {
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
     );
     expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("prefills a rejected buddy application and resubmits without agreements", async () => {
+    const application: BuddyResubmission = {
+      userId: 7,
+      email: "buddy@example.com",
+      name: "Google Buddy",
+      displayName: "Old Buddy",
+      profileImageKey: "profiles/old.webp",
+      profileImageUrl: "https://cdn.test/profiles/old.webp",
+      nationalityCode: "KR",
+      birthDate: "1995-02-03",
+      contactMethod: "LINE",
+      contactCountryCode: "",
+      contactIdentifier: "old-buddy",
+      accountStatus: "REJECTED",
+      reviewedAt: "2026-09-03T12:00:00+09:00",
+      rejectionReason: "Please update your profile.",
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "200",
+          message: "OK",
+          result: { ...application, accountStatus: "PENDING_APPROVAL", rejectionReason: null },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+
+    expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Old Buddy");
+    expect(screen.getByLabelText("Date of birth")).toHaveValue("1995-02-03");
+    expect(screen.getByText("Google Buddy")).toBeInTheDocument();
+    expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Step 1 of 2" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("textbox", { name: "Messaging app ID" })).toHaveValue("old-buddy");
+    expect(screen.queryByText("Agreements")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Submit again" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/buddy/resubmission",
+      expect.objectContaining({ method: "PUT" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      displayName: "Old Buddy",
+      profileImageKey: "profiles/old.webp",
+      nationalityCode: "KR",
+      birthDate: "1995-02-03",
+      contactMethod: "LINE",
+      contactCountryCode: "",
+      contactIdentifier: "old-buddy",
+    });
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/en/buddy/auth/status?status=PENDING_APPROVAL",
+    );
   });
 
   it("shows only the tourist signup agreements on traveler onboarding", () => {

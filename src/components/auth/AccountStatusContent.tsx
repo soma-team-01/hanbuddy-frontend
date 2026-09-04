@@ -13,12 +13,14 @@ interface AccountStatusContentProps {
   status: InactiveAuthStatus;
   reason?: string;
   userType: "TOURIST" | "BUDDY";
+  canResubmit?: boolean;
 }
 
 export function AccountStatusContent({
   status,
   reason,
   userType,
+  canResubmit = false,
 }: Readonly<AccountStatusContentProps>) {
   const t = useTranslations("AccountStatus");
   const copy = getStatusCopy(status, userType, t);
@@ -65,7 +67,18 @@ export function AccountStatusContent({
               </p>
             ) : null}
 
-            <p className="mt-6 max-w-[540px] text-sm leading-6 text-muted">
+            {status === "REJECTED" && canResubmit ? (
+              <Link
+                href="/buddy/resubmission"
+                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+              >
+                {t("rejected.resubmit")}
+              </Link>
+            ) : null}
+
+            <p
+              className={`${status === "REJECTED" && canResubmit ? "mt-4" : "mt-6"} max-w-[540px] text-sm leading-6 text-muted`}
+            >
               {t.rich("contactHelp", {
                 email: (chunks) => (
                   <a

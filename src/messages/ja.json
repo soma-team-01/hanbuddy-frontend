@@ -435,6 +435,30 @@
     "completing": "友達アカウントを作成中...",
     "completeRegistration": "友達として登録する"
   },
+  "BuddyResubmission": {
+    "metadataTitle": "バディ登録の再申請 | HanBuddy",
+    "metadataDescription": "バディプロフィールを修正して、もう一度審査を依頼します。",
+    "title": "バディ登録の再申請",
+    "eyebrow": "再申請",
+    "headline": "情報を修正して、もう一度審査を依頼してください。",
+    "description": "以前の入力内容を編集できます。既存の同意事項はそのまま維持されます。",
+    "profilePhotoOptional": "現在の写真を維持、変更、または削除できます。",
+    "contactMethods": "ゲストからの連絡方法",
+    "contactDescription": "連絡方法を確認し、必要に応じて修正してください。",
+    "googleName": "Googleアカウント名",
+    "email": "ログインメール",
+    "removeProfilePhoto": "プロフィール写真を削除",
+    "submit": "再審査を依頼",
+    "submitting": "送信中...",
+    "resubmissionFailed": "再申請を完了できませんでした。もう一度お試しください。",
+    "loading": "以前の申請情報を読み込んでいます...",
+    "loadFailedTitle": "申請情報を読み込めませんでした",
+    "loadFailedDescription": "一時的な問題が発生しました。もう一度お試しください。",
+    "sessionExpiredTitle": "もう一度ログインしてください",
+    "sessionExpiredDescription": "再申請セッションが期限切れか、現在再申請できない状態です。",
+    "loginAgain": "Googleで再ログイン",
+    "retry": "再試行"
+  },
   "AccountStatus": {
     "metadataTitle": "アカウントのステータス |ハンバディ",
     "metadataDescription": "HanBuddy アカウントの審査ステータスを確認してください。",
@@ -445,7 +469,8 @@
     },
     "rejected": {
       "title": "バディ申請は承認されませんでした",
-      "description": "以下の理由を確認し、サポートが必要な場合はご連絡ください。"
+      "description": "以下の理由を確認し、サポートが必要な場合はご連絡ください。",
+      "resubmit": "情報を修正して再申請"
     },
     "suspended": {
       "title": "バディアカウントが停止されました",

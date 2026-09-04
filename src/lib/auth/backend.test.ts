@@ -8,6 +8,7 @@ import {
   getSetCookieHeaders,
   patchBackend,
   postBackend,
+  putBackend,
 } from "./backend";
 
 const originalApiBaseUrl = process.env.HANBUDDY_API_BASE_URL;
@@ -187,6 +188,42 @@ describe("patchBackend", () => {
     );
     const [, init] = fetch.mock.calls[0] as [string, RequestInit];
     expect(new Headers(init.headers).get("authorization")).toBe("Bearer access-token");
+  });
+});
+
+describe("putBackend", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    if (originalApiBaseUrl === undefined) delete process.env.HANBUDDY_API_BASE_URL;
+    else process.env.HANBUDDY_API_BASE_URL = originalApiBaseUrl;
+  });
+
+  it("sends a PUT request with a JSON body and bearer token", async () => {
+    process.env.HANBUDDY_API_BASE_URL = "https://api.hanbuddy.test/api/v1";
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ isSuccess: true, code: "200", message: "ok", result: { id: 1 } }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetch);
+
+    await putBackend(
+      "/auth/buddy/resubmission",
+      { displayName: "Buddy" },
+      {
+        bearerToken: "resubmit-token",
+      },
+    );
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.hanbuddy.test/api/v1/auth/buddy/resubmission",
+      expect.objectContaining({ method: "PUT", body: JSON.stringify({ displayName: "Buddy" }) }),
+    );
+    const [, init] = fetch.mock.calls[0] as [string, RequestInit];
+    expect(new Headers(init.headers).get("authorization")).toBe("Bearer resubmit-token");
   });
 });
 

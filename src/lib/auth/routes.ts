@@ -6,6 +6,7 @@ interface RouteAccessInput {
   pathname: string;
   accessToken?: string;
   signupToken?: string;
+  resubmissionToken?: string;
   userType?: UserType;
 }
 
@@ -35,6 +36,7 @@ export function getRouteAccessRedirect({
   pathname,
   accessToken,
   signupToken,
+  resubmissionToken,
   userType,
 }: RouteAccessInput): string | null {
   const authenticated = Boolean(accessToken && userType);
@@ -42,6 +44,11 @@ export function getRouteAccessRedirect({
 
   if (pathname === "/login" || pathname === "/onboarding" || pathname === "/buddy/onboarding") {
     return getAuthEntryRedirect({ pathname, signupToken }, authenticated, homePath);
+  }
+
+  if (pathname === "/buddy/resubmission") {
+    if (authenticated) return homePath;
+    return resubmissionToken ? null : "/buddy";
   }
 
   return getProtectedRouteRedirect({ pathname, userType }, authenticated, homePath);

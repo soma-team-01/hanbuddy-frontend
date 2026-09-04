@@ -176,7 +176,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
             <Info label="Google 계정 이름" value={user.name} />
             <Info label="역할" value={roleLabel(user.userType)} />
             <Info label="국적" value={formatAdminCountry(user.nationalityCode)} />
-            <Info label="출생 연도" value={user.birthYear ? String(user.birthYear) : "-"} />
+            <Info label="생년월일" value={formatAdminDate(user.birthDate)} />
             <Info label="가입일" value={formatAdminDate(user.createdAt, true)} />
           </InfoSection>
           <InfoSection title="연락">
@@ -372,7 +372,30 @@ function historyTitle(type: AdminUserHistoryType, item: AdminUserHistory) {
   if (type === "payments" && "orderNumber" in item) return item.orderNumber;
   if (type === "reviews" && "content" in item) return item.activityTitle;
   if (type === "agreements" && "type" in item) return `${item.type} · ${item.version}`;
-  return "이력";
+  return historyFallbackTitle(type, item);
+}
+
+function historyFallbackTitle(type: AdminUserHistoryType, item: AdminUserHistory) {
+  const labels: Record<AdminUserHistoryType, string> = {
+    activities: "활동",
+    applications: "신청",
+    payments: "결제",
+    reviews: "리뷰",
+    agreements: "약관",
+  };
+  const id =
+    "activityId" in item
+      ? item.activityId
+      : "applicationId" in item
+        ? item.applicationId
+        : "paymentId" in item
+          ? item.paymentId
+          : "reviewId" in item
+            ? item.reviewId
+            : "userAgreementId" in item
+              ? item.userAgreementId
+              : null;
+  return id === null ? `${labels[type]} 정보 없음` : `${labels[type]} #${id}`;
 }
 function historyDescription(type: AdminUserHistoryType, item: AdminUserHistory) {
   if (type === "activities" && "price" in item)

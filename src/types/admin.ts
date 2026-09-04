@@ -75,7 +75,7 @@ export interface AdminUserSummary {
 }
 
 export interface AdminUserDetail extends AdminUserSummary {
-  birthYear: number | null;
+  birthDate: string | null;
   contactMethod: ContactMethod;
   contactCountryCode: string | null;
   contactIdentifier: string | null;

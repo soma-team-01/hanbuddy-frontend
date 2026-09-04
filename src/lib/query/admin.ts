@@ -67,7 +67,6 @@ export function adminUserHistoryQueryOptions(
   return queryOptions({
     queryKey: adminKeys.userHistory(userId, type, page),
     queryFn: async () => unwrapApiResult(await getAdminUserHistory(userId, type, page), "history"),
-    placeholderData: keepPreviousData,
   });
 }
 

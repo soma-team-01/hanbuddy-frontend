@@ -143,6 +143,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
             <dl className="mt-4 divide-y divide-line-soft">
               <Info label="Google 계정 이름" value={user.name} />
               <Info label="국적" value={formatAdminCountry(user.nationalityCode)} />
+              <Info label="생년월일" value={formatAdminDate(user.birthDate)} />
               <Info label="가입일" value={formatAdminDate(user.createdAt, true)} />
               <Info label="연락 수단" value={user.contactMethod} />
             </dl>

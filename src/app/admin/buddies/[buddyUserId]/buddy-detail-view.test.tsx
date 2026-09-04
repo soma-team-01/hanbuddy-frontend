@@ -41,7 +41,7 @@ function mockBuddyRequests(logs: Awaited<ReturnType<typeof getAdminAuditLogs>>) 
         accountStatus: "ACTIVE",
         nationalityCode: "KR",
         createdAt: "2026-08-01T10:00:00+09:00",
-        birthYear: 1998,
+        birthDate: "1998-04-12",
         contactMethod: "WHATSAPP",
         contactCountryCode: "+82",
         contactIdentifier: "01012345678",
@@ -113,6 +113,7 @@ describe("AdminBuddyDetailView", () => {
 
     expect(await screen.findByText("기록된 관리자 작업이 없습니다.")).toBeInTheDocument();
     expect(screen.getByText("대한민국")).toBeInTheDocument();
+    expect(screen.getByText("1998. 4. 12.")).toBeInTheDocument();
     expect(mockedGetAuditLogs).toHaveBeenCalledWith(27, 0);
   });
 

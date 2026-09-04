@@ -178,9 +178,14 @@ describe("EditProfilePage", () => {
       "en",
       "Nickname",
       "Save",
-      "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+      "Enter a nickname using 2–30 English letters, with only a single space, hyphen (-), or apostrophe (') between words.",
     ],
-    ["ko", "닉네임", "저장", "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요."],
+    [
+      "ko",
+      "닉네임",
+      "저장",
+      "닉네임은 2~30자의 영문으로 입력하고, 단어 사이에는 공백, 하이픈(-), 작은따옴표(')만 사용해 주세요.",
+    ],
   ] as const)("localizes profile validation for %s", async (locale, name, save, message) => {
     renderWithQueryClient(<EditProfilePage />, { locale });
     const nameInput = await screen.findByLabelText(name);
@@ -197,13 +202,13 @@ describe("EditProfilePage", () => {
     fireEvent.change(screen.getByLabelText("Nickname"), { target: { value: " " } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+      "Enter a nickname using 2–30 English letters, with only a single space, hyphen (-), or apostrophe (') between words.",
     );
 
     switchToKorean();
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요.",
+      "닉네임은 2~30자의 영문으로 입력하고, 단어 사이에는 공백, 하이픈(-), 작은따옴표(')만 사용해 주세요.",
     );
   });
 
@@ -227,13 +232,8 @@ describe("EditProfilePage", () => {
   );
 
   it.each([
-    [
-      "en",
-      "Messaging phone number",
-      "Save",
-      "Enter a contact ID or number with at least 2 characters.",
-    ],
-    ["ko", "메신저 전화번호", "저장", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
+    ["en", "Phone number", "Save", "Enter a contact ID or number with at least 2 characters."],
+    ["ko", "전화번호", "저장", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
   ] as const)(
     "shows localized contact validation after a real %s submit",
     async (locale, contactLabel, save, message) => {
@@ -260,23 +260,23 @@ describe("EditProfilePage", () => {
     renderWithQueryClient(<EditProfilePage />);
 
     // 프로필의 연락 수단이 WHATSAPP이므로 국가 선택이 바로 렌더된다
-    expect(await screen.findByLabelText("Messaging country code")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Country code")).toBeInTheDocument();
   });
 
   it("submits the updated profile and returns to my page", async () => {
     mockedUpdateMyProfile.mockResolvedValue({
       status: "success",
-      profile: { ...profile, displayName: "Sarah J." },
+      profile: { ...profile, displayName: "Sarah Jane" },
     });
     const { queryClient } = renderWithQueryClient(<EditProfilePage />);
 
     const nameInput = await screen.findByLabelText("Nickname");
-    fireEvent.change(nameInput, { target: { value: "Sarah J." } });
+    fireEvent.change(nameInput, { target: { value: "Sarah Jane" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {
       expect(mockedUpdateMyProfile).toHaveBeenCalledWith({
-        displayName: "Sarah J.",
+        displayName: "Sarah Jane",
         profileImageKey: "profiles/2026/07/06/uuid.webp",
         nationalityCode: "US",
         birthDate: "1998-04-12",
@@ -288,7 +288,7 @@ describe("EditProfilePage", () => {
     expect(uploadProfileImage).not.toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith("/en/my-page/profile");
     expect(queryClient.getQueryData(userKeys.me())).toEqual(
-      expect.objectContaining({ displayName: "Sarah J." }),
+      expect.objectContaining({ displayName: "Sarah Jane" }),
     );
   });
 

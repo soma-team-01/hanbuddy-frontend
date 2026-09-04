@@ -96,6 +96,22 @@ describe("route access redirects", () => {
     ).toBeNull();
   });
 
+  it("requires a dedicated session for buddy resubmission", () => {
+    expect(getRouteAccessRedirect({ pathname: "/buddy/resubmission" })).toBe("/buddy");
+    expect(
+      getRouteAccessRedirect({
+        pathname: "/buddy/resubmission",
+        resubmissionToken: "resubmit-token",
+      }),
+    ).toBeNull();
+    expect(
+      getRouteAccessRedirect({
+        pathname: "/buddy/resubmission",
+        signupToken: "signup-token",
+      }),
+    ).toBe("/buddy");
+  });
+
   it.each([
     ["TOURIST", "/"],
     ["BUDDY", "/dashboard"],

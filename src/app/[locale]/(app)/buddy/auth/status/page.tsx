@@ -34,7 +34,15 @@ export default async function AccountStatusPage({ params, searchParams }: Accoun
   }
 
   const reason = cookieStore.get(AUTH_COOKIES.statusReason)?.value;
-  return <AccountStatusContent status={status} reason={reason} userType="BUDDY" />;
+  const canResubmit = Boolean(cookieStore.get(AUTH_COOKIES.resubmissionToken)?.value);
+  return (
+    <AccountStatusContent
+      status={status}
+      reason={reason}
+      userType="BUDDY"
+      canResubmit={status === "REJECTED" && canResubmit}
+    />
+  );
 }
 
 function parseInactiveAuthStatus(value?: string | string[]): InactiveAuthStatus | null {

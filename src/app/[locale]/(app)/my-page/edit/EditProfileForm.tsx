@@ -18,6 +18,7 @@ import {
 import { CameraIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { DISPLAY_NAME_PATTERN, isValidDisplayName } from "@/lib/display-name";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import { updateMyProfile } from "@/lib/api/users";
 import { COUNTRIES, findCountry } from "@/lib/countries";
@@ -164,7 +165,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     const birthDate = typeof birthDateEntry === "string" ? birthDateEntry.trim() : "";
     const contactIdentifier = messagingContact.trim();
 
-    if (displayName.length < 2 || displayName.length > 30 || displayName !== rawDisplayName) {
+    if (!isValidDisplayName(rawDisplayName)) {
       setErrorKey("validation.nameRequired");
       return;
     }
@@ -274,18 +275,25 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                   </h2>
 
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    <label className="flex min-w-0 flex-col gap-1.5">
-                      <span className="text-sm font-medium text-ink">{t("fullName")}</span>
-                      <input
-                        name="displayName"
-                        type="text"
-                        required
-                        minLength={2}
-                        maxLength={30}
-                        defaultValue={profile.displayName}
-                        className="w-full rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                      />
-                    </label>
+                    <div className="flex min-w-0 flex-col gap-1.5">
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-sm font-medium text-ink">{t("fullName")}</span>
+                        <input
+                          name="displayName"
+                          type="text"
+                          required
+                          minLength={2}
+                          maxLength={30}
+                          pattern={DISPLAY_NAME_PATTERN}
+                          defaultValue={profile.displayName}
+                          aria-describedby="profile-display-name-hint"
+                          className="w-full rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                        />
+                      </label>
+                      <span id="profile-display-name-hint" className="text-xs leading-5 text-muted">
+                        {t("displayNameHint")}
+                      </span>
+                    </div>
                     <label className="flex min-w-0 flex-col gap-1.5">
                       <span className="text-sm font-medium text-ink">{t("email")}</span>
                       <input

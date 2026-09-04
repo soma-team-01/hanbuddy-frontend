@@ -1,9 +1,9 @@
-import { AdminShell } from "../../admin-shell";
-import { AdminBuddyDetailView } from "./buddy-detail-view";
+import { AdminShell } from "@/app/admin/admin-shell";
+import { AdminBuddyDetailView } from "@/app/admin/buddies/[buddyUserId]/buddy-detail-view";
 
 export default async function AdminBuddyDetailPage({
   params,
-}: PageProps<"/admin/buddies/[buddyUserId]">) {
+}: Readonly<{ params: Promise<{ buddyUserId: string }> }>) {
   const { buddyUserId } = await params;
   return (
     <AdminShell>

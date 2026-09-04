@@ -98,4 +98,19 @@ describe("admin users BFF", () => {
       { bearerToken: "admin-token" },
     );
   });
+
+  it("rejects a null state-change body without calling the backend mutation", async () => {
+    mockedGetBackend.mockResolvedValueOnce(adminProfile);
+
+    const response = await POST(
+      adminRequest("http://localhost/api/admin/users/42/suspend", {
+        method: "POST",
+        body: "null",
+      }),
+      { params: Promise.resolve({ segments: ["42", "suspend"] }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  });
 });

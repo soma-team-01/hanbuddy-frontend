@@ -80,4 +80,19 @@ describe("admin buddies BFF", () => {
       { bearerToken: "admin-token" },
     );
   });
+
+  it("rejects a null commission body without calling the backend mutation", async () => {
+    mockedGetBackend.mockResolvedValueOnce(adminProfile);
+
+    const response = await PATCH(
+      adminRequest("http://localhost/api/admin/buddies/7/commission", {
+        method: "PATCH",
+        body: "null",
+      }),
+      { params: Promise.resolve({ segments: ["7", "commission"] }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPatchBackend).not.toHaveBeenCalled();
+  });
 });

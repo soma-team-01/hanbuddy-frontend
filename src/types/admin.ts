@@ -204,6 +204,8 @@ export type AdminUserAuditAction =
 export interface AdminAuditLog {
   auditLogId: number;
   adminId: number;
+  adminName: string | null;
+  adminEmail: string | null;
   action: AdminUserAuditAction | string;
   targetType: string;
   targetId: number;

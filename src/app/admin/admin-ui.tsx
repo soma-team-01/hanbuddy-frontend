@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "@/components/ui/icons";
 import { SERVICE_TIME_ZONE } from "@/lib/datetime";
-import type { AdminAccountStatus } from "@/types/admin";
+import type { AdminAccountStatus, AdminAuditLogSummary } from "@/types/admin";
 
 const STATUS_STYLES: Record<AdminAccountStatus, string> = {
   ACTIVE: "border-success/25 bg-success-soft text-success",
@@ -137,6 +137,13 @@ export function formatAdminCountry(countryCode: string | null | undefined) {
   } catch {
     return countryCode;
   }
+}
+
+export function formatAdminActor(log: AdminAuditLogSummary) {
+  if (log.adminName && log.adminEmail) return `${log.adminName} · ${log.adminEmail}`;
+  if (log.adminEmail) return log.adminEmail;
+  if (log.adminName) return log.adminName;
+  return `관리자 #${log.adminId}`;
 }
 
 export function AdminReasonDialog({

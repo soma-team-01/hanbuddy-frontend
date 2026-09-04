@@ -29,13 +29,12 @@ async function renderPage(error?: string) {
 }
 
 describe("AdminLoginPage", () => {
-  it("관리자 기능 안내와 Google 로그인 진입점을 제공한다", async () => {
+  it("Google 관리자 로그인 진입점만 간결하게 제공한다", async () => {
     await renderPage();
 
-    expect(screen.getByRole("heading", { name: /서비스의 신뢰를/ })).toBeInTheDocument();
-    expect(screen.getByText("회원 상태 관리")).toBeInTheDocument();
-    expect(screen.getByText("버디 자격 검토")).toBeInTheDocument();
-    expect(screen.getByText("운영 이력 확인")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "관리자 로그인" })).toBeInTheDocument();
+    expect(screen.queryByText("회원 상태 관리")).not.toBeInTheDocument();
+    expect(screen.queryByText("Secure access")).not.toBeInTheDocument();
 
     const loginLink = screen.getByRole("link", { name: "Google로 관리자 로그인" });
     expect(loginLink).toHaveAttribute("href", "/api/auth/google/start?intent=admin");

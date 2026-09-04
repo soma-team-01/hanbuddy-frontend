@@ -217,6 +217,8 @@ describe("AdminBuddyDetailView", () => {
           {
             auditLogId: 104,
             adminId: 1,
+            adminName: "김관리",
+            adminEmail: "admin@hanbuddy.kr",
             action: "BUDDY_COMMISSION_CHANGED",
             targetType: "USER",
             targetId: 27,
@@ -236,5 +238,6 @@ describe("AdminBuddyDetailView", () => {
 
     expect(await screen.findByText("수수료 정책 변경")).toBeInTheDocument();
     expect(screen.getByText("운영 정책 변경")).toBeInTheDocument();
+    expect(screen.getByText("작업자 김관리 · admin@hanbuddy.kr")).toBeInTheDocument();
   });
 });

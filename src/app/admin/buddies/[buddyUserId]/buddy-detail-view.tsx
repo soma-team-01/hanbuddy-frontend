@@ -23,6 +23,7 @@ import {
   AdminReasonDialog,
   AdminState,
   AdminStatusBadge,
+  formatAdminActor,
   formatAdminCountry,
   formatAdminDate,
 } from "../../admin-ui";
@@ -347,7 +348,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
         ) : null}
       </section>
 
-      <section className="mt-8 rounded-3xl border border-line-soft bg-panel-raised p-6 md:p-8">
+      <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
         <h2 className="font-display text-xl font-extrabold">관리자 작업 이력</h2>
         {auditQuery.isPending ? (
           <p className="mt-4 text-sm text-muted">작업 이력을 불러오는 중입니다.</p>
@@ -370,11 +371,14 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
               key={log.auditLogId}
               className="rounded-xl border border-line-soft bg-white px-4 py-3"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <strong className="text-sm">{auditLabel(log.action)}</strong>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <strong className="text-sm">{auditLabel(log.action)}</strong>
+                  <p className="mt-1 truncate text-xs text-muted">작업자 {formatAdminActor(log)}</p>
+                </div>
                 <time className="text-xs text-muted">{formatAdminDate(log.createdAt, true)}</time>
               </div>
-              <p className="mt-1 text-sm text-muted">{log.reason || "사유 없음"}</p>
+              <p className="mt-2 text-sm text-muted">{log.reason || "사유 없음"}</p>
             </li>
           ))}
         </ol>

@@ -276,14 +276,26 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
               key={log.auditLogId}
               className="rounded-xl border border-line-soft bg-white px-4 py-3"
             >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <strong className="text-sm">{auditLabel(log.action)}</strong>
-                  <p className="mt-1 truncate text-xs text-muted">작업자 {formatAdminActor(log)}</p>
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                <div className="grid min-w-0 gap-1.5">
+                  <strong className="block text-sm leading-5 text-ink">
+                    {auditLabel(log.action)}
+                  </strong>
+                  <p className="text-sm leading-5">
+                    <span className="mr-1.5 text-muted">사유:</span>
+                    <span className="text-ink/80">{log.reason || "없음"}</span>
+                  </p>
                 </div>
-                <time className="text-xs text-muted">{formatAdminDate(log.createdAt, true)}</time>
+                <div className="grid max-w-full gap-1.5 text-xs sm:text-right">
+                  <time className="block leading-5 text-muted/80">
+                    {formatAdminDate(log.createdAt, true)}
+                  </time>
+                  <p className="leading-5 break-all">
+                    <span className="mr-1.5 text-muted">작업자:</span>
+                    <span className="font-semibold text-ink/80">{formatAdminActor(log)}</span>
+                  </p>
+                </div>
               </div>
-              <p className="mt-2 text-sm text-muted">{log.reason || "사유 없음"}</p>
             </li>
           ))}
         </ol>

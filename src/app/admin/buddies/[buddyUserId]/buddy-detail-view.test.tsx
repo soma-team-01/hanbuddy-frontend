@@ -237,7 +237,9 @@ describe("AdminBuddyDetailView", () => {
     renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
 
     expect(await screen.findByText("수수료 정책 변경")).toBeInTheDocument();
+    expect(screen.getByText("사유:")).toBeInTheDocument();
     expect(screen.getByText("운영 정책 변경")).toBeInTheDocument();
-    expect(screen.getByText("작업자 김관리 · admin@hanbuddy.kr")).toBeInTheDocument();
+    expect(screen.getByText("작업자:")).toBeInTheDocument();
+    expect(screen.getByText("김관리(admin@hanbuddy.kr)")).toBeInTheDocument();
   });
 });

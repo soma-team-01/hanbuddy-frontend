@@ -140,8 +140,8 @@ export function formatAdminCountry(countryCode: string | null | undefined) {
 }
 
 export function formatAdminActor(log: AdminAuditLogSummary) {
-  if (log.adminName && log.adminEmail) return `${log.adminName} · ${log.adminEmail}`;
-  if (log.adminEmail) return log.adminEmail;
+  if (log.adminName && log.adminEmail) return `${log.adminName}(${log.adminEmail})`;
+  if (log.adminEmail) return `관리자(${log.adminEmail})`;
   if (log.adminName) return log.adminName;
   return `관리자 #${log.adminId}`;
 }

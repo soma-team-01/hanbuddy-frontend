@@ -294,10 +294,10 @@ describe("BookingForm", () => {
   it("keeps provider brand treatments when both payment actions are available", () => {
     renderWithQueryClient(<BookingForm activity={activity} />);
 
-    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
-      "bg-[#3182f6]",
-      "text-white",
-    );
+    const tossButton = screen.getByRole("button", { name: "Pay with Toss Payments" });
+    expect(tossButton).toHaveClass("bg-[#3182f6]", "text-white");
+    expect(tossButton.parentElement).toHaveClass("md:grid-cols-2", "lg:grid-cols-1");
+    expect(tossButton.parentElement).not.toHaveClass("sm:grid-cols-2");
     expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toHaveClass(
       "bg-[#ffc439]",
       "text-[#111]",

@@ -506,7 +506,7 @@ export function BookingForm({
             <div className="lg:pt-6">
               <BottomActionBar>
                 <div
-                  className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "sm:grid-cols-2 lg:grid-cols-1" : ""}`}
+                  className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
                 >
                   {showTossPayment ? (
                     <button

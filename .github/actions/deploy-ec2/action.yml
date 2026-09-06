@@ -27,10 +27,11 @@ runs:
           paypal_environment="production"
         fi
         build_config_hash="$(
-          printf '%s\n%s\n%s\n' \
+          printf '%s\n%s\n%s\n%s\n' \
             "${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}" \
             "${PAYPAL_CLIENT_ID}" \
             "${paypal_environment}" \
+            "${PAYMENT_PROVIDER}" \
             | sha256sum \
             | cut -c1-12
         )"
@@ -48,6 +49,7 @@ runs:
             --build-arg "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}" \
             --build-arg "NEXT_PUBLIC_PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}" \
             --build-arg "NEXT_PUBLIC_PAYPAL_ENVIRONMENT=${paypal_environment}" \
+            --build-arg "NEXT_PUBLIC_PAYMENT_PROVIDER=${PAYMENT_PROVIDER}" \
             --tag "${image_uri}" \
             .
           docker push "${image_uri}"

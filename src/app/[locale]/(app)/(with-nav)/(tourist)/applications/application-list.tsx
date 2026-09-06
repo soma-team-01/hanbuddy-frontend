@@ -21,6 +21,11 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { daysUntilSeoulDate, hasDateTimePassed } from "@/lib/datetime";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel } from "@/lib/payments/toss";
+import {
+  isPaymentProviderVisible,
+  PAYMENT_PROVIDER_MODE,
+  type PaymentProviderMode,
+} from "@/lib/payment-provider-visibility";
 import { activityWeatherQueryOptions } from "@/lib/query/activities";
 import { UnauthenticatedQueryError } from "@/lib/query/result";
 import type { WeatherCondition } from "@/types/activity";
@@ -204,6 +209,7 @@ function ApplicationCard({
   onContinuePayment,
   onHoldExpired,
   isPaymentPending,
+  paymentProviderMode,
 }: Readonly<{
   application: Application;
   onCancel: () => void;
@@ -211,6 +217,7 @@ function ApplicationCard({
   onContinuePayment: (applicationId: string, paymentProvider: PaymentProvider) => Promise<void>;
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
+  paymentProviderMode: PaymentProviderMode;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
@@ -229,6 +236,13 @@ function ApplicationCard({
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
   const isPaymentBusy = isPaymentPending || paymentInFlight !== null;
+  const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
+  const showPayPalPayment = isPaymentProviderVisible("PAYPAL", paymentProviderMode);
+  const showProviderChoice = paymentProviderMode === "BOTH";
+  const tossPaymentLabel = showProviderChoice ? t("continueWithToss") : t("payNow");
+  const payPalPaymentLabel = showProviderChoice ? t("continueWithPayPal") : t("payNow");
+  const tossPaymentText = showProviderChoice ? "Toss" : tossPaymentLabel;
+  const payPalPaymentText = showProviderChoice ? "PayPal" : payPalPaymentLabel;
   // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 내린다 (조회 후 종료 시각이 지난 경우)
   const hasEnded = hasDateTimePassed(application.endAt);
 
@@ -303,49 +317,61 @@ function ApplicationCard({
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
               <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
-                <button
-                  type="button"
-                  disabled={isPaymentBusy}
-                  onClick={async () => {
-                    setPaymentError(null);
-                    setPaymentInFlight("TOSS");
-                    try {
-                      // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
-                      await onContinuePayment(application.id, "TOSS");
-                    } catch (error) {
-                      if (!isTossUserCancel(error)) showPaymentError(error);
-                    } finally {
-                      setPaymentInFlight(null);
+                {showTossPayment ? (
+                  <button
+                    type="button"
+                    disabled={isPaymentBusy}
+                    onClick={async () => {
+                      setPaymentError(null);
+                      setPaymentInFlight("TOSS");
+                      try {
+                        // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
+                        await onContinuePayment(application.id, "TOSS");
+                      } catch (error) {
+                        if (!isTossUserCancel(error)) showPaymentError(error);
+                      } finally {
+                        setPaymentInFlight(null);
+                      }
+                    }}
+                    aria-label={
+                      paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentLabel
                     }
-                  }}
-                  aria-label={
-                    paymentInFlight === "TOSS" ? t("paymentProcessing") : t("continueWithToss")
-                  }
-                  className={`${CARD_ACTION_CLASS} bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]`}
-                >
-                  {paymentInFlight === "TOSS" ? t("paymentProcessing") : "Toss"}
-                </button>
-                <button
-                  type="button"
-                  disabled={isPaymentBusy}
-                  onClick={async () => {
-                    setPaymentError(null);
-                    setPaymentInFlight("PAYPAL");
-                    try {
-                      await onContinuePayment(application.id, "PAYPAL");
-                    } catch (error) {
-                      showPaymentError(error);
-                    } finally {
-                      setPaymentInFlight(null);
+                    className={`${CARD_ACTION_CLASS} ${
+                      showProviderChoice
+                        ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
+                        : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                    }`}
+                  >
+                    {paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentText}
+                  </button>
+                ) : null}
+                {showPayPalPayment ? (
+                  <button
+                    type="button"
+                    disabled={isPaymentBusy}
+                    onClick={async () => {
+                      setPaymentError(null);
+                      setPaymentInFlight("PAYPAL");
+                      try {
+                        await onContinuePayment(application.id, "PAYPAL");
+                      } catch (error) {
+                        showPaymentError(error);
+                      } finally {
+                        setPaymentInFlight(null);
+                      }
+                    }}
+                    aria-label={
+                      paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentLabel
                     }
-                  }}
-                  aria-label={
-                    paymentInFlight === "PAYPAL" ? t("paymentProcessing") : t("continueWithPayPal")
-                  }
-                  className={`${CARD_ACTION_CLASS} bg-[#ffc439] text-[#111] enabled:hover:opacity-90`}
-                >
-                  {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : "PayPal"}
-                </button>
+                    className={`${CARD_ACTION_CLASS} ${
+                      showProviderChoice
+                        ? "bg-[#ffc439] text-[#111] enabled:hover:opacity-90"
+                        : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                    }`}
+                  >
+                    {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentText}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   disabled={isPaymentBusy}
@@ -433,6 +459,7 @@ export function ApplicationList({
   onContinuePayment,
   onHoldExpired,
   isPaymentPending,
+  paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   applications: Application[];
   onCancelApplication: (
@@ -445,6 +472,7 @@ export function ApplicationList({
   /** 좌석 선점이 만료되면 목록을 다시 불러오도록 알린다 */
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
+  paymentProviderMode?: PaymentProviderMode;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
@@ -495,6 +523,7 @@ export function ApplicationList({
             onContinuePayment={onContinuePayment}
             onHoldExpired={onHoldExpired}
             isPaymentPending={isPaymentPending}
+            paymentProviderMode={paymentProviderMode}
           />
         ))}
         {visibleApplications.length === 0 && (

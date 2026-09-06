@@ -21,6 +21,11 @@ import { createApplication, getApplicationConflicts } from "@/lib/api/applicatio
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
+import {
+  isPaymentProviderVisible,
+  PAYMENT_PROVIDER_MODE,
+  type PaymentProviderMode,
+} from "@/lib/payment-provider-visibility";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -60,7 +65,12 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 export function BookingForm({
   activity,
   initialSessionId,
-}: Readonly<{ activity: Activity; initialSessionId?: string }>) {
+  paymentProviderMode = PAYMENT_PROVIDER_MODE,
+}: Readonly<{
+  activity: Activity;
+  initialSessionId?: string;
+  paymentProviderMode?: PaymentProviderMode;
+}>) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const locale = useLocale();
@@ -89,6 +99,9 @@ export function BookingForm({
   const [payPalPayment, setPayPalPayment] = useState<PaymentReadyResponse | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [conflictDialog, setConflictDialog] = useState<ConflictDialogState | null>(null);
+  const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
+  const showPayPalPayment = isPaymentProviderVisible("PAYPAL", paymentProviderMode);
+  const showProviderChoice = paymentProviderMode === "BOTH";
   // React Query 상태가 화면에 반영되기 전의 연속 클릭도 동기적으로 차단한다
   const submissionLockRef = useRef(false);
   const conflictCheckMutation = useMutation({
@@ -134,6 +147,13 @@ export function BookingForm({
     activity.referenceCurrency === "USD" && activity.referencePrice !== undefined
       ? activity.referencePrice * guests
       : null;
+  const tossPaymentLabel = showProviderChoice ? t("payWithToss") : t("payNow");
+  const payPalPaymentLabel =
+    estimatedPayPalTotal !== null
+      ? t("payWithPayPalAmount", {
+          amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
+        })
+      : t("payWithPayPal");
 
   function toBlockingDialog(
     error: unknown,
@@ -485,50 +505,56 @@ export function BookingForm({
 
             <div className="lg:pt-6">
               <BottomActionBar>
-                <div className="grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                  <button
-                    type="button"
-                    disabled={!agreed || isSubmitting}
-                    onClick={() => handleSubmitClick("TOSS")}
-                    className="flex h-13 w-full items-center justify-center rounded-full bg-[#3182f6] px-4 font-display text-sm font-bold text-white transition-colors enabled:hover:bg-[#1b64da] disabled:opacity-40"
-                  >
-                    {isSubmitting ? t("processing") : t("payWithToss")}
-                  </button>
-                  <div className="flex min-w-0 flex-col items-center gap-1.5">
-                    {payPalPayment ? (
-                      <PayPalCheckoutButton
-                        payment={payPalPayment}
-                        autoStart
-                        onCancel={() => setPayPalPayment(null)}
-                        onConfirmed={() => {
-                          const applicationId = payPalPayment.application.applicationId;
-                          setPayPalPayment(null);
-                          void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
-                          router.push(
-                            `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
-                          );
-                        }}
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={!agreed || isSubmitting}
-                        onClick={() => handleSubmitClick("PAYPAL")}
-                        className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
-                      >
-                        {isSubmitting
-                          ? t("processing")
-                          : estimatedPayPalTotal !== null
-                            ? t("payWithPayPalAmount", {
-                                amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
-                              })
-                            : t("payWithPayPal")}
-                      </button>
-                    )}
-                    <p className="text-center text-[11px] leading-4 text-muted">
-                      {t("paypalCurrencyNotice")}
-                    </p>
-                  </div>
+                <div
+                  className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
+                >
+                  {showTossPayment ? (
+                    <button
+                      type="button"
+                      disabled={!agreed || isSubmitting}
+                      onClick={() => handleSubmitClick("TOSS")}
+                      className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
+                        showProviderChoice
+                          ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
+                          : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                      }`}
+                    >
+                      {isSubmitting ? t("processing") : tossPaymentLabel}
+                    </button>
+                  ) : null}
+                  {showPayPalPayment ? (
+                    <div className="flex min-w-0 flex-col items-center gap-1.5">
+                      {payPalPayment ? (
+                        <PayPalCheckoutButton
+                          payment={payPalPayment}
+                          autoStart
+                          onCancel={() => setPayPalPayment(null)}
+                          onConfirmed={() => {
+                            const applicationId = payPalPayment.application.applicationId;
+                            setPayPalPayment(null);
+                            void queryClient.invalidateQueries({
+                              queryKey: applicationKeys.mine(),
+                            });
+                            router.push(
+                              `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
+                            );
+                          }}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={!agreed || isSubmitting}
+                          onClick={() => handleSubmitClick("PAYPAL")}
+                          className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                        >
+                          {isSubmitting ? t("processing") : payPalPaymentLabel}
+                        </button>
+                      )}
+                      <p className="text-center text-[11px] leading-4 text-muted">
+                        {t("paypalCurrencyNotice")}
+                      </p>
+                    </div>
+                  ) : null}
                 </div>
               </BottomActionBar>
             </div>

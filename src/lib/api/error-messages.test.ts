@@ -74,9 +74,9 @@ describe("API error message registry", () => {
     }
   });
 
-  it("maps PayPal availability, order, and capture failures to safe retry guidance", () => {
+  it("maps provider availability and PayPal processing failures to safe retry guidance", () => {
     expect(resolveApiErrorMessageKey(apiError("PAYMENT503_PROVIDER", 503))).toBe(
-      "paypalUnavailable",
+      "paymentProviderUnavailable",
     );
     expect(resolveApiErrorMessageKey(apiError("PAYMENT502_PAYPAL_ORDER_CREATE", 502))).toBe(
       "paypalOrderCreateFailed",

@@ -8,6 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { parseAuthErrorCode } from "@/lib/auth/error-codes";
 import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
+import { getPolicyPath } from "@/lib/policy-routes";
 import { ReviewLoginForm } from "./review-login-form";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
@@ -100,13 +101,19 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
           )}
           <p className="mx-auto mt-5 max-w-[520px] text-xs leading-5 text-muted">
             {t("legalNoticeStart")}{" "}
-            <span className="font-semibold text-primary underline underline-offset-2">
+            <Link
+              href={getPolicyPath(locale, "terms-of-service")}
+              className="font-semibold text-primary underline underline-offset-2 hover:text-primary-hover focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
               {t("termsOfService")}
-            </span>{" "}
+            </Link>{" "}
             {t("legalNoticeMiddle")}{" "}
-            <span className="font-semibold text-primary underline underline-offset-2">
+            <Link
+              href={getPolicyPath(locale, "privacy-policy")}
+              className="font-semibold text-primary underline underline-offset-2 hover:text-primary-hover focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
               {t("privacyPolicy")}
-            </span>
+            </Link>
             {t("legalNoticeEnd")}
           </p>
         </div>

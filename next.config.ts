@@ -7,6 +7,9 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingIncludes: {
+    "/[locale]/policies/*": ["content/policies/*.md"],
+  },
   // 홈 디렉터리의 무관한 package-lock.json이 워크스페이스 루트로 잡히지 않도록 고정한다
   turbopack: {
     root: dirname(fileURLToPath(import.meta.url)),

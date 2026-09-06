@@ -347,6 +347,7 @@
     "legalNoticeEnd": ".",
     "privacyPolicy": "隐私政策",
     "termsOfService": "服务条款",
+    "cancellationRefundPolicy": "取消与退款政策",
     "helpCenter": "帮助中心",
     "rightsReserved": "保留所有权利。",
     "visualAlt": "HanBuddy 嘉宾和好友一起微笑观看棒球比赛",
@@ -413,6 +414,7 @@
       "agreeAll": "同意全部",
       "required": "必填",
       "optional": "可选",
+      "documentVersion": "版本 {version}",
       "items": {
         "adultConfirmation": "我确认我已年满 19 岁。",
         "termsOfService": "汉友服务条款",
@@ -420,7 +422,7 @@
         "buddyPrivacyCollectionUse": "个人信息收集、使用及好友申请审核",
         "buddyOperationTerms": "好友操作条款",
         "buddyCommissionPolicy": "佣金及结算政策",
-        "buddyProfileContactProvision": "与已确认的客人的个人资料可见性和联系方式共享",
+        "buddyProfileContactProvision": "已确认预订游客联系方式的使用与保护义务",
         "marketingCommunication": "接收活动和营销更新"
       }
     },

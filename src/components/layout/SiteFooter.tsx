@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { FooterLocaleSwitcher } from "@/components/layout/FooterLocaleSwitcher";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import type { SiteNavRole } from "@/lib/auth/routes";
+import { getPolicyPath } from "@/lib/policy-routes";
 
 interface SiteFooterProps {
   readonly locale: Locale;
@@ -42,10 +44,26 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
     <footer className="border-t border-line-soft bg-canvas-soft py-8 text-sm text-muted">
       <PageContainer className="flex flex-col gap-3">
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
             <p>© 2026 HanBuddy</p>
-            <span>{authT("privacyPolicy")}</span>
-            <span>{authT("termsOfService")}</span>
+            <Link
+              href={getPolicyPath(locale, "terms-of-service")}
+              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {authT("termsOfService")}
+            </Link>
+            <Link
+              href={getPolicyPath(locale, "privacy-policy")}
+              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {authT("privacyPolicy")}
+            </Link>
+            <Link
+              href={getPolicyPath(locale, "cancellation-refund-policy")}
+              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {authT("cancellationRefundPolicy")}
+            </Link>
           </div>
 
           <div className="flex items-center gap-4 sm:justify-end">

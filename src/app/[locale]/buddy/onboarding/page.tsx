@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { OnboardingForm } from "@/app/[locale]/(app)/onboarding/OnboardingForm";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
+import { getSignupAgreementDocuments } from "@/lib/server/policy-content";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
@@ -32,8 +33,17 @@ export async function generateMetadata({ params }: BuddyOnboardingPageProps): Pr
 }
 
 export default async function BuddyOnboardingPage() {
-  const cookieStore = await cookies();
+  const [cookieStore, agreementDocuments] = await Promise.all([
+    cookies(),
+    getSignupAgreementDocuments("BUDDY"),
+  ]);
   const googleProfile = decodeGoogleProfile(cookieStore.get(AUTH_COOKIES.googleProfile)?.value);
 
-  return <OnboardingForm userType="BUDDY" googleProfile={googleProfile} />;
+  return (
+    <OnboardingForm
+      userType="BUDDY"
+      googleProfile={googleProfile}
+      agreementDocuments={agreementDocuments}
+    />
+  );
 }

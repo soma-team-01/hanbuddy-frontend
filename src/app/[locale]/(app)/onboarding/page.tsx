@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
+import { getSignupAgreementDocuments } from "@/lib/server/policy-content";
 import { OnboardingForm } from "./OnboardingForm";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
@@ -32,8 +33,17 @@ export async function generateMetadata({ params }: OnboardingPageProps): Promise
 }
 
 export default async function ProfileSetupPage() {
-  const cookieStore = await cookies();
+  const [cookieStore, agreementDocuments] = await Promise.all([
+    cookies(),
+    getSignupAgreementDocuments("TOURIST"),
+  ]);
   const googleProfile = decodeGoogleProfile(cookieStore.get(AUTH_COOKIES.googleProfile)?.value);
 
-  return <OnboardingForm userType="TOURIST" googleProfile={googleProfile} />;
+  return (
+    <OnboardingForm
+      userType="TOURIST"
+      googleProfile={googleProfile}
+      agreementDocuments={agreementDocuments}
+    />
+  );
 }

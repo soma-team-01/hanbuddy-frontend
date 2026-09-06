@@ -347,6 +347,7 @@
     "legalNoticeEnd": ".",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
+    "cancellationRefundPolicy": "Cancellation & Refund Policy",
     "helpCenter": "Help Center",
     "rightsReserved": "All rights reserved.",
     "visualAlt": "HanBuddy guests and buddies smiling together at a baseball game",
@@ -413,6 +414,7 @@
       "agreeAll": "Agree to all",
       "required": "Required",
       "optional": "Optional",
+      "documentVersion": "Version {version}",
       "items": {
         "adultConfirmation": "I confirm that I am 19 years or older.",
         "termsOfService": "HanBuddy Terms of Service",
@@ -420,7 +422,7 @@
         "buddyPrivacyCollectionUse": "Personal information collection, use, and buddy application review",
         "buddyOperationTerms": "Buddy operation terms",
         "buddyCommissionPolicy": "Commission and settlement policy",
-        "buddyProfileContactProvision": "Profile visibility and contact sharing with confirmed guests",
+        "buddyProfileContactProvision": "Confirmed guest contact use and protection",
         "marketingCommunication": "Receive event and marketing updates"
       }
     },

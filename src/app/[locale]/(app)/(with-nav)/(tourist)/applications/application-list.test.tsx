@@ -151,12 +151,12 @@ describe("ApplicationList", () => {
     expect(screen.getByText(/^D-\d+$/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
-      "bg-primary",
-      "text-on-primary",
+      "bg-[#3182f6]",
+      "text-white",
     );
     expect(screen.getByRole("button", { name: "Pay with PayPal" })).toHaveClass(
-      "bg-primary",
-      "text-on-primary",
+      "bg-[#ffc439]",
+      "text-[#111]",
     );
     expect(screen.getByText("Toss")).toBeInTheDocument();
     expect(screen.getByText("PayPal")).toBeInTheDocument();

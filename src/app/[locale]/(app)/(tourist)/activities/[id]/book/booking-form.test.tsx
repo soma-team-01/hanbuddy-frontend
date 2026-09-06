@@ -293,16 +293,16 @@ describe("BookingForm", () => {
     await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
   });
 
-  it("uses the HanBuddy primary treatment for payment actions", () => {
+  it("keeps provider brand treatments when both payment actions are available", () => {
     renderWithQueryClient(<BookingForm activity={activity} />);
 
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
-      "bg-primary",
-      "text-on-primary",
+      "bg-[#3182f6]",
+      "text-white",
     );
     expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toHaveClass(
-      "bg-primary",
-      "text-on-primary",
+      "bg-[#ffc439]",
+      "text-[#111]",
     );
   });
 

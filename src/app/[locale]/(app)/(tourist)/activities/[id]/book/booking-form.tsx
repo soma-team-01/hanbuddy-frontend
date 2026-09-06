@@ -515,7 +515,11 @@ export function BookingForm({
                       type="button"
                       disabled={!agreed || isSubmitting}
                       onClick={() => handleSubmitClick("TOSS")}
-                      className="flex h-13 w-full items-center justify-center rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+                      className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
+                        showProviderChoice
+                          ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
+                          : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                      }`}
                     >
                       {isSubmitting ? t("processing") : tossPaymentLabel}
                     </button>
@@ -543,7 +547,11 @@ export function BookingForm({
                           type="button"
                           disabled={!agreed || isSubmitting}
                           onClick={() => handleSubmitClick("PAYPAL")}
-                          className="flex h-13 w-full items-center justify-center rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+                          className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold disabled:opacity-40 ${
+                            showProviderChoice
+                              ? "bg-[#ffc439] text-[#111] transition-opacity enabled:hover:opacity-90"
+                              : "bg-primary text-on-primary transition-colors enabled:hover:bg-primary-hover"
+                          }`}
                         >
                           {isSubmitting ? t("processing") : payPalPaymentLabel}
                         </button>

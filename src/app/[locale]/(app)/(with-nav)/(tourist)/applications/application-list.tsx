@@ -336,7 +336,11 @@ function ApplicationCard({
                     aria-label={
                       paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentLabel
                     }
-                    className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
+                    className={`${CARD_ACTION_CLASS} ${
+                      showProviderChoice
+                        ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
+                        : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                    }`}
                   >
                     {paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentText}
                   </button>
@@ -359,7 +363,11 @@ function ApplicationCard({
                     aria-label={
                       paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentLabel
                     }
-                    className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
+                    className={`${CARD_ACTION_CLASS} ${
+                      showProviderChoice
+                        ? "bg-[#ffc439] text-[#111] enabled:hover:opacity-90"
+                        : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                    }`}
                   >
                     {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentText}
                   </button>

@@ -40,7 +40,7 @@
     "exchangeRateUnavailable": "Exchange-rate information is temporarily unavailable. Please try again shortly.",
     "paypalOrderCreateFailed": "PayPal could not start the payment. Try PayPal again from My Applications.",
     "paypalCaptureFailed": "We could not verify the PayPal result. Check My Applications before making another payment.",
-    "paypalUnavailable": "PayPal is temporarily unavailable. Please use Toss Payments.",
+    "paymentProviderUnavailable": "The selected payment method is currently unavailable. Please try again later.",
     "buddyRequired": "This feature is only available to buddies.",
     "touristRequired": "This feature is only available to tourists.",
     "userNotFound": "Your user profile could not be found.",

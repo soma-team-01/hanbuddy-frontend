@@ -40,7 +40,7 @@
     "exchangeRateUnavailable": "暂时无法获取汇率信息。请稍后重试。",
     "paypalOrderCreateFailed": "无法开始PayPal付款。请从我的申请中再次尝试。",
     "paypalCaptureFailed": "无法确认PayPal付款结果。再次付款前，请先查看我的申请。",
-    "paypalUnavailable": "PayPal暂时无法使用。请使用Toss Payments。",
+    "paymentProviderUnavailable": "当前无法使用所选支付方式。请稍后重试。",
     "buddyRequired": "此功能仅供好友使用。",
     "touristRequired": "此功能仅供游客使用。",
     "userNotFound": "找不到您的用户个人资料。",

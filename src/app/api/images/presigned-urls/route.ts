@@ -11,9 +11,10 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  // 온보딩 중에는 signupToken, 로그인 후에는 accessToken을 Bearer로 사용한다
+  // 온보딩·재신청 중에는 각 단기 토큰, 로그인 후에는 accessToken을 Bearer로 사용한다.
   const bearerToken =
     request.cookies.get(AUTH_COOKIES.signupToken)?.value ??
+    request.cookies.get(AUTH_COOKIES.resubmissionToken)?.value ??
     request.cookies.get(AUTH_COOKIES.accessToken)?.value;
 
   if (!bearerToken) {

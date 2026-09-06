@@ -172,10 +172,10 @@ export function CountrySelect({
         aria-haspopup="listbox"
         aria-controls={isOpen ? listboxId : undefined}
         onClick={() => (isOpen ? close() : open())}
-        className={
+        className={`focus-border-only ${
           triggerClassName ??
-          "flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong"
-        }
+          "flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary-soft"
+        }`}
       >
         {selected ? (
           <span className="flex min-w-0 items-center gap-2.5">
@@ -226,7 +226,7 @@ export function CountrySelect({
                       setActiveIndex(0);
                     }}
                     onKeyDown={handleSearchKeyDown}
-                    className="w-full bg-transparent text-base text-ink outline-none placeholder:text-muted/70"
+                    className="focus-border-only w-full bg-transparent text-base text-ink outline-none placeholder:text-muted/70"
                   />
                 </div>
                 <ul

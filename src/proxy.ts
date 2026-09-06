@@ -35,6 +35,7 @@ export function proxy(request: NextRequest) {
     pathname: pathnameWithoutLocale,
     accessToken,
     signupToken: request.cookies.get(AUTH_COOKIES.signupToken)?.value,
+    resubmissionToken: request.cookies.get(AUTH_COOKIES.resubmissionToken)?.value,
     userType,
   });
 

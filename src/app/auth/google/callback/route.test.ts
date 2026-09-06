@@ -359,6 +359,7 @@ describe("GET /auth/google/callback", () => {
           registered: true,
           authStatus: "REJECTED",
           statusReason: "제출한 활동 정보를 확인할 수 없습니다.",
+          resubmissionToken: "resubmit-token",
           userId: 8,
           userType: "BUDDY",
         } satisfies GoogleLoginResponse,
@@ -371,6 +372,37 @@ describe("GET /auth/google/callback", () => {
     expect(location).toBe("http://localhost/en/buddy/auth/status?status=REJECTED");
     expect(location).not.toContain("reason");
     expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.statusReason}=`);
+    expect(response.headers.get("set-cookie") ?? "").toContain(
+      `${AUTH_COOKIES.resubmissionToken}=resubmit-token`,
+    );
+  });
+
+  it("does not store a resubmission token for a rejected tourist", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "REJECTED",
+          userId: 8,
+          userType: "TOURIST",
+          resubmissionToken: "unexpected-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("en"));
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/auth/status?status=REJECTED",
+    );
+    expect(response.headers.get("set-cookie") ?? "").not.toContain(
+      `${AUTH_COOKIES.resubmissionToken}=unexpected-token`,
+    );
   });
 
   it("redirects suspended buddy accounts to the suspended status screen", async () => {

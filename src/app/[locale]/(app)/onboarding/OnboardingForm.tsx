@@ -6,11 +6,12 @@ import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalSto
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
+  APP_BY_CONTACT_METHOD,
   CONTACT_METHOD_BY_APP,
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
-import { ArrowRightIcon, CameraIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, CameraIcon, TrashIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -20,7 +21,8 @@ import {
   getSignupAgreementTypes,
   hasAllRequiredSignupAgreements,
 } from "@/lib/auth/signup-agreements";
-import { findCountry } from "@/lib/countries";
+import { COUNTRIES, findCountry } from "@/lib/countries";
+import { DISPLAY_NAME_PATTERN, isValidDisplayName } from "@/lib/display-name";
 import {
   MAX_PROFILE_IMAGE_BYTES,
   PROFILE_IMAGE_CONTENT_TYPES,
@@ -31,6 +33,8 @@ import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
 import type messages from "@/messages/en.json";
 import type {
   ApiResponse,
+  BuddyResubmission,
+  BuddyResubmissionRequest,
   ErrorApiResponse,
   GoogleLoginResponse,
   GoogleProfile,
@@ -45,10 +49,13 @@ type OnboardingErrorKey =
   | "profileUploadFailed"
   | "signupFailed"
   | "serverUnavailable";
+type RequestFailureKey =
+  "profileUploadFailed" | "resubmissionFailed" | "signupFailed" | "serverUnavailable";
 
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
   userType?: UserType;
+  resubmission?: BuddyResubmission;
 }
 
 type OnboardingStep = 1 | 2 | 3;
@@ -94,30 +101,63 @@ function isValidDateInputValue(value: string) {
   );
 }
 
+function getInitialMessagingCountry(nationalityCode: string, contactCountryCode?: string | null) {
+  if (!contactCountryCode) return nationalityCode || "US";
+  const nationality = findCountry(nationalityCode);
+  if (nationality?.dialCode === contactCountryCode) return nationality.code;
+  return COUNTRIES.find((country) => country.dialCode === contactCountryCode)?.code ?? "US";
+}
+
+function getInitialMessagingApp(
+  isBuddyFlow: boolean,
+  resubmission: BuddyResubmission | undefined,
+): MessagingAppKey {
+  if (isBuddyFlow) return "phone";
+  if (resubmission) return APP_BY_CONTACT_METHOD[resubmission.contactMethod];
+  return "line";
+}
+
+function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
+  if (isResubmission) return "/buddy/auth/status?status=REJECTED" as const;
+  if (isBuddyFlow) return "/buddy" as const;
+  return "/login" as const;
+}
+
 export function OnboardingForm({
   googleProfile,
   userType = "TOURIST",
+  resubmission,
 }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
   const buddyT = useTranslations("BuddyOnboarding");
+  const resubmissionT = useTranslations("BuddyResubmission");
+  const messagingT = useTranslations("Messaging");
   const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
+  const isResubmission = Boolean(resubmission);
+  const isBuddyFlow = userType === "BUDDY";
+  const finalStep: OnboardingStep = isResubmission ? 2 : 3;
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
-  const [displayName, setDisplayName] = useState(googleProfile?.name ?? "");
-  const [birthDate, setBirthDate] = useState("");
-  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>("line");
-  const [messagingContact, setMessagingContact] = useState("");
+  const [displayName, setDisplayName] = useState(
+    resubmission?.displayName ?? googleProfile?.name ?? "",
+  );
+  const [birthDate, setBirthDate] = useState(resubmission?.birthDate ?? "");
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(() =>
+    getInitialMessagingApp(isBuddyFlow, resubmission),
+  );
+  const [messagingContact, setMessagingContact] = useState(
+    resubmission && (!isBuddyFlow || resubmission.contactMethod === "PHONE")
+      ? resubmission.contactIdentifier
+      : "",
+  );
   const [agreementDecisions, setAgreementDecisions] = useState<
     Partial<Record<SignupAgreementType, boolean>>
   >({});
   const [errorKey, setErrorKey] = useState<OnboardingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
     error: unknown;
-    fallbackKey: Extract<
-      OnboardingErrorKey,
-      "profileUploadFailed" | "signupFailed" | "serverUnavailable"
-    >;
+    fallbackKey: RequestFailureKey;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentLocalDate = useSyncExternalStore(
@@ -133,11 +173,23 @@ export function OnboardingForm({
     : "";
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState("");
+  const [existingProfileImageKey, setExistingProfileImageKey] = useState<string | null>(
+    resubmission?.profileImageKey ?? null,
+  );
+  const [existingProfileImageUrl, setExistingProfileImageUrl] = useState<string | null>(
+    resubmission?.profileImageUrl ?? null,
+  );
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
   const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const initialNationality = resubmission?.nationalityCode ?? "";
+  const initialMessagingCountry = getInitialMessagingCountry(
+    initialNationality,
+    resubmission?.contactCountryCode,
+  );
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
-    useMessagingCountrySync("");
+    useMessagingCountrySync(initialNationality, initialMessagingCountry);
   const agreementTypes = getSignupAgreementTypes(userType);
   const requiredAgreementTypes = getRequiredSignupAgreementTypes(userType);
   const allAgreementsSelected = agreementTypes.every(
@@ -177,6 +229,18 @@ export function OnboardingForm({
     setProfileImagePreview(URL.createObjectURL(file));
   }
 
+  function handleProfileImageRemove() {
+    if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
+    if (profileImageInputRef.current) profileImageInputRef.current.value = "";
+    setProfileImageFile(null);
+    setProfileImagePreview("");
+    setExistingProfileImageKey(null);
+    setExistingProfileImageUrl(null);
+    uploadedProfileImageRef.current = null;
+    setErrorKey(null);
+    setRequestFailure(null);
+  }
+
   function handleMessagingAppChange(nextApp: MessagingAppKey) {
     setMessagingApp(nextApp);
     // 전화번호형 <-> ID형 값이 섞이지 않도록 앱 전환 시 연락처 입력을 비운다
@@ -197,8 +261,22 @@ export function OnboardingForm({
     setErrorKey(null);
   }
 
-  async function resolveProfileImageKey(): Promise<string | undefined> {
-    if (!profileImageFile) return undefined;
+  function handleDisplayNameChange(value: string) {
+    setDisplayName(value);
+    if (errorKey === "validation.displayNameInvalid" && isValidDisplayName(value)) {
+      setErrorKey(null);
+    }
+  }
+
+  function handleDisplayNameBlur() {
+    if (!isValidDisplayName(displayName)) {
+      setRequestFailure(null);
+      setErrorKey("validation.displayNameInvalid");
+    }
+  }
+
+  async function resolveProfileImageKey(): Promise<string | null | undefined> {
+    if (!profileImageFile) return isResubmission ? existingProfileImageKey : undefined;
     if (uploadedProfileImageRef.current?.file === profileImageFile) {
       return uploadedProfileImageRef.current.imageKey;
     }
@@ -209,12 +287,7 @@ export function OnboardingForm({
   }
 
   function validateAboutYou() {
-    const trimmedDisplayName = displayName.trim();
-    if (
-      trimmedDisplayName.length < 2 ||
-      trimmedDisplayName.length > 30 ||
-      trimmedDisplayName !== displayName
-    ) {
+    if (!isValidDisplayName(displayName)) {
       setErrorKey("validation.displayNameInvalid");
       return false;
     }
@@ -276,7 +349,7 @@ export function OnboardingForm({
     setRequestFailure(null);
 
     if (currentStep === 1 && validateAboutYou()) goToStep(2);
-    if (currentStep === 2 && validateContact()) goToStep(3);
+    if (currentStep === 2 && !isResubmission && validateContact()) goToStep(3);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -284,7 +357,7 @@ export function OnboardingForm({
     setErrorKey(null);
     setRequestFailure(null);
 
-    if (currentStep !== 3) {
+    if (currentStep !== finalStep) {
       handleContinue();
       return;
     }
@@ -297,7 +370,7 @@ export function OnboardingForm({
       setCurrentStep(2);
       return;
     }
-    if (!validateAgreements()) return;
+    if (!isResubmission && !validateAgreements()) return;
 
     const contactIdentifier = messagingContact.trim();
     const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
@@ -307,7 +380,7 @@ export function OnboardingForm({
 
     setIsSubmitting(true);
     try {
-      let profileImageKey: string | undefined;
+      let profileImageKey: string | null | undefined;
       try {
         profileImageKey = await resolveProfileImageKey();
       } catch (error) {
@@ -315,35 +388,59 @@ export function OnboardingForm({
         return;
       }
 
-      const payload: GoogleSignupRequest = {
-        userType,
+      const commonProfile = {
         displayName: displayName.trim(),
-        ...(profileImageKey ? { profileImageKey } : {}),
         nationalityCode: nationality,
         birthDate,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-        contactCountryCode,
+        contactCountryCode: contactCountryCode ?? "",
         contactIdentifier,
-        agreements: buildSignupAgreements(userType, agreementDecisions),
       };
+      const payload: GoogleSignupRequest | BuddyResubmissionRequest = isResubmission
+        ? {
+            ...commonProfile,
+            profileImageKey: profileImageKey ?? null,
+          }
+        : {
+            ...commonProfile,
+            userType,
+            ...(profileImageKey ? { profileImageKey } : {}),
+            agreements: buildSignupAgreements(userType, agreementDecisions),
+          };
 
-      const response = await fetch("/api/auth/google/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        isResubmission ? "/api/auth/buddy/resubmission" : "/api/auth/google/signup",
+        {
+          method: isResubmission ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const body = (await response.json().catch(() => undefined)) as
-        ApiResponse<GoogleLoginResponse> | ErrorApiResponse | undefined;
+        ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
         setRequestFailure({
           error: createApiClientError(response.status, body && !body.isSuccess ? body : undefined),
-          fallbackKey: "signupFailed",
+          fallbackKey: isResubmission ? "resubmissionFailed" : "signupFailed",
         });
         return;
       }
 
-      const authStatus = body.result.authStatus;
+      if (isResubmission) {
+        if ((body.result as BuddyResubmission).accountStatus !== "PENDING_APPROVAL") {
+          setRequestFailure({
+            error: createApiClientError(502, undefined),
+            fallbackKey: "resubmissionFailed",
+          });
+          return;
+        }
+        router.replace("/buddy/auth/status?status=PENDING_APPROVAL");
+        router.refresh();
+        return;
+      }
+
+      const authStatus = (body.result as GoogleLoginResponse).authStatus;
       if (authStatus === "ACTIVE") {
         router.replace(userType === "BUDDY" ? "/dashboard" : "/");
       } else if (
@@ -389,28 +486,72 @@ export function OnboardingForm({
         className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
       />
     );
+  } else if (existingProfileImageUrl) {
+    profilePhoto = (
+      <Image
+        src={existingProfileImageUrl}
+        alt={t("selectedProfilePhotoPreview")}
+        width={64}
+        height={64}
+        unoptimized
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
+      />
+    );
   }
 
+  const hasDisplayNameError = errorKey === "validation.displayNameInvalid";
   let errorMessage: string | null = null;
   if (requestFailure) {
-    errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
-  } else if (errorKey) {
+    if (requestFailure.fallbackKey === "resubmissionFailed") {
+      errorMessage = getApiErrorMessage(requestFailure.error, resubmissionT("resubmissionFailed"));
+    } else {
+      errorMessage = getApiErrorMessage(requestFailure.error, t(requestFailure.fallbackKey));
+    }
+  } else if (errorKey && !hasDisplayNameError) {
     errorMessage = t(errorKey);
   }
 
-  const roleCopy = {
-    title: userType === "BUDDY" ? buddyT("title") : t("title"),
-    eyebrow: userType === "BUDDY" ? buddyT("eyebrow") : t("eyebrow"),
-    headline: userType === "BUDDY" ? buddyT("headline") : t("headline"),
-    description: userType === "BUDDY" ? buddyT("description") : t("description"),
-    photoGuidance:
-      userType === "BUDDY" ? buddyT("profilePhotoOptional") : t("profilePhotoOptional"),
-    contactMethods: userType === "BUDDY" ? buddyT("contactMethods") : t("contactMethods"),
-    contactDescription:
-      userType === "BUDDY" ? buddyT("contactDescription") : t("contactDescription"),
-    submit: userType === "BUDDY" ? buddyT("completeRegistration") : t("completeRegistration"),
-    submitting: userType === "BUDDY" ? buddyT("completing") : t("completing"),
-  };
+  function getRoleCopy() {
+    if (isResubmission) {
+      return {
+        title: resubmissionT("title"),
+        eyebrow: resubmissionT("eyebrow"),
+        headline: resubmissionT("headline"),
+        description: resubmissionT("description"),
+        photoGuidance: resubmissionT("profilePhotoOptional"),
+        contactMethods: resubmissionT("contactMethods"),
+        contactDescription: resubmissionT("contactDescription"),
+        submit: resubmissionT("submit"),
+        submitting: resubmissionT("submitting"),
+      };
+    }
+    if (isBuddyFlow) {
+      return {
+        title: buddyT("title"),
+        eyebrow: buddyT("eyebrow"),
+        headline: buddyT("headline"),
+        description: buddyT("description"),
+        photoGuidance: buddyT("profilePhotoOptional"),
+        contactMethods: buddyT("contactMethods"),
+        contactDescription: buddyT("contactDescription"),
+        submit: buddyT("completeRegistration"),
+        submitting: buddyT("completing"),
+      };
+    }
+    return {
+      title: t("title"),
+      eyebrow: t("eyebrow"),
+      headline: t("headline"),
+      description: t("description"),
+      photoGuidance: t("profilePhotoOptional"),
+      contactMethods: t("contactMethods"),
+      contactDescription: t("contactDescription"),
+      submit: t("completeRegistration"),
+      submitting: t("completing"),
+    };
+  }
+
+  const roleCopy = getRoleCopy();
 
   const agreementItems: Array<{
     type: SignupAgreementType;
@@ -460,7 +601,9 @@ export function OnboardingForm({
       isDocument: false,
     },
   ];
-  const stepLabels = [t("steps.aboutYou"), t("steps.contact"), t("steps.agreements")];
+  const stepLabels = isResubmission
+    ? [t("steps.aboutYou"), t("steps.contact")]
+    : [t("steps.aboutYou"), t("steps.contact"), t("steps.agreements")];
 
   return (
     <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
@@ -468,7 +611,7 @@ export function OnboardingForm({
         <PageContainer>
           <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4">
             <Link
-              href={userType === "BUDDY" ? "/buddy" : "/login"}
+              href={getOnboardingBackHref(isResubmission, isBuddyFlow)}
               aria-label={accessibilityT("close")}
               className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
@@ -501,7 +644,9 @@ export function OnboardingForm({
               <p className="mb-4 hidden text-xs font-bold tracking-[0.18em] text-primary uppercase lg:block">
                 {t("steps.progress", { current: currentStep, total: stepLabels.length })}
               </p>
-              <ol className="grid grid-cols-3 gap-2 lg:flex lg:flex-col lg:gap-5">
+              <ol
+                className={`${isResubmission ? "grid-cols-2" : "grid-cols-3"} grid gap-2 lg:flex lg:flex-col lg:gap-5`}
+              >
                 {stepLabels.map((label, index) => {
                   const step = (index + 1) as OnboardingStep;
                   const isActive = currentStep === step;
@@ -555,12 +700,23 @@ export function OnboardingForm({
                           <CameraIcon className="size-4" />
                           <span className="sr-only">{t("addProfilePhoto")}</span>
                           <input
+                            ref={profileImageInputRef}
                             type="file"
                             accept={PROFILE_IMAGE_CONTENT_TYPES.join(",")}
                             className="sr-only"
                             onChange={handleProfileImageChange}
                           />
                         </label>
+                        {isResubmission && (profileImagePreview || existingProfileImageUrl) ? (
+                          <button
+                            type="button"
+                            onClick={handleProfileImageRemove}
+                            aria-label={resubmissionT("removeProfilePhoto")}
+                            className="absolute -top-2 -left-2 flex size-8 items-center justify-center rounded-full border border-line-soft bg-white text-muted transition-colors hover:border-danger hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+                          >
+                            <TrashIcon className="size-4" />
+                          </button>
+                        ) : null}
                       </div>
                       <div className="min-w-0">
                         <label className="flex min-w-0 flex-col gap-1.5">
@@ -571,13 +727,30 @@ export function OnboardingForm({
                             required
                             minLength={2}
                             maxLength={30}
+                            pattern={DISPLAY_NAME_PATTERN}
                             value={displayName}
-                            onChange={(event) => setDisplayName(event.target.value)}
+                            onChange={(event) => handleDisplayNameChange(event.target.value)}
+                            onBlur={handleDisplayNameBlur}
                             aria-label={t("displayName")}
-                            className="h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                            aria-describedby={
+                              hasDisplayNameError ? "onboarding-display-name-error" : undefined
+                            }
+                            aria-invalid={hasDisplayNameError}
+                            className="focus-border-only h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                           />
                         </label>
-                        <p className="mt-2 text-xs leading-5 text-muted">
+                        {hasDisplayNameError ? (
+                          <p
+                            id="onboarding-display-name-error"
+                            role="alert"
+                            className="mt-2 text-xs leading-5 text-danger"
+                          >
+                            {t("displayNameHint")}
+                          </p>
+                        ) : null}
+                        <p
+                          className={`${hasDisplayNameError ? "mt-1" : "mt-2"} text-xs leading-5 text-muted`}
+                        >
                           {roleCopy.photoGuidance}
                         </p>
                       </div>
@@ -590,7 +763,7 @@ export function OnboardingForm({
                           value={nationality}
                           onChange={handleNationalityChange}
                           ariaLabel={t("nationality")}
-                          triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong"
+                          triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary-soft"
                         />
                       </div>
                       <label className="flex flex-col gap-1.5">
@@ -604,10 +777,24 @@ export function OnboardingForm({
                           value={birthDate}
                           onChange={(event) => setBirthDate(event.target.value)}
                           aria-label={t("birthDate")}
-                          className="w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                          className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                         />
                       </label>
                     </div>
+
+                    {resubmission?.rejectionReason ? (
+                      <div
+                        data-testid="resubmission-rejection-reason"
+                        className="rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3"
+                      >
+                        <p className="text-xs font-bold text-primary-strong">
+                          {resubmissionT("rejectionReason")}
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-ink">
+                          {resubmission.rejectionReason}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 </section>
               ) : null}
@@ -626,7 +813,7 @@ export function OnboardingForm({
                   </div>
                   <div className="mt-8 flex max-w-3xl flex-col gap-1.5">
                     <span className="text-sm font-medium text-ink">
-                      {t("preferredMessagingApp")}
+                      {isBuddyFlow ? messagingT("phoneNumber") : t("preferredMessagingApp")}
                     </span>
                     <MessagingAppField
                       app={messagingApp}
@@ -638,12 +825,13 @@ export function OnboardingForm({
                       inputName="contactIdentifier"
                       inputRequired
                       variant="cards"
+                      showAppSelector={!isBuddyFlow}
                     />
                   </div>
                 </section>
               ) : null}
 
-              {currentStep === 3 ? (
+              {!isResubmission && currentStep === 3 ? (
                 <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -731,12 +919,12 @@ export function OnboardingForm({
                 ) : null}
                 <button
                   form="google-onboarding-form"
-                  type={currentStep === 3 ? "submit" : "button"}
-                  onClick={currentStep === 3 ? undefined : handleContinue}
+                  type={currentStep === finalStep ? "submit" : "button"}
+                  onClick={currentStep === finalStep ? undefined : handleContinue}
                   disabled={isSubmitting}
                   className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60 lg:min-w-32 lg:flex-none"
                 >
-                  {currentStep === 3
+                  {currentStep === finalStep
                     ? isSubmitting
                       ? roleCopy.submitting
                       : roleCopy.submit

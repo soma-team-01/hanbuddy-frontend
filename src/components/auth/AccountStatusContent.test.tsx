@@ -8,12 +8,14 @@ describe("AccountStatusContent", () => {
     renderWithIntl(<AccountStatusContent status="PENDING_APPROVAL" userType="BUDDY" />);
 
     expect(
-      screen.getByRole("heading", { name: "Buddy application under review" }),
+      screen.getByRole("heading", { name: "Buddy signup guidance pending" }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText("We'll email you when the review is complete."),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Usually 1–3 business days")).toBeInTheDocument();
+      screen.getByText(
+        "Our team will contact you at the email address or phone number you entered during signup about your buddy registration.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("We'll contact you within 1–3 business days")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "contact@hanbuddy.kr" })).toHaveAttribute(
       "href",
       "mailto:contact@hanbuddy.kr",
@@ -23,6 +25,17 @@ describe("AccountStatusContent", () => {
       "/en/buddy",
     );
     expect(screen.queryByText("Email HanBuddy")).not.toBeInTheDocument();
+  });
+
+  it("shows tourist-specific guidance for a pending tourist account", () => {
+    renderWithIntl(<AccountStatusContent status="PENDING_APPROVAL" userType="TOURIST" />);
+
+    expect(
+      screen.getByText(
+        "Your account is awaiting review. You can use HanBuddy once the review is complete.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/buddy registration/i)).not.toBeInTheDocument();
   });
 
   it("shows a rejection reason supplied by the backend", () => {
@@ -38,6 +51,16 @@ describe("AccountStatusContent", () => {
     expect(
       screen.getByText("The submitted hosting information could not be verified."),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Update and apply again" })).not.toBeInTheDocument();
+  });
+
+  it("offers resubmission only when the rejected buddy has a resubmission session", () => {
+    renderWithIntl(<AccountStatusContent status="REJECTED" userType="BUDDY" canResubmit />);
+
+    expect(screen.getByRole("link", { name: "Update and apply again" })).toHaveAttribute(
+      "href",
+      "/en/buddy/resubmission",
+    );
   });
 
   it("localizes the suspended account guidance in Korean", () => {

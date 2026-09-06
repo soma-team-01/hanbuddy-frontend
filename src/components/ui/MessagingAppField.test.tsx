@@ -25,25 +25,25 @@ function renderField(overrides: Partial<FieldProps> = {}, locale: "en" | "ko" = 
 describe("MessagingAppField", () => {
   it("renders the country selector and generic phone input by default", () => {
     renderField();
-    expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
+    expect(screen.getByLabelText("Country code")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Phone number")).toBeInTheDocument();
   });
 
   it("renders a fixed +82 chip instead of the country selector when koreanOnly", () => {
     renderField({ koreanOnly: true });
-    expect(screen.queryByLabelText("Messaging country code")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Country code")).not.toBeInTheDocument();
     expect(screen.getByText("+82")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("010-XXXX-XXXX")).toBeInTheDocument();
   });
 
   it("displays stored digits with Korean hyphen format when koreanOnly", () => {
     renderField({ koreanOnly: true, contactValue: "01012345678" });
-    expect(screen.getByLabelText("Messaging phone number")).toHaveValue("010-1234-5678");
+    expect(screen.getByLabelText("Phone number")).toHaveValue("010-1234-5678");
   });
 
   it("reports digits only from the koreanOnly input", () => {
     const props = renderField({ koreanOnly: true });
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "010-1234" },
     });
     expect(props.onContactChange).toHaveBeenCalledWith("0101234");
@@ -51,7 +51,7 @@ describe("MessagingAppField", () => {
 
   it("caps koreanOnly phone input to 11 digits", () => {
     const props = renderField({ koreanOnly: true });
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "010-1234-5678-99" },
     });
     expect(props.onContactChange).toHaveBeenCalledWith("01012345678");
@@ -89,6 +89,14 @@ describe("MessagingAppField", () => {
     expect(screen.getByTestId("messaging-app-options")).toHaveClass("lg:grid-cols-4");
   });
 
+  it("can hide the contact method selector for a fixed phone flow", () => {
+    renderField({ app: "phone", showAppSelector: false });
+
+    expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "WhatsApp" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
+  });
+
   it.each([
     ["whatsapp", "WhatsApp"],
     ["phone", "전화번호"],
@@ -99,8 +107,8 @@ describe("MessagingAppField", () => {
       "aria-pressed",
       "true",
     );
-    expect(screen.getByLabelText("메신저 국가번호")).toBeInTheDocument();
-    expect(screen.getByLabelText("메신저 전화번호")).toHaveAttribute("placeholder", "전화번호");
+    expect(screen.getByLabelText("국가번호")).toBeInTheDocument();
+    expect(screen.getByLabelText("전화번호")).toHaveAttribute("placeholder", "전화번호");
   });
 
   it.each([

@@ -9,6 +9,7 @@ export const AUTH_COOKIES = {
   accessToken: "hanbuddy_access_token",
   refreshToken: "refresh_token",
   signupToken: "hanbuddy_signup_token",
+  resubmissionToken: "hanbuddy_resubmission_token",
   googleProfile: "hanbuddy_google_profile",
   userId: "hanbuddy_user_id",
   userType: "hanbuddy_user_type",
@@ -33,6 +34,9 @@ export const SIGNUP_COOKIE_OPTIONS = {
   ...httpOnlyCookieOptions,
   maxAge: 30 * 60,
 };
+
+// 백엔드 토큰 만료보다 오래 남지 않도록 브라우저 세션 쿠키로만 보관한다.
+export const RESUBMISSION_COOKIE_OPTIONS = httpOnlyCookieOptions;
 
 export const SESSION_COOKIE_OPTIONS = httpOnlyCookieOptions;
 
@@ -79,6 +83,10 @@ export function clearAuthStatusReasonCookie(response: NextResponse) {
 export function clearSignupCookies(response: NextResponse) {
   response.cookies.delete(AUTH_COOKIES.signupToken);
   response.cookies.delete(AUTH_COOKIES.googleProfile);
+}
+
+export function clearResubmissionCookie(response: NextResponse) {
+  response.cookies.delete(AUTH_COOKIES.resubmissionToken);
 }
 
 export function encodeGoogleProfile(profile: GoogleProfile) {

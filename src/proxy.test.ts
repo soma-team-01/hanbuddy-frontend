@@ -99,6 +99,17 @@ describe("route access proxy", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
+  it("allows buddy resubmission only with its dedicated token", async () => {
+    const rejected = await runProxy("/ko/buddy/resubmission");
+    expect(rejected.headers.get("location")).toBe("http://localhost/ko/buddy");
+
+    const allowed = await runProxy("/ko/buddy/resubmission", {
+      [AUTH_COOKIES.resubmissionToken]: "resubmit-token",
+    });
+    expect(allowed.status).toBe(200);
+    expect(allowed.headers.get("location")).toBeNull();
+  });
+
   it("protects bare admin routes without locale rewriting", async () => {
     const unauthenticated = await runProxy("/admin/buddies");
     expect(unauthenticated.headers.get("location")).toBe("http://localhost/admin/login");

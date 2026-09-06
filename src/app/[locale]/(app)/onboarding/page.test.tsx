@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import type { BuddyResubmission } from "@/lib/auth/types";
 import * as countries from "@/lib/countries";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
@@ -94,14 +95,28 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("heading", { name: headline })).toHaveClass("lg:whitespace-nowrap");
       expect(screen.getByText(description)).toHaveClass("lg:whitespace-nowrap");
       expect(screen.getByText(profilePhotoHint)).toBeInTheDocument();
+      expect(screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" })).toHaveValue(
+        "Google Traveler",
+      );
+      const displayNameInput = screen.getByRole("textbox", {
+        name: locale === "ko" ? "이름" : "Name",
+      });
+      expect(displayNameInput).toHaveAttribute("pattern", "[A-Za-z]+(?:[ '-][A-Za-z]+)*");
+      expect(displayNameInput).toHaveClass("focus-border-only");
       expect(
-        screen.getByRole("textbox", { name: locale === "ko" ? "닉네임" : "Nickname" }),
-      ).toHaveValue("Google Traveler");
+        screen.queryByText(
+          locale === "ko"
+            ? "영문 2~30자 · 단어 사이는 공백, 하이픈(-), 작은따옴표(')만 사용할 수 있어요."
+            : "Use 2–30 English letters. Separate words with one space, hyphen (-), or apostrophe (').",
+        ),
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Tourist" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
       expect(screen.getByText(nationality)).toBeInTheDocument();
       expect(screen.getByLabelText(birthDate)).toHaveAttribute("type", "date");
+      expect(screen.getByLabelText(birthDate)).toHaveClass("focus-border-only");
+      expect(screen.getByRole("button", { name: nationality })).toHaveClass("focus-border-only");
       expect(screen.getByTestId("onboarding-personal-fields")).not.toHaveClass("sm:grid-cols-2");
       expect(
         screen.queryByText(
@@ -159,6 +174,53 @@ describe("OnboardingForm", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(message);
   });
 
+  it.each([
+    [
+      "en",
+      "한글",
+      "Use 2–30 English letters. Separate words with one space, hyphen (-), or apostrophe (').",
+    ],
+    [
+      "ko",
+      "John--Smith",
+      "영문 2~30자 · 단어 사이는 공백, 하이픈(-), 작은따옴표(')만 사용할 수 있어요.",
+    ],
+  ] as const)("blocks invalid names during %s signup", (locale, value, message) => {
+    renderWithIntl(<OnboardingForm googleProfile={{ name: value }} />, { locale });
+
+    clickContinue(locale);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(message);
+    expect(screen.getByRole("alert")).toHaveClass("text-danger");
+    expect(
+      screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" }),
+    ).toHaveAttribute("aria-invalid", "true");
+    expect(
+      screen.getByRole("navigation", {
+        name: locale === "ko" ? "총 3단계 중 1단계" : "Step 1 of 3",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the name rule after blur and clears it as soon as the value is valid", () => {
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />, { locale: "ko" });
+    const input = screen.getByRole("textbox", { name: "이름" });
+    const message = "영문 2~30자 · 단어 사이는 공백, 하이픈(-), 작은따옴표(')만 사용할 수 있어요.";
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: "한글" } });
+    fireEvent.blur(input);
+
+    expect(screen.getByText(message)).toHaveClass("text-danger");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+
+    fireEvent.change(input, { target: { value: "John Smith" } });
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-invalid", "false");
+  });
+
   it("keeps profile details when moving between steps", () => {
     renderWithIntl(<OnboardingForm googleProfile={{ name: "Google Traveler" }} />);
     fillAboutYou("en", { birthDate: "1998-04-12" });
@@ -169,7 +231,7 @@ describe("OnboardingForm", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
 
-    expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Google Traveler");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Traveler");
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
   });
 
@@ -189,11 +251,20 @@ describe("OnboardingForm", () => {
     renderWithIntl(<OnboardingForm userType="BUDDY" googleProfile={{ name: "Google Buddy" }} />);
 
     expect(screen.getByText("Welcome, future buddy")).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Nickname" })).toHaveValue("Google Buddy");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Buddy");
     expect(
       screen.getByText("Choose a clear face photo so guests can recognize you when you meet."),
     ).toBeInTheDocument();
-    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "line_user" });
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    expect(
+      screen.getByRole("heading", { name: "What phone number should we use?" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "2025550114" },
+    });
+    clickContinue("en");
     expect(screen.getByRole("heading", { name: "Agreements" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
     fireEvent.click(screen.getByRole("button", { name: "Sign up as a buddy" }));
@@ -202,6 +273,9 @@ describe("OnboardingForm", () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
       userType: "BUDDY",
       displayName: "Google Buddy",
+      contactMethod: "PHONE",
+      contactCountryCode: "+1",
+      contactIdentifier: "2025550114",
       agreements: expect.arrayContaining([
         expect.objectContaining({ type: "BUDDY_OPERATION_TERMS", agreed: true }),
         expect.objectContaining({ type: "BUDDY_COMMISSION_POLICY", agreed: true }),
@@ -212,6 +286,79 @@ describe("OnboardingForm", () => {
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
     );
     expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("prefills a rejected buddy application and resubmits without agreements", async () => {
+    const application: BuddyResubmission = {
+      userId: 7,
+      email: "buddy@example.com",
+      name: "Google Buddy",
+      displayName: "Old Buddy",
+      profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
+      profileImageUrl: "https://cdn.test/profiles/old.webp",
+      nationalityCode: "KR",
+      birthDate: "1995-02-03",
+      contactMethod: "LINE",
+      contactCountryCode: "",
+      contactIdentifier: "old-buddy",
+      accountStatus: "REJECTED",
+      reviewedAt: "2026-09-03T12:00:00+09:00",
+      rejectionReason: "Please update your profile.",
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "200",
+          message: "OK",
+          result: { ...application, accountStatus: "PENDING_APPROVAL", rejectionReason: null },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Old Buddy");
+    expect(screen.getByLabelText("Date of birth")).toHaveValue("1995-02-03");
+    expect(screen.queryByText("Google Buddy")).not.toBeInTheDocument();
+    expect(screen.queryByText("buddy@example.com")).not.toBeInTheDocument();
+    expect(screen.getByText("Reason for the previous rejection")).toBeInTheDocument();
+    expect(screen.getByText("Please update your profile.")).toBeInTheDocument();
+    const personalFields = screen.getByTestId("onboarding-personal-fields");
+    const rejectionReason = screen.getByTestId("resubmission-rejection-reason");
+    expect(
+      personalFields.compareDocumentPosition(rejectionReason) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByRole("navigation", { name: "Step 1 of 2" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Phone number" })).toHaveValue("");
+    expect(screen.queryByText("Agreements")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "01012345678" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Request another review" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/buddy/resubmission",
+      expect.objectContaining({ method: "PUT" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      displayName: "Old Buddy",
+      profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
+      nationalityCode: "KR",
+      birthDate: "1995-02-03",
+      contactMethod: "PHONE",
+      contactCountryCode: "+82",
+      contactIdentifier: "01012345678",
+    });
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/en/buddy/auth/status?status=PENDING_APPROVAL",
+    );
   });
 
   it("shows only the tourist signup agreements on traveler onboarding", () => {
@@ -228,7 +375,12 @@ describe("OnboardingForm", () => {
 
   it("shows the additional buddy agreements on buddy onboarding", () => {
     renderWithIntl(<OnboardingForm userType="BUDDY" />);
-    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "line_user" });
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "2025550114" },
+    });
+    clickContinue("en");
 
     expect(
       screen.getByText("Personal information collection, use, and buddy application review"),
@@ -349,7 +501,7 @@ describe("OnboardingForm", () => {
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
+    expect(screen.getByLabelText("Country code")).toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
   });
 
@@ -361,7 +513,7 @@ describe("OnboardingForm", () => {
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "2025550123" },
     });
 
@@ -398,7 +550,7 @@ describe("OnboardingForm", () => {
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "12-ab" },
     });
 
@@ -418,7 +570,7 @@ function getStepLabels(locale: "en" | "ko") {
         searchCountry: "국가 검색",
         country: "미국",
         birthDate: "생년월일",
-        displayName: "닉네임",
+        displayName: "이름",
         appId: "메신저 앱 ID",
         continue: "다음",
       }
@@ -427,7 +579,7 @@ function getStepLabels(locale: "en" | "ko") {
         searchCountry: "Search country",
         country: "United States",
         birthDate: "Date of birth",
-        displayName: "Nickname",
+        displayName: "Name",
         appId: "Messaging app ID",
         continue: "Next",
       };
@@ -442,7 +594,7 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }) {
   const labels = getStepLabels(locale);
   const displayName = screen.getByRole("textbox", { name: labels.displayName });
   if (!(displayName as HTMLInputElement).value) {
-    fireEvent.change(displayName, { target: { value: locale === "ko" ? "여행자" : "Traveler" } });
+    fireEvent.change(displayName, { target: { value: "Traveler" } });
   }
 
   fireEvent.click(screen.getByRole("button", { name: labels.nationality }));
@@ -496,6 +648,49 @@ describe("OnboardingForm profile image", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
   }
 
+  function createRejectedApplication(): BuddyResubmission {
+    return {
+      userId: 7,
+      email: "buddy@example.com",
+      name: "Google Buddy",
+      displayName: "Old Buddy",
+      profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
+      profileImageUrl: "https://cdn.test/profiles/old.webp",
+      nationalityCode: "KR",
+      birthDate: "1995-02-03",
+      contactMethod: "LINE",
+      contactCountryCode: "",
+      contactIdentifier: "old-buddy",
+      accountStatus: "REJECTED",
+      reviewedAt: "2026-09-03T12:00:00+09:00",
+      rejectionReason: "Please update your profile.",
+    };
+  }
+
+  function mockSuccessfulResubmission(application: BuddyResubmission) {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "200",
+          message: "OK",
+          result: { ...application, accountStatus: "PENDING_APPROVAL", rejectionReason: null },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  function submitResubmission() {
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.change(screen.getByLabelText("Phone number"), {
+      target: { value: "01012345678" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Request another review" }));
+  }
+
   it("shows a local preview after selecting a profile image", () => {
     renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
 
@@ -504,6 +699,65 @@ describe("OnboardingForm profile image", () => {
     });
 
     expect(screen.getByAltText("Selected profile photo preview")).toBeInTheDocument();
+  });
+
+  it("removes the existing profile image when resubmitting", async () => {
+    const application = createRejectedApplication();
+    const fetchMock = mockSuccessfulResubmission(application);
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove profile photo" }));
+    submitResubmission();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      profileImageKey: null,
+    });
+    expect(uploadProfileImage).not.toHaveBeenCalled();
+  });
+
+  it("allows the same profile image file to be selected again after removal", () => {
+    const application = createRejectedApplication();
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+    const fileInput = screen.getByLabelText("Add profile photo") as HTMLInputElement;
+    const image = createImageFile("same-profile.png");
+
+    fireEvent.change(fileInput, { target: { files: [image] } });
+    Object.defineProperty(fileInput, "value", {
+      configurable: true,
+      value: "C:\\fakepath\\same-profile.png",
+      writable: true,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Remove profile photo" }));
+
+    expect(fileInput).toHaveValue("");
+    fireEvent.change(fileInput, { target: { files: [image] } });
+    expect(screen.getByAltText("Selected profile photo preview")).toBeInTheDocument();
+  });
+
+  it("replaces the existing profile image when resubmitting", async () => {
+    const application = createRejectedApplication();
+    const newImageKey = "profiles/2026/09/04/123e4567-e89b-12d3-a456-426614174001.png";
+    vi.mocked(uploadProfileImage).mockResolvedValue({
+      uploadUrl: "https://bucket.s3.amazonaws.com/new?signed",
+      imageKey: newImageKey,
+      imageUrl: "https://cdn.test/profiles/new.png",
+      expiresInSeconds: 300,
+    });
+    const fetchMock = mockSuccessfulResubmission(application);
+    renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+
+    const replacement = createImageFile("replacement.png");
+    fireEvent.change(screen.getByLabelText("Add profile photo"), {
+      target: { files: [replacement] },
+    });
+    submitResubmission();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(uploadProfileImage).toHaveBeenCalledWith(replacement);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      profileImageKey: newImageKey,
+    });
   });
 
   it("shows the HanBuddy default image instead of the Google profile picture", () => {

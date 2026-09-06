@@ -39,7 +39,35 @@ export interface GoogleLoginResponse {
   userType?: UserType;
   accessToken?: string;
   signupToken?: string;
+  resubmissionToken?: string;
   googleProfile?: GoogleProfile;
+}
+
+export interface BuddyResubmission {
+  userId: number;
+  email: string;
+  name: string;
+  displayName: string;
+  profileImageKey: string | null;
+  profileImageUrl: string | null;
+  nationalityCode: string;
+  birthDate: string;
+  contactMethod: ContactMethod;
+  contactCountryCode: string | null;
+  contactIdentifier: string;
+  accountStatus: "REJECTED" | "PENDING_APPROVAL";
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+}
+
+export interface BuddyResubmissionRequest {
+  displayName: string;
+  profileImageKey: string | null;
+  nationalityCode: string;
+  birthDate: string;
+  contactMethod: ContactMethod;
+  contactCountryCode: string;
+  contactIdentifier: string;
 }
 
 export interface GoogleSignupRequest {

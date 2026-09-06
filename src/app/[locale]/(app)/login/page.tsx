@@ -72,26 +72,32 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
               {t(`errors.${errorCode}`)}
             </p>
           ) : null}
-          <Link
-            href={googleStartHref}
-            prefetch={false}
-            className={`${errorCode ? "mt-6" : "mt-10"} motion-press relative mx-auto flex h-14 w-full max-w-[520px] items-center justify-center rounded-full border border-primary bg-primary px-16 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.28)] transition-colors hover:border-primary-hover hover:bg-primary-hover`}
-          >
-            <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm sm:left-4">
-              <GoogleIcon className="size-5" />
-            </span>
-            <span>{t("continueWithGoogle")}</span>
-          </Link>
           {reviewLoginEnabled ? (
-            <>
-              <div className="mx-auto my-6 flex w-full max-w-[520px] items-center gap-4 text-xs font-semibold text-muted">
-                <span className="h-px flex-1 bg-line-soft" aria-hidden="true" />
-                <span>{t("reviewLogin.divider")}</span>
-                <span className="h-px flex-1 bg-line-soft" aria-hidden="true" />
-              </div>
+            <div className={errorCode ? "mt-6" : "mt-10"}>
               <ReviewLoginForm locale={locale} returnTo={returnTo} />
-            </>
-          ) : null}
+              <Link
+                href={googleStartHref}
+                prefetch={false}
+                className="motion-press relative mx-auto mt-5 flex h-12 w-full max-w-[520px] items-center justify-center rounded-full border border-line-strong bg-white px-16 font-display text-sm font-bold text-ink transition-colors hover:border-primary/50 hover:bg-primary-soft/40"
+              >
+                <span className="absolute left-3 flex size-8 items-center justify-center rounded-full bg-white sm:left-4">
+                  <GoogleIcon className="size-5" />
+                </span>
+                <span>{t("continueWithGoogle")}</span>
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href={googleStartHref}
+              prefetch={false}
+              className={`${errorCode ? "mt-6" : "mt-10"} motion-press relative mx-auto flex h-14 w-full max-w-[520px] items-center justify-center rounded-full border border-primary bg-primary px-16 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.28)] transition-colors hover:border-primary-hover hover:bg-primary-hover`}
+            >
+              <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm sm:left-4">
+                <GoogleIcon className="size-5" />
+              </span>
+              <span>{t("continueWithGoogle")}</span>
+            </Link>
+          )}
           <p className="mx-auto mt-5 max-w-[520px] text-xs leading-5 text-muted">
             {t("legalNoticeStart")}{" "}
             <span className="font-semibold text-primary underline underline-offset-2">

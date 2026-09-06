@@ -54,11 +54,8 @@ export function ReviewLoginForm({
   }
 
   return (
-    <section className="mx-auto w-full max-w-[520px] text-left" aria-labelledby="email-login-title">
-      <h2 id="email-login-title" className="font-display text-lg font-bold text-ink">
-        {t("title")}
-      </h2>
-      <form className="mt-4 grid gap-4" onSubmit={handleSubmit}>
+    <section className="mx-auto w-full max-w-[520px] text-left" aria-label={t("title")}>
+      <form className="grid gap-4" onSubmit={handleSubmit}>
         <label className="grid gap-1.5 text-sm font-semibold text-ink" htmlFor="review-login-email">
           {t("emailLabel")}
           <input

@@ -59,7 +59,7 @@ describe("LoginPage", () => {
   it("keeps email login hidden when review login is not enabled", async () => {
     await renderLogin("en");
 
-    expect(screen.queryByRole("heading", { name: "Log in with email" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Log in with email" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   });
 
@@ -68,10 +68,28 @@ describe("LoginPage", () => {
 
     await renderLogin("en");
 
-    expect(screen.getByRole("heading", { name: "Log in with email" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Log in with email" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Log in with email" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
     expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
-    expect(screen.getByRole("button", { name: "Log in" })).toBeEnabled();
+    const emailLoginButton = screen.getByRole("button", { name: "Log in" });
+    const googleLoginLink = screen.getByRole("link", { name: "Continue with Google" });
+
+    expect(emailLoginButton).toBeEnabled();
+    expect(
+      emailLoginButton.compareDocumentPosition(googleLoginLink) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(googleLoginLink).toHaveClass("bg-white", "border-line-strong", "text-ink");
+    expect(screen.queryByText("or")).not.toBeInTheDocument();
+  });
+
+  it("keeps Google login as the primary action when review login is disabled", async () => {
+    await renderLogin("en");
+
+    expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
   });
 
   it.each([

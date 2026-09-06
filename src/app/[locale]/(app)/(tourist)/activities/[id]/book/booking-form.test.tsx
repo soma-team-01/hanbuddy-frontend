@@ -188,6 +188,23 @@ describe("BookingForm", () => {
     expect(tooltip).toHaveTextContent("No refund");
   });
 
+  it("shows only the Toss action in TOSS mode", () => {
+    renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
+
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Pay .* with PayPal/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("PayPal charges in USD.")).not.toBeInTheDocument();
+  });
+
+  it("shows only the PayPal action in PAYPAL mode", () => {
+    renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="PAYPAL" />);
+
+    expect(
+      screen.queryByRole("button", { name: "Pay with Toss Payments" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toBeInTheDocument();
+  });
+
   it("preselects the schedule passed from the availability calendar", () => {
     const twoSessionActivity: Activity = {
       ...activity,

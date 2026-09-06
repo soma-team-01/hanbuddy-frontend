@@ -170,6 +170,21 @@ describe("ApplicationList", () => {
     expect(mockedGetActivityWeather).not.toHaveBeenCalled();
   });
 
+  it("shows only the configured payment provider action", () => {
+    const { unmount } = renderList({ paymentProviderMode: "TOSS" });
+
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pay with PayPal" })).not.toBeInTheDocument();
+
+    unmount();
+    renderList({ paymentProviderMode: "PAYPAL" });
+
+    expect(
+      screen.queryByRole("button", { name: "Pay with Toss Payments" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeInTheDocument();
+  });
+
   it("shows the forecast on a confirmed upcoming application", async () => {
     mockedGetActivityWeather.mockResolvedValue({
       status: "success",

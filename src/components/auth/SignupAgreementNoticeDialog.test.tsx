@@ -53,6 +53,7 @@ describe("SignupAgreementNoticeDialog", () => {
     );
 
     expect(screen.getByText(/버디 가입 심사 및 결과 안내/)).toBeInTheDocument();
+    expect(screen.getByText(/서비스 운영 연락/)).toBeInTheDocument();
     expect(screen.getByText(/가입 심사와 운영 연락을 위한 전화번호/)).toBeInTheDocument();
     expect(screen.getByText("이용 목적")).toBeInTheDocument();
     expect(screen.queryByText(/선호 연락수단/)).not.toBeInTheDocument();

@@ -93,7 +93,7 @@ const BUDDY_PRIVACY_COLLECTION_USE_NOTICE: SignupAgreementNotice = {
     {
       label: "이용 목적",
       value:
-        "회원 가입과 로그인, 본인·연령 확인, 버디 가입 심사 및 결과 안내, 프로필 제공, 계정 보안, 고객지원",
+        "회원 가입과 로그인, 본인·연령 확인, 버디 가입 심사 및 결과 안내, 서비스 운영 연락, 프로필 제공, 계정 보안, 고객지원",
     },
     {
       label: "보유 기간",

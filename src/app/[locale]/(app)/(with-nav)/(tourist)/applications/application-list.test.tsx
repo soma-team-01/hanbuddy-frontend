@@ -151,8 +151,12 @@ describe("ApplicationList", () => {
     expect(screen.getByText(/^D-\d+$/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
-      "bg-[#3182f6]",
-      "text-white",
+      "bg-primary",
+      "text-on-primary",
+    );
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
     );
     expect(screen.getByText("Toss")).toBeInTheDocument();
     expect(screen.getByText("PayPal")).toBeInTheDocument();
@@ -170,19 +174,31 @@ describe("ApplicationList", () => {
     expect(mockedGetActivityWeather).not.toHaveBeenCalled();
   });
 
-  it("shows only the configured payment provider action", () => {
-    const { unmount } = renderList({ paymentProviderMode: "TOSS" });
+  it("shows one generic payment action while routing to the configured provider", async () => {
+    const onContinuePayment = vi.fn().mockResolvedValue(undefined);
+    const { unmount } = renderList({ paymentProviderMode: "TOSS", onContinuePayment });
 
-    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
     expect(screen.queryByRole("button", { name: "Pay with PayPal" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
 
     unmount();
-    renderList({ paymentProviderMode: "PAYPAL" });
+    onContinuePayment.mockClear();
+    renderList({ paymentProviderMode: "PAYPAL", onContinuePayment });
 
     expect(
       screen.queryByRole("button", { name: "Pay with Toss Payments" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "PAYPAL"));
   });
 
   it("shows the forecast on a confirmed upcoming application", async () => {

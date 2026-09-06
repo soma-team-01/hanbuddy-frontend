@@ -191,7 +191,13 @@ describe("BookingForm", () => {
   it("shows only the Toss action in TOSS mode", () => {
     renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
 
-    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Pay with Toss Payments" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Pay .* with PayPal/ })).not.toBeInTheDocument();
     expect(screen.queryByText("PayPal charges in USD.")).not.toBeInTheDocument();
   });
@@ -202,7 +208,13 @@ describe("BookingForm", () => {
     expect(
       screen.queryByRole("button", { name: "Pay with Toss Payments" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Pay $32.50 with PayPal" }),
+    ).not.toBeInTheDocument();
   });
 
   it("preselects the schedule passed from the availability calendar", () => {
@@ -281,12 +293,16 @@ describe("BookingForm", () => {
     await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
   });
 
-  it("uses the Toss Payments blue treatment for its payment action", () => {
+  it("uses the HanBuddy primary treatment for payment actions", () => {
     renderWithQueryClient(<BookingForm activity={activity} />);
 
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
-      "bg-[#3182f6]",
-      "text-white",
+      "bg-primary",
+      "text-on-primary",
+    );
+    expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
     );
   });
 

@@ -238,6 +238,11 @@ function ApplicationCard({
   const isPaymentBusy = isPaymentPending || paymentInFlight !== null;
   const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
   const showPayPalPayment = isPaymentProviderVisible("PAYPAL", paymentProviderMode);
+  const showProviderChoice = paymentProviderMode === "BOTH";
+  const tossPaymentLabel = showProviderChoice ? t("continueWithToss") : t("payNow");
+  const payPalPaymentLabel = showProviderChoice ? t("continueWithPayPal") : t("payNow");
+  const tossPaymentText = showProviderChoice ? "Toss" : tossPaymentLabel;
+  const payPalPaymentText = showProviderChoice ? "PayPal" : payPalPaymentLabel;
   // 종료된 활동은 백엔드가 취소를 거절하므로 버튼을 내린다 (조회 후 종료 시각이 지난 경우)
   const hasEnded = hasDateTimePassed(application.endAt);
 
@@ -329,11 +334,11 @@ function ApplicationCard({
                       }
                     }}
                     aria-label={
-                      paymentInFlight === "TOSS" ? t("paymentProcessing") : t("continueWithToss")
+                      paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentLabel
                     }
-                    className={`${CARD_ACTION_CLASS} bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]`}
+                    className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
                   >
-                    {paymentInFlight === "TOSS" ? t("paymentProcessing") : "Toss"}
+                    {paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentText}
                   </button>
                 ) : null}
                 {showPayPalPayment ? (
@@ -352,13 +357,11 @@ function ApplicationCard({
                       }
                     }}
                     aria-label={
-                      paymentInFlight === "PAYPAL"
-                        ? t("paymentProcessing")
-                        : t("continueWithPayPal")
+                      paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentLabel
                     }
-                    className={`${CARD_ACTION_CLASS} bg-[#ffc439] text-[#111] enabled:hover:opacity-90`}
+                    className={`${CARD_ACTION_CLASS} bg-primary text-on-primary enabled:hover:bg-primary-hover`}
                   >
-                    {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : "PayPal"}
+                    {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentText}
                   </button>
                 ) : null}
                 <button

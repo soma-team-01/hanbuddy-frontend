@@ -101,6 +101,7 @@ export function BookingForm({
   const [conflictDialog, setConflictDialog] = useState<ConflictDialogState | null>(null);
   const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
   const showPayPalPayment = isPaymentProviderVisible("PAYPAL", paymentProviderMode);
+  const showProviderChoice = paymentProviderMode === "BOTH";
   // React Query 상태가 화면에 반영되기 전의 연속 클릭도 동기적으로 차단한다
   const submissionLockRef = useRef(false);
   const conflictCheckMutation = useMutation({
@@ -146,6 +147,15 @@ export function BookingForm({
     activity.referenceCurrency === "USD" && activity.referencePrice !== undefined
       ? activity.referencePrice * guests
       : null;
+  const tossPaymentLabel = showProviderChoice ? t("payWithToss") : t("payNow");
+  const payPalPaymentLabel =
+    showProviderChoice && estimatedPayPalTotal !== null
+      ? t("payWithPayPalAmount", {
+          amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
+        })
+      : showProviderChoice
+        ? t("payWithPayPal")
+        : t("payNow");
 
   function toBlockingDialog(
     error: unknown,
@@ -505,9 +515,9 @@ export function BookingForm({
                       type="button"
                       disabled={!agreed || isSubmitting}
                       onClick={() => handleSubmitClick("TOSS")}
-                      className="flex h-13 w-full items-center justify-center rounded-full bg-[#3182f6] px-4 font-display text-sm font-bold text-white transition-colors enabled:hover:bg-[#1b64da] disabled:opacity-40"
+                      className="flex h-13 w-full items-center justify-center rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
                     >
-                      {isSubmitting ? t("processing") : t("payWithToss")}
+                      {isSubmitting ? t("processing") : tossPaymentLabel}
                     </button>
                   ) : null}
                   {showPayPalPayment ? (
@@ -533,19 +543,9 @@ export function BookingForm({
                           type="button"
                           disabled={!agreed || isSubmitting}
                           onClick={() => handleSubmitClick("PAYPAL")}
-                          className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                          className="flex h-13 w-full items-center justify-center rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
                         >
-                          {isSubmitting
-                            ? t("processing")
-                            : estimatedPayPalTotal !== null
-                              ? t("payWithPayPalAmount", {
-                                  amount: formatDisplayCurrency(
-                                    estimatedPayPalTotal,
-                                    "USD",
-                                    locale,
-                                  ),
-                                })
-                              : t("payWithPayPal")}
+                          {isSubmitting ? t("processing") : payPalPaymentLabel}
                         </button>
                       )}
                       <p className="text-center text-[11px] leading-4 text-muted">

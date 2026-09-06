@@ -120,22 +120,50 @@ describe("POST /api/auth/review/login", () => {
   });
 
   it("forwards a safe backend authentication failure", async () => {
+    const backendMessage = "A review account exists, but its password hash did not match.";
     mockedPostBackend.mockResolvedValue({
       status: 401,
       setCookies: [],
       payload: {
         isSuccess: false,
         code: "AUTH401_REVIEW_LOGIN",
-        message: "이메일 또는 비밀번호가 올바르지 않습니다.",
+        message: backendMessage,
+        result: { accountExists: true },
+      },
+    });
+
+    const response = await POST(createRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body).toEqual({
+      isSuccess: false,
+      code: "AUTH401_REVIEW_LOGIN",
+      message: "이메일 또는 비밀번호를 확인해 주세요.",
+    });
+    expect(JSON.stringify(body)).not.toContain(backendMessage);
+    expect(body).not.toHaveProperty("result");
+  });
+
+  it("replaces an unapproved backend failure with a generic proxy error", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 500,
+      setCookies: [],
+      payload: {
+        isSuccess: false,
+        code: "AUTH500_REVIEW_LOGIN",
+        message: "REVIEW_LOGIN_EMAIL is missing from the server configuration.",
+        result: { configuredEmail: "reviewer@hanbuddy.kr" },
       },
     });
 
     const response = await POST(createRequest());
 
-    expect(response.status).toBe(401);
-    expect(await response.json()).toMatchObject({
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({
       isSuccess: false,
-      code: "AUTH401_REVIEW_LOGIN",
+      code: "AUTH_PROXY_ERROR",
+      message: "인증 서버에 연결할 수 없습니다.",
     });
   });
 });

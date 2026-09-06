@@ -24,6 +24,25 @@ import type {
 
 export const dynamic = "force-dynamic";
 
+const PUBLIC_REVIEW_LOGIN_ERRORS = {
+  AUTH400_REVIEW_LOGIN: {
+    status: 400,
+    message: "이메일과 비밀번호를 확인해 주세요.",
+  },
+  AUTH401_REVIEW_LOGIN: {
+    status: 401,
+    message: "이메일 또는 비밀번호를 확인해 주세요.",
+  },
+  AUTH404_REVIEW_LOGIN: {
+    status: 404,
+    message: "심사용 로그인을 사용할 수 없습니다.",
+  },
+  AUTH429_REVIEW_LOGIN: {
+    status: 429,
+    message: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+  },
+} as const;
+
 export async function POST(request: NextRequest) {
   if (!isReviewLoginEnabled()) {
     return errorResponse(404, "AUTH404_REVIEW_LOGIN", "심사용 로그인을 사용할 수 없습니다.");
@@ -41,7 +60,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!backend.payload.isSuccess) {
-      return NextResponse.json(backend.payload, { status: backend.status });
+      return safeBackendErrorResponse(backend.status, backend.payload.code);
     }
 
     const result = backend.payload.result;
@@ -154,4 +173,13 @@ function errorResponse(status: number, code: string, message: string) {
     } satisfies ErrorApiResponse,
     { status },
   );
+}
+
+function safeBackendErrorResponse(status: number, code: string) {
+  const publicError = PUBLIC_REVIEW_LOGIN_ERRORS[code as keyof typeof PUBLIC_REVIEW_LOGIN_ERRORS];
+  if (!publicError || publicError.status !== status) {
+    return errorResponse(502, "AUTH_PROXY_ERROR", "인증 서버에 연결할 수 없습니다.");
+  }
+
+  return errorResponse(publicError.status, code, publicError.message);
 }

@@ -188,7 +188,7 @@ describe("BookingForm", () => {
     expect(tooltip).toHaveTextContent("No refund");
   });
 
-  it("shows only the Toss action in TOSS mode", () => {
+  it("uses the HanBuddy payment action in TOSS mode", () => {
     renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
 
     expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
@@ -202,19 +202,17 @@ describe("BookingForm", () => {
     expect(screen.queryByText("PayPal charges in USD.")).not.toBeInTheDocument();
   });
 
-  it("shows only the PayPal action in PAYPAL mode", () => {
+  it("keeps the branded PayPal action in PAYPAL mode", () => {
     renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="PAYPAL" />);
 
     expect(
       screen.queryByRole("button", { name: "Pay with Toss Payments" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
-      "bg-primary",
-      "text-on-primary",
+    expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toHaveClass(
+      "bg-[#ffc439]",
+      "text-[#111]",
     );
-    expect(
-      screen.queryByRole("button", { name: "Pay $32.50 with PayPal" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText("PayPal charges in USD.")).toBeInTheDocument();
   });
 
   it("preselects the schedule passed from the availability calendar", () => {

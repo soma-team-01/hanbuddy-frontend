@@ -149,13 +149,11 @@ export function BookingForm({
       : null;
   const tossPaymentLabel = showProviderChoice ? t("payWithToss") : t("payNow");
   const payPalPaymentLabel =
-    showProviderChoice && estimatedPayPalTotal !== null
+    estimatedPayPalTotal !== null
       ? t("payWithPayPalAmount", {
           amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
         })
-      : showProviderChoice
-        ? t("payWithPayPal")
-        : t("payNow");
+      : t("payWithPayPal");
 
   function toBlockingDialog(
     error: unknown,
@@ -547,11 +545,7 @@ export function BookingForm({
                           type="button"
                           disabled={!agreed || isSubmitting}
                           onClick={() => handleSubmitClick("PAYPAL")}
-                          className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold disabled:opacity-40 ${
-                            showProviderChoice
-                              ? "bg-[#ffc439] text-[#111] transition-opacity enabled:hover:opacity-90"
-                              : "bg-primary text-on-primary transition-colors enabled:hover:bg-primary-hover"
-                          }`}
+                          className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
                         >
                           {isSubmitting ? t("processing") : payPalPaymentLabel}
                         </button>

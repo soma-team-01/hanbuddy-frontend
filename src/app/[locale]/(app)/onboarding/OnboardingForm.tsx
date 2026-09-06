@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { SignupAgreementNoticeDialog } from "@/components/auth/SignupAgreementNoticeDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
@@ -21,6 +22,7 @@ import {
   getSignupAgreementTypes,
   hasAllRequiredSignupAgreements,
 } from "@/lib/auth/signup-agreements";
+import type { SignupAgreementDocuments } from "@/lib/auth/signup-agreement-notices";
 import { COUNTRIES, findCountry } from "@/lib/countries";
 import { DISPLAY_NAME_PATTERN, isValidDisplayName } from "@/lib/display-name";
 import {
@@ -42,6 +44,15 @@ import type {
   SignupAgreementType,
   UserType,
 } from "@/lib/auth/types";
+import {
+  clearExpiredOnboardingDrafts,
+  clearOnboardingDraft,
+  clearSignupOnboardingDrafts,
+  getOnboardingDraftScope,
+  getOnboardingMemoryDraft,
+  loadOnboardingDraft,
+  saveOnboardingDraft,
+} from "./onboarding-draft-storage";
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
 type OnboardingErrorKey =
@@ -54,8 +65,10 @@ type RequestFailureKey =
 
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
+  signupDraftAccountId?: string;
   userType?: UserType;
   resubmission?: BuddyResubmission;
+  agreementDocuments?: SignupAgreementDocuments;
 }
 
 type OnboardingStep = 1 | 2 | 3;
@@ -125,8 +138,10 @@ function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
 
 export function OnboardingForm({
   googleProfile,
+  signupDraftAccountId,
   userType = "TOURIST",
   resubmission,
+  agreementDocuments,
 }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
   const buddyT = useTranslations("BuddyOnboarding");
@@ -138,22 +153,34 @@ export function OnboardingForm({
   const isResubmission = Boolean(resubmission);
   const isBuddyFlow = userType === "BUDDY";
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
+  const draftScope = getOnboardingDraftScope({
+    userType,
+    signupDraftAccountId,
+    resubmissionUserId: resubmission?.userId,
+    reviewedAt: resubmission?.reviewedAt,
+  });
+  const [initialDraft] = useState(() => (draftScope ? getOnboardingMemoryDraft(draftScope) : null));
+  const initialStep = Math.min(initialDraft?.currentStep ?? 1, finalStep) as OnboardingStep;
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [displayName, setDisplayName] = useState(
-    resubmission?.displayName ?? googleProfile?.name ?? "",
+    initialDraft?.displayName ?? resubmission?.displayName ?? googleProfile?.name ?? "",
   );
-  const [birthDate, setBirthDate] = useState(resubmission?.birthDate ?? "");
-  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(() =>
-    getInitialMessagingApp(isBuddyFlow, resubmission),
+  const [birthDate, setBirthDate] = useState(
+    initialDraft?.birthDate ?? resubmission?.birthDate ?? "",
+  );
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
+    () => initialDraft?.messagingApp ?? getInitialMessagingApp(isBuddyFlow, resubmission),
   );
   const [messagingContact, setMessagingContact] = useState(
-    resubmission && (!isBuddyFlow || resubmission.contactMethod === "PHONE")
-      ? resubmission.contactIdentifier
-      : "",
+    initialDraft?.messagingContact ??
+      (resubmission && (!isBuddyFlow || resubmission.contactMethod === "PHONE")
+        ? resubmission.contactIdentifier
+        : ""),
   );
   const [agreementDecisions, setAgreementDecisions] = useState<
     Partial<Record<SignupAgreementType, boolean>>
-  >({});
+  >(initialDraft?.agreementDecisions ?? {});
+  const [openAgreementType, setOpenAgreementType] = useState<SignupAgreementType | null>(null);
   const [errorKey, setErrorKey] = useState<OnboardingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
     error: unknown;
@@ -171,25 +198,37 @@ export function OnboardingForm({
   const youngestAllowedBirthDate = currentLocalDate
     ? subtractYearsFromDateInput(currentLocalDate, MINIMUM_SIGNUP_AGE)
     : "";
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const [profileImagePreview, setProfileImagePreview] = useState("");
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(
+    initialDraft?.profileImageFile ?? null,
+  );
+  const [profileImagePreview, setProfileImagePreview] = useState(() =>
+    initialDraft?.profileImageFile ? URL.createObjectURL(initialDraft.profileImageFile) : "",
+  );
   const [existingProfileImageKey, setExistingProfileImageKey] = useState<string | null>(
-    resubmission?.profileImageKey ?? null,
+    initialDraft?.existingProfileImageKey ?? resubmission?.profileImageKey ?? null,
   );
   const [existingProfileImageUrl, setExistingProfileImageUrl] = useState<string | null>(
-    resubmission?.profileImageUrl ?? null,
+    initialDraft?.existingProfileImageUrl ?? resubmission?.profileImageUrl ?? null,
   );
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
   const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
-  const initialNationality = resubmission?.nationalityCode ?? "";
+  const agreementTriggerRef = useRef<HTMLButtonElement>(null);
+  const draftPersistenceDisabledRef = useRef(false);
+  const [isDraftPersistenceReady, setIsDraftPersistenceReady] = useState(initialDraft !== null);
+  const initialNationality = initialDraft?.nationality ?? resubmission?.nationalityCode ?? "";
   const initialMessagingCountry = getInitialMessagingCountry(
     initialNationality,
-    resubmission?.contactCountryCode,
+    initialDraft?.messagingCountry ?? resubmission?.contactCountryCode,
   );
-  const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
-    useMessagingCountrySync(initialNationality, initialMessagingCountry);
+  const {
+    nationality,
+    messagingCountry,
+    handleNationalityChange,
+    handleMessagingCountryChange,
+    restoreMessagingCountries,
+  } = useMessagingCountrySync(initialNationality, initialMessagingCountry);
   const agreementTypes = getSignupAgreementTypes(userType);
   const requiredAgreementTypes = getRequiredSignupAgreementTypes(userType);
   const allAgreementsSelected = agreementTypes.every(
@@ -201,6 +240,78 @@ export function OnboardingForm({
       if (profileImagePreview) URL.revokeObjectURL(profileImagePreview);
     };
   }, [profileImagePreview]);
+
+  useEffect(() => {
+    if (initialDraft) return;
+    if (!draftScope) {
+      clearSignupOnboardingDrafts();
+      return;
+    }
+
+    let cancelled = false;
+    void loadOnboardingDraft(draftScope).then((restored) => {
+      if (cancelled) return;
+      if (restored) {
+        setCurrentStep(Math.min(restored.currentStep, finalStep) as OnboardingStep);
+        setDisplayName(restored.displayName);
+        setBirthDate(restored.birthDate);
+        restoreMessagingCountries(restored.nationality, restored.messagingCountry);
+        setMessagingApp(restored.messagingApp);
+        setMessagingContact(restored.messagingContact);
+        setAgreementDecisions(restored.agreementDecisions);
+        setProfileImageFile(restored.profileImageFile);
+        setExistingProfileImageKey(restored.existingProfileImageKey);
+        setExistingProfileImageUrl(restored.existingProfileImageUrl);
+      }
+      setIsDraftPersistenceReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [draftScope, finalStep, initialDraft, restoreMessagingCountries]);
+
+  useEffect(() => {
+    if (!draftScope || !isDraftPersistenceReady || draftPersistenceDisabledRef.current) return;
+
+    saveOnboardingDraft(draftScope, {
+      currentStep,
+      displayName,
+      birthDate,
+      nationality,
+      messagingApp,
+      messagingCountry,
+      messagingContact,
+      agreementDecisions,
+      profileImageFile,
+      existingProfileImageKey,
+      existingProfileImageUrl,
+    });
+  }, [
+    agreementDecisions,
+    birthDate,
+    currentStep,
+    displayName,
+    draftScope,
+    existingProfileImageKey,
+    existingProfileImageUrl,
+    isDraftPersistenceReady,
+    messagingApp,
+    messagingContact,
+    messagingCountry,
+    nationality,
+    profileImageFile,
+  ]);
+
+  useEffect(() => {
+    const handlePageHide = () => clearExpiredOnboardingDrafts();
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, []);
+
+  useEffect(() => {
+    if (openAgreementType === null) agreementTriggerRef.current?.focus();
+  }, [openAgreementType]);
 
   useEffect(() => {
     stepHeadingRef.current?.focus();
@@ -344,6 +455,11 @@ export function OnboardingForm({
     setCurrentStep(step);
   }
 
+  function discardDraft() {
+    draftPersistenceDisabledRef.current = true;
+    if (draftScope) clearOnboardingDraft(draftScope);
+  }
+
   function handleContinue() {
     setErrorKey(null);
     setRequestFailure(null);
@@ -435,6 +551,7 @@ export function OnboardingForm({
           });
           return;
         }
+        discardDraft();
         router.replace("/buddy/auth/status?status=PENDING_APPROVAL");
         router.refresh();
         return;
@@ -442,12 +559,14 @@ export function OnboardingForm({
 
       const authStatus = (body.result as GoogleLoginResponse).authStatus;
       if (authStatus === "ACTIVE") {
+        discardDraft();
         router.replace(userType === "BUDDY" ? "/dashboard" : "/");
       } else if (
         authStatus === "PENDING_APPROVAL" ||
         authStatus === "REJECTED" ||
         authStatus === "SUSPENDED"
       ) {
+        discardDraft();
         router.replace(`/buddy/auth/status?status=${authStatus}`);
       } else {
         setRequestFailure({
@@ -556,49 +675,34 @@ export function OnboardingForm({
   const agreementItems: Array<{
     type: SignupAgreementType;
     label: string;
-    isDocument: boolean;
   }> = [
     {
       type: "ADULT_CONFIRMATION",
       label: t("agreements.items.adultConfirmation"),
-      isDocument: false,
     },
     {
       type: "TERMS_OF_SERVICE",
       label: t("agreements.items.termsOfService"),
-      isDocument: true,
     },
     {
       type: "PRIVACY_COLLECTION_USE",
-      label:
-        userType === "BUDDY"
-          ? t("agreements.items.buddyPrivacyCollectionUse")
-          : t("agreements.items.privacyCollectionUse"),
-      isDocument: true,
+      label: t("agreements.items.privacyCollectionUse"),
     },
     ...(userType === "BUDDY"
       ? [
           {
             type: "BUDDY_OPERATION_TERMS" as const,
             label: t("agreements.items.buddyOperationTerms"),
-            isDocument: true,
           },
           {
             type: "BUDDY_COMMISSION_POLICY" as const,
             label: t("agreements.items.buddyCommissionPolicy"),
-            isDocument: true,
-          },
-          {
-            type: "BUDDY_PROFILE_CONTACT_PROVISION" as const,
-            label: t("agreements.items.buddyProfileContactProvision"),
-            isDocument: true,
           },
         ]
       : []),
     {
       type: "MARKETING_COMMUNICATION",
       label: t("agreements.items.marketingCommunication"),
-      isDocument: false,
     },
   ];
   const stepLabels = isResubmission
@@ -613,6 +717,7 @@ export function OnboardingForm({
             <Link
               href={getOnboardingBackHref(isResubmission, isBuddyFlow)}
               aria-label={accessibilityT("close")}
+              onNavigate={discardDraft}
               className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
               <XIcon className="size-5" />
@@ -859,39 +964,44 @@ export function OnboardingForm({
                     {agreementItems.map((item) => {
                       const isRequired = requiredAgreementTypes.includes(item.type);
                       return (
-                        <label
-                          key={item.type}
-                          className="flex cursor-pointer items-start gap-3 py-3.5"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={agreementDecisions[item.type] === true}
-                            onChange={(event) =>
-                              handleAgreementChange(item.type, event.target.checked)
-                            }
-                            className="mt-0.5 size-4 shrink-0 accent-primary"
-                          />
-                          <span className="flex min-w-0 flex-1 items-start justify-between gap-3 text-sm leading-5">
-                            <span
-                              className={
-                                item.isDocument
-                                  ? "font-medium text-primary underline decoration-primary/40 underline-offset-4"
-                                  : "text-ink"
+                        <div key={item.type} className="flex items-start gap-3 py-3.5">
+                          <label className="mt-0.5 flex size-11 shrink-0 cursor-pointer items-center justify-center">
+                            <input
+                              type="checkbox"
+                              aria-label={item.label}
+                              checked={agreementDecisions[item.type] === true}
+                              onChange={(event) =>
+                                handleAgreementChange(item.type, event.target.checked)
                               }
-                            >
+                              className="size-4 accent-primary"
+                            />
+                          </label>
+                          {item.type === "ADULT_CONFIRMATION" ? (
+                            <span className="min-w-0 flex-1 text-sm leading-5 text-ink">
                               {item.label}
                             </span>
-                            <span
-                              className={
-                                isRequired
-                                  ? "shrink-0 text-xs font-semibold text-primary-strong"
-                                  : "shrink-0 text-xs font-semibold text-muted"
-                              }
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                agreementTriggerRef.current = event.currentTarget;
+                                setOpenAgreementType(item.type);
+                              }}
+                              className="min-w-0 flex-1 text-left text-sm leading-5 font-medium text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
                             >
-                              {isRequired ? t("agreements.required") : t("agreements.optional")}
-                            </span>
+                              {item.label}
+                            </button>
+                          )}
+                          <span
+                            className={
+                              isRequired
+                                ? "shrink-0 text-xs font-semibold text-primary"
+                                : "shrink-0 text-xs font-semibold text-muted"
+                            }
+                          >
+                            {isRequired ? t("agreements.required") : t("agreements.optional")}
                           </span>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>
@@ -936,6 +1046,15 @@ export function OnboardingForm({
           </form>
         </PageContainer>
       </main>
+      {openAgreementType ? (
+        <SignupAgreementNoticeDialog
+          agreementType={openAgreementType}
+          userType={userType}
+          title={agreementItems.find((item) => item.type === openAgreementType)?.label ?? ""}
+          document={agreementDocuments?.[openAgreementType]}
+          onClose={() => setOpenAgreementType(null)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -347,6 +347,7 @@
     "legalNoticeEnd": "에 동의하는 것으로 간주됩니다.",
     "privacyPolicy": "개인정보 처리방침",
     "termsOfService": "이용약관",
+    "cancellationRefundPolicy": "취소 및 환불 정책",
     "helpCenter": "고객센터",
     "rightsReserved": "모든 권리를 보유합니다.",
     "visualAlt": "한버디 게스트와 버디가 야구장에서 함께 웃고 있는 모습",
@@ -413,14 +414,13 @@
       "agreeAll": "전체 동의",
       "required": "필수",
       "optional": "선택",
+      "documentVersion": "버전 {version}",
       "items": {
         "adultConfirmation": "만 19세 이상임을 확인합니다.",
         "termsOfService": "HanBuddy 서비스 이용약관",
         "privacyCollectionUse": "개인정보 수집·이용",
-        "buddyPrivacyCollectionUse": "개인정보 수집·이용 및 버디 가입 심사",
         "buddyOperationTerms": "버디 운영약관",
         "buddyCommissionPolicy": "수수료·정산 정책",
-        "buddyProfileContactProvision": "프로필 공개 및 예약 확정자 연락처 제공",
         "marketingCommunication": "이벤트 및 마케팅 정보 수신"
       }
     },

@@ -21,17 +21,12 @@ const signupRequest: GoogleSignupRequest = {
   contactCountryCode: "+82",
   contactIdentifier: "01012345678",
   agreements: [
-    { type: "ADULT_CONFIRMATION", version: "2026-08-06", agreed: true },
-    { type: "TERMS_OF_SERVICE", version: "2026-08-06", agreed: true },
-    { type: "PRIVACY_COLLECTION_USE", version: "2026-08-06", agreed: true },
-    { type: "BUDDY_OPERATION_TERMS", version: "2026-08-06", agreed: true },
-    { type: "BUDDY_COMMISSION_POLICY", version: "2026-08-06", agreed: true },
-    {
-      type: "BUDDY_PROFILE_CONTACT_PROVISION",
-      version: "2026-08-06",
-      agreed: true,
-    },
-    { type: "MARKETING_COMMUNICATION", version: "2026-08-06", agreed: false },
+    { type: "ADULT_CONFIRMATION", version: "2026-09-06", agreed: true },
+    { type: "TERMS_OF_SERVICE", version: "2026-09-06", agreed: true },
+    { type: "PRIVACY_COLLECTION_USE", version: "2026-09-06", agreed: true },
+    { type: "BUDDY_OPERATION_TERMS", version: "2026-09-06", agreed: true },
+    { type: "BUDDY_COMMISSION_POLICY", version: "2026-09-06", agreed: true },
+    { type: "MARKETING_COMMUNICATION", version: "2026-09-06", agreed: false },
   ],
 };
 

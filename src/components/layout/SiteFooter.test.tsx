@@ -62,6 +62,29 @@ describe("SiteFooter", () => {
     },
   );
 
+  it.each([
+    ["en", "Terms of Service", "Privacy Policy", "Cancellation & Refund Policy", "/en"],
+    ["ko", "이용약관", "개인정보 처리방침", "취소 및 환불 정책", "/ko"],
+  ] as const)(
+    "links the published policies for %s",
+    async (locale, termsLabel, privacyLabel, cancellationLabel, localePath) => {
+      renderWithIntl(await SiteFooter({ locale }), { locale });
+
+      expect(screen.getByRole("link", { name: termsLabel })).toHaveAttribute(
+        "href",
+        `${localePath}/policies/terms-of-service`,
+      );
+      expect(screen.getByRole("link", { name: privacyLabel })).toHaveAttribute(
+        "href",
+        `${localePath}/policies/privacy-policy`,
+      );
+      expect(screen.getByRole("link", { name: cancellationLabel })).toHaveAttribute(
+        "href",
+        `${localePath}/policies/cancellation-refund-policy`,
+      );
+    },
+  );
+
   it("hides the language switcher for buddies", async () => {
     renderWithIntl(await SiteFooter({ locale: "ko", role: "buddy" }), { locale: "ko" });
 

@@ -1,6 +1,6 @@
 import type { SignupAgreementRequest, SignupAgreementType, UserType } from "@/lib/auth/types";
 
-export const SIGNUP_AGREEMENT_VERSION = "2026-08-06";
+export const SIGNUP_AGREEMENT_VERSION = "2026-09-06";
 
 const COMMON_REQUIRED_AGREEMENT_TYPES = [
   "ADULT_CONFIRMATION",
@@ -11,7 +11,6 @@ const COMMON_REQUIRED_AGREEMENT_TYPES = [
 const BUDDY_REQUIRED_AGREEMENT_TYPES = [
   "BUDDY_OPERATION_TERMS",
   "BUDDY_COMMISSION_POLICY",
-  "BUDDY_PROFILE_CONTACT_PROVISION",
 ] as const satisfies readonly SignupAgreementType[];
 
 export function getRequiredSignupAgreementTypes(userType: UserType): SignupAgreementType[] {

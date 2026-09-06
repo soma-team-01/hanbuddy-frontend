@@ -114,7 +114,15 @@ describe("LoginPage", () => {
 
       expect(screen.getByRole("main")).toHaveClass("w-full");
       expect(screen.getByRole("heading", { name: heading })).toHaveClass("font-display");
-      expect(screen.getByText(policy)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: policy })).toHaveAttribute(
+        "href",
+        `/${locale}/policies/privacy-policy`,
+      );
+      expect(
+        screen.getByRole("link", {
+          name: locale === "ko" ? "이용약관" : "Terms of Service",
+        }),
+      ).toHaveAttribute("href", `/${locale}/policies/terms-of-service`);
       expect(screen.getByText(visualCaption)).toBeInTheDocument();
       expect(screen.getAllByRole("figure")).toHaveLength(4);
       const googleLoginLink = screen.getByRole("link", { name: action });

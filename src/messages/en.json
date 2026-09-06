@@ -326,6 +326,22 @@
     "welcome": "Experience Korea like a local.",
     "introduction": "Meet local buddies and discover the moments that make Korea feel like yours.",
     "continueWithGoogle": "Continue with Google",
+    "reviewLogin": {
+      "title": "Log in with email",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Log in",
+      "submitting": "Logging in...",
+      "errors": {
+        "invalidCredentials": "Check your email and password.",
+        "tooManyAttempts": "Too many login attempts. Please try again later.",
+        "unavailable": "Email login is unavailable.",
+        "invalidRequest": "Check the information you entered.",
+        "serverUnavailable": "We couldn't log you in. Please try again."
+      }
+    },
     "legalNoticeStart": "By continuing, you agree to HanBuddy's",
     "legalNoticeMiddle": "and",
     "legalNoticeEnd": ".",

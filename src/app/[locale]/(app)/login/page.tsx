@@ -6,7 +6,9 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { GoogleIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import { parseAuthErrorCode } from "@/lib/auth/error-codes";
+import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
+import { ReviewLoginForm } from "./review-login-form";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
@@ -44,6 +46,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   const errorValue = Array.isArray(error) ? error[0] : error;
   const errorCode = errorValue ? parseAuthErrorCode(errorValue) : null;
   const returnTo = sanitizeReturnToPath(Array.isArray(next) ? next[0] : next);
+  const reviewLoginEnabled = isReviewLoginEnabled();
   const googleStartHref = returnTo
     ? `/api/auth/google/start?locale=${locale}&next=${encodeURIComponent(returnTo)}`
     : `/api/auth/google/start?locale=${locale}`;
@@ -69,16 +72,32 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
               {t(`errors.${errorCode}`)}
             </p>
           ) : null}
-          <Link
-            href={googleStartHref}
-            prefetch={false}
-            className={`${errorCode ? "mt-6" : "mt-10"} motion-press relative mx-auto flex h-14 w-full max-w-[520px] items-center justify-center rounded-full border border-primary bg-primary px-16 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.28)] transition-colors hover:border-primary-hover hover:bg-primary-hover`}
-          >
-            <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm sm:left-4">
-              <GoogleIcon className="size-5" />
-            </span>
-            <span>{t("continueWithGoogle")}</span>
-          </Link>
+          {reviewLoginEnabled ? (
+            <div className={errorCode ? "mt-6" : "mt-10"}>
+              <ReviewLoginForm locale={locale} returnTo={returnTo} />
+              <Link
+                href={googleStartHref}
+                prefetch={false}
+                className="motion-press relative mx-auto mt-5 flex h-12 w-full max-w-[520px] items-center justify-center rounded-full border border-line-strong bg-white px-16 font-display text-sm font-bold text-ink transition-colors hover:border-primary/50 hover:bg-primary-soft/40"
+              >
+                <span className="absolute left-3 flex size-8 items-center justify-center rounded-full bg-white sm:left-4">
+                  <GoogleIcon className="size-5" />
+                </span>
+                <span>{t("continueWithGoogle")}</span>
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href={googleStartHref}
+              prefetch={false}
+              className={`${errorCode ? "mt-6" : "mt-10"} motion-press relative mx-auto flex h-14 w-full max-w-[520px] items-center justify-center rounded-full border border-primary bg-primary px-16 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.28)] transition-colors hover:border-primary-hover hover:bg-primary-hover`}
+            >
+              <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm sm:left-4">
+                <GoogleIcon className="size-5" />
+              </span>
+              <span>{t("continueWithGoogle")}</span>
+            </Link>
+          )}
           <p className="mx-auto mt-5 max-w-[520px] text-xs leading-5 text-muted">
             {t("legalNoticeStart")}{" "}
             <span className="font-semibold text-primary underline underline-offset-2">

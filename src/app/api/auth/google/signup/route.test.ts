@@ -26,11 +26,6 @@ const signupRequest: GoogleSignupRequest = {
     { type: "PRIVACY_COLLECTION_USE", version: "2026-09-06", agreed: true },
     { type: "BUDDY_OPERATION_TERMS", version: "2026-09-06", agreed: true },
     { type: "BUDDY_COMMISSION_POLICY", version: "2026-09-06", agreed: true },
-    {
-      type: "BUDDY_PROFILE_CONTACT_PROVISION",
-      version: "2026-09-06",
-      agreed: true,
-    },
     { type: "MARKETING_COMMUNICATION", version: "2026-09-06", agreed: false },
   ],
 };

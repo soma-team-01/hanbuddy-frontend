@@ -77,14 +77,25 @@ function isStoredOnboardingDraft(value: unknown): value is StoredOnboardingDraft
   );
 }
 
+function getStoredDraftUpdatedAt(raw: string) {
+  try {
+    const stored: unknown = JSON.parse(raw);
+    if (stored === null || typeof stored !== "object") return null;
+    const updatedAt = (stored as Partial<StoredOnboardingDraft>).updatedAt;
+    return typeof updatedAt === "number" ? updatedAt : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getOnboardingDraftScope({
   userType,
-  googleProfileName,
+  signupDraftAccountId,
   resubmissionUserId,
   reviewedAt,
 }: Readonly<{
   userType: UserType;
-  googleProfileName?: string;
+  signupDraftAccountId?: string;
   resubmissionUserId?: number;
   reviewedAt?: string | null;
 }>) {
@@ -92,7 +103,10 @@ export function getOnboardingDraftScope({
     return `resubmission:${resubmissionUserId}:${reviewedAt ?? "unreviewed"}`;
   }
 
-  return `signup:${userType}:${encodeURIComponent(googleProfileName?.trim() || "anonymous")}`;
+  const normalizedAccountId = signupDraftAccountId?.trim();
+  return normalizedAccountId
+    ? `signup:${userType}:${encodeURIComponent(normalizedAccountId)}`
+    : null;
 }
 
 export function getOnboardingMemoryDraft(scope: string) {
@@ -172,5 +186,46 @@ export function clearAllOnboardingDrafts() {
     }
   } catch {
     // 메모리 초안은 이미 제거되었으므로 별도 오류를 노출하지 않는다.
+  }
+}
+
+export function clearSignupOnboardingDrafts() {
+  for (const scope of memoryDrafts.keys()) {
+    if (scope.startsWith("signup:")) memoryDrafts.delete(scope);
+  }
+  if (!canUseSessionStorage()) return;
+
+  try {
+    for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.sessionStorage.key(index);
+      if (key?.startsWith(`${STORAGE_KEY_PREFIX}:signup:`)) {
+        window.sessionStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // 메모리 초안은 이미 제거되었으므로 별도 오류를 노출하지 않는다.
+  }
+}
+
+export function clearExpiredOnboardingDrafts(now = Date.now()) {
+  for (const [scope, record] of memoryDrafts) {
+    if (now - record.updatedAt > DRAFT_TTL_MS) memoryDrafts.delete(scope);
+  }
+  if (!canUseSessionStorage()) return;
+
+  try {
+    for (let index = window.sessionStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.sessionStorage.key(index);
+      if (!key?.startsWith(`${STORAGE_KEY_PREFIX}:`)) continue;
+
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) continue;
+      const updatedAt = getStoredDraftUpdatedAt(raw);
+      if (updatedAt !== null && now - updatedAt > DRAFT_TTL_MS) {
+        window.sessionStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // sessionStorage 접근이 차단되어도 메모리의 만료 초안은 이미 제거되었다.
   }
 }

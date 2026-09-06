@@ -33,7 +33,9 @@ export function getPolicyPath(locale: Locale, slug: PolicySlug) {
 export function resolvePolicyDocumentHref(locale: Locale, href: string) {
   if (!href.startsWith("./")) return href;
 
-  const [sourceFile, hash] = href.slice(2).split("#", 2);
+  const hashIndex = href.indexOf("#", 2);
+  const sourceFile = hashIndex === -1 ? href.slice(2) : href.slice(2, hashIndex);
+  const hash = hashIndex === -1 ? "" : href.slice(hashIndex);
   const slug = POLICY_SLUG_BY_SOURCE_FILE[sourceFile];
-  return slug ? `${getPolicyPath(locale, slug)}${hash ? `#${hash}` : ""}` : href;
+  return slug ? `${getPolicyPath(locale, slug)}${hash}` : href;
 }

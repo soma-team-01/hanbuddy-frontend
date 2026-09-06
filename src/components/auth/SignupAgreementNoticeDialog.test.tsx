@@ -42,23 +42,20 @@ describe("SignupAgreementNoticeDialog", () => {
     expect(screen.queryByText(/전문 보기/)).not.toBeInTheDocument();
   });
 
-  it("describes how a buddy must handle a confirmed tourist's contact details", () => {
+  it("shows buddy-specific collection and review purposes under the common privacy title", () => {
     renderWithIntl(
       <SignupAgreementNoticeDialog
-        agreementType="BUDDY_PROFILE_CONTACT_PROVISION"
-        title="Confirmed guest contact use and protection"
+        agreementType="PRIVACY_COLLECTION_USE"
+        userType="BUDDY"
+        title="Personal information collection and use"
         onClose={vi.fn()}
       />,
     );
 
-    expect(screen.getByText("제공 정보")).toBeInTheDocument();
+    expect(screen.getByText(/버디 가입 심사 및 결과 안내/)).toBeInTheDocument();
+    expect(screen.getByText(/가입 심사와 운영 연락을 위한 전화번호/)).toBeInTheDocument();
     expect(screen.getByText("이용 목적")).toBeInTheDocument();
-    expect(screen.getByText("금지 사항")).toBeInTheDocument();
-    expect(screen.getByText("보관·삭제")).toBeInTheDocument();
-    expect(
-      screen.getByText(/버디의 연락수단과 연락처는 투어리스트에게 제공되지 않습니다/),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/버디 닉네임.*선호 연락수단과 연락처/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/선호 연락수단/)).not.toBeInTheDocument();
   });
 
   it("closes from the accessible close control", () => {

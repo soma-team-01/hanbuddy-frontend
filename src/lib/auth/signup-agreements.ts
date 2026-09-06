@@ -11,7 +11,6 @@ const COMMON_REQUIRED_AGREEMENT_TYPES = [
 const BUDDY_REQUIRED_AGREEMENT_TYPES = [
   "BUDDY_OPERATION_TERMS",
   "BUDDY_COMMISSION_POLICY",
-  "BUDDY_PROFILE_CONTACT_PROVISION",
 ] as const satisfies readonly SignupAgreementType[];
 
 export function getRequiredSignupAgreementTypes(userType: UserType): SignupAgreementType[] {

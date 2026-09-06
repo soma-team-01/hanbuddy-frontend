@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   clearAllOnboardingDrafts,
+  clearExpiredOnboardingDrafts,
   clearOnboardingDraft,
+  clearSignupOnboardingDrafts,
   getOnboardingDraftScope,
   loadOnboardingDraft,
   saveOnboardingDraft,
@@ -31,10 +33,14 @@ afterEach(() => {
 });
 
 describe("onboarding draft storage", () => {
-  it("uses a locale-independent scope for the same signup", () => {
-    expect(getOnboardingDraftScope({ userType: "TOURIST", googleProfileName: "John Smith" })).toBe(
-      "signup:TOURIST:John%20Smith",
-    );
+  it("uses a locale-independent account scope for the same signup", () => {
+    expect(
+      getOnboardingDraftScope({ userType: "TOURIST", signupDraftAccountId: "account-hash" }),
+    ).toBe("signup:TOURIST:account-hash");
+    expect(
+      getOnboardingDraftScope({ userType: "BUDDY", signupDraftAccountId: "account-hash" }),
+    ).toBe("signup:BUDDY:account-hash");
+    expect(getOnboardingDraftScope({ userType: "TOURIST" })).toBeNull();
     expect(
       getOnboardingDraftScope({
         userType: "BUDDY",
@@ -42,6 +48,23 @@ describe("onboarding draft storage", () => {
         reviewedAt: "2026-09-06T10:00:00+09:00",
       }),
     ).toBe("resubmission:7:2026-09-06T10:00:00+09:00");
+  });
+
+  it("does not share a signup draft between accounts with the same profile name", async () => {
+    const firstScope = getOnboardingDraftScope({
+      userType: "TOURIST",
+      signupDraftAccountId: "first-account",
+    });
+    const secondScope = getOnboardingDraftScope({
+      userType: "TOURIST",
+      signupDraftAccountId: "second-account",
+    });
+
+    expect(firstScope).not.toBeNull();
+    expect(secondScope).not.toBeNull();
+    saveOnboardingDraft(firstScope!, snapshot);
+
+    await expect(loadOnboardingDraft(secondScope!)).resolves.toBeNull();
   });
 
   it("restores entered values in the current browser tab", async () => {
@@ -73,5 +96,38 @@ describe("onboarding draft storage", () => {
     );
 
     await expect(loadOnboardingDraft("signup:TOURIST:John")).resolves.toBeNull();
+  });
+
+  it("removes only expired drafts during page-exit cleanup", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-06T10:00:00+09:00"));
+    saveOnboardingDraft("signup:TOURIST:expired", snapshot);
+    vi.setSystemTime(new Date("2026-09-06T10:31:00+09:00"));
+    saveOnboardingDraft("signup:TOURIST:current", {
+      ...snapshot,
+      displayName: "Current User",
+    });
+
+    clearExpiredOnboardingDrafts();
+
+    expect(
+      window.sessionStorage.getItem("hanbuddy:onboarding-draft:signup:TOURIST:expired"),
+    ).toBeNull();
+    expect(
+      window.sessionStorage.getItem("hanbuddy:onboarding-draft:signup:TOURIST:current"),
+    ).not.toBeNull();
+    await expect(loadOnboardingDraft("signup:TOURIST:current")).resolves.toMatchObject({
+      displayName: "Current User",
+    });
+  });
+
+  it("clears signup drafts without removing a resubmission draft", async () => {
+    saveOnboardingDraft("signup:TOURIST:account", snapshot);
+    saveOnboardingDraft("resubmission:7:reviewed", snapshot);
+
+    clearSignupOnboardingDrafts();
+
+    await expect(loadOnboardingDraft("signup:TOURIST:account")).resolves.toBeNull();
+    await expect(loadOnboardingDraft("resubmission:7:reviewed")).resolves.toEqual(snapshot);
   });
 });

@@ -7,18 +7,20 @@ import { XIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import {
   SIGNUP_AGREEMENT_DOCUMENT_VERSION,
-  SIGNUP_AGREEMENT_NOTICES,
+  getSignupAgreementNotice,
   type SignupAgreementDocuments,
 } from "@/lib/auth/signup-agreement-notices";
-import type { SignupAgreementType } from "@/lib/auth/types";
+import type { SignupAgreementType, UserType } from "@/lib/auth/types";
 
 export function SignupAgreementNoticeDialog({
   agreementType,
+  userType = "TOURIST",
   title,
   document,
   onClose,
 }: Readonly<{
   agreementType: SignupAgreementType;
+  userType?: UserType;
   title: string;
   document?: SignupAgreementDocuments[SignupAgreementType];
   onClose: () => void;
@@ -27,7 +29,7 @@ export function SignupAgreementNoticeDialog({
   const t = useTranslations("Onboarding.agreements");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const notice = SIGNUP_AGREEMENT_NOTICES[agreementType];
+  const notice = getSignupAgreementNotice(agreementType, userType);
   const version = document?.version ?? SIGNUP_AGREEMENT_DOCUMENT_VERSION;
 
   useEffect(() => {

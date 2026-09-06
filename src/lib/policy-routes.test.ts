@@ -19,6 +19,9 @@ describe("policy routes", () => {
     expect(resolvePolicyDocumentHref("ko", "./cancellation-refund-policy.ko.md")).toBe(
       "/ko/policies/cancellation-refund-policy",
     );
+    expect(resolvePolicyDocumentHref("ko", "./terms-of-service.ko.md#section#details")).toBe(
+      "/ko/policies/terms-of-service#section#details",
+    );
     expect(resolvePolicyDocumentHref("ko", "https://example.com/policy")).toBe(
       "https://example.com/policy",
     );

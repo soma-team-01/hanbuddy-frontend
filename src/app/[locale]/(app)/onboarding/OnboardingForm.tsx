@@ -45,7 +45,9 @@ import type {
   UserType,
 } from "@/lib/auth/types";
 import {
+  clearExpiredOnboardingDrafts,
   clearOnboardingDraft,
+  clearSignupOnboardingDrafts,
   getOnboardingDraftScope,
   getOnboardingMemoryDraft,
   loadOnboardingDraft,
@@ -63,6 +65,7 @@ type RequestFailureKey =
 
 interface OnboardingFormProps {
   googleProfile?: GoogleProfile;
+  signupDraftAccountId?: string;
   userType?: UserType;
   resubmission?: BuddyResubmission;
   agreementDocuments?: SignupAgreementDocuments;
@@ -135,6 +138,7 @@ function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
 
 export function OnboardingForm({
   googleProfile,
+  signupDraftAccountId,
   userType = "TOURIST",
   resubmission,
   agreementDocuments,
@@ -151,11 +155,11 @@ export function OnboardingForm({
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;
   const draftScope = getOnboardingDraftScope({
     userType,
-    googleProfileName: googleProfile?.name,
+    signupDraftAccountId,
     resubmissionUserId: resubmission?.userId,
     reviewedAt: resubmission?.reviewedAt,
   });
-  const [initialDraft] = useState(() => getOnboardingMemoryDraft(draftScope));
+  const [initialDraft] = useState(() => (draftScope ? getOnboardingMemoryDraft(draftScope) : null));
   const initialStep = Math.min(initialDraft?.currentStep ?? 1, finalStep) as OnboardingStep;
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [displayName, setDisplayName] = useState(
@@ -210,6 +214,7 @@ export function OnboardingForm({
   // 같은 파일로 재제출할 때(회원가입 요청만 실패한 경우) S3 업로드를 반복하지 않기 위한 캐시
   const uploadedProfileImageRef = useRef<{ file: File; imageKey: string } | null>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const agreementTriggerRef = useRef<HTMLButtonElement>(null);
   const draftPersistenceDisabledRef = useRef(false);
   const [isDraftPersistenceReady, setIsDraftPersistenceReady] = useState(initialDraft !== null);
   const initialNationality = initialDraft?.nationality ?? resubmission?.nationalityCode ?? "";
@@ -238,6 +243,10 @@ export function OnboardingForm({
 
   useEffect(() => {
     if (initialDraft) return;
+    if (!draftScope) {
+      clearSignupOnboardingDrafts();
+      return;
+    }
 
     let cancelled = false;
     void loadOnboardingDraft(draftScope).then((restored) => {
@@ -263,7 +272,7 @@ export function OnboardingForm({
   }, [draftScope, finalStep, initialDraft, restoreMessagingCountries]);
 
   useEffect(() => {
-    if (!isDraftPersistenceReady || draftPersistenceDisabledRef.current) return;
+    if (!draftScope || !isDraftPersistenceReady || draftPersistenceDisabledRef.current) return;
 
     saveOnboardingDraft(draftScope, {
       currentStep,
@@ -293,6 +302,16 @@ export function OnboardingForm({
     nationality,
     profileImageFile,
   ]);
+
+  useEffect(() => {
+    const handlePageHide = () => clearExpiredOnboardingDrafts();
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, []);
+
+  useEffect(() => {
+    if (openAgreementType === null) agreementTriggerRef.current?.focus();
+  }, [openAgreementType]);
 
   useEffect(() => {
     stepHeadingRef.current?.focus();
@@ -438,7 +457,7 @@ export function OnboardingForm({
 
   function discardDraft() {
     draftPersistenceDisabledRef.current = true;
-    clearOnboardingDraft(draftScope);
+    if (draftScope) clearOnboardingDraft(draftScope);
   }
 
   function handleContinue() {
@@ -667,10 +686,7 @@ export function OnboardingForm({
     },
     {
       type: "PRIVACY_COLLECTION_USE",
-      label:
-        userType === "BUDDY"
-          ? t("agreements.items.buddyPrivacyCollectionUse")
-          : t("agreements.items.privacyCollectionUse"),
+      label: t("agreements.items.privacyCollectionUse"),
     },
     ...(userType === "BUDDY"
       ? [
@@ -681,10 +697,6 @@ export function OnboardingForm({
           {
             type: "BUDDY_COMMISSION_POLICY" as const,
             label: t("agreements.items.buddyCommissionPolicy"),
-          },
-          {
-            type: "BUDDY_PROFILE_CONTACT_PROVISION" as const,
-            label: t("agreements.items.buddyProfileContactProvision"),
           },
         ]
       : []),
@@ -953,7 +965,7 @@ export function OnboardingForm({
                       const isRequired = requiredAgreementTypes.includes(item.type);
                       return (
                         <div key={item.type} className="flex items-start gap-3 py-3.5">
-                          <label className="mt-0.5 flex shrink-0 cursor-pointer">
+                          <label className="mt-0.5 flex size-11 shrink-0 cursor-pointer items-center justify-center">
                             <input
                               type="checkbox"
                               aria-label={item.label}
@@ -971,7 +983,10 @@ export function OnboardingForm({
                           ) : (
                             <button
                               type="button"
-                              onClick={() => setOpenAgreementType(item.type)}
+                              onClick={(event) => {
+                                agreementTriggerRef.current = event.currentTarget;
+                                setOpenAgreementType(item.type);
+                              }}
                               className="min-w-0 flex-1 text-left text-sm leading-5 font-medium text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
                             >
                               {item.label}
@@ -1034,6 +1049,7 @@ export function OnboardingForm({
       {openAgreementType ? (
         <SignupAgreementNoticeDialog
           agreementType={openAgreementType}
+          userType={userType}
           title={agreementItems.find((item) => item.type === openAgreementType)?.label ?? ""}
           document={agreementDocuments?.[openAgreementType]}
           onClose={() => setOpenAgreementType(null)}

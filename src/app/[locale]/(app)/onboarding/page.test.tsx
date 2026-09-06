@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
-import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import type { BuddyResubmission } from "@/lib/auth/types";
 import * as countries from "@/lib/countries";
@@ -14,6 +14,10 @@ const routerMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   replace: vi.fn(),
 }));
+
+beforeEach(() => {
+  clearAllOnboardingDrafts();
+});
 
 afterEach(() => {
   clearAllOnboardingDrafts();
@@ -239,7 +243,10 @@ describe("OnboardingForm", () => {
 
   it("preserves the current step and entered information after changing locale", async () => {
     const firstRender = renderWithIntl(
-      <OnboardingForm googleProfile={{ name: "Google Traveler" }} />,
+      <OnboardingForm
+        googleProfile={{ name: "Google Traveler" }}
+        signupDraftAccountId="traveler-account"
+      />,
     );
     await act(async () => undefined);
     fillAboutYou("en", { birthDate: "1998-04-12" });
@@ -251,9 +258,13 @@ describe("OnboardingForm", () => {
     );
 
     firstRender.unmount();
-    renderWithIntl(<OnboardingForm googleProfile={{ name: "Google Traveler" }} />, {
-      locale: "ko",
-    });
+    renderWithIntl(
+      <OnboardingForm
+        googleProfile={{ name: "Google Traveler" }}
+        signupDraftAccountId="traveler-account"
+      />,
+      { locale: "ko" },
+    );
 
     expect(await screen.findByRole("heading", { name: "동의 항목" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "만 19세 이상임을 확인합니다." })).toBeChecked();
@@ -268,8 +279,10 @@ describe("OnboardingForm", () => {
     renderWithIntl(<OnboardingForm googleProfile={{ name: "Google Traveler" }} />);
     advanceToAgreements("en", { birthDate: "1998-04-12", contact: "traveler_line" });
 
-    fireEvent.click(screen.getByRole("button", { name: "HanBuddy Terms of Service" }));
+    const trigger = screen.getByRole("button", { name: "HanBuddy Terms of Service" });
+    fireEvent.click(trigger);
     fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+    expect(trigger).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
 
     expect(screen.getByLabelText("Messaging app ID")).toHaveValue("traveler_line");
@@ -322,9 +335,9 @@ describe("OnboardingForm", () => {
       agreements: expect.arrayContaining([
         expect.objectContaining({ type: "BUDDY_OPERATION_TERMS", agreed: true }),
         expect.objectContaining({ type: "BUDDY_COMMISSION_POLICY", agreed: true }),
-        expect.objectContaining({ type: "BUDDY_PROFILE_CONTACT_PROVISION", agreed: true }),
       ]),
     });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).agreements).toHaveLength(6);
     expect(routerMocks.replace).toHaveBeenCalledWith(
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
     );
@@ -437,6 +450,7 @@ describe("OnboardingForm", () => {
     expect(termsButton).not.toHaveClass("text-primary");
 
     const termsCheckbox = screen.getByRole("checkbox", { name: "HanBuddy Terms of Service" });
+    expect(termsCheckbox.closest("label")).toHaveClass("size-11");
     fireEvent.click(termsButton);
     expect(termsCheckbox).not.toBeChecked();
     expect(screen.getByRole("dialog", { name: "HanBuddy Terms of Service" })).toBeInTheDocument();
@@ -455,22 +469,17 @@ describe("OnboardingForm", () => {
     });
     clickContinue("en");
 
-    expect(
-      screen.getByText("Personal information collection, use, and buddy application review"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Personal information collection and use")).toBeInTheDocument();
     expect(screen.getByText("Buddy operation terms")).toBeInTheDocument();
     expect(screen.getByText("Commission and settlement policy")).toBeInTheDocument();
-    expect(screen.getByText("Confirmed guest contact use and protection")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Confirmed guest contact use and protection"),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Buddy operation terms" })).toHaveClass("underline");
     expect(screen.getByRole("button", { name: "Commission and settlement policy" })).toHaveClass(
       "underline",
     );
-    expect(
-      screen.getByRole("button", {
-        name: "Confirmed guest contact use and protection",
-      }),
-    ).toHaveClass("underline");
-    expect(screen.getAllByText("Required")).toHaveLength(6);
+    expect(screen.getAllByText("Required")).toHaveLength(5);
     expect(screen.getAllByText("Optional")).toHaveLength(1);
   });
 
@@ -783,7 +792,10 @@ describe("OnboardingForm profile image", () => {
 
   it("preserves a selected profile image across an onboarding remount", async () => {
     const firstRender = renderWithIntl(
-      <OnboardingForm googleProfile={{ name: "Profile Traveler" }} />,
+      <OnboardingForm
+        googleProfile={{ name: "Profile Traveler" }}
+        signupDraftAccountId="profile-traveler-account"
+      />,
     );
     await act(async () => undefined);
     const image = createImageFile("profile-to-keep.png");
@@ -792,7 +804,12 @@ describe("OnboardingForm profile image", () => {
     });
 
     firstRender.unmount();
-    renderWithIntl(<OnboardingForm googleProfile={{ name: "Profile Traveler" }} />);
+    renderWithIntl(
+      <OnboardingForm
+        googleProfile={{ name: "Profile Traveler" }}
+        signupDraftAccountId="profile-traveler-account"
+      />,
+    );
 
     expect(screen.getByAltText("Selected profile photo preview")).toHaveAttribute(
       "src",

@@ -326,6 +326,23 @@
     "welcome": "像当地人一样体验韩国。",
     "introduction": "结识当地好友，发现让韩国感觉像您一样的时刻。",
     "continueWithGoogle": "继续使用谷歌",
+    "reviewLogin": {
+      "divider": "或",
+      "title": "使用邮箱登录",
+      "emailLabel": "邮箱",
+      "emailPlaceholder": "请输入邮箱",
+      "passwordLabel": "密码",
+      "passwordPlaceholder": "请输入密码",
+      "submit": "登录",
+      "submitting": "正在登录...",
+      "errors": {
+        "invalidCredentials": "请检查邮箱和密码。",
+        "tooManyAttempts": "登录尝试次数过多，请稍后再试。",
+        "unavailable": "邮箱登录暂不可用。",
+        "invalidRequest": "请检查输入的信息。",
+        "serverUnavailable": "无法登录，请重试。"
+      }
+    },
     "legalNoticeStart": "继续即表示您同意 HanBuddy 的",
     "legalNoticeMiddle": "和",
     "legalNoticeEnd": ".",

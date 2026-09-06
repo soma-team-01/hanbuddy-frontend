@@ -64,10 +64,12 @@ runs:
       run: |
         runtime_environment_json="$(jq -n \
           --arg api "${HANBUDDY_API_BASE_URL}" \
+          --arg review_login_enabled "${REVIEW_LOGIN_ENABLED}" \
           --arg client_id "${GOOGLE_CLIENT_ID}" \
           --arg redirect_uri "${GOOGLE_REDIRECT_URI}" \
           '{
             HANBUDDY_API_BASE_URL: $api,
+            REVIEW_LOGIN_ENABLED: $review_login_enabled,
             GOOGLE_CLIENT_ID: $client_id,
             GOOGLE_REDIRECT_URI: $redirect_uri
           }')"

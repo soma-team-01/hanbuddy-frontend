@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
 import LoginPage, { generateMetadata } from "./page";
@@ -36,6 +36,15 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
+}));
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 async function renderLogin(locale: Locale, searchParams: { error?: string | string[] } = {}) {
   renderWithIntl(
     await LoginPage({
@@ -47,6 +56,24 @@ async function renderLogin(locale: Locale, searchParams: { error?: string | stri
 }
 
 describe("LoginPage", () => {
+  it("keeps email login hidden when review login is not enabled", async () => {
+    await renderLogin("en");
+
+    expect(screen.queryByRole("heading", { name: "Log in with email" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  });
+
+  it("shows email login only when review login is explicitly enabled", async () => {
+    vi.stubEnv("REVIEW_LOGIN_ENABLED", "true");
+
+    await renderLogin("en");
+
+    expect(screen.getByRole("heading", { name: "Log in with email" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
+    expect(screen.getByRole("button", { name: "Log in" })).toBeEnabled();
+  });
+
   it.each([
     [
       "en",

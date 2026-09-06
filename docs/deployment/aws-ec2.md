@@ -156,6 +156,7 @@ Repository variables:
 | `FRONTEND_DOMAIN`        | `staging.hanbuddy.kr`                              |
 | `ROUTE53_HOSTED_ZONE_ID` | `hanbuddy.kr` hosted zone ID                       |
 | `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                          |
+| `REVIEW_LOGIN_ENABLED`   | 심사용 이메일 로그인을 노출하므로 `true`           |
 | `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                         |
 | `GOOGLE_REDIRECT_URI`    | `https://staging.hanbuddy.kr/auth/google/callback` |
 | `PAYMENT_PROVIDER`       | `TOSS`                                             |
@@ -177,6 +178,7 @@ Environment secret:
 | `FRONTEND_DOMAIN`        | 운영 전환 시 사용할 frontend domain              |
 | `ROUTE53_HOSTED_ZONE_ID` | `hanbuddy.kr` hosted zone ID                     |
 | `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                        |
+| `REVIEW_LOGIN_ENABLED`   | 운영에서는 이메일 로그인을 숨기므로 `false`      |
 | `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                       |
 | `GOOGLE_REDIRECT_URI`    | 운영 frontend domain의 Google OAuth callback URL |
 | `PAYMENT_PROVIDER`       | `PAYPAL`                                         |
@@ -189,6 +191,8 @@ Production environment secret:
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | production domain이 허용된 Google Maps key |
 
 `AWS_ROLE_ARN`, `AWS_REGION`, `ECR_REPOSITORY`, `PRODUCTION_DEPLOYMENT_ENABLED`는 두 환경이 공유하는 repository variable이다. `PRODUCTION_DEPLOYMENT_ENABLED`는 production job의 실행 여부만 제어하며 environment variable을 대신하지 않는다.
+
+`REVIEW_LOGIN_ENABLED`는 `true` 또는 `false`만 허용하는 서버 런타임 변수다. `true`이면 일반 로그인 화면에 이메일·비밀번호 입력 영역이 추가되고 same-origin `/api/auth/review/login` BFF가 활성화된다. `false`이거나 로컬에서 설정하지 않으면 기존 Google 로그인만 노출되며 BFF 직접 호출도 거부한다. 값 변경 후 해당 환경을 다시 배포해야 하며, 심사 계정 이메일과 비밀번호 해시는 백엔드 Parameter Store에서만 관리한다.
 
 토스 결제용 frontend 환경변수는 없다. 결제 준비 API가 `clientKey`, 주문번호, 금액을 내려준다.
 PayPal `PAYPAL_CLIENT_ID`는 브라우저 SDK에 공개되는 값이므로 environment variable로 관리한다.

@@ -26,6 +26,7 @@ jobs:
       ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'hanbuddy-frontend' }}
       EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
       HANBUDDY_API_BASE_URL: ${{ vars.HANBUDDY_API_BASE_URL }}
+      REVIEW_LOGIN_ENABLED: ${{ vars.REVIEW_LOGIN_ENABLED }}
       GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
       GOOGLE_REDIRECT_URI: ${{ vars.GOOGLE_REDIRECT_URI }}
       FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}
@@ -40,6 +41,10 @@ jobs:
           test -n "${AWS_ROLE_ARN}" || { echo "Missing AWS_ROLE_ARN repository variable"; exit 1; }
           test -n "${EC2_INSTANCE_ID}" || { echo "Missing EC2_INSTANCE_ID production variable"; exit 1; }
           test -n "${HANBUDDY_API_BASE_URL}" || { echo "Missing HANBUDDY_API_BASE_URL production variable"; exit 1; }
+          case "${REVIEW_LOGIN_ENABLED}" in
+            true|false) ;;
+            *) echo "REVIEW_LOGIN_ENABLED production variable must be true or false"; exit 1 ;;
+          esac
           test -n "${GOOGLE_CLIENT_ID}" || { echo "Missing GOOGLE_CLIENT_ID production variable"; exit 1; }
           test -n "${GOOGLE_REDIRECT_URI}" || { echo "Missing GOOGLE_REDIRECT_URI production variable"; exit 1; }
           test -n "${FRONTEND_DOMAIN}" || { echo "Missing FRONTEND_DOMAIN production variable"; exit 1; }

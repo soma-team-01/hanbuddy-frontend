@@ -43,6 +43,15 @@ export interface GoogleLoginResponse {
   googleProfile?: GoogleProfile;
 }
 
+export interface ReviewLoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface ReviewLoginRedirect {
+  redirectTo: string;
+}
+
 export interface BuddyResubmission {
   userId: number;
   email: string;

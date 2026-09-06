@@ -326,6 +326,23 @@
     "welcome": "地元の人のように韓国を体験してください。",
     "introduction": "地元の友達と出会い、韓国を自分のものだと感じる瞬間を見つけてください。",
     "continueWithGoogle": "Google を続ける",
+    "reviewLogin": {
+      "divider": "または",
+      "title": "メールアドレスでログイン",
+      "emailLabel": "メールアドレス",
+      "emailPlaceholder": "メールアドレスを入力してください",
+      "passwordLabel": "パスワード",
+      "passwordPlaceholder": "パスワードを入力してください",
+      "submit": "ログイン",
+      "submitting": "ログイン中...",
+      "errors": {
+        "invalidCredentials": "メールアドレスとパスワードを確認してください。",
+        "tooManyAttempts": "ログイン試行回数が多すぎます。しばらくしてからもう一度お試しください。",
+        "unavailable": "メールログインは利用できません。",
+        "invalidRequest": "入力内容を確認してください。",
+        "serverUnavailable": "ログインできませんでした。もう一度お試しください。"
+      }
+    },
     "legalNoticeStart": "続行すると、HanBuddy の内容に同意したことになります。",
     "legalNoticeMiddle": "そして",
     "legalNoticeEnd": ".",

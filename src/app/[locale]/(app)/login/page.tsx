@@ -6,7 +6,9 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { GoogleIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import { parseAuthErrorCode } from "@/lib/auth/error-codes";
+import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
+import { ReviewLoginForm } from "./review-login-form";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
@@ -44,6 +46,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   const errorValue = Array.isArray(error) ? error[0] : error;
   const errorCode = errorValue ? parseAuthErrorCode(errorValue) : null;
   const returnTo = sanitizeReturnToPath(Array.isArray(next) ? next[0] : next);
+  const reviewLoginEnabled = isReviewLoginEnabled();
   const googleStartHref = returnTo
     ? `/api/auth/google/start?locale=${locale}&next=${encodeURIComponent(returnTo)}`
     : `/api/auth/google/start?locale=${locale}`;
@@ -79,6 +82,16 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             </span>
             <span>{t("continueWithGoogle")}</span>
           </Link>
+          {reviewLoginEnabled ? (
+            <>
+              <div className="mx-auto my-6 flex w-full max-w-[520px] items-center gap-4 text-xs font-semibold text-muted">
+                <span className="h-px flex-1 bg-line-soft" aria-hidden="true" />
+                <span>{t("reviewLogin.divider")}</span>
+                <span className="h-px flex-1 bg-line-soft" aria-hidden="true" />
+              </div>
+              <ReviewLoginForm locale={locale} returnTo={returnTo} />
+            </>
+          ) : null}
           <p className="mx-auto mt-5 max-w-[520px] text-xs leading-5 text-muted">
             {t("legalNoticeStart")}{" "}
             <span className="font-semibold text-primary underline underline-offset-2">

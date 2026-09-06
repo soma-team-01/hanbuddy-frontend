@@ -106,6 +106,7 @@ read_runtime_value() {
 }
 
 api_base_url="$(read_runtime_value HANBUDDY_API_BASE_URL)"
+review_login_enabled="$(read_runtime_value REVIEW_LOGIN_ENABLED)"
 google_client_id="$(read_runtime_value GOOGLE_CLIENT_ID)"
 google_redirect_uri="$(read_runtime_value GOOGLE_REDIRECT_URI)"
 
@@ -116,6 +117,7 @@ encode() {
 
 image_uri_base64="$(encode "${IMAGE_URI}")"
 api_base_url_base64="$(encode "${api_base_url}")"
+review_login_enabled_base64="$(encode "${review_login_enabled}")"
 google_client_id_base64="$(encode "${google_client_id}")"
 google_redirect_uri_base64="$(encode "${google_redirect_uri}")"
 frontend_domain_base64="$(encode "${FRONTEND_DOMAIN}")"
@@ -138,6 +140,7 @@ fi
 
 image_uri="\$(printf '%s' '${image_uri_base64}' | base64 --decode)"
 api_base_url="\$(printf '%s' '${api_base_url_base64}' | base64 --decode)"
+review_login_enabled="\$(printf '%s' '${review_login_enabled_base64}' | base64 --decode)"
 google_client_id="\$(printf '%s' '${google_client_id_base64}' | base64 --decode)"
 google_redirect_uri="\$(printf '%s' '${google_redirect_uri_base64}' | base64 --decode)"
 frontend_domain="\$(printf '%s' '${frontend_domain_base64}' | base64 --decode)"
@@ -163,6 +166,7 @@ start_frontend() {
     --log-opt max-size=10m \
     --log-opt max-file=3 \
     -e "HANBUDDY_API_BASE_URL=\${api_base_url}" \
+    -e "REVIEW_LOGIN_ENABLED=\${review_login_enabled}" \
     -e "GOOGLE_CLIENT_ID=\${google_client_id}" \
     -e "GOOGLE_REDIRECT_URI=\${google_redirect_uri}" \
     "\${container_image}"

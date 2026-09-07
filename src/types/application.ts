@@ -54,6 +54,8 @@ export interface CreateApplicationRequest {
   activityScheduleId: number;
   guestCount: number;
   specialRequest?: string;
+  /** 신청 건에 귀속되는 취소·환불 정책 필수 동의 */
+  refundPolicyAgreed: boolean;
 }
 
 export interface CancelApplicationRequest {

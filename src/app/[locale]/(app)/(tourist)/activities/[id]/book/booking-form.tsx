@@ -232,6 +232,7 @@ export function BookingForm({
         activityScheduleId: Number(sessionId),
         guestCount: guests,
         specialRequest: specialRequest.trim() || undefined,
+        refundPolicyAgreed,
       };
       try {
         const conflicts = await conflictCheckMutation.mutateAsync(Number(sessionId));
@@ -274,6 +275,7 @@ export function BookingForm({
           activityScheduleId: Number(sessionId),
           guestCount: guests,
           specialRequest: specialRequest.trim() || undefined,
+          refundPolicyAgreed,
         },
         paymentProvider,
       );

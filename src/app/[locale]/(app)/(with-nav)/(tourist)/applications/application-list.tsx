@@ -228,6 +228,7 @@ function ApplicationCard({
   const [pendingPaymentProvider, setPendingPaymentProvider] = useState<PaymentProvider | null>(
     null,
   );
+  // 신청별 동의는 최초 생성 시 저장된다. 이 상태는 결제 재개 전 재확인 UI만 제어한다.
   const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
   const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);

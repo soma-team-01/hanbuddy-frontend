@@ -325,6 +325,7 @@ describe("BookingForm", () => {
         activityScheduleId: 101,
         guestCount: 1,
         specialRequest: "Vegetarian snacks, please.",
+        refundPolicyAgreed: true,
       },
       "EN",
       "TOSS",
@@ -384,7 +385,11 @@ describe("BookingForm", () => {
 
     await waitFor(() =>
       expect(mockedCreateApplication).toHaveBeenCalledWith(
-        expect.objectContaining({ activityScheduleId: 101, guestCount: 1 }),
+        expect.objectContaining({
+          activityScheduleId: 101,
+          guestCount: 1,
+          refundPolicyAgreed: true,
+        }),
         "EN",
         "PAYPAL",
       ),
@@ -623,7 +628,7 @@ describe("BookingForm", () => {
 
     await waitFor(() =>
       expect(mockedCreateApplication).toHaveBeenCalledWith(
-        expect.objectContaining({ guestCount: 2 }),
+        expect.objectContaining({ guestCount: 2, refundPolicyAgreed: true }),
         "EN",
         "TOSS",
       ),

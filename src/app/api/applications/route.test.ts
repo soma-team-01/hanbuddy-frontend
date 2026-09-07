@@ -10,7 +10,12 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 });
 
 const mockedPostBackend = vi.mocked(postBackend);
-const createRequest = { activityScheduleId: 101, guestCount: 2, specialRequest: "No pork" };
+const createRequest = {
+  activityScheduleId: 101,
+  guestCount: 2,
+  specialRequest: "No pork",
+  refundPolicyAgreed: true,
+};
 
 describe("POST /api/applications", () => {
   beforeEach(() => {

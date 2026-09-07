@@ -171,6 +171,7 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("booking-layout")).toHaveClass(
       "lg:grid-cols-[minmax(0,36rem)_360px]",
     );
+    expect(screen.getByTestId("booking-layout").parentElement).toHaveClass("py-3", "md:py-4");
     expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
     // 요약 카드: 선택한 일정과 총액이 보인다
@@ -189,6 +190,7 @@ describe("BookingForm", () => {
       "focus-border-only",
       "focus:border-primary",
     );
+    expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveAttribute("rows", "2");
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
     expect(screen.getByText("Full refund")).toBeInTheDocument();
     expect(screen.getByText("50% refund")).toBeInTheDocument();

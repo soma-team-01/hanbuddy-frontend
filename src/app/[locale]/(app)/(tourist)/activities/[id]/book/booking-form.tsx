@@ -301,14 +301,14 @@ export function BookingForm({
 
   return (
     <>
-      <PageContainer className="py-6 md:py-10">
+      <PageContainer className="py-3 md:py-4">
         {/* 왼쪽 칸이 남는 폭까지 늘어나면 요약 패널과 사이가 크게 비므로 본문 폭에 맞춰 묶어 둔다 */}
         <main
           data-testid="booking-layout"
           className="grid gap-6 lg:grid-cols-[minmax(0,36rem)_360px] lg:items-start lg:justify-center"
         >
           <div className="mx-auto w-full max-w-xl divide-y divide-line-soft lg:mx-0">
-            <section className="flex flex-col gap-3 pb-7">
+            <section className="flex flex-col gap-2.5 pb-4">
               <h2 className="font-display text-base font-bold text-ink">{t("dateTimeHeading")}</h2>
               <button
                 type="button"
@@ -323,7 +323,7 @@ export function BookingForm({
               <span className="text-xs text-muted">{t("kstNotice")}</span>
             </section>
 
-            <section className="flex flex-col gap-3 py-7">
+            <section className="flex flex-col gap-2.5 py-4">
               <h2 className="font-display text-base font-bold text-ink">{t("guestsHeading")}</h2>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">{t("guestCount")}</span>
@@ -353,12 +353,12 @@ export function BookingForm({
               </div>
             </section>
 
-            <section className="flex flex-col gap-3 py-7">
+            <section className="flex flex-col gap-2.5 py-4">
               <h2 className="font-display text-base font-bold text-ink">{t("specialRequest")}</h2>
               <label className="flex flex-col gap-2">
                 <span className="text-xs text-muted">{t("specialRequestDescription")}</span>
                 <textarea
-                  rows={3}
+                  rows={2}
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
@@ -367,7 +367,7 @@ export function BookingForm({
               </label>
             </section>
 
-            <div className="pt-7">
+            <div className="pt-4">
               <RefundPolicyConsent
                 agreed={refundPolicyAgreed}
                 onAgreedChange={setRefundPolicyAgreed}

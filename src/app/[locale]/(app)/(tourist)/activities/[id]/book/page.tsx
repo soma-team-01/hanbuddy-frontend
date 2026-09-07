@@ -21,7 +21,7 @@ export default async function BookingPage({
 
   return (
     <div className="flex flex-1 flex-col pb-28 lg:pb-0">
-      <PageHeader title={t("title")} backHref={`/activities/${id}`} />
+      <PageHeader title={t("title")} backHref={`/activities/${id}`} compact />
       <BookingContent
         activityId={id}
         initialScheduleId={initialScheduleId}

@@ -124,14 +124,13 @@ function renderList(
   );
 }
 
-function acceptRefundPolicyAndPay(buttonName: string) {
-  const agreement = screen.getByRole("checkbox", {
-    name: /agree to the cancellation and refund policy/i,
-  });
+function continuePaymentAfterReview(buttonName: string) {
+  expect(
+    screen.queryByRole("checkbox", {
+      name: /agree to the cancellation and refund policy/i,
+    }),
+  ).not.toBeInTheDocument();
   const confirmButton = screen.getByRole("button", { name: buttonName });
-  expect(agreement).toBeRequired();
-  expect(confirmButton).toBeDisabled();
-  fireEvent.click(agreement);
   expect(confirmButton).toBeEnabled();
   fireEvent.click(confirmButton);
 }
@@ -205,9 +204,10 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
     expect(screen.getByRole("dialog", { name: "Review before payment" })).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
-    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
+    continuePaymentAfterReview("Continue payment with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
 
+    expect(onContinuePayment).toHaveBeenCalledTimes(1);
     unmount();
     onContinuePayment.mockClear();
     renderList({ paymentProviderMode: "PAYPAL", onContinuePayment });
@@ -220,8 +220,9 @@ describe("ApplicationList", () => {
       "text-on-primary",
     );
     fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
-    acceptRefundPolicyAndPay("Agree and pay with PayPal");
+    continuePaymentAfterReview("Continue payment with PayPal");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "PAYPAL"));
+    expect(onContinuePayment).toHaveBeenCalledTimes(1);
   });
 
   it("shows the forecast on a confirmed upcoming application", async () => {
@@ -284,7 +285,7 @@ describe("ApplicationList", () => {
     expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
-    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
+    continuePaymentAfterReview("Continue payment with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -341,7 +342,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
-    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The payment service is temporarily unavailable. Please try again shortly.",
@@ -359,7 +360,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
-    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
     // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
     await waitFor(() =>
@@ -382,7 +383,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
-    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -402,7 +403,7 @@ describe("ApplicationList", () => {
     const { rerender } = render(<IntlTestProvider locale="en">{applicationList}</IntlTestProvider>);
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
-    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
+    continuePaymentAfterReview("Continue payment with Toss Payments");
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
 
     rerender(<IntlTestProvider locale="ko">{applicationList}</IntlTestProvider>);

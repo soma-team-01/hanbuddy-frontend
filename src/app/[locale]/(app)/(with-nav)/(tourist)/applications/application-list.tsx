@@ -10,7 +10,7 @@ import {
   WeatherConditionIcon,
 } from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
-import { RefundPolicyConsent } from "@/components/booking/RefundPolicyConsent";
+import { RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
 import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
@@ -228,8 +228,6 @@ function ApplicationCard({
   const [pendingPaymentProvider, setPendingPaymentProvider] = useState<PaymentProvider | null>(
     null,
   );
-  // 신청별 동의는 최초 생성 시 저장된다. 이 상태는 결제 재개 전 재확인 UI만 제어한다.
-  const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
   const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);
   const t = useTranslations("Applications");
@@ -261,30 +259,28 @@ function ApplicationCard({
     setPaymentError(error);
   }
 
-  function openPaymentConsent(paymentProvider: PaymentProvider) {
+  function openPaymentReview(paymentProvider: PaymentProvider) {
     setPaymentError(null);
-    setRefundPolicyAgreed(false);
     setPendingPaymentProvider(paymentProvider);
   }
 
-  function closePaymentConsent() {
+  function closePaymentReview() {
     setPendingPaymentProvider(null);
-    setRefundPolicyAgreed(false);
     setPaymentError(null);
   }
 
   async function handleConfirmedPayment() {
     const paymentProvider = pendingPaymentProvider;
-    if (!paymentProvider || !refundPolicyAgreed) return;
+    if (!paymentProvider) return;
 
     setPaymentError(null);
     setPaymentInFlight(paymentProvider);
     try {
       await onContinuePayment(application.id, paymentProvider);
-      closePaymentConsent();
+      closePaymentReview();
     } catch (error) {
       if (paymentProvider === "TOSS" && isTossUserCancel(error)) {
-        closePaymentConsent();
+        closePaymentReview();
         return;
       }
       showPaymentError(error);
@@ -363,7 +359,7 @@ function ApplicationCard({
                   <button
                     type="button"
                     disabled={isPaymentBusy}
-                    onClick={() => openPaymentConsent("TOSS")}
+                    onClick={() => openPaymentReview("TOSS")}
                     aria-label={tossPaymentLabel}
                     className={`${CARD_ACTION_CLASS} ${
                       showProviderChoice
@@ -378,7 +374,7 @@ function ApplicationCard({
                   <button
                     type="button"
                     disabled={isPaymentBusy}
-                    onClick={() => openPaymentConsent("PAYPAL")}
+                    onClick={() => openPaymentReview("PAYPAL")}
                     aria-label={payPalPaymentLabel}
                     className={`${CARD_ACTION_CLASS} ${
                       showProviderChoice
@@ -467,23 +463,18 @@ function ApplicationCard({
       ) : null}
       {pendingPaymentProvider ? (
         <ConfirmDialog
-          title={t("paymentAgreementTitle")}
-          description={t("paymentAgreementDescription")}
+          title={t("paymentReviewTitle")}
+          description={t("paymentReviewDescription")}
           confirmLabel={
-            pendingPaymentProvider === "TOSS"
-              ? t("agreeAndPayWithToss")
-              : t("agreeAndPayWithPayPal")
+            pendingPaymentProvider === "TOSS" ? t("resumeWithToss") : t("resumeWithPayPal")
           }
           pendingLabel={t("paymentProcessing")}
           isPending={paymentInFlight !== null}
-          confirmDisabled={!refundPolicyAgreed}
           onConfirm={() => void handleConfirmedPayment()}
-          onClose={closePaymentConsent}
+          onClose={closePaymentReview}
         >
           <div className="max-h-[60vh] overflow-y-auto pr-1">
-            <RefundPolicyConsent
-              agreed={refundPolicyAgreed}
-              onAgreedChange={setRefundPolicyAgreed}
+            <RefundPolicyNotice
               document={refundPolicyDocument}
               idPrefix={`application-${application.id}-refund-policy`}
             />

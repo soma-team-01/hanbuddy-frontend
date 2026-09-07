@@ -7,10 +7,7 @@ import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
-import {
-  RefundPolicyAgreement,
-  RefundPolicyConsent,
-} from "@/components/booking/RefundPolicyConsent";
+import { RefundPolicyAgreement, RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
 import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
@@ -373,12 +370,9 @@ export function BookingForm({
             </section>
 
             <div className="pt-4">
-              <RefundPolicyConsent
-                agreed={refundPolicyAgreed}
-                onAgreedChange={setRefundPolicyAgreed}
+              <RefundPolicyNotice
                 document={refundPolicyDocument}
                 idPrefix="booking-refund-policy"
-                showAgreement={false}
               />
             </div>
           </div>

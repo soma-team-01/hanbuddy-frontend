@@ -5,18 +5,12 @@ import { useState } from "react";
 import type { PolicyDocumentData } from "@/types/policy";
 import { RefundPolicyDialog } from "./RefundPolicyDialog";
 
-export function RefundPolicyConsent({
-  agreed,
-  onAgreedChange,
+export function RefundPolicyNotice({
   document,
   idPrefix = "refund-policy",
-  showAgreement = true,
 }: Readonly<{
-  agreed: boolean;
-  onAgreedChange: (agreed: boolean) => void;
   document?: PolicyDocumentData;
   idPrefix?: string;
-  showAgreement?: boolean;
 }>) {
   const t = useTranslations("Booking");
   const [policyOpen, setPolicyOpen] = useState(false);
@@ -73,15 +67,6 @@ export function RefundPolicyConsent({
         </dl>
 
         <p className="mt-1 text-[9px] leading-3 text-muted">{t("actualPaymentRefundNotice")}</p>
-
-        {showAgreement ? (
-          <RefundPolicyAgreement
-            agreed={agreed}
-            onAgreedChange={onAgreedChange}
-            describedBy={`${noticeId} ${summaryId}`}
-            className="mt-1.5 border-t border-line-soft pt-1.5"
-          />
-        ) : null}
       </section>
 
       {policyOpen && document ? (

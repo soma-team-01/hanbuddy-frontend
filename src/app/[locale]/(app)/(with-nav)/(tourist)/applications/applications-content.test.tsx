@@ -323,6 +323,7 @@ describe("ApplicationsContent", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     await waitFor(() =>
@@ -363,6 +364,7 @@ describe("ApplicationsContent", () => {
     renderWithQueryClient(<ApplicationsContent />);
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(

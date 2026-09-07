@@ -30,6 +30,7 @@ const quote = {
   freeCancellationUntil: "2099-09-07T12:30:00Z",
   quotedAt: "2099-09-07T12:15:00Z",
 };
+const startAt = "2099-09-09T12:30:00Z";
 
 function renderWithQueryClient(ui: ReactElement, options: { locale?: "en" | "ko" } = {}) {
   const queryClient = createQueryClient();
@@ -42,9 +43,9 @@ describe("CancelDialog", () => {
     mockedGetCancellationQuote.mockResolvedValue({ status: "success", quote });
   });
 
-  it("disables Yes, Cancel until a reason is selected", () => {
+  it("disables Yes, Cancel until a reason is selected", async () => {
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={vi.fn()} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
 
     expect(screen.getByRole("dialog")).toHaveClass("max-md:mt-auto", "md:rounded-3xl");
@@ -52,12 +53,23 @@ describe("CancelDialog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
 
-    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
+  });
+
+  it("keeps cancellation disabled while the latest quote is being fetched", () => {
+    mockedGetCancellationQuote.mockReturnValue(new Promise(() => undefined));
+    renderWithQueryClient(
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+
+    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeDisabled();
   });
 
   it("shows the backend-provided PayPal refund quote in USD", async () => {
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={vi.fn()} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
 
     expect(await screen.findByText("30-minute free cancellation · 100%")).toBeInTheDocument();
@@ -90,7 +102,7 @@ describe("CancelDialog", () => {
       })
       .mockResolvedValueOnce({ status: "success", quote });
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={vi.fn()} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
@@ -104,10 +116,11 @@ describe("CancelDialog", () => {
   it("submits the selected reason as a backend enum value", async () => {
     const onConfirm = vi.fn().mockResolvedValue({ ok: true });
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={onConfirm} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={onConfirm} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Found another option" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     await waitFor(() => expect(onConfirm).toHaveBeenCalledWith("FOUND_OTHER", undefined));
@@ -116,7 +129,7 @@ describe("CancelDialog", () => {
   it("holds back Yes, Cancel until the other reason is written out", async () => {
     const onConfirm = vi.fn().mockResolvedValue({ ok: true });
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={onConfirm} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={onConfirm} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Other reason" }));
@@ -129,6 +142,7 @@ describe("CancelDialog", () => {
     expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeDisabled();
 
     fireEvent.change(detail, { target: { value: "  My flight was cancelled.  " } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     await waitFor(() =>
@@ -136,9 +150,9 @@ describe("CancelDialog", () => {
     );
   });
 
-  it("drops the written detail when the reason moves off other", () => {
+  it("drops the written detail when the reason moves off other", async () => {
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={vi.fn()} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Other reason" }));
@@ -151,7 +165,7 @@ describe("CancelDialog", () => {
     expect(
       screen.queryByLabelText("Please provide a reason for cancellation"),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
   });
 
   it("prevents Escape from closing while cancellation is submitting", async () => {
@@ -164,10 +178,11 @@ describe("CancelDialog", () => {
         }),
     );
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={onClose} onConfirm={onConfirm} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={onClose} onConfirm={onConfirm} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
     await screen.findByRole("button", { name: "Cancelling..." });
 
@@ -187,10 +202,11 @@ describe("CancelDialog", () => {
   it("recovers with an error message when onConfirm rejects unexpectedly", async () => {
     const onConfirm = vi.fn().mockRejectedValue(new Error("network down"));
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={onConfirm} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={onConfirm} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -211,10 +227,11 @@ describe("CancelDialog", () => {
       }),
     });
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={onConfirm} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={onConfirm} />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Illness or unexpected emergency" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -230,7 +247,7 @@ describe("CancelDialog", () => {
       error: new Error("raw cancellation failure"),
     } as const);
     const cancelDialog = (
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={onConfirm} />
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={onConfirm} />
     );
     const queryClient = createQueryClient();
     queryClient.setQueryData(applicationKeys.cancellationQuote("11"), quote);
@@ -241,6 +258,7 @@ describe("CancelDialog", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not cancel the application.");
 
@@ -255,7 +273,7 @@ describe("CancelDialog", () => {
 
   it("localizes the complete Korean cancellation dialog", () => {
     renderWithQueryClient(
-      <CancelDialog applicationId="11" onClose={vi.fn()} onConfirm={vi.fn()} />,
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
       { locale: "ko" },
     );
 

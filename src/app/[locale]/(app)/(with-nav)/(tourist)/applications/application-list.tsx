@@ -596,6 +596,9 @@ export function ApplicationList({
       ? application.status === "pending_payment" || application.status === "confirmed"
       : application.status === "completed" || application.status === "cancelled",
   );
+  const cancelTarget = cancelTargetId
+    ? applications.find((application) => application.id === cancelTargetId)
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -677,17 +680,18 @@ export function ApplicationList({
           ) : null}
         </ConfirmDialog>
       ) : null}
-      {cancelTargetId && (
+      {cancelTarget ? (
         <CancelDialog
-          applicationId={cancelTargetId}
+          applicationId={cancelTarget.id}
+          startAt={cancelTarget.startAt}
           onClose={() => setCancelTargetId(null)}
           onConfirm={async (reason, detail) => {
-            const outcome = await onCancelApplication(cancelTargetId, reason, detail);
+            const outcome = await onCancelApplication(cancelTarget.id, reason, detail);
             if (outcome.ok) setCancelTargetId(null);
             return outcome;
           }}
         />
-      )}
+      ) : null}
     </div>
   );
 }

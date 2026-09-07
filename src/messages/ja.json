@@ -785,7 +785,7 @@
     "quoteFinalNotice": "返金額はキャンセル申請が受け付けられた時点を基準に確定します。",
     "refundedAmount": "返金額",
     "refundStatuses": {
-      "REQUESTED": "返金申請額",
+      "REQUESTED": "返金を申請しました",
       "FAILED": "返金失敗"
     }
   },

@@ -785,7 +785,7 @@
     "quoteFinalNotice": "환불액은 취소 요청이 접수된 시점을 기준으로 확정됩니다.",
     "refundedAmount": "환불 금액",
     "refundStatuses": {
-      "REQUESTED": "환불 요청 금액",
+      "REQUESTED": "환불 요청됨",
       "FAILED": "환불 실패"
     }
   },

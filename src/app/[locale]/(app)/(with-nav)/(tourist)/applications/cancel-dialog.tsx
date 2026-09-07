@@ -18,15 +18,33 @@ const REASONS = [
 
 /** 백엔드 CancelApplicationRequest.cancellationDetail의 @Size(max = 255)와 맞춘다 */
 const CANCELLATION_DETAIL_MAX_LENGTH = 255;
+const HOUR_MS = 60 * 60 * 1000;
+const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
+
+/** 열려 있는 취소 모달의 견적이 달라질 수 있는 가장 가까운 정책 경계를 구한다. */
+function getNextQuoteBoundary(startAt: string, freeCancellationUntil: string) {
+  const now = Date.now();
+  const startAtMs = Date.parse(startAt);
+  const boundaries = [
+    Date.parse(freeCancellationUntil),
+    startAtMs - 48 * HOUR_MS,
+    startAtMs - 24 * HOUR_MS,
+    startAtMs,
+  ].filter((boundary) => Number.isFinite(boundary) && boundary > now);
+
+  return boundaries.length > 0 ? Math.min(...boundaries) : null;
+}
 
 export type CancelDialogOutcome = { ok: true } | { ok: false; error: unknown };
 
 export function CancelDialog({
   applicationId,
+  startAt,
   onClose,
   onConfirm,
 }: Readonly<{
   applicationId: string;
+  startAt: string;
   onClose: () => void;
   onConfirm: (
     reason: ApplicationCancellationReason,
@@ -52,6 +70,7 @@ export function CancelDialog({
     isError: isQuoteError,
     isPending: isQuotePending,
     isSuccess: isQuoteSuccess,
+    isFetching,
     refetch: refetchQuote,
   } = useQuery(cancellationQuoteQueryOptions(applicationId));
   useAuthQueryRedirect(quoteError);
@@ -67,19 +86,22 @@ export function CancelDialog({
   }, [reason]);
 
   useEffect(() => {
-    if (quote?.policyType !== "FREE_CANCELLATION_WINDOW") return;
-    const delay = Date.parse(quote.freeCancellationUntil) - Date.now();
+    if (!quote) return;
+    const nextBoundary = getNextQuoteBoundary(startAt, quote.freeCancellationUntil);
+    if (nextBoundary === null) return;
+    const delay = nextBoundary - Date.now() + 50;
     // 브라우저 타이머의 32-bit 한도를 넘는 비정상 응답은 즉시 만료로 오인하지 않는다.
-    if (!Number.isFinite(delay) || delay <= 0 || delay > 2_147_483_647) return;
+    if (!Number.isFinite(delay) || delay <= 0 || delay > MAX_BROWSER_TIMEOUT_MS) return;
 
-    const timeout = window.setTimeout(() => void refetchQuote(), delay + 50);
+    const timeout = window.setTimeout(() => void refetchQuote(), delay);
     return () => window.clearTimeout(timeout);
-  }, [quote, refetchQuote]);
+  }, [quote, refetchQuote, startAt]);
 
   const trimmedDetail = detail.trim();
   // 백엔드는 OTHER에서 상세 사유를 필수로 받는다
   const needsDetail = reason === "OTHER";
-  const canSubmit = isQuoteSuccess && Boolean(reason) && (!needsDetail || trimmedDetail.length > 0);
+  const canSubmit =
+    isQuoteSuccess && !isFetching && Boolean(reason) && (!needsDetail || trimmedDetail.length > 0);
 
   async function handleConfirm() {
     if (!reason || !canSubmit || isSubmitting) return;

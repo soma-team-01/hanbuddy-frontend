@@ -107,6 +107,25 @@ describe("PaymentSuccessContent", () => {
     expect(screen.queryByText(/^Discount/)).not.toBeInTheDocument();
   });
 
+  it("falls back the amount and currency together when provider payment data is incomplete", async () => {
+    mockedConfirmApplicationPayment.mockResolvedValue({
+      status: "success",
+      application: {
+        ...confirmedApplication,
+        paymentProvider: "PAYPAL",
+        providerPaymentAmount: 62.5,
+        providerPaymentCurrency: null,
+      },
+    });
+
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
+
+    expect(await screen.findByRole("heading", { name: "Payment complete" })).toBeInTheDocument();
+    expect(screen.getAllByText("₩90,000")).toHaveLength(2);
+    expect(screen.queryByText("₩63")).not.toBeInTheDocument();
+    expect(screen.queryByText("$62.50")).not.toBeInTheDocument();
+  });
+
   it("shows the stored original total, discount, and paid amount", async () => {
     mockedConfirmApplicationPayment.mockResolvedValue({
       status: "success",

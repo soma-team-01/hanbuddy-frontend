@@ -785,7 +785,7 @@
     "quoteFinalNotice": "退款金額將以取消申請受理時的時間為準確定。",
     "refundedAmount": "退款金額",
     "refundStatuses": {
-      "REQUESTED": "退款申請金額",
+      "REQUESTED": "已申請退款",
       "FAILED": "退款失敗"
     }
   },

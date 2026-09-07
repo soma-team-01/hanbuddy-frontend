@@ -100,6 +100,12 @@ const paidApplication: Application = {
   paymentCurrency: "KRW",
 };
 
+const refundPolicyDocument = {
+  title: "HanBuddy Cancellation and Refund Policy",
+  version: "2026-09-07",
+  source: "## Refund criteria\n\nThe full cancellation and refund policy.",
+};
+
 function renderList(
   overrides: Partial<React.ComponentProps<typeof ApplicationList>> = {},
   locale: Locale = "en",
@@ -111,10 +117,22 @@ function renderList(
       onCancelPendingPayment={vi.fn().mockResolvedValue({ ok: true })}
       onContinuePayment={vi.fn().mockResolvedValue(undefined)}
       isPaymentPending={false}
+      refundPolicyDocument={refundPolicyDocument}
       {...overrides}
     />,
     { locale },
   );
+}
+
+function continuePaymentAfterReview(buttonName: string) {
+  expect(
+    screen.queryByRole("checkbox", {
+      name: /agree to the cancellation and refund policy/i,
+    }),
+  ).not.toBeInTheDocument();
+  const confirmButton = screen.getByRole("button", { name: buttonName });
+  expect(confirmButton).toBeEnabled();
+  fireEvent.click(confirmButton);
 }
 
 describe("ApplicationList", () => {
@@ -184,8 +202,12 @@ describe("ApplicationList", () => {
     );
     expect(screen.queryByRole("button", { name: "Pay with PayPal" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    expect(screen.getByRole("dialog", { name: "Review before payment" })).toBeInTheDocument();
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    continuePaymentAfterReview("Continue payment with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
 
+    expect(onContinuePayment).toHaveBeenCalledTimes(1);
     unmount();
     onContinuePayment.mockClear();
     renderList({ paymentProviderMode: "PAYPAL", onContinuePayment });
@@ -198,7 +220,9 @@ describe("ApplicationList", () => {
       "text-on-primary",
     );
     fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    continuePaymentAfterReview("Continue payment with PayPal");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "PAYPAL"));
+    expect(onContinuePayment).toHaveBeenCalledTimes(1);
   });
 
   it("shows the forecast on a confirmed upcoming application", async () => {
@@ -257,6 +281,11 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
+    expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
+    expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    continuePaymentAfterReview("Continue payment with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -313,6 +342,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The payment service is temporarily unavailable. Please try again shortly.",
@@ -330,6 +360,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
     // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
     await waitFor(() =>
@@ -352,6 +383,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -371,6 +403,7 @@ describe("ApplicationList", () => {
     const { rerender } = render(<IntlTestProvider locale="en">{applicationList}</IntlTestProvider>);
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
 
     rerender(<IntlTestProvider locale="ko">{applicationList}</IntlTestProvider>);

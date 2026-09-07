@@ -111,37 +111,46 @@ describe("AdminBuddiesDashboard", () => {
     );
   });
 
-  it("requests the next 20 buddies with pagination arrows", async () => {
-    mockedGetAdminBuddies.mockResolvedValue({
-      status: "success",
-      buddies: {
-        ...EMPTY_PAGE,
-        content: [
-          {
-            buddyId: 1,
-            email: "buddy@example.com",
-            name: "김버디",
-            displayName: "서울버디",
-            accountStatus: "ACTIVE",
-            nationalityCode: "KR",
-            commissionPolicy: "STANDARD_20",
-            createdAt: "2026-08-06T10:00:00+09:00",
-          },
-        ],
-        totalElements: 21,
-        totalPages: 2,
-        hasNext: true,
-      },
-    });
+  it.each([
+    ["STANDARD_20", "일반 수수료 20% + VAT 2% (총 22%)"],
+    ["EARLY_10", "초기 수수료 10% + VAT 1% (총 11%)"],
+  ] as const)(
+    "shows the %s commission breakdown and paginates buddies",
+    async (commissionPolicy, label) => {
+      mockedGetAdminBuddies.mockResolvedValue({
+        status: "success",
+        buddies: {
+          ...EMPTY_PAGE,
+          content: [
+            {
+              buddyId: 1,
+              email: "buddy@example.com",
+              name: "김버디",
+              displayName: "서울버디",
+              accountStatus: "ACTIVE",
+              nationalityCode: "KR",
+              commissionPolicy,
+              createdAt: "2026-08-06T10:00:00+09:00",
+            },
+          ],
+          totalElements: 21,
+          totalPages: 2,
+          hasNext: true,
+        },
+      });
 
-    renderWithQueryClient(<AdminBuddiesDashboard />);
-    await screen.findByText("서울버디");
-    expect(screen.queryByText("국적")).not.toBeInTheDocument();
-    expect(screen.queryByText("KR")).not.toBeInTheDocument();
-    mockedGetAdminBuddies.mockClear();
+      renderWithQueryClient(<AdminBuddiesDashboard />);
+      await screen.findByText("서울버디");
+      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.queryByText("국적")).not.toBeInTheDocument();
+      expect(screen.queryByText("KR")).not.toBeInTheDocument();
+      mockedGetAdminBuddies.mockClear();
 
-    fireEvent.click(screen.getByRole("button", { name: "다음 페이지" }));
+      fireEvent.click(screen.getByRole("button", { name: "다음 페이지" }));
 
-    await waitFor(() => expect(mockedGetAdminBuddies).toHaveBeenCalledWith({ page: 1, size: 20 }));
-  });
+      await waitFor(() =>
+        expect(mockedGetAdminBuddies).toHaveBeenCalledWith({ page: 1, size: 20 }),
+      );
+    },
+  );
 });

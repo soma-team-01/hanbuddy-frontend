@@ -4,6 +4,20 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 describe("ConfirmDialog", () => {
+  it("disables confirmation until its prerequisite is satisfied", () => {
+    renderWithIntl(
+      <ConfirmDialog
+        title="Review required"
+        confirmLabel="Continue"
+        confirmDisabled
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+  });
+
   it("renders title, description, and children", () => {
     renderWithIntl(
       <ConfirmDialog

@@ -10,6 +10,7 @@ import {
   WeatherConditionIcon,
 } from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
+import { RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
 import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
@@ -34,6 +35,7 @@ import type {
   ApplicationCancellationReason,
   PaymentProvider,
 } from "@/types/application";
+import type { PolicyDocumentData } from "@/types/policy";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
@@ -210,6 +212,7 @@ function ApplicationCard({
   onHoldExpired,
   isPaymentPending,
   paymentProviderMode,
+  refundPolicyDocument,
 }: Readonly<{
   application: Application;
   onCancel: () => void;
@@ -218,9 +221,13 @@ function ApplicationCard({
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
   paymentProviderMode: PaymentProviderMode;
+  refundPolicyDocument?: PolicyDocumentData;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
+  const [pendingPaymentProvider, setPendingPaymentProvider] = useState<PaymentProvider | null>(
+    null,
+  );
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
   const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);
   const t = useTranslations("Applications");
@@ -235,7 +242,8 @@ function ApplicationCard({
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
-  const isPaymentBusy = isPaymentPending || paymentInFlight !== null;
+  const isPaymentBusy =
+    isPaymentPending || paymentInFlight !== null || pendingPaymentProvider !== null;
   const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
   const showPayPalPayment = isPaymentProviderVisible("PAYPAL", paymentProviderMode);
   const showProviderChoice = paymentProviderMode === "BOTH";
@@ -249,6 +257,36 @@ function ApplicationCard({
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
     setPaymentError(error);
+  }
+
+  function openPaymentReview(paymentProvider: PaymentProvider) {
+    setPaymentError(null);
+    setPendingPaymentProvider(paymentProvider);
+  }
+
+  function closePaymentReview() {
+    setPendingPaymentProvider(null);
+    setPaymentError(null);
+  }
+
+  async function handleConfirmedPayment() {
+    const paymentProvider = pendingPaymentProvider;
+    if (!paymentProvider) return;
+
+    setPaymentError(null);
+    setPaymentInFlight(paymentProvider);
+    try {
+      await onContinuePayment(application.id, paymentProvider);
+      closePaymentReview();
+    } catch (error) {
+      if (paymentProvider === "TOSS" && isTossUserCancel(error)) {
+        closePaymentReview();
+        return;
+      }
+      showPaymentError(error);
+    } finally {
+      setPaymentInFlight(null);
+    }
   }
 
   const dDay = isUpcoming ? daysUntilSeoulDate(application.startAt) : null;
@@ -321,55 +359,30 @@ function ApplicationCard({
                   <button
                     type="button"
                     disabled={isPaymentBusy}
-                    onClick={async () => {
-                      setPaymentError(null);
-                      setPaymentInFlight("TOSS");
-                      try {
-                        // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
-                        await onContinuePayment(application.id, "TOSS");
-                      } catch (error) {
-                        if (!isTossUserCancel(error)) showPaymentError(error);
-                      } finally {
-                        setPaymentInFlight(null);
-                      }
-                    }}
-                    aria-label={
-                      paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentLabel
-                    }
+                    onClick={() => openPaymentReview("TOSS")}
+                    aria-label={tossPaymentLabel}
                     className={`${CARD_ACTION_CLASS} ${
                       showProviderChoice
                         ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
                         : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
                     }`}
                   >
-                    {paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentText}
+                    {tossPaymentText}
                   </button>
                 ) : null}
                 {showPayPalPayment ? (
                   <button
                     type="button"
                     disabled={isPaymentBusy}
-                    onClick={async () => {
-                      setPaymentError(null);
-                      setPaymentInFlight("PAYPAL");
-                      try {
-                        await onContinuePayment(application.id, "PAYPAL");
-                      } catch (error) {
-                        showPaymentError(error);
-                      } finally {
-                        setPaymentInFlight(null);
-                      }
-                    }}
-                    aria-label={
-                      paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentLabel
-                    }
+                    onClick={() => openPaymentReview("PAYPAL")}
+                    aria-label={payPalPaymentLabel}
                     className={`${CARD_ACTION_CLASS} ${
                       showProviderChoice
                         ? "bg-[#ffc439] text-[#111] enabled:hover:opacity-90"
                         : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
                     }`}
                   >
-                    {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentText}
+                    {payPalPaymentText}
                   </button>
                 ) : null}
                 <button
@@ -420,7 +433,7 @@ function ApplicationCard({
               onExpire={onHoldExpired}
             />
           ) : null}
-          {paymentError !== null && (
+          {paymentError !== null && pendingPaymentProvider === null && (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
@@ -448,6 +461,34 @@ function ApplicationCard({
           onClose={() => setHostProfileOpen(false)}
         />
       ) : null}
+      {pendingPaymentProvider ? (
+        <ConfirmDialog
+          title={t("paymentReviewTitle")}
+          description={t("paymentReviewDescription")}
+          confirmLabel={
+            pendingPaymentProvider === "TOSS" ? t("resumeWithToss") : t("resumeWithPayPal")
+          }
+          pendingLabel={t("paymentProcessing")}
+          isPending={paymentInFlight !== null}
+          onConfirm={() => void handleConfirmedPayment()}
+          onClose={closePaymentReview}
+        >
+          <div className="max-h-[60vh] overflow-y-auto pr-1">
+            <RefundPolicyNotice
+              document={refundPolicyDocument}
+              idPrefix={`application-${application.id}-refund-policy`}
+            />
+          </div>
+          {paymentError !== null ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
+            >
+              {getApiErrorMessage(paymentError, t("paymentFailed"))}
+            </p>
+          ) : null}
+        </ConfirmDialog>
+      ) : null}
     </article>
   );
 }
@@ -459,6 +500,7 @@ export function ApplicationList({
   onContinuePayment,
   onHoldExpired,
   isPaymentPending,
+  refundPolicyDocument,
   paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   applications: Application[];
@@ -472,6 +514,7 @@ export function ApplicationList({
   /** 좌석 선점이 만료되면 목록을 다시 불러오도록 알린다 */
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
+  refundPolicyDocument?: PolicyDocumentData;
   paymentProviderMode?: PaymentProviderMode;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
@@ -524,6 +567,7 @@ export function ApplicationList({
             onHoldExpired={onHoldExpired}
             isPaymentPending={isPaymentPending}
             paymentProviderMode={paymentProviderMode}
+            refundPolicyDocument={refundPolicyDocument}
           />
         ))}
         {visibleApplications.length === 0 && (

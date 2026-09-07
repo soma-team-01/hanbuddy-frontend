@@ -113,6 +113,7 @@ describe("application API client", () => {
           activityScheduleId: 101,
           guestCount: 2,
           specialRequest: "Vegetarian snacks, please.",
+          refundPolicyAgreed: true,
         },
         "EN",
         "PAYPAL",
@@ -126,12 +127,13 @@ describe("application API client", () => {
         activityScheduleId: 101,
         guestCount: 2,
         specialRequest: "Vegetarian snacks, please.",
+        refundPolicyAgreed: true,
       }),
       credentials: "same-origin",
     });
   });
 
-  it("continues a pending payment through the internal API", async () => {
+  it("continues a pending payment without resending the stored refund agreement", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       createJsonResponse({
         isSuccess: true,
@@ -276,7 +278,11 @@ describe("application API client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      createApplication({ activityScheduleId: 101, guestCount: 9 }, "EN", "TOSS"),
+      createApplication(
+        { activityScheduleId: 101, guestCount: 9, refundPolicyAgreed: true },
+        "EN",
+        "TOSS",
+      ),
     ).resolves.toEqual({
       status: "error",
       error: expect.objectContaining({

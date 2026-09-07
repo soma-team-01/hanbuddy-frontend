@@ -58,9 +58,11 @@ export function generateStaticParams() {
 
 export default async function LocaleLayout({
   children,
+  policy,
   params,
 }: Readonly<{
   children: React.ReactNode;
+  policy: React.ReactNode;
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
@@ -101,6 +103,7 @@ export default async function LocaleLayout({
             >
               {children}
             </RouteShell>
+            {policy}
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

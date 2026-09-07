@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { RefundPolicyAgreement, RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
 import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
@@ -40,6 +41,7 @@ import type {
   PaymentProvider,
   PaymentReadyResponse,
 } from "@/types/application";
+import type { PolicyDocumentData } from "@/types/policy";
 import { BookingConflictDialog } from "./booking-conflict-dialog";
 
 const MAX_GUESTS = 8;
@@ -65,10 +67,12 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 export function BookingForm({
   activity,
   initialSessionId,
+  refundPolicyDocument,
   paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   activity: Activity;
   initialSessionId?: string;
+  refundPolicyDocument?: PolicyDocumentData;
   paymentProviderMode?: PaymentProviderMode;
 }>) {
   const queryClient = useQueryClient();
@@ -87,7 +91,7 @@ export function BookingForm({
     return activity.sessions[0]?.id ?? "";
   });
   const [guests, setGuests] = useState(1);
-  const [agreed, setAgreed] = useState(false);
+  const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorKey, setErrorKey] = useState<BookingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
@@ -225,6 +229,7 @@ export function BookingForm({
         activityScheduleId: Number(sessionId),
         guestCount: guests,
         specialRequest: specialRequest.trim() || undefined,
+        refundPolicyAgreed,
       };
       try {
         const conflicts = await conflictCheckMutation.mutateAsync(Number(sessionId));
@@ -267,6 +272,7 @@ export function BookingForm({
           activityScheduleId: Number(sessionId),
           guestCount: guests,
           specialRequest: specialRequest.trim() || undefined,
+          refundPolicyAgreed,
         },
         paymentProvider,
       );
@@ -297,14 +303,14 @@ export function BookingForm({
 
   return (
     <>
-      <PageContainer className="py-6 md:py-10">
+      <PageContainer className="py-3 md:py-4">
         {/* 왼쪽 칸이 남는 폭까지 늘어나면 요약 패널과 사이가 크게 비므로 본문 폭에 맞춰 묶어 둔다 */}
         <main
           data-testid="booking-layout"
           className="grid gap-6 lg:grid-cols-[minmax(0,36rem)_360px] lg:items-start lg:justify-center"
         >
           <div className="mx-auto w-full max-w-xl divide-y divide-line-soft lg:mx-0">
-            <section className="flex flex-col gap-3 pb-7">
+            <section className="flex flex-col gap-2.5 pb-4">
               <h2 className="font-display text-base font-bold text-ink">{t("dateTimeHeading")}</h2>
               <button
                 type="button"
@@ -319,7 +325,7 @@ export function BookingForm({
               <span className="text-xs text-muted">{t("kstNotice")}</span>
             </section>
 
-            <section className="flex flex-col gap-3 py-7">
+            <section className="flex flex-col gap-2.5 py-4">
               <h2 className="font-display text-base font-bold text-ink">{t("guestsHeading")}</h2>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">{t("guestCount")}</span>
@@ -349,12 +355,12 @@ export function BookingForm({
               </div>
             </section>
 
-            <section className="flex flex-col gap-3 py-7">
+            <section className="flex flex-col gap-2.5 py-4">
               <h2 className="font-display text-base font-bold text-ink">{t("specialRequest")}</h2>
               <label className="flex flex-col gap-2">
                 <span className="text-xs text-muted">{t("specialRequestDescription")}</span>
                 <textarea
-                  rows={3}
+                  rows={2}
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
@@ -363,50 +369,12 @@ export function BookingForm({
               </label>
             </section>
 
-            <section className="flex flex-col gap-3 pt-7">
-              <p className="text-sm leading-6 text-muted">
-                {t.rich("refundPolicy", {
-                  policy: (chunks) => (
-                    <span className="group relative inline-block">
-                      <button
-                        type="button"
-                        aria-describedby="refund-policy-tooltip"
-                        className="font-semibold text-ink underline decoration-primary/60 decoration-2 underline-offset-4 transition-colors hover:text-primary focus-visible:text-primary"
-                      >
-                        {chunks}
-                      </button>
-                      <span
-                        id="refund-policy-tooltip"
-                        role="tooltip"
-                        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-72 -translate-x-1/2 flex-col gap-2 rounded-xl border border-primary/30 bg-canvas-soft p-4 text-left text-xs leading-5 font-normal no-underline shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:flex group-hover:flex"
-                      >
-                        {(["full", "half", "none"] as const).map((rule) => (
-                          <span key={rule} className="flex items-center justify-between gap-3">
-                            <span className="text-muted">{t(`refundRules.${rule}.label`)}</span>
-                            <span
-                              className={`font-display font-bold ${
-                                rule === "none" ? "text-ink" : "text-primary"
-                              }`}
-                            >
-                              {t(`refundRules.${rule}.value`)}
-                            </span>
-                          </span>
-                        ))}
-                      </span>
-                    </span>
-                  ),
-                })}
-              </p>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(event) => setAgreed(event.target.checked)}
-                  className="size-4.5 rounded accent-primary"
-                />
-                <span className="text-sm text-ink">{t("agreement")}</span>
-              </label>
-            </section>
+            <div className="pt-4">
+              <RefundPolicyNotice
+                document={refundPolicyDocument}
+                idPrefix="booking-refund-policy"
+              />
+            </div>
           </div>
 
           <BookingPanel>
@@ -505,56 +473,64 @@ export function BookingForm({
 
             <div className="lg:pt-6">
               <BottomActionBar>
-                <div
-                  className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
-                >
-                  {showTossPayment ? (
-                    <button
-                      type="button"
-                      disabled={!agreed || isSubmitting}
-                      onClick={() => handleSubmitClick("TOSS")}
-                      className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
-                        showProviderChoice
-                          ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
-                          : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
-                      }`}
-                    >
-                      {isSubmitting ? t("processing") : tossPaymentLabel}
-                    </button>
-                  ) : null}
-                  {showPayPalPayment ? (
-                    <div className="flex min-w-0 flex-col items-center gap-1.5">
-                      {payPalPayment ? (
-                        <PayPalCheckoutButton
-                          payment={payPalPayment}
-                          autoStart
-                          onCancel={() => setPayPalPayment(null)}
-                          onConfirmed={() => {
-                            const applicationId = payPalPayment.application.applicationId;
-                            setPayPalPayment(null);
-                            void queryClient.invalidateQueries({
-                              queryKey: applicationKeys.mine(),
-                            });
-                            router.push(
-                              `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
-                            );
-                          }}
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={!agreed || isSubmitting}
-                          onClick={() => handleSubmitClick("PAYPAL")}
-                          className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
-                        >
-                          {isSubmitting ? t("processing") : payPalPaymentLabel}
-                        </button>
-                      )}
-                      <p className="text-center text-[11px] leading-4 text-muted">
-                        {t("paypalCurrencyNotice")}
-                      </p>
-                    </div>
-                  ) : null}
+                <div className="flex w-full flex-col gap-2">
+                  <RefundPolicyAgreement
+                    agreed={refundPolicyAgreed}
+                    onAgreedChange={setRefundPolicyAgreed}
+                    describedBy="booking-refund-policy-notice booking-refund-policy-summary"
+                    className="px-1 py-1"
+                  />
+                  <div
+                    className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
+                  >
+                    {showTossPayment ? (
+                      <button
+                        type="button"
+                        disabled={!refundPolicyAgreed || isSubmitting}
+                        onClick={() => handleSubmitClick("TOSS")}
+                        className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
+                          showProviderChoice
+                            ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
+                            : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                        }`}
+                      >
+                        {isSubmitting ? t("processing") : tossPaymentLabel}
+                      </button>
+                    ) : null}
+                    {showPayPalPayment ? (
+                      <div className="flex min-w-0 flex-col items-center gap-1.5">
+                        {payPalPayment ? (
+                          <PayPalCheckoutButton
+                            payment={payPalPayment}
+                            autoStart
+                            onCancel={() => setPayPalPayment(null)}
+                            onConfirmed={() => {
+                              const applicationId = payPalPayment.application.applicationId;
+                              setPayPalPayment(null);
+                              void queryClient.invalidateQueries({
+                                queryKey: applicationKeys.mine(),
+                              });
+                              router.push(
+                                `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
+                              );
+                            }}
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={!refundPolicyAgreed || isSubmitting}
+                            onClick={() => handleSubmitClick("PAYPAL")}
+                            className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                          >
+                            {isSubmitting ? t("processing") : payPalPaymentLabel}
+                          </button>
+                        )}
+                        <p className="text-center text-[11px] leading-4 text-muted">
+                          {t("paypalCurrencyNotice")}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </BottomActionBar>
             </div>

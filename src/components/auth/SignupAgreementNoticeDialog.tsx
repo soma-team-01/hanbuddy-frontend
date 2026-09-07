@@ -29,7 +29,7 @@ export function SignupAgreementNoticeDialog({
   const t = useTranslations("Onboarding.agreements");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const notice = getSignupAgreementNotice(agreementType, userType);
+  const notice = getSignupAgreementNotice(agreementType, userType, locale);
   const version = document?.version ?? SIGNUP_AGREEMENT_DOCUMENT_VERSION;
 
   useEffect(() => {

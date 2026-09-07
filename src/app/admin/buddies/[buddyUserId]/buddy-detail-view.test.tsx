@@ -161,7 +161,7 @@ describe("AdminBuddyDetailView", () => {
     expect(screen.getByText("1998. 4. 12.")).toBeInTheDocument();
     expect(screen.getByText("+82")).toBeInTheDocument();
     expect(screen.getByText("01012345678")).toBeInTheDocument();
-    expect(screen.getByText("초기 버디 10%")).toBeInTheDocument();
+    expect(screen.getByText("초기 버디 수수료 10% + VAT 1% (총 11%)")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "계정 정지" })).toHaveLength(2);
     expect(screen.queryByRole("link", { name: "회원 정보 보기" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "운영 정보" })).toBeInTheDocument();
@@ -194,18 +194,19 @@ describe("AdminBuddyDetailView", () => {
         "변경 이후 새로 생성되는 결제부터 적용되며 기존 결제와 정산 금액은 바뀌지 않습니다.",
       ),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "초기 버디 10%" })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
+    expect(
+      screen.getByRole("radio", { name: "초기 버디 수수료 10%, 부가세 1%, 총 11%" }),
+    ).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("button", { name: "수수료 정책 변경" })).toBeDisabled();
 
-    fireEvent.click(screen.getByRole("radio", { name: "일반 20%" }));
+    fireEvent.click(screen.getByRole("radio", { name: "일반 수수료 20%, 부가세 2%, 총 22%" }));
     fireEvent.change(screen.getByRole("textbox", { name: "변경 사유" }), {
       target: { value: "초기 운영 정책 종료" },
     });
 
-    expect(screen.getByRole("radio", { name: "일반 20%" })).toHaveAttribute("aria-checked", "true");
+    expect(
+      screen.getByRole("radio", { name: "일반 수수료 20%, 부가세 2%, 총 22%" }),
+    ).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("button", { name: "수수료 정책 변경" })).toBeEnabled();
   });
 

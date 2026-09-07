@@ -16,9 +16,9 @@ describe("SignupAgreementNoticeDialog", () => {
     expect(
       screen.getByRole("dialog", { name: "Personal information collection and use" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Version 2026-09-06")).toBeInTheDocument();
-    expect(screen.getByText("수집 항목")).toBeInTheDocument();
-    expect(screen.getByText("거부 권리와 불이익")).toBeInTheDocument();
+    expect(screen.getByText("Version 2026-09-07")).toBeInTheDocument();
+    expect(screen.getByText("Data collected")).toBeInTheDocument();
+    expect(screen.getByText("Right to refuse and consequences")).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.queryByText(/전문 보기/)).not.toBeInTheDocument();
   });
@@ -52,11 +52,11 @@ describe("SignupAgreementNoticeDialog", () => {
       />,
     );
 
-    expect(screen.getByText(/버디 가입 심사 및 결과 안내/)).toBeInTheDocument();
-    expect(screen.getByText(/서비스 운영 연락/)).toBeInTheDocument();
-    expect(screen.getByText(/가입 심사와 운영 연락을 위한 전화번호/)).toBeInTheDocument();
-    expect(screen.getByText("이용 목적")).toBeInTheDocument();
-    expect(screen.queryByText(/선호 연락수단/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Buddy application review and results/)).toBeInTheDocument();
+    expect(screen.getByText(/operational communication/)).toBeInTheDocument();
+    expect(screen.getByText(/phone number for application review/)).toBeInTheDocument();
+    expect(screen.getByText("Purpose")).toBeInTheDocument();
+    expect(screen.queryByText(/preferred contact method/)).not.toBeInTheDocument();
   });
 
   it("closes from the accessible close control", () => {

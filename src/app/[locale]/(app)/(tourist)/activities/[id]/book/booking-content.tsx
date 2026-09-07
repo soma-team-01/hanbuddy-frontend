@@ -8,12 +8,18 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import { touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import type { PolicyDocumentData } from "@/types/policy";
 import { BookingForm } from "./booking-form";
 
 export function BookingContent({
   activityId,
   initialScheduleId,
-}: Readonly<{ activityId: string; initialScheduleId?: string }>) {
+  refundPolicyDocument,
+}: Readonly<{
+  activityId: string;
+  initialScheduleId?: string;
+  refundPolicyDocument?: PolicyDocumentData;
+}>) {
   const locale = useLocale();
   const language = getContentLanguage(locale);
   // 원화 계약 가격과 함께 PayPal 결제 예정 금액을 안내할 USD 참고 가격을 받는다.
@@ -46,5 +52,11 @@ export function BookingContent({
     );
   }
 
-  return <BookingForm activity={activity} initialSessionId={initialScheduleId} />;
+  return (
+    <BookingForm
+      activity={activity}
+      initialSessionId={initialScheduleId}
+      refundPolicyDocument={refundPolicyDocument}
+    />
+  );
 }

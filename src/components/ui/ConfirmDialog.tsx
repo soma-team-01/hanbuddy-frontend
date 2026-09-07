@@ -11,6 +11,7 @@ interface ConfirmDialogBaseProps {
   cancelVariant?: "soft" | "outline";
   tone?: "default" | "danger";
   isPending?: boolean;
+  confirmDisabled?: boolean;
   onClose: () => void;
   children?: React.ReactNode;
 }
@@ -42,6 +43,7 @@ export function ConfirmDialog({
   cancelVariant = "soft",
   tone = "default",
   isPending = false,
+  confirmDisabled = false,
   onConfirm,
   onClose,
   confirmSlot,
@@ -105,7 +107,7 @@ export function ConfirmDialog({
             <button
               type="button"
               onClick={onConfirm}
-              disabled={isPending}
+              disabled={isPending || confirmDisabled}
               className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-on-primary transition-colors disabled:opacity-60 ${
                 tone === "danger"
                   ? "bg-danger enabled:hover:bg-danger/90"

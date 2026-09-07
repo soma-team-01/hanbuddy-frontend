@@ -417,12 +417,29 @@ describe("OnboardingForm", () => {
     );
   });
 
+  it.each(["en", "ko"] as const)(
+    "keeps %s agreement rows compact and vertically aligned",
+    (locale) => {
+      renderWithIntl(<OnboardingForm />, { locale });
+      advanceToAgreements(locale, { birthDate: "1998-04-12", contact: "line_user" });
+      const checkboxes = screen.getAllByRole("checkbox").slice(1);
+      for (const checkbox of checkboxes) {
+        const target = checkbox.closest("label");
+        expect(target).toHaveClass("size-11");
+        expect(target).not.toHaveClass("mt-0.5");
+        expect(target?.parentElement).toHaveClass("items-center", "py-1.5");
+        expect(target?.parentElement).not.toHaveClass("items-start", "py-3.5");
+      }
+      expect(checkboxes[0].closest("form")).not.toHaveClass("lg:min-h-[620px]");
+    },
+  );
+
   it("shows only the tourist signup agreements on traveler onboarding", () => {
     renderWithIntl(
       <OnboardingForm
         agreementDocuments={{
           TERMS_OF_SERVICE: {
-            version: "2026-09-06",
+            version: "2026-09-07",
             source: "## 제1조 목적\n\n이 약관은 HanBuddy 서비스 이용 조건을 정합니다.",
           },
         }}
@@ -454,7 +471,7 @@ describe("OnboardingForm", () => {
     fireEvent.click(termsButton);
     expect(termsCheckbox).not.toBeChecked();
     expect(screen.getByRole("dialog", { name: "HanBuddy Terms of Service" })).toBeInTheDocument();
-    expect(screen.getByText("Version 2026-09-06")).toBeInTheDocument();
+    expect(screen.getByText("Version 2026-09-07")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "제1조 목적" })).toBeInTheDocument();
     expect(screen.getByText("이 약관은 HanBuddy 서비스 이용 조건을 정합니다.")).toBeInTheDocument();
     expect(screen.queryByText(/전문 보기/)).not.toBeInTheDocument();
@@ -520,10 +537,10 @@ describe("OnboardingForm", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(JSON.parse(fetchMock.mock.calls[0][1].body).agreements).toEqual([
-      { type: "ADULT_CONFIRMATION", version: "2026-09-06", agreed: true },
-      { type: "TERMS_OF_SERVICE", version: "2026-09-06", agreed: true },
-      { type: "PRIVACY_COLLECTION_USE", version: "2026-09-06", agreed: true },
-      { type: "MARKETING_COMMUNICATION", version: "2026-09-06", agreed: false },
+      { type: "ADULT_CONFIRMATION", version: "2026-09-07", agreed: true },
+      { type: "TERMS_OF_SERVICE", version: "2026-09-07", agreed: true },
+      { type: "PRIVACY_COLLECTION_USE", version: "2026-09-07", agreed: true },
+      { type: "MARKETING_COMMUNICATION", version: "2026-09-07", agreed: false },
     ]);
   });
 

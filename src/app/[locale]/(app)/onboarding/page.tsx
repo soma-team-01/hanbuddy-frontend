@@ -33,10 +33,11 @@ export async function generateMetadata({ params }: OnboardingPageProps): Promise
   };
 }
 
-export default async function ProfileSetupPage() {
+export default async function ProfileSetupPage({ params }: Readonly<OnboardingPageProps>) {
+  const { locale } = await params;
   const [cookieStore, agreementDocuments] = await Promise.all([
     cookies(),
-    getSignupAgreementDocuments("TOURIST"),
+    getSignupAgreementDocuments("TOURIST", locale),
   ]);
   const googleProfile = decodeGoogleProfile(cookieStore.get(AUTH_COOKIES.googleProfile)?.value);
   const signupDraftAccountId = getSignupDraftAccountId(

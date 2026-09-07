@@ -143,6 +143,12 @@ describe("ApplicationsContent", () => {
 
     expect(await screen.findByText("₩90,000")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    expect(
+      screen.queryByRole("checkbox", {
+        name: /agree to the cancellation and refund policy/i,
+      }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Continue payment with Toss Payments" }));
 
     await waitFor(() => {
       expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
@@ -183,6 +189,12 @@ describe("ApplicationsContent", () => {
 
     renderWithQueryClient(<ApplicationsContent />);
     fireEvent.click(await screen.findByRole("button", { name: "Pay with PayPal" }));
+    expect(
+      screen.queryByRole("checkbox", {
+        name: /agree to the cancellation and refund policy/i,
+      }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Continue payment with PayPal" }));
 
     await waitFor(() =>
       expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11", "EN", "PAYPAL"),

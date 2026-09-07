@@ -16,6 +16,9 @@ describe("policy routes", () => {
   });
 
   it("rewrites links between the source documents and leaves external URLs unchanged", () => {
+    expect(resolvePolicyDocumentHref("ja", "./terms-of-service.ja.md#example")).toBe(
+      "/ja/policies/terms-of-service#example",
+    );
     expect(resolvePolicyDocumentHref("ko", "./cancellation-refund-policy.ko.md")).toBe(
       "/ko/policies/cancellation-refund-policy",
     );

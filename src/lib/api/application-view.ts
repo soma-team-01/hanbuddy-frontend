@@ -59,5 +59,9 @@ export function mapApplicationResponseToApplication(
     },
     paymentAmount: response.paymentAmount,
     paymentCurrency: response.paymentCurrency,
+    paymentProvider: response.paymentProvider,
+    providerPaymentAmount: response.providerPaymentAmount,
+    providerPaymentCurrency: response.providerPaymentCurrency,
+    refund: response.refund,
   };
 }

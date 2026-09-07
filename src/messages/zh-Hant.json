@@ -765,7 +765,27 @@
     "cancelPendingDescription": "我們為您保留的座位將立即釋放。",
     "cancelPendingConfirm": "是的，取消",
     "keepPendingApplication": "保留申請",
-    "holdRemaining": "{time} 剩下完成付款"
+    "holdRemaining": "{time} 剩下完成付款",
+    "freeCancellationRemaining": "免費取消剩餘 {time}",
+    "refundEstimateTitle": "取消退款預估",
+    "quoteLoading": "正在確認最新退款金額...",
+    "quoteFailed": "無法載入退款預估金額。",
+    "retryQuote": "重試",
+    "refundPolicy": "適用標準",
+    "refundPolicyTypes": {
+      "FREE_CANCELLATION_WINDOW": "付款後30分鐘內免費取消",
+      "BEFORE_48_HOURS": "活動開始48小時前",
+      "BETWEEN_24_AND_48_HOURS": "活動開始前24至48小時",
+      "WITHIN_24_HOURS": "活動開始前不足24小時"
+    },
+    "estimatedRefund": "預計退款",
+    "cancellationFee": "取消手續費",
+    "quoteFinalNotice": "最終退款金額將在提交取消申請時重新計算。",
+    "refundedAmount": "退款金額",
+    "refundStatuses": {
+      "REQUESTED": "退款申請金額",
+      "FAILED": "退款失敗"
+    }
   },
   "Payment": {
     "unavailable": "無法付款",

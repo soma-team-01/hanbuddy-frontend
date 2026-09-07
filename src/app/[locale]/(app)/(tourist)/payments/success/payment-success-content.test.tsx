@@ -90,7 +90,12 @@ describe("PaymentSuccessContent", () => {
   it("shows the paid amount in the currency it was charged in", async () => {
     mockedConfirmApplicationPayment.mockResolvedValue({
       status: "success",
-      application: { ...confirmedApplication, paymentAmount: 62.5, paymentCurrency: "USD" },
+      application: {
+        ...confirmedApplication,
+        paymentProvider: "PAYPAL",
+        providerPaymentAmount: 62.5,
+        providerPaymentCurrency: "USD",
+      },
     });
 
     renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);

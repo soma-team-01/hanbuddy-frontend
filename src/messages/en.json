@@ -765,7 +765,27 @@
     "cancelPendingDescription": "The seat we're holding for you will be released right away.",
     "cancelPendingConfirm": "Yes, cancel",
     "keepPendingApplication": "Keep application",
-    "holdRemaining": "{time} left to complete payment"
+    "holdRemaining": "{time} left to complete payment",
+    "freeCancellationRemaining": "Free cancellation for {time}",
+    "refundEstimateTitle": "Cancellation refund estimate",
+    "quoteLoading": "Checking the latest refund amount...",
+    "quoteFailed": "Could not load the refund estimate.",
+    "retryQuote": "Try again",
+    "refundPolicy": "Applied policy",
+    "refundPolicyTypes": {
+      "FREE_CANCELLATION_WINDOW": "30-minute free cancellation",
+      "BEFORE_48_HOURS": "48+ hours before the activity",
+      "BETWEEN_24_AND_48_HOURS": "24–48 hours before the activity",
+      "WITHIN_24_HOURS": "Less than 24 hours before the activity"
+    },
+    "estimatedRefund": "Estimated refund",
+    "cancellationFee": "Cancellation fee",
+    "quoteFinalNotice": "The final refund is recalculated when you submit the cancellation.",
+    "refundedAmount": "Refunded",
+    "refundStatuses": {
+      "REQUESTED": "Refund requested",
+      "FAILED": "Refund failed"
+    }
   },
   "Payment": {
     "unavailable": "Payment unavailable",

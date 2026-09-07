@@ -58,11 +58,14 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
   const scheduleLabel =
     formatSeoulDateTime(application.startAt, locale) ?? tErrors("dateTimeUnavailable");
   const paidAmount =
-    application.paymentAmount !== null && application.paymentAmount !== undefined
-      ? application.paymentAmount
-      : application.totalPrice;
+    application.providerPaymentAmount !== null && application.providerPaymentAmount !== undefined
+      ? application.providerPaymentAmount
+      : application.paymentAmount !== null && application.paymentAmount !== undefined
+        ? application.paymentAmount
+        : application.totalPrice;
   // 실제 결제 통화로 표기한다 — 원화가 아닌 결제를 ₩로 적으면 금액을 잘못 읽는다
-  const paidCurrency = application.paymentCurrency ?? application.currency;
+  const paidCurrency =
+    application.providerPaymentCurrency ?? application.paymentCurrency ?? application.currency;
   const originalTotalPrice = application.originalTotalPrice ?? application.totalPrice;
   const discountAmount =
     application.discountAmount ?? Math.max(0, originalTotalPrice - application.totalPrice);

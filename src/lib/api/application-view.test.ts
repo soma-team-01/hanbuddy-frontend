@@ -17,6 +17,10 @@ const application = {
   currency: "KRW",
   paymentAmount: 68.97,
   paymentCurrency: "USD",
+  paymentProvider: "PAYPAL",
+  providerPaymentAmount: 68.97,
+  providerPaymentCurrency: "USD",
+  refund: null,
   status: "CONFIRMED",
   cancellationReason: null,
   cancellationDetail: null,
@@ -55,6 +59,10 @@ describe("application view adapters", () => {
       },
       paymentAmount: 68.97,
       paymentCurrency: "USD",
+      paymentProvider: "PAYPAL",
+      providerPaymentAmount: 68.97,
+      providerPaymentCurrency: "USD",
+      refund: null,
     });
   });
 

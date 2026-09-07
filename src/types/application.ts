@@ -7,6 +7,39 @@ export type BackendApplicationStatus =
 export type ApplicationCancellationReason =
   "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER";
 
+export type CancellationPolicyType =
+  "FREE_CANCELLATION_WINDOW" | "BEFORE_48_HOURS" | "BETWEEN_24_AND_48_HOURS" | "WITHIN_24_HOURS";
+
+export interface CancellationQuoteResponse {
+  policyVersion: string;
+  policyType: CancellationPolicyType;
+  refundPercent: number;
+  refundAmount: number;
+  refundCurrency: string;
+  cancellationFeeAmount: number;
+  freeCancellationUntil: string;
+  quotedAt: string;
+}
+
+export interface PaymentRefundResponse {
+  refundId: number;
+  provider: PaymentProvider | "EXTERNAL";
+  status: "REQUESTED" | "COMPLETED" | "FAILED";
+  policyVersion: string;
+  policyType: CancellationPolicyType;
+  refundPercent: number;
+  refundAmount: number;
+  refundCurrency: string;
+  cancellationFeeAmount: number;
+  refundAmountKrw: number;
+  retainedAmountKrw: number;
+  platformCommissionAmountKrw: number;
+  commissionVatAmountKrw: number;
+  guidePayoutAmountKrw: number;
+  requestedAt: string;
+  completedAt: string | null;
+}
+
 export interface PriceBreakdown {
   unitPrice: number;
   guests: number;
@@ -48,6 +81,10 @@ export interface Application {
   breakdown?: PriceBreakdown;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;
+  paymentProvider?: PaymentProvider | null;
+  providerPaymentAmount?: number | null;
+  providerPaymentCurrency?: string | null;
+  refund?: PaymentRefundResponse | null;
 }
 
 export interface CreateApplicationRequest {
@@ -106,6 +143,10 @@ export interface ApplicationResponse {
   discountAmount?: number | null;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;
+  paymentProvider?: PaymentProvider | null;
+  providerPaymentAmount?: number | null;
+  providerPaymentCurrency?: string | null;
+  refund?: PaymentRefundResponse | null;
   status: BackendApplicationStatus;
   cancellationReason: ApplicationCancellationReason | null;
   cancellationDetail: string | null;

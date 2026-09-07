@@ -765,7 +765,27 @@
     "cancelPendingDescription": "선점 중인 좌석이 즉시 해제됩니다.",
     "cancelPendingConfirm": "네, 취소할게요",
     "keepPendingApplication": "신청 유지",
-    "holdRemaining": "결제 마감까지 {time}"
+    "holdRemaining": "결제 마감까지 {time}",
+    "freeCancellationRemaining": "무료 취소 가능 {time}",
+    "refundEstimateTitle": "취소 시 환불 예상 금액",
+    "quoteLoading": "최신 환불 금액을 확인하는 중...",
+    "quoteFailed": "환불 예상 금액을 불러오지 못했습니다.",
+    "retryQuote": "다시 시도",
+    "refundPolicy": "적용 기준",
+    "refundPolicyTypes": {
+      "FREE_CANCELLATION_WINDOW": "결제 후 30분 무료 취소",
+      "BEFORE_48_HOURS": "활동 48시간 전까지",
+      "BETWEEN_24_AND_48_HOURS": "활동 24~48시간 전",
+      "WITHIN_24_HOURS": "활동 24시간 전 이후"
+    },
+    "estimatedRefund": "예상 환불액",
+    "cancellationFee": "취소 수수료",
+    "quoteFinalNotice": "최종 환불액은 취소 요청 시점에 다시 계산됩니다.",
+    "refundedAmount": "환불 금액",
+    "refundStatuses": {
+      "REQUESTED": "환불 요청 금액",
+      "FAILED": "환불 실패"
+    }
   },
   "Payment": {
     "unavailable": "결제를 이용할 수 없습니다.",

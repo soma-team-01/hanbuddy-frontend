@@ -39,6 +39,7 @@ import type { PolicyDocumentData } from "@/types/policy";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
+import { FreeCancellationWindow } from "./free-cancellation-window";
 
 const TABS = ["upcoming", "past"] as const;
 
@@ -78,7 +79,9 @@ function PriceBreakdown({
   const discountAmount = breakdown.discountAmount ?? Math.max(0, originalTotalPrice - total);
   const hasDiscount = discountAmount > 0;
   const hasCompletedPayment =
-    application.status === "confirmed" || application.status === "completed";
+    application.status === "confirmed" ||
+    application.status === "completed" ||
+    application.status === "cancelled";
 
   return (
     <div className="border-t border-line-soft pt-3">
@@ -91,10 +94,17 @@ function PriceBreakdown({
         <span>{t("priceBreakdown")}</span>
         {/* 접혀 있어도 총액은 보이게 둔다 — 카드에서 금액을 따로 반복하지 않기 위해 */}
         <span className="flex items-center gap-1.5">
-          <span className="font-display font-bold text-ink">
-            {paymentCharge
-              ? formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)
-              : formatKrw(total, locale)}
+          <span className="flex flex-col items-end font-display font-bold text-ink">
+            <span>
+              {paymentCharge
+                ? formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)
+                : formatKrw(total, locale)}
+            </span>
+            {paymentCharge && paymentCharge.currency.toUpperCase() !== "KRW" ? (
+              <span className="font-sans text-xs font-medium text-muted">
+                {formatKrw(total, locale)}
+              </span>
+            ) : null}
           </span>
           <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </span>
@@ -132,6 +142,34 @@ function PriceBreakdown({
               <span className="tabular-nums">
                 {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
               </span>
+            </div>
+          ) : null}
+          {application.status === "cancelled" && application.refund ? (
+            <div className="mt-1 flex flex-col gap-2 border-t border-line-soft pt-2">
+              <div className="flex justify-end gap-2 font-display font-semibold text-success">
+                <span>
+                  {application.refund.status === "COMPLETED"
+                    ? t("refundedAmount")
+                    : t(`refundStatuses.${application.refund.status}`)}
+                </span>
+                <span className="tabular-nums">
+                  {formatCurrency(
+                    application.refund.refundAmount,
+                    application.refund.refundCurrency,
+                    locale,
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-end gap-2 text-muted">
+                <span>{t("cancellationFee")}</span>
+                <span className="tabular-nums">
+                  {formatCurrency(
+                    application.refund.cancellationFeeAmount,
+                    application.refund.refundCurrency,
+                    locale,
+                  )}
+                </span>
+              </div>
             </div>
           ) : null}
         </div>
@@ -234,11 +272,18 @@ function ApplicationCard({
   const tActivityDetail = useTranslations("ActivityDetail");
   const getApiErrorMessage = useApiErrorMessage();
   const paymentCharge =
-    application.paymentAmount !== null &&
-    application.paymentAmount !== undefined &&
-    application.paymentCurrency
-      ? { amount: application.paymentAmount, currency: application.paymentCurrency }
-      : null;
+    application.providerPaymentAmount !== null &&
+    application.providerPaymentAmount !== undefined &&
+    application.providerPaymentCurrency
+      ? {
+          amount: application.providerPaymentAmount,
+          currency: application.providerPaymentCurrency,
+        }
+      : application.paymentAmount !== null &&
+          application.paymentAmount !== undefined &&
+          application.paymentCurrency
+        ? { amount: application.paymentAmount, currency: application.paymentCurrency }
+        : null;
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
@@ -403,6 +448,9 @@ function ApplicationCard({
               >
                 {t("cancel")}
               </button>
+            ) : null}
+            {application.status === "confirmed" && !hasEnded ? (
+              <FreeCancellationWindow applicationId={application.id} />
             ) : null}
             {isCompleted && !application.myReview ? (
               <ApplicationReviewActions
@@ -612,6 +660,7 @@ export function ApplicationList({
       ) : null}
       {cancelTargetId && (
         <CancelDialog
+          applicationId={cancelTargetId}
           onClose={() => setCancelTargetId(null)}
           onConfirm={async (reason, detail) => {
             const outcome = await onCancelApplication(cancelTargetId, reason, detail);

@@ -765,7 +765,27 @@
     "cancelPendingDescription": "私たちがあなたのために確保している席はすぐに解放されます。",
     "cancelPendingConfirm": "はい、キャンセルします",
     "keepPendingApplication": "アプリケーションを保持する",
-    "holdRemaining": "{time} 支払い完了まで残っています"
+    "holdRemaining": "{time} 支払い完了まで残っています",
+    "freeCancellationRemaining": "無料キャンセル可能 残り{time}",
+    "refundEstimateTitle": "キャンセル時の返金見込み額",
+    "quoteLoading": "最新の返金額を確認しています...",
+    "quoteFailed": "返金見込み額を読み込めませんでした。",
+    "retryQuote": "再試行",
+    "refundPolicy": "適用基準",
+    "refundPolicyTypes": {
+      "FREE_CANCELLATION_WINDOW": "決済後30分間の無料キャンセル",
+      "BEFORE_48_HOURS": "アクティビティの48時間以上前",
+      "BETWEEN_24_AND_48_HOURS": "アクティビティの24〜48時間前",
+      "WITHIN_24_HOURS": "アクティビティの24時間前以降"
+    },
+    "estimatedRefund": "返金見込み額",
+    "cancellationFee": "キャンセル料",
+    "quoteFinalNotice": "最終返金額はキャンセル申請時に再計算されます。",
+    "refundedAmount": "返金額",
+    "refundStatuses": {
+      "REQUESTED": "返金申請額",
+      "FAILED": "返金失敗"
+    }
   },
   "Payment": {
     "unavailable": "支払いは利用できません",

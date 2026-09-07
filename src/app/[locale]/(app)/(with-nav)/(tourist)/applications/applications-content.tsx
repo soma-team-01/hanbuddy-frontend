@@ -25,10 +25,13 @@ import type {
   PaymentProvider,
   PaymentReadyResponse,
 } from "@/types/application";
+import type { PolicyDocumentData } from "@/types/policy";
 import { ApplicationList } from "./application-list";
 import type { CancelDialogOutcome } from "./cancel-dialog";
 
-export function ApplicationsContent() {
+export function ApplicationsContent({
+  refundPolicyDocument,
+}: Readonly<{ refundPolicyDocument?: PolicyDocumentData }>) {
   const queryClient = useQueryClient();
   const locale = useLocale();
   const language = getContentLanguage(locale);
@@ -163,6 +166,7 @@ export function ApplicationsContent() {
     <>
       <ApplicationList
         applications={applications}
+        refundPolicyDocument={refundPolicyDocument}
         onCancelApplication={handleCancelApplication}
         onCancelPendingPayment={handleCancelPendingPayment}
         onContinuePayment={handleContinuePayment}

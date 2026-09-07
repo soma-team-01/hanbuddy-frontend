@@ -35,6 +35,7 @@ import type {
   ApplicationCancellationReason,
   PaymentProvider,
 } from "@/types/application";
+import type { PolicyDocumentData } from "@/types/policy";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
@@ -211,6 +212,7 @@ function ApplicationCard({
   onHoldExpired,
   isPaymentPending,
   paymentProviderMode,
+  refundPolicyDocument,
 }: Readonly<{
   application: Application;
   onCancel: () => void;
@@ -219,6 +221,7 @@ function ApplicationCard({
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
   paymentProviderMode: PaymentProviderMode;
+  refundPolicyDocument?: PolicyDocumentData;
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
@@ -480,6 +483,7 @@ function ApplicationCard({
             <RefundPolicyConsent
               agreed={refundPolicyAgreed}
               onAgreedChange={setRefundPolicyAgreed}
+              document={refundPolicyDocument}
               idPrefix={`application-${application.id}-refund-policy`}
             />
           </div>
@@ -504,6 +508,7 @@ export function ApplicationList({
   onContinuePayment,
   onHoldExpired,
   isPaymentPending,
+  refundPolicyDocument,
   paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   applications: Application[];
@@ -517,6 +522,7 @@ export function ApplicationList({
   /** 좌석 선점이 만료되면 목록을 다시 불러오도록 알린다 */
   onHoldExpired?: () => void;
   isPaymentPending: boolean;
+  refundPolicyDocument?: PolicyDocumentData;
   paymentProviderMode?: PaymentProviderMode;
 }>) {
   const [tab, setTab] = useState<TabKey>("upcoming");
@@ -569,6 +575,7 @@ export function ApplicationList({
             onHoldExpired={onHoldExpired}
             isPaymentPending={isPaymentPending}
             paymentProviderMode={paymentProviderMode}
+            refundPolicyDocument={refundPolicyDocument}
           />
         ))}
         {visibleApplications.length === 0 && (

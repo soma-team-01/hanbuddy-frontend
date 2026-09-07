@@ -41,6 +41,7 @@ import type {
   PaymentProvider,
   PaymentReadyResponse,
 } from "@/types/application";
+import type { PolicyDocumentData } from "@/types/policy";
 import { BookingConflictDialog } from "./booking-conflict-dialog";
 
 const MAX_GUESTS = 8;
@@ -66,10 +67,12 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 export function BookingForm({
   activity,
   initialSessionId,
+  refundPolicyDocument,
   paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   activity: Activity;
   initialSessionId?: string;
+  refundPolicyDocument?: PolicyDocumentData;
   paymentProviderMode?: PaymentProviderMode;
 }>) {
   const queryClient = useQueryClient();
@@ -368,6 +371,7 @@ export function BookingForm({
               <RefundPolicyConsent
                 agreed={refundPolicyAgreed}
                 onAgreedChange={setRefundPolicyAgreed}
+                document={refundPolicyDocument}
                 idPrefix="booking-refund-policy"
               />
             </div>

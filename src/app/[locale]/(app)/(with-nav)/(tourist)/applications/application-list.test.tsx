@@ -100,6 +100,12 @@ const paidApplication: Application = {
   paymentCurrency: "KRW",
 };
 
+const refundPolicyDocument = {
+  title: "HanBuddy Cancellation and Refund Policy",
+  version: "2026-09-07",
+  source: "## Refund criteria\n\nThe full cancellation and refund policy.",
+};
+
 function renderList(
   overrides: Partial<React.ComponentProps<typeof ApplicationList>> = {},
   locale: Locale = "en",
@@ -111,6 +117,7 @@ function renderList(
       onCancelPendingPayment={vi.fn().mockResolvedValue({ ok: true })}
       onContinuePayment={vi.fn().mockResolvedValue(undefined)}
       isPaymentPending={false}
+      refundPolicyDocument={refundPolicyDocument}
       {...overrides}
     />,
     { locale },
@@ -274,10 +281,8 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
     expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View full policy" })).toHaveAttribute(
-      "href",
-      "/en/policies/cancellation-refund-policy",
-    );
+    expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
+    expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
     acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));

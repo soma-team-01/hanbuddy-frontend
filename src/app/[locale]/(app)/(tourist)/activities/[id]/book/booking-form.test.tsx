@@ -132,6 +132,12 @@ const paymentReady: PaymentReadyResponse = {
   orderExpiresAt: "2026-07-14T13:00:00+09:00",
 };
 
+const refundPolicyDocument = {
+  title: "HanBuddy Cancellation and Refund Policy",
+  version: "2026-09-07",
+  source: "## Refund criteria\n\nThe full cancellation and refund policy.",
+};
+
 async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: submitLabel }));
@@ -153,7 +159,9 @@ describe("BookingForm", () => {
   });
 
   it("uses one responsive form layout with a sticky desktop summary", () => {
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    renderWithQueryClient(
+      <BookingForm activity={activity} refundPolicyDocument={refundPolicyDocument} />,
+    );
 
     expect(screen.getByRole("img", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
       "loading",
@@ -171,13 +179,10 @@ describe("BookingForm", () => {
     expect(screen.getByText("≈ $32.50")).toHaveClass("text-muted");
     expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toBeInTheDocument();
     expect(screen.getByText("PayPal charges in USD.")).toBeInTheDocument();
-    // 취소·환불 기준은 모바일에서도 항상 보이고 전문으로 이어진다
+    // 취소·환불 핵심 기준은 작게 요약하고 전문은 현재 화면 위 팝업으로 연다
     expect(screen.getByRole("heading", { name: "Cancellation and refund" })).toBeInTheDocument();
     expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View full policy" })).toHaveAttribute(
-      "href",
-      "/en/policies/cancellation-refund-policy",
-    );
+    expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
     // 특별 요청 칸은 처음부터 표시되고 비어 있으면 대시로 보인다
     expect(screen.getByTestId("summary-special-request")).toHaveTextContent("—");
     expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveClass(
@@ -197,6 +202,46 @@ describe("BookingForm", () => {
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
     fireEvent.click(agreement);
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
+  });
+
+  it("keeps booking details when the policy popup is closed or dismissed with browser back", async () => {
+    renderWithQueryClient(
+      <BookingForm activity={activity} refundPolicyDocument={refundPolicyDocument} />,
+    );
+    const request = screen.getByPlaceholderText(/Let your buddy know/i);
+    fireEvent.change(request, { target: { value: "Meet me by exit 2." } });
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    fireEvent.click(screen.getByRole("button", { name: "View full policy" }));
+    expect(
+      screen.getByRole("dialog", { name: "HanBuddy Cancellation and Refund Policy" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("The full cancellation and refund policy.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "HanBuddy Cancellation and Refund Policy" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(request).toHaveValue("Meet me by exit 2.");
+    expect(screen.getByRole("checkbox")).toBeChecked();
+
+    fireEvent.click(screen.getByRole("button", { name: "View full policy" }));
+    expect(
+      screen.getByRole("dialog", { name: "HanBuddy Cancellation and Refund Policy" }),
+    ).toBeInTheDocument();
+
+    window.history.back();
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "HanBuddy Cancellation and Refund Policy" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(request).toHaveValue("Meet me by exit 2.");
+    expect(screen.getByRole("checkbox")).toBeChecked();
   });
 
   it("uses the HanBuddy payment action in TOSS mode", () => {

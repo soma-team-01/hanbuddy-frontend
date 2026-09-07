@@ -666,6 +666,7 @@
     "totalKrw": "Total (KRW): {amount}",
     "refundPolicyHeading": "Cancellation and refund",
     "refundPolicyLink": "View full policy",
+    "policyDocumentVersion": "Version {version}",
     "statutoryWithdrawalNotice": "You may request withdrawal within 7 days of payment under applicable law. When a statutory withdrawal right applies, applicable law takes priority.",
     "actualPaymentRefundNotice": "If a discount was applied, the refund is calculated from the amount actually paid.",
     "agreement": "[Required] I have reviewed and agree to the cancellation and refund policy.",

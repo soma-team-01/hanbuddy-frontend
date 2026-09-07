@@ -666,6 +666,7 @@
     "totalKrw": "總計（韓元）： {amount}",
     "refundPolicyHeading": "取消與退款說明",
     "refundPolicyLink": "查看完整政策",
+    "policyDocumentVersion": "版本 {version}",
     "statutoryWithdrawalNotice": "付款日起7日內，您可以依適用法律申請撤回。依法享有撤回權時，以相關法律規定為準。",
     "actualPaymentRefundNotice": "使用優惠時，退款按實際支付金額計算。",
     "agreement": "【必選】我已查看並同意取消與退款政策。",

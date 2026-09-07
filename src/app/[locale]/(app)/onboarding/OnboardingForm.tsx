@@ -740,7 +740,7 @@ export function OnboardingForm({
             aria-label={roleCopy.title}
             noValidate
             onSubmit={handleSubmit}
-            className="mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft lg:min-h-[620px] lg:grid-cols-[250px_minmax(0,1fr)]"
+            className={`mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft lg:grid-cols-[250px_minmax(0,1fr)] ${currentStep === 3 ? "" : "lg:min-h-[620px]"}`}
           >
             <nav
               aria-label={t("steps.progress", { current: currentStep, total: stepLabels.length })}
@@ -937,7 +937,7 @@ export function OnboardingForm({
               ) : null}
 
               {!isResubmission && currentStep === 3 ? (
-                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                <section className="px-5 py-6 md:px-12 md:py-8 lg:px-16">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2
@@ -949,7 +949,7 @@ export function OnboardingForm({
                       </h2>
                       <p className="mt-1 text-sm text-muted">{t("agreements.description")}</p>
                     </div>
-                    <label className="flex cursor-pointer items-center gap-2 self-start rounded-full border border-line-soft px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary sm:self-auto">
+                    <label className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-full border border-line-soft px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary sm:self-auto">
                       <input
                         type="checkbox"
                         checked={allAgreementsSelected}
@@ -960,12 +960,12 @@ export function OnboardingForm({
                     </label>
                   </div>
 
-                  <div className="mt-7 max-w-3xl divide-y divide-line-soft border-y border-line-soft">
+                  <div className="mt-5 max-w-3xl divide-y divide-line-soft border-y border-line-soft">
                     {agreementItems.map((item) => {
                       const isRequired = requiredAgreementTypes.includes(item.type);
                       return (
-                        <div key={item.type} className="flex items-start gap-3 py-3.5">
-                          <label className="mt-0.5 flex size-11 shrink-0 cursor-pointer items-center justify-center">
+                        <div key={item.type} className="flex items-center gap-2 py-1.5">
+                          <label className="flex size-11 shrink-0 cursor-pointer items-center justify-center">
                             <input
                               type="checkbox"
                               aria-label={item.label}

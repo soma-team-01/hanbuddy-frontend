@@ -417,6 +417,23 @@ describe("OnboardingForm", () => {
     );
   });
 
+  it.each(["en", "ko"] as const)(
+    "keeps %s agreement rows compact and vertically aligned",
+    (locale) => {
+      renderWithIntl(<OnboardingForm />, { locale });
+      advanceToAgreements(locale, { birthDate: "1998-04-12", contact: "line_user" });
+      const checkboxes = screen.getAllByRole("checkbox").slice(1);
+      for (const checkbox of checkboxes) {
+        const target = checkbox.closest("label");
+        expect(target).toHaveClass("size-11");
+        expect(target).not.toHaveClass("mt-0.5");
+        expect(target?.parentElement).toHaveClass("items-center", "py-1.5");
+        expect(target?.parentElement).not.toHaveClass("items-start", "py-3.5");
+      }
+      expect(checkboxes[0].closest("form")).not.toHaveClass("lg:min-h-[620px]");
+    },
+  );
+
   it("shows only the tourist signup agreements on traveler onboarding", () => {
     renderWithIntl(
       <OnboardingForm

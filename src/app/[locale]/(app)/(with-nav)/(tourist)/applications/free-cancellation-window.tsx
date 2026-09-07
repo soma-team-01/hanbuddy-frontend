@@ -43,6 +43,19 @@ export function FreeCancellationWindow({
     return () => window.clearTimeout(timeout);
   }, [fullRefundUntil, refetch]);
 
+  if (!quote) return null;
+
+  if (quote.refundPercent !== 100) {
+    return (
+      <p
+        className="font-display text-xs font-bold text-danger"
+        data-testid="free-cancellation-window"
+      >
+        {t("freeCancellationEnded")}
+      </p>
+    );
+  }
+
   if (!deadline) return null;
 
   return (

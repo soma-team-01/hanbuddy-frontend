@@ -767,6 +767,7 @@
     "keepPendingApplication": "신청 유지",
     "holdRemaining": "결제 마감까지 {time}",
     "freeCancellationUntil": "무료 취소 가능: {dateTime}까지",
+    "freeCancellationEnded": "무료 취소 기간 종료",
     "providerPaymentAmount": "{provider} 결제 금액",
     "refundEstimateTitle": "취소 시 환불 예상 금액",
     "quoteLoading": "최신 환불 금액을 확인하는 중...",

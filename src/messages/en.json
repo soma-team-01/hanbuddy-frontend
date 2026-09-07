@@ -767,6 +767,7 @@
     "keepPendingApplication": "Keep application",
     "holdRemaining": "{time} left to complete payment",
     "freeCancellationUntil": "Free cancellation until {dateTime}",
+    "freeCancellationEnded": "Free cancellation period ended",
     "providerPaymentAmount": "{provider} payment",
     "refundEstimateTitle": "Cancellation refund estimate",
     "quoteLoading": "Checking the latest refund amount...",

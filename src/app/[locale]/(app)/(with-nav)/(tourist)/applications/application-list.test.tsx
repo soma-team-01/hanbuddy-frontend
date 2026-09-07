@@ -407,6 +407,34 @@ describe("ApplicationList", () => {
     );
   });
 
+  it.each([
+    ["BETWEEN_24_AND_48_HOURS", 50],
+    ["WITHIN_24_HOURS", 0],
+  ] as const)(
+    "shows one ended state after free cancellation for %s",
+    async (policyType, refundPercent) => {
+      mockedGetCancellationQuote.mockResolvedValue({
+        status: "success",
+        quote: {
+          policyVersion: "2026-09-07",
+          policyType,
+          refundPercent,
+          refundAmount: refundPercent === 50 ? 45000 : 0,
+          refundCurrency: "KRW",
+          cancellationFeeAmount: refundPercent === 50 ? 45000 : 90000,
+          freeCancellationUntil: "2099-07-07T10:30:00+09:00",
+          quotedAt: "2099-07-19T10:00:00+09:00",
+        },
+      });
+
+      renderList({ applications: [paidApplication] });
+
+      const notice = await screen.findByTestId("free-cancellation-window");
+      expect(notice).toHaveClass("text-danger");
+      expect(notice).toHaveTextContent("Free cancellation period ended");
+    },
+  );
+
   it("shows the stored discount snapshot in the price breakdown", () => {
     const discountedApplication: Application = {
       ...paidApplication,

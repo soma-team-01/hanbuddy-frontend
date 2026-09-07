@@ -767,6 +767,7 @@
     "keepPendingApplication": "保留申请",
     "holdRemaining": "{time} 剩下完成付款",
     "freeCancellationUntil": "可免费取消至 {dateTime}",
+    "freeCancellationEnded": "免费取消期已结束",
     "providerPaymentAmount": "{provider} 支付金额",
     "refundEstimateTitle": "取消退款预估",
     "quoteLoading": "正在确认最新退款金额...",

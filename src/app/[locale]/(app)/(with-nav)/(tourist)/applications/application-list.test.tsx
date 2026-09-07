@@ -336,8 +336,10 @@ describe("ApplicationList", () => {
       ],
     });
 
-    expect(screen.getByText("PayPal payment · $68.97")).toBeInTheDocument();
+    const collapsedPaymentSummary = screen.getByText("PayPal payment · $68.97");
+    expect(collapsedPaymentSummary).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(collapsedPaymentSummary).not.toBeInTheDocument();
     expect(screen.getByText("Total").parentElement).toHaveTextContent("₩90,000");
     expect(screen.getByText("PayPal payment").parentElement).toHaveTextContent("$68.97");
   });

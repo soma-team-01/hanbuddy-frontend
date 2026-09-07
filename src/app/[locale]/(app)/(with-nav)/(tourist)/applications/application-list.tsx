@@ -102,17 +102,19 @@ function PriceBreakdown({
         className="flex w-full items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-ink"
       >
         <span>{t("priceBreakdown")}</span>
-        {/* 접혀 있어도 총액은 보이게 둔다 — 카드에서 금액을 따로 반복하지 않기 위해 */}
+        {/* 접힌 상태에서는 요약 금액, 펼친 상태에서는 아래 상세 내역만 보여준다. */}
         <span className="flex items-center gap-1.5">
-          <span className="flex flex-col items-end font-display font-bold text-ink">
-            <span>{formatKrw(total, locale)}</span>
-            {paymentCharge && isForeignCurrency ? (
-              <span className="font-sans text-xs font-medium text-muted">
-                {paymentLabel} ·{" "}
-                {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
-              </span>
-            ) : null}
-          </span>
+          {!open ? (
+            <span className="flex flex-col items-end font-display font-bold text-ink">
+              <span>{formatKrw(total, locale)}</span>
+              {paymentCharge && isForeignCurrency ? (
+                <span className="font-sans text-xs font-medium text-muted">
+                  {paymentLabel} ·{" "}
+                  {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
+                </span>
+              ) : null}
+            </span>
+          ) : null}
           <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </span>
       </button>

@@ -336,10 +336,10 @@ describe("ApplicationList", () => {
       ],
     });
 
-    expect(screen.getByText("$68.97")).toBeInTheDocument();
+    expect(screen.getByText("PayPal payment · $68.97")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
     expect(screen.getByText("Total").parentElement).toHaveTextContent("₩90,000");
-    expect(screen.getByText("Paid").parentElement).toHaveTextContent("$68.97");
+    expect(screen.getByText("PayPal payment").parentElement).toHaveTextContent("$68.97");
   });
 
   it("shows the requested PayPal amount for a pending payment", () => {
@@ -354,7 +354,7 @@ describe("ApplicationList", () => {
       ],
     });
 
-    expect(screen.getByText("$68.97")).toBeInTheDocument();
+    expect(screen.getByText("PayPal payment · $68.97")).toBeInTheDocument();
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
   });
 
@@ -363,7 +363,7 @@ describe("ApplicationList", () => {
 
     const notice = await screen.findByTestId("free-cancellation-window");
     expect(notice).toHaveClass("text-success");
-    expect(notice).toHaveTextContent(/^Free cancellation for /);
+    expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
   });
 
   it("shows the stored discount snapshot in the price breakdown", () => {

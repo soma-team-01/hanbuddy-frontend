@@ -82,6 +82,16 @@ function PriceBreakdown({
     application.status === "confirmed" ||
     application.status === "completed" ||
     application.status === "cancelled";
+  const providerName =
+    application.paymentProvider === "PAYPAL"
+      ? "PayPal"
+      : application.paymentProvider === "TOSS"
+        ? "Toss Payments"
+        : null;
+  const paymentLabel = providerName
+    ? t("providerPaymentAmount", { provider: providerName })
+    : t("paidAmount");
+  const isForeignCurrency = paymentCharge?.currency.toUpperCase() !== "KRW";
 
   return (
     <div className="border-t border-line-soft pt-3">
@@ -95,14 +105,11 @@ function PriceBreakdown({
         {/* 접혀 있어도 총액은 보이게 둔다 — 카드에서 금액을 따로 반복하지 않기 위해 */}
         <span className="flex items-center gap-1.5">
           <span className="flex flex-col items-end font-display font-bold text-ink">
-            <span>
-              {paymentCharge
-                ? formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)
-                : formatKrw(total, locale)}
-            </span>
-            {paymentCharge && paymentCharge.currency.toUpperCase() !== "KRW" ? (
+            <span>{formatKrw(total, locale)}</span>
+            {paymentCharge && isForeignCurrency ? (
               <span className="font-sans text-xs font-medium text-muted">
-                {formatKrw(total, locale)}
+                {paymentLabel} ·{" "}
+                {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
               </span>
             ) : null}
           </span>
@@ -138,7 +145,7 @@ function PriceBreakdown({
           </div>
           {hasCompletedPayment && paymentCharge ? (
             <div className="flex justify-end gap-2 font-display font-semibold text-primary">
-              <span>{t("paidAmount")}</span>
+              <span>{paymentLabel}</span>
               <span className="tabular-nums">
                 {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
               </span>

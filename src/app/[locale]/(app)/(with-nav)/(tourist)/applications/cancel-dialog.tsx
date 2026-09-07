@@ -118,9 +118,12 @@ export function CancelDialog({
 
       <section
         aria-label={t("refundEstimateTitle")}
-        className="mt-5 rounded-2xl border border-line-soft bg-panel-raised p-4"
+        className="mt-5 border-y border-line-soft border-t-primary py-4"
       >
-        <h3 className="font-display text-sm font-bold text-ink">{t("refundEstimateTitle")}</h3>
+        <h3 className="flex items-center gap-2 font-display text-sm font-bold text-ink">
+          <span aria-hidden className="h-4 w-1 rounded-full bg-primary" />
+          {t("refundEstimateTitle")}
+        </h3>
         {isQuotePending ? (
           <p className="mt-2 text-sm text-muted">{t("quoteLoading")}</p>
         ) : isQuoteError ? (

@@ -61,6 +61,12 @@ describe("CancelDialog", () => {
     );
 
     expect(await screen.findByText("30-minute free cancellation · 100%")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Cancellation refund estimate" })).toHaveClass(
+      "border-t-primary",
+    );
+    expect(screen.getByRole("region", { name: "Cancellation refund estimate" })).not.toHaveClass(
+      "bg-panel-raised",
+    );
     expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent("$36.50");
     expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$0.00");
   });

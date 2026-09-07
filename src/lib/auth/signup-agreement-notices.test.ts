@@ -9,7 +9,7 @@ describe("localized signup notices", () => {
       for (const userType of ["TOURIST", "BUDDY"] as const) {
         const original = getSignupAgreementNotice(agreementType, userType, "ko");
         const notice = getSignupAgreementNotice(agreementType, userType, locale);
-        expect(notice.paragraphs.length).toBe(original.paragraphs.length);
+        expect(notice.paragraphs).toHaveLength(original.paragraphs.length);
         expect(notice.details?.length).toBe(original.details?.length);
         expect(JSON.stringify(notice).match(/\d+%/g)?.sort()).toEqual(
           JSON.stringify(original).match(/\d+%/g)?.sort(),

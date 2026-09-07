@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: OnboardingPageProps): Promise
   };
 }
 
-export default async function ProfileSetupPage({ params }: OnboardingPageProps) {
+export default async function ProfileSetupPage({ params }: Readonly<OnboardingPageProps>) {
   const { locale } = await params;
   const [cookieStore, agreementDocuments] = await Promise.all([
     cookies(),

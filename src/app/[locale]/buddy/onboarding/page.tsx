@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: BuddyOnboardingPageProps): Pr
   };
 }
 
-export default async function BuddyOnboardingPage({ params }: BuddyOnboardingPageProps) {
+export default async function BuddyOnboardingPage({ params }: Readonly<BuddyOnboardingPageProps>) {
   const { locale } = await params;
   const [cookieStore, agreementDocuments] = await Promise.all([
     cookies(),

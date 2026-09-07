@@ -26,17 +26,17 @@ export function RefundPolicyConsent({
     <>
       <section
         aria-labelledby={headingId}
-        className="rounded-xl border border-line-soft bg-canvas-soft px-3.5 py-3 shadow-[0_8px_24px_rgba(38,27,24,0.03)]"
+        className="rounded-xl border border-line-soft bg-canvas-soft px-3 py-2 shadow-[0_6px_18px_rgba(38,27,24,0.025)]"
       >
-        <div className="flex items-center justify-between gap-3">
-          <h2 id={headingId} className="font-display text-sm font-bold text-ink">
+        <div className="flex items-center justify-between gap-2">
+          <h2 id={headingId} className="font-display text-xs font-bold text-ink">
             {t("refundPolicyHeading")}
           </h2>
           <button
             type="button"
             disabled={!document}
             onClick={() => setPolicyOpen(true)}
-            className="shrink-0 text-xs font-semibold text-ink underline decoration-ink/25 underline-offset-4 transition-colors enabled:hover:text-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="shrink-0 text-[11px] font-semibold text-ink underline decoration-ink/25 underline-offset-3 transition-colors enabled:hover:text-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t("refundPolicyLink")}
           </button>
@@ -44,19 +44,19 @@ export function RefundPolicyConsent({
 
         <p
           id={noticeId}
-          className="mt-2 rounded-lg bg-primary-soft/65 px-3 py-2 text-xs leading-5 text-ink/75"
+          className="mt-1.5 rounded-md bg-primary-soft/65 px-2.5 py-1.5 text-[10px] leading-4 text-ink/75"
         >
           {t("statutoryWithdrawalNotice")}
         </p>
 
         <dl
           id={summaryId}
-          className="mt-2 divide-y divide-line-soft overflow-hidden rounded-lg border border-line-soft"
+          className="mt-1.5 divide-y divide-line-soft overflow-hidden rounded-md border border-line-soft"
         >
           {(["full", "half", "none", "noShow"] as const).map((rule) => (
             <div
               key={rule}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-1.5 text-xs leading-5"
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-0.5 text-[10px] leading-4"
             >
               <dt className="text-muted">{t(`refundRules.${rule}.label`)}</dt>
               <dd className="text-right font-display font-bold text-ink">
@@ -66,18 +66,18 @@ export function RefundPolicyConsent({
           ))}
         </dl>
 
-        <p className="mt-1.5 text-[11px] leading-4 text-muted">{t("actualPaymentRefundNotice")}</p>
+        <p className="mt-1 text-[9px] leading-3 text-muted">{t("actualPaymentRefundNotice")}</p>
 
-        <label className="mt-2.5 flex cursor-pointer items-start gap-2.5 border-t border-line-soft pt-2.5">
+        <label className="mt-1.5 flex cursor-pointer items-start gap-2 border-t border-line-soft pt-1.5">
           <input
             type="checkbox"
             required
             aria-describedby={`${noticeId} ${summaryId}`}
             checked={agreed}
             onChange={(event) => onAgreedChange(event.target.checked)}
-            className="mt-0.5 size-4 shrink-0 rounded accent-primary"
+            className="mt-px size-3.5 shrink-0 rounded accent-primary"
           />
-          <span className="text-xs leading-5 font-semibold text-ink">{t("agreement")}</span>
+          <span className="text-[10px] leading-4 font-semibold text-ink">{t("agreement")}</span>
         </label>
       </section>
 

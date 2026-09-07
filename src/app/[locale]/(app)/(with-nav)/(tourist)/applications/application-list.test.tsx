@@ -126,7 +126,7 @@ function renderList(
 
 function acceptRefundPolicyAndPay(buttonName: string) {
   const agreement = screen.getByRole("checkbox", {
-    name: /reviewed and agree to the cancellation and refund policy/i,
+    name: /agree to the cancellation and refund policy/i,
   });
   const confirmButton = screen.getByRole("button", { name: buttonName });
   expect(agreement).toBeRequired();

@@ -145,7 +145,7 @@ describe("ApplicationsContent", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
     fireEvent.click(
       screen.getByRole("checkbox", {
-        name: /reviewed and agree to the cancellation and refund policy/i,
+        name: /agree to the cancellation and refund policy/i,
       }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Agree and pay with Toss Payments" }));
@@ -191,7 +191,7 @@ describe("ApplicationsContent", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Pay with PayPal" }));
     fireEvent.click(
       screen.getByRole("checkbox", {
-        name: /reviewed and agree to the cancellation and refund policy/i,
+        name: /agree to the cancellation and refund policy/i,
       }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Agree and pay with PayPal" }));

@@ -196,7 +196,7 @@ describe("BookingForm", () => {
     expect(screen.getAllByText("No refund")).toHaveLength(2);
 
     const agreement = screen.getByRole("checkbox", {
-      name: /reviewed and agree to the cancellation and refund policy/i,
+      name: /agree to the cancellation and refund policy/i,
     });
     expect(agreement).toBeRequired();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();

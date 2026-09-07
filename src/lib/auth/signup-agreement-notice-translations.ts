@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/routing";
-import type { SignupAgreementType, UserType } from "./types";
-import type { SignupAgreementNotice } from "./signup-agreement-notices";
+import type { SignupAgreementType, UserType } from "@/lib/auth/types";
+import type { SignupAgreementNotice } from "@/lib/auth/signup-agreement-notices";
 import en from "./notices/en.json";
 import ja from "./notices/ja.json";
 import zhHans from "./notices/zh-Hans.json";

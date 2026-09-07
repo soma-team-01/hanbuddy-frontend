@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { LOCALES } from "@/i18n/routing";
-import { getSignupAgreementNotice, SIGNUP_AGREEMENT_NOTICES } from "./signup-agreement-notices";
-import type { SignupAgreementType } from "./types";
+import {
+  getSignupAgreementNotice,
+  SIGNUP_AGREEMENT_NOTICES,
+} from "@/lib/auth/signup-agreement-notices";
+import type { SignupAgreementType } from "@/lib/auth/types";
 
 describe("localized signup notices", () => {
   it.each(LOCALES)("provides all notices and role-specific privacy details in %s", (locale) => {

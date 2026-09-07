@@ -4,6 +4,32 @@ import { LOCALES } from "@/i18n/routing";
 import { getPolicyDocument, getSignupAgreementDocuments } from "./policy-content";
 
 describe("policy content", () => {
+  it("keeps the company as the requester in Japanese buddy publishing terms", async () => {
+    const policy = await getPolicyDocument("buddy-operation-terms", "ja");
+    expect(policy.source).toContain(
+      "当社は明らかな不正確・違法情報、高リスク、サービス趣旨に合わない活動の修正・掲載停止を求めることができます。",
+    );
+    expect(policy.source).not.toContain("掲載停止を求められます");
+  });
+
+  it("uses the correct traditional Chinese withdrawal-restriction wording", async () => {
+    const policy = await getPolicyDocument("consent-notices", "zh-Hant");
+    expect(policy.source).toContain("法定期限後或法定限制事由成立時");
+    expect(policy.source).not.toContain("限製");
+  });
+
+  it.each([
+    ["zh-Hans", "通过服务公布内容及生效日。", "重大影响权利的变更提前30天通知，其他提前7天通知。"],
+    ["zh-Hant", "透過服務公布內容及生效日。", "重大影響權利的變更提前30天通知，其他提前7天通知。"],
+  ] as const)(
+    "clearly describes how privacy-policy changes are announced in %s",
+    async (locale, publication, noticePeriod) => {
+      const policy = await getPolicyDocument("privacy-policy", locale);
+      expect(policy.source).toContain(publication);
+      expect(policy.source).toContain(noticePeriod);
+    },
+  );
+
   it.each([
     ["ko", "최초 신청 시의 동의는 해당 신청에 유지됩니다.", "다시 확인하고 필수 동의합니다"],
     [

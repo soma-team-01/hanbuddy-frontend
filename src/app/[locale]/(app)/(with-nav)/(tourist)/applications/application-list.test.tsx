@@ -304,9 +304,16 @@ describe("ApplicationList", () => {
     expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" })).toHaveClass(
+      "border-ink",
+    );
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }),
+    ).not.toHaveClass("bg-panel");
     expect(onContinuePayment).not.toHaveBeenCalled();
     continuePaymentAfterReview("Continue payment with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
+    expect(screen.queryByRole("dialog", { name: "Review before payment" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -428,10 +435,13 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
     continuePaymentAfterReview("Continue payment with Toss Payments");
 
-    // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Opening payment..." })).toBeDisabled(),
-    );
+    // 사전 확인 팝업은 즉시 닫고 결제창이 열려 있는 동안 카드의 결제 버튼을 잠근다
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Review before payment" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    });
 
     await act(async () => {
       resolvePayment();

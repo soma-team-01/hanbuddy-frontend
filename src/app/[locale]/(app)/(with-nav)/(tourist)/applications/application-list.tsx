@@ -329,12 +329,12 @@ function ApplicationCard({
 
     setPaymentError(null);
     setPaymentInFlight(paymentProvider);
+    // 결제 SDK가 자체 모달을 띄우기 전에 사전 확인 팝업을 닫아 중첩 모달을 피한다.
+    closePaymentReview();
     try {
       await onContinuePayment(application.id, paymentProvider);
-      closePaymentReview();
     } catch (error) {
       if (paymentProvider === "TOSS" && isTossUserCancel(error)) {
-        closePaymentReview();
         return;
       }
       showPaymentError(error);
@@ -532,6 +532,7 @@ function ApplicationCard({
             pendingPaymentProvider === "TOSS" ? t("resumeWithToss") : t("resumeWithPayPal")
           }
           pendingLabel={t("paymentProcessing")}
+          cancelVariant="outline"
           isPending={paymentInFlight !== null}
           onConfirm={() => void handleConfirmedPayment()}
           onClose={closePaymentReview}

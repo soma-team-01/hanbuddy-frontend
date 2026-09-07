@@ -746,8 +746,8 @@
       "foundOther": "別の選択肢を見つけました",
       "other": "その他の理由"
     },
-    "cancellationDetailLabel": "何が起こったのか教えてください",
-    "cancellationDetailPlaceholder": "短いメモは相手の理解に役立ちます。",
+    "cancellationDetailLabel": "キャンセル理由を入力してください",
+    "cancellationDetailPlaceholder": "キャンセル理由を簡潔に入力してください。",
     "cancellationDetailRequired": "キャンセルする理由を教えてください。",
     "cancellationDetailCount": "{count}/{max}",
     "keepApplication": "いいえ、そのままにしてください",

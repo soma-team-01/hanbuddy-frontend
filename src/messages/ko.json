@@ -746,8 +746,8 @@
       "foundOther": "다른 옵션을 찾음",
       "other": "기타 사유"
     },
-    "cancellationDetailLabel": "어떤 일이 있었는지 알려 주세요",
-    "cancellationDetailPlaceholder": "짧게 적어 주시면 버디가 이해하는 데 도움이 됩니다.",
+    "cancellationDetailLabel": "취소 사유를 적어 주세요.",
+    "cancellationDetailPlaceholder": "취소 사유를 간단히 입력해 주세요.",
     "cancellationDetailRequired": "취소 사유를 적어 주세요.",
     "cancellationDetailCount": "{count}/{max}",
     "keepApplication": "유지하기",

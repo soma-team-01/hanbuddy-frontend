@@ -116,7 +116,7 @@ describe("CancelDialog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Other reason" }));
 
-    const detail = screen.getByLabelText("Tell us what happened");
+    const detail = screen.getByLabelText("Please provide a reason for cancellation");
     expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeDisabled();
 
     // 공백만 적은 것은 사유가 아니다
@@ -137,13 +137,15 @@ describe("CancelDialog", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Other reason" }));
-    fireEvent.change(screen.getByLabelText("Tell us what happened"), {
+    fireEvent.change(screen.getByLabelText("Please provide a reason for cancellation"), {
       target: { value: "My flight was cancelled." },
     });
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
 
     // 다른 사유에 상세 설명을 붙이면 백엔드가 거절하므로 입력칸 자체가 사라진다
-    expect(screen.queryByLabelText("Tell us what happened")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Please provide a reason for cancellation"),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
   });
 

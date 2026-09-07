@@ -746,8 +746,8 @@
       "foundOther": "Found another option",
       "other": "Other reason"
     },
-    "cancellationDetailLabel": "Tell us what happened",
-    "cancellationDetailPlaceholder": "A short note helps your buddy understand.",
+    "cancellationDetailLabel": "Please provide a reason for cancellation",
+    "cancellationDetailPlaceholder": "Briefly enter your reason for cancellation.",
     "cancellationDetailRequired": "Please tell us why you're cancelling.",
     "cancellationDetailCount": "{count}/{max}",
     "keepApplication": "No, Keep It",

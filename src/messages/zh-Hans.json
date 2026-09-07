@@ -746,8 +746,8 @@
       "foundOther": "找到了另一个选择",
       "other": "其他原因"
     },
-    "cancellationDetailLabel": "告诉我们发生了什么",
-    "cancellationDetailPlaceholder": "简短的说明可以帮助您的好友理解。",
+    "cancellationDetailLabel": "请输入取消原因",
+    "cancellationDetailPlaceholder": "请简要填写取消原因。",
     "cancellationDetailRequired": "请告诉我们您取消的原因。",
     "cancellationDetailCount": "{count}/{max}",
     "keepApplication": "不，保留它",

@@ -7,7 +7,10 @@ import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { RefundPolicyConsent } from "@/components/booking/RefundPolicyConsent";
+import {
+  RefundPolicyAgreement,
+  RefundPolicyConsent,
+} from "@/components/booking/RefundPolicyConsent";
 import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
@@ -373,6 +376,7 @@ export function BookingForm({
                 onAgreedChange={setRefundPolicyAgreed}
                 document={refundPolicyDocument}
                 idPrefix="booking-refund-policy"
+                showAgreement={false}
               />
             </div>
           </div>
@@ -473,56 +477,64 @@ export function BookingForm({
 
             <div className="lg:pt-6">
               <BottomActionBar>
-                <div
-                  className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
-                >
-                  {showTossPayment ? (
-                    <button
-                      type="button"
-                      disabled={!refundPolicyAgreed || isSubmitting}
-                      onClick={() => handleSubmitClick("TOSS")}
-                      className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
-                        showProviderChoice
-                          ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
-                          : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
-                      }`}
-                    >
-                      {isSubmitting ? t("processing") : tossPaymentLabel}
-                    </button>
-                  ) : null}
-                  {showPayPalPayment ? (
-                    <div className="flex min-w-0 flex-col items-center gap-1.5">
-                      {payPalPayment ? (
-                        <PayPalCheckoutButton
-                          payment={payPalPayment}
-                          autoStart
-                          onCancel={() => setPayPalPayment(null)}
-                          onConfirmed={() => {
-                            const applicationId = payPalPayment.application.applicationId;
-                            setPayPalPayment(null);
-                            void queryClient.invalidateQueries({
-                              queryKey: applicationKeys.mine(),
-                            });
-                            router.push(
-                              `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
-                            );
-                          }}
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={!refundPolicyAgreed || isSubmitting}
-                          onClick={() => handleSubmitClick("PAYPAL")}
-                          className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
-                        >
-                          {isSubmitting ? t("processing") : payPalPaymentLabel}
-                        </button>
-                      )}
-                      <p className="text-center text-[11px] leading-4 text-muted">
-                        {t("paypalCurrencyNotice")}
-                      </p>
-                    </div>
-                  ) : null}
+                <div className="flex w-full flex-col gap-2">
+                  <RefundPolicyAgreement
+                    agreed={refundPolicyAgreed}
+                    onAgreedChange={setRefundPolicyAgreed}
+                    describedBy="booking-refund-policy-notice booking-refund-policy-summary"
+                    className="rounded-lg border border-line-soft bg-canvas-soft px-3 py-2"
+                  />
+                  <div
+                    className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
+                  >
+                    {showTossPayment ? (
+                      <button
+                        type="button"
+                        disabled={!refundPolicyAgreed || isSubmitting}
+                        onClick={() => handleSubmitClick("TOSS")}
+                        className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
+                          showProviderChoice
+                            ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
+                            : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                        }`}
+                      >
+                        {isSubmitting ? t("processing") : tossPaymentLabel}
+                      </button>
+                    ) : null}
+                    {showPayPalPayment ? (
+                      <div className="flex min-w-0 flex-col items-center gap-1.5">
+                        {payPalPayment ? (
+                          <PayPalCheckoutButton
+                            payment={payPalPayment}
+                            autoStart
+                            onCancel={() => setPayPalPayment(null)}
+                            onConfirmed={() => {
+                              const applicationId = payPalPayment.application.applicationId;
+                              setPayPalPayment(null);
+                              void queryClient.invalidateQueries({
+                                queryKey: applicationKeys.mine(),
+                              });
+                              router.push(
+                                `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
+                              );
+                            }}
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={!refundPolicyAgreed || isSubmitting}
+                            onClick={() => handleSubmitClick("PAYPAL")}
+                            className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                          >
+                            {isSubmitting ? t("processing") : payPalPaymentLabel}
+                          </button>
+                        )}
+                        <p className="text-center text-[11px] leading-4 text-muted">
+                          {t("paypalCurrencyNotice")}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </BottomActionBar>
             </div>

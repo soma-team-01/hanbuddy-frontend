@@ -10,11 +10,13 @@ export function RefundPolicyConsent({
   onAgreedChange,
   document,
   idPrefix = "refund-policy",
+  showAgreement = true,
 }: Readonly<{
   agreed: boolean;
   onAgreedChange: (agreed: boolean) => void;
   document?: PolicyDocumentData;
   idPrefix?: string;
+  showAgreement?: boolean;
 }>) {
   const t = useTranslations("Booking");
   const [policyOpen, setPolicyOpen] = useState(false);
@@ -72,17 +74,14 @@ export function RefundPolicyConsent({
 
         <p className="mt-1 text-[9px] leading-3 text-muted">{t("actualPaymentRefundNotice")}</p>
 
-        <label className="mt-1.5 flex cursor-pointer items-start gap-2 border-t border-line-soft pt-1.5">
-          <input
-            type="checkbox"
-            required
-            aria-describedby={`${noticeId} ${summaryId}`}
-            checked={agreed}
-            onChange={(event) => onAgreedChange(event.target.checked)}
-            className="mt-px size-3.5 shrink-0 rounded accent-primary"
+        {showAgreement ? (
+          <RefundPolicyAgreement
+            agreed={agreed}
+            onAgreedChange={onAgreedChange}
+            describedBy={`${noticeId} ${summaryId}`}
+            className="mt-1.5 border-t border-line-soft pt-1.5"
           />
-          <span className="text-[10px] leading-4 font-semibold text-ink">{t("agreement")}</span>
-        </label>
+        ) : null}
       </section>
 
       {policyOpen && document ? (
@@ -93,5 +92,33 @@ export function RefundPolicyConsent({
         />
       ) : null}
     </>
+  );
+}
+
+export function RefundPolicyAgreement({
+  agreed,
+  onAgreedChange,
+  describedBy,
+  className = "",
+}: Readonly<{
+  agreed: boolean;
+  onAgreedChange: (agreed: boolean) => void;
+  describedBy?: string;
+  className?: string;
+}>) {
+  const t = useTranslations("Booking");
+
+  return (
+    <label className={`flex cursor-pointer items-start gap-2 ${className}`}>
+      <input
+        type="checkbox"
+        required
+        aria-describedby={describedBy}
+        checked={agreed}
+        onChange={(event) => onAgreedChange(event.target.checked)}
+        className="mt-px size-3.5 shrink-0 rounded accent-primary"
+      />
+      <span className="text-[10px] leading-4 font-semibold text-ink">{t("agreement")}</span>
+    </label>
   );
 }

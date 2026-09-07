@@ -204,6 +204,7 @@ describe("BookingForm", () => {
       name: /agree to the cancellation and refund policy/i,
     });
     expect(agreement).toBeRequired();
+    expect(within(screen.getByTestId("bottom-action-bar")).getByRole("checkbox")).toBe(agreement);
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
     fireEvent.click(agreement);
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();

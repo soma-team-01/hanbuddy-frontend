@@ -105,7 +105,7 @@ function PriceBreakdown({
         {/* 접힌 상태에서는 요약 금액, 펼친 상태에서는 아래 상세 내역만 보여준다. */}
         <span className="flex items-center gap-1.5">
           {!open ? (
-            <span className="flex flex-col items-end font-display font-bold text-ink">
+            <span className="flex flex-col items-end gap-0.5 font-display font-bold text-ink">
               <span>{formatKrw(total, locale)}</span>
               {paymentCharge && isForeignCurrency ? (
                 <span className="font-sans text-xs font-medium text-muted">
@@ -406,7 +406,7 @@ function ApplicationCard({
 
           {/* 넓은 화면에서는 제목·일정·버디 묶음 옆에 실행 버튼과 취소 사유를 담는다 */}
           <div
-            className={`order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:text-right ${
+            className={`relative order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:text-right ${
               application.status === "confirmed" ? "sm:self-stretch" : "sm:self-center"
             }`}
           >
@@ -457,7 +457,7 @@ function ApplicationCard({
               <button
                 type="button"
                 onClick={onCancel}
-                className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary`}
+                className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary sm:absolute sm:top-1/2 sm:right-0 sm:-translate-y-1/2`}
               >
                 {t("cancel")}
               </button>

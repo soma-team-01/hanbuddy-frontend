@@ -338,6 +338,7 @@ describe("ApplicationList", () => {
 
     const collapsedPaymentSummary = screen.getByText("PayPal payment · $68.97");
     expect(collapsedPaymentSummary).toBeInTheDocument();
+    expect(collapsedPaymentSummary.parentElement).toHaveClass("gap-0.5");
     fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
     expect(collapsedPaymentSummary).not.toBeInTheDocument();
     expect(screen.getByText("Total").parentElement).toHaveTextContent("₩90,000");
@@ -741,7 +742,11 @@ describe("ApplicationList", () => {
       applications: [{ ...applications[0], id: "7", status: "confirmed" }],
     });
 
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveClass(
+      "sm:absolute",
+      "sm:top-1/2",
+      "sm:-translate-y-1/2",
+    );
   });
 
   it("writes a review from a completed application card", async () => {

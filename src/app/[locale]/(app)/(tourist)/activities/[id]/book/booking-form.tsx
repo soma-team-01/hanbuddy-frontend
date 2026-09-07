@@ -482,7 +482,7 @@ export function BookingForm({
                     agreed={refundPolicyAgreed}
                     onAgreedChange={setRefundPolicyAgreed}
                     describedBy="booking-refund-policy-notice booking-refund-policy-summary"
-                    className="rounded-lg border border-line-soft bg-canvas-soft px-3 py-2"
+                    className="px-1 py-1"
                   />
                   <div
                     className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}

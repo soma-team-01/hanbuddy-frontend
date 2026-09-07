@@ -205,6 +205,7 @@ describe("BookingForm", () => {
     });
     expect(agreement).toBeRequired();
     expect(within(screen.getByTestId("bottom-action-bar")).getByRole("checkbox")).toBe(agreement);
+    expect(agreement.parentElement).not.toHaveClass("border", "rounded-lg", "bg-canvas-soft");
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
     fireEvent.click(agreement);
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();

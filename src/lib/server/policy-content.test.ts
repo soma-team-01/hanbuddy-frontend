@@ -4,6 +4,25 @@ import { LOCALES } from "@/i18n/routing";
 import { getPolicyDocument, getSignupAgreementDocuments } from "./policy-content";
 
 describe("policy content", () => {
+  it.each([
+    ["ko", "최초 신청 시의 동의는 해당 신청에 유지됩니다.", "다시 확인하고 필수 동의합니다"],
+    [
+      "en",
+      "Consent given at the initial application remains valid for that application.",
+      "give required consent again",
+    ],
+    ["ja", "初回申請時の同意は、その申請について維持されます。", "再確認して必須同意します"],
+    ["zh-Hans", "首次申请时的同意继续适用于该申请。", "重新确认相同说明并必选同意"],
+    ["zh-Hant", "首次申請時的同意繼續適用於該申請。", "重新確認相同說明並必選同意"],
+  ] as const)(
+    "keeps initial consent without requiring repeat consent in %s",
+    async (locale, retained, repeated) => {
+      const document = await getPolicyDocument("consent-notices", locale);
+      expect(document.source).toContain(retained);
+      expect(document.source).not.toContain(repeated);
+    },
+  );
+
   it.each(LOCALES)(
     "loads every complete policy in %s with the same version and sections",
     async (locale) => {

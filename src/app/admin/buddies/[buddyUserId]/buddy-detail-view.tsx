@@ -471,9 +471,7 @@ function Metric({ label, value, detail }: { label: string; value: string; detail
 }
 
 function commissionLabel(policy: AdminCommissionPolicy | null) {
-  return policy === "EARLY_10"
-    ? "초기 버디 수수료 10% + VAT 1% (총 11%)"
-    : policy === "STANDARD_20"
-      ? "일반 수수료 20% + VAT 2% (총 22%)"
-      : "승인 후 설정";
+  if (policy === "EARLY_10") return "초기 버디 수수료 10% + VAT 1% (총 11%)";
+  if (policy === "STANDARD_20") return "일반 수수료 20% + VAT 2% (총 22%)";
+  return "승인 후 설정";
 }

@@ -66,4 +66,4 @@ I also acknowledge that after the statutory withdrawal period or where a legally
 
 I have read the full [Cancellation and Refund Policy](./cancellation-refund-policy.en.md) and agree to it.
 
-When continuing a pending payment from My Applications, I review the same cancellation and refund notice and give required consent again immediately before payment.
+When continuing a pending payment from My Applications, I review the same cancellation and refund notice immediately before payment. Consent given at the initial application remains valid for that application.

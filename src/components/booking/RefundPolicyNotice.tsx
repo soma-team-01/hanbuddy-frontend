@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { PolicyDocumentData } from "@/types/policy";
 import { RefundPolicyDialog } from "./RefundPolicyDialog";
 
@@ -14,6 +14,7 @@ export function RefundPolicyNotice({
 }>) {
   const t = useTranslations("Booking");
   const [policyOpen, setPolicyOpen] = useState(false);
+  const policyTriggerRef = useRef<HTMLButtonElement>(null);
   const headingId = `${idPrefix}-heading`;
   const noticeId = `${idPrefix}-notice`;
   const summaryId = `${idPrefix}-summary`;
@@ -29,6 +30,7 @@ export function RefundPolicyNotice({
             {t("refundPolicyHeading")}
           </h2>
           <button
+            ref={policyTriggerRef}
             type="button"
             disabled={!document}
             onClick={() => setPolicyOpen(true)}
@@ -74,6 +76,7 @@ export function RefundPolicyNotice({
           document={document}
           idPrefix={idPrefix}
           onClose={() => setPolicyOpen(false)}
+          returnFocusRef={policyTriggerRef}
         />
       ) : null}
     </>

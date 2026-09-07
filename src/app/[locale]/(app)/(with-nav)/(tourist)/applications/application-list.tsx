@@ -464,7 +464,10 @@ function ApplicationCard({
             ) : null}
             {application.status === "confirmed" && !hasEnded ? (
               <div className="sm:mt-auto">
-                <FreeCancellationWindow applicationId={application.id} />
+                <FreeCancellationWindow
+                  applicationId={application.id}
+                  startAt={application.startAt}
+                />
               </div>
             ) : null}
             {isCompleted && !application.myReview ? (

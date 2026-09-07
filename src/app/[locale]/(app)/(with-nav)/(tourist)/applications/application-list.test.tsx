@@ -369,12 +369,42 @@ describe("ApplicationList", () => {
   });
 
   it("shows the active 30-minute free-cancellation window in green", async () => {
-    renderList({ applications: [paidApplication] });
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          startAt: "2099-07-20T11:00:00+09:00",
+          endAt: "2099-07-20T13:00:00+09:00",
+        },
+      ],
+    });
 
     const notice = await screen.findByTestId("free-cancellation-window");
     expect(notice).toHaveClass("text-success");
     expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
     expect(notice.parentElement).toHaveClass("sm:mt-auto");
+  });
+
+  it("shows the activity's 48-hour cutoff when it extends free cancellation", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        policyVersion: "2026-09-07",
+        policyType: "BEFORE_48_HOURS",
+        refundPercent: 100,
+        refundAmount: 90000,
+        refundCurrency: "KRW",
+        cancellationFeeAmount: 0,
+        freeCancellationUntil: "2099-07-07T10:30:00+09:00",
+        quotedAt: "2099-07-08T10:00:00+09:00",
+      },
+    });
+
+    renderList({ applications: [paidApplication] });
+
+    expect(await screen.findByTestId("free-cancellation-window")).toHaveTextContent(
+      "Free cancellation until Sat, Jul 18 · 10:00 AM",
+    );
   });
 
   it("shows the stored discount snapshot in the price breakdown", () => {

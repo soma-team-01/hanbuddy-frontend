@@ -8,29 +8,40 @@ import { formatSeoulDateWithWeekday, formatSeoulTime } from "@/lib/datetime";
 import { cancellationQuoteQueryOptions } from "@/lib/query/applications";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
-export function FreeCancellationWindow({ applicationId }: Readonly<{ applicationId: string }>) {
+const FULL_REFUND_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+
+function getFullRefundUntil(startAt: string, freeCancellationUntil: string) {
+  const startAtMs = Date.parse(startAt);
+  const freeCancellationUntilMs = Date.parse(freeCancellationUntil);
+  if (!Number.isFinite(startAtMs) || !Number.isFinite(freeCancellationUntilMs)) return null;
+
+  const activityPolicyDeadline = startAtMs - FULL_REFUND_THRESHOLD_MS;
+  const bookingProtectionDeadline = Math.min(freeCancellationUntilMs, startAtMs);
+  return new Date(Math.max(activityPolicyDeadline, bookingProtectionDeadline)).toISOString();
+}
+
+export function FreeCancellationWindow({
+  applicationId,
+  startAt,
+}: Readonly<{ applicationId: string; startAt: string }>) {
   const locale = useLocale() as Locale;
   const t = useTranslations("Applications");
   const { data: quote, error, refetch } = useQuery(cancellationQuoteQueryOptions(applicationId));
   useAuthQueryRedirect(error);
-  const freeCancellationUntil =
-    quote?.policyType === "FREE_CANCELLATION_WINDOW" ? quote.freeCancellationUntil : null;
-  const deadlineDate = freeCancellationUntil
-    ? formatSeoulDateWithWeekday(freeCancellationUntil, locale)
-    : null;
-  const deadlineTime = freeCancellationUntil
-    ? formatSeoulTime(freeCancellationUntil, locale)
-    : null;
+  const fullRefundUntil =
+    quote?.refundPercent === 100 ? getFullRefundUntil(startAt, quote.freeCancellationUntil) : null;
+  const deadlineDate = fullRefundUntil ? formatSeoulDateWithWeekday(fullRefundUntil, locale) : null;
+  const deadlineTime = fullRefundUntil ? formatSeoulTime(fullRefundUntil, locale) : null;
   const deadline = deadlineDate && deadlineTime ? `${deadlineDate} · ${deadlineTime}` : null;
 
   useEffect(() => {
-    if (!freeCancellationUntil) return;
-    const delay = Date.parse(freeCancellationUntil) - Date.now();
+    if (!fullRefundUntil) return;
+    const delay = Date.parse(fullRefundUntil) - Date.now();
     if (!Number.isFinite(delay) || delay > 2_147_483_647) return;
 
     const timeout = window.setTimeout(() => void refetch(), Math.max(0, delay + 50));
     return () => window.clearTimeout(timeout);
-  }, [freeCancellationUntil, refetch]);
+  }, [fullRefundUntil, refetch]);
 
   if (!deadline) return null;
 

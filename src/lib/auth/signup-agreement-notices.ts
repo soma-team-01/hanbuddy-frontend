@@ -1,4 +1,6 @@
 import type { SignupAgreementType, UserType } from "@/lib/auth/types";
+import type { Locale } from "@/i18n/routing";
+import { getTranslatedSignupNotice } from "./signup-agreement-notice-translations";
 
 export const SIGNUP_AGREEMENT_DOCUMENT_VERSION = "2026-09-07";
 
@@ -111,7 +113,9 @@ const BUDDY_PRIVACY_COLLECTION_USE_NOTICE: SignupAgreementNotice = {
 export function getSignupAgreementNotice(
   agreementType: SignupAgreementType,
   userType: UserType,
+  locale: Locale = "ko",
 ): SignupAgreementNotice {
+  if (locale !== "ko") return getTranslatedSignupNotice(agreementType, userType, locale);
   if (agreementType === "PRIVACY_COLLECTION_USE" && userType === "BUDDY") {
     return BUDDY_PRIVACY_COLLECTION_USE_NOTICE;
   }

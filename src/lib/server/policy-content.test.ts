@@ -1,8 +1,42 @@
 import { describe, expect, it } from "vitest";
 import { POLICY_SLUGS } from "@/lib/policy-routes";
+import { LOCALES } from "@/i18n/routing";
 import { getPolicyDocument, getSignupAgreementDocuments } from "./policy-content";
 
 describe("policy content", () => {
+  it.each(LOCALES)(
+    "loads every complete policy in %s with the same version and sections",
+    async (locale) => {
+      for (const slug of POLICY_SLUGS) {
+        const original = await getPolicyDocument(slug, "ko");
+        const translated = await getPolicyDocument(slug, locale);
+        expect(translated.version).toBe(original.version);
+        expect(translated.source.match(/^## /gm)?.length).toBe(
+          original.source.match(/^## /gm)?.length,
+        );
+        expect(translated.source.match(/^\d+\. /gm)?.length).toBe(
+          original.source.match(/^\d+\. /gm)?.length,
+        );
+        expect(translated.source.match(/\d+%/g)?.sort()).toEqual(
+          original.source.match(/\d+%/g)?.sort(),
+        );
+        expect(translated.title).toMatch(/^HanBuddy /);
+        expect(translated.source).not.toMatch(/^(Version|Effective date|버전|시행일):/m);
+        if (locale !== "ko") {
+          expect(translated.title).not.toBe(original.title);
+          expect(translated.source).not.toMatch(/[가-힣]/);
+        }
+      }
+    },
+  );
+
+  it("passes the language through to signup policy documents", async () => {
+    const documents = await getSignupAgreementDocuments("BUDDY", "en");
+    expect(documents.TERMS_OF_SERVICE?.source).toContain("## Article 1.");
+    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("22%");
+    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("11%");
+    expect(documents.BUDDY_OPERATION_TERMS?.source).not.toMatch(/[가-힣]/);
+  });
   it.each(POLICY_SLUGS)("loads the published Korean source for %s", async (slug) => {
     const policy = await getPolicyDocument(slug);
 

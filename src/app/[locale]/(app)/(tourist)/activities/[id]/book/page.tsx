@@ -16,7 +16,7 @@ export default async function BookingPage({
   const initialScheduleId = typeof scheduleId === "string" ? scheduleId : undefined;
   const [t, refundPolicyDocument] = await Promise.all([
     getTranslations({ locale, namespace: "Booking" }),
-    getPolicyDocument("cancellation-refund-policy"),
+    getPolicyDocument("cancellation-refund-policy", locale),
   ]);
 
   return (

@@ -33,10 +33,11 @@ export async function generateMetadata({ params }: BuddyOnboardingPageProps): Pr
   };
 }
 
-export default async function BuddyOnboardingPage() {
+export default async function BuddyOnboardingPage({ params }: BuddyOnboardingPageProps) {
+  const { locale } = await params;
   const [cookieStore, agreementDocuments] = await Promise.all([
     cookies(),
-    getSignupAgreementDocuments("BUDDY"),
+    getSignupAgreementDocuments("BUDDY", locale),
   ]);
   const googleProfile = decodeGoogleProfile(cookieStore.get(AUTH_COOKIES.googleProfile)?.value);
   const signupDraftAccountId = getSignupDraftAccountId(

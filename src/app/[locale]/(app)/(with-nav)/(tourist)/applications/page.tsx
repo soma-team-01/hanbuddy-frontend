@@ -11,7 +11,7 @@ export default async function ApplicationsPage({
   const { locale } = await params;
   const [t, refundPolicyDocument] = await Promise.all([
     getTranslations({ locale, namespace: "Applications" }),
-    getPolicyDocument("cancellation-refund-policy"),
+    getPolicyDocument("cancellation-refund-policy", locale),
   ]);
 
   return (

@@ -405,7 +405,11 @@ function ApplicationCard({
           </div>
 
           {/* 넓은 화면에서는 제목·일정·버디 묶음 옆에 실행 버튼과 취소 사유를 담는다 */}
-          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:self-center sm:text-right">
+          <div
+            className={`order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:text-right ${
+              application.status === "confirmed" ? "sm:self-stretch" : "sm:self-center"
+            }`}
+          >
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
               <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
@@ -459,7 +463,9 @@ function ApplicationCard({
               </button>
             ) : null}
             {application.status === "confirmed" && !hasEnded ? (
-              <FreeCancellationWindow applicationId={application.id} />
+              <div className="sm:mt-auto">
+                <FreeCancellationWindow applicationId={application.id} />
+              </div>
             ) : null}
             {isCompleted && !application.myReview ? (
               <ApplicationReviewActions

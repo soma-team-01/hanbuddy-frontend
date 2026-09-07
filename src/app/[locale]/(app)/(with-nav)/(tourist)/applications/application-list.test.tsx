@@ -366,6 +366,7 @@ describe("ApplicationList", () => {
     const notice = await screen.findByTestId("free-cancellation-window");
     expect(notice).toHaveClass("text-success");
     expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
+    expect(notice.parentElement).toHaveClass("sm:mt-auto");
   });
 
   it("shows the stored discount snapshot in the price breakdown", () => {

@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getMyApplications } from "@/lib/api/applications";
+import { getApplicationCancellationQuote, getMyApplications } from "@/lib/api/applications";
 import type { ContentLanguage } from "@/types/content-language";
 import { unwrapApiResult } from "./result";
 
@@ -9,6 +9,8 @@ export const applicationKeys = {
     language
       ? ([...applicationKeys.all(), "me", language] as const)
       : ([...applicationKeys.all(), "me"] as const),
+  cancellationQuote: (applicationId: number | string) =>
+    [...applicationKeys.all(), "me", String(applicationId), "cancellation-quote"] as const,
 };
 
 /** 결제 대기 신청의 좌석 선점이 풀리는 주기(15분)보다 짧게 다시 확인한다 */
@@ -24,5 +26,18 @@ export function myApplicationsQueryOptions(language: ContentLanguage) {
         ? PENDING_PAYMENT_REFRESH_MS
         : false,
     refetchOnWindowFocus: true,
+  });
+}
+
+export function cancellationQuoteQueryOptions(applicationId: number | string) {
+  return queryOptions({
+    queryKey: applicationKeys.cancellationQuote(applicationId),
+    queryFn: async () =>
+      unwrapApiResult(await getApplicationCancellationQuote(applicationId), "quote"),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    retry: false,
   });
 }

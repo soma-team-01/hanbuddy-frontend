@@ -746,8 +746,8 @@
       "foundOther": "別の選択肢を見つけました",
       "other": "その他の理由"
     },
-    "cancellationDetailLabel": "何が起こったのか教えてください",
-    "cancellationDetailPlaceholder": "短いメモは相手の理解に役立ちます。",
+    "cancellationDetailLabel": "キャンセル理由を入力してください",
+    "cancellationDetailPlaceholder": "キャンセル理由を簡潔に入力してください。",
     "cancellationDetailRequired": "キャンセルする理由を教えてください。",
     "cancellationDetailCount": "{count}/{max}",
     "keepApplication": "いいえ、そのままにしてください",
@@ -765,7 +765,29 @@
     "cancelPendingDescription": "私たちがあなたのために確保している席はすぐに解放されます。",
     "cancelPendingConfirm": "はい、キャンセルします",
     "keepPendingApplication": "アプリケーションを保持する",
-    "holdRemaining": "{time} 支払い完了まで残っています"
+    "holdRemaining": "{time} 支払い完了まで残っています",
+    "freeCancellationUntil": "{dateTime}まで無料キャンセル可能",
+    "freeCancellationEnded": "無料キャンセル期間終了",
+    "providerPaymentAmount": "{provider} 決済金額",
+    "refundEstimateTitle": "キャンセル時の返金見込み額",
+    "quoteLoading": "最新の返金額を確認しています...",
+    "quoteFailed": "返金見込み額を読み込めませんでした。",
+    "retryQuote": "再試行",
+    "refundPolicy": "適用基準",
+    "refundPolicyTypes": {
+      "FREE_CANCELLATION_WINDOW": "決済後30分間の無料キャンセル",
+      "BEFORE_48_HOURS": "アクティビティの48時間以上前",
+      "BETWEEN_24_AND_48_HOURS": "アクティビティの24〜48時間前",
+      "WITHIN_24_HOURS": "アクティビティの24時間前以降"
+    },
+    "estimatedRefund": "返金見込み額",
+    "cancellationFee": "キャンセル料",
+    "quoteFinalNotice": "返金額はキャンセル申請が受け付けられた時点を基準に確定します。",
+    "refundedAmount": "返金額",
+    "refundStatuses": {
+      "REQUESTED": "返金を申請しました",
+      "FAILED": "返金失敗"
+    }
   },
   "Payment": {
     "unavailable": "支払いは利用できません",

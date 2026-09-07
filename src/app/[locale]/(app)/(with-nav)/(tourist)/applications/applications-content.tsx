@@ -17,6 +17,7 @@ import { activityKeys } from "@/lib/query/activities";
 import { requestTossPayment } from "@/lib/payments/toss";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
+import { chatKeys } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type {
@@ -62,10 +63,14 @@ export function ApplicationsContent({
             item.applicationId === application.applicationId ? application : item,
           ),
       );
+      queryClient.removeQueries({
+        queryKey: applicationKeys.cancellationQuote(application.applicationId),
+      });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
         // 좌석이 풀렸으므로 활동 상세의 잔여 좌석을 갱신한다
         queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.all() }),
       ]);
     },
   });
@@ -118,6 +123,12 @@ export function ApplicationsContent({
       await cancelApplicationMutation.mutateAsync({ applicationId, reason, detail });
       return { ok: true };
     } catch (error) {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+        queryClient.invalidateQueries({
+          queryKey: applicationKeys.cancellationQuote(applicationId),
+        }),
+      ]);
       return {
         ok: false,
         error,

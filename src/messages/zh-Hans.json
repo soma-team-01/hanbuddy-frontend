@@ -746,8 +746,8 @@
       "foundOther": "找到了另一个选择",
       "other": "其他原因"
     },
-    "cancellationDetailLabel": "告诉我们发生了什么",
-    "cancellationDetailPlaceholder": "简短的说明可以帮助您的好友理解。",
+    "cancellationDetailLabel": "请输入取消原因",
+    "cancellationDetailPlaceholder": "请简要填写取消原因。",
     "cancellationDetailRequired": "请告诉我们您取消的原因。",
     "cancellationDetailCount": "{count}/{max}",
     "keepApplication": "不，保留它",
@@ -765,7 +765,29 @@
     "cancelPendingDescription": "我们为您保留的座位将立即释放。",
     "cancelPendingConfirm": "是的，取消",
     "keepPendingApplication": "保留申请",
-    "holdRemaining": "{time} 剩下完成付款"
+    "holdRemaining": "{time} 剩下完成付款",
+    "freeCancellationUntil": "可免费取消至 {dateTime}",
+    "freeCancellationEnded": "免费取消期已结束",
+    "providerPaymentAmount": "{provider} 支付金额",
+    "refundEstimateTitle": "取消退款预估",
+    "quoteLoading": "正在确认最新退款金额...",
+    "quoteFailed": "无法加载退款预估金额。",
+    "retryQuote": "重试",
+    "refundPolicy": "适用标准",
+    "refundPolicyTypes": {
+      "FREE_CANCELLATION_WINDOW": "付款后30分钟内免费取消",
+      "BEFORE_48_HOURS": "活动开始48小时前",
+      "BETWEEN_24_AND_48_HOURS": "活动开始前24至48小时",
+      "WITHIN_24_HOURS": "活动开始前不足24小时"
+    },
+    "estimatedRefund": "预计退款",
+    "cancellationFee": "取消手续费",
+    "quoteFinalNotice": "退款金额将以取消申请受理时的时间为准确定。",
+    "refundedAmount": "退款金额",
+    "refundStatuses": {
+      "REQUESTED": "已申请退款",
+      "FAILED": "退款失败"
+    }
   },
   "Payment": {
     "unavailable": "无法付款",

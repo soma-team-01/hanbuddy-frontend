@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getActivityWeather, getTouristActivities } from "@/lib/api/activities";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
+import { getApplicationCancellationQuote } from "@/lib/api/applications";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Locale } from "@/i18n/routing";
@@ -32,11 +33,17 @@ vi.mock("@/lib/api/reviews", () => ({
   deleteReview: vi.fn(),
 }));
 
+vi.mock("@/lib/api/applications", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/applications")>()),
+  getApplicationCancellationQuote: vi.fn(),
+}));
+
 const mockedGetActivityWeather = vi.mocked(getActivityWeather);
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedCreateReview = vi.mocked(createReview);
 const mockedUpdateReview = vi.mocked(updateReview);
 const mockedDeleteReview = vi.mocked(deleteReview);
+const mockedGetCancellationQuote = vi.mocked(getApplicationCancellationQuote);
 
 const applications: Application[] = [
   {
@@ -148,6 +155,19 @@ describe("ApplicationList", () => {
         issuedAt: null,
         baseDate: "2099-07-20",
         forecasts: [],
+      },
+    });
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        policyVersion: "2026-09-07",
+        policyType: "FREE_CANCELLATION_WINDOW",
+        refundPercent: 100,
+        refundAmount: 90000,
+        refundCurrency: "KRW",
+        cancellationFeeAmount: 0,
+        freeCancellationUntil: "2099-07-20T10:30:00+09:00",
+        quotedAt: "2099-07-20T10:10:00+09:00",
       },
     });
   });
@@ -284,9 +304,16 @@ describe("ApplicationList", () => {
     expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" })).toHaveClass(
+      "border-ink",
+    );
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }),
+    ).not.toHaveClass("bg-panel");
     expect(onContinuePayment).not.toHaveBeenCalled();
     continuePaymentAfterReview("Continue payment with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
+    expect(screen.queryByRole("dialog", { name: "Review before payment" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -303,6 +330,110 @@ describe("ApplicationList", () => {
     expect(screen.getByText("Paid").parentElement).toHaveTextContent("₩90,000");
     expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
   });
+
+  it("shows the PayPal provider amount in USD alongside the KRW booking total", () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          paymentProvider: "PAYPAL",
+          providerPaymentAmount: 68.97,
+          providerPaymentCurrency: "USD",
+        },
+      ],
+    });
+
+    const collapsedPaymentSummary = screen.getByText("PayPal payment · $68.97");
+    expect(collapsedPaymentSummary).toBeInTheDocument();
+    expect(collapsedPaymentSummary.parentElement).toHaveClass("gap-0.5");
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(collapsedPaymentSummary).not.toBeInTheDocument();
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("₩90,000");
+    expect(screen.getByText("PayPal payment").parentElement).toHaveTextContent("$68.97");
+  });
+
+  it("shows the requested PayPal amount for a pending payment", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          paymentProvider: "PAYPAL",
+          providerPaymentAmount: 68.97,
+          providerPaymentCurrency: "USD",
+        },
+      ],
+    });
+
+    expect(screen.getByText("PayPal payment · $68.97")).toBeInTheDocument();
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+  });
+
+  it("shows the active 30-minute free-cancellation window in green", async () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          startAt: "2099-07-20T11:00:00+09:00",
+          endAt: "2099-07-20T13:00:00+09:00",
+        },
+      ],
+    });
+
+    const notice = await screen.findByTestId("free-cancellation-window");
+    expect(notice).toHaveClass("text-success");
+    expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
+    expect(notice.parentElement).toHaveClass("sm:mt-auto");
+  });
+
+  it("shows the activity's 48-hour cutoff when it extends free cancellation", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        policyVersion: "2026-09-07",
+        policyType: "BEFORE_48_HOURS",
+        refundPercent: 100,
+        refundAmount: 90000,
+        refundCurrency: "KRW",
+        cancellationFeeAmount: 0,
+        freeCancellationUntil: "2099-07-07T10:30:00+09:00",
+        quotedAt: "2099-07-08T10:00:00+09:00",
+      },
+    });
+
+    renderList({ applications: [paidApplication] });
+
+    expect(await screen.findByTestId("free-cancellation-window")).toHaveTextContent(
+      "Free cancellation until Sat, Jul 18 · 10:00 AM",
+    );
+  });
+
+  it.each([
+    ["BETWEEN_24_AND_48_HOURS", 50],
+    ["WITHIN_24_HOURS", 0],
+  ] as const)(
+    "shows one ended state after free cancellation for %s",
+    async (policyType, refundPercent) => {
+      mockedGetCancellationQuote.mockResolvedValue({
+        status: "success",
+        quote: {
+          policyVersion: "2026-09-07",
+          policyType,
+          refundPercent,
+          refundAmount: refundPercent === 50 ? 45000 : 0,
+          refundCurrency: "KRW",
+          cancellationFeeAmount: refundPercent === 50 ? 45000 : 90000,
+          freeCancellationUntil: "2099-07-07T10:30:00+09:00",
+          quotedAt: "2099-07-19T10:00:00+09:00",
+        },
+      });
+
+      renderList({ applications: [paidApplication] });
+
+      const notice = await screen.findByTestId("free-cancellation-window");
+      expect(notice).toHaveClass("text-danger");
+      expect(notice).toHaveTextContent("Free cancellation period ended");
+    },
+  );
 
   it("shows the stored discount snapshot in the price breakdown", () => {
     const discountedApplication: Application = {
@@ -362,10 +493,13 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
     continuePaymentAfterReview("Continue payment with Toss Payments");
 
-    // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Opening payment..." })).toBeDisabled(),
-    );
+    // 사전 확인 팝업은 즉시 닫고 결제창이 열려 있는 동안 카드의 결제 버튼을 잠근다
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Review before payment" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    });
 
     await act(async () => {
       resolvePayment();
@@ -614,6 +748,46 @@ describe("ApplicationList", () => {
     expect(screen.getByText("Cancellation reason: Schedule conflict")).toBeInTheDocument();
   });
 
+  it("shows the final provider-currency refund returned by cancellation", () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          id: "9",
+          status: "cancelled",
+          cancellationReason: "SCHEDULE_CONFLICT",
+          paymentProvider: "PAYPAL",
+          providerPaymentAmount: 68.97,
+          providerPaymentCurrency: "USD",
+          refund: {
+            refundId: 4,
+            provider: "PAYPAL",
+            status: "COMPLETED",
+            policyVersion: "2026-09-07",
+            policyType: "BETWEEN_24_AND_48_HOURS",
+            refundPercent: 50,
+            refundAmount: 34.49,
+            refundCurrency: "USD",
+            cancellationFeeAmount: 34.48,
+            refundAmountKrw: 45000,
+            retainedAmountKrw: 45000,
+            platformCommissionAmountKrw: 9000,
+            commissionVatAmountKrw: 900,
+            guidePayoutAmountKrw: 35100,
+            requestedAt: "2026-09-07T15:00:00+09:00",
+            completedAt: "2026-09-07T15:00:02+09:00",
+          },
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+
+    expect(screen.getByText("Refunded").parentElement).toHaveTextContent("$34.49");
+    expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$34.48");
+  });
+
   it("hides the cancel action once the activity has ended", () => {
     renderList({
       applications: [
@@ -636,7 +810,11 @@ describe("ApplicationList", () => {
       applications: [{ ...applications[0], id: "7", status: "confirmed" }],
     });
 
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveClass(
+      "sm:absolute",
+      "sm:top-1/2",
+      "sm:-translate-y-1/2",
+    );
   });
 
   it("writes a review from a completed application card", async () => {

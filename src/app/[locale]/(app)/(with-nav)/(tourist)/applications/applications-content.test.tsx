@@ -4,6 +4,7 @@ import {
   cancelMyApplication,
   cancelPendingPayment,
   continueApplicationPayment,
+  getApplicationCancellationQuote,
   getMyApplications,
 } from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
@@ -26,6 +27,7 @@ vi.mock("@/lib/api/applications", () => ({
   cancelPendingPayment: vi.fn(),
   continueApplicationPayment: vi.fn(),
   getMyApplications: vi.fn(),
+  getApplicationCancellationQuote: vi.fn(),
 }));
 
 vi.mock("@/lib/api/activities", () => ({
@@ -57,6 +59,7 @@ const mockedCancelMyApplication = vi.mocked(cancelMyApplication);
 const mockedCancelPendingPayment = vi.mocked(cancelPendingPayment);
 const mockedContinueApplicationPayment = vi.mocked(continueApplicationPayment);
 const mockedGetMyApplications = vi.mocked(getMyApplications);
+const mockedGetCancellationQuote = vi.mocked(getApplicationCancellationQuote);
 const mockedRequestTossPayment = vi.mocked(requestTossPayment);
 
 const confirmedApplication: ApplicationResponse = {
@@ -91,6 +94,20 @@ describe("ApplicationsContent", () => {
     mockedCancelPendingPayment.mockReset();
     mockedContinueApplicationPayment.mockReset();
     mockedGetMyApplications.mockReset();
+    mockedGetCancellationQuote.mockReset();
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        policyVersion: "2026-09-07",
+        policyType: "BEFORE_48_HOURS",
+        refundPercent: 100,
+        refundAmount: 90000,
+        refundCurrency: "KRW",
+        cancellationFeeAmount: 0,
+        freeCancellationUntil: "2026-07-07T10:30:00Z",
+        quotedAt: "2026-07-09T09:00:00Z",
+      },
+    });
     mockedRequestTossPayment.mockReset();
     mockedRequestTossPayment.mockResolvedValue(undefined);
     mockedGetActivityWeather.mockReset();
@@ -306,6 +323,7 @@ describe("ApplicationsContent", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     await waitFor(() =>
@@ -346,6 +364,7 @@ describe("ApplicationsContent", () => {
     renderWithQueryClient(<ApplicationsContent />);
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(

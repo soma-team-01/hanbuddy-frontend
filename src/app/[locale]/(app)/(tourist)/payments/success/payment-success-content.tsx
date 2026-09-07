@@ -28,6 +28,26 @@ interface PaymentSuccessContentProps {
   amount: number | null;
 }
 
+/** 금액과 통화를 항상 같은 결제 기록에서 선택해 서로 다른 통화가 섞이지 않게 한다. */
+function getPaidPayment(application: ApplicationResponse) {
+  if (application.providerPaymentAmount != null && application.providerPaymentCurrency != null) {
+    return {
+      amount: application.providerPaymentAmount,
+      currency: application.providerPaymentCurrency,
+    };
+  }
+  if (application.paymentAmount != null && application.paymentCurrency != null) {
+    return {
+      amount: application.paymentAmount,
+      currency: application.paymentCurrency,
+    };
+  }
+  return {
+    amount: application.totalPrice,
+    currency: application.currency,
+  };
+}
+
 function RecoveryState({ message }: Readonly<{ message: string }>) {
   const t = useTranslations("Payment");
 
@@ -57,12 +77,8 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
   const tErrors = useTranslations("Errors");
   const scheduleLabel =
     formatSeoulDateTime(application.startAt, locale) ?? tErrors("dateTimeUnavailable");
-  const paidAmount =
-    application.paymentAmount !== null && application.paymentAmount !== undefined
-      ? application.paymentAmount
-      : application.totalPrice;
+  const paidPayment = getPaidPayment(application);
   // 실제 결제 통화로 표기한다 — 원화가 아닌 결제를 ₩로 적으면 금액을 잘못 읽는다
-  const paidCurrency = application.paymentCurrency ?? application.currency;
   const originalTotalPrice = application.originalTotalPrice ?? application.totalPrice;
   const discountAmount =
     application.discountAmount ?? Math.max(0, originalTotalPrice - application.totalPrice);
@@ -149,7 +165,7 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
           <div className="flex items-center justify-between border-t border-line-soft pt-4">
             <span className="font-display text-base font-bold text-ink">{t("paidLabel")}</span>
             <span className="font-display text-xl font-bold text-primary">
-              {formatCurrency(paidAmount, paidCurrency, locale)}
+              {formatCurrency(paidPayment.amount, paidPayment.currency, locale)}
             </span>
           </div>
         </section>

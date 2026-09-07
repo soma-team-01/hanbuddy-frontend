@@ -39,6 +39,7 @@ import type { PolicyDocumentData } from "@/types/policy";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
+import { FreeCancellationWindow } from "./free-cancellation-window";
 
 const TABS = ["upcoming", "past"] as const;
 
@@ -78,7 +79,19 @@ function PriceBreakdown({
   const discountAmount = breakdown.discountAmount ?? Math.max(0, originalTotalPrice - total);
   const hasDiscount = discountAmount > 0;
   const hasCompletedPayment =
-    application.status === "confirmed" || application.status === "completed";
+    application.status === "confirmed" ||
+    application.status === "completed" ||
+    application.status === "cancelled";
+  const providerName =
+    application.paymentProvider === "PAYPAL"
+      ? "PayPal"
+      : application.paymentProvider === "TOSS"
+        ? "Toss Payments"
+        : null;
+  const paymentLabel = providerName
+    ? t("providerPaymentAmount", { provider: providerName })
+    : t("paidAmount");
+  const isForeignCurrency = paymentCharge?.currency.toUpperCase() !== "KRW";
 
   return (
     <div className="border-t border-line-soft pt-3">
@@ -89,13 +102,19 @@ function PriceBreakdown({
         className="flex w-full items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-ink"
       >
         <span>{t("priceBreakdown")}</span>
-        {/* 접혀 있어도 총액은 보이게 둔다 — 카드에서 금액을 따로 반복하지 않기 위해 */}
+        {/* 접힌 상태에서는 요약 금액, 펼친 상태에서는 아래 상세 내역만 보여준다. */}
         <span className="flex items-center gap-1.5">
-          <span className="font-display font-bold text-ink">
-            {paymentCharge
-              ? formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)
-              : formatKrw(total, locale)}
-          </span>
+          {!open ? (
+            <span className="flex flex-col items-end gap-0.5 font-display font-bold text-ink">
+              <span>{formatKrw(total, locale)}</span>
+              {paymentCharge && isForeignCurrency ? (
+                <span className="font-sans text-xs font-medium text-muted">
+                  {paymentLabel} ·{" "}
+                  {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
+                </span>
+              ) : null}
+            </span>
+          ) : null}
           <ChevronDownIcon className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </span>
       </button>
@@ -128,10 +147,38 @@ function PriceBreakdown({
           </div>
           {hasCompletedPayment && paymentCharge ? (
             <div className="flex justify-end gap-2 font-display font-semibold text-primary">
-              <span>{t("paidAmount")}</span>
+              <span>{paymentLabel}</span>
               <span className="tabular-nums">
                 {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
               </span>
+            </div>
+          ) : null}
+          {application.status === "cancelled" && application.refund ? (
+            <div className="mt-1 flex flex-col gap-2 border-t border-line-soft pt-2">
+              <div className="flex justify-end gap-2 font-display font-semibold text-success">
+                <span>
+                  {application.refund.status === "COMPLETED"
+                    ? t("refundedAmount")
+                    : t(`refundStatuses.${application.refund.status}`)}
+                </span>
+                <span className="tabular-nums">
+                  {formatCurrency(
+                    application.refund.refundAmount,
+                    application.refund.refundCurrency,
+                    locale,
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-end gap-2 text-muted">
+                <span>{t("cancellationFee")}</span>
+                <span className="tabular-nums">
+                  {formatCurrency(
+                    application.refund.cancellationFeeAmount,
+                    application.refund.refundCurrency,
+                    locale,
+                  )}
+                </span>
+              </div>
             </div>
           ) : null}
         </div>
@@ -234,11 +281,18 @@ function ApplicationCard({
   const tActivityDetail = useTranslations("ActivityDetail");
   const getApiErrorMessage = useApiErrorMessage();
   const paymentCharge =
-    application.paymentAmount !== null &&
-    application.paymentAmount !== undefined &&
-    application.paymentCurrency
-      ? { amount: application.paymentAmount, currency: application.paymentCurrency }
-      : null;
+    application.providerPaymentAmount !== null &&
+    application.providerPaymentAmount !== undefined &&
+    application.providerPaymentCurrency
+      ? {
+          amount: application.providerPaymentAmount,
+          currency: application.providerPaymentCurrency,
+        }
+      : application.paymentAmount !== null &&
+          application.paymentAmount !== undefined &&
+          application.paymentCurrency
+        ? { amount: application.paymentAmount, currency: application.paymentCurrency }
+        : null;
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
@@ -275,12 +329,12 @@ function ApplicationCard({
 
     setPaymentError(null);
     setPaymentInFlight(paymentProvider);
+    // 결제 SDK가 자체 모달을 띄우기 전에 사전 확인 팝업을 닫아 중첩 모달을 피한다.
+    closePaymentReview();
     try {
       await onContinuePayment(application.id, paymentProvider);
-      closePaymentReview();
     } catch (error) {
       if (paymentProvider === "TOSS" && isTossUserCancel(error)) {
-        closePaymentReview();
         return;
       }
       showPaymentError(error);
@@ -351,7 +405,11 @@ function ApplicationCard({
           </div>
 
           {/* 넓은 화면에서는 제목·일정·버디 묶음 옆에 실행 버튼과 취소 사유를 담는다 */}
-          <div className="order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:self-center sm:text-right">
+          <div
+            className={`relative order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:text-right ${
+              application.status === "confirmed" ? "sm:self-stretch" : "sm:self-center"
+            }`}
+          >
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
               <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
@@ -399,10 +457,18 @@ function ApplicationCard({
               <button
                 type="button"
                 onClick={onCancel}
-                className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary`}
+                className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary sm:absolute sm:top-1/2 sm:right-0 sm:-translate-y-1/2`}
               >
                 {t("cancel")}
               </button>
+            ) : null}
+            {application.status === "confirmed" && !hasEnded ? (
+              <div className="sm:mt-auto">
+                <FreeCancellationWindow
+                  applicationId={application.id}
+                  startAt={application.startAt}
+                />
+              </div>
             ) : null}
             {isCompleted && !application.myReview ? (
               <ApplicationReviewActions
@@ -469,6 +535,7 @@ function ApplicationCard({
             pendingPaymentProvider === "TOSS" ? t("resumeWithToss") : t("resumeWithPayPal")
           }
           pendingLabel={t("paymentProcessing")}
+          cancelVariant="outline"
           isPending={paymentInFlight !== null}
           onConfirm={() => void handleConfirmedPayment()}
           onClose={closePaymentReview}
@@ -529,6 +596,9 @@ export function ApplicationList({
       ? application.status === "pending_payment" || application.status === "confirmed"
       : application.status === "completed" || application.status === "cancelled",
   );
+  const cancelTarget = cancelTargetId
+    ? applications.find((application) => application.id === cancelTargetId)
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -610,16 +680,18 @@ export function ApplicationList({
           ) : null}
         </ConfirmDialog>
       ) : null}
-      {cancelTargetId && (
+      {cancelTarget ? (
         <CancelDialog
+          applicationId={cancelTarget.id}
+          startAt={cancelTarget.startAt}
           onClose={() => setCancelTargetId(null)}
           onConfirm={async (reason, detail) => {
-            const outcome = await onCancelApplication(cancelTargetId, reason, detail);
+            const outcome = await onCancelApplication(cancelTarget.id, reason, detail);
             if (outcome.ok) setCancelTargetId(null);
             return outcome;
           }}
         />
-      )}
+      ) : null}
     </div>
   );
 }

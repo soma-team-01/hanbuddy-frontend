@@ -746,8 +746,8 @@
       "foundOther": "Found another option",
       "other": "Other reason"
     },
-    "cancellationDetailLabel": "Tell us what happened",
-    "cancellationDetailPlaceholder": "A short note helps your buddy understand.",
+    "cancellationDetailLabel": "Please provide a reason for cancellation",
+    "cancellationDetailPlaceholder": "Briefly enter your reason for cancellation.",
     "cancellationDetailRequired": "Please tell us why you're cancelling.",
     "cancellationDetailCount": "{count}/{max}",
     "keepApplication": "No, Keep It",
@@ -765,7 +765,29 @@
     "cancelPendingDescription": "The seat we're holding for you will be released right away.",
     "cancelPendingConfirm": "Yes, cancel",
     "keepPendingApplication": "Keep application",
-    "holdRemaining": "{time} left to complete payment"
+    "holdRemaining": "{time} left to complete payment",
+    "freeCancellationUntil": "Free cancellation until {dateTime}",
+    "freeCancellationEnded": "Free cancellation period ended",
+    "providerPaymentAmount": "{provider} payment",
+    "refundEstimateTitle": "Cancellation refund estimate",
+    "quoteLoading": "Checking the latest refund amount...",
+    "quoteFailed": "Could not load the refund estimate.",
+    "retryQuote": "Try again",
+    "refundPolicy": "Applied policy",
+    "refundPolicyTypes": {
+      "FREE_CANCELLATION_WINDOW": "30-minute free cancellation",
+      "BEFORE_48_HOURS": "48+ hours before the activity",
+      "BETWEEN_24_AND_48_HOURS": "24–48 hours before the activity",
+      "WITHIN_24_HOURS": "Less than 24 hours before the activity"
+    },
+    "estimatedRefund": "Estimated refund",
+    "cancellationFee": "Cancellation fee",
+    "quoteFinalNotice": "The refund amount is finalized based on when your cancellation request is received.",
+    "refundedAmount": "Refunded",
+    "refundStatuses": {
+      "REQUESTED": "Refund requested",
+      "FAILED": "Refund failed"
+    }
   },
   "Payment": {
     "unavailable": "Payment unavailable",

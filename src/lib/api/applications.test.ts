@@ -6,6 +6,7 @@ import {
   confirmApplicationPayment,
   continueApplicationPayment,
   createApplication,
+  getApplicationCancellationQuote,
   getApplicationConflicts,
   getMyApplications,
 } from "./applications";
@@ -231,6 +232,33 @@ describe("application API client", () => {
       applications: [application],
     });
     expect(fetchMock).toHaveBeenCalledWith("/api/applications/me?language=EN", {
+      credentials: "same-origin",
+    });
+  });
+
+  it("loads a fresh cancellation quote without a locale parameter", async () => {
+    const quote = {
+      policyVersion: "2026-09-07",
+      policyType: "FREE_CANCELLATION_WINDOW",
+      refundPercent: 100,
+      refundAmount: 68.97,
+      refundCurrency: "USD",
+      cancellationFeeAmount: 0,
+      freeCancellationUntil: "2026-07-07T10:30:00Z",
+      quotedAt: "2026-07-07T10:15:00Z",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ isSuccess: true, code: "200", message: "ok", result: quote }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getApplicationCancellationQuote(11)).resolves.toEqual({
+      status: "success",
+      quote,
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/me/11/cancellation-quote", {
       credentials: "same-origin",
     });
   });

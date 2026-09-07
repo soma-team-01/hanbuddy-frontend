@@ -171,21 +171,32 @@ describe("BookingForm", () => {
     expect(screen.getByText("≈ $32.50")).toHaveClass("text-muted");
     expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toBeInTheDocument();
     expect(screen.getByText("PayPal charges in USD.")).toBeInTheDocument();
-    // 취소·환불 정책은 밑줄 트리거에 호버 툴팁으로 제공된다
-    expect(
-      screen.getByRole("button", { name: "cancellation & refund policy" }),
-    ).toBeInTheDocument();
+    // 취소·환불 기준은 모바일에서도 항상 보이고 전문으로 이어진다
+    expect(screen.getByRole("heading", { name: "Cancellation and refund" })).toBeInTheDocument();
+    expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View full policy" })).toHaveAttribute(
+      "href",
+      "/en/policies/cancellation-refund-policy",
+    );
     // 특별 요청 칸은 처음부터 표시되고 비어 있으면 대시로 보인다
     expect(screen.getByTestId("summary-special-request")).toHaveTextContent("—");
     expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveClass(
       "focus-border-only",
       "focus:border-primary",
     );
-    const tooltip = screen.getByRole("tooltip");
-    expect(tooltip).toHaveTextContent("48+ hours before the activity");
-    expect(tooltip).toHaveTextContent("Full refund");
-    expect(tooltip).toHaveTextContent("50% refund");
-    expect(tooltip).toHaveTextContent("No refund");
+    expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
+    expect(screen.getByText("Full refund")).toBeInTheDocument();
+    expect(screen.getByText("50% refund")).toBeInTheDocument();
+    expect(screen.getByText("After the activity starts or no-show")).toBeInTheDocument();
+    expect(screen.getAllByText("No refund")).toHaveLength(2);
+
+    const agreement = screen.getByRole("checkbox", {
+      name: /reviewed and agree to the cancellation and refund policy/i,
+    });
+    expect(agreement).toBeRequired();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    fireEvent.click(agreement);
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
   });
 
   it("uses the HanBuddy payment action in TOSS mode", () => {

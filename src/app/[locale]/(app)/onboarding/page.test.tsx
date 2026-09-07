@@ -422,7 +422,7 @@ describe("OnboardingForm", () => {
       <OnboardingForm
         agreementDocuments={{
           TERMS_OF_SERVICE: {
-            version: "2026-09-06",
+            version: "2026-09-07",
             source: "## 제1조 목적\n\n이 약관은 HanBuddy 서비스 이용 조건을 정합니다.",
           },
         }}
@@ -454,7 +454,7 @@ describe("OnboardingForm", () => {
     fireEvent.click(termsButton);
     expect(termsCheckbox).not.toBeChecked();
     expect(screen.getByRole("dialog", { name: "HanBuddy Terms of Service" })).toBeInTheDocument();
-    expect(screen.getByText("Version 2026-09-06")).toBeInTheDocument();
+    expect(screen.getByText("Version 2026-09-07")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "제1조 목적" })).toBeInTheDocument();
     expect(screen.getByText("이 약관은 HanBuddy 서비스 이용 조건을 정합니다.")).toBeInTheDocument();
     expect(screen.queryByText(/전문 보기/)).not.toBeInTheDocument();
@@ -520,10 +520,10 @@ describe("OnboardingForm", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(JSON.parse(fetchMock.mock.calls[0][1].body).agreements).toEqual([
-      { type: "ADULT_CONFIRMATION", version: "2026-09-06", agreed: true },
-      { type: "TERMS_OF_SERVICE", version: "2026-09-06", agreed: true },
-      { type: "PRIVACY_COLLECTION_USE", version: "2026-09-06", agreed: true },
-      { type: "MARKETING_COMMUNICATION", version: "2026-09-06", agreed: false },
+      { type: "ADULT_CONFIRMATION", version: "2026-09-07", agreed: true },
+      { type: "TERMS_OF_SERVICE", version: "2026-09-07", agreed: true },
+      { type: "PRIVACY_COLLECTION_USE", version: "2026-09-07", agreed: true },
+      { type: "MARKETING_COMMUNICATION", version: "2026-09-07", agreed: false },
     ]);
   });
 

@@ -664,8 +664,11 @@
     "discount": "Discount ({percent}%)",
     "discountAmount": "Discount",
     "totalKrw": "Total (KRW): {amount}",
-    "refundPolicy": "Please review the <policy>cancellation & refund policy</policy> before applying.",
-    "agreement": "I agree to the terms above.",
+    "refundPolicyHeading": "Cancellation and refund",
+    "refundPolicyLink": "View full policy",
+    "statutoryWithdrawalNotice": "You may request withdrawal within 7 days of payment under applicable law. When a statutory withdrawal right applies, applicable law takes priority.",
+    "actualPaymentRefundNotice": "If a discount was applied, the refund is calculated from the amount actually paid.",
+    "agreement": "[Required] I have reviewed and agree to the cancellation and refund policy.",
     "submit": "Apply & Pay",
     "payNow": "Pay now",
     "payWithToss": "Pay with Toss Payments",
@@ -703,6 +706,10 @@
       "none": {
         "label": "Less than 24 hours before",
         "value": "No refund"
+      },
+      "noShow": {
+        "label": "After the activity starts or no-show",
+        "value": "No refund"
       }
     },
     "goToApplications": "Go to My Applications"
@@ -722,6 +729,10 @@
     "payNow": "Pay now",
     "continueWithToss": "Pay with Toss Payments",
     "continueWithPayPal": "Pay with PayPal",
+    "paymentAgreementTitle": "Review before payment",
+    "paymentAgreementDescription": "Review and accept the cancellation and refund policy again before continuing to payment.",
+    "agreeAndPayWithToss": "Agree and pay with Toss Payments",
+    "agreeAndPayWithPayPal": "Agree and pay with PayPal",
     "cancel": "Cancel",
     "paymentFailed": "Could not complete the payment.",
     "cancelFailed": "Could not cancel the application.",

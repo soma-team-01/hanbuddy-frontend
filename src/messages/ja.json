@@ -664,8 +664,11 @@
     "discount": "割引（{percent}%)",
     "discountAmount": "割引",
     "totalKrw": "合計(KRW): {amount}",
-    "refundPolicy": "を確認してください。 <policy>キャンセルと返金ポリシー</policy> 申請する前に。",
-    "agreement": "上記の条件に同意します。",
+    "refundPolicyHeading": "キャンセル・返金について",
+    "refundPolicyLink": "ポリシー全文を見る",
+    "statutoryWithdrawalNotice": "決済日から7日以内は、法令に基づき申込みの撤回を申請できます。法定の撤回権が認められる場合は、関係法令が優先されます。",
+    "actualPaymentRefundNotice": "割引が適用された場合、実際のお支払い金額を基準に返金します。",
+    "agreement": "【必須】キャンセル・返金規定を確認し、同意します。",
     "submit": "申し込みと支払い",
     "payNow": "支払う",
     "payWithToss": "Toss Paymentsで支払う",
@@ -703,6 +706,10 @@
       "none": {
         "label": "24時間以内",
         "value": "返金不可"
+      },
+      "noShow": {
+        "label": "開始後または無断不参加",
+        "value": "返金不可"
       }
     },
     "goToApplications": "「マイアプリケーション」に移動"
@@ -722,6 +729,10 @@
     "payNow": "支払う",
     "continueWithToss": "Toss Paymentsで支払う",
     "continueWithPayPal": "PayPalで支払う",
+    "paymentAgreementTitle": "お支払い前の確認",
+    "paymentAgreementDescription": "キャンセル・返金規定を再度確認し、同意してからお支払いに進んでください。",
+    "agreeAndPayWithToss": "同意してToss Paymentsで支払う",
+    "agreeAndPayWithPayPal": "同意してPayPalで支払う",
     "cancel": "キャンセル",
     "paymentFailed": "支払いを完了できませんでした。",
     "cancelFailed": "申請をキャンセルできませんでした。",

@@ -117,6 +117,18 @@ function renderList(
   );
 }
 
+function acceptRefundPolicyAndPay(buttonName: string) {
+  const agreement = screen.getByRole("checkbox", {
+    name: /reviewed and agree to the cancellation and refund policy/i,
+  });
+  const confirmButton = screen.getByRole("button", { name: buttonName });
+  expect(agreement).toBeRequired();
+  expect(confirmButton).toBeDisabled();
+  fireEvent.click(agreement);
+  expect(confirmButton).toBeEnabled();
+  fireEvent.click(confirmButton);
+}
+
 describe("ApplicationList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -184,6 +196,9 @@ describe("ApplicationList", () => {
     );
     expect(screen.queryByRole("button", { name: "Pay with PayPal" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    expect(screen.getByRole("dialog", { name: "Review before payment" })).toBeInTheDocument();
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
 
     unmount();
@@ -198,6 +213,7 @@ describe("ApplicationList", () => {
       "text-on-primary",
     );
     fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    acceptRefundPolicyAndPay("Agree and pay with PayPal");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "PAYPAL"));
   });
 
@@ -257,6 +273,13 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
+    expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View full policy" })).toHaveAttribute(
+      "href",
+      "/en/policies/cancellation-refund-policy",
+    );
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -313,6 +336,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The payment service is temporarily unavailable. Please try again shortly.",
@@ -330,6 +354,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
 
     // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
     await waitFor(() =>
@@ -352,6 +377,7 @@ describe("ApplicationList", () => {
     renderList({ onContinuePayment });
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
 
     await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -371,6 +397,7 @@ describe("ApplicationList", () => {
     const { rerender } = render(<IntlTestProvider locale="en">{applicationList}</IntlTestProvider>);
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    acceptRefundPolicyAndPay("Agree and pay with Toss Payments");
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
 
     rerender(<IntlTestProvider locale="ko">{applicationList}</IntlTestProvider>);

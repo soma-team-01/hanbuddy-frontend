@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { RefundPolicyConsent } from "@/components/booking/RefundPolicyConsent";
 import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
@@ -87,7 +88,7 @@ export function BookingForm({
     return activity.sessions[0]?.id ?? "";
   });
   const [guests, setGuests] = useState(1);
-  const [agreed, setAgreed] = useState(false);
+  const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorKey, setErrorKey] = useState<BookingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
@@ -363,50 +364,13 @@ export function BookingForm({
               </label>
             </section>
 
-            <section className="flex flex-col gap-3 pt-7">
-              <p className="text-sm leading-6 text-muted">
-                {t.rich("refundPolicy", {
-                  policy: (chunks) => (
-                    <span className="group relative inline-block">
-                      <button
-                        type="button"
-                        aria-describedby="refund-policy-tooltip"
-                        className="font-semibold text-ink underline decoration-primary/60 decoration-2 underline-offset-4 transition-colors hover:text-primary focus-visible:text-primary"
-                      >
-                        {chunks}
-                      </button>
-                      <span
-                        id="refund-policy-tooltip"
-                        role="tooltip"
-                        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-72 -translate-x-1/2 flex-col gap-2 rounded-xl border border-primary/30 bg-canvas-soft p-4 text-left text-xs leading-5 font-normal no-underline shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:flex group-hover:flex"
-                      >
-                        {(["full", "half", "none"] as const).map((rule) => (
-                          <span key={rule} className="flex items-center justify-between gap-3">
-                            <span className="text-muted">{t(`refundRules.${rule}.label`)}</span>
-                            <span
-                              className={`font-display font-bold ${
-                                rule === "none" ? "text-ink" : "text-primary"
-                              }`}
-                            >
-                              {t(`refundRules.${rule}.value`)}
-                            </span>
-                          </span>
-                        ))}
-                      </span>
-                    </span>
-                  ),
-                })}
-              </p>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(event) => setAgreed(event.target.checked)}
-                  className="size-4.5 rounded accent-primary"
-                />
-                <span className="text-sm text-ink">{t("agreement")}</span>
-              </label>
-            </section>
+            <div className="pt-7">
+              <RefundPolicyConsent
+                agreed={refundPolicyAgreed}
+                onAgreedChange={setRefundPolicyAgreed}
+                idPrefix="booking-refund-policy"
+              />
+            </div>
           </div>
 
           <BookingPanel>
@@ -511,7 +475,7 @@ export function BookingForm({
                   {showTossPayment ? (
                     <button
                       type="button"
-                      disabled={!agreed || isSubmitting}
+                      disabled={!refundPolicyAgreed || isSubmitting}
                       onClick={() => handleSubmitClick("TOSS")}
                       className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
                         showProviderChoice
@@ -543,7 +507,7 @@ export function BookingForm({
                       ) : (
                         <button
                           type="button"
-                          disabled={!agreed || isSubmitting}
+                          disabled={!refundPolicyAgreed || isSubmitting}
                           onClick={() => handleSubmitClick("PAYPAL")}
                           className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
                         >

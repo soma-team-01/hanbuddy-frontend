@@ -664,8 +664,11 @@
     "discount": "折扣（{percent}%)",
     "discountAmount": "折扣",
     "totalKrw": "總計（韓元）： {amount}",
-    "refundPolicy": "請查看 <policy>取消和退款政策</policy> 申請之前。",
-    "agreement": "我同意以上條款。",
+    "refundPolicyHeading": "取消與退款說明",
+    "refundPolicyLink": "查看完整政策",
+    "statutoryWithdrawalNotice": "付款日起7日內，您可以依適用法律申請撤回。依法享有撤回權時，以相關法律規定為準。",
+    "actualPaymentRefundNotice": "使用優惠時，退款按實際支付金額計算。",
+    "agreement": "【必選】我已查看並同意取消與退款政策。",
     "submit": "申請並付款",
     "payNow": "立即付款",
     "payWithToss": "使用Toss Payments付款",
@@ -703,6 +706,10 @@
       "none": {
         "label": "不到 24 小時前",
         "value": "不予退款"
+      },
+      "noShow": {
+        "label": "活動開始後或未到場",
+        "value": "不予退款"
       }
     },
     "goToApplications": "轉到我的應用程式"
@@ -722,6 +729,10 @@
     "payNow": "立即付款",
     "continueWithToss": "使用Toss Payments付款",
     "continueWithPayPal": "使用PayPal付款",
+    "paymentAgreementTitle": "付款前確認",
+    "paymentAgreementDescription": "請再次查看並同意取消與退款政策，然後繼續付款。",
+    "agreeAndPayWithToss": "同意並使用Toss Payments付款",
+    "agreeAndPayWithPayPal": "同意並使用PayPal付款",
     "cancel": "取消",
     "paymentFailed": "無法完成付款。",
     "cancelFailed": "無法取消申請。",

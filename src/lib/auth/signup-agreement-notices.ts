@@ -1,6 +1,6 @@
 import type { SignupAgreementType, UserType } from "@/lib/auth/types";
 
-export const SIGNUP_AGREEMENT_DOCUMENT_VERSION = "2026-09-06";
+export const SIGNUP_AGREEMENT_DOCUMENT_VERSION = "2026-09-07";
 
 export interface SignupAgreementNotice {
   readonly paragraphs: readonly string[];
@@ -54,7 +54,8 @@ export const SIGNUP_AGREEMENT_NOTICES: Record<SignupAgreementType, SignupAgreeme
   },
   BUDDY_COMMISSION_POLICY: {
     paragraphs: [
-      "본인은 버디 수수료·정산 정책을 확인하였으며, 본인에게 표시된 수수료율, 정산 주기, 취소·환불·차지백의 정산 반영 기준에 동의합니다.",
+      "본인은 버디 수수료·정산 정책을 확인하였으며, 기본 버디는 플랫폼 수수료 20%와 그 수수료에 대한 부가가치세 2%를 합한 총 22%, 얼리 버디는 수수료 10%와 그 수수료에 대한 부가가치세 1%를 합한 총 11%가 실제 판매금액에서 공제됨을 확인합니다.",
+      "또한 본인에게 표시된 정산 주기와 취소·환불·차지백의 정산 반영 기준에 동의합니다.",
     ],
   },
   MARKETING_COMMUNICATION: {

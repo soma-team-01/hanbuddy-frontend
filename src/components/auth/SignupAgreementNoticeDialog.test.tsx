@@ -16,7 +16,7 @@ describe("SignupAgreementNoticeDialog", () => {
     expect(
       screen.getByRole("dialog", { name: "Personal information collection and use" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Version 2026-09-06")).toBeInTheDocument();
+    expect(screen.getByText("Version 2026-09-07")).toBeInTheDocument();
     expect(screen.getByText("수집 항목")).toBeInTheDocument();
     expect(screen.getByText("거부 권리와 불이익")).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();

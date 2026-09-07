@@ -1,6 +1,6 @@
 import type { SignupAgreementRequest, SignupAgreementType, UserType } from "@/lib/auth/types";
 
-export const SIGNUP_AGREEMENT_VERSION = "2026-09-06";
+export const SIGNUP_AGREEMENT_VERSION = "2026-09-07";
 
 const COMMON_REQUIRED_AGREEMENT_TYPES = [
   "ADULT_CONFIRMATION",

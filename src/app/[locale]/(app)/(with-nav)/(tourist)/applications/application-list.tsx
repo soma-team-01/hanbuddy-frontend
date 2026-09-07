@@ -10,6 +10,7 @@ import {
   WeatherConditionIcon,
 } from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
+import { RefundPolicyConsent } from "@/components/booking/RefundPolicyConsent";
 import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
@@ -221,6 +222,10 @@ function ApplicationCard({
 }>) {
   const [paymentError, setPaymentError] = useState<unknown>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
+  const [pendingPaymentProvider, setPendingPaymentProvider] = useState<PaymentProvider | null>(
+    null,
+  );
+  const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
   const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);
   const t = useTranslations("Applications");
@@ -235,7 +240,8 @@ function ApplicationCard({
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
   const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
-  const isPaymentBusy = isPaymentPending || paymentInFlight !== null;
+  const isPaymentBusy =
+    isPaymentPending || paymentInFlight !== null || pendingPaymentProvider !== null;
   const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
   const showPayPalPayment = isPaymentProviderVisible("PAYPAL", paymentProviderMode);
   const showProviderChoice = paymentProviderMode === "BOTH";
@@ -249,6 +255,38 @@ function ApplicationCard({
   function showPaymentError(error: unknown) {
     if (error instanceof UnauthenticatedQueryError) return;
     setPaymentError(error);
+  }
+
+  function openPaymentConsent(paymentProvider: PaymentProvider) {
+    setPaymentError(null);
+    setRefundPolicyAgreed(false);
+    setPendingPaymentProvider(paymentProvider);
+  }
+
+  function closePaymentConsent() {
+    setPendingPaymentProvider(null);
+    setRefundPolicyAgreed(false);
+    setPaymentError(null);
+  }
+
+  async function handleConfirmedPayment() {
+    const paymentProvider = pendingPaymentProvider;
+    if (!paymentProvider || !refundPolicyAgreed) return;
+
+    setPaymentError(null);
+    setPaymentInFlight(paymentProvider);
+    try {
+      await onContinuePayment(application.id, paymentProvider);
+      closePaymentConsent();
+    } catch (error) {
+      if (paymentProvider === "TOSS" && isTossUserCancel(error)) {
+        closePaymentConsent();
+        return;
+      }
+      showPaymentError(error);
+    } finally {
+      setPaymentInFlight(null);
+    }
   }
 
   const dDay = isUpcoming ? daysUntilSeoulDate(application.startAt) : null;
@@ -321,55 +359,30 @@ function ApplicationCard({
                   <button
                     type="button"
                     disabled={isPaymentBusy}
-                    onClick={async () => {
-                      setPaymentError(null);
-                      setPaymentInFlight("TOSS");
-                      try {
-                        // 토스 결제창을 연다 — 인증이 끝나면 /payments/success로 리다이렉트된다
-                        await onContinuePayment(application.id, "TOSS");
-                      } catch (error) {
-                        if (!isTossUserCancel(error)) showPaymentError(error);
-                      } finally {
-                        setPaymentInFlight(null);
-                      }
-                    }}
-                    aria-label={
-                      paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentLabel
-                    }
+                    onClick={() => openPaymentConsent("TOSS")}
+                    aria-label={tossPaymentLabel}
                     className={`${CARD_ACTION_CLASS} ${
                       showProviderChoice
                         ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
                         : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
                     }`}
                   >
-                    {paymentInFlight === "TOSS" ? t("paymentProcessing") : tossPaymentText}
+                    {tossPaymentText}
                   </button>
                 ) : null}
                 {showPayPalPayment ? (
                   <button
                     type="button"
                     disabled={isPaymentBusy}
-                    onClick={async () => {
-                      setPaymentError(null);
-                      setPaymentInFlight("PAYPAL");
-                      try {
-                        await onContinuePayment(application.id, "PAYPAL");
-                      } catch (error) {
-                        showPaymentError(error);
-                      } finally {
-                        setPaymentInFlight(null);
-                      }
-                    }}
-                    aria-label={
-                      paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentLabel
-                    }
+                    onClick={() => openPaymentConsent("PAYPAL")}
+                    aria-label={payPalPaymentLabel}
                     className={`${CARD_ACTION_CLASS} ${
                       showProviderChoice
                         ? "bg-[#ffc439] text-[#111] enabled:hover:opacity-90"
                         : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
                     }`}
                   >
-                    {paymentInFlight === "PAYPAL" ? t("paymentProcessing") : payPalPaymentText}
+                    {payPalPaymentText}
                   </button>
                 ) : null}
                 <button
@@ -420,7 +433,7 @@ function ApplicationCard({
               onExpire={onHoldExpired}
             />
           ) : null}
-          {paymentError !== null && (
+          {paymentError !== null && pendingPaymentProvider === null && (
             <p
               role="alert"
               className="rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
@@ -447,6 +460,38 @@ function ApplicationCard({
           currentActivityId={String(application.activityId)}
           onClose={() => setHostProfileOpen(false)}
         />
+      ) : null}
+      {pendingPaymentProvider ? (
+        <ConfirmDialog
+          title={t("paymentAgreementTitle")}
+          description={t("paymentAgreementDescription")}
+          confirmLabel={
+            pendingPaymentProvider === "TOSS"
+              ? t("agreeAndPayWithToss")
+              : t("agreeAndPayWithPayPal")
+          }
+          pendingLabel={t("paymentProcessing")}
+          isPending={paymentInFlight !== null}
+          confirmDisabled={!refundPolicyAgreed}
+          onConfirm={() => void handleConfirmedPayment()}
+          onClose={closePaymentConsent}
+        >
+          <div className="max-h-[60vh] overflow-y-auto pr-1">
+            <RefundPolicyConsent
+              agreed={refundPolicyAgreed}
+              onAgreedChange={setRefundPolicyAgreed}
+              idPrefix={`application-${application.id}-refund-policy`}
+            />
+          </div>
+          {paymentError !== null ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
+            >
+              {getApiErrorMessage(paymentError, t("paymentFailed"))}
+            </p>
+          ) : null}
+        </ConfirmDialog>
       ) : null}
     </article>
   );

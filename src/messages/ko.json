@@ -664,8 +664,11 @@
     "discount": "할인 ({percent}%)",
     "discountAmount": "할인 금액",
     "totalKrw": "총액(KRW): {amount}",
-    "refundPolicy": "신청 전에 <policy>취소 및 환불 정책</policy>을 확인해 주세요.",
-    "agreement": "위 약관에 동의합니다.",
+    "refundPolicyHeading": "취소 및 환불 안내",
+    "refundPolicyLink": "정책 전문 보기",
+    "statutoryWithdrawalNotice": "결제일로부터 7일 이내에는 법령에 따라 청약철회를 요청할 수 있습니다. 법정 청약철회가 인정되는 경우에는 관계 법령이 우선 적용됩니다.",
+    "actualPaymentRefundNotice": "할인이 적용된 경우 실제 결제금액을 기준으로 환불합니다.",
+    "agreement": "[필수] 취소 및 환불 규정을 확인했으며 이에 동의합니다.",
     "submit": "신청 및 결제",
     "payNow": "결제하기",
     "payWithToss": "토스페이먼츠로 결제",
@@ -701,7 +704,11 @@
         "value": "부분 환불 50%"
       },
       "none": {
-        "label": "활동 24시간 전 이후",
+        "label": "활동 시작 24시간 미만",
+        "value": "환불 불가"
+      },
+      "noShow": {
+        "label": "활동 시작 후 또는 무단 불참",
         "value": "환불 불가"
       }
     },
@@ -722,6 +729,10 @@
     "payNow": "결제하기",
     "continueWithToss": "토스페이먼츠로 결제",
     "continueWithPayPal": "PayPal로 결제",
+    "paymentAgreementTitle": "결제 전 확인",
+    "paymentAgreementDescription": "취소 및 환불 규정을 다시 확인하고 동의한 뒤 결제를 진행해 주세요.",
+    "agreeAndPayWithToss": "동의하고 토스페이먼츠로 결제",
+    "agreeAndPayWithPayPal": "동의하고 PayPal로 결제",
     "cancel": "취소",
     "paymentFailed": "결제를 완료하지 못했습니다.",
     "cancelFailed": "신청을 취소하지 못했습니다.",

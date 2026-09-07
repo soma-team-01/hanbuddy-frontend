@@ -69,6 +69,11 @@ describe("CancelDialog", () => {
     );
     expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent("$36.50");
     expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$0.00");
+    expect(
+      screen.getByText(
+        "The refund amount is finalized based on when your cancellation request is received.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("keeps cancellation disabled and retries when the quote fails", async () => {

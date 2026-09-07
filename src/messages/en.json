@@ -781,7 +781,7 @@
     },
     "estimatedRefund": "Estimated refund",
     "cancellationFee": "Cancellation fee",
-    "quoteFinalNotice": "The final refund is recalculated when you submit the cancellation.",
+    "quoteFinalNotice": "The refund amount is finalized based on when your cancellation request is received.",
     "refundedAmount": "Refunded",
     "refundStatuses": {
       "REQUESTED": "Refund requested",

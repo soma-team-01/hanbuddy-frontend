@@ -781,7 +781,7 @@
     },
     "estimatedRefund": "返金見込み額",
     "cancellationFee": "キャンセル料",
-    "quoteFinalNotice": "最終返金額はキャンセル申請時に再計算されます。",
+    "quoteFinalNotice": "返金額はキャンセル申請が受け付けられた時点を基準に確定します。",
     "refundedAmount": "返金額",
     "refundStatuses": {
       "REQUESTED": "返金申請額",

@@ -781,7 +781,7 @@
     },
     "estimatedRefund": "预计退款",
     "cancellationFee": "取消手续费",
-    "quoteFinalNotice": "最终退款金额将在提交取消申请时重新计算。",
+    "quoteFinalNotice": "退款金额将以取消申请受理时的时间为准确定。",
     "refundedAmount": "退款金额",
     "refundStatuses": {
       "REQUESTED": "退款申请金额",

@@ -192,10 +192,13 @@ describe("BookingForm", () => {
     );
     expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveAttribute("rows", "2");
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
-    expect(screen.getByText("Full refund")).toBeInTheDocument();
-    expect(screen.getByText("50% refund")).toBeInTheDocument();
+    expect(screen.getByText("Full refund")).toHaveClass("text-ink");
+    expect(screen.getByText("50% refund")).toHaveClass("text-primary");
     expect(screen.getByText("After the activity starts or no-show")).toBeInTheDocument();
     expect(screen.getAllByText("No refund")).toHaveLength(2);
+    for (const noRefund of screen.getAllByText("No refund")) {
+      expect(noRefund).toHaveClass("text-primary");
+    }
 
     const agreement = screen.getByRole("checkbox", {
       name: /agree to the cancellation and refund policy/i,
@@ -607,13 +610,13 @@ describe("BookingForm", () => {
     );
   });
 
-  it("starts with a single guest and applies the chosen count", async () => {
+  it("starts with one participant and applies the chosen count", async () => {
     renderWithQueryClient(<BookingForm activity={activity} />);
 
     // 스테퍼와 우측 요약 모두 1명으로 시작한다
-    expect(screen.getAllByText("1 guest")).toHaveLength(2);
+    expect(screen.getAllByText("1 participant")).toHaveLength(2);
 
-    fireEvent.click(screen.getByRole("button", { name: "Increase guests" }));
+    fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
     await agreeAndSubmit();
 
     await waitFor(() =>

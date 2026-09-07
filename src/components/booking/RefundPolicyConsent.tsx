@@ -59,7 +59,11 @@ export function RefundPolicyConsent({
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-0.5 text-[10px] leading-4"
             >
               <dt className="text-muted">{t(`refundRules.${rule}.label`)}</dt>
-              <dd className="text-right font-display font-bold text-ink">
+              <dd
+                className={`text-right font-display font-bold ${
+                  rule === "full" ? "text-ink" : "text-primary"
+                }`}
+              >
                 {t(`refundRules.${rule}.value`)}
               </dd>
             </div>

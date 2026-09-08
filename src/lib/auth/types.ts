@@ -42,6 +42,11 @@ export interface GoogleLoginResponse {
   googleProfile?: GoogleProfile;
 }
 
+export interface GoogleLoginRequest {
+  code: string;
+  redirectUri: string;
+}
+
 export interface ReviewLoginRequest {
   email: string;
   password: string;

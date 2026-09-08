@@ -61,13 +61,17 @@ describe("policy locale at server entry points", () => {
       });
       renderWithIntl(await PolicyPage({ params }), { locale });
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(refund.title);
-      expect(screen.getByText(`${locale}:policyDocumentVersion:2026-09-07`)).toBeInTheDocument();
+      expect(
+        screen.getByText(`${locale}:policyDocumentVersion:${refund.version}`),
+      ).toBeInTheDocument();
       cleanup();
 
       renderWithIntl(await InterceptedPolicyPage({ params }), { locale });
       expect(screen.getByRole("dialog", { name: refund.title })).toBeInTheDocument();
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(refund.title);
-      expect(screen.getByText(`${locale}:policyDocumentVersion:2026-09-07`)).toBeInTheDocument();
+      expect(
+        screen.getByText(`${locale}:policyDocumentVersion:${refund.version}`),
+      ).toBeInTheDocument();
       cleanup();
 
       for (const page of [

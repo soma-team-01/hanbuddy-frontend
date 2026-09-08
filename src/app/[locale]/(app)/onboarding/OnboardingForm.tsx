@@ -521,7 +521,7 @@ export function OnboardingForm({
             ...commonProfile,
             userType,
             ...(profileImageKey ? { profileImageKey } : {}),
-            agreements: buildSignupAgreements(userType, agreementDecisions),
+            agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
 
       const response = await fetch(

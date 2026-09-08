@@ -1,27 +1,28 @@
 # HanBuddy Cancellation and Refund Policy
 
-Version: 2026-09-07
-Effective date: 2026-09-20
+Version: 2026-09-08
 
 This policy covers cancellation, refunds, schedule changes and service issues for activities booked on HanBuddy and forms part of the Terms of Service. More favorable conditions shown in the activity details or at checkout take priority for the Tourist.
 
 Refunds are assessed in this order:
 
-1. First determine whether statutory withdrawal was requested within 7 days of payment.
+1. Members may request statutory withdrawal within 7 days of receiving the written contract details. If supply occurs later, members may request withdrawal within 7 days from receipt or commencement of supply. Any longer period required by applicable law applies.
 2. If statutory withdrawal applies, refund the full amount actually paid as a priority.
-3. Apply the general 48-hour/24-hour rules in Section 2 to voluntary cancellations after the statutory withdrawal period or where a legally recognized restriction on withdrawal applies.
+3. HanBuddy’s general 48-hour/24-hour cancellation rules apply after the statutory withdrawal period or where grounds restricting withdrawal under Article 17(2) of the Republic of Korea’s Act on the Consumer Protection in Electronic Commerce, Etc. are recognized. However, a full refund takes priority when the 30-minute free cancellation conditions below are met.
 4. Apply Sections 3–7 for separate grounds such as Buddy cancellation, lateness or no-show, activities not as described, or material schedule changes.
 
 ## 1. Statutory Withdrawal Rights
 
-1. Members may request withdrawal within 7 days of payment.
+1. Members may request statutory withdrawal within 7 days of receiving the written contract details. If supply occurs later, members may request withdrawal within 7 days from receipt or commencement of supply. Any longer period required by applicable law applies.
 2. Where statutory withdrawal applies, the full amount actually paid is refunded without a cancellation fee.
-3. For services reserved for a specific time, where the activity is imminent or provision has begun and grounds restricting withdrawal under Article 17(2) of the Act on the Consumer Protection in Electronic Commerce, Etc. are recognized, Section 2 applies.
+3. HanBuddy’s general 48-hour/24-hour cancellation rules apply after the statutory withdrawal period or where grounds restricting withdrawal under Article 17(2) of the Republic of Korea’s Act on the Consumer Protection in Electronic Commerce, Etc. are recognized. However, a full refund takes priority when the 30-minute free cancellation conditions below are met.
 4. Before payment, the Company clearly discloses statutory withdrawal availability, possible restrictions, time-based refund amounts and the actual-payment basis, and obtains separate consent.
 5. If the activity differs from its description, advertising or contract, the Tourist may withdraw within 3 months of provision and within 30 days of becoming aware, or being able to become aware, of the discrepancy.
 6. This policy does not restrict statutory rights to withdrawal, contract termination, damages or dispute resolution.
 
 ## 2. HanBuddy General Cancellation Rules
+
+Cancellation requested within 30 minutes of payment confirmation of the booking and before the scheduled activity start receives a full refund of the amount actually paid, regardless of the general cancellation rules. This benefit ends at the scheduled activity start. It does not restrict statutory withdrawal or other refund rights.
 
 For personal cancellations after the statutory withdrawal period or where a legally recognized restriction applies, the following refunds are calculated from the scheduled start time, unless the activity details offer more favorable conditions.
 
@@ -31,6 +32,8 @@ For personal cancellations after the statutory withdrawal period or where a lega
 | At least 24 but less than 48 hours before the start | 50% of the amount actually paid |
 | Less than 24 hours before the start                 | No refund                       |
 | After the start or for a no-show                    | No refund                       |
+
+The refund restrictions in the table above apply to ordinary voluntary cancellations. Even after the activity starts, statutory withdrawal rights remain available for separable service portions whose provision has not begun. Portions not provided due to the Buddy’s or Company’s fault and other separate refund grounds qualify for full or partial refunds under Sections 3–7 and applicable law.
 
 1. Times are calculated in the activity location’s local time. Activities in the Republic of Korea use Korea Standard Time (KST).
 2. “Amount actually paid” means the amount approved through the payment method after coupons, promotions, points and other discounts.
@@ -79,8 +82,8 @@ If natural disasters, emergency government orders, major traffic restrictions, o
 
 1. Tourists may request a refund through booking cancellation/refund functions or contact@hanbuddy.kr.
 2. The Company checks booking details and cancellation timing, and explains additional evidence needed and estimated processing time where further review is required.
-3. Approved refunds normally use the original payment method. Unless law provides otherwise, the Company initiates cancellation or repayment within 3 business days of confirming the refund grounds.
-4. Card issuers, banks, PayPal, Toss Payments and other providers may take additional time to reflect the refund. The Company makes evidence of its cancellation request available.
+3. For statutory withdrawal, the Company will refund within 3 business days of the statutory starting date. For services or transactions where supply has not occurred, this is the date statutory withdrawal is exercised. For other cancellations eligible for a refund under this policy, the Company will refund within 3 business days of receiving the cancellation request. Refunds normally use the original payment method. For card and similar payments, the Company will promptly request the payment provider to stop billing or cancel the payment and take any necessary steps, including returning funds already received.
+4. After the Company cancels the payment and makes any necessary return of funds, additional time may be needed for card statements, billing deductions or account deposits to reflect the refund, depending on the card issuer, bank or payment provider. The Company will provide the cancellation result and verifiable transaction information. This does not limit its statutory refund obligations or liability for delay. Failed cancellation requests will be followed up until properly processed.
 5. Coupon and promotional discounts are not refunded in cash. Coupon restoration follows promotion conditions disclosed before payment.
 6. Members may initially appeal within 3 days of notification of a refund decision. Later requests based on statutory rights or justified grounds are also reviewed.
 

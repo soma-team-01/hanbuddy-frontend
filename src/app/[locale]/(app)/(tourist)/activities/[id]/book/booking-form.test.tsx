@@ -182,7 +182,9 @@ describe("BookingForm", () => {
     expect(screen.getByText("PayPal charges in USD.")).toBeInTheDocument();
     // 취소·환불 핵심 기준은 작게 요약하고 전문은 현재 화면 위 팝업으로 연다
     expect(screen.getByRole("heading", { name: "Cancellation and refund" })).toBeInTheDocument();
-    expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/within 7 days of receiving the written contract details/i),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
     // 특별 요청 칸은 처음부터 표시되고 비어 있으면 대시로 보인다
     expect(screen.getByTestId("summary-special-request")).toHaveTextContent("—");
@@ -192,7 +194,10 @@ describe("BookingForm", () => {
     );
     expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveAttribute("rows", "2");
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
-    expect(screen.getByText("Full refund")).toHaveClass("text-ink");
+    expect(screen.getAllByText("Full refund")).toHaveLength(2);
+    for (const fullRefund of screen.getAllByText("Full refund")) {
+      expect(fullRefund).toHaveClass("text-ink");
+    }
     expect(screen.getByText("50% refund")).toHaveClass("text-primary");
     expect(screen.getByText("After the activity starts or no-show")).toBeInTheDocument();
     expect(screen.getAllByText("No refund")).toHaveLength(2);

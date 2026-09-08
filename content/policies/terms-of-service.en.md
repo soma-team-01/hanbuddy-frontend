@@ -1,7 +1,6 @@
 # HanBuddy Terms of Service
 
-Version: 2026-09-07
-Effective date: 2026-09-20
+Version: 2026-09-08
 
 ## Article 1. Purpose
 
@@ -74,8 +73,8 @@ These Terms set out the rights, obligations and responsibilities of Zero One (th
 ## Article 10. Cancellation, Refunds and Schedule Changes
 
 1. Detailed rules for cancellation, refunds, Buddy cancellation, lateness, no-shows and material changes are in the [Cancellation and Refund Policy](./cancellation-refund-policy.en.md).
-2. Members may request statutory withdrawal within 7 days of payment. Where statutory withdrawal applies, the full amount actually paid is refunded.
-3. For services booked for a specific time, where a legally recognized restriction on withdrawal applies because the activity is imminent or provision has begun, the policy’s general 48-hour/24-hour cancellation rules apply.
+2. Members may request statutory withdrawal within 7 days of receiving the written contract details. If supply occurs later, members may request withdrawal within 7 days from receipt or commencement of supply. Any longer period required by applicable law applies.
+3. HanBuddy’s general 48-hour/24-hour cancellation rules apply after the statutory withdrawal period or where grounds restricting withdrawal under Article 17(2) of the Republic of Korea’s Act on the Consumer Protection in Electronic Commerce, Etc. are recognized. However, a full refund takes priority when the 30-minute free cancellation conditions below are met. Cancellation requested within 30 minutes of payment confirmation of the booking and before the scheduled activity start receives a full refund of the amount actually paid, regardless of the general cancellation rules. This benefit ends at the scheduled activity start. It does not restrict statutory withdrawal or other refund rights.
 4. Before application and payment, the Company clearly displays statutory withdrawal availability, time-based refunds, the actual-payment basis and a link to the full policy, and obtains separate consent.
 5. Material changes to the schedule, location or activity require the Tourist’s consent. Tourists who do not agree may cancel under the Cancellation and Refund Policy.
 

@@ -301,7 +301,9 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
-    expect(screen.getByText(/within 7 days of payment/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/within 7 days of receiving the written contract details/i),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
     expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" })).toHaveClass(

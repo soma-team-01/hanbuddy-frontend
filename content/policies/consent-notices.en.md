@@ -1,7 +1,6 @@
 # HanBuddy Consent Notices
 
-Version: 2026-09-07
-Effective date: 2026-09-20
+Version: 2026-09-08
 
 These notices explain registration consents. Required and optional items are distinguished. Refusing optional consent does not prevent use of basic Service features.
 
@@ -53,7 +52,9 @@ I have read the [Buddy Commission and Settlement Policy](./buddy-commission-sett
 
 ### [Required] Cancellation and Refund Policy
 
-I acknowledge that statutory withdrawal may be requested within 7 days of payment under applicable law, and that applicable law takes priority where statutory withdrawal is recognized.
+Members may request statutory withdrawal within 7 days of receiving the written contract details. If supply occurs later, members may request withdrawal within 7 days from receipt or commencement of supply. Any longer period required by applicable law applies.
+
+Cancellation requested within 30 minutes of payment confirmation of the booking and before the scheduled activity start receives a full refund of the amount actually paid, regardless of the general cancellation rules. This benefit ends at the scheduled activity start. It does not restrict statutory withdrawal or other refund rights.
 
 I also acknowledge that after the statutory withdrawal period or where a legally recognized restriction applies, HanBuddy’s general cancellation rules use the scheduled activity start time:
 
@@ -63,6 +64,8 @@ I also acknowledge that after the statutory withdrawal period or where a legally
 | At least 24 but less than 48 hours before the start | 50% of the amount actually paid |
 | Less than 24 hours before the start                 | No refund                       |
 | After the start or for a no-show                    | No refund                       |
+
+The refund restrictions in the table above apply to ordinary voluntary cancellations. Even after the activity starts, statutory withdrawal rights remain available for separable service portions whose provision has not begun. Portions not provided due to the Buddy’s or Company’s fault and other separate refund grounds qualify for full or partial refunds under Sections 3–7 of the Cancellation and Refund Policy and applicable law.
 
 I have read the full [Cancellation and Refund Policy](./cancellation-refund-policy.en.md) and agree to it.
 

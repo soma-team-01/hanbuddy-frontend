@@ -1,7 +1,6 @@
 # HanBuddy Privacy Policy
 
 Version: 2026-09-07
-Effective date: 2026-09-20
 
 Zero One (the “Company”) values HanBuddy users’ personal information and complies with the Personal Information Protection Act and other applicable laws. This policy explains what information is processed and why, who receives or processes it, and users’ rights.
 

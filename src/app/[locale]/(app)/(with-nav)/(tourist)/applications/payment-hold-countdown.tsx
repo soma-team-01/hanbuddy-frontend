@@ -45,11 +45,11 @@ export function PaymentHoldCountdown({
   return (
     <p
       data-testid="payment-hold-countdown"
-      className={`flex items-center gap-1.5 text-xs font-semibold ${
+      className={`flex items-center gap-1.5 text-sm font-semibold ${
         urgent ? "text-danger" : "text-primary"
       }`}
     >
-      <ClockIcon className="size-3.5" />
+      <ClockIcon className="size-4" />
       {t("holdRemaining", { time: formatRemaining(remainingMs) })}
     </p>
   );

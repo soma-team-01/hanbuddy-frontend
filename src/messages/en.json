@@ -718,7 +718,8 @@
         "value": "No refund"
       }
     },
-    "goToApplications": "Go to My Applications"
+    "goToApplications": "Go to My Applications",
+    "tableScrollHint": "Swipe sideways to see the full table."
   },
   "Applications": {
     "title": "My Applications",

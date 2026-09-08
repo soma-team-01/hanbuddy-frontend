@@ -138,6 +138,8 @@ describe("MyActivityDetailContent", () => {
     // Book now는 비활성 버튼이라 예약 단계로 이동할 수 없다
     expect(await screen.findByRole("button", { name: "Book now" })).toBeDisabled();
     expect(screen.queryByRole("link", { name: "Book now" })).not.toBeInTheDocument();
+    // 버디 미리보기는 하단 고정 바 대신 본문 아래 인라인 카드로 보여 준다
+    expect(screen.getByTestId("booking-bottom-bar")).not.toHaveClass("fixed");
 
     // 캘린더 열람과 시간대 선택은 고객 화면과 동일하게 동작한다
     fireEvent.click(screen.getByTestId("date-select-box"));

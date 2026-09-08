@@ -196,7 +196,11 @@ describe("ActivityDetailContent", () => {
     expect(
       krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(screen.getByText("per person")).toHaveClass("text-right");
+    // 모바일은 가격과 같은 줄에 붙고, md 이상에서만 제 줄로 내려가 오른쪽 정렬된다
+    expect(screen.getByText("per person")).toHaveClass("md:basis-full", "md:text-right");
+    expect(screen.getByText("per person").parentElement).toBe(
+      screen.getByTestId("booking-bar-price"),
+    );
     // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();

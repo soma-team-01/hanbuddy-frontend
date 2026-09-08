@@ -718,7 +718,8 @@
         "value": "不予退款"
       }
     },
-    "goToApplications": "轉到我的應用程式"
+    "goToApplications": "轉到我的應用程式",
+    "tableScrollHint": "左右滑動查看完整表格。"
   },
   "Applications": {
     "title": "我的應用程式",

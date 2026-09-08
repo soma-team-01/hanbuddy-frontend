@@ -7,6 +7,8 @@ import { resolvePolicyDocumentHref } from "@/lib/policy-routes";
 interface PolicyDocumentProps {
   readonly locale: Locale;
   readonly source: string;
+  /** 모바일에서 표가 가로로 넘칠 때 보여 줄 안내 문구. 없으면 힌트를 그리지 않는다. */
+  readonly tableScrollHint?: string;
 }
 
 function getHeadingId(children: React.ReactNode) {
@@ -20,7 +22,7 @@ function getHeadingId(children: React.ReactNode) {
     .replace(/-+/g, "-");
 }
 
-export function PolicyDocument({ locale, source }: PolicyDocumentProps) {
+export function PolicyDocument({ locale, source, tableScrollHint }: PolicyDocumentProps) {
   return (
     <article className="min-w-0 text-sm leading-6 text-ink md:text-[15px] md:leading-7">
       <ReactMarkdown
@@ -55,10 +57,25 @@ export function PolicyDocument({ locale, source }: PolicyDocumentProps) {
             </blockquote>
           ),
           table: ({ children }) => (
-            <div className="mt-4 overflow-x-auto rounded-xl border border-line-soft">
-              <table className="w-full min-w-[640px] border-collapse text-left text-sm leading-6">
-                {children}
-              </table>
+            <div className="mt-4">
+              {tableScrollHint ? (
+                <p className="mb-1.5 text-xs text-muted md:hidden">{tableScrollHint}</p>
+              ) : null}
+              {/* 페이드는 표 영역만 감싸는 컨테이너에 두어 안내 문구를 덮지 않게 한다 */}
+              <div className="relative">
+                <div className="overflow-x-auto rounded-xl border border-line-soft">
+                  <table className="w-full min-w-[640px] border-collapse text-left text-sm leading-6">
+                    {children}
+                  </table>
+                </div>
+                {tableScrollHint ? (
+                  <span
+                    aria-hidden="true"
+                    data-testid="table-edge-fade"
+                    className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-xl bg-gradient-to-l from-white to-transparent md:hidden"
+                  />
+                ) : null}
+              </div>
             </div>
           ),
           thead: ({ children }) => <thead className="bg-panel text-ink">{children}</thead>,

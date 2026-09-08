@@ -68,7 +68,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
   }
 
   return (
-    <div className="flex flex-1 flex-col pb-32">
+    <div className="flex flex-1 flex-col pb-6">
       <PageHeader onLeftClick={goBack} />
       <ActivityDetailView
         activity={activity}

@@ -57,6 +57,17 @@ describe("locale layout metadata", () => {
   });
 });
 
+describe("locale layout viewport", () => {
+  it("enables safe-area insets and keyboard-aware layout without blocking zoom", () => {
+    expect(localeLayout.viewport).toEqual({
+      width: "device-width",
+      initialScale: 1,
+      viewportFit: "cover",
+      interactiveWidget: "resizes-content",
+    });
+  });
+});
+
 describe("locale layout fonts", () => {
   it("loads the approved display, interface, and Korean font weights as CSS variables", () => {
     expect(fontMocks.plusJakartaSans).toHaveBeenCalledWith({

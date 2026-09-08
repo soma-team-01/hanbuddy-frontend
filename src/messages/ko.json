@@ -718,7 +718,8 @@
         "value": "환불 불가"
       }
     },
-    "goToApplications": "내 신청으로 가기"
+    "goToApplications": "내 신청으로 가기",
+    "tableScrollHint": "옆으로 밀어 전체 표를 확인하세요."
   },
   "Applications": {
     "title": "내 신청",

@@ -48,7 +48,7 @@ const TABS = ["upcoming", "past"] as const;
  * 좁은 화면에서는 제목이 설 자리가 없어지므로 최소 폭 대신 가로를 꽉 채운다.
  */
 const CARD_ACTION_CLASS =
-  "h-9 w-full shrink-0 rounded-lg px-4 font-display text-xs font-bold whitespace-nowrap transition-colors disabled:opacity-40 sm:w-auto sm:min-w-32";
+  "h-12 w-full shrink-0 rounded-xl px-4 font-display text-sm font-bold whitespace-nowrap transition-colors disabled:opacity-40 sm:w-auto sm:min-w-32";
 
 const REASON_MESSAGE_KEY = {
   SCHEDULE_CONFLICT: "scheduleConflict",
@@ -412,7 +412,7 @@ function ApplicationCard({
           >
             {application.status === "pending_payment" ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
-              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto">
+              <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto">
                 {showTossPayment ? (
                   <button
                     type="button"

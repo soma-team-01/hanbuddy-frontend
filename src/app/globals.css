@@ -380,3 +380,8 @@ dialog.motion-dialog[open]::backdrop {
     scale: none;
   }
 }
+
+/* 하단 고정 바(예약·상세)가 있는 동안 푸터가 바 뒤에 가려지지 않도록 바 높이만큼 여백을 준다 */
+body[data-fixed-bar="true"] footer {
+  padding-bottom: calc(var(--fixed-bar-height, 0px) + 1rem);
+}

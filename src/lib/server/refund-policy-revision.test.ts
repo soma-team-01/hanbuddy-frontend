@@ -64,6 +64,7 @@ describe("refund policy revision", () => {
         "utf8",
       );
       expect(source).not.toMatch(/^(시행일|적용 예정일|Effective date):/m);
+      expect(source).not.toMatch(/^부칙:.*\d{4}년\s*\d{1,2}월\s*\d{1,2}일부터 시행합니다\./m);
     }
   });
 });

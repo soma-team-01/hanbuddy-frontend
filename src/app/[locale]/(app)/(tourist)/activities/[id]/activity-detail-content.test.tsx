@@ -196,8 +196,8 @@ describe("ActivityDetailContent", () => {
     expect(
       krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    // 모바일은 가격과 같은 줄에 붙고, sm 이상에서만 제 줄로 내려가 오른쪽 정렬된다
-    expect(screen.getByText("per person")).toHaveClass("sm:basis-full", "sm:text-right");
+    // 모바일은 가격과 같은 줄에 붙고, md 이상에서만 제 줄로 내려가 오른쪽 정렬된다
+    expect(screen.getByText("per person")).toHaveClass("md:basis-full", "md:text-right");
     expect(screen.getByText("per person").parentElement).toBe(
       screen.getByTestId("booking-bar-price"),
     );

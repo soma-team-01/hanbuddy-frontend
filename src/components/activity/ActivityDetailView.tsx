@@ -199,13 +199,13 @@ export function ActivityDetailView({
   }
 
   const bottomBarContent = (
-    <div className="mx-auto flex w-full max-w-[840px] flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-4">
+    <div className="mx-auto flex w-full max-w-[840px] flex-col gap-2.5 md:flex-row md:items-center md:gap-4">
       <button
         type="button"
         data-testid="date-select-box"
         onClick={() => setCalendarOpen(true)}
         disabled={dateBoxDisabled}
-        className={`flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:flex-1 ${
+        className={`flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:flex-1 ${
           selectedSession
             ? "text-ink enabled:hover:border-ink"
             : "text-muted enabled:hover:border-ink enabled:hover:text-ink"
@@ -214,13 +214,13 @@ export function ActivityDetailView({
         <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
         <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
       </button>
-      {/* 모바일은 가격+버튼을 2행에 묶고, sm 이상은 래퍼를 없애 날짜·가격·버튼 1행을 유지한다 */}
+      {/* 모바일(<768px)은 가격+버튼을 2행에 묶고, md 이상은 래퍼를 없애 날짜·가격·버튼 1행을 유지한다 */}
       <div
         data-testid="booking-bar-actions"
-        className="flex items-center justify-between gap-3 sm:contents"
+        className="flex items-center justify-between gap-3 md:contents"
       >
-        {/* 모바일은 원화·환산가·1인당을 한 줄로 읽히게 하고, sm 이상은 오른쪽 정렬 세로 블록으로 되돌린다 */}
-        <div className="flex min-w-0 flex-col items-start text-left sm:shrink-0 sm:items-end sm:text-right">
+        {/* 모바일은 원화·환산가·1인당을 한 줄로 읽히게 하고, md 이상은 오른쪽 정렬 세로 블록으로 되돌린다 */}
+        <div className="flex min-w-0 flex-col items-start text-left md:shrink-0 md:items-end md:text-right">
           {hasDiscount ? (
             <span className="text-sm text-muted line-through">
               {formatKrw(activity.originalPrice ?? activity.price, locale)}
@@ -228,7 +228,7 @@ export function ActivityDetailView({
           ) : null}
           <div
             data-testid="booking-bar-price"
-            className="flex flex-wrap items-baseline gap-x-1.5 sm:justify-end sm:whitespace-nowrap"
+            className="flex flex-wrap items-baseline gap-x-1.5 md:justify-end md:whitespace-nowrap"
           >
             <span className="font-display text-xl font-bold text-primary">
               {formatKrw(activity.price, locale)}
@@ -247,7 +247,7 @@ export function ActivityDetailView({
                 )
               </span>
             ) : null}
-            <span className="text-xs text-muted sm:basis-full sm:text-right">
+            <span className="text-xs text-muted md:basis-full md:text-right">
               {tExplore("perPersonLabel")}
             </span>
           </div>
@@ -256,14 +256,14 @@ export function ActivityDetailView({
           <button
             type="button"
             disabled
-            className="flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary opacity-60 sm:px-8"
+            className="flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary opacity-60 md:px-8"
           >
             {t("bookNow")}
           </button>
         ) : (
           <Link
             href={`/activities/${activity.id}/book?scheduleId=${selectedSession.id}`}
-            className="flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover sm:px-8"
+            className="flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8"
           >
             {t("bookNow")}
           </Link>

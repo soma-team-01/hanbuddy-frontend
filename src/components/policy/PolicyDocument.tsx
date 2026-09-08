@@ -57,22 +57,25 @@ export function PolicyDocument({ locale, source, tableScrollHint }: PolicyDocume
             </blockquote>
           ),
           table: ({ children }) => (
-            <div className="relative mt-4">
+            <div className="mt-4">
               {tableScrollHint ? (
                 <p className="mb-1.5 text-xs text-muted md:hidden">{tableScrollHint}</p>
               ) : null}
-              <div className="overflow-x-auto rounded-xl border border-line-soft">
-                <table className="w-full min-w-[640px] border-collapse text-left text-sm leading-6">
-                  {children}
-                </table>
+              {/* 페이드는 표 영역만 감싸는 컨테이너에 두어 안내 문구를 덮지 않게 한다 */}
+              <div className="relative">
+                <div className="overflow-x-auto rounded-xl border border-line-soft">
+                  <table className="w-full min-w-[640px] border-collapse text-left text-sm leading-6">
+                    {children}
+                  </table>
+                </div>
+                {tableScrollHint ? (
+                  <span
+                    aria-hidden="true"
+                    data-testid="table-edge-fade"
+                    className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-xl bg-gradient-to-l from-white to-transparent md:hidden"
+                  />
+                ) : null}
               </div>
-              {tableScrollHint ? (
-                <span
-                  aria-hidden="true"
-                  data-testid="table-edge-fade"
-                  className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-xl bg-gradient-to-l from-white to-transparent md:hidden"
-                />
-              ) : null}
             </div>
           ),
           thead: ({ children }) => <thead className="bg-panel text-ink">{children}</thead>,

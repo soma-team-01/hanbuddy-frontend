@@ -78,12 +78,12 @@ describe("ActivityDetailView", () => {
     const bar = screen.getByTestId("booking-bottom-bar");
     expect(bar).toHaveClass("fixed");
     const row = bar.firstElementChild as HTMLElement;
-    expect(row).toHaveClass("flex-col", "sm:flex-row");
-    expect(screen.getByTestId("date-select-box")).toHaveClass("w-full", "sm:flex-1");
+    expect(row).toHaveClass("flex-col", "md:flex-row");
+    expect(screen.getByTestId("date-select-box")).toHaveClass("w-full", "md:flex-1");
     expect(screen.getByTestId("date-select-box")).not.toHaveClass("flex-1");
-    // 가격과 버튼은 모바일에서 한 줄로 묶이고 sm 이상에서는 래퍼가 사라져 기존 1행이 된다
+    // 가격과 버튼은 모바일에서 한 줄로 묶이고 md 이상에서는 래퍼가 사라져 기존 1행이 된다
     expect(screen.getByText("₩50,000").closest("[data-testid=booking-bar-actions]")).toHaveClass(
-      "sm:contents",
+      "md:contents",
     );
     // 1인당 문구는 모바일에서 가격과 한 줄에 놓이고 길면 줄바꿈되며, 잘리지 않는다
     const priceRow = screen.getByTestId("booking-bar-price");

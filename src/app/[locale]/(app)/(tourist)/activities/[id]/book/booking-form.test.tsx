@@ -193,6 +193,10 @@ describe("BookingForm", () => {
       "focus:border-primary",
     );
     expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveAttribute("rows", "2");
+    // iOS 자동 확대를 막기 위해 입력은 16px, 스테퍼는 44px 터치 타깃
+    expect(screen.getByPlaceholderText(/Let your buddy know/i)).toHaveClass("text-base");
+    expect(screen.getByRole("button", { name: "Increase participants" })).toHaveClass("size-11");
+    expect(screen.getByRole("button", { name: "Decrease participants" })).toHaveClass("size-11");
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
     expect(screen.getAllByText("Full refund")).toHaveLength(2);
     for (const fullRefund of screen.getAllByText("Full refund")) {
@@ -656,6 +660,13 @@ describe("BookingForm", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+    // 에러는 고정 바 안쪽 맨 위에 보이고 포커스를 받아 화면 밖에 숨지 않는다
+    const alert = screen.getByRole("alert");
+    expect(screen.getByTestId("bottom-action-bar")).toContainElement(alert);
+    expect(screen.getByTestId("bottom-action-bar").firstElementChild?.firstElementChild).toBe(
+      alert,
+    );
+    await waitFor(() => expect(alert).toHaveFocus());
   });
 
   it("shows a cancellation notice when the buyer closes the Toss window", async () => {

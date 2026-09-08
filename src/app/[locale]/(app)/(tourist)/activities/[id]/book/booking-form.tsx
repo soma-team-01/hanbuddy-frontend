@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -108,6 +108,7 @@ export function BookingForm({
   const showProviderChoice = paymentProviderMode === "BOTH";
   // React Query 상태가 화면에 반영되기 전의 연속 클릭도 동기적으로 차단한다
   const submissionLockRef = useRef(false);
+  const errorAlertRef = useRef<HTMLDivElement>(null);
   const conflictCheckMutation = useMutation({
     mutationFn: async (activityScheduleId: number) =>
       unwrapApiResult(
@@ -290,6 +291,11 @@ export function BookingForm({
     requestFailure?.error instanceof ApiClientError &&
     requestFailure.error.code === "APPLICATION409_PAYMENT_PENDING";
 
+  // 에러는 모바일 고정 바 안에 그려지므로, 새로 생길 때 포커스를 옮겨 사용자가 놓치지 않게 한다
+  useEffect(() => {
+    if (errorMessage) errorAlertRef.current?.focus();
+  }, [errorMessage]);
+
   const selectedSession = activity.sessions.find((session) => session.id === sessionId) ?? null;
   const sessionTimeRange = selectedSession
     ? formatSessionTimeRange(selectedSession, activity.durationMinutes, locale as Locale)
@@ -335,7 +341,7 @@ export function BookingForm({
                     aria-label={t("decreaseGuests")}
                     disabled={guests <= 1}
                     onClick={() => setGuests((count) => Math.max(1, count - 1))}
-                    className="flex size-9 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+                    className="flex size-11 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                   >
                     <MinusIcon className="size-4" />
                   </button>
@@ -347,7 +353,7 @@ export function BookingForm({
                     aria-label={t("increaseGuests")}
                     disabled={guests >= MAX_GUESTS}
                     onClick={() => setGuests((count) => Math.min(MAX_GUESTS, count + 1))}
-                    className="flex size-9 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+                    className="flex size-11 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                   >
                     <PlusIcon className="size-4" />
                   </button>
@@ -364,7 +370,7 @@ export function BookingForm({
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
-                  className="focus-border-only w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm text-ink transition-colors placeholder:text-muted/60 focus:border-primary"
+                  className="focus-border-only w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-base text-ink transition-colors placeholder:text-muted/60 focus:border-primary"
                 />
               </label>
             </section>
@@ -474,6 +480,24 @@ export function BookingForm({
             <div className="lg:pt-6">
               <BottomActionBar>
                 <div className="flex w-full flex-col gap-2">
+                  {errorMessage ? (
+                    <div
+                      ref={errorAlertRef}
+                      role="alert"
+                      tabIndex={-1}
+                      className="rounded-xl border border-danger/30 bg-canvas-soft px-4 py-3 text-sm text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                    >
+                      <p>{errorMessage}</p>
+                      {blockedByPendingPayment ? (
+                        <Link
+                          href="/applications"
+                          className="mt-2 inline-flex font-display text-sm font-bold text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary"
+                        >
+                          {t("goToApplications")}
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <RefundPolicyAgreement
                     agreed={refundPolicyAgreed}
                     onAgreedChange={setRefundPolicyAgreed}
@@ -525,7 +549,7 @@ export function BookingForm({
                             {isSubmitting ? t("processing") : payPalPaymentLabel}
                           </button>
                         )}
-                        <p className="text-center text-[11px] leading-4 text-muted">
+                        <p className="text-center text-xs leading-4 text-muted">
                           {t("paypalCurrencyNotice")}
                         </p>
                       </div>
@@ -534,23 +558,6 @@ export function BookingForm({
                 </div>
               </BottomActionBar>
             </div>
-
-            {errorMessage ? (
-              <div
-                role="alert"
-                className="mt-3 rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger"
-              >
-                <p>{errorMessage}</p>
-                {blockedByPendingPayment ? (
-                  <Link
-                    href="/applications"
-                    className="mt-2 inline-flex font-display text-sm font-bold text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary"
-                  >
-                    {t("goToApplications")}
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
           </BookingPanel>
         </main>
       </PageContainer>

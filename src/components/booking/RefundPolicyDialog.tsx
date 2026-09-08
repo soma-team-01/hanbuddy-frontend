@@ -110,7 +110,11 @@ export function RefundPolicyDialog({
         </div>
 
         <div className="max-h-[min(76svh,720px)] min-h-0 overflow-y-auto px-5 py-5 md:px-7 md:py-6">
-          <PolicyDocument locale={locale} source={document.source} />
+          <PolicyDocument
+            locale={locale}
+            source={document.source}
+            tableScrollHint={t("tableScrollHint")}
+          />
         </div>
       </div>
     </dialog>

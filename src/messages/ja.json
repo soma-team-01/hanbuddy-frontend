@@ -718,7 +718,8 @@
         "value": "返金不可"
       }
     },
-    "goToApplications": "「マイアプリケーション」に移動"
+    "goToApplications": "「マイアプリケーション」に移動",
+    "tableScrollHint": "横にスワイプすると表全体を確認できます。"
   },
   "Applications": {
     "title": "私のアプリケーション",

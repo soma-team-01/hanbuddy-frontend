@@ -28,6 +28,7 @@ export function SignupAgreementNoticeDialog({
   const locale = useLocale() as Locale;
   const t = useTranslations("Onboarding.agreements");
   const tAccessibility = useTranslations("Accessibility");
+  const tBooking = useTranslations("Booking");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const notice = getSignupAgreementNotice(agreementType, userType, locale);
   const version = document?.version ?? SIGNUP_AGREEMENT_DOCUMENT_VERSION;
@@ -66,7 +67,11 @@ export function SignupAgreementNoticeDialog({
 
       <div className="max-h-[min(72svh,680px)] overflow-y-auto px-5 py-5 text-sm leading-6 md:px-7 md:py-6">
         {document ? (
-          <PolicyDocument locale={locale} source={document.source} />
+          <PolicyDocument
+            locale={locale}
+            source={document.source}
+            tableScrollHint={tBooking("tableScrollHint")}
+          />
         ) : (
           <>
             {notice.paragraphs.map((paragraph) => (

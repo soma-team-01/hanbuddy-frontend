@@ -18,7 +18,11 @@ export async function PolicyPageContent({
           <p className="mb-6 text-xs text-muted md:mb-7">
             {t("policyDocumentVersion", { version: policy.version })}
           </p>
-          <PolicyDocument locale={locale} source={policy.source} />
+          <PolicyDocument
+            locale={locale}
+            source={policy.source}
+            tableScrollHint={t("tableScrollHint")}
+          />
         </div>
       </PageContainer>
     </main>

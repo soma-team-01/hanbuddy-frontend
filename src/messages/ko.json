@@ -667,7 +667,8 @@
     "refundPolicyHeading": "취소 및 환불 안내",
     "refundPolicyLink": "정책 전문 보기",
     "policyDocumentVersion": "버전 {version}",
-    "statutoryWithdrawalNotice": "결제일로부터 7일 이내 법정 청약철회를 요청할 수 있으며, 관계 법령이 우선 적용됩니다.",
+    "statutoryWithdrawalNotice": "청약철회는 계약내용 서면 수령일부터 7일 이내, 공급이 더 늦으면 공급받거나 공급이 시작된 날부터 7일 이내에 요청할 수 있습니다. 법령상 권리가 우선합니다.",
+    "refundExceptionsNotice": "일반 취소 기준은 법정 기간 경과 또는 법령상 제한 사유가 인정될 때 적용합니다. 30분 무료 취소와 미제공 부분 등 별도 환불 권리는 우선 보장합니다.",
     "actualPaymentRefundNotice": "할인 결제는 실제 결제금액을 기준으로 환불합니다.",
     "agreement": "[필수] 취소 및 환불 규정에 동의합니다.",
     "submit": "신청 및 결제",
@@ -696,6 +697,10 @@
     "continueApplication": "계속 신청하기",
     "totalLabel": "총액 (KRW)",
     "refundRules": {
+      "free": {
+        "label": "결제 확정 후 30분 이내 · 활동 시작 전",
+        "value": "전액 환불"
+      },
       "full": {
         "label": "활동 48시간 전까지",
         "value": "전액 환불"

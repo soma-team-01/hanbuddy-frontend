@@ -667,7 +667,8 @@
     "refundPolicyHeading": "取消与退款说明",
     "refundPolicyLink": "查看完整政策",
     "policyDocumentVersion": "版本 {version}",
-    "statutoryWithdrawalNotice": "付款日起7日内可申请法定撤回，并以相关法律规定为准。",
+    "statutoryWithdrawalNotice": "可在收到合同书面内容后7天内请求撤回；供应更晚时，从收到供应或供应开始之日起7天内计算。法定权利优先。",
+    "refundExceptionsNotice": "一般标准适用于法定期间已过或法定限制事由获认可的情况。30分钟免费取消及未提供部分等独立退款权利优先。",
     "actualPaymentRefundNotice": "折扣订单按实际支付金额退款。",
     "agreement": "【必选】我同意取消与退款政策。",
     "submit": "申请并付款",
@@ -696,6 +697,10 @@
     "continueApplication": "继续预订",
     "totalLabel": "总计（韩元）",
     "refundRules": {
+      "free": {
+        "label": "付款确认后30分钟内 · 活动开始前",
+        "value": "全额退款"
+      },
       "full": {
         "label": "活动前48小时以上",
         "value": "全额退款"

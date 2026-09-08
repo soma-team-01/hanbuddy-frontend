@@ -667,7 +667,8 @@
     "refundPolicyHeading": "キャンセル・返金について",
     "refundPolicyLink": "ポリシー全文を見る",
     "policyDocumentVersion": "バージョン {version}",
-    "statutoryWithdrawalNotice": "決済日から7日以内は法定の撤回を申請でき、関係法令が優先されます。",
+    "statutoryWithdrawalNotice": "契約内容の書面受領から7日以内、供給が遅い場合は供給を受けた日または供給開始日から7日以内に撤回を請求できます。法定権利が優先します。",
+    "refundExceptionsNotice": "一般基準は法定期間経過後または法定制限事由が認められる場合に適用します。30分無料キャンセルや未提供部分等の別途返金権を優先します。",
     "actualPaymentRefundNotice": "割引決済は実際の支払金額を基準に返金します。",
     "agreement": "【必須】キャンセル・返金規定に同意します。",
     "submit": "申し込みと支払い",
@@ -696,6 +697,10 @@
     "continueApplication": "予約を続ける",
     "totalLabel": "合計(ウォン)",
     "refundRules": {
+      "free": {
+        "label": "決済確定後30分以内・活動開始前",
+        "value": "全額返金"
+      },
       "full": {
         "label": "アクティビティの 48 時間以上前",
         "value": "全額返金"

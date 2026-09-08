@@ -51,7 +51,7 @@ export function RefundPolicyNotice({
           id={summaryId}
           className="mt-1.5 divide-y divide-line-soft overflow-hidden rounded-md border border-line-soft"
         >
-          {(["full", "half", "none", "noShow"] as const).map((rule) => (
+          {(["free", "full", "half", "none", "noShow"] as const).map((rule) => (
             <div
               key={rule}
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 py-0.5 text-[10px] leading-4"
@@ -59,7 +59,7 @@ export function RefundPolicyNotice({
               <dt className="text-muted">{t(`refundRules.${rule}.label`)}</dt>
               <dd
                 className={`text-right font-display font-bold ${
-                  rule === "full" ? "text-ink" : "text-primary"
+                  rule === "free" || rule === "full" ? "text-ink" : "text-primary"
                 }`}
               >
                 {t(`refundRules.${rule}.value`)}
@@ -68,6 +68,9 @@ export function RefundPolicyNotice({
           ))}
         </dl>
 
+        <p id={`${idPrefix}-exceptions`} className="mt-1 text-[9px] leading-3 text-muted">
+          {t("refundExceptionsNotice")}
+        </p>
         <p className="mt-1 text-[9px] leading-3 text-muted">{t("actualPaymentRefundNotice")}</p>
       </section>
 

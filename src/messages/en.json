@@ -667,7 +667,8 @@
     "refundPolicyHeading": "Cancellation and refund",
     "refundPolicyLink": "View full policy",
     "policyDocumentVersion": "Version {version}",
-    "statutoryWithdrawalNotice": "You may request statutory withdrawal within 7 days of payment. Applicable law takes priority.",
+    "statutoryWithdrawalNotice": "Withdrawal may be requested within 7 days of receiving the written contract details, or of receipt or commencement of supply if later. Statutory rights take priority.",
+    "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. The 30-minute benefit and separate refund rights, including unprovided portions, take priority.",
     "actualPaymentRefundNotice": "Discounted bookings are refunded from the amount paid.",
     "agreement": "[Required] I agree to the cancellation and refund policy.",
     "submit": "Apply & Pay",
@@ -696,6 +697,10 @@
     "continueApplication": "Continue booking",
     "totalLabel": "Total (KRW)",
     "refundRules": {
+      "free": {
+        "label": "Within 30 min of payment confirmation · before activity starts",
+        "value": "Full refund"
+      },
       "full": {
         "label": "48+ hours before the activity",
         "value": "Full refund"

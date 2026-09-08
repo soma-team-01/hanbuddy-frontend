@@ -12,9 +12,10 @@ import {
   setAuthStatusReasonCookie,
   setAuthenticatedSessionCookies,
 } from "@/lib/auth/cookies";
-import type { GoogleLoginResponse } from "@/lib/auth/types";
 import type { AuthErrorCode } from "@/lib/auth/error-codes";
+import { getGoogleRedirectUri, GoogleOAuthConfigError } from "@/lib/auth/google-config";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
+import type { GoogleLoginRequest, GoogleLoginResponse } from "@/lib/auth/types";
 import { localizePathname } from "@/i18n/pathname";
 import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 
@@ -43,9 +44,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const backend = await postBackend<{ code: string }, GoogleLoginResponse>("/auth/google/login", {
-      code,
-    });
+    const redirectUri = getGoogleRedirectUri();
+    const backend = await postBackend<GoogleLoginRequest, GoogleLoginResponse>(
+      "/auth/google/login",
+      { code, redirectUri },
+    );
 
     if (!backend.payload.isSuccess) {
       return redirectToLoginWithError(request, "backendRejected");
@@ -69,8 +72,11 @@ export async function GET(request: NextRequest) {
       appendBackendSetCookies(response, backend.setCookies);
     }
     return response;
-  } catch {
-    return redirectToLoginWithError(request, "serverUnavailable");
+  } catch (error) {
+    return redirectToLoginWithError(
+      request,
+      error instanceof GoogleOAuthConfigError ? "configuration" : "serverUnavailable",
+    );
   }
 }
 
@@ -215,14 +221,10 @@ function createLocalizedUrl(request: NextRequest, pathname: string) {
 }
 
 function createPublicUrl(request: NextRequest, pathname: string) {
-  const configuredRedirectUri = process.env.GOOGLE_REDIRECT_URI?.trim();
-
-  if (configuredRedirectUri) {
-    try {
-      return new URL(pathname, new URL(configuredRedirectUri).origin);
-    } catch {
-      // 잘못된 로컬 설정에서는 기존 요청 URL을 사용해 오류 화면으로 이동한다.
-    }
+  try {
+    return new URL(pathname, new URL(getGoogleRedirectUri()).origin);
+  } catch {
+    // 잘못된 로컬 설정에서는 기존 요청 URL을 사용해 오류 화면으로 이동한다.
   }
 
   return new URL(pathname, request.url);

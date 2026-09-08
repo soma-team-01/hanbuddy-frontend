@@ -19,6 +19,7 @@ const mockedPostBackend = vi.mocked(postBackend);
 describe("GET /auth/google/callback", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
+    vi.stubEnv("GOOGLE_REDIRECT_URI", "http://localhost/auth/google/callback");
   });
 
   afterEach(() => {
@@ -84,6 +85,18 @@ describe("GET /auth/google/callback", () => {
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
+  it("rejects a redirect URI list before calling the backend", async () => {
+    vi.stubEnv(
+      "GOOGLE_REDIRECT_URI",
+      "http://localhost:3000/auth/google/callback,https://staging.hanbuddy.kr/auth/google/callback",
+    );
+
+    const response = await GET(createCallbackRequest());
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/login?error=configuration");
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  });
+
   it("does not forward backend cookies when the successful payload is unusable", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,
@@ -123,8 +136,38 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest("ko"));
 
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/login", {
+      code: "code",
+      redirectUri: "http://localhost/auth/google/callback",
+    });
     expect(response.headers.get("location")).toBe("http://localhost/ko");
     expect(response.headers.get("set-cookie") ?? "").toContain("refresh_token=backend");
+  });
+
+  it("passes the local callback URI used by the Google authorization request", async () => {
+    vi.stubEnv("GOOGLE_REDIRECT_URI", "http://localhost:3000/auth/google/callback");
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "ACTIVE",
+          accessToken: "access-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    await GET(createCallbackRequest());
+
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/login", {
+      code: "code",
+      redirectUri: "http://localhost:3000/auth/google/callback",
+    });
   });
 
   it("uses and clears the OAuth locale after authentication", async () => {
@@ -531,6 +574,10 @@ describe("GET /auth/google/callback", () => {
       }),
     );
 
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/login", {
+      code: "code",
+      redirectUri: "https://staging.hanbuddy.kr/auth/google/callback",
+    });
     expect(response.headers.get("location")).toBe("https://staging.hanbuddy.kr/ko/onboarding");
   });
 

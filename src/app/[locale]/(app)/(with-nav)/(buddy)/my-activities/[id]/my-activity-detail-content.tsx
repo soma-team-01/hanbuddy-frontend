@@ -106,7 +106,7 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
           </div>
         </div>
       </PageContainer>
-      <ActivityDetailView activity={activity} preview />
+      <ActivityDetailView activity={activity} preview bottomBar="inline" />
     </div>
   );
 }

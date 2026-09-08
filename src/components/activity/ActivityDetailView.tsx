@@ -219,13 +219,17 @@ export function ActivityDetailView({
         data-testid="booking-bar-actions"
         className="flex items-center justify-between gap-3 sm:contents"
       >
-        <div className="flex shrink-0 flex-col items-end text-right">
+        {/* 모바일은 원화·환산가·1인당을 한 줄로 읽히게 하고, sm 이상은 오른쪽 정렬 세로 블록으로 되돌린다 */}
+        <div className="flex min-w-0 flex-col items-start text-left sm:shrink-0 sm:items-end sm:text-right">
           {hasDiscount ? (
             <span className="text-sm text-muted line-through">
               {formatKrw(activity.originalPrice ?? activity.price, locale)}
             </span>
           ) : null}
-          <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
+          <div
+            data-testid="booking-bar-price"
+            className="flex flex-wrap items-baseline gap-x-1.5 sm:justify-end sm:whitespace-nowrap"
+          >
             <span className="font-display text-xl font-bold text-primary">
               {formatKrw(activity.price, locale)}
             </span>
@@ -243,8 +247,10 @@ export function ActivityDetailView({
                 )
               </span>
             ) : null}
+            <span className="text-xs text-muted sm:basis-full sm:text-right">
+              {tExplore("perPersonLabel")}
+            </span>
           </div>
-          <span className="text-right text-xs text-muted">{tExplore("perPersonLabel")}</span>
         </div>
         {preview || !selectedSession ? (
           <button

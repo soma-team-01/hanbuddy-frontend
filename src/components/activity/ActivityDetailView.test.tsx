@@ -85,6 +85,11 @@ describe("ActivityDetailView", () => {
     expect(screen.getByText("₩50,000").closest("[data-testid=booking-bar-actions]")).toHaveClass(
       "sm:contents",
     );
+    // 1인당 문구는 모바일에서 가격과 한 줄에 놓이고 길면 줄바꿈되며, 잘리지 않는다
+    const priceRow = screen.getByTestId("booking-bar-price");
+    expect(priceRow).toHaveClass("flex-wrap", "items-baseline");
+    expect(priceRow).not.toHaveClass("whitespace-nowrap");
+    expect(screen.getByText("per person").parentElement).toBe(priceRow);
   });
 
   it("marks the body and exposes the bar height while the fixed bar is mounted", () => {

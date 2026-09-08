@@ -87,7 +87,11 @@ describe("policy content", () => {
 
     expect(policy.slug).toBe(slug);
     expect(policy.title).toMatch(/^HanBuddy /);
-    expect(policy.version).toBe("2026-09-07");
+    expect(policy.version).toBe(
+      ["cancellation-refund-policy", "terms-of-service", "consent-notices"].includes(slug)
+        ? "2026-09-08"
+        : "2026-09-07",
+    );
     expect(policy.source).not.toContain("버전:");
     expect(policy.source).not.toContain("시행일:");
     expect(policy.source).not.toContain("적용 예정일:");

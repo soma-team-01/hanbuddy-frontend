@@ -1,7 +1,6 @@
 # HanBuddy Community and Safety Policy
 
 Version: 2026-09-07
-Effective date: 2026-09-20
 
 HanBuddy applies these standards so Tourists and Buddies of different backgrounds can meet in a safe and respectful environment.
 

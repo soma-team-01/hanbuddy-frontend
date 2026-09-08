@@ -1,7 +1,6 @@
 # HanBuddy Buddy Operating Terms
 
 Version: 2026-09-07
-Effective date: 2026-09-20
 
 These Terms apply alongside the Terms of Service to Buddies listing and providing activities on HanBuddy.
 

@@ -1,7 +1,6 @@
 # HanBuddy Buddy Commission and Settlement Policy
 
 Version: 2026-09-07
-Effective date: 2026-09-20
 
 This policy applies to activity sales proceeds, platform fees, cancellations, refunds and settlements for Buddies providing activities on HanBuddy.
 

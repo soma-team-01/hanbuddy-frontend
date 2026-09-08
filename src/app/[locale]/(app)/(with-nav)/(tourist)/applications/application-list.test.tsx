@@ -200,6 +200,12 @@ describe("ApplicationList", () => {
     expect(screen.getByText("PayPal")).toBeInTheDocument();
     const paymentActions = screen.getByText("Toss").closest("div")?.parentElement;
     expect(paymentActions).toHaveClass("sm:row-start-1", "sm:row-span-2", "sm:self-center");
+    // 결제·취소가 붙어 있으므로 모바일 터치 타깃 48px과 간격 12px을 보장한다
+    for (const name of ["Pay with Toss Payments", "Pay with PayPal", "Cancel"]) {
+      expect(screen.getByRole("button", { name })).toHaveClass("h-12", "text-sm", "rounded-xl");
+      expect(screen.getByRole("button", { name })).not.toHaveClass("h-9", "text-xs");
+    }
+    expect(screen.getByRole("button", { name: "Cancel" }).parentElement).toHaveClass("gap-3");
     const scheduleAndHost = screen.getByRole("button", {
       name: "View Jihoon Kim's profile",
     }).parentElement;
@@ -658,6 +664,7 @@ describe("ApplicationList", () => {
       expect(screen.getByTestId("payment-hold-countdown")).toHaveTextContent(
         "1:05 left to complete payment",
       );
+      expect(screen.getByTestId("payment-hold-countdown")).toHaveClass("text-sm");
 
       await act(async () => {
         vi.advanceTimersByTime(60_000);

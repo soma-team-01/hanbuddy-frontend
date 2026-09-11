@@ -392,7 +392,7 @@
     "nationality": "国籍",
     "birthDate": "生年月日",
     "contactMethods": "友達はどのようにあなたに連絡を取るべきですか?",
-    "contactDescription": "最も頻繁にチェックするメッセンジャーを選択してください。",
+    "contactDescription": "WhatsApp、カカオトーク、Instagram、電話から選び、バディが連絡できるIDまたは番号を入力してください。",
     "preferredMessagingApp": "優先メッセージング アプリ",
     "addProfilePhoto": "プロフィール写真を追加",
     "profilePhotoHint": "プロフィール写真",
@@ -430,6 +430,7 @@
       "displayNameInvalid": "名前は2〜30文字の英字で入力し、単語の区切りには半角スペース、ハイフン（-）、アポストロフィ（'）のみ使用してください。",
       "nationalityRequired": "国籍を選択してください。",
       "birthDateInvalid": "19 ～ 120 歳の有効な生年月日を入力してください。",
+      "contactMethodRequired": "利用可能な連絡方法を選択してください。",
       "contactInvalid": "選択した方法に有効な連絡先 ID または電話番号を入力します。",
       "agreementsRequired": "続行するには必須項目すべてに同意します。"
     },
@@ -843,6 +844,8 @@
     "koreanPhonePlaceholder": "010-XXXX-XXXX",
     "phoneInputLabel": "電話番号",
     "appIdPlaceholder": "{app} ID",
+    "kakaotalk": "カカオトーク",
+    "instagram": "Instagram",
     "appIdInputLabel": "メッセージングアプリID"
   },
   "Chat": {
@@ -1356,5 +1359,16 @@
     "redirectFallback": "PayPalウェブサイトで続ける",
     "captureFailed": "PayPalのお支払いを確認できませんでした。再試行する前に申込履歴をご確認ください。",
     "unavailable": "現在PayPalをご利用いただけません。Toss Paymentsを選択してください。"
+  },
+  "BirthDatePicker": {
+    "label": "生年月日",
+    "placeholder": "生年月日を選択してください",
+    "year": "年",
+    "month": "月",
+    "day": "日",
+    "choose": "選択",
+    "done": "完了",
+    "invalid": "19 ～ 120 歳の有効な生年月日を入力してください。",
+    "reselectDay": "日が無効になりました。もう一度選択してください。"
   }
 }

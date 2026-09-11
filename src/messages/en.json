@@ -392,7 +392,7 @@
     "nationality": "Nationality",
     "birthDate": "Date of birth",
     "contactMethods": "How should buddies reach you?",
-    "contactDescription": "Choose the messenger you check most often.",
+    "contactDescription": "Choose WhatsApp, KakaoTalk, Instagram, or phone. Enter the ID or number your buddy can use to reach you.",
     "preferredMessagingApp": "Preferred Messaging App",
     "addProfilePhoto": "Add profile photo",
     "profilePhotoHint": "Profile photo",
@@ -430,6 +430,7 @@
       "displayNameInvalid": "Enter a name using 2–30 English letters, with only a single space, hyphen (-), or apostrophe (') between words.",
       "nationalityRequired": "Please select a nationality.",
       "birthDateInvalid": "Enter a valid date of birth for an age between 19 and 120.",
+      "contactMethodRequired": "Choose a contact method from the available options.",
       "contactInvalid": "Enter a valid contact ID or phone number for the selected method.",
       "agreementsRequired": "Agree to all required items to continue."
     },
@@ -843,6 +844,8 @@
     "koreanPhonePlaceholder": "010-XXXX-XXXX",
     "phoneInputLabel": "Phone number",
     "appIdPlaceholder": "{app} ID",
+    "kakaotalk": "KakaoTalk",
+    "instagram": "Instagram",
     "appIdInputLabel": "Messaging app ID"
   },
   "Chat": {
@@ -1356,5 +1359,16 @@
     "redirectFallback": "Continue on the PayPal website",
     "captureFailed": "We could not verify the PayPal payment. Check My Applications before trying again.",
     "unavailable": "PayPal is temporarily unavailable. Please choose Toss Payments."
+  },
+  "BirthDatePicker": {
+    "label": "Date of birth",
+    "placeholder": "Select your birth date",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "choose": "Select",
+    "done": "Done",
+    "invalid": "Enter a valid date of birth for an age between 19 and 120.",
+    "reselectDay": "The day is no longer valid. Please select it again."
   }
 }

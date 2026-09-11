@@ -62,6 +62,18 @@ describe("buddy view helpers", () => {
     expect(formatNationalityCode("FR", "zh-Hant")).toBe("法國");
   });
 
+  it.each([
+    ["KAKAOTALK", "KakaoTalk"],
+    ["INSTAGRAM", "Instagram"],
+  ] as const)("labels %s applicant IDs without a country code", (method, label) => {
+    expect(
+      formatApplicantContact(
+        { ...applicant, applicantContactMethod: method, applicantContactIdentifier: "@synthetic" },
+        "en",
+      ),
+    ).toBe(label + " @synthetic");
+  });
+
   it("keeps the country code off ID-based messengers", () => {
     // LINE·WeChat은 ID 체계라 국가번호가 의미 없다 — 붙이면 엉뚱한 연락처처럼 보인다
     expect(

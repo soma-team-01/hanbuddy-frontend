@@ -131,7 +131,7 @@ export interface BuddyApplicationApplicantSummaryResponse {
   applicantProfileImageUrl: string | null;
   applicantNationalityCode: string;
   guestCount: number;
-  applicantContactMethod: "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
+  applicantContactMethod: import("@/lib/auth/types").ContactMethod;
   applicantContactCountryCode: string | null;
   applicantContactIdentifier: string;
   /** 신청 시 남긴 요청 사항. 없으면 null */

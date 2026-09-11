@@ -392,7 +392,7 @@
     "nationality": "國籍",
     "birthDate": "出生日期",
     "contactMethods": "好友該如何聯絡您？",
-    "contactDescription": "選擇您最常查看的信差。",
+    "contactDescription": "請選擇 WhatsApp、KakaoTalk、Instagram 或電話，並輸入 Buddy 可以聯絡到您的 ID 或號碼。",
     "preferredMessagingApp": "首選訊息應用程式",
     "addProfilePhoto": "新增個人資料照片",
     "profilePhotoHint": "個人資料照片",
@@ -430,6 +430,7 @@
       "displayNameInvalid": "姓名須由2至30個英文字母組成，單字之間僅可使用一個空格、連字號（-）或英文撇號（'）。",
       "nationalityRequired": "請選擇國籍。",
       "birthDateInvalid": "輸入 19 歲至 120 歲之間的有效出生日期。",
+      "contactMethodRequired": "請選擇目前可用的聯絡方式。",
       "contactInvalid": "輸入所選方法的有效聯絡 ID 或電話號碼。",
       "agreementsRequired": "同意所有必需的項目才能繼續。"
     },
@@ -842,7 +843,9 @@
     "phonePlaceholder": "電話號碼",
     "koreanPhonePlaceholder": "010-XXXX-XXXX",
     "phoneInputLabel": "電話號碼",
-    "appIdPlaceholder": "{app} 身分證號",
+    "appIdPlaceholder": "{app} ID",
+    "kakaotalk": "KakaoTalk",
+    "instagram": "Instagram",
     "appIdInputLabel": "訊息應用程式 ID"
   },
   "Chat": {
@@ -1356,5 +1359,16 @@
     "redirectFallback": "前往PayPal網站繼續",
     "captureFailed": "無法確認PayPal付款。再次付款前，請先查看我的申請。",
     "unavailable": "PayPal暫時無法使用。請選擇Toss Payments。"
+  },
+  "BirthDatePicker": {
+    "label": "出生日期",
+    "placeholder": "請選擇出生日期",
+    "year": "年",
+    "month": "月",
+    "day": "日",
+    "choose": "選擇",
+    "done": "完成",
+    "invalid": "輸入 19 歲至 120 歲之間的有效出生日期。",
+    "reselectDay": "日期已失效，請重新選擇日。"
   }
 }

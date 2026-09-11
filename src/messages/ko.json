@@ -392,7 +392,7 @@
     "nationality": "국적",
     "birthDate": "생년월일",
     "contactMethods": "버디가 어떻게 연락하면 될까요?",
-    "contactDescription": "가장 자주 확인하는 메신저를 선택해 주세요.",
+    "contactDescription": "WhatsApp, 카카오톡, 인스타그램 또는 전화 중 하나를 선택하고 버디가 연락할 수 있는 ID나 번호를 입력해 주세요.",
     "preferredMessagingApp": "선호하는 메신저",
     "addProfilePhoto": "프로필 사진 추가",
     "profilePhotoHint": "프로필 사진",
@@ -430,6 +430,7 @@
       "displayNameInvalid": "이름은 2~30자의 영문으로 입력하고, 단어 사이에는 공백, 하이픈(-), 작은따옴표(')만 사용해 주세요.",
       "nationalityRequired": "국적을 선택해 주세요.",
       "birthDateInvalid": "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요.",
+      "contactMethodRequired": "현재 제공되는 연락 수단 중 하나를 선택해 주세요.",
       "contactInvalid": "선택한 연락 수단에 맞는 올바른 ID 또는 전화번호를 입력해 주세요.",
       "agreementsRequired": "회원가입을 계속하려면 필수 항목에 모두 동의해 주세요."
     },
@@ -843,6 +844,8 @@
     "koreanPhonePlaceholder": "010-XXXX-XXXX",
     "phoneInputLabel": "전화번호",
     "appIdPlaceholder": "{app} ID",
+    "kakaotalk": "카카오톡",
+    "instagram": "인스타그램",
     "appIdInputLabel": "메신저 앱 ID"
   },
   "Chat": {
@@ -1356,5 +1359,16 @@
     "redirectFallback": "PayPal 웹사이트에서 계속하기",
     "captureFailed": "PayPal 결제를 확인하지 못했습니다. 다시 결제하기 전에 내 신청을 확인해 주세요.",
     "unavailable": "현재 PayPal을 이용할 수 없습니다. 토스페이먼츠를 선택해 주세요."
+  },
+  "BirthDatePicker": {
+    "label": "생년월일",
+    "placeholder": "생년월일을 선택해 주세요",
+    "year": "연도",
+    "month": "월",
+    "day": "일",
+    "choose": "선택",
+    "done": "완료",
+    "invalid": "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요.",
+    "reselectDay": "선택한 일자가 유효하지 않아요. 일을 다시 선택해 주세요."
   }
 }

@@ -30,14 +30,14 @@ const signupRequest: GoogleSignupRequest = {
   ],
 };
 
-function createSignupRequest() {
+function createSignupRequest(body: GoogleSignupRequest = signupRequest) {
   return new NextRequest("http://localhost/api/auth/google/signup", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       cookie: `${AUTH_COOKIES.signupToken}=signup-token`,
     },
-    body: JSON.stringify(signupRequest),
+    body: JSON.stringify(body),
   });
 }
 
@@ -54,6 +54,34 @@ describe("POST /api/auth/google/signup", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
   });
+
+  it.each(["KAKAOTALK", "INSTAGRAM"] as const)(
+    "forwards tourist %s and LocalDate unchanged",
+    async (contactMethod) => {
+      const body: GoogleSignupRequest = {
+        ...signupRequest,
+        userType: "TOURIST",
+        contactMethod,
+        contactCountryCode: "",
+        contactIdentifier: "사용자 / @synthetic",
+        birthDate: "1998-04-12",
+      };
+      mockedPostBackend.mockResolvedValue({
+        status: 200,
+        setCookies: [],
+        payload: successfulPayload({
+          registered: true,
+          authStatus: "ACTIVE",
+          userId: 17,
+          userType: "TOURIST",
+        }),
+      });
+      expect((await POST(createSignupRequest(body))).status).toBe(200);
+      expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/signup", body, {
+        bearerToken: "signup-token",
+      });
+    },
+  );
 
   it("forwards role-specific signup agreements to the backend", async () => {
     mockedPostBackend.mockResolvedValue({

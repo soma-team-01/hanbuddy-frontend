@@ -7,7 +7,7 @@ import * as countries from "@/lib/countries";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
 import { OnboardingForm } from "./OnboardingForm";
-import { clearAllOnboardingDrafts } from "./onboarding-draft-storage";
+import { saveOnboardingDraft, clearAllOnboardingDrafts } from "./onboarding-draft-storage";
 import { generateMetadata } from "./page";
 
 const routerMocks = vi.hoisted(() => ({
@@ -52,6 +52,76 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
 }));
 
 describe("OnboardingForm", () => {
+  it.each(["line", "wechat"] as const)(
+    "requires a fresh choice for a legacy %s signup draft without relabeling its ID",
+    (messagingApp) => {
+      saveOnboardingDraft("signup:TOURIST:legacy", {
+        currentStep: 2,
+        displayName: "Traveler",
+        birthDate: "1998-04-12",
+        nationality: "US",
+        messagingApp,
+        messagingCountry: "US",
+        messagingContact: "legacy_only",
+        agreementDecisions: {},
+        profileImageFile: null,
+        existingProfileImageKey: null,
+        existingProfileImageUrl: null,
+      });
+      renderWithIntl(<OnboardingForm signupDraftAccountId="legacy" />);
+      expect(screen.getByLabelText("Messaging app ID")).toHaveValue("legacy_only");
+      expect(screen.getByRole("button", { name: "KakaoTalk" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      clickContinue("en");
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Choose a contact method from the available options.",
+      );
+    },
+  );
+
+  it.each([
+    ["KakaoTalk", "KAKAOTALK", "카카오 사용자 / a"],
+    ["Instagram", "INSTAGRAM", "https://instagram.com/synthetic.user"],
+  ])(
+    "submits %s with an unrestricted identifier and LocalDate birthDate",
+    async (label, method, identifier) => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            isSuccess: true,
+            code: "200",
+            message: "OK",
+            result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
+          }),
+          { status: 200 },
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(<OnboardingForm />);
+      fillAboutYou("en", { birthDate: "1998-04-12" });
+      clickContinue("en");
+      expect(screen.queryByRole("button", { name: "Line" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "WeChat" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "WhatsApp" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Phone Number" })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: label }));
+      fillContact("en", identifier);
+      clickContinue("en");
+      fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
+      fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      expect(fetchMock.mock.calls[0][0]).toBe("/api/auth/google/signup");
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+        contactMethod: method,
+        contactIdentifier: identifier,
+        contactCountryCode: "",
+        birthDate: "1998-04-12",
+      });
+    },
+  );
+
   it.each([
     [
       "en",
@@ -120,8 +190,10 @@ describe("OnboardingForm", () => {
       expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
       expect(screen.getByText(nationality)).toBeInTheDocument();
-      expect(screen.getByLabelText(birthDate)).toHaveAttribute("type", "date");
-      expect(screen.getByLabelText(birthDate)).toHaveClass("focus-border-only");
+      expect(screen.getByRole("button", { name: birthDate })).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
       expect(screen.getByRole("button", { name: nationality })).toHaveClass("focus-border-only");
       expect(screen.getByTestId("onboarding-personal-fields")).not.toHaveClass("sm:grid-cols-2");
       expect(
@@ -149,19 +221,19 @@ describe("OnboardingForm", () => {
     },
   );
 
-  it("adds the local birth date limit only after client mount", async () => {
+  it("preserves buddy local birth date limits only after client mount", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-06T12:00:00+09:00"));
 
     const serverHtml = renderToString(
       <IntlTestProvider locale="en">
-        <OnboardingForm />
+        <OnboardingForm userType="BUDDY" />
       </IntlTestProvider>,
     );
     expect(serverHtml).not.toContain('min="1906-08-06"');
     expect(serverHtml).not.toContain('max="2007-08-06"');
 
-    renderWithIntl(<OnboardingForm />);
+    renderWithIntl(<OnboardingForm userType="BUDDY" />);
     await act(async () => undefined);
     expect(screen.getByLabelText("Date of birth")).toHaveAttribute("min", "1906-08-06");
     expect(screen.getByLabelText("Date of birth")).toHaveAttribute("max", "2007-08-06");
@@ -238,7 +310,9 @@ describe("OnboardingForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
 
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Traveler");
-    expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
+    expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
+      "April 12, 1998",
+    );
   });
 
   it("preserves the current step and entered information after changing locale", async () => {
@@ -272,7 +346,7 @@ describe("OnboardingForm", () => {
     expect(screen.getByLabelText("메신저 앱 ID")).toHaveValue("traveler_line");
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
     expect(screen.getByRole("textbox", { name: "이름" })).toHaveValue("Google Traveler");
-    expect(screen.getByLabelText("생년월일")).toHaveValue("1998-04-12");
+    expect(screen.getByRole("button", { name: "생년월일" })).toHaveTextContent("1998 / 04 / 12");
   });
 
   it("keeps entered information after opening and closing an agreement document", () => {
@@ -288,7 +362,9 @@ describe("OnboardingForm", () => {
     expect(screen.getByLabelText("Messaging app ID")).toHaveValue("traveler_line");
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Traveler");
-    expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
+    expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
+      "April 12, 1998",
+    );
   });
 
   it("renders buddy-specific copy and submits the buddy role", async () => {
@@ -568,7 +644,7 @@ describe("OnboardingForm", () => {
     (locale, birthDate, message) => {
       const fetchMock = vi.fn();
       vi.stubGlobal("fetch", fetchMock);
-      renderWithIntl(<OnboardingForm />, { locale });
+      renderWithIntl(<OnboardingForm userType="BUDDY" />, { locale });
       fillAboutYou(locale, { birthDate });
 
       clickContinue(locale);
@@ -631,14 +707,14 @@ describe("OnboardingForm", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("rejects a messenger ID containing unsupported characters", () => {
+  it("rejects a blank messenger ID", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     renderWithIntl(<OnboardingForm />);
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.change(screen.getByLabelText("Messaging app ID"), {
-      target: { value: "line user" },
+      target: { value: "   " },
     });
 
     clickContinue("en");
@@ -708,9 +784,31 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }) {
     target: { value: labels.country },
   });
   fireEvent.click(screen.getByText(labels.country));
-  fireEvent.change(screen.getByLabelText(labels.birthDate), {
-    target: { value: values.birthDate },
-  });
+  const picker = screen.queryByRole("button", { name: labels.birthDate });
+  if (!picker) {
+    fireEvent.change(screen.getByLabelText(labels.birthDate), {
+      target: { value: values.birthDate },
+    });
+  } else if (values.birthDate) {
+    fireEvent.click(picker);
+    const [year, month, day] = values.birthDate.split("-").map(Number);
+    for (const [name, value] of locale === "en"
+      ? [
+          ["Year", year],
+          ["Month", month],
+          ["Day", day],
+        ]
+      : [
+          ["연도", year],
+          ["월", month],
+          ["일", day],
+        ]) {
+      fireEvent.change(screen.getByRole("combobox", { name: String(name) }), {
+        target: { value: String(value) },
+      });
+    }
+    fireEvent.click(screen.getByRole("button", { name: locale === "en" ? "Done" : "완료" }));
+  }
 }
 
 function fillContact(locale: "en" | "ko", contact: string) {
@@ -943,7 +1041,7 @@ describe("OnboardingForm profile image", () => {
       displayName: "Traveler",
       nationalityCode: "US",
       birthDate: "1998-04-12",
-      contactMethod: "LINE",
+      contactMethod: "KAKAOTALK",
       contactIdentifier: "line_user",
       profileImageKey: "profiles/2026/07/07/uuid.png",
     });
@@ -1183,4 +1281,107 @@ describe("onboarding metadata", () => {
       },
     });
   });
+});
+
+it.each(["TOURIST", "BUDDY"] as const)(
+  "preserves exact original age boundaries for %s",
+  (userType) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-11T12:00:00+09:00"));
+    for (const [birthDate, accepted] of [
+      ["1906-09-10", false],
+      ["1906-09-11", true],
+      ["2007-09-11", true],
+      ["2007-09-12", false],
+      ["2026-09-12", false],
+    ] as const) {
+      clearAllOnboardingDrafts();
+      const view = renderWithIntl(<OnboardingForm userType={userType} />);
+      fillAboutYou("en", { birthDate });
+      clickContinue("en");
+      if (accepted)
+        expect(
+          screen.getByRole("textbox", {
+            name: userType === "BUDDY" ? "Phone number" : "Messaging app ID",
+          }),
+        ).toBeInTheDocument();
+      else
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Enter a valid date of birth for an age between 19 and 120.",
+        );
+      view.unmount();
+    }
+    vi.useRealTimers();
+  },
+);
+it("marks an empty tourist birth date invalid", () => {
+  renderWithIntl(<OnboardingForm />);
+  fillAboutYou("en", { birthDate: "" });
+  clickContinue("en");
+  expect(screen.getByRole("button", { name: "Date of birth" })).toHaveAccessibleDescription(
+    /Enter a valid date of birth for an age between 19 and 120/,
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Enter a valid date of birth for an age between 19 and 120.",
+  );
+});
+
+it("retains a leap date across en → ko → en remounts only for the same signup account", async () => {
+  const first = renderWithIntl(<OnboardingForm signupDraftAccountId="synthetic-a" />);
+  await act(async () => undefined);
+  fillAboutYou("en", { birthDate: "2000-02-29" });
+  first.unmount();
+  const second = renderWithIntl(<OnboardingForm signupDraftAccountId="synthetic-a" />, {
+    locale: "ko",
+  });
+  expect(screen.getByRole("button", { name: "생년월일" })).toHaveTextContent("2000 / 02 / 29");
+  second.unmount();
+  const third = renderWithIntl(<OnboardingForm signupDraftAccountId="synthetic-a" />);
+  expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
+    "February 29, 2000",
+  );
+  third.unmount();
+  renderWithIntl(<OnboardingForm signupDraftAccountId="synthetic-b" />);
+  await act(async () => undefined);
+  expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
+    "Select your birth date",
+  );
+});
+
+it.each(["TOURIST", "BUDDY"] as const)(
+  "preserves leap-day clamped original bounds for %s",
+  (userType) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-02-29T12:00:00+09:00"));
+    for (const [birthDate, accepted] of [
+      ["1904-02-28", false],
+      ["1904-02-29", true],
+      ["2005-02-28", true],
+      ["2005-03-01", false],
+    ] as const) {
+      clearAllOnboardingDrafts();
+      const view = renderWithIntl(<OnboardingForm userType={userType} />);
+      fillAboutYou("en", { birthDate });
+      clickContinue("en");
+      if (accepted)
+        expect(
+          screen.getByRole("textbox", {
+            name: userType === "BUDDY" ? "Phone number" : "Messaging app ID",
+          }),
+        ).toBeInTheDocument();
+      else
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Enter a valid date of birth for an age between 19 and 120.",
+        );
+      view.unmount();
+    }
+  },
+);
+it("restores the original Korean tourist validation message", () => {
+  renderWithIntl(<OnboardingForm />, { locale: "ko" });
+  fillAboutYou("ko", { birthDate: "" });
+  clickContinue("ko");
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요.",
+  );
 });

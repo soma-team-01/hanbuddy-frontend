@@ -1026,6 +1026,8 @@
     "deleteDescription": "This action cannot be undone.",
     "deleting": "Deleting...",
     "changingStatus": "Updating...",
+    "visibilityPublic": "Public",
+    "visibilityPrivate": "Private",
     "makePrivate": "Make private",
     "makePrivateActivity": "Make {title} private",
     "makePrivateTitle": "Make this activity private?",

@@ -4,10 +4,11 @@ import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { ActivityVisibilityControl } from "@/components/buddy/ActivityVisibilityControl";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
-import { deleteMyActivity, updateMyActivityStatus } from "@/lib/api/buddy";
+import { deleteMyActivity } from "@/lib/api/buddy";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { activityKeys } from "@/lib/query/activities";
@@ -35,10 +36,6 @@ export function MyActivitiesContent() {
   const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const [statusTarget, setStatusTarget] = useState<{
-    activityId: number;
-    nextStatus: "ACTIVE" | "INACTIVE";
-  } | null>(null);
   const activitiesQuery = useQuery(myActivitiesQueryOptions());
   const deleteActivityMutation = useMutation({
     mutationFn: async (activityId: number) =>
@@ -56,44 +53,12 @@ export function MyActivitiesContent() {
       ]);
     },
   });
-  const statusMutation = useMutation({
-    mutationFn: async ({
-      activityId,
-      nextStatus,
-    }: {
-      activityId: number;
-      nextStatus: "ACTIVE" | "INACTIVE";
-    }) => unwrapApiResult(await updateMyActivityStatus(activityId, nextStatus), "activity"),
-    onSuccess: (updatedActivity) => {
-      queryClient.setQueryData<MyActivitySummaryResponse[]>(
-        buddyKeys.myActivities(),
-        (current = []) =>
-          current.map((activity) =>
-            activity.activityId === updatedActivity.activityId
-              ? { ...activity, status: updatedActivity.status }
-              : activity,
-          ),
-      );
-    },
-    onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: buddyKeys.all() }),
-        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
-      ]);
-    },
-  });
-  useAuthQueryRedirect(
-    activitiesQuery.error ?? deleteActivityMutation.error ?? statusMutation.error,
-  );
+  useAuthQueryRedirect(activitiesQuery.error ?? deleteActivityMutation.error);
 
   const activities = activitiesQuery.data ?? [];
 
   async function handleDelete(activityId: number) {
     await deleteActivityMutation.mutateAsync(activityId).catch(() => undefined);
-  }
-
-  async function handleStatusChange(activityId: number, nextStatus: "ACTIVE" | "INACTIVE") {
-    await statusMutation.mutateAsync({ activityId, nextStatus }).catch(() => undefined);
   }
 
   if (activitiesQuery.isPending) {
@@ -125,30 +90,21 @@ export function MyActivitiesContent() {
           {getApiErrorMessage(deleteActivityMutation.error, t("deleteError"))}
         </p>
       ) : null}
-      {statusMutation.error ? (
-        <p
-          role="alert"
-          className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
-        >
-          {getApiErrorMessage(statusMutation.error, t("statusChangeError"))}
-        </p>
-      ) : null}
       <p aria-live="polite" className="sr-only">
-        {deleteActivityMutation.isPending
-          ? t("deleting")
-          : statusMutation.isPending
-            ? t("changingStatus")
-            : ""}
+        {deleteActivityMutation.isPending ? t("deleting") : ""}
       </p>
-      <div data-testid="activity-records" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div
+        data-testid="activity-records"
+        className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
         {activities.map((activity, index) => (
           <article
             key={activity.activityId}
-            className="flex flex-col gap-3 rounded-3xl border border-line-soft bg-canvas-soft p-4 shadow-[0_8px_22px_rgba(61,45,43,0.06)]"
+            className="flex flex-col gap-2.5 rounded-2xl border border-line-soft bg-canvas-soft p-3 shadow-[0_6px_18px_rgba(61,45,43,0.05)]"
           >
             <Link
               href={`/my-activities/${activity.activityId}`}
-              className="relative block aspect-[4/3] w-full overflow-hidden rounded-xl transition-opacity hover:opacity-90"
+              className="relative block aspect-[4/3] w-full overflow-hidden rounded-lg transition-opacity hover:opacity-90"
             >
               <Image
                 src={getActivityThumbnail(activity.thumbnailImageUrl)}
@@ -160,58 +116,48 @@ export function MyActivitiesContent() {
               />
             </Link>
             <div className="flex items-center justify-between">
-              <span
-                className={`rounded-full px-3 py-1 font-display text-xs font-semibold ${
-                  STATUS_BADGE_CLASS[activity.status]
-                }`}
-              >
-                {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
-              </span>
+              {activity.status === "ACTIVE" || activity.status === "INACTIVE" ? (
+                <ActivityVisibilityControl
+                  activityId={activity.activityId}
+                  title={activity.title}
+                  status={activity.status}
+                  compact
+                  disabled={deleteActivityMutation.isPending}
+                />
+              ) : (
+                <span
+                  className={`rounded-full px-2 py-0.5 font-display text-[10px] font-semibold ${
+                    STATUS_BADGE_CLASS[activity.status]
+                  }`}
+                >
+                  {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
+                </span>
+              )}
               <span className="flex items-center gap-1">
-                {activity.status === "ACTIVE" || activity.status === "INACTIVE" ? (
-                  <button
-                    type="button"
-                    aria-label={
-                      activity.status === "ACTIVE"
-                        ? t("makePrivateActivity", { title: activity.title })
-                        : t("publishActivity", { title: activity.title })
-                    }
-                    onClick={() =>
-                      setStatusTarget({
-                        activityId: activity.activityId,
-                        nextStatus: activity.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                      })
-                    }
-                    disabled={deleteActivityMutation.isPending || statusMutation.isPending}
-                    className="mr-1 flex h-9 items-center justify-center rounded-full border border-line-strong px-3 font-display text-xs font-semibold text-ink transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {activity.status === "ACTIVE" ? t("makePrivate") : t("publish")}
-                  </button>
-                ) : null}
                 <Link
                   href={`/my-activities/${activity.activityId}/edit`}
                   aria-label={t("editActivity", { title: activity.title })}
-                  className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft hover:text-primary-strong"
+                  className="flex size-7 items-center justify-center rounded-full text-muted hover:bg-primary-soft hover:text-primary-strong"
                 >
-                  <PencilIcon className="size-4" />
+                  <PencilIcon className="size-3.5" />
                 </Link>
                 <button
                   type="button"
                   aria-label={t("deleteActivity", { title: activity.title })}
                   onClick={() => setDeleteTargetId(activity.activityId)}
-                  disabled={deleteActivityMutation.isPending || statusMutation.isPending}
-                  className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={deleteActivityMutation.isPending}
+                  className="flex size-7 items-center justify-center rounded-full text-muted hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <TrashIcon className="size-4" />
+                  <TrashIcon className="size-3.5" />
                 </button>
               </span>
             </div>
             <Link href={`/my-activities/${activity.activityId}`} className="hover:underline">
-              <h2 className="font-display text-xl leading-7 font-semibold text-ink">
+              <h2 className="font-display text-base leading-6 font-semibold text-ink">
                 {activity.title}
               </h2>
             </Link>
-            <p className="line-clamp-2 text-base text-muted">{activity.description}</p>
+            <p className="line-clamp-2 text-sm leading-5 text-muted">{activity.description}</p>
           </article>
         ))}
       </div>
@@ -229,25 +175,6 @@ export function MyActivitiesContent() {
           onClose={() => setDeleteTargetId(null)}
         />
       )}
-      {statusTarget ? (
-        <ConfirmDialog
-          title={statusTarget.nextStatus === "INACTIVE" ? t("makePrivateTitle") : t("publishTitle")}
-          description={
-            statusTarget.nextStatus === "INACTIVE"
-              ? t("makePrivateDescription")
-              : t("publishDescription")
-          }
-          confirmLabel={statusTarget.nextStatus === "INACTIVE" ? t("makePrivate") : t("publish")}
-          pendingLabel={t("changingStatus")}
-          isPending={statusMutation.isPending}
-          onConfirm={() => {
-            const target = statusTarget;
-            setStatusTarget(null);
-            void handleStatusChange(target.activityId, target.nextStatus);
-          }}
-          onClose={() => setStatusTarget(null)}
-        />
-      ) : null}
     </div>
   );
 }

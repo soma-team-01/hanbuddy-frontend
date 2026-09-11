@@ -47,14 +47,24 @@ describe("MyActivitiesContent", () => {
 
     renderWithQueryClient(<MyActivitiesContent />);
 
-    expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
+    expect(await screen.findByText("Traditional Tea Tasting")).toHaveClass("text-base");
     expect(screen.getByRole("img", { name: "Traditional Tea Tasting" })).toHaveAttribute(
       "loading",
       "eager",
     );
-    expect(screen.getByTestId("activity-records")).toHaveClass("md:grid-cols-2", "xl:grid-cols-3");
-    expect(screen.getByText("Learn Korean tea etiquette.")).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByTestId("activity-records")).toHaveClass(
+      "md:grid-cols-2",
+      "lg:grid-cols-3",
+      "xl:grid-cols-4",
+    );
+    expect(screen.getByText("Learn Korean tea etiquette.")).toHaveClass("text-sm");
+    expect(
+      screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
+    ).toHaveAttribute("aria-checked", "true");
+    expect(
+      screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
+    ).toHaveClass("min-h-5");
+    expect(screen.getByText("Public")).toBeInTheDocument();
     const detailLinks = screen.getAllByRole("link", { name: "Traditional Tea Tasting" });
     expect(detailLinks.length).toBeGreaterThanOrEqual(1);
     for (const detailLink of detailLinks) {
@@ -120,15 +130,16 @@ describe("MyActivitiesContent", () => {
 
     renderWithQueryClient(<MyActivitiesContent />);
     fireEvent.click(
-      await screen.findByRole("button", { name: "Make Traditional Tea Tasting private" }),
+      await screen.findByRole("switch", { name: "Make Traditional Tea Tasting private" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Make private" }));
 
     await waitFor(() => expect(mockedUpdateMyActivityStatus).toHaveBeenCalledWith(42, "INACTIVE"));
-    expect(await screen.findByText("Inactive")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Publish Traditional Tea Tasting" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Private")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Publish Traditional Tea Tasting" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
   });
 
   it("keeps the active card unchanged when unfinished reservations block hiding", async () => {
@@ -156,14 +167,17 @@ describe("MyActivitiesContent", () => {
 
     renderWithQueryClient(<MyActivitiesContent />);
     fireEvent.click(
-      await screen.findByRole("button", { name: "Make Traditional Tea Tasting private" }),
+      await screen.findByRole("switch", { name: "Make Traditional Tea Tasting private" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Make private" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "This activity cannot be made private or deleted while it has unfinished reservations.",
     );
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText("Public")).toBeInTheDocument();
+    expect(
+      screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
+    ).toHaveAttribute("aria-checked", "true");
     expect(screen.queryByText("unfinished")).not.toBeInTheDocument();
   });
 
@@ -192,10 +206,10 @@ describe("MyActivitiesContent", () => {
 
     expect(await screen.findByText("Draft Walk")).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /Publish Draft Walk|Make Draft Walk private/ }),
+      screen.queryByRole("switch", { name: /Publish Draft Walk|Make Draft Walk private/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /Publish Deleted Walk|Make Deleted Walk private/ }),
+      screen.queryByRole("switch", { name: /Publish Deleted Walk|Make Deleted Walk private/ }),
     ).not.toBeInTheDocument();
   });
 
@@ -362,7 +376,7 @@ describe("MyActivitiesContent", () => {
 
     expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
     expect(screen.getByText("Learn Korean tea etiquette.")).toBeInTheDocument();
-    expect(screen.getByText("게시 중")).toBeInTheDocument();
+    expect(screen.getByText("공개 중")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "신청자 보기" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Traditional Tea Tasting 삭제" }));

@@ -1026,6 +1026,8 @@
     "deleteDescription": "此操作無法撤銷。",
     "deleting": "正在刪除...",
     "changingStatus": "正在更新...",
+    "visibilityPublic": "公開中",
+    "visibilityPrivate": "不公開",
     "makePrivate": "設為不公開",
     "makePrivateActivity": "將{title}設為不公開",
     "makePrivateTitle": "將此活動設為不公開嗎？",

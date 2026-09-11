@@ -1026,6 +1026,8 @@
     "deleteDescription": "この操作は元に戻すことができません。",
     "deleting": "削除中...",
     "changingStatus": "変更中...",
+    "visibilityPublic": "公開中",
+    "visibilityPrivate": "非公開",
     "makePrivate": "非公開",
     "makePrivateActivity": "{title}を非公開にする",
     "makePrivateTitle": "このアクティビティを非公開にしますか？",

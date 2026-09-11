@@ -1026,6 +1026,8 @@
     "deleteDescription": "삭제한 액티비티는 복구할 수 없습니다.",
     "deleting": "삭제 중...",
     "changingStatus": "변경 중...",
+    "visibilityPublic": "공개 중",
+    "visibilityPrivate": "비공개",
     "makePrivate": "비공개",
     "makePrivateActivity": "{title} 비공개",
     "makePrivateTitle": "이 액티비티를 비공개할까요?",

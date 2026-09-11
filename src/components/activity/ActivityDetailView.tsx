@@ -17,6 +17,7 @@ import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { formatDisplayCurrency, formatKrw } from "@/lib/format";
+import { formatActivityDuration } from "@/lib/activity-duration";
 import { useFixedBarHeight } from "@/lib/layout/use-fixed-bar-height";
 import {
   buildGoogleMapsEmbedUrl,
@@ -133,9 +134,11 @@ export function ActivityDetailView({
     : tExplore("estimatedPrice");
   const totalDurationLabel =
     activity.durationMinutes !== undefined
-      ? activity.durationMinutes < 60
-        ? tExplore("durationMinutes", { minutes: activity.durationMinutes })
-        : tExplore("durationHours", { hours: activity.durationMinutes / 60 })
+      ? formatActivityDuration(
+          activity.durationMinutes,
+          (hours) => tExplore("durationHours", { hours }),
+          (minutes) => tExplore("durationMinutes", { minutes }),
+        )
       : "";
   const itinerary = activity.itinerary ?? [];
   const galleryImages = useMemo(

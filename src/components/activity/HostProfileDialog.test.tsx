@@ -30,6 +30,7 @@ function createActivity(
     buddyId,
     title: `Activity ${activityId}`,
     description: "A local experience.",
+    totalDurationMinutes: 0,
     thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
     buddyName: "Seoul Buddy",
     buddyProfileImageUrl: null,

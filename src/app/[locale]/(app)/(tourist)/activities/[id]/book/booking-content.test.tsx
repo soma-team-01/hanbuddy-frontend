@@ -27,6 +27,7 @@ const activityDetail: TouristActivityDetail = {
   activityId: 42,
   title: "Bukchon Hidden Gems",
   description: "Walk through quiet alleys with a local buddy.",
+  totalDurationMinutes: 60,
   thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
   buddyId: 7,
   buddyName: "Jihoon Kim",

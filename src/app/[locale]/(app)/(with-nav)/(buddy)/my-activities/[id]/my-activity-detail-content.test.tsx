@@ -47,6 +47,7 @@ const activityDetail: MyActivityDetailResponse = {
   activityId: 42,
   title: "Traditional Tea Tasting",
   description: "Learn Korean tea etiquette with a local buddy.",
+  totalDurationMinutes: 15,
   thumbnailImageUrl: "https://static.hanbuddy.com/activities/tea.webp",
   status: "ACTIVE",
   hostIntroduction: "I have hosted tea ceremonies in Insadong for five years.",

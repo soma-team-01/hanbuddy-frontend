@@ -192,6 +192,7 @@ describe("ApplicantsContent", () => {
         activityId: 42,
         title: "Traditional Tea Tasting",
         description: "Learn Korean tea etiquette.",
+        totalDurationMinutes: 0,
         thumbnailImageUrl: null,
         status: "ACTIVE",
         hostIntroduction: "A tea sommelier hosting hanok tea ceremonies in Seoul.",

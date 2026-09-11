@@ -41,10 +41,7 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     referencePriceEstimated: hasReferencePrice ? displayPrice.estimated : undefined,
     referencePriceExchangeRateDate: hasReferencePrice ? displayPrice.exchangeRateDate : undefined,
     discountPercent: summary.discountPercent ?? undefined,
-    durationMinutes:
-      summary.totalDurationHours != null && summary.totalDurationHours > 0
-        ? Math.round(summary.totalDurationHours * 60)
-        : undefined,
+    durationMinutes: summary.totalDurationMinutes,
     isSoldOut: summary.isSoldOut,
     rating: summary.averageRating ?? undefined,
     reviewCount: summary.reviewCount ?? undefined,

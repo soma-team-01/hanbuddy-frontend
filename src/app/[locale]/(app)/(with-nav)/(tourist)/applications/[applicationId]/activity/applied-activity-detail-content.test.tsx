@@ -45,6 +45,7 @@ function buildResponse(status: "ACTIVE" | "INACTIVE" | "DELETED", canBook: boole
       buddyId: 7,
       title: "Bukchon Hidden Gems",
       description: "A preserved application activity.",
+      totalDurationMinutes: 0,
       thumbnailImageUrl: "/activity.jpg",
       buddyName: "Jihoon Kim",
       buddyProfileImageUrl: null,

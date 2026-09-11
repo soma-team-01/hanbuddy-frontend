@@ -432,7 +432,7 @@ export function buildPreviewActivityFromDraft(
     price: hasDiscount ? discountedPrice : price,
     originalPrice: hasDiscount ? price : undefined,
     discountPercent: hasDiscount ? discountPercent : undefined,
-    durationMinutes: itineraryMinutes > 0 ? Math.ceil(itineraryMinutes / 30) * 30 : undefined,
+    durationMinutes: itineraryMinutes > 0 ? itineraryMinutes : undefined,
     isSoldOut: false,
     host: {
       id: hostId,

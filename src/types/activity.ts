@@ -68,7 +68,7 @@ export interface Activity {
   originalPrice?: number;
   /** 진행 중인 할인율(%) — 카드 할인 배지에 사용 */
   discountPercent?: number;
-  /** 총 소요 시간(분). 백엔드 totalDurationHours(0.5시간 단위)를 분으로 환산한 값 */
+  /** 총 소요 시간(분). 백엔드가 제공한 정확한 분 단위 값 */
   durationMinutes?: number;
   /** 모든 일정이 예약 마감이면 true */
   isSoldOut?: boolean;
@@ -118,8 +118,8 @@ export interface TouristActivitySummary {
   averageRating?: number | null;
   /** 이 활동에 달린 리뷰 수 */
   reviewCount?: number | null;
-  /** 총 소요시간(시간 단위). 일정표 소요시간 합을 0.5시간 단위로 올림한 값 */
-  totalDurationHours?: number | null;
+  /** 일정표 소요시간의 정확한 합(분). 일정표가 비어 있으면 0 */
+  totalDurationMinutes: number;
   thumbnailImageUrl: string;
   buddyName: string;
   buddyProfileImageUrl: string | null;

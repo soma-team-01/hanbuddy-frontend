@@ -95,6 +95,8 @@ export interface MyActivitySummaryResponse {
   activityId: number;
   title: string;
   description: string;
+  /** 일정표 소요시간의 정확한 합(분). 일정표가 비어 있으면 0 */
+  totalDurationMinutes: number;
   sourceLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   status: MyActivityStatus;

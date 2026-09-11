@@ -175,6 +175,18 @@ describe("activity creation wizard", () => {
     expect(validateActivityCreateStep("schedule", draft)).toBe("scheduleInPast");
   });
 
+  it.each([31, 100])("accepts %i future schedules", (scheduleCount) => {
+    const draft = createCompleteDraft({
+      schedules: Array.from({ length: scheduleCount }, (_, index) => ({
+        id: `schedule-${index}`,
+        date: seoulDateKey(index + 1),
+        startTime: "10:00",
+      })),
+    });
+
+    expect(validateActivityCreateStep("schedule", draft)).toBeNull();
+  });
+
   it("judges past schedules against an Asia/Seoul reference time", () => {
     const reference = { date: "2026-08-07", time: "11:30" };
 

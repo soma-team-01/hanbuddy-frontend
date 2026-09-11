@@ -1367,7 +1367,6 @@
       "submissionFailed": "We couldn't register your experience. Please try again.",
       "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only.",
       "maxGuestsTooMany": "Capacity can be at most 100 guests.",
-      "schedulesTooMany": "You can add up to 30 sessions.",
       "itineraryTooMany": "You can add up to 20 itinerary activities."
     }
   },

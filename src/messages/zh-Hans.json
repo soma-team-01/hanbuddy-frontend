@@ -1367,7 +1367,6 @@
       "submissionFailed": "我们无法登记您的经历。请再试一次。",
       "scheduleInPast": "某些选定的日期或开始时间已经过去。仅选择未来的会话。",
       "maxGuestsTooMany": "最多可容纳 100 位客人。",
-      "schedulesTooMany": "您最多可以添加 30 个会话。",
       "itineraryTooMany": "您最多可以添加 20 项行程活动。"
     }
   },

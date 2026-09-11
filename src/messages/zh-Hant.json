@@ -1367,7 +1367,6 @@
       "submissionFailed": "我們無法登記您的經驗。請再試一次。",
       "scheduleInPast": "某些選定的日期或開始時間已經過去。僅選擇未來的會話。",
       "maxGuestsTooMany": "最多可容納 100 位客人。",
-      "schedulesTooMany": "您最多可以新增 30 個會話。",
       "itineraryTooMany": "您最多可以新增 20 項行程活動。"
     }
   },

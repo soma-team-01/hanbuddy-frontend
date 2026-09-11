@@ -968,11 +968,19 @@ describe("buildActivityUpsertRequest", () => {
     hasNoRestrictions: true,
   };
 
+  function createSchedules(count: number) {
+    return Array.from({ length: count }, (_, index) => {
+      const date = new Date(Date.UTC(2099, 0, index + 1)).toISOString().slice(0, 10);
+      return { id: `schedule-${index}`, date, startTime: "10:00" };
+    });
+  }
+
   it("submits edited dates together with the past ones it must keep", () => {
+    const schedules = createSchedules(31);
     const request = buildActivityUpsertRequest(
       {
         ...baseDraft,
-        schedules: [{ id: "new", date: "2099-07-20", startTime: "10:00" }],
+        schedules,
         retainedScheduleStartAts: ["2020-01-01T10:00:00+09:00"],
       },
       [],
@@ -981,13 +989,26 @@ describe("buildActivityUpsertRequest", () => {
     );
 
     // 지난 일정이 빠지면 백엔드가 삭제로 보고, 신청 내역이 있으면 수정을 거절한다
-    expect(request.schedules).toEqual([
-      { startAt: "2099-07-20T10:00:00+09:00" },
-      { startAt: "2020-01-01T10:00:00+09:00" },
-    ]);
+    expect(request.schedules).toHaveLength(32);
+    expect(request.schedules.slice(0, 31)).toEqual(
+      schedules.map(({ date, startTime }) => ({
+        startAt: `${date}T${startTime}:00+09:00`,
+      })),
+    );
+    expect(request.schedules.at(-1)).toEqual({ startAt: "2020-01-01T10:00:00+09:00" });
     expect(request).toMatchObject({
       meetingLatitude: 37.5701,
       meetingLongitude: 126.9996,
+    });
+  });
+
+  it("submits all 100 future schedules without truncation", () => {
+    const schedules = createSchedules(100);
+    const request = buildActivityUpsertRequest({ ...baseDraft, schedules }, [], [], "EN");
+
+    expect(request.schedules).toHaveLength(100);
+    expect(request.schedules.at(-1)).toEqual({
+      startAt: `${schedules.at(-1)?.date}T10:00:00+09:00`,
     });
   });
 

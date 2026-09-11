@@ -63,7 +63,7 @@ export interface ActivityUpsertRequest {
   meetingLatitude?: number;
   meetingLongitude?: number;
   status: MyActivityStatus;
-  /** 최대 30개 */
+  /** 최소 1개. 별도의 업무 상한 없음 */
   schedules: ActivityScheduleRequest[];
   /** 최소 1개, 최대 20개 */
   itineraries: ActivityItineraryRequest[];

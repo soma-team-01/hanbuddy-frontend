@@ -2,6 +2,9 @@ import type { ContentLanguage, ResolvedContentLanguage } from "./content-languag
 
 /** DELETED는 soft delete된 활동 — 목록·상세 응답에서 제외되지만 계약상 존재한다 */
 export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
+export interface ActivityStatusUpdateRequest {
+  status: Extract<MyActivityStatus, "ACTIVE" | "INACTIVE">;
+}
 export type ActivityScheduleStatus = "OPEN" | "CLOSED";
 
 export interface ActivityScheduleRequest {

@@ -7,9 +7,10 @@ import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
-import { deleteMyActivity } from "@/lib/api/buddy";
+import { deleteMyActivity, updateMyActivityStatus } from "@/lib/api/buddy";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { activityKeys } from "@/lib/query/activities";
 import { buddyKeys, myActivitiesQueryOptions } from "@/lib/query/buddy";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
@@ -34,34 +35,65 @@ export function MyActivitiesContent() {
   const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [statusTarget, setStatusTarget] = useState<{
+    activityId: number;
+    nextStatus: "ACTIVE" | "INACTIVE";
+  } | null>(null);
   const activitiesQuery = useQuery(myActivitiesQueryOptions());
   const deleteActivityMutation = useMutation({
     mutationFn: async (activityId: number) =>
       unwrapApiResult(await deleteMyActivity(activityId), "message"),
-    onMutate: async (activityId) => {
-      await queryClient.cancelQueries({ queryKey: buddyKeys.myActivities() });
-      const previousActivities = queryClient.getQueryData<MyActivitySummaryResponse[]>(
-        buddyKeys.myActivities(),
-      );
+    onSuccess: (_message, activityId) => {
       queryClient.setQueryData<MyActivitySummaryResponse[]>(
         buddyKeys.myActivities(),
         (current = []) => current.filter((activity) => activity.activityId !== activityId),
       );
-      return { previousActivities };
     },
-    onError: (_error, _activityId, context) => {
-      if (context?.previousActivities) {
-        queryClient.setQueryData(buddyKeys.myActivities(), context.previousActivities);
-      }
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buddyKeys.all() }),
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
   });
-  useAuthQueryRedirect(activitiesQuery.error ?? deleteActivityMutation.error);
+  const statusMutation = useMutation({
+    mutationFn: async ({
+      activityId,
+      nextStatus,
+    }: {
+      activityId: number;
+      nextStatus: "ACTIVE" | "INACTIVE";
+    }) => unwrapApiResult(await updateMyActivityStatus(activityId, nextStatus), "activity"),
+    onSuccess: (updatedActivity) => {
+      queryClient.setQueryData<MyActivitySummaryResponse[]>(
+        buddyKeys.myActivities(),
+        (current = []) =>
+          current.map((activity) =>
+            activity.activityId === updatedActivity.activityId
+              ? { ...activity, status: updatedActivity.status }
+              : activity,
+          ),
+      );
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buddyKeys.all() }),
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
+    },
+  });
+  useAuthQueryRedirect(
+    activitiesQuery.error ?? deleteActivityMutation.error ?? statusMutation.error,
+  );
 
   const activities = activitiesQuery.data ?? [];
 
   async function handleDelete(activityId: number) {
     await deleteActivityMutation.mutateAsync(activityId).catch(() => undefined);
+  }
+
+  async function handleStatusChange(activityId: number, nextStatus: "ACTIVE" | "INACTIVE") {
+    await statusMutation.mutateAsync({ activityId, nextStatus }).catch(() => undefined);
   }
 
   if (activitiesQuery.isPending) {
@@ -93,8 +125,20 @@ export function MyActivitiesContent() {
           {getApiErrorMessage(deleteActivityMutation.error, t("deleteError"))}
         </p>
       ) : null}
+      {statusMutation.error ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          {getApiErrorMessage(statusMutation.error, t("statusChangeError"))}
+        </p>
+      ) : null}
       <p aria-live="polite" className="sr-only">
-        {deleteActivityMutation.isPending ? t("deleting") : ""}
+        {deleteActivityMutation.isPending
+          ? t("deleting")
+          : statusMutation.isPending
+            ? t("changingStatus")
+            : ""}
       </p>
       <div data-testid="activity-records" className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {activities.map((activity, index) => (
@@ -124,6 +168,26 @@ export function MyActivitiesContent() {
                 {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
               </span>
               <span className="flex items-center gap-1">
+                {activity.status === "ACTIVE" || activity.status === "INACTIVE" ? (
+                  <button
+                    type="button"
+                    aria-label={
+                      activity.status === "ACTIVE"
+                        ? t("makePrivateActivity", { title: activity.title })
+                        : t("publishActivity", { title: activity.title })
+                    }
+                    onClick={() =>
+                      setStatusTarget({
+                        activityId: activity.activityId,
+                        nextStatus: activity.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                      })
+                    }
+                    disabled={deleteActivityMutation.isPending || statusMutation.isPending}
+                    className="mr-1 flex h-9 items-center justify-center rounded-full border border-line-strong px-3 font-display text-xs font-semibold text-ink transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {activity.status === "ACTIVE" ? t("makePrivate") : t("publish")}
+                  </button>
+                ) : null}
                 <Link
                   href={`/my-activities/${activity.activityId}/edit`}
                   aria-label={t("editActivity", { title: activity.title })}
@@ -135,7 +199,7 @@ export function MyActivitiesContent() {
                   type="button"
                   aria-label={t("deleteActivity", { title: activity.title })}
                   onClick={() => setDeleteTargetId(activity.activityId)}
-                  disabled={deleteActivityMutation.isPending}
+                  disabled={deleteActivityMutation.isPending || statusMutation.isPending}
                   className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <TrashIcon className="size-4" />
@@ -165,6 +229,25 @@ export function MyActivitiesContent() {
           onClose={() => setDeleteTargetId(null)}
         />
       )}
+      {statusTarget ? (
+        <ConfirmDialog
+          title={statusTarget.nextStatus === "INACTIVE" ? t("makePrivateTitle") : t("publishTitle")}
+          description={
+            statusTarget.nextStatus === "INACTIVE"
+              ? t("makePrivateDescription")
+              : t("publishDescription")
+          }
+          confirmLabel={statusTarget.nextStatus === "INACTIVE" ? t("makePrivate") : t("publish")}
+          pendingLabel={t("changingStatus")}
+          isPending={statusMutation.isPending}
+          onConfirm={() => {
+            const target = statusTarget;
+            setStatusTarget(null);
+            void handleStatusChange(target.activityId, target.nextStatus);
+          }}
+          onClose={() => setStatusTarget(null)}
+        />
+      ) : null}
     </div>
   );
 }

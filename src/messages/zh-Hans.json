@@ -22,6 +22,8 @@
     "activityScheduleFuture": "活动日程必须在未来开始。",
     "activityOwner": "您只能访问您创建的活动。",
     "activityNotFound": "无法找到此活动。",
+    "activityStatusInvalid": "不允许进行此活动状态变更。",
+    "activityUnfinishedReservations": "此活动仍有未结束的预订，无法设为不公开或删除。",
     "activityScheduleNotFound": "找不到该活动时间表。",
     "applicationNotApplicable": "本活动不接受报名。",
     "applicationScheduleNotOpen": "所选时间表尚未开放申请。",
@@ -797,6 +799,15 @@
       "FAILED": "退款失败"
     }
   },
+  "AppliedActivityDetail": {
+    "title": "已申请的活动",
+    "loading": "正在加载已申请的活动...",
+    "loadError": "无法加载此申请中的活动。",
+    "backToApplications": "返回我的申请",
+    "appliedSchedule": "我申请的时间",
+    "notAcceptingBookings": "此活动目前不接受预订。",
+    "noAvailableSchedules": "此活动目前没有可预订的时间。"
+  },
   "Payment": {
     "unavailable": "无法付款",
     "complete": "付款完成",
@@ -1004,6 +1015,7 @@
     "loading": "正在加载活动...",
     "loadError": "无法加载活动。",
     "deleteError": "无法删除该活动。",
+    "statusChangeError": "无法更改活动公开状态。",
     "empty": "还没有活动。",
     "edit": "编辑",
     "editActivity": "编辑 {title}",
@@ -1013,6 +1025,15 @@
     "deleteTitle": "删除此活动？",
     "deleteDescription": "此操作无法撤消。",
     "deleting": "正在删除...",
+    "changingStatus": "正在更新...",
+    "makePrivate": "设为不公开",
+    "makePrivateActivity": "将{title}设为不公开",
+    "makePrivateTitle": "将此活动设为不公开吗？",
+    "makePrivateDescription": "活动将从公开探索中隐藏，之后仍可重新公开。",
+    "publish": "公开",
+    "publishActivity": "公开{title}",
+    "publishTitle": "公开此活动吗？",
+    "publishDescription": "活动将向游客展示，并在有可预订时间时接受申请。",
     "status": {
       "active": "活跃",
       "draft": "吃水",

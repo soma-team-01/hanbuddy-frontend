@@ -17,8 +17,17 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(68);
+    expect(BACKEND_ERROR_CODES).toHaveLength(70);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
+  });
+
+  it("maps activity visibility conflicts and invalid transitions", () => {
+    expect(resolveApiErrorMessageKey(apiError("ACTIVITY400_STATUS", 400))).toBe(
+      "activityStatusInvalid",
+    );
+    expect(resolveApiErrorMessageKey(apiError("ACTIVITY409_UNFINISHED_RESERVATIONS", 409))).toBe(
+      "activityUnfinishedReservations",
+    );
   });
 
   it("maps review errors to their own messages", () => {

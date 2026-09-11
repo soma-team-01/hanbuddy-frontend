@@ -52,6 +52,7 @@ export function ActivityDetailView({
   weather,
   preview = false,
   bottomBar = "fixed",
+  showBookingBar = true,
   unoptimizedImages = false,
 }: Readonly<{
   activity: Activity;
@@ -59,6 +60,8 @@ export function ActivityDetailView({
   preview?: boolean;
   /** inline이면 하단 바를 고정하지 않고 본문 아래 카드로 렌더링한다 (위저드 검토 화면용) */
   bottomBar?: "fixed" | "inline";
+  /** 신청 이력처럼 신규 예약이 불가능한 상세에서는 예약 UI와 고정 바 여백을 모두 제거한다 */
+  showBookingBar?: boolean;
   /** blob 미리보기처럼 next/image 최적화가 불가능한 소스일 때 */
   unoptimizedImages?: boolean;
 }>) {
@@ -69,7 +72,7 @@ export function ActivityDetailView({
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
   const fixedBarRef = useRef<HTMLDivElement>(null);
-  useFixedBarHeight(fixedBarRef, bottomBar === "fixed");
+  useFixedBarHeight(fixedBarRef, showBookingBar && bottomBar === "fixed");
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
     null,
   );
@@ -573,7 +576,7 @@ export function ActivityDetailView({
             </div>
           </article>
 
-          {bottomBar === "inline" ? (
+          {showBookingBar && bottomBar === "inline" ? (
             <div
               data-testid="booking-bottom-bar"
               className="rounded-2xl border border-line-soft bg-canvas-soft p-4"
@@ -584,7 +587,7 @@ export function ActivityDetailView({
         </main>
       </PageContainer>
 
-      {bottomBar === "fixed" ? (
+      {showBookingBar && bottomBar === "fixed" ? (
         <div
           ref={fixedBarRef}
           data-testid="booking-bottom-bar"
@@ -594,7 +597,7 @@ export function ActivityDetailView({
         </div>
       ) : null}
 
-      {calendarOpen ? (
+      {showBookingBar && calendarOpen ? (
         <AvailabilityCalendarDialog
           sessions={activity.sessions}
           selectedSessionId={selectedSessionId}

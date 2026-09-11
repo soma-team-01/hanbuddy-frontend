@@ -182,7 +182,7 @@ describe("ApplicationList", () => {
     // 카드에 활동 사진·제목·호스트가 보이고 카드가 상세로 연결된다
     expect(screen.getByRole("link", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
       "href",
-      "/en/activities/42",
+      "/en/applications/1/activity",
     );
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
     // 미래 일정에는 디데이 배지가 붙는다

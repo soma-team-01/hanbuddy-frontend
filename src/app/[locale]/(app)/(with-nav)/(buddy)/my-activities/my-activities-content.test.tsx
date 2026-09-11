@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteMyActivity, getMyActivities } from "@/lib/api/buddy";
+import { deleteMyActivity, getMyActivities, updateMyActivityStatus } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -16,16 +16,19 @@ vi.mock("next/navigation", async (importOriginal) => ({
 vi.mock("@/lib/api/buddy", () => ({
   deleteMyActivity: vi.fn(),
   getMyActivities: vi.fn(),
+  updateMyActivityStatus: vi.fn(),
 }));
 
 const mockedDeleteMyActivity = vi.mocked(deleteMyActivity);
 const mockedGetMyActivities = vi.mocked(getMyActivities);
+const mockedUpdateMyActivityStatus = vi.mocked(updateMyActivityStatus);
 
 describe("MyActivitiesContent", () => {
   beforeEach(() => {
     routerMock.replace.mockReset();
     mockedDeleteMyActivity.mockReset();
     mockedGetMyActivities.mockReset();
+    mockedUpdateMyActivityStatus.mockReset();
   });
 
   it("renders buddy activities loaded from the API", async () => {
@@ -83,6 +86,117 @@ describe("MyActivitiesContent", () => {
 
     expect(await screen.findByText("Retired Night Walk")).toBeInTheDocument();
     expect(screen.getByText("Deleted")).toBeInTheDocument();
+  });
+
+  it("changes an active activity to inactive through the dedicated status endpoint", async () => {
+    mockedGetMyActivities.mockResolvedValueOnce({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Traditional Tea Tasting",
+          description: "Learn Korean tea etiquette.",
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+        },
+      ],
+    });
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Traditional Tea Tasting",
+          description: "Learn Korean tea etiquette.",
+          thumbnailImageUrl: null,
+          status: "INACTIVE",
+        },
+      ],
+    });
+    mockedUpdateMyActivityStatus.mockResolvedValue({
+      status: "success",
+      activity: { activityId: 42, status: "INACTIVE" } as never,
+    });
+
+    renderWithQueryClient(<MyActivitiesContent />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Make Traditional Tea Tasting private" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Make private" }));
+
+    await waitFor(() => expect(mockedUpdateMyActivityStatus).toHaveBeenCalledWith(42, "INACTIVE"));
+    expect(await screen.findByText("Inactive")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Publish Traditional Tea Tasting" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the active card unchanged when unfinished reservations block hiding", async () => {
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 42,
+          title: "Traditional Tea Tasting",
+          description: "Learn Korean tea etiquette.",
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+        },
+      ],
+    });
+    mockedUpdateMyActivityStatus.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "ACTIVITY409_UNFINISHED_RESERVATIONS",
+        status: 409,
+        details: null,
+        backendMessage: "unfinished",
+      }),
+    });
+
+    renderWithQueryClient(<MyActivitiesContent />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Make Traditional Tea Tasting private" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Make private" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This activity cannot be made private or deleted while it has unfinished reservations.",
+    );
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.queryByText("unfinished")).not.toBeInTheDocument();
+  });
+
+  it("does not offer status restoration for draft or deleted activities", async () => {
+    mockedGetMyActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          activityId: 43,
+          title: "Draft Walk",
+          description: "Draft.",
+          thumbnailImageUrl: null,
+          status: "DRAFT",
+        },
+        {
+          activityId: 44,
+          title: "Deleted Walk",
+          description: "Deleted.",
+          thumbnailImageUrl: null,
+          status: "DELETED",
+        },
+      ],
+    });
+
+    renderWithQueryClient(<MyActivitiesContent />);
+
+    expect(await screen.findByText("Draft Walk")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Publish Draft Walk|Make Draft Walk private/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Publish Deleted Walk|Make Deleted Walk private/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("removes an activity after a successful delete request", async () => {

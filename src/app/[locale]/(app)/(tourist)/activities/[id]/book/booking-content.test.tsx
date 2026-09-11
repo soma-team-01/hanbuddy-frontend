@@ -55,6 +55,17 @@ const activityDetail: TouristActivityDetail = {
   ],
 };
 
+const cnyActivityDetail: TouristActivityDetail = {
+  ...activityDetail,
+  displayPrice: {
+    price: 240,
+    discountedPrice: null,
+    currency: "CNY",
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
+  },
+};
+
 describe("BookingContent", () => {
   beforeEach(() => {
     mockedGetTouristActivity.mockReset();
@@ -82,6 +93,20 @@ describe("BookingContent", () => {
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(mockedGetTouristActivity).not.toHaveBeenCalled();
+  });
+
+  it("uses the locale currency for the summary and USD only for the PayPal action", async () => {
+    mockedGetTouristActivity.mockImplementation(async (_activityId, _language, currency) => ({
+      status: "success",
+      activity: currency === "CNY" ? cnyActivityDetail : activityDetail,
+    }));
+
+    renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
+
+    expect(await screen.findByText("≈ ¥240.00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay US$32.50 with PayPal" })).toBeInTheDocument();
+    expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "ZH_HANS", "CNY");
+    expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "ZH_HANS", "USD");
   });
 
   it("shows the Korean Seoul time-zone notice", async () => {

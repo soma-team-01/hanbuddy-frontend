@@ -67,11 +67,13 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 export function BookingForm({
   activity,
   initialSessionId,
+  payPalUnitPriceUsd,
   refundPolicyDocument,
   paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   activity: Activity;
   initialSessionId?: string;
+  payPalUnitPriceUsd?: number;
   refundPolicyDocument?: PolicyDocumentData;
   paymentProviderMode?: PaymentProviderMode;
 }>) {
@@ -148,10 +150,15 @@ export function BookingForm({
   const total = discountedUnitPrice * guests;
   const discountAmount = Math.max(0, originalSubtotal - total);
   const hasDiscount = discountAmount > 0;
-  const estimatedPayPalTotal =
-    activity.referenceCurrency === "USD" && activity.referencePrice !== undefined
+  const localeReferenceTotal =
+    activity.referenceCurrency && activity.referencePrice !== undefined
       ? activity.referencePrice * guests
       : null;
+  const payPalReferenceUnitPrice =
+    payPalUnitPriceUsd ??
+    (activity.referenceCurrency === "USD" ? activity.referencePrice : undefined);
+  const estimatedPayPalTotal =
+    payPalReferenceUnitPrice !== undefined ? payPalReferenceUnitPrice * guests : null;
   const tossPaymentLabel = showProviderChoice ? t("payWithToss") : t("payNow");
   const payPalPaymentLabel =
     estimatedPayPalTotal !== null
@@ -465,9 +472,14 @@ export function BookingForm({
               <div className="flex items-end justify-between border-t border-line-soft pt-4">
                 <span className="font-display text-base font-bold text-ink">{t("totalLabel")}</span>
                 <div className="flex flex-col items-end gap-0.5">
-                  {estimatedPayPalTotal !== null ? (
+                  {localeReferenceTotal !== null && activity.referenceCurrency ? (
                     <span className="text-xs font-medium text-muted">
-                      ≈ {formatDisplayCurrency(estimatedPayPalTotal, "USD", locale)}
+                      ≈{" "}
+                      {formatDisplayCurrency(
+                        localeReferenceTotal,
+                        activity.referenceCurrency,
+                        locale,
+                      )}
                     </span>
                   ) : null}
                   <span className="font-display text-xl font-bold text-primary">

@@ -2,7 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import { CountrySelect } from "@/components/ui/CountrySelect";
-import { LineIcon, PhoneIcon, WeChatIcon, WhatsAppIcon } from "@/components/ui/icons";
+import {
+  InstagramIcon,
+  KakaoTalkIcon,
+  LineIcon,
+  PhoneIcon,
+  WeChatIcon,
+  WhatsAppIcon,
+} from "@/components/ui/icons";
 import type { ContactMethod } from "@/lib/auth/types";
 import { formatKoreanPhone, toDigits } from "@/lib/phone";
 
@@ -10,6 +17,8 @@ export const MESSAGING_APPS = [
   { key: "whatsapp", label: "WhatsApp", Icon: WhatsAppIcon },
   { key: "line", label: "Line", Icon: LineIcon },
   { key: "wechat", label: "WeChat", Icon: WeChatIcon },
+  { key: "kakaotalk", label: "KakaoTalk", Icon: KakaoTalkIcon },
+  { key: "instagram", label: "Instagram", Icon: InstagramIcon },
   { key: "phone", label: null, Icon: PhoneIcon },
 ] as const;
 
@@ -20,6 +29,8 @@ export const CONTACT_METHOD_BY_APP: Record<MessagingAppKey, ContactMethod> = {
   line: "LINE",
   wechat: "WECHAT",
   phone: "PHONE",
+  kakaotalk: "KAKAOTALK",
+  instagram: "INSTAGRAM",
 };
 
 export const APP_BY_CONTACT_METHOD: Record<ContactMethod, MessagingAppKey> = {
@@ -27,9 +38,12 @@ export const APP_BY_CONTACT_METHOD: Record<ContactMethod, MessagingAppKey> = {
   LINE: "line",
   WECHAT: "wechat",
   PHONE: "phone",
+  KAKAOTALK: "kakaotalk",
+  INSTAGRAM: "instagram",
 };
 
 interface MessagingAppFieldProps {
+  touristSignup?: boolean;
   app: MessagingAppKey;
   onAppChange: (key: MessagingAppKey) => void;
   /** 전화번호 입력 시 사용할 국가(ISO alpha-2) */
@@ -55,6 +69,8 @@ const BRAND_MARK_CLASS: Record<MessagingAppKey, string> = {
   line: "bg-[#06C755]",
   wechat: "bg-[#07C160]",
   phone: "bg-primary-strong",
+  kakaotalk: "bg-[#FEE500] text-[#191919]",
+  instagram: "bg-[#C13584]",
 };
 
 type MessagingVariant = NonNullable<MessagingAppFieldProps["variant"]>;
@@ -80,6 +96,7 @@ function getOptionClassName(variant: MessagingVariant, isSelected: boolean, inde
 }
 
 interface MessagingAppSelectorProps {
+  touristSignup?: boolean;
   app: MessagingAppKey;
   onAppChange: (key: MessagingAppKey) => void;
   phoneLabel: string;
@@ -88,20 +105,28 @@ interface MessagingAppSelectorProps {
 }
 
 function MessagingAppSelector({
+  touristSignup = false,
   app,
   onAppChange,
   phoneLabel,
   variant,
   singleRowOnDesktop,
 }: Readonly<MessagingAppSelectorProps>) {
+  const t = useTranslations("Messaging");
+  const options = MESSAGING_APPS.filter(({ key }) =>
+    touristSignup
+      ? key !== "line" && key !== "wechat"
+      : (key !== "kakaotalk" && key !== "instagram") || key === app,
+  );
   return (
     <div
       data-testid="messaging-app-options"
       className={getSelectorClassName(variant, singleRowOnDesktop)}
     >
-      {MESSAGING_APPS.map(({ key, label, Icon }, index) => {
+      {options.map(({ key, label, Icon }, index) => {
         const isSelected = app === key;
-        const displayLabel = label ?? phoneLabel;
+        const displayLabel =
+          key === "kakaotalk" || key === "instagram" ? t(key) : (label ?? phoneLabel);
         let appIcon = <Icon data-messaging-icon={key} className="size-5 shrink-0 text-success" />;
 
         if (variant === "cards") {
@@ -236,7 +261,11 @@ function AppIdContactInput({
   inputLabel,
   getPlaceholder,
 }: Readonly<AppIdContactInputProps>) {
-  const appLabel = MESSAGING_APPS.find((item) => item.key === app)?.label ?? phoneLabel;
+  const t = useTranslations("Messaging");
+  const appLabel =
+    app === "kakaotalk" || app === "instagram"
+      ? t(app)
+      : (MESSAGING_APPS.find((item) => item.key === app)?.label ?? phoneLabel);
   const inputBackground = variant === "cards" ? "bg-canvas-soft" : "bg-panel";
 
   return (
@@ -255,6 +284,7 @@ function AppIdContactInput({
 
 /** 메시징 앱 단일 선택 + 앱 특성에 맞는 연락처 입력(온보딩·프로필 수정 공용) */
 export function MessagingAppField({
+  touristSignup = false,
   app,
   onAppChange,
   country,
@@ -275,6 +305,7 @@ export function MessagingAppField({
     <>
       {showAppSelector ? (
         <MessagingAppSelector
+          touristSignup={touristSignup}
           app={app}
           onAppChange={onAppChange}
           phoneLabel={t("phoneNumber")}
@@ -282,7 +313,7 @@ export function MessagingAppField({
           singleRowOnDesktop={singleRowOnDesktop}
         />
       ) : null}
-      {/* WhatsApp·전화번호는 번호 기반, LINE·WeChat은 ID 기반으로 연락처를 교환한다 */}
+      {/* WhatsApp·전화번호는 번호 기반, 나머지 앱은 ID 기반으로 연락처를 교환한다 */}
       {usesPhoneNumber ? (
         <PhoneContactInput
           country={country}

@@ -4,11 +4,16 @@ import { describe, it, expect, vi } from "vitest";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { renderWithIntl } from "@/test/render-with-intl";
+import zhHans from "@/messages/zh-Hans.json";
+import zhHant from "@/messages/zh-Hant.json";
 import { MessagingAppField } from "./MessagingAppField";
 
 type FieldProps = ComponentProps<typeof MessagingAppField>;
 
-function renderField(overrides: Partial<FieldProps> = {}, locale: "en" | "ko" = "en") {
+function renderField(
+  overrides: Partial<FieldProps> = {},
+  locale: "en" | "ko" | "zh-Hans" | "zh-Hant" = "en",
+) {
   const props: FieldProps = {
     app: "whatsapp",
     onAppChange: vi.fn(),
@@ -18,11 +23,33 @@ function renderField(overrides: Partial<FieldProps> = {}, locale: "en" | "ko" = 
     onContactChange: vi.fn(),
     ...overrides,
   };
-  renderWithIntl(<MessagingAppField {...props} />, { locale });
+  renderWithIntl(<MessagingAppField {...props} />, {
+    locale,
+    messages: locale === "zh-Hans" ? zhHans : locale === "zh-Hant" ? zhHant : undefined,
+  });
   return props;
 }
 
 describe("MessagingAppField", () => {
+  it.each([
+    ["kakaotalk", "카카오톡"],
+    ["instagram", "인스타그램"],
+  ] as const)("localizes tourist %s labels and ID hints", (app, label) => {
+    renderField({ app, touristSignup: true }, "ko");
+    expect(screen.getByRole("button", { name: label })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByPlaceholderText(label + " ID")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Line" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("국가번호")).not.toBeInTheDocument();
+  });
+
+  it.each(["zh-Hans", "zh-Hant"] as const)(
+    "requests a messenger ID rather than an identity document in %s",
+    (locale) => {
+      renderField({ app: "kakaotalk", touristSignup: true }, locale);
+      expect(screen.getByPlaceholderText("KakaoTalk ID")).toBeInTheDocument();
+    },
+  );
+
   it("renders the country selector and generic phone input by default", () => {
     renderField();
     expect(screen.getByLabelText("Country code")).toBeInTheDocument();

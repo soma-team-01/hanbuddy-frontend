@@ -32,6 +32,8 @@ function formatBirthDate(birthDate: string, locale: Locale) {
 function getContactMethodLabel(method: ContactMethod, phoneLabel: string) {
   const labels: Record<ContactMethod, string> = {
     WHATSAPP: "WhatsApp",
+    KAKAOTALK: "KakaoTalk",
+    INSTAGRAM: "Instagram",
     LINE: "LINE",
     WECHAT: "WeChat",
     PHONE: phoneLabel,

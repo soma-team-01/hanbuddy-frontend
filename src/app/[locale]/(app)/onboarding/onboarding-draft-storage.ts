@@ -4,7 +4,7 @@ import type { SignupAgreementType, UserType } from "@/lib/auth/types";
 const STORAGE_KEY_PREFIX = "hanbuddy:onboarding-draft";
 const STORAGE_VERSION = 1;
 const DRAFT_TTL_MS = 30 * 60 * 1000;
-const MESSAGING_APPS = ["whatsapp", "line", "wechat", "phone"] as const;
+const MESSAGING_APPS = ["whatsapp", "line", "wechat", "phone", "kakaotalk", "instagram"] as const;
 
 export interface OnboardingDraftSnapshot {
   currentStep: 1 | 2 | 3;

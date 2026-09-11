@@ -54,6 +54,9 @@ import {
   saveOnboardingDraft,
 } from "./onboarding-draft-storage";
 
+import { BirthDatePicker } from "./BirthDatePicker";
+import { isValidBirthDate } from "./birth-date";
+
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
 type OnboardingErrorKey =
   | `validation.${OnboardingValidationErrorKey}`
@@ -127,7 +130,7 @@ function getInitialMessagingApp(
 ): MessagingAppKey {
   if (isBuddyFlow) return "phone";
   if (resubmission) return APP_BY_CONTACT_METHOD[resubmission.contactMethod];
-  return "line";
+  return "kakaotalk";
 }
 
 function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
@@ -432,7 +435,14 @@ export function OnboardingForm({
     const isValidContact = requiresContactCountryCode
       ? COUNTRY_CALLING_CODE_PATTERN.test(contactCountryCode ?? "") &&
         PHONE_CONTACT_PATTERN.test(normalizedPhoneNumber)
-      : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
+      : messagingApp === "kakaotalk" || messagingApp === "instagram"
+        ? contactIdentifier.length > 0
+        : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
+
+    if (!isBuddyFlow && (messagingApp === "line" || messagingApp === "wechat")) {
+      setErrorKey("validation.contactMethodRequired");
+      return false;
+    }
 
     if (!isValidContact) {
       setErrorKey("validation.contactInvalid");
@@ -871,20 +881,42 @@ export function OnboardingForm({
                           triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary-soft"
                         />
                       </div>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
-                        <input
-                          name="birthDate"
-                          type="date"
-                          min={oldestAllowedBirthDate || undefined}
-                          max={youngestAllowedBirthDate || undefined}
-                          required
+                      {isBuddyFlow ? (
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
+                          <input
+                            name="birthDate"
+                            type="date"
+                            min={oldestAllowedBirthDate || undefined}
+                            max={youngestAllowedBirthDate || undefined}
+                            required
+                            value={birthDate}
+                            onChange={(event) => setBirthDate(event.target.value)}
+                            aria-label={t("birthDate")}
+                            className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                          />
+                        </label>
+                      ) : (
+                        <BirthDatePicker
                           value={birthDate}
-                          onChange={(event) => setBirthDate(event.target.value)}
-                          aria-label={t("birthDate")}
-                          className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                          today={currentLocalDate}
+                          oldestAllowedBirthDate={oldestAllowedBirthDate}
+                          youngestAllowedBirthDate={youngestAllowedBirthDate}
+                          invalid={errorKey === "validation.birthDateInvalid"}
+                          onChange={(value) => {
+                            setBirthDate(value);
+                            if (
+                              isValidBirthDate(
+                                value,
+                                currentLocalDate,
+                                oldestAllowedBirthDate,
+                                youngestAllowedBirthDate,
+                              )
+                            )
+                              setErrorKey(null);
+                          }}
                         />
-                      </label>
+                      )}
                     </div>
 
                     {resubmission?.rejectionReason ? (
@@ -921,6 +953,7 @@ export function OnboardingForm({
                       {isBuddyFlow ? messagingT("phoneNumber") : t("preferredMessagingApp")}
                     </span>
                     <MessagingAppField
+                      touristSignup={!isBuddyFlow}
                       app={messagingApp}
                       onAppChange={handleMessagingAppChange}
                       country={messagingCountry}

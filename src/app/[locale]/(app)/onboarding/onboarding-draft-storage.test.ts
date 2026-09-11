@@ -33,6 +33,25 @@ afterEach(() => {
 });
 
 describe("onboarding draft storage", () => {
+  it.each(["kakaotalk", "instagram", "line", "wechat"] as const)(
+    "restores %s from session storage without changing its meaning",
+    async (messagingApp) => {
+      const scope = "signup:TOURIST:stored";
+      window.sessionStorage.setItem(
+        "hanbuddy:onboarding-draft:" + scope,
+        JSON.stringify({
+          version: 1,
+          updatedAt: Date.now(),
+          snapshot: { ...snapshot, messagingApp },
+        }),
+      );
+      expect(await loadOnboardingDraft(scope)).toMatchObject({
+        messagingApp,
+        messagingContact: snapshot.messagingContact,
+      });
+    },
+  );
+
   it("uses a locale-independent account scope for the same signup", () => {
     expect(
       getOnboardingDraftScope({ userType: "TOURIST", signupDraftAccountId: "account-hash" }),

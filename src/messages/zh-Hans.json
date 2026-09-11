@@ -676,6 +676,8 @@
     "payWithToss": "使用Toss Payments付款",
     "payWithPayPal": "使用PayPal付款",
     "payWithPayPalAmount": "使用PayPal支付{amount}",
+    "paypalPriceLoading": "正在加载PayPal金额...",
+    "paypalPriceUnavailable": "无法加载PayPal的美元金额。请稍后再试。",
     "paypalCurrencyNotice": "PayPal以USD结算。",
     "processing": "处理中...",
     "kstNotice": "所有时间均采用韩国标准时间 (KST)。",

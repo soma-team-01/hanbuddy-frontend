@@ -33,27 +33,29 @@ export function BookingContent({
   const language = getContentLanguage(locale);
   const displayCurrency = getDefaultDisplayCurrency(locale);
   const showPayPalPayment = isPaymentProviderVisible("PAYPAL", PAYMENT_PROVIDER_MODE);
+  const needsPayPalUsdEstimate = showPayPalPayment && displayCurrency !== "USD";
   const activityQuery = useQuery(
     touristActivityQueryOptions(activityId, language, displayCurrency),
   );
   // 화면 참고 가격과 별개로 PayPal 버튼에는 실제 결제 통화인 USD 예상액을 표시한다.
   const payPalActivityQuery = useQuery({
     ...touristActivityQueryOptions(activityId, language, "USD"),
-    enabled: showPayPalPayment && displayCurrency !== "USD",
+    enabled: needsPayPalUsdEstimate,
   });
   const t = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
-  useAuthQueryRedirect(activityQuery.error);
+  useAuthQueryRedirect(activityQuery.error ?? payPalActivityQuery.error);
 
   const activity = activityQuery.data
     ? mapTouristActivityDetailToActivity(activityQuery.data, tErrors("dateTimeUnavailable"), locale)
     : null;
-  const payPalUnitPriceUsd = showPayPalPayment
-    ? getPayPalUnitPriceUsd(
-        displayCurrency === "USD" ? activityQuery.data : payPalActivityQuery.data,
-      )
-    : undefined;
+  let payPalPriceDetail: TouristActivityDetail | undefined;
+  if (showPayPalPayment) {
+    payPalPriceDetail = displayCurrency === "USD" ? activityQuery.data : payPalActivityQuery.data;
+  }
+  const payPalUnitPriceUsd = getPayPalUnitPriceUsd(payPalPriceDetail);
+  const payPalPricePending = needsPayPalUsdEstimate && payPalActivityQuery.isPending;
 
   if (activityQuery.isPending) {
     return <PageContainer className="py-10 text-center text-muted">{t("loading")}</PageContainer>;
@@ -78,6 +80,7 @@ export function BookingContent({
     <BookingForm
       activity={activity}
       initialSessionId={initialScheduleId}
+      payPalPricePending={payPalPricePending}
       payPalUnitPriceUsd={payPalUnitPriceUsd}
       refundPolicyDocument={refundPolicyDocument}
     />

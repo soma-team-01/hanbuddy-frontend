@@ -67,12 +67,14 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 export function BookingForm({
   activity,
   initialSessionId,
+  payPalPricePending = false,
   payPalUnitPriceUsd,
   refundPolicyDocument,
   paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   activity: Activity;
   initialSessionId?: string;
+  payPalPricePending?: boolean;
   payPalUnitPriceUsd?: number;
   refundPolicyDocument?: PolicyDocumentData;
   paymentProviderMode?: PaymentProviderMode;
@@ -159,13 +161,19 @@ export function BookingForm({
     (activity.referenceCurrency === "USD" ? activity.referencePrice : undefined);
   const estimatedPayPalTotal =
     payPalReferenceUnitPrice !== undefined ? payPalReferenceUnitPrice * guests : null;
+  const isPayPalPricePending =
+    showPayPalPayment && estimatedPayPalTotal === null && payPalPricePending;
+  const isPayPalPriceUnavailable =
+    showPayPalPayment && estimatedPayPalTotal === null && !isPayPalPricePending;
   const tossPaymentLabel = showProviderChoice ? t("payWithToss") : t("payNow");
-  const payPalPaymentLabel =
-    estimatedPayPalTotal !== null
-      ? t("payWithPayPalAmount", {
-          amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
-        })
-      : t("payWithPayPal");
+  let payPalPaymentLabel = t("payWithPayPal");
+  if (isPayPalPricePending) {
+    payPalPaymentLabel = t("paypalPriceLoading");
+  } else if (estimatedPayPalTotal !== null) {
+    payPalPaymentLabel = t("payWithPayPalAmount", {
+      amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
+    });
+  }
 
   function toBlockingDialog(
     error: unknown,
@@ -224,6 +232,7 @@ export function BookingForm({
   }
 
   function handleSubmitClick(paymentProvider: PaymentProvider) {
+    if (paymentProvider === "PAYPAL" && estimatedPayPalTotal === null) return;
     void runWithSubmissionLock(async () => {
       const validationError = validateBookingSession(sessionId);
       if (validationError) {
@@ -554,15 +563,24 @@ export function BookingForm({
                         ) : (
                           <button
                             type="button"
-                            disabled={!refundPolicyAgreed || isSubmitting}
+                            disabled={
+                              !refundPolicyAgreed || isSubmitting || estimatedPayPalTotal === null
+                            }
                             onClick={() => handleSubmitClick("PAYPAL")}
                             className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
                           >
                             {isSubmitting ? t("processing") : payPalPaymentLabel}
                           </button>
                         )}
-                        <p className="text-center text-xs leading-4 text-muted">
-                          {t("paypalCurrencyNotice")}
+                        <p
+                          role={isPayPalPriceUnavailable ? "alert" : undefined}
+                          className={`text-center text-xs leading-4 ${
+                            isPayPalPriceUnavailable ? "text-danger" : "text-muted"
+                          }`}
+                        >
+                          {isPayPalPriceUnavailable
+                            ? t("paypalPriceUnavailable")
+                            : t("paypalCurrencyNotice")}
                         </p>
                       </div>
                     ) : null}

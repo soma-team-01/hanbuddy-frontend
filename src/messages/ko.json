@@ -676,6 +676,8 @@
     "payWithToss": "토스페이먼츠로 결제",
     "payWithPayPal": "PayPal로 결제",
     "payWithPayPalAmount": "PayPal로 {amount} 결제",
+    "paypalPriceLoading": "PayPal 결제 금액을 불러오는 중...",
+    "paypalPriceUnavailable": "PayPal의 USD 결제 금액을 불러오지 못했습니다. 다시 시도해 주세요.",
     "paypalCurrencyNotice": "PayPal은 USD로 결제됩니다.",
     "processing": "처리 중...",
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",

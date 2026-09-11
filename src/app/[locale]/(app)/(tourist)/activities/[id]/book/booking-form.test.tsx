@@ -287,6 +287,20 @@ describe("BookingForm", () => {
     expect(screen.getByText("PayPal charges in USD.")).toBeInTheDocument();
   });
 
+  it("separates the locale reference price from the PayPal USD amount", () => {
+    renderWithQueryClient(
+      <BookingForm
+        activity={{ ...activity, referencePrice: 240, referenceCurrency: "CNY" }}
+        payPalUnitPriceUsd={32.5}
+        paymentProviderMode="PAYPAL"
+      />,
+      { locale: "zh-Hans" },
+    );
+
+    expect(screen.getByText("≈ ¥240.00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay US$32.50 with PayPal" })).toBeInTheDocument();
+  });
+
   it("preselects the schedule passed from the availability calendar", () => {
     const twoSessionActivity: Activity = {
       ...activity,

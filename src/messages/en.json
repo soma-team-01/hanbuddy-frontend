@@ -676,6 +676,8 @@
     "payWithToss": "Pay with Toss Payments",
     "payWithPayPal": "Pay with PayPal",
     "payWithPayPalAmount": "Pay {amount} with PayPal",
+    "paypalPriceLoading": "Loading PayPal amount...",
+    "paypalPriceUnavailable": "Could not load the PayPal USD amount. Please try again.",
     "paypalCurrencyNotice": "PayPal charges in USD.",
     "processing": "Processing...",
     "kstNotice": "All times are in Korea Standard Time (KST).",

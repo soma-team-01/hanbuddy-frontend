@@ -6,10 +6,19 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
+import { getDefaultDisplayCurrency } from "@/lib/display-currency";
+import { getLocaleOrDefault } from "@/i18n/routing";
+import { isPaymentProviderVisible, PAYMENT_PROVIDER_MODE } from "@/lib/payment-provider-visibility";
 import { touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import type { TouristActivityDetail } from "@/types/activity";
 import type { PolicyDocumentData } from "@/types/policy";
 import { BookingForm } from "./booking-form";
+
+function getPayPalUnitPriceUsd(detail: TouristActivityDetail | undefined): number | undefined {
+  if (detail?.displayPrice?.currency !== "USD") return undefined;
+  return detail.displayPrice.discountedPrice ?? detail.displayPrice.price;
+}
 
 export function BookingContent({
   activityId,
@@ -20,18 +29,33 @@ export function BookingContent({
   initialScheduleId?: string;
   refundPolicyDocument?: PolicyDocumentData;
 }>) {
-  const locale = useLocale();
+  const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
-  // 원화 계약 가격과 함께 PayPal 결제 예정 금액을 안내할 USD 참고 가격을 받는다.
-  const activityQuery = useQuery(touristActivityQueryOptions(activityId, language, "USD"));
+  const displayCurrency = getDefaultDisplayCurrency(locale);
+  const showPayPalPayment = isPaymentProviderVisible("PAYPAL", PAYMENT_PROVIDER_MODE);
+  const needsPayPalUsdEstimate = showPayPalPayment && displayCurrency !== "USD";
+  const activityQuery = useQuery(
+    touristActivityQueryOptions(activityId, language, displayCurrency),
+  );
+  // 화면 참고 가격과 별개로 PayPal 버튼에는 실제 결제 통화인 USD 예상액을 표시한다.
+  const payPalActivityQuery = useQuery({
+    ...touristActivityQueryOptions(activityId, language, "USD"),
+    enabled: needsPayPalUsdEstimate,
+  });
   const t = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
-  useAuthQueryRedirect(activityQuery.error);
+  useAuthQueryRedirect(activityQuery.error ?? payPalActivityQuery.error);
 
   const activity = activityQuery.data
     ? mapTouristActivityDetailToActivity(activityQuery.data, tErrors("dateTimeUnavailable"), locale)
     : null;
+  let payPalPriceDetail: TouristActivityDetail | undefined;
+  if (showPayPalPayment) {
+    payPalPriceDetail = displayCurrency === "USD" ? activityQuery.data : payPalActivityQuery.data;
+  }
+  const payPalUnitPriceUsd = getPayPalUnitPriceUsd(payPalPriceDetail);
+  const payPalPricePending = needsPayPalUsdEstimate && payPalActivityQuery.isPending;
 
   if (activityQuery.isPending) {
     return <PageContainer className="py-10 text-center text-muted">{t("loading")}</PageContainer>;
@@ -56,6 +80,8 @@ export function BookingContent({
     <BookingForm
       activity={activity}
       initialSessionId={initialScheduleId}
+      payPalPricePending={payPalPricePending}
+      payPalUnitPriceUsd={payPalUnitPriceUsd}
       refundPolicyDocument={refundPolicyDocument}
     />
   );

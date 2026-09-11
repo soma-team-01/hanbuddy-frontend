@@ -676,6 +676,8 @@
     "payWithToss": "Toss Paymentsで支払う",
     "payWithPayPal": "PayPalで支払う",
     "payWithPayPalAmount": "PayPalで{amount}を支払う",
+    "paypalPriceLoading": "PayPalの支払金額を読み込んでいます...",
+    "paypalPriceUnavailable": "PayPalのUSD支払金額を読み込めませんでした。もう一度お試しください。",
     "paypalCurrencyNotice": "PayPalはUSDで決済されます。",
     "processing": "処理中...",
     "kstNotice": "時間はすべて韓国標準時 (KST) です。",

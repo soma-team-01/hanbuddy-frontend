@@ -2,6 +2,9 @@ import type { ContentLanguage, ResolvedContentLanguage } from "./content-languag
 
 /** DELETED는 soft delete된 활동 — 목록·상세 응답에서 제외되지만 계약상 존재한다 */
 export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
+export interface ActivityStatusUpdateRequest {
+  status: Extract<MyActivityStatus, "ACTIVE" | "INACTIVE">;
+}
 export type ActivityScheduleStatus = "OPEN" | "CLOSED";
 
 export interface ActivityScheduleRequest {
@@ -60,7 +63,7 @@ export interface ActivityUpsertRequest {
   meetingLatitude?: number;
   meetingLongitude?: number;
   status: MyActivityStatus;
-  /** 최대 30개 */
+  /** 최소 1개. 별도의 업무 상한 없음 */
   schedules: ActivityScheduleRequest[];
   /** 최소 1개, 최대 20개 */
   itineraries: ActivityItineraryRequest[];
@@ -92,6 +95,8 @@ export interface MyActivitySummaryResponse {
   activityId: number;
   title: string;
   description: string;
+  /** 일정표 소요시간의 정확한 합(분). 일정표가 비어 있으면 0 */
+  totalDurationMinutes: number;
   sourceLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   status: MyActivityStatus;

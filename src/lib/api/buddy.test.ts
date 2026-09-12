@@ -9,6 +9,7 @@ import {
   getMyActivity,
   previewActivityPrice,
   updateMyActivity,
+  updateMyActivityStatus,
 } from "./buddy";
 import type { ActivityUpsertRequest } from "@/types/buddy";
 
@@ -120,6 +121,30 @@ describe("buddy API client", () => {
       activity: activityDetail,
     });
     expect(fetchMock).toHaveBeenCalledWith("/api/activities/me/7", { credentials: "same-origin" });
+  });
+
+  it("updates only the activity visibility through the dedicated endpoint", async () => {
+    const inactiveActivity = { ...activityDetail, status: "INACTIVE" };
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: inactiveActivity,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(updateMyActivityStatus(7, "INACTIVE")).resolves.toEqual({
+      status: "success",
+      activity: inactiveActivity,
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/me/7/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "INACTIVE" }),
+      credentials: "same-origin",
+    });
   });
 
   it("creates a buddy activity through the internal API", async () => {

@@ -88,6 +88,7 @@ function buildActivityDetail() {
     buddyId: 7,
     title: "Bukchon Hidden Gems",
     description: "Walk through quiet alleys with a local buddy.",
+    totalDurationMinutes: 0,
     thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
     buddyName: "Jihoon Kim",
     buddyProfileImageUrl: null,
@@ -321,7 +322,7 @@ describe("ActivityDetailContent", () => {
     });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
-      activity: { ...buildActivityDetail(), totalDurationHours: 2.25 },
+      activity: { ...buildActivityDetail(), totalDurationMinutes: 135 },
     });
 
     renderWithQueryClient(<ActivityDetailContent activityId="42" />);
@@ -387,7 +388,7 @@ describe("ActivityDetailContent", () => {
       status: "success",
       activity: {
         ...buildActivityDetail(),
-        totalDurationHours: 2.5,
+        totalDurationMinutes: 150,
         hostIntroduction: "I have guided Bukchon walks for seven years and love quiet alleys.",
         restrictionNotes: [],
         schedules: [],
@@ -430,7 +431,7 @@ describe("ActivityDetailContent", () => {
     expect(
       screen.getByText("I have guided Bukchon walks for seven years and love quiet alleys."),
     ).toBeInTheDocument();
-    expect(screen.getByText("2.5 hours")).toBeInTheDocument();
+    expect(screen.getByText("2 hours 30min")).toBeInTheDocument();
     // 일정이 없으면 칩 대신 안내 문구가 뜨고 Book now가 비활성화된다
     expect(screen.getByText("No dates available yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
@@ -475,6 +476,7 @@ describe("ActivityDetailContent", () => {
           buddyId: 7,
           title: "Bukchon Hidden Gems",
           description: "Current activity is excluded.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -489,6 +491,7 @@ describe("ActivityDetailContent", () => {
           buddyId: 7,
           title: "Seoul Night Market Walk",
           description: "Another experience by the same buddy.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/market.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -503,6 +506,7 @@ describe("ActivityDetailContent", () => {
           buddyId: 9,
           title: "Other buddy experience",
           description: "Hosted by a different buddy with the same public name.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/other.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,

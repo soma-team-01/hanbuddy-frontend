@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getMyActivity } from "@/lib/api/buddy";
+import { getMyActivity, updateMyActivityStatus } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -15,6 +15,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 vi.mock("@/lib/api/buddy", () => ({
   getMyActivity: vi.fn(),
+  updateMyActivityStatus: vi.fn(),
 }));
 
 vi.mock("@/lib/api/useMyProfile", () => ({
@@ -31,6 +32,7 @@ vi.mock("@/lib/google/places", async () => {
 });
 
 const mockedGetMyActivity = vi.mocked(getMyActivity);
+const mockedUpdateMyActivityStatus = vi.mocked(updateMyActivityStatus);
 const mockedUseMyProfile = vi.mocked(useMyProfile);
 
 function seoulDateKey(offsetDays: number) {
@@ -45,6 +47,7 @@ const activityDetail: MyActivityDetailResponse = {
   activityId: 42,
   title: "Traditional Tea Tasting",
   description: "Learn Korean tea etiquette with a local buddy.",
+  totalDurationMinutes: 15,
   thumbnailImageUrl: "https://static.hanbuddy.com/activities/tea.webp",
   status: "ACTIVE",
   hostIntroduction: "I have hosted tea ceremonies in Insadong for five years.",
@@ -92,6 +95,7 @@ const profile = {
 describe("MyActivityDetailContent", () => {
   beforeEach(() => {
     mockedGetMyActivity.mockReset();
+    mockedUpdateMyActivityStatus.mockReset();
     mockedUseMyProfile.mockReset();
     mockedUseMyProfile.mockReturnValue({ status: "success", profile });
   });
@@ -105,14 +109,18 @@ describe("MyActivityDetailContent", () => {
       await screen.findByRole("heading", { name: "Traditional Tea Tasting" }),
     ).toBeInTheDocument();
     expect(mockedGetMyActivity).toHaveBeenCalledWith("42");
-    expect(screen.getByTestId("guest-preview-banner")).toBeInTheDocument();
+    expect(screen.getByTestId("guest-preview-banner")).toHaveClass("bg-transparent");
+    expect(screen.getByTestId("guest-preview-banner")).not.toHaveClass("bg-primary-soft/60");
     expect(screen.getByText("Guest preview")).toBeInTheDocument();
     expect(
       screen.getByText(
         "This is exactly what guests see. Booking steps are disabled in this preview.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText("Public")).toBeInTheDocument();
+    expect(
+      screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
+    ).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("link", { name: /Edit activity/ })).toHaveAttribute(
       "href",
       "/en/my-activities/42/edit",
@@ -154,6 +162,32 @@ describe("MyActivityDetailContent", () => {
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
   });
 
+  it("changes visibility from the activity preview without leaving the detail page", async () => {
+    mockedGetMyActivity
+      .mockResolvedValueOnce({ status: "success", activity: activityDetail })
+      .mockResolvedValue({
+        status: "success",
+        activity: { ...activityDetail, status: "INACTIVE" },
+      });
+    mockedUpdateMyActivityStatus.mockResolvedValue({
+      status: "success",
+      activity: { ...activityDetail, status: "INACTIVE" },
+    });
+
+    renderWithQueryClient(<MyActivityDetailContent activityId="42" />);
+
+    fireEvent.click(
+      await screen.findByRole("switch", { name: "Make Traditional Tea Tasting private" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Make private" }));
+
+    await waitFor(() => expect(mockedUpdateMyActivityStatus).toHaveBeenCalledWith(42, "INACTIVE"));
+    expect(
+      await screen.findByRole("switch", { name: "Publish Traditional Tea Tasting" }),
+    ).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByText("Private")).toBeInTheDocument();
+  });
+
   it("localizes the preview banner in Korean", async () => {
     mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
 
@@ -168,7 +202,7 @@ describe("MyActivityDetailContent", () => {
         "고객에게 보이는 활동 상세와 동일한 화면입니다. 미리보기에서는 예약 단계로 이동할 수 없습니다.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("게시 중")).toBeInTheDocument();
+    expect(screen.getByText("공개 중")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /활동 수정/ })).toHaveAttribute(
       "href",
       "/ko/my-activities/42/edit",

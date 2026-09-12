@@ -22,6 +22,8 @@
     "activityScheduleFuture": "活動行程必須在未來開始。",
     "activityOwner": "您只能存取您建立的活動。",
     "activityNotFound": "無法找到此活動。",
+    "activityStatusInvalid": "不允許進行此活動狀態變更。",
+    "activityUnfinishedReservations": "此活動仍有未結束的預訂，無法設為不公開或刪除。",
     "activityScheduleNotFound": "找不到該活動時間表。",
     "applicationNotApplicable": "本活動不接受報名。",
     "applicationScheduleNotOpen": "所選時間表尚未開放申請。",
@@ -797,6 +799,15 @@
       "FAILED": "退款失敗"
     }
   },
+  "AppliedActivityDetail": {
+    "title": "已申請的活動",
+    "loading": "正在載入已申請的活動...",
+    "loadError": "無法載入此申請中的活動。",
+    "backToApplications": "返回我的申請",
+    "appliedSchedule": "我申請的時間",
+    "notAcceptingBookings": "此活動目前不接受預訂。",
+    "noAvailableSchedules": "此活動目前沒有可預訂的時間。"
+  },
   "Payment": {
     "unavailable": "無法付款",
     "complete": "付款完成",
@@ -1004,6 +1015,7 @@
     "loading": "正在加載活動...",
     "loadError": "無法載入活動。",
     "deleteError": "無法刪除該活動。",
+    "statusChangeError": "無法變更活動公開狀態。",
     "empty": "還沒有活動。",
     "edit": "編輯",
     "editActivity": "編輯 {title}",
@@ -1013,6 +1025,17 @@
     "deleteTitle": "刪除此活動？",
     "deleteDescription": "此操作無法撤銷。",
     "deleting": "正在刪除...",
+    "changingStatus": "正在更新...",
+    "visibilityPublic": "公開中",
+    "visibilityPrivate": "不公開",
+    "makePrivate": "設為不公開",
+    "makePrivateActivity": "將{title}設為不公開",
+    "makePrivateTitle": "將此活動設為不公開嗎？",
+    "makePrivateDescription": "活動將從公開探索中隱藏，之後仍可重新公開。",
+    "publish": "公開",
+    "publishActivity": "公開{title}",
+    "publishTitle": "公開此活動嗎？",
+    "publishDescription": "活動將向旅客顯示，並在有可預訂時段時接受申請。",
     "status": {
       "active": "活躍",
       "draft": "吃水",
@@ -1344,7 +1367,6 @@
       "submissionFailed": "我們無法登記您的經驗。請再試一次。",
       "scheduleInPast": "某些選定的日期或開始時間已經過去。僅選擇未來的會話。",
       "maxGuestsTooMany": "最多可容納 100 位客人。",
-      "schedulesTooMany": "您最多可以新增 30 個會話。",
       "itineraryTooMany": "您最多可以新增 20 項行程活動。"
     }
   },

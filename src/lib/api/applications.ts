@@ -1,6 +1,7 @@
 import type {
   ApplicationCancellationReason,
   ApplicationConflictCheckResponse,
+  AppliedActivityDetailResponse,
   ApplicationResponse,
   CancelApplicationRequest,
   CapturePayPalPaymentRequest,
@@ -13,6 +14,8 @@ import type {
 import { withContentLanguage } from "@/lib/content-language";
 import { withPaymentProvider } from "@/lib/payment-provider";
 import type { ContentLanguage } from "@/types/content-language";
+import type { DisplayCurrency } from "@/types/display-currency";
+import { withDisplayCurrency } from "@/lib/display-currency";
 import { requestApiResult, type ApiResult } from "./result";
 
 export type ApplicationResult = ApiResult<ApplicationResponse, "application">;
@@ -20,6 +23,10 @@ export type ApplicationsResult = ApiResult<ApplicationResponse[], "applications"
 export type PaymentReadyResult = ApiResult<PaymentReadyResponse, "payment">;
 export type ApplicationConflictResult = ApiResult<ApplicationConflictCheckResponse, "conflicts">;
 export type CancellationQuoteResult = ApiResult<CancellationQuoteResponse, "quote">;
+export type AppliedActivityDetailResult = ApiResult<
+  AppliedActivityDetailResponse,
+  "appliedActivity"
+>;
 
 const DEFAULT_APPLICATION_CREATE_ERROR_MESSAGE = "신청을 완료하지 못했습니다.";
 const DEFAULT_APPLICATION_LIST_ERROR_MESSAGE = "신청 목록을 불러오지 못했습니다.";
@@ -30,6 +37,23 @@ const DEFAULT_PAYMENT_CONFIRM_ERROR_MESSAGE = "결제를 완료하지 못했습�
 const DEFAULT_PAYPAL_CAPTURE_ERROR_MESSAGE = "PayPal 결제를 완료하지 못했습니다.";
 const DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE = "예약 일정 중복 여부를 확인하지 못했습니다.";
 const DEFAULT_CANCELLATION_QUOTE_ERROR_MESSAGE = "취소 예상 금액을 불러오지 못했습니다.";
+const DEFAULT_APPLIED_ACTIVITY_ERROR_MESSAGE = "신청한 활동 상세를 불러오지 못했습니다.";
+
+export async function getAppliedActivityDetail(
+  applicationId: number | string,
+  language: ContentLanguage,
+  displayCurrency: DisplayCurrency,
+): Promise<AppliedActivityDetailResult> {
+  return requestApiResult<AppliedActivityDetailResponse, "appliedActivity">(
+    withDisplayCurrency(
+      withContentLanguage(`/api/applications/${applicationId}/activity`, language),
+      displayCurrency,
+    ),
+    "appliedActivity",
+    undefined,
+    DEFAULT_APPLIED_ACTIVITY_ERROR_MESSAGE,
+  );
+}
 
 export async function getApplicationCancellationQuote(
   applicationId: number | string,

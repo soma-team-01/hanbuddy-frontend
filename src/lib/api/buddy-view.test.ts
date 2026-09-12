@@ -98,6 +98,7 @@ describe("buddy view helpers", () => {
       activityId: 42,
       title: "Traditional Tea Tasting",
       description: "Learn Korean tea etiquette with a local buddy.",
+      totalDurationMinutes: 65,
       thumbnailImageUrl: "https://static.hanbuddy.com/activities/tea.webp",
       status: "ACTIVE",
       hostIntroduction: "I have hosted tea ceremonies in Insadong for five years.",
@@ -177,8 +178,7 @@ describe("buddy view helpers", () => {
         "Meet at Anguk",
         "Tea ceremony",
       ]);
-      // 총 소요시간: 65분 합을 30분 단위로 올림 → 90분
-      expect(activity.durationMinutes).toBe(90);
+      expect(activity.durationMinutes).toBe(65);
       expect(activity.sessions).toEqual([
         {
           id: "101",

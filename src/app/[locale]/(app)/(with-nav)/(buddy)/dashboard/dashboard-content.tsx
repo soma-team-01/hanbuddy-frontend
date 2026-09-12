@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
+import { ActivityVisibilityControl } from "@/components/buddy/ActivityVisibilityControl";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ApplicantProfileDialog } from "@/components/buddy/ApplicantProfileDialog";
 import { Avatar } from "@/components/ui/Avatar";
@@ -332,54 +333,76 @@ export function DashboardContent() {
     );
   } else {
     myActivitiesContent = (
-      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {myActivities.map((activity) => (
+      <ul className="grid grid-cols-1 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
+        {myActivities.map((activity, activityIndex) => (
           <li
             key={activity.activityId}
-            className="flex items-center gap-1.5 rounded-xl border border-line-soft p-3.5 transition-colors hover:border-primary"
+            className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-line-soft bg-canvas-soft p-2.5 shadow-[0_5px_14px_rgba(61,45,43,0.05)] transition-colors hover:border-primary"
           >
             <Link
               href={`/my-activities/${activity.activityId}`}
-              className="flex min-w-0 flex-1 items-center gap-3"
+              className="relative block aspect-video w-full overflow-hidden rounded-lg transition-opacity hover:opacity-90"
             >
-              <div className="relative size-12 shrink-0 overflow-hidden rounded-lg">
-                <Image
-                  src={getActivityThumbnail(activity.thumbnailImageUrl)}
-                  alt=""
-                  fill
-                  sizes="48px"
-                  className="object-cover"
+              <Image
+                src={getActivityThumbnail(activity.thumbnailImageUrl)}
+                alt={activity.title}
+                fill
+                loading={activityIndex === 0 ? "eager" : undefined}
+                sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                className="object-cover"
+              />
+            </Link>
+            <div className="flex min-w-0 items-center justify-between gap-2">
+              {activity.status === "ACTIVE" || activity.status === "INACTIVE" ? (
+                <ActivityVisibilityControl
+                  activityId={activity.activityId}
+                  title={activity.title}
+                  status={activity.status}
+                  compact
+                  disabled={deleteActivityMutation.isPending}
                 />
-              </div>
-              <div className="min-w-0 flex-1">
-                {/* 상태를 먼저 보여주고 그 아래에 활동명을 둔다 */}
-                <p
-                  className={`text-[11px] font-semibold ${ACTIVITY_STATUS_TEXT_CLASS[activity.status]}`}
+              ) : (
+                <span
+                  className={`text-[10px] font-semibold ${ACTIVITY_STATUS_TEXT_CLASS[activity.status]}`}
                 >
                   {tMyActivities(
                     `status.${activity.status.toLowerCase() as Lowercase<MyActivityStatus>}`,
                   )}
-                </p>
-                <p className="truncate font-display text-sm font-bold text-ink">{activity.title}</p>
-              </div>
-            </Link>
-            {/* 홈에서 바로 고치고 지운다 — 내 활동 화면과 같은 흐름 */}
+                </span>
+              )}
+              {/* 홈에서도 상태 확인 뒤 바로 수정·삭제할 수 있다. */}
+              <span className="flex shrink-0 items-center gap-0.5">
+                <Link
+                  href={`/my-activities/${activity.activityId}/edit`}
+                  aria-label={tMyActivities("editActivity", { title: activity.title })}
+                  className="flex size-6 items-center justify-center rounded-full text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                >
+                  <PencilIcon className="size-3" />
+                </Link>
+                <button
+                  type="button"
+                  aria-label={tMyActivities("deleteActivity", { title: activity.title })}
+                  disabled={deleteActivityMutation.isPending}
+                  onClick={() => setDeleteTargetId(activity.activityId)}
+                  className="flex size-6 items-center justify-center rounded-full text-muted transition-colors enabled:hover:bg-primary-soft enabled:hover:text-danger disabled:opacity-50"
+                >
+                  <TrashIcon className="size-3" />
+                </button>
+              </span>
+            </div>
             <Link
-              href={`/my-activities/${activity.activityId}/edit`}
-              aria-label={tMyActivities("editActivity", { title: activity.title })}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
+              href={`/my-activities/${activity.activityId}`}
+              className="block min-w-0 hover:underline"
             >
-              <PencilIcon className="size-3.5" />
+              <h3 className="line-clamp-2 font-display text-xs leading-4 font-bold text-ink">
+                {activity.title}
+              </h3>
             </Link>
-            <button
-              type="button"
-              aria-label={tMyActivities("deleteActivity", { title: activity.title })}
-              disabled={deleteActivityMutation.isPending}
-              onClick={() => setDeleteTargetId(activity.activityId)}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-danger disabled:opacity-50"
-            >
-              <TrashIcon className="size-3.5" />
-            </button>
+            {activity.description.trim() ? (
+              <p className="line-clamp-2 text-[11px] leading-4 text-muted">
+                {activity.description}
+              </p>
+            ) : null}
           </li>
         ))}
       </ul>

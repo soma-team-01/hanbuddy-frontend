@@ -97,11 +97,15 @@ describe("ActivityCard", () => {
   });
 
   it.each([
+    [0, "0min"],
+    [5, "5min"],
+    [29, "29min"],
     [30, "30min"],
-    [45, "45min"],
+    [31, "31min"],
     [60, "1 hour"],
-    [90, "1.5 hours"],
-    [150, "2.5 hours"],
+    [80, "1 hour 20min"],
+    [90, "1 hour 30min"],
+    [150, "2 hours 30min"],
   ])("formats a %i minute duration as %s", (durationMinutes, expected) => {
     renderWithIntl(<ActivityCard activity={{ ...activity, durationMinutes }} />);
 
@@ -113,7 +117,7 @@ describe("ActivityCard", () => {
       locale: "ko",
     });
 
-    expect(screen.getByText("1.5시간")).toBeInTheDocument();
+    expect(screen.getByText("1시간 30분")).toBeInTheDocument();
     expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 

@@ -3,6 +3,7 @@ import { appendBackendSetCookies, createProxyErrorResponse, postBackend } from "
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import {
   isSupportedProfileImageType,
+  MAX_ACTIVITY_IMAGE_COUNT,
   MAX_CHAT_IMAGE_COUNT,
   type PresignedImageUploadRequest,
   type PresignedImageUploadResult,
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     uploadRequest.purpose === "ACTIVITY" &&
     Number.isInteger(uploadRequest.imageCount) &&
     uploadRequest.imageCount >= 1 &&
-    uploadRequest.imageCount <= 8;
+    uploadRequest.imageCount <= MAX_ACTIVITY_IMAGE_COUNT;
   const isValidChatRequest =
     uploadRequest.purpose === "CHAT" &&
     Number.isInteger(uploadRequest.imageCount) &&

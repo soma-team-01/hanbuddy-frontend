@@ -182,7 +182,7 @@ describe("ApplicationList", () => {
     // 카드에 활동 사진·제목·호스트가 보이고 카드가 상세로 연결된다
     expect(screen.getByRole("link", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
       "href",
-      "/en/activities/42",
+      "/en/applications/1/activity",
     );
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
     // 미래 일정에는 디데이 배지가 붙는다
@@ -570,6 +570,7 @@ describe("ApplicationList", () => {
           buddyId: 7,
           title: "Bukchon Hidden Gems",
           description: "The activity this application is for.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/bukchon.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -584,6 +585,7 @@ describe("ApplicationList", () => {
           buddyId: 7,
           title: "Seoul Night Market Walk",
           description: "Another experience by the same buddy.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/market.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -626,6 +628,7 @@ describe("ApplicationList", () => {
           buddyId: 12,
           title: "Namesake's experience",
           description: "Hosted by a different buddy with the same public name.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/other.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,

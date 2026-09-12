@@ -333,7 +333,7 @@ export function DashboardContent() {
     );
   } else {
     myActivitiesContent = (
-      <ul className="grid gap-2.5 md:grid-cols-3 lg:grid-cols-4">
+      <ul className="grid grid-cols-1 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
         {myActivities.map((activity, activityIndex) => (
           <li
             key={activity.activityId}

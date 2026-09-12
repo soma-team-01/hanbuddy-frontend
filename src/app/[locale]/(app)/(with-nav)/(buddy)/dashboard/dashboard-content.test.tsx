@@ -396,7 +396,8 @@ describe("DashboardContent", () => {
 
     // 내 활동 — 삭제된 것은 빼고, 카드가 상세로 연결된다
     const list = screen.getByText("Bukchon Hidden Gems").closest("ul")!;
-    expect(list).toHaveClass("lg:grid-cols-4");
+    expect(list).not.toHaveClass("sm:grid-cols-2");
+    expect(list).toHaveClass("md:grid-cols-3", "lg:grid-cols-4");
     // 카드마다 이미지·제목 상세 링크와 수정 링크가 있다
     expect(within(list).getAllByRole("link")).toHaveLength(6);
     expect(screen.queryByText("Gone Walk")).not.toBeInTheDocument();

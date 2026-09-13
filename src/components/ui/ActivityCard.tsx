@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
+import { formatActivityDuration } from "@/lib/activity-duration";
 import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
@@ -93,7 +94,9 @@ export function ActivityCard({
 }
 
 function formatDuration(t: ReturnType<typeof useTranslations<"Explore">>, minutes: number): string {
-  if (minutes < 60) return t("durationMinutes", { minutes });
-
-  return t("durationHours", { hours: minutes / 60 });
+  return formatActivityDuration(
+    minutes,
+    (hours) => t("durationHours", { hours }),
+    (remainingMinutes) => t("durationMinutes", { minutes: remainingMinutes }),
+  );
 }

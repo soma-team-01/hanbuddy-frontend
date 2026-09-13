@@ -16,6 +16,7 @@ function createActivity(activityId: number) {
     buddyId: 7,
     title: `HanBuddy activity ${activityId}`,
     description: "A personal Korean experience.",
+    totalDurationMinutes: 0,
     thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
     buddyName: "HanBuddy buddy",
     buddyProfileImageUrl: null,

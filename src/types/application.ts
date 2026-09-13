@@ -1,11 +1,26 @@
 import type { MyReviewResponse } from "./review";
 import type { ResolvedContentLanguage } from "./content-language";
+import type { TouristActivityDetail } from "./activity";
 
 export type ApplicationStatus = "pending_payment" | "confirmed" | "cancelled" | "completed";
 export type BackendApplicationStatus =
   "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 export type ApplicationCancellationReason =
   "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER";
+
+export type AppliedActivityStatus = "ACTIVE" | "INACTIVE" | "DELETED";
+
+export interface AppliedActivityDetailResponse {
+  applicationId: number;
+  activityScheduleId: number;
+  /** 신청한 회차의 Asia/Seoul 오프셋 포함 시작 일시 */
+  startAt: string;
+  /** 신청한 회차의 종료 일시 */
+  endAt: string;
+  activityStatus: AppliedActivityStatus;
+  canBook: boolean;
+  activity: TouristActivityDetail;
+}
 
 export type CancellationPolicyType =
   "FREE_CANCELLATION_WINDOW" | "BEFORE_48_HOURS" | "BETWEEN_24_AND_48_HOURS" | "WITHIN_24_HOURS";
@@ -60,7 +75,7 @@ export interface PriceBreakdown {
 
 export interface Application {
   id: string;
-  /** 신청한 활동 상세로 이동하기 위한 활동 ID */
+  /** 날씨 등 공개 활동 부가 정보를 조회하기 위한 활동 ID */
   activityId: number;
   status: ApplicationStatus;
   /** 활동 시작 일시 (Asia/Seoul 오프셋 포함) — D-day 계산용 */

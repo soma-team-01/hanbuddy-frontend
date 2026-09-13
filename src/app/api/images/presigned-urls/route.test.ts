@@ -143,7 +143,7 @@ describe("POST /api/images/presigned-urls", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const body = { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 3 };
+    const body = { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 10 };
     const response = await POST(
       createRequest({
         cookie: "hanbuddy_access_token=access-token",
@@ -186,8 +186,8 @@ describe("POST /api/images/presigned-urls", () => {
     ["unsupported contentType", { purpose: "PROFILE", contentType: "image/gif", imageCount: 1 }],
     ["imageCount other than 1", { purpose: "PROFILE", contentType: "image/webp", imageCount: 2 }],
     [
-      "activity imageCount over 8",
-      { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 9 },
+      "activity imageCount over 10",
+      { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 11 },
     ],
     ["unknown purpose", { purpose: "OTHER", contentType: "image/webp", imageCount: 1 }],
   ])("rejects %s with 400 before reaching the backend", async (_label, body) => {

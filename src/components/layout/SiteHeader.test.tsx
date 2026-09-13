@@ -87,13 +87,9 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("button", { name: /Select language/ })).not.toBeInTheDocument();
   });
 
-  it("shows the payout entry only to buddies", () => {
+  it("keeps the future payout entry hidden from buddies", () => {
     renderWithQueryClient(<SiteHeader role="buddy" />);
-    // 정산은 버디 전용 — 상단바 지폐 아이콘으로 들어간다
-    expect(screen.getAllByRole("link", { name: "Payouts" })[0]).toHaveAttribute(
-      "href",
-      "/en/dashboard/settlement",
-    );
+    expect(screen.queryByRole("link", { name: "Payouts" })).not.toBeInTheDocument();
   });
 
   it("hides the payout entry from tourists", () => {

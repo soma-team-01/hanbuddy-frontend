@@ -39,6 +39,7 @@ const activityDetail: MyActivityDetailResponse = {
   activityId: 42,
   title: "Seoul market walk",
   description: "Meet local vendors and taste a neighborhood breakfast together.",
+  totalDurationMinutes: 60,
   thumbnailImageUrl: "https://cdn.example.test/activities/cover.webp",
   status: "ACTIVE",
   hostIntroduction: "I have guided friends through this market for years.",

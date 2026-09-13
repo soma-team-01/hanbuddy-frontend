@@ -4,7 +4,11 @@ import {
   activityWeatherQueryOptions,
   touristActivityQueryOptions,
 } from "./activities";
-import { applicationKeys, myApplicationsQueryOptions } from "./applications";
+import {
+  applicationKeys,
+  appliedActivityDetailQueryOptions,
+  myApplicationsQueryOptions,
+} from "./applications";
 import {
   buddyActivityApplicationsQueryOptions,
   buddyApplicationsQueryOptions,
@@ -31,6 +35,17 @@ describe("domain query options", () => {
     expect(applicationKeys.mine()).toEqual(["applications", "me"]);
     expect(myApplicationsQueryOptions("EN").queryKey).toEqual(applicationKeys.mine("EN"));
     expect(applicationKeys.mine("EN")).not.toEqual(applicationKeys.mine("KO"));
+    expect(appliedActivityDetailQueryOptions(11, "EN", "USD").queryKey).toEqual([
+      "applications",
+      "me",
+      "11",
+      "activity",
+      "EN",
+      "USD",
+    ]);
+    expect(applicationKeys.activityDetail(11, "EN", "USD")).not.toEqual(
+      applicationKeys.activityDetail(11, "KO", "KRW"),
+    );
   });
 
   it("separates review caches by the requested content language", () => {

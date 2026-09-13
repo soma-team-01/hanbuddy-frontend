@@ -123,6 +123,19 @@ describe("ActivityDetailView", () => {
     expect(document.body.dataset.fixedBar).toBeUndefined();
   });
 
+  it("removes every booking control and fixed-bar side effect in read-only mode", () => {
+    renderWithIntl(
+      <ActivityDetailView activity={activity} showBookingBar={false} unoptimizedImages />,
+      { locale: "en" },
+    );
+
+    expect(screen.queryByTestId("booking-bottom-bar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("date-select-box")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Book now" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Book now" })).not.toBeInTheDocument();
+    expect(document.body.dataset.fixedBar).toBeUndefined();
+  });
+
   it("fills the hero column on mobile and shows the photo count badge for extra photos", () => {
     renderWithIntl(
       <ActivityDetailView

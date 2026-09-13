@@ -34,7 +34,6 @@ export const ACTIVITY_CREATE_LIMITS = {
   itineraryDescription: { min: 5, max: 50 },
   // 백엔드 ActivityUpsertRequest 계약 상한
   maxGuests: { max: 100 },
-  schedules: { max: 30 },
   itineraryItems: { max: 20 },
 } as const;
 
@@ -109,7 +108,6 @@ export type ActivityCreateErrorKey =
   | "itineraryTooMany"
   | "maxGuestsInvalid"
   | "maxGuestsTooMany"
-  | "schedulesTooMany"
   | "priceInvalid"
   | "inclusionsRequired"
   | "restrictionsRequired"
@@ -245,9 +243,6 @@ export function validateActivityCreateStep(
         )
       ) {
         return "scheduleInvalid";
-      }
-      if (draft.schedules.length > ACTIVITY_CREATE_LIMITS.schedules.max) {
-        return "schedulesTooMany";
       }
       const now = getSeoulNowParts();
       return draft.schedules.some((schedule) => isPastSchedule(schedule, now))
@@ -432,7 +427,7 @@ export function buildPreviewActivityFromDraft(
     price: hasDiscount ? discountedPrice : price,
     originalPrice: hasDiscount ? price : undefined,
     discountPercent: hasDiscount ? discountPercent : undefined,
-    durationMinutes: itineraryMinutes > 0 ? Math.ceil(itineraryMinutes / 30) * 30 : undefined,
+    durationMinutes: itineraryMinutes > 0 ? itineraryMinutes : undefined,
     isSoldOut: false,
     host: {
       id: hostId,

@@ -349,7 +349,7 @@ function ApplicationCard({
     <article className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 transition-colors hover:border-primary/50 md:p-6">
       <div className="flex gap-4">
         <Link
-          href={`/activities/${application.activityId}`}
+          href={`/applications/${application.id}/activity`}
           aria-hidden="true"
           tabIndex={-1}
           className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-panel md:size-28"
@@ -374,7 +374,7 @@ function ApplicationCard({
           </div>
 
           <div className="flex min-w-0 flex-col gap-1.5 sm:col-start-1">
-            <Link href={`/activities/${application.activityId}`} className="min-w-0">
+            <Link href={`/applications/${application.id}/activity`} className="min-w-0">
               <h3
                 className={`line-clamp-2 font-display text-base leading-6 font-bold ${
                   isCancelled ? "text-muted" : "text-ink"

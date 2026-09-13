@@ -8,6 +8,7 @@ import {
   createApplication,
   getApplicationCancellationQuote,
   getApplicationConflicts,
+  getAppliedActivityDetail,
   getMyApplications,
 } from "./applications";
 
@@ -59,6 +60,36 @@ function createJsonResponse(body: unknown, status = 200) {
 describe("application API client", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("loads an application-owned activity with content and display preferences", async () => {
+    const appliedActivity = {
+      applicationId: 11,
+      activityScheduleId: 101,
+      startAt: application.startAt,
+      endAt: application.endAt,
+      activityStatus: "INACTIVE",
+      canBook: false,
+      activity: { activityId: 42 },
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: appliedActivity,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getAppliedActivityDetail(11, "KO", "KRW")).resolves.toEqual({
+      status: "success",
+      appliedActivity,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/11/activity?language=KO&displayCurrency=KRW",
+      { credentials: "same-origin" },
+    );
   });
 
   it("checks schedule conflicts through the internal API", async () => {

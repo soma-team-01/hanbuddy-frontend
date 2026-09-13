@@ -22,6 +22,8 @@
     "activityScheduleFuture": "アクティビティのスケジュールは将来的に開始する必要があります。",
     "activityOwner": "自分が作成したアクティビティのみにアクセスできます。",
     "activityNotFound": "このアクティビティは見つかりませんでした。",
+    "activityStatusInvalid": "このアクティビティの公開状態は変更できません。",
+    "activityUnfinishedReservations": "未終了の予約があるため、このアクティビティを非公開または削除できません。",
     "activityScheduleNotFound": "このアクティビティ スケジュールは見つかりませんでした。",
     "applicationNotApplicable": "このアクティビティは申し込みを受け付けていません。",
     "applicationScheduleNotOpen": "選択されたスケジュールは申し込みを受け付けていません。",
@@ -797,6 +799,15 @@
       "FAILED": "返金失敗"
     }
   },
+  "AppliedActivityDetail": {
+    "title": "申し込んだアクティビティ",
+    "loading": "申し込んだアクティビティを読み込んでいます...",
+    "loadError": "申し込んだアクティビティを読み込めませんでした。",
+    "backToApplications": "予約一覧に戻る",
+    "appliedSchedule": "申し込んだ日時",
+    "notAcceptingBookings": "現在予約を受け付けていないアクティビティです。",
+    "noAvailableSchedules": "現在予約可能な日程がありません。"
+  },
   "Payment": {
     "unavailable": "支払いは利用できません",
     "complete": "支払い完了",
@@ -1004,6 +1015,7 @@
     "loading": "アクティビティを読み込んでいます...",
     "loadError": "アクティビティを読み込めませんでした。",
     "deleteError": "アクティビティを削除できませんでした。",
+    "statusChangeError": "アクティビティの公開状態を変更できませんでした。",
     "empty": "まだアクティビティはありません。",
     "edit": "編集",
     "editActivity": "編集 {title}",
@@ -1013,6 +1025,17 @@
     "deleteTitle": "このアクティビティを削除しますか?",
     "deleteDescription": "この操作は元に戻すことができません。",
     "deleting": "削除中...",
+    "changingStatus": "変更中...",
+    "visibilityPublic": "公開中",
+    "visibilityPrivate": "非公開",
+    "makePrivate": "非公開",
+    "makePrivateActivity": "{title}を非公開にする",
+    "makePrivateTitle": "このアクティビティを非公開にしますか？",
+    "makePrivateDescription": "公開検索には表示されなくなりますが、後で再公開できます。",
+    "publish": "公開",
+    "publishActivity": "{title}を公開する",
+    "publishTitle": "このアクティビティを公開しますか？",
+    "publishDescription": "旅行者に表示され、予約可能な日程がある場合は申し込みを受け付けます。",
     "status": {
       "active": "アクティブ",
       "draft": "草案",
@@ -1344,7 +1367,6 @@
       "submissionFailed": "あなたの体験を登録できませんでした。もう一度試してください。",
       "scheduleInPast": "選択した日付または開始時刻の一部がすでに過ぎています。今後のセッションのみを選択してください。",
       "maxGuestsTooMany": "収容人数は最大 100 名です。",
-      "schedulesTooMany": "最大 30 個のセッションを追加できます。",
       "itineraryTooMany": "旅程アクティビティは最大 20 件追加できます。"
     }
   },

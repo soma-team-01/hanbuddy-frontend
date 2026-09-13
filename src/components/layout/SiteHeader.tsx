@@ -12,7 +12,6 @@ import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
 import { ChatRoomsPoller } from "@/components/chat/ChatRoomsPoller";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { AdminSiteHeader } from "@/components/layout/AdminSiteHeader";
-import { SettlementNavIcon } from "@/components/layout/SettlementNavIcon";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileMenu } from "./MobileMenu";
 import { PageContainer } from "./PageContainer";
@@ -195,10 +194,6 @@ function LocalizedSiteHeader({
               className="size-11 animate-pulse rounded-full border border-line-soft bg-panel"
             />
           ) : null}
-          {/* 정산은 버디에게만 있는 화면이다 — 채팅 아이콘 왼쪽에 둔다 */}
-          {!isMinimalHeader && effectiveAuthenticated && effectiveRole === "buddy" ? (
-            <SettlementNavIcon />
-          ) : null}
           {!isMinimalHeader && effectiveAuthenticated ? <ChatNavIcon /> : null}
           {(!isMinimalHeader || isBuddyHostingPage) && effectiveAuthenticated ? (
             <HeaderAccountMenu
@@ -224,9 +219,6 @@ function LocalizedSiteHeader({
                 aria-hidden
                 className="size-10 animate-pulse rounded-full border border-line-soft bg-panel"
               />
-            ) : null}
-            {effectiveAuthenticated && effectiveRole === "buddy" ? (
-              <SettlementNavIcon compact />
             ) : null}
             {effectiveAuthenticated ? <ChatNavIcon compact /> : null}
             {effectiveAuthenticated ? (

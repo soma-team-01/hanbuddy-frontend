@@ -22,6 +22,8 @@
     "activityScheduleFuture": "Activity schedules must start in the future.",
     "activityOwner": "You can only access activities you created.",
     "activityNotFound": "This activity could not be found.",
+    "activityStatusInvalid": "This activity status change is not allowed.",
+    "activityUnfinishedReservations": "This activity cannot be made private or deleted while it has unfinished reservations.",
     "activityScheduleNotFound": "This activity schedule could not be found.",
     "applicationNotApplicable": "This activity is not accepting applications.",
     "applicationScheduleNotOpen": "The selected schedule is not open for applications.",
@@ -797,6 +799,15 @@
       "FAILED": "Refund failed"
     }
   },
+  "AppliedActivityDetail": {
+    "title": "Application activity",
+    "loading": "Loading the activity from your application...",
+    "loadError": "Could not load this application activity.",
+    "backToApplications": "Back to My Applications",
+    "appliedSchedule": "Your applied schedule",
+    "notAcceptingBookings": "This activity is not currently accepting bookings.",
+    "noAvailableSchedules": "This activity has no available schedules."
+  },
   "Payment": {
     "unavailable": "Payment unavailable",
     "complete": "Payment complete",
@@ -1004,6 +1015,7 @@
     "loading": "Loading activities...",
     "loadError": "Could not load activities.",
     "deleteError": "Could not delete the activity.",
+    "statusChangeError": "Could not change the activity visibility.",
     "empty": "No activities yet.",
     "edit": "Edit",
     "editActivity": "Edit {title}",
@@ -1013,6 +1025,17 @@
     "deleteTitle": "Delete this activity?",
     "deleteDescription": "This action cannot be undone.",
     "deleting": "Deleting...",
+    "changingStatus": "Updating...",
+    "visibilityPublic": "Public",
+    "visibilityPrivate": "Private",
+    "makePrivate": "Make private",
+    "makePrivateActivity": "Make {title} private",
+    "makePrivateTitle": "Make this activity private?",
+    "makePrivateDescription": "It will disappear from public discovery, but you can publish it again later.",
+    "publish": "Publish",
+    "publishActivity": "Publish {title}",
+    "publishTitle": "Publish this activity?",
+    "publishDescription": "It will be visible to tourists and accept bookings when schedules are available.",
     "status": {
       "active": "Active",
       "draft": "Draft",
@@ -1344,7 +1367,6 @@
       "submissionFailed": "We couldn't register your experience. Please try again.",
       "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only.",
       "maxGuestsTooMany": "Capacity can be at most 100 guests.",
-      "schedulesTooMany": "You can add up to 30 sessions.",
       "itineraryTooMany": "You can add up to 20 itinerary activities."
     }
   },

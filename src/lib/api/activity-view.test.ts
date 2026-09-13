@@ -9,6 +9,7 @@ const summary = {
   buddyId: 7,
   title: "Bukchon Hidden Gems",
   description: "Walk through quiet alleys with a local buddy.",
+  totalDurationMinutes: 80,
   thumbnailImageUrl:
     "https://hanbuddy-bucket-526958954481-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/activities/2026/07/07/bukchon.webp",
   buddyName: "Jihoon Kim",
@@ -154,27 +155,20 @@ describe("activity view adapters", () => {
     });
   });
 
-  it("converts totalDurationHours to minutes for the card duration", () => {
-    expect(
-      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: 1.5 }).durationMinutes,
-    ).toBe(90);
-    expect(
-      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: 0.5 }).durationMinutes,
-    ).toBe(30);
-  });
+  it.each([0, 5, 29, 30, 31, 80])(
+    "passes an exact %i minute summary duration through without rounding",
+    (totalDurationMinutes) => {
+      expect(
+        mapTouristActivitySummaryToActivity({ ...summary, totalDurationMinutes }).durationMinutes,
+      ).toBe(totalDurationMinutes);
+    },
+  );
 
-  it("omits the duration when the response has no totalDurationHours", () => {
-    expect(mapTouristActivitySummaryToActivity(summary).durationMinutes).toBeUndefined();
-    expect(
-      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: null }).durationMinutes,
-    ).toBeUndefined();
-  });
-
-  it("passes the detail totalDurationHours through to the activity duration", () => {
+  it("passes the detail totalDurationMinutes through without conversion", () => {
     const detail = mapTouristActivityDetailToActivity(
       {
         ...summary,
-        totalDurationHours: 2.5,
+        totalDurationMinutes: 150,
         buddyId: 7,
         includedItems: [],
         restrictionNotes: [],

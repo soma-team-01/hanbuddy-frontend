@@ -238,6 +238,8 @@ function PhoneContactInput({
   );
 }
 
+export const MAX_MESSENGER_ID_LENGTH = 100;
+
 interface AppIdContactInputProps {
   app: MessagingAppKey;
   contactValue: string;
@@ -272,6 +274,7 @@ function AppIdContactInput({
     <input
       name={inputName}
       type="text"
+      maxLength={MAX_MESSENGER_ID_LENGTH}
       required={inputRequired}
       value={contactValue}
       onChange={(event) => onContactChange(event.target.value)}

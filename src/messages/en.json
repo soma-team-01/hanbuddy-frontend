@@ -1390,7 +1390,7 @@
     "day": "Day",
     "choose": "Select",
     "done": "Done",
-    "invalid": "Enter a valid date of birth for an age between 19 and 120.",
+    "reselectMonthDay": "Please select the month and day again for the chosen year.",
     "reselectDay": "The day is no longer valid. Please select it again."
   }
 }

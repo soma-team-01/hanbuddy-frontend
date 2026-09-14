@@ -29,7 +29,7 @@ export function BirthDatePicker({
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const firstSelect = useRef<HTMLSelectElement>(null);
-  const [reselectDay, setReselectDay] = useState(false);
+  const [reselection, setReselection] = useState<"reselectDay" | "reselectMonthDay" | null>(null);
   const [open, setOpen] = useState(false);
   const [parts, setParts] = useState({ year: "", month: "", day: "" });
   const order: Part[] = locale === "en" ? ["month", "day", "year"] : ["year", "month", "day"];
@@ -103,11 +103,11 @@ export function BirthDatePicker({
     if (updated.month && !allowed("month", Number(updated.month), updated)) {
       updated.month = "";
       updated.day = "";
-      setReselectDay(true);
+      setReselection("reselectMonthDay");
     } else if (updated.day && !allowed("day", Number(updated.day), updated)) {
       updated.day = "";
-      setReselectDay(true);
-    } else if (part === "day") setReselectDay(false);
+      setReselection(reselection ?? "reselectDay");
+    } else if (updated.month && updated.day) setReselection(null);
     setParts(updated);
     const candidate = `${updated.year.padStart(4, "0")}-${updated.month.padStart(2, "0")}-${updated.day.padStart(2, "0")}`;
     onChange(
@@ -151,7 +151,7 @@ export function BirthDatePicker({
             month: month ? String(Number(month)) : "",
             day: day ? String(Number(day)) : "",
           });
-          setReselectDay(false);
+          setReselection(null);
           setOpen(true);
         }}
         className="flex min-h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 py-3 text-left text-base text-ink focus-visible:outline-2 focus-visible:outline-primary-strong"
@@ -209,7 +209,7 @@ export function BirthDatePicker({
             ))}
           </div>
           <output className="mt-3 block text-sm text-muted">
-            {reselectDay ? t("reselectDay") : ""}
+            {reselection ? t(reselection) : ""}
           </output>
           <button
             type="button"

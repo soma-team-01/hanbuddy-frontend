@@ -84,6 +84,8 @@ describe("OnboardingForm", () => {
   it.each([
     ["KakaoTalk", "KAKAOTALK", "카카오 사용자 / a"],
     ["Instagram", "INSTAGRAM", "https://instagram.com/synthetic.user"],
+    ["KakaoTalk", "KAKAOTALK", "a".repeat(100)],
+    ["Instagram", "INSTAGRAM", "a".repeat(100)],
   ])(
     "submits %s with an unrestricted identifier and LocalDate birthDate",
     async (label, method, identifier) => {
@@ -121,6 +123,17 @@ describe("OnboardingForm", () => {
       });
     },
   );
+
+  it.each(["KakaoTalk", "Instagram"])("rejects an overlong %s ID before signup", (app) => {
+    renderWithIntl(<OnboardingForm />);
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    fireEvent.click(screen.getByRole("button", { name: app }));
+    fillContact("en", "a".repeat(101));
+    clickContinue("en");
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter a valid contact ID or phone number");
+    expect(screen.queryByRole("button", { name: /Sign up/ })).not.toBeInTheDocument();
+  });
 
   it.each([
     [

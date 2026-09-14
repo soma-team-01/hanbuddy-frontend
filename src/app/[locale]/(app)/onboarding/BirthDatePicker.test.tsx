@@ -114,6 +114,33 @@ it("invalidates an out-of-range month when changing to the youngest year", () =>
   expect(screen.getByRole("combobox", { name: "Day" })).toHaveValue("");
   expect(screen.getByLabelText("payload")).toBeEmptyDOMElement();
 });
+it.each(["Month", "Day"])("keeps the month/day notice when %s is reselected first", (first) => {
+  renderWithIntl(<Picker initial="2000-12-31" />);
+  fireEvent.click(screen.getByRole("button", { name: "Date of birth" }));
+  fireEvent.change(screen.getByRole("combobox", { name: "Year" }), { target: { value: "2007" } });
+  expect(screen.getByRole("status")).toHaveTextContent("Please select the month and day again");
+  const selections =
+    first === "Month"
+      ? [
+          ["Month", "8"],
+          ["Day", "11"],
+        ]
+      : [
+          ["Day", "11"],
+          ["Month", "8"],
+        ];
+  const [[firstName, firstValue], [lastName, lastValue]] = selections;
+  fireEvent.change(screen.getByRole("combobox", { name: firstName }), {
+    target: { value: firstValue },
+  });
+  expect(screen.getByRole("status")).toHaveTextContent("Please select the month and day again");
+  expect(screen.getByLabelText("payload")).toBeEmptyDOMElement();
+  fireEvent.change(screen.getByRole("combobox", { name: lastName }), {
+    target: { value: lastValue },
+  });
+  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  expect(screen.getByLabelText("payload")).toHaveTextContent("2007-08-11");
+});
 it("shows invalid input as empty and exposes a described error", () => {
   renderWithIntl(
     <BirthDatePicker

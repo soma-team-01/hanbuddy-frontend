@@ -38,6 +38,7 @@ describe("MessagingAppField", () => {
     renderField({ app, touristSignup: true }, "ko");
     expect(screen.getByRole("button", { name: label })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByPlaceholderText(label + " ID")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(label + " ID")).toHaveAttribute("maxlength", "100");
     expect(screen.queryByRole("button", { name: "Line" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("국가번호")).not.toBeInTheDocument();
   });

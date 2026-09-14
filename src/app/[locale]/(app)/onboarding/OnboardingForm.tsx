@@ -9,6 +9,7 @@ import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
   APP_BY_CONTACT_METHOD,
   CONTACT_METHOD_BY_APP,
+  MAX_MESSENGER_ID_LENGTH,
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
@@ -434,7 +435,7 @@ export function OnboardingForm({
     const normalizedPhoneNumber = contactIdentifier.replace(/[ -]/g, "");
     const isUnrestrictedMessenger = messagingApp === "kakaotalk" || messagingApp === "instagram";
     const isValidMessengerId = isUnrestrictedMessenger
-      ? contactIdentifier.length > 0
+      ? contactIdentifier.length > 0 && contactIdentifier.length <= MAX_MESSENGER_ID_LENGTH
       : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
     const isValidContact = requiresContactCountryCode
       ? COUNTRY_CALLING_CODE_PATTERN.test(contactCountryCode ?? "") &&

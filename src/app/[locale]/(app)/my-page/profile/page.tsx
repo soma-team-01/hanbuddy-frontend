@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { ProfilePageContent } from "./ProfilePageContent";
+import { getSignupAgreementDocuments } from "@/lib/server/policy-content";
 
 const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
@@ -29,6 +30,9 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   };
 }
 
-export default function ProfilePage() {
-  return <ProfilePageContent />;
+export default async function ProfilePage({ params }: Readonly<ProfilePageProps>) {
+  const { locale } = await params;
+  // Public documents only; the authenticated API determines which rows and role to display.
+  const documents = await getSignupAgreementDocuments("BUDDY", locale);
+  return <ProfilePageContent documents={documents} />;
 }

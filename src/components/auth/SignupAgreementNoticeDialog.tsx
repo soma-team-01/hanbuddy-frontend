@@ -17,12 +17,14 @@ export function SignupAgreementNoticeDialog({
   userType = "TOURIST",
   title,
   document,
+  versionNote,
   onClose,
 }: Readonly<{
   agreementType: SignupAgreementType;
   userType?: UserType;
   title: string;
   document?: SignupAgreementDocuments[SignupAgreementType];
+  versionNote?: string;
   onClose: () => void;
 }>) {
   const locale = useLocale() as Locale;
@@ -54,6 +56,7 @@ export function SignupAgreementNoticeDialog({
             {title}
           </h2>
           <p className="mt-1 text-xs text-muted">{t("documentVersion", { version })}</p>
+          {versionNote ? <p className="mt-1 text-xs text-muted">{versionNote}</p> : null}
         </div>
         <button
           type="button"

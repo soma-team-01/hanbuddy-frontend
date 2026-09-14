@@ -5,7 +5,21 @@ import type { Locale } from "@/i18n/routing";
 import { getMyProfile } from "@/lib/api/users";
 import { createMockProfile } from "@/test/factories";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import ProfilePage, { generateMetadata } from "./page";
+import ServerProfilePage, { generateMetadata } from "./page";
+import { ProfilePageContent as ProfilePage } from "./ProfilePageContent";
+
+vi.mock("@/lib/api/agreements", () => ({
+  getMyAgreements: vi
+    .fn()
+    .mockResolvedValue({ status: "success", data: { userType: "TOURIST", agreements: [] } }),
+  updateMarketingConsent: vi.fn(),
+}));
+
+vi.mock("@/lib/server/policy-content", () => ({
+  getSignupAgreementDocuments: vi
+    .fn()
+    .mockResolvedValue({ TERMS_OF_SERVICE: { version: "2026-09-08", source: "Terms body" } }),
+}));
 
 vi.mock("next-intl/server", async () => {
   const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
@@ -110,6 +124,15 @@ describe("ProfilePage", () => {
 });
 
 describe("profile metadata", () => {
+  it("passes the localized signup documents to the profile", async () => {
+    const { getSignupAgreementDocuments } = await import("@/lib/server/policy-content");
+    const page = await ServerProfilePage({ params: Promise.resolve({ locale: "ko" }) });
+    expect(getSignupAgreementDocuments).toHaveBeenCalledWith("BUDDY", "ko");
+    expect(page.props.documents.TERMS_OF_SERVICE).toEqual({
+      version: "2026-09-08",
+      source: "Terms body",
+    });
+  });
   it.each([
     ["en", "Profile | HanBuddy", "/en/my-page/profile"],
     ["ko", "프로필 | HanBuddy", "/ko/my-page/profile"],

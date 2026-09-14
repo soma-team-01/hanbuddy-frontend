@@ -503,6 +503,23 @@
     "backToBuddy": "Back to buddy page",
     "backToHome": "Back to home"
   },
+  "ProfileAgreements": {
+    "title": "Agreements & preferences",
+    "description": "Review your agreements and manage marketing emails.",
+    "loading": "Loading agreements…",
+    "loadFailed": "Could not load your agreements.",
+    "retry": "Retry",
+    "recordedVersion": "Recorded version: {version}",
+    "currentDocument": "Current document",
+    "noRecord": "No record",
+    "agreed": "Agreed",
+    "notAgreed": "Not agreed",
+    "versionMismatch": "The marketing document has changed. Refresh this page to check the latest document before opting in. You can still opt out.",
+    "saveFailed": "Could not confirm the change. We’re checking your saved preference. Please try again.",
+    "saving": "Saving…",
+    "saved": "Preference saved.",
+    "serviceNotice": "Booking confirmations and essential service messages are not affected."
+  },
   "Profile": {
     "title": "Edit profile",
     "metadataTitle": "Edit profile | HanBuddy",

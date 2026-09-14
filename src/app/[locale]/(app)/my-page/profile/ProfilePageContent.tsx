@@ -19,6 +19,8 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import type { ContactMethod } from "@/lib/auth/types";
 import type { MyProfile } from "@/types/user";
+import type { SignupAgreementDocuments } from "@/lib/auth/signup-agreement-notices";
+import { ProfileAgreements } from "@/app/[locale]/(app)/my-page/profile/ProfileAgreements";
 
 type DetailIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -96,7 +98,10 @@ function ProfileDetail({
   );
 }
 
-function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
+function ProfileView({
+  profile,
+  documents,
+}: Readonly<{ profile: MyProfile; documents: SignupAgreementDocuments }>) {
   const locale = useLocale() as Locale;
   const t = useTranslations("Profile");
   const tMessaging = useTranslations("Messaging");
@@ -107,73 +112,80 @@ function ProfileView({ profile }: Readonly<{ profile: MyProfile }>) {
 
       <main className="flex flex-1 flex-col">
         <PageContainer className="flex flex-1 justify-center py-4 md:py-6">
-          <section
-            aria-label={t("summaryLabel")}
-            className="relative w-full max-w-[520px] self-start overflow-hidden rounded-[2rem] border border-line-soft bg-white px-6 py-6 shadow-[0_20px_55px_rgba(38,27,24,0.08)] md:px-8 md:py-7"
-          >
-            <Link
-              href="/my-page/edit"
-              className="absolute top-5 right-5 inline-flex min-h-9 items-center gap-2 rounded-full border border-line-strong bg-white px-3.5 text-sm font-bold text-primary-strong shadow-[0_6px_18px_rgba(38,27,24,0.06)] transition-colors hover:border-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          <div className="flex w-full max-w-[520px] flex-col gap-5 self-start">
+            <section
+              aria-label={t("summaryLabel")}
+              className="relative w-full max-w-[520px] self-start overflow-hidden rounded-[2rem] border border-line-soft bg-white px-6 py-6 shadow-[0_20px_55px_rgba(38,27,24,0.08)] md:px-8 md:py-7"
             >
-              <PencilIcon aria-hidden className="size-4" />
-              {t("editAction")}
-            </Link>
+              <Link
+                href="/my-page/edit"
+                className="absolute top-5 right-5 inline-flex min-h-9 items-center gap-2 rounded-full border border-line-strong bg-white px-3.5 text-sm font-bold text-primary-strong shadow-[0_6px_18px_rgba(38,27,24,0.06)] transition-colors hover:border-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <PencilIcon aria-hidden className="size-4" />
+                {t("editAction")}
+              </Link>
 
-            <div className="flex justify-center pt-5 md:pt-3">
-              <Avatar
-                name={profile.displayName}
-                src={profile.profileImageUrl}
-                size={120}
-                eagerImage
-                className="ring-1 ring-line-soft ring-offset-6 ring-offset-white"
-              />
-            </div>
+              <div className="flex justify-center pt-5 md:pt-3">
+                <Avatar
+                  name={profile.displayName}
+                  src={profile.profileImageUrl}
+                  size={120}
+                  eagerImage
+                  className="ring-1 ring-line-soft ring-offset-6 ring-offset-white"
+                />
+              </div>
 
-            <div className="mt-7 min-w-0">
-              <h2 className="truncate font-display text-2xl font-extrabold tracking-[-0.04em] text-ink md:text-3xl">
-                {profile.displayName}
-              </h2>
-              <p className="mt-2 flex items-center gap-2 text-sm break-all text-muted md:text-base">
-                <MailIcon aria-hidden className="size-4 shrink-0" />
-                {profile.email}
-              </p>
-            </div>
+              <div className="mt-7 min-w-0">
+                <h2 className="truncate font-display text-2xl font-extrabold tracking-[-0.04em] text-ink md:text-3xl">
+                  {profile.displayName}
+                </h2>
+                <p className="mt-2 flex items-center gap-2 text-sm break-all text-muted md:text-base">
+                  <MailIcon aria-hidden className="size-4 shrink-0" />
+                  {profile.email}
+                </p>
+              </div>
 
-            <div className="mt-5 border-t border-line-soft pt-1">
-              <h3 className="sr-only">{t("viewDetails")}</h3>
-              <p className="sr-only">{t("viewDetailsDescription")}</p>
-              <dl>
-                <ProfileDetail
-                  Icon={GlobeIcon}
-                  label={t("nationality")}
-                  value={formatNationalityCode(profile.nationalityCode, locale)}
-                />
-                <ProfileDetail
-                  Icon={CalendarIcon}
-                  label={t("age")}
-                  value={formatBirthDate(profile.birthDate, locale)}
-                />
-                <ProfileDetail
-                  Icon={MessageCircleIcon}
-                  label={t("contactDetails")}
-                  value={<ContactValue profile={profile} phoneLabel={tMessaging("phoneNumber")} />}
-                />
-              </dl>
-            </div>
-          </section>
+              <div className="mt-5 border-t border-line-soft pt-1">
+                <h3 className="sr-only">{t("viewDetails")}</h3>
+                <p className="sr-only">{t("viewDetailsDescription")}</p>
+                <dl>
+                  <ProfileDetail
+                    Icon={GlobeIcon}
+                    label={t("nationality")}
+                    value={formatNationalityCode(profile.nationalityCode, locale)}
+                  />
+                  <ProfileDetail
+                    Icon={CalendarIcon}
+                    label={t("age")}
+                    value={formatBirthDate(profile.birthDate, locale)}
+                  />
+                  <ProfileDetail
+                    Icon={MessageCircleIcon}
+                    label={t("contactDetails")}
+                    value={
+                      <ContactValue profile={profile} phoneLabel={tMessaging("phoneNumber")} />
+                    }
+                  />
+                </dl>
+              </div>
+            </section>
+            <ProfileAgreements key={profile.userId} userId={profile.userId} documents={documents} />
+          </div>
         </PageContainer>
       </main>
     </div>
   );
 }
 
-export function ProfilePageContent() {
+export function ProfilePageContent({
+  documents = {},
+}: Readonly<{ documents?: SignupAgreementDocuments }>) {
   const t = useTranslations("Profile");
   const getApiErrorMessage = useApiErrorMessage();
   const result = useMyProfile();
 
   if (result?.status === "success") {
-    return <ProfileView profile={result.profile} />;
+    return <ProfileView profile={result.profile} documents={documents} />;
   }
 
   return (

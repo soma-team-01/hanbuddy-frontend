@@ -2,20 +2,22 @@
 
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
 import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { toSeoulStartAt } from "@/lib/datetime";
+import { getContentLanguage } from "@/lib/content-language";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
 import { activityKeys } from "@/lib/query/activities";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { ActivityUpsertRequest, MyActivityStatus } from "@/types/buddy";
+import type { ContentLanguage, ResolvedContentLanguage } from "@/types/content-language";
 import {
   ACTIVITY_CREATE_LIMITS,
   ACTIVITY_CREATE_STEPS,
@@ -47,6 +49,12 @@ import {
   ReviewStep,
   ScheduleStep,
 } from "./activity-create-steps";
+import {
+  clearActivityCreateDraft,
+  getActivityCreateDraftScope,
+  loadActivityCreateDraft,
+  saveActivityCreateDraft,
+} from "./activity-create-draft-storage";
 
 const MAX_EXPERIENCE_PHOTOS = ACTIVITY_CREATE_LIMITS.photos.max;
 
@@ -61,7 +69,7 @@ const STEP_GROUPS = [
   steps: ReadonlyArray<ActivityCreateStep>;
 }>;
 
-type DraftTextField = Exclude<
+type DraftScalarField = Exclude<
   keyof ActivityCreateDraft,
   "photos" | "itinerary" | "schedules" | "discountType" | "hasNoRestrictions"
 >;
@@ -100,10 +108,15 @@ function splitDraftLines(value: string) {
     .filter(Boolean);
 }
 
+function roundMeetingCoordinate(value: number) {
+  return Number(value.toFixed(6));
+}
+
 export function buildActivityUpsertRequest(
   draft: ActivityCreateDraft,
   imageKeys: string[],
   itineraryImageKeys: string[],
+  sourceLanguage: ContentLanguage,
   status: MyActivityStatus = "ACTIVE",
 ): ActivityUpsertRequest {
   // 화면에서 편집한 일정과, 편집 대상이 아닌 지난 일정을 함께 보낸다.
@@ -117,6 +130,7 @@ export function buildActivityUpsertRequest(
   const schedules = [...new Set(startAts)].map((startAt) => ({ startAt }));
 
   return {
+    sourceLanguage,
     title: draft.experienceName.trim(),
     description: draft.experienceDescription.trim(),
     hostIntroduction: draft.hostIntroduction.trim(),
@@ -134,6 +148,15 @@ export function buildActivityUpsertRequest(
       : {}),
     meetingPointName: draft.meetingPlace.trim(),
     meetingPlaceId: draft.meetingPlaceId,
+    ...(typeof draft.meetingLatitude === "number" &&
+    Number.isFinite(draft.meetingLatitude) &&
+    typeof draft.meetingLongitude === "number" &&
+    Number.isFinite(draft.meetingLongitude)
+      ? {
+          meetingLatitude: roundMeetingCoordinate(draft.meetingLatitude),
+          meetingLongitude: roundMeetingCoordinate(draft.meetingLongitude),
+        }
+      : {}),
     status,
     schedules,
     itineraries: draft.itinerary.map((item, index) => ({
@@ -269,6 +292,8 @@ export interface CreateActivityFormProps {
   initialDraft?: ActivityCreateDraft;
   /** edit 모드에서 유지할 기존 활동 상태 */
   initialStatus?: MyActivityStatus;
+  /** edit 모드에서 기존 활동 원문의 언어를 유지한다 */
+  initialSourceLanguage?: ResolvedContentLanguage;
 }
 
 export function CreateActivityForm({
@@ -276,8 +301,14 @@ export function CreateActivityForm({
   activityId,
   initialDraft,
   initialStatus,
+  initialSourceLanguage,
 }: Readonly<CreateActivityFormProps> = {}) {
   const t = useTranslations("CreateActivity");
+  const currentLanguage = getContentLanguage(useLocale());
+  const sourceLanguage =
+    initialSourceLanguage && initialSourceLanguage !== "UNKNOWN"
+      ? initialSourceLanguage
+      : currentLanguage;
   const router = useRouter();
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
@@ -287,6 +318,8 @@ export function CreateActivityForm({
     storedSnapshot && storedSnapshot.mode === mode && storedSnapshot.activityId === activityId
       ? storedSnapshot
       : null;
+  const initialSnapshotRef = useRef(initialSnapshot);
+  const persistenceScope = getActivityCreateDraftScope(mode, activityId);
   const [currentStep, setCurrentStep] = useState<ActivityCreateStep>(
     initialSnapshot?.currentStep ?? "host",
   );
@@ -308,6 +341,8 @@ export function CreateActivityForm({
   const fileSequence = useRef(initialSnapshot?.fileSequence ?? 0);
   const scheduleSequence = useRef(initialSnapshot?.scheduleSequence ?? 0);
   const objectUrls = useRef(initialSnapshot?.objectUrls ?? new Set<string>());
+  const draftWasDiscarded = useRef(false);
+  const [isDraftPersistenceReady, setIsDraftPersistenceReady] = useState(initialSnapshot !== null);
   const contentRef = useRef<HTMLDivElement>(null);
   const currentIndex = getStepIndex(currentStep);
   const progressIndex = reviewing ? ACTIVITY_CREATE_STEPS.length : currentIndex + 1;
@@ -354,6 +389,61 @@ export function CreateActivityForm({
     };
   }, []);
 
+  useEffect(() => {
+    if (initialSnapshotRef.current) return;
+
+    let cancelled = false;
+    void loadActivityCreateDraft(persistenceScope).then((restored) => {
+      if (cancelled) {
+        restored?.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+        return;
+      }
+
+      if (restored) {
+        setCurrentStep(restored.snapshot.currentStep);
+        setFurthestStepIndex(restored.snapshot.furthestStepIndex);
+        setDraft(restored.snapshot.draft);
+        setErrorKey(restored.snapshot.errorKey);
+        setReviewing(restored.snapshot.reviewing);
+        fileSequence.current = restored.snapshot.fileSequence;
+        scheduleSequence.current = restored.snapshot.scheduleSequence;
+        restored.objectUrls.forEach((url) => objectUrls.current.add(url));
+      }
+      setIsDraftPersistenceReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [persistenceScope]);
+
+  useEffect(() => {
+    if (!isDraftPersistenceReady || draftWasDiscarded.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      if (draftWasDiscarded.current) return;
+      void saveActivityCreateDraft(persistenceScope, {
+        currentStep,
+        furthestStepIndex,
+        draft,
+        errorKey,
+        reviewing,
+        fileSequence: fileSequence.current,
+        scheduleSequence: scheduleSequence.current,
+      }).catch(() => undefined);
+    }, 200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    currentStep,
+    draft,
+    errorKey,
+    furthestStepIndex,
+    isDraftPersistenceReady,
+    persistenceScope,
+    reviewing,
+  ]);
+
   function preserveForLocaleChange() {
     activityCreateLocaleSnapshot = {
       mode,
@@ -369,13 +459,23 @@ export function CreateActivityForm({
     };
   }
 
-  function clearPreservedDraft() {
+  const clearPreservedDraft = useCallback(() => {
     activityCreateLocaleSnapshot = null;
+    draftWasDiscarded.current = true;
+    void clearActivityCreateDraft(persistenceScope).catch(() => undefined);
     objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
     objectUrls.current.clear();
-  }
+  }, [persistenceScope]);
 
-  function updateField(field: DraftTextField, value: string) {
+  useEffect(() => {
+    window.addEventListener("popstate", clearPreservedDraft);
+    return () => window.removeEventListener("popstate", clearPreservedDraft);
+  }, [clearPreservedDraft]);
+
+  function updateField<Field extends DraftScalarField>(
+    field: Field,
+    value: ActivityCreateDraft[Field],
+  ) {
     setDraft((current) => ({ ...current, [field]: value }));
     setErrorKey(null);
   }
@@ -586,6 +686,8 @@ export function CreateActivityForm({
 
   async function submitActivity() {
     if (isSubmitting) return;
+    // 새 시도를 시작하므로 지난 제출 오류부터 비운다 — 검증에 걸려 되돌아갈 때 두 오류가 겹치지 않게
+    setSubmissionError(null);
 
     // 제출 직전 전체 단계를 한 번 더 검증해 리뷰 중 유실된 값이 있으면 해당 단계로 되돌린다
     const invalidStep = ACTIVITY_CREATE_STEPS.find(
@@ -599,7 +701,6 @@ export function CreateActivityForm({
       return;
     }
 
-    setSubmissionError(null);
     setSubmissionPhase("uploading");
     try {
       // 기존 이미지는 발급받았던 key를 그대로 쓰고, 새로 고른 파일만 업로드한다
@@ -637,7 +738,13 @@ export function CreateActivityForm({
 
       setSubmissionPhase("registering");
       await submitActivityMutation.mutateAsync(
-        buildActivityUpsertRequest(draft, imageKeys, itineraryImageKeys, initialStatus ?? "ACTIVE"),
+        buildActivityUpsertRequest(
+          draft,
+          imageKeys,
+          itineraryImageKeys,
+          sourceLanguage,
+          initialStatus ?? "ACTIVE",
+        ),
       );
       clearPreservedDraft();
       router.push(
@@ -712,7 +819,7 @@ export function CreateActivityForm({
   }
 
   function renderStep() {
-    if (reviewing) return <ReviewStep draft={draft} t={t} />;
+    if (reviewing) return <ReviewStep draft={draft} activityId={activityId} t={t} />;
 
     switch (currentStep) {
       case "host":
@@ -827,13 +934,18 @@ export function CreateActivityForm({
     STEP_GROUPS.find((group) => group.steps.some((step) => step === currentStep)) ?? STEP_GROUPS[0];
   const exitHref =
     isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/dashboard";
+  let phaseLabel: string | null = null;
+  if (submissionPhase === "uploading") phaseLabel = t("actions.submitUploading");
+  if (submissionPhase === "registering") {
+    phaseLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
+  }
+
   let primaryActionLabel = reviewing
     ? t(isEdit ? "actions.save" : "actions.finish")
     : t("actions.next");
-  if (submissionPhase === "uploading") primaryActionLabel = t("actions.submitUploading");
-  if (submissionPhase === "registering") {
-    primaryActionLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
-  }
+  if (reviewing && phaseLabel) primaryActionLabel = phaseLabel;
+  // 수정 모드에는 단계마다 저장 버튼이 있어 진행 문구는 그쪽에 싣는다
+  const stepSaveLabel = phaseLabel ?? t("actions.save");
 
   return (
     <div className="fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-[#fff] text-ink">
@@ -859,7 +971,7 @@ export function CreateActivityForm({
             />
             <Link
               href={exitHref}
-              onClick={clearPreservedDraft}
+              onNavigate={clearPreservedDraft}
               className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong bg-white px-3 text-sm font-bold text-ink transition hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
             >
               <LogOutIcon className="size-4" />
@@ -952,8 +1064,20 @@ export function CreateActivityForm({
               }`}
             >
               <p aria-live="polite" className="sr-only">
-                {isSubmitting ? primaryActionLabel : ""}
+                {isSubmitting ? (phaseLabel ?? primaryActionLabel) : ""}
               </p>
+              {isEdit && !reviewing ? (
+                // 마지막 화면까지 가지 않아도 지금까지의 변경을 바로 저장한다.
+                // 저장 전에 전체 단계를 검증하므로, 비어 있는 단계가 있으면 그리로 데려간다
+                <button
+                  type="button"
+                  onClick={() => void submitActivity()}
+                  disabled={isSubmitting}
+                  className="flex min-h-11 items-center justify-center rounded-full border border-primary px-6 text-sm font-bold text-primary transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {stepSaveLabel}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={goNext}

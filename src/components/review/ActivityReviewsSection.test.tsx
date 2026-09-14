@@ -17,10 +17,14 @@ function createReview(reviewId: number): ReviewResponse {
     applicationId: reviewId + 100,
     activityId: 42,
     activityTitle: "Bukchon Hidden Gems",
+    activityTitleLanguage: "EN",
     reviewerName: `Reviewer ${reviewId}`,
     reviewerProfileImageUrl: null,
     rating: 5,
     content: `Loved every minute of it (${reviewId}).`,
+    contentLanguage: "EN",
+    sourceLanguage: "EN",
+    originalContent: `Loved every minute of it (${reviewId}).`,
     createdAt: "2026-08-01T13:00:00+09:00",
   };
 }
@@ -42,10 +46,10 @@ describe("ActivityReviewsSection", () => {
     vi.clearAllMocks();
   });
 
-  it("previews six reviews with the average rating and total count", async () => {
+  it("previews three reviews in one column with the average rating and total count", async () => {
     mockedGetActivityReviews.mockResolvedValue({
       status: "success",
-      reviews: createPage(0, 6, true),
+      reviews: createPage(0, 3, true),
     });
 
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
@@ -53,7 +57,8 @@ describe("ActivityReviewsSection", () => {
     expect(await screen.findByRole("img", { name: "Rated 4.8 out of 5" })).toBeInTheDocument();
     expect(screen.getByText("31 reviews")).toBeInTheDocument();
     expect(screen.getByText("Loved every minute of it (1).")).toBeInTheDocument();
-    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 6);
+    expect(screen.getByRole("list")).toHaveClass("flex-col");
+    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 3, "EN");
   });
 
   it("opens the full list in a dialog that pages twelve at a time", async () => {
@@ -67,23 +72,29 @@ describe("ActivityReviewsSection", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Show all 31 reviews" }));
 
     const dialog = await screen.findByRole("dialog");
-    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, null));
+    await waitFor(() =>
+      expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, "EN", null),
+    );
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Load more reviews" }));
 
-    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenLastCalledWith(42, 1, 12, null));
+    await waitFor(() =>
+      expect(mockedGetActivityReviews).toHaveBeenLastCalledWith(42, 1, 12, "EN", null),
+    );
     expect(await within(dialog).findByText("Loved every minute of it (101).")).toBeInTheDocument();
   });
 
   it("filters the dialog list by the star level the reader picks", async () => {
-    mockedGetActivityReviews.mockImplementation(async (_activityId, page, size, rating) => ({
-      status: "success",
-      reviews: {
-        ...createPage(page, size, false),
-        totalCount: rating === 5 ? 24 : 31,
-        reviews: [createReview(rating === 5 ? 500 : 1)],
-      },
-    }));
+    mockedGetActivityReviews.mockImplementation(
+      async (_activityId, page, size, _language, rating) => ({
+        status: "success",
+        reviews: {
+          ...createPage(page, size, false),
+          totalCount: rating === 5 ? 24 : 31,
+          reviews: [createReview(rating === 5 ? 500 : 1)],
+        },
+      }),
+    );
 
     renderWithQueryClient(<ActivityReviewsSection activityId={42} />);
 
@@ -92,7 +103,7 @@ describe("ActivityReviewsSection", () => {
 
     fireEvent.click(within(dialog).getByRole("button", { name: /Show only 5-star reviews/ }));
 
-    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, 5));
+    await waitFor(() => expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 12, "EN", 5));
     expect(await within(dialog).findByText("Loved every minute of it (500).")).toBeInTheDocument();
     // 필터를 걸어도 평균 별점과 분포는 전체 기준으로 남는다
     expect(within(dialog).getByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();
@@ -112,7 +123,7 @@ describe("ActivityReviewsSection", () => {
         totalCount: 2,
         reviews: [createReview(1), createReview(2)],
         page: 0,
-        size: 6,
+        size: 3,
         hasNext: false,
       },
     });
@@ -131,7 +142,7 @@ describe("ActivityReviewsSection", () => {
         totalCount: 0,
         reviews: [],
         page: 0,
-        size: 6,
+        size: 3,
         hasNext: false,
       },
     });

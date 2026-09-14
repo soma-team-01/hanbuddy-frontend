@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
@@ -38,6 +38,14 @@ const caveat = Caveat({
   weight: ["400", "500", "600", "700"],
 });
 
+// iOS 세이프에어리어(env(safe-area-inset-*))와 키보드 대응 레이아웃을 켠다. 확대는 막지 않는다(접근성).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -58,9 +66,11 @@ export function generateStaticParams() {
 
 export default async function LocaleLayout({
   children,
+  policy,
   params,
 }: Readonly<{
   children: React.ReactNode;
+  policy: React.ReactNode;
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
@@ -97,10 +107,11 @@ export default async function LocaleLayout({
                   mayHaveSession={mayHaveSession}
                 />
               }
-              footer={<SiteFooter locale={locale} />}
+              footer={<SiteFooter locale={locale} role={role} />}
             >
               {children}
             </RouteShell>
+            {policy}
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

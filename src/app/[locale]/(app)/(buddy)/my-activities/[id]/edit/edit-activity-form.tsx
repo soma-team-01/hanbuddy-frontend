@@ -54,6 +54,7 @@ export function EditActivityForm({ activityId }: Readonly<{ activityId: string }
       activityId={activityId}
       initialDraft={initialDraft}
       initialStatus={activityQuery.data.status}
+      initialSourceLanguage={activityQuery.data.sourceLanguage}
     />
   );
 }

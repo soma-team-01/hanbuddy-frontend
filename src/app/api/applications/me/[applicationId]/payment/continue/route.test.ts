@@ -42,19 +42,38 @@ describe("POST /api/applications/me/[applicationId]/payment/continue", () => {
     });
 
     const response = await POST(
-      new NextRequest("http://localhost/api/applications/me/11/payment/continue", {
-        method: "POST",
-        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
-      }),
+      new NextRequest(
+        "http://localhost/api/applications/me/11/payment/continue?paymentProvider=PAYPAL&language=EN",
+        {
+          method: "POST",
+          headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+        },
+      ),
       context,
     );
 
     expect(mockedPostBackend).toHaveBeenCalledWith(
-      "/applications/me/11/payment/continue",
+      "/applications/me/11/payment/continue?paymentProvider=PAYPAL&language=EN",
       undefined,
       { bearerToken: "access-token" },
     );
     expect(response.status).toBe(200);
+  });
+
+  it("rejects unsupported payment providers before proxying", async () => {
+    const response = await POST(
+      new NextRequest(
+        "http://localhost/api/applications/me/11/payment/continue?paymentProvider=CARD",
+        {
+          method: "POST",
+          headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+        },
+      ),
+      context,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
   it("rejects non-numeric application ids before proxying", async () => {

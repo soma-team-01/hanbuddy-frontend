@@ -20,3 +20,11 @@ describe("nextConfig images.remotePatterns", () => {
     });
   });
 });
+
+describe("nextConfig output file tracing", () => {
+  it("includes policy documents for policy and onboarding routes", () => {
+    expect(nextConfig.outputFileTracingIncludes).toEqual({
+      "/*": ["content/policies/*.md"],
+    });
+  });
+});

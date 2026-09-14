@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
@@ -27,6 +27,7 @@ const activityDetail: TouristActivityDetail = {
   activityId: 42,
   title: "Bukchon Hidden Gems",
   description: "Walk through quiet alleys with a local buddy.",
+  totalDurationMinutes: 60,
   thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
   buddyId: 7,
   buddyName: "Jihoon Kim",
@@ -35,6 +36,13 @@ const activityDetail: TouristActivityDetail = {
   restrictionNotes: [],
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 32.5,
+    discountedPrice: null,
+    currency: "USD",
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
+  },
   meetingPointName: "Anguk Station Exit 2",
   meetingPlaceId: "ChIJ-bukchon",
   images: [],
@@ -46,6 +54,17 @@ const activityDetail: TouristActivityDetail = {
       status: "OPEN",
     },
   ],
+};
+
+const cnyActivityDetail: TouristActivityDetail = {
+  ...activityDetail,
+  displayPrice: {
+    price: 240,
+    discountedPrice: null,
+    currency: "CNY",
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
+  },
 };
 
 describe("BookingContent", () => {
@@ -64,16 +83,76 @@ describe("BookingContent", () => {
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("10:00 AM");
     expect(screen.getByText("All times are in Korea Standard Time (KST).")).toBeInTheDocument();
+    expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "EN", "USD");
   });
 
   it("reuses activity detail already cached by the detail screen", async () => {
     const queryClient = createQueryClient();
-    queryClient.setQueryData(activityKeys.detail("42"), activityDetail);
+    queryClient.setQueryData(activityKeys.detail("42", "EN", "USD"), activityDetail);
 
     renderWithQueryClient(<BookingContent activityId="42" />, { queryClient });
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(mockedGetTouristActivity).not.toHaveBeenCalled();
+  });
+
+  it("uses the locale currency for the summary and USD only for the PayPal action", async () => {
+    mockedGetTouristActivity.mockImplementation(async (_activityId, _language, currency) => ({
+      status: "success",
+      activity: currency === "CNY" ? cnyActivityDetail : activityDetail,
+    }));
+
+    renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
+
+    expect(await screen.findByText("≈ ¥240.00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay US$32.50 with PayPal" })).toBeInTheDocument();
+    expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "ZH_HANS", "CNY");
+    expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "ZH_HANS", "USD");
+  });
+
+  it("keeps PayPal disabled until the USD estimate is ready", async () => {
+    let resolveUsdEstimate!: (result: {
+      status: "success";
+      activity: TouristActivityDetail;
+    }) => void;
+    mockedGetTouristActivity.mockImplementation(async (_activityId, _language, currency) => {
+      if (currency === "CNY") {
+        return { status: "success", activity: cnyActivityDetail };
+      }
+      return new Promise((resolve) => {
+        resolveUsdEstimate = resolve;
+      });
+    });
+
+    renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
+
+    expect(await screen.findByText("≈ ¥240.00")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect(screen.getByRole("button", { name: "Loading PayPal amount..." })).toBeDisabled();
+
+    await act(async () => {
+      resolveUsdEstimate({ status: "success", activity: activityDetail });
+    });
+
+    expect(await screen.findByRole("button", { name: "Pay US$32.50 with PayPal" })).toBeEnabled();
+  });
+
+  it("blocks PayPal and shows an error when the USD estimate fails", async () => {
+    mockedGetTouristActivity.mockImplementation(async (_activityId, _language, currency) => {
+      if (currency === "CNY") {
+        return { status: "success", activity: cnyActivityDetail };
+      }
+      throw new Error("USD estimate failed");
+    });
+
+    renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
+
+    expect(await screen.findByText("≈ ¥240.00")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not load the PayPal USD amount. Please try again.",
+    );
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
   });
 
   it("shows the Korean Seoul time-zone notice", async () => {

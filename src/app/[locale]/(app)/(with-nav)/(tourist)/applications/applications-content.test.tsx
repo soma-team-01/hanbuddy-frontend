@@ -4,12 +4,14 @@ import {
   cancelMyApplication,
   cancelPendingPayment,
   continueApplicationPayment,
+  getApplicationCancellationQuote,
   getMyApplications,
 } from "@/lib/api/applications";
 import { ApiClientError } from "@/lib/api/errors";
+import { getActivityWeather } from "@/lib/api/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import type { ApplicationResponse } from "@/types/application";
+import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
 import { requestTossPayment } from "@/lib/payments/toss";
 import { ApplicationsContent } from "./applications-content";
 
@@ -25,6 +27,12 @@ vi.mock("@/lib/api/applications", () => ({
   cancelPendingPayment: vi.fn(),
   continueApplicationPayment: vi.fn(),
   getMyApplications: vi.fn(),
+  getApplicationCancellationQuote: vi.fn(),
+}));
+
+vi.mock("@/lib/api/activities", () => ({
+  getActivityWeather: vi.fn(),
+  getTouristActivities: vi.fn(),
 }));
 
 vi.mock("@/lib/payments/toss", async (importOriginal) => ({
@@ -32,10 +40,26 @@ vi.mock("@/lib/payments/toss", async (importOriginal) => ({
   requestTossPayment: vi.fn(),
 }));
 
+vi.mock("@/components/payment/PayPalCheckoutDialog", () => ({
+  PayPalCheckoutButton: ({
+    payment,
+    autoStart,
+  }: {
+    payment: PaymentReadyResponse;
+    autoStart?: boolean;
+  }) => (
+    <div data-testid="paypal-checkout" data-auto-start={String(autoStart)}>
+      {payment.providerOrderId}
+    </div>
+  ),
+}));
+
+const mockedGetActivityWeather = vi.mocked(getActivityWeather);
 const mockedCancelMyApplication = vi.mocked(cancelMyApplication);
 const mockedCancelPendingPayment = vi.mocked(cancelPendingPayment);
 const mockedContinueApplicationPayment = vi.mocked(continueApplicationPayment);
 const mockedGetMyApplications = vi.mocked(getMyApplications);
+const mockedGetCancellationQuote = vi.mocked(getApplicationCancellationQuote);
 const mockedRequestTossPayment = vi.mocked(requestTossPayment);
 
 const confirmedApplication: ApplicationResponse = {
@@ -70,8 +94,35 @@ describe("ApplicationsContent", () => {
     mockedCancelPendingPayment.mockReset();
     mockedContinueApplicationPayment.mockReset();
     mockedGetMyApplications.mockReset();
+    mockedGetCancellationQuote.mockReset();
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        policyVersion: "2026-09-07",
+        policyType: "BEFORE_48_HOURS",
+        refundPercent: 100,
+        refundAmount: 90000,
+        refundCurrency: "KRW",
+        cancellationFeeAmount: 0,
+        freeCancellationUntil: "2026-07-07T10:30:00Z",
+        quotedAt: "2026-07-09T09:00:00Z",
+      },
+    });
     mockedRequestTossPayment.mockReset();
     mockedRequestTossPayment.mockResolvedValue(undefined);
+    mockedGetActivityWeather.mockReset();
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: false,
+        unavailableReason: "LOCATION_UNAVAILABLE",
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
+        baseDate: "2099-07-20",
+        forecasts: [],
+      },
+    });
   });
 
   it("continues a pending payment through the Toss window", async () => {
@@ -84,6 +135,10 @@ describe("ApplicationsContent", () => {
     const paymentReady = {
       application: pendingApplication,
       paymentId: 7,
+      paymentProvider: "TOSS" as const,
+      paymentAttemptId: 12,
+      providerOrderId: "hanbuddy-11-order",
+      approvalUrl: null,
       orderNumber: "hanbuddy-11-order",
       clientKey: "test_ck_client-key",
       orderName: "Bukchon Hidden Gems",
@@ -104,12 +159,66 @@ describe("ApplicationsContent", () => {
     renderWithQueryClient(<ApplicationsContent />);
 
     expect(await screen.findByText("₩90,000")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    expect(
+      screen.queryByRole("checkbox", {
+        name: /agree to the cancellation and refund policy/i,
+      }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Continue payment with Toss Payments" }));
 
     await waitFor(() => {
       expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "en");
     });
-    expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11");
+    expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11", "EN", "TOSS");
+  });
+
+  it("switches a pending application to PayPal payment", async () => {
+    const pendingApplication: ApplicationResponse = {
+      ...confirmedApplication,
+      status: "PENDING_PAYMENT",
+      paymentAmount: null,
+      paymentCurrency: null,
+    };
+    const payPalPayment = {
+      application: pendingApplication,
+      paymentId: 7,
+      paymentProvider: "PAYPAL" as const,
+      paymentAttemptId: 13,
+      providerOrderId: "5O190127TN364715T",
+      approvalUrl: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T",
+      orderNumber: "hanbuddy-11-paypal",
+      clientKey: null,
+      orderName: "Bukchon Hidden Gems",
+      paymentStatus: "CREATED" as const,
+      paymentAmount: 68.97,
+      paymentCurrency: "USD",
+      orderExpiresAt: "2026-07-14T13:00:00+09:00",
+    };
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [pendingApplication],
+    });
+    mockedContinueApplicationPayment.mockResolvedValue({
+      status: "success",
+      payment: payPalPayment,
+    });
+
+    renderWithQueryClient(<ApplicationsContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Pay with PayPal" }));
+    expect(
+      screen.queryByRole("checkbox", {
+        name: /agree to the cancellation and refund policy/i,
+      }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Continue payment with PayPal" }));
+
+    await waitFor(() =>
+      expect(mockedContinueApplicationPayment).toHaveBeenCalledWith("11", "EN", "PAYPAL"),
+    );
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+    expect(await screen.findByTestId("paypal-checkout")).toHaveTextContent("5O190127TN364715T");
+    expect(screen.getByTestId("paypal-checkout")).toHaveAttribute("data-auto-start", "true");
   });
 
   it("shows the seat-hold countdown from the application response", async () => {
@@ -156,7 +265,7 @@ describe("ApplicationsContent", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
 
-    await waitFor(() => expect(mockedCancelPendingPayment).toHaveBeenCalledWith("11"));
+    await waitFor(() => expect(mockedCancelPendingPayment).toHaveBeenCalledWith("11", "EN"));
     await waitFor(() => expect(screen.queryByText("Bukchon Hidden Gems")).not.toBeInTheDocument());
   });
 
@@ -214,10 +323,16 @@ describe("ApplicationsContent", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     await waitFor(() =>
-      expect(mockedCancelMyApplication).toHaveBeenCalledWith("11", "SCHEDULE_CONFLICT", undefined),
+      expect(mockedCancelMyApplication).toHaveBeenCalledWith(
+        "11",
+        "SCHEDULE_CONFLICT",
+        "EN",
+        undefined,
+      ),
     );
     await waitFor(() => expect(screen.queryByText("Bukchon Hidden Gems")).not.toBeInTheDocument());
 
@@ -225,7 +340,7 @@ describe("ApplicationsContent", () => {
 
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
     expect(screen.getByText("Cancelled")).toBeInTheDocument();
-    expect(queryClient.getQueryData(applicationKeys.mine())).toEqual([
+    expect(queryClient.getQueryData(applicationKeys.mine("EN"))).toEqual([
       expect.objectContaining({ applicationId: 11, status: "CANCELLED" }),
     ]);
   });
@@ -249,6 +364,7 @@ describe("ApplicationsContent", () => {
     renderWithQueryClient(<ApplicationsContent />);
     fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(

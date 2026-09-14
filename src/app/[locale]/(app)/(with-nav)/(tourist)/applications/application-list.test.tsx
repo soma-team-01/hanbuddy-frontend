@@ -1,11 +1,14 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivities } from "@/lib/api/activities";
+import { getActivityWeather, getTouristActivities } from "@/lib/api/activities";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
+import { getApplicationCancellationQuote } from "@/lib/api/applications";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Locale } from "@/i18n/routing";
+import { activityKeys } from "@/lib/query/activities";
+import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
 import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
@@ -18,6 +21,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/activities", () => ({
+  getActivityWeather: vi.fn(),
   getTouristActivities: vi.fn(),
 }));
 
@@ -29,10 +33,17 @@ vi.mock("@/lib/api/reviews", () => ({
   deleteReview: vi.fn(),
 }));
 
+vi.mock("@/lib/api/applications", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/applications")>()),
+  getApplicationCancellationQuote: vi.fn(),
+}));
+
+const mockedGetActivityWeather = vi.mocked(getActivityWeather);
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedCreateReview = vi.mocked(createReview);
 const mockedUpdateReview = vi.mocked(updateReview);
 const mockedDeleteReview = vi.mocked(deleteReview);
+const mockedGetCancellationQuote = vi.mocked(getApplicationCancellationQuote);
 
 const applications: Application[] = [
   {
@@ -81,6 +92,9 @@ const reviewedApplication: Application = {
     reviewId: 9,
     rating: 5,
     content: "The tea master was wonderful.",
+    contentLanguage: "EN",
+    sourceLanguage: "KO",
+    originalContent: "차를 설명해 주신 선생님이 정말 좋았어요.",
     createdAt: "2026-07-11T13:00:00+09:00",
   },
 };
@@ -91,6 +105,12 @@ const paidApplication: Application = {
   status: "confirmed",
   paymentAmount: 90000,
   paymentCurrency: "KRW",
+};
+
+const refundPolicyDocument = {
+  title: "HanBuddy Cancellation and Refund Policy",
+  version: "2026-09-07",
+  source: "## Refund criteria\n\nThe full cancellation and refund policy.",
 };
 
 function renderList(
@@ -104,15 +124,52 @@ function renderList(
       onCancelPendingPayment={vi.fn().mockResolvedValue({ ok: true })}
       onContinuePayment={vi.fn().mockResolvedValue(undefined)}
       isPaymentPending={false}
+      refundPolicyDocument={refundPolicyDocument}
       {...overrides}
     />,
     { locale },
   );
 }
 
+function continuePaymentAfterReview(buttonName: string) {
+  expect(
+    screen.queryByRole("checkbox", {
+      name: /agree to the cancellation and refund policy/i,
+    }),
+  ).not.toBeInTheDocument();
+  const confirmButton = screen.getByRole("button", { name: buttonName });
+  expect(confirmButton).toBeEnabled();
+  fireEvent.click(confirmButton);
+}
+
 describe("ApplicationList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: false,
+        unavailableReason: "LOCATION_UNAVAILABLE",
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
+        baseDate: "2099-07-20",
+        forecasts: [],
+      },
+    });
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        policyVersion: "2026-09-07",
+        policyType: "FREE_CANCELLATION_WINDOW",
+        refundPercent: 100,
+        refundAmount: 90000,
+        refundCurrency: "KRW",
+        cancellationFeeAmount: 0,
+        freeCancellationUntil: "2099-07-20T10:30:00+09:00",
+        quotedAt: "2099-07-20T10:10:00+09:00",
+      },
+    });
   });
 
   it("shows a continue-payment action for pending applications", () => {
@@ -125,22 +182,146 @@ describe("ApplicationList", () => {
     // 카드에 활동 사진·제목·호스트가 보이고 카드가 상세로 연결된다
     expect(screen.getByRole("link", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
       "href",
-      "/en/activities/42",
+      "/en/applications/1/activity",
     );
     expect(screen.getByText("Jihoon Kim")).toBeInTheDocument();
     // 미래 일정에는 디데이 배지가 붙는다
     expect(screen.getByText(/^D-\d+$/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Continue Payment" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toHaveClass(
+      "bg-[#3182f6]",
+      "text-white",
+    );
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toHaveClass(
+      "bg-[#ffc439]",
+      "text-[#111]",
+    );
+    expect(screen.getByText("Toss")).toBeInTheDocument();
+    expect(screen.getByText("PayPal")).toBeInTheDocument();
+    const paymentActions = screen.getByText("Toss").closest("div")?.parentElement;
+    expect(paymentActions).toHaveClass("sm:row-start-1", "sm:row-span-2", "sm:self-center");
+    // 결제·취소가 붙어 있으므로 모바일 터치 타깃 48px과 간격 12px을 보장한다
+    for (const name of ["Pay with Toss Payments", "Pay with PayPal", "Cancel"]) {
+      expect(screen.getByRole("button", { name })).toHaveClass("h-12", "text-sm", "rounded-xl");
+      expect(screen.getByRole("button", { name })).not.toHaveClass("h-9", "text-xs");
+    }
+    expect(screen.getByRole("button", { name: "Cancel" }).parentElement).toHaveClass("gap-3");
+    const scheduleAndHost = screen.getByRole("button", {
+      name: "View Jihoon Kim's profile",
+    }).parentElement;
+    expect(scheduleAndHost).toHaveClass("flex-col", "gap-1.5");
+    expect(within(scheduleAndHost as HTMLElement).getByText("Jul 20, 2026")).toBeInTheDocument();
+    expect(
+      within(scheduleAndHost as HTMLElement).getByRole("heading", { name: "Bukchon Hidden Gems" }),
+    ).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
+    expect(mockedGetActivityWeather).not.toHaveBeenCalled();
+  });
+
+  it("shows one generic payment action while routing to the configured provider", async () => {
+    const onContinuePayment = vi.fn().mockResolvedValue(undefined);
+    const { unmount } = renderList({ paymentProviderMode: "TOSS", onContinuePayment });
+
+    expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
+    expect(screen.queryByRole("button", { name: "Pay with PayPal" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    expect(screen.getByRole("dialog", { name: "Review before payment" })).toBeInTheDocument();
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    continuePaymentAfterReview("Continue payment with Toss Payments");
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
+
+    expect(onContinuePayment).toHaveBeenCalledTimes(1);
+    unmount();
+    onContinuePayment.mockClear();
+    renderList({ paymentProviderMode: "PAYPAL", onContinuePayment });
+
+    expect(
+      screen.queryByRole("button", { name: "Pay with Toss Payments" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    continuePaymentAfterReview("Continue payment with PayPal");
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "PAYPAL"));
+    expect(onContinuePayment).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the forecast on a confirmed upcoming application", async () => {
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: true,
+        unavailableReason: null,
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: "2099-07-19T23:00:00+09:00",
+        baseDate: "2099-07-20",
+        forecasts: [
+          {
+            forecastAt: "2099-07-20T10:00:00+09:00",
+            temperatureCelsius: 28,
+            condition: "CLEAR",
+            precipitationProbability: 10,
+          },
+        ],
+      },
+    });
+
+    renderList({ applications: [paidApplication] });
+
+    const weatherIcon = await screen.findByRole("img", { name: "Clear" });
+    expect(weatherIcon).toHaveClass("size-7", "text-amber-500");
+    expect(screen.getByText("Clear · 28°C")).toBeInTheDocument();
+    expect(screen.getByText("Chance of precipitation 10%")).toBeInTheDocument();
+    expect(screen.getByText("Weather data from KMA")).toHaveClass("mt-3", "text-right");
+    expect(
+      screen.getByText("Jul 20, 2026").parentElement?.querySelector('[aria-hidden="true"]'),
+    ).not.toBeNull();
+    expect(mockedGetActivityWeather).toHaveBeenCalledWith(42);
+  });
+
+  it("hides the weather divider when the forecast is unavailable", async () => {
+    const { queryClient } = renderList({ applications: [paidApplication] });
+
+    await waitFor(() => {
+      expect(mockedGetActivityWeather).toHaveBeenCalledWith(42);
+      expect(queryClient.getQueryData(activityKeys.weather(42))).toMatchObject({
+        available: false,
+      });
+    });
+
+    expect(screen.queryByRole("img", { name: "Clear" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Jul 20, 2026").parentElement?.querySelector('[aria-hidden="true"]'),
+    ).toBeNull();
   });
 
   it("opens the Toss payment window when continuing a pending payment", async () => {
     const onContinuePayment = vi.fn().mockResolvedValue(undefined);
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
 
-    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1"));
+    expect(
+      screen.getByText(/within 7 days of receiving the written contract details/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View full policy" })).toBeEnabled();
+    expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" })).toHaveClass(
+      "border-ink",
+    );
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }),
+    ).not.toHaveClass("bg-panel");
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    continuePaymentAfterReview("Continue payment with Toss Payments");
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
+    expect(screen.queryByRole("dialog", { name: "Review before payment" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -158,6 +339,135 @@ describe("ApplicationList", () => {
     expect(screen.queryByText("Service fee")).not.toBeInTheDocument();
   });
 
+  it("shows the PayPal provider amount in USD alongside the KRW booking total", () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          paymentProvider: "PAYPAL",
+          providerPaymentAmount: 68.97,
+          providerPaymentCurrency: "USD",
+        },
+      ],
+    });
+
+    const collapsedPaymentSummary = screen.getByText("PayPal payment · $68.97");
+    expect(collapsedPaymentSummary).toBeInTheDocument();
+    expect(collapsedPaymentSummary.parentElement).toHaveClass("gap-0.5");
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(collapsedPaymentSummary).not.toBeInTheDocument();
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("₩90,000");
+    expect(screen.getByText("PayPal payment").parentElement).toHaveTextContent("$68.97");
+  });
+
+  it("shows the requested PayPal amount for a pending payment", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          paymentProvider: "PAYPAL",
+          providerPaymentAmount: 68.97,
+          providerPaymentCurrency: "USD",
+        },
+      ],
+    });
+
+    expect(screen.getByText("PayPal payment · $68.97")).toBeInTheDocument();
+    expect(screen.getByText("₩90,000")).toBeInTheDocument();
+  });
+
+  it("shows the active 30-minute free-cancellation window in green", async () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          startAt: "2099-07-20T11:00:00+09:00",
+          endAt: "2099-07-20T13:00:00+09:00",
+        },
+      ],
+    });
+
+    const notice = await screen.findByTestId("free-cancellation-window");
+    expect(notice).toHaveClass("text-success");
+    expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
+    expect(notice.parentElement).toHaveClass("sm:mt-auto");
+  });
+
+  it("shows the activity's 48-hour cutoff when it extends free cancellation", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        policyVersion: "2026-09-07",
+        policyType: "BEFORE_48_HOURS",
+        refundPercent: 100,
+        refundAmount: 90000,
+        refundCurrency: "KRW",
+        cancellationFeeAmount: 0,
+        freeCancellationUntil: "2099-07-07T10:30:00+09:00",
+        quotedAt: "2099-07-08T10:00:00+09:00",
+      },
+    });
+
+    renderList({ applications: [paidApplication] });
+
+    expect(await screen.findByTestId("free-cancellation-window")).toHaveTextContent(
+      "Free cancellation until Sat, Jul 18 · 10:00 AM",
+    );
+  });
+
+  it.each([
+    ["BETWEEN_24_AND_48_HOURS", 50],
+    ["WITHIN_24_HOURS", 0],
+  ] as const)(
+    "shows one ended state after free cancellation for %s",
+    async (policyType, refundPercent) => {
+      mockedGetCancellationQuote.mockResolvedValue({
+        status: "success",
+        quote: {
+          policyVersion: "2026-09-07",
+          policyType,
+          refundPercent,
+          refundAmount: refundPercent === 50 ? 45000 : 0,
+          refundCurrency: "KRW",
+          cancellationFeeAmount: refundPercent === 50 ? 45000 : 90000,
+          freeCancellationUntil: "2099-07-07T10:30:00+09:00",
+          quotedAt: "2099-07-19T10:00:00+09:00",
+        },
+      });
+
+      renderList({ applications: [paidApplication] });
+
+      const notice = await screen.findByTestId("free-cancellation-window");
+      expect(notice).toHaveClass("text-danger");
+      expect(notice).toHaveTextContent("Free cancellation period ended");
+    },
+  );
+
+  it("shows the stored discount snapshot in the price breakdown", () => {
+    const discountedApplication: Application = {
+      ...paidApplication,
+      paymentAmount: 80000,
+      breakdown: {
+        unitPrice: 40000,
+        guests: 2,
+        serviceFee: 0,
+        originalUnitPrice: 50000,
+        discountedUnitPrice: 40000,
+        originalTotalPrice: 100000,
+        discountPercent: 20,
+        discountAmount: 20000,
+        finalTotalPrice: 80000,
+      },
+    };
+
+    renderList({ applications: [discountedApplication] });
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+
+    expect(screen.getByText("Discount (20%)").parentElement).toHaveTextContent("-₩20,000");
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("₩80,000");
+    expect(screen.getByText("Paid").parentElement).toHaveTextContent("₩80,000");
+  });
+
   it("shows a localized error when opening the payment fails", async () => {
     const onContinuePayment = vi.fn().mockRejectedValue(
       new ApiClientError({
@@ -170,7 +480,8 @@ describe("ApplicationList", () => {
     );
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "The payment service is temporarily unavailable. Please try again shortly.",
@@ -187,18 +498,22 @@ describe("ApplicationList", () => {
     );
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
-    // 결제 재개 API가 끝나고 결제창이 열려 있는 동안에도 다시 누를 수 없어야 한다
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Opening payment..." })).toBeDisabled(),
-    );
+    // 사전 확인 팝업은 즉시 닫고 결제창이 열려 있는 동안 카드의 결제 버튼을 잠근다
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Review before payment" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    });
 
     await act(async () => {
       resolvePayment();
     });
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Continue Payment" })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled(),
     );
     expect(onContinuePayment).toHaveBeenCalledTimes(1);
   });
@@ -209,9 +524,10 @@ describe("ApplicationList", () => {
       .mockRejectedValue({ code: "PAY_PROCESS_CANCELED", message: "결제가 취소되었습니다." });
     renderList({ onContinuePayment });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
 
-    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1"));
+    await waitFor(() => expect(onContinuePayment).toHaveBeenCalledWith("1", "TOSS"));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -228,7 +544,8 @@ describe("ApplicationList", () => {
     );
     const { rerender } = render(<IntlTestProvider locale="en">{applicationList}</IntlTestProvider>);
 
-    fireEvent.click(screen.getByRole("button", { name: "Continue Payment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
+    continuePaymentAfterReview("Continue payment with Toss Payments");
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not complete the payment.");
 
     rerender(<IntlTestProvider locale="ko">{applicationList}</IntlTestProvider>);
@@ -240,7 +557,8 @@ describe("ApplicationList", () => {
   it("disables the payment action while a payment request is pending", () => {
     renderList({ isPaymentPending: true });
 
-    expect(screen.getByRole("button", { name: "Opening payment..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
   });
 
   it("opens the host profile popup from the application card", async () => {
@@ -252,6 +570,7 @@ describe("ApplicationList", () => {
           buddyId: 7,
           title: "Bukchon Hidden Gems",
           description: "The activity this application is for.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/bukchon.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -259,12 +578,14 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-bukchon",
           price: 45000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(45000),
         },
         {
           activityId: 77,
           buddyId: 7,
           title: "Seoul Night Market Walk",
           description: "Another experience by the same buddy.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/market.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -272,6 +593,7 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-gwangjang",
           price: 30000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(30000),
         },
       ],
     });
@@ -306,6 +628,7 @@ describe("ApplicationList", () => {
           buddyId: 12,
           title: "Namesake's experience",
           description: "Hosted by a different buddy with the same public name.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/other.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -313,6 +636,7 @@ describe("ApplicationList", () => {
           meetingPlaceId: "ChIJ-hongdae",
           price: 20000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(20000),
         },
       ],
     });
@@ -343,6 +667,7 @@ describe("ApplicationList", () => {
       expect(screen.getByTestId("payment-hold-countdown")).toHaveTextContent(
         "1:05 left to complete payment",
       );
+      expect(screen.getByTestId("payment-hold-countdown")).toHaveClass("text-sm");
 
       await act(async () => {
         vi.advanceTimersByTime(60_000);
@@ -375,9 +700,16 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
+    expect(screen.getByRole("dialog", { name: "Cancel this application?" })).toBeInTheDocument();
     expect(
-      screen.getByText("The seat we're holding for you will be released right away."),
-    ).toBeInTheDocument();
+      screen.queryByText("The seat we're holding for you will be released right away."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Keep application" })).toHaveClass(
+      "border-ink",
+      "text-ink",
+      "enabled:hover:border-primary",
+      "enabled:hover:text-primary",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
 
     await waitFor(() => expect(onCancelPendingPayment).toHaveBeenCalledWith("1"));
@@ -407,8 +739,8 @@ describe("ApplicationList", () => {
       "This payment needs administrator review before it can continue.",
     );
     expect(
-      screen.getByText("The seat we're holding for you will be released right away."),
-    ).toBeInTheDocument();
+      screen.queryByText("The seat we're holding for you will be released right away."),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the cancellation reason on a cancelled application", () => {
@@ -426,6 +758,46 @@ describe("ApplicationList", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
 
     expect(screen.getByText("Cancellation reason: Schedule conflict")).toBeInTheDocument();
+  });
+
+  it("shows the final provider-currency refund returned by cancellation", () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          id: "9",
+          status: "cancelled",
+          cancellationReason: "SCHEDULE_CONFLICT",
+          paymentProvider: "PAYPAL",
+          providerPaymentAmount: 68.97,
+          providerPaymentCurrency: "USD",
+          refund: {
+            refundId: 4,
+            provider: "PAYPAL",
+            status: "COMPLETED",
+            policyVersion: "2026-09-07",
+            policyType: "BETWEEN_24_AND_48_HOURS",
+            refundPercent: 50,
+            refundAmount: 34.49,
+            refundCurrency: "USD",
+            cancellationFeeAmount: 34.48,
+            refundAmountKrw: 45000,
+            retainedAmountKrw: 45000,
+            platformCommissionAmountKrw: 9000,
+            commissionVatAmountKrw: 900,
+            guidePayoutAmountKrw: 35100,
+            requestedAt: "2026-09-07T15:00:00+09:00",
+            completedAt: "2026-09-07T15:00:02+09:00",
+          },
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+
+    expect(screen.getByText("Refunded").parentElement).toHaveTextContent("$34.49");
+    expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$34.48");
   });
 
   it("hides the cancel action once the activity has ended", () => {
@@ -450,7 +822,11 @@ describe("ApplicationList", () => {
       applications: [{ ...applications[0], id: "7", status: "confirmed" }],
     });
 
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveClass(
+      "sm:absolute",
+      "sm:top-1/2",
+      "sm:-translate-y-1/2",
+    );
   });
 
   it("writes a review from a completed application card", async () => {
@@ -461,10 +837,14 @@ describe("ApplicationList", () => {
         applicationId: 2,
         activityId: 43,
         activityTitle: "Traditional Tea Tasting",
+        activityTitleLanguage: "EN",
         reviewerName: "Nelli",
         reviewerProfileImageUrl: null,
         rating: 5,
         content: "The tea master was wonderful.",
+        contentLanguage: "EN",
+        sourceLanguage: "EN",
+        originalContent: "The tea master was wonderful.",
         createdAt: "2026-07-11T13:00:00+09:00",
       },
     });
@@ -472,7 +852,9 @@ describe("ApplicationList", () => {
     renderList();
 
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
-    fireEvent.click(screen.getByRole("button", { name: "Write a review" }));
+    const writeReviewButton = screen.getByRole("button", { name: "Write a review" });
+    expect(writeReviewButton).toHaveClass("h-9", "sm:min-w-32");
+    fireEvent.click(writeReviewButton);
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Traditional Tea Tasting")).toBeInTheDocument();
@@ -484,11 +866,14 @@ describe("ApplicationList", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Submit review" }));
 
     await waitFor(() =>
-      expect(mockedCreateReview).toHaveBeenCalledWith({
-        applicationId: 2,
-        rating: 5,
-        content: "The tea master was wonderful.",
-      }),
+      expect(mockedCreateReview).toHaveBeenCalledWith(
+        {
+          applicationId: 2,
+          rating: 5,
+          content: "The tea master was wonderful.",
+        },
+        "EN",
+      ),
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
@@ -501,10 +886,14 @@ describe("ApplicationList", () => {
         applicationId: 2,
         activityId: 43,
         activityTitle: "Traditional Tea Tasting",
+        activityTitleLanguage: "EN",
         reviewerName: "Nelli",
         reviewerProfileImageUrl: null,
         rating: 4,
         content: "Slightly rushed at the end.",
+        contentLanguage: "EN",
+        sourceLanguage: "EN",
+        originalContent: "Slightly rushed at the end.",
         createdAt: "2026-07-11T13:00:00+09:00",
       },
     });
@@ -520,11 +909,15 @@ describe("ApplicationList", () => {
     expect(screen.getByLabelText("Rated 5 out of 5")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Edit review" })).toHaveTextContent("");
 
+    fireEvent.click(screen.getByRole("button", { name: "Show original" }));
+    expect(screen.getByText("차를 설명해 주신 선생님이 정말 좋았어요.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show translation" }));
+
     fireEvent.click(screen.getByRole("button", { name: "Edit review" }));
     const editDialog = await screen.findByRole("dialog");
-    // 수정 폼은 백엔드가 내려준 후기 내용으로 채워진다
+    // 카드에는 번역문이 보여도 수정 폼은 저장된 원문으로 채워진다
     expect(within(editDialog).getByLabelText("Your review")).toHaveValue(
-      "The tea master was wonderful.",
+      "차를 설명해 주신 선생님이 정말 좋았어요.",
     );
     fireEvent.click(within(editDialog).getByRole("button", { name: "4 stars" }));
     fireEvent.change(within(editDialog).getByLabelText("Your review"), {
@@ -533,10 +926,14 @@ describe("ApplicationList", () => {
     fireEvent.click(within(editDialog).getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
-      expect(mockedUpdateReview).toHaveBeenCalledWith(9, {
-        rating: 4,
-        content: "Slightly rushed at the end.",
-      }),
+      expect(mockedUpdateReview).toHaveBeenCalledWith(
+        9,
+        {
+          rating: 4,
+          content: "Slightly rushed at the end.",
+        },
+        "EN",
+      ),
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
@@ -623,7 +1020,8 @@ describe("ApplicationList", () => {
   it("localizes the continue-payment action in Korean", () => {
     renderList({}, "ko");
 
-    expect(screen.getByRole("button", { name: "결제 이어서 하기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "토스페이먼츠로 결제" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "PayPal로 결제" })).toBeInTheDocument();
     expect(screen.getByText("Bukchon Hidden Gems")).toBeInTheDocument();
   });
 });

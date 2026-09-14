@@ -9,7 +9,6 @@ import {
   CalendarDaysIcon,
   CameraIcon,
   CheckIcon,
-  ChevronRightIcon,
   CompassIcon,
   ImagePlusIcon,
   MapPinIcon,
@@ -360,13 +359,6 @@ export function ItineraryStep({
   return (
     <div className="w-full space-y-4">
       {items.map((item, index) => {
-        const complete =
-          item.photo &&
-          item.title.trim().length >= ACTIVITY_CREATE_LIMITS.itineraryTitle.min &&
-          item.title.trim().length <= ACTIVITY_CREATE_LIMITS.itineraryTitle.max &&
-          item.description.trim().length >= ACTIVITY_CREATE_LIMITS.itineraryDescription.min &&
-          item.description.trim().length <= ACTIVITY_CREATE_LIMITS.itineraryDescription.max &&
-          Number(item.durationMinutes) > 0;
         return (
           <section
             key={item.id}
@@ -409,14 +401,13 @@ export function ItineraryStep({
               </span>
             </button>
             <div className="flex shrink-0 items-center gap-1">
-              {complete ? <CheckIcon className="size-5 text-primary" /> : null}
               <button
                 type="button"
                 onClick={() => openEditor(item.id)}
                 aria-label={t("itinerary.edit", { index: index + 1 })}
                 className="flex size-10 items-center justify-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
               >
-                <ChevronRightIcon className="size-5" />
+                <PencilIcon className="size-4" />
               </button>
               <button
                 type="button"
@@ -681,7 +672,13 @@ export function MeetingStep({
   t,
 }: Readonly<{
   draft: ActivityCreateDraft;
-  onChange: (field: "meetingAddress" | "meetingPlaceId" | "meetingPlace", value: string) => void;
+  onChange: <
+    Field extends
+      "meetingAddress" | "meetingPlaceId" | "meetingPlace" | "meetingLatitude" | "meetingLongitude",
+  >(
+    field: Field,
+    value: ActivityCreateDraft[Field],
+  ) => void;
   t: Translator;
 }>) {
   const locale = useLocale() as Locale;
@@ -725,6 +722,8 @@ export function MeetingStep({
     if (draft.meetingPlaceId || draft.meetingAddress) {
       onChange("meetingPlaceId", "");
       onChange("meetingAddress", "");
+      onChange("meetingLatitude", null);
+      onChange("meetingLongitude", null);
     }
   }
 
@@ -737,6 +736,8 @@ export function MeetingStep({
       setPredictions([]);
       onChange("meetingPlaceId", prediction.placeId);
       onChange("meetingAddress", address);
+      onChange("meetingLatitude", details.latitude ?? null);
+      onChange("meetingLongitude", details.longitude ?? null);
       setStatus("idle");
     } catch {
       setStatus("error");
@@ -1645,7 +1646,11 @@ export function RestrictionsStep({
   );
 }
 
-export function ReviewStep({ draft, t }: Readonly<{ draft: ActivityCreateDraft; t: Translator }>) {
+export function ReviewStep({
+  draft,
+  activityId,
+  t,
+}: Readonly<{ draft: ActivityCreateDraft; activityId?: string; t: Translator }>) {
   const locale = useLocale() as Locale;
   const tActivityDetail = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
@@ -1655,7 +1660,9 @@ export function ReviewStep({ draft, t }: Readonly<{ draft: ActivityCreateDraft; 
   const activity = buildPreviewActivityFromDraft(draft, {
     locale,
     dateTimeUnavailable: tErrors("dateTimeUnavailable"),
-    hostName: profile?.name ?? t("review.hostName"),
+    activityId,
+    hostId: profile?.userId,
+    hostName: profile?.displayName ?? profile?.name ?? t("review.hostName"),
     hostBio: tActivityDetail("localHost"),
     hostAvatarUrl: profile?.profileImageUrl ?? null,
   });

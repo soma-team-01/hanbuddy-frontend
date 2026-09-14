@@ -5,6 +5,7 @@ import {
   proxyAuthenticatedPatch,
   readJsonBody,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import { isValidReviewContent, isValidReviewRating } from "@/app/api/_utils/review-input";
 import type { ReviewResponse, UpdateReviewRequest } from "@/types/review";
 
@@ -31,7 +32,7 @@ export async function PATCH(request: NextRequest, context: ReviewRouteContext) {
 
   return proxyAuthenticatedPatch<UpdateReviewRequest, ReviewResponse>(
     request,
-    `/reviews/${reviewId}`,
+    appendRequestedContentLanguage(request, `/reviews/${reviewId}`),
     parsed.body,
     "후기 서버에 연결할 수 없습니다.",
   );

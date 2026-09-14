@@ -4,6 +4,7 @@ import {
   proxyAuthenticatedPost,
   readJsonBody,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import { isValidReviewContent, isValidReviewRating } from "@/app/api/_utils/review-input";
 import type { CreateReviewRequest, ReviewResponse } from "@/types/review";
 
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   return proxyAuthenticatedPost<CreateReviewRequest, ReviewResponse>(
     request,
-    "/reviews",
+    appendRequestedContentLanguage(request, "/reviews"),
     parsed.body,
     "후기 서버에 연결할 수 없습니다.",
   );

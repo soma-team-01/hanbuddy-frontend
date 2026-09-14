@@ -1,6 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithIntl } from "@/test/render-with-intl";
 import BuddyHostingPage, { generateMetadata } from "./page";
 
@@ -95,15 +96,6 @@ describe("BuddyHostingPage", () => {
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/buddy",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/buddy",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "/buddy");
   });
 });

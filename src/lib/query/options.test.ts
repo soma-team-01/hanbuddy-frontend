@@ -1,29 +1,75 @@
 import { describe, expect, it } from "vitest";
-import { activityKeys, touristActivityQueryOptions } from "./activities";
-import { applicationKeys, myApplicationsQueryOptions } from "./applications";
+import {
+  activityKeys,
+  activityWeatherQueryOptions,
+  touristActivityQueryOptions,
+} from "./activities";
+import {
+  applicationKeys,
+  appliedActivityDetailQueryOptions,
+  myApplicationsQueryOptions,
+} from "./applications";
 import {
   buddyActivityApplicationsQueryOptions,
   buddyApplicationsQueryOptions,
   buddyKeys,
   myActivityQueryOptions,
 } from "./buddy";
+import { activityReviewSummaryQueryOptions, buddyReviewsQueryOptions, reviewKeys } from "./reviews";
 import { myProfileQueryOptions, userKeys } from "./users";
 
 describe("domain query options", () => {
   it("builds stable activity keys", () => {
-    expect(activityKeys.list()).toEqual(["activities", "list"]);
-    expect(activityKeys.detail("42")).toEqual(["activities", "detail", "42"]);
-    expect(touristActivityQueryOptions("42").queryKey).toEqual(activityKeys.detail("42"));
-    expect(activityKeys.detail(42)).toEqual(activityKeys.detail("42"));
+    expect(activityKeys.list("EN")).toEqual(["activities", "list", "EN", "KRW"]);
+    expect(activityKeys.list("EN", "USD")).not.toEqual(activityKeys.list("EN", "KRW"));
+    expect(activityKeys.detail("42", "EN")).toEqual(["activities", "detail", "42", "EN", "KRW"]);
+    expect(touristActivityQueryOptions("42", "EN").queryKey).toEqual(
+      activityKeys.detail("42", "EN"),
+    );
+    expect(activityKeys.detail(42, "KO")).toEqual(activityKeys.detail("42", "KO"));
+    expect(activityKeys.weather(42)).toEqual(["activities", "weather", "42"]);
+    expect(activityWeatherQueryOptions("42").queryKey).toEqual(activityKeys.weather(42));
   });
 
   it("builds stable application keys", () => {
     expect(applicationKeys.mine()).toEqual(["applications", "me"]);
-    expect(myApplicationsQueryOptions().queryKey).toEqual(applicationKeys.mine());
+    expect(myApplicationsQueryOptions("EN").queryKey).toEqual(applicationKeys.mine("EN"));
+    expect(applicationKeys.mine("EN")).not.toEqual(applicationKeys.mine("KO"));
+    expect(appliedActivityDetailQueryOptions(11, "EN", "USD").queryKey).toEqual([
+      "applications",
+      "me",
+      "11",
+      "activity",
+      "EN",
+      "USD",
+    ]);
+    expect(applicationKeys.activityDetail(11, "EN", "USD")).not.toEqual(
+      applicationKeys.activityDetail(11, "KO", "KRW"),
+    );
+  });
+
+  it("separates review caches by the requested content language", () => {
+    expect(activityReviewSummaryQueryOptions(42, "EN").queryKey).toEqual([
+      "reviews",
+      "activity",
+      "42",
+      "EN",
+      "summary",
+      3,
+    ]);
+    expect(buddyReviewsQueryOptions(7, "KO").queryKey).toEqual([
+      "reviews",
+      "buddy",
+      "7",
+      "KO",
+      12,
+      null,
+    ]);
+    expect(reviewKeys.activity(42, "EN")).not.toEqual(reviewKeys.activity(42, "JA"));
   });
 
   it("polls my applications only while a pending payment can expire", () => {
-    const { refetchInterval } = myApplicationsQueryOptions();
+    const { refetchInterval } = myApplicationsQueryOptions("EN");
     expect(typeof refetchInterval).toBe("function");
     if (typeof refetchInterval !== "function") return;
 
@@ -46,15 +92,19 @@ describe("domain query options", () => {
       "date",
       "2026-07-20",
     ]);
-    expect(buddyApplicationsQueryOptions("2026-07-20").queryKey).toEqual(
-      buddyKeys.applicationsByDate("2026-07-20"),
+    expect(buddyApplicationsQueryOptions("2026-07-20", "EN").queryKey).toEqual(
+      buddyKeys.applicationsByDate("2026-07-20", "EN"),
+    );
+    expect(buddyKeys.applicationsByDate("2026-07-20", "EN")).not.toEqual(
+      buddyKeys.applicationsByDate("2026-07-20", "KO"),
     );
     expect(myActivityQueryOptions(7).queryKey).toEqual(["buddy", "activities", "detail", "7"]);
-    expect(buddyActivityApplicationsQueryOptions(101).queryKey).toEqual([
+    expect(buddyActivityApplicationsQueryOptions(101, "KO").queryKey).toEqual([
       "buddy",
       "applications",
       "schedule",
       "101",
+      "KO",
     ]);
   });
 

@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -17,7 +18,7 @@ const HERO_MEDIA = [
     altKey: "visuals.marketAlt",
   },
   {
-    src: "/images/landing/kbo-0726-group.webp",
+    src: "/images/landing/kbo-0726-group-wide.webp",
     altKey: "visuals.teaAlt",
   },
   {
@@ -31,12 +32,10 @@ const BOOKING_STEPS = ["experience", "schedule", "payment"] as const;
 const REVIEW_KEYS = ["cheerTogether", "localBuddy", "lookedAfter"] as const;
 
 const CONTACT_DETAILS = {
-  email: "zeroone.soma@gmail.com",
+  email: "contact@hanbuddy.kr",
   instagramLabel: "@hanbuddy_kr",
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
 } as const;
-
-const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface LandingPageProps {
   readonly params: Promise<{ locale: Locale }>;
@@ -54,6 +53,9 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
       languages: {
         en: `${APP_ORIGIN}/en`,
         ko: `${APP_ORIGIN}/ko`,
+        ja: `${APP_ORIGIN}/ja`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant`,
       },
     },
   };

@@ -71,11 +71,15 @@ describe("PaymentSuccessContent", () => {
 
     expect(await screen.findByRole("heading", { name: "Payment complete" })).toBeInTheDocument();
     expect(mockedConfirmApplicationPayment).toHaveBeenCalledTimes(1);
-    expect(mockedConfirmApplicationPayment).toHaveBeenCalledWith("11", {
-      paymentKey: "tviva20260809abcdef",
-      orderId: "hanbuddy-11-order",
-      amount: 90000,
-    });
+    expect(mockedConfirmApplicationPayment).toHaveBeenCalledWith(
+      "11",
+      {
+        paymentKey: "tviva20260809abcdef",
+        orderId: "hanbuddy-11-order",
+        amount: 90000,
+      },
+      "EN",
+    );
     expect(mockedGetMyApplications).not.toHaveBeenCalled();
     // 예약 요약과 같은 구성 — 라벨과 금액이 좌우로 나뉜다
     expect(screen.getByText("Application total")).toBeInTheDocument();
@@ -86,7 +90,12 @@ describe("PaymentSuccessContent", () => {
   it("shows the paid amount in the currency it was charged in", async () => {
     mockedConfirmApplicationPayment.mockResolvedValue({
       status: "success",
-      application: { ...confirmedApplication, paymentAmount: 62.5, paymentCurrency: "USD" },
+      application: {
+        ...confirmedApplication,
+        paymentProvider: "PAYPAL",
+        providerPaymentAmount: 62.5,
+        providerPaymentCurrency: "USD",
+      },
     });
 
     renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
@@ -95,6 +104,49 @@ describe("PaymentSuccessContent", () => {
     // 신청 총액은 원화, 실제 결제는 결제 통화로 적는다
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
     expect(screen.getByText("$62.50")).toBeInTheDocument();
+    expect(screen.queryByText(/^Discount/)).not.toBeInTheDocument();
+  });
+
+  it("falls back the amount and currency together when provider payment data is incomplete", async () => {
+    mockedConfirmApplicationPayment.mockResolvedValue({
+      status: "success",
+      application: {
+        ...confirmedApplication,
+        paymentProvider: "PAYPAL",
+        providerPaymentAmount: 62.5,
+        providerPaymentCurrency: null,
+      },
+    });
+
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
+
+    expect(await screen.findByRole("heading", { name: "Payment complete" })).toBeInTheDocument();
+    expect(screen.getAllByText("₩90,000")).toHaveLength(2);
+    expect(screen.queryByText("₩63")).not.toBeInTheDocument();
+    expect(screen.queryByText("$62.50")).not.toBeInTheDocument();
+  });
+
+  it("shows the stored original total, discount, and paid amount", async () => {
+    mockedConfirmApplicationPayment.mockResolvedValue({
+      status: "success",
+      application: {
+        ...confirmedApplication,
+        price: 50000,
+        totalPrice: 80000,
+        originalUnitPrice: 50000,
+        discountPercent: 20,
+        discountedUnitPrice: 40000,
+        originalTotalPrice: 100000,
+        discountAmount: 20000,
+        paymentAmount: 80000,
+      },
+    });
+
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
+
+    expect(await screen.findByText("Original total")).toBeInTheDocument();
+    expect(screen.getByText("Discount (20%)").parentElement).toHaveTextContent("-₩20,000");
+    expect(screen.getByText("Paid").parentElement).toHaveTextContent("₩80,000");
   });
 
   it("shows a confirming status while the approval call is in flight", () => {

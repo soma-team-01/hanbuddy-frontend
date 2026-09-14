@@ -1,6 +1,7 @@
 import type { SignupAgreementRequest, SignupAgreementType, UserType } from "@/lib/auth/types";
+import type { SignupAgreementDocuments } from "./signup-agreement-notices";
 
-export const SIGNUP_AGREEMENT_VERSION = "2026-08-06";
+export const SIGNUP_AGREEMENT_VERSION = "2026-09-07";
 
 const COMMON_REQUIRED_AGREEMENT_TYPES = [
   "ADULT_CONFIRMATION",
@@ -11,7 +12,6 @@ const COMMON_REQUIRED_AGREEMENT_TYPES = [
 const BUDDY_REQUIRED_AGREEMENT_TYPES = [
   "BUDDY_OPERATION_TERMS",
   "BUDDY_COMMISSION_POLICY",
-  "BUDDY_PROFILE_CONTACT_PROVISION",
 ] as const satisfies readonly SignupAgreementType[];
 
 export function getRequiredSignupAgreementTypes(userType: UserType): SignupAgreementType[] {
@@ -34,10 +34,12 @@ export function hasAllRequiredSignupAgreements(
 export function buildSignupAgreements(
   userType: UserType,
   decisions: Partial<Record<SignupAgreementType, boolean>>,
+  documents?: SignupAgreementDocuments,
 ): SignupAgreementRequest[] {
   return getSignupAgreementTypes(userType).map((type) => ({
     type,
-    version: SIGNUP_AGREEMENT_VERSION,
+    // Record the document shown to the member; unchanged inline notices retain their own version.
+    version: documents?.[type]?.version ?? SIGNUP_AGREEMENT_VERSION,
     agreed: decisions[type] === true,
   }));
 }

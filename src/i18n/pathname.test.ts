@@ -11,6 +11,9 @@ describe("locale pathname helpers", () => {
   it.each([
     ["/en/explore", "en", "/explore"],
     ["/ko", "ko", "/"],
+    ["/ja/activities/1", "ja", "/activities/1"],
+    ["/zh-Hans/explore", "zh-Hans", "/explore"],
+    ["/zh-Hant", "zh-Hant", "/"],
     ["/explore", null, "/explore"],
   ] as const)("parses %s", (pathname, locale, canonical) => {
     expect(getLocaleFromPathname(pathname)).toBe(locale);
@@ -20,6 +23,7 @@ describe("locale pathname helpers", () => {
   it("localizes canonical pathnames", () => {
     expect(localizePathname("/activities/1", "ko")).toBe("/ko/activities/1");
     expect(localizePathname("/", "en")).toBe("/en");
+    expect(localizePathname("/explore", "zh-Hans")).toBe("/zh-Hans/explore");
   });
 
   it("reads a locale from a location", () => {
@@ -29,6 +33,9 @@ describe("locale pathname helpers", () => {
   it("detects unsupported language segments", () => {
     expect(hasUnsupportedLanguageSegment("/fr/explore")).toBe(true);
     expect(hasUnsupportedLanguageSegment("/EN/explore")).toBe(true);
+    expect(hasUnsupportedLanguageSegment("/zh-Hans/explore")).toBe(false);
+    expect(hasUnsupportedLanguageSegment("/zh-Hant/explore")).toBe(false);
+    expect(hasUnsupportedLanguageSegment("/zh-HK/explore")).toBe(true);
     expect(hasUnsupportedLanguageSegment("/my-page")).toBe(false);
   });
 });

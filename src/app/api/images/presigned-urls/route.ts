@@ -3,6 +3,7 @@ import { appendBackendSetCookies, createProxyErrorResponse, postBackend } from "
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import {
   isSupportedProfileImageType,
+  MAX_ACTIVITY_IMAGE_COUNT,
   MAX_CHAT_IMAGE_COUNT,
   type PresignedImageUploadRequest,
   type PresignedImageUploadResult,
@@ -11,9 +12,10 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  // 온보딩 중에는 signupToken, 로그인 후에는 accessToken을 Bearer로 사용한다
+  // 온보딩·재신청 중에는 각 단기 토큰, 로그인 후에는 accessToken을 Bearer로 사용한다.
   const bearerToken =
     request.cookies.get(AUTH_COOKIES.signupToken)?.value ??
+    request.cookies.get(AUTH_COOKIES.resubmissionToken)?.value ??
     request.cookies.get(AUTH_COOKIES.accessToken)?.value;
 
   if (!bearerToken) {
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
     uploadRequest.purpose === "ACTIVITY" &&
     Number.isInteger(uploadRequest.imageCount) &&
     uploadRequest.imageCount >= 1 &&
-    uploadRequest.imageCount <= 8;
+    uploadRequest.imageCount <= MAX_ACTIVITY_IMAGE_COUNT;
   const isValidChatRequest =
     uploadRequest.purpose === "CHAT" &&
     Number.isInteger(uploadRequest.imageCount) &&

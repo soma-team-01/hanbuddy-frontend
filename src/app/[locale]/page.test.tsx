@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
 
@@ -87,7 +88,7 @@ describe("LandingPage", () => {
       "The moments that stay with you.",
       "Want to learn more about HanBuddy",
       "Email us anything",
-      "mailto:zeroone.soma@gmail.com",
+      "mailto:contact@hanbuddy.kr",
     ],
     [
       "ko",
@@ -95,7 +96,7 @@ describe("LandingPage", () => {
       "오래 기억에 남는 순간.",
       "HanBuddy에 대해 더 궁금하다면",
       "무엇이든 이메일로 물어보세요",
-      "mailto:zeroone.soma@gmail.com",
+      "mailto:contact@hanbuddy.kr",
     ],
   ] as const)(
     "renders the service, review, and contact sections for %s",
@@ -150,15 +151,6 @@ describe("LandingPage", () => {
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en",
-          ko: "https://hanbuddy-frontend.vercel.app/ko",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "");
   });
 });

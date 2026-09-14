@@ -35,6 +35,21 @@ describe("POST /api/google/places/autocomplete", () => {
     });
   });
 
+  it("preserves a supported Chinese locale", async () => {
+    await POST(
+      new NextRequest("http://localhost/api/google/places/autocomplete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: "Seoul", locale: "zh-Hans" }),
+      }),
+    );
+
+    expect(searchGooglePlacePredictions).toHaveBeenCalledWith("Seoul", "test-key", {
+      locale: "zh-Hans",
+      referrer: "http://localhost:3000/",
+    });
+  });
+
   it("rejects a JSON primitive body with 400 instead of crashing", async () => {
     const response = await POST(
       new NextRequest("http://localhost/api/google/places/autocomplete", {

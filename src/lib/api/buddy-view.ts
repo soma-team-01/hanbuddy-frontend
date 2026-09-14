@@ -3,7 +3,7 @@ import type {
   MyActivityDetailResponse,
   MyActivityStatus,
 } from "@/types/buddy";
-import type { Locale } from "@/i18n/routing";
+import { getIntlLocale, type Locale } from "@/i18n/routing";
 import { formatSeoulDate, formatSeoulTime, getSeoulDateTimeParts } from "@/lib/datetime";
 import type { Activity, Session } from "@/types/activity";
 
@@ -25,12 +25,40 @@ const CONTACT_METHOD_LABELS: Record<
     PHONE: "Phone",
     WECHAT: "WeChat",
     WHATSAPP: "WhatsApp",
+    KAKAOTALK: "KakaoTalk",
+    INSTAGRAM: "Instagram",
   },
   ko: {
     LINE: "Line",
     PHONE: "전화",
     WECHAT: "WeChat",
     WHATSAPP: "WhatsApp",
+    KAKAOTALK: "KakaoTalk",
+    INSTAGRAM: "Instagram",
+  },
+  ja: {
+    LINE: "LINE",
+    PHONE: "電話",
+    WECHAT: "WeChat",
+    WHATSAPP: "WhatsApp",
+    KAKAOTALK: "KakaoTalk",
+    INSTAGRAM: "Instagram",
+  },
+  "zh-Hans": {
+    LINE: "LINE",
+    PHONE: "电话",
+    WECHAT: "微信",
+    WHATSAPP: "WhatsApp",
+    KAKAOTALK: "KakaoTalk",
+    INSTAGRAM: "Instagram",
+  },
+  "zh-Hant": {
+    LINE: "LINE",
+    PHONE: "電話",
+    WECHAT: "微信",
+    WHATSAPP: "WhatsApp",
+    KAKAOTALK: "KakaoTalk",
+    INSTAGRAM: "Instagram",
   },
 };
 
@@ -43,6 +71,9 @@ function createRegionDisplayNames(locale: string) {
 const regionDisplayNames: Record<Locale, Intl.DisplayNames | null> = {
   en: createRegionDisplayNames("en-US"),
   ko: createRegionDisplayNames("ko-KR"),
+  ja: createRegionDisplayNames(getIntlLocale("ja")),
+  "zh-Hans": createRegionDisplayNames(getIntlLocale("zh-Hans")),
+  "zh-Hant": createRegionDisplayNames(getIntlLocale("zh-Hant")),
 };
 
 export function getActivityThumbnail(thumbnailImageUrl: string | null) {
@@ -54,15 +85,16 @@ export function getMyActivityStatusLabel(status: MyActivityStatus) {
 }
 
 export interface PreviewHost {
+  id?: number;
   name: string;
   avatarUrl: string | null;
 }
 
 /**
  * 내 활동 상세 응답을 게스트에게 보이는 상세 화면과 동일한 뷰 모델로 변환한다.
- * 투어리스트 응답에만 있는 값은 같은 규칙으로 재계산한다:
+ * 투어리스트 화면에 필요한 값은 같은 규칙으로 구성한다:
  * - 남은 자리 = maxCapacity - bookedCount (CLOSED 일정은 0)
- * - 총 소요시간 = 일정표 소요시간 합을 30분 단위로 올림
+ * - 총 소요시간 = 백엔드가 제공한 일정표의 정확한 분 합계
  */
 export function mapMyActivityDetailToPreviewActivity(
   detail: MyActivityDetailResponse,
@@ -74,10 +106,6 @@ export function mapMyActivityDetailToPreviewActivity(
   const images = [...detail.images].sort((left, right) => left.imageOrder - right.imageOrder);
   const heroImageUrl = images[0]?.imageUrl ?? getActivityThumbnail(detail.thumbnailImageUrl);
   const hasActiveDiscount = detail.discountedPrice !== null;
-  const itineraryMinutes = detail.itineraries.reduce(
-    (total, item) => total + item.durationMinutes,
-    0,
-  );
   const sessions = detail.schedules.map<Session>((schedule) => ({
     id: String(schedule.scheduleId),
     startAt: schedule.startAt,
@@ -100,9 +128,10 @@ export function mapMyActivityDetailToPreviewActivity(
     price: detail.discountedPrice ?? detail.price,
     originalPrice: hasActiveDiscount ? detail.price : undefined,
     discountPercent: hasActiveDiscount ? (detail.discountPercent ?? undefined) : undefined,
-    durationMinutes: itineraryMinutes > 0 ? Math.ceil(itineraryMinutes / 30) * 30 : undefined,
+    durationMinutes: detail.totalDurationMinutes,
     isSoldOut: sessions.length > 0 && sessions.every((session) => session.spotsLeft === 0),
     host: {
+      id: host.id,
       name: host.name,
       bio: hostBio,
       avatarUrl: host.avatarUrl,
@@ -132,14 +161,30 @@ export function formatNationalityCode(countryCode: string, locale: Locale) {
   return regionDisplayNames[locale]?.of(countryCode) ?? countryCode;
 }
 
+/** 연락 수단 이름과 값(국가번호 포함)을 분리해서 준다 — 라벨/값을 나눠 그릴 때 쓴다 */
+export function getApplicantContactParts(
+  applicant: BuddyApplicationApplicantSummaryResponse,
+  locale: Locale,
+): { method: string; value: string } {
+  const usesCountryCode =
+    applicant.applicantContactMethod === "WHATSAPP" || applicant.applicantContactMethod === "PHONE";
+
+  return {
+    method: CONTACT_METHOD_LABELS[locale][applicant.applicantContactMethod],
+    value: [
+      usesCountryCode ? applicant.applicantContactCountryCode : null,
+      applicant.applicantContactIdentifier,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
 export function formatApplicantContact(
   applicant: BuddyApplicationApplicantSummaryResponse,
   locale: Locale,
 ) {
-  const methodLabel = CONTACT_METHOD_LABELS[locale][applicant.applicantContactMethod];
-  const contactValue = [applicant.applicantContactCountryCode, applicant.applicantContactIdentifier]
-    .filter(Boolean)
-    .join(" ");
-
-  return `${methodLabel} ${contactValue}`.trim();
+  // 국가번호는 전화 기반 수단에만 의미가 있다 — LINE·WeChat ID에 붙이면 엉뚱한 표기가 된다
+  const { method, value } = getApplicantContactParts(applicant, locale);
+  return `${method} ${value}`.trim();
 }

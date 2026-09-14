@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivities, getTouristActivity } from "./activities";
+import { getActivityWeather, getTouristActivities, getTouristActivity } from "./activities";
 
 const activitySummary = {
   activityId: 42,
@@ -11,6 +11,13 @@ const activitySummary = {
   meetingPointName: "Anguk Station Exit 2",
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 32.5,
+    discountedPrice: null,
+    currency: "USD",
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
+  },
 };
 
 const activityDetail = {
@@ -59,11 +66,13 @@ describe("tourist activity API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivities()).resolves.toEqual({
+    await expect(getTouristActivities("EN", "USD")).resolves.toEqual({
       status: "success",
       activities: [activitySummary],
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities", { credentials: "same-origin" });
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities?language=EN&displayCurrency=USD", {
+      credentials: "same-origin",
+    });
   });
 
   it("loads a tourist activity detail through the internal API", async () => {
@@ -77,11 +86,37 @@ describe("tourist activity API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivity(42)).resolves.toEqual({
+    await expect(getTouristActivity(42, "KO", "KRW")).resolves.toEqual({
       status: "success",
       activity: activityDetail,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42?language=KO&displayCurrency=KRW", {
+      credentials: "same-origin",
+    });
+  });
+
+  it("loads activity weather through the internal API", async () => {
+    const weather = {
+      available: true,
+      unavailableReason: null,
+      provider: "KMA",
+      timeZone: "Asia/Seoul",
+      issuedAt: "2026-08-24T14:00:00+09:00",
+      baseDate: "2026-08-24",
+      forecasts: [],
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ isSuccess: true, code: "200", message: "ok", result: weather }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getActivityWeather(42)).resolves.toEqual({
+      status: "success",
+      weather,
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/42/weather", {
       credentials: "same-origin",
     });
   });
@@ -93,7 +128,9 @@ describe("tourist activity API client", () => {
       .mockResolvedValueOnce(createJsonResponse({ isSuccess: false }, 401));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getTouristActivities()).resolves.toEqual({ status: "unauthenticated" });
+    await expect(getTouristActivities("EN", "USD")).resolves.toEqual({
+      status: "unauthenticated",
+    });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/auth/refresh", {
       method: "POST",
       credentials: "same-origin",

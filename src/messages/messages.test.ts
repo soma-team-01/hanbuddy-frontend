@@ -1,7 +1,18 @@
 import { isStructurallySame, parse } from "@formatjs/icu-messageformat-parser";
 import { describe, expect, it } from "vitest";
 import en from "./en.json";
+import ja from "./ja.json";
 import ko from "./ko.json";
+import zhHans from "./zh-Hans.json";
+import zhHant from "./zh-Hant.json";
+
+const localeMessages = [
+  ["en", en],
+  ["ko", ko],
+  ["ja", ja],
+  ["zh-Hans", zhHans],
+  ["zh-Hant", zhHant],
+] as const;
 
 function flatten(value: unknown, prefix = ""): Record<string, string> {
   if (typeof value === "string") return { [prefix]: value };
@@ -17,29 +28,47 @@ function flatten(value: unknown, prefix = ""): Record<string, string> {
 }
 
 describe("locale messages", () => {
-  it("keeps the Korean key contract identical to English", () => {
-    expect(Object.keys(flatten(ko)).sort()).toEqual(Object.keys(flatten(en)).sort());
+  it.each(localeMessages)("keeps the %s key contract identical to English", (_, messages) => {
+    expect(Object.keys(flatten(messages)).sort()).toEqual(Object.keys(flatten(en)).sort());
   });
 
-  it.each([
-    ["en", flatten(en)],
-    ["ko", flatten(ko)],
-  ] as const)("contains non-empty valid ICU messages for %s", (_, messages) => {
-    for (const [key, message] of Object.entries(messages)) {
-      expect(message.trim(), key).not.toBe("");
-      expect(() => parse(message), key).not.toThrow();
-    }
-  });
+  it.each(localeMessages.map(([locale, messages]) => [locale, flatten(messages)] as const))(
+    "contains non-empty valid ICU messages for %s",
+    (_, messages) => {
+      for (const [key, message] of Object.entries(messages)) {
+        expect(message.trim(), key).not.toBe("");
+        expect(() => parse(message), key).not.toThrow();
+      }
+    },
+  );
 
   it("keeps ICU argument names and types identical across locales", () => {
     const english = flatten(en);
-    const korean = flatten(ko);
 
-    for (const [key, englishMessage] of Object.entries(english)) {
-      const comparison = isStructurallySame(parse(englishMessage), parse(korean[key]));
-      const detail = comparison.error?.message ?? "ICU mismatch";
-      expect(comparison.success, `${key}: ${detail}`).toBe(true);
+    for (const [locale, messages] of localeMessages) {
+      const localized = flatten(messages);
+      for (const [key, englishMessage] of Object.entries(english)) {
+        const comparison = isStructurallySame(parse(englishMessage), parse(localized[key]));
+        const detail = comparison.error?.message ?? "ICU mismatch";
+        expect(comparison.success, `${locale}:${key}: ${detail}`).toBe(true);
+      }
     }
+  });
+
+  it("keeps localized review parentheses and Traditional Chinese minute units valid", () => {
+    for (const reviewCount of [
+      ja.Booking.reviewCount,
+      zhHans.Booking.reviewCount,
+      zhHant.Booking.reviewCount,
+    ]) {
+      expect(reviewCount).not.toContain("（");
+      expect(reviewCount).not.toContain("）");
+    }
+
+    expect(zhHant.Explore.durationMinutes).toBe("{minutes}分鐘");
+    expect(zhHant.ActivityDetail.itineraryMinutes).toBe("{minutes} 分鐘");
+    expect(zhHant.CreateActivity.itinerary.durationSummary).toBe("{minutes, number} 分鐘");
+    expect(zhHant.CreateActivity.itinerary.editor.minutes).toBe("分鐘");
   });
 
   it("contains the complete Tourist message contract", () => {
@@ -61,6 +90,17 @@ describe("locale messages", () => {
       "ActivityDetail.cannotJoin",
       "ActivityDetail.availability",
       "ActivityDetail.remaining",
+      "ActivityDetail.weatherAttribution",
+      "ActivityDetail.weatherTemperature",
+      "ActivityDetail.weatherPrecipitation",
+      "ActivityDetail.weatherPrecipitationUnavailable",
+      "ActivityDetail.weatherConditions.clear",
+      "ActivityDetail.weatherConditions.partlyCloudy",
+      "ActivityDetail.weatherConditions.cloudy",
+      "ActivityDetail.weatherConditions.rain",
+      "ActivityDetail.weatherConditions.rainSnow",
+      "ActivityDetail.weatherConditions.snow",
+      "ActivityDetail.weatherConditions.shower",
       "ActivityDetail.meetingPoint",
       "ActivityDetail.mapUnavailable",
       "ActivityDetail.mapTitle",
@@ -74,7 +114,10 @@ describe("locale messages", () => {
       "Booking.priceDetails",
       "Booking.subtotal",
       "Booking.totalKrw",
-      "Booking.refundPolicy",
+      "Booking.refundPolicyHeading",
+      "Booking.refundPolicyLink",
+      "Booking.statutoryWithdrawalNotice",
+      "Booking.actualPaymentRefundNotice",
       "Booking.agreement",
       "Booking.submit",
       "Booking.processing",
@@ -88,6 +131,10 @@ describe("locale messages", () => {
       "Applications.paidAmount",
       "Applications.total",
       "Applications.continuePayment",
+      "Applications.paymentReviewTitle",
+      "Applications.paymentReviewDescription",
+      "Applications.resumeWithToss",
+      "Applications.resumeWithPayPal",
       "Applications.cancel",
       "Applications.cancellationTitle",
       "Applications.cancellationPrompt",
@@ -104,10 +151,8 @@ describe("locale messages", () => {
       "Payment.loading",
     ];
 
-    for (const [locale, messages] of [
-      ["en", flatten(en)],
-      ["ko", flatten(ko)],
-    ] as const) {
+    for (const [locale, localeCatalog] of localeMessages) {
+      const messages = flatten(localeCatalog);
       for (const key of requiredKeys) {
         expect(messages[key], `${locale}:${key}`).toBeTypeOf("string");
       }
@@ -115,7 +160,7 @@ describe("locale messages", () => {
   });
 
   it("uses ICU variables and plurals for Tourist amounts and counts", () => {
-    for (const messages of [en, ko]) {
+    for (const [, messages] of localeMessages) {
       expect(messages.ActivityDetail.perPerson).toContain("{price}");
       expect(messages.ActivityDetail.remaining).toContain("plural");
       expect(messages.Booking.guests).toContain("plural");
@@ -131,16 +176,17 @@ describe("locale messages", () => {
 
   it("contains the complete Buddy message contract", () => {
     const requiredKeys = [
-      "BuddyDashboard.quickActions",
       "BuddyDashboard.createActivity",
-      "BuddyDashboard.upcoming",
-      "BuddyDashboard.loadingSchedule",
-      "BuddyDashboard.noUpcoming",
-      "BuddyDashboard.previousDates",
-      "BuddyDashboard.nextDates",
+      "Settlement.title",
+      "Settlement.expectedThisMonth",
+      "BuddyDashboard.previousWeek",
+      "BuddyDashboard.nextWeek",
+      "BuddyDashboard.openCalendar",
+      "BuddyDashboard.today",
       "BuddyDashboard.scheduleDates",
       "BuddyDashboard.loadingApplicants",
       "BuddyDashboard.applicantCount",
+      "BuddyDashboard.myActivitiesHeading",
       "MyActivities.title",
       "MyActivities.description",
       "MyActivities.loading",
@@ -291,10 +337,8 @@ describe("locale messages", () => {
       "CreateActivity.errors.discountInvalid",
     ];
 
-    for (const [locale, messages] of [
-      ["en", flatten(en)],
-      ["ko", flatten(ko)],
-    ] as const) {
+    for (const [locale, localeCatalog] of localeMessages) {
+      const messages = flatten(localeCatalog);
       for (const key of requiredKeys) {
         expect(messages[key], `${locale}:${key}`).toBeTypeOf("string");
       }
@@ -302,7 +346,8 @@ describe("locale messages", () => {
   });
 
   it("uses ICU numbers and plurals for Buddy counts and payout values", () => {
-    for (const messages of [flatten(en), flatten(ko)]) {
+    for (const [, localeCatalog] of localeMessages) {
+      const messages = flatten(localeCatalog);
       expect(messages["BuddyDashboard.applicantCount"]).toContain("plural");
       expect(messages["Applicants.confirmedCount"]).toContain("plural");
       expect(messages["Applicants.pendingCount"]).toContain("plural");

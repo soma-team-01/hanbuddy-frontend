@@ -3,6 +3,7 @@ import {
   badRequestResponse,
   proxyAuthenticatedPatch,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type { ApplicationResponse } from "@/types/application";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function PATCH(request: NextRequest, context: PaymentCancelRouteCon
   // 결제 대기 신청 취소는 본문이 없다 — 좌석 선점 해제와 결제 주문 취소를 백엔드가 함께 처리한다
   return proxyAuthenticatedPatch<undefined, ApplicationResponse>(
     request,
-    `/applications/me/${applicationId}/payment/cancel`,
+    appendRequestedContentLanguage(request, `/applications/me/${applicationId}/payment/cancel`),
     undefined,
     "신청 취소 서버에 연결할 수 없습니다.",
   );

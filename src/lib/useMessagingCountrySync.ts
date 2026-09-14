@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 /**
  * 국적 선택과 메시징 국가번호 선택을 묶어 관리한다.
@@ -11,15 +11,30 @@ export function useMessagingCountrySync(initialNationality: string, initialCount
   const [messagingCountry, setMessagingCountry] = useState(initialCountry);
   const messagingCountryTouched = useRef(false);
 
-  function handleNationalityChange(code: string) {
+  const handleNationalityChange = useCallback((code: string) => {
     setNationality(code);
     if (!messagingCountryTouched.current) setMessagingCountry(code);
-  }
+  }, []);
 
-  function handleMessagingCountryChange(code: string) {
+  const handleMessagingCountryChange = useCallback((code: string) => {
     messagingCountryTouched.current = true;
     setMessagingCountry(code);
-  }
+  }, []);
 
-  return { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange };
+  const restoreMessagingCountries = useCallback(
+    (restoredNationality: string, restoredMessagingCountry: string) => {
+      setNationality(restoredNationality);
+      setMessagingCountry(restoredMessagingCountry);
+      messagingCountryTouched.current = restoredMessagingCountry !== restoredNationality;
+    },
+    [],
+  );
+
+  return {
+    nationality,
+    messagingCountry,
+    handleNationalityChange,
+    handleMessagingCountryChange,
+    restoreMessagingCountries,
+  };
 }

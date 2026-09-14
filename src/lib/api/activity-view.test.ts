@@ -9,6 +9,7 @@ const summary = {
   buddyId: 7,
   title: "Bukchon Hidden Gems",
   description: "Walk through quiet alleys with a local buddy.",
+  totalDurationMinutes: 80,
   thumbnailImageUrl:
     "https://hanbuddy-bucket-526958954481-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/activities/2026/07/07/bukchon.webp",
   buddyName: "Jihoon Kim",
@@ -18,6 +19,13 @@ const summary = {
   meetingPlaceId: "ChIJ-bukchon",
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 32.5,
+    discountedPrice: null,
+    currency: "USD" as const,
+    exchangeRateDate: "2026-08-31",
+    estimated: true,
+  },
 };
 
 describe("activity view adapters", () => {
@@ -36,6 +44,21 @@ describe("activity view adapters", () => {
         placeId: "ChIJ-bukchon",
       },
       price: 45000,
+      referencePrice: 32.5,
+      referenceOriginalPrice: undefined,
+      referenceCurrency: "USD",
+      referencePriceEstimated: true,
+      referencePriceExchangeRateDate: "2026-08-31",
+    });
+  });
+
+  it("falls back to the existing KRW fields during a rolling backend deployment", () => {
+    const legacySummary = { ...summary, displayPrice: undefined };
+
+    expect(mapTouristActivitySummaryToActivity(legacySummary)).toMatchObject({
+      price: 45000,
+      referencePrice: undefined,
+      referenceCurrency: undefined,
     });
   });
 
@@ -46,10 +69,12 @@ describe("activity view adapters", () => {
         discountPercent: null,
         discountEndDate: null,
         discountedPrice: null,
+        displayPrice: { ...summary.displayPrice, discountedPrice: null },
       }),
     ).toMatchObject({
       price: 45000,
       originalPrice: undefined,
+      referencePrice: 32.5,
       discountPercent: undefined,
     });
   });
@@ -60,11 +85,14 @@ describe("activity view adapters", () => {
       discountPercent: 20,
       discountEndDate: "2026-08-31",
       discountedPrice: 36000,
+      displayPrice: { ...summary.displayPrice, discountedPrice: 26 },
       isSoldOut: false,
     });
 
     expect(activity.price).toBe(36000);
     expect(activity.originalPrice).toBe(45000);
+    expect(activity.referencePrice).toBe(26);
+    expect(activity.referenceOriginalPrice).toBe(32.5);
     expect(activity.discountPercent).toBe(20);
     expect(activity.isSoldOut).toBe(false);
   });
@@ -127,27 +155,20 @@ describe("activity view adapters", () => {
     });
   });
 
-  it("converts totalDurationHours to minutes for the card duration", () => {
-    expect(
-      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: 1.5 }).durationMinutes,
-    ).toBe(90);
-    expect(
-      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: 0.5 }).durationMinutes,
-    ).toBe(30);
-  });
+  it.each([0, 5, 29, 30, 31, 80])(
+    "passes an exact %i minute summary duration through without rounding",
+    (totalDurationMinutes) => {
+      expect(
+        mapTouristActivitySummaryToActivity({ ...summary, totalDurationMinutes }).durationMinutes,
+      ).toBe(totalDurationMinutes);
+    },
+  );
 
-  it("omits the duration when the response has no totalDurationHours", () => {
-    expect(mapTouristActivitySummaryToActivity(summary).durationMinutes).toBeUndefined();
-    expect(
-      mapTouristActivitySummaryToActivity({ ...summary, totalDurationHours: null }).durationMinutes,
-    ).toBeUndefined();
-  });
-
-  it("passes the detail totalDurationHours through to the activity duration", () => {
+  it("passes the detail totalDurationMinutes through without conversion", () => {
     const detail = mapTouristActivityDetailToActivity(
       {
         ...summary,
-        totalDurationHours: 2.5,
+        totalDurationMinutes: 150,
         buddyId: 7,
         includedItems: [],
         restrictionNotes: [],

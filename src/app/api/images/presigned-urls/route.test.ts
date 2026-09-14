@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { POST } from "./route";
 
 const originalApiBaseUrl = process.env.HANBUDDY_API_BASE_URL;
@@ -65,6 +66,27 @@ describe("POST /api/images/presigned-urls", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("uses the resubmission token for profile image uploads", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(backendSuccessBody), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      createRequest({
+        cookie: `${AUTH_COOKIES.resubmissionToken}=resubmit-token`,
+        body: presignedRequestBody,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(new Headers(init.headers).get("authorization")).toBe("Bearer resubmit-token");
+  });
+
   it("forwards the request to the backend with the signup token as bearer", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify(backendSuccessBody), {
@@ -121,7 +143,7 @@ describe("POST /api/images/presigned-urls", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const body = { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 3 };
+    const body = { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 10 };
     const response = await POST(
       createRequest({
         cookie: "hanbuddy_access_token=access-token",
@@ -164,8 +186,8 @@ describe("POST /api/images/presigned-urls", () => {
     ["unsupported contentType", { purpose: "PROFILE", contentType: "image/gif", imageCount: 1 }],
     ["imageCount other than 1", { purpose: "PROFILE", contentType: "image/webp", imageCount: 2 }],
     [
-      "activity imageCount over 8",
-      { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 9 },
+      "activity imageCount over 10",
+      { purpose: "ACTIVITY", contentType: "image/webp", imageCount: 11 },
     ],
     ["unknown purpose", { purpose: "OTHER", contentType: "image/webp", imageCount: 1 }],
   ])("rejects %s with 400 before reaching the backend", async (_label, body) => {

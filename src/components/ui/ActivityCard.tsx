@@ -2,7 +2,8 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
-import { formatKrw } from "@/lib/format";
+import { formatActivityDuration } from "@/lib/activity-duration";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
 
 export function ActivityCard({
@@ -13,6 +14,11 @@ export function ActivityCard({
   const t = useTranslations("Explore");
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
+  const hasReferencePrice =
+    activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
+  const estimatedPriceTitle = activity.referencePriceExchangeRateDate
+    ? t("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
+    : t("estimatedPrice");
 
   return (
     <article className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)] transition duration-200 hover:shadow-[0_14px_32px_rgba(61,45,43,0.1)]">
@@ -59,6 +65,19 @@ export function ActivityCard({
                 {formatKrw(activity.originalPrice ?? activity.price, locale)}
               </s>
             ) : null}
+            {hasReferencePrice ? (
+              <p
+                className="text-xs leading-4 font-medium text-muted"
+                title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+              >
+                ≈{" "}
+                {formatDisplayCurrency(
+                  activity.referencePrice!,
+                  activity.referenceCurrency!,
+                  locale,
+                )}
+              </p>
+            ) : null}
             <p
               className={`font-display text-xl leading-7 ${
                 hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
@@ -75,7 +94,9 @@ export function ActivityCard({
 }
 
 function formatDuration(t: ReturnType<typeof useTranslations<"Explore">>, minutes: number): string {
-  if (minutes < 60) return t("durationMinutes", { minutes });
-
-  return t("durationHours", { hours: minutes / 60 });
+  return formatActivityDuration(
+    minutes,
+    (hours) => t("durationHours", { hours }),
+    (remainingMinutes) => t("durationMinutes", { minutes: remainingMinutes }),
+  );
 }

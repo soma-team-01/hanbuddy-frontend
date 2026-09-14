@@ -12,6 +12,7 @@ import {
   isValidChatMessageContent,
   isValidChatRoomId,
 } from "@/app/api/_utils/chat-input";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type {
   ChatMessagePageResponse,
   ChatMessageResponse,
@@ -30,9 +31,10 @@ export async function GET(request: NextRequest, context: ChatMessagesRouteContex
     return badRequestResponse("잘못된 채팅방 ID입니다.");
   }
 
+  const backendPath = `/chat/rooms/${chatRoomId}/messages${buildChatMessageQuery(request.nextUrl.searchParams)}`;
   return proxyAuthenticatedGet<ChatMessagePageResponse>(
     request,
-    `/chat/rooms/${chatRoomId}/messages${buildChatMessageQuery(request.nextUrl.searchParams)}`,
+    appendRequestedContentLanguage(request, backendPath),
     "채팅 서버에 연결할 수 없습니다.",
   );
 }
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest, context: ChatMessagesRouteConte
   return proxyAuthenticatedPost<SendChatMessageRequest, ChatMessageResponse>(
     request,
     `/chat/rooms/${chatRoomId}/messages`,
-    { content: body.content },
+    { messageType: "TEXT", content: body.content },
     "채팅 서버에 연결할 수 없습니다.",
   );
 }

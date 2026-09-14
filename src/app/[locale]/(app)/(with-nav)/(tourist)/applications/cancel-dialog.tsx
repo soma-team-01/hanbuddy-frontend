@@ -1,8 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { formatCurrency } from "@/lib/format";
+import { cancellationQuoteQueryOptions } from "@/lib/query/applications";
+import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { ApplicationCancellationReason } from "@/types/application";
 
 const REASONS = [
@@ -14,13 +18,33 @@ const REASONS = [
 
 /** 백엔드 CancelApplicationRequest.cancellationDetail의 @Size(max = 255)와 맞춘다 */
 const CANCELLATION_DETAIL_MAX_LENGTH = 255;
+const HOUR_MS = 60 * 60 * 1000;
+const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
+
+/** 열려 있는 취소 모달의 견적이 달라질 수 있는 가장 가까운 정책 경계를 구한다. */
+function getNextQuoteBoundary(startAt: string, freeCancellationUntil: string) {
+  const now = Date.now();
+  const startAtMs = Date.parse(startAt);
+  const boundaries = [
+    Date.parse(freeCancellationUntil),
+    startAtMs - 48 * HOUR_MS,
+    startAtMs - 24 * HOUR_MS,
+    startAtMs,
+  ].filter((boundary) => Number.isFinite(boundary) && boundary > now);
+
+  return boundaries.length > 0 ? Math.min(...boundaries) : null;
+}
 
 export type CancelDialogOutcome = { ok: true } | { ok: false; error: unknown };
 
 export function CancelDialog({
+  applicationId,
+  startAt,
   onClose,
   onConfirm,
 }: Readonly<{
+  applicationId: string;
+  startAt: string;
   onClose: () => void;
   onConfirm: (
     reason: ApplicationCancellationReason,
@@ -28,6 +52,7 @@ export function CancelDialog({
   ) => Promise<CancelDialogOutcome>;
 }>) {
   const t = useTranslations("Applications");
+  const locale = useLocale();
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
   const [reason, setReason] = useState<ApplicationCancellationReason | null>(null);
@@ -39,6 +64,16 @@ export function CancelDialog({
   } | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const detailRef = useRef<HTMLTextAreaElement>(null);
+  const {
+    data: quote,
+    error: quoteError,
+    isError: isQuoteError,
+    isPending: isQuotePending,
+    isSuccess: isQuoteSuccess,
+    isFetching,
+    refetch: refetchQuote,
+  } = useQuery(cancellationQuoteQueryOptions(applicationId));
+  useAuthQueryRedirect(quoteError);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -50,10 +85,23 @@ export function CancelDialog({
     if (reason === "OTHER") detailRef.current?.focus();
   }, [reason]);
 
+  useEffect(() => {
+    if (!quote) return;
+    const nextBoundary = getNextQuoteBoundary(startAt, quote.freeCancellationUntil);
+    if (nextBoundary === null) return;
+    const delay = nextBoundary - Date.now() + 50;
+    // 브라우저 타이머의 32-bit 한도를 넘는 비정상 응답은 즉시 만료로 오인하지 않는다.
+    if (!Number.isFinite(delay) || delay <= 0 || delay > MAX_BROWSER_TIMEOUT_MS) return;
+
+    const timeout = window.setTimeout(() => void refetchQuote(), delay);
+    return () => window.clearTimeout(timeout);
+  }, [quote, refetchQuote, startAt]);
+
   const trimmedDetail = detail.trim();
   // 백엔드는 OTHER에서 상세 사유를 필수로 받는다
   const needsDetail = reason === "OTHER";
-  const canSubmit = Boolean(reason) && (!needsDetail || trimmedDetail.length > 0);
+  const canSubmit =
+    isQuoteSuccess && !isFetching && Boolean(reason) && (!needsDetail || trimmedDetail.length > 0);
 
   async function handleConfirm() {
     if (!reason || !canSubmit || isSubmitting) return;
@@ -83,12 +131,62 @@ export function CancelDialog({
         if (isSubmitting) event.preventDefault();
       }}
       onClose={onClose}
-      className="motion-dialog m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-3xl md:p-8"
+      className="motion-dialog m-0 max-h-[calc(100dvh-1rem)] w-full max-w-none overflow-y-auto rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-3xl md:p-8"
     >
       <h2 id="cancel-dialog-title" className="font-display text-xl font-bold text-ink">
         {t("cancellationTitle")}
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted">{t("cancellationPrompt")}</p>
+
+      <section
+        aria-label={t("refundEstimateTitle")}
+        className="mt-5 border-y border-line-soft border-t-primary py-4"
+      >
+        <h3 className="flex items-center gap-2 font-display text-sm font-bold text-ink">
+          <span aria-hidden className="h-4 w-1 rounded-full bg-primary" />
+          {t("refundEstimateTitle")}
+        </h3>
+        {isQuotePending ? (
+          <p className="mt-2 text-sm text-muted">{t("quoteLoading")}</p>
+        ) : isQuoteError ? (
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+            <p role="alert" className="text-sm text-danger">
+              {t("quoteFailed")}
+            </p>
+            <button
+              type="button"
+              onClick={() => void refetchQuote()}
+              className="rounded-full border border-primary px-3 py-1.5 font-display text-xs font-bold text-primary hover:bg-primary hover:text-on-primary"
+            >
+              {t("retryQuote")}
+            </button>
+          </div>
+        ) : quote ? (
+          <div className="mt-3 flex flex-col gap-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <span className="text-muted">{t("refundPolicy")}</span>
+              <span className="text-right font-semibold text-ink">
+                {t(`refundPolicyTypes.${quote.policyType}`)} · {quote.refundPercent}%
+              </span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted">{t("estimatedRefund")}</span>
+              <span className="font-display font-bold text-primary">
+                {formatCurrency(quote.refundAmount, quote.refundCurrency, locale)}
+              </span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-muted">{t("cancellationFee")}</span>
+              <span className="font-semibold text-ink">
+                {formatCurrency(quote.cancellationFeeAmount, quote.refundCurrency, locale)}
+              </span>
+            </div>
+            <p className="border-t border-line-soft pt-2 text-xs leading-5 text-muted">
+              {t("quoteFinalNotice")}
+            </p>
+          </div>
+        ) : null}
+      </section>
 
       <p className="mt-6 font-display text-sm font-bold text-ink">{t("cancellationQuestion")}</p>
       <div className="mt-3 flex flex-col gap-2">

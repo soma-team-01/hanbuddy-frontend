@@ -7,7 +7,7 @@
 - **Next.js 16** (App Router) · **React 19** · **TypeScript**
 - **Tailwind CSS v4**
 - **ESLint** + **Prettier**
-- 배포: **Vercel**
+- 배포: **AWS EC2**
 
 ## 시작하기
 
@@ -58,18 +58,21 @@ src/
 
 ```
 main      ─ 실서비스(Production). PR로만 병합 (develop → main: merge commit)
-develop   ─ 통합/스테이징. Vercel 고정 Preview (feature → develop: squash)
-feature/* ─ 개별 기능 작업 (develop에서 분기)
+develop   ─ 통합 및 수동 Staging 배포 기준 (feature → develop: squash)
+feature/* ─ 개별 기능 작업 및 PR CI 검증 (develop에서 분기, Preview 배포 없음)
 ```
 
 - 작업 흐름: `feature/xxx`(develop 분기) → PR → `develop` → 릴리즈 시 PR → `main`
 - 브랜치/커밋 네이밍: `<type>/<설명>`, 커밋 메시지 `<prefix>: <한국어 요약>` (`feat`, `fix`, `docs`, `chore` …)
 - `main`·`develop`은 GitHub Ruleset으로 보호됨 (직접 push 불가, PR 필수).
 
-## 배포 (Vercel)
+## 배포 (AWS EC2)
 
-- `main` push → **Production** 자동 배포 (https://hanbuddy-frontend.vercel.app)
-- `develop`·PR push → **Preview** 자동 배포 (로그인 필요)
+- `main` push → CI 성공 후 설정이 활성화된 경우 **Production** 자동 배포
+- `develop` → GitHub Actions의 `Deploy staging` workflow로 **Staging** 수동 배포
+- Feature 브랜치와 PR → 배포 없이 CI만 실행
+- 사용하지 않는 Staging은 `Stop staging` workflow로 중지
+- 자세한 구성과 운영 절차는 [`docs/deployment/aws-ec2.md`](docs/deployment/aws-ec2.md) 참고
 
 ## 참고
 

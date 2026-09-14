@@ -7,13 +7,23 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { touristActivityQueryOptions } from "@/lib/query/activities";
+import { getContentLanguage } from "@/lib/content-language";
+import { getDefaultDisplayCurrency } from "@/lib/display-currency";
+import { getLocaleOrDefault } from "@/i18n/routing";
+import { activityWeatherQueryOptions, touristActivityQueryOptions } from "@/lib/query/activities";
 import { useHistoryBack } from "@/lib/navigation/use-history-back";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
-  const activityQuery = useQuery(touristActivityQueryOptions(activityId));
-  const locale = useLocale();
+  const locale = getLocaleOrDefault(useLocale());
+  const language = getContentLanguage(locale);
+  const activityQuery = useQuery(
+    touristActivityQueryOptions(activityId, language, getDefaultDisplayCurrency(locale)),
+  );
+  const weatherQuery = useQuery({
+    ...activityWeatherQueryOptions(activityId),
+    enabled: activityQuery.isSuccess,
+  });
   const t = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
@@ -58,9 +68,12 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
   }
 
   return (
-    <div className="flex flex-1 flex-col pb-32">
+    <div className="flex flex-1 flex-col pb-6">
       <PageHeader onLeftClick={goBack} />
-      <ActivityDetailView activity={activity} />
+      <ActivityDetailView
+        activity={activity}
+        weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
+      />
     </div>
   );
 }

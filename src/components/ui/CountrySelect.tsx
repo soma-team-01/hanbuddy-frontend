@@ -5,6 +5,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl";
 import { COUNTRIES } from "@/lib/countries";
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "@/components/ui/icons";
+import { getIntlLocale } from "@/i18n/routing";
 
 interface CountrySelectProps {
   /** ISO 3166-1 alpha-2 코드 */
@@ -43,7 +44,7 @@ export function CountrySelect({
   const listboxId = useId();
 
   const localizedCountries = useMemo(() => {
-    const displayNames = new Intl.DisplayNames(locale === "ko" ? "ko-KR" : "en-US", {
+    const displayNames = new Intl.DisplayNames(getIntlLocale(locale), {
       type: "region",
     });
 
@@ -80,7 +81,7 @@ export function CountrySelect({
     if (!trigger) return;
 
     const viewportPadding = 8;
-    const panelGap = 8;
+    const panelGap = 4;
     const triggerRect = trigger.getBoundingClientRect();
     const availableWidth = Math.max(0, window.innerWidth - viewportPadding * 2);
     const preferredWidth = display === "dialCode" ? 288 : Math.max(triggerRect.width, 256);
@@ -93,7 +94,7 @@ export function CountrySelect({
     const availableAbove = triggerRect.top - panelGap - viewportPadding;
     const opensAbove = availableBelow < 240 && availableAbove > availableBelow;
     const availableHeight = opensAbove ? availableAbove : availableBelow;
-    const maxHeight = Math.max(96, Math.min(320, availableHeight));
+    const maxHeight = Math.max(96, Math.min(272, availableHeight));
 
     setPanelPosition({
       left,
@@ -171,10 +172,10 @@ export function CountrySelect({
         aria-haspopup="listbox"
         aria-controls={isOpen ? listboxId : undefined}
         onClick={() => (isOpen ? close() : open())}
-        className={
+        className={`focus-border-only ${
           triggerClassName ??
-          "flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong"
-        }
+          "flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-panel px-4 py-3.5 text-base text-ink transition-colors hover:border-line-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary-soft"
+        }`}
       >
         {selected ? (
           <span className="flex min-w-0 items-center gap-2.5">
@@ -202,9 +203,9 @@ export function CountrySelect({
               <div
                 data-testid="country-select-panel"
                 style={panelPosition}
-                className="fixed z-[100] flex flex-col overflow-hidden rounded-xl border border-line-soft bg-panel shadow-xl"
+                className="fixed z-[100] flex flex-col overflow-hidden rounded-xl border border-line-soft bg-canvas-soft shadow-lg"
               >
-                <div className="flex items-center gap-2 border-b border-line-soft px-3 py-2.5">
+                <div className="flex shrink-0 items-center gap-2 border-b border-line-soft px-3 py-2">
                   <SearchIcon className="size-4 shrink-0 text-muted" />
                   <input
                     ref={searchRef}
@@ -225,14 +226,14 @@ export function CountrySelect({
                       setActiveIndex(0);
                     }}
                     onKeyDown={handleSearchKeyDown}
-                    className="w-full bg-transparent text-base text-ink outline-none placeholder:text-muted/70"
+                    className="focus-border-only w-full bg-transparent text-base text-ink outline-none placeholder:text-muted/70"
                   />
                 </div>
                 <ul
                   id={listboxId}
                   role="listbox"
                   aria-label={ariaLabel}
-                  className="overflow-y-auto"
+                  className="overflow-y-auto overscroll-contain py-1"
                 >
                   {filtered.map((country, index) => {
                     const isSelected = country.code === value;
@@ -251,20 +252,18 @@ export function CountrySelect({
                           tabIndex={-1}
                           onClick={() => select(country.code)}
                           onMouseMove={() => setActiveIndex(index)}
-                          className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left ${
-                            isActive ? "bg-primary-soft" : ""
-                          }`}
+                          className="flex h-9 w-full items-center gap-2.5 px-3 text-left text-sm"
                         >
                           <span aria-hidden>{country.flag}</span>
-                          <span className="min-w-0 flex-1 truncate text-base text-ink">
+                          <span
+                            className={`min-w-0 flex-1 truncate ${isActive ? "font-semibold text-primary-strong underline decoration-primary underline-offset-4" : "text-ink"}`}
+                          >
                             {country.localizedName}
                           </span>
                           {display === "dialCode" && (
                             <span className="shrink-0 text-sm text-muted">{country.dialCode}</span>
                           )}
-                          {isSelected && (
-                            <CheckIcon className="size-4 shrink-0 text-primary-strong" />
-                          )}
+                          {isSelected && <CheckIcon className="size-3 shrink-0 text-primary" />}
                         </button>
                       </li>
                     );

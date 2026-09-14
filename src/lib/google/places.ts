@@ -6,6 +6,8 @@ const GOOGLE_MAPS_EMBED_BASE_URL = "https://www.google.com/maps/embed/v1/place";
 
 export interface GooglePlaceDetails {
   formattedAddress: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface GooglePlacePrediction {
@@ -26,6 +28,10 @@ interface GooglePlacesOptions {
 
 interface GooglePlaceDetailsResponse {
   formattedAddress?: string;
+  location?: {
+    latitude?: number;
+    longitude?: number;
+  };
 }
 
 interface GoogleAutocompleteResponse {
@@ -101,7 +107,7 @@ export async function fetchGooglePlaceDetails(
     headers: {
       ...(referrer ? { Referer: referrer } : {}),
       "X-Goog-Api-Key": trimmedApiKey,
-      "X-Goog-FieldMask": "formattedAddress",
+      "X-Goog-FieldMask": "formattedAddress,location",
     },
   });
 
@@ -110,8 +116,22 @@ export async function fetchGooglePlaceDetails(
   }
 
   const place = (await response.json()) as GooglePlaceDetailsResponse;
+  const latitude = place.location?.latitude;
+  const longitude = place.location?.longitude;
+  const hasValidCoordinates =
+    typeof latitude === "number" &&
+    Number.isFinite(latitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    typeof longitude === "number" &&
+    Number.isFinite(longitude) &&
+    longitude >= -180 &&
+    longitude <= 180;
+
   return {
     formattedAddress: place.formattedAddress?.trim() ?? "",
+    latitude: hasValidCoordinates ? latitude : null,
+    longitude: hasValidCoordinates ? longitude : null,
   };
 }
 

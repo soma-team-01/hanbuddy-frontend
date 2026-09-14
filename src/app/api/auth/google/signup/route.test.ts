@@ -21,28 +21,23 @@ const signupRequest: GoogleSignupRequest = {
   contactCountryCode: "+82",
   contactIdentifier: "01012345678",
   agreements: [
-    { type: "ADULT_CONFIRMATION", version: "2026-08-06", agreed: true },
-    { type: "TERMS_OF_SERVICE", version: "2026-08-06", agreed: true },
-    { type: "PRIVACY_COLLECTION_USE", version: "2026-08-06", agreed: true },
-    { type: "BUDDY_OPERATION_TERMS", version: "2026-08-06", agreed: true },
-    { type: "BUDDY_COMMISSION_POLICY", version: "2026-08-06", agreed: true },
-    {
-      type: "BUDDY_PROFILE_CONTACT_PROVISION",
-      version: "2026-08-06",
-      agreed: true,
-    },
-    { type: "MARKETING_COMMUNICATION", version: "2026-08-06", agreed: false },
+    { type: "ADULT_CONFIRMATION", version: "2026-09-07", agreed: true },
+    { type: "TERMS_OF_SERVICE", version: "2026-09-07", agreed: true },
+    { type: "PRIVACY_COLLECTION_USE", version: "2026-09-07", agreed: true },
+    { type: "BUDDY_OPERATION_TERMS", version: "2026-09-07", agreed: true },
+    { type: "BUDDY_COMMISSION_POLICY", version: "2026-09-07", agreed: true },
+    { type: "MARKETING_COMMUNICATION", version: "2026-09-07", agreed: false },
   ],
 };
 
-function createSignupRequest() {
+function createSignupRequest(body: GoogleSignupRequest = signupRequest) {
   return new NextRequest("http://localhost/api/auth/google/signup", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       cookie: `${AUTH_COOKIES.signupToken}=signup-token`,
     },
-    body: JSON.stringify(signupRequest),
+    body: JSON.stringify(body),
   });
 }
 
@@ -59,6 +54,34 @@ describe("POST /api/auth/google/signup", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
   });
+
+  it.each(["KAKAOTALK", "INSTAGRAM"] as const)(
+    "forwards tourist %s and LocalDate unchanged",
+    async (contactMethod) => {
+      const body: GoogleSignupRequest = {
+        ...signupRequest,
+        userType: "TOURIST",
+        contactMethod,
+        contactCountryCode: "",
+        contactIdentifier: "사용자 / @synthetic",
+        birthDate: "1998-04-12",
+      };
+      mockedPostBackend.mockResolvedValue({
+        status: 200,
+        setCookies: [],
+        payload: successfulPayload({
+          registered: true,
+          authStatus: "ACTIVE",
+          userId: 17,
+          userType: "TOURIST",
+        }),
+      });
+      expect((await POST(createSignupRequest(body))).status).toBe(200);
+      expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/signup", body, {
+        bearerToken: "signup-token",
+      });
+    },
+  );
 
   it("forwards role-specific signup agreements to the backend", async () => {
     mockedPostBackend.mockResolvedValue({

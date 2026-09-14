@@ -9,6 +9,7 @@ import {
   getMyActivity,
   previewActivityPrice,
   updateMyActivity,
+  updateMyActivityStatus,
 } from "./buddy";
 import type { ActivityUpsertRequest } from "@/types/buddy";
 
@@ -41,6 +42,7 @@ const activityDetail = {
 };
 
 const activityRequest: ActivityUpsertRequest = {
+  sourceLanguage: "EN",
   title: "Traditional Tea Tasting",
   description: "Learn Korean tea etiquette.",
   hostIntroduction: "A tea sommelier hosting hanok tea ceremonies in Seoul.",
@@ -119,6 +121,30 @@ describe("buddy API client", () => {
       activity: activityDetail,
     });
     expect(fetchMock).toHaveBeenCalledWith("/api/activities/me/7", { credentials: "same-origin" });
+  });
+
+  it("updates only the activity visibility through the dedicated endpoint", async () => {
+    const inactiveActivity = { ...activityDetail, status: "INACTIVE" };
+    const fetchMock = vi.fn().mockResolvedValue(
+      createJsonResponse({
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: inactiveActivity,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(updateMyActivityStatus(7, "INACTIVE")).resolves.toEqual({
+      status: "success",
+      activity: inactiveActivity,
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/activities/me/7/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "INACTIVE" }),
+      credentials: "same-origin",
+    });
   });
 
   it("creates a buddy activity through the internal API", async () => {
@@ -230,6 +256,12 @@ describe("buddy API client", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedule-dates", {
       credentials: "same-origin",
     });
+
+    await getBuddyScheduleDates({ from: "2026-08-01", to: "2026-08-31" });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/applications/buddy/schedule-dates?from=2026-08-01&to=2026-08-31",
+      { credentials: "same-origin" },
+    );
   });
 
   it("loads buddy date activity applications through the internal API", async () => {
@@ -254,11 +286,11 @@ describe("buddy API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getBuddyApplications("2026-07-20")).resolves.toEqual({
+    await expect(getBuddyApplications("2026-07-20", "EN")).resolves.toEqual({
       status: "success",
       activities: [response],
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy?date=2026-07-20", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy?date=2026-07-20&language=EN", {
       credentials: "same-origin",
     });
   });
@@ -287,11 +319,11 @@ describe("buddy API client", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getBuddyActivityApplications(99)).resolves.toEqual({
+    await expect(getBuddyActivityApplications(99, "EN")).resolves.toEqual({
       status: "success",
       applications: response,
     });
-    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedules/99", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications/buddy/schedules/99?language=EN", {
       credentials: "same-origin",
     });
   });

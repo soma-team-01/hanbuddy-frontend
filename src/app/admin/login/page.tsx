@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { GoogleIcon } from "@/components/ui/icons";
 
 const ERROR_MESSAGES: Record<string, string> = {
   adminOnly: "관리자 계정으로만 접근할 수 있습니다.",
@@ -13,68 +15,45 @@ export default async function AdminLoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-      <section className="relative hidden overflow-hidden border-r border-line-soft bg-white p-14 lg:flex lg:flex-col lg:justify-between">
-        <Link
-          href="/admin/login"
-          className="flex items-center gap-3 font-display text-xl font-extrabold"
-        >
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-white">
-            H
-          </span>
-          HanBuddy
-        </Link>
-        <div className="max-w-xl">
-          <p className="mb-5 text-sm font-bold tracking-[0.24em] text-primary uppercase">
-            Admin workspace
-          </p>
-          <h1 className="font-display text-5xl leading-[1.08] font-extrabold tracking-[-0.04em]">
-            좋은 만남이 시작되기 전,
-            <br />
-            신뢰할 수 있는 버디를 확인합니다.
-          </h1>
-          <p className="mt-7 max-w-lg text-lg leading-8 text-muted">
-            신청자의 프로필과 연락 정보를 검토하고 HanBuddy의 새로운 버디를 승인하세요.
-          </p>
-        </div>
-        <p className="text-sm text-muted">© 2026 HanBuddy. Admin access only.</p>
-      </section>
-      <section className="flex min-h-screen items-center justify-center px-5 py-12">
-        <div className="w-full max-w-md">
-          <div className="mb-10 lg:hidden">
-            <span className="font-display text-xl font-extrabold">HanBuddy</span>
-          </div>
-          <p className="text-sm font-bold tracking-[0.22em] text-primary uppercase">Welcome back</p>
-          <h2 className="mt-4 font-display text-3xl font-extrabold tracking-[-0.035em]">
-            관리자 로그인
-          </h2>
-          <p className="mt-3 leading-7 text-muted">
-            관리자 권한이 등록된 Google 계정으로 로그인해 주세요.
-          </p>
-          {error ? (
-            <p
-              role="alert"
-              className="mt-6 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
-            >
-              {ERROR_MESSAGES[error] ?? "로그인에 실패했습니다. 다시 시도해 주세요."}
-            </p>
-          ) : null}
-          <Link
-            href="/api/auth/google/start?intent=admin"
-            prefetch={false}
-            className="mt-8 flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-primary font-display font-bold text-white shadow-[0_12px_30px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
+    <main className="min-h-screen bg-white text-ink">
+      <SiteHeader role="admin" authenticated={false} mayHaveSession={false} />
+      <div className="mx-auto flex min-h-[calc(100vh-76px)] w-full max-w-[1200px] flex-col px-5 md:px-8">
+        <div className="flex flex-1 items-center justify-center py-14 md:py-20">
+          <section
+            aria-labelledby="admin-login-heading"
+            className="w-full max-w-[440px] rounded-[28px] border border-line-soft bg-white p-6 shadow-[0_24px_70px_rgba(38,27,24,0.08)] sm:p-9"
           >
-            <span className="flex size-8 items-center justify-center rounded-full bg-white font-bold text-primary">
-              G
-            </span>
-            Google로 관리자 로그인
-          </Link>
-          <p className="mt-5 text-center text-xs leading-5 text-muted">
-            접근 권한이 없다면 시스템 관리자에게 문의해 주세요.
-          </p>
+            <h1
+              id="admin-login-heading"
+              className="text-center font-display text-3xl font-extrabold tracking-[-0.04em]"
+            >
+              관리자 로그인
+            </h1>
+
+            {error ? (
+              <p
+                role="alert"
+                className="mt-6 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm leading-6 text-danger"
+              >
+                {ERROR_MESSAGES[error] ?? "로그인에 실패했습니다. 다시 시도해 주세요."}
+              </p>
+            ) : null}
+
+            <Link
+              href="/api/auth/google/start?intent=admin"
+              prefetch={false}
+              className="mt-8 flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-primary px-5 font-display font-bold text-white shadow-[0_12px_30px_rgba(209,63,50,0.2)] transition-[background-color,transform,box-shadow] hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-[0_16px_34px_rgba(209,63,50,0.24)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <span className="flex size-8 items-center justify-center rounded-full bg-white">
+                <GoogleIcon className="size-4" />
+              </span>
+              Google로 관리자 로그인
+            </Link>
+          </section>
         </div>
-      </section>
+      </div>
     </main>
   );
 }

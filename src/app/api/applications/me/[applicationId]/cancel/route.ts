@@ -4,6 +4,7 @@ import {
   proxyAuthenticatedPatch,
   readJsonBody,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type { ApplicationResponse, CancelApplicationRequest } from "@/types/application";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function PATCH(request: NextRequest, context: CancelApplicationRout
 
   return proxyAuthenticatedPatch<CancelApplicationRequest, ApplicationResponse>(
     request,
-    `/applications/me/${applicationId}/cancel`,
+    appendRequestedContentLanguage(request, `/applications/me/${applicationId}/cancel`),
     parsed.body,
     "신청 취소 서버에 연결할 수 없습니다.",
   );

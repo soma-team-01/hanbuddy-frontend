@@ -3,12 +3,15 @@ import { localizePathname } from "@/i18n/pathname";
 import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 import { AUTH_COOKIES, OAUTH_STATE_COOKIE_OPTIONS } from "@/lib/auth/cookies";
 import type { AuthErrorCode } from "@/lib/auth/error-codes";
+import {
+  getGoogleClientId,
+  getGoogleRedirectUri,
+  GoogleOAuthConfigError,
+} from "@/lib/auth/google-config";
 import { buildGoogleAuthorizationUrl, createOAuthState } from "@/lib/auth/google";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 
 export const dynamic = "force-dynamic";
-
-class GoogleAuthStartConfigError extends Error {}
 
 export function GET(request: NextRequest) {
   try {
@@ -43,7 +46,7 @@ export function GET(request: NextRequest) {
   } catch (error) {
     return redirectToLoginWithError(
       request,
-      error instanceof GoogleAuthStartConfigError ? "configuration" : "unknown",
+      error instanceof GoogleOAuthConfigError ? "configuration" : "unknown",
     );
   }
 }
@@ -60,22 +63,4 @@ function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
   const loginUrl = new URL(localizePathname("/login", locale), request.url);
   loginUrl.searchParams.set("error", code);
   return NextResponse.redirect(loginUrl);
-}
-
-function getGoogleClientId() {
-  const value = process.env.GOOGLE_CLIENT_ID;
-  if (!value?.trim()) {
-    throw new GoogleAuthStartConfigError("Missing required environment variable: GOOGLE_CLIENT_ID");
-  }
-  return value.trim();
-}
-
-function getGoogleRedirectUri() {
-  const value = process.env.GOOGLE_REDIRECT_URI;
-  if (!value?.trim()) {
-    throw new GoogleAuthStartConfigError(
-      "Missing required environment variable: GOOGLE_REDIRECT_URI",
-    );
-  }
-  return value.trim();
 }

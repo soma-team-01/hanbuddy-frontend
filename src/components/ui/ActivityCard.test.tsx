@@ -50,6 +50,29 @@ describe("ActivityCard", () => {
     ).toBeTruthy();
   });
 
+  it("keeps KRW as the main price and shows the locale currency as a reference", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{
+          ...activity,
+          referencePrice: 32.5,
+          referenceCurrency: "USD",
+          referencePriceEstimated: true,
+          referencePriceExchangeRateDate: "2026-08-31",
+        }}
+      />,
+    );
+
+    const krwPrice = screen.getByText("₩35,000");
+    const referencePrice = screen.getByText("≈ $32.50");
+    expect(krwPrice).toHaveClass("text-ink");
+    expect(referencePrice).toHaveClass("text-muted");
+    expect(
+      referencePrice.compareDocumentPosition(krwPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText("per person")).toBeInTheDocument();
+  });
+
   it("replaces the discount chip with a sold-out chip when sold out", () => {
     renderWithIntl(
       <ActivityCard
@@ -74,11 +97,15 @@ describe("ActivityCard", () => {
   });
 
   it.each([
+    [0, "0min"],
+    [5, "5min"],
+    [29, "29min"],
     [30, "30min"],
-    [45, "45min"],
+    [31, "31min"],
     [60, "1 hour"],
-    [90, "1.5 hours"],
-    [150, "2.5 hours"],
+    [80, "1 hour 20min"],
+    [90, "1 hour 30min"],
+    [150, "2 hours 30min"],
   ])("formats a %i minute duration as %s", (durationMinutes, expected) => {
     renderWithIntl(<ActivityCard activity={{ ...activity, durationMinutes }} />);
 
@@ -90,7 +117,7 @@ describe("ActivityCard", () => {
       locale: "ko",
     });
 
-    expect(screen.getByText("1.5시간")).toBeInTheDocument();
+    expect(screen.getByText("1시간 30분")).toBeInTheDocument();
     expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 

@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { badRequestResponse, proxyAuthenticatedGet } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type { BuddyActivityApplicationsResponse } from "@/types/buddy";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest, context: BuddyScheduleApplicatio
 
   return proxyAuthenticatedGet<BuddyActivityApplicationsResponse>(
     request,
-    `/applications/buddy/schedules/${activityScheduleId}`,
+    appendRequestedContentLanguage(request, `/applications/buddy/schedules/${activityScheduleId}`),
     "버디 활동 신청자 상세 서버에 연결할 수 없습니다.",
   );
 }

@@ -57,6 +57,37 @@ describe("buddy view helpers", () => {
       ),
     ).toBe("전화 +33 612345678");
     expect(formatApplicantContact(applicant, "ko")).toBe("WhatsApp +33 612345678");
+    expect(formatNationalityCode("FR", "ja")).toBe("フランス");
+    expect(formatNationalityCode("FR", "zh-Hans")).toBe("法国");
+    expect(formatNationalityCode("FR", "zh-Hant")).toBe("法國");
+  });
+
+  it.each([
+    ["KAKAOTALK", "KakaoTalk"],
+    ["INSTAGRAM", "Instagram"],
+  ] as const)("labels %s applicant IDs without a country code", (method, label) => {
+    expect(
+      formatApplicantContact(
+        { ...applicant, applicantContactMethod: method, applicantContactIdentifier: "@synthetic" },
+        "en",
+      ),
+    ).toBe(label + " @synthetic");
+  });
+
+  it("keeps the country code off ID-based messengers", () => {
+    // LINE·WeChat은 ID 체계라 국가번호가 의미 없다 — 붙이면 엉뚱한 연락처처럼 보인다
+    expect(
+      formatApplicantContact(
+        { ...applicant, applicantContactMethod: "LINE", applicantContactIdentifier: "sophie_m" },
+        "en",
+      ),
+    ).toBe("Line sophie_m");
+    expect(
+      formatApplicantContact(
+        { ...applicant, applicantContactMethod: "WECHAT", applicantContactIdentifier: "sophie-m" },
+        "en",
+      ),
+    ).toBe("WeChat sophie-m");
   });
 
   it("falls back gracefully for unknown nationality and missing country code", () => {
@@ -79,6 +110,7 @@ describe("buddy view helpers", () => {
       activityId: 42,
       title: "Traditional Tea Tasting",
       description: "Learn Korean tea etiquette with a local buddy.",
+      totalDurationMinutes: 65,
       thumbnailImageUrl: "https://static.hanbuddy.com/activities/tea.webp",
       status: "ACTIVE",
       hostIntroduction: "I have hosted tea ceremonies in Insadong for five years.",
@@ -129,7 +161,7 @@ describe("buddy view helpers", () => {
         },
       ],
     };
-    const host = { name: "Jihoon Kim", avatarUrl: null };
+    const host = { id: 17, name: "Tea Buddy", avatarUrl: null };
 
     it("maps the buddy detail to the guest-facing view model", () => {
       const activity = mapMyActivityDetailToPreviewActivity(
@@ -146,7 +178,8 @@ describe("buddy view helpers", () => {
       expect(activity.originalPrice).toBe(45000);
       expect(activity.discountPercent).toBe(20);
       expect(activity.host).toEqual({
-        name: "Jihoon Kim",
+        id: 17,
+        name: "Tea Buddy",
         bio: "Local HanBuddy host",
         avatarUrl: null,
       });
@@ -157,8 +190,7 @@ describe("buddy view helpers", () => {
         "Meet at Anguk",
         "Tea ceremony",
       ]);
-      // 총 소요시간: 65분 합을 30분 단위로 올림 → 90분
-      expect(activity.durationMinutes).toBe(90);
+      expect(activity.durationMinutes).toBe(65);
       expect(activity.sessions).toEqual([
         {
           id: "101",

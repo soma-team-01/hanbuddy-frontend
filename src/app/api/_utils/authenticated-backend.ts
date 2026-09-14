@@ -97,7 +97,11 @@ export async function proxyPublicGet<TResult>(
 
 export async function readJsonBody<TBody>(request: NextRequest, invalidMessage: string) {
   try {
-    return { ok: true as const, body: (await request.json()) as TBody };
+    const body: unknown = await request.json();
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return { ok: false as const, response: badRequestResponse(invalidMessage) };
+    }
+    return { ok: true as const, body: body as TBody };
   } catch {
     return { ok: false as const, response: badRequestResponse(invalidMessage) };
   }

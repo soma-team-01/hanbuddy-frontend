@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
 import { postBackend } from "@/lib/auth/backend";
 import type { GoogleLoginResponse } from "@/lib/auth/types";
@@ -19,6 +19,11 @@ const mockedPostBackend = vi.mocked(postBackend);
 describe("GET /auth/google/callback", () => {
   beforeEach(() => {
     mockedPostBackend.mockReset();
+    vi.stubEnv("GOOGLE_REDIRECT_URI", "http://localhost/auth/google/callback");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("redirects to login when Google returns an error", async () => {
@@ -80,6 +85,18 @@ describe("GET /auth/google/callback", () => {
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
+  it("rejects a redirect URI list before calling the backend", async () => {
+    vi.stubEnv(
+      "GOOGLE_REDIRECT_URI",
+      "http://localhost:3000/auth/google/callback,https://staging.hanbuddy.kr/auth/google/callback",
+    );
+
+    const response = await GET(createCallbackRequest());
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/login?error=configuration");
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  });
+
   it("does not forward backend cookies when the successful payload is unusable", async () => {
     mockedPostBackend.mockResolvedValue({
       status: 200,
@@ -119,8 +136,38 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest("ko"));
 
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/login", {
+      code: "code",
+      redirectUri: "http://localhost/auth/google/callback",
+    });
     expect(response.headers.get("location")).toBe("http://localhost/ko");
     expect(response.headers.get("set-cookie") ?? "").toContain("refresh_token=backend");
+  });
+
+  it("passes the local callback URI used by the Google authorization request", async () => {
+    vi.stubEnv("GOOGLE_REDIRECT_URI", "http://localhost:3000/auth/google/callback");
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "ACTIVE",
+          accessToken: "access-token",
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    await GET(createCallbackRequest());
+
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/login", {
+      code: "code",
+      redirectUri: "http://localhost:3000/auth/google/callback",
+    });
   });
 
   it("uses and clears the OAuth locale after authentication", async () => {
@@ -265,7 +312,7 @@ describe("GET /auth/google/callback", () => {
 
     const response = await GET(createCallbackRequest(undefined, undefined, "admin"));
 
-    expect(response.headers.get("location")).toBe("http://localhost/admin/buddies");
+    expect(response.headers.get("location")).toBe("http://localhost/admin/users");
     expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.userType}=ADMIN`);
   });
 
@@ -355,6 +402,7 @@ describe("GET /auth/google/callback", () => {
           registered: true,
           authStatus: "REJECTED",
           statusReason: "제출한 활동 정보를 확인할 수 없습니다.",
+          resubmissionToken: "resubmit-token",
           userId: 8,
           userType: "BUDDY",
         } satisfies GoogleLoginResponse,
@@ -367,6 +415,37 @@ describe("GET /auth/google/callback", () => {
     expect(location).toBe("http://localhost/en/buddy/auth/status?status=REJECTED");
     expect(location).not.toContain("reason");
     expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.statusReason}=`);
+    expect(response.headers.get("set-cookie") ?? "").toContain(
+      `${AUTH_COOKIES.resubmissionToken}=resubmit-token`,
+    );
+  });
+
+  it("does not store a resubmission token for a rejected tourist", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "REJECTED",
+          userId: 8,
+          userType: "TOURIST",
+          resubmissionToken: "unexpected-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("en"));
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/auth/status?status=REJECTED",
+    );
+    expect(response.headers.get("set-cookie") ?? "").not.toContain(
+      `${AUTH_COOKIES.resubmissionToken}=unexpected-token`,
+    );
   });
 
   it("redirects suspended buddy accounts to the suspended status screen", async () => {
@@ -390,6 +469,30 @@ describe("GET /auth/google/callback", () => {
 
     expect(response.headers.get("location")).toBe(
       "http://localhost/en/buddy/auth/status?status=SUSPENDED",
+    );
+  });
+
+  it("redirects suspended tourist accounts to the general account status screen", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: true,
+          authStatus: "SUSPENDED",
+          userId: 10,
+          userType: "TOURIST",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(createCallbackRequest("ko"));
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/ko/auth/status?status=SUSPENDED",
     );
   });
 
@@ -444,6 +547,38 @@ describe("GET /auth/google/callback", () => {
       picture: "https://lh3.googleusercontent.com/profile",
     });
     expect(decodedProfile).not.toHaveProperty("email");
+  });
+
+  it("uses the configured public origin behind the EC2 reverse proxy", async () => {
+    vi.stubEnv("GOOGLE_REDIRECT_URI", "https://staging.hanbuddy.kr/auth/google/callback");
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
+          signupToken: "signup-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(
+      new NextRequest("http://0.0.0.0:3000/auth/google/callback?code=code&state=state", {
+        headers: {
+          cookie: `${AUTH_COOKIES.oauthState}=state; ${AUTH_COOKIES.oauthLocale}=ko`,
+        },
+      }),
+    );
+
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/login", {
+      code: "code",
+      redirectUri: "https://staging.hanbuddy.kr/auth/google/callback",
+    });
+    expect(response.headers.get("location")).toBe("https://staging.hanbuddy.kr/ko/onboarding");
   });
 
   it("redirects an unregistered buddy signup to buddy onboarding", async () => {

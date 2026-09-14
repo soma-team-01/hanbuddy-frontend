@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
 import {
   cancelMyApplication,
   cancelPendingPayment,
@@ -9,24 +11,36 @@ import {
 } from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import type { Locale } from "@/i18n/routing";
 import { activityKeys } from "@/lib/query/activities";
 import { requestTossPayment } from "@/lib/payments/toss";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
+import { chatKeys } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { ApplicationCancellationReason, ApplicationResponse } from "@/types/application";
+import type {
+  ApplicationCancellationReason,
+  ApplicationResponse,
+  PaymentProvider,
+  PaymentReadyResponse,
+} from "@/types/application";
+import type { PolicyDocumentData } from "@/types/policy";
 import { ApplicationList } from "./application-list";
 import type { CancelDialogOutcome } from "./cancel-dialog";
 
-export function ApplicationsContent() {
+export function ApplicationsContent({
+  refundPolicyDocument,
+}: Readonly<{ refundPolicyDocument?: PolicyDocumentData }>) {
   const queryClient = useQueryClient();
   const locale = useLocale();
+  const language = getContentLanguage(locale);
   const t = useTranslations("Applications");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
-  const applicationsQuery = useQuery(myApplicationsQueryOptions());
+  const [payPalPayment, setPayPalPayment] = useState<PaymentReadyResponse | null>(null);
+  const applicationsQuery = useQuery(myApplicationsQueryOptions(language));
   const cancelApplicationMutation = useMutation({
     mutationFn: async ({
       applicationId,
@@ -36,23 +50,33 @@ export function ApplicationsContent() {
       applicationId: string;
       reason: ApplicationCancellationReason;
       detail?: string;
-    }) => unwrapApiResult(await cancelMyApplication(applicationId, reason, detail), "application"),
+    }) =>
+      unwrapApiResult(
+        await cancelMyApplication(applicationId, reason, language, detail),
+        "application",
+      ),
     onSuccess: async (application) => {
-      queryClient.setQueryData<ApplicationResponse[]>(applicationKeys.mine(), (current = []) =>
-        current.map((item) =>
-          item.applicationId === application.applicationId ? application : item,
-        ),
+      queryClient.setQueryData<ApplicationResponse[]>(
+        applicationKeys.mine(language),
+        (current = []) =>
+          current.map((item) =>
+            item.applicationId === application.applicationId ? application : item,
+          ),
       );
+      queryClient.removeQueries({
+        queryKey: applicationKeys.cancellationQuote(application.applicationId),
+      });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
         // 좌석이 풀렸으므로 활동 상세의 잔여 좌석을 갱신한다
         queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.all() }),
       ]);
     },
   });
   const cancelPendingPaymentMutation = useMutation({
     mutationFn: async (applicationId: string) =>
-      unwrapApiResult(await cancelPendingPayment(applicationId), "application"),
+      unwrapApiResult(await cancelPendingPayment(applicationId, language), "application"),
     onSuccess: async () => {
       // 결제 전 취소된 신청은 백엔드 목록에서 제외되므로 다시 불러온다
       await Promise.all([
@@ -64,8 +88,17 @@ export function ApplicationsContent() {
     },
   });
   const continuePaymentMutation = useMutation({
-    mutationFn: async (applicationId: string) =>
-      unwrapApiResult(await continueApplicationPayment(applicationId), "payment"),
+    mutationFn: async ({
+      applicationId,
+      paymentProvider,
+    }: {
+      applicationId: string;
+      paymentProvider: PaymentProvider;
+    }) =>
+      unwrapApiResult(
+        await continueApplicationPayment(applicationId, language, paymentProvider),
+        "payment",
+      ),
   });
   useAuthQueryRedirect(
     applicationsQuery.error ??
@@ -90,6 +123,12 @@ export function ApplicationsContent() {
       await cancelApplicationMutation.mutateAsync({ applicationId, reason, detail });
       return { ok: true };
     } catch (error) {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+        queryClient.invalidateQueries({
+          queryKey: applicationKeys.cancellationQuote(applicationId),
+        }),
+      ]);
       return {
         ok: false,
         error,
@@ -106,8 +145,15 @@ export function ApplicationsContent() {
     }
   }
 
-  async function handleContinuePayment(applicationId: string) {
-    const payment = await continuePaymentMutation.mutateAsync(applicationId);
+  async function handleContinuePayment(applicationId: string, paymentProvider: PaymentProvider) {
+    const payment = await continuePaymentMutation.mutateAsync({
+      applicationId,
+      paymentProvider,
+    });
+    if (paymentProvider === "PAYPAL") {
+      setPayPalPayment(payment);
+      return;
+    }
     // 결제 인증이 끝나면 successUrl(/payments/success)로 리다이렉트되어 승인 API를 호출한다
     await requestTossPayment(payment, locale as Locale);
   }
@@ -128,15 +174,35 @@ export function ApplicationsContent() {
   }
 
   return (
-    <ApplicationList
-      applications={applications}
-      onCancelApplication={handleCancelApplication}
-      onCancelPendingPayment={handleCancelPendingPayment}
-      onContinuePayment={handleContinuePayment}
-      onHoldExpired={() => {
-        void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
-      }}
-      isPaymentPending={continuePaymentMutation.isPending}
-    />
+    <>
+      <ApplicationList
+        applications={applications}
+        refundPolicyDocument={refundPolicyDocument}
+        onCancelApplication={handleCancelApplication}
+        onCancelPendingPayment={handleCancelPendingPayment}
+        onContinuePayment={handleContinuePayment}
+        onHoldExpired={() => {
+          void queryClient.invalidateQueries({ queryKey: applicationKeys.mine() });
+        }}
+        isPaymentPending={continuePaymentMutation.isPending}
+      />
+      {payPalPayment ? (
+        <PayPalCheckoutButton
+          payment={payPalPayment}
+          autoStart
+          onCancel={() => setPayPalPayment(null)}
+          onConfirmed={(application) => {
+            queryClient.setQueryData<ApplicationResponse[]>(
+              applicationKeys.mine(language),
+              (current = []) =>
+                current.map((item) =>
+                  item.applicationId === application.applicationId ? application : item,
+                ),
+            );
+            setPayPalPayment(null);
+          }}
+        />
+      ) : null}
+    </>
   );
 }

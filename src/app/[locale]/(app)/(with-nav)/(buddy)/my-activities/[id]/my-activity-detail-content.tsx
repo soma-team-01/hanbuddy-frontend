@@ -3,8 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
+import { ActivityVisibilityControl } from "@/components/buddy/ActivityVisibilityControl";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { EyeIcon, PencilIcon, UsersIcon } from "@/components/ui/icons";
+import { EyeIcon, PencilIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { mapMyActivityDetailToPreviewActivity } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -62,7 +63,8 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
     tErrors("dateTimeUnavailable"),
     locale,
     {
-      name: profile?.name ?? "HanBuddy",
+      id: profile?.userId,
+      name: profile?.displayName ?? profile?.name ?? t("fallbackHostName"),
       avatarUrl: profile?.profileImageUrl ?? null,
     },
     tActivityDetail("localHost"),
@@ -74,27 +76,36 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
         <div
           role="note"
           data-testid="guest-preview-banner"
-          className="mx-auto flex w-full max-w-[840px] flex-col gap-3 rounded-2xl border border-primary/25 bg-primary-soft/60 p-4 sm:flex-row sm:items-center sm:justify-between md:p-5"
+          className="mx-auto flex w-full max-w-[840px] flex-col gap-3 rounded-2xl border border-line-soft bg-transparent p-4 sm:flex-row sm:items-center sm:justify-between md:p-5"
         >
           <div className="flex min-w-0 items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <EyeIcon className="size-4 text-primary-strong" />
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-line-soft text-muted">
+              <EyeIcon className="size-4" />
             </span>
             <div className="min-w-0">
               <p className="flex flex-wrap items-center gap-2 font-display text-sm font-bold text-ink">
                 {t("previewTitle")}
-                <span
-                  className={`rounded-full px-2.5 py-0.5 font-display text-xs font-semibold ${
-                    STATUS_BADGE_CLASS[detail.status]
-                  }`}
-                >
-                  {tStatus(`status.${STATUS_MESSAGE_KEY[detail.status]}`)}
-                </span>
+                {detail.status !== "ACTIVE" && detail.status !== "INACTIVE" ? (
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 font-display text-xs font-semibold ${
+                      STATUS_BADGE_CLASS[detail.status]
+                    }`}
+                  >
+                    {tStatus(`status.${STATUS_MESSAGE_KEY[detail.status]}`)}
+                  </span>
+                ) : null}
               </p>
               <p className="mt-0.5 text-xs leading-5 text-muted">{t("previewNotice")}</p>
             </div>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {detail.status === "ACTIVE" || detail.status === "INACTIVE" ? (
+              <ActivityVisibilityControl
+                activityId={detail.activityId}
+                title={detail.title}
+                status={detail.status}
+              />
+            ) : null}
             <Link
               href={`/my-activities/${detail.activityId}/edit`}
               className="flex min-h-10 items-center gap-1.5 rounded-full bg-primary px-4 font-display text-xs font-bold text-on-primary transition-colors hover:bg-primary-hover"
@@ -102,17 +113,10 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
               <PencilIcon className="size-3.5" />
               {t("edit")}
             </Link>
-            <Link
-              href={`/my-activities/${detail.activityId}/applicants`}
-              className="flex min-h-10 items-center gap-1.5 rounded-full border border-line-strong bg-canvas-soft px-4 font-display text-xs font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong"
-            >
-              <UsersIcon className="size-3.5" />
-              {t("viewApplicants")}
-            </Link>
           </div>
         </div>
       </PageContainer>
-      <ActivityDetailView activity={activity} preview />
+      <ActivityDetailView activity={activity} preview bottomBar="inline" />
     </div>
   );
 }

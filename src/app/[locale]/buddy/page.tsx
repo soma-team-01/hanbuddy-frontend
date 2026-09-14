@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
@@ -12,8 +13,6 @@ import {
   UsersIcon,
 } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
-
-const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 const BENEFITS = [
   { key: "share", Icon: LightbulbIcon },
@@ -62,6 +61,9 @@ export async function generateMetadata({ params }: BuddyHostingPageProps): Promi
       languages: {
         en: `${APP_ORIGIN}/en/buddy`,
         ko: `${APP_ORIGIN}/ko/buddy`,
+        ja: `${APP_ORIGIN}/ja/buddy`,
+        "zh-Hans": `${APP_ORIGIN}/zh-Hans/buddy`,
+        "zh-Hant": `${APP_ORIGIN}/zh-Hant/buddy`,
       },
     },
   };

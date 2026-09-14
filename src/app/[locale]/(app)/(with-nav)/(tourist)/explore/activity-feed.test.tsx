@@ -16,7 +16,7 @@ const touristActivity = {
   buddyId: 7,
   title: "Bukchon Hidden Gems",
   description: "Walk through quiet alleys with a local buddy.",
-  totalDurationHours: 1.5,
+  totalDurationMinutes: 90,
   thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
   buddyName: "Jihoon Kim",
   buddyProfileImageUrl: null,
@@ -24,6 +24,13 @@ const touristActivity = {
   meetingPointName: "Anguk Station Exit 2",
   price: 45000,
   currency: "KRW",
+  displayPrice: {
+    price: 45000,
+    discountedPrice: null,
+    currency: "KRW",
+    exchangeRateDate: null,
+    estimated: false,
+  },
 } as const;
 
 describe("ActivityFeed", () => {
@@ -75,7 +82,8 @@ describe("ActivityFeed", () => {
     renderWithQueryClient(<ActivityFeed />);
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(screen.getByText("1.5 hours")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
+    expect(screen.getByText("1 hour 30min")).toBeInTheDocument();
     expect(screen.getByText("₩45,000")).toBeInTheDocument();
     expect(screen.getByText("per person")).toBeInTheDocument();
     expect(screen.queryByText("Anguk Station Exit 2")).not.toBeInTheDocument();
@@ -140,12 +148,30 @@ describe("ActivityFeed", () => {
     renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
 
     expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    expect(screen.getByText("1.5시간")).toBeInTheDocument();
+    expect(screen.getByText("1시간 30분")).toBeInTheDocument();
     expect(screen.getByText("₩45,000")).toBeInTheDocument();
     expect(screen.getByText("1인당")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute(
       "href",
       "/ko/activities/42",
     );
+  });
+
+  it.each([
+    ["ja", "JA", "/ja/activities/42"],
+    ["zh-Hans", "ZH_HANS", "/zh-Hans/activities/42"],
+    ["zh-Hant", "ZH_HANT", "/zh-Hant/activities/42"],
+  ] as const)("requests and routes activity content in %s", async (locale, language, href) => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [touristActivity],
+    });
+
+    renderWithQueryClient(<ActivityFeed />, { locale });
+
+    expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
+    const displayCurrency = locale === "ja" ? "JPY" : "CNY";
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith(language, displayCurrency);
+    expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute("href", href);
   });
 });

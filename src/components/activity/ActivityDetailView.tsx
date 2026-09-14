@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AvailabilityCalendarDialog,
   formatSessionTimeRange,
@@ -16,13 +16,15 @@ import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/com
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
+import { formatActivityDuration } from "@/lib/activity-duration";
+import { useFixedBarHeight } from "@/lib/layout/use-fixed-bar-height";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetails,
   getGoogleMapsApiKey,
 } from "@/lib/google/places";
-import type { Activity } from "@/types/activity";
+import type { Activity, ActivityWeatherResult } from "@/types/activity";
 
 const SECTION_IDS = {
   aboutHost: "about-host",
@@ -48,14 +50,19 @@ interface GoogleMeetingAddress {
  */
 export function ActivityDetailView({
   activity,
+  weather,
   preview = false,
   bottomBar = "fixed",
+  showBookingBar = true,
   unoptimizedImages = false,
 }: Readonly<{
   activity: Activity;
+  weather?: ActivityWeatherResult;
   preview?: boolean;
   /** inline이면 하단 바를 고정하지 않고 본문 아래 카드로 렌더링한다 (위저드 검토 화면용) */
   bottomBar?: "fixed" | "inline";
+  /** 신청 이력처럼 신규 예약이 불가능한 상세에서는 예약 UI와 고정 바 여백을 모두 제거한다 */
+  showBookingBar?: boolean;
   /** blob 미리보기처럼 next/image 최적화가 불가능한 소스일 때 */
   unoptimizedImages?: boolean;
 }>) {
@@ -65,6 +72,8 @@ export function ActivityDetailView({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
+  const fixedBarRef = useRef<HTMLDivElement>(null);
+  useFixedBarHeight(fixedBarRef, showBookingBar && bottomBar === "fixed");
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
     null,
   );
@@ -118,11 +127,18 @@ export function ActivityDetailView({
     : "";
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
+  const hasReferencePrice =
+    activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
+  const estimatedPriceTitle = activity.referencePriceExchangeRateDate
+    ? tExplore("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
+    : tExplore("estimatedPrice");
   const totalDurationLabel =
     activity.durationMinutes !== undefined
-      ? activity.durationMinutes < 60
-        ? tExplore("durationMinutes", { minutes: activity.durationMinutes })
-        : tExplore("durationHours", { hours: activity.durationMinutes / 60 })
+      ? formatActivityDuration(
+          activity.durationMinutes,
+          (hours) => tExplore("durationHours", { hours }),
+          (minutes) => tExplore("durationMinutes", { minutes }),
+        )
       : "";
   const itinerary = activity.itinerary ?? [];
   const galleryImages = useMemo(
@@ -189,13 +205,13 @@ export function ActivityDetailView({
   }
 
   const bottomBarContent = (
-    <div className="mx-auto flex w-full max-w-[840px] items-center gap-4">
+    <div className="mx-auto flex w-full max-w-[840px] flex-col gap-2.5 md:flex-row md:items-center md:gap-4">
       <button
         type="button"
         data-testid="date-select-box"
         onClick={() => setCalendarOpen(true)}
         disabled={dateBoxDisabled}
-        className={`flex h-12 min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:flex-1 ${
           selectedSession
             ? "text-ink enabled:hover:border-ink"
             : "text-muted enabled:hover:border-ink enabled:hover:text-ink"
@@ -204,56 +220,94 @@ export function ActivityDetailView({
         <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
         <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
       </button>
-      <div className="flex shrink-0 flex-col items-end">
-        {hasDiscount ? (
-          <span className="text-sm text-muted line-through">
-            {formatKrw(activity.originalPrice ?? activity.price, locale)}
-          </span>
-        ) : null}
-        <span className="font-display text-xl font-bold text-primary">
-          {t("perPerson", { price: formatKrw(activity.price, locale) })}
-        </span>
+      {/* 모바일(<768px)은 가격+버튼을 2행에 묶고, md 이상은 래퍼를 없애 날짜·가격·버튼 1행을 유지한다 */}
+      <div
+        data-testid="booking-bar-actions"
+        className="flex items-center justify-between gap-3 md:contents"
+      >
+        {/* 모바일은 원화·환산가·1인당을 한 줄로 읽히게 하고, md 이상은 오른쪽 정렬 세로 블록으로 되돌린다 */}
+        <div className="flex min-w-0 flex-col items-start text-left md:shrink-0 md:items-end md:text-right">
+          {hasDiscount ? (
+            <span className="text-sm text-muted line-through">
+              {formatKrw(activity.originalPrice ?? activity.price, locale)}
+            </span>
+          ) : null}
+          <div
+            data-testid="booking-bar-price"
+            className="flex flex-wrap items-baseline gap-x-1.5 md:justify-end md:whitespace-nowrap"
+          >
+            <span className="font-display text-xl font-bold text-primary">
+              {formatKrw(activity.price, locale)}
+            </span>
+            {hasReferencePrice ? (
+              <span
+                className="text-xs font-medium text-muted"
+                title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+              >
+                (≈{" "}
+                {formatDisplayCurrency(
+                  activity.referencePrice!,
+                  activity.referenceCurrency!,
+                  locale,
+                )}
+                )
+              </span>
+            ) : null}
+            <span className="text-xs text-muted md:basis-full md:text-right">
+              {tExplore("perPersonLabel")}
+            </span>
+          </div>
+        </div>
+        {preview || !selectedSession ? (
+          <button
+            type="button"
+            disabled
+            className="flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary opacity-60 md:px-8"
+          >
+            {t("bookNow")}
+          </button>
+        ) : (
+          <Link
+            href={`/activities/${activity.id}/book?scheduleId=${selectedSession.id}`}
+            className="flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8"
+          >
+            {t("bookNow")}
+          </Link>
+        )}
       </div>
-      {preview || !selectedSession ? (
-        <button
-          type="button"
-          disabled
-          className="flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary opacity-60 sm:px-8"
-        >
-          {t("bookNow")}
-        </button>
-      ) : (
-        <Link
-          href={`/activities/${activity.id}/book?scheduleId=${selectedSession.id}`}
-          className="flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover sm:px-8"
-        >
-          {t("bookNow")}
-        </Link>
-      )}
     </div>
   );
 
   return (
     <>
-      <PageContainer className="py-6 md:py-10">
+      <PageContainer className="pt-2 pb-6 md:py-10">
         <main data-testid="activity-detail-layout" className="mx-auto w-full max-w-[840px]">
           <article className="min-w-0">
-            <div className="relative grid h-[320px] grid-cols-2 gap-2 overflow-hidden rounded-3xl md:h-[420px] md:grid-cols-[1.4fr_0.6fr]">
+            <div className="relative grid h-[260px] grid-cols-1 gap-2 overflow-hidden rounded-3xl md:h-[420px] md:grid-cols-[1.4fr_0.6fr]">
               <button
                 type="button"
                 aria-label={t("viewPhoto", { number: 1 })}
                 onClick={() => setGalleryIndex(0)}
-                className="relative row-span-2 min-h-0 cursor-zoom-in"
+                className="relative min-h-0 cursor-zoom-in md:row-span-2"
               >
                 <Image
                   src={activity.heroImageUrl}
                   alt={activity.title}
                   fill
                   loading="eager"
-                  sizes="(max-width: 1023px) 70vw, 560px"
+                  sizes="(max-width: 767px) 100vw, 560px"
                   unoptimized={unoptimizedImages}
                   className="object-cover"
                 />
+                {galleryImages.length > 1 ? (
+                  // 모바일에서는 2·3번 사진이 숨겨지므로 나머지 장수를 대표 사진 위에 알린다
+                  <span
+                    data-testid="mobile-photo-count"
+                    className="pointer-events-none absolute right-3 bottom-3 rounded-full bg-ink/70 px-3 py-1.5 font-display text-xs font-bold text-white backdrop-blur-[2px] md:hidden"
+                  >
+                    {t("morePhotos", { count: galleryImages.length - 1 })}
+                  </span>
+                ) : null}
               </button>
               <button
                 type="button"
@@ -525,7 +579,7 @@ export function ActivityDetailView({
             </div>
           </article>
 
-          {bottomBar === "inline" ? (
+          {showBookingBar && bottomBar === "inline" ? (
             <div
               data-testid="booking-bottom-bar"
               className="rounded-2xl border border-line-soft bg-canvas-soft p-4"
@@ -536,8 +590,9 @@ export function ActivityDetailView({
         </main>
       </PageContainer>
 
-      {bottomBar === "fixed" ? (
+      {showBookingBar && bottomBar === "fixed" ? (
         <div
+          ref={fixedBarRef}
           data-testid="booking-bottom-bar"
           className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-canvas-soft/95 px-4 pt-2.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(61,45,43,0.08)] backdrop-blur"
         >
@@ -545,11 +600,12 @@ export function ActivityDetailView({
         </div>
       ) : null}
 
-      {calendarOpen ? (
+      {showBookingBar && calendarOpen ? (
         <AvailabilityCalendarDialog
           sessions={activity.sessions}
           selectedSessionId={selectedSessionId}
           durationMinutes={activity.durationMinutes}
+          weather={weather}
           onSelectSession={handleCalendarSelect}
           onClose={() => setCalendarOpen(false)}
         />
@@ -560,7 +616,7 @@ export function ActivityDetailView({
           host={activity.host}
           hostIntroduction={activity.hostIntroduction}
           currentActivityId={activity.id}
-          showHostedActivities={!preview}
+          showHostedActivities
           canContact={!preview}
           onClose={() => setHostProfileOpen(false)}
         />

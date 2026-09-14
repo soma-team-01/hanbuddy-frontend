@@ -5,11 +5,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ReviewFormDialog } from "@/components/review/ReviewFormDialog";
 import { ReviewStars } from "@/components/review/ReviewStars";
+import { TranslatedReviewContent } from "@/components/review/TranslatedReviewContent";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CornerDownRightIcon, PencilIcon, TrashIcon } from "@/components/ui/icons";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDate } from "@/lib/datetime";
+import { getContentLanguage } from "@/lib/content-language";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { unwrapApiResult } from "@/lib/query/result";
@@ -25,14 +27,17 @@ export function ApplicationReviewActions({
   applicationId,
   activityTitle,
   review,
+  variant = "full",
 }: Readonly<{
   applicationId: number | string;
   activityTitle: string;
   /** 신청 응답이 내려준 내 후기. 아직 쓰지 않았으면 null */
   review: MyReviewResponse | null;
+  variant?: "full" | "compact";
 }>) {
   const t = useTranslations("Reviews");
   const locale = useLocale() as Locale;
+  const language = getContentLanguage(locale);
   const getApiErrorMessage = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
@@ -54,9 +59,9 @@ export function ApplicationReviewActions({
   const saveMutation = useMutation({
     mutationFn: async (values: { rating: number; content: string }) =>
       review
-        ? unwrapApiResult(await updateReview(review.reviewId, values), "review")
+        ? unwrapApiResult(await updateReview(review.reviewId, values, language), "review")
         : unwrapApiResult(
-            await createReview({ applicationId: Number(applicationId), ...values }),
+            await createReview({ applicationId: Number(applicationId), ...values }, language),
             "review",
           ),
     onSuccess: async () => {
@@ -133,7 +138,7 @@ export function ApplicationReviewActions({
                 </button>
               </div>
             </div>
-            <p className="mt-3 text-sm leading-6 whitespace-pre-line text-ink">{review.content}</p>
+            <TranslatedReviewContent review={review} className="mt-3" />
           </section>
         </div>
       ) : (
@@ -143,7 +148,11 @@ export function ApplicationReviewActions({
             setError(null);
             setFormOpen(true);
           }}
-          className="h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+          className={
+            variant === "compact"
+              ? "h-9 w-full rounded-lg bg-primary px-4 font-display text-xs font-bold whitespace-nowrap text-on-primary transition-colors hover:bg-primary-hover sm:w-auto sm:min-w-32"
+              : "h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+          }
         >
           {t("write")}
         </button>

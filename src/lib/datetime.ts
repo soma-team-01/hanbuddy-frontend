@@ -1,4 +1,4 @@
-import type { Locale } from "@/i18n/routing";
+import { getIntlLocale, type Locale } from "@/i18n/routing";
 
 export const SERVICE_TIME_ZONE = "Asia/Seoul";
 
@@ -111,7 +111,7 @@ export function formatSeoulDateTime(value: string, locale: Locale): string | nul
   const date = getOffsetfulDate(value);
   if (!date) return null;
 
-  const formatted = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  const formatted = new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: SERVICE_TIME_ZONE,
     year: "numeric",
     month: locale === "ko" ? "numeric" : "short",
@@ -128,7 +128,7 @@ export function formatSeoulDate(value: string, locale: Locale): string | null {
   const date = getOffsetfulDate(value);
   if (!date) return null;
 
-  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: SERVICE_TIME_ZONE,
     year: "numeric",
     month: locale === "ko" ? "numeric" : "short",
@@ -140,7 +140,7 @@ export function formatSeoulTime(value: string, locale: Locale): string | null {
   const date = getOffsetfulDate(value);
   if (!date) return null;
 
-  const formatted = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  const formatted = new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: SERVICE_TIME_ZONE,
     hour: "numeric",
     minute: "2-digit",
@@ -174,7 +174,7 @@ export function formatSeoulDateWithWeekday(value: string, locale: Locale): strin
   const date = getOffsetfulDate(value);
   if (!date) return null;
 
-  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: SERVICE_TIME_ZONE,
     month: locale === "ko" ? "numeric" : "short",
     day: "numeric",
@@ -186,7 +186,7 @@ export function formatSeoulWeekday(value: string, locale: Locale): string | null
   const date = getOffsetfulDate(value);
   if (!date) return null;
 
-  return new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: SERVICE_TIME_ZONE,
     weekday: "short",
   }).format(date);

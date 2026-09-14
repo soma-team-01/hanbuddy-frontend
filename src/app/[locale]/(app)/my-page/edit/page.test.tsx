@@ -1,7 +1,8 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { uploadProfileImage } from "@/lib/images/presigned";
@@ -97,8 +98,19 @@ describe("EditProfilePage", () => {
   it("populates the form with the loaded profile", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
-    expect(await screen.findByRole("form")).toHaveClass("md:grid-cols-2", "max-w-[800px]");
+    expect(await screen.findByRole("form")).toHaveClass("max-w-[900px]", "rounded-[2rem]");
     expect(screen.getByLabelText("Nickname")).toHaveValue("Sarah");
+    expect(screen.getByLabelText("Email")).toHaveValue("user@example.com");
+    expect(screen.getByLabelText("Email")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Email")).toHaveClass("bg-panel-raised");
+    expect(screen.queryByRole("heading", { name: "Sarah" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("edit-profile-layout")).toHaveClass(
+      "lg:grid-cols-[180px_minmax(0,1fr)]",
+    );
+    expect(within(screen.getByRole("form")).getByRole("button", { name: "Save" })).toBeVisible();
+    expect(screen.getByTestId("page-header")).not.toContainElement(
+      screen.getByRole("button", { name: "Save" }),
+    );
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
     expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });
@@ -126,7 +138,7 @@ describe("EditProfilePage", () => {
       "Nickname",
       "Nationality",
       "Date of birth",
-      "Contact Details",
+      "Contact",
       "Preferred Messaging App",
       "Add profile photo",
       "Save",
@@ -137,7 +149,7 @@ describe("EditProfilePage", () => {
       "닉네임",
       "국적",
       "생년월일",
-      "연락처 정보",
+      "연락처",
       "선호하는 메신저",
       "프로필 사진 추가",
       "저장",
@@ -157,7 +169,7 @@ describe("EditProfilePage", () => {
       expect(screen.getByRole("button", { name: save })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: back })).toHaveAttribute(
         "href",
-        `/${locale}/my-page`,
+        `/${locale}/my-page/profile`,
       );
     },
   );
@@ -167,9 +179,14 @@ describe("EditProfilePage", () => {
       "en",
       "Nickname",
       "Save",
-      "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+      "Enter a nickname using 2–30 English letters, with only a single space, hyphen (-), or apostrophe (') between words.",
     ],
-    ["ko", "닉네임", "저장", "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요."],
+    [
+      "ko",
+      "닉네임",
+      "저장",
+      "닉네임은 2~30자의 영문으로 입력하고, 단어 사이에는 공백, 하이픈(-), 작은따옴표(')만 사용해 주세요.",
+    ],
   ] as const)("localizes profile validation for %s", async (locale, name, save, message) => {
     renderWithQueryClient(<EditProfilePage />, { locale });
     const nameInput = await screen.findByLabelText(name);
@@ -186,13 +203,13 @@ describe("EditProfilePage", () => {
     fireEvent.change(screen.getByLabelText("Nickname"), { target: { value: " " } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Enter a nickname from 2 to 30 characters without spaces at the beginning or end.",
+      "Enter a nickname using 2–30 English letters, with only a single space, hyphen (-), or apostrophe (') between words.",
     );
 
     switchToKorean();
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "닉네임은 앞뒤 공백 없이 2자 이상 30자 이하로 입력해 주세요.",
+      "닉네임은 2~30자의 영문으로 입력하고, 단어 사이에는 공백, 하이픈(-), 작은따옴표(')만 사용해 주세요.",
     );
   });
 
@@ -216,13 +233,8 @@ describe("EditProfilePage", () => {
   );
 
   it.each([
-    [
-      "en",
-      "Messaging phone number",
-      "Save",
-      "Enter a contact ID or number with at least 2 characters.",
-    ],
-    ["ko", "메신저 전화번호", "저장", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
+    ["en", "Phone number", "Save", "Enter a contact ID or number with at least 2 characters."],
+    ["ko", "전화번호", "저장", "연락처 ID 또는 번호를 2자 이상 입력해 주세요."],
   ] as const)(
     "shows localized contact validation after a real %s submit",
     async (locale, contactLabel, save, message) => {
@@ -249,23 +261,23 @@ describe("EditProfilePage", () => {
     renderWithQueryClient(<EditProfilePage />);
 
     // 프로필의 연락 수단이 WHATSAPP이므로 국가 선택이 바로 렌더된다
-    expect(await screen.findByLabelText("Messaging country code")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Country code")).toBeInTheDocument();
   });
 
   it("submits the updated profile and returns to my page", async () => {
     mockedUpdateMyProfile.mockResolvedValue({
       status: "success",
-      profile: { ...profile, displayName: "Sarah J." },
+      profile: { ...profile, displayName: "Sarah Jane" },
     });
     const { queryClient } = renderWithQueryClient(<EditProfilePage />);
 
     const nameInput = await screen.findByLabelText("Nickname");
-    fireEvent.change(nameInput, { target: { value: "Sarah J." } });
+    fireEvent.change(nameInput, { target: { value: "Sarah Jane" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {
       expect(mockedUpdateMyProfile).toHaveBeenCalledWith({
-        displayName: "Sarah J.",
+        displayName: "Sarah Jane",
         profileImageKey: "profiles/2026/07/06/uuid.webp",
         nationalityCode: "US",
         birthDate: "1998-04-12",
@@ -275,9 +287,9 @@ describe("EditProfilePage", () => {
       });
     });
     expect(uploadProfileImage).not.toHaveBeenCalled();
-    expect(replace).toHaveBeenCalledWith("/en/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page/profile");
     expect(queryClient.getQueryData(userKeys.me())).toEqual(
-      expect.objectContaining({ displayName: "Sarah J." }),
+      expect.objectContaining({ displayName: "Sarah Jane" }),
     );
   });
 
@@ -316,7 +328,7 @@ describe("EditProfilePage", () => {
         profileImageKey: "profiles/2026/07/07/uuid.png",
       }),
     );
-    expect(replace).toHaveBeenCalledWith("/en/my-page");
+    expect(replace).toHaveBeenCalledWith("/en/my-page/profile");
   });
 
   it("shows the upload error and skips saving when the image upload fails", async () => {
@@ -399,7 +411,7 @@ describe("EditProfilePage", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Check the format of the entered information.");
     expect(alert).not.toHaveTextContent("국적 코드는 영문 대문자 2자리여야 합니다");
-    expect(replace).not.toHaveBeenCalledWith("/en/my-page");
+    expect(replace).not.toHaveBeenCalledWith("/en/my-page/profile");
   });
 
   it("uses the current locale when an in-flight save fails", async () => {
@@ -464,15 +476,6 @@ describe("edit profile metadata", () => {
       params: Promise.resolve({ locale: locale satisfies Locale }),
     });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/my-page/edit",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/my-page/edit",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "/my-page/edit");
   });
 });

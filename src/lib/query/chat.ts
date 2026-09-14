@@ -1,71 +1,95 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { getChatMessages, getChatRoom, getChatRoomImages, getMyChatRooms } from "@/lib/api/chat";
 import type { ChatMessageResponse } from "@/types/chat";
+import type { ContentLanguage } from "@/types/content-language";
 import { unwrapApiResult } from "./result";
 
 /** 위로 스크롤하며 과거를 불러오는 흐름이라 한 번에 30건씩 가져온다 */
 export const CHAT_MESSAGE_PAGE_SIZE = 30;
 
 /**
- * 실시간 구독(STOMP)이 끊겼을 때만 쓰는 대비책이다.
- * 연결되어 있는 동안에는 폴링을 멈추고 브로드캐스트로 받는다.
- */
-export const CHAT_MESSAGE_POLL_INTERVAL = 2_500;
-/**
  * 목록·안 읽은 수 배지 주기. 대화방 밖에서는 소켓이 없어 이 값이 곧 반응 속도가 된다.
  * 탭이 백그라운드면 TanStack이 자동으로 멈춘다.
  */
-export const CHAT_ROOM_LIST_POLL_INTERVAL = 3_000;
+export const CHAT_ROOM_LIST_POLL_INTERVAL = 15_000;
 
 export const chatKeys = {
   all: () => ["chat"] as const,
-  rooms: () => [...chatKeys.all(), "rooms"] as const,
-  room: (chatRoomId: number | string) => [...chatKeys.all(), "room", String(chatRoomId)] as const,
-  messages: (chatRoomId: number | string) =>
-    [...chatKeys.all(), "messages", String(chatRoomId)] as const,
+  rooms: (language?: ContentLanguage) =>
+    language
+      ? ([...chatKeys.all(), "rooms", language] as const)
+      : ([...chatKeys.all(), "rooms"] as const),
+  room: (chatRoomId: number | string, language?: ContentLanguage) =>
+    language
+      ? ([...chatKeys.all(), "room", String(chatRoomId), language] as const)
+      : ([...chatKeys.all(), "room", String(chatRoomId)] as const),
+  messages: (chatRoomId: number | string, language?: ContentLanguage) =>
+    language
+      ? ([...chatKeys.all(), "messages", String(chatRoomId), language] as const)
+      : ([...chatKeys.all(), "messages", String(chatRoomId)] as const),
   images: (chatRoomId: number | string) =>
     [...chatKeys.all(), "images", String(chatRoomId)] as const,
-  latestMessages: (chatRoomId: number | string) =>
-    [...chatKeys.messages(chatRoomId), "latest"] as const,
-  messageHistory: (chatRoomId: number | string, boundaryId: number) =>
-    [...chatKeys.messages(chatRoomId), "history", boundaryId] as const,
+  latestMessages: (chatRoomId: number | string, language: ContentLanguage) =>
+    [...chatKeys.messages(chatRoomId, language), "latest"] as const,
+  messageHistory: (chatRoomId: number | string, boundaryId: number, language: ContentLanguage) =>
+    [...chatKeys.messages(chatRoomId, language), "history", boundaryId] as const,
 };
 
-export function myChatRoomsQueryOptions() {
+function chatRoomsQueryConfig(language: ContentLanguage) {
+  return {
+    queryKey: chatKeys.rooms(language),
+    queryFn: async () => unwrapApiResult(await getMyChatRooms(language), "rooms"),
+    staleTime: 5_000,
+  } as const;
+}
+
+/** 전역 폴링 소유자만 사용한다. 화면 컴포넌트는 캐시 전용 옵션을 사용해야 한다. */
+export function myChatRoomsPollingQueryOptions(language: ContentLanguage) {
   return queryOptions({
-    queryKey: chatKeys.rooms(),
-    queryFn: async () => unwrapApiResult(await getMyChatRooms(), "rooms"),
+    ...chatRoomsQueryConfig(language),
     refetchInterval: CHAT_ROOM_LIST_POLL_INTERVAL,
     refetchOnWindowFocus: true,
-    staleTime: 5_000,
+  });
+}
+
+/** 폴링 타이머 없이 전역 채팅방 목록 캐시를 구독한다. */
+export function myChatRoomsCacheQueryOptions(language: ContentLanguage) {
+  return queryOptions({
+    ...chatRoomsQueryConfig(language),
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
 /**
- * 방 상세(참여자·읽음 위치).
- * 말풍선 옆 "안 읽은 사람 수"가 여기서 나오므로, 실시간 구독이 끊겼을 때는 메시지와 같은 주기로
- * 다시 받아 숫자가 멈춰 있지 않게 한다.
+ * 방 상세(참여자·읽음 위치). 최초 조회와 WebSocket 연결·재연결 직후 동기화에만 사용한다.
  */
-export function chatRoomQueryOptions(chatRoomId: number | string, live = false) {
+export function chatRoomQueryOptions(chatRoomId: number | string, language: ContentLanguage) {
   return queryOptions({
-    queryKey: chatKeys.room(chatRoomId),
-    queryFn: async () => unwrapApiResult(await getChatRoom(chatRoomId), "room"),
-    refetchInterval: live ? false : CHAT_MESSAGE_POLL_INTERVAL,
+    queryKey: chatKeys.room(chatRoomId, language),
+    queryFn: async () => unwrapApiResult(await getChatRoom(chatRoomId, language), "room"),
+    refetchInterval: false,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
 }
 
 /**
- * 대화방의 최신 묶음.
- * 실시간 구독이 살아 있으면(`live`) 폴링을 끄고, 끊겼을 때만 주기적으로 다시 받는다.
+ * 대화방의 최신 묶음. 최초 조회와 WebSocket 연결·재연결 직후 동기화에만 사용한다.
  */
-export function latestChatMessagesQueryOptions(chatRoomId: number | string, live = false) {
+export function latestChatMessagesQueryOptions(
+  chatRoomId: number | string,
+  language: ContentLanguage,
+) {
   return queryOptions({
-    queryKey: chatKeys.latestMessages(chatRoomId),
+    queryKey: chatKeys.latestMessages(chatRoomId, language),
     queryFn: async () =>
-      unwrapApiResult(await getChatMessages(chatRoomId, null, CHAT_MESSAGE_PAGE_SIZE), "messages"),
-    refetchInterval: live ? false : CHAT_MESSAGE_POLL_INTERVAL,
+      unwrapApiResult(
+        await getChatMessages(chatRoomId, null, CHAT_MESSAGE_PAGE_SIZE, language),
+        "messages",
+      ),
+    refetchInterval: false,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
@@ -80,12 +104,16 @@ export function latestChatMessagesQueryOptions(chatRoomId: number | string, live
  * 경계가 바뀌는 건 이어 붙일 수 없을 만큼 창이 멀어져 다시 시작해야 할 때뿐이고,
  * 그때는 키가 함께 바뀌어 낡은 페이지가 정리되는 편이 맞다.
  */
-export function chatMessageHistoryQueryOptions(chatRoomId: number | string, boundaryId: number) {
+export function chatMessageHistoryQueryOptions(
+  chatRoomId: number | string,
+  boundaryId: number,
+  language: ContentLanguage,
+) {
   return infiniteQueryOptions({
-    queryKey: chatKeys.messageHistory(chatRoomId, boundaryId),
+    queryKey: chatKeys.messageHistory(chatRoomId, boundaryId, language),
     queryFn: async ({ pageParam }) =>
       unwrapApiResult(
-        await getChatMessages(chatRoomId, pageParam, CHAT_MESSAGE_PAGE_SIZE),
+        await getChatMessages(chatRoomId, pageParam, CHAT_MESSAGE_PAGE_SIZE, language),
         "messages",
       ),
     initialPageParam: boundaryId,

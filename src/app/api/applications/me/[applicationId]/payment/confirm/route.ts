@@ -4,6 +4,7 @@ import {
   proxyAuthenticatedPost,
   readJsonBody,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import type { ApplicationResponse, ConfirmPaymentRequest } from "@/types/application";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest, context: PaymentRouteContext) {
 
   return proxyAuthenticatedPost<ConfirmPaymentRequest, ApplicationResponse>(
     request,
-    `/applications/me/${applicationId}/payment/confirm`,
+    appendRequestedContentLanguage(request, `/applications/me/${applicationId}/payment/confirm`),
     parsed.body,
     "결제 서버에 연결할 수 없습니다.",
   );

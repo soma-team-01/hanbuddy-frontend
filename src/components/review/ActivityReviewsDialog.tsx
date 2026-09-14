@@ -13,6 +13,7 @@ import {
   activityReviewsQueryOptions,
   REVIEW_PAGE_SIZE,
 } from "@/lib/query/reviews";
+import type { ContentLanguage } from "@/types/content-language";
 
 /**
  * 활동의 전체 후기 목록 다이얼로그.
@@ -20,17 +21,22 @@ import {
  */
 export function ActivityReviewsDialog({
   activityId,
+  language,
   onClose,
-}: Readonly<{ activityId: number | string; onClose: () => void }>) {
+}: Readonly<{
+  activityId: number | string;
+  language: ContentLanguage;
+  onClose: () => void;
+}>) {
   const t = useTranslations("Reviews");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   // 평균 별점과 분포는 전체 기준이라 필터를 타지 않는 요약 캐시에서 읽는다 (상세 섹션과 공유)
-  const summaryQuery = useQuery(activityReviewSummaryQueryOptions(activityId));
+  const summaryQuery = useQuery(activityReviewSummaryQueryOptions(activityId, language));
   const reviewsQuery = useInfiniteQuery(
-    activityReviewsQueryOptions(activityId, REVIEW_PAGE_SIZE, selectedRating),
+    activityReviewsQueryOptions(activityId, language, REVIEW_PAGE_SIZE, selectedRating),
   );
 
   useEffect(() => {

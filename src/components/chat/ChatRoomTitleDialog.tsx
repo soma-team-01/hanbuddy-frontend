@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { XIcon } from "@/components/ui/icons";
 import { updateChatRoomTitle } from "@/lib/api/chat";
@@ -9,6 +9,7 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { CHAT_ROOM_TITLE_MAX_LENGTH } from "@/lib/chat/limits";
 import { chatKeys } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
+import { getContentLanguage } from "@/lib/content-language";
 
 /** 단체 채팅방 이름 바꾸기. 비워서 저장하면 활동 제목으로 되돌아간다 */
 export function ChatRoomTitleDialog({
@@ -17,6 +18,7 @@ export function ChatRoomTitleDialog({
   onClose,
 }: Readonly<{ chatRoomId: string; currentTitle: string; onClose: () => void }>) {
   const t = useTranslations("Chat");
+  const language = getContentLanguage(useLocale());
   const tCommon = useTranslations("Common");
   const tAccessibility = useTranslations("Accessibility");
   const queryClient = useQueryClient();
@@ -33,7 +35,7 @@ export function ChatRoomTitleDialog({
   const saveMutation = useMutation({
     mutationFn: async () =>
       unwrapApiResult(
-        await updateChatRoomTitle(chatRoomId, { title: title.trim() || null }),
+        await updateChatRoomTitle(chatRoomId, { title: title.trim() || null }, language),
         "room",
       ),
     onSuccess: async () => {

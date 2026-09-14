@@ -1,14 +1,19 @@
 import type { ComponentProps } from "react";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, within } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { renderWithIntl } from "@/test/render-with-intl";
+import zhHans from "@/messages/zh-Hans.json";
+import zhHant from "@/messages/zh-Hant.json";
 import { MessagingAppField } from "./MessagingAppField";
 
 type FieldProps = ComponentProps<typeof MessagingAppField>;
 
-function renderField(overrides: Partial<FieldProps> = {}, locale: "en" | "ko" = "en") {
+function renderField(
+  overrides: Partial<FieldProps> = {},
+  locale: "en" | "ko" | "zh-Hans" | "zh-Hant" = "en",
+) {
   const props: FieldProps = {
     app: "whatsapp",
     onAppChange: vi.fn(),
@@ -18,32 +23,55 @@ function renderField(overrides: Partial<FieldProps> = {}, locale: "en" | "ko" = 
     onContactChange: vi.fn(),
     ...overrides,
   };
-  renderWithIntl(<MessagingAppField {...props} />, { locale });
+  renderWithIntl(<MessagingAppField {...props} />, {
+    locale,
+    messages: locale === "zh-Hans" ? zhHans : locale === "zh-Hant" ? zhHant : undefined,
+  });
   return props;
 }
 
 describe("MessagingAppField", () => {
+  it.each([
+    ["kakaotalk", "카카오톡"],
+    ["instagram", "인스타그램"],
+  ] as const)("localizes tourist %s labels and ID hints", (app, label) => {
+    renderField({ app, touristSignup: true }, "ko");
+    expect(screen.getByRole("button", { name: label })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByPlaceholderText(label + " ID")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(label + " ID")).toHaveAttribute("maxlength", "100");
+    expect(screen.queryByRole("button", { name: "Line" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("국가번호")).not.toBeInTheDocument();
+  });
+
+  it.each(["zh-Hans", "zh-Hant"] as const)(
+    "requests a messenger ID rather than an identity document in %s",
+    (locale) => {
+      renderField({ app: "kakaotalk", touristSignup: true }, locale);
+      expect(screen.getByPlaceholderText("KakaoTalk ID")).toBeInTheDocument();
+    },
+  );
+
   it("renders the country selector and generic phone input by default", () => {
     renderField();
-    expect(screen.getByLabelText("Messaging country code")).toBeInTheDocument();
+    expect(screen.getByLabelText("Country code")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Phone number")).toBeInTheDocument();
   });
 
   it("renders a fixed +82 chip instead of the country selector when koreanOnly", () => {
     renderField({ koreanOnly: true });
-    expect(screen.queryByLabelText("Messaging country code")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Country code")).not.toBeInTheDocument();
     expect(screen.getByText("+82")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("010-XXXX-XXXX")).toBeInTheDocument();
   });
 
   it("displays stored digits with Korean hyphen format when koreanOnly", () => {
     renderField({ koreanOnly: true, contactValue: "01012345678" });
-    expect(screen.getByLabelText("Messaging phone number")).toHaveValue("010-1234-5678");
+    expect(screen.getByLabelText("Phone number")).toHaveValue("010-1234-5678");
   });
 
   it("reports digits only from the koreanOnly input", () => {
     const props = renderField({ koreanOnly: true });
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "010-1234" },
     });
     expect(props.onContactChange).toHaveBeenCalledWith("0101234");
@@ -51,7 +79,7 @@ describe("MessagingAppField", () => {
 
   it("caps koreanOnly phone input to 11 digits", () => {
     const props = renderField({ koreanOnly: true });
-    fireEvent.change(screen.getByLabelText("Messaging phone number"), {
+    fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "010-1234-5678-99" },
     });
     expect(props.onContactChange).toHaveBeenCalledWith("01012345678");
@@ -71,16 +99,30 @@ describe("MessagingAppField", () => {
   });
 
   it.each([
-    ["whatsapp", "WhatsApp"],
-    ["line", "Line"],
-    ["wechat", "WeChat"],
-    ["phone", "Phone Number"],
-  ] as const)("renders the dedicated %s contact icon", (icon, label) => {
+    ["whatsapp", "WhatsApp", "bg-[#25D366]"],
+    ["line", "Line", "bg-[#06C755]"],
+    ["wechat", "WeChat", "bg-[#07C160]"],
+    ["phone", "Phone Number", "bg-primary-strong"],
+  ] as const)("renders the recognizable %s brand mark", (app, label, brandClass) => {
     renderField({ variant: "cards" });
 
     expect(
-      screen.getByRole("button", { name: label }).querySelector(`[data-messaging-icon="${icon}"]`),
-    ).toBeInTheDocument();
+      screen.getByRole("button", { name: label }).querySelector(`[data-messaging-brand="${app}"]`),
+    ).toHaveClass(brandClass);
+  });
+
+  it("can place all contact methods in one desktop row", () => {
+    renderField({ variant: "cards", singleRowOnDesktop: true });
+
+    expect(screen.getByTestId("messaging-app-options")).toHaveClass("lg:grid-cols-4");
+  });
+
+  it("can hide the contact method selector for a fixed phone flow", () => {
+    renderField({ app: "phone", showAppSelector: false });
+
+    expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "WhatsApp" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Phone number")).toBeInTheDocument();
   });
 
   it.each([
@@ -93,8 +135,8 @@ describe("MessagingAppField", () => {
       "aria-pressed",
       "true",
     );
-    expect(screen.getByLabelText("메신저 국가번호")).toBeInTheDocument();
-    expect(screen.getByLabelText("메신저 전화번호")).toHaveAttribute("placeholder", "전화번호");
+    expect(screen.getByLabelText("국가번호")).toBeInTheDocument();
+    expect(screen.getByLabelText("전화번호")).toHaveAttribute("placeholder", "전화번호");
   });
 
   it.each([
@@ -109,6 +151,34 @@ describe("MessagingAppField", () => {
 });
 
 describe("shared localized selectors and statuses", () => {
+  it.each(["name", "dialCode"] as const)(
+    "uses a compact white %s menu with text-only highlighting",
+    (display) => {
+      Element.prototype.scrollIntoView = vi.fn();
+      renderWithIntl(
+        <CountrySelect value="AL" onChange={vi.fn()} display={display} ariaLabel="Nationality" />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
+      const panel = screen.getByTestId("country-select-panel");
+      expect(panel).toHaveClass("bg-canvas-soft", "shadow-lg");
+      expect(panel).not.toHaveClass("bg-panel");
+      expect(Number.parseFloat(panel.style.maxHeight)).toBeLessThanOrEqual(272);
+      const selected = screen.getByRole("option", { name: /Albania/ });
+      expect(selected).toHaveAttribute("aria-selected", "true");
+      expect(selected.querySelector("button")).toHaveClass("h-9", "text-sm");
+      expect(selected.querySelector("svg")).toHaveClass("text-primary");
+      expect(within(selected).getByText("Albania")).not.toHaveClass("underline");
+      expect(panel.querySelector(".bg-primary-soft")).not.toBeInTheDocument();
+      fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
+      expect(within(selected).getByText("Albania")).toHaveClass("text-primary-strong", "underline");
+      const hovered = screen.getByRole("option", { name: /Afghanistan/ });
+      fireEvent.mouseMove(within(hovered).getByRole("button"));
+      expect(within(hovered).getByText("Afghanistan")).toHaveClass("underline");
+      expect(within(selected).getByText("Albania")).not.toHaveClass("underline");
+      expect(selected).toHaveAttribute("aria-selected", "true");
+      expect(selected.querySelector("svg")).toBeInTheDocument();
+    },
+  );
   it("localizes country selection, search, empty text, and region names in Korean", () => {
     Element.prototype.scrollIntoView = vi.fn();
     renderWithIntl(<CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />, {

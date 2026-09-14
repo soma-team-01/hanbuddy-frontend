@@ -1,4 +1,6 @@
 import type { MyReviewResponse } from "./review";
+import type { ResolvedContentLanguage } from "./content-language";
+import type { TouristActivityDetail } from "./activity";
 
 export type ApplicationStatus = "pending_payment" | "confirmed" | "cancelled" | "completed";
 export type BackendApplicationStatus =
@@ -6,15 +8,74 @@ export type BackendApplicationStatus =
 export type ApplicationCancellationReason =
   "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER";
 
+export type AppliedActivityStatus = "ACTIVE" | "INACTIVE" | "DELETED";
+
+export interface AppliedActivityDetailResponse {
+  applicationId: number;
+  activityScheduleId: number;
+  /** 신청한 회차의 Asia/Seoul 오프셋 포함 시작 일시 */
+  startAt: string;
+  /** 신청한 회차의 종료 일시 */
+  endAt: string;
+  activityStatus: AppliedActivityStatus;
+  canBook: boolean;
+  activity: TouristActivityDetail;
+}
+
+export type CancellationPolicyType =
+  "FREE_CANCELLATION_WINDOW" | "BEFORE_48_HOURS" | "BETWEEN_24_AND_48_HOURS" | "WITHIN_24_HOURS";
+
+export interface CancellationQuoteResponse {
+  policyVersion: string;
+  policyType: CancellationPolicyType;
+  refundPercent: number;
+  refundAmount: number;
+  refundCurrency: string;
+  cancellationFeeAmount: number;
+  freeCancellationUntil: string;
+  quotedAt: string;
+}
+
+export interface PaymentRefundResponse {
+  refundId: number;
+  provider: PaymentProvider | "EXTERNAL";
+  status: "REQUESTED" | "COMPLETED" | "FAILED";
+  policyVersion: string;
+  policyType: CancellationPolicyType;
+  refundPercent: number;
+  refundAmount: number;
+  refundCurrency: string;
+  cancellationFeeAmount: number;
+  refundAmountKrw: number;
+  retainedAmountKrw: number;
+  platformCommissionAmountKrw: number;
+  commissionVatAmountKrw: number;
+  guidePayoutAmountKrw: number;
+  requestedAt: string;
+  completedAt: string | null;
+}
+
 export interface PriceBreakdown {
   unitPrice: number;
   guests: number;
   serviceFee: number;
+  /** 결제 생성 시점의 정상 1인 단가 */
+  originalUnitPrice?: number | null;
+  /** 결제 생성 시점의 할인 적용 1인 단가 */
+  discountedUnitPrice?: number | null;
+  /** 결제 생성 시점의 정상가 총합 */
+  originalTotalPrice?: number | null;
+  /** 적용 할인율. 할인이 없으면 null */
+  discountPercent?: number | null;
+  /** 총 할인 금액 */
+  discountAmount?: number | null;
+  /** 할인 후 최종 결제 금액 */
+  finalTotalPrice?: number | null;
 }
 
 export interface Application {
   id: string;
-  /** 신청한 활동 상세로 이동하기 위한 활동 ID */
+  /** 날씨 등 공개 활동 부가 정보를 조회하기 위한 활동 ID */
   activityId: number;
   status: ApplicationStatus;
   /** 활동 시작 일시 (Asia/Seoul 오프셋 포함) — D-day 계산용 */
@@ -35,12 +96,18 @@ export interface Application {
   breakdown?: PriceBreakdown;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;
+  paymentProvider?: PaymentProvider | null;
+  providerPaymentAmount?: number | null;
+  providerPaymentCurrency?: string | null;
+  refund?: PaymentRefundResponse | null;
 }
 
 export interface CreateApplicationRequest {
   activityScheduleId: number;
   guestCount: number;
   specialRequest?: string;
+  /** 신청 건에 귀속되는 취소·환불 정책 필수 동의 */
+  refundPolicyAgreed: boolean;
 }
 
 export interface CancelApplicationRequest {
@@ -52,6 +119,8 @@ export interface CancelApplicationRequest {
 export type PaymentStatus =
   "CREATED" | "CONFIRMED" | "REVIEW_REQUIRED" | "FAILED" | "CANCELLED" | "EXPIRED";
 
+export type PaymentProvider = "TOSS" | "PAYPAL";
+
 /** 토스 successUrl 쿼리 파라미터를 그대로 전달하는 결제 승인 요청 */
 export interface ConfirmPaymentRequest {
   paymentKey: string;
@@ -60,11 +129,17 @@ export interface ConfirmPaymentRequest {
   amount: number;
 }
 
+export interface CapturePayPalPaymentRequest {
+  /** PayPal 승인 콜백 또는 success URL의 token 값 */
+  orderId: string;
+}
+
 export interface ApplicationResponse {
   applicationId: number;
   activityId: number;
   activityScheduleId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   buddyName: string;
   guestCount: number;
@@ -76,8 +151,17 @@ export interface ApplicationResponse {
   price: number;
   totalPrice: number;
   currency: string;
+  originalUnitPrice?: number | null;
+  discountPercent?: number | null;
+  discountedUnitPrice?: number | null;
+  originalTotalPrice?: number | null;
+  discountAmount?: number | null;
   paymentAmount?: number | null;
   paymentCurrency?: string | null;
+  paymentProvider?: PaymentProvider | null;
+  providerPaymentAmount?: number | null;
+  providerPaymentCurrency?: string | null;
+  refund?: PaymentRefundResponse | null;
   status: BackendApplicationStatus;
   cancellationReason: ApplicationCancellationReason | null;
   cancellationDetail: string | null;
@@ -92,16 +176,47 @@ export interface ApplicationResponse {
 export interface PaymentReadyResponse {
   application: ApplicationResponse;
   paymentId: number;
+  paymentProvider: PaymentProvider;
+  paymentAttemptId: number;
+  /** 토스 주문번호 또는 PayPal order ID */
+  providerOrderId: string;
+  /** PayPal 전체 페이지 결제의 대체 이동 URL. 토스는 null */
+  approvalUrl: string | null;
   /** 토스 결제창 requestPayment의 orderId로 전달할 주문번호 */
   orderNumber: string;
-  /** 토스 결제창 SDK 초기화에 사용할 클라이언트 키 */
-  clientKey: string;
+  /** 토스 결제창 SDK 초기화에 사용할 클라이언트 키. PayPal은 null */
+  clientKey: string | null;
   /** 토스 결제창에 표시할 주문명(활동 제목) */
   orderName: string;
+  originalUnitPrice?: number | null;
+  discountPercent?: number | null;
+  discountedUnitPrice?: number | null;
+  originalTotalPrice?: number | null;
+  discountAmount?: number | null;
   paymentStatus: PaymentStatus;
-  /** 결제 금액 (KRW 정수) — 결제창 요청·승인 금액과 같아야 한다 */
+  /** 결제 공급자 통화 기준의 결제 금액 */
   paymentAmount: number;
   paymentCurrency: string;
   /** 현재 주문번호를 재사용할 수 있는 백엔드 기준 만료 시각 (Asia/Seoul 오프셋 포함) */
   orderExpiresAt: string;
+}
+
+export type ApplicationConflictType =
+  "SAME_SCHEDULE" | "TIME_OVERLAP" | "SAME_ACTIVITY_SAME_DAY" | "OTHER_ACTIVITY_SAME_DAY";
+
+export interface ApplicationConflictItemResponse {
+  type: ApplicationConflictType;
+  applicationId: number;
+  activityId: number;
+  activityScheduleId: number;
+  activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
+  startAt: string;
+  endAt: string;
+}
+
+export interface ApplicationConflictCheckResponse {
+  blocking: boolean;
+  conflicts: ApplicationConflictItemResponse[];
+  sameDayWarnings: ApplicationConflictItemResponse[];
 }

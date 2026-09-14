@@ -23,13 +23,14 @@ vi.mock("./applications-content", () => ({
 
 describe("ApplicationsPage", () => {
   it.each([
-    ["en", "My Applications"],
-    ["ko", "내 신청"],
-  ] as const)("renders the localized title for %s", async (locale, title) => {
+    ["en", "My Applications", "Review upcoming experiences, payments, and past applications."],
+    ["ko", "내 신청", "예정된 경험과 결제, 지난 신청 내역을 확인하세요."],
+  ] as const)("renders the localized title for %s", async (locale, title, description) => {
     renderWithIntl(await ApplicationsPage({ params: Promise.resolve({ locale }) } as never), {
       locale,
     });
 
     expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
+    expect(screen.queryByText(description)).not.toBeInTheDocument();
   });
 });

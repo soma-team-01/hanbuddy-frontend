@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { createDirectChatRoom, createGroupChatRoom } from "@/lib/api/chat";
@@ -9,6 +9,7 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useRouter } from "@/i18n/navigation";
 import { chatKeys } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
+import { getContentLanguage } from "@/lib/content-language";
 
 type ChatTarget =
   { kind: "direct"; targetUserId: number } | { kind: "group"; activityScheduleId: number };
@@ -35,6 +36,7 @@ export function StartChatButton({
   onOpened?: () => void;
 }>) {
   const t = useTranslations("Chat");
+  const language = getContentLanguage(useLocale());
   const router = useRouter();
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
@@ -45,7 +47,7 @@ export function StartChatButton({
       target.kind === "direct"
         ? unwrapApiResult(await createDirectChatRoom({ targetUserId: target.targetUserId }), "room")
         : unwrapApiResult(
-            await createGroupChatRoom({ activityScheduleId: target.activityScheduleId }),
+            await createGroupChatRoom({ activityScheduleId: target.activityScheduleId }, language),
             "room",
           ),
     onSuccess: async (room) => {

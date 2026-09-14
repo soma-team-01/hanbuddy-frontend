@@ -1,6 +1,7 @@
 import type {
   ActivityPricePreviewRequest,
   ActivityPricePreviewResponse,
+  ActivityStatusUpdateRequest,
   ActivityUpsertRequest,
   BuddyActivityApplicationsResponse,
   BuddyDateActivityApplicationsResponse,
@@ -8,6 +9,8 @@ import type {
   MyActivityDetailResponse,
   MyActivitySummaryResponse,
 } from "@/types/buddy";
+import { withContentLanguage } from "@/lib/content-language";
+import type { ContentLanguage } from "@/types/content-language";
 import { requestApiResult, type ApiResult } from "./result";
 
 export type MyActivitiesResult = ApiResult<MyActivitySummaryResponse[], "activities">;
@@ -29,6 +32,7 @@ const DEFAULT_MY_ACTIVITY_ERROR_MESSAGE = "활동 정보를 불러오지 못했�
 const DEFAULT_MY_ACTIVITY_SAVE_ERROR_MESSAGE = "활동을 저장하지 못했습니다.";
 const DEFAULT_ACTIVITY_PRICE_PREVIEW_ERROR_MESSAGE = "예상 정산액을 계산하지 못했습니다.";
 const DEFAULT_MY_ACTIVITY_DELETE_ERROR_MESSAGE = "활동을 삭제하지 못했습니다.";
+const DEFAULT_MY_ACTIVITY_STATUS_ERROR_MESSAGE = "활동 공개 상태를 변경하지 못했습니다.";
 const DEFAULT_BUDDY_SCHEDULE_DATES_ERROR_MESSAGE = "활동 일정 날짜를 불러오지 못했습니다.";
 const DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE = "신청자 목록을 불러오지 못했습니다.";
 
@@ -105,18 +109,41 @@ export async function deleteMyActivity(
   );
 }
 
-export async function getBuddyScheduleDates(): Promise<BuddyScheduleDatesResult> {
+export async function updateMyActivityStatus(
+  activityId: number | string,
+  status: ActivityStatusUpdateRequest["status"],
+): Promise<MyActivityResult> {
+  return requestApiResult<MyActivityDetailResponse, "activity">(
+    `/api/activities/me/${activityId}/status`,
+    "activity",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    },
+    DEFAULT_MY_ACTIVITY_STATUS_ERROR_MESSAGE,
+  );
+}
+
+export async function getBuddyScheduleDates(
+  /** YYYY-MM-DD, 양 끝 포함. 생략하면 오늘부터 15일 */
+  range?: { from: string; to: string },
+): Promise<BuddyScheduleDatesResult> {
+  const query = range ? `?from=${range.from}&to=${range.to}` : "";
   return requestApiResult<BuddyScheduleDateResponse[], "dates">(
-    "/api/applications/buddy/schedule-dates",
+    `/api/applications/buddy/schedule-dates${query}`,
     "dates",
     undefined,
     DEFAULT_BUDDY_SCHEDULE_DATES_ERROR_MESSAGE,
   );
 }
 
-export async function getBuddyApplications(date: string): Promise<BuddyApplicationsResult> {
+export async function getBuddyApplications(
+  date: string,
+  language: ContentLanguage,
+): Promise<BuddyApplicationsResult> {
   return requestApiResult<BuddyDateActivityApplicationsResponse[], "activities">(
-    `/api/applications/buddy?date=${encodeURIComponent(date)}`,
+    withContentLanguage(`/api/applications/buddy?date=${encodeURIComponent(date)}`, language),
     "activities",
     undefined,
     DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE,
@@ -125,9 +152,10 @@ export async function getBuddyApplications(date: string): Promise<BuddyApplicati
 
 export async function getBuddyActivityApplications(
   activityScheduleId: number | string,
+  language: ContentLanguage,
 ): Promise<BuddyActivityApplicationsResult> {
   return requestApiResult<BuddyActivityApplicationsResponse, "applications">(
-    `/api/applications/buddy/schedules/${activityScheduleId}`,
+    withContentLanguage(`/api/applications/buddy/schedules/${activityScheduleId}`, language),
     "applications",
     undefined,
     DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE,

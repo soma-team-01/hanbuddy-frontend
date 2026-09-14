@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { BuddyShell } from "@/components/layout/BuddyShell";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PlusIcon } from "@/components/ui/icons";
@@ -14,7 +13,7 @@ export default async function MyActivitiesPage({
   const t = await getTranslations({ locale, namespace: "MyActivities" });
 
   return (
-    <BuddyShell>
+    <>
       <PageHeader
         title={t("title")}
         description={t("description")}
@@ -22,7 +21,7 @@ export default async function MyActivitiesPage({
         action={
           <Link
             href="/my-activities/create"
-            className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
           >
             <PlusIcon className="size-4" />
             <span className="hidden sm:inline">{t("createActivity")}</span>
@@ -34,6 +33,6 @@ export default async function MyActivitiesPage({
           <MyActivitiesContent />
         </main>
       </PageContainer>
-    </BuddyShell>
+    </>
   );
 }

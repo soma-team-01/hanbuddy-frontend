@@ -10,6 +10,7 @@ interface PageHeaderProps {
   closeHref?: string;
   onLeftClick?: () => void;
   action?: React.ReactNode;
+  compact?: boolean;
 }
 
 export function PageHeader({
@@ -19,6 +20,7 @@ export function PageHeader({
   closeHref,
   onLeftClick,
   action,
+  compact = false,
 }: Readonly<PageHeaderProps>) {
   const t = useTranslations("Accessibility");
   const leftHref = backHref ?? closeHref;
@@ -52,11 +54,20 @@ export function PageHeader({
 
   return (
     <div data-testid="page-header" className="bg-canvas">
-      <PageContainer className="flex min-h-28 items-end gap-3 py-6 md:min-h-36 md:py-8">
+      <PageContainer
+        data-testid="page-header-content"
+        className={`flex items-end gap-3 ${
+          compact ? "min-h-20 py-4 md:min-h-24 md:py-5" : "min-h-24 py-5 md:min-h-28 md:py-6"
+        }`}
+      >
         {leftSlot}
         <div className="min-w-0 flex-1">
           {title ? (
-            <h1 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
+            <h1
+              className={`font-display font-extrabold tracking-[-0.04em] text-ink ${
+                compact ? "text-2xl" : "text-2xl md:text-3xl"
+              }`}
+            >
               {title}
             </h1>
           ) : null}

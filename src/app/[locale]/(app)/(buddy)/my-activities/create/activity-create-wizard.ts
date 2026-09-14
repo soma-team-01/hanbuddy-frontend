@@ -34,7 +34,6 @@ export const ACTIVITY_CREATE_LIMITS = {
   itineraryDescription: { min: 5, max: 50 },
   // 백엔드 ActivityUpsertRequest 계약 상한
   maxGuests: { max: 100 },
-  schedules: { max: 30 },
   itineraryItems: { max: 20 },
 } as const;
 
@@ -73,6 +72,8 @@ export interface ActivityCreateDraft {
   meetingAddress: string;
   meetingPlaceId: string;
   meetingPlace: string;
+  meetingLatitude: number | null;
+  meetingLongitude: number | null;
   schedules: ScheduleDraft[];
   /**
    * 편집 화면에 띄우지 않지만 그대로 유지해야 하는 지난 일정의 시작 시각.
@@ -107,7 +108,6 @@ export type ActivityCreateErrorKey =
   | "itineraryTooMany"
   | "maxGuestsInvalid"
   | "maxGuestsTooMany"
-  | "schedulesTooMany"
   | "priceInvalid"
   | "inclusionsRequired"
   | "restrictionsRequired"
@@ -122,6 +122,8 @@ export const EMPTY_ACTIVITY_DRAFT: ActivityCreateDraft = {
   meetingAddress: "",
   meetingPlaceId: "",
   meetingPlace: "",
+  meetingLatitude: null,
+  meetingLongitude: null,
   schedules: [],
   retainedScheduleStartAts: [],
   itinerary: [],
@@ -242,9 +244,6 @@ export function validateActivityCreateStep(
       ) {
         return "scheduleInvalid";
       }
-      if (draft.schedules.length > ACTIVITY_CREATE_LIMITS.schedules.max) {
-        return "schedulesTooMany";
-      }
       const now = getSeoulNowParts();
       return draft.schedules.some((schedule) => isPastSchedule(schedule, now))
         ? "scheduleInPast"
@@ -335,6 +334,8 @@ export function buildDraftFromMyActivityDetail(
     meetingAddress: detail.meetingPointName,
     meetingPlaceId: detail.meetingPlaceId,
     meetingPlace: detail.meetingPointName,
+    meetingLatitude: detail.meetingLatitude ?? null,
+    meetingLongitude: detail.meetingLongitude ?? null,
     schedules,
     itinerary: [...detail.itineraries]
       .sort((left, right) => left.itemOrder - right.itemOrder)
@@ -372,12 +373,22 @@ export function buildPreviewActivityFromDraft(
   options: Readonly<{
     locale: Locale;
     dateTimeUnavailable: string;
+    activityId?: string;
+    hostId?: number;
     hostName: string;
     hostBio: string;
     hostAvatarUrl?: string | null;
   }>,
 ): Activity {
-  const { locale, dateTimeUnavailable, hostName, hostBio, hostAvatarUrl = null } = options;
+  const {
+    locale,
+    dateTimeUnavailable,
+    activityId,
+    hostId,
+    hostName,
+    hostBio,
+    hostAvatarUrl = null,
+  } = options;
   const images = draft.photos.map((photo) => photo.previewUrl);
   const maxGuests = Number(draft.maxGuests) || 1;
   const sessions = draft.schedules
@@ -405,7 +416,7 @@ export function buildPreviewActivityFromDraft(
   const discountedPrice = Math.round(price * (1 - discountPercent / 100));
 
   return {
-    id: "preview",
+    id: activityId ?? "preview",
     title: draft.experienceName,
     description: draft.experienceDescription,
     location: draft.meetingPlace,
@@ -416,9 +427,10 @@ export function buildPreviewActivityFromDraft(
     price: hasDiscount ? discountedPrice : price,
     originalPrice: hasDiscount ? price : undefined,
     discountPercent: hasDiscount ? discountPercent : undefined,
-    durationMinutes: itineraryMinutes > 0 ? Math.ceil(itineraryMinutes / 30) * 30 : undefined,
+    durationMinutes: itineraryMinutes > 0 ? itineraryMinutes : undefined,
     isSoldOut: false,
     host: {
+      id: hostId,
       name: hostName,
       bio: hostBio,
       avatarUrl: hostAvatarUrl,

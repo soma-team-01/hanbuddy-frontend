@@ -2,17 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { appendBackendSetCookies, postBackend } from "@/lib/auth/backend";
 import {
   AUTH_COOKIES,
+  RESUBMISSION_COOKIE_OPTIONS,
   SIGNUP_COOKIE_OPTIONS,
   clearAuthenticatedSessionCookies,
   clearAuthStatusReasonCookie,
+  clearResubmissionCookie,
   clearSignupCookies,
   encodeGoogleProfile,
   setAuthStatusReasonCookie,
   setAuthenticatedSessionCookies,
 } from "@/lib/auth/cookies";
-import type { GoogleLoginResponse } from "@/lib/auth/types";
 import type { AuthErrorCode } from "@/lib/auth/error-codes";
+import { getGoogleRedirectUri, GoogleOAuthConfigError } from "@/lib/auth/google-config";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
+import type { GoogleLoginRequest, GoogleLoginResponse } from "@/lib/auth/types";
 import { localizePathname } from "@/i18n/pathname";
 import { getLocaleOrDefault, LOCALE_COOKIE_NAME } from "@/i18n/routing";
 
@@ -41,9 +44,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const backend = await postBackend<{ code: string }, GoogleLoginResponse>("/auth/google/login", {
-      code,
-    });
+    const redirectUri = getGoogleRedirectUri();
+    const backend = await postBackend<GoogleLoginRequest, GoogleLoginResponse>(
+      "/auth/google/login",
+      { code, redirectUri },
+    );
 
     if (!backend.payload.isSuccess) {
       return redirectToLoginWithError(request, "backendRejected");
@@ -67,8 +72,11 @@ export async function GET(request: NextRequest) {
       appendBackendSetCookies(response, backend.setCookies);
     }
     return response;
-  } catch {
-    return redirectToLoginWithError(request, "serverUnavailable");
+  } catch (error) {
+    return redirectToLoginWithError(
+      request,
+      error instanceof GoogleOAuthConfigError ? "configuration" : "serverUnavailable",
+    );
   }
 }
 
@@ -93,10 +101,11 @@ function createAdminRedirect(request: NextRequest, result: GoogleLoginResponse) 
     return redirectToAdminLoginWithError(request, "adminOnly");
   }
 
-  const response = NextResponse.redirect(new URL("/admin/buddies", request.url));
+  const response = NextResponse.redirect(createPublicUrl(request, "/admin/users"));
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
   clearAuthStatusReasonCookie(response);
+  clearResubmissionCookie(response);
   return response;
 }
 
@@ -127,6 +136,7 @@ function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginRe
   setAuthenticatedSessionCookies(response, result);
   clearSignupCookies(response);
   clearAuthStatusReasonCookie(response);
+  clearResubmissionCookie(response);
   return response;
 }
 
@@ -142,6 +152,7 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
   const response = NextResponse.redirect(createLocalizedUrl(request, onboardingPath));
   clearAuthenticatedSessionCookies(response);
   clearAuthStatusReasonCookie(response);
+  clearResubmissionCookie(response);
   response.cookies.set(AUTH_COOKIES.signupToken, result.signupToken, SIGNUP_COOKIE_OPTIONS);
   if (result.googleProfile) {
     response.cookies.set(
@@ -158,12 +169,22 @@ function createInactiveAccountRedirect(request: NextRequest, result: GoogleLogin
     return redirectToLoginWithError(request, "invalidLoginResponse");
   }
 
-  const statusUrl = createLocalizedUrl(request, "/buddy/auth/status");
+  const statusPath = result.userType === "BUDDY" ? "/buddy/auth/status" : "/auth/status";
+  const statusUrl = createLocalizedUrl(request, statusPath);
   statusUrl.searchParams.set("status", result.authStatus);
   const response = NextResponse.redirect(statusUrl);
   clearAuthenticatedSessionCookies(response);
   clearSignupCookies(response);
   setAuthStatusReasonCookie(response, result.statusReason);
+  if (result.authStatus === "REJECTED" && result.userType === "BUDDY" && result.resubmissionToken) {
+    response.cookies.set(
+      AUTH_COOKIES.resubmissionToken,
+      result.resubmissionToken,
+      RESUBMISSION_COOKIE_OPTIONS,
+    );
+  } else {
+    clearResubmissionCookie(response);
+  }
   return response;
 }
 
@@ -180,13 +201,14 @@ function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
 }
 
 function redirectToAdminLoginWithError(request: NextRequest, code: string) {
-  const loginUrl = new URL("/admin/login", request.url);
+  const loginUrl = createPublicUrl(request, "/admin/login");
   loginUrl.searchParams.set("error", code);
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);
   response.cookies.delete(AUTH_COOKIES.oauthLocale);
   response.cookies.delete(AUTH_COOKIES.oauthIntent);
   clearSignupCookies(response);
+  clearResubmissionCookie(response);
   return response;
 }
 
@@ -195,5 +217,15 @@ function createLocalizedUrl(request: NextRequest, pathname: string) {
     request.cookies.get(AUTH_COOKIES.oauthLocale)?.value ??
       request.cookies.get(LOCALE_COOKIE_NAME)?.value,
   );
-  return new URL(localizePathname(pathname, locale), request.url);
+  return createPublicUrl(request, localizePathname(pathname, locale));
+}
+
+function createPublicUrl(request: NextRequest, pathname: string) {
+  try {
+    return new URL(pathname, new URL(getGoogleRedirectUri()).origin);
+  } catch {
+    // 잘못된 로컬 설정에서는 기존 요청 URL을 사용해 오류 화면으로 이동한다.
+  }
+
+  return new URL(pathname, request.url);
 }

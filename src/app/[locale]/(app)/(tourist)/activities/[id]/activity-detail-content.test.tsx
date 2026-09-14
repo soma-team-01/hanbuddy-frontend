@@ -1,11 +1,12 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivities, getTouristActivity } from "@/lib/api/activities";
+import { getActivityWeather, getTouristActivities, getTouristActivity } from "@/lib/api/activities";
 import { getActivityReviews, getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
 import { createQueryClient } from "@/lib/query/client";
+import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { ActivityDetailContent } from "./activity-detail-content";
@@ -18,6 +19,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/activities", () => ({
+  getActivityWeather: vi.fn(),
   getTouristActivity: vi.fn(),
   getTouristActivities: vi.fn(),
 }));
@@ -38,6 +40,7 @@ vi.mock("@/lib/google/places", async () => {
 });
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
+const mockedGetActivityWeather = vi.mocked(getActivityWeather);
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedGetActivityReviews = vi.mocked(getActivityReviews);
 const mockedGetBuddyProfile = vi.mocked(getBuddyProfile);
@@ -85,6 +88,7 @@ function buildActivityDetail() {
     buddyId: 7,
     title: "Bukchon Hidden Gems",
     description: "Walk through quiet alleys with a local buddy.",
+    totalDurationMinutes: 0,
     thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
     buddyName: "Jihoon Kim",
     buddyProfileImageUrl: null,
@@ -92,6 +96,7 @@ function buildActivityDetail() {
     restrictionNotes: ["Comfortable shoes recommended"],
     price: 45000,
     currency: "KRW",
+    displayPrice: createKrwDisplayPrice(45000),
     meetingPointName: "Anguk Station Exit 2",
     meetingPlaceId: "ChIJ-bukchon",
     images: [],
@@ -124,6 +129,19 @@ describe("ActivityDetailContent", () => {
     routerMock.back.mockReset();
     routerMock.push.mockReset();
     mockedGetTouristActivity.mockReset();
+    mockedGetActivityWeather.mockReset();
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: false,
+        unavailableReason: "LOCATION_UNAVAILABLE",
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
+        baseDate: futureDateKey,
+        forecasts: [],
+      },
+    });
     mockedGetTouristActivities.mockReset();
     mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
     mockedFetchGooglePlaceDetails.mockReset();
@@ -153,7 +171,16 @@ describe("ActivityDetailContent", () => {
     });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
-      activity: buildActivityDetail(),
+      activity: {
+        ...buildActivityDetail(),
+        displayPrice: {
+          price: 32.5,
+          discountedPrice: null,
+          currency: "USD" as const,
+          exchangeRateDate: "2026-08-31",
+          estimated: true,
+        },
+      },
     });
 
     renderWithQueryClient(<ActivityDetailContent activityId="42" />);
@@ -164,7 +191,17 @@ describe("ActivityDetailContent", () => {
       "eager",
     );
     expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
-    expect(screen.getByText("₩45,000 per person")).toBeInTheDocument();
+    const krwPrice = screen.getByText("₩45,000");
+    const referencePrice = screen.getByText("(≈ $32.50)");
+    expect(referencePrice).toHaveClass("text-muted");
+    expect(
+      krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // 모바일은 가격과 같은 줄에 붙고, md 이상에서만 제 줄로 내려가 오른쪽 정렬된다
+    expect(screen.getByText("per person")).toHaveClass("md:basis-full", "md:text-right");
+    expect(screen.getByText("per person").parentElement).toBe(
+      screen.getByTestId("booking-bar-price"),
+    );
     // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
@@ -213,13 +250,79 @@ describe("ActivityDetailContent", () => {
     );
   });
 
+  it("shows only the forecast icon matching each schedule start time", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "success",
+      weather: {
+        available: true,
+        unavailableReason: null,
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: "2026-08-24T14:00:00+09:00",
+        baseDate: futureDateKey,
+        forecasts: [
+          {
+            forecastAt: `${futureDateKey}T14:00:00+09:00`,
+            temperatureCelsius: 29,
+            condition: "PARTLY_CLOUDY",
+            precipitationProbability: 20,
+          },
+        ],
+      },
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+    fireEvent.click(await screen.findByTestId("date-select-box"));
+
+    const dialog = await screen.findByRole("dialog");
+    const weatherIcons = within(dialog).getAllByLabelText("Partly cloudy");
+    expect(weatherIcons.length).toBeGreaterThan(0);
+    expect(weatherIcons[0]).toHaveClass("text-sky-500");
+    expect(within(dialog).getAllByText("29°C").length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByText("Chance of precipitation 20%").length).toBeGreaterThan(0);
+    expect(within(dialog).getByText("Weather data from KMA")).toBeInTheDocument();
+    expect(mockedGetActivityWeather).toHaveBeenCalledTimes(1);
+    expect(mockedGetActivityWeather).toHaveBeenCalledWith("42");
+  });
+
+  it("keeps booking available when the weather request fails", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({ formattedAddress: "Anguk Station" });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+    mockedGetActivityWeather.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: null,
+        status: 502,
+        details: null,
+        backendMessage: "weather unavailable",
+      }),
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+
+    fireEvent.click(await screen.findByTestId("date-select-box"));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByText("Weather data from KMA")).not.toBeInTheDocument();
+    expect(screen.getByText("Available times")).toBeInTheDocument();
+  });
+
   it("shows start and end times in the calendar when a duration is provided", async () => {
     mockedFetchGooglePlaceDetails.mockResolvedValue({
       formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
     });
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
-      activity: { ...buildActivityDetail(), totalDurationHours: 2.25 },
+      activity: { ...buildActivityDetail(), totalDurationMinutes: 135 },
     });
 
     renderWithQueryClient(<ActivityDetailContent activityId="42" />);
@@ -250,7 +353,8 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByRole("heading", { name: "포함 사항" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "신청 전 확인사항" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "만나는 장소" })).toBeInTheDocument();
-    expect(screen.getByText("1인당 ₩45,000")).toBeInTheDocument();
+    expect(screen.getByText("₩45,000")).toBeInTheDocument();
+    expect(screen.getByText("1인당")).toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: "지금 예약하기" })).toBeDisabled();
     const dateBox = screen.getByTestId("date-select-box");
@@ -284,7 +388,7 @@ describe("ActivityDetailContent", () => {
       status: "success",
       activity: {
         ...buildActivityDetail(),
-        totalDurationHours: 2.5,
+        totalDurationMinutes: 150,
         hostIntroduction: "I have guided Bukchon walks for seven years and love quiet alleys.",
         restrictionNotes: [],
         schedules: [],
@@ -327,7 +431,7 @@ describe("ActivityDetailContent", () => {
     expect(
       screen.getByText("I have guided Bukchon walks for seven years and love quiet alleys."),
     ).toBeInTheDocument();
-    expect(screen.getByText("2.5 hours")).toBeInTheDocument();
+    expect(screen.getByText("2 hours 30min")).toBeInTheDocument();
     // 일정이 없으면 칩 대신 안내 문구가 뜨고 Book now가 비활성화된다
     expect(screen.getByText("No dates available yet")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
@@ -372,6 +476,7 @@ describe("ActivityDetailContent", () => {
           buddyId: 7,
           title: "Bukchon Hidden Gems",
           description: "Current activity is excluded.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -379,12 +484,14 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-bukchon",
           price: 45000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(45000),
         },
         {
           activityId: 77,
           buddyId: 7,
           title: "Seoul Night Market Walk",
           description: "Another experience by the same buddy.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/market.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -392,12 +499,14 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-gwangjang",
           price: 30000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(30000),
         },
         {
           activityId: 88,
           buddyId: 9,
           title: "Other buddy experience",
           description: "Hosted by a different buddy with the same public name.",
+          totalDurationMinutes: 0,
           thumbnailImageUrl: "/images/activities/other.jpg",
           buddyName: "Jihoon Kim",
           buddyProfileImageUrl: null,
@@ -405,6 +514,7 @@ describe("ActivityDetailContent", () => {
           meetingPlaceId: "ChIJ-hongdae",
           price: 20000,
           currency: "KRW",
+          displayPrice: createKrwDisplayPrice(20000),
         },
       ],
     });
@@ -431,7 +541,7 @@ describe("ActivityDetailContent", () => {
     ).toBeInTheDocument();
     expect(within(dialog).getByText("2 live experiences")).toBeInTheDocument();
     expect(mockedGetBuddyProfile).toHaveBeenCalledWith(7);
-    expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 12, null);
+    expect(mockedGetBuddyReviews).toHaveBeenCalledWith(7, 0, 12, "EN", null);
   });
 
   it("lists the buddy's reviews across activities in the host profile", async () => {
@@ -453,10 +563,14 @@ describe("ActivityDetailContent", () => {
             applicationId: 15,
             activityId: 77,
             activityTitle: "Seoul Night Market Walk",
+            activityTitleLanguage: "EN",
             reviewerName: "Nelli",
             reviewerProfileImageUrl: null,
             rating: 5,
             content: "Jihoon knows every alley.",
+            contentLanguage: "EN",
+            sourceLanguage: "EN",
+            originalContent: "Jihoon knows every alley.",
             createdAt: "2026-08-01T13:00:00+09:00",
           },
         ],
@@ -539,7 +653,9 @@ describe("ActivityDetailContent", () => {
       "en",
       "ko",
     ]);
-    expect(mockedGetTouristActivity).toHaveBeenCalledTimes(1);
+    expect(mockedGetTouristActivity).toHaveBeenCalledTimes(2);
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(1, "42", "EN", "USD");
+    expect(mockedGetTouristActivity).toHaveBeenNthCalledWith(2, "42", "KO", "KRW");
   });
 
   it("ignores a late Google address response from the previous locale", async () => {

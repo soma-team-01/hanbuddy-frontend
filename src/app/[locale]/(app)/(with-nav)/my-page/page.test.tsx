@@ -1,45 +1,20 @@
-import { render, screen } from "@testing-library/react";
-import { cookies } from "next/headers";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { redirect } from "next/navigation";
+import { describe, expect, it, vi } from "vitest";
 import MyPage from "./page";
 
-vi.mock("next/headers", () => ({
-  cookies: vi.fn(),
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(),
 }));
 
-vi.mock("./tourist-my-page", () => ({
-  TouristMyPage: () => <p>Tourist My Page Screen</p>,
-}));
-
-vi.mock("./buddy-my-page", () => ({
-  BuddyMyPage: () => <p>Buddy My Page Screen</p>,
-}));
-
-const mockedCookies = vi.mocked(cookies);
-
-function stubUserTypeCookie(value?: string) {
-  mockedCookies.mockResolvedValue({
-    get: (name: string) =>
-      name === AUTH_COOKIES.userType && value !== undefined ? { name, value } : undefined,
-  } as Awaited<ReturnType<typeof cookies>>);
-}
+const mockedRedirect = vi.mocked(redirect);
 
 describe("MyPage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it.each([
-    ["TOURIST", "Tourist My Page Screen"],
-    ["BUDDY", "Buddy My Page Screen"],
-    [undefined, "Tourist My Page Screen"],
-    ["ADMIN", "Tourist My Page Screen"],
-  ])("renders the role screen for %s", async (userType, expectedScreen) => {
-    stubUserTypeCookie(userType);
+    ["en", "/en/my-page/profile"],
+    ["ko", "/ko/my-page/profile"],
+  ])("redirects the legacy %s route to the profile", async (locale, expectedPath) => {
+    await MyPage({ params: Promise.resolve({ locale }) });
 
-    render(await MyPage());
-
-    expect(screen.getByText(expectedScreen)).toBeInTheDocument();
+    expect(mockedRedirect).toHaveBeenCalledWith(expectedPath);
   });
 });

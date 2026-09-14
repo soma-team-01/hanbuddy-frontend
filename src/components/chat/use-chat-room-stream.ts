@@ -1,46 +1,140 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { openChatRoomStream } from "@/lib/chat/stomp-client";
+import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
+import { openChatRoomStream, type ChatStreamStatus } from "@/lib/chat/stomp-client";
 import { chatKeys } from "@/lib/query/chat";
+import type { ContentLanguage } from "@/types/content-language";
 import type {
   ChatMessagePageResponse,
   ChatMessageResponse,
   ChatReadEvent,
   ChatRoomDetailResponse,
+  ChatTranslationEvent,
 } from "@/types/chat";
+
+const TRANSLATION_REFRESH_DELAY_MS = 300;
 
 /**
  * 열려 있는 채팅방의 실시간 구독.
- * 연결되면 폴링을 멈추고, 끊기면 다시 폴링으로 돌아가도록 연결 상태를 돌려준다.
+ * 연결이 끊기면 제한된 횟수만 자동 재시도하고, 실패 후에는 사용자가 직접 다시 시도한다.
  */
-export function useChatRoomStream(chatRoomId: string) {
+export function useChatRoomStream(chatRoomId: string, language: ContentLanguage) {
   const queryClient = useQueryClient();
-  const [connected, setConnected] = useState(false);
+  const [connection, setConnection] = useState<{
+    chatRoomId: string;
+    status: ChatStreamStatus;
+  }>({ chatRoomId, status: "connecting" });
+  const [retryVersion, setRetryVersion] = useState(0);
 
   useEffect(() => {
+    let translationRefreshTimer: ReturnType<typeof setTimeout> | null = null;
     const close = openChatRoomStream(chatRoomId, {
       onMessage: (message) => {
         queryClient.setQueryData<ChatMessagePageResponse>(
-          chatKeys.latestMessages(chatRoomId),
+          chatKeys.latestMessages(chatRoomId, language),
           (current) => appendMessage(current, message),
         );
         // 목록의 마지막 메시지·안 읽은 수를 갱신한다
         void queryClient.invalidateQueries({ queryKey: chatKeys.rooms() });
+        // 기본 메시지 이벤트에는 번역이 없으므로 짧게 모아 최신 페이지를 다시 조회한다.
+        // 조회가 캐시 미스를 만들면 백엔드가 지연 번역을 시작한다.
+        if (translationRefreshTimer !== null) clearTimeout(translationRefreshTimer);
+        translationRefreshTimer = setTimeout(() => {
+          translationRefreshTimer = null;
+          void queryClient.invalidateQueries({
+            queryKey: chatKeys.latestMessages(chatRoomId, language),
+          });
+        }, TRANSLATION_REFRESH_DELAY_MS);
+      },
+      onTranslation: (event) => {
+        queryClient.setQueryData<ChatMessagePageResponse>(
+          chatKeys.latestMessages(chatRoomId, language),
+          (current) => applyTranslationEvent(current, event, language),
+        );
+        queryClient.setQueriesData<InfiniteData<ChatMessagePageResponse>>(
+          { queryKey: [...chatKeys.messages(chatRoomId, language), "history"] },
+          (current) => applyTranslationToHistory(current, event, language),
+        );
+        // 방 목록 미리보기도 이미 생성된 번역 캐시를 다시 읽게 한다.
+        void queryClient.invalidateQueries({ queryKey: chatKeys.rooms() });
       },
       onRead: (event) => {
-        queryClient.setQueryData<ChatRoomDetailResponse>(chatKeys.room(chatRoomId), (current) =>
-          applyReadEvent(current, event),
+        queryClient.setQueryData<ChatRoomDetailResponse>(
+          chatKeys.room(chatRoomId, language),
+          (current) => applyReadEvent(current, event),
         );
       },
-      onConnectedChange: setConnected,
+      onStatusChange: (status) => {
+        setConnection({ chatRoomId, status });
+        if (status === "connected") {
+          // REST 조회와 구독 시작 사이 또는 재연결 중 놓친 메시지·읽음 위치를 한 번 맞춘다
+          void Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: chatKeys.latestMessages(chatRoomId, language),
+            }),
+            queryClient.invalidateQueries({ queryKey: chatKeys.room(chatRoomId, language) }),
+          ]);
+        }
+      },
     });
 
-    return close;
-  }, [chatRoomId, queryClient]);
+    return () => {
+      if (translationRefreshTimer !== null) clearTimeout(translationRefreshTimer);
+      close();
+    };
+  }, [chatRoomId, language, queryClient, retryVersion]);
 
-  return connected;
+  const retry = useCallback(() => {
+    setConnection({ chatRoomId, status: "connecting" });
+    setRetryVersion((current) => current + 1);
+  }, [chatRoomId]);
+
+  return {
+    status: connection.chatRoomId === chatRoomId ? connection.status : "connecting",
+    retry,
+  };
+}
+
+/** 현재 화면 언어로 도착한 번역만 해당 메시지에 합친다. 원문은 그대로 보존한다. */
+export function applyTranslationEvent(
+  current: ChatMessagePageResponse | undefined,
+  event: ChatTranslationEvent,
+  language: ContentLanguage,
+): ChatMessagePageResponse | undefined {
+  if (!current || event.contentLanguage !== language) return current;
+  const targetIndex = current.messages.findIndex(
+    (message) => message.messageId === event.messageId,
+  );
+  if (targetIndex < 0) return current;
+
+  return {
+    ...current,
+    messages: current.messages.map((message, index) =>
+      index === targetIndex
+        ? {
+            ...message,
+            content: event.content,
+            sourceLanguage: event.sourceLanguage,
+            contentLanguage: event.contentLanguage,
+          }
+        : message,
+    ),
+  };
+}
+
+/** 과거 페이지에서 시작된 번역 이벤트도 현재 화면에 바로 반영한다. */
+export function applyTranslationToHistory(
+  current: InfiniteData<ChatMessagePageResponse> | undefined,
+  event: ChatTranslationEvent,
+  language: ContentLanguage,
+): InfiniteData<ChatMessagePageResponse> | undefined {
+  if (!current || event.contentLanguage !== language) return current;
+
+  return {
+    ...current,
+    pages: current.pages.map((page) => applyTranslationEvent(page, event, language) ?? page),
+  };
 }
 
 /** 최신 묶음 앞에 새 메시지를 끼운다. 내가 보낸 메시지는 REST 응답으로 이미 들어와 있을 수 있다 */

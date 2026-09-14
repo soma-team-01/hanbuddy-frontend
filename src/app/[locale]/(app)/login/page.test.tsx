@@ -1,7 +1,8 @@
 import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithIntl } from "@/test/render-with-intl";
 import LoginPage, { generateMetadata } from "./page";
 
@@ -36,6 +37,15 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
+}));
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 async function renderLogin(locale: Locale, searchParams: { error?: string | string[] } = {}) {
   renderWithIntl(
     await LoginPage({
@@ -47,6 +57,42 @@ async function renderLogin(locale: Locale, searchParams: { error?: string | stri
 }
 
 describe("LoginPage", () => {
+  it("keeps email login hidden when review login is not enabled", async () => {
+    await renderLogin("en");
+
+    expect(screen.queryByRole("region", { name: "Log in with email" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  });
+
+  it("shows email login only when review login is explicitly enabled", async () => {
+    vi.stubEnv("REVIEW_LOGIN_ENABLED", "true");
+
+    await renderLogin("en");
+
+    expect(screen.getByRole("region", { name: "Log in with email" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Log in with email" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
+    const emailLoginButton = screen.getByRole("button", { name: "Log in" });
+    const googleLoginLink = screen.getByRole("link", { name: "Continue with Google" });
+
+    expect(emailLoginButton).toBeEnabled();
+    expect(
+      emailLoginButton.compareDocumentPosition(googleLoginLink) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(googleLoginLink).toHaveClass("bg-white", "border-line-strong", "text-ink");
+    expect(screen.queryByText("or")).not.toBeInTheDocument();
+  });
+
+  it("keeps Google login as the primary action when review login is disabled", async () => {
+    await renderLogin("en");
+
+    expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
+  });
+
   it.each([
     [
       "en",
@@ -69,7 +115,15 @@ describe("LoginPage", () => {
 
       expect(screen.getByRole("main")).toHaveClass("w-full");
       expect(screen.getByRole("heading", { name: heading })).toHaveClass("font-display");
-      expect(screen.getByText(policy)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: policy })).toHaveAttribute(
+        "href",
+        `/${locale}/policies/privacy-policy`,
+      );
+      expect(
+        screen.getByRole("link", {
+          name: locale === "ko" ? "이용약관" : "Terms of Service",
+        }),
+      ).toHaveAttribute("href", `/${locale}/policies/terms-of-service`);
       expect(screen.getByText(visualCaption)).toBeInTheDocument();
       expect(screen.getAllByRole("figure")).toHaveLength(4);
       const googleLoginLink = screen.getByRole("link", { name: action });
@@ -110,15 +164,6 @@ describe("LoginPage", () => {
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/login",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/login",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "/login");
   });
 });

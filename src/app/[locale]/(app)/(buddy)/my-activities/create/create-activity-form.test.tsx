@@ -10,6 +10,11 @@ import {
 } from "@/lib/google/places";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
 import { buildDraftFromMyActivityDetail, EMPTY_ACTIVITY_DRAFT } from "./activity-create-wizard";
+import {
+  clearActivityCreateDraft,
+  loadActivityCreateDraft,
+  saveActivityCreateDraft,
+} from "./activity-create-draft-storage";
 import { buildActivityUpsertRequest, CreateActivityForm } from "./create-activity-form";
 
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -33,9 +38,13 @@ vi.mock("@/lib/google/places", async (importOriginal) => ({
   ]),
   fetchGooglePlaceDetailsViaBff: vi.fn().mockResolvedValue({
     formattedAddress: "88 Changgyeonggung-ro, Jongno-gu, Seoul",
+    latitude: 37.5701,
+    longitude: 126.9996,
   }),
   fetchGooglePlaceDetails: vi.fn().mockResolvedValue({
     formattedAddress: "88 Changgyeonggung-ro, Jongno-gu, Seoul",
+    latitude: 37.5701,
+    longitude: 126.9996,
   }),
 }));
 
@@ -53,8 +62,20 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
 vi.mock("@/lib/api/useMyProfile", () => ({
   useMyProfile: () => ({
     status: "success",
-    profile: { name: "Jihoon Kim", profileImageUrl: null },
+    profile: {
+      userId: 17,
+      name: "Jihoon Kim",
+      displayName: "Seoul Buddy",
+      profileImageUrl: null,
+    },
   }),
+}));
+
+vi.mock("./activity-create-draft-storage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./activity-create-draft-storage")>()),
+  clearActivityCreateDraft: vi.fn().mockResolvedValue(undefined),
+  loadActivityCreateDraft: vi.fn().mockResolvedValue(null),
+  saveActivityCreateDraft: vi.fn().mockResolvedValue(undefined),
 }));
 
 const mockedUsePathname = vi.mocked(usePathname);
@@ -64,6 +85,9 @@ const mockedFetchGooglePlaceDetails = vi.mocked(fetchGooglePlaceDetailsViaBff);
 const mockedUploadActivityImageSet = vi.mocked(uploadActivityImageSet);
 const mockedCreateMyActivity = vi.mocked(createMyActivity);
 const mockedUpdateMyActivity = vi.mocked(updateMyActivity);
+const mockedClearActivityCreateDraft = vi.mocked(clearActivityCreateDraft);
+const mockedLoadActivityCreateDraft = vi.mocked(loadActivityCreateDraft);
+const mockedSaveActivityCreateDraft = vi.mocked(saveActivityCreateDraft);
 
 const createObjectUrlMock = vi.fn((file: Blob) =>
   file instanceof File ? `blob:${file.name}` : "blob:preview",
@@ -207,12 +231,19 @@ describe("CreateActivityForm", () => {
     );
     mockedUpdateMyActivity.mockReset();
     mockedCreateMyActivity.mockReset();
+    mockedClearActivityCreateDraft.mockReset();
+    mockedClearActivityCreateDraft.mockResolvedValue(undefined);
+    mockedLoadActivityCreateDraft.mockReset();
+    mockedLoadActivityCreateDraft.mockResolvedValue(null);
+    mockedSaveActivityCreateDraft.mockReset();
+    mockedSaveActivityCreateDraft.mockResolvedValue(undefined);
     mockedCreateMyActivity.mockResolvedValue({
       status: "success",
       activity: {
         activityId: 1,
         title: "Seoul market walk",
         description: "Meet local vendors and taste a neighborhood breakfast together.",
+        totalDurationMinutes: 0,
         hostIntroduction: "I have guided friends through this market for years.",
         thumbnailImageUrl: "https://cdn.example.test/key-0.webp",
         includedItems: ["Equipment rental"],
@@ -268,6 +299,90 @@ describe("CreateActivityForm", () => {
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
   });
 
+  it("restores the saved step and fields after the form remounts", async () => {
+    const restoredFile = new File([new Uint8Array([1])], "restored.webp", {
+      type: "image/webp",
+    });
+    mockedLoadActivityCreateDraft.mockResolvedValue({
+      snapshot: {
+        currentStep: "photos",
+        furthestStepIndex: 3,
+        draft: {
+          ...EMPTY_ACTIVITY_DRAFT,
+          hostIntroduction: "I have guided sports fans around Seoul for many years.",
+          experienceName: "Seoul stadium night",
+          photos: [
+            {
+              id: "restored-photo",
+              file: restoredFile,
+              previewUrl: "blob:restored.webp",
+            },
+          ],
+        },
+        errorKey: null,
+        reviewing: false,
+        fileSequence: 4,
+        scheduleSequence: 2,
+      },
+      objectUrls: new Set(["blob:restored.webp"]),
+    });
+
+    renderWithQueryClient(<CreateActivityForm />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Show what guests can expect" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Experience photo 1" })).toHaveAttribute(
+      "src",
+      "blob:restored.webp",
+    );
+    expect(mockedLoadActivityCreateDraft).toHaveBeenCalledWith("create");
+    await waitFor(() =>
+      expect(mockedSaveActivityCreateDraft).toHaveBeenCalledWith(
+        "create",
+        expect.objectContaining({
+          currentStep: "photos",
+          furthestStepIndex: 3,
+          fileSequence: 4,
+          scheduleSequence: 2,
+          draft: expect.objectContaining({
+            photos: [expect.objectContaining({ file: restoredFile })],
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("saves changed fields for refresh recovery", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await waitFor(() => expect(mockedLoadActivityCreateDraft).toHaveBeenCalledWith("create"));
+
+    fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
+      target: { value: "I have guided sports fans around Seoul for many years." },
+    });
+
+    await waitFor(() =>
+      expect(mockedSaveActivityCreateDraft).toHaveBeenCalledWith(
+        "create",
+        expect.objectContaining({
+          currentStep: "host",
+          draft: expect.objectContaining({
+            hostIntroduction: "I have guided sports fans around Seoul for many years.",
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("discards the saved draft when browser history leaves the form", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await waitFor(() => expect(mockedLoadActivityCreateDraft).toHaveBeenCalledWith("create"));
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+
+    expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("create");
+  });
+
   it("keeps the current step and shows guidance when a required value is missing", () => {
     renderWithQueryClient(<CreateActivityForm />);
 
@@ -303,7 +418,7 @@ describe("CreateActivityForm", () => {
       "Seoul stadium night",
     );
 
-    fireEvent.click(screen.getByRole("link", { name: "Exit" }));
+    window.dispatchEvent(new PopStateEvent("popstate"));
   });
 
   it("starts directly with the host introduction step", () => {
@@ -381,6 +496,13 @@ describe("CreateActivityForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const editItineraryButton = screen.getByRole("button", { name: "Edit activity 1" });
+    const removeItineraryButton = screen.getByRole("button", { name: "Remove activity 1" });
+    const itineraryActions = editItineraryButton.parentElement;
+    expect(itineraryActions).not.toBeNull();
+    expect(itineraryActions?.querySelectorAll("svg")).toHaveLength(2);
+    expect(editItineraryButton.querySelector("svg")).toHaveClass("size-4");
+    expect(removeItineraryButton.querySelector("svg")).toHaveClass("size-4");
     clickNext();
 
     const meetingPlaceInput = screen.getByRole("textbox", { name: "Meeting place name" });
@@ -479,7 +601,8 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
     expect(screen.getByText("Seoul market walk")).toBeInTheDocument();
     // 미리보기의 호스트는 버디 본인 프로필로 표시된다
-    expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getByText("Host: Seoul Buddy")).toBeInTheDocument();
+    expect(screen.queryByText("Host: Jihoon Kim")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What's included" })).toBeInTheDocument();
     expect(screen.getByText("Equipment rental")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Before you join" })).not.toBeInTheDocument();
@@ -522,6 +645,7 @@ describe("CreateActivityForm", () => {
     ]);
 
     expect(mockedCreateMyActivity).toHaveBeenCalledWith({
+      sourceLanguage: "EN",
       title: "Seoul market walk",
       description: "Meet local vendors and taste a neighborhood breakfast together.",
       hostIntroduction: "I have guided friends through this market for years.",
@@ -537,6 +661,8 @@ describe("CreateActivityForm", () => {
       currency: "KRW",
       meetingPointName: "Gwangjang Market Gate 2",
       meetingPlaceId: "ChIJ-gwangjang",
+      meetingLatitude: 37.5701,
+      meetingLongitude: 126.9996,
       status: "ACTIVE",
       schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00` }],
       itineraries: [
@@ -553,6 +679,7 @@ describe("CreateActivityForm", () => {
     expect(request).not.toHaveProperty("discountEndDate");
 
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
+    expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("create");
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities");
   });
 
@@ -655,8 +782,10 @@ describe("CreateActivityForm", () => {
   function buildEditDetail(): MyActivityDetailResponse {
     return {
       activityId: 42,
+      sourceLanguage: "KO",
       title: "Seoul market walk",
       description: "Meet local vendors and taste a neighborhood breakfast together.",
+      totalDurationMinutes: 60,
       thumbnailImageUrl: "https://cdn.example.test/activities/cover.webp",
       status: "ACTIVE",
       hostIntroduction: "I have guided friends through this market for years.",
@@ -703,6 +832,7 @@ describe("CreateActivityForm", () => {
         activityId="42"
         initialDraft={buildDraftFromMyActivityDetail(detail)}
         initialStatus={detail.status}
+        initialSourceLanguage={detail.sourceLanguage}
       />,
     );
   }
@@ -725,6 +855,7 @@ describe("CreateActivityForm", () => {
     const [calledActivityId, request] = mockedUpdateMyActivity.mock.calls[0];
     expect(calledActivityId).toBe("42");
     expect(request).toMatchObject({
+      sourceLanguage: "KO",
       title: "Seoul market walk",
       hostIntroduction: "I have guided friends through this market for years.",
       imageKeys: ["activities/cover.webp", "activities/two.webp", "activities/three.webp"],
@@ -749,6 +880,36 @@ describe("CreateActivityForm", () => {
     expect(request).not.toHaveProperty("discountPercent");
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+  });
+
+  it("saves from any step in edit mode without walking to the review screen", async () => {
+    const detail = buildEditDetail();
+    mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+
+    renderEditForm(detail);
+
+    // 리뷰에서 첫 단계로 돌아가면 단계 전용 저장 버튼이 생긴다
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(
+      screen.queryByRole("heading", { name: "Preview your experience" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
+    const [calledActivityId, request] = mockedUpdateMyActivity.mock.calls[0];
+    expect(calledActivityId).toBe("42");
+    expect(request).toMatchObject({ title: "Seoul market walk", status: "ACTIVE" });
+    await waitFor(() => expect(routerPush).toHaveBeenCalled());
+    expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+  });
+
+  it("keeps the per-step save away from create mode", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+
+    // 생성 모드 첫 단계에는 다음 버튼만 있다
+    expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
   });
 
   it("uploads only newly added photos in edit mode and appends their keys", async () => {
@@ -799,28 +960,56 @@ describe("buildActivityUpsertRequest", () => {
     hostIntroduction: "I have guided friends through this market for years.",
     meetingPlace: "Gwangjang Market Gate 2",
     meetingPlaceId: "ChIJ-gwangjang",
+    meetingLatitude: 37.5701,
+    meetingLongitude: 126.9996,
     maxGuests: "4",
     pricePerPerson: "50000",
     inclusions: "Breakfast tasting",
     hasNoRestrictions: true,
   };
 
+  function createSchedules(count: number) {
+    return Array.from({ length: count }, (_, index) => {
+      const date = new Date(Date.UTC(2099, 0, index + 1)).toISOString().slice(0, 10);
+      return { id: `schedule-${index}`, date, startTime: "10:00" };
+    });
+  }
+
   it("submits edited dates together with the past ones it must keep", () => {
+    const schedules = createSchedules(31);
     const request = buildActivityUpsertRequest(
       {
         ...baseDraft,
-        schedules: [{ id: "new", date: "2099-07-20", startTime: "10:00" }],
+        schedules,
         retainedScheduleStartAts: ["2020-01-01T10:00:00+09:00"],
       },
       [],
       [],
+      "EN",
     );
 
     // 지난 일정이 빠지면 백엔드가 삭제로 보고, 신청 내역이 있으면 수정을 거절한다
-    expect(request.schedules).toEqual([
-      { startAt: "2099-07-20T10:00:00+09:00" },
-      { startAt: "2020-01-01T10:00:00+09:00" },
-    ]);
+    expect(request.schedules).toHaveLength(32);
+    expect(request.schedules.slice(0, 31)).toEqual(
+      schedules.map(({ date, startTime }) => ({
+        startAt: `${date}T${startTime}:00+09:00`,
+      })),
+    );
+    expect(request.schedules.at(-1)).toEqual({ startAt: "2020-01-01T10:00:00+09:00" });
+    expect(request).toMatchObject({
+      meetingLatitude: 37.5701,
+      meetingLongitude: 126.9996,
+    });
+  });
+
+  it("submits all 100 future schedules without truncation", () => {
+    const schedules = createSchedules(100);
+    const request = buildActivityUpsertRequest({ ...baseDraft, schedules }, [], [], "EN");
+
+    expect(request.schedules).toHaveLength(100);
+    expect(request.schedules.at(-1)).toEqual({
+      startAt: `${schedules.at(-1)?.date}T10:00:00+09:00`,
+    });
   });
 
   it("does not send the same moment twice", () => {
@@ -832,8 +1021,28 @@ describe("buildActivityUpsertRequest", () => {
       },
       [],
       [],
+      "EN",
     );
 
     expect(request.schedules).toHaveLength(1);
+  });
+
+  it("rounds Google meeting coordinates to the backend precision", () => {
+    const request = buildActivityUpsertRequest(
+      {
+        ...baseDraft,
+        meetingLatitude: 37.566535123,
+        meetingLongitude: 126.977964987,
+      },
+      [],
+      [],
+      "EN",
+    );
+
+    expect(request).toMatchObject({
+      sourceLanguage: "EN",
+      meetingLatitude: 37.566535,
+      meetingLongitude: 126.977965,
+    });
   });
 });

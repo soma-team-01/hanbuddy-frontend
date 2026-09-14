@@ -11,7 +11,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MessageSquareIcon, XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
+import { getContentLanguage } from "@/lib/content-language";
+import { getDefaultDisplayCurrency } from "@/lib/display-currency";
+import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { buddyProfileQueryOptions, buddyReviewsQueryOptions } from "@/lib/query/reviews";
 import type { Host } from "@/types/activity";
@@ -27,7 +30,7 @@ export function HostProfileDialog({
   host,
   hostIntroduction,
   currentActivityId,
-  /** 버디 미리보기·등록 검토처럼 실제 목록을 조회할 수 없는 화면에서는 목록을 숨긴다 */
+  /** 버디 식별자를 알 수 없는 화면에서는 호스팅 중인 활동 목록을 숨길 수 있다 */
   showHostedActivities = true,
   /** 버디 본인이 자기 화면을 미리 볼 때는 자신에게 말을 걸 수 없다 */
   canContact = true,
@@ -40,14 +43,16 @@ export function HostProfileDialog({
   canContact?: boolean;
   onClose: () => void;
 }>) {
-  const locale = useLocale();
+  const locale = getLocaleOrDefault(useLocale());
+  const language = getContentLanguage(locale);
   const t = useTranslations("ActivityDetail");
+  const tExplore = useTranslations("Explore");
   const tReviews = useTranslations("Reviews");
   const tChat = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const activitiesQuery = useQuery({
-    ...touristActivitiesQueryOptions(),
+    ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
     enabled: showHostedActivities,
   });
 
@@ -63,7 +68,7 @@ export function HostProfileDialog({
     enabled: hasBuddyId,
   });
   const reviewsQuery = useInfiniteQuery({
-    ...buddyReviewsQueryOptions(buddyId ?? NO_BUDDY_ID),
+    ...buddyReviewsQueryOptions(buddyId ?? NO_BUDDY_ID, language),
     enabled: hasBuddyId,
   });
 
@@ -89,6 +94,30 @@ export function HostProfileDialog({
   const sentinelRef = useInfiniteScrollSentinel(() => {
     void reviewsQuery.fetchNextPage();
   }, canLoadMoreReviews);
+
+  let contactAction = null;
+  if (hasBuddyId && canContact) {
+    contactAction = (
+      <StartChatButton
+        target={{ kind: "direct", targetUserId: buddyId }}
+        label={tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
+        icon={<MessageSquareIcon className="size-4" />}
+        onOpened={onClose}
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
+      />
+    );
+  } else if (hasBuddyId) {
+    contactAction = (
+      <button
+        type="button"
+        disabled
+        className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary opacity-60"
+      >
+        <MessageSquareIcon className="size-4" />
+        {tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
+      </button>
+    );
+  }
 
   return (
     <dialog
@@ -131,15 +160,7 @@ export function HostProfileDialog({
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 md:p-7">
-        {canContact && hasBuddyId ? (
-          <StartChatButton
-            target={{ kind: "direct", targetUserId: buddyId }}
-            label={tChat("contactBuddy", { name: profile?.buddyName ?? host.name })}
-            icon={<MessageSquareIcon className="size-4" />}
-            onOpened={onClose}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
-          />
-        ) : null}
+        {contactAction}
 
         {hostIntroduction ? (
           <p className="mt-5 text-sm leading-7 whitespace-pre-line text-ink">{hostIntroduction}</p>
@@ -147,11 +168,7 @@ export function HostProfileDialog({
 
         {showHostedActivities ? (
           <section
-            className={
-              hostIntroduction || (canContact && hasBuddyId)
-                ? "mt-6 border-t border-line-soft pt-5"
-                : ""
-            }
+            className={hostIntroduction || hasBuddyId ? "mt-6 border-t border-line-soft pt-5" : ""}
           >
             <h3 className="font-display text-sm font-bold text-ink">{t("hostedActivities")}</h3>
             {activitiesQuery.isPending ? (
@@ -161,35 +178,58 @@ export function HostProfileDialog({
               <p className="mt-3 text-sm text-muted">{t("noOtherActivities")}</p>
             ) : null}
             <ul className="mt-3 flex flex-col gap-2">
-              {hostedActivities.map((activity) => (
-                <li key={activity.activityId}>
-                  <Link
-                    href={`/activities/${activity.activityId}`}
-                    onClick={onClose}
-                    className="flex items-center gap-3 rounded-xl border border-line-soft bg-canvas-soft p-2.5 transition-colors hover:border-primary"
-                  >
-                    <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-panel">
-                      <Image
-                        src={activity.thumbnailImageUrl}
-                        alt=""
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="line-clamp-2 block font-display text-sm font-bold text-ink">
-                        {activity.title}
+              {hostedActivities.map((activity) => {
+                const estimatedPriceTitle = activity.displayPrice?.exchangeRateDate
+                  ? tExplore("estimatedPriceWithDate", {
+                      date: activity.displayPrice.exchangeRateDate,
+                    })
+                  : tExplore("estimatedPrice");
+
+                return (
+                  <li key={activity.activityId}>
+                    <Link
+                      href={`/activities/${activity.activityId}`}
+                      onClick={onClose}
+                      className="flex items-center gap-3 rounded-xl border border-line-soft bg-canvas-soft p-2.5 transition-colors hover:border-primary"
+                    >
+                      <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-panel">
+                        <Image
+                          src={activity.thumbnailImageUrl}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
                       </span>
-                      <span className="mt-0.5 block text-xs font-semibold text-primary">
-                        {t("perPerson", {
-                          price: formatKrw(activity.discountedPrice ?? activity.price, locale),
-                        })}
+                      <span className="min-w-0 flex-1">
+                        <span className="line-clamp-2 block font-display text-sm font-bold text-ink">
+                          {activity.title}
+                        </span>
+                        <span className="mt-0.5 block text-xs font-semibold text-primary">
+                          {t("perPerson", {
+                            price: formatKrw(activity.discountedPrice ?? activity.price, locale),
+                          })}
+                        </span>
+                        {activity.displayPrice && activity.displayPrice.currency !== "KRW" ? (
+                          <span
+                            className="block text-xs text-muted"
+                            title={
+                              activity.displayPrice.estimated ? estimatedPriceTitle : undefined
+                            }
+                          >
+                            ≈{" "}
+                            {formatDisplayCurrency(
+                              activity.displayPrice.discountedPrice ?? activity.displayPrice.price,
+                              activity.displayPrice.currency,
+                              locale,
+                            )}
+                          </span>
+                        ) : null}
                       </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ) : null}

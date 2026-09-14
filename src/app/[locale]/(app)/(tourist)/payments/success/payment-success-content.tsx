@@ -11,6 +11,7 @@ import { Link } from "@/i18n/navigation";
 import { confirmApplicationPayment } from "@/lib/api/applications";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { getContentLanguage } from "@/lib/content-language";
 import { formatSeoulDateTime } from "@/lib/datetime";
 import { formatCurrency, formatKrw } from "@/lib/format";
 import { activityKeys } from "@/lib/query/activities";
@@ -25,6 +26,26 @@ interface PaymentSuccessContentProps {
   paymentKey: string;
   orderId: string;
   amount: number | null;
+}
+
+/** 금액과 통화를 항상 같은 결제 기록에서 선택해 서로 다른 통화가 섞이지 않게 한다. */
+function getPaidPayment(application: ApplicationResponse) {
+  if (application.providerPaymentAmount != null && application.providerPaymentCurrency != null) {
+    return {
+      amount: application.providerPaymentAmount,
+      currency: application.providerPaymentCurrency,
+    };
+  }
+  if (application.paymentAmount != null && application.paymentCurrency != null) {
+    return {
+      amount: application.paymentAmount,
+      currency: application.paymentCurrency,
+    };
+  }
+  return {
+    amount: application.totalPrice,
+    currency: application.currency,
+  };
 }
 
 function RecoveryState({ message }: Readonly<{ message: string }>) {
@@ -56,12 +77,12 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
   const tErrors = useTranslations("Errors");
   const scheduleLabel =
     formatSeoulDateTime(application.startAt, locale) ?? tErrors("dateTimeUnavailable");
-  const paidAmount =
-    application.paymentAmount !== null && application.paymentAmount !== undefined
-      ? application.paymentAmount
-      : application.totalPrice;
+  const paidPayment = getPaidPayment(application);
   // 실제 결제 통화로 표기한다 — 원화가 아닌 결제를 ₩로 적으면 금액을 잘못 읽는다
-  const paidCurrency = application.paymentCurrency ?? application.currency;
+  const originalTotalPrice = application.originalTotalPrice ?? application.totalPrice;
+  const discountAmount =
+    application.discountAmount ?? Math.max(0, originalTotalPrice - application.totalPrice);
+  const hasDiscount = discountAmount > 0;
 
   return (
     <PageContainer className="flex flex-1 items-center justify-center py-10 pb-44 md:py-16 lg:pb-16">
@@ -124,35 +145,48 @@ function ConfirmationResult({ application }: Readonly<{ application: Application
           </dl>
 
           <div className="flex items-center justify-between border-t border-line-soft pt-4 text-sm">
-            <span className="text-muted">{t("totalLabel")}</span>
-            <span className="font-semibold text-ink">
-              {formatKrw(application.totalPrice, locale)}
+            <span className="text-muted">
+              {hasDiscount ? t("originalAmountLabel") : t("totalLabel")}
             </span>
+            <span className="font-semibold text-ink">{formatKrw(originalTotalPrice, locale)}</span>
           </div>
+
+          {hasDiscount ? (
+            <div className="flex items-center justify-between text-sm font-semibold text-primary">
+              <span>
+                {application.discountPercent
+                  ? t("discountLabel", { percent: application.discountPercent })
+                  : t("discountAmountLabel")}
+              </span>
+              <span>-{formatKrw(discountAmount, locale)}</span>
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-between border-t border-line-soft pt-4">
             <span className="font-display text-base font-bold text-ink">{t("paidLabel")}</span>
             <span className="font-display text-xl font-bold text-primary">
-              {formatCurrency(paidAmount, paidCurrency, locale)}
+              {formatCurrency(paidPayment.amount, paidPayment.currency, locale)}
             </span>
           </div>
         </section>
-        <BottomActionBar>
-          <div className="flex w-full flex-col gap-2">
-            <Link
-              href="/applications"
-              className="flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-on-primary"
-            >
-              {t("viewApplications")}
-            </Link>
-            <Link
-              href="/explore"
-              className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary"
-            >
-              {t("exploreMore")}
-            </Link>
-          </div>
-        </BottomActionBar>
+        <div className="lg:mt-6">
+          <BottomActionBar>
+            <div className="flex w-full flex-col gap-2">
+              <Link
+                href="/applications"
+                className="flex w-full items-center justify-center rounded-xl bg-primary px-5 py-3.5 text-sm font-bold text-on-primary"
+              >
+                {t("viewApplications")}
+              </Link>
+              <Link
+                href="/explore"
+                className="flex w-full items-center justify-center rounded-xl border border-primary px-5 py-3 text-sm font-bold text-primary"
+              >
+                {t("exploreMore")}
+              </Link>
+            </div>
+          </BottomActionBar>
+        </div>
       </main>
     </PageContainer>
   );
@@ -165,17 +199,22 @@ export function PaymentSuccessContent({
   amount,
 }: Readonly<PaymentSuccessContentProps>) {
   const queryClient = useQueryClient();
+  const language = getContentLanguage(useLocale());
   const t = useTranslations("Payment");
   const getApiErrorMessage = useApiErrorMessage();
   const hasConfirmParams = paymentKey.length > 0 && orderId.length > 0 && amount !== null;
   const confirmMutation = useMutation({
     mutationFn: async () =>
       unwrapApiResult(
-        await confirmApplicationPayment(applicationId, {
-          paymentKey,
-          orderId,
-          amount: amount ?? 0,
-        }),
+        await confirmApplicationPayment(
+          applicationId,
+          {
+            paymentKey,
+            orderId,
+            amount: amount ?? 0,
+          },
+          language,
+        ),
         "application",
       ),
     onSuccess: async () => {
@@ -188,7 +227,7 @@ export function PaymentSuccessContent({
   });
   const confirmStartedRef = useRef(false);
   const applicationsQuery = useQuery({
-    ...myApplicationsQueryOptions(),
+    ...myApplicationsQueryOptions(language),
     enabled: applicationId.length > 0 && !hasConfirmParams,
   });
   useAuthQueryRedirect(applicationsQuery.error ?? confirmMutation.error);

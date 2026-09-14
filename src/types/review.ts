@@ -1,13 +1,23 @@
+import type { ResolvedContentLanguage } from "./content-language";
+
 export interface ReviewResponse {
   reviewId: number;
   applicationId: number;
   activityId: number;
   activityTitle: string;
+  activityTitleLanguage: ResolvedContentLanguage;
   reviewerName: string;
   reviewerProfileImageUrl: string | null;
   /** 1~5 정수 */
   rating: number;
+  /** 현재 요청 언어의 번역본. 번역이 없으면 원문 */
   content: string;
+  /** content에 실제 적용된 언어 */
+  contentLanguage: ResolvedContentLanguage;
+  /** 백엔드가 판별한 저장 원문의 언어 */
+  sourceLanguage: ResolvedContentLanguage;
+  /** 수정과 원문 보기에 사용하는 저장 원문 */
+  originalContent: string;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   createdAt: string;
 }
@@ -17,7 +27,12 @@ export interface MyReviewResponse {
   reviewId: number;
   /** 1~5 정수 */
   rating: number;
+  /** 현재 요청 언어의 번역본. 번역이 없으면 원문 */
   content: string;
+  contentLanguage: ResolvedContentLanguage;
+  sourceLanguage: ResolvedContentLanguage;
+  /** 수정과 원문 보기에 사용하는 저장 원문 */
+  originalContent: string;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   createdAt: string;
 }

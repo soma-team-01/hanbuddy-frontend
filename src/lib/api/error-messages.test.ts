@@ -17,8 +17,17 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(61);
+    expect(BACKEND_ERROR_CODES).toHaveLength(70);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
+  });
+
+  it("maps activity visibility conflicts and invalid transitions", () => {
+    expect(resolveApiErrorMessageKey(apiError("ACTIVITY400_STATUS", 400))).toBe(
+      "activityStatusInvalid",
+    );
+    expect(resolveApiErrorMessageKey(apiError("ACTIVITY409_UNFINISHED_RESERVATIONS", 409))).toBe(
+      "activityUnfinishedReservations",
+    );
   });
 
   it("maps review errors to their own messages", () => {
@@ -43,6 +52,15 @@ describe("API error message registry", () => {
     );
   });
 
+  it("distinguishes duplicate schedules from overlapping reservations", () => {
+    expect(resolveApiErrorMessageKey(apiError("APPLICATION409_SAME_SCHEDULE", 409))).toBe(
+      "applicationSameSchedule",
+    );
+    expect(resolveApiErrorMessageKey(apiError("APPLICATION409_TIME_CONFLICT", 409))).toBe(
+      "applicationTimeConflict",
+    );
+  });
+
   it("tells the three payment conflicts apart so retries are safe", () => {
     expect(resolveApiErrorMessageKey(apiError("PAYMENT409_DUPLICATE", 409))).toBe(
       "paymentAlreadyCreated",
@@ -63,6 +81,18 @@ describe("API error message registry", () => {
     ]) {
       expect(resolveApiErrorMessageKey(apiError(code, 502))).toBe("paymentServiceUnavailable");
     }
+  });
+
+  it("maps provider availability and PayPal processing failures to safe retry guidance", () => {
+    expect(resolveApiErrorMessageKey(apiError("PAYMENT503_PROVIDER", 503))).toBe(
+      "paymentProviderUnavailable",
+    );
+    expect(resolveApiErrorMessageKey(apiError("PAYMENT502_PAYPAL_ORDER_CREATE", 502))).toBe(
+      "paypalOrderCreateFailed",
+    );
+    expect(resolveApiErrorMessageKey(apiError("PAYMENT502_PAYPAL_CAPTURE", 502))).toBe(
+      "paypalCaptureFailed",
+    );
   });
 
   it("prefers a known code over its HTTP category", () => {

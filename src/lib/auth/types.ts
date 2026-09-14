@@ -1,12 +1,11 @@
 export type UserType = "TOURIST" | "BUDDY" | "ADMIN";
-export type ContactMethod = "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
+export type ContactMethod = "WHATSAPP" | "LINE" | "WECHAT" | "PHONE" | "KAKAOTALK" | "INSTAGRAM";
 export type SignupAgreementType =
   | "ADULT_CONFIRMATION"
   | "TERMS_OF_SERVICE"
   | "PRIVACY_COLLECTION_USE"
   | "BUDDY_OPERATION_TERMS"
   | "BUDDY_COMMISSION_POLICY"
-  | "BUDDY_PROFILE_CONTACT_PROVISION"
   | "MARKETING_COMMUNICATION";
 export type AuthStatus =
   "ONBOARDING_REQUIRED" | "PENDING_APPROVAL" | "ACTIVE" | "REJECTED" | "SUSPENDED";
@@ -39,7 +38,49 @@ export interface GoogleLoginResponse {
   userType?: UserType;
   accessToken?: string;
   signupToken?: string;
+  resubmissionToken?: string;
   googleProfile?: GoogleProfile;
+}
+
+export interface GoogleLoginRequest {
+  code: string;
+  redirectUri: string;
+}
+
+export interface ReviewLoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface ReviewLoginRedirect {
+  redirectTo: string;
+}
+
+export interface BuddyResubmission {
+  userId: number;
+  email: string;
+  name: string;
+  displayName: string;
+  profileImageKey: string | null;
+  profileImageUrl: string | null;
+  nationalityCode: string;
+  birthDate: string;
+  contactMethod: ContactMethod;
+  contactCountryCode: string | null;
+  contactIdentifier: string;
+  accountStatus: "REJECTED" | "PENDING_APPROVAL";
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+}
+
+export interface BuddyResubmissionRequest {
+  displayName: string;
+  profileImageKey: string | null;
+  nationalityCode: string;
+  birthDate: string;
+  contactMethod: ContactMethod;
+  contactCountryCode: string;
+  contactIdentifier: string;
 }
 
 export interface GoogleSignupRequest {

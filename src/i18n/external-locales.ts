@@ -3,6 +3,9 @@ import type { Locale } from "./routing";
 const EXTERNAL_LOCALES = {
   en: { googleLanguage: "en", googleRegion: "KR" },
   ko: { googleLanguage: "ko", googleRegion: "KR" },
+  ja: { googleLanguage: "ja", googleRegion: "KR" },
+  "zh-Hans": { googleLanguage: "zh-CN", googleRegion: "KR" },
+  "zh-Hant": { googleLanguage: "zh-TW", googleRegion: "KR" },
 } as const;
 
 export function getExternalLocales(locale: Locale) {

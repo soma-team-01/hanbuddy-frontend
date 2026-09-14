@@ -3,6 +3,7 @@ import { appendBackendSetCookies, createProxyErrorResponse, postBackend } from "
 import {
   clearAuthenticatedSessionCookies,
   clearAuthStatusReasonCookie,
+  clearResubmissionCookie,
   clearSignupCookies,
 } from "@/lib/auth/cookies";
 
@@ -17,6 +18,7 @@ export async function POST(request: NextRequest) {
     appendBackendSetCookies(response, backend.setCookies);
     clearAuthenticatedSessionCookies(response);
     clearAuthStatusReasonCookie(response);
+    clearResubmissionCookie(response);
     clearSignupCookies(response);
     return response;
   } catch {
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
     );
     clearAuthenticatedSessionCookies(response);
     clearAuthStatusReasonCookie(response);
+    clearResubmissionCookie(response);
     clearSignupCookies(response);
     return response;
   }

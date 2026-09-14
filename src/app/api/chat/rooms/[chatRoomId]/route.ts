@@ -5,6 +5,7 @@ import {
   proxyAuthenticatedPatch,
   readJsonBody,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import { isValidChatRoomId, normalizeChatRoomTitle } from "@/app/api/_utils/chat-input";
 import type { ChatRoomDetailResponse, UpdateChatRoomTitleRequest } from "@/types/chat";
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, context: ChatRoomRouteContext) {
 
   return proxyAuthenticatedGet<ChatRoomDetailResponse>(
     request,
-    `/chat/rooms/${chatRoomId}`,
+    appendRequestedContentLanguage(request, `/chat/rooms/${chatRoomId}`),
     "채팅 서버에 연결할 수 없습니다.",
   );
 }
@@ -43,7 +44,7 @@ export async function PATCH(request: NextRequest, context: ChatRoomRouteContext)
 
   return proxyAuthenticatedPatch<UpdateChatRoomTitleRequest, ChatRoomDetailResponse>(
     request,
-    `/chat/rooms/${chatRoomId}`,
+    appendRequestedContentLanguage(request, `/chat/rooms/${chatRoomId}`),
     { title },
     "채팅 서버에 연결할 수 없습니다.",
   );

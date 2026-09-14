@@ -1,0 +1,90 @@
+{
+  "ADULT_CONFIRMATION": {
+    "paragraphs": [
+      "I confirm that I am at least 19 years old and that HanBuddy is available for registration and use by adults only."
+    ]
+  },
+  "TERMS_OF_SERVICE": {
+    "paragraphs": ["I have read the full HanBuddy Terms of Service and agree to them."]
+  },
+  "PRIVACY_COLLECTION_USE": {
+    "paragraphs": [
+      "I have read the following information about the collection and use of personal information and agree to it."
+    ],
+    "details": [
+      {
+        "label": "Data collected",
+        "value": "Google account identifier, email, name, profile image, nickname, nationality, date of birth, preferred contact method, contact identifier or phone number"
+      },
+      {
+        "label": "Purpose",
+        "value": "Registration and login, identity and age verification, profiles, communication between booking parties, account security and customer support"
+      },
+      {
+        "label": "Retention period",
+        "value": "Until account closure. Contract, payment, dispute and consent records are retained separately for the periods required by law."
+      },
+      {
+        "label": "Right to refuse and consequences",
+        "value": "You may refuse consent, but registration and Service use will be difficult because this information is required."
+      }
+    ]
+  },
+  "BUDDY_PRIVACY_COLLECTION_USE": {
+    "paragraphs": [
+      "I have read the following information about the collection and use of personal information and agree to it."
+    ],
+    "details": [
+      {
+        "label": "Data collected",
+        "value": "Google account identifier, email, name, profile image, nickname, nationality, date of birth, phone number for application review and operational contact"
+      },
+      {
+        "label": "Purpose",
+        "value": "Registration and login, identity and age verification, Buddy application review and results, operational communication, profiles, account security and customer support"
+      },
+      {
+        "label": "Retention period",
+        "value": "Until account closure. Contract, payment, dispute and consent records are retained separately for the periods required by law."
+      },
+      {
+        "label": "Right to refuse and consequences",
+        "value": "You may refuse consent, but Buddy registration and Service use will be difficult because this information is required."
+      }
+    ]
+  },
+  "BUDDY_OPERATION_TERMS": {
+    "paragraphs": [
+      "I have read the Buddy Operating Terms and agree to accurate activity information, booking fulfillment, safety measures, protection of users’ personal information and community standards."
+    ]
+  },
+  "BUDDY_COMMISSION_POLICY": {
+    "paragraphs": [
+      "I have read the Buddy Commission and Settlement Policy. I acknowledge total deductions from actual sales of 22% for standard Buddies (20% platform fee plus 2% VAT on the fee) and 11% for Early Buddies (10% fee plus 1% VAT).",
+      "I also agree to the displayed settlement schedule and treatment of cancellations, refunds and chargebacks."
+    ]
+  },
+  "MARKETING_COMMUNICATION": {
+    "paragraphs": [
+      "I agree to receive marketing emails. I may withdraw consent at any time through account settings or the unsubscribe function in emails."
+    ],
+    "details": [
+      {
+        "label": "Data collected and used",
+        "value": "Email, nickname, Service use and booking history"
+      },
+      {
+        "label": "Purpose",
+        "value": "Events, benefits, new activities and promotions"
+      },
+      {
+        "label": "Retention period",
+        "value": "Until consent withdrawal or account closure"
+      },
+      {
+        "label": "Right to refuse and consequences",
+        "value": "Basic Service features remain available if you refuse consent."
+      }
+    ]
+  }
+}

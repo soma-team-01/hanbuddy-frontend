@@ -19,7 +19,7 @@ Parameters:
     Description: Route 53 hosted zone ID that contains the frontend domains
   FrontendRecordNames:
     Type: CommaDelimitedList
-    Default: hanbuddy.kr,staging.hanbuddy.kr
+    Default: hanbuddy.kr,www.hanbuddy.kr,staging.hanbuddy.kr
     Description: Lowercase frontend DNS record names without trailing dots
 Resources:
   FrontendRepository:
@@ -34,7 +34,9 @@ Resources:
       ImageTagMutability: IMMUTABLE_WITH_EXCLUSION
       ImageTagMutabilityExclusionFilters:
         - ImageTagMutabilityExclusionFilterType: WILDCARD
-          ImageTagMutabilityExclusionFilterValue: "*-latest"
+          ImageTagMutabilityExclusionFilterValue: "production-latest"
+        - ImageTagMutabilityExclusionFilterType: WILDCARD
+          ImageTagMutabilityExclusionFilterValue: "staging-latest"
       LifecyclePolicy:
         LifecyclePolicyText: |
           {
@@ -106,6 +108,7 @@ Resources:
                 Effect: Allow
                 Action:
                   - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
                   - ecr:CompleteLayerUpload
                   - ecr:DescribeImages
                   - ecr:GetDownloadUrlForLayer
@@ -158,6 +161,7 @@ Resources:
                     route53:ChangeResourceRecordSetsNormalizedRecordNames: !Ref FrontendRecordNames
                     route53:ChangeResourceRecordSetsRecordTypes:
                       - A
+                      - CNAME
                     route53:ChangeResourceRecordSetsActions:
                       - UPSERT
                       - DELETE
@@ -165,6 +169,10 @@ Resources:
                 Effect: Allow
                 Action: route53:ListResourceRecordSets
                 Resource: !Sub arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedZoneId}
+              - Sid: WaitForFrontendDnsChanges
+                Effect: Allow
+                Action: route53:GetChange
+                Resource: !Sub arn:${AWS::Partition}:route53:::change/*
 
 Outputs:
   AwsRoleArn:

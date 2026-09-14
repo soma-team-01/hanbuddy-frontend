@@ -7,141 +7,121 @@ import { useState } from "react";
 import { isUnauthenticatedError } from "@/lib/api/errors";
 import { SERVICE_TIME_ZONE } from "@/lib/datetime";
 import { adminBuddyApplicationsQueryOptions } from "@/lib/query/admin";
+import { AdminMemberNavigation } from "@/app/admin/admin-member-navigation";
+import {
+  AdminLoadingRows,
+  AdminPagination,
+  AdminState,
+  AdminStatusBadge,
+} from "@/app/admin/admin-ui";
 
-const STATUS_LABELS = {
-  PENDING_APPROVAL: "승인 대기",
-  ACTIVE: "승인",
-  REJECTED: "거절",
-  SUSPENDED: "정지",
-} as const;
-
-type StatusFilter = "ALL" | keyof typeof STATUS_LABELS;
-
-const STATUS_FILTERS: Array<{ value: StatusFilter; label: string }> = [
-  { value: "ALL", label: "전체" },
-  ...Object.entries(STATUS_LABELS).map(([value, label]) => ({
-    value: value as keyof typeof STATUS_LABELS,
-    label,
-  })),
-];
+const PAGE_SIZE = 20;
 
 export function BuddyApplicationsDashboard() {
+  return (
+    <main className="mx-auto w-full max-w-[1200px] px-5 py-6 md:px-6 md:py-7 xl:px-8">
+      <AdminMemberNavigation />
+      <BuddyApplicationsSection />
+    </main>
+  );
+}
+
+export function BuddyApplicationsSection({ showHeader = true }: { showHeader?: boolean } = {}) {
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [page, setPage] = useState(0);
   const query = useQuery(adminBuddyApplicationsQueryOptions());
   const applications = query.data ?? [];
-  const filteredApplications =
-    statusFilter === "ALL"
-      ? applications
-      : applications.filter((item) => item.accountStatus === statusFilter);
+  const totalPages = Math.ceil(applications.length / PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(totalPages - 1, 0));
+  const visibleApplications = applications.slice(
+    currentPage * PAGE_SIZE,
+    (currentPage + 1) * PAGE_SIZE,
+  );
   const sessionExpired = isUnauthenticatedError(query.error);
   const pendingCount = applications.filter(
     (item) => item.accountStatus === "PENDING_APPROVAL",
   ).length;
 
   return (
-    <main className="mx-auto w-full max-w-[1200px] px-5 py-10 md:px-8 md:py-14">
-      <div className="flex flex-col gap-5 border-b border-line-soft pb-8 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm font-bold tracking-[0.2em] text-primary uppercase">
-            Buddy approval
-          </p>
-          <h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.04em] md:text-4xl">
-            버디 신청 관리
-          </h1>
-          <p className="mt-3 text-muted">프로필을 확인하고 승인 또는 거절을 결정하세요.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted">승인 대기</span>
-          <strong className="font-display text-3xl text-primary">{pendingCount}</strong>
-        </div>
-      </div>
-      {!query.isPending && !query.error && applications.length > 0 ? (
-        <div aria-label="신청 상태 필터" className="mt-7 flex flex-wrap gap-2">
-          {STATUS_FILTERS.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              aria-pressed={statusFilter === filter.value}
-              onClick={() => setStatusFilter(filter.value)}
-              className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${
-                statusFilter === filter.value
-                  ? "border-primary bg-primary text-white"
-                  : "border-line-strong bg-white text-muted hover:border-primary hover:text-primary"
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-      {query.isPending ? <LoadingRows /> : null}
-      {sessionExpired ? (
-        <State
-          title="관리자 세션이 만료되었습니다."
-          description="다시 로그인한 뒤 버디 신청을 확인해 주세요."
-          action={() => router.replace("/admin/login")}
-          actionLabel="다시 로그인"
-        />
-      ) : query.error ? (
-        <State
-          title="목록을 불러오지 못했습니다."
-          description="잠시 후 다시 시도해 주세요."
-          action={() => query.refetch()}
-        />
-      ) : null}
-      {!query.isPending && !query.error && filteredApplications.length === 0 ? (
-        <State
-          title={
-            applications.length === 0
-              ? "새로운 버디 신청이 없습니다."
-              : `${STATUS_LABELS[statusFilter as keyof typeof STATUS_LABELS]} 상태의 신청이 없습니다.`
-          }
-          description={
-            applications.length === 0
-              ? "신청이 접수되면 이곳에 표시됩니다."
-              : "다른 상태를 선택해 신청 내역을 확인해 주세요."
-          }
-        />
-      ) : null}
-      {filteredApplications.length > 0 ? (
-        <div className="mt-8 overflow-hidden rounded-2xl border border-line-soft">
-          <div className="hidden grid-cols-[1.4fr_1fr_0.8fr_0.9fr_auto] gap-4 border-b border-line-soft bg-panel-raised px-6 py-3 text-xs font-bold tracking-[0.12em] text-muted uppercase md:grid">
-            <span>신청자</span>
-            <span>국적</span>
-            <span>상태</span>
-            <span>신청일</span>
-            <span>검토</span>
+    <section
+      id="buddy-approvals"
+      className={showHeader ? "mt-7 border-t border-line-soft pt-5" : "mt-3"}
+    >
+      {showHeader ? (
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="font-display text-xl font-extrabold tracking-[-0.03em] md:text-2xl">
+            승인 관리
+          </h2>
+          <div className="flex items-baseline gap-2 text-sm text-muted">
+            <span>승인 대기</span>
+            <strong className="font-display text-lg text-primary">{pendingCount}</strong>
           </div>
-          <ul className="divide-y divide-line-soft">
-            {filteredApplications.map((item) => (
-              <li
-                key={item.userId}
-                className="grid gap-4 px-5 py-5 transition-colors hover:bg-primary-soft/30 md:grid-cols-[1.4fr_1fr_0.8fr_0.9fr_auto] md:items-center md:px-6"
-              >
-                <div>
-                  <p className="font-display font-bold">{item.name}</p>
-                  <p className="mt-1 text-sm text-muted">{item.email}</p>
-                </div>
-                <p className="text-sm">{item.nationalityCode}</p>
-                <span
-                  className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${item.accountStatus === "PENDING_APPROVAL" ? "bg-primary-soft text-primary-strong" : "bg-panel text-muted"}`}
-                >
-                  {STATUS_LABELS[item.accountStatus]}
-                </span>
-                <time className="text-sm text-muted">{formatDate(item.appliedAt)}</time>
-                <Link
-                  href={`/admin/buddies/${item.userId}`}
-                  className="w-fit rounded-full border border-primary px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-white"
-                >
-                  프로필 보기
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
       ) : null}
-    </main>
+      {query.isPending ? (
+        <div className="mt-4">
+          <AdminLoadingRows />
+        </div>
+      ) : null}
+      {sessionExpired ? (
+        <div className="mt-4">
+          <AdminState
+            title="관리자 세션이 만료되었습니다."
+            description="다시 로그인한 뒤 버디 신청을 확인해 주세요."
+            action={() => router.replace("/admin/login")}
+            actionLabel="다시 로그인"
+          />
+        </div>
+      ) : query.error ? (
+        <div className="mt-4">
+          <AdminState
+            title="목록을 불러오지 못했습니다."
+            description="잠시 후 다시 시도해 주세요."
+            action={() => query.refetch()}
+          />
+        </div>
+      ) : null}
+      {!query.isPending && !query.error && applications.length === 0 ? (
+        <div className="mt-4">
+          <AdminState
+            title="새로운 버디 신청이 없습니다."
+            description="승인 대기 신청이 접수되면 이곳에 표시됩니다."
+          />
+        </div>
+      ) : null}
+      {applications.length > 0 ? (
+        <ul aria-label="승인 대기 목록" className="mt-3 grid gap-1.5">
+          {visibleApplications.map((item) => (
+            <li
+              key={item.userId}
+              className="grid gap-2 rounded-lg border border-line-soft bg-white px-3 py-2.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <AdminStatusBadge status={item.accountStatus} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">{item.name}</p>
+                  <p className="truncate text-[11px] text-muted">{item.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <span className="text-[11px] font-semibold text-muted">
+                  <time>{formatDate(item.appliedAt)}</time>
+                </span>
+                <Link
+                  href={`/admin/buddy-applications/${item.userId}`}
+                  className="flex h-8 shrink-0 items-center justify-center rounded-md border border-primary px-3 text-[11px] font-bold text-primary transition-colors hover:bg-primary hover:text-white"
+                >
+                  신청서 검토
+                </Link>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {applications.length > 0 ? (
+        <AdminPagination page={currentPage} totalPages={totalPages} onPage={setPage} />
+      ) : null}
+    </section>
   );
 }
 
@@ -155,40 +135,4 @@ function formatDate(value: string) {
         day: "numeric",
         timeZone: SERVICE_TIME_ZONE,
       }).format(date);
-}
-function State({
-  title,
-  description,
-  action,
-  actionLabel = "다시 시도",
-}: {
-  title: string;
-  description: string;
-  action?: () => void;
-  actionLabel?: string;
-}) {
-  return (
-    <div className="py-24 text-center">
-      <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-primary" />
-      <h2 className="font-display text-xl font-bold">{title}</h2>
-      <p className="mt-2 text-muted">{description}</p>
-      {action ? (
-        <button
-          onClick={action}
-          className="mt-6 rounded-full border border-primary px-5 py-2 text-sm font-bold text-primary"
-        >
-          {actionLabel}
-        </button>
-      ) : null}
-    </div>
-  );
-}
-function LoadingRows() {
-  return (
-    <div aria-label="불러오는 중" className="mt-8 space-y-3">
-      {[1, 2, 3].map((item) => (
-        <div key={item} className="h-20 animate-pulse rounded-2xl bg-panel" />
-      ))}
-    </div>
-  );
 }

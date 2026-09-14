@@ -3,39 +3,62 @@
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Link } from "@/i18n/navigation";
+import { RefundPolicyAgreement, RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
+import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ApiClientError } from "@/lib/api/errors";
-import {
-  ArrowRightIcon,
-  CalendarDaysIcon,
-  MinusIcon,
-  PlusIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { CalendarDaysIcon, MinusIcon, PlusIcon, UserIcon } from "@/components/ui/icons";
 import {
   AvailabilityCalendarDialog,
   formatSessionTimeRange,
 } from "@/components/activity/AvailabilityCalendarDialog";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
-import { createApplication } from "@/lib/api/applications";
+import { createApplication, getApplicationConflicts } from "@/lib/api/applications";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { formatKrw } from "@/lib/format";
+import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
+import {
+  isPaymentProviderVisible,
+  PAYMENT_PROVIDER_MODE,
+  type PaymentProviderMode,
+} from "@/lib/payment-provider-visibility";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { Activity } from "@/types/activity";
+import { getContentLanguage } from "@/lib/content-language";
+import type {
+  ApplicationConflictItemResponse,
+  ApplicationConflictType,
+  CreateApplicationRequest,
+  PaymentProvider,
+  PaymentReadyResponse,
+} from "@/types/application";
+import type { PolicyDocumentData } from "@/types/policy";
+import { BookingConflictDialog } from "./booking-conflict-dialog";
 
 const MAX_GUESTS = 8;
 
-type BookingErrorKey = "scheduleRequired" | "paymentProcessFailed" | "paymentCancelled";
+type BookingErrorKey =
+  | "scheduleRequired"
+  | "paymentProcessFailed"
+  | "paymentCancelled"
+  | "paymentAmountChanged"
+  | "conflictCheckFailed";
+
+interface ConflictDialogState {
+  type: ApplicationConflictType;
+  item?: ApplicationConflictItemResponse;
+  blocking: boolean;
+  paymentProvider: PaymentProvider;
+}
 
 function validateBookingSession(sessionId: string): BookingErrorKey | null {
   return sessionId ? null : "scheduleRequired";
@@ -44,9 +67,22 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 export function BookingForm({
   activity,
   initialSessionId,
-}: Readonly<{ activity: Activity; initialSessionId?: string }>) {
+  payPalPricePending = false,
+  payPalUnitPriceUsd,
+  refundPolicyDocument,
+  paymentProviderMode = PAYMENT_PROVIDER_MODE,
+}: Readonly<{
+  activity: Activity;
+  initialSessionId?: string;
+  payPalPricePending?: boolean;
+  payPalUnitPriceUsd?: number;
+  refundPolicyDocument?: PolicyDocumentData;
+  paymentProviderMode?: PaymentProviderMode;
+}>) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const locale = useLocale();
+  const contentLanguage = getContentLanguage(locale);
   const t = useTranslations("Booking");
   const getApiErrorMessage = useApiErrorMessage();
   const [sessionId, setSessionId] = useState(() => {
@@ -59,20 +95,44 @@ export function BookingForm({
     return activity.sessions[0]?.id ?? "";
   });
   const [guests, setGuests] = useState(1);
-  const [agreed, setAgreed] = useState(false);
+  const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorKey, setErrorKey] = useState<BookingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
     error: unknown;
     fallbackKey: BookingErrorKey;
   } | null>(null);
-  // 토스 결제창이 열려 있는 동안 제출 버튼을 잠근다
+  // 외부 결제창이 열려 있는 동안 제출 버튼을 잠근다
   const [paymentInFlight, setPaymentInFlight] = useState(false);
+  const [payPalPayment, setPayPalPayment] = useState<PaymentReadyResponse | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  // 재시도 시에도 매번 신청을 새로 생성한다 — 백엔드가 기존 PENDING_PAYMENT 신청을 대체(SUPERSEDED)한다
+  const [conflictDialog, setConflictDialog] = useState<ConflictDialogState | null>(null);
+  const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
+  const showPayPalPayment = isPaymentProviderVisible("PAYPAL", paymentProviderMode);
+  const showProviderChoice = paymentProviderMode === "BOTH";
+  // React Query 상태가 화면에 반영되기 전의 연속 클릭도 동기적으로 차단한다
+  const submissionLockRef = useRef(false);
+  const errorAlertRef = useRef<HTMLDivElement>(null);
+  const conflictCheckMutation = useMutation({
+    mutationFn: async (activityScheduleId: number) =>
+      unwrapApiResult(
+        await getApplicationConflicts(activityScheduleId, contentLanguage),
+        "conflicts",
+      ),
+  });
+  // 사전 확인 뒤에도 생성 시점의 좌석·일정 충돌은 백엔드가 다시 검증한다
   const createApplicationMutation = useMutation({
-    mutationFn: async (request: Parameters<typeof createApplication>[0]) =>
-      unwrapApiResult(await createApplication(request), "payment"),
+    mutationFn: async ({
+      request,
+      paymentProvider,
+    }: {
+      request: CreateApplicationRequest;
+      paymentProvider: PaymentProvider;
+    }) =>
+      unwrapApiResult(
+        await createApplication(request, contentLanguage, paymentProvider),
+        "payment",
+      ),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
@@ -82,33 +142,76 @@ export function BookingForm({
       ]);
     },
   });
-  useAuthQueryRedirect(createApplicationMutation.error);
-  const isSubmitting = createApplicationMutation.isPending || paymentInFlight;
+  useAuthQueryRedirect(conflictCheckMutation.error ?? createApplicationMutation.error);
+  const isSubmitting =
+    conflictCheckMutation.isPending || createApplicationMutation.isPending || paymentInFlight;
 
-  const subtotal = activity.price * guests;
-  const total = subtotal;
+  const discountedUnitPrice = activity.price;
+  const originalUnitPrice = activity.originalPrice ?? discountedUnitPrice;
+  const originalSubtotal = originalUnitPrice * guests;
+  const total = discountedUnitPrice * guests;
+  const discountAmount = Math.max(0, originalSubtotal - total);
+  const hasDiscount = discountAmount > 0;
+  const localeReferenceTotal =
+    activity.referenceCurrency && activity.referencePrice !== undefined
+      ? activity.referencePrice * guests
+      : null;
+  const payPalReferenceUnitPrice =
+    payPalUnitPriceUsd ??
+    (activity.referenceCurrency === "USD" ? activity.referencePrice : undefined);
+  const estimatedPayPalTotal =
+    payPalReferenceUnitPrice !== undefined ? payPalReferenceUnitPrice * guests : null;
+  const isPayPalPricePending =
+    showPayPalPayment && estimatedPayPalTotal === null && payPalPricePending;
+  const isPayPalPriceUnavailable =
+    showPayPalPayment && estimatedPayPalTotal === null && !isPayPalPricePending;
+  const tossPaymentLabel = showProviderChoice ? t("payWithToss") : t("payNow");
+  let payPalPaymentLabel = t("payWithPayPal");
+  if (isPayPalPricePending) {
+    payPalPaymentLabel = t("paypalPriceLoading");
+  } else if (estimatedPayPalTotal !== null) {
+    payPalPaymentLabel = t("payWithPayPalAmount", {
+      amount: formatDisplayCurrency(estimatedPayPalTotal, "USD", locale),
+    });
+  }
 
-  async function handleSubmitClick() {
-    const validationError = validateBookingSession(sessionId);
-    if (validationError) {
-      setRequestFailure(null);
-      setErrorKey(validationError);
-      return;
+  function toBlockingDialog(
+    error: unknown,
+    paymentProvider: PaymentProvider,
+  ): ConflictDialogState | null {
+    if (!(error instanceof ApiClientError)) return null;
+    if (error.code === "APPLICATION409_SAME_SCHEDULE") {
+      return { type: "SAME_SCHEDULE", blocking: true, paymentProvider };
     }
-    setErrorKey(null);
-    setRequestFailure(null);
+    if (error.code === "APPLICATION409_TIME_CONFLICT") {
+      return { type: "TIME_OVERLAP", blocking: true, paymentProvider };
+    }
+    return null;
+  }
+
+  async function createAndOpenPayment(
+    request: CreateApplicationRequest,
+    paymentProvider: PaymentProvider,
+  ) {
     try {
-      const payment = await createApplicationMutation.mutateAsync({
-        activityScheduleId: Number(sessionId),
-        guestCount: guests,
-        specialRequest: specialRequest.trim() || undefined,
-      });
+      const payment = await createApplicationMutation.mutateAsync({ request, paymentProvider });
+      if (paymentProvider === "PAYPAL") {
+        setPayPalPayment(payment);
+        return;
+      }
+      if (payment.paymentCurrency !== "KRW" || payment.paymentAmount !== total) {
+        setErrorKey("paymentAmountChanged");
+        return;
+      }
       setPaymentInFlight(true);
       // 결제 인증이 끝나면 successUrl(/payments/success)로 리다이렉트되어 승인 API를 호출한다
       await requestTossPayment(payment, locale as Locale);
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
-      if (isTossUserCancel(error)) {
+      const blockingDialog = toBlockingDialog(error, paymentProvider);
+      if (blockingDialog) {
+        setConflictDialog(blockingDialog);
+      } else if (paymentProvider === "TOSS" && isTossUserCancel(error)) {
         setErrorKey("paymentCancelled");
       } else {
         setRequestFailure({ error, fallbackKey: "paymentProcessFailed" });
@@ -116,6 +219,81 @@ export function BookingForm({
     } finally {
       setPaymentInFlight(false);
     }
+  }
+
+  async function runWithSubmissionLock(action: () => Promise<void>) {
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
+    try {
+      await action();
+    } finally {
+      submissionLockRef.current = false;
+    }
+  }
+
+  function handleSubmitClick(paymentProvider: PaymentProvider) {
+    if (paymentProvider === "PAYPAL" && estimatedPayPalTotal === null) return;
+    void runWithSubmissionLock(async () => {
+      const validationError = validateBookingSession(sessionId);
+      if (validationError) {
+        setRequestFailure(null);
+        setErrorKey(validationError);
+        return;
+      }
+      setErrorKey(null);
+      setRequestFailure(null);
+      const request: CreateApplicationRequest = {
+        activityScheduleId: Number(sessionId),
+        guestCount: guests,
+        specialRequest: specialRequest.trim() || undefined,
+        refundPolicyAgreed,
+      };
+      try {
+        const conflicts = await conflictCheckMutation.mutateAsync(Number(sessionId));
+        const blockingItem = conflicts.conflicts[0];
+        if (conflicts.blocking) {
+          setConflictDialog({
+            type: blockingItem?.type ?? "TIME_OVERLAP",
+            item: blockingItem,
+            blocking: true,
+            paymentProvider,
+          });
+          return;
+        }
+        const warningItem = conflicts.sameDayWarnings[0];
+        if (warningItem) {
+          setConflictDialog({
+            type: warningItem.type,
+            item: warningItem,
+            blocking: false,
+            paymentProvider,
+          });
+          return;
+        }
+        await createAndOpenPayment(request, paymentProvider);
+      } catch (error) {
+        if (error instanceof UnauthenticatedQueryError) return;
+        setRequestFailure({ error, fallbackKey: "conflictCheckFailed" });
+      }
+    });
+  }
+
+  function handleContinueApplication() {
+    void runWithSubmissionLock(async () => {
+      const paymentProvider = conflictDialog?.paymentProvider ?? "TOSS";
+      setConflictDialog(null);
+      setErrorKey(null);
+      setRequestFailure(null);
+      await createAndOpenPayment(
+        {
+          activityScheduleId: Number(sessionId),
+          guestCount: guests,
+          specialRequest: specialRequest.trim() || undefined,
+          refundPolicyAgreed,
+        },
+        paymentProvider,
+      );
+    });
   }
 
   let errorMessage: string | null = null;
@@ -128,6 +306,11 @@ export function BookingForm({
   const blockedByPendingPayment =
     requestFailure?.error instanceof ApiClientError &&
     requestFailure.error.code === "APPLICATION409_PAYMENT_PENDING";
+
+  // 에러는 모바일 고정 바 안에 그려지므로, 새로 생길 때 포커스를 옮겨 사용자가 놓치지 않게 한다
+  useEffect(() => {
+    if (errorMessage) errorAlertRef.current?.focus();
+  }, [errorMessage]);
 
   const selectedSession = activity.sessions.find((session) => session.id === sessionId) ?? null;
   const sessionTimeRange = selectedSession
@@ -142,14 +325,14 @@ export function BookingForm({
 
   return (
     <>
-      <PageContainer className="py-6 md:py-10">
+      <PageContainer className="py-3 md:py-4">
         {/* 왼쪽 칸이 남는 폭까지 늘어나면 요약 패널과 사이가 크게 비므로 본문 폭에 맞춰 묶어 둔다 */}
         <main
           data-testid="booking-layout"
           className="grid gap-6 lg:grid-cols-[minmax(0,36rem)_360px] lg:items-start lg:justify-center"
         >
           <div className="mx-auto w-full max-w-xl divide-y divide-line-soft lg:mx-0">
-            <section className="flex flex-col gap-3 pb-7">
+            <section className="flex flex-col gap-2.5 pb-4">
               <h2 className="font-display text-base font-bold text-ink">{t("dateTimeHeading")}</h2>
               <button
                 type="button"
@@ -164,7 +347,7 @@ export function BookingForm({
               <span className="text-xs text-muted">{t("kstNotice")}</span>
             </section>
 
-            <section className="flex flex-col gap-3 py-7">
+            <section className="flex flex-col gap-2.5 py-4">
               <h2 className="font-display text-base font-bold text-ink">{t("guestsHeading")}</h2>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">{t("guestCount")}</span>
@@ -174,7 +357,7 @@ export function BookingForm({
                     aria-label={t("decreaseGuests")}
                     disabled={guests <= 1}
                     onClick={() => setGuests((count) => Math.max(1, count - 1))}
-                    className="flex size-9 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+                    className="flex size-11 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                   >
                     <MinusIcon className="size-4" />
                   </button>
@@ -186,7 +369,7 @@ export function BookingForm({
                     aria-label={t("increaseGuests")}
                     disabled={guests >= MAX_GUESTS}
                     onClick={() => setGuests((count) => Math.min(MAX_GUESTS, count + 1))}
-                    className="flex size-9 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
+                    className="flex size-11 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                   >
                     <PlusIcon className="size-4" />
                   </button>
@@ -194,64 +377,26 @@ export function BookingForm({
               </div>
             </section>
 
-            <section className="flex flex-col gap-3 py-7">
+            <section className="flex flex-col gap-2.5 py-4">
               <h2 className="font-display text-base font-bold text-ink">{t("specialRequest")}</h2>
               <label className="flex flex-col gap-2">
                 <span className="text-xs text-muted">{t("specialRequestDescription")}</span>
                 <textarea
-                  rows={3}
+                  rows={2}
                   placeholder={t("specialRequestPlaceholder")}
                   value={specialRequest}
                   onChange={(event) => setSpecialRequest(event.target.value)}
-                  className="w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-sm text-ink transition-colors outline-none placeholder:text-muted/60 focus:border-primary"
+                  className="focus-border-only w-full resize-none rounded-xl border border-line-strong bg-canvas-soft px-4 py-3.5 text-base text-ink transition-colors placeholder:text-muted/60 focus:border-primary"
                 />
               </label>
             </section>
 
-            <section className="flex flex-col gap-3 pt-7">
-              <p className="text-sm leading-6 text-muted">
-                {t.rich("refundPolicy", {
-                  policy: (chunks) => (
-                    <span className="group relative inline-block">
-                      <button
-                        type="button"
-                        aria-describedby="refund-policy-tooltip"
-                        className="font-semibold text-ink underline decoration-primary/60 decoration-2 underline-offset-4 transition-colors hover:text-primary focus-visible:text-primary"
-                      >
-                        {chunks}
-                      </button>
-                      <span
-                        id="refund-policy-tooltip"
-                        role="tooltip"
-                        className="pointer-events-none absolute bottom-full left-1/2 z-40 mb-2 hidden w-72 -translate-x-1/2 flex-col gap-2 rounded-xl border border-primary/30 bg-canvas-soft p-4 text-left text-xs leading-5 font-normal no-underline shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:flex group-hover:flex"
-                      >
-                        {(["full", "half", "none"] as const).map((rule) => (
-                          <span key={rule} className="flex items-center justify-between gap-3">
-                            <span className="text-muted">{t(`refundRules.${rule}.label`)}</span>
-                            <span
-                              className={`font-display font-bold ${
-                                rule === "none" ? "text-ink" : "text-primary"
-                              }`}
-                            >
-                              {t(`refundRules.${rule}.value`)}
-                            </span>
-                          </span>
-                        ))}
-                      </span>
-                    </span>
-                  ),
-                })}
-              </p>
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(event) => setAgreed(event.target.checked)}
-                  className="size-4.5 rounded accent-primary"
-                />
-                <span className="text-sm text-ink">{t("agreement")}</span>
-              </label>
-            </section>
+            <div className="pt-4">
+              <RefundPolicyNotice
+                document={refundPolicyDocument}
+                idPrefix="booking-refund-policy"
+              />
+            </div>
           </div>
 
           <BookingPanel>
@@ -315,50 +460,134 @@ export function BookingForm({
                 <h2 className="font-display text-sm font-bold text-ink">{t("priceDetails")}</h2>
                 <div className="flex items-center justify-between text-muted">
                   <span>
-                    {t("subtotal", { price: formatKrw(activity.price, locale), count: guests })}
+                    {t("subtotal", { price: formatKrw(originalUnitPrice, locale), count: guests })}
                   </span>
-                  <span>{formatKrw(subtotal, locale)}</span>
+                  <span className={hasDiscount ? "line-through" : undefined}>
+                    {formatKrw(originalSubtotal, locale)}
+                  </span>
                 </div>
+                {hasDiscount ? (
+                  <div className="flex items-center justify-between font-semibold text-primary">
+                    <span>
+                      {activity.discountPercent
+                        ? t("discount", { percent: activity.discountPercent })
+                        : t("discountAmount")}
+                    </span>
+                    <span>-{formatKrw(discountAmount, locale)}</span>
+                  </div>
+                ) : null}
               </div>
 
-              <div className="flex items-center justify-between border-t border-line-soft pt-4">
+              <div className="flex items-end justify-between border-t border-line-soft pt-4">
                 <span className="font-display text-base font-bold text-ink">{t("totalLabel")}</span>
-                <span className="font-display text-xl font-bold text-primary">
-                  {formatKrw(total, locale)}
-                </span>
+                <div className="flex flex-col items-end gap-0.5">
+                  {localeReferenceTotal !== null && activity.referenceCurrency ? (
+                    <span className="text-xs font-medium text-muted">
+                      ≈{" "}
+                      {formatDisplayCurrency(
+                        localeReferenceTotal,
+                        activity.referenceCurrency,
+                        locale,
+                      )}
+                    </span>
+                  ) : null}
+                  <span className="font-display text-xl font-bold text-primary">
+                    {formatKrw(total, locale)}
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="lg:pt-6">
               <BottomActionBar>
-                <button
-                  type="button"
-                  disabled={!agreed || isSubmitting}
-                  onClick={handleSubmitClick}
-                  className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-transparent font-display text-base font-bold text-primary transition-colors enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
-                >
-                  {isSubmitting ? t("processing") : t("submit")}
-                  <ArrowRightIcon className="size-4" />
-                </button>
+                <div className="flex w-full flex-col gap-2">
+                  {errorMessage ? (
+                    <div
+                      ref={errorAlertRef}
+                      role="alert"
+                      tabIndex={-1}
+                      className="rounded-xl border border-danger/30 bg-canvas-soft px-4 py-3 text-sm text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
+                    >
+                      <p>{errorMessage}</p>
+                      {blockedByPendingPayment ? (
+                        <Link
+                          href="/applications"
+                          className="mt-2 inline-flex font-display text-sm font-bold text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary"
+                        >
+                          {t("goToApplications")}
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <RefundPolicyAgreement
+                    agreed={refundPolicyAgreed}
+                    onAgreedChange={setRefundPolicyAgreed}
+                    describedBy="booking-refund-policy-notice booking-refund-policy-summary"
+                    className="px-1 py-1"
+                  />
+                  <div
+                    className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
+                  >
+                    {showTossPayment ? (
+                      <button
+                        type="button"
+                        disabled={!refundPolicyAgreed || isSubmitting}
+                        onClick={() => handleSubmitClick("TOSS")}
+                        className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
+                          showProviderChoice
+                            ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
+                            : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
+                        }`}
+                      >
+                        {isSubmitting ? t("processing") : tossPaymentLabel}
+                      </button>
+                    ) : null}
+                    {showPayPalPayment ? (
+                      <div className="flex min-w-0 flex-col items-center gap-1.5">
+                        {payPalPayment ? (
+                          <PayPalCheckoutButton
+                            payment={payPalPayment}
+                            autoStart
+                            onCancel={() => setPayPalPayment(null)}
+                            onConfirmed={() => {
+                              const applicationId = payPalPayment.application.applicationId;
+                              setPayPalPayment(null);
+                              void queryClient.invalidateQueries({
+                                queryKey: applicationKeys.mine(),
+                              });
+                              router.push(
+                                `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
+                              );
+                            }}
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={
+                              !refundPolicyAgreed || isSubmitting || estimatedPayPalTotal === null
+                            }
+                            onClick={() => handleSubmitClick("PAYPAL")}
+                            className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                          >
+                            {isSubmitting ? t("processing") : payPalPaymentLabel}
+                          </button>
+                        )}
+                        <p
+                          role={isPayPalPriceUnavailable ? "alert" : undefined}
+                          className={`text-center text-xs leading-4 ${
+                            isPayPalPriceUnavailable ? "text-danger" : "text-muted"
+                          }`}
+                        >
+                          {isPayPalPriceUnavailable
+                            ? t("paypalPriceUnavailable")
+                            : t("paypalCurrencyNotice")}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </BottomActionBar>
             </div>
-
-            {errorMessage ? (
-              <div
-                role="alert"
-                className="mt-3 rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger"
-              >
-                <p>{errorMessage}</p>
-                {blockedByPendingPayment ? (
-                  <Link
-                    href="/applications"
-                    className="mt-2 inline-flex font-display text-sm font-bold text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:decoration-primary"
-                  >
-                    {t("goToApplications")}
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
           </BookingPanel>
         </main>
       </PageContainer>
@@ -373,6 +602,16 @@ export function BookingForm({
             setCalendarOpen(false);
           }}
           onClose={() => setCalendarOpen(false)}
+        />
+      ) : null}
+
+      {conflictDialog ? (
+        <BookingConflictDialog
+          type={conflictDialog.type}
+          item={conflictDialog.item}
+          blocking={conflictDialog.blocking}
+          onClose={() => setConflictDialog(null)}
+          onContinue={handleContinueApplication}
         />
       ) : null}
     </>

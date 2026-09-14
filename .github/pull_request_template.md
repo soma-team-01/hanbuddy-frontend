@@ -20,9 +20,12 @@
 
 <!-- 예: close #12 / refs #34 -->
 
-## 화면 / Figma 참고
+## 화면 확인
 
-<!-- UI 변경 시: Vercel Preview URL, 스크린샷, 또는 참고한 Figma nodeId -->
+<!--
+UI 변경 시 확인한 화면과 반응형 너비, 스크린샷, 참고한 디자인 문서 또는 Figma nodeId를 작성합니다.
+수동으로 staging을 배포한 경우에만 staging URL을 추가합니다.
+-->
 
 ## 체크리스트
 

@@ -5,6 +5,7 @@ import {
   ACTIVITY_CREATE_STEPS,
   EMPTY_ACTIVITY_DRAFT,
   buildDraftFromMyActivityDetail,
+  buildPreviewActivityFromDraft,
   getNextActivityCreateStep,
   getPreviousActivityCreateStep,
   isPastSchedule,
@@ -58,6 +59,37 @@ function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): Acti
 }
 
 describe("activity creation wizard", () => {
+  it("keeps the edited activity id in the guest preview", () => {
+    const activity = buildPreviewActivityFromDraft(createCompleteDraft(), {
+      locale: "en",
+      dateTimeUnavailable: "Unavailable",
+      activityId: "42",
+      hostName: "Seoul Buddy",
+      hostBio: "Local host",
+    });
+
+    expect(activity.id).toBe("42");
+  });
+
+  it.each([5, 29, 30, 31, 80])(
+    "keeps an exact %i minute itinerary total in the guest preview",
+    (durationMinutes) => {
+      const activity = buildPreviewActivityFromDraft(
+        createCompleteDraft({
+          itinerary: [{ ...itinerary, durationMinutes: String(durationMinutes) }],
+        }),
+        {
+          locale: "en",
+          dateTimeUnavailable: "Unavailable",
+          hostName: "Seoul Buddy",
+          hostBio: "Local host",
+        },
+      );
+
+      expect(activity.durationMinutes).toBe(durationMinutes);
+    },
+  );
+
   it("keeps the requested fields in twelve focused steps", () => {
     expect(ACTIVITY_CREATE_STEPS).toEqual([
       "host",
@@ -143,6 +175,18 @@ describe("activity creation wizard", () => {
     expect(validateActivityCreateStep("schedule", draft)).toBe("scheduleInPast");
   });
 
+  it.each([31, 100])("accepts %i future schedules", (scheduleCount) => {
+    const draft = createCompleteDraft({
+      schedules: Array.from({ length: scheduleCount }, (_, index) => ({
+        id: `schedule-${index}`,
+        date: seoulDateKey(index + 1),
+        startTime: "10:00",
+      })),
+    });
+
+    expect(validateActivityCreateStep("schedule", draft)).toBeNull();
+  });
+
   it("judges past schedules against an Asia/Seoul reference time", () => {
     const reference = { date: "2026-08-07", time: "11:30" };
 
@@ -173,6 +217,7 @@ describe("activity creation wizard", () => {
       activityId: 42,
       title: "Seoul market walk",
       description: "Meet local vendors and taste a neighborhood breakfast together.",
+      totalDurationMinutes: 60,
       thumbnailImageUrl: "https://cdn.example.test/activities/cover.webp",
       status: "ACTIVE",
       hostIntroduction: "I have guided friends through this market for years.",
@@ -186,6 +231,8 @@ describe("activity creation wizard", () => {
       discountedPrice: null,
       meetingPointName: "Gwangjang Market Gate 2",
       meetingPlaceId: "ChIJ-gwangjang",
+      meetingLatitude: 37.5701,
+      meetingLongitude: 126.9996,
       images: [
         { imageUrl: "https://cdn.example.test/activities/two.webp", imageOrder: 1 },
         { imageUrl: "https://cdn.example.test/activities/cover.webp", imageOrder: 0 },
@@ -250,6 +297,8 @@ describe("activity creation wizard", () => {
       });
       expect(draft.meetingPlace).toBe("Gwangjang Market Gate 2");
       expect(draft.meetingPlaceId).toBe("ChIJ-gwangjang");
+      expect(draft.meetingLatitude).toBe(37.5701);
+      expect(draft.meetingLongitude).toBe(126.9996);
       expect(draft.meetingAddress).toBe("Gwangjang Market Gate 2");
       expect(draft.maxGuests).toBe("4");
       expect(draft.pricePerPerson).toBe("50000");

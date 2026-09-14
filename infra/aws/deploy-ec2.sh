@@ -10,6 +10,19 @@ set -Eeuo pipefail
 : "${ROUTE53_HOSTED_ZONE_ID:?ROUTE53_HOSTED_ZONE_ID is required}"
 : "${EC2_RUNTIME_ENVIRONMENT_JSON:?EC2_RUNTIME_ENVIRONMENT_JSON is required}"
 
+script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+redirect_domain="${FRONTEND_REDIRECT_DOMAIN:-}"
+for domain in "${FRONTEND_DOMAIN}" "${redirect_domain}"; do
+  if [[ -n "${domain}" && ! "${domain}" =~ ^[a-z0-9]+([.-][a-z0-9]+)*\.[a-z]{2,}$ ]]; then
+    echo "Invalid frontend domain: ${domain}" >&2
+    exit 1
+  fi
+done
+if [[ "${redirect_domain}" == "${FRONTEND_DOMAIN}" ]]; then
+  echo "Redirect and canonical domains must differ." >&2
+  exit 1
+fi
+
 instance_state="$(aws ec2 describe-instances \
   --instance-ids "${EC2_INSTANCE_ID}" \
   --region "${AWS_REGION}" \
@@ -56,22 +69,14 @@ if [[ -z "${public_ip}" || "${public_ip}" == "None" ]]; then
   exit 1
 fi
 
-dns_change="$(jq -n \
+# Snapshot only for planning; do not send traffic to an unprepared instance.
+dns_records="$(aws route53 list-resource-record-sets \
+  --hosted-zone-id "${ROUTE53_HOSTED_ZONE_ID}" --output json)"
+dns_plan="$(jq -e \
   --arg domain "${FRONTEND_DOMAIN}" \
+  --arg redirect "${redirect_domain}" \
   --arg ip "${public_ip}" \
-  '{Changes: [{
-    Action: "UPSERT",
-    ResourceRecordSet: {
-      Name: $domain,
-      Type: "A",
-      TTL: 60,
-      ResourceRecords: [{Value: $ip}]
-    }
-  }]}')"
-
-aws route53 change-resource-record-sets \
-  --hosted-zone-id "${ROUTE53_HOSTED_ZONE_ID}" \
-  --change-batch "${dns_change}" >/dev/null
+  -f "${script_directory}/dns-change.jq" <<< "${dns_records}")"
 
 for _ in $(seq 1 60); do
   ping_status="$(aws ssm describe-instance-information \
@@ -106,6 +111,7 @@ read_runtime_value() {
 }
 
 api_base_url="$(read_runtime_value HANBUDDY_API_BASE_URL)"
+review_login_enabled="$(read_runtime_value REVIEW_LOGIN_ENABLED)"
 google_client_id="$(read_runtime_value GOOGLE_CLIENT_ID)"
 google_redirect_uri="$(read_runtime_value GOOGLE_REDIRECT_URI)"
 
@@ -116,9 +122,11 @@ encode() {
 
 image_uri_base64="$(encode "${IMAGE_URI}")"
 api_base_url_base64="$(encode "${api_base_url}")"
+review_login_enabled_base64="$(encode "${review_login_enabled}")"
 google_client_id_base64="$(encode "${google_client_id}")"
 google_redirect_uri_base64="$(encode "${google_redirect_uri}")"
 frontend_domain_base64="$(encode "${FRONTEND_DOMAIN}")"
+redirect_domain_base64="$(encode "${redirect_domain}")"
 
 read -r -d '' remote_script <<EOF || true
 #!/usr/bin/env bash
@@ -138,9 +146,11 @@ fi
 
 image_uri="\$(printf '%s' '${image_uri_base64}' | base64 --decode)"
 api_base_url="\$(printf '%s' '${api_base_url_base64}' | base64 --decode)"
+review_login_enabled="\$(printf '%s' '${review_login_enabled_base64}' | base64 --decode)"
 google_client_id="\$(printf '%s' '${google_client_id_base64}' | base64 --decode)"
 google_redirect_uri="\$(printf '%s' '${google_redirect_uri_base64}' | base64 --decode)"
 frontend_domain="\$(printf '%s' '${frontend_domain_base64}' | base64 --decode)"
+redirect_domain="\$(printf '%s' '${redirect_domain_base64}' | base64 --decode)"
 registry="\${image_uri%%/*}"
 
 aws ecr get-login-password --region '${AWS_REGION}' \
@@ -163,6 +173,7 @@ start_frontend() {
     --log-opt max-size=10m \
     --log-opt max-file=3 \
     -e "HANBUDDY_API_BASE_URL=\${api_base_url}" \
+    -e "REVIEW_LOGIN_ENABLED=\${review_login_enabled}" \
     -e "GOOGLE_CLIENT_ID=\${google_client_id}" \
     -e "GOOGLE_REDIRECT_URI=\${google_redirect_uri}" \
     "\${container_image}"
@@ -172,7 +183,7 @@ start_frontend "\${image_uri}"
 
 healthy=false
 for _ in \$(seq 1 30); do
-  if curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/dev/null; then
+  if [[ "\$(curl --silent --show-error --connect-timeout 3 --max-time 5 --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/api/health)" == "200" ]]; then
     healthy=true
     break
   fi
@@ -191,11 +202,22 @@ if [[ "\${healthy}" != "true" ]]; then
   exit 1
 fi
 
-printf '%s\n' \
+caddy_config="\$(printf '%s\n' \
   "\${frontend_domain} {" \
   '  encode zstd gzip' \
   '  reverse_proxy 127.0.0.1:3000' \
-  '}' > /opt/hanbuddy/Caddyfile
+  '}')"
+if [[ -n "\${redirect_domain}" ]]; then
+  caddy_config+="\$(printf '\n%s\n' \
+    "\${redirect_domain} {" \
+    "  redir https://\${frontend_domain}{uri} 308" \
+    '}')"
+fi
+
+# Validate through stdin before replacing the bind-mounted config file.
+printf '%s\n' "\${caddy_config}" | docker exec -i hanbuddy-caddy \
+  caddy validate --config /dev/stdin --adapter caddyfile
+printf '%s\n' "\${caddy_config}" > /opt/hanbuddy/Caddyfile
 
 docker restart hanbuddy-caddy >/dev/null
 docker image prune --all --force --filter until=168h >/dev/null
@@ -252,8 +274,74 @@ if [[ "${command_status}" != "Success" || "$(jq -r '.Status' <<< "${command_resu
   exit 1
 fi
 
+apply_dns_change() {
+  local batch="$1"
+  local change_id
+  change_id="$(aws route53 change-resource-record-sets \
+    --hosted-zone-id "${ROUTE53_HOSTED_ZONE_ID}" \
+    --change-batch "${batch}" --query 'ChangeInfo.Id' --output text)" || return 1
+  aws route53 wait resource-record-sets-changed --id "${change_id}"
+}
+
+dns_attempted=false
+rollback_dns() {
+  local status=$?
+  trap - EXIT
+  if [[ "${dns_attempted}" == "true" && "${status}" != "0" ]]; then
+    echo "Deployment validation failed; attempting to restore the original DNS records." >&2
+    # Never overwrite a concurrent/manual DNS edit when recovering a failed deploy.
+    current_records="$(aws route53 list-resource-record-sets \
+      --hosted-zone-id "${ROUTE53_HOSTED_ZONE_ID}" --output json)" || current_records='{}'
+    if jq -e --argjson expected "$(jq '[.apply.Changes[].ResourceRecordSet]' <<< "${dns_plan}")" \
+      '(.ResourceRecordSets // [] | map(if .MultiValueAnswer == false then del(.MultiValueAnswer) else . end)) as $records
+       | all($expected[]; . as $record | any($records[]; . == $record))' \
+      <<< "${current_records}" >/dev/null; then
+      apply_dns_change "$(jq '.rollback' <<< "${dns_plan}")" \
+        || echo "DNS rollback failed. Restore the logged rollback batch manually." >&2
+    else
+      echo "DNS state differs from the deployment plan; inspect and restore manually if needed." >&2
+    fi
+  fi
+  exit "${status}"
+}
+trap rollback_dns EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# Preserve exact original values and TTLs in the Actions log for manual recovery.
+echo "DNS rollback batch (retain until the cutover is verified):"
+jq '.rollback' <<< "${dns_plan}"
+latest_records="$(aws route53 list-resource-record-sets \
+  --hosted-zone-id "${ROUTE53_HOSTED_ZONE_ID}" --output json)"
+latest_plan="$(jq -e --arg domain "${FRONTEND_DOMAIN}" --arg redirect "${redirect_domain}" \
+  --arg ip "${public_ip}" -f "${script_directory}/dns-change.jq" <<< "${latest_records}")"
+if ! jq -e --argjson previous "${dns_plan}" '.rollback == $previous.rollback' <<< "${latest_plan}" >/dev/null; then
+  echo "DNS changed while the app was being prepared; refusing to overwrite it. Retry after review." >&2
+  exit 1
+fi
+dns_attempted=true
+apply_dns_change "$(jq '.apply' <<< "${dns_plan}")"
+
+check_https() {
+  local domain="$1"
+  local resolve="$2"
+  local options=(--silent --show-error --connect-timeout 5 --max-time 10)
+  if [[ "${resolve}" == "direct" ]]; then
+    options+=(--resolve "${domain}:443:${public_ip}")
+  fi
+  local result
+  result="$(curl "${options[@]}" --output /dev/null --write-out '%{http_code} %{redirect_url}' \
+    "https://${domain}/api/health?cutover=1")" || return 1
+  if [[ "${domain}" == "${FRONTEND_DOMAIN}" ]]; then
+    [[ "${result}" == "200 " ]]
+  else
+    [[ "${result}" == "308 https://${FRONTEND_DOMAIN}/api/health?cutover=1" ]]
+  fi
+}
+
 for _ in $(seq 1 36); do
-  if curl --fail --silent --show-error "https://${FRONTEND_DOMAIN}/api/health" >/dev/null; then
+  if check_https "${FRONTEND_DOMAIN}" direct && check_https "${FRONTEND_DOMAIN}" public \
+    && { [[ -z "${redirect_domain}" ]] || { check_https "${redirect_domain}" direct && check_https "${redirect_domain}" public; }; }; then
     echo "Deployment is active: https://${FRONTEND_DOMAIN}"
     exit 0
   fi

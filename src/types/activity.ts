@@ -1,3 +1,6 @@
+import type { ResolvedContentLanguage } from "@/types/content-language";
+import type { ActivityDisplayPrice, DisplayCurrency } from "@/types/display-currency";
+
 export interface Host {
   /** 백엔드 버디 식별자. 동명이인이 있어도 이 값으로 호스트를 구분한다 */
   id?: number;
@@ -51,11 +54,21 @@ export interface Activity {
   reviewCount?: number;
   /** 원화(₩) 기준 1인당 가격 (진행 중인 할인이 있으면 할인 적용가) */
   price: number;
+  /** 사용자가 선택한 통화로 환산한 참고 가격. KRW 선택·fallback이면 생략한다. */
+  referencePrice?: number;
+  /** 참고 통화 기준 할인 전 가격 */
+  referenceOriginalPrice?: number;
+  /** 참고 가격의 응답 통화 */
+  referenceCurrency?: DisplayCurrency;
+  /** 환율을 적용한 참고 가격인지 여부 */
+  referencePriceEstimated?: boolean;
+  /** 참고 가격에 사용한 환율 기준일 */
+  referencePriceExchangeRateDate?: string | null;
   /** 할인 전 가격 (있을 때만 취소선으로 노출) */
   originalPrice?: number;
   /** 진행 중인 할인율(%) — 카드 할인 배지에 사용 */
   discountPercent?: number;
-  /** 총 소요 시간(분). 백엔드 totalDurationHours(0.5시간 단위)를 분으로 환산한 값 */
+  /** 총 소요 시간(분). 백엔드가 제공한 정확한 분 단위 값 */
   durationMinutes?: number;
   /** 모든 일정이 예약 마감이면 true */
   isSoldOut?: boolean;
@@ -99,17 +112,21 @@ export interface TouristActivitySummary {
   buddyId: number;
   title: string;
   description: string;
+  /** 번역 폴백까지 반영해 현재 응답 본문에 실제로 사용된 언어 */
+  contentLanguage?: ResolvedContentLanguage;
   /** 소수 첫째 자리 반올림 평균 별점. 리뷰가 없으면 null */
   averageRating?: number | null;
   /** 이 활동에 달린 리뷰 수 */
   reviewCount?: number | null;
-  /** 총 소요시간(시간 단위). 일정표 소요시간 합을 0.5시간 단위로 올림한 값 */
-  totalDurationHours?: number | null;
+  /** 일정표 소요시간의 정확한 합(분). 일정표가 비어 있으면 0 */
+  totalDurationMinutes: number;
   thumbnailImageUrl: string;
   buddyName: string;
   buddyProfileImageUrl: string | null;
   meetingPointName: string;
   meetingPlaceId: string;
+  meetingLatitude?: number | null;
+  meetingLongitude?: number | null;
   price: number;
   currency: string;
   /** 진행 중인 할인율(%). 백엔드는 항상 내려주며 할인이 없으면 null (UI 반영은 후속 작업) */
@@ -118,6 +135,8 @@ export interface TouristActivitySummary {
   discountEndDate?: string | null;
   /** 할인 적용가 (KRW 정수 반올림). 진행 중인 할인이 없으면 null */
   discountedPrice?: number | null;
+  /** 사용자가 요청한 통화로 환산한 참고 가격 */
+  displayPrice?: ActivityDisplayPrice;
   /** 모든 일정이 예약 마감이면 true */
   isSoldOut?: boolean;
 }
@@ -131,4 +150,29 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   schedules: TouristActivitySchedule[];
   /** 활동 일정표 목록 (UI 반영은 후속 작업) */
   itineraries?: ActivityItineraryResponse[];
+}
+
+export type ActivityWeatherUnavailableReason =
+  "LOCATION_UNAVAILABLE" | "WEATHER_SERVICE_DISABLED" | "WEATHER_SERVICE_UNAVAILABLE";
+
+export type WeatherCondition =
+  "CLEAR" | "PARTLY_CLOUDY" | "CLOUDY" | "RAIN" | "RAIN_SNOW" | "SNOW" | "SHOWER";
+
+export interface ActivityWeatherForecast {
+  /** 예보 대상 Asia/Seoul 일시 */
+  forecastAt: string;
+  temperatureCelsius: number;
+  condition: WeatherCondition;
+  precipitationProbability: number | null;
+}
+
+export interface ActivityWeatherResult {
+  available: boolean;
+  unavailableReason: ActivityWeatherUnavailableReason | null;
+  provider: "KMA";
+  timeZone: "Asia/Seoul";
+  /** 기상청 예보 묶음 발표 시각 */
+  issuedAt: string | null;
+  baseDate: string;
+  forecasts: ActivityWeatherForecast[];
 }

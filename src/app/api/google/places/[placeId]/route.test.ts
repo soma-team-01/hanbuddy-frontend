@@ -6,6 +6,8 @@ import { GET } from "./route";
 vi.mock("@/lib/google/places", () => ({
   fetchGooglePlaceDetails: vi.fn().mockResolvedValue({
     formattedAddress: "서울특별시 종로구 율곡로 62",
+    latitude: 37.579617,
+    longitude: 126.977041,
   }),
   getGoogleMapsApiKey: () => "test-key",
 }));
@@ -20,6 +22,8 @@ describe("GET /api/google/places/:placeId", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       formattedAddress: "서울특별시 종로구 율곡로 62",
+      latitude: 37.579617,
+      longitude: 126.977041,
     });
     expect(fetchGooglePlaceDetails).toHaveBeenCalledWith("ChIJ-anguk", "test-key", {
       locale: "ko",

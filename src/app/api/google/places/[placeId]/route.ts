@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchGooglePlaceDetails, getGoogleMapsApiKey } from "@/lib/google/places";
-import type { Locale } from "@/i18n/routing";
+import { isLocale, routing } from "@/i18n/routing";
 import { getGooglePlacesReferrer } from "../referrer";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,8 @@ interface PlaceDetailsRouteContext {
 
 export async function GET(request: NextRequest, context: PlaceDetailsRouteContext) {
   const { placeId } = await context.params;
-  const locale: Locale = request.nextUrl.searchParams.get("locale") === "ko" ? "ko" : "en";
+  const requestedLocale = request.nextUrl.searchParams.get("locale");
+  const locale = isLocale(requestedLocale) ? requestedLocale : routing.defaultLocale;
   const apiKey = getGoogleMapsApiKey();
   if (!apiKey) {
     return NextResponse.json({ message: "Google Maps API key is missing." }, { status: 503 });

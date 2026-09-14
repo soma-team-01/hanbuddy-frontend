@@ -9,13 +9,14 @@ import { getUserTypeNavRole } from "@/lib/auth/routes";
 import type { MyProfile } from "@/types/user";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
-import { Avatar } from "../ui/Avatar";
-import { UserIcon } from "../ui/icons";
+import { ChatRoomsPoller } from "@/components/chat/ChatRoomsPoller";
+import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
+import { AdminSiteHeader } from "@/components/layout/AdminSiteHeader";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { MobileMenu } from "./MobileMenu";
 import { PageContainer } from "./PageContainer";
 
-export type SiteRole = "tourist" | "buddy" | null;
+export type SiteRole = "tourist" | "buddy" | "admin" | null;
 
 const DESTINATIONS = {
   tourist: [
@@ -27,7 +28,6 @@ const DESTINATIONS = {
     { href: "/home", labelKey: "home" },
     { href: "/dashboard", labelKey: "dashboard" },
     { href: "/my-activities", labelKey: "myActivities" },
-    { href: "/my-page", labelKey: "myPage" },
   ],
   guest: [
     { href: "/", labelKey: "home" },
@@ -50,7 +50,7 @@ interface SiteHeaderProps {
 interface SessionResolution {
   key: string;
   profile: MyProfile | null;
-  status: "authenticated" | "guest";
+  status: "authenticated" | "guest" | "unresolved";
 }
 
 export function SiteHeader({
@@ -58,6 +58,22 @@ export function SiteHeader({
   authenticated = Boolean(role),
   mayHaveSession = authenticated,
 }: Readonly<SiteHeaderProps>) {
+  if (role === "admin") return <AdminSiteHeader authenticated={authenticated} />;
+
+  return (
+    <LocalizedSiteHeader
+      role={role}
+      authenticated={authenticated}
+      mayHaveSession={mayHaveSession}
+    />
+  );
+}
+
+function LocalizedSiteHeader({
+  role,
+  authenticated,
+  mayHaveSession,
+}: Readonly<Required<SiteHeaderProps> & { role: Exclude<SiteRole, "admin"> }>) {
   const t = useTranslations("Navigation");
   const pathname = usePathname();
   const sessionKey = `${authenticated}:${mayHaveSession}`;
@@ -92,7 +108,7 @@ export function SiteHeader({
       setSessionResolution({
         key: sessionKey,
         profile: null,
-        status: authenticated ? "authenticated" : "guest",
+        status: "unresolved",
       });
     });
 
@@ -111,9 +127,14 @@ export function SiteHeader({
   const isBuddyArea = pathname === "/buddy" || pathname.startsWith("/buddy/");
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
+  const showLanguageSwitcher =
+    (effectiveRole !== null || sessionStatus === "guest") &&
+    effectiveRole !== "buddy" &&
+    !isBuddyArea;
   const destinations = DESTINATIONS[effectiveRole ?? "guest"];
   const logoHref = isBuddyArea ? "/buddy" : LOGO_DESTINATIONS[effectiveRole ?? "guest"];
   const accountTitle = profile?.displayName || profile?.name || t("account");
+  const accountUserType = profile?.userType ?? (effectiveRole === "buddy" ? "BUDDY" : "TOURIST");
 
   const navigationLinks = destinations.map(({ href, labelKey }) => {
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
@@ -136,6 +157,7 @@ export function SiteHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft bg-canvas/95 backdrop-blur">
+      {!isMinimalHeader && effectiveAuthenticated ? <ChatRoomsPoller /> : null}
       <PageContainer className="flex h-[76px] items-center justify-between gap-5">
         <Link href={logoHref} aria-label="HanBuddy" className="flex shrink-0 items-center gap-2">
           <Image
@@ -160,7 +182,9 @@ export function SiteHeader({
         ) : null}
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
-          <LocaleSwitcher />
+          {showLanguageSwitcher && !effectiveAuthenticated ? (
+            <LocaleSwitcher labelStyle="name" />
+          ) : null}
           {isBuddyHostingPage && !effectiveAuthenticated ? (
             <BuddyGoogleAuthDialog variant="header" />
           ) : null}
@@ -172,18 +196,11 @@ export function SiteHeader({
           ) : null}
           {!isMinimalHeader && effectiveAuthenticated ? <ChatNavIcon /> : null}
           {(!isMinimalHeader || isBuddyHostingPage) && effectiveAuthenticated ? (
-            <Link
-              href="/my-page"
-              aria-label={t("openAccount")}
-              title={accountTitle}
-              className="inline-flex size-11 items-center justify-center rounded-full border border-line-strong bg-canvas-soft transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              {profile ? (
-                <Avatar name={accountTitle} src={profile.profileImageUrl} size={36} eagerImage />
-              ) : (
-                <UserIcon className="size-5 text-primary-strong" />
-              )}
-            </Link>
+            <HeaderAccountMenu
+              accountTitle={accountTitle}
+              profile={profile}
+              userType={accountUserType}
+            />
           ) : null}
           {!isMinimalHeader && sessionStatus === "guest" ? (
             <Link
@@ -205,18 +222,12 @@ export function SiteHeader({
             ) : null}
             {effectiveAuthenticated ? <ChatNavIcon compact /> : null}
             {effectiveAuthenticated ? (
-              <Link
-                href="/my-page"
-                aria-label={t("openAccount")}
-                title={accountTitle}
-                className="inline-flex size-10 items-center justify-center rounded-full border border-line-strong bg-canvas-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                {profile ? (
-                  <Avatar name={accountTitle} src={profile.profileImageUrl} size={32} eagerImage />
-                ) : (
-                  <UserIcon className="size-5 text-primary-strong" />
-                )}
-              </Link>
+              <HeaderAccountMenu
+                accountTitle={accountTitle}
+                compact
+                profile={profile}
+                userType={accountUserType}
+              />
             ) : null}
             <MobileMenu
               title={t("navigationMenu")}
@@ -226,17 +237,21 @@ export function SiteHeader({
               <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
                 {navigationLinks}
               </nav>
-              <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
-                <LocaleSwitcher dismissMenu className="justify-start px-1" />
-                {sessionStatus === "guest" ? (
-                  <Link
-                    href="/login"
-                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
-                  >
-                    {t("login")}
-                  </Link>
-                ) : null}
-              </div>
+              {(showLanguageSwitcher && !effectiveAuthenticated) || sessionStatus === "guest" ? (
+                <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
+                  {showLanguageSwitcher && !effectiveAuthenticated ? (
+                    <LocaleSwitcher labelStyle="name" dismissMenu className="justify-start px-1" />
+                  ) : null}
+                  {sessionStatus === "guest" ? (
+                    <Link
+                      href="/login"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+                    >
+                      {t("login")}
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
             </MobileMenu>
           </div>
         ) : null}

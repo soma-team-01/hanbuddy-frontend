@@ -1,13 +1,12 @@
 import createMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
 import {
-  getLocaleFromLocation,
   getLocaleFromPathname,
   hasUnsupportedLanguageSegment,
   localizePathname,
   stripLocaleFromPathname,
 } from "@/i18n/pathname";
-import { routing } from "@/i18n/routing";
+import { isLocale, LOCALE_COOKIE_NAME, routing } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getRouteAccessRedirect, parseUserType } from "@/lib/auth/routes";
@@ -21,31 +20,50 @@ export function proxy(request: NextRequest) {
   }
   if (hasUnsupportedLanguageSegment(pathname)) return NextResponse.next();
 
-  const intlResponse = handleI18nRouting(request);
-  const locale =
-    getLocaleFromPathname(pathname) ??
-    getLocaleFromLocation(intlResponse.headers.get("location")) ??
-    routing.defaultLocale;
+  const pathnameLocale = getLocaleFromPathname(pathname);
+  const pathnameWithoutLocale = stripLocaleFromPathname(pathname);
+  const userType = parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value);
+  const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
+  const isKoreanOnly = userType === "BUDDY" || isBuddyEntryPath(pathnameWithoutLocale);
+  const savedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
+  const locale = isKoreanOnly
+    ? "ko"
+    : isLocale(savedLocale)
+      ? savedLocale
+      : (pathnameLocale ?? routing.defaultLocale);
   const redirectPath = getRouteAccessRedirect({
-    pathname: stripLocaleFromPathname(pathname),
-    accessToken: request.cookies.get(AUTH_COOKIES.accessToken)?.value,
+    pathname: pathnameWithoutLocale,
+    accessToken,
     signupToken: request.cookies.get(AUTH_COOKIES.signupToken)?.value,
-    userType: parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value),
+    resubmissionToken: request.cookies.get(AUTH_COOKIES.resubmissionToken)?.value,
+    userType,
   });
 
   if (redirectPath) {
     const redirectUrl = new URL(localizePathname(redirectPath, locale), request.url);
     // 로그인 후 원래 가려던 화면으로 돌아올 수 있도록 목적지를 넘긴다
     if (redirectPath === "/login") {
-      const returnTo = sanitizeReturnToPath(
-        `${stripLocaleFromPathname(pathname)}${request.nextUrl.search}`,
-      );
+      const returnTo = sanitizeReturnToPath(`${pathnameWithoutLocale}${request.nextUrl.search}`);
       if (returnTo) redirectUrl.searchParams.set("next", returnTo);
     }
     return NextResponse.redirect(redirectUrl);
   }
 
-  return intlResponse;
+  if (pathnameLocale && pathnameLocale !== locale) {
+    const redirectUrl = new URL(localizePathname(pathnameWithoutLocale, locale), request.url);
+    redirectUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (pathnameLocale) return handleI18nRouting(request);
+
+  const redirectUrl = new URL(localizePathname(pathname, locale), request.url);
+  redirectUrl.search = request.nextUrl.search;
+  return NextResponse.redirect(redirectUrl);
+}
+
+function isBuddyEntryPath(pathname: string) {
+  return pathname === "/buddy" || pathname.startsWith("/buddy/");
 }
 
 function handleAdminRoute(request: NextRequest) {
@@ -56,7 +74,7 @@ function handleAdminRoute(request: NextRequest) {
 
   if (pathname === "/admin/login") {
     return authenticatedAdmin
-      ? NextResponse.redirect(new URL("/admin/buddies", request.url))
+      ? NextResponse.redirect(new URL("/admin/users", request.url))
       : NextResponse.next();
   }
   if (!accessToken) return NextResponse.redirect(new URL("/admin/login", request.url));

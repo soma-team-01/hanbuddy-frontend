@@ -4,6 +4,7 @@ import {
   proxyAuthenticatedPost,
   readJsonBody,
 } from "@/app/api/_utils/authenticated-backend";
+import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import { isPositiveId } from "@/app/api/_utils/chat-input";
 import type { ChatRoomDetailResponse, CreateGroupChatRoomRequest } from "@/types/chat";
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
 
   return proxyAuthenticatedPost<CreateGroupChatRoomRequest, ChatRoomDetailResponse>(
     request,
-    "/chat/rooms/group",
+    appendRequestedContentLanguage(request, "/chat/rooms/group"),
     { activityScheduleId: parsed.body.activityScheduleId },
     "채팅 서버에 연결할 수 없습니다.",
   );

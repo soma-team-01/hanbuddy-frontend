@@ -25,10 +25,11 @@ import {
 } from "@/lib/api/chat";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatChatScheduleLabel } from "@/lib/chat/format";
+import { getContentLanguage } from "@/lib/content-language";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/lib/chat/limits";
 import { readImageSize } from "@/lib/chat/image-size";
 import { MAX_CHAT_IMAGE_COUNT, uploadChatImages } from "@/lib/images/presigned";
-import { chatKeys, chatRoomQueryOptions, myChatRoomsQueryOptions } from "@/lib/query/chat";
+import { chatKeys, chatRoomQueryOptions, myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 import { unwrapApiResult } from "@/lib/query/result";
 import { myProfileQueryOptions } from "@/lib/query/users";
 import type { ChatMessageResponse, ChatRoomMemberResponse } from "@/types/chat";
@@ -66,6 +67,7 @@ async function sendChatPhotos(chatRoomId: string, files: File[], content: string
 export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const t = useTranslations("Chat");
   const locale = useLocale() as Locale;
+  const language = getContentLanguage(locale);
   const router = useRouter();
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
@@ -86,16 +88,16 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   const attachmentsRef = useRef<ChatAttachment[]>([]);
   const notifiedReadRef = useRef<number>(0);
 
-  // 실시간 구독이 붙으면 폴링을 멈추고 브로드캐스트로 받는다
-  const live = useChatRoomStream(chatRoomId);
+  const stream = useChatRoomStream(chatRoomId, language);
+  const chatConnected = stream.status === "connected";
   useEffect(() => {
     attachmentsRef.current = attachments;
   }, [attachments]);
 
   const profileQuery = useQuery(myProfileQueryOptions());
-  const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, live));
-  const roomsQuery = useQuery(myChatRoomsQueryOptions());
-  const chatMessages = useChatMessages(chatRoomId, live);
+  const roomQuery = useQuery(chatRoomQueryOptions(chatRoomId, language));
+  const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
+  const chatMessages = useChatMessages(chatRoomId, language);
 
   const messages = chatMessages.messages;
   const newestMessageId = messages.at(-1)?.messageId ?? 0;
@@ -142,7 +144,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       setAttachNotice(null);
       setError(null);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) }),
+        queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId, language) }),
         queryClient.invalidateQueries({ queryKey: chatKeys.images(chatRoomId) }),
         queryClient.invalidateQueries({ queryKey: chatKeys.rooms() }),
       ]);
@@ -150,7 +152,9 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
     // 묶음 전송은 한 장씩 보내므로 도중에 끊겨도 앞선 장은 이미 서버에 있다
     onError: async (sendError) => {
       setError(sendError);
-      await queryClient.invalidateQueries({ queryKey: chatKeys.latestMessages(chatRoomId) });
+      await queryClient.invalidateQueries({
+        queryKey: chatKeys.latestMessages(chatRoomId, language),
+      });
     },
   });
 
@@ -171,7 +175,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   function submitDraft() {
     const content = draft.trim();
-    if (sendMutation.isPending) return;
+    if (!chatConnected || sendMutation.isPending) return;
     if (!content && attachments.length === 0) return;
     sendMutation.mutate({ content, files: attachments.map((item) => item.file) });
   }
@@ -304,10 +308,12 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       </header>
 
       <ChatMessageList
+        key={language}
         messages={messages}
         members={room.members}
         myUserId={myUserId}
         locale={locale}
+        language={language}
         isPending={chatMessages.isPending}
         isError={chatMessages.isError}
         hasOlder={chatMessages.hasOlder}
@@ -317,6 +323,27 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
       />
 
       <div className="border-t border-line-soft px-4 py-3 md:px-6">
+        {stream.status !== "connected" ? (
+          <div
+            role={stream.status === "failed" ? "alert" : "status"}
+            className="mb-3 flex items-center justify-between gap-3 text-sm"
+          >
+            <p className={stream.status === "failed" ? "text-danger" : "text-muted"}>
+              {stream.status === "connecting" ? t("connectionConnecting") : null}
+              {stream.status === "reconnecting" ? t("connectionReconnecting") : null}
+              {stream.status === "failed" ? t("connectionFailed") : null}
+            </p>
+            {stream.status === "failed" ? (
+              <button
+                type="button"
+                onClick={stream.retry}
+                className="shrink-0 rounded-full border border-ink px-3 py-1.5 font-display text-xs font-bold text-ink transition-colors hover:border-primary hover:text-primary"
+              >
+                {t("retryConnection")}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         {error !== null ? (
           <p role="alert" className="mb-2 text-sm text-danger">
             {getApiErrorMessage(error, t("sendError"))}
@@ -356,6 +383,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           </ul>
         ) : null}
         <form
+          data-testid="chat-composer"
           className="flex items-end gap-2"
           onSubmit={(event) => {
             event.preventDefault();
@@ -370,6 +398,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
+            disabled={!chatConnected || sendMutation.isPending}
             className="hidden"
             onChange={(event) => {
               attachFiles(event.target.files);
@@ -381,35 +410,41 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             type="button"
             title={t("attachPhoto")}
             aria-label={t("attachPhoto")}
-            disabled={sendMutation.isPending || attachments.length >= MAX_CHAT_IMAGE_COUNT}
+            disabled={
+              !chatConnected || sendMutation.isPending || attachments.length >= MAX_CHAT_IMAGE_COUNT
+            }
             onClick={() => fileInputRef.current?.click()}
             className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors enabled:hover:text-primary disabled:opacity-40"
           >
             <ImagePlusIcon className="size-5" />
           </button>
-          <textarea
-            id="chat-draft"
-            rows={1}
-            value={draft}
-            maxLength={CHAT_MESSAGE_MAX_LENGTH}
-            placeholder={t("messagePlaceholder")}
-            disabled={sendMutation.isPending}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
-              if (event.nativeEvent.isComposing) return;
-              // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                submitDraft();
-              }
-            }}
-            className="focus-border-only max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
-          />
+          <div data-testid="chat-message-input" className="min-w-0 flex-1">
+            <textarea
+              id="chat-draft"
+              rows={1}
+              value={draft}
+              maxLength={CHAT_MESSAGE_MAX_LENGTH}
+              placeholder={t("messagePlaceholder")}
+              disabled={!chatConnected || sendMutation.isPending}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                // 한글 등 IME 조합 중의 Enter는 조합 확정이라 전송하지 않는다 (중복 전송 방지)
+                if (event.nativeEvent.isComposing) return;
+                // Enter로 보내고, 줄바꿈은 Shift+Enter로 남겨둔다
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  submitDraft();
+                }
+              }}
+              className="focus-border-only block max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
+            />
+          </div>
           <button
             type="submit"
             disabled={
-              sendMutation.isPending || (draft.trim().length === 0 && attachments.length === 0)
+              !chatConnected ||
+              sendMutation.isPending ||
+              (draft.trim().length === 0 && attachments.length === 0)
             }
             className="h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
           >

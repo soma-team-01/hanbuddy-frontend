@@ -1,5 +1,10 @@
+import type { ContentLanguage, ResolvedContentLanguage } from "./content-language";
+
 /** DELETED는 soft delete된 활동 — 목록·상세 응답에서 제외되지만 계약상 존재한다 */
 export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
+export interface ActivityStatusUpdateRequest {
+  status: Extract<MyActivityStatus, "ACTIVE" | "INACTIVE">;
+}
 export type ActivityScheduleStatus = "OPEN" | "CLOSED";
 
 export interface ActivityScheduleRequest {
@@ -32,6 +37,8 @@ export interface ActivityPricePreviewResponse {
 }
 
 export interface ActivityUpsertRequest {
+  /** 사용자가 작성한 원문의 주 언어 */
+  sourceLanguage: ContentLanguage;
   /** 1~20자 */
   title: string;
   /** 30~200자 */
@@ -52,8 +59,11 @@ export interface ActivityUpsertRequest {
   discountEndDate?: string;
   meetingPointName: string;
   meetingPlaceId: string;
+  /** Google Place 미팅 장소 좌표. 둘 다 있을 때만 전송 */
+  meetingLatitude?: number;
+  meetingLongitude?: number;
   status: MyActivityStatus;
-  /** 최대 30개 */
+  /** 최소 1개. 별도의 업무 상한 없음 */
   schedules: ActivityScheduleRequest[];
   /** 최소 1개, 최대 20개 */
   itineraries: ActivityItineraryRequest[];
@@ -85,6 +95,9 @@ export interface MyActivitySummaryResponse {
   activityId: number;
   title: string;
   description: string;
+  /** 일정표 소요시간의 정확한 합(분). 일정표가 비어 있으면 0 */
+  totalDurationMinutes: number;
+  sourceLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   status: MyActivityStatus;
 }
@@ -103,6 +116,8 @@ export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
   discountedPrice: number | null;
   meetingPointName: string;
   meetingPlaceId: string;
+  meetingLatitude?: number | null;
+  meetingLongitude?: number | null;
   images: ActivityImageResponse[];
   schedules: ActivityScheduleResponse[];
   itineraries: ActivityItineraryResponse[];
@@ -121,9 +136,11 @@ export interface BuddyApplicationApplicantSummaryResponse {
   applicantProfileImageUrl: string | null;
   applicantNationalityCode: string;
   guestCount: number;
-  applicantContactMethod: "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
+  applicantContactMethod: import("@/lib/auth/types").ContactMethod;
   applicantContactCountryCode: string | null;
   applicantContactIdentifier: string;
+  /** 신청 시 남긴 요청 사항. 없으면 null */
+  specialRequest?: string | null;
 }
 
 export interface BuddyDateScheduleApplicationsResponse {
@@ -137,6 +154,7 @@ export interface BuddyDateScheduleApplicationsResponse {
 export interface BuddyDateActivityApplicationsResponse {
   activityId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   thumbnailImageUrl: string | null;
   totalApplicantCount: number;
   schedules: BuddyDateScheduleApplicationsResponse[];
@@ -146,12 +164,17 @@ export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicatio
   status: "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   specialRequest: string | null;
   appliedAt: string;
+  /** 취소된 신청의 사유. 취소가 아니면 null */
+  cancellationReason?: "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER" | null;
+  /** OTHER일 때 남긴 상세 사유 */
+  cancellationDetail?: string | null;
 }
 
 export interface BuddyActivityApplicationsResponse {
   activityId: number;
   activityScheduleId: number;
   activityTitle: string;
+  contentLanguage?: ResolvedContentLanguage;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   startAt: string;
   applicantCount: number;

@@ -1,64 +1,144 @@
-import Image from "next/image";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { FooterLocaleSwitcher } from "@/components/layout/FooterLocaleSwitcher";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { InstagramIcon, MailIcon } from "@/components/ui/icons";
-import { Link } from "@/i18n/navigation";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  KakaoTalkIcon,
+  MailIcon,
+  WhatsAppIcon,
+} from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
+import type { SiteNavRole } from "@/lib/auth/routes";
+import { getPolicyPath } from "@/lib/policy-routes";
 
 interface SiteFooterProps {
   readonly locale: Locale;
+  readonly role?: SiteNavRole | null;
 }
 
 const CONTACT_DETAILS = {
-  email: "zeroone.soma@gmail.com",
+  email: "contact@hanbuddy.kr",
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
+  facebookUrl: "https://www.facebook.com/profile.php?id=61593105057939",
+  whatsappUrl: "https://wa.me/821082970110",
+  kakaoUrl: "https://pf.kakao.com/_qapJX/chat",
 } as const;
 
-export async function SiteFooter({ locale }: SiteFooterProps) {
+const BUSINESS_DETAILS = {
+  name: "제로원",
+  representative: "김민형",
+  registrationNumber: "597-05-03957",
+  address: "서울특별시 동대문구 전농로34길 15-4 404호",
+  phone: "+82 10-8297-0110",
+} as const;
+
+export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
   const [authT, landingT] = await Promise.all([
     getTranslations({ locale, namespace: "Auth" }),
     getTranslations({ locale, namespace: "Landing" }),
   ]);
 
   return (
-    <footer className="border-t border-line-soft bg-canvas-soft py-6 text-sm text-muted">
-      <PageContainer className="flex flex-col gap-4">
-        <div className="relative flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-          <Link href="/" aria-label="HanBuddy" className="flex items-center gap-2">
-            <Image
-              src="/images/brand/logo-borderless.webp"
-              alt=""
-              width={28}
-              height={28}
-              className="size-7"
-            />
-            <span className="font-display font-bold text-ink">HanBuddy</span>
-          </Link>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-xs text-muted sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
-            <p>{authT("copyright")}</p>
-            <span className="underline">{authT("privacyPolicy")}</span>
-            <span className="underline">{authT("termsOfService")}</span>
+    <footer className="border-t border-line-soft bg-canvas-soft py-8 text-sm text-muted">
+      <PageContainer className="flex flex-col gap-3">
+        <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
+            <p>© 2026 HanBuddy</p>
+            <Link
+              href={getPolicyPath(locale, "terms-of-service")}
+              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {authT("termsOfService")}
+            </Link>
+            <Link
+              href={getPolicyPath(locale, "privacy-policy")}
+              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {authT("privacyPolicy")}
+            </Link>
+            <Link
+              href={getPolicyPath(locale, "cancellation-refund-policy")}
+              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {authT("cancellationRefundPolicy")}
+            </Link>
           </div>
 
-          <div className="flex items-center gap-2 sm:ml-auto">
+          <div className="flex items-center gap-4 sm:justify-end">
+            <FooterLocaleSwitcher role={role} />
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+              className="text-muted transition-colors hover:text-primary"
             >
-              <MailIcon className="size-5" />
+              <MailIcon className="size-[18px]" />
+            </a>
+            <a
+              href={CONTACT_DETAILS.whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={landingT("contact.whatsappIconLabel")}
+              className="text-muted transition-colors hover:text-primary"
+            >
+              <WhatsAppIcon className="size-[18px]" />
+            </a>
+            <a
+              href={CONTACT_DETAILS.facebookUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={landingT("contact.facebookIconLabel")}
+              className="text-muted transition-colors hover:text-primary"
+            >
+              <FacebookIcon className="size-[18px]" />
+            </a>
+            <a
+              href={CONTACT_DETAILS.kakaoUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={landingT("contact.kakaoIconLabel")}
+              className="text-muted transition-colors hover:text-primary"
+            >
+              <KakaoTalkIcon className="size-[18px]" />
             </a>
             <a
               href={CONTACT_DETAILS.instagramUrl}
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.instagramIconLabel")}
-              className="flex size-11 items-center justify-center rounded-full border border-line-soft text-muted transition-colors hover:border-primary hover:text-primary"
+              className="text-muted transition-colors hover:text-primary"
             >
-              <InstagramIcon className="size-5" />
+              <InstagramIcon className="size-[18px]" />
             </a>
           </div>
+        </div>
+
+        <div className="space-y-1 border-t border-line-soft/70 pt-3 text-[11px] leading-5 text-muted/50">
+          <dl className="flex flex-wrap gap-x-5 gap-y-1">
+            <div className="flex gap-1.5">
+              <dt className="font-medium">상호명</dt>
+              <dd>{BUSINESS_DETAILS.name}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">대표자명</dt>
+              <dd>{BUSINESS_DETAILS.representative}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">사업자등록번호</dt>
+              <dd>{BUSINESS_DETAILS.registrationNumber}</dd>
+            </div>
+          </dl>
+          <dl className="flex flex-wrap gap-x-5 gap-y-1">
+            <div className="flex gap-1.5">
+              <dt className="shrink-0 font-medium">사업장 주소</dt>
+              <dd>{BUSINESS_DETAILS.address}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="font-medium">전화번호</dt>
+              <dd>{BUSINESS_DETAILS.phone}</dd>
+            </div>
+          </dl>
         </div>
       </PageContainer>
     </footer>

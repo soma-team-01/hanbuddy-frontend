@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { mergeChatMessages } from "./chat";
+import {
+  CHAT_ROOM_LIST_POLL_INTERVAL,
+  chatRoomQueryOptions,
+  latestChatMessagesQueryOptions,
+  mergeChatMessages,
+  myChatRoomsCacheQueryOptions,
+  myChatRoomsPollingQueryOptions,
+} from "./chat";
 import type { ChatMessageResponse } from "@/types/chat";
 
 function message(messageId: number): ChatMessageResponse {
@@ -9,6 +16,9 @@ function message(messageId: number): ChatMessageResponse {
     senderName: "SeoulMate",
     senderProfileImageUrl: null,
     content: `message ${messageId}`,
+    sourceLanguage: "KO",
+    contentLanguage: "KO",
+    originalContent: `message ${messageId}`,
     createdAt: "2026-08-09T13:00:00+09:00",
   };
 }
@@ -28,5 +38,26 @@ describe("mergeChatMessages", () => {
 
   it("returns an empty list when there is nothing to merge", () => {
     expect(mergeChatMessages([], [])).toEqual([]);
+  });
+});
+
+describe("chat polling", () => {
+  it("checks room-list unread counts every 15 seconds from the polling owner", () => {
+    expect(CHAT_ROOM_LIST_POLL_INTERVAL).toBe(15_000);
+    expect(myChatRoomsPollingQueryOptions("EN").refetchInterval).toBe(15_000);
+    expect(myChatRoomsPollingQueryOptions("EN").refetchOnWindowFocus).toBe(true);
+  });
+
+  it("lets room-list consumers observe the shared cache without starting another timer", () => {
+    const options = myChatRoomsCacheQueryOptions("EN");
+
+    expect(options.refetchInterval).toBe(false);
+    expect(options.refetchOnWindowFocus).toBe(false);
+    expect(options.refetchOnMount).toBe(false);
+  });
+
+  it("never replaces the room WebSocket with REST polling", () => {
+    expect(chatRoomQueryOptions(1, "EN").refetchInterval).toBe(false);
+    expect(latestChatMessagesQueryOptions(1, "EN").refetchInterval).toBe(false);
   });
 });

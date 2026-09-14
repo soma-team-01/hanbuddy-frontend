@@ -1,24 +1,26 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ActivityReviewsDialog } from "@/components/review/ActivityReviewsDialog";
 import { ReviewCard } from "@/components/review/ReviewCard";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { activityReviewSummaryQueryOptions } from "@/lib/query/reviews";
+import { getContentLanguage } from "@/lib/content-language";
 
 /**
  * 활동 상세의 후기 섹션.
- * 본문에는 최신 6건만 두고, 전체 목록은 다이얼로그에서 12건씩 이어 붙인다.
+ * 본문에는 최신 3건만 한 열로 두고, 전체 목록은 다이얼로그에서 12건씩 이어 붙인다.
  */
 export function ActivityReviewsSection({
   activityId,
   id,
 }: Readonly<{ activityId: number | string; id?: string }>) {
   const t = useTranslations("Reviews");
+  const language = getContentLanguage(useLocale());
   const [dialogOpen, setDialogOpen] = useState(false);
-  const previewQuery = useQuery(activityReviewSummaryQueryOptions(activityId));
+  const previewQuery = useQuery(activityReviewSummaryQueryOptions(activityId, language));
 
   const preview = previewQuery.data;
   const reviews = preview?.reviews ?? [];
@@ -46,9 +48,9 @@ export function ActivityReviewsSection({
       ) : null}
 
       {reviews.length > 0 ? (
-        <ul className="grid gap-4 md:grid-cols-2">
+        <ul className="flex flex-col gap-4">
           {reviews.map((review) => (
-            <li key={review.reviewId}>
+            <li key={review.reviewId} className="min-w-0">
               <ReviewCard review={review} />
             </li>
           ))}
@@ -66,7 +68,11 @@ export function ActivityReviewsSection({
       ) : null}
 
       {dialogOpen ? (
-        <ActivityReviewsDialog activityId={activityId} onClose={() => setDialogOpen(false)} />
+        <ActivityReviewsDialog
+          activityId={activityId}
+          language={language}
+          onClose={() => setDialogOpen(false)}
+        />
       ) : null}
     </section>
   );

@@ -5,6 +5,8 @@ import type {
   ReviewResponse,
   UpdateReviewRequest,
 } from "@/types/review";
+import { withContentLanguage } from "@/lib/content-language";
+import type { ContentLanguage } from "@/types/content-language";
 import { requestApiResult, type ApiResult } from "./result";
 
 export type ReviewResult = ApiResult<ReviewResponse, "review">;
@@ -17,20 +19,27 @@ const DEFAULT_BUDDY_PROFILE_ERROR_MESSAGE = "버디 정보를 불러오지 못�
 const DEFAULT_REVIEW_SAVE_ERROR_MESSAGE = "후기를 저장하지 못했습니다.";
 const DEFAULT_REVIEW_DELETE_ERROR_MESSAGE = "후기를 삭제하지 못했습니다.";
 
-function reviewPagePath(basePath: string, page: number, size: number, rating?: number | null) {
+function reviewPagePath(
+  basePath: string,
+  page: number,
+  size: number,
+  language: ContentLanguage,
+  rating?: number | null,
+) {
   const ratingQuery = rating ? `&rating=${rating}` : "";
-  return `${basePath}?page=${page}&size=${size}${ratingQuery}`;
+  return withContentLanguage(`${basePath}?page=${page}&size=${size}${ratingQuery}`, language);
 }
 
 export async function getActivityReviews(
   activityId: number | string,
   page: number,
   size: number,
+  language: ContentLanguage,
   /** 1~5. 지정하면 그 별점의 후기만 조회한다 */
   rating?: number | null,
 ): Promise<ReviewPageResult> {
   return requestApiResult<ReviewPageResponse, "reviews">(
-    reviewPagePath(`/api/activities/${activityId}/reviews`, page, size, rating),
+    reviewPagePath(`/api/activities/${activityId}/reviews`, page, size, language, rating),
     "reviews",
     undefined,
     DEFAULT_REVIEW_LIST_ERROR_MESSAGE,
@@ -41,10 +50,11 @@ export async function getBuddyReviews(
   buddyId: number | string,
   page: number,
   size: number,
+  language: ContentLanguage,
   rating?: number | null,
 ): Promise<ReviewPageResult> {
   return requestApiResult<ReviewPageResponse, "reviews">(
-    reviewPagePath(`/api/buddies/${buddyId}/reviews`, page, size, rating),
+    reviewPagePath(`/api/buddies/${buddyId}/reviews`, page, size, language, rating),
     "reviews",
     undefined,
     DEFAULT_REVIEW_LIST_ERROR_MESSAGE,
@@ -60,9 +70,12 @@ export async function getBuddyProfile(buddyId: number | string): Promise<BuddyPr
   );
 }
 
-export async function createReview(request: CreateReviewRequest): Promise<ReviewResult> {
+export async function createReview(
+  request: CreateReviewRequest,
+  language: ContentLanguage,
+): Promise<ReviewResult> {
   return requestApiResult<ReviewResponse, "review">(
-    "/api/reviews",
+    withContentLanguage("/api/reviews", language),
     "review",
     {
       method: "POST",
@@ -76,9 +89,10 @@ export async function createReview(request: CreateReviewRequest): Promise<Review
 export async function updateReview(
   reviewId: number | string,
   request: UpdateReviewRequest,
+  language: ContentLanguage,
 ): Promise<ReviewResult> {
   return requestApiResult<ReviewResponse, "review">(
-    `/api/reviews/${reviewId}`,
+    withContentLanguage(`/api/reviews/${reviewId}`, language),
     "review",
     {
       method: "PATCH",

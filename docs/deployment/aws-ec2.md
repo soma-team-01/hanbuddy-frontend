@@ -192,6 +192,14 @@ Production environment secret:
 
 `AWS_ROLE_ARN`, `AWS_REGION`, `ECR_REPOSITORY`, `PRODUCTION_DEPLOYMENT_ENABLED`는 두 환경이 공유하는 repository variable이다. `PRODUCTION_DEPLOYMENT_ENABLED`는 production job의 실행 여부만 제어하며 environment variable을 대신하지 않는다.
 
+CI에서 `deploy-production.yml`을 재사용 호출할 때는 호출 job의 `secrets: inherit`를 유지한다.
+수동 `Deploy production`은 성공하지만 CI 자동 호출에서 Google Maps 시크릿이 빈 값으로
+처리된 사례(#122)를 방지하기 위한 설정이다. 실제 운영 키는 계속 `production` environment
+secret에 두고, 호출받는 job의 `environment: production`도 유지한다. 키를 repository variable로
+옮기거나 로그에 출력하지 않는다. 이 경로의 최종 검증은 수정 사항이 `main`에 반영된 뒤 승인된
+운영 배포에서 수행한다. 이전 실패 실행의 재실행은 이전 커밋의 workflow를 사용하므로 수정 검증을
+대신할 수 없다.
+
 `REVIEW_LOGIN_ENABLED`는 `true` 또는 `false`만 허용하는 서버 런타임 변수다. `true`이면 일반 로그인 화면에 이메일·비밀번호 입력 영역이 추가되고 same-origin `/api/auth/review/login` BFF가 활성화된다. `false`이거나 로컬에서 설정하지 않으면 기존 Google 로그인만 노출되며 BFF 직접 호출도 거부한다. 값 변경 후 해당 환경을 다시 배포해야 하며, 심사 계정 이메일과 비밀번호 해시는 백엔드 Parameter Store에서만 관리한다.
 
 토스 결제용 frontend 환경변수는 없다. 결제 준비 API가 `clientKey`, 주문번호, 금액을 내려준다.

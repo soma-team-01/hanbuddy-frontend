@@ -1384,12 +1384,9 @@
   },
   "BirthDatePicker": {
     "label": "出生日期",
-    "placeholder": "請選擇出生日期",
     "year": "年",
     "month": "月",
     "day": "日",
-    "choose": "選擇",
-    "done": "完成",
     "reselectMonthDay": "請依所選年份重新選擇月和日。",
     "reselectDay": "日期已失效，請重新選擇日。"
   }

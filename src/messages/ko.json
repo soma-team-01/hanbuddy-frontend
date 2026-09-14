@@ -1384,12 +1384,9 @@
   },
   "BirthDatePicker": {
     "label": "생년월일",
-    "placeholder": "생년월일을 선택해 주세요",
     "year": "연도",
     "month": "월",
     "day": "일",
-    "choose": "선택",
-    "done": "완료",
     "reselectMonthDay": "선택한 연도에 맞게 월과 일을 다시 선택해 주세요.",
     "reselectDay": "선택한 일자가 유효하지 않아요. 일을 다시 선택해 주세요."
   }

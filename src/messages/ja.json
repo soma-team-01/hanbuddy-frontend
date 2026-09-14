@@ -1384,12 +1384,9 @@
   },
   "BirthDatePicker": {
     "label": "生年月日",
-    "placeholder": "生年月日を選択してください",
     "year": "年",
     "month": "月",
     "day": "日",
-    "choose": "選択",
-    "done": "完了",
     "reselectMonthDay": "選択した年に合わせて月と日をもう一度選択してください。",
     "reselectDay": "日が無効になりました。もう一度選択してください。"
   }

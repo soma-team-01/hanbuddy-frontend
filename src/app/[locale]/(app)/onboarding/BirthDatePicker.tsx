@@ -1,11 +1,21 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronDownIcon } from "@/components/ui/icons";
+import { BirthDateSelect } from "./BirthDateSelect";
 import { daysInMonth, isValidBirthDate } from "./birth-date";
 
 type Part = "year" | "month" | "day";
+type Reselection = "reselectDay" | "reselectMonthDay" | null;
+
+function dateParts(value: string, valid: boolean) {
+  const [year = "", month = "", day = ""] = valid ? value.split("-") : [];
+  return {
+    year: year ? String(Number(year)) : "",
+    month: month ? String(Number(month)) : "",
+    day: day ? String(Number(day)) : "",
+  };
+}
 
 export function BirthDatePicker({
   value,
@@ -26,51 +36,29 @@ export function BirthDatePicker({
   const validationT = useTranslations("Onboarding.validation");
   const locale = useLocale();
   const id = useId();
-  const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const firstSelect = useRef<HTMLSelectElement>(null);
-  const [reselection, setReselection] = useState<"reselectDay" | "reselectMonthDay" | null>(null);
-  const [open, setOpen] = useState(false);
-  const [parts, setParts] = useState({ year: "", month: "", day: "" });
-  const order: Part[] = locale === "en" ? ["month", "day", "year"] : ["year", "month", "day"];
   const valid = isValidBirthDate(value, today, oldestAllowedBirthDate, youngestAllowedBirthDate);
+  const [selection, setSelection] = useState(() => ({
+    sourceValue: value,
+    sourceValid: valid,
+    parts: dateParts(value, valid),
+    reselection: null as Reselection,
+  }));
+  // Restore parent-supplied drafts without resetting incomplete local selections.
+  if (value !== selection.sourceValue || valid !== selection.sourceValid) {
+    setSelection({
+      sourceValue: value,
+      sourceValid: valid,
+      parts: dateParts(value, valid),
+      reselection: null,
+    });
+  }
+  const { parts, reselection } = selection;
+  const order: Part[] = locale === "en" ? ["month", "day", "year"] : ["year", "month", "day"];
   const months = Array.from({ length: 12 }, (_, i) =>
     new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(
       new Date(Date.UTC(2000, i, 1)),
     ),
   );
-  const display = valid
-    ? (() => {
-        const [year, month, day] = value.split("-");
-        return locale === "en"
-          ? `${months[Number(month) - 1]} ${Number(day)}, ${year}`
-          : `${year} / ${month} / ${day}`;
-      })()
-    : t("placeholder");
-
-  useEffect(() => {
-    if (!open) return;
-    firstSelect.current?.focus();
-    const outside = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", outside);
-    return () => document.removeEventListener("pointerdown", outside);
-  }, [open]);
-
-  function close() {
-    setOpen(false);
-    trigger.current?.focus();
-  }
-
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === "Escape" && open) {
-      event.preventDefault();
-      event.stopPropagation();
-      close();
-    }
-  }
-
   const upperBound = youngestAllowedBirthDate < today ? youngestAllowedBirthDate : today;
   const firstYear = Number(oldestAllowedBirthDate.slice(0, 4));
   const lastYear = Number(upperBound.slice(0, 4));
@@ -79,19 +67,21 @@ export function BirthDatePicker({
     month: 12,
     day: daysInMonth(Number(parts.year), Number(parts.month)),
   };
-  const descriptionIds = [`${id}-value`, ...(invalid ? [`${id}-error`] : [])].join(" ");
+  const descriptionIds =
+    [invalid && `${id}-error`, reselection && `${id}-status`].filter(Boolean).join(" ") ||
+    undefined;
 
-  function allowed(part: Part, number: number, selection: typeof parts) {
+  function allowed(part: Part, number: number, current: typeof parts) {
     if (!oldestAllowedBirthDate || !upperBound) return false;
     if (part === "year") return number >= firstYear && number <= lastYear;
-    if (!selection.year) return true;
-    const prefix = `${selection.year.padStart(4, "0")}-${String(part === "month" ? number : selection.month).padStart(2, "0")}`;
+    if (!current.year) return true;
+    const prefix = `${current.year.padStart(4, "0")}-${String(part === "month" ? number : current.month).padStart(2, "0")}`;
     if (part === "month")
       return `${prefix}-31` >= oldestAllowedBirthDate && `${prefix}-01` <= upperBound;
-    if (!selection.month) return true;
+    if (!current.month) return true;
     const candidate = `${prefix}-${String(number).padStart(2, "0")}`;
     return (
-      number <= daysInMonth(Number(selection.year), Number(selection.month)) &&
+      number <= daysInMonth(Number(current.year), Number(current.month)) &&
       candidate >= oldestAllowedBirthDate &&
       candidate <= upperBound
     );
@@ -100,128 +90,74 @@ export function BirthDatePicker({
   function change(part: Part, next: string) {
     if (next && !allowed(part, Number(next), parts)) return;
     const updated = { ...parts, [part]: next };
+    let nextReselection = reselection;
     if (updated.month && !allowed("month", Number(updated.month), updated)) {
       updated.month = "";
       updated.day = "";
-      setReselection("reselectMonthDay");
+      nextReselection = "reselectMonthDay";
     } else if (updated.day && !allowed("day", Number(updated.day), updated)) {
       updated.day = "";
-      setReselection(reselection ?? "reselectDay");
-    } else if (updated.month && updated.day) setReselection(null);
-    setParts(updated);
+      nextReselection ??= "reselectDay";
+    } else if (updated.month && updated.day) {
+      nextReselection = null;
+    }
     const candidate = `${updated.year.padStart(4, "0")}-${updated.month.padStart(2, "0")}-${updated.day.padStart(2, "0")}`;
-    onChange(
+    const nextValue =
       updated.year &&
-        updated.month &&
-        updated.day &&
-        isValidBirthDate(candidate, today, oldestAllowedBirthDate, youngestAllowedBirthDate)
+      updated.month &&
+      updated.day &&
+      isValidBirthDate(candidate, today, oldestAllowedBirthDate, youngestAllowedBirthDate)
         ? candidate
-        : "",
-    );
+        : "";
+    setSelection({
+      sourceValue: nextValue,
+      sourceValid: Boolean(nextValue),
+      parts: updated,
+      reselection: nextReselection,
+    });
+    onChange(nextValue);
   }
 
   return (
-    <div
-      ref={root}
-      onBlur={(event) => {
-        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node))
-          setOpen(false);
-      }}
-      className="flex min-w-0 flex-col gap-1.5"
-    >
-      <span id={`${id}-label`} className="text-sm font-medium text-ink">
-        {t("label")}
-      </span>
-      <button
-        ref={trigger}
-        type="button"
-        aria-labelledby={`${id}-label`}
-        aria-describedby={descriptionIds}
-        aria-expanded={open}
-        aria-controls={`${id}-panel`}
-        onKeyDown={handleKeyDown}
-        onClick={() => {
-          if (open) {
-            close();
-            return;
-          }
-          const [year = "", month = "", day = ""] = valid ? value.split("-") : [];
-          setParts({
-            year: year ? String(Number(year)) : "",
-            month: month ? String(Number(month)) : "",
-            day: day ? String(Number(day)) : "",
-          });
-          setReselection(null);
-          setOpen(true);
-        }}
-        className="flex min-h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 py-3 text-left text-base text-ink focus-visible:outline-2 focus-visible:outline-primary-strong"
+    <fieldset className="w-full min-w-0" aria-describedby={descriptionIds}>
+      <legend className="mb-2 text-sm font-medium text-ink">{t("label")}</legend>
+      <div
+        className={
+          locale === "en"
+            ? "grid grid-cols-[1.4fr_0.8fr_1fr] gap-2"
+            : "grid grid-cols-[1.2fr_1fr_0.8fr] gap-2"
+        }
       >
-        <span id={`${id}-value`}>{display}</span>
-        <ChevronDownIcon aria-hidden className="size-4 shrink-0" />
-      </button>
+        {order.map((part) => (
+          <BirthDateSelect
+            key={part}
+            label={t(part)}
+            value={parts[part]}
+            invalid={invalid}
+            describedBy={descriptionIds}
+            onChange={(next) => change(part, next)}
+            options={[
+              { value: "", label: t(part) },
+              ...Array.from({ length: optionCounts[part] }, (_, i) => {
+                const number = part === "year" ? lastYear - i : i + 1;
+                return {
+                  value: String(number),
+                  label: part === "month" ? months[number - 1] : String(number),
+                  disabled: !allowed(part, number, parts),
+                };
+              }),
+            ]}
+          />
+        ))}
+      </div>
       {invalid && (
-        <p id={`${id}-error`} className="text-sm text-danger">
+        <p id={`${id}-error`} className="mt-2 text-sm text-danger">
           {validationT("birthDateInvalid")}
         </p>
       )}
-      {open && (
-        <fieldset
-          id={`${id}-panel`}
-          aria-labelledby={`${id}-label`}
-          className="rounded-xl border border-line-strong bg-panel-raised p-4"
-        >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {order.map((part, index) => (
-              <label
-                key={part}
-                className="flex min-w-0 flex-col gap-1 text-sm font-medium text-ink"
-              >
-                {t(part)}
-                <select
-                  ref={index === 0 ? firstSelect : undefined}
-                  value={parts[part]}
-                  aria-invalid={invalid || undefined}
-                  aria-describedby={invalid ? `${id}-error` : undefined}
-                  onChange={(event) => change(part, event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="min-h-12 w-full min-w-0 rounded-lg border border-line-strong bg-canvas-soft px-2 text-base focus-visible:outline-2 focus-visible:outline-primary-strong"
-                >
-                  <option value="">{t("choose")}</option>
-                  {Array.from(
-                    {
-                      length: optionCounts[part],
-                    },
-                    (_, i) => {
-                      const number = part === "year" ? lastYear - i : i + 1;
-                      return (
-                        <option
-                          key={number}
-                          value={number}
-                          disabled={!allowed(part, number, parts)}
-                        >
-                          {part === "month" ? months[number - 1] : number}
-                        </option>
-                      );
-                    },
-                  )}
-                </select>
-              </label>
-            ))}
-          </div>
-          <output className="mt-3 block text-sm text-muted">
-            {reselection ? t(reselection) : ""}
-          </output>
-          <button
-            type="button"
-            onClick={close}
-            onKeyDown={handleKeyDown}
-            disabled={!valid}
-            className="mt-4 min-h-11 w-full rounded-xl bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover disabled:opacity-50"
-          >
-            {t("done")}
-          </button>
-        </fieldset>
-      )}
-    </div>
+      <output id={`${id}-status`} className="block text-sm text-muted not-empty:mt-2 empty:hidden">
+        {reselection ? t(reselection) : ""}
+      </output>
+    </fieldset>
   );
 }

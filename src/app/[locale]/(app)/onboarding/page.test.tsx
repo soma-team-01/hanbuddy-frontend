@@ -6,6 +6,7 @@ import type { BuddyResubmission } from "@/lib/auth/types";
 import * as countries from "@/lib/countries";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
+import { selectBirthDatePart } from "@/test/select-birth-date";
 import { OnboardingForm } from "./OnboardingForm";
 import { saveOnboardingDraft, clearAllOnboardingDrafts } from "./onboarding-draft-storage";
 import { generateMetadata } from "./page";
@@ -203,10 +204,7 @@ describe("OnboardingForm", () => {
       expect(screen.queryByRole("button", { name: "Buddy" })).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
       expect(screen.getByText(nationality)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: birthDate })).toHaveAttribute(
-        "aria-expanded",
-        "false",
-      );
+      expect(screen.getByRole("group", { name: birthDate })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: nationality })).toHaveClass("focus-border-only");
       expect(screen.getByTestId("onboarding-personal-fields")).not.toHaveClass("sm:grid-cols-2");
       expect(
@@ -323,9 +321,7 @@ describe("OnboardingForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
 
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Traveler");
-    expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
-      "April 12, 1998",
-    );
+    expectBirthDate("en", "1998-04-12");
   });
 
   it("preserves the current step and entered information after changing locale", async () => {
@@ -359,7 +355,7 @@ describe("OnboardingForm", () => {
     expect(screen.getByLabelText("메신저 앱 ID")).toHaveValue("traveler_line");
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
     expect(screen.getByRole("textbox", { name: "이름" })).toHaveValue("Google Traveler");
-    expect(screen.getByRole("button", { name: "생년월일" })).toHaveTextContent("1998 / 04 / 12");
+    expectBirthDate("ko", "1998-04-12");
   });
 
   it("keeps entered information after opening and closing an agreement document", () => {
@@ -375,9 +371,7 @@ describe("OnboardingForm", () => {
     expect(screen.getByLabelText("Messaging app ID")).toHaveValue("traveler_line");
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Traveler");
-    expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
-      "April 12, 1998",
-    );
+    expectBirthDate("en", "1998-04-12");
   });
 
   it("renders buddy-specific copy and submits the buddy role", async () => {
@@ -797,13 +791,12 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }) {
     target: { value: labels.country },
   });
   fireEvent.click(screen.getByText(labels.country));
-  const picker = screen.queryByRole("button", { name: labels.birthDate });
+  const picker = screen.queryByRole("group", { name: labels.birthDate });
   if (!picker) {
     fireEvent.change(screen.getByLabelText(labels.birthDate), {
       target: { value: values.birthDate },
     });
   } else if (values.birthDate) {
-    fireEvent.click(picker);
     const [year, month, day] = values.birthDate.split("-").map(Number);
     for (const [name, value] of locale === "en"
       ? [
@@ -816,11 +809,8 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }) {
           ["월", month],
           ["일", day],
         ]) {
-      fireEvent.change(screen.getByRole("combobox", { name: String(name) }), {
-        target: { value: String(value) },
-      });
+      selectBirthDatePart(String(name), String(value));
     }
-    fireEvent.click(screen.getByRole("button", { name: locale === "en" ? "Done" : "완료" }));
   }
 }
 
@@ -1332,7 +1322,7 @@ it("marks an empty tourist birth date invalid", () => {
   renderWithIntl(<OnboardingForm />);
   fillAboutYou("en", { birthDate: "" });
   clickContinue("en");
-  expect(screen.getByRole("button", { name: "Date of birth" })).toHaveAccessibleDescription(
+  expect(screen.getByRole("group", { name: "Date of birth" })).toHaveAccessibleDescription(
     /Enter a valid date of birth for an age between 19 and 120/,
   );
   expect(screen.getByRole("alert")).toHaveTextContent(
@@ -1348,18 +1338,14 @@ it("retains a leap date across en → ko → en remounts only for the same signu
   const second = renderWithIntl(<OnboardingForm signupDraftAccountId="synthetic-a" />, {
     locale: "ko",
   });
-  expect(screen.getByRole("button", { name: "생년월일" })).toHaveTextContent("2000 / 02 / 29");
+  expectBirthDate("ko", "2000-02-29");
   second.unmount();
   const third = renderWithIntl(<OnboardingForm signupDraftAccountId="synthetic-a" />);
-  expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
-    "February 29, 2000",
-  );
+  expectBirthDate("en", "2000-02-29");
   third.unmount();
   renderWithIntl(<OnboardingForm signupDraftAccountId="synthetic-b" />);
   await act(async () => undefined);
-  expect(screen.getByRole("button", { name: "Date of birth" })).toHaveTextContent(
-    "Select your birth date",
-  );
+  expectBirthDate("en", "");
 });
 
 it("restores the original Korean tourist validation message", () => {
@@ -1370,3 +1356,9 @@ it("restores the original Korean tourist validation message", () => {
     "만 19세 이상 120세 이하의 올바른 생년월일을 입력해 주세요.",
   );
 });
+
+function expectBirthDate(locale: "en" | "ko", value: string) {
+  const labels = locale === "en" ? ["Year", "Month", "Day"] : ["연도", "월", "일"];
+  const parts = value ? value.split("-").map((part) => String(Number(part))) : ["", "", ""];
+  labels.forEach((name, i) => expect(screen.getByRole("combobox", { name })).toHaveValue(parts[i]));
+}

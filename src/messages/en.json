@@ -1384,12 +1384,9 @@
   },
   "BirthDatePicker": {
     "label": "Date of birth",
-    "placeholder": "Select your birth date",
     "year": "Year",
     "month": "Month",
     "day": "Day",
-    "choose": "Select",
-    "done": "Done",
     "reselectMonthDay": "Please select the month and day again for the chosen year.",
     "reselectDay": "The day is no longer valid. Please select it again."
   }

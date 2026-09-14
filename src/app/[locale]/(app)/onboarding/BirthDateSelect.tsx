@@ -3,7 +3,7 @@
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { CheckIcon, ChevronDownIcon } from "@/components/ui/icons";
-import { ONBOARDING_SELECT_TRIGGER } from "./onboarding-field-styles";
+import { ONBOARDING_SELECT_TRIGGER } from "@/app/[locale]/(app)/onboarding/onboarding-field-styles";
 
 type Option = { value: string; label: string; disabled?: boolean };
 
@@ -154,7 +154,7 @@ export function BirthDateSelect({
         }}
         onKeyDown={handleKeyDown}
         onBlur={() => setOpen(false)}
-        className={`focus-border-only ${ONBOARDING_SELECT_TRIGGER} gap-1 px-2 sm:gap-2 sm:px-4`}
+        className={`focus-border-only ${ONBOARDING_SELECT_TRIGGER} gap-1 px-2 md:gap-2 md:px-4`}
       >
         <span className="truncate">{selected?.label ?? label}</span>
         <ChevronDownIcon aria-hidden className="size-4 shrink-0 text-ink" />

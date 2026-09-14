@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { BirthDateSelect } from "./BirthDateSelect";
+import { BirthDateSelect } from "@/app/[locale]/(app)/onboarding/BirthDateSelect";
 import { daysInMonth, isValidBirthDate } from "./birth-date";
 
 type Part = "year" | "month" | "day";

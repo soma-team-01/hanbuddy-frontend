@@ -18,6 +18,14 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
 });
 
+it("keeps compact mobile spacing until the tablet breakpoint", () => {
+  render(<Select />);
+  const trigger = screen.getByRole("combobox", { name: "Day" });
+  expect(trigger).toHaveClass("gap-1", "px-2", "md:gap-2", "md:px-4");
+  expect(trigger).not.toHaveClass("sm:gap-2");
+  expect(trigger).not.toHaveClass("sm:px-4");
+});
+
 it("limits the scrollable menu to six rows and scrolls the selected option into view", () => {
   render(<Select />);
   const trigger = screen.getByRole("combobox", { name: "Day" });

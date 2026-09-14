@@ -56,7 +56,7 @@ import {
 } from "./onboarding-draft-storage";
 
 import { BirthDatePicker } from "./BirthDatePicker";
-import { ONBOARDING_SELECT_TRIGGER } from "./onboarding-field-styles";
+import { ONBOARDING_SELECT_TRIGGER } from "@/app/[locale]/(app)/onboarding/onboarding-field-styles";
 import { isValidBirthDate } from "./birth-date";
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];

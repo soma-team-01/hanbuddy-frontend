@@ -23,7 +23,7 @@ const CONTACT_DETAILS = {
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
   facebookUrl: "https://www.facebook.com/profile.php?id=61593105057939",
   whatsappUrl: "https://wa.me/821082970110",
-  kakaoUrl: "https://open.kakao.com/me/hanbuddy",
+  kakaoUrl: "http://pf.kakao.com/_qapJX/chat",
 } as const;
 
 const BUSINESS_DETAILS = {

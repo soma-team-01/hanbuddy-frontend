@@ -135,7 +135,7 @@ describe("SiteFooter", () => {
     expect(whatsappLink).toHaveAttribute("target", "_blank");
 
     const kakaoLink = screen.getByRole("link", { name: kakao });
-    expect(kakaoLink).toHaveAttribute("href", "https://open.kakao.com/me/hanbuddy");
+    expect(kakaoLink).toHaveAttribute("href", "http://pf.kakao.com/_qapJX/chat");
     expect(kakaoLink).toHaveAttribute("target", "_blank");
   });
 });

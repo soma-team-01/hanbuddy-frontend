@@ -432,12 +432,14 @@ export function OnboardingForm({
       : "";
 
     const normalizedPhoneNumber = contactIdentifier.replace(/[ -]/g, "");
+    const isUnrestrictedMessenger = messagingApp === "kakaotalk" || messagingApp === "instagram";
+    const isValidMessengerId = isUnrestrictedMessenger
+      ? contactIdentifier.length > 0
+      : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
     const isValidContact = requiresContactCountryCode
       ? COUNTRY_CALLING_CODE_PATTERN.test(contactCountryCode ?? "") &&
         PHONE_CONTACT_PATTERN.test(normalizedPhoneNumber)
-      : messagingApp === "kakaotalk" || messagingApp === "instagram"
-        ? contactIdentifier.length > 0
-        : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
+      : isValidMessengerId;
 
     if (!isBuddyFlow && (messagingApp === "line" || messagingApp === "wechat")) {
       setErrorKey("validation.contactMethodRequired");

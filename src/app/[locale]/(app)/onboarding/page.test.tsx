@@ -1283,20 +1283,23 @@ describe("onboarding metadata", () => {
   });
 });
 
-it.each(["TOURIST", "BUDDY"] as const)(
-  "preserves exact original age boundaries for %s",
-  (userType) => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-11T12:00:00+09:00"));
-    for (const [birthDate, accepted] of [
-      ["1906-09-10", false],
-      ["1906-09-11", true],
-      ["2007-09-11", true],
-      ["2007-09-12", false],
-      ["2026-09-12", false],
-    ] as const) {
-      clearAllOnboardingDrafts();
-      const view = renderWithIntl(<OnboardingForm userType={userType} />);
+describe.each(["TOURIST", "BUDDY"] as const)("%s signup age boundaries", (userType) => {
+  it.each([
+    ["2026-09-11", "1906-09-10", false],
+    ["2026-09-11", "1906-09-11", true],
+    ["2026-09-11", "2007-09-11", true],
+    ["2026-09-11", "2007-09-12", false],
+    ["2026-09-11", "2026-09-12", false],
+    ["2024-02-29", "1904-02-28", false],
+    ["2024-02-29", "1904-02-29", true],
+    ["2024-02-29", "2005-02-28", true],
+    ["2024-02-29", "2005-03-01", false],
+  ] as const)(
+    "on %s validates birth date %s with accepted=%s, including leap-day clamping",
+    (today, birthDate, accepted) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(`${today}T12:00:00+09:00`));
+      renderWithIntl(<OnboardingForm userType={userType} />);
       fillAboutYou("en", { birthDate });
       clickContinue("en");
       if (accepted)
@@ -1309,11 +1312,9 @@ it.each(["TOURIST", "BUDDY"] as const)(
         expect(screen.getByRole("alert")).toHaveTextContent(
           "Enter a valid date of birth for an age between 19 and 120.",
         );
-      view.unmount();
-    }
-    vi.useRealTimers();
-  },
-);
+    },
+  );
+});
 it("marks an empty tourist birth date invalid", () => {
   renderWithIntl(<OnboardingForm />);
   fillAboutYou("en", { birthDate: "" });
@@ -1348,35 +1349,6 @@ it("retains a leap date across en → ko → en remounts only for the same signu
   );
 });
 
-it.each(["TOURIST", "BUDDY"] as const)(
-  "preserves leap-day clamped original bounds for %s",
-  (userType) => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2024-02-29T12:00:00+09:00"));
-    for (const [birthDate, accepted] of [
-      ["1904-02-28", false],
-      ["1904-02-29", true],
-      ["2005-02-28", true],
-      ["2005-03-01", false],
-    ] as const) {
-      clearAllOnboardingDrafts();
-      const view = renderWithIntl(<OnboardingForm userType={userType} />);
-      fillAboutYou("en", { birthDate });
-      clickContinue("en");
-      if (accepted)
-        expect(
-          screen.getByRole("textbox", {
-            name: userType === "BUDDY" ? "Phone number" : "Messaging app ID",
-          }),
-        ).toBeInTheDocument();
-      else
-        expect(screen.getByRole("alert")).toHaveTextContent(
-          "Enter a valid date of birth for an age between 19 and 120.",
-        );
-      view.unmount();
-    }
-  },
-);
 it("restores the original Korean tourist validation message", () => {
   renderWithIntl(<OnboardingForm />, { locale: "ko" });
   fillAboutYou("ko", { birthDate: "" });

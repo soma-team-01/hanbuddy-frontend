@@ -28,6 +28,8 @@ it.each([
   renderWithIntl(<Picker />, { locale });
   const trigger = screen.getByRole("button", { name: label });
   fireEvent.click(trigger);
+  expect(screen.getByRole("group", { name: label }).tagName).toBe("FIELDSET");
+  expect(screen.queryByText(/Enter a valid date of birth/)).not.toBeInTheDocument();
   const selects = screen.getAllByRole("combobox");
   fields.forEach((name, i) => expect(selects[i]).toHaveAccessibleName(name));
   expect(selects[0]).toHaveFocus();
@@ -56,6 +58,7 @@ it("clears an invalidated leap day and announces reselection", () => {
   fireEvent.change(screen.getByRole("combobox", { name: "Year" }), { target: { value: "1907" } });
   expect(screen.getByRole("combobox", { name: "Day" })).toHaveValue("");
   expect(screen.getByRole("status")).toHaveTextContent("Please select it again");
+  expect(screen.getByRole("status").tagName).toBe("OUTPUT");
   expect(screen.getByLabelText("payload")).toBeEmptyDOMElement();
   expect(screen.getByRole("button", { name: "Done" })).toBeDisabled();
 });
@@ -76,6 +79,13 @@ it("closes on Escape, outside pointer and tabbing out, retaining selection", () 
   const trigger = screen.getByRole("button", { name: "Date of birth" });
   fireEvent.click(trigger);
   fireEvent.keyDown(screen.getByRole("combobox", { name: "Month" }), { key: "Escape" });
+  expect(trigger).toHaveFocus();
+  expect(trigger).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(trigger);
+  fireEvent.keyDown(trigger, { key: "Escape" });
+  expect(trigger).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(trigger);
+  fireEvent.keyDown(screen.getByRole("button", { name: "Done" }), { key: "Escape" });
   expect(trigger).toHaveFocus();
   expect(trigger).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(trigger);
@@ -121,6 +131,7 @@ it("shows invalid input as empty and exposes a described error", () => {
     /Enter a valid date of birth for an age between 19 and 120/,
   );
   fireEvent.click(trigger);
+  expect(screen.getAllByText(/Enter a valid date of birth/)).toHaveLength(1);
   screen.getAllByRole("combobox").forEach((select) => {
     expect(select).toHaveValue("");
     expect(select).toHaveAttribute("aria-invalid", "true");

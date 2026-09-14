@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { daysInMonth, isValidBirthDate } from "./birth-date";
@@ -63,9 +63,23 @@ export function BirthDatePicker({
     trigger.current?.focus();
   }
 
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === "Escape" && open) {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+    }
+  }
+
   const upperBound = youngestAllowedBirthDate < today ? youngestAllowedBirthDate : today;
   const firstYear = Number(oldestAllowedBirthDate.slice(0, 4));
   const lastYear = Number(upperBound.slice(0, 4));
+  const optionCounts: Record<Part, number> = {
+    year: Math.max(0, lastYear - firstYear + 1),
+    month: 12,
+    day: daysInMonth(Number(parts.year), Number(parts.month)),
+  };
+  const descriptionIds = [`${id}-value`, ...(invalid ? [`${id}-error`] : [])].join(" ");
 
   function allowed(part: Part, number: number, selection: typeof parts) {
     if (!oldestAllowedBirthDate || !upperBound) return false;
@@ -109,13 +123,6 @@ export function BirthDatePicker({
   return (
     <div
       ref={root}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && open) {
-          event.preventDefault();
-          event.stopPropagation();
-          close();
-        }
-      }}
       onBlur={(event) => {
         if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node))
           setOpen(false);
@@ -129,9 +136,10 @@ export function BirthDatePicker({
         ref={trigger}
         type="button"
         aria-labelledby={`${id}-label`}
-        aria-describedby={`${id}-value${invalid ? ` ${id}-error` : ""}`}
+        aria-describedby={descriptionIds}
         aria-expanded={open}
         aria-controls={`${id}-panel`}
+        onKeyDown={handleKeyDown}
         onClick={() => {
           if (open) {
             close();
@@ -157,9 +165,8 @@ export function BirthDatePicker({
         </p>
       )}
       {open && (
-        <div
+        <fieldset
           id={`${id}-panel`}
-          role="group"
           aria-labelledby={`${id}-label`}
           className="rounded-xl border border-line-strong bg-panel-raised p-4"
         >
@@ -176,17 +183,13 @@ export function BirthDatePicker({
                   aria-invalid={invalid || undefined}
                   aria-describedby={invalid ? `${id}-error` : undefined}
                   onChange={(event) => change(part, event.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="min-h-12 w-full min-w-0 rounded-lg border border-line-strong bg-canvas-soft px-2 text-base focus-visible:outline-2 focus-visible:outline-primary-strong"
                 >
                   <option value="">{t("choose")}</option>
                   {Array.from(
                     {
-                      length:
-                        part === "year"
-                          ? Math.max(0, lastYear - firstYear + 1)
-                          : part === "month"
-                            ? 12
-                            : daysInMonth(Number(parts.year), Number(parts.month)),
+                      length: optionCounts[part],
                     },
                     (_, i) => {
                       const number = part === "year" ? lastYear - i : i + 1;
@@ -205,18 +208,19 @@ export function BirthDatePicker({
               </label>
             ))}
           </div>
-          <p role="status" className="mt-3 text-sm text-muted">
-            {reselectDay ? t("reselectDay") : validationT("birthDateInvalid")}
-          </p>
+          <output className="mt-3 block text-sm text-muted">
+            {reselectDay ? t("reselectDay") : ""}
+          </output>
           <button
             type="button"
             onClick={close}
+            onKeyDown={handleKeyDown}
             disabled={!valid}
             className="mt-4 min-h-11 w-full rounded-xl bg-primary px-4 py-2 font-semibold text-on-primary hover:bg-primary-hover disabled:opacity-50"
           >
             {t("done")}
           </button>
-        </div>
+        </fieldset>
       )}
     </div>
   );

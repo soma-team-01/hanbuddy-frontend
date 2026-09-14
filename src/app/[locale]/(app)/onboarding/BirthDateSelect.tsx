@@ -3,6 +3,7 @@
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { CheckIcon, ChevronDownIcon } from "@/components/ui/icons";
+import { ONBOARDING_SELECT_TRIGGER } from "./onboarding-field-styles";
 
 type Option = { value: string; label: string; disabled?: boolean };
 
@@ -153,10 +154,10 @@ export function BirthDateSelect({
         }}
         onKeyDown={handleKeyDown}
         onBlur={() => setOpen(false)}
-        className="focus-border-only flex min-h-11 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-line-strong bg-transparent px-2.5 py-2 text-left text-sm text-ink transition-colors hover:border-orange-600 focus:border-orange-600 focus:ring-1 focus:ring-orange-600"
+        className={`focus-border-only ${ONBOARDING_SELECT_TRIGGER} gap-1 px-2 sm:gap-2 sm:px-4`}
       >
         <span className="truncate">{selected?.label ?? label}</span>
-        <ChevronDownIcon aria-hidden className="size-3 shrink-0 text-orange-600" />
+        <ChevronDownIcon aria-hidden className="size-4 shrink-0 text-ink" />
       </button>
       {open &&
         createPortal(
@@ -166,7 +167,7 @@ export function BirthDateSelect({
             role="listbox"
             aria-label={label}
             style={position}
-            className="fixed z-[100] overflow-y-auto overscroll-contain rounded-lg border border-line-soft bg-canvas-soft py-1 shadow-lg"
+            className="fixed z-[100] overflow-y-auto overscroll-contain rounded-xl border border-line-soft bg-canvas-soft py-1 shadow-lg"
           >
             {options.map((option, index) => (
               <button
@@ -181,11 +182,11 @@ export function BirthDateSelect({
                 disabled={option.disabled}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => choose(index)}
-                className={`flex h-9 w-full items-center justify-between gap-1 px-2 text-left text-sm disabled:text-muted/40 ${index === active ? "font-semibold text-orange-700 underline decoration-orange-600 underline-offset-4" : "text-ink"}`}
+                className={`flex h-9 w-full items-center justify-between gap-1 px-2 text-left text-sm disabled:text-muted/40 ${index === active ? "font-semibold text-primary-strong underline decoration-primary underline-offset-4" : "text-ink"}`}
               >
                 <span className="truncate">{option.label}</span>
                 {option.value === value && (
-                  <CheckIcon aria-hidden className="size-3 shrink-0 text-orange-600" />
+                  <CheckIcon aria-hidden className="size-3 shrink-0 text-primary" />
                 )}
               </button>
             ))}

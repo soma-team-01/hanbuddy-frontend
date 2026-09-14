@@ -205,6 +205,21 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("heading", { name: personalHeading })).toBeInTheDocument();
       expect(screen.getByText(nationality)).toBeInTheDocument();
       expect(screen.getByRole("group", { name: birthDate })).toBeInTheDocument();
+      const nationalityField = screen.getByRole("button", { name: nationality });
+      for (const dateField of screen.getAllByRole("combobox")) {
+        for (const style of [
+          "rounded-xl",
+          "border-line-soft",
+          "bg-canvas-soft",
+          "py-3",
+          "text-base",
+          "focus-visible:border-primary",
+        ]) {
+          expect(nationalityField).toHaveClass(style);
+          expect(dateField).toHaveClass(style);
+        }
+        expect(dateField.querySelector("svg")).toHaveClass("size-4", "text-ink");
+      }
       expect(screen.getByRole("button", { name: nationality })).toHaveClass("focus-border-only");
       expect(screen.getByTestId("onboarding-personal-fields")).not.toHaveClass("sm:grid-cols-2");
       expect(

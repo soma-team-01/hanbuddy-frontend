@@ -56,6 +56,7 @@ import {
 } from "./onboarding-draft-storage";
 
 import { BirthDatePicker } from "./BirthDatePicker";
+import { ONBOARDING_SELECT_TRIGGER } from "./onboarding-field-styles";
 import { isValidBirthDate } from "./birth-date";
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
@@ -881,7 +882,7 @@ export function OnboardingForm({
                           value={nationality}
                           onChange={handleNationalityChange}
                           ariaLabel={t("nationality")}
-                          triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary-soft"
+                          triggerClassName={`${ONBOARDING_SELECT_TRIGGER} gap-2 px-4`}
                         />
                       </div>
                       {isBuddyFlow ? (

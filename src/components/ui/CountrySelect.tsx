@@ -256,7 +256,7 @@ export function CountrySelect({
                         >
                           <span aria-hidden>{country.flag}</span>
                           <span
-                            className={`min-w-0 flex-1 truncate ${isActive || isSelected ? "font-semibold text-primary-strong underline decoration-primary underline-offset-4" : "text-ink"}`}
+                            className={`min-w-0 flex-1 truncate ${isActive ? "font-semibold text-primary-strong underline decoration-primary underline-offset-4" : "text-ink"}`}
                           >
                             {country.localizedName}
                           </span>

@@ -167,9 +167,16 @@ describe("shared localized selectors and statuses", () => {
       expect(selected).toHaveAttribute("aria-selected", "true");
       expect(selected.querySelector("button")).toHaveClass("h-9", "text-sm");
       expect(selected.querySelector("svg")).toHaveClass("text-primary");
+      expect(within(selected).getByText("Albania")).not.toHaveClass("underline");
       expect(panel.querySelector(".bg-primary-soft")).not.toBeInTheDocument();
       fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
       expect(within(selected).getByText("Albania")).toHaveClass("text-primary-strong", "underline");
+      const hovered = screen.getByRole("option", { name: /Afghanistan/ });
+      fireEvent.mouseMove(within(hovered).getByRole("button"));
+      expect(within(hovered).getByText("Afghanistan")).toHaveClass("underline");
+      expect(within(selected).getByText("Albania")).not.toHaveClass("underline");
+      expect(selected).toHaveAttribute("aria-selected", "true");
+      expect(selected.querySelector("svg")).toBeInTheDocument();
     },
   );
   it("localizes country selection, search, empty text, and region names in Korean", () => {

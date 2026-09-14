@@ -74,3 +74,20 @@ it("supports typing a date and does not commit on Escape, Tab or outside clicks"
   fireEvent.pointerDown(document.body);
   expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
 });
+
+it("highlights hovered dates without committing and ignores disabled dates", () => {
+  render(<Select />);
+  const trigger = screen.getByRole("combobox");
+  fireEvent.click(trigger);
+  const hovered = screen.getByRole("option", { name: "12" });
+  fireEvent.mouseMove(hovered);
+  expect(hovered).toHaveClass("text-primary-strong", "underline");
+  expect(trigger).toHaveAttribute("aria-activedescendant", hovered.id);
+  expect(trigger).toHaveValue("3");
+  expect(hovered).toHaveAttribute("aria-selected", "false");
+  expect(screen.getByRole("option", { name: "3" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.mouseMove(screen.getByRole("option", { name: "4" }));
+  expect(trigger).toHaveAttribute("aria-activedescendant", hovered.id);
+  fireEvent.click(hovered);
+  expect(trigger).toHaveValue("12");
+});

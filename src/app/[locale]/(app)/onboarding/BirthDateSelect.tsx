@@ -181,6 +181,9 @@ export function BirthDateSelect({
                 aria-selected={option.value === value}
                 disabled={option.disabled}
                 onMouseDown={(event) => event.preventDefault()}
+                onMouseMove={() => {
+                  if (!option.disabled) setActive(index);
+                }}
                 onClick={() => choose(index)}
                 className={`flex h-9 w-full items-center justify-between gap-1 px-2 text-left text-sm disabled:text-muted/40 ${index === active ? "font-semibold text-primary-strong underline decoration-primary underline-offset-4" : "text-ink"}`}
               >

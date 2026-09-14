@@ -9,6 +9,7 @@ import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
   APP_BY_CONTACT_METHOD,
   CONTACT_METHOD_BY_APP,
+  MAX_MESSENGER_ID_LENGTH,
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
@@ -53,6 +54,10 @@ import {
   loadOnboardingDraft,
   saveOnboardingDraft,
 } from "./onboarding-draft-storage";
+
+import { BirthDatePicker } from "./BirthDatePicker";
+import { ONBOARDING_SELECT_TRIGGER } from "@/app/[locale]/(app)/onboarding/onboarding-field-styles";
+import { isValidBirthDate } from "./birth-date";
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
 type OnboardingErrorKey =
@@ -127,7 +132,7 @@ function getInitialMessagingApp(
 ): MessagingAppKey {
   if (isBuddyFlow) return "phone";
   if (resubmission) return APP_BY_CONTACT_METHOD[resubmission.contactMethod];
-  return "line";
+  return "kakaotalk";
 }
 
 function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
@@ -429,10 +434,19 @@ export function OnboardingForm({
       : "";
 
     const normalizedPhoneNumber = contactIdentifier.replace(/[ -]/g, "");
+    const isUnrestrictedMessenger = messagingApp === "kakaotalk" || messagingApp === "instagram";
+    const isValidMessengerId = isUnrestrictedMessenger
+      ? contactIdentifier.length > 0 && contactIdentifier.length <= MAX_MESSENGER_ID_LENGTH
+      : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
     const isValidContact = requiresContactCountryCode
       ? COUNTRY_CALLING_CODE_PATTERN.test(contactCountryCode ?? "") &&
         PHONE_CONTACT_PATTERN.test(normalizedPhoneNumber)
-      : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
+      : isValidMessengerId;
+
+    if (!isBuddyFlow && (messagingApp === "line" || messagingApp === "wechat")) {
+      setErrorKey("validation.contactMethodRequired");
+      return false;
+    }
 
     if (!isValidContact) {
       setErrorKey("validation.contactInvalid");
@@ -868,23 +882,45 @@ export function OnboardingForm({
                           value={nationality}
                           onChange={handleNationalityChange}
                           ariaLabel={t("nationality")}
-                          triggerClassName="flex w-full items-center justify-between gap-2 rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors hover:border-line-strong focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary-soft"
+                          triggerClassName={`${ONBOARDING_SELECT_TRIGGER} gap-2 px-4`}
                         />
                       </div>
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
-                        <input
-                          name="birthDate"
-                          type="date"
-                          min={oldestAllowedBirthDate || undefined}
-                          max={youngestAllowedBirthDate || undefined}
-                          required
+                      {isBuddyFlow ? (
+                        <label className="flex flex-col gap-1.5">
+                          <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
+                          <input
+                            name="birthDate"
+                            type="date"
+                            min={oldestAllowedBirthDate || undefined}
+                            max={youngestAllowedBirthDate || undefined}
+                            required
+                            value={birthDate}
+                            onChange={(event) => setBirthDate(event.target.value)}
+                            aria-label={t("birthDate")}
+                            className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                          />
+                        </label>
+                      ) : (
+                        <BirthDatePicker
                           value={birthDate}
-                          onChange={(event) => setBirthDate(event.target.value)}
-                          aria-label={t("birthDate")}
-                          className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                          today={currentLocalDate}
+                          oldestAllowedBirthDate={oldestAllowedBirthDate}
+                          youngestAllowedBirthDate={youngestAllowedBirthDate}
+                          invalid={errorKey === "validation.birthDateInvalid"}
+                          onChange={(value) => {
+                            setBirthDate(value);
+                            if (
+                              isValidBirthDate(
+                                value,
+                                currentLocalDate,
+                                oldestAllowedBirthDate,
+                                youngestAllowedBirthDate,
+                              )
+                            )
+                              setErrorKey(null);
+                          }}
                         />
-                      </label>
+                      )}
                     </div>
 
                     {resubmission?.rejectionReason ? (
@@ -921,6 +957,7 @@ export function OnboardingForm({
                       {isBuddyFlow ? messagingT("phoneNumber") : t("preferredMessagingApp")}
                     </span>
                     <MessagingAppField
+                      touristSignup={!isBuddyFlow}
                       app={messagingApp}
                       onAppChange={handleMessagingAppChange}
                       country={messagingCountry}

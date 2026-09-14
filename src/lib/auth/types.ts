@@ -1,5 +1,5 @@
 export type UserType = "TOURIST" | "BUDDY" | "ADMIN";
-export type ContactMethod = "WHATSAPP" | "LINE" | "WECHAT" | "PHONE";
+export type ContactMethod = "WHATSAPP" | "LINE" | "WECHAT" | "PHONE" | "KAKAOTALK" | "INSTAGRAM";
 export type SignupAgreementType =
   | "ADULT_CONFIRMATION"
   | "TERMS_OF_SERVICE"

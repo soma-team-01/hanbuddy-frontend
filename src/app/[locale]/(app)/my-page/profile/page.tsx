@@ -1,10 +1,9 @@
+import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { ProfilePageContent } from "./ProfilePageContent";
 import { getSignupAgreementDocuments } from "@/lib/server/policy-content";
-
-const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface ProfilePageProps {
   params: Promise<{ locale: Locale }>;

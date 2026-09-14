@@ -1288,13 +1288,13 @@ describe("onboarding metadata", () => {
     expect(metadata).toMatchObject({
       title,
       alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        canonical: `https://hanbuddy.kr${canonicalPath}`,
         languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/onboarding",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/onboarding",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/onboarding",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/onboarding",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/onboarding",
+          en: "https://hanbuddy.kr/en/onboarding",
+          ko: "https://hanbuddy.kr/ko/onboarding",
+          ja: "https://hanbuddy.kr/ja/onboarding",
+          "zh-Hans": "https://hanbuddy.kr/zh-Hans/onboarding",
+          "zh-Hant": "https://hanbuddy.kr/zh-Hant/onboarding",
         },
       },
     });

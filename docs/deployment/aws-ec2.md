@@ -11,7 +11,7 @@ HanBuddy Next.js 프론트엔드를 private ECR과 환경별 EC2에 배포한다
 - 기본 인스턴스는 x86_64 `t3a.small`(2 vCPU, 2 GiB)이고 root volume은 gp3 16GB다.
 - staging은 사용 후 `Stop staging` workflow로 정지한다. 다음 배포가 자동으로 다시 시작한다.
 - staging은 Elastic IP를 쓰지 않고 시작할 때 바뀐 public IPv4를 Route 53 A record에 자동 반영한다. production은 안정적인 주소를 위해 Elastic IP를 사용한다. NAT Gateway와 ALB는 사용하지 않는다.
-- 하나의 ECR repository를 사용하되 `production-latest`, `staging-latest`, `<environment>-sha-<commit>` tag로 구분한다. `*-latest`만 이동할 수 있고 commit tag는 덮어쓸 수 없다.
+- 하나의 ECR repository를 사용하되 `production-latest`, `staging-latest`, `<environment>-sha-<commit>-config-<hash>` tag로 구분한다. 정확히 `production-latest`, `staging-latest`만 이동할 수 있고 commit tag는 덮어쓸 수 없다.
 - ECR lifecycle policy는 untagged image를 하루 후 삭제하고 production commit image 10개, staging commit image 3개를 유지한다.
 
 ## 예상 비용
@@ -68,7 +68,7 @@ repo:soma-team-01/hanbuddy-frontend:environment:staging
 | `GitHubRepository`      | `hanbuddy-frontend`                                                           |
 | `EcrRepositoryName`     | `hanbuddy-frontend`                                                           |
 | `Route53HostedZoneId`   | `hanbuddy.kr` hosted zone ID                                                  |
-| `FrontendRecordNames`   | `hanbuddy.kr,staging.hanbuddy.kr`                                             |
+| `FrontendRecordNames`   | `hanbuddy.kr,www.hanbuddy.kr,staging.hanbuddy.kr`                             |
 
 ## 3. Environment network stack 두 개 생성
 
@@ -175,7 +175,7 @@ Environment secret:
 | Name                     | 값                                               |
 | ------------------------ | ------------------------------------------------ |
 | `EC2_INSTANCE_ID`        | production EC2 stack output `InstanceId`         |
-| `FRONTEND_DOMAIN`        | 운영 전환 시 사용할 frontend domain              |
+| `FRONTEND_DOMAIN`        | `hanbuddy.kr` (production workflow에서 검증)     |
 | `ROUTE53_HOSTED_ZONE_ID` | `hanbuddy.kr` hosted zone ID                     |
 | `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                        |
 | `REVIEW_LOGIN_ENABLED`   | 운영에서는 이메일 로그인을 숨기므로 `false`      |
@@ -210,7 +210,7 @@ Webhook ID는 백엔드에만 둔다.
 2. Google OAuth web client의 Authorized redirect URIs에 `https://staging.hanbuddy.kr/auth/google/callback`을 추가한다.
 3. Google Maps key의 website restriction에 `https://staging.hanbuddy.kr/*`를 추가한다.
 
-production과 staging은 당분간 같은 backend `https://api.hanbuddy.kr`을 사용한다. 별도 차단 로직이 생기기 전에는 staging에서 실제 토스 결제를 실행하지 않는다.
+production은 `https://api.hanbuddy.kr`, staging은 staging environment의 `HANBUDDY_API_BASE_URL`을 사용한다. 운영 배포 전에 backend health와 실제 인증/API 계약을 별도로 확인한다. frontend `/api/health`는 backend 연결을 검사하지 않는다.
 
 ## 7. Staging 배포와 정지
 
@@ -220,10 +220,10 @@ production과 staging은 당분간 같은 backend `https://api.hanbuddy.kr`을 �
 2. `Use workflow from`은 `develop`을 선택한다.
 3. 실행하면 image를 ECR에 push한다.
 4. EC2가 stopped 상태이면 자동으로 start한다.
-5. 현재 public IPv4를 `staging.hanbuddy.kr` A record에 UPSERT한다.
-6. SSM Run Command로 image를 pull하고 기존 container를 교체한다.
-7. Caddy가 Let's Encrypt certificate를 발급하거나 기존 certificate를 재사용한다.
-8. `https://staging.hanbuddy.kr/api/health`가 성공해야 workflow가 완료된다.
+5. 기존 DNS를 읽어 복구 계획을 만들고 SSM Run Command로 image를 pull하고 기존 container를 교체한다.
+6. container의 local health 200 및 Caddy 설정 유효성을 확인하고 Caddy를 재시작한다.
+7. 그동안 DNS가 변경되지 않았는지 다시 확인한 뒤 현재 public IPv4를 `staging.hanbuddy.kr` A record에 UPSERT하고 Route 53 INSYNC를 기다린다.
+8. Caddy가 certificate를 발급하거나 재사용한다. EC2 IP 직접 지정 HTTPS와 일반 DNS HTTPS에서 health 200을 확인해야 완료된다. staging에서는 www 레코드를 만들지 않는다.
 
 정지:
 
@@ -236,7 +236,7 @@ production과 staging은 당분간 같은 backend `https://api.hanbuddy.kr`을 �
 
 ## 8. Production EC2 사전 생성과 전환
 
-production EC2도 staging과 함께 미리 생성한다. 초기 Caddy는 도메인 인증서를 요청하지 않는 HTTP 대기 설정으로 시작하고, 첫 production 배포 때만 `hanbuddy.kr` 설정과 인증서 발급을 적용한다. 따라서 현재 landing DNS에는 영향을 주지 않는다.
+production EC2도 staging과 함께 미리 생성한다. 초기 Caddy는 도메인 인증서를 요청하지 않는 HTTP 대기 설정으로 시작한다. 첫 production 배포에서 `hanbuddy.kr`과 `www.hanbuddy.kr` 설정을 준비하고 앱 local health 확인 후 DNS를 전환한다. EC2 생성만으로 현재 landing DNS를 변경하지 않는다.
 
 ```text
 Stack name: hanbuddy-frontend-production-ec2
@@ -251,6 +251,41 @@ RootVolumeSize: 16
 Outputs의 `InstanceId`를 앞의 표에 따라 `production` GitHub environment에 추가한다. landing DNS 전환 준비가 끝나기 전에는 production workflow를 실행하지 않는다.
 
 모든 production 준비가 끝난 마지막 단계에서 repository variable `PRODUCTION_DEPLOYMENT_ENABLED`를 `true`로 바꾼다. 그전에는 `false`로 유지하므로 배포 workflow가 main에 병합되어도 production job은 실행되지 않는다.
+
+### 운영 전환 전: bootstrap 스택 업데이트 (별도 작업)
+
+코드 push나 frontend 배포는 CloudFormation 스택을 자동 업데이트하지 않는다. 운영 배포 전에 관리자가 다음을 별도로 수행한다.
+
+1. CloudFormation에서 기존 `hanbuddy-frontend-bootstrap` 스택과 현재 template/parameter를 확인한다. 새 스택을 만들지 않는다.
+2. 이 변경이 포함된 `infra/aws/bootstrap.yml`로 **변경 세트(Change set)**를 생성한다. 기존 OIDC provider, 저장소명, hosted zone 등은 유지한다.
+3. `FrontendRecordNames`는 명시적으로 `hanbuddy.kr,www.hanbuddy.kr,staging.hanbuddy.kr`로 지정한다. 기존 스택의 parameter는 template Default만 바꿔서는 갱신되지 않는다.
+4. 변경 세트에 ECR 태그 보호와 배포 역할 권한 변경이 포함됐는지 확인한다. 저장소/역할 교체·삭제나 의도하지 않은 lifecycle 변경이 있으면 실행하지 않는다. ECR lifecycle 정책은 기존 이미지 만료에 영향을 줄 수 있으므로 기존 배포 template과 차이를 검토한다.
+5. 검토 후 실행하고 `UPDATE_COMPLETE`를 확인한다. 실제 AWS 설정의 drift가 있었다면 스택 업데이트만으로 모두 해소됐다고 가정하지 않고 아래 상태를 직접 확인한다.
+   - ECR `ImageTagMutability=IMMUTABLE_WITH_EXCLUSION`, 예외는 `production-latest`, `staging-latest` 두 개.
+   - GitHub 배포 역할의 `ecr:DescribeImages`, `ecr:BatchGetImage`가 **hanbuddy-frontend 저장소에만** 허용됨.
+   - Route 53의 대상 세 이름에 A/CNAME UPSERT·DELETE, 대상 hosted zone 조회, change 상태 조회 권한이 있음.
+6. 이후에만 운영 배포 gate를 활성화하고 develop → main 릴리즈를 진행한다. 이미 gate가 true이면 이 절차가 끝나기 전에 릴리즈 PR을 병합하지 않는다.
+
+ECR 조회는 이미지 부재(`ImageNotFoundException`)일 때만 새 이미지를 빌드한다. AccessDenied, 저장소 부재, 네트워크 오류 등은 배포를 중단한다. 이미지를 덮어쓰거나 권한 오류를 무시해 우회하지 않는다.
+
+### 운영 배포: apex/www 동시 전환
+
+production workflow는 `FRONTEND_DOMAIN=hanbuddy.kr`를 검증하며 `FRONTEND_REDIRECT_DOMAIN=www.hanbuddy.kr`를 코드에서 지정한다. 추가 GitHub variable 입력은 필요하지 않다.
+
+1. 기존 apex A / www CNAME과 TTL을 조회해 복구 배치를 만든다. 기존 AAAA, www의 다른 타입, 복합 라우팅 등은 자동 삭제하지 않고 전환을 중단해 별도 검토한다.
+2. EC2 앱의 local health 200, Caddy 설정 검증·재시작을 완료한다. 준비 실패 시 DNS는 변경하지 않는다.
+3. 준비 중 대상 DNS가 바뀌지 않았는지 재확인한 뒤 **하나의 Route 53 변경 배치**로 적용한다.
+   - `hanbuddy.kr A` → 운영 EC2 public IPv4 (TTL 60).
+   - `www.hanbuddy.kr CNAME` → `hanbuddy.kr.` (TTL 60).
+   - NS/MX/TXT, api/staging/landing/link 등 다른 레코드는 변경하지 않는다.
+4. Route 53 INSYNC 후 Caddy 자동 HTTPS 발급을 기다리고, 두 호스트를 EC2 IP에 직접 연결한 TLS 검증 및 일반 DNS HTTPS 검증을 수행한다. 인증서 검증 우회(`--insecure`)는 사용하지 않는다.
+5. apex health는 200, www는 경로·쿼리를 보존한 `https://hanbuddy.kr{uri}`로 308 응답이어야 한다. HTTP는 Caddy의 자동 HTTPS 리다이렉트를 사용한다.
+6. 검증 실패 시 Actions에 기록한 원래 DNS 값·TTL 복구를 시도한다. 대상 값이 다른 작업으로 변경됐으면 덮어쓰지 않고 수동 확인을 요구한다. rollback API/권한 오류나 runner 강제 종료 시 자동 복구가 보장되지 않으므로 기록된 복구 배치를 이용해 대응한다.
+7. 외부 HTTPS, 로그인 갱신·로그아웃, 활동 조회와 결제 경로까지 확인하고 DNS 캐시 갱신을 기다린 후, Vercel 프로젝트 **Settings → Domains**에서 `hanbuddy.kr`, `www.hanbuddy.kr` 등록만 제거한다. `landing.hanbuddy.kr`이나 Vercel 프로젝트 자체는 삭제하지 않는다.
+
+최초 인증서 발급은 DNS 전환 후 진행될 수 있으며 DNS 캐시도 즉시 갱신되지 않는다. 단일 EC2 컨테이너 교체와 이 전환은 **무중단을 보장하지 않는다**. 운영 점검 시간과 복구 담당자를 정하고, 전환 완료 전 Vercel 등록/기존 서비스를 유지한다. DNS 복구는 Caddy 설정·컨테이너·DB의 완전한 롤백이 아니다.
+
+페이지의 canonical/언어별 alternate는 `src/lib/site.ts`의 `https://hanbuddy.kr`를 공통으로 사용한다. staging/localhost에서도 대표 URL은 운영 도메인으로 표시하며, 이것은 사용자 브라우저를 강제로 이동시키는 설정이 아니다.
 
 Production의 Elastic IP는 주소 안정성을 위한 것이며 EC2를 정지해도 시간당 `$0.005`가 계속 청구된다. 전환 전 production EC2를 중지하면 compute 요금은 멈추지만 EBS와 Elastic IP를 합쳐 약 `$5.11/월`이 발생한다. 계속 실행하면 약 `$22.19/월`이다.
 

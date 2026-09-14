@@ -98,13 +98,13 @@ describe("BuddyHostingPage", () => {
     expect(metadata).toMatchObject({
       title,
       alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        canonical: `https://hanbuddy.kr${canonicalPath}`,
         languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/buddy",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/buddy",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/buddy",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/buddy",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/buddy",
+          en: "https://hanbuddy.kr/en/buddy",
+          ko: "https://hanbuddy.kr/ko/buddy",
+          ja: "https://hanbuddy.kr/ja/buddy",
+          "zh-Hans": "https://hanbuddy.kr/zh-Hans/buddy",
+          "zh-Hant": "https://hanbuddy.kr/zh-Hant/buddy",
         },
       },
     });

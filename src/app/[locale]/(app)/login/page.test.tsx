@@ -166,13 +166,13 @@ describe("LoginPage", () => {
     expect(metadata).toMatchObject({
       title,
       alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        canonical: `https://hanbuddy.kr${canonicalPath}`,
         languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/login",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/login",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/login",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/login",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/login",
+          en: "https://hanbuddy.kr/en/login",
+          ko: "https://hanbuddy.kr/ko/login",
+          ja: "https://hanbuddy.kr/ja/login",
+          "zh-Hans": "https://hanbuddy.kr/zh-Hans/login",
+          "zh-Hant": "https://hanbuddy.kr/zh-Hant/login",
         },
       },
     });

@@ -144,13 +144,13 @@ describe("profile metadata", () => {
     expect(metadata).toMatchObject({
       title,
       alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
+        canonical: `https://hanbuddy.kr${canonicalPath}`,
         languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/my-page/profile",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/my-page/profile",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/my-page/profile",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/my-page/profile",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/my-page/profile",
+          en: "https://hanbuddy.kr/en/my-page/profile",
+          ko: "https://hanbuddy.kr/ko/my-page/profile",
+          ja: "https://hanbuddy.kr/ja/my-page/profile",
+          "zh-Hans": "https://hanbuddy.kr/zh-Hans/my-page/profile",
+          "zh-Hant": "https://hanbuddy.kr/zh-Hant/my-page/profile",
         },
       },
     });

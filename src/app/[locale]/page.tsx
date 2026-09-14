@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -35,8 +36,6 @@ const CONTACT_DETAILS = {
   instagramLabel: "@hanbuddy_kr",
   instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
 } as const;
-
-const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface LandingPageProps {
   readonly params: Promise<{ locale: Locale }>;

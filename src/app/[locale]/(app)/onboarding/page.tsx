@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
@@ -6,8 +7,6 @@ import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
 import { getSignupAgreementDocuments } from "@/lib/server/policy-content";
 import { getSignupDraftAccountId } from "@/lib/server/signup-draft-account";
 import { OnboardingForm } from "./OnboardingForm";
-
-const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface OnboardingPageProps {
   params: Promise<{ locale: Locale }>;

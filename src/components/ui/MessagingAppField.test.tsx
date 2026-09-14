@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, within } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -151,6 +151,27 @@ describe("MessagingAppField", () => {
 });
 
 describe("shared localized selectors and statuses", () => {
+  it.each(["name", "dialCode"] as const)(
+    "uses a compact white %s menu with text-only highlighting",
+    (display) => {
+      Element.prototype.scrollIntoView = vi.fn();
+      renderWithIntl(
+        <CountrySelect value="AL" onChange={vi.fn()} display={display} ariaLabel="Nationality" />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Nationality" }));
+      const panel = screen.getByTestId("country-select-panel");
+      expect(panel).toHaveClass("bg-canvas-soft", "shadow-lg");
+      expect(panel).not.toHaveClass("bg-panel");
+      expect(Number.parseFloat(panel.style.maxHeight)).toBeLessThanOrEqual(272);
+      const selected = screen.getByRole("option", { name: /Albania/ });
+      expect(selected).toHaveAttribute("aria-selected", "true");
+      expect(selected.querySelector("button")).toHaveClass("h-9", "text-sm");
+      expect(selected.querySelector("svg")).toHaveClass("text-primary");
+      expect(panel.querySelector(".bg-primary-soft")).not.toBeInTheDocument();
+      fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
+      expect(within(selected).getByText("Albania")).toHaveClass("text-primary-strong", "underline");
+    },
+  );
   it("localizes country selection, search, empty text, and region names in Korean", () => {
     Element.prototype.scrollIntoView = vi.fn();
     renderWithIntl(<CountrySelect value="" onChange={vi.fn()} ariaLabel="Nationality" />, {

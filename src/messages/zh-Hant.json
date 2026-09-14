@@ -503,6 +503,23 @@
     "backToBuddy": "返回好友頁面",
     "backToHome": "返回首頁"
   },
+  "ProfileAgreements": {
+    "title": "同意與接收設定",
+    "description": "查看註冊時的同意紀錄，管理行銷郵件。",
+    "loading": "正在載入同意紀錄…",
+    "loadFailed": "無法載入同意紀錄。",
+    "retry": "重試",
+    "recordedVersion": "已記錄版本：{version}",
+    "currentDocument": "查看目前條款",
+    "noRecord": "無紀錄",
+    "agreed": "已同意",
+    "notAgreed": "未同意",
+    "versionMismatch": "行銷同意文件已更新。請重新整理頁面並查看最新內容後再同意訂閱。您仍可取消訂閱。",
+    "saveFailed": "無法確認變更，正在重新核對已儲存的設定。請重試。",
+    "saving": "正在儲存…",
+    "saved": "接收設定已儲存。",
+    "serviceNotice": "取消訂閱不會影響預訂確認等必要服務通知。"
+  },
   "Profile": {
     "title": "編輯個人資料",
     "metadataTitle": "編輯個人資料 |漢巴迪",

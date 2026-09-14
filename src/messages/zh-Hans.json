@@ -503,6 +503,23 @@
     "backToBuddy": "返回好友页面",
     "backToHome": "返回首页"
   },
+  "ProfileAgreements": {
+    "title": "同意与接收设置",
+    "description": "查看注册时的同意记录，管理营销邮件。",
+    "loading": "正在加载同意记录…",
+    "loadFailed": "无法加载同意记录。",
+    "retry": "重试",
+    "recordedVersion": "已记录版本：{version}",
+    "currentDocument": "查看当前条款",
+    "noRecord": "无记录",
+    "agreed": "已同意",
+    "notAgreed": "未同意",
+    "versionMismatch": "营销同意文件已更新。请刷新页面并查看最新内容后再同意订阅。您仍可取消订阅。",
+    "saveFailed": "无法确认更改，正在重新核对已保存的设置。请重试。",
+    "saving": "正在保存…",
+    "saved": "接收设置已保存。",
+    "serviceNotice": "取消订阅不会影响预订确认等必要服务通知。"
+  },
   "Profile": {
     "title": "编辑个人资料",
     "metadataTitle": "编辑个人资料 |汉巴迪",

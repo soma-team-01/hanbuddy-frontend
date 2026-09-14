@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
@@ -12,8 +13,6 @@ import {
   UsersIcon,
 } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
-
-const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 const BENEFITS = [
   { key: "share", Icon: LightbulbIcon },

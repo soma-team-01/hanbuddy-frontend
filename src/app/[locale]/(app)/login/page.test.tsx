@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithIntl } from "@/test/render-with-intl";
 import LoginPage, { generateMetadata } from "./page";
 
@@ -163,18 +164,6 @@ describe("LoginPage", () => {
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/login",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/login",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/login",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/login",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/login",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "/login");
   });
 });

@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { ApiClientError } from "@/lib/api/errors";
 import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { uploadProfileImage } from "@/lib/images/presigned";
@@ -475,18 +476,6 @@ describe("edit profile metadata", () => {
       params: Promise.resolve({ locale: locale satisfies Locale }),
     });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/my-page/edit",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/my-page/edit",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/my-page/edit",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/my-page/edit",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/my-page/edit",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "/my-page/edit");
   });
 });

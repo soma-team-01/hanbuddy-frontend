@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { getMyProfile } from "@/lib/api/users";
 import { createMockProfile } from "@/test/factories";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -141,18 +142,6 @@ describe("profile metadata", () => {
       params: Promise.resolve({ locale: locale satisfies Locale }),
     });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/my-page/profile",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/my-page/profile",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/my-page/profile",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/my-page/profile",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/my-page/profile",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "/my-page/profile");
   });
 });

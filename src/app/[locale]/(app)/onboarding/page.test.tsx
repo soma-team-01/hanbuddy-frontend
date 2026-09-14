@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import type { BuddyResubmission } from "@/lib/auth/types";
 import * as countries from "@/lib/countries";
 import { uploadProfileImage } from "@/lib/images/presigned";
@@ -1285,19 +1286,7 @@ describe("onboarding metadata", () => {
       params: Promise.resolve({ locale: locale satisfies Locale }),
     });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy-frontend.vercel.app${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy-frontend.vercel.app/en/onboarding",
-          ko: "https://hanbuddy-frontend.vercel.app/ko/onboarding",
-          ja: "https://hanbuddy-frontend.vercel.app/ja/onboarding",
-          "zh-Hans": "https://hanbuddy-frontend.vercel.app/zh-Hans/onboarding",
-          "zh-Hant": "https://hanbuddy-frontend.vercel.app/zh-Hant/onboarding",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "/onboarding");
   });
 });
 

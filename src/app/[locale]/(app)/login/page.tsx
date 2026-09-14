@@ -1,3 +1,4 @@
+import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,8 +11,6 @@ import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getPolicyPath } from "@/lib/policy-routes";
 import { ReviewLoginForm } from "./review-login-form";
-
-const APP_ORIGIN = "https://hanbuddy-frontend.vercel.app";
 
 interface LoginPageProps {
   readonly params: Promise<{ locale: Locale }>;

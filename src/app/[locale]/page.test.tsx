@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import type { Locale } from "@/i18n/routing";
+import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
 
@@ -150,18 +151,6 @@ describe("LandingPage", () => {
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
-    expect(metadata).toMatchObject({
-      title,
-      alternates: {
-        canonical: `https://hanbuddy.kr${canonicalPath}`,
-        languages: {
-          en: "https://hanbuddy.kr/en",
-          ko: "https://hanbuddy.kr/ko",
-          ja: "https://hanbuddy.kr/ja",
-          "zh-Hans": "https://hanbuddy.kr/zh-Hans",
-          "zh-Hant": "https://hanbuddy.kr/zh-Hant",
-        },
-      },
-    });
+    expectLocalizedMetadata(metadata, title, canonicalPath, "");
   });
 });

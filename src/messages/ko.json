@@ -1,7 +1,6 @@
 {
   "SignupExtra": {
     "sourceLabel": "HanBuddy를 어떻게 알게 되셨나요?",
-    "required": "필수",
     "sourceDetailLabel": "어떻게 알게 되셨나요? (최대 100자)",
     "bankTitle": "은행 계좌 (선택)",
     "bankHint": "계좌를 등록하려면 은행과 계좌번호를 함께 입력해 주세요.",

@@ -1,7 +1,6 @@
 {
   "SignupExtra": {
     "sourceLabel": "How did you hear about us?",
-    "required": "Required",
     "sourceDetailLabel": "Please specify (up to 100 characters)",
     "bankTitle": "Bank account (optional)",
     "bankHint": "Optional. Enter both fields if adding an account.",

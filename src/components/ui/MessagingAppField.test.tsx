@@ -31,6 +31,21 @@ function renderField(
 }
 
 describe("MessagingAppField", () => {
+  it("matches signup source selection with a white card, accent border and check", () => {
+    const props = renderField({ variant: "cards", touristSignup: true });
+    const selected = screen.getByRole("button", { name: "WhatsApp" });
+    const other = screen.getByRole("button", { name: "Instagram" });
+    expect(selected).toHaveClass("bg-canvas-soft", "border-primary", "text-primary-strong");
+    expect(selected).not.toHaveClass("bg-primary-soft");
+    expect(selected).toHaveClass("gap-1.5", "px-2", "sm:gap-2", "sm:px-3");
+    expect(selected).not.toHaveClass("gap-3");
+    expect(selected.querySelector(":scope > svg")).toHaveClass("visible");
+    expect(other).toHaveClass("bg-canvas-soft", "border-line-soft", "text-muted");
+    expect(other.querySelector(":scope > svg")).toHaveClass("invisible");
+    expect(within(selected).getByText("WhatsApp")).toHaveClass("font-normal");
+    fireEvent.click(other);
+    expect(props.onAppChange).toHaveBeenCalledWith("instagram");
+  });
   it.each([
     ["kakaotalk", "카카오톡"],
     ["instagram", "인스타그램"],

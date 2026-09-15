@@ -1,7 +1,6 @@
 {
   "SignupExtra": {
     "sourceLabel": "您从哪里了解到我们？",
-    "required": "必填",
     "sourceDetailLabel": "请具体说明（最多100字）",
     "bankTitle": "银行账户（选填）",
     "bankHint": "选填。如需添加账户，请同时填写银行和账号。",

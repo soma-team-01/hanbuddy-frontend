@@ -28,6 +28,7 @@ it("shows eight unselected required radio choices and a linked error for no choi
   render(<Fields />);
   const choices = screen.getAllByRole("radio");
   expect(choices).toHaveLength(8);
+  expect(screen.queryByText("Required")).not.toBeInTheDocument();
   for (const choice of choices) {
     expect(choice).not.toBeChecked();
     expect(choice).toBeRequired();

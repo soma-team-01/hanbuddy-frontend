@@ -30,10 +30,7 @@ export function SignupExtraFields({
   return (
     <div className="mt-8 max-w-3xl space-y-8 border-t border-line-soft pt-6">
       <fieldset className="min-w-0 space-y-3">
-        <legend className="text-sm font-medium text-ink">
-          {t("sourceLabel")}
-          <span className="ml-2 text-xs font-normal text-primary-strong">{t("required")}</span>
-        </legend>
+        <legend className="text-sm font-medium text-ink">{t("sourceLabel")}</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {SIGNUP_SOURCES.map((source) => (
             <label key={source} className="relative min-w-0 cursor-pointer">

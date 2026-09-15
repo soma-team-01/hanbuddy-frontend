@@ -1,7 +1,6 @@
 {
   "SignupExtra": {
     "sourceLabel": "您從哪裡得知我們？",
-    "required": "必填",
     "sourceDetailLabel": "請具體說明（最多100字）",
     "bankTitle": "銀行帳戶（選填）",
     "bankHint": "選填。如需新增帳戶，請同時填寫銀行和帳號。",

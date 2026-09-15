@@ -1,7 +1,6 @@
 {
   "SignupExtra": {
     "sourceLabel": "どこで知りましたか？",
-    "required": "必須",
     "sourceDetailLabel": "詳しく教えてください（100文字以内）",
     "bankTitle": "銀行口座（任意）",
     "bankHint": "任意です。登録する場合は銀行と口座番号を入力してください。",

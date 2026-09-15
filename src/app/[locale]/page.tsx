@@ -12,27 +12,30 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
+  // position: 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 가로 초점. cover 사진은 PC 세로 크롭에도 쓰인다.
   {
     src: "/images/landing/hanriver-picnic.webp",
     altKey: "visuals.mainAlt",
     fit: "cover",
+    position: "50% 72%",
   },
   {
     src: "/images/landing/jamsil-stadium-0726.webp",
     altKey: "visuals.marketAlt",
     fit: "cover",
+    position: "50% 55%",
   },
   {
     src: "/images/landing/kbo-0726-group.webp",
     altKey: "visuals.teaAlt",
     fit: "contain",
-    position: "60% 45%",
+    position: "85% 50%",
   },
   {
     src: "/images/landing/kleague-0815-crew.webp",
     altKey: "visuals.kleagueAlt",
     fit: "contain",
-    position: "50% 40%",
+    position: "32% 50%",
   },
 ] as const;
 
@@ -93,7 +96,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
             src: image.src,
             alt: t(image.altKey),
             fit: image.fit,
-            position: "position" in image ? image.position : undefined,
+            position: image.position,
           }))}
         />
         <div

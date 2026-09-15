@@ -165,7 +165,7 @@ describe("LandingPage", () => {
     );
     expect(frames[0]?.querySelector(".hero-media-image")).not.toHaveClass("md:object-contain");
     expect(frames[2]?.querySelector(".hero-media-image")).toHaveStyle({
-      objectPosition: "60% 45%",
+      objectPosition: "85% 50%",
     });
   });
 

@@ -7,7 +7,7 @@ import type { BuddyResubmission } from "@/lib/auth/types";
 import * as countries from "@/lib/countries";
 import { uploadProfileImage } from "@/lib/images/presigned";
 import { IntlTestProvider, renderWithIntl } from "@/test/render-with-intl";
-import { selectBirthDatePart } from "@/test/select-birth-date";
+import { openBirthDatePart, selectBirthDatePart } from "@/test/select-birth-date";
 import { OnboardingForm } from "./OnboardingForm";
 import { saveOnboardingDraft, clearAllOnboardingDrafts } from "./onboarding-draft-storage";
 import { generateMetadata } from "./page";
@@ -395,7 +395,28 @@ describe("OnboardingForm", () => {
     },
   );
 
-  it("preserves buddy local birth date limits only after client mount", async () => {
+  it.each([
+    ["TOURIST", "en"],
+    ["BUDDY", "en"],
+    ["TOURIST", "ko"],
+    ["BUDDY", "ko"],
+  ] as const)("uses the shared birth date selectors for %s in %s", (userType, locale) => {
+    const { container } = renderWithIntl(<OnboardingForm userType={userType} />, { locale });
+    expect(
+      screen.getByRole("group", { name: getStepLabels(locale).birthDate }),
+    ).toBeInTheDocument();
+    expect(container.querySelector('input[type="date"]')).not.toBeInTheDocument();
+    const names = locale === "en" ? ["Month", "Day", "Year"] : ["연도", "월", "일"];
+    const selectors = screen.getAllByRole("combobox");
+    expect(selectors).toHaveLength(3);
+    selectors.forEach((selector, index) => {
+      expect(selector).toHaveAccessibleName(names[index]);
+      expect(selector).toHaveClass("rounded-xl", "border-line-soft", "bg-canvas-soft", "text-base");
+      expect(selector.querySelector("svg")).toHaveClass("size-4", "text-ink");
+    });
+  });
+
+  it("applies buddy birth date option limits after client mount", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-06T12:00:00+09:00"));
 
@@ -404,13 +425,21 @@ describe("OnboardingForm", () => {
         <OnboardingForm userType="BUDDY" />
       </IntlTestProvider>,
     );
-    expect(serverHtml).not.toContain('min="1906-08-06"');
-    expect(serverHtml).not.toContain('max="2007-08-06"');
+    expect(serverHtml).not.toContain('type="date"');
+    expect(serverHtml).not.toContain('role="option"');
 
     renderWithIntl(<OnboardingForm userType="BUDDY" />);
     await act(async () => undefined);
-    expect(screen.getByLabelText("Date of birth")).toHaveAttribute("min", "1906-08-06");
-    expect(screen.getByLabelText("Date of birth")).toHaveAttribute("max", "2007-08-06");
+    const years = openBirthDatePart("Year")
+      .getAllByRole("option")
+      .filter((option) => (option as HTMLButtonElement).value);
+    expect(years[0]).toHaveValue("2007");
+    expect(years.at(-1)).toHaveValue("1906");
+    selectBirthDatePart("Year", "2007");
+    selectBirthDatePart("Month", "8");
+    const days = openBirthDatePart("Day");
+    expect(days.getByRole("option", { name: "6" })).toBeEnabled();
+    expect(days.getByRole("option", { name: "7" })).toBeDisabled();
 
     vi.useRealTimers();
   });
@@ -623,7 +652,7 @@ describe("OnboardingForm", () => {
     renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
 
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Old Buddy");
-    expect(screen.getByLabelText("Date of birth")).toHaveValue("1995-02-03");
+    expectBirthDate("en", "1995-02-03");
     expect(screen.queryByText("Google Buddy")).not.toBeInTheDocument();
     expect(screen.queryByText("buddy@example.com")).not.toBeInTheDocument();
     expect(screen.getByText("Reason for the previous rejection")).toBeInTheDocument();
@@ -958,12 +987,7 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }, choose
     target: { value: labels.country },
   });
   fireEvent.click(screen.getByText(labels.country));
-  const picker = screen.queryByRole("group", { name: labels.birthDate });
-  if (!picker) {
-    fireEvent.change(screen.getByLabelText(labels.birthDate), {
-      target: { value: values.birthDate },
-    });
-  } else if (values.birthDate) {
+  if (values.birthDate) {
     const [year, month, day] = values.birthDate.split("-").map(Number);
     for (const [name, value] of locale === "en"
       ? [

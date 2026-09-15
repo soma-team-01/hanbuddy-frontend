@@ -929,42 +929,25 @@ export function OnboardingForm({
                           triggerClassName={`${ONBOARDING_SELECT_TRIGGER} gap-2 px-4`}
                         />
                       </div>
-                      {isBuddyFlow ? (
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
-                          <input
-                            name="birthDate"
-                            type="date"
-                            min={oldestAllowedBirthDate || undefined}
-                            max={youngestAllowedBirthDate || undefined}
-                            required
-                            value={birthDate}
-                            onChange={(event) => setBirthDate(event.target.value)}
-                            aria-label={t("birthDate")}
-                            className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
-                          />
-                        </label>
-                      ) : (
-                        <BirthDatePicker
-                          value={birthDate}
-                          today={currentLocalDate}
-                          oldestAllowedBirthDate={oldestAllowedBirthDate}
-                          youngestAllowedBirthDate={youngestAllowedBirthDate}
-                          invalid={errorKey === "validation.birthDateInvalid"}
-                          onChange={(value) => {
-                            setBirthDate(value);
-                            if (
-                              isValidBirthDate(
-                                value,
-                                currentLocalDate,
-                                oldestAllowedBirthDate,
-                                youngestAllowedBirthDate,
-                              )
+                      <BirthDatePicker
+                        value={birthDate}
+                        today={currentLocalDate}
+                        oldestAllowedBirthDate={oldestAllowedBirthDate}
+                        youngestAllowedBirthDate={youngestAllowedBirthDate}
+                        invalid={errorKey === "validation.birthDateInvalid"}
+                        onChange={(value) => {
+                          setBirthDate(value);
+                          if (
+                            isValidBirthDate(
+                              value,
+                              currentLocalDate,
+                              oldestAllowedBirthDate,
+                              youngestAllowedBirthDate,
                             )
-                              setErrorKey(null);
-                          }}
-                        />
-                      )}
+                          )
+                            setErrorKey(null);
+                        }}
+                      />
                     </div>
 
                     {!isResubmission && (

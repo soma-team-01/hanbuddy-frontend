@@ -204,6 +204,42 @@ body {
   font-family: var(--font-sans);
 }
 
+/*
+ * 한국어는 어절 단위로 줄을 바꿔야 "경험하 / 세요"처럼 단어가 쪼개지지 않는다.
+ * 공백 없는 긴 URL·이메일은 overflow-wrap이 마지막 수단으로 끊어 가로 넘침을 막는다.
+ * 일본어·중국어는 문자 단위 줄바꿈이 자연스러우므로 한국어에만 적용한다.
+ */
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * 일본어는 브라우저가 문절(文節) 단위로 줄을 바꾸게 한다(Chrome 119+, 미지원 브라우저는 기존 동작).
+ * "ローカルのよう / に"처럼 조사 앞에서 끊기는 것을 막는다.
+ */
+:lang(ja) {
+  /* auto-phrase 미지원 브라우저는 앞 선언(normal)이 남아 상위 :lang(ko)의 keep-all을 물려받지 않는다 */
+  word-break: normal;
+  word-break: auto-phrase;
+}
+
+/* 한국어 문서 안에 lang="zh"로 표시된 원문(후기·채팅 번역 원문 등)은 위 keep-all을 물려받지 않게 되돌린다 */
+:lang(zh) {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/*
+ * 제목은 줄 길이를 고르게 나눠 "…like a / local!"처럼 마지막 단어만 홀로 남는 줄을 피한다.
+ * 카드 제목(line-clamp)도 두 줄일 때 더 고르게 나뉜다. 미지원 브라우저는 일반 줄바꿈으로 동작한다.
+ */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 :focus-visible {
   outline: 3px solid var(--color-primary-strong);
   outline-offset: 3px;
@@ -299,6 +335,16 @@ button:not(:disabled),
 .hero-media-image {
   animation: hero-media-zoom 20s ease-in-out infinite;
   animation-delay: var(--hero-media-delay);
+  /* 사진별 초점. 모바일 띠(가로 크롭)와 cover 사진의 PC 세로 크롭에 쓰인다 */
+  object-position: var(--hero-media-position, center);
+}
+
+/* md 이상에서 contain 프레임은 흐린 배경 위 정중앙에 두고, 원본 양옆을 배경에 녹인다 */
+@media (min-width: 768px) {
+  .hero-media-contain {
+    object-position: center;
+    mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+  }
 }
 
 @keyframes motion-dialog-in {

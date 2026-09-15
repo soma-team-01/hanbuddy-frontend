@@ -214,6 +214,24 @@ html:lang(ko) {
   overflow-wrap: anywhere;
 }
 
+/*
+ * 일본어는 브라우저가 문절(文節) 단위로 줄을 바꾸게 한다(Chrome 119+, 미지원 브라우저는 기존 동작).
+ * "ローカルのよう / に"처럼 조사 앞에서 끊기는 것을 막는다.
+ */
+html:lang(ja) {
+  word-break: auto-phrase;
+}
+
+/*
+ * 제목은 줄 길이를 고르게 나눠 "…like a / local!"처럼 마지막 단어만 홀로 남는 줄을 피한다.
+ * 카드 제목(line-clamp)도 두 줄일 때 더 고르게 나뉜다. 미지원 브라우저는 일반 줄바꿈으로 동작한다.
+ */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 :focus-visible {
   outline: 3px solid var(--color-primary-strong);
   outline-offset: 3px;

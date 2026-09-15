@@ -58,7 +58,15 @@ describe("global korean line breaking", () => {
 
     expect(rule).toContain("word-break: keep-all");
     expect(rule).toContain("overflow-wrap: anywhere");
-    // 일본어·중국어는 문자 단위 줄바꿈이 자연스러우므로 같은 규칙을 강제하지 않는다
-    expect(stylesheet).not.toMatch(/html:lang\((ja|zh)/);
+    // 중국어는 문자 단위 줄바꿈이 자연스러우므로 같은 규칙을 강제하지 않는다
+    expect(stylesheet).not.toMatch(/html:lang\(zh/);
+  });
+
+  it("lets Japanese break by phrase and balances heading lines in every language", () => {
+    const japanese = stylesheet.match(/html:lang\(ja\)\s*\{([^}]*)\}/)?.[1];
+    const headings = stylesheet.match(/\nh1,\s*h2,\s*h3\s*\{([^}]*)\}/)?.[1];
+
+    expect(japanese).toContain("word-break: auto-phrase");
+    expect(headings).toContain("text-wrap: balance");
   });
 });

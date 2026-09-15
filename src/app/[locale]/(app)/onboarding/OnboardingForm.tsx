@@ -3,7 +3,8 @@
 import { SignupExtraFields } from "./SignupExtraFields";
 import {
   buildSignupExtra,
-  validateSignupExtra,
+  validateSignupSource,
+  validateSignupBank,
   type SignupExtraDraft,
   type SignupExtraError,
 } from "@/lib/auth/signup-extra";
@@ -490,8 +491,12 @@ export function OnboardingForm({
     if (draftScope) clearOnboardingDraft(draftScope);
   }
 
-  function validateExtra() {
-    const error = isResubmission ? null : validateSignupExtra(signupExtra, userType);
+  function validateExtra(step: 1 | 2) {
+    let error: SignupExtraError | null = null;
+    if (!isResubmission) {
+      error =
+        step === 1 ? validateSignupSource(signupExtra) : validateSignupBank(signupExtra, userType);
+    }
     setSignupExtraError(error);
     return error === null;
   }
@@ -500,8 +505,15 @@ export function OnboardingForm({
     setErrorKey(null);
     setRequestFailure(null);
 
-    if (currentStep === 1 && validateAboutYou()) goToStep(2);
-    if (currentStep === 2 && !isResubmission && validateContact() && validateExtra()) goToStep(3);
+    if (currentStep === 1 && validateAboutYou() && validateExtra(1)) goToStep(2);
+    if (currentStep === 2 && !isResubmission) {
+      // A restored legacy draft may have progressed without collecting a signup source.
+      if (!validateExtra(1)) {
+        goToStep(1);
+        return;
+      }
+      if (validateContact() && validateExtra(2)) goToStep(3);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -514,11 +526,11 @@ export function OnboardingForm({
       return;
     }
 
-    if (!validateAboutYou()) {
+    if (!validateAboutYou() || !validateExtra(1)) {
       setCurrentStep(1);
       return;
     }
-    if (!validateContact() || !validateExtra()) {
+    if (!validateContact() || !validateExtra(2)) {
       setCurrentStep(2);
       return;
     }
@@ -576,7 +588,7 @@ export function OnboardingForm({
         if (!isResubmission && body && !body.isSuccess) {
           if (body.code === "AUTH400_SIGNUP_SOURCE") {
             setSignupExtraError({ field: "source", key: "sourceInvalid" });
-            goToStep(2);
+            goToStep(1);
           } else if (body.code === "AUTH400_BANK_ACCOUNT") {
             setSignupExtraError({ field: "bank", key: "bankInvalid" });
             goToStep(2);
@@ -955,6 +967,18 @@ export function OnboardingForm({
                       )}
                     </div>
 
+                    {!isResubmission && (
+                      <SignupExtraFields
+                        value={signupExtra}
+                        section="source"
+                        error={signupExtraError}
+                        onChange={(value) => {
+                          setSignupExtra(value);
+                          setSignupExtraError(null);
+                        }}
+                      />
+                    )}
+
                     {resubmission?.rejectionReason ? (
                       <div
                         data-testid="resubmission-rejection-reason"
@@ -1002,10 +1026,10 @@ export function OnboardingForm({
                       showAppSelector={!isBuddyFlow}
                     />
                   </div>
-                  {!isResubmission && (
+                  {!isResubmission && isBuddyFlow && (
                     <SignupExtraFields
                       value={signupExtra}
-                      isBuddy={isBuddyFlow}
+                      section="bank"
                       error={signupExtraError}
                       onChange={(value) => {
                         setSignupExtra(value);

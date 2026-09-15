@@ -16,7 +16,10 @@ function Fields({ isBuddy = false }: { isBuddy?: boolean }) {
   const [error, setError] = useState<SignupExtraError | null>(null);
   return (
     <NextIntlClientProvider locale="en" messages={en}>
-      <SignupExtraFields value={value} onChange={onChange} isBuddy={isBuddy} error={error} />
+      <SignupExtraFields value={value} onChange={onChange} section="source" error={error} />
+      {isBuddy && (
+        <SignupExtraFields value={value} onChange={onChange} section="bank" error={error} />
+      )}
       <button onClick={() => setError(validateSignupExtra(value, isBuddy ? "BUDDY" : "TOURIST"))}>
         Validate
       </button>
@@ -28,6 +31,16 @@ it("shows eight unselected required radio choices and a linked error for no choi
   render(<Fields />);
   const choices = screen.getAllByRole("radio");
   expect(choices).toHaveLength(8);
+  expect(choices.map((choice) => (choice as HTMLInputElement).value)).toEqual([
+    "INSTAGRAM",
+    "FACEBOOK",
+    "GOOGLE_SEARCH",
+    "FRIEND",
+    "MEETUP",
+    "OFFLINE_PROMOTION",
+    "UNIVERSITY_COMMUNITY",
+    "OTHER",
+  ]);
   expect(screen.queryByText("Required")).not.toBeInTheDocument();
   for (const choice of choices) {
     expect(choice).not.toBeChecked();

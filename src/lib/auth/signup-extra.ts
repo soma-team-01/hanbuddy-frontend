@@ -1,9 +1,9 @@
 export const SIGNUP_SOURCES = [
-  "MEETUP",
-  "FACEBOOK",
   "INSTAGRAM",
-  "FRIEND",
+  "FACEBOOK",
   "GOOGLE_SEARCH",
+  "FRIEND",
+  "MEETUP",
   "OFFLINE_PROMOTION",
   "UNIVERSITY_COMMUNITY",
   "OTHER",
@@ -66,10 +66,7 @@ export function isSignupSource(value: string): value is SignupSource {
 export function isBankName(value: string): value is BankName {
   return Object.hasOwn(BANKS, value);
 }
-export function validateSignupExtra(
-  draft: SignupExtraDraft,
-  role: string,
-): SignupExtraError | null {
+export function validateSignupSource(draft: SignupExtraDraft): SignupExtraError | null {
   if (!draft.signupSource) return { field: "source", key: "sourceRequired" };
   if (!isSignupSource(draft.signupSource)) return { field: "source", key: "sourceInvalid" };
   if (draft.signupSource === "OTHER") {
@@ -77,6 +74,9 @@ export function validateSignupExtra(
     if (draft.signupSourceDetail.length > 100)
       return { field: "source", key: "sourceDetailTooLong" };
   }
+  return null;
+}
+export function validateSignupBank(draft: SignupExtraDraft, role: string): SignupExtraError | null {
   if (role !== "BUDDY") return null;
   const hasAccount = Boolean(draft.bankAccountNumber.trim());
   if (Boolean(draft.bankName) !== hasAccount) return { field: "bank", key: "bankPair" };
@@ -86,6 +86,12 @@ export function validateSignupExtra(
   if (!/^[0-9 -]+$/.test(draft.bankAccountNumber) || !/[0-9]/.test(draft.bankAccountNumber))
     return { field: "bank", key: "bankFormat" };
   return null;
+}
+export function validateSignupExtra(
+  draft: SignupExtraDraft,
+  role: string,
+): SignupExtraError | null {
+  return validateSignupSource(draft) ?? validateSignupBank(draft, role);
 }
 export function buildSignupExtra(draft: SignupExtraDraft, role: string) {
   return {

@@ -17,69 +17,71 @@ const INPUT =
 export function SignupExtraFields({
   value,
   onChange,
-  isBuddy,
+  section,
   error,
 }: Readonly<{
   value: SignupExtraDraft;
   onChange: (value: SignupExtraDraft) => void;
-  isBuddy: boolean;
+  section: "source" | "bank";
   error: SignupExtraError | null;
 }>) {
   const t = useTranslations("SignupExtra");
   const id = useId();
   return (
     <div className="mt-8 max-w-3xl space-y-8 border-t border-line-soft pt-6">
-      <fieldset className="min-w-0 space-y-3">
-        <legend className="text-sm font-medium text-ink">{t("sourceLabel")}</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {SIGNUP_SOURCES.map((source) => (
-            <label key={source} className="relative min-w-0 cursor-pointer">
+      {section === "source" && (
+        <fieldset className="min-w-0 space-y-3">
+          <legend className="text-sm font-medium text-ink">{t("sourceLabel")}</legend>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {SIGNUP_SOURCES.map((source) => (
+              <label key={source} className="relative min-w-0 cursor-pointer">
+                <input
+                  type="radio"
+                  name={`${id}-source`}
+                  value={source}
+                  required
+                  checked={value.signupSource === source}
+                  onChange={() =>
+                    onChange({ ...value, signupSource: source, signupSourceDetail: "" })
+                  }
+                  aria-invalid={error?.field === "source" || undefined}
+                  aria-describedby={error?.field === "source" ? `${id}-source-error` : undefined}
+                  className="peer sr-only"
+                />
+                <span className="flex h-full min-h-11 items-center justify-between gap-2 rounded-xl border border-line-soft bg-white px-3 py-2 text-sm text-muted transition-colors peer-checked:border-primary peer-checked:text-primary-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-primary hover:text-primary-strong">
+                  <span>{t(`sources.${source}`)}</span>
+                  <CheckIcon
+                    aria-hidden
+                    className={`size-3.5 shrink-0 ${value.signupSource === source ? "visible" : "invisible"}`}
+                  />
+                </span>
+              </label>
+            ))}
+          </div>
+          {value.signupSource === "OTHER" && (
+            <label className="block space-y-2 text-sm text-ink">
+              <span>{t("sourceDetailLabel")}</span>
               <input
-                type="radio"
-                name={`${id}-source`}
-                value={source}
+                className={INPUT}
+                value={value.signupSourceDetail}
+                maxLength={100}
                 required
-                checked={value.signupSource === source}
-                onChange={() =>
-                  onChange({ ...value, signupSource: source, signupSourceDetail: "" })
-                }
+                autoComplete="off"
+                onChange={(event) => onChange({ ...value, signupSourceDetail: event.target.value })}
                 aria-invalid={error?.field === "source" || undefined}
                 aria-describedby={error?.field === "source" ? `${id}-source-error` : undefined}
-                className="peer sr-only"
               />
-              <span className="flex h-full min-h-11 items-center justify-between gap-2 rounded-xl border border-line-soft bg-white px-3 py-2 text-sm text-muted transition-colors peer-checked:border-primary peer-checked:text-primary-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-primary hover:text-primary-strong">
-                <span>{t(`sources.${source}`)}</span>
-                <CheckIcon
-                  aria-hidden
-                  className={`size-3.5 shrink-0 ${value.signupSource === source ? "visible" : "invisible"}`}
-                />
-              </span>
             </label>
-          ))}
-        </div>
-        {value.signupSource === "OTHER" && (
-          <label className="block space-y-2 text-sm text-ink">
-            <span>{t("sourceDetailLabel")}</span>
-            <input
-              className={INPUT}
-              value={value.signupSourceDetail}
-              maxLength={100}
-              required
-              autoComplete="off"
-              onChange={(event) => onChange({ ...value, signupSourceDetail: event.target.value })}
-              aria-invalid={error?.field === "source" || undefined}
-              aria-describedby={error?.field === "source" ? `${id}-source-error` : undefined}
-            />
-          </label>
-        )}
-        {error?.field === "source" && (
-          <p id={`${id}-source-error`} role="alert" className="text-sm text-danger">
-            {t(`errors.${error.key}`)}
-          </p>
-        )}
-      </fieldset>
-      {isBuddy && (
-        <div className="space-y-3 border-t border-line-soft pt-6">
+          )}
+          {error?.field === "source" && (
+            <p id={`${id}-source-error`} role="alert" className="text-sm text-danger">
+              {t(`errors.${error.key}`)}
+            </p>
+          )}
+        </fieldset>
+      )}
+      {section === "bank" && (
+        <div className="space-y-3">
           <p className="text-sm font-medium text-ink">{t("bankTitle")}</p>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
             <div className="space-y-1.5">

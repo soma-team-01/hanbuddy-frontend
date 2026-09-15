@@ -1,10 +1,10 @@
 {
   "SignupExtra": {
-    "sourceLabel": "您從哪裡得知我們？（選填）",
-    "none": "未選擇",
+    "sourceLabel": "您從哪裡得知我們？",
+    "required": "必填",
     "sourceDetailLabel": "請具體說明（最多100字）",
     "bankTitle": "銀行帳戶（選填）",
-    "bankHint": "不填寫帳戶也可以註冊。如需填寫，請同時填寫銀行和帳號。",
+    "bankHint": "選填。如需新增帳戶，請同時填寫銀行和帳號。",
     "bankLabel": "銀行",
     "bankPlaceholder": "選擇銀行",
     "accountLabel": "銀行帳號",
@@ -19,6 +19,7 @@
       "OTHER": "其他"
     },
     "errors": {
+      "sourceRequired": "請選擇您是從哪裡得知我們的。",
       "sourceInvalid": "請檢查註冊來源與詳細說明。",
       "sourceDetailRequired": "請填寫您是如何得知我們的。",
       "sourceDetailTooLong": "詳細說明不能超過100字。",

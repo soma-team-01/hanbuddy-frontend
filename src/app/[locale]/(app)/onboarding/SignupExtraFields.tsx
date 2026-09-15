@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { useTranslations } from "next-intl";
+import { CheckIcon } from "@/components/ui/icons";
 import {
   BANKS,
   SIGNUP_SOURCES,
@@ -11,7 +12,7 @@ import {
 import { OnboardingSelect } from "./OnboardingSelect";
 
 const INPUT =
-  "h-[50px] w-full min-w-0 rounded-xl border border-line-soft bg-white px-4 text-base text-ink outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary";
+  "focus-border-only h-[50px] w-full min-w-0 rounded-xl border border-line-soft bg-white px-4 text-base text-ink outline-none transition-colors focus:border-primary";
 
 export function SignupExtraFields({
   value,
@@ -27,20 +28,38 @@ export function SignupExtraFields({
   const t = useTranslations("SignupExtra");
   const id = useId();
   return (
-    <div className="mt-8 max-w-3xl space-y-6 border-t border-line-soft pt-6">
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-ink">{t("sourceLabel")}</p>
-        <OnboardingSelect
-          label={t("sourceLabel")}
-          value={value.signupSource}
-          options={[
-            { value: "", label: t("none") },
-            ...SIGNUP_SOURCES.map((source) => ({ value: source, label: t(`sources.${source}`) })),
-          ]}
-          onChange={(signupSource) => onChange({ ...value, signupSource, signupSourceDetail: "" })}
-          invalid={error?.field === "source"}
-          describedBy={error?.field === "source" ? `${id}-source-error` : undefined}
-        />
+    <div className="mt-8 max-w-3xl space-y-8 border-t border-line-soft pt-6">
+      <fieldset className="min-w-0 space-y-3">
+        <legend className="text-sm font-medium text-ink">
+          {t("sourceLabel")}
+          <span className="ml-2 text-xs font-normal text-primary-strong">{t("required")}</span>
+        </legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {SIGNUP_SOURCES.map((source) => (
+            <label key={source} className="relative min-w-0 cursor-pointer">
+              <input
+                type="radio"
+                name={`${id}-source`}
+                value={source}
+                required
+                checked={value.signupSource === source}
+                onChange={() =>
+                  onChange({ ...value, signupSource: source, signupSourceDetail: "" })
+                }
+                aria-invalid={error?.field === "source" || undefined}
+                aria-describedby={error?.field === "source" ? `${id}-source-error` : undefined}
+                className="peer sr-only"
+              />
+              <span className="flex h-full min-h-11 items-center justify-between gap-2 rounded-xl border border-line-soft bg-white px-3 py-2 text-sm text-muted transition-colors peer-checked:border-primary peer-checked:text-primary-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-primary hover:text-primary-strong">
+                <span>{t(`sources.${source}`)}</span>
+                <CheckIcon
+                  aria-hidden
+                  className={`size-3.5 shrink-0 ${value.signupSource === source ? "visible" : "invisible"}`}
+                />
+              </span>
+            </label>
+          ))}
+        </div>
         {value.signupSource === "OTHER" && (
           <label className="block space-y-2 text-sm text-ink">
             <span>{t("sourceDetailLabel")}</span>
@@ -48,6 +67,7 @@ export function SignupExtraFields({
               className={INPUT}
               value={value.signupSourceDetail}
               maxLength={100}
+              required
               autoComplete="off"
               onChange={(event) => onChange({ ...value, signupSourceDetail: event.target.value })}
               aria-invalid={error?.field === "source" || undefined}
@@ -60,37 +80,43 @@ export function SignupExtraFields({
             {t(`errors.${error.key}`)}
           </p>
         )}
-      </div>
+      </fieldset>
       {isBuddy && (
-        <div className="space-y-2">
+        <div className="space-y-3 border-t border-line-soft pt-6">
           <p className="text-sm font-medium text-ink">{t("bankTitle")}</p>
-          <p className="text-sm text-muted">{t("bankHint")}</p>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
-            <OnboardingSelect
-              label={t("bankLabel")}
-              value={value.bankName}
-              options={[
-                { value: "", label: t("bankPlaceholder") },
-                ...Object.entries(BANKS).map(([bank, label]) => ({ value: bank, label })),
-              ]}
-              onChange={(bankName) => onChange({ ...value, bankName })}
-              invalid={error?.field === "bank"}
-              describedBy={error?.field === "bank" ? `${id}-bank-error` : undefined}
-            />
-            <input
-              aria-label={t("accountLabel")}
-              className={INPUT}
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder={t("accountLabel")}
-              maxLength={50}
-              value={value.bankAccountNumber}
-              onChange={(event) => onChange({ ...value, bankAccountNumber: event.target.value })}
-              aria-invalid={error?.field === "bank" || undefined}
-              aria-describedby={error?.field === "bank" ? `${id}-bank-error` : undefined}
-            />
+            <div className="space-y-1.5">
+              <p className="text-sm text-muted">{t("bankLabel")}</p>
+              <OnboardingSelect
+                label={t("bankLabel")}
+                value={value.bankName}
+                options={[
+                  { value: "", label: t("bankPlaceholder") },
+                  ...Object.entries(BANKS).map(([bank, label]) => ({ value: bank, label })),
+                ]}
+                onChange={(bankName) => onChange({ ...value, bankName })}
+                invalid={error?.field === "bank"}
+                describedBy={error?.field === "bank" ? `${id}-bank-error` : undefined}
+              />
+            </div>
+            <label className="block space-y-1.5">
+              <span className="text-sm text-muted">{t("accountLabel")}</span>
+              <input
+                aria-label={t("accountLabel")}
+                className={INPUT}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder={t("accountLabel")}
+                maxLength={50}
+                value={value.bankAccountNumber}
+                onChange={(event) => onChange({ ...value, bankAccountNumber: event.target.value })}
+                aria-invalid={error?.field === "bank" || undefined}
+                aria-describedby={error?.field === "bank" ? `${id}-bank-error` : undefined}
+              />
+            </label>
           </div>
+          <p className="text-sm text-muted">{t("bankHint")}</p>
           {error?.field === "bank" && (
             <p id={`${id}-bank-error`} role="alert" className="text-sm text-danger">
               {t(`errors.${error.key}`)}

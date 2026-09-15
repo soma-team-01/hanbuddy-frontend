@@ -1,10 +1,10 @@
 {
   "SignupExtra": {
-    "sourceLabel": "您从哪里了解到我们？（选填）",
-    "none": "未选择",
+    "sourceLabel": "您从哪里了解到我们？",
+    "required": "必填",
     "sourceDetailLabel": "请具体说明（最多100字）",
     "bankTitle": "银行账户（选填）",
-    "bankHint": "不填写账户也可以注册。如需填写，请同时填写银行和账号。",
+    "bankHint": "选填。如需添加账户，请同时填写银行和账号。",
     "bankLabel": "银行",
     "bankPlaceholder": "选择银行",
     "accountLabel": "银行账号",
@@ -19,6 +19,7 @@
       "OTHER": "其他"
     },
     "errors": {
+      "sourceRequired": "请选择您是从哪里了解到我们的。",
       "sourceInvalid": "请检查注册来源和详细说明。",
       "sourceDetailRequired": "请填写您是如何了解到我们的。",
       "sourceDetailTooLong": "详细说明不能超过100字。",

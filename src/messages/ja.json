@@ -1,10 +1,10 @@
 {
   "SignupExtra": {
-    "sourceLabel": "どこで知りましたか？（任意）",
-    "none": "未選択",
+    "sourceLabel": "どこで知りましたか？",
+    "required": "必須",
     "sourceDetailLabel": "詳しく教えてください（100文字以内）",
     "bankTitle": "銀行口座（任意）",
-    "bankHint": "口座を入力しなくても登録できます。入力する場合は銀行と口座番号の両方が必要です。",
+    "bankHint": "任意です。登録する場合は銀行と口座番号を入力してください。",
     "bankLabel": "銀行",
     "bankPlaceholder": "銀行を選択",
     "accountLabel": "口座番号",
@@ -19,6 +19,7 @@
       "OTHER": "その他"
     },
     "errors": {
+      "sourceRequired": "どこで知ったかを選択してください。",
       "sourceInvalid": "登録経路と詳細を確認してください。",
       "sourceDetailRequired": "どこで知ったかを入力してください。",
       "sourceDetailTooLong": "詳細は100文字以内で入力してください。",

@@ -51,6 +51,7 @@ export interface SignupExtraDraft {
 export type SignupExtraError = {
   field: "source" | "bank";
   key:
+    | "sourceRequired"
     | "sourceInvalid"
     | "sourceDetailRequired"
     | "sourceDetailTooLong"
@@ -69,8 +70,8 @@ export function validateSignupExtra(
   draft: SignupExtraDraft,
   role: string,
 ): SignupExtraError | null {
-  if (draft.signupSource && !isSignupSource(draft.signupSource))
-    return { field: "source", key: "sourceInvalid" };
+  if (!draft.signupSource) return { field: "source", key: "sourceRequired" };
+  if (!isSignupSource(draft.signupSource)) return { field: "source", key: "sourceInvalid" };
   if (draft.signupSource === "OTHER") {
     if (!draft.signupSourceDetail.trim()) return { field: "source", key: "sourceDetailRequired" };
     if (draft.signupSourceDetail.length > 100)

@@ -55,7 +55,28 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
 
 describe("OnboardingForm", () => {
   it.each(["TOURIST", "BUDDY"] as const)(
-    "submits optional source for %s, with bank data only for buddy and never in drafts",
+    "blocks %s from continuing without a signup source",
+    (userType) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(<OnboardingForm userType={userType} />);
+      fillAboutYou("en", { birthDate: "1998-04-12" });
+      clickContinue("en");
+      fireEvent.change(
+        screen.getByLabelText(userType === "BUDDY" ? "Phone number" : "Messaging app ID"),
+        { target: { value: userType === "BUDDY" ? "2025550114" : "traveler_id" } },
+      );
+      clickContinue("en");
+      expect(screen.getByRole("alert")).toHaveTextContent("Please select how you heard about us.");
+      expect(screen.queryByRole("heading", { name: "Agreements" })).not.toBeInTheDocument();
+      expect(fetchMock).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("radio", { name: "Instagram" }));
+      clickContinue("en");
+      expect(screen.getByRole("heading", { name: "Agreements" })).toBeInTheDocument();
+    },
+  );
+  it.each(["TOURIST", "BUDDY"] as const)(
+    "submits required source for %s, with optional bank data only for buddy and never in drafts",
     async (userType) => {
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(
@@ -77,10 +98,7 @@ describe("OnboardingForm", () => {
           target: { value: "2025550114" },
         });
       else fillContact("en", "synthetic-id");
-      fireEvent.click(
-        screen.getByRole("combobox", { name: "How did you hear about us? (optional)" }),
-      );
-      fireEvent.click(screen.getByRole("option", { name: "Other" }));
+      fireEvent.click(screen.getByRole("radio", { name: "Other" }));
       clickContinue("en");
       expect(screen.getByRole("alert")).toHaveTextContent("Please tell us how you heard about us.");
       fireEvent.change(screen.getByLabelText("Please specify (up to 100 characters)"), {
@@ -114,19 +132,15 @@ describe("OnboardingForm", () => {
     renderWithIntl(<OnboardingForm />);
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
-    const source = screen.getByRole("combobox", { name: "How did you hear about us? (optional)" });
-    fireEvent.click(source);
-    fireEvent.click(screen.getByRole("option", { name: "Other" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Other" }));
     fireEvent.change(screen.getByLabelText("Please specify (up to 100 characters)"), {
       target: { value: "Old source" },
     });
-    fireEvent.click(source);
-    fireEvent.click(screen.getByRole("option", { name: "Instagram" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Instagram" }));
     expect(
       screen.queryByLabelText("Please specify (up to 100 characters)"),
     ).not.toBeInTheDocument();
-    fireEvent.click(source);
-    fireEvent.click(screen.getByRole("option", { name: "Other" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Other" }));
     expect(screen.getByLabelText("Please specify (up to 100 characters)")).toHaveValue("");
   });
   it.each(["line", "wechat"] as const)(
@@ -494,6 +508,7 @@ describe("OnboardingForm", () => {
     fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "2025550114" },
     });
+    fireEvent.click(screen.getByRole("radio", { name: "Friend" }));
     clickContinue("en");
     expect(screen.getByRole("heading", { name: "Agreements" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
@@ -658,6 +673,7 @@ describe("OnboardingForm", () => {
     fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "2025550114" },
     });
+    fireEvent.click(screen.getByRole("radio", { name: "Friend" }));
     clickContinue("en");
 
     expect(screen.getByText("Personal information collection and use")).toBeInTheDocument();
@@ -906,6 +922,10 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }) {
 }
 
 function fillContact(locale: "en" | "ko", contact: string) {
+  const source = screen.queryByRole("radio", {
+    name: locale === "en" ? "Friend" : "지인 추천",
+  });
+  if (source) fireEvent.click(source);
   if (contact) {
     const labels = getStepLabels(locale);
     fireEvent.change(screen.getByLabelText(labels.appId), {

@@ -337,6 +337,13 @@ button:not(:disabled),
   animation-delay: var(--hero-media-delay);
 }
 
+/* md 이상에서 contain 프레임의 원본 양옆을 흐린 배경에 녹인다 */
+@media (min-width: 768px) {
+  .hero-media-contain {
+    mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+  }
+}
+
 @keyframes motion-dialog-in {
   from {
     opacity: 0;

@@ -76,3 +76,13 @@ describe("global korean line breaking", () => {
     expect(headings).toContain("text-wrap: balance");
   });
 });
+
+describe("landing hero media styles", () => {
+  it("feathers contained hero photos into the blurred backdrop from md up", () => {
+    const block = stylesheet.match(
+      /@media \(min-width: 768px\)\s*\{\s*\.hero-media-contain\s*\{([^}]*)\}/,
+    )?.[1];
+
+    expect(block).toContain("mask-image: linear-gradient(90deg");
+  });
+});

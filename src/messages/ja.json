@@ -1,4 +1,33 @@
 {
+  "SignupExtra": {
+    "sourceLabel": "どこで知りましたか？（任意）",
+    "none": "未選択",
+    "sourceDetailLabel": "詳しく教えてください（100文字以内）",
+    "bankTitle": "銀行口座（任意）",
+    "bankHint": "口座を入力しなくても登録できます。入力する場合は銀行と口座番号の両方が必要です。",
+    "bankLabel": "銀行",
+    "bankPlaceholder": "銀行を選択",
+    "accountLabel": "口座番号",
+    "sources": {
+      "MEETUP": "Meetup",
+      "FACEBOOK": "Facebook",
+      "INSTAGRAM": "Instagram",
+      "FRIEND": "知人の紹介",
+      "GOOGLE_SEARCH": "Google検索",
+      "OFFLINE_PROMOTION": "オフラインの案内",
+      "UNIVERSITY_COMMUNITY": "大学コミュニティ",
+      "OTHER": "その他"
+    },
+    "errors": {
+      "sourceInvalid": "登録経路と詳細を確認してください。",
+      "sourceDetailRequired": "どこで知ったかを入力してください。",
+      "sourceDetailTooLong": "詳細は100文字以内で入力してください。",
+      "bankPair": "銀行と口座番号を両方入力するか、両方空欄にしてください。",
+      "bankFormat": "数字・スペース・ハイフンのみ使用し、数字を1つ以上含めてください。",
+      "bankLength": "口座番号は50文字以内で入力してください。",
+      "bankInvalid": "銀行と口座番号を確認してください。"
+    }
+  },
   "Common": {
     "cancel": "キャンセル",
     "close": "閉じる",
@@ -7,6 +36,8 @@
     "unavailable": "利用不可"
   },
   "ApiErrors": {
+    "signupSourceInvalid": "登録経路と詳細を確認してください。",
+    "signupBankAccountInvalid": "銀行と口座番号を確認してください。",
     "authenticationRequired": "続行するには、もう一度サインインしてください。",
     "googleAuthenticationInvalid": "Google認証が確認できませんでした。もう一度サインインしてください。",
     "signupAgreementsInvalid": "サインアップ規約を確認して、もう一度お試しください。",

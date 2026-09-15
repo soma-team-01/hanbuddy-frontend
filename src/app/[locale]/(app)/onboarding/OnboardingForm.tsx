@@ -1,5 +1,13 @@
 "use client";
 
+import { SignupExtraFields } from "./SignupExtraFields";
+import {
+  buildSignupExtra,
+  validateSignupExtra,
+  type SignupExtraDraft,
+  type SignupExtraError,
+} from "@/lib/auth/signup-extra";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -157,6 +165,14 @@ export function OnboardingForm({
   const router = useRouter();
   const isResubmission = Boolean(resubmission);
   const isBuddyFlow = userType === "BUDDY";
+  // Signup-only fields deliberately stay out of persistent onboarding drafts.
+  const [signupExtra, setSignupExtra] = useState<SignupExtraDraft>({
+    signupSource: "",
+    signupSourceDetail: "",
+    bankName: "",
+    bankAccountNumber: "",
+  });
+  const [signupExtraError, setSignupExtraError] = useState<SignupExtraError | null>(null);
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;
   const draftScope = getOnboardingDraftScope({
     userType,
@@ -474,12 +490,18 @@ export function OnboardingForm({
     if (draftScope) clearOnboardingDraft(draftScope);
   }
 
+  function validateExtra() {
+    const error = isResubmission ? null : validateSignupExtra(signupExtra, userType);
+    setSignupExtraError(error);
+    return error === null;
+  }
+
   function handleContinue() {
     setErrorKey(null);
     setRequestFailure(null);
 
     if (currentStep === 1 && validateAboutYou()) goToStep(2);
-    if (currentStep === 2 && !isResubmission && validateContact()) goToStep(3);
+    if (currentStep === 2 && !isResubmission && validateContact() && validateExtra()) goToStep(3);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -496,7 +518,7 @@ export function OnboardingForm({
       setCurrentStep(1);
       return;
     }
-    if (!validateContact()) {
+    if (!validateContact() || !validateExtra()) {
       setCurrentStep(2);
       return;
     }
@@ -534,6 +556,7 @@ export function OnboardingForm({
         : {
             ...commonProfile,
             userType,
+            ...buildSignupExtra(signupExtra, userType),
             ...(profileImageKey ? { profileImageKey } : {}),
             agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
@@ -550,6 +573,15 @@ export function OnboardingForm({
         ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
+        if (!isResubmission && body && !body.isSuccess) {
+          if (body.code === "AUTH400_SIGNUP_SOURCE") {
+            setSignupExtraError({ field: "source", key: "sourceInvalid" });
+            goToStep(2);
+          } else if (body.code === "AUTH400_BANK_ACCOUNT") {
+            setSignupExtraError({ field: "bank", key: "bankInvalid" });
+            goToStep(2);
+          }
+        }
         setRequestFailure({
           error: createApiClientError(response.status, body && !body.isSuccess ? body : undefined),
           fallbackKey: isResubmission ? "resubmissionFailed" : "signupFailed",
@@ -970,6 +1002,17 @@ export function OnboardingForm({
                       showAppSelector={!isBuddyFlow}
                     />
                   </div>
+                  {!isResubmission && (
+                    <SignupExtraFields
+                      value={signupExtra}
+                      isBuddy={isBuddyFlow}
+                      error={signupExtraError}
+                      onChange={(value) => {
+                        setSignupExtra(value);
+                        setSignupExtraError(null);
+                      }}
+                    />
+                  )}
                 </section>
               ) : null}
 

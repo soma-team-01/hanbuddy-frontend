@@ -1,4 +1,33 @@
 {
+  "SignupExtra": {
+    "sourceLabel": "How did you hear about us? (optional)",
+    "none": "Not selected",
+    "sourceDetailLabel": "Please specify (up to 100 characters)",
+    "bankTitle": "Bank account (optional)",
+    "bankHint": "You can sign up without an account. If provided, enter both the bank and account number.",
+    "bankLabel": "Bank",
+    "bankPlaceholder": "Select bank",
+    "accountLabel": "Account number",
+    "sources": {
+      "MEETUP": "Meetup",
+      "FACEBOOK": "Facebook",
+      "INSTAGRAM": "Instagram",
+      "FRIEND": "Friend",
+      "GOOGLE_SEARCH": "Google search",
+      "OFFLINE_PROMOTION": "Offline promotion",
+      "UNIVERSITY_COMMUNITY": "University community",
+      "OTHER": "Other"
+    },
+    "errors": {
+      "sourceInvalid": "Check your signup source and details.",
+      "sourceDetailRequired": "Please tell us how you heard about us.",
+      "sourceDetailTooLong": "Use 100 characters or fewer.",
+      "bankPair": "Enter both the bank and account number, or leave both blank.",
+      "bankFormat": "Use digits, spaces and hyphens only, with at least one digit.",
+      "bankLength": "Use 50 characters or fewer.",
+      "bankInvalid": "Check the bank and account number."
+    }
+  },
   "Common": {
     "cancel": "Cancel",
     "close": "Close",
@@ -7,6 +36,8 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "signupSourceInvalid": "Check your signup source and details.",
+    "signupBankAccountInvalid": "Check the bank and account number.",
     "authenticationRequired": "Please sign in again to continue.",
     "googleAuthenticationInvalid": "Google authentication could not be verified. Please try signing in again.",
     "signupAgreementsInvalid": "Review the signup agreements and try again.",

@@ -84,6 +84,10 @@ export interface BuddyResubmissionRequest {
 }
 
 export interface GoogleSignupRequest {
+  signupSource?: import("./signup-extra").SignupSource | null;
+  signupSourceDetail?: string | null;
+  bankName?: import("./signup-extra").BankName | null;
+  bankAccountNumber?: string | null;
   userType: UserType;
   displayName: string;
   profileImageKey?: string;

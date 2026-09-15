@@ -54,6 +54,81 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
 }));
 
 describe("OnboardingForm", () => {
+  it.each(["TOURIST", "BUDDY"] as const)(
+    "submits optional source for %s, with bank data only for buddy and never in drafts",
+    async (userType) => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            isSuccess: true,
+            code: "200",
+            message: "OK",
+            result: { registered: true, authStatus: "PENDING_APPROVAL", userType },
+          }),
+          { status: 200 },
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(<OnboardingForm userType={userType} signupDraftAccountId="optional-test" />);
+      fillAboutYou("en", { birthDate: "1998-04-12" });
+      clickContinue("en");
+      if (userType === "BUDDY")
+        fireEvent.change(screen.getByLabelText("Phone number"), {
+          target: { value: "2025550114" },
+        });
+      else fillContact("en", "synthetic-id");
+      fireEvent.click(
+        screen.getByRole("combobox", { name: "How did you hear about us? (optional)" }),
+      );
+      fireEvent.click(screen.getByRole("option", { name: "Other" }));
+      clickContinue("en");
+      expect(screen.getByRole("alert")).toHaveTextContent("Please tell us how you heard about us.");
+      fireEvent.change(screen.getByLabelText("Please specify (up to 100 characters)"), {
+        target: { value: " Travel club " },
+      });
+      if (userType === "BUDDY") {
+        fireEvent.click(screen.getByRole("combobox", { name: "Bank" }));
+        fireEvent.click(screen.getByRole("option", { name: "신한은행" }));
+        clickContinue("en");
+        expect(screen.getByRole("alert")).toHaveTextContent("Enter both");
+        fireEvent.change(screen.getByLabelText("Account number"), {
+          target: { value: "001-234 567890" },
+        });
+      } else expect(screen.queryByLabelText("Account number")).not.toBeInTheDocument();
+      clickContinue("en");
+      expect(JSON.stringify(window.sessionStorage)).not.toContain("001-234");
+      fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
+      fireEvent.submit(screen.getByRole("checkbox", { name: "Agree to all" }).closest("form")!);
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(payload).toMatchObject({ signupSource: "OTHER", signupSourceDetail: "Travel club" });
+      if (userType === "BUDDY")
+        expect(payload).toMatchObject({ bankName: "SHINHAN", bankAccountNumber: "001-234 567890" });
+      else {
+        expect(payload).not.toHaveProperty("bankName");
+        expect(payload).not.toHaveProperty("bankAccountNumber");
+      }
+    },
+  );
+  it("clears OTHER detail when a different source is selected", () => {
+    renderWithIntl(<OnboardingForm />);
+    fillAboutYou("en", { birthDate: "1998-04-12" });
+    clickContinue("en");
+    const source = screen.getByRole("combobox", { name: "How did you hear about us? (optional)" });
+    fireEvent.click(source);
+    fireEvent.click(screen.getByRole("option", { name: "Other" }));
+    fireEvent.change(screen.getByLabelText("Please specify (up to 100 characters)"), {
+      target: { value: "Old source" },
+    });
+    fireEvent.click(source);
+    fireEvent.click(screen.getByRole("option", { name: "Instagram" }));
+    expect(
+      screen.queryByLabelText("Please specify (up to 100 characters)"),
+    ).not.toBeInTheDocument();
+    fireEvent.click(source);
+    fireEvent.click(screen.getByRole("option", { name: "Other" }));
+    expect(screen.getByLabelText("Please specify (up to 100 characters)")).toHaveValue("");
+  });
   it.each(["line", "wechat"] as const)(
     "requires a fresh choice for a legacy %s signup draft without relabeling its ID",
     (messagingApp) => {

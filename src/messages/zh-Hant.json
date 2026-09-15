@@ -1,4 +1,33 @@
 {
+  "SignupExtra": {
+    "sourceLabel": "您從哪裡得知我們？（選填）",
+    "none": "未選擇",
+    "sourceDetailLabel": "請具體說明（最多100字）",
+    "bankTitle": "銀行帳戶（選填）",
+    "bankHint": "不填寫帳戶也可以註冊。如需填寫，請同時填寫銀行和帳號。",
+    "bankLabel": "銀行",
+    "bankPlaceholder": "選擇銀行",
+    "accountLabel": "銀行帳號",
+    "sources": {
+      "MEETUP": "Meetup",
+      "FACEBOOK": "Facebook",
+      "INSTAGRAM": "Instagram",
+      "FRIEND": "朋友推薦",
+      "GOOGLE_SEARCH": "Google搜尋",
+      "OFFLINE_PROMOTION": "線下宣傳",
+      "UNIVERSITY_COMMUNITY": "大學社群",
+      "OTHER": "其他"
+    },
+    "errors": {
+      "sourceInvalid": "請檢查註冊來源與詳細說明。",
+      "sourceDetailRequired": "請填寫您是如何得知我們的。",
+      "sourceDetailTooLong": "詳細說明不能超過100字。",
+      "bankPair": "請同時填寫銀行和帳號，或將兩項都留空。",
+      "bankFormat": "僅支援數字、空格和連字號，且至少包含一個數字。",
+      "bankLength": "帳號不能超過50個字元。",
+      "bankInvalid": "請檢查銀行和帳號。"
+    }
+  },
   "Common": {
     "cancel": "取消",
     "close": "關閉",
@@ -7,6 +36,8 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "signupSourceInvalid": "請檢查註冊來源與詳細說明。",
+    "signupBankAccountInvalid": "請檢查銀行和帳號。",
     "authenticationRequired": "請重新登入以繼續。",
     "googleAuthenticationInvalid": "無法驗證 Google 身份驗證。請嘗試重新登入。",
     "signupAgreementsInvalid": "查看註冊協議並重試。",

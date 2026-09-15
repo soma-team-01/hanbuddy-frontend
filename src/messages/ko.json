@@ -1,4 +1,33 @@
 {
+  "SignupExtra": {
+    "sourceLabel": "가입 경로 (선택)",
+    "none": "선택 안 함",
+    "sourceDetailLabel": "어떻게 알게 되셨나요? (최대 100자)",
+    "bankTitle": "은행 계좌 (선택)",
+    "bankHint": "입력하지 않아도 가입할 수 있어요. 입력하는 경우 은행과 계좌번호를 모두 적어주세요.",
+    "bankLabel": "은행",
+    "bankPlaceholder": "은행 선택",
+    "accountLabel": "계좌번호",
+    "sources": {
+      "MEETUP": "Meetup",
+      "FACEBOOK": "Facebook",
+      "INSTAGRAM": "Instagram",
+      "FRIEND": "지인 추천",
+      "GOOGLE_SEARCH": "Google 검색",
+      "OFFLINE_PROMOTION": "오프라인 홍보",
+      "UNIVERSITY_COMMUNITY": "대학교 커뮤니티",
+      "OTHER": "기타"
+    },
+    "errors": {
+      "sourceInvalid": "가입 경로와 상세 내용을 확인해 주세요.",
+      "sourceDetailRequired": "어떻게 알게 되셨는지 입력해 주세요.",
+      "sourceDetailTooLong": "상세 내용은 100자 이하로 입력해 주세요.",
+      "bankPair": "은행과 계좌번호를 모두 입력하거나 모두 비워 주세요.",
+      "bankFormat": "숫자·공백·하이픈만 입력하고 숫자를 하나 이상 포함해 주세요.",
+      "bankLength": "계좌번호는 50자 이하로 입력해 주세요.",
+      "bankInvalid": "은행과 계좌번호를 확인해 주세요."
+    }
+  },
   "Common": {
     "cancel": "취소",
     "close": "닫기",
@@ -7,6 +36,8 @@
     "unavailable": "사용할 수 없음"
   },
   "ApiErrors": {
+    "signupSourceInvalid": "가입 경로와 상세 내용을 확인해 주세요.",
+    "signupBankAccountInvalid": "은행과 계좌번호를 확인해 주세요.",
     "authenticationRequired": "계속하려면 다시 로그인해 주세요.",
     "googleAuthenticationInvalid": "Google 인증 정보를 확인할 수 없습니다. 다시 로그인해 주세요.",
     "signupAgreementsInvalid": "회원가입 동의 항목을 확인한 뒤 다시 시도해 주세요.",

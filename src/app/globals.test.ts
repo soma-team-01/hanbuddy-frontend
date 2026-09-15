@@ -85,7 +85,8 @@ describe("landing hero media styles", () => {
 
     expect(block).toContain("object-position: center");
     expect(block).toMatch(/mask-image:\s*linear-gradient\(90deg/);
-    expect(block).toContain("mask-composite: intersect");
+    // 위아래는 사진이 히어로를 꽉 채우므로 세로 페이드는 두지 않는다
+    expect(block).not.toContain("180deg");
     expect(stylesheet).toMatch(
       /\.hero-media-image\s*\{[^}]*object-position: var\(--hero-media-position, center\)/,
     );

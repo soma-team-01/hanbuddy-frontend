@@ -47,8 +47,7 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
                 className="hero-media-backdrop hidden scale-110 object-cover blur-2xl brightness-50 md:block"
               />
             ) : null}
-            {/* contain 사진은 md 이상에서 히어로 높이의 82%로 줄여 흐린 배경 가운데에 놓는다 */}
-            <div className={`absolute inset-0 ${isContain ? "md:inset-y-[9%]" : ""}`}>
+            <div className="absolute inset-0">
               <Image
                 src={image.src}
                 alt={image.alt}

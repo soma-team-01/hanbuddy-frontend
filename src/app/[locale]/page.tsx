@@ -89,7 +89,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
       {/* 모바일: 사진 띠 → 글자 영역 세로 배치. md 이상: 사진을 배경으로 깐 풀블리드 히어로 */}
       <section
         aria-label={t("visuals.ariaLabel")}
-        className="relative isolate flex flex-col overflow-hidden bg-ink text-on-primary md:block md:min-h-[calc(100svh-76px)]"
+        className="relative isolate flex flex-col overflow-hidden bg-ink text-on-primary md:block md:min-h-[clamp(560px,72svh,760px)]"
       >
         <LandingHeroMedia
           images={HERO_MEDIA.map((image) => ({
@@ -108,7 +108,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
           className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-ink/65 via-transparent to-ink/20 md:block"
         />
 
-        <PageContainer className="relative z-10 -mt-16 flex pt-0 pb-10 md:mt-0 md:min-h-[calc(100svh-76px)] md:items-end md:py-20 lg:py-24">
+        <PageContainer className="relative z-10 -mt-16 flex pt-0 pb-10 md:mt-0 md:min-h-[clamp(560px,72svh,760px)] md:items-end md:py-14 lg:py-16">
           <div className="landing-reveal landing-reveal-delay-1 max-w-3xl min-w-0">
             <p className="mb-6 font-display text-xs font-bold tracking-[0.28em] text-primary-soft uppercase">
               {t("eyebrow")}

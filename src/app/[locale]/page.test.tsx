@@ -171,13 +171,9 @@ describe("LandingPage", () => {
     expect(frames[2]?.querySelector(".hero-media-image")).not.toHaveStyle({
       objectPosition: "85% 50%",
     });
-    // md 이상에서 contain 사진은 히어로 높이의 82%로 줄어든다(위아래 9% 여백)
-    expect(frames[2]?.querySelector(".hero-media-image")?.parentElement).toHaveClass(
-      "md:inset-y-[9%]",
-    );
-    expect(frames[0]?.querySelector(".hero-media-image")?.parentElement).not.toHaveClass(
-      "md:inset-y-[9%]",
-    );
+    // PC 히어로는 화면 전체가 아니라 72vh(560~760px)로 낮춰 원본 사진이 위아래를 꽉 채운다
+    expect(heroRegion).toHaveClass("md:min-h-[clamp(560px,72svh,760px)]");
+    expect(heroRegion).not.toHaveClass("md:min-h-[calc(100svh-76px)]");
   });
 
   it("stacks the hero as a photo band above the copy on mobile and keeps the full-bleed hero from md", async () => {

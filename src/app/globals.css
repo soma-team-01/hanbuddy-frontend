@@ -209,7 +209,7 @@ body {
  * 공백 없는 긴 URL·이메일은 overflow-wrap이 마지막 수단으로 끊어 가로 넘침을 막는다.
  * 일본어·중국어는 문자 단위 줄바꿈이 자연스러우므로 한국어에만 적용한다.
  */
-html:lang(ko) {
+:lang(ko) {
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
@@ -218,8 +218,14 @@ html:lang(ko) {
  * 일본어는 브라우저가 문절(文節) 단위로 줄을 바꾸게 한다(Chrome 119+, 미지원 브라우저는 기존 동작).
  * "ローカルのよう / に"처럼 조사 앞에서 끊기는 것을 막는다.
  */
-html:lang(ja) {
+:lang(ja) {
   word-break: auto-phrase;
+}
+
+/* 한국어 문서 안에 lang="zh"로 표시된 원문(후기·채팅 번역 원문 등)은 위 keep-all을 물려받지 않게 되돌린다 */
+:lang(zh) {
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 /*

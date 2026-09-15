@@ -54,16 +54,18 @@ describe("global motion styles", () => {
 
 describe("global korean line breaking", () => {
   it("keeps Korean words intact at line breaks while still breaking unbreakable strings", () => {
-    const rule = stylesheet.match(/html:lang\(ko\)\s*\{([^}]*)\}/)?.[1];
+    const rule = stylesheet.match(/\n:lang\(ko\)\s*\{([^}]*)\}/)?.[1];
 
     expect(rule).toContain("word-break: keep-all");
     expect(rule).toContain("overflow-wrap: anywhere");
-    // 중국어는 문자 단위 줄바꿈이 자연스러우므로 같은 규칙을 강제하지 않는다
-    expect(stylesheet).not.toMatch(/html:lang\(zh/);
+    // 한국어 문서 안의 중국어 요소는 keep-all을 물려받지 않도록 되돌린다
+    const chinese = stylesheet.match(/\n:lang\(zh\)\s*\{([^}]*)\}/)?.[1];
+    expect(chinese).toContain("word-break: normal");
+    expect(chinese).toContain("overflow-wrap: normal");
   });
 
   it("lets Japanese break by phrase and balances heading lines in every language", () => {
-    const japanese = stylesheet.match(/html:lang\(ja\)\s*\{([^}]*)\}/)?.[1];
+    const japanese = stylesheet.match(/\n:lang\(ja\)\s*\{([^}]*)\}/)?.[1];
     const headings = stylesheet.match(/\nh1,\s*h2,\s*h3\s*\{([^}]*)\}/)?.[1];
 
     expect(japanese).toContain("word-break: auto-phrase");

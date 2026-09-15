@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminSignupInfoSection } from "@/app/admin/admin-signup-info";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -95,6 +97,8 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
       </div>
       <div className="grid gap-10 py-9 lg:grid-cols-2">
         <Section title="기본 정보">
+          <Info label="닉네임" value={application.displayName || "미입력"} />
+          <Info label="Google 계정 이름" value={application.name} />
           <Info label="국적" value={formatAdminCountry(application.nationalityCode)} />
           <Info label="생년월일" value={application.birthDate} />
           <Info label="신청일" value={formatDateTime(application.appliedAt)} />
@@ -105,6 +109,7 @@ export function BuddyApplicationReview({ userId }: { userId: string }) {
           <Info label="연락처" value={application.contactIdentifier} />
         </Section>
       </div>
+      <AdminSignupInfoSection info={application} />
       {application.rejectionReason ? (
         <div className="border-l-4 border-primary bg-primary-soft/50 px-5 py-4">
           <p className="text-sm font-bold text-primary-strong">거절 사유</p>

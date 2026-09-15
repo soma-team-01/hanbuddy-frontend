@@ -46,7 +46,7 @@ describe("admin users BFF", () => {
 
     const response = await GET(
       adminRequest(
-        "http://localhost/api/admin/users?email=user%40example.com&page=2&unknown=ignored",
+        "http://localhost/api/admin/users?userId=5&userType=TOURIST&email=user%40example.com&page=2&unknown=ignored",
       ),
       { params: Promise.resolve({ segments: [] }) },
     );
@@ -54,7 +54,7 @@ describe("admin users BFF", () => {
     expect(response.status).toBe(200);
     expect(mockedGetBackend).toHaveBeenNthCalledWith(
       2,
-      "/admin/users?email=user%40example.com&page=2",
+      "/admin/users?userId=5&userType=TOURIST&email=user%40example.com&page=2",
       { bearerToken: "admin-token" },
     );
   });

@@ -46,6 +46,13 @@ function mockBuddyRequests(logs: Awaited<ReturnType<typeof getAdminAuditLogs>>) 
         email: "buddy@example.com",
         name: "김버디",
         displayName: "버디",
+        signupSource: "INSTAGRAM",
+        bankAccount: {
+          bank: "SHINHAN",
+          bankCode: "088",
+          bankName: "신한은행",
+          accountNumber: "001234",
+        },
         userType: "BUDDY",
         accountStatus: "ACTIVE",
         nationalityCode: "KR",
@@ -157,6 +164,9 @@ describe("AdminBuddyDetailView", () => {
     renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
 
     expect(await screen.findByText("기록된 관리자 작업이 없습니다.")).toBeInTheDocument();
+    expect(screen.getByText("Instagram")).toBeInTheDocument();
+    expect(screen.getByText("신한은행")).toBeInTheDocument();
+    expect(screen.getByText("001234")).toBeInTheDocument();
     expect(screen.getByText("대한민국")).toBeInTheDocument();
     expect(screen.getByText("1998. 4. 12.")).toBeInTheDocument();
     expect(screen.getByText("+82")).toBeInTheDocument();

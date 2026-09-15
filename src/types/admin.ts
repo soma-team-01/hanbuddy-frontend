@@ -1,4 +1,18 @@
 import type { ContactMethod } from "@/lib/auth/types";
+import type { BankName, SignupSource } from "@/lib/auth/signup-extra";
+
+/** Admin response only: bankName is a legacy-compatible display string. */
+export interface AdminBankAccount {
+  bank: BankName | null;
+  bankCode: string | null;
+  bankName: string;
+  accountNumber: string;
+}
+export interface AdminSignupInfo {
+  signupSource?: SignupSource | null;
+  signupSourceDetail?: string | null;
+  bankAccount?: AdminBankAccount | null;
+}
 
 export type BuddyApplicationStatus = "PENDING_APPROVAL" | "ACTIVE" | "REJECTED" | "SUSPENDED";
 
@@ -11,7 +25,8 @@ export interface BuddyApplicationSummary {
   appliedAt: string;
 }
 
-export interface BuddyApplicationDetail extends BuddyApplicationSummary {
+export interface BuddyApplicationDetail extends BuddyApplicationSummary, AdminSignupInfo {
+  displayName?: string | null;
   profileImageKey?: string | null;
   profileImageUrl?: string | null;
   birthDate: string;
@@ -74,7 +89,7 @@ export interface AdminUserSummary {
   createdAt: string;
 }
 
-export interface AdminUserDetail extends AdminUserSummary {
+export interface AdminUserDetail extends AdminUserSummary, AdminSignupInfo {
   birthDate: string | null;
   contactMethod: ContactMethod;
   contactCountryCode: string | null;

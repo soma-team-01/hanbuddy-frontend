@@ -61,6 +61,24 @@ function user(userType: AdminUserDetail["userType"]): AdminUserDetail {
 }
 
 describe("AdminUserDetailView", () => {
+  it("shows signup information from the user response", async () => {
+    mockedGetAdminUser.mockResolvedValue({
+      status: "success",
+      user: {
+        ...user("BUDDY"),
+        signupSource: "FRIEND",
+        bankAccount: {
+          bank: "SHINHAN",
+          bankCode: "088",
+          bankName: "신한은행",
+          accountNumber: "001234",
+        },
+      },
+    });
+    renderWithQueryClient(<AdminUserDetailView userId="11" />);
+    expect(await screen.findByText("지인 추천")).toBeInTheDocument();
+    expect(screen.getByText("001234")).toBeInTheDocument();
+  });
   beforeEach(() => {
     mockedGetAdminUser.mockReset();
     mockedGetAdminUserHistory.mockReset();

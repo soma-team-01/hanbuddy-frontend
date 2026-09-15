@@ -25,11 +25,20 @@ const EMPTY_FILTERS: AdminUserFilters = { userType: "TOURIST", page: 0, size: 20
 export function AdminUsersDashboard() {
   const router = useRouter();
   const [filters, setFilters] = useState<AdminUserFilters>(EMPTY_FILTERS);
+  const [idError, setIdError] = useState(false);
   const query = useQuery(adminUsersQueryOptions(filters));
   const page = query.data;
 
   function submitFilters(formData: FormData) {
+    const rawId = String(formData.get("userId") ?? "").trim();
+    const userId = rawId ? Number(rawId) : undefined;
+    if (rawId && (!/^\d+$/.test(rawId) || !Number.isSafeInteger(userId) || Number(userId) <= 0)) {
+      setIdError(true);
+      return;
+    }
+    setIdError(false);
     setFilters({
+      ...(userId === undefined ? {} : { userId }),
       email: String(formData.get("email") ?? "").trim() || undefined,
       displayName: String(formData.get("displayName") ?? "").trim() || undefined,
       userType: "TOURIST",
@@ -57,7 +66,19 @@ export function AdminUsersDashboard() {
         action={submitFilters}
         className="mt-3 rounded-xl border border-line-soft bg-white p-3 shadow-[0_8px_24px_rgba(38,27,24,0.04)]"
       >
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_auto] lg:items-end">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[100px_minmax(0,1fr)_minmax(0,1fr)_140px_auto] lg:items-end">
+          <label className="text-xs font-bold text-muted">
+            회원 ID
+            <input
+              name="userId"
+              type="text"
+              inputMode="numeric"
+              placeholder="정확한 ID"
+              aria-invalid={idError || undefined}
+              aria-describedby={idError ? "user-id-error" : undefined}
+              className="focus-border-only mt-1 h-8 w-full rounded-lg border border-line-strong bg-white px-3 text-xs text-ink outline-none focus:border-primary"
+            />
+          </label>
           <AdminFilterInput name="email" label="로그인 이메일" placeholder="Google 계정 이메일" />
           <AdminFilterInput name="displayName" label="닉네임" placeholder="닉네임 일부" />
           <AdminFilterSelect
@@ -73,7 +94,10 @@ export function AdminUsersDashboard() {
           <div className="flex justify-end gap-2 md:col-span-2 lg:col-span-1">
             <button
               type="reset"
-              onClick={() => setFilters(EMPTY_FILTERS)}
+              onClick={() => {
+                setFilters(EMPTY_FILTERS);
+                setIdError(false);
+              }}
               className="h-8 rounded-lg border border-line-strong px-3 text-xs font-bold text-muted transition-colors hover:border-primary hover:text-primary"
             >
               초기화
@@ -86,6 +110,14 @@ export function AdminUsersDashboard() {
             </button>
           </div>
         </div>
+        {idError && (
+          <p id="user-id-error" role="alert" className="mt-2 text-xs text-danger">
+            회원 ID는 양의 정수로 입력해 주세요.
+          </p>
+        )}
+        <p className="mt-2 text-xs text-muted">
+          모든 검색 조건은 함께 적용됩니다. ID만 검색하려면 다른 조건을 비워 주세요.
+        </p>
       </form>
 
       <section className="mt-3">

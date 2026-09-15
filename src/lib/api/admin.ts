@@ -35,7 +35,7 @@ export function getBuddyApplicationForAdmin(
   return requestApiResult(
     `/api/admin/buddy-applications/${userId}`,
     "application",
-    undefined,
+    { cache: "no-store" },
     "버디 신청 정보를 불러오지 못했습니다.",
   );
 }
@@ -91,7 +91,7 @@ export function getAdminUser(userId: number | string) {
   return requestApiResult<AdminUserDetail, "user">(
     `/api/admin/users/${userId}`,
     "user",
-    undefined,
+    { cache: "no-store" },
     "회원 정보를 불러오지 못했습니다.",
   );
 }
@@ -149,7 +149,7 @@ export function getAdminBuddy(buddyId: number | string) {
   return requestApiResult<AdminBuddyDetail, "buddy">(
     `/api/admin/buddies/${buddyId}`,
     "buddy",
-    undefined,
+    { cache: "no-store" },
     "버디 정보를 불러오지 못했습니다.",
   );
 }

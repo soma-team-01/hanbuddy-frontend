@@ -68,6 +68,10 @@ describe("global korean line breaking", () => {
     const japanese = stylesheet.match(/\n:lang\(ja\)\s*\{([^}]*)\}/)?.[1];
     const headings = stylesheet.match(/\nh1,\s*h2,\s*h3\s*\{([^}]*)\}/)?.[1];
 
+    // 미지원 브라우저용 폴백이 auto-phrase보다 먼저 와야 캐스케이드로 덮어씌워진다
+    expect(japanese?.indexOf("word-break: normal")).toBeLessThan(
+      japanese?.indexOf("word-break: auto-phrase") ?? -1,
+    );
     expect(japanese).toContain("word-break: auto-phrase");
     expect(headings).toContain("text-wrap: balance");
   });

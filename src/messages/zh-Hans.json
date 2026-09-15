@@ -2,8 +2,7 @@
   "SignupExtra": {
     "sourceLabel": "您从哪里了解到我们？",
     "sourceDetailLabel": "请具体说明（最多100字）",
-    "bankTitle": "银行账户（选填）",
-    "bankHint": "选填。如需添加账户，请同时填写银行和账号。",
+    "bankTitle": "银行账户",
     "bankLabel": "银行",
     "bankPlaceholder": "选择银行",
     "accountLabel": "银行账号",
@@ -22,7 +21,7 @@
       "sourceInvalid": "请检查注册来源和详细说明。",
       "sourceDetailRequired": "请填写您是如何了解到我们的。",
       "sourceDetailTooLong": "详细说明不能超过100字。",
-      "bankPair": "请同时填写银行和账号，或将两项都留空。",
+      "bankPair": "请选择银行并填写账号。",
       "bankFormat": "仅支持数字、空格和连字符，且至少包含一个数字。",
       "bankLength": "账号不能超过50个字符。",
       "bankInvalid": "请检查银行和账号。"
@@ -482,7 +481,7 @@
     "headline": "一些细节，然后您的本地故事就可以开始了。",
     "description": "请填写伙伴注册指引所需的基本信息。注册后可继续补充活动运营信息。",
     "profilePhotoOptional": "选择一张清晰的脸部照片，以便客人在见面时能够认出您。",
-    "contactMethods": "请填写可联系您的电话号码。",
+    "contactMethods": "联系方式与收款信息",
     "contactDescription": "请输入工作人员可用于提供伙伴注册说明的电话号码。",
     "completing": "正在创建好友帐户...",
     "completeRegistration": "注册成为好友"

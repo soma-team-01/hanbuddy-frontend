@@ -7,7 +7,7 @@ const empty = {
   bankName: "",
   bankAccountNumber: "",
 };
-describe("required signup source and optional bank account", () => {
+describe("required signup source and buddy bank account", () => {
   it.each(Object.keys(BANKS))("accepts bank enum %s unchanged", (bankName) => {
     const draft = { ...empty, bankName, bankAccountNumber: "001234" };
     expect(validateSignupExtra(draft, "BUDDY")).toBeNull();
@@ -18,7 +18,7 @@ describe("required signup source and optional bank account", () => {
     });
   });
   it.each(["TOURIST", "BUDDY"] as const)(
-    "requires %s to choose a source but allows no bank account",
+    "requires %s to choose a source and only requires a bank account for buddy",
     (role) => {
       expect(validateSignupExtra({ ...empty, signupSource: "" }, role)).toEqual({
         field: "source",
@@ -28,7 +28,9 @@ describe("required signup source and optional bank account", () => {
         field: "source",
         key: "sourceInvalid",
       });
-      expect(validateSignupExtra(empty, role)).toBeNull();
+      expect(validateSignupExtra(empty, role)).toEqual(
+        role === "BUDDY" ? { field: "bank", key: "bankPair" } : null,
+      );
       expect(buildSignupExtra(empty, role)).toEqual({ signupSource: "FRIEND" });
     },
   );
@@ -76,6 +78,8 @@ describe("required signup source and optional bank account", () => {
     expect(buildSignupExtra(draft, "TOURIST")).toEqual({ signupSource: "FRIEND" });
   });
   it.each([
+    { bankName: "", bankAccountNumber: "" },
+    { bankName: "", bankAccountNumber: "   " },
     { bankName: "SHINHAN", bankAccountNumber: "" },
     { bankName: "", bankAccountNumber: "001" },
     { bankName: "OTHER", bankAccountNumber: "001" },

@@ -68,14 +68,22 @@ it("only reveals OTHER detail when selected and clears stale detail on a differe
   expect(screen.getByRole("textbox")).toHaveValue("");
 });
 
-it("keeps bank fields buddy-only and optional with a visible account label", () => {
+it("requires buddy bank fields without optional labels or helper copy", () => {
   const { unmount } = render(<Fields />);
   expect(screen.queryByRole("combobox", { name: "Bank" })).not.toBeInTheDocument();
   unmount();
   render(<Fields isBuddy />);
-  expect(screen.getByRole("combobox", { name: "Bank" })).toBeInTheDocument();
+  expect(screen.getByRole("combobox", { name: "Bank" })).toBeRequired();
+  expect(screen.getByText("Bank account")).toBeInTheDocument();
+  expect(screen.queryByText(/optional/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Enter both fields if adding/)).not.toBeInTheDocument();
   const account = screen.getByLabelText("Account number");
-  expect(account).not.toBeRequired();
+  expect(account).toBeRequired();
+  fireEvent.click(screen.getByRole("radio", { name: "Instagram" }));
+  fireEvent.click(screen.getByRole("button", { name: "Validate" }));
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Select a bank and enter your account number.",
+  );
   fireEvent.change(account, { target: { value: "001-234" } });
   expect(account).toHaveValue("001-234");
 });

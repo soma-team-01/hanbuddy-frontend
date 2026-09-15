@@ -86,6 +86,7 @@ describe("OnboardingForm", () => {
       fillAboutYou("en", { birthDate: "1998-04-12" });
       clickContinue("en");
       fireEvent.change(screen.getByLabelText("Phone number"), { target: { value: "2025550114" } });
+      fillBank("en");
       clickContinue("en");
       fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
       fireEvent.click(screen.getByRole("button", { name: "Sign up as a buddy" }));
@@ -124,12 +125,13 @@ describe("OnboardingForm", () => {
         screen.getByLabelText(userType === "BUDDY" ? "Phone number" : "Messaging app ID"),
         { target: { value: userType === "BUDDY" ? "2025550114" : "traveler_id" } },
       );
+      if (userType === "BUDDY") fillBank("en");
       clickContinue("en");
       expect(screen.getByRole("heading", { name: "Agreements" })).toBeInTheDocument();
     },
   );
   it.each(["TOURIST", "BUDDY"] as const)(
-    "submits required source for %s, with optional bank data only for buddy and never in drafts",
+    "submits required source for %s, with required bank data only for buddy and never in drafts",
     async (userType) => {
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(
@@ -162,7 +164,9 @@ describe("OnboardingForm", () => {
         fireEvent.click(screen.getByRole("combobox", { name: "Bank" }));
         fireEvent.click(screen.getByRole("option", { name: "신한은행" }));
         clickContinue("en");
-        expect(screen.getByRole("alert")).toHaveTextContent("Enter both");
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "Select a bank and enter your account number.",
+        );
         fireEvent.change(screen.getByLabelText("Account number"), {
           target: { value: "001-234 567890" },
         });
@@ -331,8 +335,8 @@ describe("OnboardingForm", () => {
       expect(screen.getByRole("form")).toHaveClass("max-w-[1280px]");
       expect(screen.getByText(eyebrow)).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: headline })).toHaveClass("lg:whitespace-nowrap");
-      expect(screen.getByText(description)).toHaveClass("lg:whitespace-nowrap");
-      expect(screen.getByText(profilePhotoHint)).toBeInTheDocument();
+      expect(screen.queryByText(description)).not.toBeInTheDocument();
+      expect(screen.queryByText(profilePhotoHint)).not.toBeInTheDocument();
       expect(screen.getByRole("textbox", { name: locale === "ko" ? "이름" : "Name" })).toHaveValue(
         "Google Traveler",
       );
@@ -584,17 +588,16 @@ describe("OnboardingForm", () => {
     expect(screen.getByText("Welcome, future buddy")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Google Buddy");
     expect(
-      screen.getByText("Choose a clear face photo so guests can recognize you when you meet."),
-    ).toBeInTheDocument();
+      screen.queryByText("Choose a clear face photo so guests can recognize you when you meet."),
+    ).not.toBeInTheDocument();
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
-    expect(
-      screen.getByRole("heading", { name: "What phone number should we use?" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Contact & payout details" })).toBeInTheDocument();
     expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "2025550114" },
     });
+    fillBank("en");
     clickContinue("en");
     expect(screen.getByRole("heading", { name: "Agreements" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
@@ -759,6 +762,7 @@ describe("OnboardingForm", () => {
     fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "2025550114" },
     });
+    fillBank("en");
     clickContinue("en");
 
     expect(screen.getByText("Personal information collection and use")).toBeInTheDocument();
@@ -1003,6 +1007,47 @@ function fillAboutYou(locale: "en" | "ko", values: { birthDate: string }, choose
       selectBirthDatePart(String(name), String(value));
     }
   }
+}
+
+it.each(["en", "ko"] as const)(
+  "requires buddy bank details in %s without helper copy",
+  (locale) => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm userType="BUDDY" />, { locale });
+    expect(screen.getByRole("heading", { level: 1 }).nextElementSibling).toBeNull();
+    fillAboutYou(locale, { birthDate: "1998-04-12" });
+    clickContinue(locale);
+    const heading = locale === "en" ? "Contact & payout details" : "연락처 및 정산 정보";
+    expect(screen.getByRole("heading", { name: heading }).nextElementSibling).toBeNull();
+    expect(screen.getByRole("navigation")).toHaveTextContent(heading);
+    fireEvent.change(screen.getByLabelText(locale === "en" ? "Phone number" : "전화번호"), {
+      target: { value: "2025550114" },
+    });
+    clickContinue(locale);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      locale === "en"
+        ? "Select a bank and enter your account number."
+        : "은행을 선택하고 계좌번호를 입력해 주세요.",
+    );
+    fireEvent.submit(screen.getByRole("form"));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    fillBank(locale);
+    clickContinue(locale);
+    expect(
+      screen.getByRole("heading", { name: locale === "en" ? "Agreements" : "동의 항목" })
+        .nextElementSibling,
+    ).toBeNull();
+  },
+);
+
+function fillBank(locale: "en" | "ko") {
+  fireEvent.click(screen.getByRole("combobox", { name: locale === "en" ? "Bank" : "은행" }));
+  fireEvent.click(screen.getByRole("option", { name: "신한은행" }));
+  fireEvent.change(screen.getByLabelText(locale === "en" ? "Account number" : "계좌번호"), {
+    target: { value: "001-234 567890" },
+  });
 }
 
 function fillContact(locale: "en" | "ko", contact: string) {

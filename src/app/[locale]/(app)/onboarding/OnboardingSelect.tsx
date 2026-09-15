@@ -14,6 +14,7 @@ export function OnboardingSelect({
   onChange,
   invalid,
   describedBy,
+  required,
 }: Readonly<{
   label: string;
   value: string;
@@ -21,6 +22,7 @@ export function OnboardingSelect({
   onChange: (value: string) => void;
   invalid?: boolean;
   describedBy?: string;
+  required?: boolean;
 }>) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
@@ -147,6 +149,7 @@ export function OnboardingSelect({
         aria-controls={open ? id : undefined}
         aria-activedescendant={open ? `${id}-${active}` : undefined}
         aria-invalid={invalid || undefined}
+        aria-required={required || undefined}
         aria-describedby={describedBy}
         onClick={() => {
           if (open) setOpen(false);

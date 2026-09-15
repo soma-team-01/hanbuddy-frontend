@@ -79,8 +79,7 @@ export function validateSignupSource(draft: SignupExtraDraft): SignupExtraError 
 export function validateSignupBank(draft: SignupExtraDraft, role: string): SignupExtraError | null {
   if (role !== "BUDDY") return null;
   const hasAccount = Boolean(draft.bankAccountNumber.trim());
-  if (Boolean(draft.bankName) !== hasAccount) return { field: "bank", key: "bankPair" };
-  if (!draft.bankName && !hasAccount) return null;
+  if (!draft.bankName || !hasAccount) return { field: "bank", key: "bankPair" };
   if (!isBankName(draft.bankName)) return { field: "bank", key: "bankInvalid" };
   if (draft.bankAccountNumber.length > 50) return { field: "bank", key: "bankLength" };
   if (!/^[0-9 -]+$/.test(draft.bankAccountNumber) || !/[0-9]/.test(draft.bankAccountNumber))

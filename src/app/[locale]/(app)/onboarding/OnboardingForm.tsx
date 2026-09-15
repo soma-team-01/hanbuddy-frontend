@@ -694,10 +694,7 @@ export function OnboardingForm({
         title: resubmissionT("title"),
         eyebrow: resubmissionT("eyebrow"),
         headline: resubmissionT("headline"),
-        description: resubmissionT("description"),
-        photoGuidance: resubmissionT("profilePhotoOptional"),
         contactMethods: resubmissionT("contactMethods"),
-        contactDescription: resubmissionT("contactDescription"),
         submit: resubmissionT("submit"),
         submitting: resubmissionT("submitting"),
       };
@@ -707,10 +704,7 @@ export function OnboardingForm({
         title: buddyT("title"),
         eyebrow: buddyT("eyebrow"),
         headline: buddyT("headline"),
-        description: buddyT("description"),
-        photoGuidance: buddyT("profilePhotoOptional"),
         contactMethods: buddyT("contactMethods"),
-        contactDescription: buddyT("contactDescription"),
         submit: buddyT("completeRegistration"),
         submitting: buddyT("completing"),
       };
@@ -719,10 +713,7 @@ export function OnboardingForm({
       title: t("title"),
       eyebrow: t("eyebrow"),
       headline: t("headline"),
-      description: t("description"),
-      photoGuidance: t("profilePhotoOptional"),
       contactMethods: t("contactMethods"),
-      contactDescription: t("contactDescription"),
       submit: t("completeRegistration"),
       submitting: t("completing"),
     };
@@ -765,7 +756,11 @@ export function OnboardingForm({
   ];
   const stepLabels = isResubmission
     ? [t("steps.aboutYou"), t("steps.contact")]
-    : [t("steps.aboutYou"), t("steps.contact"), t("steps.agreements")];
+    : [
+        t("steps.aboutYou"),
+        isBuddyFlow ? buddyT("contactMethods") : t("steps.contact"),
+        t("steps.agreements"),
+      ];
 
   return (
     <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
@@ -787,9 +782,6 @@ export function OnboardingForm({
               <h1 className="mt-1.5 font-display text-xl leading-tight font-extrabold tracking-[-0.03em] text-ink md:text-2xl lg:whitespace-nowrap">
                 {roleCopy.headline}
               </h1>
-              <p className="mt-1.5 text-sm leading-6 text-muted lg:whitespace-nowrap">
-                {roleCopy.description}
-              </p>
             </header>
           </div>
 
@@ -911,11 +903,6 @@ export function OnboardingForm({
                             {t("displayNameHint")}
                           </p>
                         ) : null}
-                        <p
-                          className={`${hasDisplayNameError ? "mt-1" : "mt-2"} text-xs leading-5 text-muted`}
-                        >
-                          {roleCopy.photoGuidance}
-                        </p>
                       </div>
                     </div>
 
@@ -989,7 +976,6 @@ export function OnboardingForm({
                     >
                       {roleCopy.contactMethods}
                     </h2>
-                    <p className="mt-1 text-sm text-muted">{roleCopy.contactDescription}</p>
                   </div>
                   <div className="mt-8 flex max-w-3xl flex-col gap-1.5">
                     <span className="text-sm font-medium text-ink">
@@ -1034,7 +1020,6 @@ export function OnboardingForm({
                       >
                         {t("agreements.title")}
                       </h2>
-                      <p className="mt-1 text-sm text-muted">{t("agreements.description")}</p>
                     </div>
                     <label className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-full border border-line-soft px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary sm:self-auto">
                       <input

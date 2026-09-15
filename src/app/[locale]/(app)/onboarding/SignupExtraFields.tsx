@@ -87,6 +87,7 @@ export function SignupExtraFields({
             <div className="space-y-1.5">
               <p className="text-sm text-muted">{t("bankLabel")}</p>
               <OnboardingSelect
+                required
                 label={t("bankLabel")}
                 value={value.bankName}
                 options={[
@@ -108,6 +109,7 @@ export function SignupExtraFields({
                 autoComplete="off"
                 placeholder={t("accountLabel")}
                 maxLength={50}
+                required
                 value={value.bankAccountNumber}
                 onChange={(event) => onChange({ ...value, bankAccountNumber: event.target.value })}
                 aria-invalid={error?.field === "bank" || undefined}
@@ -115,7 +117,6 @@ export function SignupExtraFields({
               />
             </label>
           </div>
-          <p className="text-sm text-muted">{t("bankHint")}</p>
           {error?.field === "bank" && (
             <p id={`${id}-bank-error`} role="alert" className="text-sm text-danger">
               {t(`errors.${error.key}`)}

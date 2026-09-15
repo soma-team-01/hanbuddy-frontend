@@ -29,6 +29,35 @@
       "bankInvalid": "은행과 계좌번호를 확인해 주세요."
     }
   },
+  "ScheduleCancellation": {
+    "more": "일정 옵션",
+    "cancelAction": "일정 취소",
+    "cancelled": "취소된 일정",
+    "title": "이 일정을 취소할까요?",
+    "irreversible": "취소한 일정은 다시 열 수 없으며, 새로운 신청을 받을 수 없습니다.",
+    "keep": "일정 유지",
+    "confirm": "일정 취소하기",
+    "pending": "취소 중…",
+    "reason": "취소 사유",
+    "reasonHint": "참여자에게 공개되는 사유입니다. 개인정보나 내부 메모는 적지 마세요.",
+    "refundPolicy": "취소 접수 시 유지 중인 확정 예약은 실제 결제 금액 전액이 환불됩니다. 먼저 개인 취소를 신청한 참여자에게는 기존 환불 정책이 적용됩니다.",
+    "success": "일정이 취소되었습니다. 환불은 순차적으로 진행됩니다.",
+    "loadError": "최신 취소 상태를 불러오지 못했습니다.",
+    "requestError": "취소 결과를 확인하지 못했습니다. 상태를 확인한 뒤 다시 시도해 주세요.",
+    "uncertain": "취소가 접수되었는지 확인되지 않았습니다. 다시 제출하기 전에 상태를 확인해 주세요.",
+    "retry": "상태 다시 확인",
+    "started": "이미 시작된 일정은 취소할 수 없습니다.",
+    "buddyReason": "버디 사유로 취소",
+    "currentRefund": "현재 환불 건: {amount}",
+    "statuses": {
+      "QUEUED": "환불 처리 중",
+      "DISPATCHED": "환불 처리 중",
+      "REVIEW_REQUIRED": "환불 확인 중 · 완료까지 시간이 걸릴 수 있습니다.",
+      "COMPLETED": "환불 완료",
+      "NO_PAYMENT": "취소 완료 · 확인된 결제 없음",
+      "EXCLUDED": "기존 취소·환불 정책 유지"
+    }
+  },
   "Common": {
     "cancel": "취소",
     "close": "닫기",

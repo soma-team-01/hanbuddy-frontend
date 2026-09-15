@@ -1,4 +1,5 @@
 "use client";
+import { CancelledScheduleBadge } from "./CancelledScheduleBadge";
 
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -88,6 +89,9 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
                   <span className="mt-0.5 block truncate text-[11px] font-semibold text-primary">
                     {scheduleLabel}
                   </span>
+                ) : null}
+                {room.roomType === "GROUP" && room.activityScheduleCancelled ? (
+                  <CancelledScheduleBadge />
                 ) : null}
                 <span className="mt-0.5 flex items-center justify-between gap-2">
                   <span className="truncate text-sm text-muted">

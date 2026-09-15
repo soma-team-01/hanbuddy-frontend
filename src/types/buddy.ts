@@ -5,7 +5,7 @@ export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
 export interface ActivityStatusUpdateRequest {
   status: Extract<MyActivityStatus, "ACTIVE" | "INACTIVE">;
 }
-export type ActivityScheduleStatus = "OPEN" | "CLOSED";
+export type ActivityScheduleStatus = "OPEN" | "CLOSED" | "CANCELLED";
 
 export interface ActivityScheduleRequest {
   /** Asia/Seoul 오프셋을 포함한 date-time (예: 2026-07-19T13:00:00+09:00) */
@@ -165,7 +165,7 @@ export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicatio
   specialRequest: string | null;
   appliedAt: string;
   /** 취소된 신청의 사유. 취소가 아니면 null */
-  cancellationReason?: "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER" | null;
+  cancellationReason?: import("./application").ApplicationCancellationResponseReason | null;
   /** OTHER일 때 남긴 상세 사유 */
   cancellationDetail?: string | null;
 }

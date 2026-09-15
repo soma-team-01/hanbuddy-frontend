@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
 import { ActivityVisibilityControl } from "@/components/buddy/ActivityVisibilityControl";
+import { ScheduleActions } from "@/components/buddy/ScheduleActions";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ApplicantProfileDialog } from "@/components/buddy/ApplicantProfileDialog";
 import { Avatar } from "@/components/ui/Avatar";
@@ -81,10 +82,10 @@ export function DashboardContent() {
   const myActivitiesQuery = useQuery(myActivitiesQueryOptions());
   // 단체 채팅방이 이미 있는 회차 — 버튼 문구를 만들기/열기로 나눈다
   const chatRoomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
-  const groupRoomScheduleIds = new Set(
+  const groupRooms = new Map(
     (chatRoomsQuery.data ?? [])
-      .map((room) => room.activityScheduleId)
-      .filter((scheduleId): scheduleId is number => scheduleId !== null),
+      .filter((room) => room.activityScheduleId !== null)
+      .map((room) => [room.activityScheduleId, room]),
   );
 
   const scheduleDates = (scheduleDatesQuery.data ?? [])
@@ -209,33 +210,15 @@ export function DashboardContent() {
                         {t("applicantCount", { count: schedule.applicantCount })}
                       </span>
                     </Link>
-                    {schedule.applicantCount > 0 ? (
-                      // 이미 열린 방인지에 따라 문구와 안내를 나눈다 — 만들기 전엔 무엇이 생기는지,
-                      // 만든 뒤엔 누르면 들어간다는 걸 분명히 한다
-                      <span className="group relative inline-flex shrink-0">
-                        <StartChatButton
-                          target={{
-                            kind: "group",
-                            activityScheduleId: schedule.activityScheduleId,
-                          }}
-                          label={
-                            groupRoomScheduleIds.has(schedule.activityScheduleId)
-                              ? tChat("openGroupChat")
-                              : tChat("createGroupChat")
-                          }
-                          icon={<UsersIcon className="size-3.5" />}
-                          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-primary px-2.5 font-display text-[11px] font-bold text-primary transition-colors enabled:hover:bg-primary-soft disabled:opacity-60"
-                        />
-                        <span
-                          role="tooltip"
-                          className="pointer-events-none absolute right-0 bottom-full z-40 mb-2 hidden w-64 rounded-xl border border-primary/30 bg-canvas-soft p-3 text-left text-xs leading-5 text-muted shadow-[0_12px_30px_rgba(61,45,43,0.14)] group-focus-within:block group-hover:block"
-                        >
-                          {groupRoomScheduleIds.has(schedule.activityScheduleId)
-                            ? tChat("autoJoinNoticeOpen")
-                            : tChat("autoJoinNoticeCreate")}
-                        </span>
-                      </span>
-                    ) : null}
+                    <ScheduleActions
+                      scheduleId={schedule.activityScheduleId}
+                      startAt={schedule.startAt}
+                      applicantCount={schedule.applicantCount}
+                      roomId={groupRooms.get(schedule.activityScheduleId)?.chatRoomId}
+                      knownCancelled={
+                        groupRooms.get(schedule.activityScheduleId)?.activityScheduleCancelled
+                      }
+                    />
                   </div>
 
                   {schedule.applicants.length > 0 ? (

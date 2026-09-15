@@ -31,6 +31,42 @@ const application = {
 } as const;
 
 describe("application view adapters", () => {
+  it("preserves prior personal cancellation policy when its schedule is later cancelled", () => {
+    const mapped = mapApplicationResponseToApplication(
+      {
+        ...application,
+        status: "CANCELLED",
+        scheduleCancelled: true,
+        scheduleCancelledAt: "2026-07-17T09:00:00+09:00",
+        cancellationReason: "ILLNESS",
+        cancellationDetail: "Prior personal reason",
+      },
+      "Time unavailable.",
+    );
+    expect(mapped).toMatchObject({
+      status: "cancelled",
+      scheduleCancelled: true,
+      cancellationReason: "ILLNESS",
+      cancellationDetail: "Prior personal reason",
+    });
+  });
+  it("treats a cancelled schedule as non-bookable even before application cleanup", () => {
+    expect(
+      mapApplicationResponseToApplication(
+        {
+          ...application,
+          scheduleCancelled: true,
+          cancellationReason: "BUDDY_CANCELLATION",
+          cancellationDetail: "Weather",
+        },
+        "Time unavailable.",
+      ),
+    ).toMatchObject({
+      status: "cancelled",
+      cancellationReason: "BUDDY_CANCELLATION",
+      cancellationDetail: "Weather",
+    });
+  });
   it("maps backend application fields to the existing card model", () => {
     expect(mapApplicationResponseToApplication(application, "Time unavailable.", "en")).toEqual({
       id: "11",
@@ -40,6 +76,9 @@ describe("application view adapters", () => {
       endAt: "2026-07-18T18:45:00Z",
       thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
       cancellationReason: null,
+      cancellationDetail: null,
+      scheduleCancelled: false,
+      scheduleCancelledAt: null,
       holdExpiresAt: null,
       myReview: null,
       dateLabel: "Sun, Jul 19 · 1:30 AM ~ 3:45 AM",

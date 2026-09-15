@@ -29,6 +29,35 @@
       "bankInvalid": "Check the bank and account number."
     }
   },
+  "ScheduleCancellation": {
+    "more": "Schedule options",
+    "cancelAction": "Cancel schedule",
+    "cancelled": "Cancelled schedule",
+    "title": "Cancel this schedule?",
+    "irreversible": "This cannot be undone. Once cancelled, this schedule cannot be reopened or accept new bookings.",
+    "keep": "Keep schedule",
+    "confirm": "Cancel schedule",
+    "pending": "Cancelling…",
+    "reason": "Cancellation reason",
+    "reasonHint": "Guests will see this reason. Do not include personal information or internal notes.",
+    "refundPolicy": "Confirmed bookings still active when cancellation is accepted will receive a full refund of the amount actually paid. Guests who already requested their own cancellation keep their original refund policy.",
+    "success": "Schedule cancelled. Refunds will be processed in sequence.",
+    "loadError": "Unable to load the latest cancellation status.",
+    "requestError": "The cancellation could not be confirmed. Check the status before trying again.",
+    "uncertain": "We could not confirm whether the cancellation was saved. Check the status before submitting again.",
+    "retry": "Check status",
+    "started": "This schedule has already started and cannot be cancelled.",
+    "buddyReason": "Cancelled by the buddy",
+    "currentRefund": "Current refund: {amount}",
+    "statuses": {
+      "QUEUED": "Refund processing",
+      "DISPATCHED": "Refund processing",
+      "REVIEW_REQUIRED": "Refund under review. This may take some time.",
+      "COMPLETED": "Refund completed",
+      "NO_PAYMENT": "Cancelled · No confirmed payment found",
+      "EXCLUDED": "Original cancellation and refund policy applies"
+    }
+  },
   "Common": {
     "cancel": "Cancel",
     "close": "Close",

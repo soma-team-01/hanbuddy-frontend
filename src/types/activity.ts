@@ -97,7 +97,7 @@ export interface ActivityItineraryResponse {
   itemOrder: number;
 }
 
-export type TouristActivityScheduleStatus = "OPEN" | "CLOSED";
+export type TouristActivityScheduleStatus = "OPEN" | "CLOSED" | "CANCELLED";
 
 export interface TouristActivitySchedule {
   activityScheduleId: number;

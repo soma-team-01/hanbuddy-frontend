@@ -29,6 +29,35 @@
       "bankInvalid": "請檢查銀行和帳號。"
     }
   },
+  "ScheduleCancellation": {
+    "more": "行程選項",
+    "cancelAction": "取消行程",
+    "cancelled": "已取消的行程",
+    "title": "確定取消此行程嗎？",
+    "irreversible": "取消後無法重新開放此行程，也無法接受新的預訂。",
+    "keep": "保留行程",
+    "confirm": "取消行程",
+    "pending": "正在取消…",
+    "reason": "取消原因",
+    "reasonHint": "此原因將向參與者公開。請勿填寫個人資訊或內部備註。",
+    "refundPolicy": "取消受理時仍有效的已確認預訂將退還實際支付的全部金額。已先行申請個人取消的參與者仍適用原退款政策。",
+    "success": "行程已取消，退款將依次處理。",
+    "loadError": "無法取得最新取消狀態。",
+    "requestError": "無法確認取消結果。請先查詢狀態再重試。",
+    "uncertain": "無法確認取消是否已受理。再次提交前請查詢狀態。",
+    "retry": "重新查詢狀態",
+    "started": "已開始的行程無法取消。",
+    "buddyReason": "因嚮導原因取消",
+    "currentRefund": "目前退款金額：{amount}",
+    "statuses": {
+      "QUEUED": "退款處理中",
+      "DISPATCHED": "退款處理中",
+      "REVIEW_REQUIRED": "退款確認中，完成可能需要一些時間。",
+      "COMPLETED": "退款完成",
+      "NO_PAYMENT": "已取消 · 未發現已確認的付款",
+      "EXCLUDED": "保留原取消及退款政策"
+    }
+  },
   "Common": {
     "cancel": "取消",
     "close": "關閉",

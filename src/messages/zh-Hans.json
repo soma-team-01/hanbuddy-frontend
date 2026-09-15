@@ -29,6 +29,35 @@
       "bankInvalid": "请检查银行和账号。"
     }
   },
+  "ScheduleCancellation": {
+    "more": "日程选项",
+    "cancelAction": "取消日程",
+    "cancelled": "已取消的日程",
+    "title": "确定取消此日程吗？",
+    "irreversible": "取消后无法重新开放此日程，也无法接受新的预订。",
+    "keep": "保留日程",
+    "confirm": "取消日程",
+    "pending": "正在取消…",
+    "reason": "取消原因",
+    "reasonHint": "此原因将向参与者公开。请勿填写个人信息或内部备注。",
+    "refundPolicy": "取消受理时仍有效的已确认预订将退还实际支付的全部金额。已先行申请个人取消的参与者仍适用原退款政策。",
+    "success": "日程已取消，退款将依次处理。",
+    "loadError": "无法获取最新取消状态。",
+    "requestError": "无法确认取消结果。请先查询状态再重试。",
+    "uncertain": "无法确认取消是否已受理。再次提交前请查询状态。",
+    "retry": "重新查询状态",
+    "started": "已开始的日程无法取消。",
+    "buddyReason": "因向导原因取消",
+    "currentRefund": "当前退款金额：{amount}",
+    "statuses": {
+      "QUEUED": "退款处理中",
+      "DISPATCHED": "退款处理中",
+      "REVIEW_REQUIRED": "退款确认中，完成可能需要一些时间。",
+      "COMPLETED": "退款完成",
+      "NO_PAYMENT": "已取消 · 未发现已确认的付款",
+      "EXCLUDED": "保留原取消及退款政策"
+    }
+  },
   "Common": {
     "cancel": "取消",
     "close": "关闭",

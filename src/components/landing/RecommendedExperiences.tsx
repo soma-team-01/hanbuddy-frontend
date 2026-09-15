@@ -26,16 +26,19 @@ export function RecommendedExperiences() {
     return (
       <section
         aria-labelledby="recommended-title"
-        className="border-t border-line-soft bg-canvas-soft py-12 md:py-16"
+        className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
       >
         <PageContainer>
           <RecommendedHeading />
           <p className="sr-only">{t("recommended.loading")}</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          <div
+            data-testid="recommended-track"
+            className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4"
+          >
             {Array.from({ length: RECOMMENDED_LIMIT }, (_, index) => (
               <div
                 key={index}
-                className="overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft"
+                className="w-[78vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft md:w-auto md:max-w-none"
               >
                 <div className="aspect-[16/9] w-full animate-pulse bg-panel-raised" />
                 <div className="flex flex-col gap-3 p-4">
@@ -71,14 +74,14 @@ export function RecommendedExperiences() {
   return (
     <section
       aria-labelledby="recommended-title"
-      className="border-t border-line-soft bg-canvas-soft py-12 md:py-16"
+      className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <RecommendedHeading />
           <Link
             href="/explore"
-            className="font-display text-sm font-bold text-primary transition-colors hover:text-primary-hover"
+            className="inline-flex min-h-11 items-center self-start font-display text-sm font-bold text-primary transition-colors hover:text-primary-hover"
           >
             {t("recommended.viewAll")}
             <span aria-hidden className="ml-2 text-base">
@@ -87,12 +90,16 @@ export function RecommendedExperiences() {
           </Link>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+        {/* 모바일은 스냅 가로 스와이프(다음 카드가 살짝 보임), md 이상은 그리드 */}
+        <div
+          data-testid="recommended-track"
+          className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4"
+        >
           {activities.map((activity, index) => (
             <Link
               key={activity.id}
               href={`/activities/${activity.id}`}
-              className="motion-reveal motion-press block rounded-2xl"
+              className="motion-reveal motion-press block w-[78vw] max-w-[320px] shrink-0 snap-start rounded-2xl md:w-auto md:max-w-none"
               style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
             >
               <ActivityCard activity={activity} eagerImage={index === 0} />
@@ -117,7 +124,7 @@ function RecommendedState({ kind, onRetry }: RecommendedStateProps) {
   return (
     <section
       aria-labelledby="recommended-title"
-      className="border-t border-line-soft bg-canvas-soft py-12 md:py-16"
+      className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
         <RecommendedHeading />

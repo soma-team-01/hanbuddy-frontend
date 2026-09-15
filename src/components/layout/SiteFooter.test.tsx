@@ -85,6 +85,24 @@ describe("SiteFooter", () => {
     },
   );
 
+  it("gives social icons and policy links a 44px touch target", async () => {
+    renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });
+
+    for (const name of [
+      "Email HanBuddy",
+      "Chat with HanBuddy on WhatsApp",
+      "Open HanBuddy on Facebook",
+      "Chat with HanBuddy on KakaoTalk",
+      "Open HanBuddy on Instagram",
+    ]) {
+      expect(screen.getByRole("link", { name })).toHaveClass("size-11");
+    }
+    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveClass("min-h-11");
+    expect(screen.getByRole("link", { name: "Cancellation & Refund Policy" })).toHaveClass(
+      "min-h-11",
+    );
+  });
+
   it("hides the language switcher for buddies", async () => {
     renderWithIntl(await SiteFooter({ locale: "ko", role: "buddy" }), { locale: "ko" });
 

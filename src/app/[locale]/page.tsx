@@ -1,5 +1,6 @@
 import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
@@ -7,23 +8,34 @@ import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
 import { MailIcon } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { AUTH_COOKIES } from "@/lib/auth/cookies";
+import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
+  // position: 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 가로 초점. cover 사진은 PC 세로 크롭에도 쓰인다.
   {
     src: "/images/landing/hanriver-picnic.webp",
     altKey: "visuals.mainAlt",
+    fit: "cover",
+    position: "50% 72%",
   },
   {
-    src: "/images/landing/2차-4.jpeg",
+    src: "/images/landing/jamsil-stadium-0726.webp",
     altKey: "visuals.marketAlt",
+    fit: "cover",
+    position: "50% 55%",
   },
   {
-    src: "/images/landing/kbo-0726-group-wide.webp",
+    src: "/images/landing/kbo-0726-group.webp",
     altKey: "visuals.teaAlt",
+    fit: "contain",
+    position: "85% 50%",
   },
   {
-    src: "/images/landing/hanriver-fountain.webp",
-    altKey: "visuals.fountainAlt",
+    src: "/images/landing/kleague-0815-crew.webp",
+    altKey: "visuals.kleagueAlt",
+    fit: "contain",
+    position: "32% 50%",
   },
 ] as const;
 
@@ -63,30 +75,40 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
 
 export default async function LandingPage({ params }: LandingPageProps) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Landing" });
+  const [t, cookieStore] = await Promise.all([
+    getTranslations({ locale, namespace: "Landing" }),
+    cookies(),
+  ]);
+  // 로그인한 관광객에게는 로그인 유도 대신 탐색으로 보낸다 (layout.tsx와 같은 판별 규칙)
+  const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
+  const isTourist =
+    userType === "TOURIST" && Boolean(cookieStore.get(AUTH_COOKIES.accessToken)?.value);
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      {/* 모바일: 사진 띠 → 글자 영역 세로 배치. md 이상: 사진을 배경으로 깐 풀블리드 히어로 */}
       <section
         aria-label={t("visuals.ariaLabel")}
-        className="relative isolate min-h-[calc(100svh-76px)] overflow-hidden bg-ink text-on-primary"
+        className="relative isolate flex flex-col overflow-hidden bg-ink text-on-primary md:block md:min-h-[clamp(560px,72svh,760px)]"
       >
         <LandingHeroMedia
           images={HERO_MEDIA.map((image) => ({
             src: image.src,
             alt: t(image.altKey),
+            fit: image.fit,
+            position: image.position,
           }))}
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(38,27,24,0.88)_0%,rgba(38,27,24,0.68)_38%,rgba(38,27,24,0.22)_78%,rgba(38,27,24,0.4)_100%)]"
+          className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(38,27,24,0.88)_0%,rgba(38,27,24,0.68)_38%,rgba(38,27,24,0.22)_78%,rgba(38,27,24,0.4)_100%)] md:block"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/65 via-transparent to-ink/20"
+          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-ink/65 via-transparent to-ink/20 md:block"
         />
 
-        <PageContainer className="relative z-10 flex min-h-[calc(100svh-76px)] items-end py-16 sm:py-20 lg:py-24">
+        <PageContainer className="relative z-10 -mt-16 flex pt-0 pb-10 md:mt-0 md:min-h-[clamp(560px,72svh,760px)] md:items-end md:py-14 lg:py-16">
           <div className="landing-reveal landing-reveal-delay-1 max-w-3xl min-w-0">
             <p className="mb-6 font-display text-xs font-bold tracking-[0.28em] text-primary-soft uppercase">
               {t("eyebrow")}
@@ -107,7 +129,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
               </span>
             </Link>
 
-            <div className="mt-12 grid max-w-3xl gap-5 border-t border-white/25 pt-6 sm:grid-cols-3 sm:gap-4">
+            <div className="mt-12 hidden max-w-3xl gap-4 border-t border-white/25 pt-6 md:grid md:grid-cols-3">
               {HERO_HIGHLIGHTS.map((highlight) => (
                 <div key={highlight}>
                   <p className="font-display text-sm font-bold text-primary-soft">
@@ -122,6 +144,23 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
         </PageContainer>
       </section>
+
+      {/* 모바일 전용: 하이라이트를 사진 위가 아니라 히어로 아래 밝은 띠로 */}
+      <div
+        data-testid="hero-highlights-mobile"
+        className="grid grid-cols-3 gap-3 border-b border-line-soft bg-primary-soft px-5 py-4 md:hidden"
+      >
+        {HERO_HIGHLIGHTS.map((highlight) => (
+          <div key={highlight}>
+            <p className="font-display text-[13px] leading-[1.3] font-bold text-primary-strong">
+              {t(`highlights.${highlight}.title`)}
+            </p>
+            <p className="mt-0.5 text-xs leading-[1.35] text-muted">
+              {t(`highlights.${highlight}.description`)}
+            </p>
+          </div>
+        ))}
+      </div>
 
       <RecommendedExperiences />
 
@@ -168,10 +207,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
           <div className="mt-7 text-center">
             <Link
-              href="/login"
+              href={isTourist ? "/explore" : "/login"}
               className="motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
             >
-              {t("booking.cta")}
+              {isTourist ? t("exploreExperiences") : t("booking.cta")}
               <span aria-hidden className="ml-2 text-lg leading-none">
                 →
               </span>

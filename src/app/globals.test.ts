@@ -76,3 +76,19 @@ describe("global korean line breaking", () => {
     expect(headings).toContain("text-wrap: balance");
   });
 });
+
+describe("landing hero media styles", () => {
+  it("feathers contained hero photos into the blurred backdrop from md up", () => {
+    const block = stylesheet.match(
+      /@media \(min-width: 768px\)\s*\{\s*\.hero-media-contain\s*\{([^}]*)\}/,
+    )?.[1];
+
+    expect(block).toContain("object-position: center");
+    expect(block).toMatch(/mask-image:\s*linear-gradient\(90deg/);
+    // 위아래는 사진이 히어로를 꽉 채우므로 세로 페이드는 두지 않는다
+    expect(block).not.toContain("180deg");
+    expect(stylesheet).toMatch(
+      /\.hero-media-image\s*\{[^}]*object-position: var\(--hero-media-position, center\)/,
+    );
+  });
+});

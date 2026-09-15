@@ -1,3 +1,4 @@
+import { AnalyticsSettings } from "@/components/analytics/AnalyticsProvider";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { FooterLocaleSwitcher } from "@/components/layout/FooterLocaleSwitcher";
@@ -46,6 +47,7 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
             <p>© 2026 HanBuddy</p>
+            <AnalyticsSettings />
             <Link
               href={getPolicyPath(locale, "terms-of-service")}
               className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"

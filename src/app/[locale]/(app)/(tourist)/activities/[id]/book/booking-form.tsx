@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useBeginCheckout } from "@/components/analytics/use-begin-checkout";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -313,6 +314,20 @@ export function BookingForm({
   }, [errorMessage]);
 
   const selectedSession = activity.sessions.find((session) => session.id === sessionId) ?? null;
+  useBeginCheckout(
+    Number(activity.id),
+    Boolean(
+      selectedSession &&
+      selectedSession.spotsLeft >= guests &&
+      (showTossPayment ||
+        (showPayPalPayment &&
+          estimatedPayPalTotal !== null &&
+          !isPayPalPricePending &&
+          !isPayPalPriceUnavailable)) &&
+      !requestFailure &&
+      !errorKey,
+    ),
+  );
   const sessionTimeRange = selectedSession
     ? formatSessionTimeRange(selectedSession, activity.durationMinutes, locale as Locale)
     : "";

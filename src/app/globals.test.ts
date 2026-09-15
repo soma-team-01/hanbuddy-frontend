@@ -83,6 +83,11 @@ describe("landing hero media styles", () => {
       /@media \(min-width: 768px\)\s*\{\s*\.hero-media-contain\s*\{([^}]*)\}/,
     )?.[1];
 
-    expect(block).toContain("mask-image: linear-gradient(90deg");
+    expect(block).toContain("object-position: center");
+    expect(block).toMatch(/mask-image:\s*linear-gradient\(90deg/);
+    expect(block).toContain("mask-composite: intersect");
+    expect(stylesheet).toMatch(
+      /\.hero-media-image\s*\{[^}]*object-position: var\(--hero-media-position, center\)/,
+    );
   });
 });

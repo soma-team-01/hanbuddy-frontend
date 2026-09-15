@@ -8,7 +8,10 @@ interface HeroMediaItem {
   readonly alt: string;
   /** cover: 항상 꽉 채움. contain: md 이상에서 흐린 배경 위에 원본을 가운데 잘리지 않게 놓는다(셀카·크루 사진). */
   readonly fit?: HeroMediaFit;
-  /** 모바일 사진 띠에서 얼굴이 보이도록 잡는 초점(object-position) */
+  /**
+   * 사진 초점(object-position). cover 사진은 모든 폭에서, contain 사진은 모바일 띠에서만 쓰이고
+   * md 이상에서는 흐린 배경 위 정중앙에 놓인다.
+   */
   readonly position?: string;
 }
 
@@ -44,18 +47,25 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
                 className="hero-media-backdrop hidden scale-110 object-cover blur-2xl brightness-50 md:block"
               />
             ) : null}
-            <Image
-              src={image.src}
-              alt={image.alt}
-              fill
-              priority={index === 0}
-              loading={index === 0 ? "eager" : "lazy"}
-              sizes="100vw"
-              className={`hero-media-image object-cover ${
-                isContain ? "hero-media-contain md:object-contain md:object-center" : ""
-              }`}
-              style={image.position ? { objectPosition: image.position } : undefined}
-            />
+            {/* contain 사진은 md 이상에서 히어로 높이의 82%로 줄여 흐린 배경 가운데에 놓는다 */}
+            <div className={`absolute inset-0 ${isContain ? "md:inset-y-[9%]" : ""}`}>
+              <Image
+                src={image.src}
+                alt={image.alt}
+                fill
+                priority={index === 0}
+                loading={index === 0 ? "eager" : "lazy"}
+                sizes="100vw"
+                className={`hero-media-image object-cover ${
+                  isContain ? "hero-media-contain md:object-contain" : ""
+                }`}
+                style={
+                  image.position
+                    ? ({ "--hero-media-position": image.position } as CSSProperties)
+                    : undefined
+                }
+              />
+            </div>
           </div>
         );
       })}

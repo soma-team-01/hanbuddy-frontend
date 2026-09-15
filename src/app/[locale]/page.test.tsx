@@ -164,9 +164,20 @@ describe("LandingPage", () => {
       "md:object-contain",
     );
     expect(frames[0]?.querySelector(".hero-media-image")).not.toHaveClass("md:object-contain");
-    expect(frames[2]?.querySelector(".hero-media-image")).toHaveStyle({
+    // 초점은 CSS 변수로 넘겨 md 이상의 contain 프레임에서는 스타일시트가 정중앙으로 되돌린다
+    expect(frames[2]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
+      "--hero-media-position: 85% 50%",
+    );
+    expect(frames[2]?.querySelector(".hero-media-image")).not.toHaveStyle({
       objectPosition: "85% 50%",
     });
+    // md 이상에서 contain 사진은 히어로 높이의 82%로 줄어든다(위아래 9% 여백)
+    expect(frames[2]?.querySelector(".hero-media-image")?.parentElement).toHaveClass(
+      "md:inset-y-[9%]",
+    );
+    expect(frames[0]?.querySelector(".hero-media-image")?.parentElement).not.toHaveClass(
+      "md:inset-y-[9%]",
+    );
   });
 
   it("stacks the hero as a photo band above the copy on mobile and keeps the full-bleed hero from md", async () => {

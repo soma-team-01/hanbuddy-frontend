@@ -335,12 +335,19 @@ button:not(:disabled),
 .hero-media-image {
   animation: hero-media-zoom 20s ease-in-out infinite;
   animation-delay: var(--hero-media-delay);
+  /* 사진별 초점. 모바일 띠(가로 크롭)와 cover 사진의 PC 세로 크롭에 쓰인다 */
+  object-position: var(--hero-media-position, center);
 }
 
-/* md 이상에서 contain 프레임의 원본 양옆을 흐린 배경에 녹인다 */
+/* md 이상에서 contain 프레임은 흐린 배경 위 정중앙에 두고, 원본 양옆을 배경에 녹인다 */
 @media (min-width: 768px) {
   .hero-media-contain {
-    mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+    object-position: center;
+    /* 네 변을 모두 흐린 배경에 녹인다 (가로·세로 그라데이션의 교집합) */
+    mask-image:
+      linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%),
+      linear-gradient(180deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+    mask-composite: intersect;
   }
 }
 

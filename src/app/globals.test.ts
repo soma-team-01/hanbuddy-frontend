@@ -51,3 +51,28 @@ describe("global motion styles", () => {
     expect(activeRules[1]).toContain("scale: none");
   });
 });
+
+describe("global korean line breaking", () => {
+  it("keeps Korean words intact at line breaks while still breaking unbreakable strings", () => {
+    const rule = stylesheet.match(/\n:lang\(ko\)\s*\{([^}]*)\}/)?.[1];
+
+    expect(rule).toContain("word-break: keep-all");
+    expect(rule).toContain("overflow-wrap: anywhere");
+    // 한국어 문서 안의 중국어 요소는 keep-all을 물려받지 않도록 되돌린다
+    const chinese = stylesheet.match(/\n:lang\(zh\)\s*\{([^}]*)\}/)?.[1];
+    expect(chinese).toContain("word-break: normal");
+    expect(chinese).toContain("overflow-wrap: normal");
+  });
+
+  it("lets Japanese break by phrase and balances heading lines in every language", () => {
+    const japanese = stylesheet.match(/\n:lang\(ja\)\s*\{([^}]*)\}/)?.[1];
+    const headings = stylesheet.match(/\nh1,\s*h2,\s*h3\s*\{([^}]*)\}/)?.[1];
+
+    // 미지원 브라우저용 폴백이 auto-phrase보다 먼저 와야 캐스케이드로 덮어씌워진다
+    expect(japanese?.indexOf("word-break: normal")).toBeLessThan(
+      japanese?.indexOf("word-break: auto-phrase") ?? -1,
+    );
+    expect(japanese).toContain("word-break: auto-phrase");
+    expect(headings).toContain("text-wrap: balance");
+  });
+});

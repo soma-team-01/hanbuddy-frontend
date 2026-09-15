@@ -204,6 +204,16 @@ body {
   font-family: var(--font-sans);
 }
 
+/*
+ * 한국어는 어절 단위로 줄을 바꿔야 "경험하 / 세요"처럼 단어가 쪼개지지 않는다.
+ * 공백 없는 긴 URL·이메일은 overflow-wrap이 마지막 수단으로 끊어 가로 넘침을 막는다.
+ * 일본어·중국어는 문자 단위 줄바꿈이 자연스러우므로 한국어에만 적용한다.
+ */
+html:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
 :focus-visible {
   outline: 3px solid var(--color-primary-strong);
   outline-offset: 3px;

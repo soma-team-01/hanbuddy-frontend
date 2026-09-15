@@ -51,3 +51,14 @@ describe("global motion styles", () => {
     expect(activeRules[1]).toContain("scale: none");
   });
 });
+
+describe("global korean line breaking", () => {
+  it("keeps Korean words intact at line breaks while still breaking unbreakable strings", () => {
+    const rule = stylesheet.match(/html:lang\(ko\)\s*\{([^}]*)\}/)?.[1];
+
+    expect(rule).toContain("word-break: keep-all");
+    expect(rule).toContain("overflow-wrap: anywhere");
+    // 일본어·중국어는 문자 단위 줄바꿈이 자연스러우므로 같은 규칙을 강제하지 않는다
+    expect(stylesheet).not.toMatch(/html:lang\((ja|zh)/);
+  });
+});

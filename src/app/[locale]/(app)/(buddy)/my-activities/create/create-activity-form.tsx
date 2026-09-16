@@ -334,6 +334,7 @@ export function CreateActivityForm({
   );
   const [reviewing, setReviewing] = useState(initialSnapshot?.reviewing ?? isEdit);
   const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
+  const submissionInFlight = useRef(false);
   const [submissionError, setSubmissionError] = useState<{
     error: unknown;
     fallbackKey: SubmissionFallbackKey;
@@ -685,7 +686,7 @@ export function CreateActivityForm({
   }
 
   async function submitActivity() {
-    if (isSubmitting) return;
+    if (submissionInFlight.current) return;
     // 새 시도를 시작하므로 지난 제출 오류부터 비운다 — 검증에 걸려 되돌아갈 때 두 오류가 겹치지 않게
     setSubmissionError(null);
 
@@ -701,6 +702,7 @@ export function CreateActivityForm({
       return;
     }
 
+    submissionInFlight.current = true;
     setSubmissionPhase("uploading");
     try {
       // 기존 이미지는 발급받았던 key를 그대로 쓰고, 새로 고른 파일만 업로드한다
@@ -753,6 +755,7 @@ export function CreateActivityForm({
     } catch (error) {
       setSubmissionError({ error, fallbackKey: "submissionFailed" });
     } finally {
+      submissionInFlight.current = false;
       setSubmissionPhase(null);
     }
   }
@@ -1079,8 +1082,15 @@ export function CreateActivityForm({
                 </button>
               ) : null}
               <button
+                key={reviewing ? "review" : currentStep}
                 type="button"
-                onClick={goNext}
+                onClick={(event) => {
+                  if (event.detail <= 1) goNext();
+                }}
+                onKeyDown={(event) => {
+                  if ((event.key === "Enter" || event.key === " ") && event.repeat)
+                    event.preventDefault();
+                }}
                 disabled={isSubmitting}
                 className="flex min-h-11 min-w-28 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_8px_18px_rgba(209,63,50,0.18)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-32"
               >

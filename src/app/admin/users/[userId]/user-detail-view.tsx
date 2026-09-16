@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminSignupInfoSection } from "@/app/admin/admin-signup-info";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -181,6 +183,7 @@ export function AdminUserDetailView({ userId }: { userId: string }) {
         </div>
       </section>
 
+      <AdminSignupInfoSection info={user} />
       <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
         <div className="flex items-center gap-3">
           <HistoryIcon className="size-5 text-primary" />

@@ -38,6 +38,15 @@ describe("BuddyApplicationReview", () => {
         userId: 42,
         email: "buddy@example.com",
         name: "김버디",
+        displayName: "Seoul Guide",
+        signupSource: "OTHER",
+        signupSourceDetail: "Travel club",
+        bankAccount: {
+          bank: "SHINHAN",
+          bankCode: "088",
+          bankName: "신한은행",
+          accountNumber: "001234",
+        },
         profileImageUrl: null,
         nationalityCode: "KR",
         birthDate: "1995-01-02",
@@ -69,6 +78,10 @@ describe("BuddyApplicationReview", () => {
 
     expect(await screen.findByRole("heading", { name: "김버디" })).toBeInTheDocument();
     expect(screen.getByText("buddy@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Seoul Guide")).toBeInTheDocument();
+    expect(screen.getByText("Google 계정 이름")).toBeInTheDocument();
+    expect(screen.getByText("Travel club")).toBeInTheDocument();
+    expect(screen.getByText("001234")).toBeInTheDocument();
     expect(screen.getByText("대한민국")).toBeInTheDocument();
     expect(screen.getByText(/^2026년 8월 6일 .*12:30$/)).toBeInTheDocument();
     expect(screen.queryByText("사용자 ID")).not.toBeInTheDocument();

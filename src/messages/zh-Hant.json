@@ -1,4 +1,34 @@
 {
+  "SignupExtra": {
+    "sourceLabel": "您從哪裡得知我們？",
+    "sourceDetailLabel": "請具體說明（最多100字）",
+    "bankTitle": "銀行帳戶",
+    "bankLabel": "銀行",
+    "bankPlaceholder": "選擇銀行",
+    "bankSearch": "搜尋銀行",
+    "bankNoResults": "找不到相關銀行。",
+    "accountLabel": "銀行帳號",
+    "sources": {
+      "MEETUP": "Meetup",
+      "FACEBOOK": "Facebook",
+      "INSTAGRAM": "Instagram",
+      "FRIEND": "朋友推薦",
+      "GOOGLE_SEARCH": "Google搜尋",
+      "OFFLINE_PROMOTION": "線下宣傳",
+      "UNIVERSITY_COMMUNITY": "大學社群",
+      "OTHER": "其他"
+    },
+    "errors": {
+      "sourceRequired": "請選擇您是從哪裡得知我們的。",
+      "sourceInvalid": "請檢查註冊來源與詳細說明。",
+      "sourceDetailRequired": "請填寫您是如何得知我們的。",
+      "sourceDetailTooLong": "詳細說明不能超過100字。",
+      "bankPair": "請選擇銀行並填寫帳號。",
+      "bankFormat": "僅支援數字、空格和連字號，且至少包含一個數字。",
+      "bankLength": "帳號不能超過50個字元。",
+      "bankInvalid": "請檢查銀行和帳號。"
+    }
+  },
   "Common": {
     "cancel": "取消",
     "close": "關閉",
@@ -7,6 +37,8 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "signupSourceInvalid": "請檢查註冊來源與詳細說明。",
+    "signupBankAccountInvalid": "請檢查銀行和帳號。",
     "authenticationRequired": "請重新登入以繼續。",
     "googleAuthenticationInvalid": "無法驗證 Google 身份驗證。請嘗試重新登入。",
     "signupAgreementsInvalid": "查看註冊協議並重試。",
@@ -451,7 +483,7 @@
     "headline": "一些細節，然後您的本地故事就可以開始了。",
     "description": "請填寫夥伴註冊指引所需的基本資訊。註冊後可繼續補充活動營運資訊。",
     "profilePhotoOptional": "選擇一張清晰的臉部照片，以便客人在見面時能夠認出您。",
-    "contactMethods": "請填寫可聯絡您的電話號碼。",
+    "contactMethods": "聯絡方式與收款資訊",
     "contactDescription": "請輸入工作人員可用於提供夥伴註冊說明的電話號碼。",
     "completing": "正在建立好友帳戶...",
     "completeRegistration": "註冊成為好友"

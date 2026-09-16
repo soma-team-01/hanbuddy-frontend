@@ -6,13 +6,14 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { renderWithIntl } from "@/test/render-with-intl";
 import zhHans from "@/messages/zh-Hans.json";
 import zhHant from "@/messages/zh-Hant.json";
+import ja from "@/messages/ja.json";
 import { MessagingAppField } from "./MessagingAppField";
 
 type FieldProps = ComponentProps<typeof MessagingAppField>;
 
 function renderField(
   overrides: Partial<FieldProps> = {},
-  locale: "en" | "ko" | "zh-Hans" | "zh-Hant" = "en",
+  locale: "en" | "ko" | "ja" | "zh-Hans" | "zh-Hant" = "en",
 ) {
   const props: FieldProps = {
     app: "whatsapp",
@@ -25,12 +26,49 @@ function renderField(
   };
   renderWithIntl(<MessagingAppField {...props} />, {
     locale,
-    messages: locale === "zh-Hans" ? zhHans : locale === "zh-Hant" ? zhHant : undefined,
+    messages: { en: undefined, ko: undefined, ja, "zh-Hans": zhHans, "zh-Hant": zhHant }[locale],
   });
   return props;
 }
 
 describe("MessagingAppField", () => {
+  it("exposes card-only styling hooks without shortening Japanese labels or hiding selection", () => {
+    renderField({ variant: "cards", touristSignup: true, app: "kakaotalk" }, "ja");
+    const selector = screen.getByTestId("messaging-app-options");
+    expect(selector).toHaveAttribute("data-messaging-layout", "cards");
+    const kakao = within(selector).getByRole("button", { name: "カカオトーク" });
+    expect(kakao).toHaveAttribute("aria-pressed", "true");
+    expect(kakao.querySelector("[data-messaging-label]")).toHaveTextContent("カカオトーク");
+    expect(kakao.querySelector("[data-messaging-check]")).toHaveClass("visible");
+    expect(selector.querySelectorAll("[data-messaging-label]")).toHaveLength(4);
+  });
+  it.each(["phone", "whatsapp", "instagram"] as const)(
+    "uses accent hover borders for card-mode %s fields",
+    (app) => {
+      renderField({ app, variant: "cards", touristSignup: true });
+      expect(screen.getByRole("textbox")).toHaveClass("hover:border-primary", "transition-colors");
+      if (app !== "instagram") {
+        expect(screen.getByLabelText("Country code")).toHaveClass("hover:border-primary");
+        expect(screen.getByLabelText("Country code")).not.toHaveClass("hover:border-line-strong");
+      }
+      expect(screen.getByRole("button", { name: "KakaoTalk" })).toHaveClass("hover:border-primary");
+    },
+  );
+  it("matches signup source selection with a white card, accent border and check", () => {
+    const props = renderField({ variant: "cards", touristSignup: true });
+    const selected = screen.getByRole("button", { name: "WhatsApp" });
+    const other = screen.getByRole("button", { name: "Instagram" });
+    expect(selected).toHaveClass("bg-canvas-soft", "border-primary", "text-primary-strong");
+    expect(selected).not.toHaveClass("bg-primary-soft");
+    expect(selected).toHaveClass("gap-1.5", "px-2", "sm:gap-2", "sm:px-3");
+    expect(selected).not.toHaveClass("gap-3");
+    expect(selected.querySelector(":scope > svg")).toHaveClass("visible");
+    expect(other).toHaveClass("bg-canvas-soft", "border-line-soft", "text-muted");
+    expect(other.querySelector(":scope > svg")).toHaveClass("invisible");
+    expect(within(selected).getByText("WhatsApp")).toHaveClass("font-normal");
+    fireEvent.click(other);
+    expect(props.onAppChange).toHaveBeenCalledWith("instagram");
+  });
   it.each([
     ["kakaotalk", "카카오톡"],
     ["instagram", "인스타그램"],

@@ -1,4 +1,34 @@
 {
+  "SignupExtra": {
+    "sourceLabel": "どこで知りましたか？",
+    "sourceDetailLabel": "詳しく教えてください（100文字以内）",
+    "bankTitle": "銀行口座",
+    "bankLabel": "銀行",
+    "bankPlaceholder": "銀行を選択",
+    "bankSearch": "銀行を検索",
+    "bankNoResults": "検索結果がありません。",
+    "accountLabel": "口座番号",
+    "sources": {
+      "MEETUP": "Meetup",
+      "FACEBOOK": "Facebook",
+      "INSTAGRAM": "Instagram",
+      "FRIEND": "知人の紹介",
+      "GOOGLE_SEARCH": "Google検索",
+      "OFFLINE_PROMOTION": "オフラインの案内",
+      "UNIVERSITY_COMMUNITY": "大学コミュニティ",
+      "OTHER": "その他"
+    },
+    "errors": {
+      "sourceRequired": "どこで知ったかを選択してください。",
+      "sourceInvalid": "登録経路と詳細を確認してください。",
+      "sourceDetailRequired": "どこで知ったかを入力してください。",
+      "sourceDetailTooLong": "詳細は100文字以内で入力してください。",
+      "bankPair": "銀行を選択し、口座番号を入力してください。",
+      "bankFormat": "数字・スペース・ハイフンのみ使用し、数字を1つ以上含めてください。",
+      "bankLength": "口座番号は50文字以内で入力してください。",
+      "bankInvalid": "銀行と口座番号を確認してください。"
+    }
+  },
   "Common": {
     "cancel": "キャンセル",
     "close": "閉じる",
@@ -7,6 +37,8 @@
     "unavailable": "利用不可"
   },
   "ApiErrors": {
+    "signupSourceInvalid": "登録経路と詳細を確認してください。",
+    "signupBankAccountInvalid": "銀行と口座番号を確認してください。",
     "authenticationRequired": "続行するには、もう一度サインインしてください。",
     "googleAuthenticationInvalid": "Google認証が確認できませんでした。もう一度サインインしてください。",
     "signupAgreementsInvalid": "サインアップ規約を確認して、もう一度お試しください。",
@@ -451,7 +483,7 @@
     "headline": "いくつかの詳細を説明してから、あなたの地元の物語を始めましょう。",
     "description": "バディ登録のご案内に必要な基本情報を入力してください。ホスティング情報は登録後に追加できます。",
     "profilePhotoOptional": "ゲストが会ったときにあなたを認識できるように、鮮明な顔写真を選択してください。",
-    "contactMethods": "連絡先の電話番号を入力してください。",
+    "contactMethods": "連絡先・振込先情報",
     "contactDescription": "担当者がバディ登録についてご案内するための電話番号を入力してください。",
     "completing": "友達アカウントを作成中...",
     "completeRegistration": "友達として登録する"

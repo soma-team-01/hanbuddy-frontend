@@ -446,6 +446,8 @@ export function CreateActivityForm({
   ]);
 
   function preserveForLocaleChange() {
+    // Block queued locale changes before the disabled state has rendered, too.
+    if (submissionInFlight.current) return false;
     activityCreateLocaleSnapshot = {
       mode,
       activityId,
@@ -974,6 +976,7 @@ export function CreateActivityForm({
           </div>
           <div className="flex items-center gap-2">
             <LocaleSwitcher
+              disabled={isSubmitting}
               className="min-h-10 px-3 sm:px-4"
               onBeforeLocaleChange={preserveForLocaleChange}
             />

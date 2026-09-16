@@ -39,6 +39,37 @@ describe("LocaleSwitcher", () => {
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
 
+  it("disables the trigger and already open options until it is enabled again", () => {
+    const beforeChange = vi.fn();
+    const { rerender } = renderWithIntl(<LocaleSwitcher onBeforeLocaleChange={beforeChange} />);
+    const trigger = screen.getByRole("button", { expanded: false });
+    fireEvent.click(trigger);
+    const korean = screen.getByRole("menuitemradio", { name: "한국어" });
+
+    rerender(<LocaleSwitcher disabled onBeforeLocaleChange={beforeChange} />);
+    expect(trigger).toBeDisabled();
+    expect(korean).toBeDisabled();
+    fireEvent.click(korean);
+    expect(beforeChange).not.toHaveBeenCalled();
+    expect(routerMock.replace).not.toHaveBeenCalled();
+
+    rerender(<LocaleSwitcher onBeforeLocaleChange={beforeChange} />);
+    expect(trigger).toBeEnabled();
+    expect(korean).toBeEnabled();
+    fireEvent.click(korean);
+    expect(beforeChange).toHaveBeenCalledTimes(1);
+    expect(routerMock.replace).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not navigate when the pre-change guard returns false", () => {
+    const beforeChange = vi.fn(() => false);
+    renderWithIntl(<LocaleSwitcher onBeforeLocaleChange={beforeChange} />);
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
+    expect(beforeChange).toHaveBeenCalledTimes(1);
+    expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["en", "English(en)"],
     ["ko", "한국어(ko)"],

@@ -241,9 +241,16 @@ describe("CreateActivityForm", () => {
     await completeAllStepsUntilReview();
     const submit = screen.getByRole("button", { name: "Register experience" });
 
+    const language = screen.getByRole("button", {
+      name: "Select language, current language: English",
+    });
+    fireEvent.click(language);
+    const korean = screen.getByRole("menuitemradio", { name: "한국어" });
+
     // Keep events in one batch to cover requests queued before disabled is rendered.
     act(() => {
       fireEvent.click(submit, { detail: 1 });
+      fireEvent.click(korean);
       fireEvent.click(submit, { detail: 2 });
       for (let repeat = 0; repeat < 3; repeat += 1) {
         expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
@@ -251,12 +258,15 @@ describe("CreateActivityForm", () => {
       fireEvent.click(submit, { detail: 0 }); // An already queued keyboard activation.
     });
     expect(submit).toBeDisabled();
+    expect(language).toBeDisabled();
+    expect(routerReplace).not.toHaveBeenCalled();
     expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
 
     await act(async () => uploadGate.resolve());
     await waitFor(() => expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1));
     expect(submit).toBeDisabled();
+    expect(language).toBeDisabled();
     fireEvent.click(submit, { detail: 2 });
     expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
     expect(routerPush).not.toHaveBeenCalled();
@@ -265,6 +275,9 @@ describe("CreateActivityForm", () => {
     await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/en/my-activities"));
     // router.push has returned, but the old screen remains mounted until navigation completes.
     expect(submit).toBeDisabled();
+    expect(language).toBeDisabled();
+    fireEvent.click(language);
+    expect(routerReplace).not.toHaveBeenCalled();
     fireEvent.click(submit, { detail: 1 });
     fireEvent.click(submit, { detail: 0 });
     fireEvent.keyDown(submit, { key: "Enter" });
@@ -284,6 +297,11 @@ describe("CreateActivityForm", () => {
       expect(await screen.findByRole("alert")).toBeInTheDocument();
       const retry = screen.getByRole("button", { name: "Register experience" });
       expect(retry).toBeEnabled();
+      expect(
+        screen.getByRole("button", {
+          name: "Select language, current language: English",
+        }),
+      ).toBeEnabled();
       expect(routerPush).not.toHaveBeenCalled();
       expect(mockedClearActivityCreateDraft).not.toHaveBeenCalled();
       fireEvent.click(retry);
@@ -962,6 +980,12 @@ describe("CreateActivityForm", () => {
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
     expect(save).toBeDisabled();
+    const language = screen.getByRole("button", {
+      name: "Select language, current language: English",
+    });
+    expect(language).toBeDisabled();
+    fireEvent.click(language);
+    expect(routerReplace).not.toHaveBeenCalled();
     fireEvent.click(save);
     expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
   });

@@ -144,6 +144,58 @@ async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
 }
 
 describe("BookingForm", () => {
+  it("opens an example inquiry before payment consent without disclosing form data or making a booking request", () => {
+    renderWithQueryClient(
+      <BookingForm
+        activity={{
+          ...activity,
+          sessions: [
+            ...activity.sessions,
+            { id: "102", dateLabel: "2026-07-21", timeLabel: "14:00", spotsLeft: 2 },
+          ],
+        }}
+        initialSessionId="102"
+        paymentProviderMode="PAYPAL"
+      />,
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
+    fireEvent.change(screen.getByPlaceholderText("Let your buddy know..."), {
+      target: { value: "Private dietary request" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
+    const dialog = screen.getByRole("dialog", { name: "Prefer another payment method?" });
+    expect(dialog).toHaveTextContent("Example inquiry");
+    expect(dialog).toHaveTextContent("Seoul Forest Walk & Seongsu Cafe Tour");
+    expect(dialog).not.toHaveTextContent("Bukchon Hidden Gems");
+    expect(dialog).not.toHaveTextContent("2026-07-21");
+    expect(dialog).toHaveTextContent("Participants: 2");
+    expect(dialog).not.toHaveTextContent("Private dietary request");
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+    expect(mockedGetApplicationConflicts).not.toHaveBeenCalled();
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+  });
+
+  it("keeps the example inquiry available when pricing and schedules are missing", () => {
+    renderWithQueryClient(
+      <BookingForm
+        activity={{ ...activity, sessions: [], referencePrice: undefined }}
+        paymentProviderMode="PAYPAL"
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent("Example inquiry");
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+  });
+
+  it("does not add a PayPal inquiry to Toss-only checkout", () => {
+    renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
+    expect(
+      screen.queryByRole("button", { name: "Need another payment method?" }),
+    ).not.toBeInTheDocument();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetApplicationConflicts.mockResolvedValue({

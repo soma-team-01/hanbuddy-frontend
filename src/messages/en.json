@@ -1,4 +1,34 @@
 {
+  "SignupExtra": {
+    "sourceLabel": "How did you hear about us?",
+    "sourceDetailLabel": "Please specify (up to 100 characters)",
+    "bankTitle": "Bank account",
+    "bankLabel": "Bank",
+    "bankPlaceholder": "Select bank",
+    "bankSearch": "Search bank",
+    "bankNoResults": "No banks found.",
+    "accountLabel": "Account number",
+    "sources": {
+      "MEETUP": "Meetup",
+      "FACEBOOK": "Facebook",
+      "INSTAGRAM": "Instagram",
+      "FRIEND": "Friend",
+      "GOOGLE_SEARCH": "Google search",
+      "OFFLINE_PROMOTION": "Offline promotion",
+      "UNIVERSITY_COMMUNITY": "University community",
+      "OTHER": "Other"
+    },
+    "errors": {
+      "sourceRequired": "Please select how you heard about us.",
+      "sourceInvalid": "Check your signup source and details.",
+      "sourceDetailRequired": "Please tell us how you heard about us.",
+      "sourceDetailTooLong": "Use 100 characters or fewer.",
+      "bankPair": "Select a bank and enter your account number.",
+      "bankFormat": "Use digits, spaces and hyphens only, with at least one digit.",
+      "bankLength": "Use 50 characters or fewer.",
+      "bankInvalid": "Check the bank and account number."
+    }
+  },
   "Common": {
     "cancel": "Cancel",
     "close": "Close",
@@ -7,6 +37,8 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "signupSourceInvalid": "Check your signup source and details.",
+    "signupBankAccountInvalid": "Check the bank and account number.",
     "authenticationRequired": "Please sign in again to continue.",
     "googleAuthenticationInvalid": "Google authentication could not be verified. Please try signing in again.",
     "signupAgreementsInvalid": "Review the signup agreements and try again.",
@@ -451,7 +483,7 @@
     "headline": "A few details, then your local story can begin.",
     "description": "Tell us the basic information needed for buddy signup guidance. You can add hosting details after signup.",
     "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
-    "contactMethods": "What phone number should we use?",
+    "contactMethods": "Contact & payout details",
     "contactDescription": "Enter the number where our team can reach you about your buddy signup.",
     "completing": "Creating buddy account...",
     "completeRegistration": "Sign up as a buddy"
@@ -662,6 +694,19 @@
     "filteredCount": "{count, plural, =0 {No reviews with this rating} one {# review} other {# reviews}}",
     "noneForRating": "No reviews with this rating yet.",
     "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
+  },
+  "AlternativePayment": {
+    "trigger": "Need another payment method?",
+    "title": "Prefer another payment method?",
+    "description": "Fill in the details below and send them to us.",
+    "message": "Hi! I’d like to join using another payment method.\nHanBuddy sign-up email: [your email]\nBuddy: [buddy name]\nExperience: Seoul Forest Walk & Seongsu Cafe Tour\nSchedule: YYYY-MM-DD 14:00 (KST)\nParticipants: 2\nPreferred payment method: Transfer to a Korean bank account",
+    "exampleTitle": "Example inquiry",
+    "exampleHint": "This is an example. Copy it and replace the details with your own information and preferred buddy, experience and schedule before sending.",
+    "copy": "Copy template",
+    "copied": "Copied. Edit the details, then send it through your preferred channel.",
+    "copyFailed": "Could not copy. Please select and copy the example above.",
+    "email": "Email",
+    "notConfirmed": "An inquiry does not confirm your booking."
   },
   "Booking": {
     "title": "Book activity",

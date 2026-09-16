@@ -12,19 +12,12 @@ import {
 import type { Locale } from "@/i18n/routing";
 import type { SiteNavRole } from "@/lib/auth/routes";
 import { getPolicyPath } from "@/lib/policy-routes";
+import { CONTACT_DETAILS } from "@/lib/contact-details";
 
 interface SiteFooterProps {
   readonly locale: Locale;
   readonly role?: SiteNavRole | null;
 }
-
-const CONTACT_DETAILS = {
-  email: "contact@hanbuddy.kr",
-  instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
-  facebookUrl: "https://www.facebook.com/profile.php?id=61593105057939",
-  whatsappUrl: "https://wa.me/821082970110",
-  kakaoUrl: "https://pf.kakao.com/_qapJX/chat",
-} as const;
 
 const BUSINESS_DETAILS = {
   name: "제로원",

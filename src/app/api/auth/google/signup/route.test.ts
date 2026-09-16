@@ -51,6 +51,29 @@ function successfulPayload(result: GoogleLoginResponse) {
 }
 
 describe("POST /api/auth/google/signup", () => {
+  it.each([
+    "AUTH400_SIGNUP_SOURCE",
+    "AUTH400_BANK_ACCOUNT",
+    "VALIDATION400_FORMAT",
+    "VALIDATION400_RANGE",
+  ])("preserves optional signup fields and %s errors", async (code) => {
+    const body = {
+      ...signupRequest,
+      signupSource: "OTHER" as const,
+      signupSourceDetail: "Travel club",
+      bankName: "SHINHAN" as const,
+      bankAccountNumber: "001-234 567890",
+    };
+    const payload = { isSuccess: false as const, code, message: "Invalid input" };
+    mockedPostBackend.mockResolvedValue({ status: 400, setCookies: [], payload });
+    const response = await POST(createSignupRequest(body));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual(payload);
+    expect(mockedPostBackend).toHaveBeenCalledWith("/auth/google/signup", body, {
+      bearerToken: "signup-token",
+    });
+    expect(response.headers.get("set-cookie")).toBeNull();
+  });
   beforeEach(() => {
     mockedPostBackend.mockReset();
   });

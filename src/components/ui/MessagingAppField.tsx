@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
+  CheckIcon,
   InstagramIcon,
   KakaoTalkIcon,
   LineIcon,
@@ -84,15 +85,15 @@ function getSelectorClassName(variant: MessagingVariant, singleRowOnDesktop: boo
 
 function getOptionClassName(variant: MessagingVariant, isSelected: boolean, index: number) {
   const base =
-    "focus-border-only flex items-center gap-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary/30";
+    "focus-border-only flex items-center text-left transition-colors focus-visible:ring-2 focus-visible:ring-primary/30";
   if (variant === "cards") {
     const state = isSelected
-      ? "border-primary bg-primary-soft text-primary-strong"
-      : "border-line-soft bg-canvas-soft text-ink hover:border-line-strong";
-    return `${base} min-h-14 gap-2 rounded-xl border px-3 py-2.5 ${state}`;
+      ? "border-primary text-primary-strong"
+      : "border-line-soft text-muted hover:border-primary hover:text-primary-strong";
+    return `${base} min-h-14 gap-1.5 rounded-xl border bg-canvas-soft px-2 py-2.5 sm:gap-2 sm:px-3 ${state}`;
   }
   const divider = index > 0 ? "border-t border-line-soft" : "";
-  return `${base} px-4 py-3.5 hover:bg-primary-soft/60 ${divider}`;
+  return `${base} gap-3 px-4 py-3.5 hover:bg-primary-soft/60 ${divider}`;
 }
 
 interface MessagingAppSelectorProps {
@@ -121,6 +122,7 @@ function MessagingAppSelector({
   return (
     <div
       data-testid="messaging-app-options"
+      data-messaging-layout={variant}
       className={getSelectorClassName(variant, singleRowOnDesktop)}
     >
       {options.map(({ key, label, Icon }, index) => {
@@ -164,7 +166,19 @@ function MessagingAppSelector({
               </span>
             ) : null}
             {appIcon}
-            <span className="text-sm font-semibold text-inherit">{displayLabel}</span>
+            <span
+              data-messaging-label
+              className={`min-w-0 flex-1 text-sm text-inherit ${variant === "cards" ? "font-normal" : "font-semibold"}`}
+            >
+              {displayLabel}
+            </span>
+            {variant === "cards" && (
+              <CheckIcon
+                data-messaging-check
+                aria-hidden
+                className={`size-3.5 shrink-0 ${isSelected ? "visible" : "invisible"}`}
+              />
+            )}
           </button>
         );
       })}
@@ -217,7 +231,7 @@ function PhoneContactInput({
             onChange={onCountryChange}
             display="dialCode"
             ariaLabel={countryCodeLabel}
-            triggerClassName={`flex items-center gap-2 rounded-xl border border-line-soft py-3 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong ${countryBackground}`}
+            triggerClassName={`flex items-center gap-2 rounded-xl border border-line-soft py-3 pr-3 pl-4 text-base text-ink transition-colors ${variant === "cards" ? "hover:border-primary" : "hover:border-line-strong"} ${countryBackground}`}
           />
         </div>
       )}
@@ -232,7 +246,7 @@ function PhoneContactInput({
         }}
         placeholder={koreanOnly ? koreanPhonePlaceholder : phonePlaceholder}
         aria-label={phoneInputLabel}
-        className={`focus-border-only w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${inputBackground}`}
+        className={`focus-border-only w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${variant === "cards" ? "transition-colors hover:border-primary" : ""} ${inputBackground}`}
       />
     </div>
   );
@@ -280,7 +294,7 @@ function AppIdContactInput({
       onChange={(event) => onContactChange(event.target.value)}
       placeholder={getPlaceholder(appLabel)}
       aria-label={inputLabel}
-      className={`focus-border-only mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${inputBackground}`}
+      className={`focus-border-only mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${variant === "cards" ? "transition-colors hover:border-primary" : ""} ${inputBackground}`}
     />
   );
 }

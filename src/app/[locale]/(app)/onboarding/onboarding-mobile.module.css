@@ -1,0 +1,71 @@
+/* Only onboarding controls on phones: shared profile controls and desktop stay unchanged. */
+@media (width < 48rem) {
+  .compact button[aria-haspopup="listbox"] {
+    height: 40px;
+    min-height: 40px;
+    padding-block: 8px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .compact input:is([type="text"], [type="tel"], :not([type])) {
+    height: 40px;
+    padding-block: 8px;
+    /* Keep editable text at 16px to avoid focus zoom on iOS. */
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .compact button[aria-pressed] {
+    min-height: 44px;
+    padding-block: 6px;
+  }
+
+  .compact [data-messaging-layout="cards"] button {
+    gap: 2px;
+    padding-inline: 4px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-label] {
+    font-size: 13px;
+    line-height: 20px;
+    white-space: nowrap;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-brand] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-check] {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* Preserve full labels even on the narrowest phone layout. */
+@media (width < 22.5rem) {
+  .compact [data-messaging-layout="cards"] button {
+    gap: 1px;
+    padding-inline: 2px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-label] {
+    font-size: 12px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-brand] {
+    width: 16px;
+    height: 16px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-icon] {
+    width: 14px;
+    height: 14px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-check] {
+    width: 8px;
+    height: 8px;
+  }
+}

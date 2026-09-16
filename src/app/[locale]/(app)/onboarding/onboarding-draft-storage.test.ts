@@ -33,6 +33,19 @@ afterEach(() => {
 });
 
 describe("onboarding draft storage", () => {
+  it("does not persist extra bank fields even if a caller passes them at runtime", async () => {
+    saveOnboardingDraft("signup:BUDDY:privacy", {
+      ...snapshot,
+      bankName: "SHINHAN",
+      bankAccountNumber: "001234567890",
+    } as OnboardingDraftSnapshot);
+    const raw = window.sessionStorage.getItem("hanbuddy:onboarding-draft:signup:BUDDY:privacy");
+    expect(raw).not.toContain("001234567890");
+    expect(raw).not.toContain("bankName");
+    expect(await loadOnboardingDraft("signup:BUDDY:privacy")).not.toHaveProperty(
+      "bankAccountNumber",
+    );
+  });
   it.each(["kakaotalk", "instagram", "line", "wechat"] as const)(
     "restores %s from session storage without changing its meaning",
     async (messagingApp) => {

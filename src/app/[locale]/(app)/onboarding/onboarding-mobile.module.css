@@ -20,4 +20,52 @@
     min-height: 44px;
     padding-block: 6px;
   }
+
+  .compact [data-messaging-layout="cards"] button {
+    gap: 2px;
+    padding-inline: 4px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-label] {
+    font-size: 13px;
+    line-height: 20px;
+    white-space: nowrap;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-brand] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-check] {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* Preserve full labels even on the narrowest phone layout. */
+@media (width < 22.5rem) {
+  .compact [data-messaging-layout="cards"] button {
+    gap: 1px;
+    padding-inline: 2px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-label] {
+    font-size: 12px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-brand] {
+    width: 16px;
+    height: 16px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-icon] {
+    width: 14px;
+    height: 14px;
+  }
+
+  .compact [data-messaging-layout="cards"] [data-messaging-check] {
+    width: 8px;
+    height: 8px;
+  }
 }

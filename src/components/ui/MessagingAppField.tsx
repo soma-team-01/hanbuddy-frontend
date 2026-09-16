@@ -122,6 +122,7 @@ function MessagingAppSelector({
   return (
     <div
       data-testid="messaging-app-options"
+      data-messaging-layout={variant}
       className={getSelectorClassName(variant, singleRowOnDesktop)}
     >
       {options.map(({ key, label, Icon }, index) => {
@@ -166,12 +167,14 @@ function MessagingAppSelector({
             ) : null}
             {appIcon}
             <span
+              data-messaging-label
               className={`min-w-0 flex-1 text-sm text-inherit ${variant === "cards" ? "font-normal" : "font-semibold"}`}
             >
               {displayLabel}
             </span>
             {variant === "cards" && (
               <CheckIcon
+                data-messaging-check
                 aria-hidden
                 className={`size-3.5 shrink-0 ${isSelected ? "visible" : "invisible"}`}
               />

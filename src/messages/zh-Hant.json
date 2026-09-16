@@ -695,6 +695,17 @@
     "noneForRating": "尚未有此評級的評論。",
     "ratingWithCountAria": "額定 {rating} 滿分 5 來自 {count, plural, one {# 評論} other {# 評論}}"
   },
+  "AlternativePayment": {
+    "trigger": "需要其他付款方式？",
+    "title": "想使用其他付款方式？",
+    "description": "請告知您想參加的體驗、日期、時間和人數。我們會為您介紹可用的付款方式及後續流程。",
+    "message": "您好！我想使用其他付款方式參加。\n體驗：{activity}\n日期與時間：{schedule}\n參加人數：{guests}人",
+    "scheduleMissing": "尚未選擇",
+    "copy": "複製諮詢內容",
+    "copied": "已複製。請貼上至您選擇的聯絡管道並傳送。",
+    "copyFailed": "複製失敗。請選取上方內容並手動複製。",
+    "notConfirmed": "僅諮詢並不代表預訂已確認。"
+  },
   "Booking": {
     "title": "預約活動",
     "loading": "正在加載預訂...",

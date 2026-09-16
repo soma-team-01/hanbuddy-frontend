@@ -695,6 +695,17 @@
     "noneForRating": "No reviews with this rating yet.",
     "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
   },
+  "AlternativePayment": {
+    "trigger": "Need another payment method?",
+    "title": "Prefer another payment method?",
+    "description": "Tell us which experience, date, time and number of participants you have in mind. We’ll guide you through the available payment options and next steps.",
+    "message": "Hi! I’d like to join using another payment method.\nExperience: {activity}\nSchedule: {schedule}\nParticipants: {guests}",
+    "scheduleMissing": "Not selected yet",
+    "copy": "Copy inquiry",
+    "copied": "Copied. Paste it into your preferred channel and send.",
+    "copyFailed": "Could not copy. Please select and copy the message above.",
+    "notConfirmed": "An inquiry does not confirm your booking."
+  },
   "Booking": {
     "title": "Book activity",
     "loading": "Loading booking...",

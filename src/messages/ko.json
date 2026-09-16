@@ -695,6 +695,17 @@
     "noneForRating": "해당 별점의 후기가 아직 없습니다.",
     "ratingWithCountAria": "{count, plural, other {후기 #개 기준 5점 만점에 {rating}점}}"
   },
+  "AlternativePayment": {
+    "trigger": "다른 결제 방법이 필요하신가요?",
+    "title": "다른 결제 방법을 원하시나요?",
+    "description": "참여하고 싶은 체험과 날짜·시간, 인원을 알려주세요. 가능한 결제 방법과 진행 절차를 안내해 드릴게요.",
+    "message": "안녕하세요! 다른 결제 방법으로 참여하고 싶어요.\n체험: {activity}\n일정: {schedule}\n인원: {guests}명",
+    "scheduleMissing": "아직 선택하지 않았어요",
+    "copy": "문의 내용 복사",
+    "copied": "복사했어요. 원하는 채널에 붙여 넣어 보내주세요.",
+    "copyFailed": "복사하지 못했어요. 위 문의 내용을 직접 선택해 복사해 주세요.",
+    "notConfirmed": "문의만으로 예약이 확정되지는 않아요."
+  },
   "Booking": {
     "title": "액티비티 예약",
     "loading": "예약 정보를 불러오는 중...",

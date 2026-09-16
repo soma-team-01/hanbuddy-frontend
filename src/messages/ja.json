@@ -695,6 +695,17 @@
     "noneForRating": "この評価のレビューはまだありません。",
     "ratingWithCountAria": "評価済み {rating} 5つ中から {count, plural, one {# レビュー} other {# レビュー}}"
   },
+  "AlternativePayment": {
+    "trigger": "他のお支払い方法をご希望ですか？",
+    "title": "他のお支払い方法について",
+    "description": "ご希望の体験、日時、参加人数をお知らせください。ご利用可能なお支払い方法とお手続きをご案内します。",
+    "message": "こんにちは。他の支払い方法で参加を希望しています。\n体験: {activity}\n日時: {schedule}\n参加人数: {guests}名",
+    "scheduleMissing": "未選択",
+    "copy": "問い合わせ内容をコピー",
+    "copied": "コピーしました。ご希望の連絡先に貼り付けて送信してください。",
+    "copyFailed": "コピーできませんでした。上のメッセージを選択してコピーしてください。",
+    "notConfirmed": "お問い合わせだけでは予約は確定しません。"
+  },
   "Booking": {
     "title": "書籍活動",
     "loading": "予約を読み込んでいます...",

@@ -695,6 +695,17 @@
     "noneForRating": "尚未有此评级的评论。",
     "ratingWithCountAria": "额定 {rating} 满分 5 来自 {count, plural, one {# 评论} other {# 评论}}"
   },
+  "AlternativePayment": {
+    "trigger": "需要其他付款方式？",
+    "title": "想使用其他付款方式？",
+    "description": "请告知您想参加的体验、日期、时间和人数。我们会为您介绍可用的付款方式及后续流程。",
+    "message": "您好！我想使用其他付款方式参加。\n体验：{activity}\n日期与时间：{schedule}\n参加人数：{guests}人",
+    "scheduleMissing": "尚未选择",
+    "copy": "复制咨询内容",
+    "copied": "已复制。请粘贴到您选择的联系渠道并发送。",
+    "copyFailed": "复制失败。请选中上方内容并手动复制。",
+    "notConfirmed": "仅咨询并不代表预订已确认。"
+  },
   "Booking": {
     "title": "预订活动",
     "loading": "正在加载预订...",

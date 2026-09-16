@@ -70,19 +70,19 @@ export function validateSignupSource(draft: SignupExtraDraft): SignupExtraError 
   if (!draft.signupSource) return { field: "source", key: "sourceRequired" };
   if (!isSignupSource(draft.signupSource)) return { field: "source", key: "sourceInvalid" };
   if (draft.signupSource === "OTHER") {
-    if (!draft.signupSourceDetail.trim()) return { field: "source", key: "sourceDetailRequired" };
-    if (draft.signupSourceDetail.length > 100)
-      return { field: "source", key: "sourceDetailTooLong" };
+    const detail = draft.signupSourceDetail.trim();
+    if (!detail) return { field: "source", key: "sourceDetailRequired" };
+    if (detail.length > 100) return { field: "source", key: "sourceDetailTooLong" };
   }
   return null;
 }
 export function validateSignupBank(draft: SignupExtraDraft, role: string): SignupExtraError | null {
   if (role !== "BUDDY") return null;
-  const hasAccount = Boolean(draft.bankAccountNumber.trim());
-  if (!draft.bankName || !hasAccount) return { field: "bank", key: "bankPair" };
+  const accountNumber = draft.bankAccountNumber.trim();
+  if (!draft.bankName || !accountNumber) return { field: "bank", key: "bankPair" };
   if (!isBankName(draft.bankName)) return { field: "bank", key: "bankInvalid" };
-  if (draft.bankAccountNumber.length > 50) return { field: "bank", key: "bankLength" };
-  if (!/^[0-9 -]+$/.test(draft.bankAccountNumber) || !/[0-9]/.test(draft.bankAccountNumber))
+  if (accountNumber.length > 50) return { field: "bank", key: "bankLength" };
+  if (!/^[0-9 -]+$/.test(accountNumber) || !/[0-9]/.test(accountNumber))
     return { field: "bank", key: "bankFormat" };
   return null;
 }
@@ -93,17 +93,17 @@ export function validateSignupExtra(
   return validateSignupSource(draft) ?? validateSignupBank(draft, role);
 }
 export function buildSignupExtra(draft: SignupExtraDraft, role: string) {
+  const detail = draft.signupSourceDetail.trim();
+  const accountNumber = draft.bankAccountNumber.trim();
   return {
     ...(isSignupSource(draft.signupSource)
       ? {
           signupSource: draft.signupSource,
-          ...(draft.signupSource === "OTHER"
-            ? { signupSourceDetail: draft.signupSourceDetail.trim() }
-            : {}),
+          ...(draft.signupSource === "OTHER" ? { signupSourceDetail: detail } : {}),
         }
       : {}),
-    ...(role === "BUDDY" && isBankName(draft.bankName) && draft.bankAccountNumber.trim()
-      ? { bankName: draft.bankName, bankAccountNumber: draft.bankAccountNumber.trim() }
+    ...(role === "BUDDY" && isBankName(draft.bankName) && accountNumber
+      ? { bankName: draft.bankName, bankAccountNumber: accountNumber }
       : {}),
   };
 }

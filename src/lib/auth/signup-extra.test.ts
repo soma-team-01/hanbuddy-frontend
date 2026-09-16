@@ -77,6 +77,48 @@ describe("required signup source and buddy bank account", () => {
     });
     expect(buildSignupExtra(draft, "TOURIST")).toEqual({ signupSource: "FRIEND" });
   });
+  it.each([" ", "\t", "\n", "\u00a0"])(
+    "validates and sends the same trimmed boundary values with surrounding %j",
+    (padding) => {
+      const signupSourceDetail = "가".repeat(100);
+      const bankAccountNumber = "0".repeat(50);
+      const draft = {
+        signupSource: "OTHER",
+        signupSourceDetail: `${padding}${signupSourceDetail}${padding}`,
+        bankName: "SHINHAN",
+        bankAccountNumber: `${padding}${bankAccountNumber}${padding}`,
+      };
+      expect(validateSignupExtra(draft, "TOURIST")).toBeNull();
+      expect(validateSignupExtra(draft, "BUDDY")).toBeNull();
+      expect(buildSignupExtra(draft, "BUDDY")).toEqual({
+        signupSource: "OTHER",
+        signupSourceDetail,
+        bankName: "SHINHAN",
+        bankAccountNumber,
+      });
+      expect(
+        validateSignupExtra({ ...draft, signupSourceDetail: ` ${"가".repeat(101)} ` }, "BUDDY"),
+      ).toEqual({ field: "source", key: "sourceDetailTooLong" });
+      expect(
+        validateSignupExtra({ ...draft, bankAccountNumber: ` ${"0".repeat(51)} ` }, "BUDDY"),
+      ).toEqual({ field: "bank", key: "bankLength" });
+    },
+  );
+  it("trims surrounding whitespace without changing account separators or leading zeroes", () => {
+    const draft = { ...empty, bankName: "SHINHAN", bankAccountNumber: "\t 001-234 567890 \n" };
+    expect(validateSignupExtra(draft, "BUDDY")).toBeNull();
+    expect(buildSignupExtra(draft, "BUDDY").bankAccountNumber).toBe("001-234 567890");
+    expect(validateSignupExtra({ ...draft, bankAccountNumber: "\t \n" }, "BUDDY")).toEqual({
+      field: "bank",
+      key: "bankPair",
+    });
+    expect(
+      validateSignupExtra(
+        { ...draft, signupSource: "OTHER", signupSourceDetail: "\t \n" },
+        "BUDDY",
+      ),
+    ).toEqual({ field: "source", key: "sourceDetailRequired" });
+  });
   it.each([
     { bankName: "", bankAccountNumber: "" },
     { bankName: "", bankAccountNumber: "   " },

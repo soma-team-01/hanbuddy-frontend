@@ -2,19 +2,13 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { InstagramIcon, KakaoTalkIcon, WhatsAppIcon, XIcon } from "@/components/ui/icons";
+import { InstagramIcon, KakaoTalkIcon, MailIcon, WhatsAppIcon, XIcon } from "@/components/ui/icons";
 import { CONTACT_DETAILS } from "@/lib/contact-details";
 
-/** Inquiry only: opening, copying and following a channel never create a booking or payment. */
+/** Inquiry only: opening and following a channel never create a booking or payment. */
 export function AlternativePaymentDialog({
-  activityTitle,
-  scheduleLabel,
-  guests,
   onClose,
 }: Readonly<{
-  activityTitle: string;
-  scheduleLabel: string | null;
-  guests: number;
   onClose: () => void;
 }>) {
   const t = useTranslations("AlternativePayment");
@@ -24,11 +18,7 @@ export function AlternativePaymentDialog({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const message = t("message", {
-    activity: activityTitle,
-    schedule: scheduleLabel ? `${scheduleLabel} (KST)` : t("scheduleMissing"),
-    guests,
-  });
+  const message = t("message");
   const channels = [
     {
       name: "WhatsApp",
@@ -37,6 +27,7 @@ export function AlternativePaymentDialog({
     },
     { name: "KakaoTalk", Icon: KakaoTalkIcon, href: CONTACT_DETAILS.kakaoUrl },
     { name: "Instagram", Icon: InstagramIcon, href: CONTACT_DETAILS.instagramUrl },
+    { name: t("email"), Icon: MailIcon, href: `mailto:${CONTACT_DETAILS.email}` },
   ];
 
   useEffect(() => {
@@ -53,7 +44,7 @@ export function AlternativePaymentDialog({
     };
   }, []);
 
-  async function copyInquiry() {
+  async function copyTemplate() {
     try {
       await navigator.clipboard.writeText(message);
       setCopyState("copied");
@@ -101,6 +92,8 @@ export function AlternativePaymentDialog({
             {t("description")}
           </p>
           <div className="mt-5 rounded-xl border border-line-soft p-4">
+            <h3 className="text-sm font-semibold">{t("exampleTitle")}</h3>
+            <p className="mt-1 mb-3 text-xs leading-5 text-muted">{t("exampleHint")}</p>
             <p
               data-testid="payment-inquiry-message"
               className="text-sm leading-6 break-words whitespace-pre-line select-text"
@@ -109,7 +102,7 @@ export function AlternativePaymentDialog({
             </p>
             <button
               type="button"
-              onClick={() => void copyInquiry()}
+              onClick={() => void copyTemplate()}
               className="mt-3 min-h-11 w-full rounded-lg border border-primary px-3 text-sm font-semibold text-primary-strong transition-colors hover:border-primary-hover hover:text-primary-hover"
             >
               {t("copy")}
@@ -120,7 +113,7 @@ export function AlternativePaymentDialog({
               </p>
             )}
           </div>
-          <div className="mt-5 grid grid-cols-3 gap-2">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {channels.map(({ name, Icon, href }) => (
               <a
                 key={name}

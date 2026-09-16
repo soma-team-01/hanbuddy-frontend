@@ -605,14 +605,7 @@ export function BookingForm({
         </main>
       </PageContainer>
 
-      {inquiryOpen && (
-        <AlternativePaymentDialog
-          activityTitle={activity.title}
-          scheduleLabel={selectedSession ? sessionSummaryLabel : null}
-          guests={guests}
-          onClose={() => setInquiryOpen(false)}
-        />
-      )}
+      {inquiryOpen && <AlternativePaymentDialog onClose={() => setInquiryOpen(false)} />}
 
       {calendarOpen ? (
         <AvailabilityCalendarDialog

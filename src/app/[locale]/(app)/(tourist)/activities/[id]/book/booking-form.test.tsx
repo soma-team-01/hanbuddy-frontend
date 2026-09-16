@@ -144,7 +144,7 @@ async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
 }
 
 describe("BookingForm", () => {
-  it("opens an inquiry before payment consent with the selected schedule and guest count, without any booking request", () => {
+  it("opens an example inquiry before payment consent without disclosing form data or making a booking request", () => {
     renderWithQueryClient(
       <BookingForm
         activity={{
@@ -165,8 +165,10 @@ describe("BookingForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
     const dialog = screen.getByRole("dialog", { name: "Prefer another payment method?" });
-    expect(dialog).toHaveTextContent("Bukchon Hidden Gems");
-    expect(dialog).toHaveTextContent("2026-07-21 14:00 (KST)");
+    expect(dialog).toHaveTextContent("Example inquiry");
+    expect(dialog).toHaveTextContent("Seoul Forest Walk & Seongsu Cafe Tour");
+    expect(dialog).not.toHaveTextContent("Bukchon Hidden Gems");
+    expect(dialog).not.toHaveTextContent("2026-07-21");
     expect(dialog).toHaveTextContent("Participants: 2");
     expect(dialog).not.toHaveTextContent("Private dietary request");
     expect(mockedCreateApplication).not.toHaveBeenCalled();
@@ -174,7 +176,7 @@ describe("BookingForm", () => {
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
   });
 
-  it("keeps inquiries available when PayPal pricing is missing and makes no schedule up", () => {
+  it("keeps the example inquiry available when pricing and schedules are missing", () => {
     renderWithQueryClient(
       <BookingForm
         activity={{ ...activity, sessions: [], referencePrice: undefined }}
@@ -183,7 +185,7 @@ describe("BookingForm", () => {
     );
     expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
-    expect(screen.getByRole("dialog")).toHaveTextContent("Not selected yet");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Example inquiry");
     expect(mockedCreateApplication).not.toHaveBeenCalled();
   });
 

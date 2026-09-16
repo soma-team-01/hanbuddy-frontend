@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -222,6 +222,49 @@ describe("CreateActivityForm", () => {
     expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
     expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
+  });
+  it("uploads and registers only once after a first click, second click and repeated Enter", async () => {
+    const uploadGate = Promise.withResolvers<void>();
+    const registrationGate = Promise.withResolvers<void>();
+    const uploadImplementation = mockedUploadActivityImageSet.getMockImplementation()!;
+    const registrationImplementation = mockedCreateMyActivity.getMockImplementation()!;
+    mockedUploadActivityImageSet.mockImplementation(async (...args) => {
+      await uploadGate.promise;
+      return uploadImplementation(...args);
+    });
+    mockedCreateMyActivity.mockImplementation(async (...args) => {
+      await registrationGate.promise;
+      return registrationImplementation(...args);
+    });
+
+    renderWithQueryClient(<CreateActivityForm />);
+    await completeAllStepsUntilReview();
+    const submit = screen.getByRole("button", { name: "Register experience" });
+
+    // Keep events in one batch to cover requests queued before disabled is rendered.
+    act(() => {
+      fireEvent.click(submit, { detail: 1 });
+      fireEvent.click(submit, { detail: 2 });
+      for (let repeat = 0; repeat < 3; repeat += 1) {
+        expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
+      }
+      fireEvent.click(submit, { detail: 0 }); // An already queued keyboard activation.
+    });
+    expect(submit).toBeDisabled();
+    expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+
+    await act(async () => uploadGate.resolve());
+    await waitFor(() => expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1));
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit, { detail: 2 });
+    expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
+    expect(routerPush).not.toHaveBeenCalled();
+
+    await act(async () => registrationGate.resolve());
+    await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/en/my-activities"));
+    expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
+    expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1);
   });
   beforeEach(() => {
     createObjectUrlMock.mockClear();

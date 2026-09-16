@@ -825,7 +825,7 @@ export function OnboardingForm({
                     <li
                       key={label}
                       aria-current={isActive ? "step" : undefined}
-                      className="flex min-w-0 items-center gap-2.5"
+                      className="flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2.5 sm:text-left"
                     >
                       <span
                         className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
@@ -837,7 +837,7 @@ export function OnboardingForm({
                         {step}
                       </span>
                       <span
-                        className={`hidden truncate text-xs font-semibold sm:block sm:text-sm ${
+                        className={`min-w-0 text-xs leading-4 font-semibold break-keep sm:text-sm sm:leading-5 ${
                           isActive ? "text-primary-strong" : "text-muted"
                         }`}
                       >
@@ -863,8 +863,8 @@ export function OnboardingForm({
                   </div>
 
                   <div className="mt-8 max-w-2xl space-y-6">
-                    <div className="grid items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
-                      <div className="relative shrink-0">
+                    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-4">
+                      <div className="relative size-16 shrink-0">
                         {profilePhoto}
                         <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
                           <CameraIcon className="size-4" />

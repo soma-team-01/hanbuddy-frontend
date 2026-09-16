@@ -79,6 +79,27 @@ function createRejectedApplication(): BuddyResubmission {
 }
 
 describe("OnboardingForm", () => {
+  it.each(["en", "ko"] as const)(
+    "keeps %s mobile step labels visible and anchors the photo beside the name",
+    (locale) => {
+      renderWithIntl(<OnboardingForm />, { locale });
+      const progress = screen.getByRole("navigation");
+      const labels = Array.from(progress.querySelectorAll("li > span:last-child"));
+      expect(labels).toHaveLength(3);
+      for (const label of labels) {
+        expect(label).not.toHaveClass("hidden", "truncate");
+        expect(label.parentElement).toHaveClass("flex-col", "sm:flex-row");
+      }
+      const photoInput = screen.getByLabelText(
+        locale === "en" ? "Add profile photo" : "프로필 사진 추가",
+      );
+      const photo = photoInput.closest("label")!.parentElement!;
+      expect(photo).toHaveClass("relative", "size-16");
+      expect(photo.parentElement).toHaveClass("grid-cols-[64px_minmax(0,1fr)]");
+      expect(photo.parentElement).not.toHaveClass("sm:grid-cols-[auto_minmax(0,1fr)]");
+    },
+  );
+
   it("does not submit or skip the contact step when Next is clicked twice", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

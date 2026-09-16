@@ -20,15 +20,17 @@ export const LOCALE_OPTIONS = [
 
 export function LocaleSwitcher({
   className,
+  disabled = false,
   dismissMenu = false,
   labelStyle = "short",
   onBeforeLocaleChange,
   variant = "default",
 }: Readonly<{
   className?: string;
+  disabled?: boolean;
   dismissMenu?: boolean;
   labelStyle?: "short" | "name" | "nameWithCode";
-  onBeforeLocaleChange?: () => void;
+  onBeforeLocaleChange?: () => void | boolean;
   variant?: "default" | "footer";
 }>) {
   const locale = useLocale();
@@ -68,9 +70,10 @@ export function LocaleSwitcher({
   }, [isOpen]);
 
   const selectLocale = (nextLocale: Locale) => {
+    if (disabled) return;
     setIsOpen(false);
     if (nextLocale !== locale) {
-      onBeforeLocaleChange?.();
+      if (onBeforeLocaleChange?.() === false) return;
       // usePathname은 쿼리를 뺀 경로만 준다 — ?scheduleId= 같은 파라미터가 유실되지 않게 붙여 준다
       const { search, hash } = window.location;
       router.replace(`${pathname}${search}${hash}`, { locale: nextLocale });
@@ -82,11 +85,12 @@ export function LocaleSwitcher({
       <button
         ref={triggerRef}
         type="button"
+        disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={t("selectLanguage", { language: currentOption.label })}
         onClick={() => setIsOpen((open) => !open)}
-        className={`group inline-flex cursor-pointer items-center gap-2 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+        className={`group inline-flex cursor-pointer items-center gap-2 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-50 ${
           variant === "footer"
             ? "min-h-8 border border-transparent bg-transparent px-0 text-xs font-medium text-muted hover:border-transparent hover:text-primary"
             : "min-h-11 border border-line-soft bg-white px-4 text-sm font-bold text-ink shadow-[0_6px_18px_rgba(38,27,24,0.04)] hover:border-primary hover:text-primary-strong focus-visible:border-primary"
@@ -118,12 +122,13 @@ export function LocaleSwitcher({
               <button
                 key={option.code}
                 type="button"
+                disabled={disabled}
                 role="menuitemradio"
                 aria-checked={isSelected}
                 aria-label={option.label}
                 data-menu-dismiss={dismissMenu || undefined}
                 onClick={() => selectLocale(option.code)}
-                className={`flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-3 py-2 text-left text-xs transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary ${
+                className={`flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-3 py-2 text-left text-xs transition-colors hover:bg-primary-soft/60 focus-visible:outline-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-50 ${
                   isSelected ? "font-semibold text-primary-strong" : "font-medium text-ink"
                 }`}
               >

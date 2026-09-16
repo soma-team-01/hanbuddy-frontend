@@ -27,7 +27,7 @@ export function SignupExtraFields({
   const t = useTranslations("SignupExtra");
   const id = useId();
   return (
-    <div className="mt-8 max-w-3xl space-y-8 border-t border-line-soft pt-6">
+    <div className="mt-8 max-w-3xl space-y-8 border-t border-line-soft pt-6 max-md:mt-4 max-md:space-y-4 max-md:pt-4">
       {section === "source" && (
         <fieldset className="min-w-0 space-y-3">
           <legend className="text-sm font-medium text-ink">{t("sourceLabel")}</legend>
@@ -47,7 +47,7 @@ export function SignupExtraFields({
                   aria-describedby={error?.field === "source" ? `${id}-source-error` : undefined}
                   className="peer sr-only"
                 />
-                <span className="flex h-full min-h-11 items-center justify-between gap-2 rounded-xl border border-line-soft bg-white px-3 py-2 text-sm text-muted transition-colors peer-checked:border-primary peer-checked:text-primary-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-primary hover:text-primary-strong">
+                <span className="flex h-full min-h-11 items-center justify-between gap-2 rounded-xl border border-line-soft bg-white px-3 py-2 text-sm text-muted transition-colors peer-checked:border-primary peer-checked:text-primary-strong peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-primary hover:text-primary-strong max-md:min-h-10 max-md:py-1.5">
                   <span>{t(`sources.${source}`)}</span>
                   <CheckIcon
                     aria-hidden

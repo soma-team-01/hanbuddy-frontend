@@ -79,6 +79,20 @@ function createRejectedApplication(): BuddyResubmission {
 }
 
 describe("OnboardingForm", () => {
+  it("limits compact header and form spacing to mobile breakpoints", () => {
+    renderWithIntl(<OnboardingForm />);
+    const close = screen.getByRole("link", { name: "Close" });
+    expect(close).toHaveClass("size-10", "max-md:size-8");
+    expect(close.parentElement).toHaveClass("max-md:grid-cols-[32px_minmax(0,1fr)]");
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title).toHaveClass("max-md:col-span-2", "max-md:mt-0");
+    expect(title.parentElement).toHaveClass("max-md:contents");
+    expect(screen.getByRole("heading", { name: "About you" })).toHaveClass(
+      "text-xl",
+      "max-md:text-base",
+    );
+  });
+
   it.each(["en", "ko"] as const)(
     "keeps %s mobile step labels visible and anchors the photo beside the name",
     (locale) => {

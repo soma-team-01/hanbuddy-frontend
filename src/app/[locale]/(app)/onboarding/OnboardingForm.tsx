@@ -68,6 +68,7 @@ import {
 import { BirthDatePicker } from "./BirthDatePicker";
 import { ONBOARDING_SELECT_TRIGGER } from "@/app/[locale]/(app)/onboarding/onboarding-field-styles";
 import { isValidBirthDate } from "./birth-date";
+import mobileStyles from "./onboarding-mobile.module.css";
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
 type OnboardingErrorKey =
@@ -654,13 +655,13 @@ export function OnboardingForm({
   }
 
   let profilePhoto = (
-    <div className="flex size-16 items-center justify-center rounded-2xl border border-line-soft bg-canvas-soft ring-4 ring-primary-soft">
+    <div className="flex size-16 items-center justify-center rounded-2xl border border-line-soft bg-canvas-soft ring-4 ring-primary-soft max-md:size-14">
       <Image
         src="/images/brand/logo-borderless.webp"
         alt={t("defaultProfilePhoto")}
         width={40}
         height={40}
-        className="size-10 object-contain"
+        className="size-10 object-contain max-md:size-8"
       />
     </div>
   );
@@ -672,7 +673,7 @@ export function OnboardingForm({
         width={64}
         height={64}
         unoptimized
-        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft max-md:size-14"
       />
     );
   } else if (existingProfileImageUrl) {
@@ -683,7 +684,7 @@ export function OnboardingForm({
         width={64}
         height={64}
         unoptimized
-        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft max-md:size-14"
       />
     );
   }
@@ -775,23 +776,23 @@ export function OnboardingForm({
       ];
 
   return (
-    <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
-      <main className="flex-1 py-3 md:py-4">
+    <div className={`${mobileStyles.compact} flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0`}>
+      <main className="flex-1 py-3 max-md:py-2 md:py-4">
         <PageContainer>
-          <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4">
+          <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4 max-md:mt-0 max-md:grid-cols-[32px_minmax(0,1fr)] max-md:gap-x-2 max-md:gap-y-1">
             <Link
               href={getOnboardingBackHref(isResubmission, isBuddyFlow)}
               aria-label={accessibilityT("close")}
               onNavigate={discardDraft}
-              className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+              className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong max-md:size-8"
             >
-              <XIcon className="size-5" />
+              <XIcon className="size-5 max-md:size-4" />
             </Link>
-            <header className="min-w-0 pt-1 text-left">
-              <p className="font-display text-[11px] font-bold tracking-[0.22em] text-primary uppercase">
+            <header className="min-w-0 pt-1 text-left max-md:contents">
+              <p className="font-display text-[11px] font-bold tracking-[0.22em] text-primary uppercase max-md:self-center max-md:tracking-[0.16em]">
                 {roleCopy.eyebrow}
               </p>
-              <h1 className="mt-1.5 font-display text-xl leading-tight font-extrabold tracking-[-0.03em] text-ink md:text-2xl lg:whitespace-nowrap">
+              <h1 className="mt-1.5 font-display text-xl leading-tight font-extrabold tracking-[-0.03em] text-ink max-md:col-span-2 max-md:mt-0 max-md:text-lg md:text-2xl lg:whitespace-nowrap">
                 {roleCopy.headline}
               </h1>
             </header>
@@ -805,11 +806,11 @@ export function OnboardingForm({
             onKeyDownCapture={(event) => {
               if (event.key === "Enter" && event.repeat) event.preventDefault();
             }}
-            className={`mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft lg:grid-cols-[250px_minmax(0,1fr)] ${currentStep === 3 ? "" : "lg:min-h-[620px]"}`}
+            className={`mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft max-md:mt-3 max-md:rounded-[20px] lg:grid-cols-[250px_minmax(0,1fr)] ${currentStep === 3 ? "" : "lg:min-h-[620px]"}`}
           >
             <nav
               aria-label={t("steps.progress", { current: currentStep, total: stepLabels.length })}
-              className="border-b border-line-soft px-5 py-4 lg:border-r lg:border-b-0 lg:px-8 lg:py-12"
+              className="border-b border-line-soft px-5 py-4 max-md:px-3 max-md:py-2.5 lg:border-r lg:border-b-0 lg:px-8 lg:py-12"
             >
               <p className="mb-4 hidden text-xs font-bold tracking-[0.18em] text-primary uppercase lg:block">
                 {t("steps.progress", { current: currentStep, total: stepLabels.length })}
@@ -828,7 +829,7 @@ export function OnboardingForm({
                       className="flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2.5 sm:text-left"
                     >
                       <span
-                        className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold max-md:size-6 ${
                           isActive || isComplete
                             ? "border-primary bg-primary text-on-primary"
                             : "border-line-strong bg-canvas-soft text-muted"
@@ -851,22 +852,22 @@ export function OnboardingForm({
 
             <div className="flex min-w-0 flex-col">
               {currentStep === 1 ? (
-                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                <section className="px-5 py-8 max-md:px-4 max-md:py-4 md:px-12 md:py-10 lg:px-16 lg:py-14">
                   <div>
                     <h2
                       ref={stepHeadingRef}
                       tabIndex={-1}
-                      className="font-display text-xl font-bold text-ink outline-none"
+                      className="font-display text-xl font-bold text-ink outline-none max-md:text-base"
                     >
                       {t("personalInformation")}
                     </h2>
                   </div>
 
-                  <div className="mt-8 max-w-2xl space-y-6">
-                    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-4">
-                      <div className="relative size-16 shrink-0">
+                  <div className="mt-8 max-w-2xl space-y-6 max-md:mt-4 max-md:space-y-4">
+                    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-4 max-md:grid-cols-[56px_minmax(0,1fr)]">
+                      <div className="relative size-16 shrink-0 max-md:size-14">
                         {profilePhoto}
-                        <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
+                        <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover max-md:size-7">
                           <CameraIcon className="size-4" />
                           <span className="sr-only">{t("addProfilePhoto")}</span>
                           <input
@@ -921,7 +922,10 @@ export function OnboardingForm({
                       </div>
                     </div>
 
-                    <div data-testid="onboarding-personal-fields" className="grid gap-4">
+                    <div
+                      data-testid="onboarding-personal-fields"
+                      className="grid gap-4 max-md:gap-3"
+                    >
                       <div className="flex flex-col gap-1.5">
                         <span className="text-sm font-medium text-ink">{t("nationality")}</span>
                         <CountrySelect
@@ -982,17 +986,17 @@ export function OnboardingForm({
               ) : null}
 
               {currentStep === 2 ? (
-                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                <section className="px-5 py-8 max-md:px-4 max-md:py-4 md:px-12 md:py-10 lg:px-16 lg:py-14">
                   <div>
                     <h2
                       ref={stepHeadingRef}
                       tabIndex={-1}
-                      className="font-display text-xl font-bold text-ink outline-none"
+                      className="font-display text-xl font-bold text-ink outline-none max-md:text-base"
                     >
                       {roleCopy.contactMethods}
                     </h2>
                   </div>
-                  <div className="mt-8 flex max-w-3xl flex-col gap-1.5">
+                  <div className="mt-8 flex max-w-3xl flex-col gap-1.5 max-md:mt-4">
                     <span className="text-sm font-medium text-ink">
                       {isBuddyFlow ? messagingT("phoneNumber") : t("preferredMessagingApp")}
                     </span>
@@ -1025,13 +1029,13 @@ export function OnboardingForm({
               ) : null}
 
               {!isResubmission && currentStep === 3 ? (
-                <section className="px-5 py-6 md:px-12 md:py-8 lg:px-16">
+                <section className="px-5 py-6 max-md:px-4 max-md:py-4 md:px-12 md:py-8 lg:px-16">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2
                         ref={stepHeadingRef}
                         tabIndex={-1}
-                        className="font-display text-xl font-bold text-ink outline-none"
+                        className="font-display text-xl font-bold text-ink outline-none max-md:text-base"
                       >
                         {t("agreements.title")}
                       </h2>
@@ -1047,11 +1051,14 @@ export function OnboardingForm({
                     </label>
                   </div>
 
-                  <div className="mt-5 max-w-3xl divide-y divide-line-soft border-y border-line-soft">
+                  <div className="mt-5 max-w-3xl divide-y divide-line-soft border-y border-line-soft max-md:mt-3">
                     {agreementItems.map((item) => {
                       const isRequired = requiredAgreementTypes.includes(item.type);
                       return (
-                        <div key={item.type} className="flex items-center gap-2 py-1.5">
+                        <div
+                          key={item.type}
+                          className="flex items-center gap-2 py-1.5 max-md:py-0.5"
+                        >
                           <label className="flex size-11 shrink-0 cursor-pointer items-center justify-center">
                             <input
                               type="checkbox"

@@ -5,6 +5,8 @@
     "bankTitle": "銀行帳戶",
     "bankLabel": "銀行",
     "bankPlaceholder": "選擇銀行",
+    "bankSearch": "搜尋銀行",
+    "bankNoResults": "找不到相關銀行。",
     "accountLabel": "銀行帳號",
     "sources": {
       "MEETUP": "Meetup",

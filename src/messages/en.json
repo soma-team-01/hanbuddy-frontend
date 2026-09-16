@@ -5,6 +5,8 @@
     "bankTitle": "Bank account",
     "bankLabel": "Bank",
     "bankPlaceholder": "Select bank",
+    "bankSearch": "Search bank",
+    "bankNoResults": "No banks found.",
     "accountLabel": "Account number",
     "sources": {
       "MEETUP": "Meetup",

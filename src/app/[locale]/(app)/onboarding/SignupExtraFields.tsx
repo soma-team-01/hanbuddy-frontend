@@ -4,12 +4,11 @@ import { useId } from "react";
 import { useTranslations } from "next-intl";
 import { CheckIcon } from "@/components/ui/icons";
 import {
-  BANKS,
   SIGNUP_SOURCES,
   type SignupExtraDraft,
   type SignupExtraError,
 } from "@/lib/auth/signup-extra";
-import { OnboardingSelect } from "./OnboardingSelect";
+import { BankSelect } from "./BankSelect";
 
 const INPUT =
   "focus-border-only h-[50px] w-full min-w-0 rounded-xl border border-line-soft bg-white px-4 text-base text-ink outline-none transition-colors hover:border-primary focus:border-primary";
@@ -86,14 +85,8 @@ export function SignupExtraFields({
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
             <div className="space-y-1.5">
               <p className="text-sm text-muted">{t("bankLabel")}</p>
-              <OnboardingSelect
-                required
-                label={t("bankLabel")}
+              <BankSelect
                 value={value.bankName}
-                options={[
-                  { value: "", label: t("bankPlaceholder") },
-                  ...Object.entries(BANKS).map(([bank, label]) => ({ value: bank, label })),
-                ]}
                 onChange={(bankName) => onChange({ ...value, bankName })}
                 invalid={error?.field === "bank"}
                 describedBy={error?.field === "bank" ? `${id}-bank-error` : undefined}

@@ -5,6 +5,8 @@
     "bankTitle": "银行账户",
     "bankLabel": "银行",
     "bankPlaceholder": "选择银行",
+    "bankSearch": "搜索银行",
+    "bankNoResults": "未找到相关银行。",
     "accountLabel": "银行账号",
     "sources": {
       "MEETUP": "Meetup",

@@ -1,10 +1,73 @@
 import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import { expect, it } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import en from "@/messages/en.json";
 import { type SignupExtraError, validateSignupExtra } from "@/lib/auth/signup-extra";
 import { SignupExtraFields } from "./SignupExtraFields";
+
+beforeEach(() => {
+  Element.prototype.scrollIntoView = vi.fn();
+});
+
+it("searches bank names without changing the selection until a result is chosen", () => {
+  render(<Fields isBuddy />);
+  const trigger = screen.getByRole("combobox", { name: "Bank" });
+  fireEvent.click(trigger);
+  const search = screen.getByRole("combobox", { name: "Search bank" });
+  expect(search).toHaveFocus();
+  expect(screen.getAllByRole("option")).toHaveLength(28);
+  fireEvent.change(search, { target: { value: " 신 한 " } });
+  expect(screen.getAllByRole("option")).toHaveLength(1);
+  expect(trigger).toHaveValue("");
+  fireEvent.keyDown(search, { key: "Enter", isComposing: true });
+  expect(trigger).toHaveValue("");
+  fireEvent.keyDown(search, { key: "Enter" });
+  expect(trigger).toHaveValue("SHINHAN");
+  expect(trigger).toHaveFocus();
+  expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  fireEvent.click(trigger);
+  expect(screen.getByRole("combobox", { name: "Search bank" })).toHaveValue("");
+  expect(screen.getByRole("option", { name: "신한은행" })).toHaveAttribute("aria-selected", "true");
+  fireEvent.change(screen.getByRole("combobox", { name: "Search bank" }), {
+    target: { value: "kb" },
+  });
+  fireEvent.click(screen.getByRole("option", { name: "KB국민은행" }));
+  expect(trigger).toHaveValue("KB");
+});
+
+it("handles empty search, keyboard navigation and dismissal without clearing the bank", () => {
+  render(<Fields isBuddy />);
+  const trigger = screen.getByRole("combobox", { name: "Bank" });
+  fireEvent.keyDown(trigger, { key: "ArrowDown" });
+  let search = screen.getByRole("combobox", { name: "Search bank" });
+  fireEvent.change(search, { target: { value: "수협" } });
+  fireEvent.keyDown(search, { key: "ArrowDown" });
+  expect(search).toHaveAttribute(
+    "aria-activedescendant",
+    screen.getByRole("option", { name: "수협중앙회" }).id,
+  );
+  fireEvent.keyDown(search, { key: "Enter" });
+  expect(trigger).toHaveValue("SUHYUP_CENTRAL");
+  fireEvent.click(trigger);
+  search = screen.getByRole("combobox", { name: "Search bank" });
+  fireEvent.change(search, { target: { value: "nonexistent" } });
+  expect(screen.queryByRole("option")).not.toBeInTheDocument();
+  expect(screen.getByRole("status")).toHaveTextContent("No banks found.");
+  expect(search).not.toHaveAttribute("aria-activedescendant");
+  fireEvent.keyDown(search, { key: "Enter" });
+  expect(trigger).toHaveValue("SUHYUP_CENTRAL");
+  fireEvent.keyDown(search, { key: "Escape" });
+  expect(trigger).toHaveFocus();
+  expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  fireEvent.click(trigger);
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Search bank" }), { key: "Tab" });
+  expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  fireEvent.click(trigger);
+  fireEvent.pointerDown(document.body);
+  expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  expect(trigger).toHaveValue("SUHYUP_CENTRAL");
+});
 
 function Fields({ isBuddy = false }: { isBuddy?: boolean }) {
   const [value, onChange] = useState({

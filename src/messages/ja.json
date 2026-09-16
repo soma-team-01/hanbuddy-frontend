@@ -5,6 +5,8 @@
     "bankTitle": "銀行口座",
     "bankLabel": "銀行",
     "bankPlaceholder": "銀行を選択",
+    "bankSearch": "銀行を検索",
+    "bankNoResults": "検索結果がありません。",
     "accountLabel": "口座番号",
     "sources": {
       "MEETUP": "Meetup",

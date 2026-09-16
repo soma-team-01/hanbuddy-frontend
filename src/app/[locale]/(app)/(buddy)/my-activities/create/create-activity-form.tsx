@@ -704,6 +704,7 @@ export function CreateActivityForm({
 
     submissionInFlight.current = true;
     setSubmissionPhase("uploading");
+    let submissionSucceeded = false;
     try {
       // 기존 이미지는 발급받았던 key를 그대로 쓰고, 새로 고른 파일만 업로드한다
       const newGalleryFiles = draft.photos
@@ -748,6 +749,7 @@ export function CreateActivityForm({
           initialStatus ?? "ACTIVE",
         ),
       );
+      submissionSucceeded = true;
       clearPreservedDraft();
       router.push(
         isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/my-activities",
@@ -755,8 +757,11 @@ export function CreateActivityForm({
     } catch (error) {
       setSubmissionError({ error, fallbackKey: "submissionFailed" });
     } finally {
-      submissionInFlight.current = false;
-      setSubmissionPhase(null);
+      // router.push returns before unmount. Keep successful saves locked during navigation.
+      if (!submissionSucceeded) {
+        submissionInFlight.current = false;
+        setSubmissionPhase(null);
+      }
     }
   }
 

@@ -263,9 +263,36 @@ describe("CreateActivityForm", () => {
 
     await act(async () => registrationGate.resolve());
     await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/en/my-activities"));
+    // router.push has returned, but the old screen remains mounted until navigation completes.
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit, { detail: 1 });
+    fireEvent.click(submit, { detail: 0 });
+    fireEvent.keyDown(submit, { key: "Enter" });
     expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
     expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1);
+    expect(routerPush).toHaveBeenCalledTimes(1);
   });
+  it.each(["upload", "registration"] as const)(
+    "releases the submission lock after %s failure and allows a successful retry",
+    async (failurePhase) => {
+      if (failurePhase === "upload")
+        mockedUploadActivityImageSet.mockRejectedValueOnce(new Error("upload failed"));
+      else mockedCreateMyActivity.mockRejectedValueOnce(new Error("registration failed"));
+      renderWithQueryClient(<CreateActivityForm />);
+      await completeAllStepsUntilReview();
+      fireEvent.click(screen.getByRole("button", { name: "Register experience" }));
+      expect(await screen.findByRole("alert")).toBeInTheDocument();
+      const retry = screen.getByRole("button", { name: "Register experience" });
+      expect(retry).toBeEnabled();
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(mockedClearActivityCreateDraft).not.toHaveBeenCalled();
+      fireEvent.click(retry);
+      await waitFor(() => expect(routerPush).toHaveBeenCalledTimes(1));
+      expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(2);
+      expect(mockedCreateMyActivity).toHaveBeenCalledTimes(failurePhase === "upload" ? 1 : 2);
+      expect(retry).toBeDisabled();
+    },
+  );
   beforeEach(() => {
     createObjectUrlMock.mockClear();
     revokeObjectUrlMock.mockClear();
@@ -899,7 +926,8 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    const save = screen.getByRole("button", { name: "Save changes" });
+    fireEvent.click(save);
 
     await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
     expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
@@ -933,6 +961,9 @@ describe("CreateActivityForm", () => {
     expect(request).not.toHaveProperty("discountPercent");
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+    expect(save).toBeDisabled();
+    fireEvent.click(save);
+    expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
   });
 
   it("saves from any step in edit mode without walking to the review screen", async () => {
@@ -947,7 +978,8 @@ describe("CreateActivityForm", () => {
       screen.queryByRole("heading", { name: "Preview your experience" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    const save = screen.getByRole("button", { name: "Save changes" });
+    fireEvent.click(save);
 
     await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
     const [calledActivityId, request] = mockedUpdateMyActivity.mock.calls[0];
@@ -955,6 +987,9 @@ describe("CreateActivityForm", () => {
     expect(request).toMatchObject({ title: "Seoul market walk", status: "ACTIVE" });
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+    expect(save).toBeDisabled();
+    fireEvent.click(save);
+    expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
   });
 
   it("keeps the per-step save away from create mode", async () => {

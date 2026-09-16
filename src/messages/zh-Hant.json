@@ -695,6 +695,19 @@
     "noneForRating": "尚未有此評級的評論。",
     "ratingWithCountAria": "額定 {rating} 滿分 5 來自 {count, plural, one {# 評論} other {# 評論}}"
   },
+  "AlternativePayment": {
+    "trigger": "需要其他付款方式？",
+    "title": "想使用其他付款方式？",
+    "description": "請填寫以下資訊並傳送給我們。",
+    "message": "您好！我想使用其他付款方式參加。\nHanBuddy註冊電子郵件：[註冊電子郵件]\n嚮導姓名：[嚮導姓名]\n體驗名稱：首爾林散步與聖水洞咖啡館之旅\n日期與時間：YYYY-MM-DD 14:00 (KST)\n參加人數：2人\n希望的付款方式：匯款至韓國銀行帳戶",
+    "exampleTitle": "諮詢內容範例",
+    "exampleHint": "以下僅為範例。請複製後替換為您的資訊及希望選擇的嚮導、體驗和時間，再傳送給我們。",
+    "copy": "複製範本",
+    "copied": "已複製。請修改內容後透過您選擇的管道傳送。",
+    "copyFailed": "複製失敗。請選取上方範例並手動複製。",
+    "email": "電子郵件",
+    "notConfirmed": "僅諮詢並不代表預訂已確認。"
+  },
   "Booking": {
     "title": "預約活動",
     "loading": "正在加載預訂...",

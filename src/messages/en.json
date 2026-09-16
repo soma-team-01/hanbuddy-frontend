@@ -695,6 +695,19 @@
     "noneForRating": "No reviews with this rating yet.",
     "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
   },
+  "AlternativePayment": {
+    "trigger": "Need another payment method?",
+    "title": "Prefer another payment method?",
+    "description": "Fill in the details below and send them to us.",
+    "message": "Hi! I’d like to join using another payment method.\nHanBuddy sign-up email: [your email]\nBuddy: [buddy name]\nExperience: Seoul Forest Walk & Seongsu Cafe Tour\nSchedule: YYYY-MM-DD 14:00 (KST)\nParticipants: 2\nPreferred payment method: Transfer to a Korean bank account",
+    "exampleTitle": "Example inquiry",
+    "exampleHint": "This is an example. Copy it and replace the details with your own information and preferred buddy, experience and schedule before sending.",
+    "copy": "Copy template",
+    "copied": "Copied. Edit the details, then send it through your preferred channel.",
+    "copyFailed": "Could not copy. Please select and copy the example above.",
+    "email": "Email",
+    "notConfirmed": "An inquiry does not confirm your booking."
+  },
   "Booking": {
     "title": "Book activity",
     "loading": "Loading booking...",

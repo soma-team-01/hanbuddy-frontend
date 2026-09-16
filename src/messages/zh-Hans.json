@@ -695,6 +695,19 @@
     "noneForRating": "尚未有此评级的评论。",
     "ratingWithCountAria": "额定 {rating} 满分 5 来自 {count, plural, one {# 评论} other {# 评论}}"
   },
+  "AlternativePayment": {
+    "trigger": "需要其他付款方式？",
+    "title": "想使用其他付款方式？",
+    "description": "请填写以下信息并发送给我们。",
+    "message": "您好！我想使用其他付款方式参加。\nHanBuddy注册邮箱：[注册邮箱]\n向导姓名：[向导姓名]\n体验名称：首尔林漫步与圣水洞咖啡馆之旅\n日期与时间：YYYY-MM-DD 14:00 (KST)\n参加人数：2人\n希望的付款方式：转账至韩国银行账户",
+    "exampleTitle": "咨询内容示例",
+    "exampleHint": "以下仅为示例。请复制后替换为您的信息及希望选择的向导、体验和时间，再发送给我们。",
+    "copy": "复制模板",
+    "copied": "已复制。请修改内容后通过您选择的渠道发送。",
+    "copyFailed": "复制失败。请选中上方示例并手动复制。",
+    "email": "电子邮件",
+    "notConfirmed": "仅咨询并不代表预订已确认。"
+  },
   "Booking": {
     "title": "预订活动",
     "loading": "正在加载预订...",

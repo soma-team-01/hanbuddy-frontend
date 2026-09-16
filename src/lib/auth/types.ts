@@ -71,9 +71,17 @@ export interface BuddyResubmission {
   accountStatus: "REJECTED" | "PENDING_APPROVAL";
   reviewedAt: string | null;
   rejectionReason: string | null;
+  bankAccount?: {
+    bank: import("./signup-extra").BankName | null;
+    bankCode: string | null;
+    bankName: string;
+    accountNumber: string;
+  } | null;
 }
 
 export interface BuddyResubmissionRequest {
+  bankName?: import("./signup-extra").BankName | null;
+  bankAccountNumber?: string | null;
   displayName: string;
   profileImageKey: string | null;
   nationalityCode: string;

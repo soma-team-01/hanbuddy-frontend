@@ -213,6 +213,16 @@ async function completeAllStepsUntilReview() {
 }
 
 describe("CreateActivityForm", () => {
+  it("ignores the second click after entering preview instead of publishing", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await completeAllStepsUntilReview();
+    const submit = screen.getByRole("button", { name: "Register experience" });
+    fireEvent.click(submit, { detail: 2 });
+    expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
+    expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
+  });
   beforeEach(() => {
     createObjectUrlMock.mockClear();
     revokeObjectUrlMock.mockClear();

@@ -3,6 +3,7 @@
 import { SignupExtraFields } from "./SignupExtraFields";
 import {
   buildSignupExtra,
+  isBankName,
   validateSignupSource,
   validateSignupBank,
   type SignupExtraDraft,
@@ -170,8 +171,8 @@ export function OnboardingForm({
   const [signupExtra, setSignupExtra] = useState<SignupExtraDraft>({
     signupSource: "",
     signupSourceDetail: "",
-    bankName: "",
-    bankAccountNumber: "",
+    bankName: resubmission?.bankAccount?.bank ?? "",
+    bankAccountNumber: resubmission?.bankAccount?.accountNumber ?? "",
   });
   const [signupExtraError, setSignupExtraError] = useState<SignupExtraError | null>(null);
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;
@@ -209,6 +210,7 @@ export function OnboardingForm({
     fallbackKey: RequestFailureKey;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionInFlight = useRef(false);
   const currentLocalDate = useSyncExternalStore(
     subscribeToLocalDate,
     getCurrentLocalDateInputValue,
@@ -492,11 +494,12 @@ export function OnboardingForm({
   }
 
   function validateExtra(step: 1 | 2) {
-    let error: SignupExtraError | null = null;
-    if (!isResubmission) {
-      error =
-        step === 1 ? validateSignupSource(signupExtra) : validateSignupBank(signupExtra, userType);
-    }
+    const error =
+      step === 1
+        ? isResubmission
+          ? null
+          : validateSignupSource(signupExtra)
+        : validateSignupBank(signupExtra, userType);
     setSignupExtraError(error);
     return error === null;
   }
@@ -518,6 +521,7 @@ export function OnboardingForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submissionInFlight.current) return;
     setErrorKey(null);
     setRequestFailure(null);
 
@@ -542,6 +546,7 @@ export function OnboardingForm({
       ? findCountry(messagingCountry)?.dialCode
       : "";
 
+    submissionInFlight.current = true;
     setIsSubmitting(true);
     try {
       let profileImageKey: string | null | undefined;
@@ -564,6 +569,12 @@ export function OnboardingForm({
         ? {
             ...commonProfile,
             profileImageKey: profileImageKey ?? null,
+            ...(isBankName(signupExtra.bankName)
+              ? {
+                  bankName: signupExtra.bankName,
+                  bankAccountNumber: signupExtra.bankAccountNumber.trim(),
+                }
+              : {}),
           }
         : {
             ...commonProfile,
@@ -585,8 +596,8 @@ export function OnboardingForm({
         ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
-        if (!isResubmission && body && !body.isSuccess) {
-          if (body.code === "AUTH400_SIGNUP_SOURCE") {
+        if (body && !body.isSuccess) {
+          if (!isResubmission && body.code === "AUTH400_SIGNUP_SOURCE") {
             setSignupExtraError({ field: "source", key: "sourceInvalid" });
             goToStep(1);
           } else if (body.code === "AUTH400_BANK_ACCOUNT") {
@@ -637,6 +648,7 @@ export function OnboardingForm({
     } catch (error) {
       setRequestFailure({ error, fallbackKey: "serverUnavailable" });
     } finally {
+      submissionInFlight.current = false;
       setIsSubmitting(false);
     }
   }
@@ -694,7 +706,7 @@ export function OnboardingForm({
         title: resubmissionT("title"),
         eyebrow: resubmissionT("eyebrow"),
         headline: resubmissionT("headline"),
-        contactMethods: resubmissionT("contactMethods"),
+        contactMethods: buddyT("contactMethods"),
         submit: resubmissionT("submit"),
         submitting: resubmissionT("submitting"),
       };
@@ -755,7 +767,7 @@ export function OnboardingForm({
     },
   ];
   const stepLabels = isResubmission
-    ? [t("steps.aboutYou"), t("steps.contact")]
+    ? [t("steps.aboutYou"), buddyT("contactMethods")]
     : [
         t("steps.aboutYou"),
         isBuddyFlow ? buddyT("contactMethods") : t("steps.contact"),
@@ -790,6 +802,9 @@ export function OnboardingForm({
             aria-label={roleCopy.title}
             noValidate
             onSubmit={handleSubmit}
+            onKeyDownCapture={(event) => {
+              if (event.key === "Enter" && event.repeat) event.preventDefault();
+            }}
             className={`mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft lg:grid-cols-[250px_minmax(0,1fr)] ${currentStep === 3 ? "" : "lg:min-h-[620px]"}`}
           >
             <nav
@@ -952,7 +967,7 @@ export function OnboardingForm({
                     {resubmission?.rejectionReason ? (
                       <div
                         data-testid="resubmission-rejection-reason"
-                        className="rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3"
+                        className="rounded-2xl border border-line-soft bg-canvas-soft px-4 py-3"
                       >
                         <p className="text-xs font-bold text-primary-strong">
                           {resubmissionT("rejectionReason")}
@@ -995,7 +1010,7 @@ export function OnboardingForm({
                       showAppSelector={!isBuddyFlow}
                     />
                   </div>
-                  {!isResubmission && isBuddyFlow && (
+                  {isBuddyFlow && (
                     <SignupExtraFields
                       value={signupExtra}
                       section="bank"
@@ -1092,6 +1107,7 @@ export function OnboardingForm({
                 {currentStep > 1 ? (
                   <button
                     type="button"
+                    disabled={isSubmitting}
                     onClick={() => goToStep((currentStep - 1) as OnboardingStep)}
                     className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-line-soft bg-canvas-soft px-5 font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary lg:flex-none"
                   >
@@ -1100,9 +1116,20 @@ export function OnboardingForm({
                   </button>
                 ) : null}
                 <button
+                  key={currentStep}
                   form="google-onboarding-form"
                   type={currentStep === finalStep ? "submit" : "button"}
-                  onClick={currentStep === finalStep ? undefined : handleContinue}
+                  onClick={(event) => {
+                    // A click that advances a step must never activate the new submit action.
+                    if (event.detail > 1) {
+                      event.preventDefault();
+                      return;
+                    }
+                    if (currentStep !== finalStep) {
+                      event.preventDefault();
+                      handleContinue();
+                    }
+                  }}
                   disabled={isSubmitting}
                   className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60 lg:min-w-32 lg:flex-none"
                 >

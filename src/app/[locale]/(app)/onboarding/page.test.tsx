@@ -53,7 +53,167 @@ vi.mock("@/lib/images/presigned", async (importOriginal) => ({
   uploadProfileImage: vi.fn(),
 }));
 
+function createRejectedApplication(): BuddyResubmission {
+  return {
+    userId: 7,
+    email: "buddy@example.com",
+    name: "Google Buddy",
+    displayName: "Old Buddy",
+    profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
+    profileImageUrl: "https://cdn.test/profiles/old.webp",
+    nationalityCode: "KR",
+    birthDate: "1995-02-03",
+    contactMethod: "LINE",
+    contactCountryCode: "",
+    contactIdentifier: "old-buddy",
+    accountStatus: "REJECTED",
+    reviewedAt: "2026-09-03T12:00:00+09:00",
+    rejectionReason: "Please update your profile.",
+    bankAccount: {
+      bank: "SHINHAN",
+      bankCode: "088",
+      bankName: "신한은행",
+      accountNumber: "001-234567",
+    },
+  };
+}
+
 describe("OnboardingForm", () => {
+  it("does not submit or skip the contact step when Next is clicked twice", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(
+      <OnboardingForm
+        userType="BUDDY"
+        resubmission={{
+          ...createRejectedApplication(),
+          contactMethod: "PHONE",
+          contactCountryCode: "+82",
+          contactIdentifier: "01012345678",
+        }}
+      />,
+    );
+    const next = screen.getByRole("button", { name: "Next" });
+    fireEvent.click(next, { detail: 1 });
+    const submit = screen.getByRole("button", { name: "Request another review" });
+    expect(submit).not.toBe(next);
+    expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
+    fireEvent.click(submit, { detail: 2 });
+    await act(async () => {});
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox", { name: "Phone number" })).toBeInTheDocument();
+  });
+
+  it.each(["TOURIST", "BUDDY"] as const)(
+    "does not auto-submit %s when revisiting completed agreements",
+    async (userType) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(<OnboardingForm userType={userType} />);
+      fillAboutYou("en", { birthDate: "1998-04-12" });
+      clickContinue("en");
+      if (userType === "BUDDY") {
+        fireEvent.change(screen.getByLabelText("Phone number"), {
+          target: { value: "01012345678" },
+        });
+        fillBank("en");
+      } else fillContact("en", "traveler_id");
+      clickContinue("en");
+      fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
+      fireEvent.click(screen.getByRole("button", { name: "Back" }));
+      const next = screen.getByRole("button", { name: "Next" });
+      fireEvent.click(next, { detail: 1 });
+      const submit = screen.getByRole("button", {
+        name: userType === "BUDDY" ? "Sign up as a buddy" : "Sign up",
+      });
+      expect(submit).not.toBe(next);
+      fireEvent.click(submit, { detail: 2 });
+      await act(async () => {});
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(screen.getByRole("checkbox", { name: "Agree to all" })).toBeChecked();
+    },
+  );
+
+  it.each([null, { bank: null, bankCode: null, bankName: "Legacy bank", accountNumber: "001234" }])(
+    "requires a supported bank for legacy resubmissions without one: %j",
+    (bankAccount) => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(
+        <OnboardingForm
+          userType="BUDDY"
+          resubmission={{ ...createRejectedApplication(), bankAccount }}
+        />,
+      );
+      expect(
+        screen.queryByRole("group", { name: "How did you hear about us?" }),
+      ).not.toBeInTheDocument();
+      clickContinue("en");
+      fireEvent.change(screen.getByLabelText("Phone number"), { target: { value: "01012345678" } });
+      fireEvent.click(screen.getByRole("button", { name: "Request another review" }));
+      expect(screen.getByRole("combobox", { name: "Bank" })).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("prevents concurrent resubmissions while allowing retry and edited bank details", async () => {
+    let finish!: (response: Response) => void;
+    const fetchMock = vi.fn().mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(
+      <OnboardingForm
+        userType="BUDDY"
+        resubmission={{
+          ...createRejectedApplication(),
+          contactMethod: "PHONE",
+          contactCountryCode: "+82",
+          contactIdentifier: "01012345678",
+        }}
+      />,
+    );
+    clickContinue("en");
+    expect(screen.getByRole("heading", { name: "Contact & payout details" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Bank" })).toHaveTextContent("신한은행");
+    fireEvent.change(screen.getByLabelText("Account number"), { target: { value: "009-876543" } });
+    const form = screen.getByRole("button", { name: "Request another review" }).closest("form")!;
+    act(() => {
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+    });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body).toMatchObject({ bankName: "SHINHAN", bankAccountNumber: "009-876543" });
+    expect(body).not.toHaveProperty("signupSource");
+    expect(body).not.toHaveProperty("agreements");
+    expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
+    await act(async () => {
+      finish(
+        new Response(
+          JSON.stringify({
+            isSuccess: false,
+            code: "AUTH400_BANK_ACCOUNT",
+            message: "Invalid bank",
+          }),
+          { status: 400 },
+        ),
+      );
+    });
+    expect(screen.getByRole("combobox", { name: "Bank" })).toHaveAttribute("aria-invalid", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Request another review" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await act(async () => {
+      finish(new Response("{}", { status: 500 }));
+    });
+  });
+
   it("places source after date of birth and preserves the selection when returning from contact", () => {
     renderWithIntl(<OnboardingForm />);
     const birthDate = screen.getByRole("group", { name: "Date of birth" });
@@ -636,6 +796,7 @@ describe("OnboardingForm", () => {
 
   it("prefills a rejected buddy application and resubmits without agreements", async () => {
     const application: BuddyResubmission = {
+      bankAccount: createRejectedApplication().bankAccount,
       userId: 7,
       email: "buddy@example.com",
       name: "Google Buddy",
@@ -701,6 +862,8 @@ describe("OnboardingForm", () => {
       contactMethod: "PHONE",
       contactCountryCode: "+82",
       contactIdentifier: "01012345678",
+      bankName: "SHINHAN",
+      bankAccountNumber: "001-234567",
     });
     expect(routerMocks.replace).toHaveBeenCalledWith(
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
@@ -1101,25 +1264,6 @@ describe("OnboardingForm profile image", () => {
   function fillRequiredFields() {
     advanceToAgreements("en", { birthDate: "1998-04-12", contact: "line_user" });
     fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
-  }
-
-  function createRejectedApplication(): BuddyResubmission {
-    return {
-      userId: 7,
-      email: "buddy@example.com",
-      name: "Google Buddy",
-      displayName: "Old Buddy",
-      profileImageKey: "profiles/2026/09/03/123e4567-e89b-12d3-a456-426614174000.webp",
-      profileImageUrl: "https://cdn.test/profiles/old.webp",
-      nationalityCode: "KR",
-      birthDate: "1995-02-03",
-      contactMethod: "LINE",
-      contactCountryCode: "",
-      contactIdentifier: "old-buddy",
-      accountStatus: "REJECTED",
-      reviewedAt: "2026-09-03T12:00:00+09:00",
-      rejectionReason: "Please update your profile.",
-    };
   }
 
   function mockSuccessfulResubmission(application: BuddyResubmission) {

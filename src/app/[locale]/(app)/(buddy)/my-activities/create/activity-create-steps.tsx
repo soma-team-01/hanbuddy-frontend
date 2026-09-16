@@ -649,8 +649,15 @@ export function ItineraryStep({
             </div>
             <div className="flex items-center justify-end border-t border-line-soft px-5 py-4 sm:px-7">
               <button
+                key={editorStep}
                 type="button"
-                onClick={goEditorNext}
+                onClick={(event) => {
+                  if (event.detail <= 1) goEditorNext();
+                }}
+                onKeyDown={(event) => {
+                  if ((event.key === "Enter" || event.key === " ") && event.repeat)
+                    event.preventDefault();
+                }}
                 className="flex min-h-11 min-w-28 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white transition hover:bg-primary-hover"
               >
                 {editorStep === editorSteps.length - 1

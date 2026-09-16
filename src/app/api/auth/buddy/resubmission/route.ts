@@ -11,6 +11,7 @@ import type {
   ErrorApiResponse,
 } from "@/lib/auth/types";
 import { isValidDisplayName } from "@/lib/display-name";
+import { validateSignupBank } from "@/lib/auth/signup-extra";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +108,7 @@ function isBuddyResubmissionRequest(value: unknown): value is BuddyResubmissionR
   const normalizedPhone = contactIdentifier.replace(/[ -]/g, "");
 
   return (
+    isValidBankUpdate(request) &&
     isValidDisplayName(displayName) &&
     (request.profileImageKey === null ||
       (typeof request.profileImageKey === "string" &&
@@ -121,5 +123,23 @@ function isBuddyResubmissionRequest(value: unknown): value is BuddyResubmissionR
     CONTACT_COUNTRY_CODE_PATTERN.test(request.contactCountryCode) &&
     contactIdentifier.length <= 100 &&
     PHONE_CONTACT_PATTERN.test(normalizedPhone)
+  );
+}
+
+function isValidBankUpdate(request: Partial<BuddyResubmissionRequest>) {
+  // The backend preserves the existing account when both fields are omitted.
+  if (request.bankName == null && request.bankAccountNumber == null) return true;
+  if (typeof request.bankName !== "string" || typeof request.bankAccountNumber !== "string")
+    return false;
+  return (
+    validateSignupBank(
+      {
+        signupSource: "",
+        signupSourceDetail: "",
+        bankName: request.bankName,
+        bankAccountNumber: request.bankAccountNumber,
+      },
+      "BUDDY",
+    ) === null
   );
 }

@@ -28,6 +28,12 @@ const application: BuddyResubmission = {
   accountStatus: "REJECTED",
   reviewedAt: "2026-09-03T12:00:00+09:00",
   rejectionReason: "프로필 정보를 보완해 주세요.",
+  bankAccount: {
+    bank: "SHINHAN",
+    bankCode: "088",
+    bankName: "신한은행",
+    accountNumber: "001-234567",
+  },
 };
 
 const updateRequest: BuddyResubmissionRequest = {
@@ -67,6 +73,7 @@ describe("/api/auth/buddy/resubmission", () => {
     const response = await GET(request("GET"));
 
     expect(response.status).toBe(200);
+    expect((await response.json()).result.bankAccount).toEqual(application.bankAccount);
     expect(mockedGetBackend).toHaveBeenCalledWith("/auth/buddy/resubmission", {
       bearerToken: "resubmit-token",
     });
@@ -92,6 +99,30 @@ describe("/api/auth/buddy/resubmission", () => {
     });
     expect(setCookie).toContain(`${AUTH_COOKIES.resubmissionToken}=;`);
     expect(setCookie).toContain(`${AUTH_COOKIES.statusReason}=;`);
+  });
+
+  it("forwards a bank enum and preserves leading account zeroes", async () => {
+    mockedPutBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: { isSuccess: true, code: "200", message: "OK", result: application },
+    });
+    const body = { ...updateRequest, bankName: "SHINHAN", bankAccountNumber: "001-234567" };
+    expect((await PUT(request("PUT", body))).status).toBe(200);
+    expect(mockedPutBackend).toHaveBeenCalledWith("/auth/buddy/resubmission", body, {
+      bearerToken: "resubmit-token",
+    });
+  });
+
+  it.each([
+    { bankName: "SHINHAN" },
+    { bankAccountNumber: "001-234567" },
+    { bankName: "UNKNOWN", bankAccountNumber: "123" },
+    { bankName: "SHINHAN", bankAccountNumber: 123 },
+    { bankName: "SHINHAN", bankAccountNumber: "abc" },
+  ])("rejects malformed bank updates: %j", async (bank) => {
+    expect((await PUT(request("PUT", { ...updateRequest, ...bank }))).status).toBe(400);
+    expect(mockedPutBackend).not.toHaveBeenCalled();
   });
 
   it.each([

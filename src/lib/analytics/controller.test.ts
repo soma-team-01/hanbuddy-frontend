@@ -105,12 +105,7 @@ describe("consent lifecycle and safe events", () => {
       },
     ]);
     expect(JSON.stringify(browser.send.mock.calls)).not.toMatch(/secret|email|paymentKey|purchase/);
-    expect(link.link).toHaveBeenCalledWith({
-      consentId: "00000000-0000-4000-8000-000000000001",
-      policyVersion: "test-v1",
-      clientId: "123.456",
-      sessionId: "789",
-    });
+    expect(link.link).not.toHaveBeenCalled();
   });
   it("deduplicates committed visits, rerenders and returns without manufacturing CTA", async () => {
     const { analytics, browser } = setup();
@@ -214,7 +209,7 @@ it("actively expires an idle grant without a user action", async () => {
     vi.useRealTimers();
   }
 });
-it("stops again after a canceled transport resolves and rejects invalid identities", async () => {
+it("stops again after a canceled transport resolves", async () => {
   const { analytics, browser, link } = setup();
   let finish!: () => void;
   browser.start.mockImplementation(
@@ -232,15 +227,6 @@ it("stops again after a canceled transport resolves and rejects invalid identiti
   await pending;
   expect(browser.stop.mock.calls.length).toBeGreaterThan(stops);
   expect(link.link).not.toHaveBeenCalled();
-  const other = setup();
-  other.browser.identifiers.mockResolvedValue({
-    clientId: "private@example.test",
-    sessionId: "789",
-  });
-  other.analytics.visit("/en/explore");
-  await other.analytics.accept();
-  expect(other.analytics.getSnapshot()).toBe("denied");
-  expect(other.link.revoke).toHaveBeenCalled();
 });
 it("removes the stale grant when denial cannot be persisted", async () => {
   const base = setup();
@@ -331,9 +317,9 @@ it("revokes the known epoch when cross-tab storage is removed", async () => {
   expect(analytics.getSnapshot()).toBe("unanswered");
 });
 it("does not restart pending initialization after pagehide or unmount suspension", async () => {
-  const { analytics, browser, link } = setup();
+  const { analytics, browser } = setup();
   let finish!: () => void;
-  link.link.mockImplementationOnce(
+  browser.start.mockImplementationOnce(
     () =>
       new Promise<void>((resolve) => {
         finish = resolve;
@@ -341,7 +327,7 @@ it("does not restart pending initialization after pagehide or unmount suspension
   );
   analytics.visit("/en/explore");
   const pending = analytics.accept();
-  await vi.waitFor(() => expect(link.link).toHaveBeenCalledTimes(1));
+  await vi.waitFor(() => expect(browser.start).toHaveBeenCalledTimes(1));
   analytics.suspend();
   finish();
   await pending;
@@ -409,19 +395,20 @@ it("revokes the previous epoch before adopting another tab's acceptance and reta
     expect.objectContaining({ consentId: secondId }),
   );
 });
-it.each(["grant", "link"] as const)(
+it.each(["grant", "transport"] as const)(
   "withdraws both known epochs when another tab replaces a pending %s",
   async (operation) => {
     const { first, second } = twoTabs();
     let finish!: () => void;
-    first.link[operation].mockImplementationOnce(
+    const deferred = operation === "grant" ? first.link.grant : first.browser.start;
+    deferred.mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
           finish = resolve;
         }),
     );
     const pending = first.analytics.accept();
-    await vi.waitFor(() => expect(first.link[operation]).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(deferred).toHaveBeenCalledTimes(1));
     await second.analytics.reject();
     await second.analytics.accept();
     await first.analytics.reject();
@@ -469,49 +456,46 @@ it("does not overwrite a new shared decision after awaiting retirement", async (
   expect(first.link.grant).toHaveBeenCalledTimes(1);
 });
 
-it.each(["grant", "link"] as const)(
-  "a terminal synthetic server rejects a delayed %s after cross-tab withdrawal",
-  async (operation) => {
-    const base = setup();
-    const states = new Map<string, "granted" | "linked" | "revoked">();
-    const server = {
-      grant: async ({ consentId }: { consentId: string }) => {
-        if (states.get(consentId) === "revoked") throw new Error("terminal consent");
-        states.set(consentId, "granted");
-      },
-      link: async ({ consentId }: { consentId: string }) => {
-        if (states.get(consentId) !== "granted") throw new Error("inactive consent");
-        states.set(consentId, "linked");
-      },
-      revoke: async (consentId: string) => {
-        states.set(consentId, "revoked");
-      },
-    };
-    let finish!: () => void;
-    const delayed = {
-      ...server,
-      [operation]: async (value: { consentId: string }) => {
-        await new Promise<void>((resolve) => {
-          finish = resolve;
-        });
-        await server[operation](value);
-      },
-    };
-    const first = setup({ storage: base.storage, link: delayed });
-    const second = setup({ storage: base.storage, link: server, newId: () => secondId });
-    first.analytics.visit("/en/explore");
-    second.analytics.visit("/en/explore");
-    const pending = first.analytics.accept();
-    await vi.waitFor(() => expect(finish).toBeDefined());
-    await second.analytics.reject();
-    await second.analytics.accept();
-    await first.analytics.reject();
-    finish();
-    await pending;
-    expect([...states.values()]).toEqual(["revoked", "revoked"]);
-    expect(first.browser.send).not.toHaveBeenCalled();
-  },
-);
+it("a terminal synthetic server rejects a delayed grant after cross-tab withdrawal", async () => {
+  const base = setup();
+  const states = new Map<string, "granted" | "linked" | "revoked">();
+  const server = {
+    grant: async ({ consentId }: { consentId: string }) => {
+      if (states.get(consentId) === "revoked") throw new Error("terminal consent");
+      states.set(consentId, "granted");
+    },
+    link: async ({ consentId }: { consentId: string }) => {
+      if (states.get(consentId) !== "granted") throw new Error("inactive consent");
+      states.set(consentId, "linked");
+    },
+    revoke: async (consentId: string) => {
+      states.set(consentId, "revoked");
+    },
+  };
+  let finish!: () => void;
+  const delayed = {
+    ...server,
+    grant: async (value: { consentId: string }) => {
+      await new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      await server.grant(value);
+    },
+  };
+  const first = setup({ storage: base.storage, link: delayed });
+  const second = setup({ storage: base.storage, link: server, newId: () => secondId });
+  first.analytics.visit("/en/explore");
+  second.analytics.visit("/en/explore");
+  const pending = first.analytics.accept();
+  await vi.waitFor(() => expect(finish).toBeDefined());
+  await second.analytics.reject();
+  await second.analytics.accept();
+  await first.analytics.reject();
+  finish();
+  await pending;
+  expect([...states.values()]).toEqual(["revoked", "revoked"]);
+  expect(first.browser.send).not.toHaveBeenCalled();
+});
 
 it("does not expire a newer tab's consent when the old tab's idle timer runs", async () => {
   vi.useFakeTimers();
@@ -591,4 +575,30 @@ it("does not replace a newer withdrawal handle when an older acceptance resumes"
   await first.analytics.restore();
   expect(first.link.revoke).toHaveBeenCalledWith(thirdId);
   expect(first.analytics.isActive()).toBe(false);
+});
+
+it.each([
+  ["/en/activities/42", "view_item"],
+  ["/en/activities/42", "booking_cta_click"],
+  ["/en/activities/42/book", "begin_checkout"],
+] as const)("does not gate %s / %s on identifiers or an application", async (path, event) => {
+  const { analytics, browser, link } = setup();
+  browser.identifiers.mockRejectedValue(new Error("session not initialized"));
+  link.link.mockRejectedValue(new Error("no application exists"));
+  analytics.visit(path);
+  await analytics.accept();
+  expect(analytics.track(event, path, 42)).toBe(true);
+  expect(browser.send.mock.calls.map((call) => call[0])).toEqual(["page_view", event]);
+  expect(browser.identifiers).not.toHaveBeenCalled();
+  expect(link.link).not.toHaveBeenCalled();
+  await analytics.reject();
+  expect(analytics.track(event, path, 42)).toBe(false);
+});
+it("does not submit application linkage even when identifier lookup would succeed", async () => {
+  const { analytics, browser, link } = setup();
+  analytics.visit("/en/activities/42");
+  await analytics.accept();
+  expect(browser.send.mock.calls.map((call) => call[0])).toEqual(["page_view"]);
+  expect(link.link).not.toHaveBeenCalled();
+  analytics.suspend();
 });

@@ -12,6 +12,7 @@ export async function requestApiResult<T, TKey extends string>(
   key: TKey,
   init: RequestInit | undefined,
   defaultErrorMessage: string,
+  onResponse?: (response: Response) => void,
 ): Promise<ApiResult<T, TKey>> {
   let response: Response;
   try {
@@ -21,6 +22,13 @@ export async function requestApiResult<T, TKey extends string>(
       status: "error",
       error: createApiClientError(null, null, defaultErrorMessage),
     };
+  }
+
+  // Observers must never alter the booking result.
+  try {
+    onResponse?.(response);
+  } catch {
+    /* Optional analytics metadata. */
   }
 
   if (response.status === 401) return { status: "unauthenticated" };

@@ -3,7 +3,7 @@ import type { Locale } from "@/i18n/routing";
 // Purpose-specific drafts; no Meta, advertising, legal or cross-border promises.
 export const consentCopy: Record<
   Locale,
-  { title: string; body: string; accept: string; reject: string; settings: string }
+  { title: string; body: string; accept: string; reject: string; settings: string; pending: string }
 > = {
   en: {
     title: "Optional analytics",
@@ -11,6 +11,8 @@ export const consentCopy: Record<
     accept: "Sure",
     reject: "No thanks",
     settings: "Cookie settings",
+    pending:
+      "Withdrawal is pending. Analytics is off in this browser; reconnect to finish withdrawing.",
   },
   ko: {
     title: "선택 분석",
@@ -18,6 +20,8 @@ export const consentCopy: Record<
     accept: "좋아요",
     reject: "괜찮아요",
     settings: "쿠키 설정",
+    pending:
+      "철회 처리 중입니다. 이 브라우저의 분석은 꺼져 있으며, 연결이 복구되면 철회를 다시 처리합니다.",
   },
   ja: {
     title: "任意のアクセス解析",
@@ -25,6 +29,8 @@ export const consentCopy: Record<
     accept: "同意する",
     reject: "同意しない",
     settings: "Cookie設定",
+    pending:
+      "同意の撤回を処理中です。このブラウザーの解析は停止しています。接続が回復すると再試行します。",
   },
   "zh-Hans": {
     title: "可选分析",
@@ -32,6 +38,7 @@ export const consentCopy: Record<
     accept: "同意",
     reject: "不同意",
     settings: "Cookie设置",
+    pending: "正在处理撤回。此浏览器的分析已关闭，恢复连接后将重试。",
   },
   "zh-Hant": {
     title: "選用分析",
@@ -39,5 +46,6 @@ export const consentCopy: Record<
     accept: "同意",
     reject: "不同意",
     settings: "Cookie設定",
+    pending: "正在處理撤回。此瀏覽器的分析已關閉，恢復連線後將重試。",
   },
 };

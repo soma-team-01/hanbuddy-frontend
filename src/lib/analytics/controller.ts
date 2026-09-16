@@ -6,7 +6,7 @@ import {
   type FunnelEvent,
   type SafePage,
 } from "./events";
-import { validIdentifiers, type AnalyticsIdentifiers, type ConsentLinkPort } from "./link";
+import type { AnalyticsIdentifiers, ConsentLinkPort } from "./link";
 import type { AnalyticsPolicy } from "./policy";
 
 export const CONSENT_KEY = "hanbuddy.gaConsent.v1";
@@ -197,22 +197,8 @@ export function createAnalytics({
           browser.stop();
           return;
         }
-        const ids = await browser.identifiers();
-        if (!live()) {
-          browser.stop();
-          return;
-        }
-        if (!validIdentifiers(ids)) throw new Error("Invalid analytics context");
-        await link.link({
-          consentId: consent.id,
-          policyVersion: consent.version,
-          clientId: ids.clientId,
-          sessionId: ids.sessionId,
-        });
-        if (!live()) {
-          if (state !== "granted" || record?.id !== consent.id) await revoke(consent.id);
-          return;
-        }
+        // Browser events precede application creation. Identifier lookup and
+        // application-owned purchase linkage belong to a separate, future binding.
         active = true;
         sendPage();
         notify();

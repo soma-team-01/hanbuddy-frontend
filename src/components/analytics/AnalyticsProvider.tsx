@@ -14,15 +14,15 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { CONSENT_KEY, createAnalytics, type AnalyticsController } from "@/lib/analytics/controller";
+import type { AnalyticsController } from "@/lib/analytics/controller";
+import { createCookieRuntime } from "@/lib/analytics/cookie-runtime";
 import type { FunnelEvent } from "@/lib/analytics/events";
 import type { AnalyticsPolicy } from "@/lib/analytics/policy";
-import { createGoogleBrowser } from "@/lib/analytics/browser";
-import type { ConsentLinkPort } from "@/lib/analytics/link";
 import { consentCopy } from "./consent-copy";
 
+type Controller = AnalyticsController & { isWithdrawalPending?: () => boolean };
 const Context = createContext<{
-  controller: AnalyticsController | null;
+  controller: Controller | null;
   pathname: string;
   revision: number;
 }>({ controller: null, pathname: "", revision: 0 });
@@ -33,49 +33,32 @@ export function AnalyticsProvider({
   children,
   policy,
   controller: suppliedController = null,
-  link = null,
 }: Readonly<{
   children: ReactNode;
   policy: AnalyticsPolicy | null;
-  controller?: AnalyticsController | null;
-  link?: ConsentLinkPort | null;
+  controller?: Controller | null;
 }>) {
-  // No backend consent binding exists yet. Never turn an env flag into a fabricated endpoint.
-  // The binding will construct a controller with createGoogleBrowser once its contract is verified.
   const [localController, setLocalController] = useState<{
-    controller: AnalyticsController;
+    controller: Controller;
     policy: AnalyticsPolicy;
-    link: ConsentLinkPort;
     live: () => boolean;
   } | null>(null);
   useEffect(() => {
-    if (suppliedController || !policy || !link) return;
+    if (suppliedController || !policy) return;
     let mounted = true;
-    const next = createAnalytics({
-      policy,
-      link,
-      browser: createGoogleBrowser(window, document, policy.measurementId),
-      storage: {
-        getItem: (key) => window.localStorage.getItem(key),
-        setItem: (key, value) => window.localStorage.setItem(key, value),
-        removeItem: (key) => window.localStorage.removeItem(key),
-      },
-    });
+    const runtime = createCookieRuntime(policy, window, document);
     queueMicrotask(() => {
-      if (mounted) setLocalController({ controller: next, policy, link, live: () => mounted });
+      if (mounted)
+        setLocalController({ controller: runtime.controller, policy, live: () => mounted });
     });
     return () => {
       mounted = false;
-      next.suspend();
+      runtime.dispose();
     };
-  }, [suppliedController, policy, link]);
+  }, [suppliedController, policy]);
   const controller =
     suppliedController ??
-    (policy &&
-    link &&
-    localController?.policy === policy &&
-    localController.link === link &&
-    localController.live()
+    (policy && localController?.policy === policy && localController.live()
       ? localController.controller
       : null);
   const pathname = usePathname();
@@ -91,19 +74,19 @@ export function AnalyticsProvider({
   }, [controller, pathname]);
   useEffect(() => {
     if (!controller) return;
-    const synchronize = (event: StorageEvent) => {
-      if (event.key === CONSENT_KEY || event.key === null) void controller.restore();
-    };
     const restore = () => {
       void controller.restore();
     };
     const suspend = () => controller.suspend();
-    window.addEventListener("storage", synchronize);
+    const visible = () => {
+      if (document.visibilityState === "visible") restore();
+    };
+    document.addEventListener("visibilitychange", visible);
     window.addEventListener("pageshow", restore);
     window.addEventListener("online", restore);
     window.addEventListener("pagehide", suspend);
     return () => {
-      window.removeEventListener("storage", synchronize);
+      document.removeEventListener("visibilitychange", visible);
       window.removeEventListener("pageshow", restore);
       window.removeEventListener("online", restore);
       window.removeEventListener("pagehide", suspend);
@@ -164,17 +147,24 @@ export function AnalyticsSettings() {
   const copy = consentCopy[getLocaleOrDefault(useLocale())];
   if (!controller?.enabled) return null;
   return (
-    <button
-      type="button"
-      onClick={(event) =>
-        window.dispatchEvent(
-          new CustomEvent("hanbuddy:analytics-settings", { detail: event.currentTarget }),
-        )
-      }
-      className="rounded-sm text-xs transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
-    >
-      {copy.settings}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={(event) =>
+          window.dispatchEvent(
+            new CustomEvent("hanbuddy:analytics-settings", { detail: event.currentTarget }),
+          )
+        }
+        className="rounded-sm text-xs transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+      >
+        {copy.settings}
+      </button>
+      {controller.isWithdrawalPending?.() && (
+        <p role="status" className="text-xs text-muted">
+          {copy.pending}
+        </p>
+      )}
+    </>
   );
 }
 

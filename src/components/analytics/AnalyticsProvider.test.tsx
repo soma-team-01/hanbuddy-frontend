@@ -1,7 +1,9 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { AnalyticsProvider, AnalyticsSettings, useFunnelEvent } from "./AnalyticsProvider";
-import { createAnalytics } from "@/lib/analytics/controller";
+import { createCookieAnalytics } from "@/lib/analytics/cookie-controller";
+import { createCookieConsent } from "@/lib/analytics/cookie-consent";
+import * as runtime from "@/lib/analytics/cookie-runtime";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 
 let pathname = "/en/activities/42";
@@ -14,23 +16,38 @@ function makeController() {
     stop: vi.fn(),
     identifiers: async () => ({ clientId: "123.456", sessionId: "789" }),
   };
-  const controller = createAnalytics({
-    policy: {
-      measurementId: "G-TEST",
-      origin: "https://example.test",
-      version: "synthetic",
-      consentMaxAgeMs: 10000,
-      cookieMaxAgeSeconds: 10,
-    },
-    browser,
-    storage: {
-      getItem: (k) => storage.get(k) ?? null,
-      setItem: (k, v) => {
-        storage.set(k, v);
+  const policy = {
+    measurementId: "G-TEST",
+    origin: "https://example.test",
+    version: "synthetic",
+    consentMaxAgeMs: 10000,
+    cookieMaxAgeSeconds: 10,
+  };
+  const consent = createCookieConsent({
+    policy,
+    jar: {
+      read: () => storage.get("proof") ?? "",
+      write: (v) => {
+        storage.set("proof", v);
+      },
+      decision: () => storage.get("choice") ?? "",
+      decide: (v) => {
+        storage.set("choice", v);
       },
     },
-    link: { grant: async () => {}, link: async () => {}, revoke: async () => {} },
+    exclusive: async (f) => f(),
+    api: {
+      issue: async () => {
+        const now = Math.floor(Date.now() / 1000);
+        return {
+          proof: `granted.v1.00000000-0000-4000-8000-000000000001.${now}.${now + 10}.synthetic.${"a".repeat(43)}`,
+          expiresAt: new Date((now + 10) * 1000).toISOString(),
+        };
+      },
+      withdraw: async () => {},
+    },
   });
+  const controller = createCookieAnalytics({ policy, consent, browser });
   return { controller, browser };
 }
 function Detail({ valid = true }: { valid?: boolean }) {
@@ -104,22 +121,34 @@ it("discards the old local controller when operational policy is removed", async
     consentMaxAgeMs: 10000,
     cookieMaxAgeSeconds: 10,
   };
-  const link = {
-    grant: vi.fn(async () => {}),
-    link: vi.fn(async () => {}),
-    revoke: vi.fn(async () => {}),
-  };
+  const { controller } = makeController();
+  const dispose = vi.fn();
+  const factory = vi
+    .spyOn(runtime, "createCookieRuntime")
+    .mockReturnValue({ controller, dispose } as ReturnType<typeof runtime.createCookieRuntime>);
   const view = renderWithQueryClient(
-    <AnalyticsProvider policy={policy} link={link}>
+    <AnalyticsProvider policy={policy}>
       <AnalyticsSettings />
     </AnalyticsProvider>,
   );
   await screen.findByRole("button", { name: "Cookie settings" });
   view.rerender(
-    <AnalyticsProvider policy={null} link={null}>
+    <AnalyticsProvider policy={null}>
       <AnalyticsSettings />
     </AnalyticsProvider>,
   );
   expect(screen.queryByRole("button", { name: "Cookie settings" })).not.toBeInTheDocument();
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(dispose).toHaveBeenCalled();
+  factory.mockRestore();
+});
+it("shows incomplete withdrawal without claiming server completion", () => {
+  const { controller } = makeController();
+  vi.spyOn(controller, "isWithdrawalPending").mockReturnValue(true);
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <AnalyticsSettings />
+    </AnalyticsProvider>,
+  );
+  expect(screen.getByRole("status")).toHaveTextContent("Withdrawal is pending");
 });

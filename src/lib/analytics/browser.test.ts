@@ -159,3 +159,18 @@ it.each(["unset", "timeout"])(
     }
   },
 );
+it("returns a real client identifier without inventing an unset optional session", async () => {
+  const target = {
+    location: { origin: policy.origin },
+    gtag: vi.fn((...args: unknown[]) => {
+      if (args[0] === "get")
+        (args[3] as (v: unknown) => void)(args[2] === "client_id" ? "123.456" : undefined);
+    }),
+  };
+  const browser = createGoogleBrowser(target as unknown as Window, document);
+  const loading = browser.start(policy, page);
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await loading;
+  await expect(browser.identifiers()).resolves.toEqual({ clientId: "123.456" });
+  browser.stop();
+});

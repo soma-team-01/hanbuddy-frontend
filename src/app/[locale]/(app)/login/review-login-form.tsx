@@ -1,5 +1,6 @@
 "use client";
 
+import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ export function ReviewLoginForm({
     setPending(true);
     setErrorKey(null);
     try {
+      invalidateAnalyticsAccount();
       const response = await fetch(`/api/auth/review/login?${params.toString()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

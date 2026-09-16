@@ -1,5 +1,6 @@
 "use client";
 
+import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ export function AdminSiteHeader({ authenticated }: Readonly<{ authenticated: boo
     pathname.startsWith("/admin/buddy-applications");
 
   async function logout() {
+    invalidateAnalyticsAccount();
     setPending(true);
     setError("");
     try {

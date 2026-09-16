@@ -1,5 +1,6 @@
 "use client";
 
+import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -538,6 +539,7 @@ export function OnboardingForm({
             agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
 
+      if (!isResubmission) invalidateAnalyticsAccount();
       const response = await fetch(
         isResubmission ? "/api/auth/buddy/resubmission" : "/api/auth/google/signup",
         {

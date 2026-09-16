@@ -1,5 +1,5 @@
 import type { AnalyticsBrowserPort } from "./controller";
-import { validIdentifiers } from "./link";
+import { validIdentifiers, validSessionId } from "./link";
 
 type GoogleWindow = Window & { dataLayer?: IArguments[]; gtag?: (...args: unknown[]) => void };
 const deniedAds = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
@@ -107,8 +107,12 @@ export function createGoogleBrowser(
             resolve(String(value));
           });
         });
-      const [clientId, sessionId] = await Promise.all([get("client_id"), get("session_id")]);
-      const ids = { clientId, sessionId };
+      const [clientId, sessionId] = await Promise.all([
+        get("client_id"),
+        get("session_id").catch(() => undefined),
+      ]);
+      if (!ready || epoch !== generation) throw new Error("Analytics unavailable");
+      const ids = { clientId, ...(sessionId && validSessionId(sessionId) ? { sessionId } : {}) };
       if (!validIdentifiers(ids)) throw new Error("Analytics unavailable");
       return ids;
     },

@@ -1,9 +1,6 @@
 import { NextRequest } from "next/server";
-import {
-  badRequestResponse,
-  proxyAuthenticatedPost,
-  readJsonBody,
-} from "@/app/api/_utils/authenticated-backend";
+import { badRequestResponse, readJsonBody } from "@/app/api/_utils/authenticated-backend";
+import { proxyApplicationPost } from "@/app/api/_utils/analytics-bff";
 import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import { isPaymentProvider, withPaymentProvider } from "@/lib/payment-provider";
 import type { CreateApplicationRequest, PaymentReadyResponse } from "@/types/application";
@@ -22,7 +19,7 @@ export async function POST(request: NextRequest) {
   );
   if (!parsed.ok) return parsed.response;
 
-  return proxyAuthenticatedPost<CreateApplicationRequest, PaymentReadyResponse>(
+  return proxyApplicationPost<CreateApplicationRequest, PaymentReadyResponse>(
     request,
     appendRequestedContentLanguage(
       request,

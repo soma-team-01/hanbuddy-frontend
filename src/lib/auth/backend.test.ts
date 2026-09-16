@@ -77,6 +77,32 @@ describe("postBackend", () => {
     );
   });
 
+  it("forwards only explicitly selected analytics request context", async () => {
+    process.env.HANBUDDY_API_BASE_URL = "https://api.hanbuddy.test/api/v1";
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ isSuccess: true, code: "OK", message: "ok", result: {} })),
+      );
+    vi.stubGlobal("fetch", fetch);
+
+    await postBackend(
+      "/analytics/purchase-withdrawal",
+      {},
+      {
+        cookieHeader: "__Host-hb_ga_consent=denied-proof",
+        origin: "https://app.hanbuddy.test",
+        analyticsRequest: true,
+      },
+    );
+
+    const [, init] = fetch.mock.calls[0] as [string, RequestInit];
+    const headers = new Headers(init.headers);
+    expect(headers.get("cookie")).toBe("__Host-hb_ga_consent=denied-proof");
+    expect(headers.get("origin")).toBe("https://app.hanbuddy.test");
+    expect(headers.get("x-analytics-request")).toBe("1");
+  });
+
   it("returns a proxy error response when the backend request times out", async () => {
     vi.useFakeTimers();
     process.env.HANBUDDY_API_BASE_URL = "https://api.hanbuddy.test/api/v1";

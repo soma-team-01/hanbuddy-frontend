@@ -5,7 +5,7 @@ export interface ConsentGrant {
 }
 export interface AnalyticsIdentifiers {
   clientId: string;
-  sessionId: string;
+  sessionId?: string;
 }
 export interface ConsentLinkPort {
   grant: (grant: ConsentGrant) => Promise<void>;
@@ -13,8 +13,14 @@ export interface ConsentLinkPort {
   revoke: (consentId: string) => Promise<void>;
 }
 
+export function validSessionId(value: string): boolean {
+  return /^[1-9]\d{0,18}$/.test(value) && (value.length < 19 || value <= "9223372036854775807");
+}
 export function validIdentifiers(value: AnalyticsIdentifiers): boolean {
-  return /^\d{1,20}\.\d{1,20}$/.test(value.clientId) && /^\d{1,20}$/.test(value.sessionId);
+  return (
+    /^\d{1,20}\.\d{1,20}$/.test(value.clientId) &&
+    (value.sessionId === undefined || validSessionId(value.sessionId))
+  );
 }
 
 /** The request binding is supplied only after the counterpart BFF contract is published. */

@@ -100,3 +100,33 @@ describe("PUT /api/applications/me/[applicationId]/analytics-link", () => {
     expect(mockedPutBackend).not.toHaveBeenCalled();
   });
 });
+
+it("preserves terminal outbox 409 and safe code without reflecting backend details or cookies", async () => {
+  enablePolicy();
+  mockedPutBackend.mockReset();
+  mockedPutBackend.mockResolvedValue({
+    status: 409,
+    payload: {
+      isSuccess: false,
+      code: "ANALYTICS_LINK_CONFLICT",
+      message: "private synthetic backend diagnostic",
+    },
+    setCookies: ["unrelated=synthetic; Path=/"],
+  });
+  try {
+    const context = createHash("sha256").update("access-token", "utf8").digest("hex");
+    const response = await PUT(linkRequest(context), {
+      params: Promise.resolve({ applicationId: "11" }),
+    });
+    expect(response.status).toBe(409);
+    expect(response.headers.get("set-cookie")).toBeNull();
+    await expect(response.json()).resolves.toEqual({
+      isSuccess: false,
+      code: "ANALYTICS_LINK_CONFLICT",
+      message: "Analytics request unavailable",
+    });
+    expect(mockedPutBackend).toHaveBeenCalledTimes(1);
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});

@@ -228,7 +228,7 @@ function PhoneContactInput({
             onChange={onCountryChange}
             display="dialCode"
             ariaLabel={countryCodeLabel}
-            triggerClassName={`flex items-center gap-2 rounded-xl border border-line-soft py-3 pr-3 pl-4 text-base text-ink transition-colors hover:border-line-strong ${countryBackground}`}
+            triggerClassName={`flex items-center gap-2 rounded-xl border border-line-soft py-3 pr-3 pl-4 text-base text-ink transition-colors ${variant === "cards" ? "hover:border-primary" : "hover:border-line-strong"} ${countryBackground}`}
           />
         </div>
       )}
@@ -243,7 +243,7 @@ function PhoneContactInput({
         }}
         placeholder={koreanOnly ? koreanPhonePlaceholder : phonePlaceholder}
         aria-label={phoneInputLabel}
-        className={`focus-border-only w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${inputBackground}`}
+        className={`focus-border-only w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${variant === "cards" ? "transition-colors hover:border-primary" : ""} ${inputBackground}`}
       />
     </div>
   );
@@ -291,7 +291,7 @@ function AppIdContactInput({
       onChange={(event) => onContactChange(event.target.value)}
       placeholder={getPlaceholder(appLabel)}
       aria-label={inputLabel}
-      className={`focus-border-only mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${inputBackground}`}
+      className={`focus-border-only mt-1 w-full rounded-xl border border-line-soft px-4 py-3 text-base text-ink placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary-soft ${variant === "cards" ? "transition-colors hover:border-primary" : ""} ${inputBackground}`}
     />
   );
 }

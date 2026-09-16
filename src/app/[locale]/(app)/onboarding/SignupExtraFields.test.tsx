@@ -61,6 +61,7 @@ it("only reveals OTHER detail when selected and clears stale detail on a differe
   fireEvent.click(screen.getByRole("radio", { name: "Other" }));
   const detail = screen.getByRole("textbox");
   expect(detail).toBeRequired();
+  expect(detail).toHaveClass("hover:border-primary");
   fireEvent.change(detail, { target: { value: "Travel club" } });
   fireEvent.click(screen.getByRole("radio", { name: "Friend" }));
   expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
@@ -79,6 +80,8 @@ it("requires buddy bank fields without optional labels or helper copy", () => {
   expect(screen.queryByText(/Enter both fields if adding/)).not.toBeInTheDocument();
   const account = screen.getByLabelText("Account number");
   expect(account).toBeRequired();
+  expect(account).toHaveClass("hover:border-primary");
+  expect(screen.getByRole("combobox", { name: "Bank" })).toHaveClass("hover:border-primary");
   fireEvent.click(screen.getByRole("radio", { name: "Instagram" }));
   fireEvent.click(screen.getByRole("button", { name: "Validate" }));
   expect(screen.getByRole("alert")).toHaveTextContent(

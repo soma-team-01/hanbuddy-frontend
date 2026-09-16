@@ -31,6 +31,18 @@ function renderField(
 }
 
 describe("MessagingAppField", () => {
+  it.each(["phone", "whatsapp", "instagram"] as const)(
+    "uses accent hover borders for card-mode %s fields",
+    (app) => {
+      renderField({ app, variant: "cards", touristSignup: true });
+      expect(screen.getByRole("textbox")).toHaveClass("hover:border-primary", "transition-colors");
+      if (app !== "instagram") {
+        expect(screen.getByLabelText("Country code")).toHaveClass("hover:border-primary");
+        expect(screen.getByLabelText("Country code")).not.toHaveClass("hover:border-line-strong");
+      }
+      expect(screen.getByRole("button", { name: "KakaoTalk" })).toHaveClass("hover:border-primary");
+    },
+  );
   it("matches signup source selection with a white card, accent border and check", () => {
     const props = renderField({ variant: "cards", touristSignup: true });
     const selected = screen.getByRole("button", { name: "WhatsApp" });

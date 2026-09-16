@@ -410,12 +410,24 @@ describe("OnboardingForm", () => {
       screen.getByRole("group", { name: getStepLabels(locale).birthDate }),
     ).toBeInTheDocument();
     expect(container.querySelector('input[type="date"]')).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: locale === "en" ? "Name" : "이름" })).toHaveClass(
+      "hover:border-primary",
+    );
+    expect(screen.getByRole("button", { name: getStepLabels(locale).nationality })).toHaveClass(
+      "hover:border-primary",
+    );
     const names = locale === "en" ? ["Month", "Day", "Year"] : ["연도", "월", "일"];
     const selectors = screen.getAllByRole("combobox");
     expect(selectors).toHaveLength(3);
     selectors.forEach((selector, index) => {
       expect(selector).toHaveAccessibleName(names[index]);
-      expect(selector).toHaveClass("rounded-xl", "border-line-soft", "bg-canvas-soft", "text-base");
+      expect(selector).toHaveClass(
+        "rounded-xl",
+        "border-line-soft",
+        "bg-canvas-soft",
+        "text-base",
+        "hover:border-primary",
+      );
       expect(selector.querySelector("svg")).toHaveClass("size-4", "text-ink");
     });
   });

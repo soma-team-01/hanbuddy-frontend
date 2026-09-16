@@ -891,7 +891,7 @@ export function OnboardingForm({
                               hasDisplayNameError ? "onboarding-display-name-error" : undefined
                             }
                             aria-invalid={hasDisplayNameError}
-                            className="focus-border-only h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                            className="focus-border-only h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                           />
                         </label>
                         {hasDisplayNameError ? (

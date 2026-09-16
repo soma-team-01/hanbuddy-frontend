@@ -12,7 +12,7 @@ import {
 import { OnboardingSelect } from "./OnboardingSelect";
 
 const INPUT =
-  "focus-border-only h-[50px] w-full min-w-0 rounded-xl border border-line-soft bg-white px-4 text-base text-ink outline-none transition-colors focus:border-primary";
+  "focus-border-only h-[50px] w-full min-w-0 rounded-xl border border-line-soft bg-white px-4 text-base text-ink outline-none transition-colors hover:border-primary focus:border-primary";
 
 export function SignupExtraFields({
   value,

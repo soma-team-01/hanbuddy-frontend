@@ -13,19 +13,12 @@ import {
 import type { Locale } from "@/i18n/routing";
 import type { SiteNavRole } from "@/lib/auth/routes";
 import { getPolicyPath } from "@/lib/policy-routes";
+import { CONTACT_DETAILS } from "@/lib/contact-details";
 
 interface SiteFooterProps {
   readonly locale: Locale;
   readonly role?: SiteNavRole | null;
 }
-
-const CONTACT_DETAILS = {
-  email: "contact@hanbuddy.kr",
-  instagramUrl: "https://www.instagram.com/hanbuddy_kr/",
-  facebookUrl: "https://www.facebook.com/profile.php?id=61593105057939",
-  whatsappUrl: "https://wa.me/821082970110",
-  kakaoUrl: "https://pf.kakao.com/_qapJX/chat",
-} as const;
 
 const BUSINESS_DETAILS = {
   name: "제로원",
@@ -45,35 +38,35 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
     <footer className="border-t border-line-soft bg-canvas-soft py-8 text-sm text-muted">
       <PageContainer className="flex flex-col gap-3">
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
+          <div className="flex flex-wrap items-center gap-x-4 text-xs text-muted">
             <p>© 2026 HanBuddy</p>
             <AnalyticsSettings />
             <Link
               href={getPolicyPath(locale, "terms-of-service")}
-              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+              className="inline-flex min-h-11 items-center transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
               {authT("termsOfService")}
             </Link>
             <Link
               href={getPolicyPath(locale, "privacy-policy")}
-              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+              className="inline-flex min-h-11 items-center transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
               {authT("privacyPolicy")}
             </Link>
             <Link
               href={getPolicyPath(locale, "cancellation-refund-policy")}
-              className="transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+              className="inline-flex min-h-11 items-center transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
             >
               {authT("cancellationRefundPolicy")}
             </Link>
           </div>
 
-          <div className="flex items-center gap-4 sm:justify-end">
+          <div className="flex items-center gap-1 sm:justify-end sm:gap-2">
             <FooterLocaleSwitcher role={role} />
             <a
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}
-              className="text-muted transition-colors hover:text-primary"
+              className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <MailIcon className="size-[18px]" />
             </a>
@@ -82,7 +75,7 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.whatsappIconLabel")}
-              className="text-muted transition-colors hover:text-primary"
+              className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <WhatsAppIcon className="size-[18px]" />
             </a>
@@ -91,7 +84,7 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.facebookIconLabel")}
-              className="text-muted transition-colors hover:text-primary"
+              className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <FacebookIcon className="size-[18px]" />
             </a>
@@ -100,7 +93,7 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.kakaoIconLabel")}
-              className="text-muted transition-colors hover:text-primary"
+              className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <KakaoTalkIcon className="size-[18px]" />
             </a>
@@ -109,7 +102,7 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               target="_blank"
               rel="noreferrer"
               aria-label={landingT("contact.instagramIconLabel")}
-              className="text-muted transition-colors hover:text-primary"
+              className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <InstagramIcon className="size-[18px]" />
             </a>

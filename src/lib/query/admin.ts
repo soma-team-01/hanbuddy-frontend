@@ -40,6 +40,7 @@ export function adminBuddyApplicationsQueryOptions() {
 export function adminBuddyApplicationQueryOptions(userId: number | string) {
   return queryOptions({
     queryKey: adminKeys.application(userId),
+    gcTime: 0,
     queryFn: async () => unwrapApiResult(await getBuddyApplicationForAdmin(userId), "application"),
   });
 }
@@ -55,6 +56,7 @@ export function adminUsersQueryOptions(filters: AdminUserFilters) {
 export function adminUserQueryOptions(userId: number | string) {
   return queryOptions({
     queryKey: adminKeys.user(userId),
+    gcTime: 0,
     queryFn: async () => unwrapApiResult(await getAdminUser(userId), "user"),
   });
 }
@@ -81,6 +83,7 @@ export function adminBuddiesQueryOptions(filters: AdminBuddyFilters) {
 export function adminBuddyQueryOptions(buddyId: number | string) {
   return queryOptions({
     queryKey: adminKeys.buddy(buddyId),
+    gcTime: 0,
     queryFn: async () => unwrapApiResult(await getAdminBuddy(buddyId), "buddy"),
   });
 }

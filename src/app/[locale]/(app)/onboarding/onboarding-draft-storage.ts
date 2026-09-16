@@ -28,6 +28,23 @@ interface StoredOnboardingDraft {
 
 const memoryDrafts = new Map<string, { updatedAt: number; snapshot: OnboardingDraftSnapshot }>();
 
+// Explicit allowlist: new signup fields (especially bank accounts) must never leak into drafts.
+function pickDraftFields(snapshot: OnboardingDraftSnapshot): OnboardingDraftSnapshot {
+  return {
+    currentStep: snapshot.currentStep,
+    displayName: snapshot.displayName,
+    birthDate: snapshot.birthDate,
+    nationality: snapshot.nationality,
+    messagingApp: snapshot.messagingApp,
+    messagingCountry: snapshot.messagingCountry,
+    messagingContact: snapshot.messagingContact,
+    agreementDecisions: snapshot.agreementDecisions,
+    profileImageFile: snapshot.profileImageFile,
+    existingProfileImageKey: snapshot.existingProfileImageKey,
+    existingProfileImageUrl: snapshot.existingProfileImageUrl,
+  };
+}
+
 function getStorageKey(scope: string) {
   return `${STORAGE_KEY_PREFIX}:${scope}`;
 }
@@ -133,7 +150,7 @@ export async function loadOnboardingDraft(scope: string): Promise<OnboardingDraf
       return null;
     }
 
-    const restored = { ...stored.snapshot, profileImageFile: null };
+    const restored = pickDraftFields({ ...stored.snapshot, profileImageFile: null });
     memoryDrafts.set(scope, { updatedAt: stored.updatedAt, snapshot: restored });
     return restored;
   } catch {
@@ -148,10 +165,11 @@ export async function loadOnboardingDraft(scope: string): Promise<OnboardingDraf
 
 export function saveOnboardingDraft(scope: string, snapshot: OnboardingDraftSnapshot) {
   const updatedAt = Date.now();
-  memoryDrafts.set(scope, { updatedAt, snapshot });
+  const safeSnapshot = pickDraftFields(snapshot);
+  memoryDrafts.set(scope, { updatedAt, snapshot: safeSnapshot });
   if (!canUseSessionStorage()) return;
 
-  const { profileImageFile: _profileImageFile, ...serializableSnapshot } = snapshot;
+  const { profileImageFile: _profileImageFile, ...serializableSnapshot } = safeSnapshot;
   void _profileImageFile;
   const stored: StoredOnboardingDraft = {
     version: STORAGE_VERSION,

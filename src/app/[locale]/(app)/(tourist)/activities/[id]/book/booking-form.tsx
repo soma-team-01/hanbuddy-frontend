@@ -44,6 +44,7 @@ import type {
 } from "@/types/application";
 import type { PolicyDocumentData } from "@/types/policy";
 import { BookingConflictDialog } from "./booking-conflict-dialog";
+import { AlternativePaymentDialog } from "@/components/booking/AlternativePaymentDialog";
 
 const MAX_GUESTS = 8;
 
@@ -85,6 +86,8 @@ export function BookingForm({
   const locale = useLocale();
   const contentLanguage = getContentLanguage(locale);
   const t = useTranslations("Booking");
+  const inquiryT = useTranslations("AlternativePayment");
+  const [inquiryOpen, setInquiryOpen] = useState(false);
   const getApiErrorMessage = useApiErrorMessage();
   const [sessionId, setSessionId] = useState(() => {
     if (
@@ -600,12 +603,24 @@ export function BookingForm({
                       </div>
                     ) : null}
                   </div>
+                  {showPayPalPayment && (
+                    <button
+                      type="button"
+                      disabled={isSubmitting || payPalPayment !== null}
+                      onClick={() => setInquiryOpen(true)}
+                      className="min-h-11 px-2 text-center text-sm font-medium text-primary-strong underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary disabled:opacity-40"
+                    >
+                      {inquiryT("trigger")}
+                    </button>
+                  )}
                 </div>
               </BottomActionBar>
             </div>
           </BookingPanel>
         </main>
       </PageContainer>
+
+      {inquiryOpen && <AlternativePaymentDialog onClose={() => setInquiryOpen(false)} />}
 
       {calendarOpen ? (
         <AvailabilityCalendarDialog

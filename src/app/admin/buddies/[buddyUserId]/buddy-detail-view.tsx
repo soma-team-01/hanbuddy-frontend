@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminSignupInfoSection } from "@/app/admin/admin-signup-info";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -228,6 +230,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
         </div>
       </section>
 
+      <AdminSignupInfoSection info={user} />
       <section className="mt-8 rounded-3xl border border-line-soft bg-white p-6 md:p-8">
         <h2 className="font-display text-xl font-extrabold">운영 정보</h2>
         {performanceQuery.isPending ? (

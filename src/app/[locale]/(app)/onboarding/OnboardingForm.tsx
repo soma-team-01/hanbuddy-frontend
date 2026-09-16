@@ -1,6 +1,16 @@
 "use client";
 
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
+import { SignupExtraFields } from "./SignupExtraFields";
+import {
+  buildSignupExtra,
+  isBankName,
+  validateSignupSource,
+  validateSignupBank,
+  type SignupExtraDraft,
+  type SignupExtraError,
+} from "@/lib/auth/signup-extra";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -59,6 +69,7 @@ import {
 import { BirthDatePicker } from "./BirthDatePicker";
 import { ONBOARDING_SELECT_TRIGGER } from "@/app/[locale]/(app)/onboarding/onboarding-field-styles";
 import { isValidBirthDate } from "./birth-date";
+import mobileStyles from "./onboarding-mobile.module.css";
 
 type OnboardingValidationErrorKey = keyof (typeof messages)["Onboarding"]["validation"];
 type OnboardingErrorKey =
@@ -158,6 +169,14 @@ export function OnboardingForm({
   const router = useRouter();
   const isResubmission = Boolean(resubmission);
   const isBuddyFlow = userType === "BUDDY";
+  // Signup-only fields deliberately stay out of persistent onboarding drafts.
+  const [signupExtra, setSignupExtra] = useState<SignupExtraDraft>({
+    signupSource: "",
+    signupSourceDetail: "",
+    bankName: resubmission?.bankAccount?.bank ?? "",
+    bankAccountNumber: resubmission?.bankAccount?.accountNumber ?? "",
+  });
+  const [signupExtraError, setSignupExtraError] = useState<SignupExtraError | null>(null);
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;
   const draftScope = getOnboardingDraftScope({
     userType,
@@ -193,6 +212,7 @@ export function OnboardingForm({
     fallbackKey: RequestFailureKey;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionInFlight = useRef(false);
   const currentLocalDate = useSyncExternalStore(
     subscribeToLocalDate,
     getCurrentLocalDateInputValue,
@@ -475,16 +495,35 @@ export function OnboardingForm({
     if (draftScope) clearOnboardingDraft(draftScope);
   }
 
+  function validateExtra(step: 1 | 2) {
+    const error =
+      step === 1
+        ? isResubmission
+          ? null
+          : validateSignupSource(signupExtra)
+        : validateSignupBank(signupExtra, userType);
+    setSignupExtraError(error);
+    return error === null;
+  }
+
   function handleContinue() {
     setErrorKey(null);
     setRequestFailure(null);
 
-    if (currentStep === 1 && validateAboutYou()) goToStep(2);
-    if (currentStep === 2 && !isResubmission && validateContact()) goToStep(3);
+    if (currentStep === 1 && validateAboutYou() && validateExtra(1)) goToStep(2);
+    if (currentStep === 2 && !isResubmission) {
+      // A restored legacy draft may have progressed without collecting a signup source.
+      if (!validateExtra(1)) {
+        goToStep(1);
+        return;
+      }
+      if (validateContact() && validateExtra(2)) goToStep(3);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submissionInFlight.current) return;
     setErrorKey(null);
     setRequestFailure(null);
 
@@ -493,11 +532,11 @@ export function OnboardingForm({
       return;
     }
 
-    if (!validateAboutYou()) {
+    if (!validateAboutYou() || !validateExtra(1)) {
       setCurrentStep(1);
       return;
     }
-    if (!validateContact()) {
+    if (!validateContact() || !validateExtra(2)) {
       setCurrentStep(2);
       return;
     }
@@ -509,6 +548,7 @@ export function OnboardingForm({
       ? findCountry(messagingCountry)?.dialCode
       : "";
 
+    submissionInFlight.current = true;
     setIsSubmitting(true);
     try {
       let profileImageKey: string | null | undefined;
@@ -531,10 +571,17 @@ export function OnboardingForm({
         ? {
             ...commonProfile,
             profileImageKey: profileImageKey ?? null,
+            ...(isBankName(signupExtra.bankName)
+              ? {
+                  bankName: signupExtra.bankName,
+                  bankAccountNumber: signupExtra.bankAccountNumber.trim(),
+                }
+              : {}),
           }
         : {
             ...commonProfile,
             userType,
+            ...buildSignupExtra(signupExtra, userType),
             ...(profileImageKey ? { profileImageKey } : {}),
             agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
@@ -552,6 +599,15 @@ export function OnboardingForm({
         ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
+        if (body && !body.isSuccess) {
+          if (!isResubmission && body.code === "AUTH400_SIGNUP_SOURCE") {
+            setSignupExtraError({ field: "source", key: "sourceInvalid" });
+            goToStep(1);
+          } else if (body.code === "AUTH400_BANK_ACCOUNT") {
+            setSignupExtraError({ field: "bank", key: "bankInvalid" });
+            goToStep(2);
+          }
+        }
         setRequestFailure({
           error: createApiClientError(response.status, body && !body.isSuccess ? body : undefined),
           fallbackKey: isResubmission ? "resubmissionFailed" : "signupFailed",
@@ -595,18 +651,19 @@ export function OnboardingForm({
     } catch (error) {
       setRequestFailure({ error, fallbackKey: "serverUnavailable" });
     } finally {
+      submissionInFlight.current = false;
       setIsSubmitting(false);
     }
   }
 
   let profilePhoto = (
-    <div className="flex size-16 items-center justify-center rounded-2xl border border-line-soft bg-canvas-soft ring-4 ring-primary-soft">
+    <div className="flex size-16 items-center justify-center rounded-2xl border border-line-soft bg-canvas-soft ring-4 ring-primary-soft max-md:size-14">
       <Image
         src="/images/brand/logo-borderless.webp"
         alt={t("defaultProfilePhoto")}
         width={40}
         height={40}
-        className="size-10 object-contain"
+        className="size-10 object-contain max-md:size-8"
       />
     </div>
   );
@@ -618,7 +675,7 @@ export function OnboardingForm({
         width={64}
         height={64}
         unoptimized
-        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft max-md:size-14"
       />
     );
   } else if (existingProfileImageUrl) {
@@ -629,7 +686,7 @@ export function OnboardingForm({
         width={64}
         height={64}
         unoptimized
-        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft"
+        className="size-16 rounded-2xl border border-line-soft object-cover ring-4 ring-primary-soft max-md:size-14"
       />
     );
   }
@@ -652,10 +709,7 @@ export function OnboardingForm({
         title: resubmissionT("title"),
         eyebrow: resubmissionT("eyebrow"),
         headline: resubmissionT("headline"),
-        description: resubmissionT("description"),
-        photoGuidance: resubmissionT("profilePhotoOptional"),
-        contactMethods: resubmissionT("contactMethods"),
-        contactDescription: resubmissionT("contactDescription"),
+        contactMethods: buddyT("contactMethods"),
         submit: resubmissionT("submit"),
         submitting: resubmissionT("submitting"),
       };
@@ -665,10 +719,7 @@ export function OnboardingForm({
         title: buddyT("title"),
         eyebrow: buddyT("eyebrow"),
         headline: buddyT("headline"),
-        description: buddyT("description"),
-        photoGuidance: buddyT("profilePhotoOptional"),
         contactMethods: buddyT("contactMethods"),
-        contactDescription: buddyT("contactDescription"),
         submit: buddyT("completeRegistration"),
         submitting: buddyT("completing"),
       };
@@ -677,10 +728,7 @@ export function OnboardingForm({
       title: t("title"),
       eyebrow: t("eyebrow"),
       headline: t("headline"),
-      description: t("description"),
-      photoGuidance: t("profilePhotoOptional"),
       contactMethods: t("contactMethods"),
-      contactDescription: t("contactDescription"),
       submit: t("completeRegistration"),
       submitting: t("completing"),
     };
@@ -722,32 +770,33 @@ export function OnboardingForm({
     },
   ];
   const stepLabels = isResubmission
-    ? [t("steps.aboutYou"), t("steps.contact")]
-    : [t("steps.aboutYou"), t("steps.contact"), t("steps.agreements")];
+    ? [t("steps.aboutYou"), buddyT("contactMethods")]
+    : [
+        t("steps.aboutYou"),
+        isBuddyFlow ? buddyT("contactMethods") : t("steps.contact"),
+        t("steps.agreements"),
+      ];
 
   return (
-    <div className="flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0">
-      <main className="flex-1 py-3 md:py-4">
+    <div className={`${mobileStyles.compact} flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0`}>
+      <main className="flex-1 py-3 max-md:py-2 md:py-4">
         <PageContainer>
-          <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4">
+          <div className="mx-auto mt-2 grid w-full max-w-[1280px] grid-cols-[40px_minmax(0,1fr)] items-start gap-4 max-md:mt-0 max-md:grid-cols-[32px_minmax(0,1fr)] max-md:gap-x-2 max-md:gap-y-1">
             <Link
               href={getOnboardingBackHref(isResubmission, isBuddyFlow)}
               aria-label={accessibilityT("close")}
               onNavigate={discardDraft}
-              className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+              className="inline-flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong max-md:size-8"
             >
-              <XIcon className="size-5" />
+              <XIcon className="size-5 max-md:size-4" />
             </Link>
-            <header className="min-w-0 pt-1 text-left">
-              <p className="font-display text-[11px] font-bold tracking-[0.22em] text-primary uppercase">
+            <header className="min-w-0 pt-1 text-left max-md:contents">
+              <p className="font-display text-[11px] font-bold tracking-[0.22em] text-primary uppercase max-md:self-center max-md:tracking-[0.16em]">
                 {roleCopy.eyebrow}
               </p>
-              <h1 className="mt-1.5 font-display text-xl leading-tight font-extrabold tracking-[-0.03em] text-ink md:text-2xl lg:whitespace-nowrap">
+              <h1 className="mt-1.5 font-display text-xl leading-tight font-extrabold tracking-[-0.03em] text-ink max-md:col-span-2 max-md:mt-0 max-md:text-lg md:text-2xl lg:whitespace-nowrap">
                 {roleCopy.headline}
               </h1>
-              <p className="mt-1.5 text-sm leading-6 text-muted lg:whitespace-nowrap">
-                {roleCopy.description}
-              </p>
             </header>
           </div>
 
@@ -756,11 +805,14 @@ export function OnboardingForm({
             aria-label={roleCopy.title}
             noValidate
             onSubmit={handleSubmit}
-            className={`mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft lg:grid-cols-[250px_minmax(0,1fr)] ${currentStep === 3 ? "" : "lg:min-h-[620px]"}`}
+            onKeyDownCapture={(event) => {
+              if (event.key === "Enter" && event.repeat) event.preventDefault();
+            }}
+            className={`mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft max-md:mt-3 max-md:rounded-[20px] lg:grid-cols-[250px_minmax(0,1fr)] ${currentStep === 3 ? "" : "lg:min-h-[620px]"}`}
           >
             <nav
               aria-label={t("steps.progress", { current: currentStep, total: stepLabels.length })}
-              className="border-b border-line-soft px-5 py-4 lg:border-r lg:border-b-0 lg:px-8 lg:py-12"
+              className="border-b border-line-soft px-5 py-4 max-md:px-3 max-md:py-2.5 lg:border-r lg:border-b-0 lg:px-8 lg:py-12"
             >
               <p className="mb-4 hidden text-xs font-bold tracking-[0.18em] text-primary uppercase lg:block">
                 {t("steps.progress", { current: currentStep, total: stepLabels.length })}
@@ -776,10 +828,10 @@ export function OnboardingForm({
                     <li
                       key={label}
                       aria-current={isActive ? "step" : undefined}
-                      className="flex min-w-0 items-center gap-2.5"
+                      className="flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2.5 sm:text-left"
                     >
                       <span
-                        className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold max-md:size-6 ${
                           isActive || isComplete
                             ? "border-primary bg-primary text-on-primary"
                             : "border-line-strong bg-canvas-soft text-muted"
@@ -788,7 +840,7 @@ export function OnboardingForm({
                         {step}
                       </span>
                       <span
-                        className={`hidden truncate text-xs font-semibold sm:block sm:text-sm ${
+                        className={`min-w-0 text-xs leading-4 font-semibold break-keep sm:text-sm sm:leading-5 ${
                           isActive ? "text-primary-strong" : "text-muted"
                         }`}
                       >
@@ -802,22 +854,22 @@ export function OnboardingForm({
 
             <div className="flex min-w-0 flex-col">
               {currentStep === 1 ? (
-                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                <section className="px-5 py-8 max-md:px-4 max-md:py-4 md:px-12 md:py-10 lg:px-16 lg:py-14">
                   <div>
                     <h2
                       ref={stepHeadingRef}
                       tabIndex={-1}
-                      className="font-display text-xl font-bold text-ink outline-none"
+                      className="font-display text-xl font-bold text-ink outline-none max-md:text-base"
                     >
                       {t("personalInformation")}
                     </h2>
                   </div>
 
-                  <div className="mt-8 max-w-2xl space-y-6">
-                    <div className="grid items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
-                      <div className="relative shrink-0">
+                  <div className="mt-8 max-w-2xl space-y-6 max-md:mt-4 max-md:space-y-4">
+                    <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-4 max-md:grid-cols-[56px_minmax(0,1fr)]">
+                      <div className="relative size-16 shrink-0 max-md:size-14">
                         {profilePhoto}
-                        <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover">
+                        <label className="absolute -right-2 -bottom-2 flex size-8 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary transition-colors focus-within:ring-2 focus-within:ring-primary-strong focus-within:ring-offset-2 hover:bg-primary-hover max-md:size-7">
                           <CameraIcon className="size-4" />
                           <span className="sr-only">{t("addProfilePhoto")}</span>
                           <input
@@ -857,7 +909,7 @@ export function OnboardingForm({
                               hasDisplayNameError ? "onboarding-display-name-error" : undefined
                             }
                             aria-invalid={hasDisplayNameError}
-                            className="focus-border-only h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
+                            className="focus-border-only h-11 w-full rounded-xl border border-line-soft bg-canvas-soft px-3 text-sm text-ink transition-colors hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
                           />
                         </label>
                         {hasDisplayNameError ? (
@@ -869,15 +921,13 @@ export function OnboardingForm({
                             {t("displayNameHint")}
                           </p>
                         ) : null}
-                        <p
-                          className={`${hasDisplayNameError ? "mt-1" : "mt-2"} text-xs leading-5 text-muted`}
-                        >
-                          {roleCopy.photoGuidance}
-                        </p>
                       </div>
                     </div>
 
-                    <div data-testid="onboarding-personal-fields" className="grid gap-4">
+                    <div
+                      data-testid="onboarding-personal-fields"
+                      className="grid gap-4 max-md:gap-3"
+                    >
                       <div className="flex flex-col gap-1.5">
                         <span className="text-sm font-medium text-ink">{t("nationality")}</span>
                         <CountrySelect
@@ -887,48 +937,43 @@ export function OnboardingForm({
                           triggerClassName={`${ONBOARDING_SELECT_TRIGGER} gap-2 px-4`}
                         />
                       </div>
-                      {isBuddyFlow ? (
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-sm font-medium text-ink">{t("birthDate")}</span>
-                          <input
-                            name="birthDate"
-                            type="date"
-                            min={oldestAllowedBirthDate || undefined}
-                            max={youngestAllowedBirthDate || undefined}
-                            required
-                            value={birthDate}
-                            onChange={(event) => setBirthDate(event.target.value)}
-                            aria-label={t("birthDate")}
-                            className="focus-border-only w-full rounded-xl border border-line-soft bg-canvas-soft px-4 py-3 text-base text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft focus:outline-none"
-                          />
-                        </label>
-                      ) : (
-                        <BirthDatePicker
-                          value={birthDate}
-                          today={currentLocalDate}
-                          oldestAllowedBirthDate={oldestAllowedBirthDate}
-                          youngestAllowedBirthDate={youngestAllowedBirthDate}
-                          invalid={errorKey === "validation.birthDateInvalid"}
-                          onChange={(value) => {
-                            setBirthDate(value);
-                            if (
-                              isValidBirthDate(
-                                value,
-                                currentLocalDate,
-                                oldestAllowedBirthDate,
-                                youngestAllowedBirthDate,
-                              )
+                      <BirthDatePicker
+                        value={birthDate}
+                        today={currentLocalDate}
+                        oldestAllowedBirthDate={oldestAllowedBirthDate}
+                        youngestAllowedBirthDate={youngestAllowedBirthDate}
+                        invalid={errorKey === "validation.birthDateInvalid"}
+                        onChange={(value) => {
+                          setBirthDate(value);
+                          if (
+                            isValidBirthDate(
+                              value,
+                              currentLocalDate,
+                              oldestAllowedBirthDate,
+                              youngestAllowedBirthDate,
                             )
-                              setErrorKey(null);
-                          }}
-                        />
-                      )}
+                          )
+                            setErrorKey(null);
+                        }}
+                      />
                     </div>
+
+                    {!isResubmission && (
+                      <SignupExtraFields
+                        value={signupExtra}
+                        section="source"
+                        error={signupExtraError}
+                        onChange={(value) => {
+                          setSignupExtra(value);
+                          setSignupExtraError(null);
+                        }}
+                      />
+                    )}
 
                     {resubmission?.rejectionReason ? (
                       <div
                         data-testid="resubmission-rejection-reason"
-                        className="rounded-2xl border border-primary/20 bg-primary-soft px-4 py-3"
+                        className="rounded-2xl border border-line-soft bg-canvas-soft px-4 py-3"
                       >
                         <p className="text-xs font-bold text-primary-strong">
                           {resubmissionT("rejectionReason")}
@@ -943,18 +988,17 @@ export function OnboardingForm({
               ) : null}
 
               {currentStep === 2 ? (
-                <section className="px-5 py-8 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                <section className="px-5 py-8 max-md:px-4 max-md:py-4 md:px-12 md:py-10 lg:px-16 lg:py-14">
                   <div>
                     <h2
                       ref={stepHeadingRef}
                       tabIndex={-1}
-                      className="font-display text-xl font-bold text-ink outline-none"
+                      className="font-display text-xl font-bold text-ink outline-none max-md:text-base"
                     >
                       {roleCopy.contactMethods}
                     </h2>
-                    <p className="mt-1 text-sm text-muted">{roleCopy.contactDescription}</p>
                   </div>
-                  <div className="mt-8 flex max-w-3xl flex-col gap-1.5">
+                  <div className="mt-8 flex max-w-3xl flex-col gap-1.5 max-md:mt-4">
                     <span className="text-sm font-medium text-ink">
                       {isBuddyFlow ? messagingT("phoneNumber") : t("preferredMessagingApp")}
                     </span>
@@ -972,21 +1016,31 @@ export function OnboardingForm({
                       showAppSelector={!isBuddyFlow}
                     />
                   </div>
+                  {isBuddyFlow && (
+                    <SignupExtraFields
+                      value={signupExtra}
+                      section="bank"
+                      error={signupExtraError}
+                      onChange={(value) => {
+                        setSignupExtra(value);
+                        setSignupExtraError(null);
+                      }}
+                    />
+                  )}
                 </section>
               ) : null}
 
               {!isResubmission && currentStep === 3 ? (
-                <section className="px-5 py-6 md:px-12 md:py-8 lg:px-16">
+                <section className="px-5 py-6 max-md:px-4 max-md:py-4 md:px-12 md:py-8 lg:px-16">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2
                         ref={stepHeadingRef}
                         tabIndex={-1}
-                        className="font-display text-xl font-bold text-ink outline-none"
+                        className="font-display text-xl font-bold text-ink outline-none max-md:text-base"
                       >
                         {t("agreements.title")}
                       </h2>
-                      <p className="mt-1 text-sm text-muted">{t("agreements.description")}</p>
                     </div>
                     <label className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-full border border-line-soft px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary sm:self-auto">
                       <input
@@ -999,11 +1053,14 @@ export function OnboardingForm({
                     </label>
                   </div>
 
-                  <div className="mt-5 max-w-3xl divide-y divide-line-soft border-y border-line-soft">
+                  <div className="mt-5 max-w-3xl divide-y divide-line-soft border-y border-line-soft max-md:mt-3">
                     {agreementItems.map((item) => {
                       const isRequired = requiredAgreementTypes.includes(item.type);
                       return (
-                        <div key={item.type} className="flex items-center gap-2 py-1.5">
+                        <div
+                          key={item.type}
+                          className="flex items-center gap-2 py-1.5 max-md:py-0.5"
+                        >
                           <label className="flex size-11 shrink-0 cursor-pointer items-center justify-center">
                             <input
                               type="checkbox"
@@ -1059,6 +1116,7 @@ export function OnboardingForm({
                 {currentStep > 1 ? (
                   <button
                     type="button"
+                    disabled={isSubmitting}
                     onClick={() => goToStep((currentStep - 1) as OnboardingStep)}
                     className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-line-soft bg-canvas-soft px-5 font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary lg:flex-none"
                   >
@@ -1067,9 +1125,20 @@ export function OnboardingForm({
                   </button>
                 ) : null}
                 <button
+                  key={currentStep}
                   form="google-onboarding-form"
                   type={currentStep === finalStep ? "submit" : "button"}
-                  onClick={currentStep === finalStep ? undefined : handleContinue}
+                  onClick={(event) => {
+                    // A click that advances a step must never activate the new submit action.
+                    if (event.detail > 1) {
+                      event.preventDefault();
+                      return;
+                    }
+                    if (currentStep !== finalStep) {
+                      event.preventDefault();
+                      handleContinue();
+                    }
+                  }}
                   disabled={isSubmitting}
                   className="flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60 lg:min-w-32 lg:flex-none"
                 >

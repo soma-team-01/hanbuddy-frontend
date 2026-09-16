@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -213,6 +213,104 @@ async function completeAllStepsUntilReview() {
 }
 
 describe("CreateActivityForm", () => {
+  it("ignores the second click after entering preview instead of publishing", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await completeAllStepsUntilReview();
+    const submit = screen.getByRole("button", { name: "Register experience" });
+    fireEvent.click(submit, { detail: 2 });
+    expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
+    expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
+  });
+  it("uploads and registers only once after a first click, second click and repeated Enter", async () => {
+    const uploadGate = Promise.withResolvers<void>();
+    const registrationGate = Promise.withResolvers<void>();
+    const uploadImplementation = mockedUploadActivityImageSet.getMockImplementation()!;
+    const registrationImplementation = mockedCreateMyActivity.getMockImplementation()!;
+    mockedUploadActivityImageSet.mockImplementation(async (...args) => {
+      await uploadGate.promise;
+      return uploadImplementation(...args);
+    });
+    mockedCreateMyActivity.mockImplementation(async (...args) => {
+      await registrationGate.promise;
+      return registrationImplementation(...args);
+    });
+
+    renderWithQueryClient(<CreateActivityForm />);
+    await completeAllStepsUntilReview();
+    const submit = screen.getByRole("button", { name: "Register experience" });
+
+    const language = screen.getByRole("button", {
+      name: "Select language, current language: English",
+    });
+    fireEvent.click(language);
+    const korean = screen.getByRole("menuitemradio", { name: "한국어" });
+
+    // Keep events in one batch to cover requests queued before disabled is rendered.
+    act(() => {
+      fireEvent.click(submit, { detail: 1 });
+      fireEvent.click(korean);
+      fireEvent.click(submit, { detail: 2 });
+      for (let repeat = 0; repeat < 3; repeat += 1) {
+        expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
+      }
+      fireEvent.click(submit, { detail: 0 }); // An already queued keyboard activation.
+    });
+    expect(submit).toBeDisabled();
+    expect(language).toBeDisabled();
+    expect(routerReplace).not.toHaveBeenCalled();
+    expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+
+    await act(async () => uploadGate.resolve());
+    await waitFor(() => expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1));
+    expect(submit).toBeDisabled();
+    expect(language).toBeDisabled();
+    fireEvent.click(submit, { detail: 2 });
+    expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
+    expect(routerPush).not.toHaveBeenCalled();
+
+    await act(async () => registrationGate.resolve());
+    await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/en/my-activities"));
+    // router.push has returned, but the old screen remains mounted until navigation completes.
+    expect(submit).toBeDisabled();
+    expect(language).toBeDisabled();
+    fireEvent.click(language);
+    expect(routerReplace).not.toHaveBeenCalled();
+    fireEvent.click(submit, { detail: 1 });
+    fireEvent.click(submit, { detail: 0 });
+    fireEvent.keyDown(submit, { key: "Enter" });
+    expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
+    expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1);
+    expect(routerPush).toHaveBeenCalledTimes(1);
+  });
+  it.each(["upload", "registration"] as const)(
+    "releases the submission lock after %s failure and allows a successful retry",
+    async (failurePhase) => {
+      if (failurePhase === "upload")
+        mockedUploadActivityImageSet.mockRejectedValueOnce(new Error("upload failed"));
+      else mockedCreateMyActivity.mockRejectedValueOnce(new Error("registration failed"));
+      renderWithQueryClient(<CreateActivityForm />);
+      await completeAllStepsUntilReview();
+      fireEvent.click(screen.getByRole("button", { name: "Register experience" }));
+      expect(await screen.findByRole("alert")).toBeInTheDocument();
+      const retry = screen.getByRole("button", { name: "Register experience" });
+      expect(retry).toBeEnabled();
+      expect(
+        screen.getByRole("button", {
+          name: "Select language, current language: English",
+        }),
+      ).toBeEnabled();
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(mockedClearActivityCreateDraft).not.toHaveBeenCalled();
+      fireEvent.click(retry);
+      await waitFor(() => expect(routerPush).toHaveBeenCalledTimes(1));
+      expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(2);
+      expect(mockedCreateMyActivity).toHaveBeenCalledTimes(failurePhase === "upload" ? 1 : 2);
+      expect(retry).toBeDisabled();
+    },
+  );
   beforeEach(() => {
     createObjectUrlMock.mockClear();
     revokeObjectUrlMock.mockClear();
@@ -846,7 +944,8 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    const save = screen.getByRole("button", { name: "Save changes" });
+    fireEvent.click(save);
 
     await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
     expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
@@ -880,6 +979,15 @@ describe("CreateActivityForm", () => {
     expect(request).not.toHaveProperty("discountPercent");
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+    expect(save).toBeDisabled();
+    const language = screen.getByRole("button", {
+      name: "Select language, current language: English",
+    });
+    expect(language).toBeDisabled();
+    fireEvent.click(language);
+    expect(routerReplace).not.toHaveBeenCalled();
+    fireEvent.click(save);
+    expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
   });
 
   it("saves from any step in edit mode without walking to the review screen", async () => {
@@ -894,7 +1002,8 @@ describe("CreateActivityForm", () => {
       screen.queryByRole("heading", { name: "Preview your experience" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    const save = screen.getByRole("button", { name: "Save changes" });
+    fireEvent.click(save);
 
     await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
     const [calledActivityId, request] = mockedUpdateMyActivity.mock.calls[0];
@@ -902,6 +1011,9 @@ describe("CreateActivityForm", () => {
     expect(request).toMatchObject({ title: "Seoul market walk", status: "ACTIVE" });
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
+    expect(save).toBeDisabled();
+    fireEvent.click(save);
+    expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
   });
 
   it("keeps the per-step save away from create mode", async () => {

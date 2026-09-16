@@ -27,6 +27,58 @@ const EMPTY_PAGE = {
 };
 
 describe("AdminUsersDashboard", () => {
+  it("resets pagination for ID-only searches and shows empty matches normally", async () => {
+    mockedGetAdminUsers.mockImplementation(async (filters) => ({
+      status: "success",
+      users: { ...EMPTY_PAGE, page: filters?.page ?? 0, totalPages: 3 },
+    }));
+    renderWithQueryClient(<AdminUsersDashboard />);
+    fireEvent.click(await screen.findByRole("button", { name: "다음 페이지" }));
+    await waitFor(() =>
+      expect(mockedGetAdminUsers).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 })),
+    );
+    fireEvent.change(screen.getByLabelText("회원 ID"), { target: { value: "999" } });
+    fireEvent.click(screen.getByRole("button", { name: "검색" }));
+    await waitFor(() =>
+      expect(mockedGetAdminUsers).toHaveBeenLastCalledWith({
+        userId: 999,
+        email: undefined,
+        displayName: undefined,
+        accountStatus: undefined,
+        userType: "TOURIST",
+        page: 0,
+        size: 20,
+      }),
+    );
+    expect(screen.getByText("조건에 맞는 회원이 없습니다.")).toBeInTheDocument();
+  });
+  it("searches an exact ID with other filters and resets it", async () => {
+    renderWithQueryClient(<AdminUsersDashboard />);
+    await screen.findByText("조건에 맞는 회원이 없습니다.");
+    fireEvent.change(screen.getByLabelText("회원 ID"), { target: { value: "005" } });
+    fireEvent.change(screen.getByLabelText("닉네임"), { target: { value: "여행" } });
+    fireEvent.click(screen.getByRole("button", { name: "검색" }));
+    await waitFor(() =>
+      expect(mockedGetAdminUsers).toHaveBeenLastCalledWith(
+        expect.objectContaining({ userId: 5, displayName: "여행", userType: "TOURIST", page: 0 }),
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "초기화" }));
+    expect(screen.getByLabelText("회원 ID")).toHaveValue("");
+    expect(screen.getByLabelText("닉네임")).toHaveValue("");
+  });
+  it.each(["-1", "0", "1.5", "abc", "1e3", "9007199254740992"])(
+    "rejects invalid ID %s",
+    async (value) => {
+      renderWithQueryClient(<AdminUsersDashboard />);
+      await screen.findByText("조건에 맞는 회원이 없습니다.");
+      mockedGetAdminUsers.mockClear();
+      fireEvent.change(screen.getByLabelText("회원 ID"), { target: { value } });
+      fireEvent.click(screen.getByRole("button", { name: "검색" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("양의 정수");
+      expect(mockedGetAdminUsers).not.toHaveBeenCalled();
+    },
+  );
   beforeEach(() => {
     mockedGetAdminUsers.mockReset();
     mockedGetAdminUsers.mockResolvedValue({ status: "success", users: EMPTY_PAGE });
@@ -45,7 +97,7 @@ describe("AdminUsersDashboard", () => {
     expect(screen.getByLabelText("닉네임")).toBeInTheDocument();
     expect(screen.getByLabelText("계정 상태")).toBeInTheDocument();
     expect(screen.queryByLabelText("역할")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("회원 ID")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("회원 ID")).toBeInTheDocument();
     expect(screen.queryByLabelText("이름")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("국적 코드")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("가입 시작일")).not.toBeInTheDocument();

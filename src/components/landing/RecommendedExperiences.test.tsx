@@ -57,6 +57,23 @@ describe("RecommendedExperiences", () => {
     expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
   });
 
+  it("scrolls cards horizontally with snapping on mobile and keeps the grid from md up", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [1, 2, 3, 4].map(createActivity),
+    });
+
+    renderWithQueryClient(<RecommendedExperiences />);
+    await screen.findByText("HanBuddy activity 1");
+
+    const track = screen.getByTestId("recommended-track");
+    expect(track).toHaveClass("snap-x", "overflow-x-auto", "md:grid", "lg:grid-cols-4");
+    const card = screen.getByRole("link", { name: /HanBuddy activity 1/ });
+    expect(card).toHaveClass("snap-start", "shrink-0", "w-[78vw]", "md:w-auto");
+    // 44px 터치 타깃
+    expect(screen.getByRole("link", { name: /View all experiences/ })).toHaveClass("min-h-11");
+  });
+
   it("keeps the recommendation section visible when no activities are available", async () => {
     mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
 

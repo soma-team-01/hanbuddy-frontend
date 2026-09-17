@@ -34,6 +34,15 @@ const touristActivity = {
 } as const;
 
 describe("ActivityFeed", () => {
+  it("renders server initial data and links before a client request completes", () => {
+    mockedGetTouristActivities.mockReturnValue(new Promise(() => {}));
+    renderWithQueryClient(<ActivityFeed initialActivities={[touristActivity]} />);
+    expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute(
+      "href",
+      "/en/activities/42",
+    );
+    expect(screen.queryByText("Loading activities...")).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     mockedGetTouristActivities.mockReset();
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import type { TouristActivityDetail } from "@/types/activity";
 import { useAnalyticsView, useFunnelEvent } from "@/components/analytics/AnalyticsProvider";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -15,13 +16,17 @@ import { activityWeatherQueryOptions, touristActivityQueryOptions } from "@/lib/
 import { useHistoryBack } from "@/lib/navigation/use-history-back";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
-export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
+export function ActivityDetailContent({
+  activityId,
+  initialActivity,
+}: Readonly<{ activityId: string; initialActivity?: TouristActivityDetail }>) {
   const track = useFunnelEvent();
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
-  const activityQuery = useQuery(
-    touristActivityQueryOptions(activityId, language, getDefaultDisplayCurrency(locale)),
-  );
+  const activityQuery = useQuery({
+    ...touristActivityQueryOptions(activityId, language, getDefaultDisplayCurrency(locale)),
+    initialData: initialActivity,
+  });
   const weatherQuery = useQuery({
     ...activityWeatherQueryOptions(activityId),
     enabled: activityQuery.isSuccess,

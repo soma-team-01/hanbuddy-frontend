@@ -128,6 +128,15 @@ function mockActivityDetail() {
 }
 
 describe("ActivityDetailContent", () => {
+  it("renders the initial public detail before a client request completes", () => {
+    mockedGetGoogleMapsApiKey.mockReturnValue("");
+    mockedGetTouristActivity.mockReturnValue(new Promise(() => {}));
+    renderWithQueryClient(
+      <ActivityDetailContent activityId="42" initialActivity={buildActivityDetail()} />,
+    );
+    expect(screen.getByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
+    expect(screen.getByText("Walk through quiet alleys with a local buddy.")).toBeInTheDocument();
+  });
   beforeEach(() => {
     routerMock.back.mockReset();
     routerMock.push.mockReset();

@@ -29,12 +29,15 @@ describe("ActivityCard", () => {
     expect(screen.getByText("₩35,000")).toHaveClass("text-ink");
     expect(screen.getByText("per person")).toBeInTheDocument();
     expect(screen.queryByText("Min Buddy")).not.toBeInTheDocument();
-    expect(screen.getByText("Seoul")).toHaveClass("truncate");
+    expect(screen.getByText("Gwangjang Market")).toHaveClass("truncate");
+    expect(screen.queryByText("Seoul")).not.toBeInTheDocument();
     expect(screen.queryByText("Sold out")).not.toBeInTheDocument();
   });
 
   it("omits the meeting place when the API does not provide one", () => {
-    const { container } = renderWithIntl(<ActivityCard activity={{ ...activity, location: "" }} />);
+    const { container } = renderWithIntl(
+      <ActivityCard activity={{ ...activity, meetingPoint: { name: "", area: "" } }} />,
+    );
 
     expect(container.querySelector('[data-slot="activity-card-location"]')).toBeNull();
   });

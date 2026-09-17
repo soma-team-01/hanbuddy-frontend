@@ -16,6 +16,7 @@ export function ActivityCard({
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
   const hasReferencePrice =
     activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
+  const meetingPlace = activity.meetingPoint.name;
   const estimatedPriceTitle = activity.referencePriceExchangeRateDate
     ? t("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
     : t("estimatedPrice");
@@ -51,7 +52,7 @@ export function ActivityCard({
           {activity.title}
         </h2>
 
-        {activity.durationMinutes !== undefined || activity.location ? (
+        {activity.durationMinutes !== undefined || meetingPlace ? (
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-5 text-muted">
             {activity.durationMinutes !== undefined ? (
               <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
@@ -59,10 +60,10 @@ export function ActivityCard({
                 <span>{formatDuration(t, activity.durationMinutes)}</span>
               </p>
             ) : null}
-            {activity.location ? (
+            {meetingPlace ? (
               <p data-slot="activity-card-location" className="flex min-w-0 items-center gap-1">
                 <MapPinIcon className="size-4 shrink-0" />
-                <span className="truncate">{activity.location}</span>
+                <span className="truncate">{meetingPlace}</span>
               </p>
             ) : null}
           </div>

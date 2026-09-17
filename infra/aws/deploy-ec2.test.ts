@@ -71,7 +71,11 @@ else
 fi
 `;
 
-function deploy(scenario = "success", redirect = "www.hanbuddy.kr") {
+function deploy(
+  scenario = "success",
+  redirect = "www.hanbuddy.kr",
+  analytics = { GA_ENABLED: "false", GA_MEASUREMENT_ID: "" },
+) {
   const directory = mkdtempSync(join(tmpdir(), "hanbuddy-deploy-test-"));
   try {
     writeFileSync(join(directory, "aws"), awsMock, { mode: 0o755 });
@@ -100,6 +104,7 @@ function deploy(scenario = "success", redirect = "www.hanbuddy.kr") {
           REVIEW_LOGIN_ENABLED: "false",
           GOOGLE_CLIENT_ID: "test",
           GOOGLE_REDIRECT_URI: "https://hanbuddy.kr/auth/google/callback",
+          ...analytics,
         }),
       },
     });
@@ -161,5 +166,30 @@ describe("EC2 deployment cutover (mock commands)", () => {
     expect(result.status, result.stderr).toBe(0);
     expect(result.records).toEqual(expect.arrayContaining(originalRecords));
     expect(result.curl).not.toContain("www.hanbuddy.kr");
+    expect(result.remote).toContain("ga_enabled=\"$(printf '%s' 'ZmFsc2U=' | base64 --decode)\"");
+    expect(result.remote).toContain("ga_measurement_id=\"$(printf '%s' '' | base64 --decode)\"");
+    expect(result.remote).toContain('-e "GA_ENABLED=${ga_enabled}"');
+    expect(result.remote).toContain('-e "GA_MEASUREMENT_ID=${ga_measurement_id}"');
+  });
+
+  it("encodes GA values without exposing shell syntax or changing docker argument boundaries", () => {
+    const gaEnabled = "false\n$(touch /tmp/ga-enabled-injection)";
+    const measurementId = "G-TEST'\" $(touch /tmp/ga-id-injection)";
+    const result = deploy("success", "", {
+      GA_ENABLED: gaEnabled,
+      GA_MEASUREMENT_ID: measurementId,
+    });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.remote).not.toContain(gaEnabled);
+    expect(result.remote).not.toContain(measurementId);
+    expect(result.remote).toContain(
+      `ga_enabled="$(printf '%s' '${Buffer.from(gaEnabled).toString("base64")}' | base64 --decode)"`,
+    );
+    expect(result.remote).toContain(
+      `ga_measurement_id="$(printf '%s' '${Buffer.from(measurementId).toString("base64")}' | base64 --decode)"`,
+    );
+    expect(result.remote).toContain('-e "GA_ENABLED=${ga_enabled}"');
+    expect(result.remote).toContain('-e "GA_MEASUREMENT_ID=${ga_measurement_id}"');
   });
 });

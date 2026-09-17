@@ -1,5 +1,6 @@
 "use client";
 
+import { useAnalyticsView, useFunnelEvent } from "@/components/analytics/AnalyticsProvider";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
@@ -15,6 +16,7 @@ import { useHistoryBack } from "@/lib/navigation/use-history-back";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 export function ActivityDetailContent({ activityId }: Readonly<{ activityId: string }>) {
+  const track = useFunnelEvent();
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const activityQuery = useQuery(
@@ -39,6 +41,12 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
         t("localHost"),
       )
     : null;
+
+  useAnalyticsView(
+    "view_item",
+    Number(activityId),
+    activityQuery.isSuccess && Boolean(activity) && !activityQuery.error,
+  );
 
   if (activityQuery.isPending) {
     return (
@@ -72,6 +80,7 @@ export function ActivityDetailContent({ activityId }: Readonly<{ activityId: str
       <PageHeader onLeftClick={goBack} />
       <ActivityDetailView
         activity={activity}
+        onBookingClick={() => track("booking_cta_click", Number(activityId))}
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />
     </div>

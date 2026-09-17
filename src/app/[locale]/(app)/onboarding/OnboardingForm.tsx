@@ -1,5 +1,6 @@
 "use client";
 
+import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { SignupExtraFields } from "./SignupExtraFields";
 import {
   buildSignupExtra,
@@ -585,6 +586,7 @@ export function OnboardingForm({
             agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
 
+      if (!isResubmission) invalidateAnalyticsAccount();
       const response = await fetch(
         isResubmission ? "/api/auth/buddy/resubmission" : "/api/auth/google/signup",
         {

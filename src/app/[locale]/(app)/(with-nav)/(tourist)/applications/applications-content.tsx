@@ -1,5 +1,6 @@
 "use client";
 
+import { useFunnelEvent } from "@/components/analytics/AnalyticsProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -33,6 +34,7 @@ import type { CancelDialogOutcome } from "./cancel-dialog";
 export function ApplicationsContent({
   refundPolicyDocument,
 }: Readonly<{ refundPolicyDocument?: PolicyDocumentData }>) {
+  const track = useFunnelEvent();
   const queryClient = useQueryClient();
   const locale = useLocale();
   const language = getContentLanguage(locale);
@@ -150,6 +152,22 @@ export function ApplicationsContent({
       applicationId,
       paymentProvider,
     });
+    if (
+      payment.application.applicationId === Number(applicationId) &&
+      payment.paymentProvider === paymentProvider &&
+      (paymentProvider === "TOSS"
+        ? Boolean(payment.clientKey?.trim() && payment.orderNumber.trim()) &&
+          payment.paymentCurrency === "KRW"
+        : Boolean(payment.providerOrderId.trim()) && payment.paymentCurrency === "USD") &&
+      payment.application.status === "PENDING_PAYMENT" &&
+      payment.paymentStatus === "CREATED" &&
+      Number.isFinite(payment.paymentAmount) &&
+      payment.paymentAmount > 0 &&
+      /^[A-Z]{3}$/.test(payment.paymentCurrency) &&
+      Date.parse(payment.orderExpiresAt) > Date.now()
+    ) {
+      track("begin_checkout", payment.application.activityId);
+    }
     if (paymentProvider === "PAYPAL") {
       setPayPalPayment(payment);
       return;

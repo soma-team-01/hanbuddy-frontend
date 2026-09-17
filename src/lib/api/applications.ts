@@ -1,3 +1,4 @@
+import { captureAnalyticsPayment } from "@/lib/analytics/cookie-runtime";
 import type {
   ApplicationCancellationReason,
   ApplicationConflictCheckResponse,
@@ -86,16 +87,24 @@ export async function createApplication(
   language: ContentLanguage,
   paymentProvider: PaymentProvider,
 ): Promise<PaymentReadyResult> {
-  return requestApiResult<PaymentReadyResponse, "payment">(
+  const ticket = captureAnalyticsPayment();
+  let context: string | null = null;
+  const result = await requestApiResult<PaymentReadyResponse, "payment">(
     withContentLanguage(withPaymentProvider("/api/applications", paymentProvider), language),
     "payment",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...ticket?.headers },
       body: JSON.stringify(request),
     },
     DEFAULT_APPLICATION_CREATE_ERROR_MESSAGE,
+    (response) => {
+      context = response.headers.get("X-Analytics-Context");
+    },
   );
+  if (result.status === "success" && ticket)
+    void ticket.complete(result.payment.application.applicationId, context);
+  return result;
 }
 
 export async function continueApplicationPayment(
@@ -103,7 +112,9 @@ export async function continueApplicationPayment(
   language: ContentLanguage,
   paymentProvider: PaymentProvider,
 ): Promise<PaymentReadyResult> {
-  return requestApiResult<PaymentReadyResponse, "payment">(
+  const ticket = captureAnalyticsPayment();
+  let context: string | null = null;
+  const result = await requestApiResult<PaymentReadyResponse, "payment">(
     withContentLanguage(
       withPaymentProvider(
         `/api/applications/me/${applicationId}/payment/continue`,
@@ -112,9 +123,15 @@ export async function continueApplicationPayment(
       language,
     ),
     "payment",
-    { method: "POST" },
+    { method: "POST", ...(ticket ? { headers: ticket.headers } : {}) },
     DEFAULT_PAYMENT_CONTINUE_ERROR_MESSAGE,
+    (response) => {
+      context = response.headers.get("X-Analytics-Context");
+    },
   );
+  if (result.status === "success" && ticket)
+    void ticket.complete(result.payment.application.applicationId, context);
+  return result;
 }
 
 export async function capturePayPalApplicationPayment(

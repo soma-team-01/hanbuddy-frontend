@@ -1,3 +1,5 @@
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { createTestAnalytics } from "@/test/analytics";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,6 +18,7 @@ const routerMock = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), back: vi
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => routerMock,
+  usePathname: () => "/en/activities/42",
 }));
 
 vi.mock("@/lib/api/activities", () => ({
@@ -715,4 +718,51 @@ describe("ActivityDetailContent", () => {
     expect(screen.queryByText("Anguk Station, Seoul")).not.toBeInTheDocument();
     expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(1);
   });
+});
+
+it("measures valid detail once and tracks active reservation selection", async () => {
+  const { controller, browser } = createTestAnalytics();
+  controller.visit("/en/activities/42");
+  await controller.accept();
+  mockedGetTouristActivity.mockResolvedValue({
+    status: "success",
+    activity: { ...buildActivityDetail(), activityId: 42 },
+  });
+  const view = renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <ActivityDetailContent activityId="42" />
+    </AnalyticsProvider>,
+  );
+  await waitFor(() =>
+    expect(browser.send.mock.calls.filter((c) => c[0] === "view_item")).toHaveLength(1),
+  );
+  view.rerender(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <ActivityDetailContent activityId="42" />
+    </AnalyticsProvider>,
+  );
+  expect(browser.send.mock.calls.filter((c) => c[0] === "view_item")).toHaveLength(1);
+  expect(browser.send.mock.calls.filter((c) => c[0] === "booking_cta_click")).toHaveLength(0);
+  fireEvent.click(screen.getByTestId("date-select-box"));
+  fireEvent.click(
+    within(await screen.findByRole("dialog")).getByRole("button", { name: /2:00 PM/ }),
+  );
+  const bookingLink = screen.getByRole("link", { name: "Book now" });
+  bookingLink.addEventListener("click", (event) => event.preventDefault());
+  fireEvent.click(bookingLink);
+  expect(browser.send.mock.calls.filter((c) => c[0] === "booking_cta_click")).toHaveLength(1);
+});
+it.each(["loading", "error"])("does not measure %s activity detail", async (kind) => {
+  const { controller, browser } = createTestAnalytics();
+  controller.visit("/en/activities/42");
+  await controller.accept();
+  if (kind === "loading") mockedGetTouristActivity.mockReturnValue(new Promise(() => {}));
+  else mockedGetTouristActivity.mockRejectedValue(new Error("synthetic error"));
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <ActivityDetailContent activityId="42" />
+    </AnalyticsProvider>,
+  );
+  if (kind === "error") await screen.findByRole("alert");
+  expect(browser.send.mock.calls.map((c) => c[0])).toEqual(["page_view"]);
 });

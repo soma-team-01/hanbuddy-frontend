@@ -26,6 +26,7 @@ const mockedGetMyActivity = vi.mocked(getMyActivity);
 
 describe("ApplicantsContent", () => {
   beforeEach(() => {
+    mockedGetMyActivity.mockReset();
     vi.mocked(getScheduleCancellation).mockResolvedValue({
       status: "success",
       cancellation: {
@@ -104,6 +105,94 @@ describe("ApplicantsContent", () => {
     expect(within(refund.parentElement!).getByRole("button")).toBeInTheDocument();
     expect(screen.queryByText(/현재 환불 건/)).not.toBeInTheDocument();
   });
+
+  it.each(["OPEN", "CANCELLED"] as const)(
+    "uses the known %s schedule status for applicant sections when cancellation lookup fails",
+    async (scheduleStatus) => {
+      vi.mocked(getScheduleCancellation).mockResolvedValue({
+        status: "error",
+        error: new ApiClientError({ code: null, status: 503, details: null, backendMessage: null }),
+      });
+      mockedGetMyActivity.mockResolvedValue({
+        status: "success",
+        activity: {
+          activityId: 42,
+          title: "Han River Tour",
+          description: "A walk along the river.",
+          totalDurationMinutes: 90,
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+          hostIntroduction: "Seoul local",
+          includedItems: [],
+          restrictionNotes: [],
+          maxCapacity: 4,
+          price: 50000,
+          currency: "KRW",
+          discountPercent: null,
+          discountEndDate: null,
+          discountedPrice: null,
+          meetingPointName: "Yeouinaru Station",
+          meetingPlaceId: "place-1",
+          images: [],
+          schedules: [
+            {
+              scheduleId: 99,
+              startAt: "2099-09-19T17:30:00+09:00",
+              bookedCount: 1,
+              status: scheduleStatus,
+            },
+          ],
+          itineraries: [],
+        },
+      });
+      mockedGetBuddyActivityApplications.mockResolvedValue({
+        status: "success",
+        applications: {
+          activityId: 42,
+          activityScheduleId: 99,
+          activityTitle: "Han River Tour",
+          startAt: "2099-09-19T17:30:00+09:00",
+          applicantCount: 1,
+          statusCounts: { CONFIRMED: 1 },
+          applicants: [
+            {
+              applicationId: 11,
+              applicantUserId: 4,
+              applicantName: "Tourist",
+              applicantProfileImageUrl: null,
+              applicantNationalityCode: "GB",
+              guestCount: 1,
+              applicantContactMethod: "LINE",
+              applicantContactCountryCode: null,
+              applicantContactIdentifier: "tourist",
+              status: "CONFIRMED",
+              specialRequest: null,
+              appliedAt: "2026-09-17T21:50:00+09:00",
+            },
+          ],
+        },
+      });
+      renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
+      expect(
+        await screen.findByRole("button", {
+          name: /Unable to load the latest cancellation status/,
+        }),
+      ).toBeInTheDocument();
+      const cancelled = scheduleStatus === "CANCELLED";
+      const heading = await screen.findByRole("heading", {
+        name: cancelled ? "Cancelled bookings" : "Confirmed bookings",
+      });
+      expect(within(heading.closest("section")!).getByText("Tourist")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", {
+          name: cancelled ? "Confirmed bookings" : "Cancelled bookings",
+        }),
+      ).not.toBeInTheDocument();
+      if (cancelled) expect(screen.getByText("Cancelled schedule")).toBeInTheDocument();
+      else expect(screen.queryByText("Cancelled schedule")).not.toBeInTheDocument();
+      expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+    },
+  );
 
   it("renders applicants loaded from the API for the selected schedule", async () => {
     mockedGetBuddyActivityApplications.mockResolvedValue({

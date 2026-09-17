@@ -124,9 +124,7 @@ export function ApplicantsContent({
   const sections = STATUS_SECTIONS.map(({ key, statuses }) => ({
     key,
     applicants: (applications?.applicants ?? []).filter((applicant) =>
-      (statuses as readonly string[]).includes(
-        cancellationQuery.data?.status === "CANCELLED" ? "CANCELLED" : applicant.status,
-      ),
+      (statuses as readonly string[]).includes(isCancelled ? "CANCELLED" : applicant.status),
     ),
   })).filter(({ applicants }) => applicants.length > 0);
 

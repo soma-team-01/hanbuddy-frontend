@@ -17,8 +17,23 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(72);
+    expect(BACKEND_ERROR_CODES).toHaveLength(76);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
+  });
+
+  it("distinguishes saved refund intents and schedule cancellation errors", () => {
+    expect(resolveApiErrorMessageKey(apiError("PAYMENT_RECOVERY409_PENDING", 409))).toBe(
+      "refundRecoveryPending",
+    );
+    expect(resolveApiErrorMessageKey(apiError("SCHEDULE400_REASON", 400))).toBe(
+      "scheduleCancellationReason",
+    );
+    expect(resolveApiErrorMessageKey(apiError("SCHEDULE400_STARTED", 400))).toBe(
+      "scheduleCancellationStarted",
+    );
+    expect(resolveApiErrorMessageKey(apiError("SCHEDULE400_NOT_CANCELLED", 400))).toBe(
+      "scheduleNotCancelled",
+    );
   });
 
   it("maps activity visibility conflicts and invalid transitions", () => {

@@ -21,8 +21,9 @@ export const scheduleCancellationKeys = {
 
 export function cancellationRefreshInterval(tasks: ScheduleCancellationApplicant[]) {
   if (tasks.some((task) => task.refundStatus === "QUEUED" || task.refundStatus === "DISPATCHED"))
-    return 10_000;
-  return tasks.some((task) => task.refundStatus === "REVIEW_REQUIRED") ? 30_000 : false;
+    return 20_000;
+  // Manual review and final states refresh on focus/re-entry, not indefinitely.
+  return false;
 }
 
 export function scheduleCancellationQueryOptions(id: number | string) {

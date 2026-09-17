@@ -7,6 +7,7 @@ import { XIcon } from "./icons";
 interface ConfirmDialogBaseProps {
   title: string;
   description?: string;
+  descriptionClassName?: string;
   cancelLabel?: string;
   cancelVariant?: "soft" | "outline";
   tone?: "default" | "danger";
@@ -37,6 +38,7 @@ type ConfirmDialogProps = ConfirmDialogBaseProps &
 export function ConfirmDialog({
   title,
   description,
+  descriptionClassName = "",
   confirmLabel,
   pendingLabel,
   cancelLabel,
@@ -85,7 +87,9 @@ export function ConfirmDialog({
           </button>
         ) : null}
       </div>
-      {description ? <p className="mt-2 text-muted">{description}</p> : null}
+      {description ? (
+        <p className={`mt-2 text-muted ${descriptionClassName}`}>{description}</p>
+      ) : null}
       {children ? <div className="mt-4">{children}</div> : null}
       <div className={`mt-6 ${confirmSlot ? "" : "flex gap-3"}`}>
         {confirmSlot ? (

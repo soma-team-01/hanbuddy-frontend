@@ -66,5 +66,7 @@ export function mapApplicationResponseToApplication(
     providerPaymentAmount: response.providerPaymentAmount,
     providerPaymentCurrency: response.providerPaymentCurrency,
     refund: response.refund,
+    refundRecoveryPending:
+      response.refund?.status === "REQUESTED" || response.refund?.status === "FAILED",
   };
 }

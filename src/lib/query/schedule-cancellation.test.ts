@@ -11,9 +11,9 @@ import type { ScheduleCancellationTaskStatus } from "@/types/schedule-cancellati
 
 describe("cancellation cache and polling", () => {
   it.each<[ScheduleCancellationTaskStatus, number | false]>([
-    ["QUEUED", 10000],
-    ["DISPATCHED", 10000],
-    ["REVIEW_REQUIRED", 30000],
+    ["QUEUED", 20000],
+    ["DISPATCHED", 20000],
+    ["REVIEW_REQUIRED", false],
     ["COMPLETED", false],
     ["NO_PAYMENT", false],
     ["EXCLUDED", false],

@@ -44,7 +44,7 @@ export interface PaymentRefundResponse {
   provider: PaymentProvider | "EXTERNAL";
   status: "REQUESTED" | "COMPLETED" | "FAILED";
   policyVersion: string;
-  policyType: CancellationPolicyType | "BUDDY_CANCELLATION";
+  policyType: CancellationPolicyType | "BUDDY_CANCELLATION" | "PAYMENT_COMPENSATION";
   refundPercent: number;
   refundAmount: number;
   refundCurrency: string;
@@ -77,6 +77,8 @@ export interface PriceBreakdown {
 }
 
 export interface Application {
+  /** A saved refund intent is awaiting confirmation; never treat this as refund completion. */
+  refundRecoveryPending?: boolean;
   id: string;
   /** 날씨 등 공개 활동 부가 정보를 조회하기 위한 활동 ID */
   activityId: number;

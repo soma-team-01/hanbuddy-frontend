@@ -9,6 +9,7 @@ import { StartChatButton } from "@/components/chat/StartChatButton";
 import { UsersIcon } from "@/components/ui/icons";
 import { cancelSchedule, getScheduleCancellation } from "@/lib/api/schedule-cancellation";
 import { ApiClientError } from "@/lib/api/errors";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { formatSeoulDateTime } from "@/lib/datetime";
 import {
   cacheCancelledSchedule,
@@ -26,16 +27,23 @@ export function ScheduleActions({
   applicantCount,
   roomId,
   knownCancelled = false,
+  menuPlacement = "inline",
+  showCancelledBadge = true,
 }: Readonly<{
   scheduleId: number;
   startAt: string;
   applicantCount: number;
   roomId?: number;
   knownCancelled?: boolean;
+  /** card-header requires a positioned card and space reserved beside its title. */
+  menuPlacement?: "inline" | "card-header";
+  /** Hide when the page already displays the cancelled badge beside its title. */
+  showCancelledBadge?: boolean;
 }>) {
   const t = useTranslations("ScheduleCancellation");
   const tChat = useTranslations("Chat");
   const locale = useLocale();
+  const getApiErrorMessage = useApiErrorMessage();
   const client = useQueryClient();
   const statusQuery = useQuery(scheduleCancellationQueryOptions(scheduleId));
   const [menuOpen, setMenuOpen] = useState(false);
@@ -73,14 +81,11 @@ export function ScheduleActions({
         return result;
       } catch (error) {
         // A lost POST response does not mean the cancellation failed. Never retry POST blindly.
-        const check = await getScheduleCancellation(scheduleId);
-        if (check.status === "success") {
-          client.setQueryData(
-            scheduleCancellationQueryOptions(scheduleId).queryKey,
-            check.cancellation,
-          );
-          if (check.cancellation.status === "CANCELLED") return check.cancellation;
-        } else {
+        try {
+          const check = unwrapApiResult(await getScheduleCancellation(scheduleId), "cancellation");
+          client.setQueryData(scheduleCancellationQueryOptions(scheduleId).queryKey, check);
+          if (check.status === "CANCELLED") return check;
+        } catch {
           setUncertain(true);
         }
         throw error;
@@ -111,15 +116,19 @@ export function ScheduleActions({
       : "requestError";
 
   return (
-    <div className="flex shrink-0 flex-col items-end gap-1.5">
+    <div data-schedule-cancelled={cancelled} className="flex shrink-0 flex-col items-end gap-1.5">
       {cancelled ? (
-        <span className="rounded-full border border-primary/40 px-2 py-0.5 text-xs font-semibold text-primary">
-          {t("cancelled")}
-        </span>
+        showCancelledBadge ? (
+          <span
+            className={`rounded-full border border-primary/40 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-primary ${menuPlacement === "card-header" ? "absolute top-5 right-4" : ""}`}
+          >
+            {t("cancelled")}
+          </span>
+        ) : null
       ) : !hasStarted ? (
         <div
           ref={menuRef}
-          className="relative"
+          className={menuPlacement === "card-header" ? "absolute top-4 right-4" : "relative"}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               setMenuOpen(false);
@@ -169,7 +178,11 @@ export function ScheduleActions({
           <UsersIcon className="size-3.5" />
           {tChat("openGroupChat")}
         </Link>
-      ) : !cancelled && !uncertain && statusQuery.isSuccess && applicantCount > 0 ? (
+      ) : !cancelled &&
+        !uncertain &&
+        !mutation.isPending &&
+        statusQuery.isSuccess &&
+        applicantCount > 0 ? (
         <StartChatButton
           target={{ kind: "group", activityScheduleId: scheduleId }}
           label={tChat("createGroupChat")}
@@ -178,7 +191,12 @@ export function ScheduleActions({
         />
       ) : null}
       {mutation.isSuccess ? (
-        <p role="status" className="max-w-64 text-right text-xs text-muted">
+        <p
+          role="status"
+          className={
+            menuPlacement === "card-header" ? "sr-only" : "max-w-64 text-right text-xs text-muted"
+          }
+        >
           {t("success")}
         </p>
       ) : null}
@@ -186,6 +204,7 @@ export function ScheduleActions({
         <ConfirmDialog
           title={t("title")}
           description={t("irreversible")}
+          descriptionClassName="text-sm leading-6"
           cancelVariant="outline"
           cancelLabel={t("keep")}
           confirmLabel={t("confirm")}
@@ -212,7 +231,6 @@ export function ScheduleActions({
           <p className="border-b border-line-soft pb-4 text-sm font-semibold text-primary">
             {formatSeoulDateTime(startAt, locale)}
           </p>
-          <p className="mt-4 text-sm leading-6 text-muted">{t("refundPolicy")}</p>
           <label htmlFor={reasonId} className="mt-5 block text-sm font-semibold">
             {t("reason")}
           </label>
@@ -237,7 +255,7 @@ export function ScheduleActions({
           ) : null}
           {mutation.isError || uncertain ? (
             <div role="alert" className="mt-4 text-sm text-danger">
-              <p>{t(uncertain ? "uncertain" : errorKey)}</p>
+              <p>{uncertain ? t("uncertain") : getApiErrorMessage(mutation.error, t(errorKey))}</p>
               <button
                 type="button"
                 disabled={statusQuery.isFetching || mutation.isPending}

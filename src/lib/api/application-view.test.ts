@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mapApplicationResponseToApplication } from "./application-view";
+import type { PaymentRefundResponse } from "@/types/application";
 
 const application = {
   applicationId: 11,
@@ -31,6 +32,47 @@ const application = {
 } as const;
 
 describe("application view adapters", () => {
+  it.each<PaymentRefundResponse["status"]>(["REQUESTED", "FAILED", "COMPLETED"])(
+    "preserves an earlier personal %s refund when the buddy later cancels",
+    (status) => {
+      const refund: PaymentRefundResponse = {
+        refundId: 18,
+        provider: "PAYPAL",
+        status,
+        policyVersion: "2026-09-07",
+        policyType: "BETWEEN_24_AND_48_HOURS",
+        refundPercent: 50,
+        refundAmount: 25,
+        refundCurrency: "USD",
+        cancellationFeeAmount: 25,
+        refundAmountKrw: 35000,
+        retainedAmountKrw: 35000,
+        platformCommissionAmountKrw: 0,
+        commissionVatAmountKrw: 0,
+        guidePayoutAmountKrw: 35000,
+        requestedAt: "2026-07-17T10:00:00+09:00",
+        completedAt: status === "COMPLETED" ? "2026-07-17T10:05:00+09:00" : null,
+      };
+      expect(
+        mapApplicationResponseToApplication(
+          {
+            ...application,
+            status: "CANCELLED",
+            scheduleCancelled: true,
+            cancellationReason: "ILLNESS",
+            cancellationDetail: "Original reason",
+            refund,
+          },
+          "Time unavailable.",
+        ),
+      ).toMatchObject({
+        cancellationReason: "ILLNESS",
+        cancellationDetail: "Original reason",
+        refund,
+        refundRecoveryPending: status !== "COMPLETED",
+      });
+    },
+  );
   it("preserves prior personal cancellation policy when its schedule is later cancelled", () => {
     const mapped = mapApplicationResponseToApplication(
       {
@@ -79,6 +121,7 @@ describe("application view adapters", () => {
       cancellationDetail: null,
       scheduleCancelled: false,
       scheduleCancelledAt: null,
+      refundRecoveryPending: false,
       holdExpiresAt: null,
       myReview: null,
       dateLabel: "Sun, Jul 19 · 1:30 AM ~ 3:45 AM",

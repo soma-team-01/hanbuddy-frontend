@@ -163,6 +163,8 @@ export function DashboardContent() {
       <div className="grid gap-3 lg:grid-cols-2">
         {activities.map((activity, activityIndex) => {
           const headerScheduleId = activity.schedules[0]?.activityScheduleId;
+          // Multiple sessions keep their own menu so cancelling one is never ambiguous.
+          const menuInHeader = activity.schedules.length === 1;
           const headerHref = headerScheduleId
             ? `/my-activities/${activity.activityId}/applicants?scheduleId=${headerScheduleId}`
             : `/my-activities/${activity.activityId}/applicants`;
@@ -170,11 +172,11 @@ export function DashboardContent() {
           return (
             <article
               key={activity.activityId}
-              className="flex flex-col gap-3 rounded-2xl border border-line-soft p-4"
+              className="group/schedule-card relative flex flex-col gap-3 rounded-2xl border border-line-soft p-4 has-[[data-schedule-cancelled=true]]:not-has-[[data-schedule-cancelled=false]]:bg-ink/5"
             >
               <Link
                 href={headerHref}
-                className="-m-1 flex items-center gap-3 rounded-lg p-1 transition-colors hover:text-primary"
+                className={`-m-1 flex min-w-0 items-center gap-3 rounded-lg p-1 transition-colors hover:text-primary ${menuInHeader ? "pr-10 group-has-[[data-schedule-cancelled=true]]/schedule-card:pr-36" : ""}`}
               >
                 <div className="relative size-10 shrink-0 overflow-hidden rounded-lg">
                   <Image
@@ -211,6 +213,7 @@ export function DashboardContent() {
                       </span>
                     </Link>
                     <ScheduleActions
+                      menuPlacement={menuInHeader ? "card-header" : "inline"}
                       scheduleId={schedule.activityScheduleId}
                       startAt={schedule.startAt}
                       applicantCount={schedule.applicantCount}

@@ -58,17 +58,37 @@ describe("ScheduleActions", () => {
     vi.mocked(cancelSchedule).mockReset();
   });
 
+  it("can place the menu in the card header without moving the chat action", async () => {
+    renderActions({ menuPlacement: "card-header", roomId: 8 });
+    const menu = screen.getByRole("button", { name: "일정 옵션" }).parentElement;
+    expect(menu).toHaveClass("absolute", "top-4", "right-4");
+    expect(menu).not.toContainElement(screen.getByRole("link", { name: "단체 채팅방 입장" }));
+    await openDialog();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
   it("requires a public reason, cancels the schedule once, and keeps existing chat open", async () => {
     vi.mocked(cancelSchedule).mockResolvedValue({ status: "success", cancellation: cancelled });
-    renderActions({ roomId: 8 });
+    renderActions({ roomId: 8, menuPlacement: "card-header" });
     await openDialog();
-    expect(screen.getByText(/취소한 일정은 다시 열 수 없으며/)).toBeInTheDocument();
+    const description = screen.getByText(/일정 취소 후 재오픈·신규 신청은 불가하며/);
+    expect(description).toHaveTextContent(
+      "환불은 자동 처리됩니다. 신청자에게 취소 사실을 꼭 알려주세요.",
+    );
+    expect(description).toHaveClass("text-sm");
+    expect(screen.queryByText(/취소 접수 시 유지 중인 확정 예약/)).not.toBeInTheDocument();
     const confirm = screen.getByRole("button", { name: "일정 취소하기" });
     expect(confirm).toBeDisabled();
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Weather" } });
     fireEvent.click(confirm);
     fireEvent.click(confirm);
     await screen.findByText("취소된 일정");
+    expect(screen.getByText("취소된 일정")).toHaveClass("absolute", "top-5", "right-4");
+    expect(screen.getByText("취소된 일정").parentElement).toHaveAttribute(
+      "data-schedule-cancelled",
+      "true",
+    );
+    expect(screen.getByRole("status")).toHaveClass("sr-only");
     expect(cancelSchedule).toHaveBeenCalledExactlyOnceWith(99, "Weather");
     expect(screen.getByRole("link", { name: "단체 채팅방 입장" })).toHaveAttribute(
       "href",
@@ -110,5 +130,26 @@ describe("ScheduleActions", () => {
   it("does not allow a started schedule to be cancelled", () => {
     renderActions({ startAt: "2000-01-01T10:00:00+09:00" });
     expect(screen.queryByRole("button", { name: "일정 옵션" })).not.toBeInTheDocument();
+  });
+
+  it("keeps cancellation uncertain even when the verification GET rejects", async () => {
+    vi.mocked(cancelSchedule).mockResolvedValue(failure);
+    renderActions();
+    await openDialog();
+    vi.mocked(getScheduleCancellation).mockRejectedValue(new Error("connection lost"));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Weather" } });
+    fireEvent.click(screen.getByRole("button", { name: "일정 취소하기" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("다시 제출하기 전에 상태를 확인");
+    expect(screen.getByRole("button", { name: "일정 취소하기" })).toBeDisabled();
+    expect(cancelSchedule).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not treat an unavailable old endpoint as an open schedule", async () => {
+    vi.mocked(getScheduleCancellation).mockResolvedValue(failure);
+    renderActions();
+    fireEvent.click(screen.getByRole("button", { name: "일정 옵션" }));
+    expect(await screen.findByText(/최신 취소 상태/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "일정 취소" })).toBeDisabled();
+    expect(cancelSchedule).not.toHaveBeenCalled();
   });
 });

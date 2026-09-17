@@ -94,6 +94,32 @@ describe("DashboardContent", () => {
     mockedGetMyActivities.mockResolvedValue({ status: "success", activities: [] });
   });
 
+  it("anchors a single-schedule menu to the title while keeping chat beside the time", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          ...teaTastingActivities[0],
+          schedules: [
+            { ...teaTastingActivities[0].schedules[0], startAt: "2099-07-20T10:00:00+09:00" },
+          ],
+        },
+      ],
+    });
+    renderWithQueryClient(<DashboardContent />);
+    const title = await screen.findByRole("heading", { name: "Traditional Tea Tasting" });
+    const card = title.closest("article")!;
+    expect(card).toHaveClass("relative");
+    expect(title.closest("a")).toHaveClass("pr-10");
+    const menu = within(card).getByRole("button", { name: "Schedule options" });
+    expect(menu.parentElement).toHaveClass("absolute", "top-4", "right-4");
+    const chat = await within(card).findByRole("button", { name: "Create group chat" });
+    const timeRow = within(card).getByText("10:00 AM").closest("a")!.parentElement!;
+    expect(timeRow).toContainElement(chat);
+    expect(menu.parentElement).not.toContainElement(chat);
+  });
+
   it("shows the week of the first activity date and its applicants", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({
       status: "success",

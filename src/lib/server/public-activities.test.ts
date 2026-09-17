@@ -41,6 +41,22 @@ afterEach(() => {
 });
 
 describe("anonymous public activity documents", () => {
+  it.each([null, []])(
+    "classifies HTTP 410 as missing regardless of JSON body shape",
+    async (body) => {
+      respond(body, 410);
+      await expect(getPublicActivity("42", "en")).rejects.toMatchObject({ kind: "missing" });
+    },
+  );
+  it.each([404, 500])("keeps malformed HTTP %s detail responses unavailable", async (status) => {
+    respond(null, status);
+    await expect(getPublicActivity("42", "en")).rejects.toMatchObject({ kind: "unavailable" });
+  });
+  it("does not classify a Gone list endpoint as a missing activity", async () => {
+    respond(null, 410);
+    await expect(getPublicActivities("en")).rejects.toMatchObject({ kind: "unavailable" });
+  });
+
   it.each([
     { averageRating: "4.8" },
     { reviewCount: "1" },

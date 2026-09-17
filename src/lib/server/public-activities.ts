@@ -41,6 +41,19 @@ function requireFields(value: Record<string, unknown>, strings: string[], number
     unavailable();
 }
 
+function publicDisplayPrice(value: unknown) {
+  const price = record(value);
+  requireFields(price, ["currency"], ["price"]);
+  if (
+    !["KRW", "USD", "JPY", "CNY"].includes(String(price.currency)) ||
+    typeof price.estimated !== "boolean" ||
+    (price.discountedPrice !== null && typeof price.discountedPrice !== "number") ||
+    (price.exchangeRateDate !== null && typeof price.exchangeRateDate !== "string")
+  )
+    unavailable();
+  return select(price, ["price", "discountedPrice", "currency", "exchangeRateDate", "estimated"]);
+}
+
 function summary(value: unknown): TouristActivitySummary {
   const item = record(value);
   requireFields(
@@ -117,24 +130,7 @@ function summary(value: unknown): TouristActivitySummary {
     (typeof item.contentLanguage !== "string" || !isContentLanguage(item.contentLanguage))
   )
     unavailable();
-  if (item.displayPrice !== undefined) {
-    const price = record(item.displayPrice);
-    requireFields(price, ["currency"], ["price"]);
-    if (
-      !["KRW", "USD", "JPY", "CNY"].includes(String(price.currency)) ||
-      typeof price.estimated !== "boolean" ||
-      (price.discountedPrice !== null && typeof price.discountedPrice !== "number") ||
-      (price.exchangeRateDate !== null && typeof price.exchangeRateDate !== "string")
-    )
-      unavailable();
-    result.displayPrice = select(price, [
-      "price",
-      "discountedPrice",
-      "currency",
-      "exchangeRateDate",
-      "estimated",
-    ]);
-  }
+  if (item.displayPrice !== undefined) result.displayPrice = publicDisplayPrice(item.displayPrice);
   return result as unknown as TouristActivitySummary;
 }
 
@@ -203,13 +199,12 @@ async function readPublic(path: string, locale: Locale, isDetail: boolean): Prom
       ),
       { redirect: "error" },
     );
+    // Gone confirms a deleted detail even when its body is empty or not an object.
+    if (isDetail && backend.status === 410) throw new PublicActivityError("missing");
     const payload = record(backend.payload);
     // A generic upstream 404 can mean a broken API route. Only the activity contract
-    // (or explicit Gone) confirms resource absence. Never infer it from a timeout.
-    if (
-      isDetail &&
-      ((backend.status === 404 && payload.code === "ACTIVITY404") || backend.status === 410)
-    ) {
+    // confirms resource absence. Never infer it from a timeout.
+    if (isDetail && backend.status === 404 && payload.code === "ACTIVITY404") {
       throw new PublicActivityError("missing");
     }
     if (backend.status !== 200 || payload.isSuccess !== true) unavailable();

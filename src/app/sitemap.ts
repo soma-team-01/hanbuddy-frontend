@@ -35,5 +35,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     );
   }
-  return [...urls].sort().map((url) => ({ url }));
+  return [...urls].sort((left, right) => left.localeCompare(right)).map((url) => ({ url }));
 }

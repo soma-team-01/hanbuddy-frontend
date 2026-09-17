@@ -60,62 +60,53 @@ function activity(id, language = "EN") {
 const success = (result) => ({ isSuccess: true, code: "SUCCESS", message: "OK", result });
 const failure = (code) => ({ isSuccess: false, code, message: "Synthetic fixture error" });
 
-const server = createServer(async (req, res) => {
-  const url = new URL(req.url, `http://127.0.0.1:${port}`);
-  const send = (status, body) => {
-    res.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" });
-    res.end(JSON.stringify(body));
-  };
-  if (url.pathname === "/__control" && req.method === "POST") {
-    let body = "";
-    for await (const chunk of req) body += chunk;
-    const input = JSON.parse(body || "{}");
-    if (
-      !["normal", "list-outage", "detail-outage", "list-malformed", "detail-redirect"].includes(
-        input.mode || "normal",
-      )
+async function handleControl(req, send) {
+  let body = "";
+  for await (const chunk of req) body += chunk;
+  const input = JSON.parse(body || "{}");
+  const nextMode = input.mode || "normal";
+  if (
+    !["normal", "list-outage", "detail-outage", "list-malformed", "detail-redirect"].includes(
+      nextMode,
     )
-      return send(400, failure("INVALID_MODE"));
-    mode = input.mode || "normal";
-    if (input.clearRequests) requests = [];
-    return send(200, { mode });
+  ) {
+    return send(400, failure("INVALID_MODE"));
   }
-  if (url.pathname === "/__requests") return send(200, requests);
-  if (url.pathname === "/health") return send(200, { mode });
-  requests.push({
-    path: url.pathname,
-    language: url.searchParams.get("language"),
-    currency: url.searchParams.get("displayCurrency"),
-    hasCookie: Boolean(req.headers.cookie),
-    hasAuthorization: Boolean(req.headers.authorization),
-  });
-  if (url.pathname === "/activities") {
-    if (mode === "list-outage") return send(503, failure("UPSTREAM_UNAVAILABLE"));
-    if (mode === "list-malformed") return send(200, success({ content: [] }));
-    return send(
-      200,
-      success([1, 2, 3, 4].map((id) => activity(id, url.searchParams.get("language")))),
-    );
+  mode = nextMode;
+  if (input.clearRequests) requests = [];
+  return send(200, { mode });
+}
+
+function handleList(url, send) {
+  if (mode === "list-outage") return send(503, failure("UPSTREAM_UNAVAILABLE"));
+  if (mode === "list-malformed") return send(200, success({ content: [] }));
+  return send(
+    200,
+    success([1, 2, 3, 4, 5, 6].map((id) => activity(id, url.searchParams.get("language")))),
+  );
+}
+
+async function handleDetail(id, language, res, send) {
+  if (id === 500 || (id === 1 && mode === "detail-outage"))
+    return send(503, failure("UPSTREAM_UNAVAILABLE"));
+  if (id === 501) return send(200, success({ activityId: 501 }));
+  if (id === 502 || (id === 1 && mode === "detail-redirect")) {
+    res.writeHead(302, { location: "/activities/2" });
+    return res.end();
   }
-  const detail = url.pathname.match(/^\/activities\/(\d+)$/);
-  if (detail) {
-    const id = Number(detail[1]);
-    if (id === 500 || (id === 1 && mode === "detail-outage"))
-      return send(503, failure("UPSTREAM_UNAVAILABLE"));
-    if (id === 501) return send(200, success({ activityId: 501 }));
-    if (id === 502 || (id === 1 && mode === "detail-redirect")) {
-      res.writeHead(302, { location: "/activities/2" });
-      return res.end();
-    }
-    if (id === 503) {
-      await new Promise((resolve) => setTimeout(resolve, 11000));
-      return send(503, failure("TIMEOUT"));
-    }
-    if (id === 4) return send(410, failure("ACTIVITY404"));
-    if (![1, 2].includes(id)) return send(404, failure("ACTIVITY404"));
-    return send(200, success(activity(id, url.searchParams.get("language"))));
+  if (id === 503) {
+    await new Promise((resolve) => setTimeout(resolve, 11000));
+    return send(503, failure("TIMEOUT"));
   }
-  if (/\/weather$/.test(url.pathname))
+  if (id === 4) return send(410, failure("ACTIVITY404"));
+  if (id === 5) return send(410, null);
+  if (id === 6) return send(410, []);
+  if (![1, 2].includes(id)) return send(404, failure("ACTIVITY404"));
+  return send(200, success(activity(id, language)));
+}
+
+function handleAuxiliary(url, send) {
+  if (url.pathname.endsWith("/weather"))
     return send(
       200,
       success({
@@ -128,7 +119,7 @@ const server = createServer(async (req, res) => {
         forecasts: [],
       }),
     );
-  if (/\/reviews$/.test(url.pathname))
+  if (url.pathname.endsWith("/reviews"))
     return send(
       200,
       success({
@@ -155,6 +146,28 @@ const server = createServer(async (req, res) => {
     );
   if (url.pathname === "/users/me") return send(401, failure("AUTH401"));
   return send(404, failure("FIXTURE_ROUTE404"));
+}
+
+const server = createServer(async (req, res) => {
+  const url = new URL(req.url, `http://127.0.0.1:${port}`);
+  const send = (status, body) => {
+    res.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" });
+    res.end(JSON.stringify(body));
+  };
+  if (url.pathname === "/__control" && req.method === "POST") return handleControl(req, send);
+  if (url.pathname === "/__requests") return send(200, requests);
+  if (url.pathname === "/health") return send(200, { mode });
+  requests.push({
+    path: url.pathname,
+    language: url.searchParams.get("language"),
+    currency: url.searchParams.get("displayCurrency"),
+    hasCookie: Boolean(req.headers.cookie),
+    hasAuthorization: Boolean(req.headers.authorization),
+  });
+  if (url.pathname === "/activities") return handleList(url, send);
+  const detail = /^\/activities\/(\d+)$/.exec(url.pathname);
+  if (detail) return handleDetail(Number(detail[1]), url.searchParams.get("language"), res, send);
+  return handleAuxiliary(url, send);
 });
 server.listen(port, "127.0.0.1", () => console.log(`SEO fixture ready http://127.0.0.1:${port}`));
 for (const signal of ["SIGTERM", "SIGINT"])

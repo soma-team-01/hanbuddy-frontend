@@ -143,6 +143,8 @@ try {
       [2, 200],
       [999999, 404],
       [4, 404],
+      [5, 404],
+      [6, 404],
       [500, 500],
       [501, 500],
       [502, 500],
@@ -234,7 +236,7 @@ try {
     assert.equal(doc.querySelector('link[rel="canonical"]').href, url);
     assert.ok(!doc.querySelector('meta[name="robots"]')?.content.includes("noindex"));
   }
-  assert.ok(!urls.some((url) => /\/activities\/[34]$/.test(url)));
+  assert.ok(!urls.some((url) => /\/activities\/[3456]$/.test(url)));
   for (const mode of ["list-outage", "list-malformed", "detail-outage", "detail-redirect"]) {
     await control(mode);
     await request("/sitemap.xml", 500);
@@ -271,5 +273,12 @@ try {
   console.error(JSON.stringify({ result: "FAIL", completed: matrix.length, matrix }, null, 2));
   throw error;
 } finally {
-  await control("normal");
+  try {
+    await control("normal");
+  } catch (error) {
+    // Keep a pending verification error intact, but never report a successful exit
+    // when fixture restoration failed after an otherwise successful verification.
+    console.error("Fixture cleanup failed:", error);
+    process.exitCode = 1;
+  }
 }

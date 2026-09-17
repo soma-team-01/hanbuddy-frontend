@@ -42,24 +42,22 @@ describe("ActivityCard", () => {
     expect(container.querySelector('[data-slot="activity-card-location"]')).toBeNull();
   });
 
-  it("keeps the price, per-person label and reference price in one left-aligned group", () => {
+  it("orders the price group as KRW price, parenthesized reference price, then per person", () => {
     renderWithIntl(
       <ActivityCard activity={{ ...activity, referencePrice: 32.5, referenceCurrency: "USD" }} />,
     );
 
     const priceGroup = screen.getByText("₩35,000").parentElement;
     expect(priceGroup).toHaveClass("flex-wrap", "items-baseline");
-    expect(priceGroup).toContainElement(screen.getByText("per person"));
-    expect(priceGroup).toContainElement(screen.getByText("≈ $32.50"));
+    expect(priceGroup).toHaveTextContent(/^₩35,000\s*\(≈ \$32\.50\)\s*per person$/);
   });
 
-  it("uses a taller 3:2 photo on mobile and 16:9 from tablet up", () => {
+  it("keeps a compact 16:9 photo at every width", () => {
     const { container } = renderWithIntl(<ActivityCard activity={activity} />);
 
-    expect(container.querySelector("img")?.parentElement).toHaveClass(
-      "aspect-[3/2]",
-      "md:aspect-[16/9]",
-    );
+    const frame = container.querySelector("img")?.parentElement;
+    expect(frame).toHaveClass("aspect-[16/9]");
+    expect(frame).not.toHaveClass("aspect-[3/2]");
   });
 
   it("treats the photo as decorative so the link name reads the title once", () => {
@@ -99,7 +97,7 @@ describe("ActivityCard", () => {
     );
 
     const krwPrice = screen.getByText("₩35,000");
-    const referencePrice = screen.getByText("≈ $32.50");
+    const referencePrice = screen.getByText("(≈ $32.50)");
     expect(krwPrice).toHaveClass("text-ink");
     expect(referencePrice).toHaveClass("text-muted");
     expect(

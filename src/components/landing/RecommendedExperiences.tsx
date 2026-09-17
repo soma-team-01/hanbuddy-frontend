@@ -40,7 +40,7 @@ export function RecommendedExperiences() {
                 key={index}
                 className="w-[78vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft md:w-auto md:max-w-none"
               >
-                <div className="aspect-[3/2] w-full animate-pulse bg-panel-raised md:aspect-[16/9]" />
+                <div className="aspect-[16/9] w-full animate-pulse bg-panel-raised" />
                 <div className="flex flex-col gap-3 p-4">
                   <div className="h-4 w-3/4 animate-pulse rounded-full bg-panel-raised" />
                   <div className="h-3.5 w-1/2 animate-pulse rounded-full bg-panel-raised" />

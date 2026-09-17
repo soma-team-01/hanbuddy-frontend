@@ -34,7 +34,7 @@ export function ActivityFeed() {
             key={index}
             className="overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft"
           >
-            <div className="aspect-[3/2] w-full animate-pulse bg-panel-raised md:aspect-[16/9]" />
+            <div className="aspect-[16/9] w-full animate-pulse bg-panel-raised" />
             <div className="flex flex-col gap-3 p-4">
               <div className="h-4 w-3/4 animate-pulse rounded-full bg-panel-raised" />
               <div className="h-3.5 w-1/2 animate-pulse rounded-full bg-panel-raised" />

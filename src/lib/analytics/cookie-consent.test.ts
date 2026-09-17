@@ -359,6 +359,7 @@ it("rejects expiry renewal for an already verified ID", async () => {
   await c.restore();
   expect(c.isGranted()).toBe(false);
   expect(e.api.withdraw).toHaveBeenCalledWith(proof("1", "denied"));
+  expect(c.isWithdrawalPending()).toBe(false);
 });
 it("keeps an opaque cookie inert until server RESTORE verifies it", async () => {
   const e = environment();

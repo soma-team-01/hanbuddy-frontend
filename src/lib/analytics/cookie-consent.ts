@@ -139,6 +139,10 @@ export function createCookieConsent({
     const p = verifiedResponse(result, existing);
     if (!p) {
       await retire(result.proof);
+      if (local === operation) {
+        pending = false;
+        notify();
+      }
       throw new Error("Invalid proof response");
     }
     if (decision() !== intent) {

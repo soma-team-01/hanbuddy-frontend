@@ -61,7 +61,8 @@ export function createCookieJar(
     )
       throw new Error("Invalid cookie");
     const previous = read(name);
-    document.cookie = `${name}=${value}; Path=/; Secure; SameSite=Lax${maxAge === undefined ? "" : `; Max-Age=${maxAge}`}`;
+    const maxAgeAttribute = maxAge === undefined ? "" : `; Max-Age=${maxAge}`;
+    document.cookie = `${name}=${value}; Path=/; Secure; SameSite=Lax${maxAgeAttribute}`;
     if (read(name) !== previous) changed();
   };
   return {

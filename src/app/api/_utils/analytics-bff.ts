@@ -43,7 +43,7 @@ export function isAnalyticsContextCurrent(candidate: string | null, accessToken:
 
 export function isConsentProof(value: string | undefined, choice: ConsentChoice) {
   const proof = parseProof(value ?? "");
-  return Boolean(proof && proof.granted === (choice === "granted"));
+  return Boolean(proof?.granted === (choice === "granted"));
 }
 
 /** Withdrawal remains available while collection is OFF; only the configured origin is needed. */

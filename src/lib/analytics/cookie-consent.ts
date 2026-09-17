@@ -4,9 +4,9 @@ export const CONSENT_COOKIE = "__Host-hb_ga_consent";
 export const DECISION_COOKIE = "__Host-hb_ga_decision";
 export interface ConsentCookieJar {
   read(): string;
-  write(value: string, maxAgeSeconds: number): void;
+  write(value: string, maxAgeSeconds?: number): void;
   decision(): string;
-  decide(value: string, maxAgeSeconds: number): void;
+  decide(value: string, maxAgeSeconds?: number): void;
 }
 export interface ProofApi {
   issue(action: "ACCEPT" | "RESTORE"): Promise<{ proof: string; expiresAt: string }>;
@@ -14,17 +14,10 @@ export interface ProofApi {
 }
 export type Exclusive = <T>(work: () => Promise<T>) => Promise<T>;
 
-/** Syntax and time checks only. Authenticity is established by the backend, never by this parser. */
+/** Syntax only: 32 random bytes in canonical unpadded base64url; state lives on the server. */
 export function parseProof(value: string) {
-  const match =
-    /^(granted|denied)\.v1\.([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\.(\d{1,12})\.(\d{1,12})\.([A-Za-z0-9_-]{1,64})\.([A-Za-z0-9_-]{43})$/.exec(
-      value,
-    );
-  if (!match) return null;
-  const issuedAt = Number(match[3]) * 1000,
-    expiresAt = Number(match[4]) * 1000;
-  if (expiresAt <= issuedAt) return null;
-  return { value, granted: match[1] === "granted", issuedAt, expiresAt, version: match[5] };
+  const match = /^(granted|denied)\.v2\.([A-Za-z0-9_-]{42}[AEIMQUYcgkosw048])$/.exec(value);
+  return match ? { value, granted: match[1] === "granted", id: match[2] } : null;
 }
 export const deniedProof = (value: string) => value.replace(/^granted\./, "denied.");
 
@@ -50,6 +43,8 @@ export function createCookieConsent({
     revision = 0;
   // One failed key is retained; a new issuance cannot proceed until it is retired.
   let retiring = "";
+  let verifiedProof = "",
+    verifiedExpiry = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const listeners = new Set<() => void>();
   const notify = () => {
@@ -71,27 +66,21 @@ export function createCookieConsent({
     }
   };
   const remaining = (expiresAt: number) => Math.max(0, Math.floor((expiresAt - now()) / 1000));
-  const choiceLifetime = () => Math.floor((policy?.consentMaxAgeMs ?? 0) / 1000);
-  function write(value: string) {
-    const parsed = parseProof(value);
-    jar.write(value, parsed ? remaining(parsed.expiresAt) : choiceLifetime());
-    if (read() !== value && (!parsed || parsed.expiresAt > now()))
+  function write(value: string, expiresAt?: number) {
+    if (expiresAt === undefined && read() === value) return;
+    jar.write(value, expiresAt === undefined ? undefined : remaining(expiresAt));
+    if (read() !== value && (expiresAt === undefined || expiresAt > now()))
       throw new Error("Cookie unavailable");
   }
   function decide(value: string) {
-    jar.decide(value, choiceLifetime());
+    jar.decide(value);
     if (decision() !== value) throw new Error("Cookie unavailable");
   }
+  function candidate(value: string) {
+    return Boolean(policy && parseProof(value)?.granted);
+  }
   function valid(value: string) {
-    const p = parseProof(value);
-    return Boolean(
-      policy &&
-      p?.granted &&
-      p.version === policy.version &&
-      p.issuedAt <= now() &&
-      p.expiresAt > now() &&
-      p.expiresAt - p.issuedAt <= policy.consentMaxAgeMs,
-    );
+    return candidate(value) && value === verifiedProof && verifiedExpiry > now();
   }
   function reset() {
     ready = "";
@@ -110,8 +99,8 @@ export function createCookieConsent({
     } catch {
       /* Still attempt server revocation; retain the key in memory on failure. */
     }
-    // Expiry is terminal eligibility in the server contract, not a deletion acknowledgement.
-    if (p.expiresAt > now()) await api.withdraw(retiring);
+    // Expired and old-policy IDs still require server withdrawal acknowledgement.
+    await api.withdraw(retiring);
     retiring = "";
   }
   async function drain() {
@@ -122,30 +111,31 @@ export function createCookieConsent({
   }
   function verifiedResponse(result: { proof: string; expiresAt: string }, existing: string) {
     const p = parseProof(result.proof);
+    const expiresAt = Date.parse(result.expiresAt);
     if (
-      !p ||
-      !p.granted ||
-      !valid(result.proof) ||
-      Date.parse(result.expiresAt) !== p.expiresAt ||
-      (existing && result.proof !== existing)
+      !p?.granted ||
+      !policy ||
+      !Number.isFinite(expiresAt) ||
+      expiresAt <= now() ||
+      (parseProof(existing)?.granted && result.proof !== existing) ||
+      (parseProof(existing)?.granted === false && p.id === parseProof(existing)?.id) ||
+      (result.proof === verifiedProof && expiresAt !== verifiedExpiry)
     )
       return null;
-    return p;
+    return { ...p, expiresAt };
   }
   async function establish(action: "ACCEPT" | "RESTORE", intent: string, local: number) {
     if (local !== operation || decision() !== intent) return;
     await drain();
     if (local !== operation || decision() !== intent) return;
     let existing = read();
-    if (action === "RESTORE" && !valid(existing)) return;
-    if (action === "ACCEPT" && !valid(existing)) {
-      // Retire an older proof before starting a new key; never abandon its failed revoke.
-      if (parseProof(existing)) await retire(existing);
-      if (local !== operation || decision() !== intent) return;
+    if (action === "RESTORE" && !candidate(existing)) return;
+    if (action === "ACCEPT" && !parseProof(existing)) {
+      // Legacy/malformed data is never promoted. Only this explicit acceptance may replace it.
       jar.write("", 0);
       existing = "";
     }
-    const result = await api.issue(existing ? "RESTORE" : action);
+    const result = await api.issue(action);
     const p = verifiedResponse(result, existing);
     if (!p) {
       await retire(result.proof);
@@ -157,11 +147,13 @@ export function createCookieConsent({
       return;
     }
     try {
-      write(result.proof);
+      write(result.proof, p.expiresAt);
     } catch {
       await retire(result.proof);
       throw new Error("Cookie unavailable");
     }
+    verifiedProof = result.proof;
+    verifiedExpiry = p.expiresAt;
     // A passive restore may supersede this operation without changing the user decision.
     // It will verify the persisted proof under the same lock; do not revoke that grant.
     if (local !== operation) return;
@@ -173,7 +165,10 @@ export function createCookieConsent({
       timer = setTimeout(
         () => {
           if (p.expiresAt > now()) arm();
-          else void controller.reject();
+          else {
+            // Expiry invalidates this proof, not the user's selection or remote withdrawal.
+            reset();
+          }
         },
         Math.min(Math.max(0, p.expiresAt - now()), 2147483647),
       );
@@ -183,6 +178,10 @@ export function createCookieConsent({
   }
   const controller = {
     enabled: Boolean(policy && exclusive),
+    invalidate() {
+      operation++;
+      reset();
+    },
     getRevision: () => revision,
     subscribe(listener: () => void) {
       listeners.add(listener);
@@ -195,17 +194,22 @@ export function createCookieConsent({
         ready &&
         ready === read() &&
         readyDecision === decision() &&
-        !decision().startsWith("denied") &&
+        decision().startsWith("accept.") &&
         valid(ready),
       );
     },
-    hasGrantCookie: () => valid(read()) && !decision().startsWith("denied"),
+    hasGrantCookie: () =>
+      candidate(read()) &&
+      (read() !== verifiedProof || verifiedExpiry > now()) &&
+      decision().startsWith("accept."),
     getProof() {
       return this.isGranted() ? ready : null;
     },
     getSnapshot(): "unanswered" | "granted" | "denied" {
-      if (this.isGranted()) return "granted";
-      return read() || decision() || retiring ? "denied" : "unanswered";
+      if (this.isGranted() || decision().startsWith("accept.")) return "granted";
+      return decision().startsWith("denied") || parseProof(read())?.granted === false || retiring
+        ? "denied"
+        : "unanswered";
     },
     isWithdrawalPending: () => pending || Boolean(retiring),
     async accept() {
@@ -229,7 +233,7 @@ export function createCookieConsent({
         await exclusive(async () => {
           if (local !== operation || decision() !== intent) return;
           await drain();
-          if (intent.startsWith("denied") || !valid(read())) {
+          if (!intent.startsWith("accept.") || !candidate(read())) {
             pending = false;
             notify();
             return;
@@ -254,7 +258,9 @@ export function createCookieConsent({
         /* The cookie or server can still enforce denial. */
       }
       const current = read();
-      if (parseProof(current)) retiring = deniedProof(current);
+      if (parseProof(current)) {
+        retiring = deniedProof(current);
+      }
       try {
         write(retiring || "denied");
       } catch {

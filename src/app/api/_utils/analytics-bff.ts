@@ -1,3 +1,5 @@
+import { APP_ORIGIN } from "@/lib/site";
+import { parseProof } from "@/lib/analytics/cookie-consent";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -15,24 +17,17 @@ export const ANALYTICS_PROOF_HEADER = "X-Analytics-Proof";
 export const ANALYTICS_REQUEST_HEADER = "X-Analytics-Request";
 
 type ConsentChoice = "granted" | "denied";
+export function readServerAnalyticsPolicy() {
+  return readAnalyticsPolicy({
+    GA_ENABLED: process.env.GA_ENABLED,
+    GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
+  });
+}
 
 interface AnalyticsBackendOptions {
   cookieHeader: string;
   origin: string;
   analyticsRequest: true;
-}
-
-export function readServerAnalyticsPolicy() {
-  return readAnalyticsPolicy({
-    GA_ENABLED: process.env.GA_ENABLED,
-    GA_DESTINATION_VERIFIED: process.env.GA_DESTINATION_VERIFIED,
-    GA_AUTOMATIC_COLLECTION_DISABLED: process.env.GA_AUTOMATIC_COLLECTION_DISABLED,
-    GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
-    GA_ORIGIN: process.env.GA_ORIGIN,
-    GA_POLICY_VERSION: process.env.GA_POLICY_VERSION,
-    GA_CONSENT_MAX_AGE_SECONDS: process.env.GA_CONSENT_MAX_AGE_SECONDS,
-    GA_COOKIE_MAX_AGE_SECONDS: process.env.GA_COOKIE_MAX_AGE_SECONDS,
-  });
 }
 
 export function analyticsContextForToken(accessToken: string) {
@@ -46,23 +41,14 @@ export function isAnalyticsContextCurrent(candidate: string | null, accessToken:
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-export function isConsentProof(
-  value: string | undefined,
-  choice: ConsentChoice,
-  policyVersion: string,
-) {
-  if (!value || value.length > 512) return false;
-  const parts = value.split(".");
-  if (parts.length !== 7 || parts[0] !== choice || parts[1] !== "v1") return false;
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(parts[2]) ||
-    !/^\d{1,12}$/.test(parts[3]) ||
-    !/^\d{1,12}$/.test(parts[4]) ||
-    parts[5] !== policyVersion ||
-    !/^[A-Za-z0-9_-]{43}$/.test(parts[6])
-  )
-    return false;
-  return true;
+export function isConsentProof(value: string | undefined, choice: ConsentChoice) {
+  const proof = parseProof(value ?? "");
+  return Boolean(proof && proof.granted === (choice === "granted"));
+}
+
+/** Withdrawal remains available while collection is OFF; only the configured origin is needed. */
+export function readAnalyticsOrigin() {
+  return APP_ORIGIN;
 }
 
 export function analyticsUnavailableResponse(status: 400 | 403 | 409 | 410 | 415 | 502 | 503) {
@@ -78,11 +64,14 @@ export function analyticsUnavailableResponse(status: 400 | 403 | 409 | 410 | 415
   const code = codes[status];
   return NextResponse.json(
     { isSuccess: false, code, message: "Analytics request unavailable" },
-    { status },
+    { status, headers: { "Cache-Control": "no-store" } },
   );
 }
 
-export function validateAnalyticsRequest(request: NextRequest, policy: AnalyticsPolicy) {
+export function validateAnalyticsRequest(
+  request: NextRequest,
+  policy: Pick<AnalyticsPolicy, "origin">,
+) {
   return (
     request.headers.get("origin") === policy.origin &&
     request.headers.get(ANALYTICS_REQUEST_HEADER) === "1"
@@ -107,13 +96,13 @@ export async function readAnalyticsJson(request: NextRequest) {
 
 export function analyticsBackendOptions(
   request: NextRequest,
-  policy: AnalyticsPolicy,
+  policy: Pick<AnalyticsPolicy, "origin">,
   choice: ConsentChoice,
   explicitProof?: string | null,
 ): AnalyticsBackendOptions | null {
   if (!validateAnalyticsRequest(request, policy)) return null;
   const proof = explicitProof ?? request.cookies.get(ANALYTICS_COOKIE_NAME)?.value;
-  if (!isConsentProof(proof, choice, policy.version)) return null;
+  if (!isConsentProof(proof, choice)) return null;
   return {
     cookieHeader: `${ANALYTICS_COOKIE_NAME}=${proof}`,
     origin: policy.origin,
@@ -162,7 +151,7 @@ export function createProjectedAnalyticsResponse<TResult, TProjected>(
           message: backend.payload.message,
           result,
         },
-        { status: backend.status },
+        { status: backend.status, headers: { "Cache-Control": "no-store" } },
       );
     }
     return analyticsUnavailableResponse(502);
@@ -175,6 +164,6 @@ export function createProjectedAnalyticsResponse<TResult, TProjected>(
   const status = backend.status >= 400 && backend.status <= 599 ? backend.status : 502;
   return NextResponse.json(
     { isSuccess: false, code, message: "Analytics request unavailable" },
-    { status },
+    { status, headers: { "Cache-Control": "no-store" } },
   );
 }

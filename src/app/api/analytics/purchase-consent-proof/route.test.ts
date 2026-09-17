@@ -9,26 +9,22 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 });
 
 const mockedPostBackend = vi.mocked(postBackend);
-const signature = "A".repeat(43);
-const grantedProof = `granted.v1.123e4567-e89b-12d3-a456-426614174000.1700000000.1999999999.policy_1.${signature}`;
+afterEach(() => vi.unstubAllEnvs());
+const opaqueId = "A".repeat(43);
+const grantedProof = `granted.v2.${opaqueId}`;
 
 function enablePolicy() {
+  vi.stubEnv("NODE_ENV", "production");
   vi.stubEnv("GA_ENABLED", "true");
-  vi.stubEnv("GA_DESTINATION_VERIFIED", "true");
-  vi.stubEnv("GA_AUTOMATIC_COLLECTION_DISABLED", "true");
-  vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST123");
-  vi.stubEnv("GA_ORIGIN", "https://app.hanbuddy.test");
-  vi.stubEnv("GA_POLICY_VERSION", "policy_1");
-  vi.stubEnv("GA_CONSENT_MAX_AGE_SECONDS", "3600");
-  vi.stubEnv("GA_COOKIE_MAX_AGE_SECONDS", "3600");
+  vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
 }
 
 function request(action: string, cookie?: string) {
-  return new NextRequest("https://app.hanbuddy.test/api/analytics/purchase-consent-proof", {
+  return new NextRequest("https://hanbuddy.kr/api/analytics/purchase-consent-proof", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      origin: "https://app.hanbuddy.test",
+      origin: "https://hanbuddy.kr",
       "x-analytics-request": "1",
       ...(cookie ? { cookie: `__Host-hb_ga_consent=${cookie}; unrelated=secret` } : {}),
     },
@@ -40,10 +36,17 @@ describe("POST /api/analytics/purchase-consent-proof", () => {
   beforeEach(() => mockedPostBackend.mockReset());
   afterEach(() => vi.unstubAllEnvs());
 
-  it("keeps the route disabled and avoids backend calls without a complete policy", async () => {
-    const response = await POST(request("ACCEPT"));
-
-    expect(response.status).toBe(503);
+  it("fails closed without enabled configuration before forwarding", async () => {
+    const req = new NextRequest("https://hanbuddy.kr/api/analytics/purchase-consent-proof", {
+      method: "POST",
+      headers: {
+        origin: "https://hanbuddy.kr",
+        "content-type": "application/json",
+        "x-analytics-request": "1",
+      },
+      body: JSON.stringify({ action: "ACCEPT" }),
+    });
+    expect((await POST(req)).status).toBe(503);
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 
@@ -60,15 +63,16 @@ describe("POST /api/analytics/purchase-consent-proof", () => {
       setCookies: ["unexpected=must-not-pass; Path=/"],
     });
 
-    const response = await POST(request("ACCEPT", "denied"));
+    const response = await POST(request("ACCEPT"));
 
     expect(mockedPostBackend).toHaveBeenCalledWith(
       "/analytics/purchase-consent-proof",
       { action: "ACCEPT" },
-      { origin: "https://app.hanbuddy.test", analyticsRequest: true },
+      { origin: "https://hanbuddy.kr", analyticsRequest: true },
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("set-cookie")).toBeNull();
+    expect(response.headers.get("cache-control")).toBe("no-store");
     await expect(response.json()).resolves.toMatchObject({
       isSuccess: true,
       result: { proof: grantedProof, expiresAt: "2033-05-18T03:33:19Z" },
@@ -94,7 +98,7 @@ describe("POST /api/analytics/purchase-consent-proof", () => {
       { action: "RESTORE" },
       {
         cookieHeader: `__Host-hb_ga_consent=${grantedProof}`,
-        origin: "https://app.hanbuddy.test",
+        origin: "https://hanbuddy.kr",
         analyticsRequest: true,
       },
     );
@@ -132,5 +136,66 @@ describe("POST /api/analytics/purchase-consent-proof", () => {
       code: "ANALYTICS_PROXY_ERROR",
       message: "Analytics request unavailable",
     });
+  });
+});
+
+it.each(["granted.v1.legacy", `granted.v2.${"A".repeat(42)}B`])(
+  "rejects legacy/noncanonical IDs without automatic migration: %s",
+  async (proof) => {
+    enablePolicy();
+    mockedPostBackend.mockReset();
+    const response = await POST(request("ACCEPT", proof));
+    expect(response.status).toBe(410);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  },
+);
+it("forwards denied v2 on explicit ACCEPT so the server enforces revocation ACK", async () => {
+  enablePolicy();
+  mockedPostBackend.mockReset();
+  mockedPostBackend.mockResolvedValue({
+    status: 409,
+    payload: { isSuccess: false, code: "ANALYTICS_LINK_CONFLICT", message: "private" },
+    setCookies: [],
+  });
+  const denied = grantedProof.replace("granted", "denied");
+  const response = await POST(request("ACCEPT", denied));
+  expect(response.status).toBe(409);
+  expect(mockedPostBackend).toHaveBeenCalledExactlyOnceWith(
+    "/analytics/purchase-consent-proof",
+    { action: "ACCEPT" },
+    {
+      cookieHeader: `__Host-hb_ga_consent=${denied}`,
+      origin: "https://hanbuddy.kr",
+      analyticsRequest: true,
+    },
+  );
+});
+
+it.each(["https://preview.example", "http://localhost:3000", "https://evil.example"])(
+  "does not trust Host/forwarded headers over browser Origin %s",
+  async (origin) => {
+    enablePolicy();
+    mockedPostBackend.mockReset();
+    const req = request("ACCEPT");
+    req.headers.set("origin", origin);
+    req.headers.set("host", "hanbuddy.kr");
+    req.headers.set("x-forwarded-host", "hanbuddy.kr");
+    expect((await POST(req)).status).toBe(403);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+  },
+);
+it("keeps server policy mismatch410 terminal without issuing a new acceptance", async () => {
+  enablePolicy();
+  mockedPostBackend.mockReset();
+  mockedPostBackend.mockResolvedValue({
+    status: 410,
+    payload: { isSuccess: false, code: "ANALYTICS_REVOKED_OR_EXPIRED", message: "policy mismatch" },
+    setCookies: [],
+  });
+  const response = await POST(request("RESTORE", grantedProof));
+  expect(response.status).toBe(410);
+  expect(mockedPostBackend).toHaveBeenCalledTimes(1);
+  expect(mockedPostBackend.mock.calls[0][1]).toEqual({
+    action: "RESTORE",
   });
 });

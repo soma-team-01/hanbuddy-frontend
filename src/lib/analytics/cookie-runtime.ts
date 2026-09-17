@@ -46,6 +46,7 @@ export function createProofApi(request: Request): ProofApi {
 export function createCookieJar(
   document: Pick<Document, "cookie">,
   changed: () => void = () => {},
+  storage?: Pick<Storage, "getItem" | "setItem">,
 ): ConsentCookieJar {
   const read = (name: string) =>
     document.cookie
@@ -53,18 +54,28 @@ export function createCookieJar(
       .map((s) => s.trim())
       .find((s) => s.startsWith(`${name}=`))
       ?.slice(name.length + 1) ?? "";
-  const write = (name: string, value: string, maxAge: number) => {
-    if (!/^[A-Za-z0-9_.-]*$/.test(value) || !Number.isSafeInteger(maxAge) || maxAge < 0)
+  const write = (name: string, value: string, maxAge?: number) => {
+    if (
+      !/^[A-Za-z0-9_.-]*$/.test(value) ||
+      (maxAge !== undefined && (!Number.isSafeInteger(maxAge) || maxAge < 0))
+    )
       throw new Error("Invalid cookie");
     const previous = read(name);
-    document.cookie = `${name}=${value}; Path=/; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+    document.cookie = `${name}=${value}; Path=/; Secure; SameSite=Lax${maxAge === undefined ? "" : `; Max-Age=${maxAge}`}`;
     if (read(name) !== previous) changed();
   };
   return {
     read: () => read(CONSENT_COOKIE),
     write: (v, a) => write(CONSENT_COOKIE, v, a),
-    decision: () => read(DECISION_COOKIE),
-    decide: (v, a) => write(DECISION_COOKIE, v, a),
+    decision: () => (storage ? (storage.getItem(DECISION_COOKIE) ?? "") : read(DECISION_COOKIE)),
+    decide: (v, a) => {
+      if (!storage) return write(DECISION_COOKIE, v, a);
+      if (!/^(accept|denied)\.[A-Za-z0-9-]+$/.test(v)) throw new Error("Invalid decision");
+      const previous = storage.getItem(DECISION_COOKIE);
+      // Only a choice/generation marker is persistent; never the server opaque proof.
+      storage.setItem(DECISION_COOKIE, v);
+      if (storage.getItem(DECISION_COOKIE) !== previous) changed();
+    },
   };
 }
 export function createPaymentLinker({
@@ -133,10 +144,17 @@ export function captureAnalyticsPayment() {
 /** Inert until an explicit, complete policy and browser serialization support exist. */
 export function createCookieRuntime(policy: AnalyticsPolicy, target: Window, document: Document) {
   let disposed = false;
+  let storage: Storage | undefined;
+  try {
+    storage = target.localStorage;
+  } catch {
+    /* Fail closed when choice storage is blocked. */
+  }
   let supported =
     target.location.origin === policy.origin &&
     policy.origin.startsWith("https://") &&
     Boolean(target.navigator.locks) &&
+    Boolean(storage) &&
     typeof BroadcastChannel !== "undefined";
   let channel: BroadcastChannel | null = null;
   if (supported) {
@@ -147,7 +165,7 @@ export function createCookieRuntime(policy: AnalyticsPolicy, target: Window, doc
     }
   }
   const browser = createGoogleBrowser(target, document, policy.measurementId);
-  const jar = createCookieJar(document, () => channel?.postMessage("consent"));
+  const jar = createCookieJar(document, () => channel?.postMessage("consent"), storage);
   const consent = createCookieConsent({
     policy,
     jar,
@@ -163,13 +181,23 @@ export function createCookieRuntime(policy: AnalyticsPolicy, target: Window, doc
     identifiers: () => browser.identifiers(),
     request: target.fetch.bind(target),
   });
-  const invalidate = () => channel?.postMessage("auth");
+  const invalidate = () => {
+    controller.suspend();
+    channel?.postMessage("auth");
+    void controller.restore();
+  };
   invalidators.add(invalidate);
   if (supported) current = linker;
   if (channel)
     channel.onmessage = (event) => {
-      if (event.data === "auth") authEpoch++;
-      if (event.data === "consent") void controller.restore();
+      if (event.data === "auth") {
+        authEpoch++;
+        controller.suspend();
+        void controller.restore();
+      }
+      if (event.data === "consent") {
+        void controller.restore();
+      }
       // A denial must stop a peer even when both cookie writes were rejected.
       // Scope it to the observed decision so a delayed message cannot revoke a newer choice.
       if (event.data?.type === "deny" && typeof event.data.decision === "string") {

@@ -11,9 +11,22 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getRouteAccessRedirect, parseUserType } from "@/lib/auth/routes";
 
+import { isNoindexPath } from "@/lib/seo/indexing";
+
 const handleI18nRouting = createMiddleware(routing);
 
 export function proxy(request: NextRequest) {
+  const response = routeRequest(request);
+  if (
+    isNoindexPath(request.nextUrl.pathname) ||
+    (response.status >= 300 && response.status < 400)
+  ) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  return response;
+}
+
+function routeRequest(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return handleAdminRoute(request);

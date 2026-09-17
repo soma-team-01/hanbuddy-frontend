@@ -115,6 +115,7 @@ export function createCookieAnalytics({
     },
     suspend: () => {
       action++;
+      consent.invalidate();
       stop(false);
     },
     dispose() {

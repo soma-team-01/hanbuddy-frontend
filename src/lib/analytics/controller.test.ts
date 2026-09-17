@@ -7,7 +7,6 @@ const policy = {
   origin: "https://example.test",
   version: "test-v1",
   consentMaxAgeMs: 10000,
-  cookieMaxAgeSeconds: 10,
 };
 function setup(overrides: Record<string, unknown> = {}) {
   const values = new Map<string, string>();
@@ -53,16 +52,7 @@ function setup(overrides: Record<string, unknown> = {}) {
 describe("operational activation", () => {
   it("does not activate from an ID alone or invent retention", () => {
     expect(readAnalyticsPolicy({ GA_MEASUREMENT_ID: "G-TEST123" })).toBeNull();
-    expect(
-      readAnalyticsPolicy({
-        GA_ENABLED: "true",
-        GA_DESTINATION_VERIFIED: "true",
-        GA_AUTOMATIC_COLLECTION_DISABLED: "true",
-        GA_POLICY_VERSION: "test-v1",
-        GA_ORIGIN: "https://example.test",
-        GA_MEASUREMENT_ID: "G-TEST123",
-      }),
-    ).toBeNull();
+    expect(readAnalyticsPolicy({ GA_ENABLED: "false", GA_MEASUREMENT_ID: "G-TEST" })).toBeNull();
   });
   it("requires policy and the actual backend binding even after accept", async () => {
     for (const overrides of [{ policy: null }, { link: null }]) {

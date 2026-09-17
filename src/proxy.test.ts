@@ -327,3 +327,47 @@ describe("route access proxy", () => {
     },
   );
 });
+
+describe("document indexing boundaries", () => {
+  it.each([
+    "/en/login",
+    "/en/onboarding",
+    "/ko/buddy/onboarding",
+    "/en/home",
+    "/en/my-page",
+    "/en/chat",
+    "/en/applications",
+    "/ko/dashboard",
+    "/ko/my-activities/create",
+    "/en/activities/42/book?scheduleId=101",
+    "/en/payments/success",
+    "/en/auth/status",
+    "/ko/buddy/auth/status",
+    "/ko/buddy/resubmission",
+    "/admin/login",
+    "/admin/users",
+  ])("marks %s noindex without blocking crawl", async (path) => {
+    const response = await runProxy(path);
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+  it("keeps authenticated private documents noindex", async () => {
+    const response = await runProxy("/en/my-page", {
+      [AUTH_COOKIES.accessToken]: "fixture",
+      [AUTH_COOKIES.userType]: "TOURIST",
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+  it.each(["/en", "/en/explore", "/en/activities/42", "/ko/buddy"])(
+    "keeps public document %s indexable",
+    async (path) => {
+      const response = await runProxy(path);
+      expect(response.headers.get("x-robots-tag")).toBeNull();
+    },
+  );
+  it("excludes locale redirects from indexing without dropping their query", async () => {
+    const response = await runProxy("/en/explore?utm_source=fixture", { NEXT_LOCALE: "ko" });
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    expect(response.headers.get("location")).toBe("http://localhost/ko/explore?utm_source=fixture");
+  });
+});

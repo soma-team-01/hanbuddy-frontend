@@ -12,17 +12,15 @@ vi.mock("./browser", () => ({
 const policy = {
   measurementId: "G-TEST",
   origin: "https://example.test",
-  version: "synthetic",
-  consentMaxAgeMs: 60000,
-  cookieMaxAgeSeconds: 60,
 };
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
-function environment() {
+function environment(origin = policy.origin) {
   let blocked = false;
   const cookies = new Map<string, string>();
+  const decisions = new Map<string, string>();
   let tail = Promise.resolve();
   const document = {
     get cookie() {
@@ -44,15 +42,19 @@ function environment() {
     return Response.json({
       isSuccess: true,
       result: {
-        proof: existing?.startsWith("granted.")
-          ? existing
-          : `granted.v1.00000000-0000-4000-8000-000000000001.${now}.${now + 60}.synthetic.${"a".repeat(43)}`,
+        proof: existing?.startsWith("granted.") ? existing : `granted.v2.${"A".repeat(43)}`,
         expiresAt: new Date((now + 60) * 1000).toISOString(),
       },
     });
   });
   const target = {
-    location: { origin: policy.origin },
+    localStorage: {
+      getItem: (key: string) => decisions.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (!blocked) decisions.set(key, value);
+      },
+    },
+    location: { origin },
     navigator: {
       locks: {
         request: (_name: string, work: () => Promise<unknown>) => {
@@ -165,3 +167,18 @@ it("withdraws another active tab even when all cookie writes silently fail", asy
   a.dispose();
   b.dispose();
 });
+
+it.each(["http://localhost:3000", "https://preview.example", "https://staging.example"])(
+  "keeps transport disabled on noncanonical browser origin %s",
+  (origin) => {
+    const e = environment(origin);
+    const runtime = createCookieRuntime(
+      { ...policy, origin: "https://hanbuddy.kr" },
+      e.target,
+      e.document,
+    );
+    expect(runtime.controller.enabled).toBe(false);
+    expect(e.issue).not.toHaveBeenCalled();
+    runtime.dispose();
+  },
+);

@@ -1,5 +1,6 @@
 "use client";
 
+import type { TouristActivitySummary } from "@/types/activity";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityCard } from "@/components/ui/ActivityCard";
@@ -11,14 +12,17 @@ import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 
-export function ActivityFeed() {
+export function ActivityFeed({
+  initialActivities,
+}: Readonly<{ initialActivities?: TouristActivitySummary[] }> = {}) {
   const t = useTranslations("Explore");
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const getApiErrorMessage = useApiErrorMessage();
-  const activitiesQuery = useQuery(
-    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
-  );
+  const activitiesQuery = useQuery({
+    ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
+    initialData: initialActivities,
+  });
 
   const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
 

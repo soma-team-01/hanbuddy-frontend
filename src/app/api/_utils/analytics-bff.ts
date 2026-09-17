@@ -56,8 +56,8 @@ export function isConsentProof(
   if (parts.length !== 7 || parts[0] !== choice || parts[1] !== "v1") return false;
   if (
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(parts[2]) ||
-    !/^[0-9]{1,12}$/.test(parts[3]) ||
-    !/^[0-9]{1,12}$/.test(parts[4]) ||
+    !/^\d{1,12}$/.test(parts[3]) ||
+    !/^\d{1,12}$/.test(parts[4]) ||
     parts[5] !== policyVersion ||
     !/^[A-Za-z0-9_-]{43}$/.test(parts[6])
   )
@@ -66,18 +66,16 @@ export function isConsentProof(
 }
 
 export function analyticsUnavailableResponse(status: 400 | 403 | 409 | 410 | 415 | 502 | 503) {
-  const code =
-    status === 403
-      ? "ANALYTICS_FORBIDDEN"
-      : status === 409
-        ? "ANALYTICS_CONTEXT_CHANGED"
-        : status === 410
-          ? "ANALYTICS_REVOKED_OR_EXPIRED"
-          : status === 503
-            ? "ANALYTICS_DISABLED"
-            : status === 502
-              ? "ANALYTICS_PROXY_ERROR"
-              : "ANALYTICS_INVALID";
+  const codes = {
+    400: "ANALYTICS_INVALID",
+    403: "ANALYTICS_FORBIDDEN",
+    409: "ANALYTICS_CONTEXT_CHANGED",
+    410: "ANALYTICS_REVOKED_OR_EXPIRED",
+    415: "ANALYTICS_INVALID",
+    502: "ANALYTICS_PROXY_ERROR",
+    503: "ANALYTICS_DISABLED",
+  };
+  const code = codes[status];
   return NextResponse.json(
     { isSuccess: false, code, message: "Analytics request unavailable" },
     { status },
@@ -138,7 +136,7 @@ export async function proxyApplicationPost<TBody, TResult>(
   try {
     const backend = await postBackend<TBody, TResult>(backendPath, body, {
       bearerToken: accessToken,
-      ...(analytics ?? {}),
+      ...analytics,
     });
     const response = createBackendJsonResponse(backend);
     if (analytics && backend.status >= 200 && backend.status < 300 && backend.payload.isSuccess) {

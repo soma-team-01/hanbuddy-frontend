@@ -120,6 +120,18 @@ export function createCookieConsent({
     if (parseProof(current) && (!parseProof(current)!.granted || decision().startsWith("denied")))
       await retire(current);
   }
+  function verifiedResponse(result: { proof: string; expiresAt: string }, existing: string) {
+    const p = parseProof(result.proof);
+    if (
+      !p ||
+      !p.granted ||
+      !valid(result.proof) ||
+      Date.parse(result.expiresAt) !== p.expiresAt ||
+      (existing && result.proof !== existing)
+    )
+      return null;
+    return p;
+  }
   async function establish(action: "ACCEPT" | "RESTORE", intent: string, local: number) {
     if (local !== operation || decision() !== intent) return;
     await drain();
@@ -134,15 +146,9 @@ export function createCookieConsent({
       existing = "";
     }
     const result = await api.issue(existing ? "RESTORE" : action);
-    const p = parseProof(result.proof);
-    if (
-      !p ||
-      !p.granted ||
-      !valid(result.proof) ||
-      Date.parse(result.expiresAt) !== p.expiresAt ||
-      (existing && result.proof !== existing)
-    ) {
-      if (p) await retire(result.proof);
+    const p = verifiedResponse(result, existing);
+    if (!p) {
+      await retire(result.proof);
       throw new Error("Invalid proof response");
     }
     if (decision() !== intent) {

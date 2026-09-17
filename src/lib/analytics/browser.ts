@@ -8,10 +8,10 @@ const deniedAds = { ad_storage: "denied", ad_user_data: "denied", ad_personaliza
 export function createGoogleBrowser(
   target: Window,
   document: Document,
-  measurementId?: string,
+  measurementId: string | null = null,
 ): AnalyticsBrowserPort {
   const google = target as GoogleWindow;
-  let id: string | null = measurementId ?? null;
+  let id = measurementId;
   let ready = false;
   let generation = 0;
   let script: HTMLScriptElement | null = null;

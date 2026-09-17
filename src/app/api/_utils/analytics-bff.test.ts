@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   analyticsContextForToken,
+  analyticsUnavailableResponse,
   isAnalyticsContextCurrent,
   isConsentProof,
 } from "./analytics-bff";
@@ -24,5 +25,23 @@ describe("analytics BFF validation", () => {
     expect(isAnalyticsContextCurrent(expected, "access-token")).toBe(true);
     expect(isAnalyticsContextCurrent(expected, "different-token")).toBe(false);
     expect(isAnalyticsContextCurrent("not-a-hash", "access-token")).toBe(false);
+  });
+});
+
+it.each([
+  [400, "ANALYTICS_INVALID"],
+  [403, "ANALYTICS_FORBIDDEN"],
+  [409, "ANALYTICS_CONTEXT_CHANGED"],
+  [410, "ANALYTICS_REVOKED_OR_EXPIRED"],
+  [415, "ANALYTICS_INVALID"],
+  [502, "ANALYTICS_PROXY_ERROR"],
+  [503, "ANALYTICS_DISABLED"],
+] as const)("preserves safe analytics failure %s / %s", async (status, code) => {
+  const response = analyticsUnavailableResponse(status);
+  expect(response.status).toBe(status);
+  expect(await response.json()).toEqual({
+    isSuccess: false,
+    code,
+    message: "Analytics request unavailable",
   });
 });

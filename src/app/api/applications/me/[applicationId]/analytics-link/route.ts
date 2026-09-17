@@ -41,11 +41,11 @@ export async function PUT(request: NextRequest, context: LinkRouteContext) {
   const sessionId = body?.sessionId;
   if (
     typeof clientId !== "string" ||
-    !/^[0-9]{1,20}\.[0-9]{1,20}$/.test(clientId) ||
+    !/^\d{1,20}\.\d{1,20}$/.test(clientId) ||
     !(
       sessionId === undefined ||
       (typeof sessionId === "string" &&
-        /^[1-9][0-9]{0,18}$/.test(sessionId) &&
+        /^[1-9]\d{0,18}$/.test(sessionId) &&
         (sessionId.length < 19 || sessionId <= "9223372036854775807"))
     )
   )

@@ -151,4 +151,6 @@ it("shows incomplete withdrawal without claiming server completion", () => {
     </AnalyticsProvider>,
   );
   expect(screen.getByRole("status")).toHaveTextContent("Withdrawal is pending");
+  expect(screen.getByRole("status").tagName).toBe("OUTPUT");
+  expect(screen.getByRole("status")).toHaveClass("block", "text-xs", "text-muted");
 });

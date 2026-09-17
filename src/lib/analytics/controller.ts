@@ -219,6 +219,21 @@ export function createAnalytics({
     })();
     return starting;
   }
+  function canRestore(stored: ConsentRecord | null) {
+    return (
+      stored?.state === "granted" && stored.version === policy?.version && stored.expiresAt > now()
+    );
+  }
+  async function retireStored(stored: ConsentRecord) {
+    pendingWithdrawal = stored;
+    if (!(await revoke(stored.id))) {
+      stop(true);
+      setState("denied");
+      return false;
+    }
+    if (pendingWithdrawal === stored) pendingWithdrawal = null;
+    return true;
+  }
   return {
     enabled,
     subscribe(listener: () => void) {
@@ -241,11 +256,7 @@ export function createAnalytics({
       // Reconcile shared state before minting an epoch. A failed retirement keeps
       // the old record locally; no new grant can discard that revocation handle.
       const stored = read();
-      if (
-        stored?.state === "granted" &&
-        stored.version === policy.version &&
-        stored.expiresAt > now()
-      ) {
+      if (canRestore(stored)) {
         await this.restore();
         return;
       }
@@ -253,15 +264,7 @@ export function createAnalytics({
       const previous = record;
       if (previous && !(await revoke(previous.id))) return;
       if (generation !== intent) return;
-      if (stored && stored.id !== previous?.id) {
-        pendingWithdrawal = stored;
-        if (!(await revoke(stored.id))) {
-          stop(true);
-          setState("denied");
-          return;
-        }
-        if (pendingWithdrawal === stored) pendingWithdrawal = null;
-      }
+      if (stored && stored.id !== previous?.id && !(await retireStored(stored))) return;
       if (generation !== intent) return;
       // Awaited revocations may have overlapped another tab's decision.
       if (JSON.stringify(read()) !== JSON.stringify(stored)) return;

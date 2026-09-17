@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useRef,
+  useMemo,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -93,8 +94,12 @@ export function AnalyticsProvider({
       controller.suspend();
     };
   }, [controller]);
+  const contextValue = useMemo(
+    () => ({ controller, pathname, revision }),
+    [controller, pathname, revision],
+  );
   return (
-    <Context.Provider value={{ controller, pathname, revision }}>
+    <Context.Provider value={contextValue}>
       {children}
       <ConsentControl />
     </Context.Provider>
@@ -102,7 +107,7 @@ export function AnalyticsProvider({
 }
 
 function ConsentControl() {
-  const { controller, revision } = useContext(Context);
+  const { controller } = useContext(Context);
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const trigger = useRef<HTMLElement | null>(null);
@@ -115,7 +120,6 @@ function ConsentControl() {
     window.addEventListener("hanbuddy:analytics-settings", show);
     return () => window.removeEventListener("hanbuddy:analytics-settings", show);
   }, []);
-  void revision;
   if (!controller?.enabled) return null;
   const visible = open || (!dismissed && controller.getSnapshot() === "unanswered");
   if (!visible) return null;
@@ -160,9 +164,7 @@ export function AnalyticsSettings() {
         {copy.settings}
       </button>
       {controller.isWithdrawalPending?.() && (
-        <p role="status" className="text-xs text-muted">
-          {copy.pending}
-        </p>
+        <output className="block text-xs text-muted">{copy.pending}</output>
       )}
     </>
   );

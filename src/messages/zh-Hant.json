@@ -29,6 +29,35 @@
       "bankInvalid": "請檢查銀行和帳號。"
     }
   },
+  "ScheduleCancellation": {
+    "refundAmount": "退款金額",
+    "buddyCancellationReason": "Buddy 提供的取消原因",
+    "refundRecoveryPending": "正在確認退款結果，請勿重複申請取消或付款。",
+    "more": "行程選項",
+    "cancelAction": "取消行程",
+    "cancelled": "已取消的行程",
+    "title": "確定取消此行程嗎？",
+    "irreversible": "取消後無法重新開放或接受新預訂，退款將自動處理。請務必通知報名者取消事宜。",
+    "keep": "保留行程",
+    "confirm": "取消行程",
+    "pending": "正在取消…",
+    "reason": "取消原因",
+    "reasonHint": "此原因將向參與者公開。請勿填寫個人資訊或內部備註。",
+    "success": "行程已取消，退款將依次處理。",
+    "loadError": "無法取得最新取消狀態。",
+    "requestError": "無法確認取消結果。請先查詢狀態再重試。",
+    "uncertain": "無法確認取消是否已受理。再次提交前請查詢狀態。",
+    "retry": "重新查詢狀態",
+    "started": "已開始的行程無法取消。",
+    "statuses": {
+      "QUEUED": "退款處理中",
+      "DISPATCHED": "退款處理中",
+      "REVIEW_REQUIRED": "退款確認中，完成可能需要一些時間。",
+      "COMPLETED": "退款完成",
+      "NO_PAYMENT": "已取消 · 未發現已確認的付款",
+      "EXCLUDED": "保留原取消及退款政策"
+    }
+  },
   "Common": {
     "cancel": "取消",
     "close": "關閉",
@@ -37,6 +66,10 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "refundRecoveryPending": "正在確認退款結果，請勿重複申請取消或付款。",
+    "scheduleCancellationReason": "請輸入1至255個字元的公開取消原因。",
+    "scheduleCancellationStarted": "已開始的日程無法取消。",
+    "scheduleNotCancelled": "未找到日程取消紀錄，請重新整理我的報名以查看最新狀態。",
     "signupSourceInvalid": "請檢查註冊來源與詳細說明。",
     "signupBankAccountInvalid": "請檢查銀行和帳號。",
     "authenticationRequired": "請重新登入以繼續。",
@@ -894,8 +927,8 @@
     "confirming": "正在確認您的付款...",
     "confirmFailed": "我們無法確認您的付款。請從「我的應用程式」重試。",
     "failTitle": "付款失敗",
-    "failDescription": "付款尚未完成，也未收取任何費用。",
-    "retryFromApplications": "在“我的應用程式”中重試",
+    "failDescription": "無法確認付款結果。再次付款前，請在我的報名中查看最新狀態。",
+    "retryFromApplications": "查看我的報名狀態",
     "failReasons": {
       "cancelled": "您在付款完成之前取消了付款。",
       "aborted": "付款被中斷。請再試一次。",

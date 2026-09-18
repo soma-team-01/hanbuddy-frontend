@@ -4,6 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
+import { ScheduleActions } from "@/components/buddy/ScheduleActions";
+import { ScheduleRefundStatus } from "@/components/booking/ScheduleRefundStatus";
+import { scheduleCancellationQueryOptions } from "@/lib/query/schedule-cancellation";
+import { myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 import { ApplicantProfileDialog } from "@/components/buddy/ApplicantProfileDialog";
 import { MonthCalendarButton } from "@/components/buddy/MonthCalendarButton";
 import { Avatar } from "@/components/ui/Avatar";
@@ -37,13 +41,6 @@ const STATUS_SECTIONS = [
   { key: "sectionCancelled", statuses: ["CANCELLED", "SUPERSEDED"] },
 ] as const;
 
-const CANCELLATION_REASON_KEY = {
-  SCHEDULE_CONFLICT: "scheduleConflict",
-  ILLNESS: "illness",
-  FOUND_OTHER: "foundOther",
-  OTHER: "other",
-} as const;
-
 export function ApplicantsContent({
   activityId,
   initialScheduleId,
@@ -51,8 +48,8 @@ export function ApplicantsContent({
   const locale = useLocale() as Locale;
   const language = getContentLanguage(locale);
   const t = useTranslations("Applicants");
-  const tApplications = useTranslations("Applications");
   const tChat = useTranslations("Chat");
+  const tCancellation = useTranslations("ScheduleCancellation");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
   const todayDate = getSeoulNowParts().date;
@@ -78,11 +75,20 @@ export function ApplicantsContent({
   const noScheduleOnSelectedDate = Boolean(selectedDate) && !dateSchedule;
 
   const applicationsQuery = useQuery(buddyActivityApplicationsQueryOptions(scheduleId, language));
+  const cancellationQuery = useQuery(scheduleCancellationQueryOptions(scheduleId));
+  const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
+  const room = roomsQuery.data?.find(
+    (item) => String(item.activityScheduleId) === String(scheduleId),
+  );
   // 쿼리 파라미터로 바로 들어온 첫 화면에서는 활동 상세 오류가 조회를 막지 않는다
   const relevantActivityError = initialScheduleId && !selectedDate ? null : activityQuery.error;
   useAuthQueryRedirect(relevantActivityError ?? applicationsQuery.error);
 
   const applications = applicationsQuery.data ?? null;
+  const isCancelled =
+    cancellationQuery.data?.status === "CANCELLED" ||
+    schedules.find((item) => String(item.scheduleId) === String(scheduleId))?.status ===
+      "CANCELLED";
   const requestError = relevantActivityError ?? applicationsQuery.error;
   const hasNoSchedule =
     !initialScheduleId && activityQuery.isSuccess && !scheduleId && !selectedDate;
@@ -118,17 +124,24 @@ export function ApplicantsContent({
   const sections = STATUS_SECTIONS.map(({ key, statuses }) => ({
     key,
     applicants: (applications?.applicants ?? []).filter((applicant) =>
-      (statuses as readonly string[]).includes(applicant.status),
+      (statuses as readonly string[]).includes(isCancelled ? "CANCELLED" : applicant.status),
     ),
   })).filter(({ applicants }) => applicants.length > 0);
 
   return (
     <>
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="font-display text-3xl leading-8 font-extrabold tracking-[-0.04em] text-ink md:text-4xl">
-            {activityQuery.data?.title ?? applications?.activityTitle}
-          </h2>
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <h2 className="min-w-0 font-display text-3xl leading-8 font-extrabold tracking-[-0.04em] break-words text-ink md:text-4xl">
+              {activityQuery.data?.title ?? applications?.activityTitle}
+            </h2>
+            {isCancelled ? (
+              <span className="shrink-0 rounded-full border border-primary/40 px-2 py-0.5 text-xs font-semibold text-primary">
+                {tCancellation("cancelled")}
+              </span>
+            ) : null}
+          </div>
           {scheduleLabel ? <p className="mt-2 text-muted">{scheduleLabel}</p> : null}
         </div>
         {/* 이 활동의 다른 회차 날짜로 바로 이동한다 — 점은 이 활동의 회차 날짜 */}
@@ -140,6 +153,42 @@ export function ApplicantsContent({
           onSelectDate={setSelectedDate}
         />
       </div>
+
+      {applications ? (
+        <div className="mt-4 flex justify-end">
+          <ScheduleActions
+            key={scheduleId}
+            scheduleId={Number(scheduleId)}
+            startAt={applications.startAt}
+            applicantCount={applications.applicantCount}
+            roomId={room?.chatRoomId}
+            knownCancelled={isCancelled}
+            showCancelledBadge={false}
+          />
+        </div>
+      ) : null}
+      {cancellationQuery.data?.status === "CANCELLED" ? (
+        <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-y border-line-soft py-3 text-sm text-muted">
+          <p className="min-w-0 [overflow-wrap:anywhere] break-words">
+            <span className="font-medium">{tCancellation("reason")}:</span>{" "}
+            {cancellationQuery.data.reason}
+          </p>
+          {cancellationQuery.data.cancelledAt ? (
+            <p className="text-xs">
+              {formatSeoulDateTime(cancellationQuery.data.cancelledAt, locale)}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {cancellationQuery.isError ? (
+        <button
+          type="button"
+          onClick={() => cancellationQuery.refetch()}
+          className="mt-3 text-sm text-primary underline"
+        >
+          {tCancellation("loadError")} {tCancellation("retry")}
+        </button>
+      ) : null}
 
       {noScheduleOnSelectedDate ? (
         <p className="mt-6 rounded-2xl border border-dashed border-line-soft px-4 py-8 text-center text-muted">
@@ -193,19 +242,8 @@ export function ApplicantsContent({
                           </span>
                         </span>
                       </button>
-                      {applicant.cancellationReason ? (
-                        // 취소 사유는 채팅 아이콘 바로 왼쪽에서 읽힌다. OTHER면 남긴 상세도 함께
-                        <span className="min-w-0 text-right text-xs text-muted">
-                          {tApplications("cancelledReason", {
-                            reason: tApplications(
-                              `cancellationReasons.${CANCELLATION_REASON_KEY[applicant.cancellationReason]}`,
-                            ),
-                          })}
-                          {applicant.cancellationDetail ? (
-                            <span className="block text-ink">{applicant.cancellationDetail}</span>
-                          ) : null}
-                        </span>
-                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted md:max-w-md md:justify-end md:text-right">
                       <StartChatButton
                         target={{ kind: "direct", targetUserId: applicant.applicantUserId }}
                         label={tChat("messageApplicant", { name: applicant.applicantName })}
@@ -213,9 +251,12 @@ export function ApplicantsContent({
                         labelHidden
                         className="flex size-9 shrink-0 items-center justify-center text-muted transition-colors enabled:hover:text-primary disabled:opacity-60"
                       />
-                    </div>
-                    <div className="flex flex-wrap gap-2 text-xs text-muted md:max-w-72 md:justify-end md:text-right">
-                      <span>
+                      {cancellationQuery.data?.applicants
+                        .filter((task) => task.applicationId === applicant.applicationId)
+                        .map((task) => (
+                          <ScheduleRefundStatus key={task.applicationId} task={task} />
+                        ))}
+                      <span className="leading-5">
                         {t("appliedOn", {
                           date:
                             formatSeoulDateTime(applicant.appliedAt, locale) ??

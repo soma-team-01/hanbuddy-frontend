@@ -85,16 +85,18 @@ export function mapTouristActivityDetailToActivity(
     hostIntroduction: detail.hostIntroduction?.trim() ? detail.hostIntroduction : undefined,
     included: detail.includedItems.map(toIncludedItem),
     restrictions: detail.restrictionNotes,
-    sessions: detail.schedules.map<Session>((schedule) => {
-      return {
-        id: String(schedule.activityScheduleId),
-        startAt: schedule.startAt,
-        dateKey: getSeoulDateTimeParts(schedule.startAt)?.date,
-        dateLabel: formatSeoulDate(schedule.startAt, locale) ?? dateTimeUnavailable,
-        timeLabel: formatSeoulTime(schedule.startAt, locale) ?? "",
-        spotsLeft: schedule.remainingCapacity,
-      };
-    }),
+    sessions: detail.schedules
+      .filter((schedule) => schedule.status !== "CANCELLED")
+      .map<Session>((schedule) => {
+        return {
+          id: String(schedule.activityScheduleId),
+          startAt: schedule.startAt,
+          dateKey: getSeoulDateTimeParts(schedule.startAt)?.date,
+          dateLabel: formatSeoulDate(schedule.startAt, locale) ?? dateTimeUnavailable,
+          timeLabel: formatSeoulTime(schedule.startAt, locale) ?? "",
+          spotsLeft: schedule.status === "CLOSED" ? 0 : schedule.remainingCapacity,
+        };
+      }),
     itinerary: [...(detail.itineraries ?? [])]
       .sort((left, right) => left.itemOrder - right.itemOrder)
       .map<ActivityItineraryItem>((item) => ({

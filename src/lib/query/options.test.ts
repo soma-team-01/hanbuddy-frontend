@@ -79,7 +79,7 @@ describe("domain query options", () => {
 
     // 좌석 선점이 풀린 결제 대기 신청은 백엔드 목록에서 사라지므로 주기적으로 확인한다
     expect(refetchInterval(withStatus("PENDING_PAYMENT"))).toBe(60_000);
-    expect(refetchInterval(withStatus("CONFIRMED"))).toBe(false);
+    expect(refetchInterval(withStatus("CONFIRMED"))).toBe(60_000);
     expect(refetchInterval(withStatus())).toBe(false);
   });
 

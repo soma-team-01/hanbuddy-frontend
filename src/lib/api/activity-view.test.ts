@@ -29,6 +29,33 @@ const summary = {
 };
 
 describe("activity view adapters", () => {
+  it("never offers cancelled schedules and treats closed schedules as unavailable", () => {
+    const activity = mapTouristActivityDetailToActivity(
+      {
+        ...summary,
+        images: [],
+        includedItems: [],
+        restrictionNotes: [],
+        schedules: [
+          {
+            activityScheduleId: 1,
+            startAt: "2099-10-01T10:00:00+09:00",
+            remainingCapacity: 5,
+            status: "CANCELLED",
+          },
+          {
+            activityScheduleId: 2,
+            startAt: "2099-10-02T10:00:00+09:00",
+            remainingCapacity: 5,
+            status: "CLOSED",
+          },
+        ],
+      },
+      "Unavailable",
+    );
+    expect(activity.sessions).toHaveLength(1);
+    expect(activity.sessions?.[0]).toMatchObject({ id: "2", spotsLeft: 0 });
+  });
   it("maps a tourist activity summary to the existing card model", () => {
     expect(mapTouristActivitySummaryToActivity(summary)).toMatchObject({
       id: "42",

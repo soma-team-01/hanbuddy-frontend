@@ -298,6 +298,7 @@ export function buildDraftFromMyActivityDetail(
 ): ActivityCreateDraft {
   const now = getSeoulNowParts();
   const schedules = detail.schedules
+    .filter((schedule) => schedule.status !== "CANCELLED")
     .map((schedule) => {
       const parts = getSeoulDateTimeParts(schedule.startAt);
       if (!parts) return null;
@@ -312,6 +313,7 @@ export function buildDraftFromMyActivityDetail(
     .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
   const retainedScheduleStartAts = detail.schedules
     .filter((schedule) => {
+      if (schedule.status === "CANCELLED") return true;
       const parts = getSeoulDateTimeParts(schedule.startAt);
       return parts !== null && isPastSchedule({ date: parts.date, startTime: parts.time }, now);
     })

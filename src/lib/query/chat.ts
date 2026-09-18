@@ -63,13 +63,16 @@ export function myChatRoomsCacheQueryOptions(language: ContentLanguage) {
 }
 
 /**
- * 방 상세(참여자·읽음 위치). 최초 조회와 WebSocket 연결·재연결 직후 동기화에만 사용한다.
+ * 방 상세. 별도 취소 이벤트가 없으므로 단체방 일정 상태도 주기적으로 확인한다.
  */
 export function chatRoomQueryOptions(chatRoomId: number | string, language: ContentLanguage) {
   return queryOptions({
     queryKey: chatKeys.room(chatRoomId, language),
     queryFn: async () => unwrapApiResult(await getChatRoom(chatRoomId, language), "room"),
-    refetchInterval: false,
+    refetchInterval: (query) =>
+      query.state.data?.roomType === "GROUP" && !query.state.data.activityScheduleCancelled
+        ? 30_000
+        : false,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });

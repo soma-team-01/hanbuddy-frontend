@@ -1,5 +1,6 @@
 import { fireEvent, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getScheduleCancellation } from "@/lib/api/schedule-cancellation";
 import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -8,6 +9,7 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { ApplicantsContent } from "./applicants-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock("@/lib/api/schedule-cancellation", () => ({ getScheduleCancellation: vi.fn() }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -23,6 +25,175 @@ const mockedGetBuddyActivityApplications = vi.mocked(getBuddyActivityApplication
 const mockedGetMyActivity = vi.mocked(getMyActivity);
 
 describe("ApplicantsContent", () => {
+  beforeEach(() => {
+    mockedGetMyActivity.mockReset();
+    vi.mocked(getScheduleCancellation).mockResolvedValue({
+      status: "success",
+      cancellation: {
+        activityScheduleId: 99,
+        status: "OPEN",
+        cancelledAt: null,
+        reason: null,
+        applicants: [],
+      },
+    });
+  });
+
+  it("places the cancelled badge beside the title and shows the shared reason once without row amounts", async () => {
+    vi.mocked(getScheduleCancellation).mockResolvedValue({
+      status: "success",
+      cancellation: {
+        activityScheduleId: 99,
+        status: "CANCELLED",
+        cancelledAt: "2026-09-17T22:21:00+09:00",
+        reason: "test",
+        applicants: [
+          {
+            applicationId: 11,
+            refundStatus: "COMPLETED",
+            reviewReason: null,
+            additionalRefundAmount: 50000,
+            currency: "KRW",
+          },
+        ],
+      },
+    });
+    mockedGetBuddyActivityApplications.mockResolvedValue({
+      status: "success",
+      applications: {
+        activityId: 42,
+        activityScheduleId: 99,
+        activityTitle: "Han River Tour",
+        startAt: "2099-09-19T17:30:00+09:00",
+        applicantCount: 1,
+        statusCounts: { CANCELLED: 1 },
+        applicants: [
+          {
+            applicationId: 11,
+            applicantUserId: 4,
+            applicantName: "Tourist",
+            applicantProfileImageUrl: null,
+            applicantNationalityCode: "GB",
+            guestCount: 1,
+            applicantContactMethod: "LINE",
+            applicantContactCountryCode: null,
+            applicantContactIdentifier: "tourist",
+            status: "CANCELLED",
+            specialRequest: null,
+            appliedAt: "2026-09-17T21:50:00+09:00",
+            cancellationReason: "BUDDY_CANCELLATION",
+            cancellationDetail: "test",
+          },
+        ],
+      },
+    });
+    renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />, {
+      locale: "ko",
+    });
+    expect(await screen.findByText("환불 완료")).toBeInTheDocument();
+    const title = screen.getByRole("heading", { level: 2 });
+    expect(within(title.parentElement!).getByText("취소된 일정")).toBeInTheDocument();
+    expect(screen.getAllByText("취소된 일정")).toHaveLength(1);
+    const reason = screen.getByText(/취소 사유:/).closest("p")!;
+    expect(reason).toHaveTextContent("취소 사유: test");
+    expect(reason.parentElement).toHaveTextContent("2026. 9. 17. 오후 10:21");
+    const row = screen.getByText("Tourist", { exact: true }).closest("article")!;
+    expect(row).not.toHaveTextContent("test");
+    expect(row).not.toHaveTextContent("50,000");
+    const refund = within(row).getByRole("status");
+    expect(refund.parentElement).toHaveClass("items-center", "gap-x-4");
+    expect(within(refund.parentElement!).getByRole("button")).toBeInTheDocument();
+    expect(screen.queryByText(/현재 환불 건/)).not.toBeInTheDocument();
+  });
+
+  it.each(["OPEN", "CANCELLED"] as const)(
+    "uses the known %s schedule status for applicant sections when cancellation lookup fails",
+    async (scheduleStatus) => {
+      vi.mocked(getScheduleCancellation).mockResolvedValue({
+        status: "error",
+        error: new ApiClientError({ code: null, status: 503, details: null, backendMessage: null }),
+      });
+      mockedGetMyActivity.mockResolvedValue({
+        status: "success",
+        activity: {
+          activityId: 42,
+          title: "Han River Tour",
+          description: "A walk along the river.",
+          totalDurationMinutes: 90,
+          thumbnailImageUrl: null,
+          status: "ACTIVE",
+          hostIntroduction: "Seoul local",
+          includedItems: [],
+          restrictionNotes: [],
+          maxCapacity: 4,
+          price: 50000,
+          currency: "KRW",
+          discountPercent: null,
+          discountEndDate: null,
+          discountedPrice: null,
+          meetingPointName: "Yeouinaru Station",
+          meetingPlaceId: "place-1",
+          images: [],
+          schedules: [
+            {
+              scheduleId: 99,
+              startAt: "2099-09-19T17:30:00+09:00",
+              bookedCount: 1,
+              status: scheduleStatus,
+            },
+          ],
+          itineraries: [],
+        },
+      });
+      mockedGetBuddyActivityApplications.mockResolvedValue({
+        status: "success",
+        applications: {
+          activityId: 42,
+          activityScheduleId: 99,
+          activityTitle: "Han River Tour",
+          startAt: "2099-09-19T17:30:00+09:00",
+          applicantCount: 1,
+          statusCounts: { CONFIRMED: 1 },
+          applicants: [
+            {
+              applicationId: 11,
+              applicantUserId: 4,
+              applicantName: "Tourist",
+              applicantProfileImageUrl: null,
+              applicantNationalityCode: "GB",
+              guestCount: 1,
+              applicantContactMethod: "LINE",
+              applicantContactCountryCode: null,
+              applicantContactIdentifier: "tourist",
+              status: "CONFIRMED",
+              specialRequest: null,
+              appliedAt: "2026-09-17T21:50:00+09:00",
+            },
+          ],
+        },
+      });
+      renderWithQueryClient(<ApplicantsContent activityId="42" initialScheduleId="99" />);
+      expect(
+        await screen.findByRole("button", {
+          name: /Unable to load the latest cancellation status/,
+        }),
+      ).toBeInTheDocument();
+      const cancelled = scheduleStatus === "CANCELLED";
+      const heading = await screen.findByRole("heading", {
+        name: cancelled ? "Cancelled bookings" : "Confirmed bookings",
+      });
+      expect(within(heading.closest("section")!).getByText("Tourist")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", {
+          name: cancelled ? "Confirmed bookings" : "Cancelled bookings",
+        }),
+      ).not.toBeInTheDocument();
+      if (cancelled) expect(screen.getByText("Cancelled schedule")).toBeInTheDocument();
+      else expect(screen.queryByText("Cancelled schedule")).not.toBeInTheDocument();
+      expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+    },
+  );
+
   it("renders applicants loaded from the API for the selected schedule", async () => {
     mockedGetBuddyActivityApplications.mockResolvedValue({
       status: "success",
@@ -117,7 +288,7 @@ describe("ApplicantsContent", () => {
     expect(screen.getByRole("heading", { name: "Cancelled bookings" })).toBeInTheDocument();
   });
 
-  it("splits applicants into status sections and shows cancellation reasons", async () => {
+  it("splits applicants into status sections without repeating cancellation reasons", async () => {
     const base = {
       applicantProfileImageUrl: null,
       applicantNationalityCode: "FR",
@@ -180,9 +351,8 @@ describe("ApplicantsContent", () => {
     expect(headings).toEqual(["Completed bookings", "Confirmed bookings", "Cancelled bookings"]);
     // 결제 대기 신청자는 어디에도 없다
     expect(screen.queryByText("Wait Choi")).not.toBeInTheDocument();
-    // 취소 사유와 OTHER 상세가 함께 보인다
-    expect(screen.getByText(/Cancellation reason: Other reason/)).toBeInTheDocument();
-    expect(screen.getByText("My flight was cancelled.")).toBeInTheDocument();
+    expect(screen.queryByText(/Cancellation reason: Other reason/)).not.toBeInTheDocument();
+    expect(screen.queryByText("My flight was cancelled.")).not.toBeInTheDocument();
   });
 
   it("falls back to the first activity schedule when no schedule query is provided", async () => {
@@ -307,7 +477,7 @@ describe("ApplicantsContent", () => {
     expect(screen.getByText("2026. 7. 19. 오전 1:30에 신청")).toBeInTheDocument();
     expect(screen.getAllByText("1명").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { name: "예약 취소" })).toBeInTheDocument();
-    expect(screen.getByText("취소 사유: 일정 충돌")).toBeInTheDocument();
+    expect(screen.queryByText("취소 사유: 일정 충돌")).not.toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("프랑스")).toBeInTheDocument();
     // 연락처는 목록에 없고 프로필 팝업에서 수단·값으로 나뉘어 보인다

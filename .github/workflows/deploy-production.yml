@@ -77,5 +77,6 @@ jobs:
           environment-name: production
           commit-sha: ${{ github.sha }}
           registry: ${{ steps.ecr.outputs.registry }}
+          ga4-origin: ${{ vars.GA4_ORIGIN }}
           ga-enabled: ${{ vars.GA_ENABLED }}
           ga-measurement-id: ${{ vars.GA_MEASUREMENT_ID }}

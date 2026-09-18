@@ -25,3 +25,24 @@ it("cannot override canonical origin or require removed policy/TTL inputs", () =
     }),
   ).toEqual({ measurementId: "G-TEST", origin: APP_ORIGIN });
 });
+
+it("uses GA4_ORIGIN without changing canonical URLs", () => {
+  expect(
+    readAnalyticsPolicy({
+      GA_ENABLED: "true",
+      GA_MEASUREMENT_ID: "G-TEST",
+      GA4_ORIGIN: "https://staging.hanbuddy.kr",
+    }),
+  ).toEqual({ measurementId: "G-TEST", origin: "https://staging.hanbuddy.kr" });
+  expect(APP_ORIGIN).toBe("https://hanbuddy.kr");
+});
+it.each([
+  "http://staging.hanbuddy.kr",
+  "https://staging.hanbuddy.kr/",
+  "https://user:pass@staging.hanbuddy.kr",
+  "invalid",
+])("fails closed for invalid GA4_ORIGIN %s", (GA4_ORIGIN) => {
+  expect(
+    readAnalyticsPolicy({ GA_ENABLED: "true", GA_MEASUREMENT_ID: "G-TEST", GA4_ORIGIN }),
+  ).toBeNull();
+});

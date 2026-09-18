@@ -338,3 +338,12 @@ curl --fail --retry 20 --retry-connrefused --retry-delay 1 \
 docker stop "${container_id}"
 trap - EXIT
 ```
+
+### GA4_ORIGIN
+
+GitHub의 각 environment variable `GA4_ORIGIN`은 서버 컨테이너에 런타임으로 전달된다.
+미설정 또는 빈 값은 `https://hanbuddy.kr`를 사용한다. Staging에서 GA4를 검증하려면
+`https://staging.hanbuddy.kr`로 지정한 뒤 재배포한다. HTTPS origin만 허용하며 경로나 끝 슬래시는 넣지 않는다.
+GA4 수집 및 동의 BFF의 origin 검사에만 적용된다. canonical URL, robots, sitemap은 기존 운영 도메인을 유지한다.
+GA 수집에는 별도로 `GA_ENABLED=true`, 유효한 측정 ID와 사용자 동의가 필요하다.
+백엔드의 analytics origin 허용 설정도 해당 도메인을 허용해야 한다.

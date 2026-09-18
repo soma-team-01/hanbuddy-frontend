@@ -102,6 +102,7 @@ export default async function LocaleLayout({
           <QueryProvider>
             <AnalyticsProvider
               policy={readAnalyticsPolicy({
+                GA4_ORIGIN: process.env.GA4_ORIGIN,
                 GA_ENABLED: process.env.GA_ENABLED,
                 GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
               })}

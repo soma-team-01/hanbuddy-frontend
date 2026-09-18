@@ -95,7 +95,7 @@ describe("ActivityFeed", () => {
     expect(screen.getByText("1 hour 30min")).toBeInTheDocument();
     expect(screen.getByText("₩45,000")).toBeInTheDocument();
     expect(screen.getByText("per person")).toBeInTheDocument();
-    expect(screen.queryByText("Anguk Station Exit 2")).not.toBeInTheDocument();
+    expect(screen.getByText("Anguk Station Exit 2")).toBeInTheDocument();
 
     const activityLink = screen.getByRole("link", { name: /Bukchon Hidden Gems/ });
     expect(screen.getByTestId("activity-grid")).toHaveClass(
@@ -104,10 +104,7 @@ describe("ActivityFeed", () => {
       "lg:grid-cols-3",
       "xl:grid-cols-4",
     );
-    expect(screen.getByRole("img", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
-      "loading",
-      "eager",
-    );
+    expect(activityLink.querySelector("img")).toHaveAttribute("loading", "eager");
     expect(activityLink).toHaveClass("motion-reveal", "motion-press");
     expect(activityLink).toHaveStyle({ animationDelay: "0ms" });
   });

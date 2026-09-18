@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   analyticsContextForToken,
   analyticsUnavailableResponse,
   isAnalyticsContextCurrent,
   isConsentProof,
+  readAnalyticsOrigin,
+  readServerAnalyticsPolicy,
 } from "./analytics-bff";
 
 const opaqueId = "A".repeat(43);
@@ -45,4 +47,17 @@ it.each([
     code,
     message: "Analytics request unavailable",
   });
+});
+
+afterEach(() => vi.unstubAllEnvs());
+it("uses the configured origin for collection and withdrawal even with collection disabled", () => {
+  vi.stubEnv("GA4_ORIGIN", "https://staging.hanbuddy.kr");
+  vi.stubEnv("GA_ENABLED", "true");
+  vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
+  expect(readServerAnalyticsPolicy()?.origin).toBe("https://staging.hanbuddy.kr");
+  vi.stubEnv("GA_ENABLED", "false");
+  expect(readServerAnalyticsPolicy()).toBeNull();
+  expect(readAnalyticsOrigin()).toBe("https://staging.hanbuddy.kr");
+  vi.stubEnv("GA4_ORIGIN", "https://staging.hanbuddy.kr/path");
+  expect(readAnalyticsOrigin()).toBeNull();
 });

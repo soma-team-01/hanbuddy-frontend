@@ -1,4 +1,3 @@
-import { APP_ORIGIN } from "@/lib/site";
 import { parseProof } from "@/lib/analytics/cookie-consent";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,7 +7,11 @@ import {
   getAccessToken,
   unauthorizedResponse,
 } from "@/app/api/_utils/authenticated-backend";
-import { readAnalyticsPolicy, type AnalyticsPolicy } from "@/lib/analytics/policy";
+import {
+  readAnalyticsPolicy,
+  readAnalyticsPolicyOrigin,
+  type AnalyticsPolicy,
+} from "@/lib/analytics/policy";
 import { postBackend, type BackendResponse } from "@/lib/auth/backend";
 
 export const ANALYTICS_COOKIE_NAME = "__Host-hb_ga_consent";
@@ -19,6 +22,7 @@ export const ANALYTICS_REQUEST_HEADER = "X-Analytics-Request";
 type ConsentChoice = "granted" | "denied";
 export function readServerAnalyticsPolicy() {
   return readAnalyticsPolicy({
+    GA4_ORIGIN: process.env.GA4_ORIGIN,
     GA_ENABLED: process.env.GA_ENABLED,
     GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
   });
@@ -48,7 +52,7 @@ export function isConsentProof(value: string | undefined, choice: ConsentChoice)
 
 /** Withdrawal remains available while collection is OFF; only the configured origin is needed. */
 export function readAnalyticsOrigin() {
-  return APP_ORIGIN;
+  return readAnalyticsPolicyOrigin({ GA4_ORIGIN: process.env.GA4_ORIGIN });
 }
 
 export function analyticsUnavailableResponse(status: 400 | 403 | 409 | 410 | 415 | 502 | 503) {

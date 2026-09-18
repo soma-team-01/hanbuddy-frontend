@@ -11,6 +11,10 @@ inputs:
   registry:
     description: ECR registry returned by amazon-ecr-login
     required: true
+  ga4-origin:
+    description: Optional server runtime origin (defaults to production)
+    required: false
+    default: ""
   ga-enabled:
     description: Optional GA runtime enable flag
     required: false
@@ -72,10 +76,12 @@ runs:
     - name: Deploy to EC2
       shell: bash
       env:
+        GA4_ORIGIN: ${{ inputs.ga4-origin }}
         GA_ENABLED: ${{ inputs.ga-enabled }}
         GA_MEASUREMENT_ID: ${{ inputs.ga-measurement-id }}
       run: |
         runtime_environment_json="$(jq -n \
+          --arg ga4_origin "${GA4_ORIGIN}" \
           --arg api "${HANBUDDY_API_BASE_URL}" \
           --arg review_login_enabled "${REVIEW_LOGIN_ENABLED}" \
           --arg client_id "${GOOGLE_CLIENT_ID}" \
@@ -83,6 +89,7 @@ runs:
           --arg ga_enabled "${GA_ENABLED}" \
           --arg ga_measurement_id "${GA_MEASUREMENT_ID}" \
           '{
+            GA4_ORIGIN: $ga4_origin,
             HANBUDDY_API_BASE_URL: $api,
             REVIEW_LOGIN_ENABLED: $review_login_enabled,
             GOOGLE_CLIENT_ID: $client_id,

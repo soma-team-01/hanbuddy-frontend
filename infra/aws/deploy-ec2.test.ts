@@ -104,6 +104,7 @@ function deploy(
           REVIEW_LOGIN_ENABLED: "false",
           GOOGLE_CLIENT_ID: "test",
           GOOGLE_REDIRECT_URI: "https://hanbuddy.kr/auth/google/callback",
+          GA4_ORIGIN: redirect ? "https://hanbuddy.kr" : "https://staging.hanbuddy.kr",
           ...analytics,
         }),
       },
@@ -169,6 +170,7 @@ describe("EC2 deployment cutover (mock commands)", () => {
     expect(result.remote).toContain("ga_enabled=\"$(printf '%s' 'ZmFsc2U=' | base64 --decode)\"");
     expect(result.remote).toContain("ga_measurement_id=\"$(printf '%s' '' | base64 --decode)\"");
     expect(result.remote).toContain('-e "GA_ENABLED=${ga_enabled}"');
+    expect(result.remote).toContain('-e "GA4_ORIGIN=${ga4_origin}"');
     expect(result.remote).toContain('-e "GA_MEASUREMENT_ID=${ga_measurement_id}"');
   });
 
@@ -190,6 +192,7 @@ describe("EC2 deployment cutover (mock commands)", () => {
       `ga_measurement_id="$(printf '%s' '${Buffer.from(measurementId).toString("base64")}' | base64 --decode)"`,
     );
     expect(result.remote).toContain('-e "GA_ENABLED=${ga_enabled}"');
+    expect(result.remote).toContain('-e "GA4_ORIGIN=${ga4_origin}"');
     expect(result.remote).toContain('-e "GA_MEASUREMENT_ID=${ga_measurement_id}"');
   });
 });

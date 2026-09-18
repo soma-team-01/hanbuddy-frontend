@@ -688,6 +688,7 @@
     "viewHostProfile": "見る {name}さんのプロフィール"
   },
   "Reviews": {
+    "anonymous": "匿名",
     "sectionTitle": "レビュー",
     "ratingAria": "評価済み {rating} 5つのうち",
     "countLabel": "{count, plural, =0 {まだレビューはありません} one {# レビュー} other {# レビュー}}",

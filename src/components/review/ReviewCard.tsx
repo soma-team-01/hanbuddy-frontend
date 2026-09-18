@@ -18,14 +18,17 @@ export function ReviewCard({
 }: Readonly<{ review: ReviewResponse; showActivityTitle?: boolean }>) {
   const locale = useLocale() as Locale;
   const t = useTranslations("Reviews");
-  const writtenOn = formatSeoulDate(review.createdAt, locale);
+  const reviewDate =
+    review.source === "LEGACY_IMPORT" ? review.originalReviewedAt : review.createdAt;
+  const writtenOn = reviewDate ? formatSeoulDate(reviewDate, locale) : null;
+  const reviewerName = review.reviewerName?.trim() || t("anonymous");
 
   return (
     <article className="flex min-w-0 flex-col gap-3 rounded-2xl border border-line-soft bg-canvas-soft p-5">
       <div className="flex items-center gap-3">
-        <Avatar name={review.reviewerName} src={review.reviewerProfileImageUrl} size={40} />
+        <Avatar name={reviewerName} src={review.reviewerProfileImageUrl} size={40} />
         <div className="min-w-0">
-          <p className="truncate font-display text-sm font-bold text-ink">{review.reviewerName}</p>
+          <p className="truncate font-display text-sm font-bold text-ink">{reviewerName}</p>
           <div className="mt-0.5 flex items-center gap-2">
             <ReviewStars
               rating={review.rating}

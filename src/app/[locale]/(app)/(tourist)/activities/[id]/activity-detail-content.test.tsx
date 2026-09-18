@@ -577,6 +577,8 @@ describe("ActivityDetailContent", () => {
             activityTitle: "Seoul Night Market Walk",
             activityTitleLanguage: "EN",
             reviewerName: "Nelli",
+            source: "PLATFORM",
+            originalReviewedAt: null,
             reviewerProfileImageUrl: null,
             rating: 5,
             content: "Jihoon knows every alley.",

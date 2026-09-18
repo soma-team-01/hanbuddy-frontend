@@ -688,6 +688,7 @@
     "viewHostProfile": "View {name}'s profile"
   },
   "Reviews": {
+    "anonymous": "Anonymous",
     "sectionTitle": "Reviews",
     "ratingAria": "Rated {rating} out of 5",
     "countLabel": "{count, plural, =0 {No reviews yet} one {# review} other {# reviews}}",

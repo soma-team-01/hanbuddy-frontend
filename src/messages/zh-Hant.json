@@ -688,6 +688,7 @@
     "viewHostProfile": "查看 {name}的個人資料"
   },
   "Reviews": {
+    "anonymous": "匿名",
     "sectionTitle": "評論",
     "ratingAria": "額定 {rating} 滿分 5",
     "countLabel": "{count, plural, =0 {還沒有評論} one {# 評論} other {# 評論}}",

@@ -688,6 +688,7 @@
     "viewHostProfile": "{name} 프로필 보기"
   },
   "Reviews": {
+    "anonymous": "익명",
     "sectionTitle": "후기",
     "ratingAria": "5점 만점에 {rating}점",
     "countLabel": "{count, plural, =0 {아직 후기가 없습니다} other {후기 #개}}",

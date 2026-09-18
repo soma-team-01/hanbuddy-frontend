@@ -688,6 +688,7 @@
     "viewHostProfile": "查看 {name}的个人资料"
   },
   "Reviews": {
+    "anonymous": "匿名",
     "sectionTitle": "评论",
     "ratingAria": "额定 {rating} 满分 5",
     "countLabel": "{count, plural, =0 {还没有评论} one {# 评论} other {# 评论}}",

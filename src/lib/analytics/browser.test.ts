@@ -4,9 +4,6 @@ import { createGoogleBrowser } from "./browser";
 const policy = {
   measurementId: "G-TEST123",
   origin: "http://localhost:3000",
-  version: "synthetic",
-  consentMaxAgeMs: 10000,
-  cookieMaxAgeSeconds: 10,
 };
 const page = {
   page_location: "http://localhost:3000/activities/detail",
@@ -36,8 +33,6 @@ it("loads nothing on construction and sends only explicit safe fields after star
       send_page_view: false,
       allow_google_signals: false,
       allow_ad_personalization_signals: false,
-      cookie_expires: 10,
-      cookie_update: false,
     },
   ]);
   expect(queue.filter((entry) => entry[0] === "event").map((entry) => Array.from(entry))).toEqual([

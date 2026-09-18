@@ -9,17 +9,12 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 });
 
 const mockedPostBackend = vi.mocked(postBackend);
-const deniedProof = `denied.v1.123e4567-e89b-12d3-a456-426614174000.1700000000.1999999999.policy_1.${"A".repeat(43)}`;
+const deniedProof = `denied.v2.${"A".repeat(43)}`;
 
 function enablePolicy() {
+  vi.stubEnv("NODE_ENV", "production");
   vi.stubEnv("GA_ENABLED", "true");
-  vi.stubEnv("GA_DESTINATION_VERIFIED", "true");
-  vi.stubEnv("GA_AUTOMATIC_COLLECTION_DISABLED", "true");
-  vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST123");
-  vi.stubEnv("GA_ORIGIN", "https://app.hanbuddy.test");
-  vi.stubEnv("GA_POLICY_VERSION", "policy_1");
-  vi.stubEnv("GA_CONSENT_MAX_AGE_SECONDS", "3600");
-  vi.stubEnv("GA_COOKIE_MAX_AGE_SECONDS", "3600");
+  vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
 }
 
 describe("POST /api/analytics/purchase-withdrawal", () => {
@@ -39,11 +34,11 @@ describe("POST /api/analytics/purchase-withdrawal", () => {
       setCookies: [],
     });
     const response = await POST(
-      new NextRequest("https://app.hanbuddy.test/api/analytics/purchase-withdrawal", {
+      new NextRequest("https://hanbuddy.kr/api/analytics/purchase-withdrawal", {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          origin: "https://app.hanbuddy.test",
+          origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
           "x-analytics-proof": deniedProof,
           cookie: "__Host-hb_ga_consent=pending.123; session=secret",
@@ -57,7 +52,7 @@ describe("POST /api/analytics/purchase-withdrawal", () => {
       {},
       {
         cookieHeader: `__Host-hb_ga_consent=${deniedProof}`,
-        origin: "https://app.hanbuddy.test",
+        origin: "https://hanbuddy.kr",
         analyticsRequest: true,
       },
     );
@@ -67,11 +62,11 @@ describe("POST /api/analytics/purchase-withdrawal", () => {
   it("rejects granted or malformed explicit proofs before the backend call", async () => {
     enablePolicy();
     const response = await POST(
-      new NextRequest("https://app.hanbuddy.test/api/analytics/purchase-withdrawal", {
+      new NextRequest("https://hanbuddy.kr/api/analytics/purchase-withdrawal", {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          origin: "https://app.hanbuddy.test",
+          origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
           "x-analytics-proof": deniedProof.replace("denied", "granted"),
         },
@@ -79,7 +74,65 @@ describe("POST /api/analytics/purchase-withdrawal", () => {
       }),
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(403);
     expect(mockedPostBackend).not.toHaveBeenCalled();
   });
 });
+
+it.each(["off", "missing-id"])(
+  "allows denied-ID withdrawal with %s collection settings",
+  async (mode) => {
+    enablePolicy();
+    mockedPostBackend.mockReset();
+    if (mode === "off") vi.stubEnv("GA_ENABLED", "false");
+    else vi.stubEnv("GA_MEASUREMENT_ID", undefined);
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      payload: {
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: { withdrawalAcknowledged: true },
+      },
+      setCookies: ["must-not-pass=1"],
+    });
+    const response = await POST(
+      new NextRequest("https://hanbuddy.kr/api/analytics/purchase-withdrawal", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://hanbuddy.kr",
+          "x-analytics-request": "1",
+          "x-analytics-proof": deniedProof,
+        },
+        body: "{}",
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(mockedPostBackend).toHaveBeenCalledTimes(1);
+    vi.unstubAllEnvs();
+  },
+);
+it.each(["denied.v1.legacy", `denied.v2.${"A".repeat(42)}B`])(
+  "returns 410 for invalid withdrawal: %s",
+  async (proof) => {
+    enablePolicy();
+    mockedPostBackend.mockReset();
+    const response = await POST(
+      new NextRequest("https://hanbuddy.kr/api/analytics/purchase-withdrawal", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://hanbuddy.kr",
+          "x-analytics-request": "1",
+          "x-analytics-proof": proof,
+        },
+        body: "{}",
+      }),
+    );
+    expect(response.status).toBe(410);
+    expect(mockedPostBackend).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  },
+);

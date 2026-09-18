@@ -110,10 +110,30 @@ read_runtime_value() {
   printf '%s' "${value}"
 }
 
+read_optional_runtime_value() {
+  local key="$1"
+  local value
+
+  if ! value="$(jq -er --arg key "${key}" '
+    if has($key) and (.[$key] | type == "string") then
+      .[$key]
+    else
+      error("missing runtime string")
+    end
+  ' <<< "${EC2_RUNTIME_ENVIRONMENT_JSON}")"; then
+    echo "EC2_RUNTIME_ENVIRONMENT_JSON is missing string ${key}." >&2
+    exit 1
+  fi
+
+  printf '%s' "${value}"
+}
+
 api_base_url="$(read_runtime_value HANBUDDY_API_BASE_URL)"
 review_login_enabled="$(read_runtime_value REVIEW_LOGIN_ENABLED)"
 google_client_id="$(read_runtime_value GOOGLE_CLIENT_ID)"
 google_redirect_uri="$(read_runtime_value GOOGLE_REDIRECT_URI)"
+ga_enabled="$(read_optional_runtime_value GA_ENABLED)"
+ga_measurement_id="$(read_optional_runtime_value GA_MEASUREMENT_ID)"
 
 encode() {
   local value="$1"
@@ -125,6 +145,8 @@ api_base_url_base64="$(encode "${api_base_url}")"
 review_login_enabled_base64="$(encode "${review_login_enabled}")"
 google_client_id_base64="$(encode "${google_client_id}")"
 google_redirect_uri_base64="$(encode "${google_redirect_uri}")"
+ga_enabled_base64="$(encode "${ga_enabled}")"
+ga_measurement_id_base64="$(encode "${ga_measurement_id}")"
 frontend_domain_base64="$(encode "${FRONTEND_DOMAIN}")"
 redirect_domain_base64="$(encode "${redirect_domain}")"
 
@@ -149,6 +171,8 @@ api_base_url="\$(printf '%s' '${api_base_url_base64}' | base64 --decode)"
 review_login_enabled="\$(printf '%s' '${review_login_enabled_base64}' | base64 --decode)"
 google_client_id="\$(printf '%s' '${google_client_id_base64}' | base64 --decode)"
 google_redirect_uri="\$(printf '%s' '${google_redirect_uri_base64}' | base64 --decode)"
+ga_enabled="\$(printf '%s' '${ga_enabled_base64}' | base64 --decode)"
+ga_measurement_id="\$(printf '%s' '${ga_measurement_id_base64}' | base64 --decode)"
 frontend_domain="\$(printf '%s' '${frontend_domain_base64}' | base64 --decode)"
 redirect_domain="\$(printf '%s' '${redirect_domain_base64}' | base64 --decode)"
 registry="\${image_uri%%/*}"
@@ -176,6 +200,8 @@ start_frontend() {
     -e "REVIEW_LOGIN_ENABLED=\${review_login_enabled}" \
     -e "GOOGLE_CLIENT_ID=\${google_client_id}" \
     -e "GOOGLE_REDIRECT_URI=\${google_redirect_uri}" \
+    -e "GA_ENABLED=\${ga_enabled}" \
+    -e "GA_MEASUREMENT_ID=\${ga_measurement_id}" \
     "\${container_image}"
 }
 

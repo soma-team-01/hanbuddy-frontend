@@ -11,25 +11,20 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 });
 
 const mockedPutBackend = vi.mocked(putBackend);
-const proof = `granted.v1.123e4567-e89b-12d3-a456-426614174000.1700000000.1999999999.policy_1.${"A".repeat(43)}`;
+const proof = `granted.v2.${"A".repeat(43)}`;
 
 function enablePolicy() {
+  vi.stubEnv("NODE_ENV", "production");
   vi.stubEnv("GA_ENABLED", "true");
-  vi.stubEnv("GA_DESTINATION_VERIFIED", "true");
-  vi.stubEnv("GA_AUTOMATIC_COLLECTION_DISABLED", "true");
-  vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST123");
-  vi.stubEnv("GA_ORIGIN", "https://app.hanbuddy.test");
-  vi.stubEnv("GA_POLICY_VERSION", "policy_1");
-  vi.stubEnv("GA_CONSENT_MAX_AGE_SECONDS", "3600");
-  vi.stubEnv("GA_COOKIE_MAX_AGE_SECONDS", "3600");
+  vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
 }
 
 function linkRequest(context: string) {
-  return new NextRequest("https://app.hanbuddy.test/api/applications/me/11/analytics-link", {
+  return new NextRequest("https://hanbuddy.kr/api/applications/me/11/analytics-link", {
     method: "PUT",
     headers: {
       "content-type": "application/json",
-      origin: "https://app.hanbuddy.test",
+      origin: "https://hanbuddy.kr",
       "x-analytics-request": "1",
       "x-analytics-context": context,
       cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_ga_consent=${proof}; other=secret`,
@@ -61,7 +56,7 @@ describe("PUT /api/applications/me/[applicationId]/analytics-link", () => {
       {
         bearerToken: "access-token",
         cookieHeader: `__Host-hb_ga_consent=${proof}`,
-        origin: "https://app.hanbuddy.test",
+        origin: "https://hanbuddy.kr",
         analyticsRequest: true,
       },
     );

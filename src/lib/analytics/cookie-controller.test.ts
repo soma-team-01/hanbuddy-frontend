@@ -4,14 +4,11 @@ import { createCookieConsent } from "./cookie-consent";
 const policy = {
   measurementId: "G-TEST",
   origin: "https://example.test",
-  version: "v1",
-  consentMaxAgeMs: 60000,
-  cookieMaxAgeSeconds: 60,
 };
 function setup() {
   let cookie = "",
     choice = "";
-  const proof = `granted.v1.00000000-0000-4000-8000-000000000001.1000.1060.v1.${"a".repeat(43)}`;
+  const proof = `granted.v2.${"A".repeat(43)}`;
   const consent = createCookieConsent({
     policy,
     jar: {

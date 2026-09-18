@@ -7,15 +7,15 @@ import {
   isConsentProof,
 } from "./analytics-bff";
 
-const signature = "A".repeat(43);
-const grantedProof = `granted.v1.123e4567-e89b-12d3-a456-426614174000.1700000000.1999999999.policy_1.${signature}`;
+const opaqueId = "A".repeat(43);
+const grantedProof = `granted.v2.${opaqueId}`;
 
 describe("analytics BFF validation", () => {
-  it("accepts only the requested choice and configured policy version for shaped proofs", () => {
-    expect(isConsentProof(grantedProof, "granted", "policy_1")).toBe(true);
-    expect(isConsentProof(grantedProof, "denied", "policy_1")).toBe(false);
-    expect(isConsentProof(grantedProof, "granted", "other-policy")).toBe(false);
-    expect(isConsentProof("pending.123", "granted", "policy_1")).toBe(false);
+  it("accepts only the requested choice and canonical opaque IDs", () => {
+    expect(isConsentProof(grantedProof, "granted")).toBe(true);
+    expect(isConsentProof(grantedProof, "denied")).toBe(false);
+    expect(isConsentProof(`granted.v2.${"A".repeat(42)}B`, "granted")).toBe(false);
+    expect(isConsentProof("pending.123", "granted")).toBe(false);
   });
 
   it("derives a stable opaque context and rejects stale or malformed contexts", () => {
@@ -39,6 +39,7 @@ it.each([
 ] as const)("preserves safe analytics failure %s / %s", async (status, code) => {
   const response = analyticsUnavailableResponse(status);
   expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("no-store");
   expect(await response.json()).toEqual({
     isSuccess: false,
     code,

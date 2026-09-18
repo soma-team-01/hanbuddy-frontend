@@ -1,5 +1,22 @@
 import { expect, it, vi } from "vitest";
 import { createProofApi, createPaymentLinker, createCookieJar } from "./cookie-runtime";
+it("persists only the browser decision without an application expiry or opaque ID", () => {
+  const values = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
+  };
+  const document = { cookie: "" };
+  const jar = createCookieJar(document, undefined, storage);
+  jar.decide("denied.synthetic");
+  document.cookie = "";
+  expect(createCookieJar(document, undefined, storage).decision()).toBe("denied.synthetic");
+  expect([...values.values()]).toEqual(["denied.synthetic"]);
+  values.clear();
+  expect(createCookieJar(document, undefined, storage).decision()).toBe("");
+});
 it("uses same origin exact proof operations and rejects unavailable/malformed acknowledgement", async () => {
   const request = vi.fn(
     async () =>
@@ -102,3 +119,13 @@ it("disabled capture and missing response fence never obtain identifiers", async
   s.deny();
   expect(s.link.capture()).toBeNull();
 });
+it.each([410, 503])(
+  "does not query configuration or retry after terminal %s without retrying proof",
+  async (status) => {
+    const request = vi.fn<typeof fetch>(async () =>
+      Response.json({ isSuccess: false }, { status }),
+    );
+    await expect(createProofApi(request).issue("RESTORE")).rejects.toThrow();
+    expect(request).toHaveBeenCalledTimes(1);
+  },
+);

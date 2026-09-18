@@ -103,13 +103,7 @@ export default async function LocaleLayout({
             <AnalyticsProvider
               policy={readAnalyticsPolicy({
                 GA_ENABLED: process.env.GA_ENABLED,
-                GA_DESTINATION_VERIFIED: process.env.GA_DESTINATION_VERIFIED,
-                GA_AUTOMATIC_COLLECTION_DISABLED: process.env.GA_AUTOMATIC_COLLECTION_DISABLED,
                 GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
-                GA_ORIGIN: process.env.GA_ORIGIN,
-                GA_POLICY_VERSION: process.env.GA_POLICY_VERSION,
-                GA_CONSENT_MAX_AGE_SECONDS: process.env.GA_CONSENT_MAX_AGE_SECONDS,
-                GA_COOKIE_MAX_AGE_SECONDS: process.env.GA_COOKIE_MAX_AGE_SECONDS,
               })}
             >
               <RouteShell

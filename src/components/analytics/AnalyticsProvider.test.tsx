@@ -19,9 +19,6 @@ function makeController() {
   const policy = {
     measurementId: "G-TEST",
     origin: "https://example.test",
-    version: "synthetic",
-    consentMaxAgeMs: 10000,
-    cookieMaxAgeSeconds: 10,
   };
   const consent = createCookieConsent({
     policy,
@@ -40,7 +37,7 @@ function makeController() {
       issue: async () => {
         const now = Math.floor(Date.now() / 1000);
         return {
-          proof: `granted.v1.00000000-0000-4000-8000-000000000001.${now}.${now + 10}.synthetic.${"a".repeat(43)}`,
+          proof: `granted.v2.${"A".repeat(43)}`,
           expiresAt: new Date((now + 10) * 1000).toISOString(),
         };
       },
@@ -117,9 +114,6 @@ it("discards the old local controller when operational policy is removed", async
   const policy = {
     measurementId: "G-TEST",
     origin: "https://example.test",
-    version: "synthetic",
-    consentMaxAgeMs: 10000,
-    cookieMaxAgeSeconds: 10,
   };
   const { controller } = makeController();
   const dispose = vi.fn();

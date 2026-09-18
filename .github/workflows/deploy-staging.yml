@@ -78,3 +78,5 @@ jobs:
           environment-name: staging
           commit-sha: ${{ github.sha }}
           registry: ${{ steps.ecr.outputs.registry }}
+          ga-enabled: ${{ vars.GA_ENABLED }}
+          ga-measurement-id: ${{ vars.GA_MEASUREMENT_ID }}

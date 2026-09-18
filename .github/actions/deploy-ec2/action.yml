@@ -11,6 +11,14 @@ inputs:
   registry:
     description: ECR registry returned by amazon-ecr-login
     required: true
+  ga-enabled:
+    description: Optional GA runtime enable flag
+    required: false
+    default: ""
+  ga-measurement-id:
+    description: Optional GA runtime measurement ID
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -63,17 +71,24 @@ runs:
 
     - name: Deploy to EC2
       shell: bash
+      env:
+        GA_ENABLED: ${{ inputs.ga-enabled }}
+        GA_MEASUREMENT_ID: ${{ inputs.ga-measurement-id }}
       run: |
         runtime_environment_json="$(jq -n \
           --arg api "${HANBUDDY_API_BASE_URL}" \
           --arg review_login_enabled "${REVIEW_LOGIN_ENABLED}" \
           --arg client_id "${GOOGLE_CLIENT_ID}" \
           --arg redirect_uri "${GOOGLE_REDIRECT_URI}" \
+          --arg ga_enabled "${GA_ENABLED}" \
+          --arg ga_measurement_id "${GA_MEASUREMENT_ID}" \
           '{
             HANBUDDY_API_BASE_URL: $api,
             REVIEW_LOGIN_ENABLED: $review_login_enabled,
             GOOGLE_CLIENT_ID: $client_id,
-            GOOGLE_REDIRECT_URI: $redirect_uri
+            GOOGLE_REDIRECT_URI: $redirect_uri,
+            GA_ENABLED: $ga_enabled,
+            GA_MEASUREMENT_ID: $ga_measurement_id
           }')"
         export EC2_RUNTIME_ENVIRONMENT_JSON="${runtime_environment_json}"
         bash infra/aws/deploy-ec2.sh

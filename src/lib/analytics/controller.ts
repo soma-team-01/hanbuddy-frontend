@@ -27,7 +27,8 @@ export interface AnalyticsBrowserPort {
   stop: (resetIdentity?: boolean) => void;
 }
 interface Options {
-  policy: AnalyticsPolicy | null;
+  // Historical unbound port; production uses the opaque cookie controller.
+  policy: (AnalyticsPolicy & { version: string; consentMaxAgeMs: number }) | null;
   link: ConsentLinkPort | null;
   browser: AnalyticsBrowserPort;
   storage: Pick<Storage, "getItem" | "setItem"> & Partial<Pick<Storage, "removeItem">>;

@@ -1,15 +1,76 @@
 import { describe, expect, it, vi } from "vitest";
-import { createCookieConsent, type ConsentCookieJar, type ProofApi } from "./cookie-consent";
+import {
+  createCookieConsent,
+  parseProof,
+  type ConsentCookieJar,
+  type ProofApi,
+} from "./cookie-consent";
 
 const policy = {
   measurementId: "G-TEST",
   origin: "https://example.test",
-  version: "synthetic",
-  consentMaxAgeMs: 60000,
-  cookieMaxAgeSeconds: 60,
 };
-const proof = (id = "1", choice = "granted") =>
-  `${choice}.v1.00000000-0000-4000-8000-${id.padStart(12, "0")}.1000.1060.synthetic.${"a".repeat(43)}`;
+const proof = (id = "1", choice = "granted") => `${choice}.v2.${id.padStart(42, "A")}A`;
+it.each(["\n", "\r", "\r\n", " "])("rejects trailing whitespace in an opaque ID: %j", (suffix) => {
+  expect(parseProof(proof() + suffix)).toBeNull();
+});
+it("requires a new choice after choice storage deletion, even with a leftover proof", async () => {
+  const e = environment();
+  const c = e.make();
+  await c.accept();
+  e.jar.decide("");
+  await c.restore();
+  expect(c.isGranted()).toBe(false);
+  expect(c.getSnapshot()).toBe("unanswered");
+  expect(e.api.issue).toHaveBeenCalledTimes(1);
+  c.dispose();
+});
+it("proof expiry stops collection without changing choice or acknowledging withdrawal", async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(1000000);
+  try {
+    const e = environment();
+    const c = createCookieConsent({ policy, jar: e.jar, api: e.api, exclusive: async (f) => f() });
+    await c.accept();
+    const choice = e.jar.decision();
+    await vi.advanceTimersByTimeAsync(61000);
+    expect(c.isGranted()).toBe(false);
+    expect(e.jar.decision()).toBe(choice);
+    expect(e.api.withdraw).not.toHaveBeenCalled();
+    expect(c.getSnapshot()).toBe("granted");
+    await c.restore();
+    expect(e.api.issue).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(e.api.issue).mock.calls[1]).toEqual(["RESTORE"]);
+    c.dispose();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+it("has no invented control or recovery deadline and retries expired-server-proof withdrawal", async () => {
+  const e = environment();
+  let now = 1000000;
+  const c = createCookieConsent({
+    policy,
+    jar: e.jar,
+    api: e.api,
+    exclusive: async (f) => f(),
+    now: () => now,
+  });
+  await c.accept();
+  vi.mocked(e.api.withdraw).mockRejectedValue(new Error("offline"));
+  await c.reject();
+  const denied = e.jar.read(),
+    decision = e.jar.decision();
+  now += 900000000000;
+  await c.restore();
+  expect(e.api.withdraw).toHaveBeenCalledWith(denied);
+  expect(e.jar.decision()).toBe(decision);
+  expect(c.isWithdrawalPending()).toBe(true);
+  vi.mocked(e.api.withdraw).mockResolvedValue();
+  await c.restore();
+  expect(c.isWithdrawalPending()).toBe(false);
+  c.dispose();
+});
 function environment() {
   let value = "",
     decision = "";
@@ -39,7 +100,7 @@ function environment() {
   const make = () => createCookieConsent({ policy, jar, api, exclusive, now: () => 1000000 });
   return { jar, api, make };
 }
-describe("signed cookie consent", () => {
+describe("opaque cookie consent", () => {
   it("accepts only explicitly, restores the same proof and never extends expiry", async () => {
     const e = environment(),
       c = e.make();
@@ -123,15 +184,16 @@ describe("signed cookie consent", () => {
   it("does not turn failed RESTORE into ACCEPT", async () => {
     const e = environment();
     e.jar.write(proof(), 60);
+    e.jar.decide("accept.synthetic");
     vi.mocked(e.api.issue).mockRejectedValue(new Error("expired"));
     const c = e.make();
     await c.restore();
     expect(e.api.issue).toHaveBeenCalledExactlyOnceWith("RESTORE");
     expect(c.isGranted()).toBe(false);
   });
-  it("rejects mismatched server expiry/version and cannot collect if cookie writes fail", async () => {
+  it("rejects expired server proof and cannot collect if cookie writes fail", async () => {
     const e = environment();
-    vi.mocked(e.api.issue).mockResolvedValue({ proof: proof(), expiresAt: "1970-01-01T00:18:40Z" });
+    vi.mocked(e.api.issue).mockResolvedValue({ proof: proof(), expiresAt: "1970-01-01T00:16:40Z" });
     const a = e.make();
     await a.accept();
     expect(a.isGranted()).toBe(false);
@@ -229,6 +291,7 @@ it("a stale failed revoke cannot overwrite a newer tab's granted proof", async (
 it("recovers a denied decision persisted before the granted proof could be flipped", async () => {
   const e = environment();
   e.jar.write(proof(), 60);
+  e.jar.decide("accept.synthetic");
   e.jar.decide("denied.reload", 60);
   const c = e.make();
   await c.restore();
@@ -243,13 +306,13 @@ it("does not mistake a timer chunk for long proof expiry", async () => {
       duration = 3000000000;
     vi.setSystemTime(start);
     const e = environment();
-    const longProof = proof().replace(".1060.", `.${(start + duration) / 1000}.`);
+    const longProof = proof();
     vi.mocked(e.api.issue).mockResolvedValue({
       proof: longProof,
       expiresAt: new Date(start + duration).toISOString(),
     });
     const c = createCookieConsent({
-      policy: { ...policy, consentMaxAgeMs: duration },
+      policy,
       jar: e.jar,
       api: e.api,
       exclusive: async (f) => f(),
@@ -277,5 +340,53 @@ it("attempts existing-proof withdrawal even when both local denial writes fail",
   };
   await c.reject();
   expect(e.api.withdraw).toHaveBeenCalledWith(proof("1", "denied"));
+  expect(c.isGranted()).toBe(false);
+});
+
+it("does not reactivate the retired ID on explicit reacceptance", async () => {
+  const e = environment(),
+    c = e.make();
+  await c.accept();
+  await c.reject();
+  await c.accept(); // broken server returns the same retired ID
+  expect(c.isGranted()).toBe(false);
+});
+it("rejects expiry renewal for an already verified ID", async () => {
+  const e = environment(),
+    c = e.make();
+  await c.accept();
+  vi.mocked(e.api.issue).mockResolvedValue({ proof: proof(), expiresAt: "1970-01-01T00:17:30Z" });
+  await c.restore();
+  expect(c.isGranted()).toBe(false);
+  expect(e.api.withdraw).toHaveBeenCalledWith(proof("1", "denied"));
+  expect(c.isWithdrawalPending()).toBe(false);
+});
+it("keeps an opaque cookie inert until server RESTORE verifies it", async () => {
+  const e = environment();
+  e.jar.write(proof(), 60);
+  e.jar.decide("accept.synthetic");
+  const c = e.make();
+  expect(c.isGranted()).toBe(false);
+  await c.restore();
+  expect(e.api.issue).toHaveBeenCalledExactlyOnceWith("RESTORE");
+  expect(c.isGranted()).toBe(true);
+});
+it("never promotes a legacy cookie during restore", async () => {
+  const e = environment();
+  e.jar.write("granted.v1.legacy", 60);
+  const c = e.make();
+  await c.restore();
+  expect(e.api.issue).not.toHaveBeenCalled();
+  expect(c.isGranted()).toBe(false);
+});
+
+it("does not renew the denied cookie lifetime on passive restore or withdrawal retry", async () => {
+  const e = environment(),
+    c = e.make();
+  await c.accept();
+  await c.reject();
+  const write = vi.spyOn(e.jar, "write");
+  await c.restore();
+  expect(write).not.toHaveBeenCalled();
   expect(c.isGranted()).toBe(false);
 });

@@ -42,8 +42,6 @@ export function createGoogleBrowser(
         send_page_view: false,
         allow_google_signals: false,
         allow_ad_personalization_signals: false,
-        cookie_expires: policy.cookieMaxAgeSeconds,
-        cookie_update: false,
       });
       setEnabled(true);
       await new Promise<void>((resolve, reject) => {

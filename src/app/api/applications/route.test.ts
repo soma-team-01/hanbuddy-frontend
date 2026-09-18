@@ -81,15 +81,11 @@ describe("POST /api/applications", () => {
   });
 
   it("forwards eligible analytics capture context and binds the response to the current login", async () => {
+    vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("GA_ENABLED", "true");
-    vi.stubEnv("GA_DESTINATION_VERIFIED", "true");
-    vi.stubEnv("GA_AUTOMATIC_COLLECTION_DISABLED", "true");
-    vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST123");
-    vi.stubEnv("GA_ORIGIN", "https://app.hanbuddy.test");
-    vi.stubEnv("GA_POLICY_VERSION", "policy_1");
-    vi.stubEnv("GA_CONSENT_MAX_AGE_SECONDS", "3600");
-    vi.stubEnv("GA_COOKIE_MAX_AGE_SECONDS", "3600");
-    const proof = `granted.v1.123e4567-e89b-12d3-a456-426614174000.1700000000.1999999999.policy_1.${"A".repeat(43)}`;
+    vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
+
+    const proof = `granted.v2.${"A".repeat(43)}`;
     mockedPostBackend.mockResolvedValue({
       status: 201,
       payload: {
@@ -102,12 +98,12 @@ describe("POST /api/applications", () => {
     });
 
     const response = await POST(
-      new NextRequest("https://app.hanbuddy.test/api/applications", {
+      new NextRequest("https://hanbuddy.kr/api/applications", {
         method: "POST",
         body: JSON.stringify(createRequest),
         headers: {
           "content-type": "application/json",
-          origin: "https://app.hanbuddy.test",
+          origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
           cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_ga_consent=${proof}; other=secret`,
         },
@@ -117,7 +113,7 @@ describe("POST /api/applications", () => {
     expect(mockedPostBackend).toHaveBeenCalledWith("/applications", createRequest, {
       bearerToken: "access-token",
       cookieHeader: `__Host-hb_ga_consent=${proof}`,
-      origin: "https://app.hanbuddy.test",
+      origin: "https://hanbuddy.kr",
       analyticsRequest: true,
     });
     expect(response.headers.get("x-analytics-context")).toBe(
@@ -126,14 +122,10 @@ describe("POST /api/applications", () => {
   });
 
   it("ignores invalid analytics context without blocking application creation", async () => {
+    vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("GA_ENABLED", "true");
-    vi.stubEnv("GA_DESTINATION_VERIFIED", "true");
-    vi.stubEnv("GA_AUTOMATIC_COLLECTION_DISABLED", "true");
-    vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST123");
-    vi.stubEnv("GA_ORIGIN", "https://app.hanbuddy.test");
-    vi.stubEnv("GA_POLICY_VERSION", "policy_1");
-    vi.stubEnv("GA_CONSENT_MAX_AGE_SECONDS", "3600");
-    vi.stubEnv("GA_COOKIE_MAX_AGE_SECONDS", "3600");
+    vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
+
     mockedPostBackend.mockResolvedValue({
       status: 201,
       payload: {
@@ -146,7 +138,7 @@ describe("POST /api/applications", () => {
     });
 
     const response = await POST(
-      new NextRequest("https://app.hanbuddy.test/api/applications", {
+      new NextRequest("https://hanbuddy.kr/api/applications", {
         method: "POST",
         body: JSON.stringify(createRequest),
         headers: {
@@ -165,15 +157,11 @@ describe("POST /api/applications", () => {
   });
 
   it("does not expose an auth context when a 2xx backend payload reports failure", async () => {
+    vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("GA_ENABLED", "true");
-    vi.stubEnv("GA_DESTINATION_VERIFIED", "true");
-    vi.stubEnv("GA_AUTOMATIC_COLLECTION_DISABLED", "true");
-    vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST123");
-    vi.stubEnv("GA_ORIGIN", "https://app.hanbuddy.test");
-    vi.stubEnv("GA_POLICY_VERSION", "policy_1");
-    vi.stubEnv("GA_CONSENT_MAX_AGE_SECONDS", "3600");
-    vi.stubEnv("GA_COOKIE_MAX_AGE_SECONDS", "3600");
-    const proof = `granted.v1.123e4567-e89b-12d3-a456-426614174000.1700000000.1999999999.policy_1.${"A".repeat(43)}`;
+    vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
+
+    const proof = `granted.v2.${"A".repeat(43)}`;
     mockedPostBackend.mockResolvedValue({
       status: 200,
       payload: { isSuccess: false, code: "APPLICATION_FAILED", message: "failed" },
@@ -181,11 +169,11 @@ describe("POST /api/applications", () => {
     });
 
     const response = await POST(
-      new NextRequest("https://app.hanbuddy.test/api/applications", {
+      new NextRequest("https://hanbuddy.kr/api/applications", {
         method: "POST",
         body: JSON.stringify(createRequest),
         headers: {
-          origin: "https://app.hanbuddy.test",
+          origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
           cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_ga_consent=${proof}`,
         },

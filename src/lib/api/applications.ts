@@ -47,14 +47,9 @@ function startAnalyticsCompletion(
   applicationId: number,
   context: string | null,
 ) {
-  try {
-    const completion = ticket.complete(applicationId, context);
-    void completion.catch(() => {
-      /* Optional analytics must not reject a successful payment preparation. */
-    });
-  } catch {
-    /* A synchronous analytics failure must not reject payment preparation either. */
-  }
+  void ticket.complete(applicationId, context).catch(() => {
+    /* Optional analytics must not reject a successful payment preparation. */
+  });
 }
 
 export async function getAppliedActivityDetail(

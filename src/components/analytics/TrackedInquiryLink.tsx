@@ -8,12 +8,14 @@ export type InquiryChannel = "email" | "whatsapp" | "facebook" | "kakao" | "inst
 export type InquiryPlacement = "landing_contact" | "site_footer" | "payment_inquiry";
 
 export function TrackedInquiryLink({
+  href,
   channel,
   placement,
   locale,
   onClick,
   ...props
-}: AnchorHTMLAttributes<HTMLAnchorElement> & {
+}: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
+  href: string;
   channel: InquiryChannel;
   placement: InquiryPlacement;
   locale: Locale;
@@ -22,6 +24,7 @@ export function TrackedInquiryLink({
   return (
     <a
       {...props}
+      href={href}
       onClick={(event) => {
         trackInquiry({ channel, placement, locale });
         onClick?.(event);

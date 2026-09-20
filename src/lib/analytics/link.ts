@@ -33,14 +33,14 @@ export function validFbp(value: string): boolean {
   return (
     value.length <= 512 &&
     /^[\x20-\x7E]+$/.test(value) &&
-    /^fb\.[0-9]+\.[0-9]{13}\.[0-9]+(?:\.[A-Za-z0-9_-]+)*$/.test(value)
+    /^fb\.\d+\.\d{13}\.\d+(?:\.[A-Za-z0-9_-]+)*$/.test(value)
   );
 }
 export function validFbc(value: string): boolean {
   return (
     value.length <= 512 &&
     /^[\x20-\x7E]+$/.test(value) &&
-    /^fb\.[0-9]+\.[0-9]{13}\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/.test(value)
+    /^fb\.\d+\.\d{13}\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/.test(value)
   );
 }
 export function validEventSourceUrl(value: string, origin: string): boolean {

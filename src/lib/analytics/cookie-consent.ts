@@ -33,9 +33,9 @@ export function createCookieConsent({
     const bytes = crypto.getRandomValues(new Uint8Array(32));
     let binary = "";
     bytes.forEach((byte) => {
-      binary += String.fromCharCode(byte);
+      binary += String.fromCodePoint(byte);
     });
-    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=$/, "");
   },
 }: {
   policy: AnalyticsPolicy | null;

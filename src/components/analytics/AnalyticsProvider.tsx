@@ -221,9 +221,9 @@ export function useAnalyticsEnabled() {
 
 export function useMeasurementEvents() {
   const { controller, pathname, revision } = useContext(Context);
-  return useMemo(() => {
-    void revision;
-    return {
+  return useMemo(
+    () => ({
+      consentRevision: revision,
       trackList: (itemIds: AnalyticsItemId[], version: string) =>
         controller?.trackList?.(pathname, itemIds, version) ?? false,
       trackSelection: (itemId: AnalyticsItemId, index: number) =>
@@ -240,6 +240,7 @@ export function useMeasurementEvents() {
       }) => controller?.trackLandingCta?.(pathname, input) ?? false,
       trackInquiry: (input: { channel: string; placement: string; locale: string }) =>
         controller?.trackInquiry?.(pathname, input) ?? false,
-    };
-  }, [controller, pathname, revision]);
+    }),
+    [controller, pathname, revision],
+  );
 }

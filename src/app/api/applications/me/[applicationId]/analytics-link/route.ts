@@ -23,6 +23,34 @@ interface LinkResult {
   linked: boolean;
 }
 
+function parseIdentifiers(body: Record<string, unknown> | null): AnalyticsIdentifiers | null {
+  if (!body) return null;
+  const { clientId, sessionId, fbp, fbc, eventSourceUrl } = body;
+  if (
+    typeof clientId !== "string" ||
+    (sessionId !== undefined && typeof sessionId !== "string") ||
+    (fbp !== undefined && typeof fbp !== "string") ||
+    (fbc !== undefined && typeof fbc !== "string") ||
+    (eventSourceUrl !== undefined && typeof eventSourceUrl !== "string")
+  )
+    return null;
+  return {
+    clientId,
+    ...(sessionId === undefined ? {} : { sessionId }),
+    ...(fbp === undefined ? {} : { fbp }),
+    ...(fbc === undefined ? {} : { fbc }),
+    ...(eventSourceUrl === undefined ? {} : { eventSourceUrl }),
+  };
+}
+
+function hasMetaAttribution(identifiers: AnalyticsIdentifiers) {
+  return (
+    identifiers.fbp !== undefined ||
+    identifiers.fbc !== undefined ||
+    identifiers.eventSourceUrl !== undefined
+  );
+}
+
 export async function PUT(request: NextRequest, context: LinkRouteContext) {
   const policy = readServerAnalyticsPolicy();
   if (!policy?.measurementId) return analyticsUnavailableResponse(503);
@@ -37,30 +65,9 @@ export async function PUT(request: NextRequest, context: LinkRouteContext) {
   const { applicationId } = await context.params;
   if (!/^\d+$/.test(applicationId)) return analyticsUnavailableResponse(400);
 
-  const body = await readAnalyticsJson(request);
-  const clientId = body?.clientId;
-  const sessionId = body?.sessionId;
-  const fbp = body?.fbp;
-  const fbc = body?.fbc;
-  const eventSourceUrl = body?.eventSourceUrl;
-  if (
-    typeof clientId !== "string" ||
-    (sessionId !== undefined && typeof sessionId !== "string") ||
-    (fbp !== undefined && typeof fbp !== "string") ||
-    (fbc !== undefined && typeof fbc !== "string") ||
-    (eventSourceUrl !== undefined && typeof eventSourceUrl !== "string")
-  )
-    return analyticsUnavailableResponse(400);
-
-  const identifiers: AnalyticsIdentifiers = {
-    clientId,
-    ...(sessionId === undefined ? {} : { sessionId }),
-    ...(fbp === undefined ? {} : { fbp }),
-    ...(fbc === undefined ? {} : { fbc }),
-    ...(eventSourceUrl === undefined ? {} : { eventSourceUrl }),
-  };
-  if ((fbp !== undefined || fbc !== undefined || eventSourceUrl !== undefined) && !policy.pixelId)
-    return analyticsUnavailableResponse(503);
+  const identifiers = parseIdentifiers(await readAnalyticsJson(request));
+  if (!identifiers) return analyticsUnavailableResponse(400);
+  if (hasMetaAttribution(identifiers) && !policy.pixelId) return analyticsUnavailableResponse(503);
   if (!validIdentifiers(identifiers, policy.origin)) return analyticsUnavailableResponse(400);
 
   const analytics = analyticsBackendOptions(request, policy, "granted");

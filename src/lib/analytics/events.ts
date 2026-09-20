@@ -98,6 +98,135 @@ const validLocale = (value: unknown, page: SafePage): value is string =>
   (LOCALES as readonly string[]).includes(value) &&
   value === page.locale;
 
+function funnelFields(
+  name: FunnelEvent,
+  page: SafePage,
+  input: number | Record<string, unknown>,
+  base: AnalyticsFields,
+): AnalyticsFields | null {
+  if (!positiveId(input)) return null;
+  if (name === "begin_checkout") {
+    const eligible =
+      (page.path === "/activities/booking" && page.activityId === input) ||
+      page.path === "/applications";
+    return eligible ? { ...base, items: [{ item_id: String(input) }] } : null;
+  }
+  const eligible = page.path === "/activities/detail" && page.activityId === input;
+  return eligible ? { ...base, items: [{ item_id: String(input) }] } : null;
+}
+
+function listFields(
+  page: SafePage,
+  input: Record<string, unknown>,
+  base: AnalyticsFields,
+): AnalyticsFields | null {
+  if (page.path !== "/explore" || !exactList(input) || !Array.isArray(input.itemIds)) return null;
+  if (!input.itemIds.every(safeItemId)) return null;
+  return {
+    ...base,
+    item_list_id: EXPLORE_LIST.itemListId,
+    item_list_name: EXPLORE_LIST.itemListName,
+    items: input.itemIds.map((itemId, index) => ({ item_id: String(itemId), index: index + 1 })),
+  };
+}
+
+function selectionFields(
+  page: SafePage,
+  input: Record<string, unknown>,
+  base: AnalyticsFields,
+): AnalyticsFields | null {
+  if (
+    page.path !== "/explore" ||
+    !exactList(input) ||
+    !safeItemId(input.itemId) ||
+    !positiveId(input.index)
+  )
+    return null;
+  return {
+    ...base,
+    item_list_id: EXPLORE_LIST.itemListId,
+    item_list_name: EXPLORE_LIST.itemListName,
+    items: [{ item_id: String(input.itemId), index: input.index }],
+  };
+}
+
+function signupFields(
+  page: SafePage,
+  input: Record<string, unknown>,
+  base: AnalyticsFields,
+): AnalyticsFields | null {
+  return page.path.endsWith("/onboarding") && input.method === "google"
+    ? { ...base, method: "google" }
+    : null;
+}
+
+function sectionFields(
+  page: SafePage,
+  input: Record<string, unknown>,
+  base: AnalyticsFields,
+): AnalyticsFields | null {
+  const expected = SECTION_POSITIONS[input.sectionId as keyof typeof SECTION_POSITIONS];
+  if (
+    page.path !== "/" ||
+    expected === undefined ||
+    input.position !== expected ||
+    input.pageType !== "landing" ||
+    !validLocale(input.locale, page)
+  )
+    return null;
+  return {
+    ...base,
+    section_id: input.sectionId as string,
+    position: expected,
+    page_type: "landing",
+    locale: input.locale,
+  };
+}
+
+function landingCtaFields(
+  page: SafePage,
+  input: Record<string, unknown>,
+  base: AnalyticsFields,
+): AnalyticsFields | null {
+  const contract = CTA_CONTRACTS[input.ctaId as keyof typeof CTA_CONTRACTS];
+  if (
+    page.path !== "/" ||
+    !contract ||
+    input.sectionId !== contract.sectionId ||
+    input.position !== contract.position ||
+    !(contract.destinations as readonly unknown[]).includes(input.destinationType) ||
+    !validLocale(input.locale, page)
+  )
+    return null;
+  return {
+    ...base,
+    cta_id: input.ctaId as string,
+    section_id: contract.sectionId,
+    position: contract.position,
+    destination_type: input.destinationType as string,
+    locale: input.locale,
+  };
+}
+
+function inquiryFields(
+  page: SafePage,
+  input: Record<string, unknown>,
+  base: AnalyticsFields,
+): AnalyticsFields | null {
+  if (
+    !(INQUIRY_CHANNELS as readonly unknown[]).includes(input.channel) ||
+    !(INQUIRY_PLACEMENTS as readonly unknown[]).includes(input.placement) ||
+    !validLocale(input.locale, page)
+  )
+    return null;
+  return {
+    ...base,
+    channel: input.channel as string,
+    placement: input.placement as string,
+    locale: input.locale,
+  };
+}
+
 export function eventFields(
   name: MeasurementEvent,
   page: SafePage,
@@ -106,104 +235,22 @@ export function eventFields(
 ): AnalyticsFields | null {
   const base = pageFields(page, origin);
   if (name === "view_item" || name === "booking_cta_click" || name === "begin_checkout") {
-    if (!positiveId(input)) return null;
-    if (
-      (name === "view_item" || name === "booking_cta_click") &&
-      (page.path !== "/activities/detail" || page.activityId !== input)
-    )
-      return null;
-    if (
-      name === "begin_checkout" &&
-      !(
-        (page.path === "/activities/booking" && page.activityId === input) ||
-        page.path === "/applications"
-      )
-    )
-      return null;
-    return { ...base, items: [{ item_id: String(input) }] };
+    return funnelFields(name, page, input, base);
   }
   if (typeof input !== "object" || input === null || Array.isArray(input)) return null;
 
-  if (name === "view_item_list") {
-    if (page.path !== "/explore" || !exactList(input) || !Array.isArray(input.itemIds)) return null;
-    if (!input.itemIds.every(safeItemId)) return null;
-    return {
-      ...base,
-      item_list_id: EXPLORE_LIST.itemListId,
-      item_list_name: EXPLORE_LIST.itemListName,
-      items: input.itemIds.map((itemId, index) => ({ item_id: String(itemId), index: index + 1 })),
-    };
+  switch (name) {
+    case "view_item_list":
+      return listFields(page, input, base);
+    case "select_item":
+      return selectionFields(page, input, base);
+    case "sign_up":
+      return signupFields(page, input, base);
+    case "section_view":
+      return sectionFields(page, input, base);
+    case "landing_cta_click":
+      return landingCtaFields(page, input, base);
+    case "inquiry_click":
+      return inquiryFields(page, input, base);
   }
-  if (name === "select_item") {
-    if (
-      page.path !== "/explore" ||
-      !exactList(input) ||
-      !safeItemId(input.itemId) ||
-      !positiveId(input.index)
-    )
-      return null;
-    return {
-      ...base,
-      item_list_id: EXPLORE_LIST.itemListId,
-      item_list_name: EXPLORE_LIST.itemListName,
-      items: [{ item_id: String(input.itemId), index: input.index }],
-    };
-  }
-  if (name === "sign_up") {
-    if (!page.path.endsWith("/onboarding") || input.method !== "google") return null;
-    return { ...base, method: "google" };
-  }
-  if (name === "section_view") {
-    const expected = SECTION_POSITIONS[input.sectionId as keyof typeof SECTION_POSITIONS];
-    if (
-      page.path !== "/" ||
-      expected === undefined ||
-      input.position !== expected ||
-      input.pageType !== "landing" ||
-      !validLocale(input.locale, page)
-    )
-      return null;
-    return {
-      ...base,
-      section_id: input.sectionId as string,
-      position: expected,
-      page_type: "landing",
-      locale: input.locale,
-    };
-  }
-  if (name === "landing_cta_click") {
-    const contract = CTA_CONTRACTS[input.ctaId as keyof typeof CTA_CONTRACTS];
-    if (
-      page.path !== "/" ||
-      !contract ||
-      input.sectionId !== contract.sectionId ||
-      input.position !== contract.position ||
-      !(contract.destinations as readonly unknown[]).includes(input.destinationType) ||
-      !validLocale(input.locale, page)
-    )
-      return null;
-    return {
-      ...base,
-      cta_id: input.ctaId as string,
-      section_id: contract.sectionId,
-      position: contract.position,
-      destination_type: input.destinationType as string,
-      locale: input.locale,
-    };
-  }
-  if (name === "inquiry_click") {
-    if (
-      !(INQUIRY_CHANNELS as readonly unknown[]).includes(input.channel) ||
-      !(INQUIRY_PLACEMENTS as readonly unknown[]).includes(input.placement) ||
-      !validLocale(input.locale, page)
-    )
-      return null;
-    return {
-      ...base,
-      channel: input.channel as string,
-      placement: input.placement as string,
-      locale: input.locale,
-    };
-  }
-  return null;
 }

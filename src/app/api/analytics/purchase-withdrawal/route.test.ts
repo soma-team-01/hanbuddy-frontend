@@ -9,7 +9,7 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 });
 
 const mockedPostBackend = vi.mocked(postBackend);
-const deniedProof = `denied.v2.${"A".repeat(43)}`;
+const deniedProof = `denied.v3.${"A".repeat(43)}`;
 
 function enablePolicy() {
   vi.stubEnv("NODE_ENV", "production");
@@ -41,7 +41,7 @@ describe("POST /api/analytics/purchase-withdrawal", () => {
           origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
           "x-analytics-proof": deniedProof,
-          cookie: "__Host-hb_ga_consent=pending.123; session=secret",
+          cookie: "__Host-hb_measurement_consent=pending.123; session=secret",
         },
         body: "{}",
       }),
@@ -51,7 +51,7 @@ describe("POST /api/analytics/purchase-withdrawal", () => {
       "/analytics/purchase-withdrawal",
       {},
       {
-        cookieHeader: `__Host-hb_ga_consent=${deniedProof}`,
+        cookieHeader: `__Host-hb_measurement_consent=${deniedProof}`,
         origin: "https://hanbuddy.kr",
         analyticsRequest: true,
       },
@@ -114,7 +114,7 @@ it.each(["off", "missing-id"])(
     vi.unstubAllEnvs();
   },
 );
-it.each(["denied.v1.legacy", `denied.v2.${"A".repeat(42)}B`])(
+it.each(["denied.v1.legacy", `denied.v3.${"A".repeat(42)}B`])(
   "returns 410 for invalid withdrawal: %s",
   async (proof) => {
     enablePolicy();

@@ -1,7 +1,8 @@
 import { APP_ORIGIN } from "@/lib/site";
 
 export interface AnalyticsPolicy {
-  measurementId: string;
+  measurementId?: string;
+  pixelId?: string;
   origin: string;
 }
 
@@ -9,11 +10,27 @@ export interface AnalyticsPolicy {
 export function readAnalyticsPolicy(
   env: Record<string, string | undefined>,
 ): AnalyticsPolicy | null {
-  const id = env.GA_MEASUREMENT_ID;
-  if (env.GA_ENABLED !== "true" || !id || !/^G-[A-Z0-9]+$/.test(id) || id.trim() !== id)
-    return null;
+  const measurementId = env.GA_MEASUREMENT_ID;
+  const pixelId = env.META_PIXEL_ID;
+  const validMeasurementId =
+    env.GA_ENABLED === "true" &&
+    Boolean(
+      measurementId &&
+      /^G-[A-Z0-9]+$/.test(measurementId) &&
+      measurementId.trim() === measurementId,
+    );
+  const validPixelId =
+    env.META_PIXEL_ENABLED === "true" &&
+    Boolean(pixelId && /^[1-9]\d{4,31}$/.test(pixelId) && pixelId.trim() === pixelId);
+  if (!validMeasurementId && !validPixelId) return null;
   const origin = readAnalyticsPolicyOrigin(env);
-  return origin ? { measurementId: id, origin } : null;
+  return origin
+    ? {
+        ...(validMeasurementId ? { measurementId } : {}),
+        ...(validPixelId ? { pixelId } : {}),
+        origin,
+      }
+    : null;
 }
 
 /** The same origin validation applies to collection and withdrawal. */

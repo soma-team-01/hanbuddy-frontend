@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
@@ -7,6 +7,11 @@ import { ActivityFeed } from "./activity-feed";
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
+}));
+
+const analytics = vi.hoisted(() => ({ trackList: vi.fn(), trackSelection: vi.fn() }));
+vi.mock("@/components/analytics/AnalyticsProvider", () => ({
+  useMeasurementEvents: () => analytics,
 }));
 
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
@@ -45,6 +50,8 @@ describe("ActivityFeed", () => {
   });
   beforeEach(() => {
     mockedGetTouristActivities.mockReset();
+    analytics.trackList.mockReset();
+    analytics.trackSelection.mockReset();
   });
 
   it("renders a loading state while activities are pending", async () => {
@@ -110,6 +117,33 @@ describe("ActivityFeed", () => {
     );
     expect(activityLink).toHaveClass("motion-reveal", "motion-press");
     expect(activityLink).toHaveStyle({ animationDelay: "0ms" });
+    await waitFor(() => expect(analytics.trackList).toHaveBeenCalledWith(["42"], "42"));
+    expect(analytics.trackList).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(activityLink, { detail: 1 });
+    fireEvent.click(activityLink, { detail: 0 });
+    expect(analytics.trackSelection).toHaveBeenNthCalledWith(1, "42", 1);
+    expect(analytics.trackSelection).toHaveBeenNthCalledWith(2, "42", 1);
+  });
+
+  it("does not report a list while loading, empty or failed", async () => {
+    let resolveActivities!: (value: Awaited<ReturnType<typeof getTouristActivities>>) => void;
+    mockedGetTouristActivities.mockReturnValue(
+      new Promise((resolve) => {
+        resolveActivities = resolve;
+      }),
+    );
+    const view = renderWithQueryClient(<ActivityFeed />);
+    expect(analytics.trackList).not.toHaveBeenCalled();
+    await act(async () => resolveActivities({ status: "success", activities: [] }));
+    await screen.findByText("No activities available yet.");
+    expect(analytics.trackList).not.toHaveBeenCalled();
+    view.unmount();
+
+    mockedGetTouristActivities.mockRejectedValue(new Error("failed"));
+    renderWithQueryClient(<ActivityFeed />);
+    await screen.findByRole("alert");
+    expect(analytics.trackList).not.toHaveBeenCalled();
   });
 
   it("localizes Korean loading and empty states", async () => {

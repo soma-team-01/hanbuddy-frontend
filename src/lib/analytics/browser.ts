@@ -1,5 +1,7 @@
 import type { AnalyticsBrowserPort } from "./controller";
-import { validIdentifiers, validSessionId } from "./link";
+import { validEventSourceUrl, validFbc, validFbp, validIdentifiers, validSessionId } from "./link";
+import type { AnalyticsPolicy } from "./policy";
+import { createMetaBrowser } from "./meta-browser";
 
 type GoogleWindow = Window & { dataLayer?: IArguments[]; gtag?: (...args: unknown[]) => void };
 const deniedAds = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
@@ -23,6 +25,7 @@ export function createGoogleBrowser(
   return {
     async start(policy, page) {
       if (target.location.origin !== policy.origin) throw new Error("Analytics origin disabled");
+      if (!policy.measurementId) throw new Error("Analytics unavailable");
       id = policy.measurementId;
       const epoch = ++generation;
       google.dataLayer ??= [];
@@ -141,6 +144,70 @@ export function createGoogleBrowser(
       for (const name of names)
         for (const domain of domains)
           document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax${domain}`;
+    },
+  };
+}
+
+/** Runs only configured providers; a load failure in one does not disable the other. */
+export function createMeasurementBrowser(
+  target: Window,
+  document: Document,
+  policy: AnalyticsPolicy,
+): AnalyticsBrowserPort {
+  const google = policy.measurementId
+    ? createGoogleBrowser(target, document, policy.measurementId)
+    : null;
+  const meta = policy.pixelId ? createMetaBrowser(target, document, policy.pixelId) : null;
+  let active: AnalyticsBrowserPort[] = [];
+  let pageLocation = "";
+  const readCookie = (name: string) =>
+    document.cookie
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(`${name}=`))
+      ?.slice(name.length + 1);
+  return {
+    async start(nextPolicy, page) {
+      active = [];
+      pageLocation = page.page_location;
+      const configured = [google, meta].filter(
+        (provider): provider is AnalyticsBrowserPort => provider !== null,
+      );
+      const results = await Promise.allSettled(
+        configured.map(async (provider) => {
+          await provider.start(nextPolicy, page);
+          active.push(provider);
+        }),
+      );
+      results.forEach((result, index) => {
+        if (result.status === "rejected") configured[index].stop(false);
+      });
+      if (!active.length) throw new Error("Analytics unavailable");
+    },
+    send(name, fields) {
+      if (validEventSourceUrl(fields.page_location, policy.origin)) {
+        pageLocation = fields.page_location;
+      }
+      active.forEach((provider) => provider.send(name, fields));
+    },
+    async identifiers() {
+      if (!google || !active.includes(google)) throw new Error("Analytics unavailable");
+      const ids = await google.identifiers();
+      if (!meta || !active.includes(meta)) return ids;
+      const fbp = readCookie("_fbp");
+      const fbc = readCookie("_fbc");
+      const attribution = {
+        ...(fbp && validFbp(fbp) ? { fbp } : {}),
+        ...(fbc && validFbc(fbc) ? { fbc } : {}),
+      };
+      return Object.keys(attribution).length && validEventSourceUrl(pageLocation, policy.origin)
+        ? { ...ids, ...attribution, eventSourceUrl: pageLocation }
+        : ids;
+    },
+    stop(resetIdentity = false) {
+      google?.stop(resetIdentity);
+      meta?.stop(resetIdentity);
+      active = [];
     },
   };
 }

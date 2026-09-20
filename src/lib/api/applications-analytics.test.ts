@@ -11,9 +11,15 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 it.each(["create", "continue"])(
-  "%s captures before payment and does not await linkage",
+  "%s starts consent/linkage without delaying the successful payment return",
   async (kind) => {
-    const complete = vi.fn(() => new Promise<void>(() => {}));
+    let finish!: () => void;
+    const complete = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
     vi.mocked(captureAnalyticsPayment).mockReturnValue({
       headers: { "X-Analytics-Request": "1" },
       complete,
@@ -26,6 +32,51 @@ it.each(["create", "continue"])(
         ),
     );
     vi.stubGlobal("fetch", request);
+    let settled = false;
+    const operation =
+      kind === "create"
+        ? createApplication(
+            { activityScheduleId: 1, guestCount: 1, refundPolicyAgreed: true },
+            "EN",
+            "TOSS",
+          )
+        : continueApplicationPayment(42, "EN", "TOSS");
+    void operation.then(() => {
+      settled = true;
+    });
+    await vi.waitFor(() => expect(complete).toHaveBeenCalledWith(42, "a".repeat(64)));
+    await Promise.resolve();
+    expect(settled).toBe(true);
+    const result = await operation;
+    expect(result.status).toBe("success");
+    expect(request.mock.calls[0][1]?.headers).toEqual(
+      expect.objectContaining({ "X-Analytics-Request": "1" }),
+    );
+    finish();
+    await expect(complete.mock.results[0].value).resolves.toBeUndefined();
+  },
+);
+
+it.each(["create", "continue"])(
+  "%s stays successful when detached analytics completion rejects",
+  async (kind) => {
+    const complete = vi.fn(async () => {
+      throw new Error("analytics failed");
+    });
+    vi.mocked(captureAnalyticsPayment).mockReturnValue({
+      headers: { "X-Analytics-Request": "1" },
+      complete,
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () =>
+        Response.json(
+          { isSuccess: true, result: { application: { applicationId: 42 } } },
+          { headers: { "X-Analytics-Context": "a".repeat(64) } },
+        ),
+      ),
+    );
+
     const result =
       kind === "create"
         ? await createApplication(
@@ -34,10 +85,8 @@ it.each(["create", "continue"])(
             "TOSS",
           )
         : await continueApplicationPayment(42, "EN", "TOSS");
+
     expect(result.status).toBe("success");
-    expect(request.mock.calls[0][1]?.headers).toEqual(
-      expect.objectContaining({ "X-Analytics-Request": "1" }),
-    );
     expect(complete).toHaveBeenCalledWith(42, "a".repeat(64));
   },
 );
@@ -71,6 +120,8 @@ it.each(["create", "continue"])(
     };
     const request = vi.fn<typeof fetch>(async (path) => {
       if (String(path).endsWith("/analytics-link")) return lateResponse;
+      if (String(path).endsWith("/analytics-consent"))
+        return Response.json({ isSuccess: true, result: { registered: true } });
       return Response.json(
         { isSuccess: true, result: payment },
         { headers: { "X-Analytics-Context": "a".repeat(64) } },
@@ -81,22 +132,22 @@ it.each(["create", "continue"])(
     const ticket = createPaymentLinker({
       proof: () => "synthetic-granted-proof",
       epoch: () => 0,
+      origin: "https://hanbuddy.kr",
       identifiers,
       request,
     }).capture()!;
     const complete = vi.fn(ticket.complete);
     vi.mocked(captureAnalyticsPayment).mockReturnValue({ ...ticket, complete });
 
-    // Booking resolves while the linkage response is still outstanding.
-    const result =
+    const operation =
       kind === "create"
-        ? await createApplication(
+        ? createApplication(
             { activityScheduleId: 1, guestCount: 1, refundPolicyAgreed: true },
             "EN",
             "TOSS",
           )
-        : await continueApplicationPayment(42, "EN", "TOSS");
-    expect(result).toEqual({ status: "success", payment });
+        : continueApplicationPayment(42, "EN", "TOSS");
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(3));
     finishLink(
       Response.json(
         {
@@ -107,20 +158,22 @@ it.each(["create", "continue"])(
         { status: 409 },
       ),
     );
+    const result = await operation;
     await expect(complete.mock.results[0].value).resolves.toBeUndefined();
     await vi.runAllTimersAsync();
 
     expect(result).toEqual({ status: "success", payment });
     expect(complete).toHaveBeenCalledTimes(1);
     expect(identifiers).toHaveBeenCalledTimes(1);
-    expect(request).toHaveBeenCalledTimes(2);
+    expect(request).toHaveBeenCalledTimes(3);
     expect(request.mock.calls.map(([path]) => String(path))).toEqual([
       expect.stringContaining(
         kind === "create" ? "/api/applications?" : "/api/applications/me/42/payment/continue?",
       ),
+      "/api/applications/me/42/analytics-consent",
       "/api/applications/me/42/analytics-link",
     ]);
-    expect(request.mock.calls[1][1]).toMatchObject({
+    expect(request.mock.calls[2][1]).toMatchObject({
       method: "PUT",
       body: '{"clientId":"123.456","sessionId":"789"}',
     });

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { InstagramIcon, KakaoTalkIcon, MailIcon, WhatsAppIcon, XIcon } from "@/components/ui/icons";
 import { CONTACT_DETAILS } from "@/lib/contact-details";
+import { getLocaleOrDefault } from "@/i18n/routing";
+import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
 
 /** Inquiry only: opening and following a channel never create a booking or payment. */
 export function AlternativePaymentDialog({
@@ -13,6 +15,8 @@ export function AlternativePaymentDialog({
 }>) {
   const t = useTranslations("AlternativePayment");
   const tAccessibility = useTranslations("Accessibility");
+  const locale = getLocaleOrDefault(useLocale());
+  const { trackInquiry } = useMeasurementEvents();
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -22,12 +26,23 @@ export function AlternativePaymentDialog({
   const channels = [
     {
       name: "WhatsApp",
+      channel: "whatsapp",
       Icon: WhatsAppIcon,
       href: `${CONTACT_DETAILS.whatsappUrl}?text=${encodeURIComponent(message)}`,
     },
-    { name: "KakaoTalk", Icon: KakaoTalkIcon, href: CONTACT_DETAILS.kakaoUrl },
-    { name: "Instagram", Icon: InstagramIcon, href: CONTACT_DETAILS.instagramUrl },
-    { name: t("email"), Icon: MailIcon, href: `mailto:${CONTACT_DETAILS.email}` },
+    { name: "KakaoTalk", channel: "kakao", Icon: KakaoTalkIcon, href: CONTACT_DETAILS.kakaoUrl },
+    {
+      name: "Instagram",
+      channel: "instagram",
+      Icon: InstagramIcon,
+      href: CONTACT_DETAILS.instagramUrl,
+    },
+    {
+      name: t("email"),
+      channel: "email",
+      Icon: MailIcon,
+      href: `mailto:${CONTACT_DETAILS.email}`,
+    },
   ];
 
   useEffect(() => {
@@ -114,12 +129,13 @@ export function AlternativePaymentDialog({
             )}
           </div>
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {channels.map(({ name, Icon, href }) => (
+            {channels.map(({ name, channel, Icon, href }) => (
               <a
                 key={name}
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackInquiry({ channel, placement: "payment_inquiry", locale })}
                 className="flex min-h-20 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-line-soft px-1 py-3 text-xs font-medium text-ink transition-colors hover:border-primary hover:text-primary-strong"
               >
                 <Icon aria-hidden className="size-6 text-primary" />

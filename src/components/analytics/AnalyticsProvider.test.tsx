@@ -1,6 +1,12 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { useEffect } from "react";
 import { expect, it, vi } from "vitest";
-import { AnalyticsProvider, AnalyticsSettings, useFunnelEvent } from "./AnalyticsProvider";
+import {
+  AnalyticsProvider,
+  AnalyticsSettings,
+  useFunnelEvent,
+  useMeasurementEvents,
+} from "./AnalyticsProvider";
 import { createCookieAnalytics } from "@/lib/analytics/cookie-controller";
 import { createCookieConsent } from "@/lib/analytics/cookie-consent";
 import * as runtime from "@/lib/analytics/cookie-runtime";
@@ -37,7 +43,7 @@ function makeController() {
       issue: async () => {
         const now = Math.floor(Date.now() / 1000);
         return {
-          proof: `granted.v2.${"A".repeat(43)}`,
+          proof: `granted.v3.${"A".repeat(43)}`,
           expiresAt: new Date((now + 10) * 1000).toISOString(),
         };
       },
@@ -59,6 +65,20 @@ function Detail({ valid = true }: { valid?: boolean }) {
     </button>
   );
 }
+function ExploreExposure() {
+  const { trackList } = useMeasurementEvents();
+  useEffect(() => {
+    trackList([42], "42");
+  }, [trackList]);
+  return null;
+}
+function LandingExposure() {
+  const { trackSection } = useMeasurementEvents();
+  useEffect(() => {
+    trackSection({ sectionId: "hero", position: 1, locale: "en" });
+  }, [trackSection]);
+  return null;
+}
 it("keeps navigation usable with no operational policy and no consent collection", () => {
   renderWithQueryClient(
     <AnalyticsProvider policy={null}>
@@ -71,11 +91,25 @@ it("keeps navigation usable with no operational policy and no consent collection
   expect(screen.queryByRole("button", { name: "Cookie settings" })).not.toBeInTheDocument();
 });
 it.each([
-  ["en", "Sure", "No thanks", "Cookie settings"],
-  ["ko", "좋아요", "괜찮아요", "쿠키 설정"],
+  [
+    "en",
+    "Analytics & advertising",
+    "Allow analytics and advertising tools to measure site use and campaign results. We don’t send form answers or contact details. You can change this anytime in Cookie settings.",
+    "Allow",
+    "No thanks",
+    "Cookie settings",
+  ],
+  [
+    "ko",
+    "분석 및 광고",
+    "서비스 이용과 캠페인 성과 측정을 위해 분석·광고 도구를 사용합니다. 폼 답변과 연락처는 전송하지 않으며, 쿠키 설정에서 언제든 변경할 수 있습니다.",
+    "허용",
+    "거절",
+    "쿠키 설정",
+  ],
 ] as const)(
-  "supports %s grant, CTA, settings withdrawal and re-navigation",
-  async (locale, accept, reject, settings) => {
+  "supports exact %s combined-consent copy, grant, withdrawal and re-navigation",
+  async (locale, title, body, accept, reject, settings) => {
     pathname = `/${locale}/activities/42`;
     const { controller, browser } = makeController();
     const ui = (
@@ -85,6 +119,8 @@ it.each([
       </AnalyticsProvider>
     );
     const view = renderWithQueryClient(ui, { locale });
+    expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
+    expect(screen.getByText(body)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Book" }));
     expect(browser.send).not.toHaveBeenCalled();
     fireEvent.click(await screen.findByRole("button", { name: accept }));
@@ -148,3 +184,27 @@ it("shows incomplete withdrawal without claiming server completion", () => {
   expect(screen.getByRole("status").tagName).toBe("OUTPUT");
   expect(screen.getByRole("status")).toHaveClass("block", "text-xs", "text-muted");
 });
+
+it.each([
+  ["/en/explore", <ExploreExposure key="explore" />, "view_item_list"],
+  ["/en", <LandingExposure key="landing" />, "section_view"],
+] as const)(
+  "replays a rendered %s exposure once when consent becomes active",
+  async (route, exposure, eventName) => {
+    pathname = route;
+    const { controller, browser } = makeController();
+    renderWithQueryClient(
+      <AnalyticsProvider policy={null} controller={controller}>
+        {exposure}
+      </AnalyticsProvider>,
+    );
+    expect(browser.send).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Allow" }));
+
+    await waitFor(() =>
+      expect(browser.send.mock.calls.map(([name]) => name)).toEqual(["page_view", eventName]),
+    );
+    expect(browser.send.mock.calls.filter(([name]) => name === eventName)).toHaveLength(1);
+  },
+);

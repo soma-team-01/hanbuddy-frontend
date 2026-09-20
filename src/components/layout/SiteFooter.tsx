@@ -14,6 +14,7 @@ import type { Locale } from "@/i18n/routing";
 import type { SiteNavRole } from "@/lib/auth/routes";
 import { getPolicyPath } from "@/lib/policy-routes";
 import { CONTACT_DETAILS } from "@/lib/contact-details";
+import { TrackedInquiryLink } from "@/components/analytics/TrackedInquiryLink";
 
 interface SiteFooterProps {
   readonly locale: Locale;
@@ -63,14 +64,20 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
 
           <div className="flex items-center gap-1 sm:justify-end sm:gap-2">
             <FooterLocaleSwitcher role={role} />
-            <a
+            <TrackedInquiryLink
+              channel="email"
+              placement="site_footer"
+              locale={locale}
               href={`mailto:${CONTACT_DETAILS.email}`}
               aria-label={landingT("contact.emailIconLabel")}
               className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <MailIcon className="size-[18px]" />
-            </a>
-            <a
+            </TrackedInquiryLink>
+            <TrackedInquiryLink
+              channel="whatsapp"
+              placement="site_footer"
+              locale={locale}
               href={CONTACT_DETAILS.whatsappUrl}
               target="_blank"
               rel="noreferrer"
@@ -78,8 +85,11 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <WhatsAppIcon className="size-[18px]" />
-            </a>
-            <a
+            </TrackedInquiryLink>
+            <TrackedInquiryLink
+              channel="facebook"
+              placement="site_footer"
+              locale={locale}
               href={CONTACT_DETAILS.facebookUrl}
               target="_blank"
               rel="noreferrer"
@@ -87,8 +97,11 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <FacebookIcon className="size-[18px]" />
-            </a>
-            <a
+            </TrackedInquiryLink>
+            <TrackedInquiryLink
+              channel="kakao"
+              placement="site_footer"
+              locale={locale}
               href={CONTACT_DETAILS.kakaoUrl}
               target="_blank"
               rel="noreferrer"
@@ -96,8 +109,11 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <KakaoTalkIcon className="size-[18px]" />
-            </a>
-            <a
+            </TrackedInquiryLink>
+            <TrackedInquiryLink
+              channel="instagram"
+              placement="site_footer"
+              locale={locale}
               href={CONTACT_DETAILS.instagramUrl}
               target="_blank"
               rel="noreferrer"
@@ -105,7 +121,7 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
               className="flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:text-primary"
             >
               <InstagramIcon className="size-[18px]" />
-            </a>
+            </TrackedInquiryLink>
           </div>
         </div>
 

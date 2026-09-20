@@ -16,9 +16,19 @@ const routerMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   replace: vi.fn(),
 }));
+const analyticsMocks = vi.hoisted(() => ({ trackSignup: vi.fn() }));
+const accountAnalyticsMocks = vi.hoisted(() => ({ invalidateAnalyticsAccount: vi.fn() }));
+
+vi.mock("@/components/analytics/AnalyticsProvider", () => ({
+  useMeasurementEvents: () => analyticsMocks,
+}));
+vi.mock("@/lib/analytics/cookie-runtime", () => accountAnalyticsMocks);
 
 beforeEach(() => {
   clearAllOnboardingDrafts();
+  analyticsMocks.trackSignup.mockClear();
+  accountAnalyticsMocks.invalidateAnalyticsAccount.mockReset();
+  accountAnalyticsMocks.invalidateAnalyticsAccount.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -827,6 +837,63 @@ describe("OnboardingForm", () => {
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
     );
     expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(analyticsMocks.trackSignup).toHaveBeenCalledTimes(1);
+    expect(analyticsMocks.trackSignup).toHaveBeenCalledWith("google");
+  });
+
+  it("waits for the new account analytics restore before emitting sign_up exactly once", async () => {
+    let finishRestore!: () => void;
+    accountAnalyticsMocks.invalidateAnalyticsAccount.mockReturnValue(
+      new Promise<void>((resolve) => {
+        finishRestore = resolve;
+      }),
+    );
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        isSuccess: true,
+        code: "201",
+        message: "OK",
+        result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Traveler" }} />);
+    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "traveler_id" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(accountAnalyticsMocks.invalidateAnalyticsAccount).toHaveBeenCalledTimes(1);
+    expect(analyticsMocks.trackSignup).not.toHaveBeenCalled();
+    expect(routerMocks.replace).not.toHaveBeenCalled();
+
+    await act(async () => finishRestore());
+
+    await waitFor(() => expect(analyticsMocks.trackSignup).toHaveBeenCalledWith("google"));
+    expect(analyticsMocks.trackSignup).toHaveBeenCalledTimes(1);
+    expect(routerMocks.replace).toHaveBeenCalledWith("/en");
+  });
+
+  it("does not emit sign_up when the server confirms an existing account", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        isSuccess: true,
+        code: "200",
+        message: "OK",
+        result: { registered: false, authStatus: "ACTIVE", userType: "TOURIST" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(<OnboardingForm googleProfile={{ name: "Existing Traveler" }} />);
+    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "traveler_id" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+
+    await waitFor(() => expect(routerMocks.replace).toHaveBeenCalledWith("/en"));
+    expect(accountAnalyticsMocks.invalidateAnalyticsAccount).toHaveBeenCalledTimes(1);
+    expect(analyticsMocks.trackSignup).not.toHaveBeenCalled();
   });
 
   it("prefills a rejected buddy application and resubmits without agreements", async () => {
@@ -903,6 +970,7 @@ describe("OnboardingForm", () => {
     expect(routerMocks.replace).toHaveBeenCalledWith(
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
     );
+    expect(analyticsMocks.trackSignup).not.toHaveBeenCalled();
   });
 
   it.each(["en", "ko"] as const)(

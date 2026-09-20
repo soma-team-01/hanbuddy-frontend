@@ -25,6 +25,8 @@ export function RecommendedExperiences() {
   if (activitiesQuery.isPending) {
     return (
       <section
+        data-landing-section="recommended_experiences"
+        data-landing-position="2"
         aria-labelledby="recommended-title"
         className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
       >
@@ -73,6 +75,8 @@ export function RecommendedExperiences() {
 
   return (
     <section
+      data-landing-section="recommended_experiences"
+      data-landing-position="2"
       aria-labelledby="recommended-title"
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
@@ -123,6 +127,8 @@ function RecommendedState({ kind, onRetry }: RecommendedStateProps) {
 
   return (
     <section
+      data-landing-section="recommended_experiences"
+      data-landing-position="2"
       aria-labelledby="recommended-title"
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >

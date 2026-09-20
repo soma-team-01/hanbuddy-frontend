@@ -14,7 +14,7 @@ afterEach(() => {
 const origin = "https://hanbuddy.kr";
 const expiry = "1970-01-01T00:17:40Z";
 
-// Synthetic action-only v2 server boundary, not an assertion about a deployed backend.
+// Synthetic action-only v3 server boundary, not an assertion about a deployed backend.
 function environment() {
   for (const [key, value] of Object.entries({
     NODE_ENV: "production",
@@ -63,12 +63,12 @@ function environment() {
     if (raw.startsWith("denied.") && !record?.revoked) return unavailable(409);
     const next = `${String(++serial).padStart(42, "A")}A`;
     records.set(next, { revoked: false, expiresAt: expiry });
-    return ok({ proof: `granted.v2.${next}`, expiresAt: expiry });
+    return ok({ proof: `granted.v3.${next}`, expiresAt: expiry });
   });
   const request: typeof fetch = async (url, init) => {
     const headers = new Headers(init?.headers);
     headers.set("origin", origin);
-    if (cookie) headers.set("cookie", `__Host-hb_ga_consent=${cookie}; unrelated=discard`);
+    if (cookie) headers.set("cookie", `__Host-hb_measurement_consent=${cookie}; unrelated=discard`);
     const req = new NextRequest(`${origin}${url}`, {
       ...init,
       headers,
@@ -105,7 +105,7 @@ it("uses actual adapter and BFF for accept/restore/withdraw/reaccept with origin
   try {
     await e.controller.accept();
     const first = e.controller.getProof();
-    expect(first).toMatch(/^granted\.v2\./);
+    expect(first).toMatch(/^granted\.v3\./);
     await e.controller.restore();
     expect(e.controller.getProof()).toBe(first);
     await e.controller.reject();
@@ -130,7 +130,7 @@ it("withdraws while collection is OFF and unknown denied ACK creates no record",
     await e.controller.reject();
     expect(e.controller.isWithdrawalPending()).toBe(false);
     expect([...e.records.values()][0].revoked).toBe(true);
-    await e.api.withdraw(`denied.v2.${"Z".repeat(42)}A`);
+    await e.api.withdraw(`denied.v3.${"Z".repeat(42)}A`);
     expect(e.records.size).toBe(1);
   } finally {
     e.controller.dispose();
@@ -140,7 +140,7 @@ it("withdraws while collection is OFF and unknown denied ACK creates no record",
 it("does not convert server RESTORE 410 into new acceptance", async () => {
   const e = environment();
   try {
-    e.jar.write(`granted.v2.${"Z".repeat(42)}A`, 60);
+    e.jar.write(`granted.v3.${"Z".repeat(42)}A`, 60);
     e.jar.decide("accept.synthetic");
     await e.controller.restore();
     expect(e.controller.isGranted()).toBe(false);

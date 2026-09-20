@@ -135,6 +135,8 @@ google_redirect_uri="$(read_runtime_value GOOGLE_REDIRECT_URI)"
 ga4_origin="$(read_optional_runtime_value GA4_ORIGIN)"
 ga_enabled="$(read_optional_runtime_value GA_ENABLED)"
 ga_measurement_id="$(read_optional_runtime_value GA_MEASUREMENT_ID)"
+meta_pixel_enabled="$(read_optional_runtime_value META_PIXEL_ENABLED)"
+meta_pixel_id="$(read_optional_runtime_value META_PIXEL_ID)"
 
 encode() {
   local value="$1"
@@ -149,6 +151,8 @@ google_redirect_uri_base64="$(encode "${google_redirect_uri}")"
 ga4_origin_base64="$(encode "${ga4_origin}")"
 ga_enabled_base64="$(encode "${ga_enabled}")"
 ga_measurement_id_base64="$(encode "${ga_measurement_id}")"
+meta_pixel_enabled_base64="$(encode "${meta_pixel_enabled}")"
+meta_pixel_id_base64="$(encode "${meta_pixel_id}")"
 frontend_domain_base64="$(encode "${FRONTEND_DOMAIN}")"
 redirect_domain_base64="$(encode "${redirect_domain}")"
 
@@ -176,6 +180,8 @@ google_redirect_uri="\$(printf '%s' '${google_redirect_uri_base64}' | base64 --d
 ga4_origin="\$(printf '%s' '${ga4_origin_base64}' | base64 --decode)"
 ga_enabled="\$(printf '%s' '${ga_enabled_base64}' | base64 --decode)"
 ga_measurement_id="\$(printf '%s' '${ga_measurement_id_base64}' | base64 --decode)"
+meta_pixel_enabled="\$(printf '%s' '${meta_pixel_enabled_base64}' | base64 --decode)"
+meta_pixel_id="\$(printf '%s' '${meta_pixel_id_base64}' | base64 --decode)"
 frontend_domain="\$(printf '%s' '${frontend_domain_base64}' | base64 --decode)"
 redirect_domain="\$(printf '%s' '${redirect_domain_base64}' | base64 --decode)"
 registry="\${image_uri%%/*}"
@@ -206,6 +212,8 @@ start_frontend() {
     -e "GA4_ORIGIN=\${ga4_origin}" \
     -e "GA_ENABLED=\${ga_enabled}" \
     -e "GA_MEASUREMENT_ID=\${ga_measurement_id}" \
+    -e "META_PIXEL_ENABLED=\${meta_pixel_enabled}" \
+    -e "META_PIXEL_ID=\${meta_pixel_id}" \
     "\${container_image}"
 }
 

@@ -10,13 +10,13 @@ import {
 } from "./analytics-bff";
 
 const opaqueId = "A".repeat(43);
-const grantedProof = `granted.v2.${opaqueId}`;
+const grantedProof = `granted.v3.${opaqueId}`;
 
 describe("analytics BFF validation", () => {
   it("accepts only the requested choice and canonical opaque IDs", () => {
     expect(isConsentProof(grantedProof, "granted")).toBe(true);
     expect(isConsentProof(grantedProof, "denied")).toBe(false);
-    expect(isConsentProof(`granted.v2.${"A".repeat(42)}B`, "granted")).toBe(false);
+    expect(isConsentProof(`granted.v3.${"A".repeat(42)}B`, "granted")).toBe(false);
     expect(isConsentProof("pending.123", "granted")).toBe(false);
   });
 

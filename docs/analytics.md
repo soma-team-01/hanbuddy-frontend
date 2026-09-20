@@ -1,79 +1,78 @@
-# Optional GA4 funnel analytics
+# Optional browser measurement
 
-The frontend emits `page_view`, `view_item`, `booking_cta_click` and `begin_checkout` only after fresh GA-only consent. It never emits `purchase`. Payment confirmation and purchase delivery belong to the backend's dedicated transactional outbox and independent scheduler.
+HanBuddy uses one optional browser choice for GA4 analytics and Meta advertising measurement. Both providers are off until the backend acknowledges a fresh v3 grant. GA4 purchase remains backend-only, and the browser never emits Meta Pixel `Purchase`.
 
-## Collection is disabled until activation is verified
+## Runtime configuration
 
-Exactly two new **server-only** GA inputs are read: `GA_ENABLED` (only literal `true` enables) and `GA_MEASUREMENT_ID` (format `G-[A-Z0-9]+`). Missing/malformed values fail closed. There are no `NEXT_PUBLIC_*` GA inputs, signing key, extra origin, policy-version or lifetime environment variables. The server layout passes only the public measurement ID and origin to the client; BFF routes validate the same configuration at request time. The locale layout is dynamic, so it reads server configuration at request rendering, not from a baked public environment variable.
+All provider configuration is server-only and is supplied to the running container, not baked into `NEXT_PUBLIC_*` variables.
 
-Existing `HANBUDDY_API_BASE_URL` supplies the BFF backend URL. `APP_ORIGIN` is the existing fixed canonical HTTPS origin in `src/lib/site.ts`, not a new environment variable. Backend trusted origin must match it exactly. Browser origin must also match; local/staging/preview origins stay disabled. Host/forwarded headers cannot override trust. Web Locks, BroadcastChannel and accessible browser choice storage are required for collection. No production configuration was changed.
+| Variable             | Accepted value                                                        | Disabled state                                        |
+| -------------------- | --------------------------------------------------------------------- | ----------------------------------------------------- |
+| `GA4_ORIGIN`         | Exact HTTPS origin without a path, query, fragment, or trailing slash | Invalid origin disables collection and BFF operations |
+| `GA_ENABLED`         | Literal `true`                                                        | Missing or any other value                            |
+| `GA_MEASUREMENT_ID`  | `G-[A-Z0-9]+`                                                         | Missing or malformed ID                               |
+| `META_PIXEL_ENABLED` | Literal `true`                                                        | Missing or any other value                            |
+| `META_PIXEL_ID`      | 5–32 decimal digits, first digit nonzero                              | Missing or malformed ID                               |
 
-There is **no purchase-policy bootstrap/settings query** or public policyVersion requirement. Backend ACCEPT/RESTORE availability still gates collection; a syntactically valid proof is never sufficient. Destination/origin matching, enhanced/history/form/outbound automatic-collection settings, backend availability and retention approvals remain activation gates. They are not replaced by extra frontend flags. Google cookies use Google's defaults: the frontend supplies neither `cookie_expires` nor `cookie_update`. GA API secrets remain backend-only.
+At least one correctly configured provider makes the consent control available. A missing provider stays off without disabling the other provider. The browser origin must exactly match `GA4_ORIGIN`; unsupported local, preview, or staging origins fail closed unless that exact HTTPS origin is explicitly configured. Web Locks, BroadcastChannel, and accessible local choice storage are also required.
 
-Cookie settings (`쿠키 설정` / `Cookie settings`) is beside the footer copyright when the provider has valid configuration and browser support. OFF/missing configuration or an unsupported origin hides the controls; this is not an unconditional footer button. The footer is absent on activity create/edit fullscreen routes. Initial modal is for unanswered choice; settings reopens it after either choice. Reject/close withdraws; acceptance is explicit. The withdrawal BFF remains available independently of collection flags.
+## Unified v3 consent
 
-## Current browser consent contract
+The frontend manages `__Host-hb_measurement_consent` as either `granted.v3.<id>` or `denied.v3.<id>`. The ID is exactly 32 random bytes encoded as 43 unpadded base64url characters. The cookie is JavaScript-readable and is written with `Secure; Path=/; SameSite=Lax`, without `Domain`.
 
-The approved choice applies to this browser, including anonymous detail/CTA and login continuity. It is not an account-wide ledger. The current action-only v2 backend contract is committed; source comparison and local HTTP fixtures verify the frontend wire mapping, not deployment, Java/DB execution or activation. Earlier signed v1, account-consent and policy-bootstrap proposals are historical.
+The local choice-generation marker is stored under `__Host-hb_measurement_decision`; it is not backend proof and contains no account or provider identifier. The retired `__Host-hb_ga_consent` and `__Host-hb_ga_decision` values are deleted and ignored. Neither an old accept nor an old deny is converted, so both providers remain off until the user answers the v3 dialog.
 
-Production uses `cookie-consent.ts`, `cookie-controller.ts` and `cookie-runtime.ts`. The earlier `controller.ts`/`ConsentLinkPort` scaffold remains unbound for historical tests/types; its old lifetime is not a production setting.
+`POST /api/analytics/purchase-consent-proof` forwards only `{action: "ACCEPT" | "RESTORE"}`. RESTORE verifies the current proof and never extends its backend expiry. `POST /api/analytics/purchase-withdrawal` sends the denied form of the same opaque ID and requires `withdrawalAcknowledged: true`. Withdrawal immediately stops new browser sends and best-effort clears GA/Meta cookies and queued browser state; it does not claim provider-side deletion.
 
-- `POST /api/analytics/purchase-consent-proof` forwards only `{action: "ACCEPT" | "RESTORE"}` to the matching backend path. Success is `{proof, expiresAt}` inside the standard result envelope. No policyVersion is sent. Only explicit acceptance can issue a new ID. RESTORE never turns into ACCEPT on failure and does not extend the original grant expiry.
-- `__Host-hb_ga_consent` contains `granted.v2.<id>` or `denied.v2.<id>`. IDs are 32 random bytes in canonical unpadded base64url (43 characters), with no HMAC, expiry or policy embedded. The cookie is Secure, host-only, Path=/, SameSite=Lax and JavaScript-readable. No backend/BFF Set-Cookie is forwarded by analytics-only routes.
-- The choice/generation marker is persisted in localStorage under `__Host-hb_ga_decision`, without an application TTL. This stores only `accept.<generation>` or `denied.<generation>`, never the opaque proof, account identity or GA IDs. It is not server consent evidence. Legacy `hanbuddy.gaConsent.v1` and old decision cookies are not automatically migrated. Browser data deletion requires a new choice; a leftover proof alone cannot restore consent. Deleting only the proof cookie stops eligibility and never triggers automatic issuance.
-- A persisted accepted choice still requires successful RESTORE of the current proof before collection after reload. Server `expiresAt` bounds granted-cookie Max-Age and the in-memory timer. A known ID must retain its original expiry; there is no separate frontend grant cap. Expiry stops collection without changing the stored choice, automatically granting, or acknowledging withdrawal. The user can explicitly change their choice via settings.
-- Explicit ACCEPT with a live granted ID preserves its ID/expiry. A denied ID requires withdrawal ACK before reacceptance and must receive a different ID. Not-yet-revoked denied IDs return409; revoked granted/unknown/expired/internal-policy-invalid IDs return410. Signed v1 is rejected with410 and never automatically migrated; explicit choice may replace legacy local data.
-- `POST /api/analytics/purchase-withdrawal` sends the same ID as denied. Completion requires `withdrawalAcknowledged:true`. Expired and old-policy IDs remain eligible for withdrawal attempts; dates never stand in for ACK. A denied recovery cookie has no application Max-Age/Expires override and remains subject to browser cookie deletion/session handling. Passive retry does not rewrite an unchanged cookie. Failed withdrawal retains the key in memory and the denied cookie where possible, blocking new issuance. If browser data is deleted or all persistence fails, the recovery key can be lost; this is not a deletion acknowledgement.
-- Withdrawal requires exact canonical Origin and `X-Analytics-Request: 1`, even while collection is OFF. Malformed IDs return410, granted IDs403. A canonical unknown denied ID may receive idempotent server ACK without creating a grant. A validated `X-Analytics-Proof` override can retire a late key; BFF projects it into the selected backend cookie only.
-- Eligible application creation and payment continuation forward the selected proof before PG preparation. After success, `PUT /api/applications/me/{applicationId}/analytics-link` forwards only actual `clientId` and optional `sessionId`. No user/payment ID, amount, currency or timestamp is added. Backend `POST /applications/me/{applicationId}/analytics-consent` is an existing protected registration operation; the frontend does not add a retroactive registration flow.
+All analytics BFF requests require JSON, the exact configured `Origin`, and `X-Analytics-Request: 1`. Analytics routes forward only the selected measurement cookie, required authentication, and explicitly projected fields. Provider script elements use `no-referrer`; there is no Meta noscript request. This script-fetch policy does not suppress metadata collected by a loaded provider library.
 
-Terminal outbox states `HTTP_RECEIVED`, `POLICY_BLOCKED`, `EXPIRED`, `INVALID`, `UNKNOWN` and `CORRECTION_REQUIRED` reject late linkage with **409 / ANALYTICS_LINK_CONFLICT**, including identical retries. BFF preserves status/code and uses the fixed message `Analytics request unavailable`. This cannot change the successful booking result or trigger automatic linkage/payment retries, regranting or retroactive registration. UNKNOWN is not success.
+## Browser events
 
-All analytics BFF operations require the original trusted Origin and marker. Only the selected proof cookie is forwarded, plus the existing bearer on protected routes; unrelated cookies and decision storage are excluded. Eligible create/continue responses include a same-origin `X-Analytics-Context` digest of the current access token. Linkage must return that digest; BFF compares it with the current login. The digest is not sent to GA or backend. Auth generations and cross-tab invalidation drop delayed callbacks. Ownership and the originally captured proof remain backend checks; already-dispatched requests cannot be recalled.
+The app owns SPA page views. GA is configured with `send_page_view: false`, and the controller emits one explicit, sanitized `page_view` for each committed eligible pathname. App-supplied GA and Meta event fields use fixed query-free route templates, static titles, and an empty referrer. The app never copies raw URLs, queries, fragments, referrers, tokens, form/contact text, or profile data into custom event parameters.
 
-## Serialization and recovery
+After a fresh v3 grant, the standard Meta Pixel library is explicitly allowed to perform its normal browser-side collection of the current live page URL and referrer, including possible query components. This is a provider-collected exception, not permission for app code to add raw URL/referrer fields. HanBuddy does not emit Meta events on login, OAuth callback, payment success/failure/callback, or any route outside the fixed Meta page allowlist. Meta's allowlist is landing, Explore, onboarding, applications, activity detail, and activity booking; the existing safe-page controller keeps OAuth and payment callback routes ineligible for all app page events.
 
-Web Locks serialize issuance, restore and revocation across cooperating same-origin tabs. Denial writes the shared decision immediately; every send/link checks the live proof and decision. BroadcastChannel stops other tabs and triggers reconciliation. Idempotent cookie writes do not cause restore-message loops. Restoration also occurs on navigation, pageshow, online and visibility return.
+| App event           | Trigger                                                                                                           | GA4                 | Meta                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------- |
+| `page_view`         | One committed eligible pathname after verified consent                                                            | `page_view`         | `PageView`             |
+| `view_item`         | Successfully rendered activity detail, including direct entry                                                     | `view_item`         | `ViewContent`          |
+| `booking_cta_click` | Actual activity-detail booking CTA activation                                                                     | `booking_cta_click` | —                      |
+| `begin_checkout`    | Existing usable booking/payment-continuation trigger                                                              | `begin_checkout`    | `InitiateCheckout`     |
+| `view_item_list`    | Successfully rendered nonempty Explore results, once per page/list version                                        | `view_item_list`    | —                      |
+| `select_item`       | Actual Explore card mouse, touch, or keyboard activation                                                          | `select_item`       | —                      |
+| `sign_up`           | Server-confirmed new Google account, once after bounded account restoration; never OAuth start/login/resubmission | `sign_up`           | `CompleteRegistration` |
+| `section_view`      | Landing section meets the continuous one-second visibility rule                                                   | `section_view`      | —                      |
+| `landing_cta_click` | Actual activation of an allowlisted landing CTA                                                                   | `landing_cta_click` | —                      |
+| `inquiry_click`     | Actual activation of an allowlisted inquiry channel                                                               | `inquiry_click`     | `Contact`              |
 
-A withdrawal waits behind in-flight issuance. A late response cannot activate a denied generation; its opaque ID is retired. Failed revocation retains the key and blocks new issuance. A stale tab cannot overwrite a newer proof with its older failed withdrawal. Recovery handles a denied decision paired with a still-granted cookie. Passive restore does not revoke unchanged acceptance. Long expiries re-arm timer chunks rather than withdrawing at the JavaScript timer limit.
+Explore uses `explore_activities` / `Explore activities` and includes only ordered rendered opaque/numeric IDs and one-based indexes. It does not send titles, prices, or free text.
 
-Pagehide/provider cleanup and departure from allowed routes stop sending and pending tag/identifier callbacks while preserving identity for valid consent. Withdrawal and expiry reset configured GA cookies. No storage/network mechanism can guarantee durable withdrawal if all cookie writes and server communication fail and the page closes; memory-only recovery is lost. Server revocation/expiry and pre-send checks remain essential. Started outbound delivery cannot be retracted.
+The current landing section inventory is:
 
-## Retention and booking availability gates
+1. `hero`
+2. `recommended_experiences`
+3. `booking_steps`
+4. `guest_reviews`
+5. `contact`
 
-GA175-RETENTION-01 remains unresolved for backend revocation/evidence, link/outbox, raw analytics/PII and minimal dedup deletion. The browser-choice lifetime decision does not approve indefinite server retention. Proposed 72-hour, 30-day and 180-day values are not approved defaults. Backend consent expiry and browser cookie expiry do not establish storage deletion policy. No client purchase-dedup ledger is added.
+A normal section must be at least 50% visible for one continuous second. A section taller than the viewport must occupy at least 50% of the viewport for the same duration. Async section replacement, resize, rescroll, and rerender do not duplicate a section within the same page visit.
 
-Frontend identifier lookup/linkage is fire-and-forget and cannot delay or reject the booking result. Missing/invalid consent simply omits capture context. **Backend availability, confirmed by attachment110's comment269 response:** valid pre-PG consent-capture DB failure rolls back preparation before the new PG order call; payment continuation may still have an earlier PG order. A post-approval outbox INSERT failure rolling back internal confirmation is a separate, previously approved same-DB atomicity boundary (comment210). Async frontend linkage does not remove either database write or guarantee no booking impact/zero loss. This is an acknowledged contract limit, not an unanswered atomicity approval question. Backend code is not changed here.
+Landing CTA IDs are `hero_explore` in `hero` and `booking_start` in `booking_steps`; only `explore` and `login` destination categories are sent. Activity-detail booking stays exclusively `booking_cta_click`. Inquiry payloads contain only allowlisted channel, placement, and locale categories; they are never reported as lead generation.
 
-## Google command and session lifecycle
+## Checkout consent registration and attribution
 
-The transport uses the documented `Arguments` command envelope from [Google's data-layer integration](https://developers.google.com/tag-platform/tag-manager/datalayer). Tests check the envelope and synthetic callbacks; they do not execute Google's tag.
+Eligible application creation and payment continuation capture the granted v3 proof before preparation. After a successful preparation, and before the caller can continue to provider confirmation, the frontend performs this best-effort sequence once:
 
-The [gtag API reference](https://developers.google.com/tag-platform/gtagjs/reference) supports `get` for `client_id` and `session_id` and permits an undefined result when a field is unset. [Google's session documentation](https://support.google.com/analytics/answer/9191807?hl=en) associates ID generation with session start. Neither reference guarantees that a session ID is initialized before the first event with `send_page_view: false`.
+1. `POST /api/applications/me/{applicationId}/analytics-consent` with `{}`.
+2. Read a valid GA `clientId` and optional `sessionId`.
+3. `PUT /api/applications/me/{applicationId}/analytics-link` with the validated identifiers and optional Meta attribution.
 
-Browser-event startup is server ID acknowledgement → tag config/load → explicit page view. Neither identifier lookup nor application-owned linkage gates page/detail/CTA events or authenticated usable checkout before application creation. The identifier reader requires a real numeric client ID and omits an unavailable/invalid optional session ID; it is not invoked during event startup. Application linkage validates actual Google identifiers separately; no ID, original timestamp or synthetic bootstrap event may be manufactured. **The actual first-visit/session initialization and anonymous-login-reload continuity are unverified activation gates.** A successful fake `get` callback or retained synthetic cookie is not evidence of real Google behavior. This ordering is covered by synthetic tests only and must be validated under separately authorized runtime verification before enabling collection.
+Meta attribution is read only while v3 consent is live. `_fbp` and `_fbc` must match the documented allowlists. If either is present, `eventSourceUrl` is required and must be an ASCII absolute HTTPS URL of at most 512 bytes, exactly equal to the configured origin plus a canonical fixed analytics route-template path, with no user info, dot segments, query, or fragment. The source URL is taken from the same sanitized route template used for app event fields, never from the raw live URL. The required GA `clientId` is 1–20 digits, a dot, and 1–20 digits. The optional GA `sessionId` follows the backend contract exactly: a positive 1–19 digit decimal with no leading zero.
 
-## Event boundaries
+The BFF also requires the same-origin `X-Analytics-Context` produced by the successful authenticated preparation response. Account changes, withdrawal, or proof-generation changes drop delayed linkage. HTTP 409 and 410 are terminal and are not retried or converted into a new grant. Each optional consent/link request is bounded to three seconds; timeout or any other measurement failure is isolated so it does not turn a successful preparation into a booking failure. Success pages perform no linkage.
 
-| Event               | Trigger                                                                                                             | Exclusions                                                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `page_view`         | Committed allowed route after consent acknowledgement and tag initialization                                        | Prefetch, unknown/sensitive routes, query-only changes, automatic tag page views                                           |
-| `view_item`         | Successfully displayed activity detail                                                                              | Loading/error, cached fetch without rendering, rerender duplication                                                        |
-| `booking_cta_click` | Active reservation link on activity detail, including diversion to login                                            | Disabled/unselected/preview link; direct booking or continuation                                                           |
-| `begin_checkout`    | Usable booking selection after a successful fresh tourist-profile check; usable owned payment continuation response | Loading/error, missing/full selection, unauthorized/redirect state, failed/expired/review-required continuation, rerenders |
+## Operational gates and validation limits
 
-Views and checkout are deduplicated by event and activity within a committed route visit; returning to a route or refreshing is a new visit. Each real CTA activation is counted. Initial/direct booking and continuation may legitimately have no measured CTA. Actions performed before consent are discarded, not queued. The currently displayed eligible page/detail/booking can be measured once after acceptance.
+GA4 Enhanced Measurement automatic browser-history page changes must be disabled by a human in GA administration before activation. This repository cannot change or verify that setting. Meta/GA destination settings, backend deployment, retention, and live receipt are also separate operator checks.
 
-Only public numeric activity IDs are included in item data. Frontend events omit estimated prices and currencies. The backend owns the actual approved purchase amount/currency; it must not substitute a displayed estimate or convert PayPal USD to KRW for the event.
-
-## Privacy and UI
-
-Page fields use fixed route templates and static titles, with an empty referrer. No raw query, fragment, dynamic path segment, page title, form text, API error or profile data is forwarded. The Google script request uses `no-referrer`; config and every event carry safe page context. Advertising consent remains denied and Google Signals/ad personalization are disabled. No Meta tag is installed.
-
-The provider renders a consent dialog and a footer Cookie settings control once operation is eligible. Closing/rejecting never grants. Withdrawal remains accessible through that control. The copy is a purpose-specific draft in English, Korean, Japanese, Simplified Chinese and Traditional Chinese, matching the application's current locales. It makes no legal, advertising or international-transfer claims. Content review remains part of activation readiness.
-
-## Validation limits
-
-Unit/integration tests use a fake tag sink or a synthetic DOM script-load event. They do not contact GA, create users, or perform payments. Command CI does not prove live stream settings, browser network behavior, backend linkage or purchase receipt.
-
-Before activation, the supervising worker must verify the published backend contract, approved backend retention/deletion durations, destination/origin and automatic-collection settings, then exercise EN/KO at 390/768/1024/1440 for detail, CTA/login return, booking, continuation, consent and withdrawal. Browser QA is currently held by the user and has not run. No deployment or live collection is claimed.
+Automated tests use task-local DOM/script stubs and synthetic callbacks. They do not contact GA or Meta, create real accounts, call payment providers, prove provider-side deletion, or prove live collection. Browser QA and real-provider verification are not established by command tests or a build.

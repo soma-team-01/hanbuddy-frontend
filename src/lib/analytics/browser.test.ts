@@ -7,7 +7,7 @@ const policy = {
 };
 const page = {
   page_location: "http://localhost:3000/activities/detail",
-  page_referrer: "",
+  page_referrer: "" as const,
   page_title: "Activity",
 };
 afterEach(() => {

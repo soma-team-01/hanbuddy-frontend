@@ -1,6 +1,15 @@
 import type { AnalyticsBrowserPort } from "./controller";
 import type { CookieConsent } from "./cookie-consent";
-import { eventFields, pageFields, safePage, type FunnelEvent, type SafePage } from "./events";
+import {
+  eventFields,
+  EXPLORE_LIST,
+  pageFields,
+  safePage,
+  type AnalyticsItemId,
+  type FunnelEvent,
+  type MeasurementEvent,
+  type SafePage,
+} from "./events";
 import type { AnalyticsPolicy } from "./policy";
 
 /** Browser events need verified browser consent, never an application or GA identifier lookup. */
@@ -58,6 +67,26 @@ export function createCookieAnalytics({
       if (epoch === generation) stop();
     }
   }
+  function emit(
+    name: MeasurementEvent,
+    pathname: string,
+    input: number | Record<string, unknown>,
+    key: string,
+    repeatable = false,
+  ) {
+    controller.visit(pathname);
+    if (!allowed() || !page || (!repeatable && seen.has(key))) return false;
+    const fields = eventFields(name, page, input, policy.origin);
+    if (!fields) return false;
+    try {
+      browser.send(name, fields);
+      if (!repeatable) seen.add(key);
+      return true;
+    } catch {
+      stop();
+      return false;
+    }
+  }
   const controller = {
     enabled: consent.enabled,
     subscribe(listener: () => void) {
@@ -99,19 +128,74 @@ export function createCookieAnalytics({
       sendPage();
     },
     track(name: FunnelEvent, pathname: string, activityId: number) {
-      this.visit(pathname);
-      if (!allowed() || !page) return false;
-      const fields = eventFields(name, page, activityId, policy.origin),
-        key = `${name}:${activityId}`;
-      if (!fields || (name !== "booking_cta_click" && seen.has(key))) return false;
+      return emit(
+        name,
+        pathname,
+        activityId,
+        `${name}:${activityId}`,
+        name === "booking_cta_click",
+      );
+    },
+    trackList(pathname: string, itemIds: AnalyticsItemId[], version: string) {
+      return emit(
+        "view_item_list",
+        pathname,
+        { ...EXPLORE_LIST, itemIds },
+        `view_item_list:${version}`,
+      );
+    },
+    trackSelection(pathname: string, itemId: AnalyticsItemId, index: number) {
+      return emit(
+        "select_item",
+        pathname,
+        { ...EXPLORE_LIST, itemId, index },
+        `select_item:${itemId}:${index}`,
+        true,
+      );
+    },
+    trackSignup(pathname: string, method: "google") {
+      const signupPage = safePage(pathname);
+      const key = `sign_up:${method}`;
+      if (!allowed() || !signupPage || seen.has(key)) return false;
+      const fields = eventFields("sign_up", signupPage, { method }, policy.origin);
+      if (!fields) return false;
       try {
-        browser.send(name, fields);
-        if (name !== "booking_cta_click") seen.add(key);
+        browser.send("sign_up", fields);
+        seen.add(key);
         return true;
       } catch {
         stop();
         return false;
       }
+    },
+    trackSection(pathname: string, input: { sectionId: string; position: number; locale: string }) {
+      return emit(
+        "section_view",
+        pathname,
+        { ...input, pageType: "landing" },
+        `section_view:${input.sectionId}`,
+      );
+    },
+    trackLandingCta(
+      pathname: string,
+      input: {
+        ctaId: string;
+        sectionId: string;
+        position: number;
+        destinationType: string;
+        locale: string;
+      },
+    ) {
+      return emit("landing_cta_click", pathname, input, `landing_cta_click:${input.ctaId}`, true);
+    },
+    trackInquiry(pathname: string, input: { channel: string; placement: string; locale: string }) {
+      return emit(
+        "inquiry_click",
+        pathname,
+        input,
+        `inquiry_click:${input.placement}:${input.channel}`,
+        true,
+      );
     },
     suspend: () => {
       action++;

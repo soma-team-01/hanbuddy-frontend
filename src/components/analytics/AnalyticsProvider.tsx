@@ -17,13 +17,37 @@ import { getLocaleOrDefault } from "@/i18n/routing";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { AnalyticsController } from "@/lib/analytics/controller";
 import { createCookieRuntime } from "@/lib/analytics/cookie-runtime";
-import type { FunnelEvent } from "@/lib/analytics/events";
+import type { AnalyticsItemId, FunnelEvent } from "@/lib/analytics/events";
 import type { AnalyticsPolicy } from "@/lib/analytics/policy";
 import { consentCopy } from "./consent-copy";
 
 type Controller = AnalyticsController & { isWithdrawalPending?: () => boolean };
+type MeasurementMethods = {
+  trackList(pathname: string, itemIds: AnalyticsItemId[], version: string): boolean;
+  trackSelection(pathname: string, itemId: AnalyticsItemId, index: number): boolean;
+  trackSignup(pathname: string, method: "google"): boolean;
+  trackSection(
+    pathname: string,
+    input: { sectionId: string; position: number; locale: string },
+  ): boolean;
+  trackLandingCta(
+    pathname: string,
+    input: {
+      ctaId: string;
+      sectionId: string;
+      position: number;
+      destinationType: string;
+      locale: string;
+    },
+  ): boolean;
+  trackInquiry(
+    pathname: string,
+    input: { channel: string; placement: string; locale: string },
+  ): boolean;
+};
+type ControllerWithMeasurement = Controller & Partial<MeasurementMethods>;
 const Context = createContext<{
-  controller: Controller | null;
+  controller: ControllerWithMeasurement | null;
   pathname: string;
   revision: number;
 }>({ controller: null, pathname: "", revision: 0 });
@@ -37,7 +61,7 @@ export function AnalyticsProvider({
 }: Readonly<{
   children: ReactNode;
   policy: AnalyticsPolicy | null;
-  controller?: Controller | null;
+  controller?: ControllerWithMeasurement | null;
 }>) {
   const [localController, setLocalController] = useState<{
     controller: Controller;
@@ -193,4 +217,29 @@ export function useAnalyticsView(
 
 export function useAnalyticsEnabled() {
   return Boolean(useContext(Context).controller?.enabled);
+}
+
+export function useMeasurementEvents() {
+  const { controller, pathname, revision } = useContext(Context);
+  return useMemo(() => {
+    void revision;
+    return {
+      trackList: (itemIds: AnalyticsItemId[], version: string) =>
+        controller?.trackList?.(pathname, itemIds, version) ?? false,
+      trackSelection: (itemId: AnalyticsItemId, index: number) =>
+        controller?.trackSelection?.(pathname, itemId, index) ?? false,
+      trackSignup: (method: "google") => controller?.trackSignup?.(pathname, method) ?? false,
+      trackSection: (input: { sectionId: string; position: number; locale: string }) =>
+        controller?.trackSection?.(pathname, input) ?? false,
+      trackLandingCta: (input: {
+        ctaId: string;
+        sectionId: string;
+        position: number;
+        destinationType: string;
+        locale: string;
+      }) => controller?.trackLandingCta?.(pathname, input) ?? false,
+      trackInquiry: (input: { channel: string; placement: string; locale: string }) =>
+        controller?.trackInquiry?.(pathname, input) ?? false,
+    };
+  }, [controller, pathname, revision]);
 }

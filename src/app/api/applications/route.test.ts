@@ -85,7 +85,7 @@ describe("POST /api/applications", () => {
     vi.stubEnv("GA_ENABLED", "true");
     vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
 
-    const proof = `granted.v2.${"A".repeat(43)}`;
+    const proof = `granted.v3.${"A".repeat(43)}`;
     mockedPostBackend.mockResolvedValue({
       status: 201,
       payload: {
@@ -105,14 +105,14 @@ describe("POST /api/applications", () => {
           "content-type": "application/json",
           origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
-          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_ga_consent=${proof}; other=secret`,
+          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_measurement_consent=${proof}; other=secret`,
         },
       }),
     );
 
     expect(mockedPostBackend).toHaveBeenCalledWith("/applications", createRequest, {
       bearerToken: "access-token",
-      cookieHeader: `__Host-hb_ga_consent=${proof}`,
+      cookieHeader: `__Host-hb_measurement_consent=${proof}`,
       origin: "https://hanbuddy.kr",
       analyticsRequest: true,
     });
@@ -144,7 +144,7 @@ describe("POST /api/applications", () => {
         headers: {
           origin: "https://evil.example",
           "x-analytics-request": "1",
-          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_ga_consent=pending.local`,
+          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_measurement_consent=pending.local`,
         },
       }),
     );
@@ -161,7 +161,7 @@ describe("POST /api/applications", () => {
     vi.stubEnv("GA_ENABLED", "true");
     vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
 
-    const proof = `granted.v2.${"A".repeat(43)}`;
+    const proof = `granted.v3.${"A".repeat(43)}`;
     mockedPostBackend.mockResolvedValue({
       status: 200,
       payload: { isSuccess: false, code: "APPLICATION_FAILED", message: "failed" },
@@ -175,7 +175,7 @@ describe("POST /api/applications", () => {
         headers: {
           origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
-          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_ga_consent=${proof}`,
+          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_measurement_consent=${proof}`,
         },
       }),
     );

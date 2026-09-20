@@ -6,7 +6,8 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
 import { MailIcon } from "@/components/ui/icons";
-import { Link } from "@/i18n/navigation";
+import { LandingAnalytics, LandingCtaLink } from "@/components/analytics/LandingAnalytics";
+import { TrackedInquiryLink } from "@/components/analytics/TrackedInquiryLink";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
@@ -86,8 +87,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <LandingAnalytics locale={locale} />
       {/* 모바일: 사진 띠 → 글자 영역 세로 배치. md 이상: 사진을 배경으로 깐 풀블리드 히어로 */}
       <section
+        data-landing-section="hero"
+        data-landing-position="1"
         aria-label={t("visuals.ariaLabel")}
         className="relative isolate flex flex-col overflow-hidden bg-ink text-on-primary md:block md:min-h-[clamp(560px,72svh,760px)]"
       >
@@ -119,15 +123,20 @@ export default async function LandingPage({ params }: LandingPageProps) {
             <p className="mt-6 max-w-2xl text-sm leading-6 text-white/80 sm:text-base sm:leading-7">
               {t("description")}
             </p>
-            <Link
+            <LandingCtaLink
               href="/explore"
+              ctaId="hero_explore"
+              sectionId="hero"
+              position={1}
+              destinationType="explore"
+              locale={locale}
               className="motion-press mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.36)] transition-colors hover:bg-primary-hover"
             >
               {t("exploreExperiences")}
               <span aria-hidden className="ml-3 text-lg leading-none">
                 →
               </span>
-            </Link>
+            </LandingCtaLink>
 
             <div className="mt-12 hidden max-w-3xl gap-4 border-t border-white/25 pt-6 md:grid md:grid-cols-3">
               {HERO_HIGHLIGHTS.map((highlight) => (
@@ -165,6 +174,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
       <RecommendedExperiences />
 
       <section
+        data-landing-section="booking_steps"
+        data-landing-position="3"
         aria-labelledby="booking-title"
         className="border-t border-line-soft bg-canvas-soft py-10 md:py-12"
       >
@@ -206,20 +217,27 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
 
           <div className="mt-7 text-center">
-            <Link
+            <LandingCtaLink
               href={isTourist ? "/explore" : "/login"}
+              ctaId="booking_start"
+              sectionId="booking_steps"
+              position={3}
+              destinationType={isTourist ? "explore" : "login"}
+              locale={locale}
               className="motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
             >
               {isTourist ? t("exploreExperiences") : t("booking.cta")}
               <span aria-hidden className="ml-2 text-lg leading-none">
                 →
               </span>
-            </Link>
+            </LandingCtaLink>
           </div>
         </PageContainer>
       </section>
 
       <section
+        data-landing-section="guest_reviews"
+        data-landing-position="4"
         aria-labelledby="reviews-title"
         className="bg-canvas-soft pt-20 pb-10 md:pt-28 md:pb-16"
       >
@@ -277,6 +295,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
       </section>
 
       <section
+        data-landing-section="contact"
+        data-landing-position="5"
         aria-labelledby="contact-title"
         className="bg-canvas-soft pt-8 pb-4 md:pt-12 md:pb-5"
       >
@@ -294,13 +314,16 @@ export default async function LandingPage({ params }: LandingPageProps) {
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted sm:text-base">
               {t("contact.description")}
             </p>
-            <a
+            <TrackedInquiryLink
+              channel="email"
+              placement="landing_contact"
+              locale={locale}
               href={`mailto:${CONTACT_DETAILS.email}`}
               className="motion-press mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_12px_24px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
             >
               <MailIcon className="size-5" />
               {t("contact.emailLabel")}
-            </a>
+            </TrackedInquiryLink>
             <p className="mt-4 text-sm text-muted">{t("contact.responseNote")}</p>
           </div>
         </PageContainer>

@@ -105,6 +105,8 @@ export default async function LocaleLayout({
                 GA4_ORIGIN: process.env.GA4_ORIGIN,
                 GA_ENABLED: process.env.GA_ENABLED,
                 GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
+                META_PIXEL_ENABLED: process.env.META_PIXEL_ENABLED,
+                META_PIXEL_ID: process.env.META_PIXEL_ID,
               })}
             >
               <RouteShell

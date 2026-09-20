@@ -1,7 +1,9 @@
 import type { AnalyticsPolicy } from "./policy";
 
-export const CONSENT_COOKIE = "__Host-hb_ga_consent";
-export const DECISION_COOKIE = "__Host-hb_ga_decision";
+export const CONSENT_COOKIE = "__Host-hb_measurement_consent";
+export const DECISION_COOKIE = "__Host-hb_measurement_decision";
+export const LEGACY_CONSENT_COOKIE = "__Host-hb_ga_consent";
+export const LEGACY_DECISION_COOKIE = "__Host-hb_ga_decision";
 export interface ConsentCookieJar {
   read(): string;
   write(value: string, maxAgeSeconds?: number): void;
@@ -16,7 +18,7 @@ export type Exclusive = <T>(work: () => Promise<T>) => Promise<T>;
 
 /** Syntax only: 32 random bytes in canonical unpadded base64url; state lives on the server. */
 export function parseProof(value: string) {
-  const match = /^(granted|denied)\.v2\.([A-Za-z0-9_-]{42}[AEIMQUYcgkosw048])$/.exec(value);
+  const match = /^(granted|denied)\.v3\.([A-Za-z0-9_-]{42}[AEIMQUYcgkosw048])$/.exec(value);
   return match ? { value, granted: match[1] === "granted", id: match[2] } : null;
 }
 export const deniedProof = (value: string) => value.replace(/^granted\./, "denied.");
@@ -27,7 +29,14 @@ export function createCookieConsent({
   api,
   exclusive,
   now = Date.now,
-  newId = () => crypto.randomUUID(),
+  newId = () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    let binary = "";
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  },
 }: {
   policy: AnalyticsPolicy | null;
   jar: ConsentCookieJar;
@@ -262,11 +271,9 @@ export function createCookieConsent({
         /* The cookie or server can still enforce denial. */
       }
       const current = read();
-      if (parseProof(current)) {
-        retiring = deniedProof(current);
-      }
+      retiring = parseProof(current) ? deniedProof(current) : `denied.v3.${newId()}`;
       try {
-        write(retiring || "denied");
+        write(retiring);
       } catch {
         /* Keep the key in memory and withdraw below. */
       }

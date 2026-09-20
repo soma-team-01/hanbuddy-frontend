@@ -14,7 +14,7 @@ import {
 } from "@/lib/analytics/policy";
 import { postBackend, type BackendResponse } from "@/lib/auth/backend";
 
-export const ANALYTICS_COOKIE_NAME = "__Host-hb_ga_consent";
+export const ANALYTICS_COOKIE_NAME = "__Host-hb_measurement_consent";
 export const ANALYTICS_CONTEXT_HEADER = "X-Analytics-Context";
 export const ANALYTICS_PROOF_HEADER = "X-Analytics-Proof";
 export const ANALYTICS_REQUEST_HEADER = "X-Analytics-Request";
@@ -25,6 +25,8 @@ export function readServerAnalyticsPolicy() {
     GA4_ORIGIN: process.env.GA4_ORIGIN,
     GA_ENABLED: process.env.GA_ENABLED,
     GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
+    META_PIXEL_ENABLED: process.env.META_PIXEL_ENABLED,
+    META_PIXEL_ID: process.env.META_PIXEL_ID,
   });
 }
 

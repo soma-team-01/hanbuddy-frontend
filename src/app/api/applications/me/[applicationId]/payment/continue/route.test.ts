@@ -97,7 +97,7 @@ describe("POST /api/applications/me/[applicationId]/payment/continue", () => {
     vi.stubEnv("GA_ENABLED", "true");
     vi.stubEnv("GA_MEASUREMENT_ID", "G-TEST");
 
-    const proof = `granted.v2.${"A".repeat(43)}`;
+    const proof = `granted.v3.${"A".repeat(43)}`;
     mockedPostBackend.mockResolvedValue({
       status: 200,
       payload: {
@@ -115,7 +115,7 @@ describe("POST /api/applications/me/[applicationId]/payment/continue", () => {
         headers: {
           origin: "https://hanbuddy.kr",
           "x-analytics-request": "1",
-          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_ga_consent=${proof}; other=secret`,
+          cookie: `${AUTH_COOKIES.accessToken}=access-token; __Host-hb_measurement_consent=${proof}; other=secret`,
         },
       }),
       context,
@@ -126,7 +126,7 @@ describe("POST /api/applications/me/[applicationId]/payment/continue", () => {
       undefined,
       {
         bearerToken: "access-token",
-        cookieHeader: `__Host-hb_ga_consent=${proof}`,
+        cookieHeader: `__Host-hb_measurement_consent=${proof}`,
         origin: "https://hanbuddy.kr",
         analyticsRequest: true,
       },

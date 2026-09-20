@@ -2,6 +2,7 @@ import {
   eventFields,
   pageFields,
   safePage,
+  type AnalyticsFields,
   type AnalyticsEvent,
   type FunnelEvent,
   type SafePage,
@@ -19,10 +20,7 @@ interface ConsentRecord {
 }
 export interface AnalyticsBrowserPort {
   start: (policy: AnalyticsPolicy, page: ReturnType<typeof pageFields>) => Promise<void>;
-  send: (
-    name: AnalyticsEvent,
-    params: ReturnType<typeof pageFields> & { items?: { item_id: string }[] },
-  ) => void;
+  send: (name: AnalyticsEvent, params: AnalyticsFields) => void;
   identifiers: () => Promise<AnalyticsIdentifiers>;
   stop: (resetIdentity?: boolean) => void;
 }

@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { createCookieRuntime } from "./cookie-runtime";
-import { createGoogleBrowser } from "./browser";
+import { createCookieRuntime, invalidateAnalyticsAccount } from "./cookie-runtime";
+import { createMeasurementBrowser } from "./browser";
 vi.mock("./browser", () => ({
-  createGoogleBrowser: vi.fn(() => ({
+  createMeasurementBrowser: vi.fn(() => ({
     start: vi.fn(async () => {}),
     send: vi.fn(),
     stop: vi.fn(),
@@ -14,6 +14,7 @@ const policy = {
   origin: "https://example.test",
 };
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
@@ -38,11 +39,11 @@ function environment(origin = policy.origin) {
     if (String(path).includes("withdrawal"))
       return Response.json({ isSuccess: true, result: { withdrawalAcknowledged: true } });
     const now = Math.floor(Date.now() / 1000),
-      existing = cookies.get("__Host-hb_ga_consent");
+      existing = cookies.get("__Host-hb_measurement_consent");
     return Response.json({
       isSuccess: true,
       result: {
-        proof: existing?.startsWith("granted.") ? existing : `granted.v2.${"A".repeat(43)}`,
+        proof: existing?.startsWith("granted.") ? existing : `granted.v3.${"A".repeat(43)}`,
         expiresAt: new Date((now + 60) * 1000).toISOString(),
       },
     });
@@ -116,7 +117,7 @@ it("two tabs converge without RESTORE broadcast loops and stop on withdrawal", a
   expect(e.issue.mock.calls.length).toBeLessThan(5);
   await a.controller.reject();
   await vi.waitFor(() => expect(b.controller.isActive()).toBe(false));
-  const second = vi.mocked(createGoogleBrowser).mock.results[1].value;
+  const second = vi.mocked(createMeasurementBrowser).mock.results[1].value;
   expect(second.stop).toHaveBeenCalledWith(true);
   a.dispose();
   b.dispose();
@@ -134,6 +135,34 @@ it("unavailable channel construction cannot break the application", () => {
   const r = createCookieRuntime(policy, e.target, e.document);
   expect(r.controller.enabled).toBe(false);
   r.dispose();
+});
+it("bounds account invalidation when optional consent restoration stalls", async () => {
+  vi.stubGlobal(
+    "BroadcastChannel",
+    class {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      postMessage() {}
+      close() {}
+    },
+  );
+  const e = environment();
+  const runtime = createCookieRuntime(policy, e.target, e.document);
+  runtime.controller.visit("/en/onboarding");
+  await runtime.controller.accept();
+  e.issue.mockImplementationOnce(() => new Promise<Response>(() => {}));
+  vi.useFakeTimers();
+  let settled = false;
+
+  const pending = invalidateAnalyticsAccount().then(() => {
+    settled = true;
+  });
+  await vi.advanceTimersByTimeAsync(2999);
+  expect(settled).toBe(false);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(settled).toBe(true);
+
+  await pending;
+  runtime.dispose();
 });
 it("withdraws another active tab even when all cookie writes silently fail", async () => {
   const channels = new Set<{ onmessage: ((e: { data: unknown }) => void) | null }>();
@@ -163,7 +192,7 @@ it("withdraws another active tab even when all cookie writes silently fail", asy
   await a.controller.reject();
   expect(b.controller.isActive()).toBe(false);
   expect(b.controller.track("booking_cta_click", "/en/activities/42", 42)).toBe(false);
-  expect(vi.mocked(createGoogleBrowser).mock.results[1].value.stop).toHaveBeenCalledWith(true);
+  expect(vi.mocked(createMeasurementBrowser).mock.results[1].value.stop).toHaveBeenCalledWith(true);
   a.dispose();
   b.dispose();
 });

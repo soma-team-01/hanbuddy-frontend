@@ -10,7 +10,7 @@ const policy = {
   measurementId: "G-TEST",
   origin: "https://example.test",
 };
-const proof = (id = "1", choice = "granted") => `${choice}.v2.${id.padStart(42, "A")}A`;
+const proof = (id = "1", choice = "granted") => `${choice}.v3.${id.padStart(42, "A")}A`;
 it.each(["\n", "\r", "\r\n", " "])("rejects trailing whitespace in an opaque ID: %j", (suffix) => {
   expect(parseProof(proof() + suffix)).toBeNull();
 });
@@ -143,7 +143,7 @@ describe("opaque cookie consent", () => {
     await accepting;
     await rejecting;
     expect(e.api.withdraw).toHaveBeenCalledWith(proof("1", "denied"));
-    expect(e.jar.read()).toBe(proof("1", "denied"));
+    expect(parseProof(e.jar.read())?.granted).toBe(false);
     expect(a.isGranted()).toBe(false);
     expect(b.isWithdrawalPending()).toBe(false);
   });
@@ -167,7 +167,7 @@ describe("opaque cookie consent", () => {
     await rejecting;
     await b.accept();
     expect(e.api.issue).toHaveBeenCalledTimes(1);
-    expect(e.jar.read()).toBe(proof("1", "denied"));
+    expect(parseProof(e.jar.read())?.granted).toBe(false);
     expect(b.isWithdrawalPending()).toBe(true);
     expect(b.isGranted()).toBe(false);
   });

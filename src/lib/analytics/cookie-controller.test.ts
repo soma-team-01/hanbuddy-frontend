@@ -8,7 +8,7 @@ const policy = {
 function setup() {
   let cookie = "",
     choice = "";
-  const proof = `granted.v2.${"A".repeat(43)}`;
+  const proof = `granted.v3.${"A".repeat(43)}`;
   const consent = createCookieConsent({
     policy,
     jar: {
@@ -86,4 +86,88 @@ it("suspends without deleting identity and restores without repeating a page vie
   expect(browser.stop).toHaveBeenLastCalledWith(false);
   await controller.restore();
   expect(browser.send).toHaveBeenCalledTimes(1);
+});
+
+it("emits exactly one explicit query-free page view per SPA pathname", async () => {
+  const { controller, browser } = setup();
+  controller.visit("/en/explore");
+  await controller.accept();
+  controller.visit("/en/explore");
+  controller.visit("/en/explore");
+  controller.visit("/ko/explore");
+
+  const pageViews = browser.send.mock.calls.filter(([name]) => name === "page_view");
+  expect(pageViews).toHaveLength(2);
+  expect(pageViews.map(([, fields]) => fields)).toEqual([
+    {
+      page_location: "https://example.test/explore",
+      page_referrer: "",
+      page_title: "Explore",
+    },
+    {
+      page_location: "https://example.test/explore",
+      page_referrer: "",
+      page_title: "Explore",
+    },
+  ]);
+  expect(JSON.stringify(pageViews)).not.toMatch(/[?#]|https:\/\/example\.test\/(en|ko)\//);
+});
+
+it("deduplicates a stable Explore list version and section within one route visit", async () => {
+  const { controller, browser } = setup();
+  controller.visit("/en/explore");
+  await controller.accept();
+
+  expect(
+    (
+      controller as never as {
+        trackList: (pathname: string, itemIds: number[], version: string) => boolean;
+      }
+    ).trackList("/en/explore", [42, 7], "42.7"),
+  ).toBe(true);
+  expect(
+    (
+      controller as never as {
+        trackList: (pathname: string, itemIds: number[], version: string) => boolean;
+      }
+    ).trackList("/en/explore", [42, 7], "42.7"),
+  ).toBe(false);
+
+  controller.visit("/en");
+  const landing = controller as never as {
+    trackSection: (
+      pathname: string,
+      input: { sectionId: string; position: number; locale: string },
+    ) => boolean;
+  };
+  expect(landing.trackSection("/en", { sectionId: "hero", position: 1, locale: "en" })).toBe(true);
+  expect(landing.trackSection("/en", { sectionId: "hero", position: 1, locale: "en" })).toBe(false);
+  expect(browser.send.mock.calls.map((call) => call[0])).toEqual([
+    "page_view",
+    "view_item_list",
+    "page_view",
+    "section_view",
+  ]);
+});
+
+it("emits a restored signup against onboarding without changing the current landing page", async () => {
+  const { controller, browser } = setup();
+  controller.visit("/en/onboarding");
+  await controller.accept();
+  controller.visit("/en");
+  browser.send.mockClear();
+
+  const measurement = controller as never as {
+    trackSignup: (pathname: string, method: "google") => boolean;
+    trackSection: (
+      pathname: string,
+      input: { sectionId: string; position: number; locale: string },
+    ) => boolean;
+  };
+  expect(measurement.trackSignup("/en/onboarding", "google")).toBe(true);
+  expect(measurement.trackSection("/en", { sectionId: "hero", position: 1, locale: "en" })).toBe(
+    true,
+  );
+
+  expect(browser.send.mock.calls.map(([name]) => name)).toEqual(["sign_up", "section_view"]);
 });

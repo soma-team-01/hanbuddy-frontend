@@ -11,7 +11,7 @@ vi.mock("@/lib/auth/backend", async (importOriginal) => {
 const mockedPostBackend = vi.mocked(postBackend);
 afterEach(() => vi.unstubAllEnvs());
 const opaqueId = "A".repeat(43);
-const grantedProof = `granted.v2.${opaqueId}`;
+const grantedProof = `granted.v3.${opaqueId}`;
 
 function enablePolicy() {
   vi.stubEnv("NODE_ENV", "production");
@@ -26,7 +26,7 @@ function request(action: string, cookie?: string) {
       "content-type": "application/json",
       origin: "https://hanbuddy.kr",
       "x-analytics-request": "1",
-      ...(cookie ? { cookie: `__Host-hb_ga_consent=${cookie}; unrelated=secret` } : {}),
+      ...(cookie ? { cookie: `__Host-hb_measurement_consent=${cookie}; unrelated=secret` } : {}),
     },
     body: JSON.stringify({ action, ignored: "not-forwarded" }),
   });
@@ -97,7 +97,7 @@ describe("POST /api/analytics/purchase-consent-proof", () => {
       "/analytics/purchase-consent-proof",
       { action: "RESTORE" },
       {
-        cookieHeader: `__Host-hb_ga_consent=${grantedProof}`,
+        cookieHeader: `__Host-hb_measurement_consent=${grantedProof}`,
         origin: "https://hanbuddy.kr",
         analyticsRequest: true,
       },
@@ -139,7 +139,7 @@ describe("POST /api/analytics/purchase-consent-proof", () => {
   });
 });
 
-it.each(["granted.v1.legacy", `granted.v2.${"A".repeat(42)}B`])(
+it.each(["granted.v1.legacy", `granted.v3.${"A".repeat(42)}B`])(
   "rejects legacy/noncanonical IDs without automatic migration: %s",
   async (proof) => {
     enablePolicy();
@@ -149,7 +149,7 @@ it.each(["granted.v1.legacy", `granted.v2.${"A".repeat(42)}B`])(
     expect(mockedPostBackend).not.toHaveBeenCalled();
   },
 );
-it("forwards denied v2 on explicit ACCEPT so the server enforces revocation ACK", async () => {
+it("forwards denied v3 on explicit ACCEPT so the server enforces revocation ACK", async () => {
   enablePolicy();
   mockedPostBackend.mockReset();
   mockedPostBackend.mockResolvedValue({
@@ -164,7 +164,7 @@ it("forwards denied v2 on explicit ACCEPT so the server enforces revocation ACK"
     "/analytics/purchase-consent-proof",
     { action: "ACCEPT" },
     {
-      cookieHeader: `__Host-hb_ga_consent=${denied}`,
+      cookieHeader: `__Host-hb_measurement_consent=${denied}`,
       origin: "https://hanbuddy.kr",
       analyticsRequest: true,
     },

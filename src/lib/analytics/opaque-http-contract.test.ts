@@ -13,7 +13,7 @@ import { postBackend } from "@/lib/auth/backend";
 // HTTP wire fixture from backend 66c8b29 PurchaseConsentController/Service.
 // This executes real frontend fetch/BFF code, not Java, SQL, PG or Google.
 const origin = "https://hanbuddy.kr";
-const proof = `granted.v2.${"A".repeat(43)}`;
+const proof = `granted.v3.${"A".repeat(43)}`;
 const denied = proof.replace("granted", "denied");
 const expiresAt = "2099-01-01T00:00:00Z"; // synthetic, never an approved lifetime
 const token = "synthetic-owner";
@@ -63,7 +63,7 @@ function request(path: string, body?: object, selected = proof, method = "POST")
       origin,
       "Content-Type": "application/json",
       "X-Analytics-Request": "1",
-      cookie: `hanbuddy_access_token=${token}; __Host-hb_ga_consent=${selected}; unrelated=discard`,
+      cookie: `hanbuddy_access_token=${token}; __Host-hb_measurement_consent=${selected}; unrelated=discard`,
       "X-Analytics-Context": analyticsContextForToken(token),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -79,7 +79,7 @@ function expectCall(
   expect(calls.at(-1)).toMatchObject({ method, path, body });
   expect(calls.at(-1)?.headers).toMatchObject({ origin, "x-analytics-request": "1" });
   expect(calls.at(-1)?.headers.cookie).toBe(
-    selected ? `__Host-hb_ga_consent=${selected}` : undefined,
+    selected ? `__Host-hb_measurement_consent=${selected}` : undefined,
   );
   expect(calls.at(-1)?.headers.authorization).toBe(authenticated ? `Bearer ${token}` : undefined);
 }
@@ -126,7 +126,7 @@ it("preserves capture before create/continue and actual currency; register stays
     {},
     {
       bearerToken: token,
-      cookieHeader: `__Host-hb_ga_consent=${proof}`,
+      cookieHeader: `__Host-hb_measurement_consent=${proof}`,
       origin,
       analyticsRequest: true,
     },

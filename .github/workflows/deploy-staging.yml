@@ -81,3 +81,5 @@ jobs:
           ga4-origin: ${{ vars.GA4_ORIGIN }}
           ga-enabled: ${{ vars.GA_ENABLED }}
           ga-measurement-id: ${{ vars.GA_MEASUREMENT_ID }}
+          meta-pixel-enabled: ${{ vars.META_PIXEL_ENABLED }}
+          meta-pixel-id: ${{ vars.META_PIXEL_ID }}

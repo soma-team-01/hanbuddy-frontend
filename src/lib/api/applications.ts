@@ -103,7 +103,7 @@ export async function createApplication(
     },
   );
   if (result.status === "success" && ticket)
-    void ticket.complete(result.payment.application.applicationId, context);
+    await ticket.complete(result.payment.application.applicationId, context);
   return result;
 }
 
@@ -130,7 +130,7 @@ export async function continueApplicationPayment(
     },
   );
   if (result.status === "success" && ticket)
-    void ticket.complete(result.payment.application.applicationId, context);
+    await ticket.complete(result.payment.application.applicationId, context);
   return result;
 }
 

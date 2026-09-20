@@ -23,7 +23,7 @@ function environment(failGoogle = false) {
     },
   } as unknown as Document;
   const target = {
-    location: { origin, hostname: "example.test" },
+    location: new URL(`${origin}/en/explore?campaign=safe`),
   } as unknown as Window;
   return { target, document, scripts };
 }

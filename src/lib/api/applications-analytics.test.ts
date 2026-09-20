@@ -11,7 +11,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 it.each(["create", "continue"])(
-  "%s captures before payment and completes consent/linkage before returning",
+  "%s starts consent/linkage without delaying the successful payment return",
   async (kind) => {
     let finish!: () => void;
     const complete = vi.fn(
@@ -45,13 +45,49 @@ it.each(["create", "continue"])(
       settled = true;
     });
     await vi.waitFor(() => expect(complete).toHaveBeenCalledWith(42, "a".repeat(64)));
-    expect(settled).toBe(false);
-    finish();
+    await Promise.resolve();
+    expect(settled).toBe(true);
     const result = await operation;
     expect(result.status).toBe("success");
     expect(request.mock.calls[0][1]?.headers).toEqual(
       expect.objectContaining({ "X-Analytics-Request": "1" }),
     );
+    finish();
+    await expect(complete.mock.results[0].value).resolves.toBeUndefined();
+  },
+);
+
+it.each(["create", "continue"])(
+  "%s stays successful when detached analytics completion rejects",
+  async (kind) => {
+    const complete = vi.fn(async () => {
+      throw new Error("analytics failed");
+    });
+    vi.mocked(captureAnalyticsPayment).mockReturnValue({
+      headers: { "X-Analytics-Request": "1" },
+      complete,
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () =>
+        Response.json(
+          { isSuccess: true, result: { application: { applicationId: 42 } } },
+          { headers: { "X-Analytics-Context": "a".repeat(64) } },
+        ),
+      ),
+    );
+
+    const result =
+      kind === "create"
+        ? await createApplication(
+            { activityScheduleId: 1, guestCount: 1, refundPolicyAgreed: true },
+            "EN",
+            "TOSS",
+          )
+        : await continueApplicationPayment(42, "EN", "TOSS");
+
+    expect(result.status).toBe("success");
+    expect(complete).toHaveBeenCalledWith(42, "a".repeat(64));
   },
 );
 it("normal payment remains usable when analytics is unavailable", async () => {

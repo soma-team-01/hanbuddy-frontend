@@ -1,5 +1,5 @@
 import type { AnalyticsBrowserPort } from "./controller";
-import type { AnalyticsEvent, AnalyticsFields } from "./events";
+import { pageFields, safePage, type AnalyticsEvent, type AnalyticsFields } from "./events";
 
 type MetaQueue = ((...args: unknown[]) => void) & {
   callMethod?: (...args: unknown[]) => void;
@@ -33,6 +33,12 @@ function isMetaPage(fields: AnalyticsFields, origin: string) {
   } catch {
     return false;
   }
+}
+
+function isCurrentMetaPage(target: Window, fields: AnalyticsFields, origin: string) {
+  if (target.location.origin !== origin || !isMetaPage(fields, origin)) return false;
+  const livePage = safePage(target.location.pathname);
+  return Boolean(livePage && pageFields(livePage, origin).page_location === fields.page_location);
 }
 
 const metaEvent = (name: AnalyticsEvent, fields: AnalyticsFields): [string, object?] | null => {
@@ -77,8 +83,8 @@ export function createMetaBrowser(
   };
 
   return {
-    async start(policy) {
-      if (target.location.origin !== policy.origin || !policy.pixelId)
+    async start(policy, page) {
+      if (!policy.pixelId || !isCurrentMetaPage(target, page, policy.origin))
         throw new Error("Analytics origin disabled");
       pixelId = policy.pixelId;
       pixelOrigin = policy.origin;
@@ -124,7 +130,7 @@ export function createMetaBrowser(
       });
     },
     send(name, fields) {
-      if (!ready || !isMetaPage(fields, pixelOrigin)) return;
+      if (!ready || !isCurrentMetaPage(target, fields, pixelOrigin)) return;
       const mapped = metaEvent(name, fields);
       if (!mapped) return;
       const [event, params] = mapped;

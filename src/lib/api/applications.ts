@@ -40,6 +40,23 @@ const DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE = "예약 일정 중복 여부�
 const DEFAULT_CANCELLATION_QUOTE_ERROR_MESSAGE = "취소 예상 금액을 불러오지 못했습니다.";
 const DEFAULT_APPLIED_ACTIVITY_ERROR_MESSAGE = "신청한 활동 상세를 불러오지 못했습니다.";
 
+type AnalyticsPaymentTicket = NonNullable<ReturnType<typeof captureAnalyticsPayment>>;
+
+function startAnalyticsCompletion(
+  ticket: AnalyticsPaymentTicket,
+  applicationId: number,
+  context: string | null,
+) {
+  try {
+    const completion = ticket.complete(applicationId, context);
+    void completion.catch(() => {
+      /* Optional analytics must not reject a successful payment preparation. */
+    });
+  } catch {
+    /* A synchronous analytics failure must not reject payment preparation either. */
+  }
+}
+
 export async function getAppliedActivityDetail(
   applicationId: number | string,
   language: ContentLanguage,
@@ -103,7 +120,7 @@ export async function createApplication(
     },
   );
   if (result.status === "success" && ticket)
-    await ticket.complete(result.payment.application.applicationId, context);
+    startAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
   return result;
 }
 
@@ -130,7 +147,7 @@ export async function continueApplicationPayment(
     },
   );
   if (result.status === "success" && ticket)
-    await ticket.complete(result.payment.application.applicationId, context);
+    startAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
   return result;
 }
 

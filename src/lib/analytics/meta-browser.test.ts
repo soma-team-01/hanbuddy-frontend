@@ -20,7 +20,9 @@ it("is inert until start and maps only approved app events without Purchase", as
     push?: (...args: unknown[]) => void;
     queue?: unknown[][];
   };
-  const target = { location: { origin: policy.origin, search: "" } } as unknown as Window;
+  const target = {
+    location: new URL(`${policy.origin}/en/activities/42?campaign=safe#details`),
+  } as unknown as Window;
   const document = {
     cookie: "",
     createElement: () => ({ dataset: {}, remove: vi.fn() }) as unknown as HTMLScriptElement,
@@ -94,7 +96,7 @@ it("revokes queued Meta consent and clears only Meta cookies on withdrawal", asy
     head: { appendChild: (script: HTMLScriptElement) => script.onload?.(new Event("load")) },
   } as unknown as Document;
   const target = {
-    location: { origin: policy.origin, hostname: "example.test" },
+    location: new URL(`${policy.origin}/en/activities/42`),
   } as unknown as Window;
   const browser = createMetaBrowser(target, document, policy.pixelId);
   await browser.start(policy, page);
@@ -108,8 +110,8 @@ it("revokes queued Meta consent and clears only Meta cookies on withdrawal", asy
   expect(writes.every((value) => !value.startsWith("_ga"))).toBe(true);
 });
 
-it.each(["/login", "/auth/google/callback", "/payments/success"])(
-  "does not emit Meta events on sensitive route %s",
+it.each(["/en/login", "/auth/google/callback", "/en/payments/success"])(
+  "does not emit Meta events after the live browser moves to sensitive route %s",
   async (path) => {
     const delivered: unknown[][] = [];
     type PixelQueue = ((...args: unknown[]) => void) & {
@@ -117,7 +119,7 @@ it.each(["/login", "/auth/google/callback", "/payments/success"])(
       queue?: unknown[][];
     };
     const target = {
-      location: { origin: policy.origin, hostname: "example.test" },
+      location: new URL(`${policy.origin}/en/activities/42?campaign=safe`),
     } as unknown as Window;
     const document = {
       cookie: "",
@@ -134,9 +136,37 @@ it.each(["/login", "/auth/google/callback", "/payments/success"])(
     } as unknown as Document;
     const browser = createMetaBrowser(target, document, policy.pixelId);
     await browser.start(policy, page);
+    delivered.length = 0;
 
-    browser.send("page_view", { ...page, page_location: `${policy.origin}${path}` });
+    target.location = new URL(`${policy.origin}${path}?token=secret#callback`) as never;
+    browser.send("page_view", page);
 
     expect(delivered.filter(([command]) => command === "track")).toEqual([]);
+  },
+);
+
+it.each([
+  ["/en/login?next=%2Fen%2Fexplore", `${policy.origin}/login`],
+  ["/auth/google/callback?code=secret", page.page_location],
+  ["/en/payments/success?paymentKey=secret", page.page_location],
+  ["/en/private?token=secret", page.page_location],
+] as const)(
+  "does not initialize Meta on sensitive or unknown live route %s",
+  async (path, pageLocation) => {
+    const appendChild = vi.fn((script: HTMLScriptElement) => script.onload?.(new Event("load")));
+    const target = { location: new URL(`${policy.origin}${path}`) } as unknown as Window;
+    const document = {
+      cookie: "",
+      createElement: () => ({ dataset: {}, remove: vi.fn() }) as unknown as HTMLScriptElement,
+      head: { appendChild },
+    } as unknown as Document;
+    const browser = createMetaBrowser(target, document, policy.pixelId);
+
+    await expect(browser.start(policy, { ...page, page_location: pageLocation })).rejects.toThrow(
+      "Analytics origin disabled",
+    );
+
+    expect(appendChild).not.toHaveBeenCalled();
+    expect((target as Window & { fbq?: unknown }).fbq).toBeUndefined();
   },
 );

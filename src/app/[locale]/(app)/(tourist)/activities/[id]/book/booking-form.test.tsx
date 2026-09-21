@@ -145,6 +145,17 @@ async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
 }
 
 describe("BookingForm", () => {
+  it("passes selected date and time labels to the inquiry when startAt is absent", () => {
+    renderWithQueryClient(
+      <BookingForm activity={activity} initialSessionId="101" paymentProviderMode="PAYPAL" />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("2026-07-20 10:00 (KST)");
+    expect(dialog).not.toHaveTextContent("[Select a date and time]");
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+  });
   it("fills current selections before consent without making a booking or exposing private requests", () => {
     renderWithQueryClient(
       <BookingForm

@@ -1316,6 +1316,9 @@
       "restrictions": "e.g., Comfortable shoes are recommended"
     },
     "photos": {
+      "reorderHint": "Change the cover photo or drag photos to reorder them.",
+      "move": "Move photo {index}",
+      "moved": "Photo moved to position {position} of {count}",
       "upload": "Add experience photos",
       "hint": "JPG, PNG, or WebP · at least 3, up to 10",
       "label": "Upload experience photos",

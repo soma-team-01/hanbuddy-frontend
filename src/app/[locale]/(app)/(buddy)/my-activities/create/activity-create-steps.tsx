@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -48,6 +48,7 @@ import {
   type ScheduleDraft,
 } from "./activity-create-wizard";
 import { getPresetLabelVariants, getPresetLineSet } from "./preset-labels";
+import { usePhotoSort } from "./use-photo-sort";
 
 type Translator = ReturnType<typeof useTranslations<"CreateActivity">>;
 
@@ -207,14 +208,31 @@ export function PhotoStep({
   onAdd,
   onRemove,
   onCover,
+  onReorder,
   t,
 }: Readonly<{
   photos: PhotoDraft[];
   onAdd: (files: FileList | null) => void;
   onRemove: (id: string) => void;
   onCover: (id: string) => void;
+  onReorder: (id: string, targetId: string) => void;
   t: Translator;
 }>) {
+  const helpId = useId();
+  const {
+    gridRef,
+    preview,
+    position,
+    cancel,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onKeyDown,
+  } = usePhotoSort(
+    photos.map((photo) => photo.id),
+    onReorder,
+  );
+  const draggedPhoto = photos.find((photo) => photo.id === preview?.id);
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4 text-sm">
@@ -225,15 +243,41 @@ export function PhotoStep({
           <span className="text-muted">{t("photos.minimum")}</span>
         ) : null}
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <p id={helpId} className="text-sm leading-6 text-muted">
+        {t("photos.reorderHint")}
+      </p>
+      <p role="status" className="sr-only">
+        {position === null ? "" : t("photos.moved", { position, count: photos.length })}
+      </p>
+      {preview && draggedPhoto ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed z-50 h-16 w-20 overflow-hidden rounded-xl border-2 border-primary shadow-lg"
+          style={{
+            left: `clamp(8px, ${preview.x + 12}px, calc(100vw - 88px))`,
+            top: `clamp(8px, ${preview.y + 12}px, calc(100vh - 72px))`,
+          }}
+        >
+          <Image
+            src={draggedPhoto.previewUrl}
+            alt=""
+            fill
+            sizes="80px"
+            unoptimized
+            className="object-cover"
+          />
+        </div>
+      ) : null}
+      <div ref={gridRef} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {photos.map((photo, index) => (
           <div
             key={photo.id}
+            data-photo-id={photo.id}
             className={`group relative aspect-[4/3] overflow-hidden rounded-2xl border-2 bg-white transition ${
               index === 0
                 ? "border-primary shadow-[0_8px_24px_rgba(209,63,50,0.12)]"
                 : "border-transparent"
-            }`}
+            } ${preview?.id === photo.id ? "opacity-50" : ""} ${preview?.targetId === photo.id ? "ring-2 ring-primary ring-offset-2" : ""}`}
           >
             <Image
               src={photo.previewUrl}
@@ -241,10 +285,25 @@ export function PhotoStep({
               fill
               sizes="(max-width: 640px) 50vw, 240px"
               unoptimized
+              draggable={false}
               className="object-cover"
             />
+            <button
+              type="button"
+              aria-label={t("photos.move", { index: index + 1 })}
+              aria-describedby={helpId}
+              aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
+              onPointerDown={(event) => onPointerDown(event, photo.id)}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={cancel}
+              onLostPointerCapture={cancel}
+              onKeyDown={(event) => onKeyDown(event, photo.id)}
+              onContextMenu={(event) => event.preventDefault()}
+              className="absolute inset-0 cursor-grab touch-auto select-none [-webkit-touch-callout:none] focus-visible:outline-3 focus-visible:-outline-offset-4 focus-visible:outline-primary active:cursor-grabbing"
+            />
             {index === 0 ? (
-              <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink">
+              <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink">
                 {t("photos.cover")}
               </span>
             ) : (

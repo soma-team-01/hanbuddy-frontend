@@ -52,6 +52,17 @@ export interface PhotoDraft {
   existingKey?: string;
 }
 
+/** Move a photo without recreating its File, preview URL, or existing upload key. */
+export function reorderPhotos(photos: PhotoDraft[], id: string, targetId: string): PhotoDraft[] {
+  const from = photos.findIndex((photo) => photo.id === id);
+  const to = photos.findIndex((photo) => photo.id === targetId);
+  if (from < 0 || to < 0 || from === to) return photos;
+  const next = [...photos];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
+
 export interface ItineraryDraft {
   id: string;
   title: string;

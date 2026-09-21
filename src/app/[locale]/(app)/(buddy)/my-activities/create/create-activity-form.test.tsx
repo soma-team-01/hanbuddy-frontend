@@ -123,7 +123,7 @@ function clickEditorNext() {
   fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Next" }));
 }
 
-async function fillStepsUntilSchedule() {
+async function fillStepsUntilSchedule(reorder = false) {
   fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
     target: { value: "I have guided friends through this market for years." },
   });
@@ -147,6 +147,11 @@ async function fillStepsUntilSchedule() {
   fireEvent.change(screen.getByLabelText("Upload experience photos"), {
     target: { files: photos },
   });
+  if (reorder) {
+    const handle = screen.getByRole("button", { name: "Move photo 3" });
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+  }
   clickNext();
 
   fireEvent.click(screen.getByRole("button", { name: "Add an activity" }));
@@ -183,8 +188,8 @@ async function fillStepsUntilSchedule() {
   expect(screen.getByRole("heading", { name: "Set dates and start times" })).toBeInTheDocument();
 }
 
-async function completeAllStepsUntilReview() {
-  await fillStepsUntilSchedule();
+async function completeAllStepsUntilReview(reorder = false) {
+  await fillStepsUntilSchedule(reorder);
 
   fireEvent.click(screen.getByRole("button", { name: "Next month" }));
   fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
@@ -781,6 +786,24 @@ describe("CreateActivityForm", () => {
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities");
   });
 
+  it("uploads reordered photos in display order when creating an activity", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await completeAllStepsUntilReview(true);
+    fireEvent.click(screen.getByRole("button", { name: "Register experience" }));
+    await waitFor(() => expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1));
+    expect(mockedUploadActivityImageSet.mock.calls[0][0].map((file: File) => file.name)).toEqual([
+      "market-2.webp",
+      "market-0.webp",
+      "market-1.webp",
+      "market-0.webp",
+    ]);
+    expect(mockedCreateMyActivity.mock.calls[0][0].imageKeys).toEqual([
+      "activities/2026/08/07/key-0.webp",
+      "activities/2026/08/07/key-1.webp",
+      "activities/2026/08/07/key-2.webp",
+    ]);
+  });
+
   it("keeps the review open and shows an error message when registration fails", async () => {
     mockedCreateMyActivity.mockResolvedValue({
       status: "error",
@@ -1024,7 +1047,7 @@ describe("CreateActivityForm", () => {
     expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
   });
 
-  it("uploads only newly added photos in edit mode and appends their keys", async () => {
+  it("uploads only new photos in edit mode and preserves their reordered position among existing keys", async () => {
     const detail = buildEditDetail();
     mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
 
@@ -1039,6 +1062,8 @@ describe("CreateActivityForm", () => {
     fireEvent.change(screen.getByLabelText("Upload experience photos"), {
       target: { files: [new File([new Uint8Array([9])], "new-shot.webp", { type: "image/webp" })] },
     });
+    const handle = screen.getByRole("button", { name: "Move photo 4" });
+    for (let move = 0; move < 3; move += 1) fireEvent.keyDown(handle, { key: "ArrowLeft" });
 
     for (let step = 0; step < 9; step += 1) {
       clickNext();
@@ -1055,10 +1080,10 @@ describe("CreateActivityForm", () => {
 
     const [, request] = mockedUpdateMyActivity.mock.calls[0];
     expect(request.imageKeys).toEqual([
+      "activities/2026/08/07/key-0.webp",
       "activities/cover.webp",
       "activities/two.webp",
       "activities/three.webp",
-      "activities/2026/08/07/key-0.webp",
     ]);
     expect(request.itineraries[0].imageKey).toBe("activities/itinerary.webp");
   });

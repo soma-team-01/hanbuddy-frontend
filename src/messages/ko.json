@@ -1316,6 +1316,9 @@
       "restrictions": "예: 편한 신발을 신고 와 주세요"
     },
     "photos": {
+      "reorderHint": "대표 사진을 변경하거나, 사진을 드래그해 순서를 바꾸세요.",
+      "move": "사진 {index} 순서 이동",
+      "moved": "사진이 전체 {count}장 중 {position}번째로 이동했습니다",
       "upload": "체험 사진 추가",
       "hint": "JPG, PNG, WebP · 최소 3장, 최대 10장",
       "label": "체험 사진 업로드",

@@ -1316,6 +1316,9 @@
       "restrictions": "例如，建議穿著舒適的鞋子"
     },
     "photos": {
+      "reorderHint": "更換封面照片，或拖曳照片調整順序。",
+      "move": "移動第{index}張照片",
+      "moved": "照片已移至第{position}張，共{count}張",
       "upload": "新增體驗照片",
       "hint": "JPG、PNG 或 WebP · 至少 3 個，最多 10 個",
       "label": "上傳體驗照片",

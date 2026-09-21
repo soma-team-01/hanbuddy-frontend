@@ -1316,6 +1316,9 @@
       "restrictions": "例: 歩きやすい靴をお勧めします"
     },
     "photos": {
+      "reorderHint": "カバー写真を変更したり、写真をドラッグして並べ替えたりできます。",
+      "move": "写真{index}を移動",
+      "moved": "写真を全{count}枚中{position}番目に移動しました",
       "upload": "体験写真を追加",
       "hint": "JPG、PNG、または WebP · 少なくとも 3、最大 10",
       "label": "体験写真をアップロードする",

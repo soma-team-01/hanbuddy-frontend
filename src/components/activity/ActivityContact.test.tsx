@@ -34,6 +34,9 @@ describe("ActivityContact", () => {
       "right-[calc(100%+0.75rem)]",
       "top-1/2",
       "origin-right",
+      "border-primary/40",
+      "after:border-primary/40",
+      "bg-canvas-soft",
     );
     expect(trigger).toHaveAccessibleDescription(en.ActivityContact.teaser);
     act(() => vi.advanceTimersByTime(2999));

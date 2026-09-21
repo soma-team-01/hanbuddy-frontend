@@ -23,7 +23,7 @@ export function ActivityContact() {
         {showTeaser && (
           <p
             id={teaserId}
-            className="activity-contact-teaser absolute top-1/2 right-[calc(100%+0.75rem)] w-60 max-w-[calc(100vw-6rem)] origin-right -translate-y-1/2 rounded-2xl border border-line-soft bg-canvas-soft px-4 py-3 text-sm leading-5 font-medium text-ink shadow-lg after:absolute after:top-1/2 after:-right-1.5 after:size-3 after:-translate-y-1/2 after:rotate-45 after:border-t after:border-r after:border-line-soft after:bg-canvas-soft"
+            className="activity-contact-teaser absolute top-1/2 right-[calc(100%+0.75rem)] w-60 max-w-[calc(100vw-6rem)] origin-right -translate-y-1/2 rounded-2xl border border-primary/40 bg-canvas-soft px-4 py-3 text-sm leading-5 font-medium text-ink shadow-lg after:absolute after:top-1/2 after:-right-1.5 after:size-3 after:-translate-y-1/2 after:rotate-45 after:border-t after:border-r after:border-primary/40 after:bg-canvas-soft"
           >
             {t("teaser")}
           </p>

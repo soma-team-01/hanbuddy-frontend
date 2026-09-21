@@ -1293,7 +1293,7 @@
       "hostIntroductionCharacters": "{count, number}/{max, number}자 · 최소 {min, number}자",
       "experienceNameCharacters": "{count, number}/{max, number}자",
       "experienceDescriptionCharacters": "{count, number}/{max, number}자 · 최소 {min, number}자",
-      "experienceNameEnglish": "활동 제목은 자동 번역되지 않습니다. 반드시 영어로 작성해 주세요.",
+      "experienceNameEnglish": "활동 제목은 자동 번역되지 않습니다. <emphasis>반드시 영어로</emphasis> 작성해 주세요.",
       "fieldCharacters": "{count} / {max}자",
       "listLimits": "{count} / {max}개 · 항목당 최대 {length}자"
     },

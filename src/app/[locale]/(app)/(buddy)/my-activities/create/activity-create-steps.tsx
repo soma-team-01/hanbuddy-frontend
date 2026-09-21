@@ -148,7 +148,9 @@ export function NameStep({
         className="w-full border-b-2 border-line-strong bg-transparent px-2 py-2 text-center font-display text-2xl font-bold tracking-tight text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none sm:text-4xl"
       />
       <p id="experience-name-guidance" className="mt-4 text-sm leading-6 text-muted">
-        {t("hints.experienceNameEnglish")}
+        {t.rich("hints.experienceNameEnglish", {
+          emphasis: (chunks) => <strong className="font-bold text-primary">{chunks}</strong>,
+        })}
       </p>
       <p className="mt-2 text-sm text-muted tabular-nums">
         {t("hints.experienceNameCharacters", {

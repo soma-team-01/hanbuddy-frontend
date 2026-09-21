@@ -1293,7 +1293,7 @@
       "hostIntroductionCharacters": "{count, number}/{max, number} 字符·最少 {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} 人物",
       "experienceDescriptionCharacters": "{count, number}/{max, number} 字符·最少 {min, number}",
-      "experienceNameEnglish": "活动标题不会自动翻译，请务必使用英语填写。",
+      "experienceNameEnglish": "活动标题不会自动翻译，请<emphasis>务必使用英语</emphasis>填写。",
       "fieldCharacters": "{count} / {max}字",
       "listLimits": "{count} / {max}项 · 每项最多{length}字"
     },

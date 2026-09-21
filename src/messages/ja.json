@@ -1293,7 +1293,7 @@
       "hostIntroductionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} キャラクター",
       "experienceDescriptionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}",
-      "experienceNameEnglish": "アクティビティ名は自動翻訳されません。必ず英語で入力してください。",
+      "experienceNameEnglish": "アクティビティ名は自動翻訳されません。<emphasis>必ず英語で</emphasis>入力してください。",
       "fieldCharacters": "{count} / {max}文字",
       "listLimits": "{count} / {max}項目 · 各項目は{length}文字まで"
     },

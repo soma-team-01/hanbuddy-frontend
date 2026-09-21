@@ -48,6 +48,17 @@ function ListHarness({
 }
 
 describe("activity input limits", () => {
+  it.each([
+    ["ko", "반드시 영어로"],
+    ["en", "in English"],
+  ] as const)("emphasizes the English title requirement in %s", (locale, text) => {
+    renderWithIntl(<Fields />, { locale });
+    const emphasis = screen.getByText(text, { exact: true });
+    expect(emphasis.tagName).toBe("STRONG");
+    expect(emphasis).toHaveClass("font-bold", "text-primary");
+    expect(emphasis.closest("p")).toHaveClass("text-muted");
+  });
+
   it("uses expanded input limits and accessible English-only title guidance", () => {
     renderWithIntl(<Fields />);
     const title = screen.getByPlaceholderText("e.g., Cheer at a Korean Baseball Night");

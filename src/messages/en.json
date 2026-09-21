@@ -1293,7 +1293,7 @@
       "hostIntroductionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} characters",
       "experienceDescriptionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
-      "experienceNameEnglish": "Activity titles are not automatically translated. Please write the title in English.",
+      "experienceNameEnglish": "Activity titles are not automatically translated. Please write the title <emphasis>in English</emphasis>.",
       "fieldCharacters": "{count} / {max} characters",
       "listLimits": "{count} / {max} items · Up to {length} characters per item"
     },

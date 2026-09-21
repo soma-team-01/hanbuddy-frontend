@@ -66,9 +66,43 @@ describe("ActivityDetailView", () => {
         unoptimizedImages
       />,
     );
-    if (isTranslated) expect(screen.getByText("Automatically translated")).toBeInTheDocument();
-    else expect(screen.queryByText("Automatically translated")).not.toBeInTheDocument();
+    if (isTranslated)
+      expect(
+        screen.getByText("Activity details have been automatically translated."),
+      ).toBeInTheDocument();
+    else
+      expect(
+        screen.queryByText("Activity details have been automatically translated."),
+      ).not.toBeInTheDocument();
   });
+  it.each([
+    ["en", "Activity details have been automatically translated."],
+    ["ko", "활동 소개가 자동 번역되었습니다."],
+  ] as const)(
+    "places the translation notice before the location and title in %s",
+    (locale, label) => {
+      renderWithIntl(
+        <ActivityDetailView
+          activity={{ ...activity, isTranslated: true }}
+          preview
+          bottomBar="inline"
+          unoptimizedImages
+        />,
+        { locale },
+      );
+      const notice = screen.getByText(label);
+      const location = screen.getByText(activity.district, { exact: true });
+      expect(
+        notice.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        notice.compareDocumentPosition(screen.getByRole("heading", { level: 1 })) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(notice.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+      expect(notice.querySelector("svg rect")).not.toBeNull();
+    },
+  );
   it("keeps the guest host profile content visible while preview actions stay disabled", () => {
     renderWithIntl(
       <ActivityDetailView activity={activity} preview bottomBar="inline" unoptimizedImages />,

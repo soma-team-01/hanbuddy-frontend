@@ -18,7 +18,7 @@ import {
   ClockIcon,
   MapPinIcon,
   XIcon,
-  GlobeIcon,
+  TranslationIcon,
 } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
@@ -375,6 +375,12 @@ export function ActivityDetailView({
 
             <div className="flex min-w-0 flex-col gap-10 py-8 [overflow-wrap:anywhere] md:py-10">
               <section className="flex flex-col gap-3">
+                {activity.isTranslated === true && (
+                  <p className="mb-1 flex items-center gap-1.5 text-xs leading-5 text-muted">
+                    <TranslationIcon className="size-4 shrink-0" />
+                    {t("autoTranslated")}
+                  </p>
+                )}
                 <p className="font-display text-xs font-bold tracking-[0.14em] text-primary uppercase">
                   {activity.categoryLabel
                     ? `${activity.district} · ${activity.categoryLabel}`
@@ -408,12 +414,6 @@ export function ActivityDetailView({
                 <p className="max-w-2xl leading-7 whitespace-pre-line text-muted">
                   {activity.description}
                 </p>
-                {activity.isTranslated === true && (
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
-                    <GlobeIcon aria-hidden className="size-3.5 shrink-0" />
-                    {t("autoTranslated")}
-                  </p>
-                )}
               </section>
 
               <section className="grid gap-4 border-t border-line-soft pt-6 md:grid-cols-2 xl:grid-cols-3">

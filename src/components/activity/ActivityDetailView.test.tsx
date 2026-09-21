@@ -2,6 +2,11 @@ import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { Activity } from "@/types/activity";
+import en from "@/messages/en.json";
+import ko from "@/messages/ko.json";
+import ja from "@/messages/ja.json";
+import zhHans from "@/messages/zh-Hans.json";
+import zhHant from "@/messages/zh-Hant.json";
 
 vi.mock("@/components/activity/HostProfileDialog", () => ({
   HostProfileDialog: ({
@@ -66,21 +71,18 @@ describe("ActivityDetailView", () => {
         unoptimizedImages
       />,
     );
-    if (isTranslated)
-      expect(
-        screen.getByText("Activity details have been automatically translated."),
-      ).toBeInTheDocument();
-    else
-      expect(
-        screen.queryByText("Activity details have been automatically translated."),
-      ).not.toBeInTheDocument();
+    if (isTranslated) expect(screen.getByText("Auto-translated")).toBeInTheDocument();
+    else expect(screen.queryByText("Auto-translated")).not.toBeInTheDocument();
   });
   it.each([
-    ["en", "Activity details have been automatically translated."],
-    ["ko", "활동 소개가 자동 번역되었습니다."],
+    ["en", "Auto-translated", en],
+    ["ko", "자동 번역됨", ko],
+    ["ja", "自動翻訳済み", ja],
+    ["zh-Hans", "已自动翻译", zhHans],
+    ["zh-Hant", "已自動翻譯", zhHant],
   ] as const)(
     "places the translation notice before the location and title in %s",
-    (locale, label) => {
+    (locale, label, messages) => {
       renderWithIntl(
         <ActivityDetailView
           activity={{ ...activity, isTranslated: true }}
@@ -88,7 +90,7 @@ describe("ActivityDetailView", () => {
           bottomBar="inline"
           unoptimizedImages
         />,
-        { locale },
+        { locale, messages },
       );
       const notice = screen.getByText(label);
       const location = screen.getByText(activity.district, { exact: true });

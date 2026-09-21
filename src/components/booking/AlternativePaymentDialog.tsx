@@ -39,7 +39,7 @@ export function AlternativePaymentDialog({
     result: "copied" | "failed";
   } | null>(null);
   const schedule = booking?.startAt ? getSeoulDateTimeParts(booking.startAt) : null;
-  const email = profile.isSuccess && !profile.isFetching ? profile.data.email : undefined;
+  const email = profile.data?.email;
   const message = t("message", {
     email: email?.trim() || t("missingValue"),
     buddy: booking?.buddyName.trim() || t("missingValue"),

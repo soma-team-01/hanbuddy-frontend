@@ -9,6 +9,8 @@ import zhHant from "@/messages/zh-Hant.json";
 import { renderWithQueryClient as renderWithIntl } from "@/test/render-with-query-client";
 import { getMyProfile } from "@/lib/api/users";
 import type { MyProfile } from "@/types/user";
+import { createQueryClient } from "@/lib/query/client";
+import { userKeys } from "@/lib/query/users";
 import { AlternativePaymentDialog } from "./AlternativePaymentDialog";
 
 const analytics = vi.hoisted(() => ({ trackInquiry: vi.fn() }));
@@ -38,6 +40,26 @@ describe("AlternativePaymentDialog", () => {
     vi.mocked(getMyProfile).mockImplementation(() => new Promise(() => {}));
   });
   afterEach(() => vi.unstubAllGlobals());
+  it("keeps the cached email in copied and WhatsApp messages while refreshing the profile", async () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(userKeys.me(), { email: "cached@example.test" });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    renderWithIntl(<AlternativePaymentDialog booking={booking} onClose={vi.fn()} />, {
+      queryClient,
+    });
+    await waitFor(() => expect(getMyProfile).toHaveBeenCalled());
+    expect(queryClient.isFetching({ queryKey: userKeys.me() })).toBe(1);
+    const message = screen.getByTestId("payment-inquiry-message").textContent;
+    expect(message).toContain("cached@example.test");
+    fireEvent.click(screen.getByRole("button", { name: en.AlternativePayment.copy }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(message));
+    expect(
+      new URL(
+        screen.getByRole("link", { name: "WhatsApp" }).getAttribute("href")!,
+      ).searchParams.get("text"),
+    ).toBe(message);
+  });
   it("loads the account email and keeps copied text and WhatsApp in sync with current selections", async () => {
     vi.mocked(getMyProfile).mockResolvedValue({
       status: "success",

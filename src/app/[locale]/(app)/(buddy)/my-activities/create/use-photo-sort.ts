@@ -4,6 +4,9 @@ import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } fr
 
 type Drag = { id: string; pointerId: number; x: number; y: number; active: boolean };
 type Preview = { id: string; targetId: string | null; x: number; y: number };
+type MoveAnnouncement = { position: number; count: number };
+const ANNOUNCEMENT_DELAY_MS = 50;
+const ANNOUNCEMENT_DURATION_MS = 3000;
 const KEY_DIRECTIONS: Readonly<Record<string, number>> = {
   ArrowLeft: -1,
   ArrowUp: -1,
@@ -21,8 +24,9 @@ export function usePhotoSort(ids: string[], onReorder: (id: string, targetId: st
   const gridRef = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const announcementTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
-  const [position, setPosition] = useState<number | null>(null);
+  const [announcement, setAnnouncement] = useState<MoveAnnouncement | null>(null);
   const isDragging = preview !== null;
 
   // The wizard scrolls its main panel, not the window. Keep scrolling while held
@@ -60,6 +64,7 @@ export function usePhotoSort(ids: string[], onReorder: (id: string, targetId: st
     return () => {
       grid?.removeEventListener("touchmove", preventDragScroll);
       if (timer.current) clearTimeout(timer.current);
+      if (announcementTimer.current) clearTimeout(announcementTimer.current);
     };
   }, []);
 
@@ -77,7 +82,17 @@ export function usePhotoSort(ids: string[], onReorder: (id: string, targetId: st
   function move(id: string, targetId: string) {
     if (id === targetId || !ids.includes(id) || !ids.includes(targetId)) return;
     onReorder(id, targetId);
-    setPosition(ids.indexOf(targetId) + 1);
+    const nextAnnouncement = { position: ids.indexOf(targetId) + 1, count: ids.length };
+    if (announcementTimer.current) clearTimeout(announcementTimer.current);
+    // Empty the live region in a separate render so identical moves announce again.
+    setAnnouncement(null);
+    announcementTimer.current = setTimeout(() => {
+      setAnnouncement(nextAnnouncement);
+      announcementTimer.current = setTimeout(() => {
+        setAnnouncement(null);
+        announcementTimer.current = null;
+      }, ANNOUNCEMENT_DURATION_MS);
+    }, ANNOUNCEMENT_DELAY_MS);
   }
 
   function onPointerDown(event: PointerEvent<HTMLButtonElement>, id: string) {
@@ -138,7 +153,7 @@ export function usePhotoSort(ids: string[], onReorder: (id: string, targetId: st
   return {
     gridRef,
     preview,
-    position,
+    announcement,
     cancel,
     onPointerDown,
     onPointerMove,

@@ -222,7 +222,7 @@ export function PhotoStep({
   const {
     gridRef,
     preview,
-    position,
+    announcement,
     cancel,
     onPointerDown,
     onPointerMove,
@@ -247,7 +247,7 @@ export function PhotoStep({
         {t("photos.reorderHint")}
       </p>
       <p role="status" className="sr-only">
-        {position === null ? "" : t("photos.moved", { position, count: photos.length })}
+        {announcement === null ? "" : t("photos.moved", announcement)}
       </p>
       {preview && draggedPhoto ? (
         <div

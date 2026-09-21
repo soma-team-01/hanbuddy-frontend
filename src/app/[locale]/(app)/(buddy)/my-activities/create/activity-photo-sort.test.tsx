@@ -131,6 +131,7 @@ describe("photo reordering", () => {
   );
 
   it("supports keyboard ordering and boundaries while keeping focus", () => {
+    vi.useFakeTimers();
     renderWithIntl(<Harness />);
     const source = handle(2);
     source.focus();
@@ -141,7 +142,48 @@ describe("photo reordering", () => {
     expect(screen.getByAltText("Experience photo 1")).toHaveAttribute("src", "/b.jpg");
     fireEvent.keyDown(source, { key: "ArrowRight" });
     expect(screen.getByAltText("Experience photo 2")).toHaveAttribute("src", "/b.jpg");
+    act(() => vi.advanceTimersByTime(50));
     expect(screen.getByRole("status")).toHaveTextContent("Photo moved to position 2 of 3");
+  });
+
+  it("captures the count at movement time without replaying the announcement on deletion, then clears it", () => {
+    vi.useFakeTimers();
+    renderWithIntl(<Harness />);
+    fireEvent.keyDown(handle(2), { key: "ArrowRight" });
+    act(() => vi.advanceTimersByTime(50));
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Photo moved to position 3 of 3");
+    fireEvent.click(screen.getByRole("button", { name: "Remove experience photo 1" }));
+    expect(status).toHaveTextContent("Photo moved to position 3 of 3");
+    act(() => vi.advanceTimersByTime(3000));
+    expect(status).toBeEmptyDOMElement();
+    fireEvent.click(screen.getByRole("button", { name: "Remove experience photo 1" }));
+    expect(status).toBeEmptyDOMElement();
+  });
+
+  it("clears the live region before announcing another move to the same position", () => {
+    vi.useFakeTimers();
+    renderWithIntl(<Harness />);
+    fireEvent.keyDown(handle(1), { key: "ArrowRight" });
+    act(() => vi.advanceTimersByTime(50));
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Photo moved to position 2 of 3");
+    fireEvent.keyDown(handle(3), { key: "ArrowLeft" });
+    expect(status).toBeEmptyDOMElement();
+    act(() => vi.advanceTimersByTime(50));
+    expect(status).toHaveTextContent("Photo moved to position 2 of 3");
+  });
+
+  it("announces only the latest rapid move and clears pending timers when unmounted", () => {
+    vi.useFakeTimers();
+    const view = renderWithIntl(<Harness />);
+    const source = handle(1);
+    fireEvent.keyDown(source, { key: "ArrowRight" });
+    fireEvent.keyDown(source, { key: "ArrowRight" });
+    act(() => vi.advanceTimersByTime(50));
+    expect(screen.getByRole("status")).toHaveTextContent("Photo moved to position 3 of 3");
+    view.unmount();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("scrolls the wizard panel while a photo is held near its edge and stops after cancellation", () => {

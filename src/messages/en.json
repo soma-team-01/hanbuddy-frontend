@@ -729,6 +729,13 @@
     "noneForRating": "No reviews with this rating yet.",
     "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
   },
+  "ActivityContact": {
+    "teaser": "Have a question? Feel free to ask us anytime!",
+    "trigger": "Contact us",
+    "title": "Have more questions?",
+    "description": "Feel free to reach out to the HanBuddy team through your preferred channel.",
+    "hint": "Share the activity name or page link so we can help with your question."
+  },
   "AlternativePayment": {
     "trigger": "Need another payment method?",
     "title": "Prefer another payment method?",

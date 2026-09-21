@@ -347,6 +347,32 @@ button:not(:disabled),
   }
 }
 
+@keyframes activity-contact-teaser {
+  0% {
+    opacity: 0;
+    transform: translateX(8px) scale(0.96);
+  }
+  5%,
+  92% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(6px) scale(0.97);
+  }
+}
+
+.activity-contact-teaser {
+  animation: activity-contact-teaser 3s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-contact-teaser {
+    animation: none;
+  }
+}
+
 @keyframes motion-dialog-in {
   from {
     opacity: 0;

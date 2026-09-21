@@ -729,6 +729,13 @@
     "noneForRating": "尚未有此评级的评论。",
     "ratingWithCountAria": "额定 {rating} 满分 5 来自 {count, plural, one {# 评论} other {# 评论}}"
   },
+  "ActivityContact": {
+    "teaser": "有任何疑问，欢迎随时联系我们！",
+    "trigger": "联系我们",
+    "title": "还有疑问吗？",
+    "description": "欢迎随时通过您方便的方式联系HanBuddy运营团队。",
+    "hint": "请附上活动名称或页面链接，方便我们为您解答。"
+  },
   "AlternativePayment": {
     "trigger": "需要其他付款方式？",
     "title": "想使用其他付款方式？",

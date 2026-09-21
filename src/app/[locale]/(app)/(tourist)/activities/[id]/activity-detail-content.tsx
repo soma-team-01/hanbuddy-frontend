@@ -5,6 +5,7 @@ import { useAnalyticsView, useFunnelEvent } from "@/components/analytics/Analyti
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
+import { ActivityContact } from "@/components/activity/ActivityContact";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { mapTouristActivityDetailToActivity } from "@/lib/api/activity-view";
@@ -88,6 +89,7 @@ export function ActivityDetailContent({
         onBookingClick={() => track("booking_cta_click", Number(activityId))}
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />
+      <ActivityContact />
     </div>
   );
 }

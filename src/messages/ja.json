@@ -729,6 +729,13 @@
     "noneForRating": "この評価のレビューはまだありません。",
     "ratingWithCountAria": "評価済み {rating} 5つ中から {count, plural, one {# レビュー} other {# レビュー}}"
   },
+  "ActivityContact": {
+    "teaser": "気になることがあれば、いつでもお気軽にご相談ください！",
+    "trigger": "お問い合わせ",
+    "title": "ご不明な点はありますか？",
+    "description": "ご都合のよい連絡方法で、いつでもHanBuddy運営チームにお問い合わせください。",
+    "hint": "アクティビティ名やページのリンクを添えていただくと、スムーズにご案内できます。"
+  },
   "AlternativePayment": {
     "trigger": "他のお支払い方法をご希望ですか？",
     "title": "他のお支払い方法について",

@@ -1,3 +1,5 @@
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { readAnalyticsPolicy } from "@/lib/analytics/policy";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
@@ -98,20 +100,30 @@ export default async function LocaleLayout({
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
           <QueryProvider>
-            <RouteShell
-              sessionRole={role}
-              header={
-                <SiteHeader
-                  role={role}
-                  authenticated={authenticated}
-                  mayHaveSession={mayHaveSession}
-                />
-              }
-              footer={<SiteFooter locale={locale} role={role} />}
+            <AnalyticsProvider
+              policy={readAnalyticsPolicy({
+                GA4_ORIGIN: process.env.GA4_ORIGIN,
+                GA_ENABLED: process.env.GA_ENABLED,
+                GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
+                META_PIXEL_ENABLED: process.env.META_PIXEL_ENABLED,
+                META_PIXEL_ID: process.env.META_PIXEL_ID,
+              })}
             >
-              {children}
-            </RouteShell>
-            {policy}
+              <RouteShell
+                sessionRole={role}
+                header={
+                  <SiteHeader
+                    role={role}
+                    authenticated={authenticated}
+                    mayHaveSession={mayHaveSession}
+                  />
+                }
+                footer={<SiteFooter locale={locale} role={role} />}
+              >
+                {children}
+              </RouteShell>
+              {policy}
+            </AnalyticsProvider>
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

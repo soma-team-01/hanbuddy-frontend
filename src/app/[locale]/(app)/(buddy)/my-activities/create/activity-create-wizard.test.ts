@@ -263,6 +263,17 @@ describe("activity creation wizard", () => {
       ],
     };
 
+    it("retains cancelled schedules without making them editable or reopening them", () => {
+      const draft = buildDraftFromMyActivityDetail({
+        ...detail,
+        schedules: detail.schedules.map((schedule) => ({ ...schedule, status: "CANCELLED" })),
+      });
+      expect(draft.schedules).toEqual([]);
+      expect(draft.retainedScheduleStartAts).toEqual(
+        detail.schedules.map((schedule) => schedule.startAt),
+      );
+    });
+
     it("keeps past schedules out of editing but remembers them for submission", () => {
       const draft = buildDraftFromMyActivityDetail(detail);
 

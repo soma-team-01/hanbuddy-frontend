@@ -40,7 +40,10 @@ export function myApplicationsQueryOptions(language: ContentLanguage) {
     queryFn: async () => unwrapApiResult(await getMyApplications(language), "applications"),
     // 선점이 만료된 결제 대기 신청은 백엔드 목록에서 빠지므로 주기적으로 다시 불러온다
     refetchInterval: (query) =>
-      query.state.data?.some((application) => application.status === "PENDING_PAYMENT")
+      query.state.data?.some(
+        (application) =>
+          application.status === "PENDING_PAYMENT" || application.status === "CONFIRMED",
+      )
         ? PENDING_PAYMENT_REFRESH_MS
         : false,
     refetchOnWindowFocus: true,

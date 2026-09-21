@@ -9,6 +9,11 @@ import zhHant from "@/messages/zh-Hant.json";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { AlternativePaymentDialog } from "./AlternativePaymentDialog";
 
+const analytics = vi.hoisted(() => ({ trackInquiry: vi.fn() }));
+vi.mock("@/components/analytics/AnalyticsProvider", () => ({
+  useMeasurementEvents: () => analytics,
+}));
+
 function Harness() {
   const [open, setOpen] = useState(false);
   return (
@@ -67,6 +72,19 @@ describe("AlternativePaymentDialog", () => {
     expect(screen.getByText(en.AlternativePayment.exampleHint)).toBeInTheDocument();
     expect(screen.getByRole("dialog")).toHaveTextContent("HanBuddy sign-up email");
     expect(screen.getByRole("dialog")).toHaveTextContent("Korean bank account");
+    analytics.trackInquiry.mockClear();
+    fireEvent.click(screen.getByRole("link", { name: "WhatsApp" }));
+    fireEvent.click(screen.getByRole("link", { name: "Email" }));
+    expect(analytics.trackInquiry).toHaveBeenNthCalledWith(1, {
+      channel: "whatsapp",
+      placement: "payment_inquiry",
+      locale: "en",
+    });
+    expect(analytics.trackInquiry).toHaveBeenNthCalledWith(2, {
+      channel: "email",
+      placement: "payment_inquiry",
+      locale: "en",
+    });
   });
 
   it.each([

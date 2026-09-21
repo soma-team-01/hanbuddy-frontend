@@ -1,3 +1,5 @@
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { createTestAnalytics } from "@/test/analytics";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -20,6 +22,7 @@ const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => routerMock,
+  usePathname: () => "/en/applications",
 }));
 
 vi.mock("@/lib/api/applications", () => ({
@@ -345,6 +348,39 @@ describe("ApplicationsContent", () => {
     ]);
   });
 
+  it("refreshes a pending refund result without offering another cancellation or claiming completion", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [confirmedApplication],
+    });
+    mockedCancelMyApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "PAYMENT_RECOVERY409_PENDING",
+        status: 409,
+        details: null,
+        backendMessage: "internal recovery details",
+      }),
+    });
+    renderWithQueryClient(<ApplicationsContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
+    expect(
+      await screen.findByText(
+        "We’re checking the refund result. Please do not submit another cancellation or payment.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Cancelled", { exact: true })).not.toBeInTheDocument();
+    expect(mockedCancelMyApplication).toHaveBeenCalledTimes(1);
+    expect(mockedContinueApplicationPayment).not.toHaveBeenCalled();
+    expect(mockedGetMyApplications.mock.calls.length).toBeGreaterThan(1);
+  });
+
   it("passes a cancellation API error to the dialog for localized rendering", async () => {
     mockedGetMyApplications.mockResolvedValue({
       status: "success",
@@ -402,3 +438,82 @@ describe("ApplicationsContent", () => {
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });
+
+it("measures usable continuation without a detail CTA or frontend purchase", async () => {
+  const { controller, browser } = createTestAnalytics();
+  controller.visit("/en/applications");
+  await controller.accept();
+  const pending = { ...confirmedApplication, status: "PENDING_PAYMENT" as const };
+  mockedGetMyApplications.mockResolvedValue({ status: "success", applications: [pending] });
+  mockedContinueApplicationPayment.mockResolvedValue({
+    status: "success",
+    payment: {
+      application: pending,
+      paymentId: 7,
+      paymentProvider: "TOSS",
+      paymentAttemptId: 12,
+      providerOrderId: "synthetic",
+      approvalUrl: null,
+      orderNumber: "synthetic",
+      clientKey: "test",
+      orderName: "synthetic",
+      paymentStatus: "CREATED",
+      paymentAmount: 90000,
+      paymentCurrency: "KRW",
+      orderExpiresAt: new Date(Date.now() + 60000).toISOString(),
+    },
+  });
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <ApplicationsContent />
+    </AnalyticsProvider>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Pay with Toss Payments" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continue payment with Toss Payments" }));
+  await waitFor(() =>
+    expect(browser.send.mock.calls.filter((c) => c[0] === "begin_checkout")).toHaveLength(1),
+  );
+  expect(browser.send.mock.calls.map((c) => c[0])).toEqual(["page_view", "begin_checkout"]);
+});
+it.each(["error", "expired", "review", "malformed"])(
+  "does not measure %s continuation",
+  async (kind) => {
+    const { controller, browser } = createTestAnalytics();
+    controller.visit("/en/applications");
+    await controller.accept();
+    const pending = { ...confirmedApplication, status: "PENDING_PAYMENT" as const };
+    mockedGetMyApplications.mockResolvedValue({ status: "success", applications: [pending] });
+    if (kind === "error")
+      mockedContinueApplicationPayment.mockRejectedValue(new Error("synthetic error"));
+    else
+      mockedContinueApplicationPayment.mockResolvedValue({
+        status: "success",
+        payment: {
+          application: pending,
+          paymentId: 7,
+          paymentProvider: "TOSS",
+          paymentAttemptId: 12,
+          providerOrderId: "synthetic",
+          approvalUrl: null,
+          orderNumber: "synthetic",
+          clientKey: kind === "malformed" ? null : "test",
+          orderName: "synthetic",
+          paymentStatus: kind === "review" ? "REVIEW_REQUIRED" : "CREATED",
+          paymentAmount: 90000,
+          paymentCurrency: "KRW",
+          orderExpiresAt: new Date(kind === "expired" ? 0 : Date.now() + 60000).toISOString(),
+        },
+      });
+    renderWithQueryClient(
+      <AnalyticsProvider policy={null} controller={controller}>
+        <ApplicationsContent />
+      </AnalyticsProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Pay with Toss Payments" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue payment with Toss Payments" }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(browser.send.mock.calls.map((c) => c[0])).toEqual(["page_view"]);
+  },
+);

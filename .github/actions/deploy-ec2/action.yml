@@ -11,6 +11,26 @@ inputs:
   registry:
     description: ECR registry returned by amazon-ecr-login
     required: true
+  ga4-origin:
+    description: Optional server runtime origin (defaults to production)
+    required: false
+    default: ""
+  ga-enabled:
+    description: Optional GA runtime enable flag
+    required: false
+    default: ""
+  ga-measurement-id:
+    description: Optional GA runtime measurement ID
+    required: false
+    default: ""
+  meta-pixel-enabled:
+    description: Optional Meta Pixel runtime enable flag
+    required: false
+    default: ""
+  meta-pixel-id:
+    description: Optional Meta Pixel ID
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -63,17 +83,33 @@ runs:
 
     - name: Deploy to EC2
       shell: bash
+      env:
+        GA4_ORIGIN: ${{ inputs.ga4-origin }}
+        GA_ENABLED: ${{ inputs.ga-enabled }}
+        GA_MEASUREMENT_ID: ${{ inputs.ga-measurement-id }}
+        META_PIXEL_ENABLED: ${{ inputs.meta-pixel-enabled }}
+        META_PIXEL_ID: ${{ inputs.meta-pixel-id }}
       run: |
         runtime_environment_json="$(jq -n \
+          --arg ga4_origin "${GA4_ORIGIN}" \
           --arg api "${HANBUDDY_API_BASE_URL}" \
           --arg review_login_enabled "${REVIEW_LOGIN_ENABLED}" \
           --arg client_id "${GOOGLE_CLIENT_ID}" \
           --arg redirect_uri "${GOOGLE_REDIRECT_URI}" \
+          --arg ga_enabled "${GA_ENABLED}" \
+          --arg ga_measurement_id "${GA_MEASUREMENT_ID}" \
+          --arg meta_pixel_enabled "${META_PIXEL_ENABLED}" \
+          --arg meta_pixel_id "${META_PIXEL_ID}" \
           '{
+            GA4_ORIGIN: $ga4_origin,
             HANBUDDY_API_BASE_URL: $api,
             REVIEW_LOGIN_ENABLED: $review_login_enabled,
             GOOGLE_CLIENT_ID: $client_id,
-            GOOGLE_REDIRECT_URI: $redirect_uri
+            GOOGLE_REDIRECT_URI: $redirect_uri,
+            GA_ENABLED: $ga_enabled,
+            GA_MEASUREMENT_ID: $ga_measurement_id,
+            META_PIXEL_ENABLED: $meta_pixel_enabled,
+            META_PIXEL_ID: $meta_pixel_id
           }')"
         export EC2_RUNTIME_ENVIRONMENT_JSON="${runtime_environment_json}"
         bash infra/aws/deploy-ec2.sh

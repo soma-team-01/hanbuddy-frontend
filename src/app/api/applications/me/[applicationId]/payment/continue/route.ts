@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { badRequestResponse, proxyAuthenticatedPost } from "@/app/api/_utils/authenticated-backend";
+import { badRequestResponse } from "@/app/api/_utils/authenticated-backend";
+import { proxyApplicationPost } from "@/app/api/_utils/analytics-bff";
 import { appendRequestedContentLanguage } from "@/app/api/_utils/content-language";
 import { isPaymentProvider, withPaymentProvider } from "@/lib/payment-provider";
 import type { PaymentReadyResponse } from "@/types/application";
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest, context: PaymentRouteContext) {
     ? withPaymentProvider(`/applications/me/${applicationId}/payment/continue`, paymentProvider)
     : `/applications/me/${applicationId}/payment/continue`;
 
-  return proxyAuthenticatedPost<undefined, PaymentReadyResponse>(
+  return proxyApplicationPost<undefined, PaymentReadyResponse>(
     request,
     appendRequestedContentLanguage(request, backendPath),
     undefined,

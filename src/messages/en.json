@@ -29,6 +29,35 @@
       "bankInvalid": "Check the bank and account number."
     }
   },
+  "ScheduleCancellation": {
+    "refundAmount": "Refund amount",
+    "buddyCancellationReason": "Cancellation reason from your buddy",
+    "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
+    "more": "Schedule options",
+    "cancelAction": "Cancel schedule",
+    "cancelled": "Cancelled schedule",
+    "title": "Cancel this schedule?",
+    "irreversible": "Cancellation prevents reopening and new bookings. Refunds are automatic. Please notify all applicants of the cancellation.",
+    "keep": "Keep schedule",
+    "confirm": "Cancel schedule",
+    "pending": "Cancelling…",
+    "reason": "Cancellation reason",
+    "reasonHint": "Guests will see this reason. Do not include personal information or internal notes.",
+    "success": "Schedule cancelled. Refunds will be processed in sequence.",
+    "loadError": "Unable to load the latest cancellation status.",
+    "requestError": "The cancellation could not be confirmed. Check the status before trying again.",
+    "uncertain": "We could not confirm whether the cancellation was saved. Check the status before submitting again.",
+    "retry": "Check status",
+    "started": "This schedule has already started and cannot be cancelled.",
+    "statuses": {
+      "QUEUED": "Refund processing",
+      "DISPATCHED": "Refund processing",
+      "REVIEW_REQUIRED": "Refund under review. This may take some time.",
+      "COMPLETED": "Refund completed",
+      "NO_PAYMENT": "Cancelled · No confirmed payment found",
+      "EXCLUDED": "Original cancellation and refund policy applies"
+    }
+  },
   "Common": {
     "cancel": "Cancel",
     "close": "Close",
@@ -37,6 +66,10 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
+    "scheduleCancellationReason": "Enter a public cancellation reason of 1–255 characters.",
+    "scheduleCancellationStarted": "A schedule that has already started cannot be cancelled.",
+    "scheduleNotCancelled": "No schedule cancellation was found. Refresh your applications to check the latest status.",
     "signupSourceInvalid": "Check your signup source and details.",
     "signupBankAccountInvalid": "Check the bank and account number.",
     "authenticationRequired": "Please sign in again to continue.",
@@ -655,6 +688,7 @@
     "viewHostProfile": "View {name}'s profile"
   },
   "Reviews": {
+    "anonymous": "Anonymous",
     "sectionTitle": "Reviews",
     "ratingAria": "Rated {rating} out of 5",
     "countLabel": "{count, plural, =0 {No reviews yet} one {# review} other {# reviews}}",
@@ -894,8 +928,8 @@
     "confirming": "Confirming your payment...",
     "confirmFailed": "We couldn't confirm your payment. Please try again from My Applications.",
     "failTitle": "Payment failed",
-    "failDescription": "The payment was not completed and nothing has been charged.",
-    "retryFromApplications": "Try again in My Applications",
+    "failDescription": "We couldn’t confirm the payment result. Check the latest status in My Applications before paying again.",
+    "retryFromApplications": "Check My Applications",
     "failReasons": {
       "cancelled": "You cancelled the payment before it was completed.",
       "aborted": "The payment was interrupted. Please try again.",

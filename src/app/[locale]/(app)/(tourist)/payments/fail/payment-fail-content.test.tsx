@@ -10,10 +10,12 @@ describe("PaymentFailContent", () => {
 
     expect(screen.getByRole("heading", { name: "Payment failed" })).toBeInTheDocument();
     expect(
-      screen.getByText("The payment was not completed and nothing has been charged."),
+      screen.getByText(
+        "We couldn’t confirm the payment result. Check the latest status in My Applications before paying again.",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("The payment exceeds your card's limit.");
-    expect(screen.getByRole("link", { name: "Try again in My Applications" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Check My Applications" })).toHaveAttribute(
       "href",
       "/en/applications",
     );
@@ -28,7 +30,7 @@ describe("PaymentFailContent", () => {
 
     expect(screen.getByRole("heading", { name: "결제에 실패했습니다" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "내 신청에서 다시 시도" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "내 신청에서 상태 확인" })).toHaveAttribute(
       "href",
       "/ko/applications",
     );

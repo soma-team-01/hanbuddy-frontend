@@ -14,6 +14,26 @@ const cancelRequest = { cancellationReason: "SCHEDULE_CONFLICT" };
 const context = { params: Promise.resolve({ applicationId: "11" }) };
 
 describe("PATCH /api/applications/me/[applicationId]/cancel", () => {
+  it("preserves the saved-intent 409 response without retrying cancellation", async () => {
+    const payload = {
+      isSuccess: false,
+      code: "PAYMENT_RECOVERY409_PENDING",
+      message: "확인 중",
+      result: null,
+    };
+    mockedPatchBackend.mockResolvedValue({ status: 409, payload, setCookies: [] });
+    const response = await PATCH(
+      new NextRequest("http://localhost/api/applications/me/11/cancel", {
+        method: "PATCH",
+        body: JSON.stringify(cancelRequest),
+        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+      }),
+      context,
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual(payload);
+    expect(mockedPatchBackend).toHaveBeenCalledTimes(1);
+  });
   beforeEach(() => {
     mockedPatchBackend.mockReset();
   });

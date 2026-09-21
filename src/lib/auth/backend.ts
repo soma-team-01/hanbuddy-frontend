@@ -6,6 +6,9 @@ export const BACKEND_REQUEST_TIMEOUT_MS = 10_000;
 interface BackendRequestOptions {
   bearerToken?: string;
   cookieHeader?: string | null;
+  origin?: string;
+  analyticsRequest?: true;
+  redirect?: RequestRedirect;
 }
 
 export interface BackendResponse<T> {
@@ -71,6 +74,8 @@ async function requestBackend<TBody, TResult>(
   const headers = new Headers({ "Content-Type": "application/json" });
   if (options.bearerToken) headers.set("Authorization", `Bearer ${options.bearerToken}`);
   if (options.cookieHeader) headers.set("Cookie", options.cookieHeader);
+  if (options.origin) headers.set("Origin", options.origin);
+  if (options.analyticsRequest) headers.set("X-Analytics-Request", "1");
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), BACKEND_REQUEST_TIMEOUT_MS);
@@ -81,6 +86,7 @@ async function requestBackend<TBody, TResult>(
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
+      ...(options.redirect ? { redirect: options.redirect } : {}),
       signal: controller.signal,
     });
   } catch (error) {

@@ -51,12 +51,14 @@ interface GoogleMeetingAddress {
 export function ActivityDetailView({
   activity,
   weather,
+  onBookingClick,
   preview = false,
   bottomBar = "fixed",
   showBookingBar = true,
   unoptimizedImages = false,
 }: Readonly<{
   activity: Activity;
+  onBookingClick?: () => void;
   weather?: ActivityWeatherResult;
   preview?: boolean;
   /** inline이면 하단 바를 고정하지 않고 본문 아래 카드로 렌더링한다 (위저드 검토 화면용) */
@@ -269,6 +271,7 @@ export function ActivityDetailView({
         ) : (
           <Link
             href={`/activities/${activity.id}/book?scheduleId=${selectedSession.id}`}
+            onClick={onBookingClick}
             className="flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8"
           >
             {t("bookNow")}

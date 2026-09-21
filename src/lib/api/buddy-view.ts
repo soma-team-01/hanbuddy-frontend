@@ -106,15 +106,17 @@ export function mapMyActivityDetailToPreviewActivity(
   const images = [...detail.images].sort((left, right) => left.imageOrder - right.imageOrder);
   const heroImageUrl = images[0]?.imageUrl ?? getActivityThumbnail(detail.thumbnailImageUrl);
   const hasActiveDiscount = detail.discountedPrice !== null;
-  const sessions = detail.schedules.map<Session>((schedule) => ({
-    id: String(schedule.scheduleId),
-    startAt: schedule.startAt,
-    dateKey: getSeoulDateTimeParts(schedule.startAt)?.date,
-    dateLabel: formatSeoulDate(schedule.startAt, locale) ?? dateTimeUnavailable,
-    timeLabel: formatSeoulTime(schedule.startAt, locale) ?? "",
-    spotsLeft:
-      schedule.status === "CLOSED" ? 0 : Math.max(0, detail.maxCapacity - schedule.bookedCount),
-  }));
+  const sessions = detail.schedules
+    .filter((schedule) => schedule.status !== "CANCELLED")
+    .map<Session>((schedule) => ({
+      id: String(schedule.scheduleId),
+      startAt: schedule.startAt,
+      dateKey: getSeoulDateTimeParts(schedule.startAt)?.date,
+      dateLabel: formatSeoulDate(schedule.startAt, locale) ?? dateTimeUnavailable,
+      timeLabel: formatSeoulTime(schedule.startAt, locale) ?? "",
+      spotsLeft:
+        schedule.status === "CLOSED" ? 0 : Math.max(0, detail.maxCapacity - schedule.bookedCount),
+    }));
 
   return {
     id: String(detail.activityId),

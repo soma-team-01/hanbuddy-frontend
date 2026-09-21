@@ -1,0 +1,213 @@
+import { afterEach, expect, it, vi } from "vitest";
+import { createCookieRuntime, invalidateAnalyticsAccount } from "./cookie-runtime";
+import { createMeasurementBrowser } from "./browser";
+vi.mock("./browser", () => ({
+  createMeasurementBrowser: vi.fn(() => ({
+    start: vi.fn(async () => {}),
+    send: vi.fn(),
+    stop: vi.fn(),
+    identifiers: vi.fn(async () => ({ clientId: "1.2", sessionId: "3" })),
+  })),
+}));
+const policy = {
+  measurementId: "G-TEST",
+  origin: "https://example.test",
+};
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+});
+function environment(origin = policy.origin) {
+  let blocked = false;
+  const cookies = new Map<string, string>();
+  const decisions = new Map<string, string>();
+  let tail = Promise.resolve();
+  const document = {
+    get cookie() {
+      return [...cookies].map(([k, v]) => `${k}=${v}`).join("; ");
+    },
+    set cookie(value: string) {
+      if (blocked) return;
+      const [entry] = value.split(";"),
+        [key, ...rest] = entry.split("=");
+      if (value.includes("Max-Age=0")) cookies.delete(key);
+      else cookies.set(key, rest.join("="));
+    },
+  };
+  const issue = vi.fn<typeof fetch>(async (path) => {
+    if (String(path).includes("withdrawal"))
+      return Response.json({ isSuccess: true, result: { withdrawalAcknowledged: true } });
+    const now = Math.floor(Date.now() / 1000),
+      existing = cookies.get("__Host-hb_measurement_consent");
+    return Response.json({
+      isSuccess: true,
+      result: {
+        proof: existing?.startsWith("granted.") ? existing : `granted.v3.${"A".repeat(43)}`,
+        expiresAt: new Date((now + 60) * 1000).toISOString(),
+      },
+    });
+  });
+  const target = {
+    localStorage: {
+      getItem: (key: string) => decisions.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (!blocked) decisions.set(key, value);
+      },
+    },
+    location: { origin },
+    navigator: {
+      locks: {
+        request: (_name: string, work: () => Promise<unknown>) => {
+          const next = tail.then(work);
+          tail = next.then(
+            () => {},
+            () => {},
+          );
+          return next;
+        },
+      },
+    },
+    fetch: issue,
+  } as unknown as Window;
+  return {
+    document: document as Document,
+    target,
+    issue,
+    blockWrites: () => {
+      blocked = true;
+    },
+  };
+}
+it("fails closed when cross-tab invalidation is unavailable", () => {
+  vi.stubGlobal("BroadcastChannel", undefined);
+  const e = environment(),
+    r = createCookieRuntime(policy, e.target, e.document);
+  expect(r.controller.enabled).toBe(false);
+  r.dispose();
+});
+it("two tabs converge without RESTORE broadcast loops and stop on withdrawal", async () => {
+  const channels = new Set<{ onmessage: ((e: { data: string }) => void) | null }>();
+  let messages = 0;
+  vi.stubGlobal(
+    "BroadcastChannel",
+    class {
+      onmessage: ((e: { data: string }) => void) | null = null;
+      constructor() {
+        channels.add(this);
+      }
+      postMessage(data: string) {
+        messages++;
+        if (messages > 30) throw new Error("broadcast loop");
+        for (const c of channels) if (c !== this) c.onmessage?.({ data });
+      }
+      close() {
+        channels.delete(this);
+      }
+    },
+  );
+  const e = environment(),
+    a = createCookieRuntime(policy, e.target, e.document),
+    b = createCookieRuntime(policy, e.target, e.document);
+  a.controller.visit("/en/explore");
+  b.controller.visit("/en/explore");
+  await a.controller.accept();
+  await vi.waitFor(() => expect(b.controller.isActive()).toBe(true));
+  expect(messages).toBeLessThan(5);
+  expect(e.issue.mock.calls.length).toBeLessThan(5);
+  await a.controller.reject();
+  await vi.waitFor(() => expect(b.controller.isActive()).toBe(false));
+  const second = vi.mocked(createMeasurementBrowser).mock.results[1].value;
+  expect(second.stop).toHaveBeenCalledWith(true);
+  a.dispose();
+  b.dispose();
+});
+it("unavailable channel construction cannot break the application", () => {
+  vi.stubGlobal(
+    "BroadcastChannel",
+    class {
+      constructor() {
+        throw new Error("blocked");
+      }
+    },
+  );
+  const e = environment();
+  const r = createCookieRuntime(policy, e.target, e.document);
+  expect(r.controller.enabled).toBe(false);
+  r.dispose();
+});
+it("bounds account invalidation when optional consent restoration stalls", async () => {
+  vi.stubGlobal(
+    "BroadcastChannel",
+    class {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      postMessage() {}
+      close() {}
+    },
+  );
+  const e = environment();
+  const runtime = createCookieRuntime(policy, e.target, e.document);
+  runtime.controller.visit("/en/onboarding");
+  await runtime.controller.accept();
+  e.issue.mockImplementationOnce(() => new Promise<Response>(() => {}));
+  vi.useFakeTimers();
+  let settled = false;
+
+  const pending = invalidateAnalyticsAccount().then(() => {
+    settled = true;
+  });
+  await vi.advanceTimersByTimeAsync(2999);
+  expect(settled).toBe(false);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(settled).toBe(true);
+
+  await pending;
+  runtime.dispose();
+});
+it("withdraws another active tab even when all cookie writes silently fail", async () => {
+  const channels = new Set<{ onmessage: ((e: { data: unknown }) => void) | null }>();
+  vi.stubGlobal(
+    "BroadcastChannel",
+    class {
+      onmessage: ((e: { data: unknown }) => void) | null = null;
+      constructor() {
+        channels.add(this);
+      }
+      postMessage(data: unknown) {
+        for (const c of channels) if (c !== this) c.onmessage?.({ data });
+      }
+      close() {
+        channels.delete(this);
+      }
+    },
+  );
+  const e = environment(),
+    a = createCookieRuntime(policy, e.target, e.document),
+    b = createCookieRuntime(policy, e.target, e.document);
+  a.controller.visit("/en/activities/42");
+  b.controller.visit("/en/activities/42");
+  await a.controller.accept();
+  await vi.waitFor(() => expect(b.controller.isActive()).toBe(true));
+  e.blockWrites();
+  await a.controller.reject();
+  expect(b.controller.isActive()).toBe(false);
+  expect(b.controller.track("booking_cta_click", "/en/activities/42", 42)).toBe(false);
+  expect(vi.mocked(createMeasurementBrowser).mock.results[1].value.stop).toHaveBeenCalledWith(true);
+  a.dispose();
+  b.dispose();
+});
+
+it.each(["http://localhost:3000", "https://preview.example", "https://staging.example"])(
+  "keeps transport disabled on noncanonical browser origin %s",
+  (origin) => {
+    const e = environment(origin);
+    const runtime = createCookieRuntime(
+      { ...policy, origin: "https://hanbuddy.kr" },
+      e.target,
+      e.document,
+    );
+    expect(runtime.controller.enabled).toBe(false);
+    expect(e.issue).not.toHaveBeenCalled();
+    runtime.dispose();
+  },
+);

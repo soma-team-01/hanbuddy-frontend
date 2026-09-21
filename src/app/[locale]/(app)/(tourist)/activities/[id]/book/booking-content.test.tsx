@@ -1,4 +1,7 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { createTestAnalytics } from "@/test/analytics";
+import { getMyProfile } from "@/lib/api/users";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
@@ -11,6 +14,7 @@ import { BookingContent } from "./booking-content";
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  usePathname: () => "/en/activities/42/book",
 }));
 
 vi.mock("@/lib/api/activities", () => ({
@@ -20,6 +24,8 @@ vi.mock("@/lib/api/activities", () => ({
 vi.mock("@/lib/api/applications", () => ({
   createApplication: vi.fn(),
 }));
+
+vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn() }));
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
 
@@ -195,3 +201,107 @@ describe("BookingContent", () => {
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });
+
+it.each(["TOURIST", "BUDDY", "unauthenticated"])(
+  "begins checkout only after authenticated usable form: %s",
+  async (role) => {
+    const { controller, browser } = createTestAnalytics();
+    controller.visit("/en/activities/42/book");
+    await controller.accept();
+    let resolveProfile!: (value: Awaited<ReturnType<typeof getMyProfile>>) => void;
+    vi.mocked(getMyProfile).mockReturnValue(
+      new Promise((resolve) => {
+        resolveProfile = resolve;
+      }),
+    );
+    mockedGetTouristActivity.mockResolvedValue({ status: "success", activity: activityDetail });
+    renderWithQueryClient(
+      <AnalyticsProvider policy={null} controller={controller}>
+        <BookingContent activityId="42" />
+      </AnalyticsProvider>,
+    );
+    await screen.findByRole("heading", { name: activityDetail.title });
+    expect(browser.send.mock.calls.filter((c) => c[0] === "begin_checkout")).toHaveLength(0);
+    await act(async () =>
+      resolveProfile(
+        role === "unauthenticated"
+          ? { status: "unauthenticated" }
+          : {
+              status: "success",
+              profile: {
+                userId: 1,
+                email: "synthetic@example.test",
+                name: "Test",
+                displayName: "Test",
+                userType: role as "TOURIST" | "BUDDY",
+                profileImageKey: null,
+                profileImageUrl: null,
+                nationalityCode: "KR",
+                birthDate: "2000-01-01",
+                contactMethod: "LINE",
+                contactCountryCode: null,
+                contactIdentifier: "synthetic@example.test",
+              },
+            },
+      ),
+    );
+    await waitFor(() => expect(vi.mocked(getMyProfile)).toHaveBeenCalled());
+    if (role === "TOURIST")
+      await waitFor(() =>
+        expect(browser.send.mock.calls.filter((c) => c[0] === "begin_checkout")).toHaveLength(1),
+      );
+    else expect(browser.send.mock.calls.filter((c) => c[0] === "begin_checkout")).toHaveLength(0);
+    expect(browser.send.mock.calls.filter((c) => c[0] === "booking_cta_click")).toHaveLength(0);
+  },
+);
+
+it.each(["loading", "error", "empty", "full"])(
+  "does not begin checkout for %s booking data",
+  async (kind) => {
+    const { controller, browser } = createTestAnalytics();
+    controller.visit("/en/activities/42/book");
+    await controller.accept();
+    vi.mocked(getMyProfile).mockResolvedValue({
+      status: "success",
+      profile: {
+        userId: 1,
+        email: "synthetic@example.test",
+        name: "Test",
+        displayName: "Test",
+        userType: "TOURIST",
+        profileImageKey: null,
+        profileImageUrl: null,
+        nationalityCode: "KR",
+        birthDate: "2000-01-01",
+        contactMethod: "LINE",
+        contactCountryCode: null,
+        contactIdentifier: "synthetic@example.test",
+      },
+    });
+    if (kind === "loading") mockedGetTouristActivity.mockReturnValue(new Promise(() => {}));
+    else if (kind === "error")
+      mockedGetTouristActivity.mockRejectedValue(new Error("synthetic error"));
+    else
+      mockedGetTouristActivity.mockResolvedValue({
+        status: "success",
+        activity: {
+          ...activityDetail,
+          schedules:
+            kind === "empty"
+              ? []
+              : activityDetail.schedules.map((s) => ({ ...s, remainingCapacity: 0 })),
+        },
+      });
+    renderWithQueryClient(
+      <AnalyticsProvider policy={null} controller={controller}>
+        <BookingContent activityId="42" />
+      </AnalyticsProvider>,
+    );
+    if (kind === "error") await screen.findByRole("alert");
+    else if (kind !== "loading") await screen.findByRole("heading", { name: activityDetail.title });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(browser.send.mock.calls.filter((c) => c[0] === "begin_checkout")).toHaveLength(0);
+  },
+);

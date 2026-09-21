@@ -7,6 +7,9 @@ export type BackendApplicationStatus =
   "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 export type ApplicationCancellationReason =
   "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER";
+/** Response only: never offered in a tourist cancellation request. */
+export type ApplicationCancellationResponseReason =
+  ApplicationCancellationReason | "BUDDY_CANCELLATION";
 
 export type AppliedActivityStatus = "ACTIVE" | "INACTIVE" | "DELETED";
 
@@ -41,7 +44,7 @@ export interface PaymentRefundResponse {
   provider: PaymentProvider | "EXTERNAL";
   status: "REQUESTED" | "COMPLETED" | "FAILED";
   policyVersion: string;
-  policyType: CancellationPolicyType;
+  policyType: CancellationPolicyType | "BUDDY_CANCELLATION" | "PAYMENT_COMPENSATION";
   refundPercent: number;
   refundAmount: number;
   refundCurrency: string;
@@ -74,6 +77,8 @@ export interface PriceBreakdown {
 }
 
 export interface Application {
+  /** A saved refund intent is awaiting confirmation; never treat this as refund completion. */
+  refundRecoveryPending?: boolean;
   id: string;
   /** 날씨 등 공개 활동 부가 정보를 조회하기 위한 활동 ID */
   activityId: number;
@@ -88,7 +93,10 @@ export interface Application {
   activityTitle: string;
   thumbnailUrl: string | null;
   /** 취소된 신청의 사유. 취소되지 않았으면 null */
-  cancellationReason: ApplicationCancellationReason | null;
+  cancellationReason: ApplicationCancellationResponseReason | null;
+  cancellationDetail?: string | null;
+  scheduleCancelled?: boolean;
+  scheduleCancelledAt?: string | null;
   /** 결제 대기 신청의 좌석 선점 만료 시각. 없으면 남은 시간을 표시하지 않는다 */
   holdExpiresAt: string | null;
   /** 내가 이 신청에 남긴 리뷰. 아직 쓰지 않았으면 null */
@@ -163,7 +171,9 @@ export interface ApplicationResponse {
   providerPaymentCurrency?: string | null;
   refund?: PaymentRefundResponse | null;
   status: BackendApplicationStatus;
-  cancellationReason: ApplicationCancellationReason | null;
+  cancellationReason: ApplicationCancellationResponseReason | null;
+  scheduleCancelled?: boolean;
+  scheduleCancelledAt?: string | null;
   cancellationDetail: string | null;
   cancelledAt: string | null;
   /** 결제 대기 신청의 좌석 선점 만료 시각 (Asia/Seoul 오프셋 포함). 선점 중이 아니면 null */

@@ -1,5 +1,6 @@
 "use client";
 
+import { useFunnelEvent } from "@/components/analytics/AnalyticsProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -10,6 +11,7 @@ import {
   continueApplicationPayment,
 } from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
+import { ApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import type { Locale } from "@/i18n/routing";
@@ -33,6 +35,7 @@ import type { CancelDialogOutcome } from "./cancel-dialog";
 export function ApplicationsContent({
   refundPolicyDocument,
 }: Readonly<{ refundPolicyDocument?: PolicyDocumentData }>) {
+  const track = useFunnelEvent();
   const queryClient = useQueryClient();
   const locale = useLocale();
   const language = getContentLanguage(locale);
@@ -40,8 +43,10 @@ export function ApplicationsContent({
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
   const [payPalPayment, setPayPalPayment] = useState<PaymentReadyResponse | null>(null);
+  const [pendingRefundIds, setPendingRefundIds] = useState<ReadonlySet<string>>(new Set());
   const applicationsQuery = useQuery(myApplicationsQueryOptions(language));
   const cancelApplicationMutation = useMutation({
+    retry: false,
     mutationFn: async ({
       applicationId,
       reason,
@@ -110,9 +115,19 @@ export function ApplicationsContent({
   const applications = (applicationsQuery.data ?? [])
     // 새 신청으로 대체된 신청은 결제할 수도 취소할 수도 없으므로 목록에서 제외한다
     .filter((application) => application.status !== "SUPERSEDED")
-    .map((application) =>
-      mapApplicationResponseToApplication(application, tErrors("dateTimeUnavailable"), locale),
-    );
+    .map((application) => {
+      const view = mapApplicationResponseToApplication(
+        application,
+        tErrors("dateTimeUnavailable"),
+        locale,
+      );
+      return {
+        ...view,
+        refundRecoveryPending:
+          view.refundRecoveryPending ||
+          (pendingRefundIds.has(view.id) && application.refund?.status !== "COMPLETED"),
+      };
+    });
 
   async function handleCancelApplication(
     applicationId: string,
@@ -123,12 +138,19 @@ export function ApplicationsContent({
       await cancelApplicationMutation.mutateAsync({ applicationId, reason, detail });
       return { ok: true };
     } catch (error) {
+      const recoveryPending =
+        error instanceof ApiClientError && error.code === "PAYMENT_RECOVERY409_PENDING";
+      if (recoveryPending) {
+        setPendingRefundIds((current) => new Set([...current, applicationId]));
+      }
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
         queryClient.invalidateQueries({
           queryKey: applicationKeys.cancellationQuote(applicationId),
         }),
       ]);
+      // Close the input dialog, but leave the server's application status untouched.
+      if (recoveryPending) return { ok: true };
       return {
         ok: false,
         error,
@@ -150,6 +172,22 @@ export function ApplicationsContent({
       applicationId,
       paymentProvider,
     });
+    if (
+      payment.application.applicationId === Number(applicationId) &&
+      payment.paymentProvider === paymentProvider &&
+      (paymentProvider === "TOSS"
+        ? Boolean(payment.clientKey?.trim() && payment.orderNumber.trim()) &&
+          payment.paymentCurrency === "KRW"
+        : Boolean(payment.providerOrderId.trim()) && payment.paymentCurrency === "USD") &&
+      payment.application.status === "PENDING_PAYMENT" &&
+      payment.paymentStatus === "CREATED" &&
+      Number.isFinite(payment.paymentAmount) &&
+      payment.paymentAmount > 0 &&
+      /^[A-Z]{3}$/.test(payment.paymentCurrency) &&
+      Date.parse(payment.orderExpiresAt) > Date.now()
+    ) {
+      track("begin_checkout", payment.application.activityId);
+    }
     if (paymentProvider === "PAYPAL") {
       setPayPalPayment(payment);
       return;

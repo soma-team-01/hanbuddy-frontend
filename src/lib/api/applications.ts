@@ -1,3 +1,4 @@
+import { captureAnalyticsPayment } from "@/lib/analytics/cookie-runtime";
 import type {
   ApplicationCancellationReason,
   ApplicationConflictCheckResponse,
@@ -38,6 +39,18 @@ const DEFAULT_PAYPAL_CAPTURE_ERROR_MESSAGE = "PayPal 결제를 완료하지 못�
 const DEFAULT_APPLICATION_CONFLICT_ERROR_MESSAGE = "예약 일정 중복 여부를 확인하지 못했습니다.";
 const DEFAULT_CANCELLATION_QUOTE_ERROR_MESSAGE = "취소 예상 금액을 불러오지 못했습니다.";
 const DEFAULT_APPLIED_ACTIVITY_ERROR_MESSAGE = "신청한 활동 상세를 불러오지 못했습니다.";
+
+type AnalyticsPaymentTicket = NonNullable<ReturnType<typeof captureAnalyticsPayment>>;
+
+function startAnalyticsCompletion(
+  ticket: AnalyticsPaymentTicket,
+  applicationId: number,
+  context: string | null,
+) {
+  void ticket.complete(applicationId, context).catch(() => {
+    /* Optional analytics must not reject a successful payment preparation. */
+  });
+}
 
 export async function getAppliedActivityDetail(
   applicationId: number | string,
@@ -86,16 +99,24 @@ export async function createApplication(
   language: ContentLanguage,
   paymentProvider: PaymentProvider,
 ): Promise<PaymentReadyResult> {
-  return requestApiResult<PaymentReadyResponse, "payment">(
+  const ticket = captureAnalyticsPayment();
+  let context: string | null = null;
+  const result = await requestApiResult<PaymentReadyResponse, "payment">(
     withContentLanguage(withPaymentProvider("/api/applications", paymentProvider), language),
     "payment",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...ticket?.headers },
       body: JSON.stringify(request),
     },
     DEFAULT_APPLICATION_CREATE_ERROR_MESSAGE,
+    (response) => {
+      context = response.headers.get("X-Analytics-Context");
+    },
   );
+  if (result.status === "success" && ticket)
+    startAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
+  return result;
 }
 
 export async function continueApplicationPayment(
@@ -103,7 +124,9 @@ export async function continueApplicationPayment(
   language: ContentLanguage,
   paymentProvider: PaymentProvider,
 ): Promise<PaymentReadyResult> {
-  return requestApiResult<PaymentReadyResponse, "payment">(
+  const ticket = captureAnalyticsPayment();
+  let context: string | null = null;
+  const result = await requestApiResult<PaymentReadyResponse, "payment">(
     withContentLanguage(
       withPaymentProvider(
         `/api/applications/me/${applicationId}/payment/continue`,
@@ -112,9 +135,15 @@ export async function continueApplicationPayment(
       language,
     ),
     "payment",
-    { method: "POST" },
+    { method: "POST", ...(ticket ? { headers: ticket.headers } : {}) },
     DEFAULT_PAYMENT_CONTINUE_ERROR_MESSAGE,
+    (response) => {
+      context = response.headers.get("X-Analytics-Context");
+    },
   );
+  if (result.status === "success" && ticket)
+    startAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
+  return result;
 }
 
 export async function capturePayPalApplicationPayment(

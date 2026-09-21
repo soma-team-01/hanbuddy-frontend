@@ -1,5 +1,7 @@
 "use client";
 
+import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
+import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
 import { SignupExtraFields } from "./SignupExtraFields";
 import {
   buildSignupExtra,
@@ -166,6 +168,7 @@ export function OnboardingForm({
   const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
+  const { trackSignup } = useMeasurementEvents();
   const isResubmission = Boolean(resubmission);
   const isBuddyFlow = userType === "BUDDY";
   // Signup-only fields deliberately stay out of persistent onboarding drafts.
@@ -613,6 +616,8 @@ export function OnboardingForm({
         return;
       }
 
+      if (!isResubmission) await invalidateAnalyticsAccount();
+
       if (isResubmission) {
         if ((body.result as BuddyResubmission).accountStatus !== "PENDING_APPROVAL") {
           setRequestFailure({
@@ -627,7 +632,9 @@ export function OnboardingForm({
         return;
       }
 
-      const authStatus = (body.result as GoogleLoginResponse).authStatus;
+      const signupResult = body.result as GoogleLoginResponse;
+      const authStatus = signupResult.authStatus;
+      if (signupResult.registered === true) trackSignup("google");
       if (authStatus === "ACTIVE") {
         discardDraft();
         router.replace(userType === "BUDDY" ? "/dashboard" : "/");

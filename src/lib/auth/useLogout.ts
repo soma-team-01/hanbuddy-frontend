@@ -1,5 +1,6 @@
 "use client";
 
+import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useRouter } from "@/i18n/navigation";
@@ -11,6 +12,7 @@ export function useLogout(userType: UserType) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   async function logout() {
+    invalidateAnalyticsAccount();
     setIsLoggingOut(true);
 
     try {

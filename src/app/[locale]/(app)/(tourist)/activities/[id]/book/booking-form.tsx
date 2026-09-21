@@ -620,7 +620,17 @@ export function BookingForm({
         </main>
       </PageContainer>
 
-      {inquiryOpen && <AlternativePaymentDialog onClose={() => setInquiryOpen(false)} />}
+      {inquiryOpen && (
+        <AlternativePaymentDialog
+          booking={{
+            activityTitle: activity.title,
+            buddyName: activity.host.name,
+            startAt: selectedSession?.startAt,
+            participants: guests,
+          }}
+          onClose={() => setInquiryOpen(false)}
+        />
+      )}
 
       {calendarOpen ? (
         <AvailabilityCalendarDialog

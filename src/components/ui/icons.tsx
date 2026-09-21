@@ -29,6 +29,18 @@ export function EyeIcon(props: IconProps) {
   );
 }
 
+/** Overlapping language tiles: Latin A and the character 文. */
+export function TranslationIcon(props: IconProps) {
+  return (
+    <IconBase strokeWidth={1.5} {...props}>
+      <path d="M13 8V3H3v11h5" />
+      <path d="m5 11 2.3-6 2.3 6M5.8 9h3" />
+      <rect x="10" y="10" width="11" height="11" rx="1" />
+      <path d="M15.5 12v2M12 14h7M17.5 14c-.5 3-2.2 5-5.5 6M13.5 14c.6 2.7 2.7 4.8 5.5 6" />
+    </IconBase>
+  );
+}
+
 export function ArrowLeftIcon(props: IconProps) {
   return (
     <IconBase {...props}>

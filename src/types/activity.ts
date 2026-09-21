@@ -41,6 +41,8 @@ export interface ActivityItineraryItem {
 }
 
 export interface Activity {
+  /** True only when the API actually returned a translated body, not for locale mismatch alone. */
+  isTranslated?: boolean;
   id: string;
   title: string;
   description: string;
@@ -142,6 +144,8 @@ export interface TouristActivitySummary {
 }
 
 export interface TouristActivityDetail extends TouristActivitySummary {
+  /** Optional during rolling deployment; absence means no translation disclosure. */
+  isTranslated?: boolean;
   /** 버디 본인 소개 (활동별 저장) */
   hostIntroduction?: string;
   includedItems: string[];

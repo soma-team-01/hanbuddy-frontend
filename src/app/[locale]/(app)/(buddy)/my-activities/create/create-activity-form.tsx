@@ -33,6 +33,7 @@ import {
   type PhotoDraft,
   type ScheduleDraft,
   validateActivityCreateStep,
+  reorderPhotos,
 } from "./activity-create-wizard";
 import {
   CapacityStep,
@@ -858,6 +859,12 @@ export function CreateActivityForm({
             onAdd={addPhotoFiles}
             onRemove={removePhoto}
             onCover={makeCoverPhoto}
+            onReorder={(id, targetId) =>
+              setDraft((current) => ({
+                ...current,
+                photos: reorderPhotos(current.photos, id, targetId),
+              }))
+            }
             t={t}
           />
         );

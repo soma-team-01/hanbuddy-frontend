@@ -73,6 +73,7 @@ export function mapTouristActivityDetailToActivity(
 
   return {
     ...mapTouristActivitySummaryToActivity(detail),
+    isTranslated: detail.isTranslated === true,
     imageUrl: detail.thumbnailImageUrl || heroImageUrl,
     heroImageUrl,
     images: images.map(({ imageUrl }) => imageUrl),

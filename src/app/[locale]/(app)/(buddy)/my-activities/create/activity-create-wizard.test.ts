@@ -112,12 +112,12 @@ describe("activity creation wizard", () => {
   > = [
     ["host", { hostIntroduction: "" }, "hostIntroductionRequired"],
     ["host", { hostIntroduction: "A".repeat(29) }, "hostIntroductionRequired"],
-    ["host", { hostIntroduction: "A".repeat(201) }, "hostIntroductionRequired"],
+    ["host", { hostIntroduction: "A".repeat(2001) }, "hostIntroductionRequired"],
     ["name", { experienceName: "" }, "experienceNameRequired"],
-    ["name", { experienceName: "A".repeat(21) }, "experienceNameRequired"],
+    ["name", { experienceName: "A".repeat(101) }, "experienceNameRequired"],
     ["description", { experienceDescription: "" }, "experienceDescriptionRequired"],
     ["description", { experienceDescription: "A".repeat(29) }, "experienceDescriptionRequired"],
-    ["description", { experienceDescription: "A".repeat(201) }, "experienceDescriptionRequired"],
+    ["description", { experienceDescription: "A".repeat(3001) }, "experienceDescriptionRequired"],
     ["photos", { photos: [photo] }, "photosMinimum"],
     [
       "photos",
@@ -126,7 +126,7 @@ describe("activity creation wizard", () => {
     ],
     [
       "itinerary",
-      { itinerary: [{ ...itinerary, title: "A".repeat(21) }] },
+      { itinerary: [{ ...itinerary, title: "A".repeat(101) }] },
       "itineraryTitleRequired",
     ],
     [
@@ -136,7 +136,7 @@ describe("activity creation wizard", () => {
     ],
     [
       "itinerary",
-      { itinerary: [{ ...itinerary, description: "A".repeat(51) }] },
+      { itinerary: [{ ...itinerary, description: "A".repeat(1001) }] },
       "itineraryDescriptionTooShort",
     ],
     ["meeting", { meetingAddress: "" }, "meetingAddressRequired"],
@@ -164,6 +164,53 @@ describe("activity creation wizard", () => {
 
   it.each(validationCases)("validates the %s step", (step, overrides, error) => {
     expect(validateActivityCreateStep(step, createCompleteDraft(overrides))).toBe(error);
+  });
+
+  it("accepts the expanded API limits without truncation", () => {
+    const draft = createCompleteDraft({
+      experienceName: "A".repeat(100),
+      hostIntroduction: "가".repeat(2000),
+      experienceDescription: "가".repeat(3000),
+      meetingPlace: "A".repeat(500),
+      itinerary: [{ ...itinerary, title: "A".repeat(100), description: "가".repeat(1000) }],
+      inclusions: Array.from({ length: 20 }, () => "A".repeat(500)).join("\n"),
+      restrictions: Array.from({ length: 20 }, () => "A".repeat(500)).join("\n"),
+    });
+    for (const step of ACTIVITY_CREATE_STEPS)
+      expect(validateActivityCreateStep(step, draft)).toBeNull();
+    expect(draft.experienceDescription).toHaveLength(3000);
+  });
+
+  it.each(["inclusions", "restrictions"] as const)(
+    "validates %s item lengths and total count",
+    (step) => {
+      expect(
+        validateActivityCreateStep(step, createCompleteDraft({ [step]: "A".repeat(501) })),
+      ).toBe("listItemTooLong");
+      expect(
+        validateActivityCreateStep(
+          step,
+          createCompleteDraft({
+            [step]: Array.from({ length: 21 }, (_, i) => `Item ${i}`).join("\n"),
+          }),
+        ),
+      ).toBe("listTooMany");
+      expect(
+        validateActivityCreateStep(step, createCompleteDraft({ [step]: " \n a \n " })),
+      ).toBeNull();
+    },
+  );
+
+  it("validates meeting place length and bypasses only explicitly empty restrictions", () => {
+    expect(
+      validateActivityCreateStep("meeting", createCompleteDraft({ meetingPlace: "A".repeat(501) })),
+    ).toBe("meetingPlaceTooLong");
+    expect(
+      validateActivityCreateStep(
+        "restrictions",
+        createCompleteDraft({ restrictions: "A".repeat(501), hasNoRestrictions: true }),
+      ),
+    ).toBeNull();
   });
 
   it("rejects a start time that has already passed today in Asia/Seoul", () => {

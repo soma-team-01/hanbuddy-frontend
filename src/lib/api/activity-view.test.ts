@@ -29,6 +29,27 @@ const summary = {
 };
 
 describe("activity view adapters", () => {
+  it.each([true, false, undefined])(
+    "preserves the server translation decision: %s",
+    (isTranslated) => {
+      const activity = mapTouristActivityDetailToActivity(
+        {
+          ...summary,
+          isTranslated,
+          contentLanguage: "KO",
+          images: [],
+          includedItems: [],
+          restrictionNotes: [],
+          schedules: [],
+          itineraries: [],
+        },
+        "Unavailable",
+        "ko",
+      );
+      expect(activity.isTranslated).toBe(isTranslated === true);
+      expect(activity.title).toBe(summary.title);
+    },
+  );
   it("never offers cancelled schedules and treats closed schedules as unavailable", () => {
     const activity = mapTouristActivityDetailToActivity(
       {

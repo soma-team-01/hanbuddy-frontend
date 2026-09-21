@@ -685,7 +685,8 @@
     "kstNotice": "時間はすべて韓国標準時 (KST) です。",
     "hostedActivities": "この仲間の他の経験",
     "noOtherActivities": "他の経験はまだありません。",
-    "viewHostProfile": "見る {name}さんのプロフィール"
+    "viewHostProfile": "見る {name}さんのプロフィール",
+    "autoTranslated": "自動翻訳済み"
   },
   "Reviews": {
     "anonymous": "匿名",
@@ -739,15 +740,18 @@
   "AlternativePayment": {
     "trigger": "他のお支払い方法をご希望ですか？",
     "title": "他のお支払い方法について",
-    "description": "以下の項目を記入してお送りください。",
-    "message": "こんにちは。他の支払い方法で参加を希望しています。\nHanBuddy登録メールアドレス: [登録メールアドレス]\nバディの名前: [バディの名前]\n体験名: ソウルの森散策と聖水洞カフェ巡り\n日時: YYYY-MM-DD 14:00 (KST)\n参加人数: 2名\n希望する支払い方法: 韓国の銀行口座への振込",
-    "exampleTitle": "お問い合わせの記入例",
-    "exampleHint": "以下は記入例です。コピー後、ご自身の情報とご希望のバディ・体験・日時に書き換えて送信してください。",
+    "description": "以下の予約情報を確認し、希望する支払い方法を記入してお送りください。",
+    "message": "こんにちは！別の支払い方法で参加したいです。\nHanBuddy登録メール: {email}\nバディ名: {buddy}\n体験名: {activity}\n日時: {schedule}\n人数（本人を含む）: {participants}名\n希望する支払い方法: {method}",
+    "exampleTitle": "お問い合わせ内容",
+    "exampleHint": "現在の選択内容を反映しています。内容を確認し、希望する支払い方法を記入してから送信してください。",
     "copy": "テンプレートをコピー",
-    "copied": "コピーしました。内容を書き換えて、ご希望の連絡先へ送信してください。",
-    "copyFailed": "コピーできませんでした。上の記入例を選択してコピーしてください。",
+    "copied": "コピーしました。内容を確認し、希望する支払い方法を記入してお送りください。",
+    "copyFailed": "コピーできませんでした。上のメッセージを選択してコピーしてください。",
     "email": "メール",
-    "notConfirmed": "お問い合わせだけでは予約は確定しません。"
+    "notConfirmed": "お問い合わせだけでは予約は確定しません。",
+    "missingValue": "[ご記入ください]",
+    "missingSchedule": "[日時を選択してください]",
+    "preferredMethod": "[希望する支払い方法]"
   },
   "Booking": {
     "title": "書籍活動",
@@ -1288,7 +1292,10 @@
       "characters": "{count, number} 入力された文字",
       "hostIntroductionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} キャラクター",
-      "experienceDescriptionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}"
+      "experienceDescriptionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}",
+      "experienceNameEnglish": "アクティビティ名は自動翻訳されません。<emphasis>必ず英語で</emphasis>入力してください。",
+      "fieldCharacters": "{count} / {max}文字",
+      "listLimits": "{count} / {max}項目 · 各項目は{length}文字まで"
     },
     "placeholders": {
       "hostIntroduction": "自己紹介と、この体験を主催したい理由を説明します。",
@@ -1299,7 +1306,7 @@
       "meetingAddress": "例: ソウル特別市松坡区オリンピック路25",
       "meetingPlace": "例：ゲート1チケットブース",
       "itineraryTitle": "例: チームのチャントを学ぶ",
-      "itineraryDescription": "このアクティビティを 5 ～ 50 文字で説明してください。",
+      "itineraryDescription": "このアクティビティを 5 ～ 1000 文字で説明してください。",
       "duration": "例: 30",
       "maxGuests": "例: 8",
       "pricePerPerson": "例: 50000",
@@ -1309,6 +1316,9 @@
       "restrictions": "例: 歩きやすい靴をお勧めします"
     },
     "photos": {
+      "reorderHint": "カバー写真を変更したり、写真をドラッグして並べ替えたりできます。",
+      "move": "写真{index}を移動",
+      "moved": "写真を全{count}枚中{position}番目に移動しました",
       "upload": "体験写真を追加",
       "hint": "JPG、PNG、または WebP · 少なくとも 3、最大 10",
       "label": "体験写真をアップロードする",
@@ -1346,9 +1356,9 @@
         "done": "完了",
         "errors": {
           "photo": "続行するには写真を追加してください。",
-          "description": "5文字から50文字まで書きます。",
+          "description": "5文字から1000文字まで書きます。",
           "duration": "少なくとも 1 分間の継続時間を設定します。",
-          "title": "アクティビティのタイトルを 1 ～ 20 文字で入力します。"
+          "title": "アクティビティのタイトルを 1 ～ 100 文字で入力します。"
         }
       }
     },
@@ -1453,16 +1463,16 @@
     },
     "errors": {
       "categoryRequired": "続行するにはカテゴリを選択してください。",
-      "hostIntroductionRequired": "30 文字から 200 文字の間で紹介文を書きます。",
+      "hostIntroductionRequired": "30 文字から 2000 文字の間で紹介文を書きます。",
       "photosMinimum": "体験写真を 3 ～ 10 枚追加します。",
-      "experienceNameRequired": "エクスペリエンス名を 1 ～ 20 文字で入力します。",
-      "experienceDescriptionRequired": "詳細な説明を 30 ～ 200 文字で入力します。",
+      "experienceNameRequired": "エクスペリエンス名を 1 ～ 100 文字で入力します。",
+      "experienceDescriptionRequired": "詳細な説明を 30 ～ 3000 文字で入力します。",
       "meetingAddressRequired": "会議のアドレスを入力します。",
       "meetingPlaceRequired": "短い集合場所の名前を入力します。",
       "scheduleInvalid": "少なくとも 1 つの日付を選択し、選択した日付ごとに開始時刻を設定します。",
       "itineraryRequired": "少なくとも 1 つの旅程アクティビティを追加します。",
-      "itineraryTitleRequired": "すべてのアクティビティには 1 ～ 20 文字のタイトルが必要です。",
-      "itineraryDescriptionTooShort": "各アクティビティの説明は 5 ～ 50 文字にする必要があります。",
+      "itineraryTitleRequired": "すべてのアクティビティには 1 ～ 100 文字のタイトルが必要です。",
+      "itineraryDescriptionTooShort": "各アクティビティの説明は 5 ～ 1000 文字にする必要があります。",
       "itineraryDurationInvalid": "すべてのアクティビティに 0 より大きい期間を入力します。",
       "itineraryPhotoRequired": "すべてのアクティビティに写真を追加します。",
       "maxGuestsInvalid": "0 より大きい整数の容量を入力します。",
@@ -1474,7 +1484,10 @@
       "submissionFailed": "あなたの体験を登録できませんでした。もう一度試してください。",
       "scheduleInPast": "選択した日付または開始時刻の一部がすでに過ぎています。今後のセッションのみを選択してください。",
       "maxGuestsTooMany": "収容人数は最大 100 名です。",
-      "itineraryTooMany": "旅程アクティビティは最大 20 件追加できます。"
+      "itineraryTooMany": "旅程アクティビティは最大 20 件追加できます。",
+      "meetingPlaceTooLong": "集合場所名は500文字以内で入力してください。",
+      "listItemTooLong": "各項目は500文字以内で入力してください。",
+      "listTooMany": "項目は20件まで追加できます。"
     }
   },
   "PayPalPayment": {

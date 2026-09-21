@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -40,6 +40,7 @@ import {
 import {
   ACTIVITY_CREATE_LIMITS,
   buildPreviewActivityFromDraft,
+  validateActivityList,
   type ActivityCreateDraft,
   type DiscountType,
   type ItineraryDraft,
@@ -47,6 +48,7 @@ import {
   type ScheduleDraft,
 } from "./activity-create-wizard";
 import { getPresetLabelVariants, getPresetLineSet } from "./preset-labels";
+import { usePhotoSort } from "./use-photo-sort";
 
 type Translator = ReturnType<typeof useTranslations<"CreateActivity">>;
 
@@ -138,6 +140,7 @@ export function NameStep({
       </label>
       <input
         id="experience-name"
+        aria-describedby="experience-name-guidance"
         autoFocus
         maxLength={ACTIVITY_CREATE_LIMITS.experienceName.max}
         value={value}
@@ -145,7 +148,12 @@ export function NameStep({
         placeholder={t("placeholders.experienceName")}
         className="w-full border-b-2 border-line-strong bg-transparent px-2 py-2 text-center font-display text-2xl font-bold tracking-tight text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none sm:text-4xl"
       />
-      <p className="mt-4 text-sm text-muted tabular-nums">
+      <p id="experience-name-guidance" className="mt-4 text-sm leading-6 text-muted">
+        {t.rich("hints.experienceNameEnglish", {
+          emphasis: (chunks) => <strong className="font-bold text-primary">{chunks}</strong>,
+        })}
+      </p>
+      <p className="mt-2 text-sm text-muted tabular-nums">
         {t("hints.experienceNameCharacters", {
           count: value.trim().length,
           max: ACTIVITY_CREATE_LIMITS.experienceName.max,
@@ -200,14 +208,31 @@ export function PhotoStep({
   onAdd,
   onRemove,
   onCover,
+  onReorder,
   t,
 }: Readonly<{
   photos: PhotoDraft[];
   onAdd: (files: FileList | null) => void;
   onRemove: (id: string) => void;
   onCover: (id: string) => void;
+  onReorder: (id: string, targetId: string) => void;
   t: Translator;
 }>) {
+  const helpId = useId();
+  const {
+    gridRef,
+    preview,
+    announcement,
+    cancel,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onKeyDown,
+  } = usePhotoSort(
+    photos.map((photo) => photo.id),
+    onReorder,
+  );
+  const draggedPhoto = photos.find((photo) => photo.id === preview?.id);
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4 text-sm">
@@ -218,15 +243,41 @@ export function PhotoStep({
           <span className="text-muted">{t("photos.minimum")}</span>
         ) : null}
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <p id={helpId} className="text-sm leading-6 text-muted">
+        {t("photos.reorderHint")}
+      </p>
+      <p role="status" className="sr-only">
+        {announcement === null ? "" : t("photos.moved", announcement)}
+      </p>
+      {preview && draggedPhoto ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed z-50 h-16 w-20 overflow-hidden rounded-xl border-2 border-primary shadow-lg"
+          style={{
+            left: `clamp(8px, ${preview.x + 12}px, calc(100vw - 88px))`,
+            top: `clamp(8px, ${preview.y + 12}px, calc(100vh - 72px))`,
+          }}
+        >
+          <Image
+            src={draggedPhoto.previewUrl}
+            alt=""
+            fill
+            sizes="80px"
+            unoptimized
+            className="object-cover"
+          />
+        </div>
+      ) : null}
+      <div ref={gridRef} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {photos.map((photo, index) => (
           <div
             key={photo.id}
+            data-photo-id={photo.id}
             className={`group relative aspect-[4/3] overflow-hidden rounded-2xl border-2 bg-white transition ${
               index === 0
                 ? "border-primary shadow-[0_8px_24px_rgba(209,63,50,0.12)]"
                 : "border-transparent"
-            }`}
+            } ${preview?.id === photo.id ? "opacity-50" : ""} ${preview?.targetId === photo.id ? "ring-2 ring-primary ring-offset-2" : ""}`}
           >
             <Image
               src={photo.previewUrl}
@@ -234,10 +285,25 @@ export function PhotoStep({
               fill
               sizes="(max-width: 640px) 50vw, 240px"
               unoptimized
+              draggable={false}
               className="object-cover"
             />
+            <button
+              type="button"
+              aria-label={t("photos.move", { index: index + 1 })}
+              aria-describedby={helpId}
+              aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown"
+              onPointerDown={(event) => onPointerDown(event, photo.id)}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={cancel}
+              onLostPointerCapture={cancel}
+              onKeyDown={(event) => onKeyDown(event, photo.id)}
+              onContextMenu={(event) => event.preventDefault()}
+              className="absolute inset-0 cursor-grab touch-auto select-none [-webkit-touch-callout:none] focus-visible:outline-3 focus-visible:-outline-offset-4 focus-visible:outline-primary active:cursor-grabbing"
+            />
             {index === 0 ? (
-              <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink">
+              <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink">
                 {t("photos.cover")}
               </span>
             ) : (
@@ -757,9 +823,18 @@ export function MeetingStep({
         <input
           className={INPUT_CLASS}
           value={draft.meetingPlace}
+          aria-label={t("fields.meetingPlace")}
+          aria-describedby="meeting-place-character-count"
+          maxLength={ACTIVITY_CREATE_LIMITS.meetingPlace.max}
           onChange={(event) => onChange("meetingPlace", event.target.value)}
           placeholder={t("placeholders.meetingPlace")}
         />
+        <p id="meeting-place-character-count" className="text-xs text-muted tabular-nums">
+          {t("hints.fieldCharacters", {
+            count: draft.meetingPlace.trim().length,
+            max: ACTIVITY_CREATE_LIMITS.meetingPlace.max,
+          })}
+        </p>
       </Field>
       <div className="grid gap-2.5 text-sm text-ink">
         <label htmlFor="meeting-address" className="font-semibold">
@@ -1254,6 +1329,26 @@ export function PriceStep({
   );
 }
 
+function ActivityListLimitHint({ value, t }: Readonly<{ value: string; t: Translator }>) {
+  const error = validateActivityList(value);
+  return (
+    <div className="text-xs text-muted">
+      <p>
+        {t("hints.listLimits", {
+          count: getLines(value).length,
+          max: ACTIVITY_CREATE_LIMITS.listItems.max,
+          length: ACTIVITY_CREATE_LIMITS.listItem.max,
+        })}
+      </p>
+      {error && (
+        <p role="alert" className="mt-1 text-danger">
+          {t(`errors.${error}`)}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function getLines(value: string) {
   return value
     .split("\n")
@@ -1282,12 +1377,14 @@ export function InclusionsStep({
     const variants = new Set(getPresetLabelVariants("inclusions", key));
     const withoutPreset = lines.filter((line) => !variants.has(line));
     const next = withoutPreset.length === lines.length ? [...lines, label] : withoutPreset;
+    if (next.length > lines.length && validateActivityList(next.join("\n"))) return;
     onChange(next.join("\n"));
   }
 
   function addCustomItem() {
     const next = customInput.trim();
     if (!next || lines.includes(next)) return;
+    if (validateActivityList([...lines, next].join("\n"))) return;
     onChange([...lines, next].join("\n"));
     setCustomInput("");
   }
@@ -1307,8 +1404,9 @@ export function InclusionsStep({
               key={key}
               type="button"
               aria-pressed={selected}
+              disabled={!selected && !!validateActivityList([...lines, label].join("\n"))}
               onClick={() => toggle(key, label)}
-              className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition ${
+              className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                 selected
                   ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-[0_6px_18px_rgba(5,150,105,0.12)]"
                   : "border-line-strong text-ink hover:border-primary/60"
@@ -1340,6 +1438,7 @@ export function InclusionsStep({
         <div className="flex gap-2">
           <input
             id="custom-inclusion-input"
+            maxLength={ACTIVITY_CREATE_LIMITS.listItem.max}
             value={customInput}
             onChange={(event) => setCustomInput(event.target.value)}
             onKeyDown={(event) => {
@@ -1356,7 +1455,9 @@ export function InclusionsStep({
           <button
             type="button"
             onClick={addCustomItem}
-            disabled={!customInput.trim()}
+            disabled={
+              !customInput.trim() || !!validateActivityList([...lines, customInput].join("\n"))
+            }
             aria-label={t("inclusions.add")}
             className="flex size-[3.375rem] shrink-0 items-center justify-center rounded-xl border border-primary bg-white text-primary transition hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:border-line-strong disabled:text-muted/35"
           >
@@ -1364,6 +1465,7 @@ export function InclusionsStep({
           </button>
         </div>
         <p className="text-sm leading-5 text-muted">{t("inclusions.customHint")}</p>
+        <ActivityListLimitHint value={value} t={t} />
       </div>
       {customItems.length ? (
         <ul className="grid gap-2 sm:grid-cols-2">
@@ -1375,7 +1477,9 @@ export function InclusionsStep({
               <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
                 <CheckIcon className="size-3.5" />
               </span>
-              <span className="min-w-0 flex-1 text-sm font-bold text-emerald-950">{item}</span>
+              <span className="min-w-0 flex-1 text-sm font-bold [overflow-wrap:anywhere] text-emerald-950">
+                {item}
+              </span>
               <button
                 type="button"
                 onClick={() => removeCustomItem(item)}
@@ -1513,12 +1617,14 @@ export function RestrictionsStep({
     const variants = new Set(getPresetLabelVariants("restrictions", key));
     const withoutPreset = lines.filter((line) => !variants.has(line));
     const next = withoutPreset.length === lines.length ? [...lines, label] : withoutPreset;
+    if (next.length > lines.length && validateActivityList(next.join("\n"))) return;
     onChange(next.join("\n"));
   }
 
   function addRestriction() {
     const next = input.trim();
     if (hasNoRestrictions || !next || lines.includes(next)) return;
+    if (validateActivityList([...lines, next].join("\n"))) return;
     onChange([...lines, next].join("\n"));
     setInput("");
   }
@@ -1561,10 +1667,13 @@ export function RestrictionsStep({
               <button
                 key={key}
                 type="button"
-                disabled={hasNoRestrictions}
+                disabled={
+                  hasNoRestrictions ||
+                  (!selected && !!validateActivityList([...lines, label].join("\n")))
+                }
                 aria-pressed={selected}
                 onClick={() => toggle(key, label)}
-                className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition ${
+                className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                   selected
                     ? "border-primary bg-primary-soft text-primary-strong shadow-[0_6px_18px_rgba(209,63,50,0.12)]"
                     : "border-line-strong bg-white text-ink hover:border-primary/60"
@@ -1597,6 +1706,7 @@ export function RestrictionsStep({
           <div className="flex gap-2">
             <input
               id="restriction-input"
+              maxLength={ACTIVITY_CREATE_LIMITS.listItem.max}
               className={INPUT_CLASS}
               disabled={hasNoRestrictions}
               value={input}
@@ -1613,7 +1723,11 @@ export function RestrictionsStep({
             <button
               type="button"
               onClick={addRestriction}
-              disabled={hasNoRestrictions || !input.trim()}
+              disabled={
+                hasNoRestrictions ||
+                !input.trim() ||
+                !!validateActivityList([...lines, input].join("\n"))
+              }
               aria-label={t("restrictions.add")}
               className="flex size-[54px] shrink-0 items-center justify-center rounded-xl border border-primary bg-white text-primary transition hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:border-line-strong disabled:text-muted/35"
             >
@@ -1623,6 +1737,7 @@ export function RestrictionsStep({
           <span className="text-sm leading-5 font-normal text-muted">
             {t("restrictions.customHint")}
           </span>
+          <ActivityListLimitHint value={value} t={t} />
         </div>
 
         {customItems.length ? (
@@ -1635,7 +1750,9 @@ export function RestrictionsStep({
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-white">
                   <CheckIcon className="size-3.5" />
                 </span>
-                <span className="min-w-0 flex-1 text-sm font-bold text-primary-strong">{item}</span>
+                <span className="min-w-0 flex-1 text-sm font-bold [overflow-wrap:anywhere] text-primary-strong">
+                  {item}
+                </span>
                 <button
                   type="button"
                   onClick={() => removeRestriction(item)}

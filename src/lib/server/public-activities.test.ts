@@ -41,6 +41,13 @@ afterEach(() => {
 });
 
 describe("anonymous public activity documents", () => {
+  it.each([true, false, undefined])(
+    "preserves actual translation metadata in the initial detail (%s)",
+    async (isTranslated) => {
+      respond(success({ ...activity, isTranslated }));
+      expect((await getPublicActivity("42", "ko")).isTranslated).toBe(isTranslated);
+    },
+  );
   it.each([null, []])(
     "classifies HTTP 410 as missing regardless of JSON body shape",
     async (body) => {
@@ -66,6 +73,7 @@ describe("anonymous public activity documents", () => {
     { discountEndDate: 20260101 },
     { meetingLatitude: "37" },
     { contentLanguage: "en" },
+    { isTranslated: "true" },
   ])(
     "rejects optional DTO fields with invalid scalar types before metadata or sitemap use",
     async (invalid) => {

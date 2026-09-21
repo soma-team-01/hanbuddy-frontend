@@ -729,6 +729,13 @@
     "noneForRating": "尚未有此評級的評論。",
     "ratingWithCountAria": "額定 {rating} 滿分 5 來自 {count, plural, one {# 評論} other {# 評論}}"
   },
+  "ActivityContact": {
+    "teaser": "有任何疑問，歡迎隨時聯絡我們！",
+    "trigger": "聯絡我們",
+    "title": "還有疑問嗎？",
+    "description": "歡迎隨時透過您方便的方式聯絡HanBuddy營運團隊。",
+    "hint": "請附上活動名稱或頁面連結，方便我們為您解答。"
+  },
   "AlternativePayment": {
     "trigger": "需要其他付款方式？",
     "title": "想使用其他付款方式？",

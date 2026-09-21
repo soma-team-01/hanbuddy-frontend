@@ -2,8 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { InstagramIcon, KakaoTalkIcon, MailIcon, WhatsAppIcon, XIcon } from "@/components/ui/icons";
-import { CONTACT_DETAILS } from "@/lib/contact-details";
+import { XIcon } from "@/components/ui/icons";
+import { ContactChannelLinks } from "@/components/contact/ContactChannelLinks";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
 
@@ -23,27 +23,6 @@ export function AlternativePaymentDialog({
   const closeRef = useRef<HTMLButtonElement>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const message = t("message");
-  const channels = [
-    {
-      name: "WhatsApp",
-      channel: "whatsapp",
-      Icon: WhatsAppIcon,
-      href: `${CONTACT_DETAILS.whatsappUrl}?text=${encodeURIComponent(message)}`,
-    },
-    { name: "KakaoTalk", channel: "kakao", Icon: KakaoTalkIcon, href: CONTACT_DETAILS.kakaoUrl },
-    {
-      name: "Instagram",
-      channel: "instagram",
-      Icon: InstagramIcon,
-      href: CONTACT_DETAILS.instagramUrl,
-    },
-    {
-      name: t("email"),
-      channel: "email",
-      Icon: MailIcon,
-      href: `mailto:${CONTACT_DETAILS.email}`,
-    },
-  ];
 
   useEffect(() => {
     const opener = document.activeElement;
@@ -128,21 +107,12 @@ export function AlternativePaymentDialog({
               </p>
             )}
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {channels.map(({ name, channel, Icon, href }) => (
-              <a
-                key={name}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackInquiry({ channel, placement: "payment_inquiry", locale })}
-                className="flex min-h-20 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-line-soft px-1 py-3 text-xs font-medium text-ink transition-colors hover:border-primary hover:text-primary-strong"
-              >
-                <Icon aria-hidden className="size-6 text-primary" />
-                <span>{name}</span>
-              </a>
-            ))}
-          </div>
+          <ContactChannelLinks
+            message={message}
+            onChannelClick={(channel) =>
+              trackInquiry({ channel, placement: "payment_inquiry", locale })
+            }
+          />
           <p className="mt-4 text-center text-xs leading-5 text-muted">{t("notConfirmed")}</p>
         </div>
       </div>

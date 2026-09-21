@@ -729,6 +729,13 @@
     "noneForRating": "해당 별점의 후기가 아직 없습니다.",
     "ratingWithCountAria": "{count, plural, other {후기 #개 기준 5점 만점에 {rating}점}}"
   },
+  "ActivityContact": {
+    "teaser": "궁금한 게 있으면 언제든지 물어보세요!",
+    "trigger": "문의하기",
+    "title": "더 궁금하신가요?",
+    "description": "언제든지 편한 연락 수단으로 HanBuddy 운영팀에 문의해 주세요.",
+    "hint": "활동 이름이나 페이지 링크를 함께 보내주시면 더 쉽게 안내해 드릴 수 있어요."
+  },
   "AlternativePayment": {
     "trigger": "다른 결제 방법이 필요하신가요?",
     "title": "다른 결제 방법을 원하시나요?",

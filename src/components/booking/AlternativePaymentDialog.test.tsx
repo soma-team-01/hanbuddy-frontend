@@ -33,6 +33,8 @@ describe("AlternativePaymentDialog", () => {
     opener.focus();
     fireEvent.click(opener);
     const dialog = screen.getByRole("dialog", { name: "Prefer another payment method?" });
+    expect(dialog).toHaveClass("motion-dialog");
+    expect(dialog.querySelector(".motion-dialog")).toBeNull();
     expect(document.body.style.overflow).toBe("hidden");
     expect(screen.getByRole("button", { name: "Close dialog" })).toHaveFocus();
     fireEvent(dialog, new Event("cancel", { bubbles: true, cancelable: true }));

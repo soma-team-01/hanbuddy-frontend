@@ -80,6 +80,8 @@ describe("ActivityContact", () => {
     expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
     fireEvent.click(trigger);
     const dialog = screen.getByRole("dialog", { name: messages.ActivityContact.title });
+    expect(dialog).toHaveClass("motion-dialog");
+    expect(dialog.querySelector(".motion-dialog")).toBeNull();
     expect(dialog).toHaveTextContent(messages.ActivityContact.description);
     expect(within(dialog).getAllByRole("link")).toHaveLength(4);
     expect(within(dialog).getByRole("link", { name: "WhatsApp" })).toHaveAttribute(

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { XIcon } from "@/components/ui/icons";
+import { useModalDialog } from "@/components/ui/use-modal-dialog";
 import { ContactChannelLinks } from "@/components/contact/ContactChannelLinks";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
@@ -19,25 +20,11 @@ export function AlternativePaymentDialog({
   const { trackInquiry } = useMeasurementEvents();
   const titleId = useId();
   const descriptionId = useId();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const { dialogRef, closeRef } = useModalDialog();
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const message = t("message");
 
-  useEffect(() => {
-    const opener = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    const dialog = dialogRef.current;
-    document.body.style.overflow = "hidden";
-    dialog?.showModal();
-    closeRef.current?.focus();
-    return () => {
-      dialog?.close();
-      document.body.style.overflow = previousOverflow;
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
-  }, []);
-
+  /** Copies the localized inquiry template and exposes clipboard failures to the user. */
   async function copyTemplate() {
     try {
       await navigator.clipboard.writeText(message);
@@ -56,7 +43,7 @@ export function AlternativePaymentDialog({
         event.preventDefault();
         onClose();
       }}
-      className="m-0 h-dvh max-h-none w-screen max-w-none items-end justify-center overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] open:flex md:items-center md:p-6"
+      className="motion-dialog m-0 h-dvh max-h-none w-screen max-w-none items-end justify-center overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] open:flex md:items-center md:p-6"
     >
       <button
         type="button"
@@ -66,7 +53,7 @@ export function AlternativePaymentDialog({
         onClick={onClose}
         className="absolute inset-0 cursor-default"
       />
-      <div className="motion-dialog relative flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-canvas-soft shadow-2xl md:max-w-md md:rounded-2xl">
+      <div className="relative flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-canvas-soft shadow-2xl md:max-w-md md:rounded-2xl">
         <div className="flex shrink-0 items-start justify-between gap-3 px-5 pt-5 md:px-7 md:pt-7">
           <h2 id={titleId} className="font-display text-lg leading-7 font-bold">
             {t("title")}

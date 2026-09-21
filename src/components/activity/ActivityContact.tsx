@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ContactChannelLinks } from "@/components/contact/ContactChannelLinks";
 import { ChatBubbleDotsIcon, XIcon } from "@/components/ui/icons";
+import { useModalDialog } from "@/components/ui/use-modal-dialog";
 
+/** Offers activity inquiries with a brief introduction above the booking bar. */
 export function ActivityContact() {
   const t = useTranslations("ActivityContact");
   const [open, setOpen] = useState(false);
@@ -48,27 +50,13 @@ export function ActivityContact() {
   );
 }
 
+/** Displays official contact channels without changing the current booking selection. */
 function ActivityContactDialog({ onClose }: Readonly<{ onClose: () => void }>) {
   const t = useTranslations("ActivityContact");
   const tAccessibility = useTranslations("Accessibility");
   const titleId = useId();
   const descriptionId = useId();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const opener = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    const dialog = dialogRef.current;
-    document.body.style.overflow = "hidden";
-    dialog?.showModal();
-    closeRef.current?.focus();
-    return () => {
-      dialog?.close();
-      document.body.style.overflow = previousOverflow;
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
-  }, []);
+  const { dialogRef, closeRef } = useModalDialog();
 
   return (
     <dialog
@@ -79,7 +67,7 @@ function ActivityContactDialog({ onClose }: Readonly<{ onClose: () => void }>) {
         event.preventDefault();
         onClose();
       }}
-      className="m-0 h-dvh max-h-none w-screen max-w-none items-end justify-center overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] open:flex md:items-center md:p-6"
+      className="motion-dialog m-0 h-dvh max-h-none w-screen max-w-none items-end justify-center overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] open:flex md:items-center md:p-6"
     >
       <button
         type="button"
@@ -89,7 +77,7 @@ function ActivityContactDialog({ onClose }: Readonly<{ onClose: () => void }>) {
         onClick={onClose}
         className="absolute inset-0 cursor-default"
       />
-      <div className="motion-dialog relative max-h-[90dvh] w-full overflow-y-auto rounded-t-3xl bg-canvas-soft px-5 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl md:max-w-md md:rounded-2xl md:p-7">
+      <div className="relative max-h-[90dvh] w-full overflow-y-auto rounded-t-3xl bg-canvas-soft px-5 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl md:max-w-md md:rounded-2xl md:p-7">
         <div className="flex items-start justify-between gap-3">
           <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-soft text-primary">
             <ChatBubbleDotsIcon aria-hidden className="size-6" />

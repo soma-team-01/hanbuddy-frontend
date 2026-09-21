@@ -685,7 +685,8 @@
     "kstNotice": "所有時間均採用韓國標準時間 (KST)。",
     "hostedActivities": "這位朋友的其他經歷",
     "noOtherActivities": "還沒有其他經驗。",
-    "viewHostProfile": "查看 {name}的個人資料"
+    "viewHostProfile": "查看 {name}的個人資料",
+    "autoTranslated": "自動翻譯"
   },
   "Reviews": {
     "anonymous": "匿名",
@@ -739,15 +740,18 @@
   "AlternativePayment": {
     "trigger": "需要其他付款方式？",
     "title": "想使用其他付款方式？",
-    "description": "請填寫以下資訊並傳送給我們。",
-    "message": "您好！我想使用其他付款方式參加。\nHanBuddy註冊電子郵件：[註冊電子郵件]\n嚮導姓名：[嚮導姓名]\n體驗名稱：首爾林散步與聖水洞咖啡館之旅\n日期與時間：YYYY-MM-DD 14:00 (KST)\n參加人數：2人\n希望的付款方式：匯款至韓國銀行帳戶",
-    "exampleTitle": "諮詢內容範例",
-    "exampleHint": "以下僅為範例。請複製後替換為您的資訊及希望選擇的嚮導、體驗和時間，再傳送給我們。",
+    "description": "請確認以下預約資訊，填寫希望使用的付款方式後傳送給我們。",
+    "message": "您好！我想使用其他付款方式參加。\nHanBuddy註冊信箱: {email}\nBuddy姓名: {buddy}\n體驗名稱: {activity}\n日期與時間: {schedule}\n人數（含本人）: {participants}人\n希望使用的付款方式: {method}",
+    "exampleTitle": "詢問內容",
+    "exampleHint": "已填入您目前選擇的資訊。請核對內容並填寫希望使用的付款方式後再傳送。",
     "copy": "複製範本",
-    "copied": "已複製。請修改內容後透過您選擇的管道傳送。",
-    "copyFailed": "複製失敗。請選取上方範例並手動複製。",
+    "copied": "已複製。請核對內容並填寫希望使用的付款方式後傳送。",
+    "copyFailed": "複製失敗，請選取並複製上方訊息。",
     "email": "電子郵件",
-    "notConfirmed": "僅諮詢並不代表預訂已確認。"
+    "notConfirmed": "僅諮詢並不代表預訂已確認。",
+    "missingValue": "[請填寫]",
+    "missingSchedule": "[請選擇日期與時間]",
+    "preferredMethod": "[希望使用的付款方式]"
   },
   "Booking": {
     "title": "預約活動",
@@ -1288,7 +1292,10 @@
       "characters": "{count, number} 輸入的字符",
       "hostIntroductionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} 人物",
-      "experienceDescriptionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}"
+      "experienceDescriptionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}",
+      "experienceNameEnglish": "活動標題不會自動翻譯，請務必使用英語填寫。",
+      "fieldCharacters": "{count} / {max}字",
+      "listLimits": "{count} / {max}項 · 每項最多{length}字"
     },
     "placeholders": {
       "hostIntroduction": "介紹一下你自己以及為什麼你想舉辦這次體驗。",
@@ -1299,7 +1306,7 @@
       "meetingAddress": "例如，首爾特別市松坡區奧林匹克路25號",
       "meetingPlace": "例如，1號門售票亭",
       "itineraryTitle": "例如，學習團隊口號",
-      "itineraryDescription": "用 5 到 50 個字元描述此活動。",
+      "itineraryDescription": "用 5 到 1000 個字元描述此活動。",
       "duration": "例如，30",
       "maxGuests": "例如，8",
       "pricePerPerson": "例如，50000",
@@ -1346,9 +1353,9 @@
         "done": "完成",
         "errors": {
           "photo": "添加照片以繼續。",
-          "description": "寫5到50個字元。",
+          "description": "寫5到1000個字元。",
           "duration": "設定至少 1 分鐘的持續時間。",
-          "title": "輸入 1 到 20 個字元的活動標題。"
+          "title": "輸入 1 到 100 個字元的活動標題。"
         }
       }
     },
@@ -1453,16 +1460,16 @@
     },
     "errors": {
       "categoryRequired": "選擇一個類別以繼續。",
-      "hostIntroductionRequired": "寫一個 30 到 200 個字元的簡介。",
+      "hostIntroductionRequired": "寫一個 30 到 2000 個字元的簡介。",
       "photosMinimum": "新增 3 到 10 張體驗照片。",
-      "experienceNameRequired": "輸入 1 到 20 個字元之間的體驗名稱。",
-      "experienceDescriptionRequired": "寫下 30 到 200 個字符的詳細描述。",
+      "experienceNameRequired": "輸入 1 到 100 個字元之間的體驗名稱。",
+      "experienceDescriptionRequired": "寫下 30 到 3000 個字符的詳細描述。",
       "meetingAddressRequired": "輸入會議地址。",
       "meetingPlaceRequired": "輸入簡短的會議地點名稱。",
       "scheduleInvalid": "至少選擇一個日期並為每個選定日期設定開始時間。",
       "itineraryRequired": "增加至少一項行程活動。",
-      "itineraryTitleRequired": "每個活動都需要一個 1 到 20 個字元的標題。",
-      "itineraryDescriptionTooShort": "每項活動描述必須在 5 到 50 個字元之間。",
+      "itineraryTitleRequired": "每個活動都需要一個 1 到 100 個字元的標題。",
+      "itineraryDescriptionTooShort": "每項活動描述必須在 5 到 1000 個字元之間。",
       "itineraryDurationInvalid": "每項活動輸入大於 0 的持續時間。",
       "itineraryPhotoRequired": "為每項活動新增照片。",
       "maxGuestsInvalid": "輸入大於 0 的整數容量。",
@@ -1474,7 +1481,10 @@
       "submissionFailed": "我們無法登記您的經驗。請再試一次。",
       "scheduleInPast": "某些選定的日期或開始時間已經過去。僅選擇未來的會話。",
       "maxGuestsTooMany": "最多可容納 100 位客人。",
-      "itineraryTooMany": "您最多可以新增 20 項行程活動。"
+      "itineraryTooMany": "您最多可以新增 20 項行程活動。",
+      "meetingPlaceTooLong": "集合地點名稱不得超過500字。",
+      "listItemTooLong": "每項不得超過500字。",
+      "listTooMany": "最多可新增20項。"
     }
   },
   "PayPalPayment": {

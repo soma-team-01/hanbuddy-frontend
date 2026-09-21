@@ -12,7 +12,14 @@ import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ActivityReviewsSection } from "@/components/review/ActivityReviewsSection";
 import { Avatar } from "@/components/ui/Avatar";
-import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
+import {
+  CalendarDaysIcon,
+  CheckIcon,
+  ClockIcon,
+  MapPinIcon,
+  XIcon,
+  GlobeIcon,
+} from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
@@ -366,7 +373,7 @@ export function ActivityDetailView({
               ) : null}
             </div>
 
-            <div className="flex flex-col gap-10 py-8 md:py-10">
+            <div className="flex min-w-0 flex-col gap-10 py-8 [overflow-wrap:anywhere] md:py-10">
               <section className="flex flex-col gap-3">
                 <p className="font-display text-xs font-bold tracking-[0.14em] text-primary uppercase">
                   {activity.categoryLabel
@@ -398,7 +405,15 @@ export function ActivityDetailView({
                     />
                   )
                 ) : null}
-                <p className="max-w-2xl leading-7 text-muted">{activity.description}</p>
+                <p className="max-w-2xl leading-7 whitespace-pre-line text-muted">
+                  {activity.description}
+                </p>
+                {activity.isTranslated === true && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
+                    <GlobeIcon aria-hidden className="size-3.5 shrink-0" />
+                    {t("autoTranslated")}
+                  </p>
+                )}
               </section>
 
               <section className="grid gap-4 border-t border-line-soft pt-6 md:grid-cols-2 xl:grid-cols-3">
@@ -485,7 +500,9 @@ export function ActivityDetailView({
                           <h3 className="font-display text-base font-bold text-ink md:text-lg">
                             {item.title}
                           </h3>
-                          <p className="text-sm leading-6 text-muted">{item.description}</p>
+                          <p className="text-sm leading-6 whitespace-pre-line text-muted">
+                            {item.description}
+                          </p>
                         </div>
                       </li>
                     ))}

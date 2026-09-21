@@ -57,6 +57,18 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it.each([true, false, undefined])("marks only actual translated content: %s", (isTranslated) => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{ ...activity, isTranslated }}
+        bottomBar="inline"
+        preview
+        unoptimizedImages
+      />,
+    );
+    if (isTranslated) expect(screen.getByText("Automatically translated")).toBeInTheDocument();
+    else expect(screen.queryByText("Automatically translated")).not.toBeInTheDocument();
+  });
   it("keeps the guest host profile content visible while preview actions stay disabled", () => {
     renderWithIntl(
       <ActivityDetailView activity={activity} preview bottomBar="inline" unoptimizedImages />,

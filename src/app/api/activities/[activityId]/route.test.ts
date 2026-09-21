@@ -16,6 +16,28 @@ describe("GET /api/activities/[activityId]", () => {
     mockedGetBackend.mockReset();
   });
 
+  it.each([true, false, undefined])(
+    "preserves translation metadata (%s) without inferring it",
+    async (isTranslated) => {
+      const result = {
+        activityId: 42,
+        title: "Original English title",
+        contentLanguage: "KO",
+        ...(isTranslated === undefined ? {} : { isTranslated }),
+      };
+      mockedGetBackend.mockResolvedValue({
+        status: 200,
+        payload: { isSuccess: true, code: "200", message: "ok", result },
+        setCookies: [],
+      });
+      const response = await GET(
+        new NextRequest("http://localhost/api/activities/42?language=KO"),
+        context,
+      );
+      expect((await response.json()).result).toEqual(result);
+    },
+  );
+
   it("proxies the public tourist activity detail without an access token", async () => {
     mockedGetBackend.mockResolvedValue({
       status: 200,

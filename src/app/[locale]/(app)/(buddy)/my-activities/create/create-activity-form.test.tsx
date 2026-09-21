@@ -487,7 +487,7 @@ describe("CreateActivityForm", () => {
     clickNext();
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Write an introduction between 30 and 200 characters.",
+      "Write an introduction between 30 and 2000 characters.",
     );
     expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
   });

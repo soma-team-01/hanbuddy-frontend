@@ -1,18 +1,30 @@
 "use client";
 
 import { useId, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { XIcon } from "@/components/ui/icons";
 import { useModalDialog } from "@/components/ui/use-modal-dialog";
 import { ContactChannelLinks } from "@/components/contact/ContactChannelLinks";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
+import { myProfileQueryOptions } from "@/lib/query/users";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
+
+export interface PaymentInquiryBooking {
+  activityTitle: string;
+  buddyName: string;
+  startAt?: string;
+  participants: number;
+}
 
 /** Inquiry only: opening and following a channel never create a booking or payment. */
 export function AlternativePaymentDialog({
   onClose,
+  booking,
 }: Readonly<{
   onClose: () => void;
+  booking?: PaymentInquiryBooking;
 }>) {
   const t = useTranslations("AlternativePayment");
   const tAccessibility = useTranslations("Accessibility");
@@ -21,16 +33,29 @@ export function AlternativePaymentDialog({
   const titleId = useId();
   const descriptionId = useId();
   const { dialogRef, closeRef } = useModalDialog();
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const message = t("message");
+  const profile = useQuery({ ...myProfileQueryOptions(), retry: false, refetchOnMount: "always" });
+  const [copyState, setCopyState] = useState<{
+    message: string;
+    result: "copied" | "failed";
+  } | null>(null);
+  const schedule = booking?.startAt ? getSeoulDateTimeParts(booking.startAt) : null;
+  const email = profile.isSuccess && !profile.isFetching ? profile.data.email : undefined;
+  const message = t("message", {
+    email: email?.trim() || t("missingValue"),
+    buddy: booking?.buddyName.trim() || t("missingValue"),
+    activity: booking?.activityTitle.trim() || t("missingValue"),
+    schedule: schedule ? `${schedule.date} ${schedule.time} (KST)` : t("missingSchedule"),
+    participants: booking?.participants ?? t("missingValue"),
+    method: t("preferredMethod"),
+  });
 
   /** Copies the localized inquiry template and exposes clipboard failures to the user. */
   async function copyTemplate() {
     try {
       await navigator.clipboard.writeText(message);
-      setCopyState("copied");
+      setCopyState({ message, result: "copied" });
     } catch {
-      setCopyState("failed");
+      setCopyState({ message, result: "failed" });
     }
   }
 
@@ -88,9 +113,9 @@ export function AlternativePaymentDialog({
             >
               {t("copy")}
             </button>
-            {copyState !== "idle" && (
+            {copyState?.message === message && (
               <p role="status" className="mt-2 text-xs leading-5 text-muted">
-                {t(copyState === "copied" ? "copied" : "copyFailed")}
+                {t(copyState.result === "copied" ? "copied" : "copyFailed")}
               </p>
             )}
           </div>

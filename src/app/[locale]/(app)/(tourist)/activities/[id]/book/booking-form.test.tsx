@@ -14,6 +14,7 @@ import type { ApplicationResponse, PaymentReadyResponse } from "@/types/applicat
 import { BookingForm } from "./booking-form";
 
 const replace = vi.fn();
+vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn(() => new Promise(() => {})) }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -144,14 +145,20 @@ async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
 }
 
 describe("BookingForm", () => {
-  it("opens an example inquiry before payment consent without disclosing form data or making a booking request", () => {
+  it("fills current selections before consent without making a booking or exposing private requests", () => {
     renderWithQueryClient(
       <BookingForm
         activity={{
           ...activity,
           sessions: [
             ...activity.sessions,
-            { id: "102", dateLabel: "2026-07-21", timeLabel: "14:00", spotsLeft: 2 },
+            {
+              id: "102",
+              dateLabel: "2026-07-21",
+              timeLabel: "14:00",
+              startAt: "2026-07-21T14:00:00+09:00",
+              spotsLeft: 2,
+            },
           ],
         }}
         initialSessionId="102"
@@ -165,15 +172,20 @@ describe("BookingForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
     const dialog = screen.getByRole("dialog", { name: "Prefer another payment method?" });
-    expect(dialog).toHaveTextContent("Example inquiry");
-    expect(dialog).toHaveTextContent("Seoul Forest Walk & Seongsu Cafe Tour");
-    expect(dialog).not.toHaveTextContent("Bukchon Hidden Gems");
-    expect(dialog).not.toHaveTextContent("2026-07-21");
-    expect(dialog).toHaveTextContent("Participants: 2");
+    expect(dialog).toHaveTextContent("Your inquiry");
+    expect(dialog).not.toHaveTextContent("Seoul Forest Walk & Seongsu Cafe Tour");
+    expect(dialog).toHaveTextContent("Bukchon Hidden Gems");
+    expect(dialog).toHaveTextContent("2026-07-21 14:00 (KST)");
+    expect(dialog).toHaveTextContent("Participants (including me): 2");
+    expect(dialog).toHaveTextContent("Jihoon Kim");
     expect(dialog).not.toHaveTextContent("Private dietary request");
     expect(mockedCreateApplication).not.toHaveBeenCalled();
     expect(mockedGetApplicationConflicts).not.toHaveBeenCalled();
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+    fireEvent.click(screen.getByRole("button", { name: "Decrease participants" }));
+    fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent("Participants (including me): 1");
   });
 
   it("keeps the example inquiry available when pricing and schedules are missing", () => {
@@ -185,7 +197,8 @@ describe("BookingForm", () => {
     );
     expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
-    expect(screen.getByRole("dialog")).toHaveTextContent("Example inquiry");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Your inquiry");
+    expect(screen.getByRole("dialog")).toHaveTextContent("[Select a date and time]");
     expect(mockedCreateApplication).not.toHaveBeenCalled();
   });
 

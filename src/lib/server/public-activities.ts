@@ -144,8 +144,10 @@ function detail(value: unknown): TouristActivityDetail {
     });
   if (item.hostIntroduction !== undefined && typeof item.hostIntroduction !== "string")
     unavailable();
+  if (item.isTranslated !== undefined && typeof item.isTranslated !== "boolean") unavailable();
   return {
     ...result,
+    ...(typeof item.isTranslated === "boolean" ? { isTranslated: item.isTranslated } : {}),
     ...(item.hostIntroduction !== undefined
       ? { hostIntroduction: item.hostIntroduction as string }
       : {}),

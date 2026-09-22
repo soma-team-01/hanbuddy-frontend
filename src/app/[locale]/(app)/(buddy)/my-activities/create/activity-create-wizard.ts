@@ -26,12 +26,15 @@ export const ACTIVITY_CREATE_STEPS = [
 ] as const;
 
 export const ACTIVITY_CREATE_LIMITS = {
-  hostIntroduction: { min: 30, max: 200 },
-  experienceName: { min: 1, max: 20 },
-  experienceDescription: { min: 30, max: 200 },
+  hostIntroduction: { min: 30, max: 2000 },
+  experienceName: { min: 1, max: 100 },
+  experienceDescription: { min: 30, max: 3000 },
   photos: { min: 3, max: 10 },
-  itineraryTitle: { min: 1, max: 20 },
-  itineraryDescription: { min: 5, max: 50 },
+  itineraryTitle: { min: 1, max: 100 },
+  itineraryDescription: { min: 5, max: 1000 },
+  meetingPlace: { max: 500 },
+  listItem: { max: 500 },
+  listItems: { max: 20 },
   // 백엔드 ActivityUpsertRequest 계약 상한
   maxGuests: { max: 100 },
   itineraryItems: { max: 20 },
@@ -47,6 +50,17 @@ export interface PhotoDraft {
   previewUrl: string;
   /** 기존 이미지 유지 시 재사용할 S3 key */
   existingKey?: string;
+}
+
+/** Move a photo without recreating its File, preview URL, or existing upload key. */
+export function reorderPhotos(photos: PhotoDraft[], id: string, targetId: string): PhotoDraft[] {
+  const from = photos.findIndex((photo) => photo.id === id);
+  const to = photos.findIndex((photo) => photo.id === targetId);
+  if (from < 0 || to < 0 || from === to) return photos;
+  const next = [...photos];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
 }
 
 export interface ItineraryDraft {
@@ -98,6 +112,9 @@ export type ActivityCreateErrorKey =
   | "experienceDescriptionRequired"
   | "meetingAddressRequired"
   | "meetingPlaceRequired"
+  | "meetingPlaceTooLong"
+  | "listItemTooLong"
+  | "listTooMany"
   | "scheduleInvalid"
   | "scheduleInPast"
   | "itineraryRequired"
@@ -145,6 +162,14 @@ function isPositiveInteger(value: string) {
 function isWithinLength(value: string, min: number, max: number) {
   const length = value.trim().length;
   return length >= min && length <= max;
+}
+
+export function validateActivityList(value: string): ActivityCreateErrorKey | null {
+  const lines = splitLines(value);
+  if (lines.length > ACTIVITY_CREATE_LIMITS.listItems.max) return "listTooMany";
+  return lines.some((line) => line.length > ACTIVITY_CREATE_LIMITS.listItem.max)
+    ? "listItemTooLong"
+    : null;
 }
 
 /** 일정이 Asia/Seoul 기준 현재보다 과거인지 판단한다 (오늘 날짜는 지나간 시각까지 과거로 본다) */
@@ -228,6 +253,8 @@ export function validateActivityCreateStep(
     }
     case "meeting":
       if (!draft.meetingAddress.trim()) return "meetingAddressRequired";
+      if (draft.meetingPlace.trim().length > ACTIVITY_CREATE_LIMITS.meetingPlace.max)
+        return "meetingPlaceTooLong";
       return draft.meetingPlace.trim() ? null : "meetingPlaceRequired";
     case "schedule": {
       if (
@@ -257,7 +284,9 @@ export function validateActivityCreateStep(
     case "price":
       return isPositiveInteger(draft.pricePerPerson) ? null : "priceInvalid";
     case "inclusions":
-      return draft.inclusions.trim() ? null : "inclusionsRequired";
+      return draft.inclusions.trim()
+        ? validateActivityList(draft.inclusions)
+        : "inclusionsRequired";
     case "discount": {
       if (draft.discountType !== "none") {
         const discount = Number(draft.discountPercent);
@@ -275,7 +304,10 @@ export function validateActivityCreateStep(
       return null;
     }
     case "restrictions":
-      return draft.hasNoRestrictions || draft.restrictions.trim() ? null : "restrictionsRequired";
+      if (draft.hasNoRestrictions) return null;
+      return draft.restrictions.trim()
+        ? validateActivityList(draft.restrictions)
+        : "restrictionsRequired";
   }
 }
 

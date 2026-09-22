@@ -203,6 +203,7 @@ describe("ActivityDetailContent", () => {
       "eager",
     );
     expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Contact us" })).toBeInTheDocument();
     const krwPrice = screen.getByText("₩45,000");
     const referencePrice = screen.getByText("(≈ $32.50)");
     expect(referencePrice).toHaveClass("text-muted");
@@ -256,6 +257,13 @@ describe("ActivityDetailContent", () => {
     // 선택하면 다이얼로그가 닫히고 날짜 박스와 Book now 링크가 그 일정으로 바뀐다
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
+    expect(screen.getByRole("link", { name: "Book now" })).toHaveAttribute(
+      "href",
+      "/en/activities/42/book?scheduleId=102",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Contact us" }));
+    expect(screen.getByRole("dialog", { name: "Have more questions?" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
     expect(screen.getByRole("link", { name: "Book now" })).toHaveAttribute(
       "href",
       "/en/activities/42/book?scheduleId=102",

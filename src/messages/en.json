@@ -685,7 +685,8 @@
     "kstNotice": "All times are in Korea Standard Time (KST).",
     "hostedActivities": "Other experiences from this buddy",
     "noOtherActivities": "No other experiences yet.",
-    "viewHostProfile": "View {name}'s profile"
+    "viewHostProfile": "View {name}'s profile",
+    "autoTranslated": "Auto-translated"
   },
   "Reviews": {
     "anonymous": "Anonymous",
@@ -729,18 +730,28 @@
     "noneForRating": "No reviews with this rating yet.",
     "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
   },
+  "ActivityContact": {
+    "teaser": "Have a question? Feel free to ask us anytime!",
+    "trigger": "Contact us",
+    "title": "Have more questions?",
+    "description": "Feel free to reach out to the HanBuddy team through your preferred channel.",
+    "hint": "Share the activity name or page link so we can help with your question."
+  },
   "AlternativePayment": {
     "trigger": "Need another payment method?",
     "title": "Prefer another payment method?",
-    "description": "Fill in the details below and send them to us.",
-    "message": "Hi! I’d like to join using another payment method.\nHanBuddy sign-up email: [your email]\nBuddy: [buddy name]\nExperience: Seoul Forest Walk & Seongsu Cafe Tour\nSchedule: YYYY-MM-DD 14:00 (KST)\nParticipants: 2\nPreferred payment method: Transfer to a Korean bank account",
-    "exampleTitle": "Example inquiry",
-    "exampleHint": "This is an example. Copy it and replace the details with your own information and preferred buddy, experience and schedule before sending.",
+    "description": "Review your booking details below, add your preferred payment method, and send the message to us.",
+    "message": "Hi! I’d like to join using another payment method.\nHanBuddy sign-up email: {email}\nBuddy: {buddy}\nExperience: {activity}\nSchedule: {schedule}\nParticipants (including me): {participants}\nPreferred payment method: {method}",
+    "exampleTitle": "Your inquiry",
+    "exampleHint": "Filled from your current selections. Check the details and add your preferred payment method before sending.",
     "copy": "Copy template",
-    "copied": "Copied. Edit the details, then send it through your preferred channel.",
-    "copyFailed": "Could not copy. Please select and copy the example above.",
+    "copied": "Copied. Check the details and add your preferred payment method before sending.",
+    "copyFailed": "Could not copy. Please select and copy the message above.",
     "email": "Email",
-    "notConfirmed": "An inquiry does not confirm your booking."
+    "notConfirmed": "An inquiry does not confirm your booking.",
+    "missingValue": "[Please fill in]",
+    "missingSchedule": "[Select a date and time]",
+    "preferredMethod": "[Your preferred payment method]"
   },
   "Booking": {
     "title": "Book activity",
@@ -1281,7 +1292,10 @@
       "characters": "{count, number} characters entered",
       "hostIntroductionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} characters",
-      "experienceDescriptionCharacters": "{count, number}/{max, number} characters · minimum {min, number}"
+      "experienceDescriptionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
+      "experienceNameEnglish": "Activity titles are not automatically translated. Please write the title <emphasis>in English</emphasis>.",
+      "fieldCharacters": "{count} / {max} characters",
+      "listLimits": "{count} / {max} items · Up to {length} characters per item"
     },
     "placeholders": {
       "hostIntroduction": "Introduce yourself and why you want to host this experience.",
@@ -1292,7 +1306,7 @@
       "meetingAddress": "e.g., 25 Olympic-ro, Songpa-gu, Seoul",
       "meetingPlace": "e.g., Gate 1 ticket booth",
       "itineraryTitle": "e.g., Learn the team chants",
-      "itineraryDescription": "Describe this activity in 5 to 50 characters.",
+      "itineraryDescription": "Describe this activity in 5 to 1000 characters.",
       "duration": "e.g., 30",
       "maxGuests": "e.g., 8",
       "pricePerPerson": "e.g., 50000",
@@ -1302,6 +1316,9 @@
       "restrictions": "e.g., Comfortable shoes are recommended"
     },
     "photos": {
+      "reorderHint": "Change the cover photo or drag photos to reorder them.",
+      "move": "Move photo {index}",
+      "moved": "Photo moved to position {position} of {count}",
       "upload": "Add experience photos",
       "hint": "JPG, PNG, or WebP · at least 3, up to 10",
       "label": "Upload experience photos",
@@ -1339,9 +1356,9 @@
         "done": "Done",
         "errors": {
           "photo": "Add a photo to continue.",
-          "description": "Write 5 to 50 characters.",
+          "description": "Write 5 to 1000 characters.",
           "duration": "Set a duration of at least 1 minute.",
-          "title": "Enter a 1 to 20 character activity title."
+          "title": "Enter a 1 to 100 character activity title."
         }
       }
     },
@@ -1446,16 +1463,16 @@
     },
     "errors": {
       "categoryRequired": "Choose a category to continue.",
-      "hostIntroductionRequired": "Write an introduction between 30 and 200 characters.",
+      "hostIntroductionRequired": "Write an introduction between 30 and 2000 characters.",
       "photosMinimum": "Add between 3 and 10 experience photos.",
-      "experienceNameRequired": "Enter an experience name between 1 and 20 characters.",
-      "experienceDescriptionRequired": "Write a detailed description between 30 and 200 characters.",
+      "experienceNameRequired": "Enter an experience name between 1 and 100 characters.",
+      "experienceDescriptionRequired": "Write a detailed description between 30 and 3000 characters.",
       "meetingAddressRequired": "Enter the meeting address.",
       "meetingPlaceRequired": "Enter a short meeting place name.",
       "scheduleInvalid": "Choose at least one date and set a start time for every selected date.",
       "itineraryRequired": "Add at least one itinerary activity.",
-      "itineraryTitleRequired": "Every activity needs a title between 1 and 20 characters.",
-      "itineraryDescriptionTooShort": "Each activity description must be between 5 and 50 characters.",
+      "itineraryTitleRequired": "Every activity needs a title between 1 and 100 characters.",
+      "itineraryDescriptionTooShort": "Each activity description must be between 5 and 1000 characters.",
       "itineraryDurationInvalid": "Enter a duration greater than 0 for every activity.",
       "itineraryPhotoRequired": "Add a photo for every activity.",
       "maxGuestsInvalid": "Enter a whole-number capacity greater than 0.",
@@ -1467,7 +1484,10 @@
       "submissionFailed": "We couldn't register your experience. Please try again.",
       "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only.",
       "maxGuestsTooMany": "Capacity can be at most 100 guests.",
-      "itineraryTooMany": "You can add up to 20 itinerary activities."
+      "itineraryTooMany": "You can add up to 20 itinerary activities.",
+      "meetingPlaceTooLong": "Use no more than 500 characters for the meeting place.",
+      "listItemTooLong": "Each item must be 500 characters or fewer.",
+      "listTooMany": "You can add up to 20 items."
     }
   },
   "PayPalPayment": {

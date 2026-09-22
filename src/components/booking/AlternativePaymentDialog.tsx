@@ -1,17 +1,41 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { InstagramIcon, KakaoTalkIcon, MailIcon, WhatsAppIcon, XIcon } from "@/components/ui/icons";
-import { CONTACT_DETAILS } from "@/lib/contact-details";
+import { XIcon } from "@/components/ui/icons";
+import { useModalDialog } from "@/components/ui/use-modal-dialog";
+import { ContactChannelLinks } from "@/components/contact/ContactChannelLinks";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
+import { myProfileQueryOptions } from "@/lib/query/users";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
+
+export interface PaymentInquiryBooking {
+  activityTitle: string;
+  buddyName: string;
+  startAt?: string;
+  dateLabel?: string;
+  timeLabel?: string;
+  participants: number;
+}
+
+/** Prefer the precise KST timestamp, retaining selected labels for legacy sessions. */
+function getInquirySchedule(booking?: PaymentInquiryBooking): string | null {
+  const schedule = booking?.startAt ? getSeoulDateTimeParts(booking.startAt) : null;
+  if (schedule) return `${schedule.date} ${schedule.time} (KST)`;
+  const date = booking?.dateLabel?.trim();
+  const time = booking?.timeLabel?.trim();
+  return date && time ? `${date} ${time} (KST)` : null;
+}
 
 /** Inquiry only: opening and following a channel never create a booking or payment. */
 export function AlternativePaymentDialog({
   onClose,
+  booking,
 }: Readonly<{
   onClose: () => void;
+  booking?: PaymentInquiryBooking;
 }>) {
   const t = useTranslations("AlternativePayment");
   const tAccessibility = useTranslations("Accessibility");
@@ -19,52 +43,30 @@ export function AlternativePaymentDialog({
   const { trackInquiry } = useMeasurementEvents();
   const titleId = useId();
   const descriptionId = useId();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const message = t("message");
-  const channels = [
-    {
-      name: "WhatsApp",
-      channel: "whatsapp",
-      Icon: WhatsAppIcon,
-      href: `${CONTACT_DETAILS.whatsappUrl}?text=${encodeURIComponent(message)}`,
-    },
-    { name: "KakaoTalk", channel: "kakao", Icon: KakaoTalkIcon, href: CONTACT_DETAILS.kakaoUrl },
-    {
-      name: "Instagram",
-      channel: "instagram",
-      Icon: InstagramIcon,
-      href: CONTACT_DETAILS.instagramUrl,
-    },
-    {
-      name: t("email"),
-      channel: "email",
-      Icon: MailIcon,
-      href: `mailto:${CONTACT_DETAILS.email}`,
-    },
-  ];
+  const { dialogRef, closeRef } = useModalDialog();
+  const profile = useQuery({ ...myProfileQueryOptions(), retry: false, refetchOnMount: "always" });
+  const [copyState, setCopyState] = useState<{
+    message: string;
+    result: "copied" | "failed";
+  } | null>(null);
+  const schedule = getInquirySchedule(booking);
+  const email = profile.data?.email;
+  const message = t("message", {
+    email: email?.trim() || t("missingValue"),
+    buddy: booking?.buddyName.trim() || t("missingValue"),
+    activity: booking?.activityTitle.trim() || t("missingValue"),
+    schedule: schedule ?? t("missingSchedule"),
+    participants: booking?.participants ?? t("missingValue"),
+    method: t("preferredMethod"),
+  });
 
-  useEffect(() => {
-    const opener = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    const dialog = dialogRef.current;
-    document.body.style.overflow = "hidden";
-    dialog?.showModal();
-    closeRef.current?.focus();
-    return () => {
-      dialog?.close();
-      document.body.style.overflow = previousOverflow;
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
-  }, []);
-
+  /** Copies the localized inquiry template and exposes clipboard failures to the user. */
   async function copyTemplate() {
     try {
       await navigator.clipboard.writeText(message);
-      setCopyState("copied");
+      setCopyState({ message, result: "copied" });
     } catch {
-      setCopyState("failed");
+      setCopyState({ message, result: "failed" });
     }
   }
 
@@ -77,7 +79,7 @@ export function AlternativePaymentDialog({
         event.preventDefault();
         onClose();
       }}
-      className="m-0 h-dvh max-h-none w-screen max-w-none items-end justify-center overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] open:flex md:items-center md:p-6"
+      className="motion-dialog m-0 h-dvh max-h-none w-screen max-w-none items-end justify-center overflow-hidden border-0 bg-transparent p-0 text-ink backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] open:flex md:items-center md:p-6"
     >
       <button
         type="button"
@@ -87,7 +89,7 @@ export function AlternativePaymentDialog({
         onClick={onClose}
         className="absolute inset-0 cursor-default"
       />
-      <div className="motion-dialog relative flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-canvas-soft shadow-2xl md:max-w-md md:rounded-2xl">
+      <div className="relative flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-canvas-soft shadow-2xl md:max-w-md md:rounded-2xl">
         <div className="flex shrink-0 items-start justify-between gap-3 px-5 pt-5 md:px-7 md:pt-7">
           <h2 id={titleId} className="font-display text-lg leading-7 font-bold">
             {t("title")}
@@ -122,27 +124,18 @@ export function AlternativePaymentDialog({
             >
               {t("copy")}
             </button>
-            {copyState !== "idle" && (
+            {copyState?.message === message && (
               <p role="status" className="mt-2 text-xs leading-5 text-muted">
-                {t(copyState === "copied" ? "copied" : "copyFailed")}
+                {t(copyState.result === "copied" ? "copied" : "copyFailed")}
               </p>
             )}
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {channels.map(({ name, channel, Icon, href }) => (
-              <a
-                key={name}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackInquiry({ channel, placement: "payment_inquiry", locale })}
-                className="flex min-h-20 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-line-soft px-1 py-3 text-xs font-medium text-ink transition-colors hover:border-primary hover:text-primary-strong"
-              >
-                <Icon aria-hidden className="size-6 text-primary" />
-                <span>{name}</span>
-              </a>
-            ))}
-          </div>
+          <ContactChannelLinks
+            message={message}
+            onChannelClick={(channel) =>
+              trackInquiry({ channel, placement: "payment_inquiry", locale })
+            }
+          />
           <p className="mt-4 text-center text-xs leading-5 text-muted">{t("notConfirmed")}</p>
         </div>
       </div>

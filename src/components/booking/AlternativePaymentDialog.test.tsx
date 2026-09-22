@@ -40,6 +40,58 @@ describe("AlternativePaymentDialog", () => {
     vi.mocked(getMyProfile).mockImplementation(() => new Promise(() => {}));
   });
   afterEach(() => vi.unstubAllGlobals());
+  it.each([undefined, "invalid-date"])(
+    "uses selected labels when startAt is %s and keeps copy and WhatsApp aligned",
+    async (startAt) => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal("navigator", { clipboard: { writeText } });
+      renderWithIntl(
+        <AlternativePaymentDialog
+          booking={{ ...booking, startAt, dateLabel: "2027-01-02", timeLabel: "14:30" }}
+          onClose={vi.fn()}
+        />,
+      );
+      const message = screen.getByTestId("payment-inquiry-message").textContent;
+      expect(message).toContain("2027-01-02 14:30 (KST)");
+      expect(message).not.toContain(en.AlternativePayment.missingSchedule);
+      fireEvent.click(screen.getByRole("button", { name: en.AlternativePayment.copy }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith(message));
+      expect(
+        new URL(
+          screen.getByRole("link", { name: "WhatsApp" }).getAttribute("href")!,
+        ).searchParams.get("text"),
+      ).toBe(message);
+    },
+  );
+
+  it("prefers the exact startAt converted to KST over fallback labels", () => {
+    renderWithIntl(
+      <AlternativePaymentDialog
+        booking={{ ...booking, dateLabel: "Fallback date", timeLabel: "Fallback time" }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("payment-inquiry-message")).toHaveTextContent(
+      "2027-01-01 01:30 (KST)",
+    );
+    expect(screen.getByTestId("payment-inquiry-message")).not.toHaveTextContent("Fallback");
+  });
+
+  it.each([
+    { dateLabel: "2027-01-02", timeLabel: undefined },
+    { dateLabel: undefined, timeLabel: "14:30" },
+    { dateLabel: " ", timeLabel: " " },
+  ])("keeps the missing-schedule prompt for incomplete labels: %j", (labels) => {
+    renderWithIntl(
+      <AlternativePaymentDialog
+        booking={{ ...booking, startAt: undefined, ...labels }}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("payment-inquiry-message")).toHaveTextContent(
+      en.AlternativePayment.missingSchedule,
+    );
+  });
   it("keeps the cached email in copied and WhatsApp messages while refreshing the profile", async () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(userKeys.me(), { email: "cached@example.test" });

@@ -15,7 +15,18 @@ export interface PaymentInquiryBooking {
   activityTitle: string;
   buddyName: string;
   startAt?: string;
+  dateLabel?: string;
+  timeLabel?: string;
   participants: number;
+}
+
+/** Prefer the precise KST timestamp, retaining selected labels for legacy sessions. */
+function getInquirySchedule(booking?: PaymentInquiryBooking): string | null {
+  const schedule = booking?.startAt ? getSeoulDateTimeParts(booking.startAt) : null;
+  if (schedule) return `${schedule.date} ${schedule.time} (KST)`;
+  const date = booking?.dateLabel?.trim();
+  const time = booking?.timeLabel?.trim();
+  return date && time ? `${date} ${time} (KST)` : null;
 }
 
 /** Inquiry only: opening and following a channel never create a booking or payment. */
@@ -38,13 +49,13 @@ export function AlternativePaymentDialog({
     message: string;
     result: "copied" | "failed";
   } | null>(null);
-  const schedule = booking?.startAt ? getSeoulDateTimeParts(booking.startAt) : null;
+  const schedule = getInquirySchedule(booking);
   const email = profile.data?.email;
   const message = t("message", {
     email: email?.trim() || t("missingValue"),
     buddy: booking?.buddyName.trim() || t("missingValue"),
     activity: booking?.activityTitle.trim() || t("missingValue"),
-    schedule: schedule ? `${schedule.date} ${schedule.time} (KST)` : t("missingSchedule"),
+    schedule: schedule ?? t("missingSchedule"),
     participants: booking?.participants ?? t("missingValue"),
     method: t("preferredMethod"),
   });

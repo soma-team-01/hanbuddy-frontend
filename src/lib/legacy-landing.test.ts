@@ -41,8 +41,8 @@ describe("resolveLegacyLandingPath", () => {
     ["/events/kbo-gocheok", "/activities/1"],
     ["/events/hanriver", "/"],
     ["/events", "/"],
-    ["/about", "/"],
-    ["/about/", "/"],
+    ["/privacy", "/policies/privacy-policy"],
+    ["/privacy/", "/policies/privacy-policy"],
   ])("maps the retired landing page %s to %s", (pathname, target) => {
     expect(resolveLegacyLandingPath(pathname, new URLSearchParams({ utm_source: "ads" }))).toEqual({
       pathname: target,
@@ -50,7 +50,8 @@ describe("resolveLegacyLandingPath", () => {
     });
   });
 
-  it.each(["/", "/explore", "/activities/4", "/applications", "/apply-now", "/events-x"])(
+  // /about은 MVP에도 같은 경로의 소개 페이지가 있으므로 로케일만 붙여 그대로 보낸다
+  it.each(["/", "/explore", "/about", "/activities/4", "/applications", "/apply-now", "/events-x"])(
     "leaves the current route %s alone",
     (pathname) => {
       expect(resolveLegacyLandingPath(pathname, new URLSearchParams())).toBeNull();

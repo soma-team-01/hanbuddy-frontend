@@ -155,6 +155,7 @@
     "languageDialogDescription": "請選擇在 HanBuddy 中使用的語言。",
     "home": "首頁",
     "explore": "探索",
+    "about": "關於我們",
     "applications": "我的預訂",
     "dashboard": "儀表板",
     "buddyWorkspace": "夥伴管理",
@@ -384,6 +385,117 @@
       "title": "您想分享韓國的哪一部分？",
       "description": "啟動您的好友帳戶，將某個地點、品味或日常熱情轉化為 HanBuddy 體驗。",
       "button": "從好友開始"
+    }
+  },
+  "About": {
+    "metadataTitle": "關於 HanBuddy | 陪你看首爾比賽之夜的團隊",
+    "metadataDescription": "認識策劃並營運 HanBuddy 的首爾團隊 ZeroOne：蠶室、高尺 KBO 棒球之夜和足球之夜，由韓國本地好友全程陪同。",
+    "hero": {
+      "eyebrow": "關於 HanBuddy",
+      "title": "讓「像本地人一樣」真正發生的團隊。",
+      "description": "和韓國本地好友一起的首爾小團比賽之夜。我們負責策劃、買票，並坐在你身邊一起加油。你只需到場。",
+      "primaryCta": "探索體驗",
+      "secondaryCta": "認識團隊",
+      "collageAlt1": "三位朋友在高尺天空巨蛋看台上開心微笑",
+      "collageAlt2": "旅客和本地好友在蠶室棒球場與斗山熊隊吉祥物合影",
+      "collageAlt3": "在K聯賽賽場同行的旅客與本地好友"
+    },
+    "origin": {
+      "eyebrow": "我們為什麼開始",
+      "title": "韓國最精彩的時刻，往往鎖在「僅限本地人」之後。",
+      "body1": "一切始於一張眼睜睜消失的票：蠶室夜場比賽，幾秒售罄，而購票應用要求的是",
+      "body1Strong": "韓國手機號碼和韓國銀行卡。",
+      "body2": "沒有韓國號碼、沒有韓國卡，就沒有票。",
+      "body2Strong": "HanBuddy 用一位本地好友為你打開這些夜晚：買票、佔座，坐在你身邊。"
+    },
+    "how": {
+      "eyebrow": "運作方式",
+      "title": "每一個比賽之夜都由我們親自營運。",
+      "steps": {
+        "plan": {
+          "title": "每一場都由我們親自策劃",
+          "description": "蠶室、高尺的棒球，首爾世界盃競技場的足球。一場真實比賽、一個小團、一位會唱加油歌的好友。"
+        },
+        "confirm": {
+          "title": "線上預訂後，我們立即買票",
+          "description": "比賽門票和球場餐食已包含在價格中。專人確認集合地點，並解答你的問題。"
+        },
+        "improve": {
+          "title": "每一場都在變得更好",
+          "description": "每位旅客都會填寫一分鐘問卷，答案會改變下一場的安排。"
+        }
+      }
+    },
+    "stats": {
+      "eyebrow": "到目前為止",
+      "title": "來自真實比賽之夜的數字。",
+      "items": {
+        "runs": {
+          "value": "7 場",
+          "label": "自 2026 年 6 月以來的比賽之夜"
+        },
+        "rating": {
+          "value": "4.9 / 5",
+          "label": "旅客平均滿意度"
+        },
+        "stadiums": {
+          "value": "3 座",
+          "label": "球場：蠶室、高尺、首爾世界盃"
+        }
+      },
+      "note": "滿意度基於 2026 年 6 月至 9 月的 10 份旅客問卷。"
+    },
+    "timeline": {
+      "eyebrow": "活動記錄",
+      "title": "我們去過的地方，以及接下來的行程。",
+      "items": {
+        "june": {
+          "date": "2026 年 6 月",
+          "title": "蠶室首場 KBO 之夜",
+          "description": "一位旅客、全體成員擔任好友，以及滿滿的收穫。"
+        },
+        "july": {
+          "date": "2026 年 7 月",
+          "title": "蠶室 KBO 第二場",
+          "description": "三位旅客、加油歌、炸雞和啤酒。問卷全部 5 分滿分。"
+        },
+        "august": {
+          "date": "2026 年 8 月",
+          "title": "首場足球之夜：K 聯賽",
+          "description": "首爾世界盃競技場、圍巾，以及一位說「像和朋友在一起」的旅客。"
+        },
+        "september": {
+          "date": "2026 年 9 月",
+          "title": "四場比賽之夜，含首次室內巨蛋",
+          "description": "高尺天空巨蛋和蠶室、天藍色球衣、吉祥物合影。截至目前問卷全部 5 分滿分。"
+        }
+      }
+    },
+    "team": {
+      "eyebrow": "認識團隊",
+      "title": "我們是 ZeroOne，三位來自首爾的朋友，一起營運 HanBuddy。",
+      "description": "我們策劃每一夜、購買門票、回覆訊息，並和你一起坐在看台上。",
+      "backed": "HanBuddy 是韓國科學技術資訊通訊部主辦的國家軟體人才計畫 AI·SW Maestro 第 17 期 ZeroOne 團隊的官方專案。",
+      "linkedin": "LinkedIn",
+      "members": {
+        "minhyung": {
+          "name": "Minhyung Kim",
+          "role": "團隊負責人 · 營運"
+        },
+        "yoohyun": {
+          "name": "Yoohyun Kim",
+          "role": "體驗策劃 · 內容"
+        },
+        "junyoung": {
+          "name": "Junyoung Lee",
+          "role": "預訂 · 配對營運"
+        }
+      }
+    },
+    "cta": {
+      "title": "認識我們最好的方式，就是在球場。",
+      "description": "選個日期，預訂座位，剩下的交給我們。",
+      "button": "查看即將到來的比賽之夜"
     }
   },
   "Auth": {

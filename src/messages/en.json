@@ -155,6 +155,7 @@
     "languageDialogDescription": "Choose the language used across HanBuddy.",
     "home": "Home",
     "explore": "Explore",
+    "about": "About",
     "applications": "My Applications",
     "dashboard": "Dashboard",
     "buddyWorkspace": "Buddy workspace",
@@ -384,6 +385,117 @@
       "title": "What part of Korea would you love to share?",
       "description": "Start your buddy account and turn a place, taste, or everyday passion into a HanBuddy experience.",
       "button": "Start as a buddy"
+    }
+  },
+  "About": {
+    "metadataTitle": "About HanBuddy | The team behind your Seoul game night",
+    "metadataDescription": "Meet ZeroOne, the Seoul team that plans and runs HanBuddy: KBO baseball nights at Jamsil and Gocheok and football nights with a Korean local buddy.",
+    "hero": {
+      "eyebrow": "About HanBuddy",
+      "title": "The team that makes “like a local” happen.",
+      "description": "Small-group game nights in Seoul with a Korean buddy. We plan the night, buy your ticket, and sit next to you. You just show up.",
+      "primaryCta": "Explore experiences",
+      "secondaryCta": "Meet the team",
+      "collageAlt1": "Three friends smiling in the stands at Gocheok Sky Dome",
+      "collageAlt2": "Guests and buddies posing with the Doosan Bears mascot at Jamsil Stadium",
+      "collageAlt3": "Guests and buddies at a K League match"
+    },
+    "origin": {
+      "eyebrow": "Why we started",
+      "title": "Some of Korea’s best moments are locked behind “locals only.”",
+      "body1": "It started with a ticket we watched disappear: a Jamsil night game, sold out in seconds, on an app that wants",
+      "body1Strong": "a Korean phone number and a Korean card.",
+      "body2": "No Korean number, no Korean card, no ticket.",
+      "body2Strong": "HanBuddy unlocks those nights with a local buddy who buys the ticket, saves the seat, and sits next to you."
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "title": "Run by us, every game night.",
+      "steps": {
+        "plan": {
+          "title": "We plan every game night ourselves",
+          "description": "Baseball at Jamsil and Gocheok, football at Seoul World Cup Stadium. One real match, a small group, and a buddy who knows the cheering songs."
+        },
+        "confirm": {
+          "title": "Book online, we buy your ticket right away",
+          "description": "Your match ticket and stadium food are included in the price. A real person confirms the meeting spot and answers your questions."
+        },
+        "improve": {
+          "title": "Every run gets better",
+          "description": "Every guest fills in a one-minute survey, and it changes the next run."
+        }
+      }
+    },
+    "stats": {
+      "eyebrow": "So far",
+      "title": "Numbers from real game nights.",
+      "items": {
+        "runs": {
+          "value": "7",
+          "label": "game nights since June 2026"
+        },
+        "rating": {
+          "value": "4.9 / 5",
+          "label": "average guest rating"
+        },
+        "stadiums": {
+          "value": "3",
+          "label": "stadiums: Jamsil, Gocheok, Seoul World Cup"
+        }
+      },
+      "note": "Rating from 10 guest survey responses, June to September 2026."
+    },
+    "timeline": {
+      "eyebrow": "Our runs",
+      "title": "Where we’ve been, and where we’re going next.",
+      "items": {
+        "june": {
+          "date": "June 2026",
+          "title": "First KBO night at Jamsil",
+          "description": "One guest, the whole team as buddies, and a lot to learn."
+        },
+        "july": {
+          "date": "July 2026",
+          "title": "KBO at Jamsil, round two",
+          "description": "Three guests, cheering songs, chicken and beer. Every survey came back 5 out of 5."
+        },
+        "august": {
+          "date": "August 2026",
+          "title": "First football night: K League",
+          "description": "Seoul World Cup Stadium, scarves, and a guest who said it felt like being with friends."
+        },
+        "september": {
+          "date": "September 2026",
+          "title": "Four game nights, including our first indoor dome",
+          "description": "Gocheok Sky Dome and Jamsil, sky-blue jerseys, mascot photos. Every survey so far: 5 out of 5."
+        }
+      }
+    },
+    "team": {
+      "eyebrow": "Meet the team",
+      "title": "We’re ZeroOne, three friends from Seoul running HanBuddy together.",
+      "description": "We plan the nights, buy the tickets, answer your messages, and sit in the stands with you.",
+      "backed": "HanBuddy is the official project of team ZeroOne in AI·SW Maestro (17th), a national tech talent program by Korea’s Ministry of Science and ICT.",
+      "linkedin": "LinkedIn",
+      "members": {
+        "minhyung": {
+          "name": "Minhyung Kim",
+          "role": "Leads the team & operations"
+        },
+        "yoohyun": {
+          "name": "Yoohyun Kim",
+          "role": "Designs the experiences & content"
+        },
+        "junyoung": {
+          "name": "Junyoung Lee",
+          "role": "Keeps bookings & matching smooth"
+        }
+      }
+    },
+    "cta": {
+      "title": "The best way to meet us is at a game.",
+      "description": "Pick a date, book your seat, and we take it from there.",
+      "button": "See upcoming game nights"
     }
   },
   "Auth": {

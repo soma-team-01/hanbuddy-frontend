@@ -549,6 +549,115 @@ describe("GET /auth/google/callback", () => {
     expect(decodedProfile).not.toHaveProperty("email");
   });
 
+  it("carries the booking return path into tourist onboarding", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
+          signupToken: "signup-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(
+      createCallbackRequest("ko", undefined, undefined, [
+        `${AUTH_COOKIES.oauthReturnTo}=${encodeURIComponent("/activities/42/book?scheduleId=101")}`,
+      ]),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/ko/onboarding?next=%2Factivities%2F42%2Fbook%3FscheduleId%3D101",
+    );
+    expect(response.headers.get("set-cookie") ?? "").toContain(`${AUTH_COOKIES.oauthReturnTo}=;`);
+  });
+
+  it("drops an unsafe return path from tourist onboarding", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
+          signupToken: "signup-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(
+      createCallbackRequest("en", undefined, undefined, [
+        `${AUTH_COOKIES.oauthReturnTo}=${encodeURIComponent("https://evil.example.com/")}`,
+      ]),
+    );
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/onboarding");
+  });
+
+  it("does not carry a return path into buddy onboarding", async () => {
+    mockedPostBackend.mockResolvedValue({
+      status: 200,
+      setCookies: [],
+      payload: {
+        isSuccess: true,
+        code: "AUTH200",
+        message: "OK",
+        result: {
+          registered: false,
+          authStatus: "ONBOARDING_REQUIRED",
+          signupToken: "signup-token",
+        } satisfies GoogleLoginResponse,
+      },
+    });
+
+    const response = await GET(
+      createCallbackRequest("en", undefined, "buddy", [
+        `${AUTH_COOKIES.oauthReturnTo}=${encodeURIComponent("/activities/42/book?scheduleId=101")}`,
+      ]),
+    );
+
+    expect(response.headers.get("location")).toBe("http://localhost/en/buddy/onboarding");
+  });
+
+  it("keeps the return path on the login retry after a Google error", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/auth/google/callback?error=access_denied", {
+        headers: {
+          cookie: [
+            `${AUTH_COOKIES.oauthLocale}=ko`,
+            `${AUTH_COOKIES.oauthReturnTo}=${encodeURIComponent("/activities/42/book?scheduleId=101")}`,
+          ].join("; "),
+        },
+      }),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/ko/login?error=googleCancelled&next=%2Factivities%2F42%2Fbook%3FscheduleId%3D101",
+    );
+  });
+
+  it("keeps the return path on the login retry after a backend failure", async () => {
+    mockedPostBackend.mockRejectedValue(new Error("backend down"));
+
+    const response = await GET(
+      createCallbackRequest("en", undefined, undefined, [
+        `${AUTH_COOKIES.oauthReturnTo}=${encodeURIComponent("/activities/42/book?scheduleId=101")}`,
+      ]),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/en/login?error=serverUnavailable&next=%2Factivities%2F42%2Fbook%3FscheduleId%3D101",
+    );
+  });
+
   it("uses the configured public origin behind the EC2 reverse proxy", async () => {
     vi.stubEnv("GOOGLE_REDIRECT_URI", "https://staging.hanbuddy.kr/auth/google/callback");
     mockedPostBackend.mockResolvedValue({

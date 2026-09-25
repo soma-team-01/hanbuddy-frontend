@@ -7,7 +7,12 @@ const LEGACY_EVENT_ACTIVITY_PATHS: Record<string, string> = {
   "kbo-gocheok": "/activities/1",
 };
 
-const LEGACY_HOME_PATHS = new Set(["/apply", "/events", "/about"]);
+const LEGACY_HOME_PATHS = new Set(["/apply", "/events"]);
+
+// 옛 랜딩의 단일 페이지 → MVP의 같은 역할 페이지. /about은 MVP에 같은 경로가 생겨 매핑하지 않는다.
+const LEGACY_PAGE_PATHS: Record<string, string> = {
+  "/privacy": "/policies/privacy-policy",
+};
 
 type LegacyLandingTarget = { pathname: string; search: string };
 
@@ -32,7 +37,8 @@ function resolveTargetPathname(pathname: string, event: string | null): string |
   if (pathname.startsWith("/events/")) {
     return LEGACY_EVENT_ACTIVITY_PATHS[pathname.slice("/events/".length)] ?? "/";
   }
-  return LEGACY_HOME_PATHS.has(pathname) ? "/" : null;
+  if (LEGACY_HOME_PATHS.has(pathname)) return "/";
+  return LEGACY_PAGE_PATHS[pathname] ?? null;
 }
 
 function stripTrailingSlashes(pathname: string): string {

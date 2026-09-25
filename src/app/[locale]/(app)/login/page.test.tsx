@@ -125,7 +125,15 @@ describe("LoginPage", () => {
         }),
       ).toHaveAttribute("href", `/${locale}/policies/terms-of-service`);
       expect(screen.getByText(visualCaption)).toBeInTheDocument();
-      expect(screen.getAllByRole("figure")).toHaveLength(4);
+      const figures = screen.getAllByRole("figure");
+      expect(figures).toHaveLength(4);
+      // 9월 회차 사진이 한강 사진 자리를 대신한다
+      const figureSources = figures.map((figure) =>
+        figure.querySelector("img")?.getAttribute("src"),
+      );
+      expect(figureSources[2]).toContain("kbo-0912-mascot-crew");
+      expect(figureSources[3]).toContain("kbo-0905-dome-seats");
+      expect(figureSources.join(" ")).not.toContain("hanriver");
       const googleLoginLink = screen.getByRole("link", { name: action });
       expect(googleLoginLink).toHaveAttribute("href", `/api/auth/google/start?locale=${locale}`);
       expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");

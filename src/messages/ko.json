@@ -155,6 +155,7 @@
     "languageDialogDescription": "HanBuddy에서 사용할 언어를 선택하세요.",
     "home": "홈",
     "explore": "탐색",
+    "about": "소개",
     "applications": "내 신청",
     "dashboard": "대시보드",
     "buddyWorkspace": "버디 워크스페이스",
@@ -238,10 +239,9 @@
     },
     "visuals": {
       "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",
-      "mainAlt": "한강에서 피크닉을 즐기는 친구들",
-      "marketAlt": "서울의 야간 야구 경기장",
-      "teaAlt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
-      "fountainAlt": "해 질 무렵 빛나는 한강 분수",
+      "gocheokAlt": "고척 스카이돔 관중석에서 웃고 있는 세 친구",
+      "jamsilAlt": "잠실야구장 한 줄을 채운 하늘색 유니폼의 게스트와 버디",
+      "kbo0726Alt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
       "kleagueAlt": "K리그 경기장에서 함께한 게스트와 버디",
       "mainCaption": "나만의 한국을 만나보세요."
     },
@@ -387,6 +387,117 @@
       "button": "버디로 시작하기"
     }
   },
+  "About": {
+    "metadataTitle": "HanBuddy 소개 | 서울 직관의 밤을 함께 만드는 팀",
+    "metadataDescription": "HanBuddy를 기획하고 운영하는 서울 팀 ZeroOne을 소개합니다. 잠실·고척 KBO 야구 직관과 축구 직관을 한국인 로컬 버디와 함께합니다.",
+    "hero": {
+      "eyebrow": "HanBuddy 소개",
+      "title": "‘현지인처럼’을 실제로 만드는 팀입니다.",
+      "description": "한국인 버디와 함께하는 서울 소규모 직관의 밤. 기획부터 티켓 구매까지 저희가 준비하고, 옆자리에 앉아 함께 응원합니다. 오시기만 하면 됩니다.",
+      "primaryCta": "액티비티 둘러보기",
+      "secondaryCta": "팀 소개 보기",
+      "collageAlt1": "고척 스카이돔 관중석에서 웃고 있는 세 친구",
+      "collageAlt2": "잠실야구장에서 두산 베어스 마스코트와 함께 포즈를 취한 게스트와 버디",
+      "collageAlt3": "K리그 경기장에서 함께한 게스트와 버디"
+    },
+    "origin": {
+      "eyebrow": "시작한 이유",
+      "title": "한국의 가장 좋은 순간들은 ‘현지인 전용’ 뒤에 잠겨 있습니다.",
+      "body1": "눈앞에서 사라지는 티켓 한 장에서 시작했습니다. 잠실 야간 경기, 몇 초 만에 매진, 그리고 예매 앱이 요구하는",
+      "body1Strong": "한국 휴대폰 번호와 한국 카드.",
+      "body2": "한국 번호도, 한국 카드도 없으면 티켓도 없습니다.",
+      "body2Strong": "HanBuddy는 티켓을 사고 좌석을 잡고 옆자리에 앉아 주는 로컬 버디로 그 밤을 열어 드립니다."
+    },
+    "how": {
+      "eyebrow": "진행 방식",
+      "title": "모든 직관의 밤을 저희가 직접 운영합니다.",
+      "steps": {
+        "plan": {
+          "title": "회차 하나하나를 직접 기획합니다",
+          "description": "잠실·고척 야구, 서울월드컵경기장 축구. 실제 경기 한 편, 소규모 그룹, 그리고 응원가를 아는 버디."
+        },
+        "confirm": {
+          "title": "온라인으로 예약하면 바로 티켓을 구매합니다",
+          "description": "경기 티켓과 구장 음식이 가격에 포함되어 있습니다. 담당자가 직접 만남 장소를 안내하고 궁금한 점에 답합니다."
+        },
+        "improve": {
+          "title": "회차마다 더 나아집니다",
+          "description": "모든 게스트가 1분 설문을 남기고, 그 답이 다음 회차를 바꿉니다."
+        }
+      }
+    },
+    "stats": {
+      "eyebrow": "지금까지",
+      "title": "실제 직관의 밤에서 나온 숫자입니다.",
+      "items": {
+        "runs": {
+          "value": "7회",
+          "label": "2026년 6월부터 운영한 직관의 밤"
+        },
+        "rating": {
+          "value": "4.9 / 5",
+          "label": "게스트 평균 만족도"
+        },
+        "stadiums": {
+          "value": "3곳",
+          "label": "경기장: 잠실, 고척, 서울월드컵"
+        }
+      },
+      "note": "만족도는 2026년 6~9월 게스트 설문 응답 10건 기준입니다."
+    },
+    "timeline": {
+      "eyebrow": "운영 기록",
+      "title": "지나온 회차와 다음 회차.",
+      "items": {
+        "june": {
+          "date": "2026년 6월",
+          "title": "잠실 첫 KBO 직관",
+          "description": "게스트 한 명, 팀원 전원이 버디로, 그리고 배울 것이 가득했던 밤."
+        },
+        "july": {
+          "date": "2026년 7월",
+          "title": "잠실 KBO 두 번째 회차",
+          "description": "게스트 세 명, 응원가, 치킨과 맥주. 설문 전원 5점 만점."
+        },
+        "august": {
+          "date": "2026년 8월",
+          "title": "첫 축구 직관: K리그",
+          "description": "서울월드컵경기장, 머플러, 그리고 ‘친구들과 있는 것 같았다’는 게스트의 말."
+        },
+        "september": {
+          "date": "2026년 9월",
+          "title": "직관 4회, 첫 실내 돔 포함",
+          "description": "고척 스카이돔과 잠실, 하늘색 유니폼, 마스코트 사진. 지금까지 설문 전원 5점 만점."
+        }
+      }
+    },
+    "team": {
+      "eyebrow": "팀 소개",
+      "title": "서울의 세 친구, ZeroOne이 HanBuddy를 함께 운영합니다.",
+      "description": "회차를 기획하고, 티켓을 사고, 메시지에 답하고, 관중석에 함께 앉습니다.",
+      "backed": "HanBuddy는 과학기술정보통신부 주관 국가 SW 인재 양성 프로그램 AI·SW 마에스트로 17기 팀 ZeroOne의 공식 프로젝트입니다.",
+      "linkedin": "LinkedIn",
+      "members": {
+        "minhyung": {
+          "name": "김민형",
+          "role": "팀 리드 · 운영 총괄"
+        },
+        "yoohyun": {
+          "name": "김유현",
+          "role": "경험 기획 · 콘텐츠"
+        },
+        "junyoung": {
+          "name": "이준영",
+          "role": "예약 · 매칭 운영"
+        }
+      }
+    },
+    "cta": {
+      "title": "저희를 만나는 가장 좋은 방법은 경기장입니다.",
+      "description": "날짜를 고르고 좌석을 예약하세요. 나머지는 저희가 준비합니다.",
+      "button": "다가오는 직관 보기"
+    }
+  },
   "Auth": {
     "metadataTitle": "로그인 | HanBuddy",
     "metadataDescription": "현지 버디와 함께 여행 일정 너머의 한국을 경험해 보세요.",
@@ -422,10 +533,10 @@
     "visualCaption": "새 친구들, 7월 26일 ⚾",
     "visualRightAlt": "야구장 관중석에서 게스트와 버디가 함께 웃고 있는 모습",
     "visualRightCaption": "첫 야구 직관 ⚾",
-    "visualBottomLeftAlt": "한강을 밝히는 반포대교 무지개분수",
-    "visualBottomLeftCaption": "반포 무지개분수 🌈",
-    "visualBottomRightAlt": "한강에서 즐기는 치킨과 라면, 음료",
-    "visualBottomRightCaption": "한강 치맥 🍗",
+    "visualBottomLeftAlt": "잠실야구장에서 두산 베어스 마스코트와 함께 포즈를 취한 게스트와 버디",
+    "visualBottomLeftCaption": "마스코트와, 9월 12일 ⚾",
+    "visualBottomRightAlt": "고척 스카이돔 관중석에서 간식을 나누는 게스트와 버디",
+    "visualBottomRightCaption": "돔 간식 타임, 9월 5일 ⚾",
     "errors": {
       "googleCancelled": "Google 로그인이 취소되었습니다.",
       "missingCode": "Google에서 인증 코드를 받지 못했습니다.",

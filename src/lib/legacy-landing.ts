@@ -15,7 +15,7 @@ export function resolveLegacyLandingPath(
   pathname: string,
   searchParams: URLSearchParams,
 ): LegacyLandingTarget | null {
-  const normalized = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const normalized = stripTrailingSlashes(pathname);
   const target = resolveTargetPathname(normalized, searchParams.get("event"));
   if (!target) return null;
 
@@ -33,4 +33,10 @@ function resolveTargetPathname(pathname: string, event: string | null): string |
     return LEGACY_EVENT_ACTIVITY_PATHS[pathname.slice("/events/".length)] ?? "/";
   }
   return LEGACY_HOME_PATHS.has(pathname) ? "/" : null;
+}
+
+function stripTrailingSlashes(pathname: string): string {
+  let end = pathname.length;
+  while (end > 1 && pathname[end - 1] === "/") end -= 1;
+  return pathname.slice(0, end);
 }

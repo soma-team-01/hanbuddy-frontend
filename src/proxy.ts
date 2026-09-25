@@ -53,7 +53,7 @@ function routeRequest(request: NextRequest) {
   if (legacyTarget) {
     const redirectUrl = new URL(localizePathname(legacyTarget.pathname, locale), request.url);
     redirectUrl.search = legacyTarget.search;
-    return NextResponse.redirect(redirectUrl, 308);
+    return NextResponse.redirect(redirectUrl);
   }
 
   const redirectPath = getRouteAccessRedirect({

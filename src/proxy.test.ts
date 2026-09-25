@@ -296,7 +296,7 @@ describe("route access proxy", () => {
         "/apply?event=korea-football&utm_source=meetup&utm_medium=social&utm_campaign=korea-football-20260928&utm_content=event-description",
       );
 
-      expect(response.status).toBe(308);
+      expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe(
         "http://localhost/en/activities/4?utm_source=meetup&utm_medium=social&utm_campaign=korea-football-20260928&utm_content=event-description",
       );
@@ -305,14 +305,14 @@ describe("route access proxy", () => {
     it("honors the saved locale even when the old link already carries one", async () => {
       const response = await runProxy("/ko/apply/?event=kbo-jamsil", { NEXT_LOCALE: "ko" });
 
-      expect(response.status).toBe(308);
+      expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe("http://localhost/ko/activities/2");
     });
 
     it("sends a retired landing page to the localized home instead of a 404", async () => {
       const response = await runProxy("/events/hanriver?utm_source=ads");
 
-      expect(response.status).toBe(308);
+      expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe("http://localhost/en?utm_source=ads");
     });
 
@@ -322,7 +322,7 @@ describe("route access proxy", () => {
         [AUTH_COOKIES.userType]: "BUDDY",
       });
 
-      expect(response.status).toBe(308);
+      expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe("http://localhost/ko");
     });
   });

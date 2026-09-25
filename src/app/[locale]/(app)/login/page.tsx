@@ -150,11 +150,11 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             <span className="login-polaroid-tape" aria-hidden="true" />
             <span className="login-polaroid-frame">
               <Image
-                src="/images/landing/hanriver-fountain.webp"
+                src="/images/landing/kbo-0912-mascot-crew.webp"
                 alt={t("visualBottomLeftAlt")}
                 fill
                 sizes="(min-width: 1440px) 232px, (min-width: 1024px) 176px, 45vw"
-                className="object-cover"
+                className="object-cover object-[50%_68%]"
               />
             </span>
             <figcaption>{t("visualBottomLeftCaption")}</figcaption>
@@ -164,11 +164,11 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             <span className="login-polaroid-tape" aria-hidden="true" />
             <span className="login-polaroid-frame">
               <Image
-                src="/images/landing/hanriver-food.webp"
+                src="/images/landing/kbo-0905-dome-seats.webp"
                 alt={t("visualBottomRightAlt")}
                 fill
                 sizes="(min-width: 1440px) 232px, (min-width: 1024px) 176px, 45vw"
-                className="object-cover object-[50%_55%]"
+                className="object-cover object-[55%_50%]"
               />
             </span>
             <figcaption>{t("visualBottomRightCaption")}</figcaption>

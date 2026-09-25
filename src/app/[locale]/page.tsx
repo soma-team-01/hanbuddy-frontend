@@ -13,22 +13,23 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
-  // position: 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 가로 초점. cover 사진은 PC 세로 크롭에도 쓰인다.
+  // position: 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 초점. cover 사진은 PC 세로 크롭에도 쓰인다.
+  // 세로 원본(9:16)은 contain으로 두어 PC에서 흐린 배경 위에 잘리지 않게 놓는다.
   {
-    src: "/images/landing/hanriver-picnic.webp",
-    altKey: "visuals.mainAlt",
+    src: "/images/landing/kbo-0905-dome-friends.webp",
+    altKey: "visuals.gocheokAlt",
     fit: "cover",
-    position: "50% 72%",
+    position: "50% 45%",
   },
   {
-    src: "/images/landing/jamsil-stadium-0726.webp",
-    altKey: "visuals.marketAlt",
-    fit: "cover",
-    position: "50% 55%",
+    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
+    altKey: "visuals.jamsilAlt",
+    fit: "contain",
+    position: "50% 62%",
   },
   {
     src: "/images/landing/kbo-0726-group.webp",
-    altKey: "visuals.teaAlt",
+    altKey: "visuals.kbo0726Alt",
     fit: "contain",
     position: "85% 50%",
   },

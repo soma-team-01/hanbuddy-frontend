@@ -238,10 +238,9 @@
     },
     "visuals": {
       "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",
-      "mainAlt": "한강에서 피크닉을 즐기는 친구들",
-      "marketAlt": "서울의 야간 야구 경기장",
-      "teaAlt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
-      "fountainAlt": "해 질 무렵 빛나는 한강 분수",
+      "gocheokAlt": "고척 스카이돔 관중석에서 웃고 있는 세 친구",
+      "jamsilAlt": "잠실야구장 한 줄을 채운 하늘색 유니폼의 게스트와 버디",
+      "kbo0726Alt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
       "kleagueAlt": "K리그 경기장에서 함께한 게스트와 버디",
       "mainCaption": "나만의 한국을 만나보세요."
     },
@@ -422,10 +421,10 @@
     "visualCaption": "새 친구들, 7월 26일 ⚾",
     "visualRightAlt": "야구장 관중석에서 게스트와 버디가 함께 웃고 있는 모습",
     "visualRightCaption": "첫 야구 직관 ⚾",
-    "visualBottomLeftAlt": "한강을 밝히는 반포대교 무지개분수",
-    "visualBottomLeftCaption": "반포 무지개분수 🌈",
-    "visualBottomRightAlt": "한강에서 즐기는 치킨과 라면, 음료",
-    "visualBottomRightCaption": "한강 치맥 🍗",
+    "visualBottomLeftAlt": "잠실야구장에서 두산 베어스 마스코트와 함께 포즈를 취한 게스트와 버디",
+    "visualBottomLeftCaption": "마스코트와, 9월 12일 ⚾",
+    "visualBottomRightAlt": "고척 스카이돔 관중석에서 간식을 나누는 게스트와 버디",
+    "visualBottomRightCaption": "돔 간식 타임, 9월 5일 ⚾",
     "errors": {
       "googleCancelled": "Google 로그인이 취소되었습니다.",
       "missingCode": "Google에서 인증 코드를 받지 못했습니다.",

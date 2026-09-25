@@ -22,15 +22,48 @@ const activity: Activity = {
 };
 
 describe("ActivityCard", () => {
-  it("renders the title and per-person price without the buddy name or location", () => {
+  it("renders the title, meeting place and per-person price without the buddy name", () => {
     renderWithIntl(<ActivityCard activity={activity} />);
 
     expect(screen.getByRole("heading", { name: "Market walk" })).toHaveClass("text-ink");
     expect(screen.getByText("₩35,000")).toHaveClass("text-ink");
     expect(screen.getByText("per person")).toBeInTheDocument();
     expect(screen.queryByText("Min Buddy")).not.toBeInTheDocument();
+    expect(screen.getByText("Gwangjang Market")).toHaveClass("truncate");
     expect(screen.queryByText("Seoul")).not.toBeInTheDocument();
     expect(screen.queryByText("Sold out")).not.toBeInTheDocument();
+  });
+
+  it("omits the meeting place when the API does not provide one", () => {
+    const { container } = renderWithIntl(
+      <ActivityCard activity={{ ...activity, meetingPoint: { name: "", area: "" } }} />,
+    );
+
+    expect(container.querySelector('[data-slot="activity-card-location"]')).toBeNull();
+  });
+
+  it("orders the price group as KRW price, parenthesized reference price, then per person", () => {
+    renderWithIntl(
+      <ActivityCard activity={{ ...activity, referencePrice: 32.5, referenceCurrency: "USD" }} />,
+    );
+
+    const priceGroup = screen.getByText("₩35,000").parentElement;
+    expect(priceGroup).toHaveClass("flex-wrap", "items-baseline");
+    expect(priceGroup).toHaveTextContent(/^₩35,000\s*\(≈ \$32\.50\)\s*per person$/);
+  });
+
+  it("keeps a compact 16:9 photo at every width", () => {
+    const { container } = renderWithIntl(<ActivityCard activity={activity} />);
+
+    const frame = container.querySelector("img")?.parentElement;
+    expect(frame).toHaveClass("aspect-[16/9]");
+    expect(frame).not.toHaveClass("aspect-[3/2]");
+  });
+
+  it("treats the photo as decorative so the link name reads the title once", () => {
+    const { container } = renderWithIntl(<ActivityCard activity={activity} />);
+
+    expect(container.querySelector("img")).toHaveAttribute("alt", "");
   });
 
   it("shows the discount percent chip and the signature-colored discounted price", () => {
@@ -64,11 +97,11 @@ describe("ActivityCard", () => {
     );
 
     const krwPrice = screen.getByText("₩35,000");
-    const referencePrice = screen.getByText("≈ $32.50");
+    const referencePrice = screen.getByText("(≈ $32.50)");
     expect(krwPrice).toHaveClass("text-ink");
     expect(referencePrice).toHaveClass("text-muted");
     expect(
-      referencePrice.compareDocumentPosition(krwPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+      krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.getByText("per person")).toBeInTheDocument();
   });
@@ -145,8 +178,8 @@ describe("ActivityCard", () => {
   });
 
   it("loads the card image eagerly when requested", () => {
-    renderWithIntl(<ActivityCard activity={activity} eagerImage />);
+    const { container } = renderWithIntl(<ActivityCard activity={activity} eagerImage />);
 
-    expect(screen.getByRole("img", { name: "Market walk" })).toHaveAttribute("loading", "eager");
+    expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
   });
 });

@@ -896,6 +896,32 @@ describe("OnboardingForm", () => {
     expect(analyticsMocks.trackSignup).not.toHaveBeenCalled();
   });
 
+  it("returns a new tourist to the booking screen they came from after signup", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        isSuccess: true,
+        code: "201",
+        message: "OK",
+        result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(
+      <OnboardingForm
+        googleProfile={{ name: "Traveler" }}
+        returnTo="/activities/42/book?scheduleId=101"
+      />,
+    );
+    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "traveler_id" });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+
+    await waitFor(() =>
+      expect(routerMocks.replace).toHaveBeenCalledWith("/en/activities/42/book?scheduleId=101"),
+    );
+  });
+
   it("prefills a rejected buddy application and resubmits without agreements", async () => {
     const application: BuddyResubmission = {
       bankAccount: createRejectedApplication().bankAccount,

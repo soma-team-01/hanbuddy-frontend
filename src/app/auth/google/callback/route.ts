@@ -130,7 +130,7 @@ function createAuthenticatedRedirect(request: NextRequest, result: GoogleLoginRe
   }
 
   // 로그인 전에 보던 화면이 있으면 그 화면으로 복귀한다 (검증된 내부 경로만)
-  const returnTo = sanitizeReturnToPath(request.cookies.get(AUTH_COOKIES.oauthReturnTo)?.value);
+  const returnTo = getReturnToPath(request);
   const fallbackPath = result.userType === "BUDDY" ? "/dashboard" : "/";
   const response = NextResponse.redirect(createLocalizedUrl(request, returnTo ?? fallbackPath));
   setAuthenticatedSessionCookies(response, result);
@@ -145,11 +145,16 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
     return redirectToLoginWithError(request, "missingSignupToken");
   }
 
-  const onboardingPath =
-    request.cookies.get(AUTH_COOKIES.oauthIntent)?.value === "buddy"
-      ? "/buddy/onboarding"
-      : "/onboarding";
-  const response = NextResponse.redirect(createLocalizedUrl(request, onboardingPath));
+  const isBuddyIntent = request.cookies.get(AUTH_COOKIES.oauthIntent)?.value === "buddy";
+  const onboardingUrl = createLocalizedUrl(
+    request,
+    isBuddyIntent ? "/buddy/onboarding" : "/onboarding",
+  );
+  // 예약 화면에서 온 신규 관광객은 온보딩을 마친 뒤 그 화면으로 돌아가야 한다.
+  // 이 응답이 return-to 쿠키를 지우므로 경로를 온보딩 쿼리로 넘긴다. 버디 온보딩은 대시보드로 간다.
+  const returnTo = isBuddyIntent ? null : getReturnToPath(request);
+  if (returnTo) onboardingUrl.searchParams.set("next", returnTo);
+  const response = NextResponse.redirect(onboardingUrl);
   clearAuthenticatedSessionCookies(response);
   clearAuthStatusReasonCookie(response);
   clearResubmissionCookie(response);
@@ -192,12 +197,19 @@ function redirectToLoginWithError(request: NextRequest, code: AuthErrorCode) {
   if (isAdminIntent(request)) return redirectToAdminLoginWithError(request, code);
   const loginUrl = createLocalizedUrl(request, "/login");
   loginUrl.searchParams.set("error", code);
+  // 재시도 링크가 원래 목적지(예약 화면)를 잃지 않도록 next를 함께 넘긴다
+  const returnTo = getReturnToPath(request);
+  if (returnTo) loginUrl.searchParams.set("next", returnTo);
 
   const response = NextResponse.redirect(loginUrl);
   response.cookies.delete(AUTH_COOKIES.oauthState);
   response.cookies.delete(AUTH_COOKIES.oauthLocale);
   response.cookies.delete(AUTH_COOKIES.oauthIntent);
   return response;
+}
+
+function getReturnToPath(request: NextRequest) {
+  return sanitizeReturnToPath(request.cookies.get(AUTH_COOKIES.oauthReturnTo)?.value);
 }
 
 function redirectToAdminLoginWithError(request: NextRequest, code: string) {

@@ -13,19 +13,20 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
-  // position: 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 초점. cover 사진은 PC 세로 크롭에도 쓰인다.
-  // 세로 원본(9:16)은 contain으로 두어 PC에서 흐린 배경 위에 잘리지 않게 놓는다.
+  // PC(md 이상)는 4장 모두 4:3 원본을 흐린 배경 위에 같은 크기로 놓는다(contain). 풀블리드 cover는
+  // 셀피의 얼굴이 화면을 가득 채워 부담스럽고, 사진마다 박스 크기가 달라지는 문제가 있었다.
+  // position은 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 초점이다.
   {
     src: "/images/landing/kbo-0905-dome-friends.webp",
     altKey: "visuals.gocheokAlt",
-    fit: "cover",
+    fit: "contain",
     position: "50% 45%",
   },
   {
     src: "/images/landing/kbo-0912-jamsil-crowd.webp",
     altKey: "visuals.jamsilAlt",
     fit: "contain",
-    position: "50% 62%",
+    position: "50% 40%",
   },
   {
     src: "/images/landing/kbo-0726-group.webp",

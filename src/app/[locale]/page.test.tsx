@@ -152,22 +152,22 @@ describe("LandingPage", () => {
     expect(heroRegion.innerHTML).not.toContain("2%EC%B0%A8-4");
   });
 
-  it("blurs a backdrop behind close-up photos on desktop and keeps landscapes full-bleed", async () => {
+  it("places every hero photo on a blurred backdrop at the same 4:3 size on desktop", async () => {
     await renderLanding("en");
 
     const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
     const frames = heroRegion.querySelectorAll(".hero-media-frame");
     const backdrops = heroRegion.querySelectorAll(".hero-media-backdrop");
 
-    // 세로 원본(9/12 잠실)과 크루 셀카 2장은 contain, 가로 셀피(9/5 고척)만 cover
-    expect(backdrops).toHaveLength(3);
-    expect(frames[1]?.querySelector(".hero-media-image")).toHaveClass("md:object-contain");
-    expect(frames[2]?.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
-    expect(frames[2]?.querySelector(".hero-media-image")).toHaveClass(
-      "hero-media-contain",
-      "md:object-contain",
-    );
-    expect(frames[0]?.querySelector(".hero-media-image")).not.toHaveClass("md:object-contain");
+    // 풀블리드 cover는 셀피 얼굴이 화면을 채우고 사진마다 크기가 달라져 4장 모두 contain으로 통일했다
+    expect(backdrops).toHaveLength(4);
+    frames.forEach((frame) => {
+      expect(frame.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
+      expect(frame.querySelector(".hero-media-image")).toHaveClass(
+        "hero-media-contain",
+        "md:object-contain",
+      );
+    });
     // 초점은 CSS 변수로 넘겨 md 이상의 contain 프레임에서는 스타일시트가 정중앙으로 되돌린다
     expect(frames[2]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
       "--hero-media-position: 85% 50%",

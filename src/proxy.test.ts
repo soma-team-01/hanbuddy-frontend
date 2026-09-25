@@ -290,6 +290,43 @@ describe("route access proxy", () => {
     },
   );
 
+  describe("legacy landing links", () => {
+    it("sends the old apply link to the activity detail and keeps the UTM parameters", async () => {
+      const response = await runProxy(
+        "/apply?event=korea-football&utm_source=meetup&utm_medium=social&utm_campaign=korea-football-20260928&utm_content=event-description",
+      );
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe(
+        "http://localhost/en/activities/4?utm_source=meetup&utm_medium=social&utm_campaign=korea-football-20260928&utm_content=event-description",
+      );
+    });
+
+    it("honors the saved locale even when the old link already carries one", async () => {
+      const response = await runProxy("/ko/apply/?event=kbo-jamsil", { NEXT_LOCALE: "ko" });
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe("http://localhost/ko/activities/2");
+    });
+
+    it("sends a retired landing page to the localized home instead of a 404", async () => {
+      const response = await runProxy("/events/hanriver?utm_source=ads");
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe("http://localhost/en?utm_source=ads");
+    });
+
+    it("keeps a buddy on the Korean home when they open an old landing link", async () => {
+      const response = await runProxy("/about", {
+        [AUTH_COOKIES.accessToken]: "access-token",
+        [AUTH_COOKIES.userType]: "BUDDY",
+      });
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe("http://localhost/ko");
+    });
+  });
+
   it("lets an unsupported language segment reach the locale 404 boundary", async () => {
     const response = await runProxy("/fr/explore");
 

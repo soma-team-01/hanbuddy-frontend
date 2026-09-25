@@ -238,10 +238,9 @@
     },
     "visuals": {
       "ariaLabel": "Real HanBuddy moments in Seoul",
-      "mainAlt": "Friends enjoying a picnic by the Han River",
-      "marketAlt": "A baseball game under the lights in Seoul",
-      "teaAlt": "Travelers and local buddies cheering together at a baseball game",
-      "fountainAlt": "The Han River fountain glowing at dusk",
+      "gocheokAlt": "Three friends smiling in the stands at Gocheok Sky Dome",
+      "jamsilAlt": "Guests and buddies in sky-blue jerseys filling a row at Jamsil Stadium",
+      "kbo0726Alt": "Travelers and local buddies cheering together at a baseball game",
       "kleagueAlt": "Guests and buddies at a K League match",
       "mainCaption": "Your Korea, made personal."
     },
@@ -422,10 +421,10 @@
     "visualCaption": "new friends, Jul 26 ⚾",
     "visualRightAlt": "Guests and buddies smiling together in the baseball stands",
     "visualRightCaption": "first baseball night ⚾",
-    "visualBottomLeftAlt": "Banpo Bridge rainbow fountain lighting up the Han River",
-    "visualBottomLeftCaption": "Banpo rainbow 🌈",
-    "visualBottomRightAlt": "Fried chicken, noodles, and drinks shared by the Han River",
-    "visualBottomRightCaption": "chimaek by the river 🍗",
+    "visualBottomLeftAlt": "Guests and buddies posing with the Doosan Bears mascot at Jamsil Stadium",
+    "visualBottomLeftCaption": "mascot crew, Sep 12 ⚾",
+    "visualBottomRightAlt": "Guests and a buddy sharing snacks in the stands at Gocheok Sky Dome",
+    "visualBottomRightCaption": "dome snacks, Sep 5 ⚾",
     "errors": {
       "googleCancelled": "Google sign-in was cancelled.",
       "missingCode": "Google did not return an authorization code.",

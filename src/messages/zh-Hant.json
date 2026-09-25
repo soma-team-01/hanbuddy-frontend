@@ -238,10 +238,9 @@
     },
     "visuals": {
       "ariaLabel": "首爾真正的 HanBuddy 時刻",
-      "mainAlt": "朋友們在漢江邊享受野餐",
-      "marketAlt": "首爾燈光下的棒球比賽",
-      "teaAlt": "旅客和當地好友在棒球比賽中一起歡呼",
-      "fountainAlt": "漢江噴泉在黃昏時閃閃發光",
+      "gocheokAlt": "三位朋友在高尺天空巨蛋看台上開心微笑",
+      "jamsilAlt": "身穿天藍色球衣的旅客和本地好友坐滿蠶室棒球場的一排座位",
+      "kbo0726Alt": "旅客和當地好友在棒球比賽中一起歡呼",
       "kleagueAlt": "在K聯賽賽場同行的旅客與本地好友",
       "mainCaption": "您的韓國，個性化。"
     },
@@ -422,10 +421,10 @@
     "visualCaption": "新朋友，7 月 26 日 ⚾",
     "visualRightAlt": "嘉賓和好友在棒球看台上一起微笑",
     "visualRightCaption": "第一個棒球之夜⚾",
-    "visualBottomLeftAlt": "半坡大橋彩虹噴泉點亮漢江",
-    "visualBottomLeftCaption": "半坡彩虹🌈",
-    "visualBottomRightAlt": "漢江邊共享的炸雞、麵條、飲料",
-    "visualBottomRightCaption": "河邊的奇美克🍗",
+    "visualBottomLeftAlt": "旅客和本地好友在蠶室棒球場與斗山熊隊吉祥物合影",
+    "visualBottomLeftCaption": "吉祥物合影 9/12 ⚾",
+    "visualBottomRightAlt": "旅客和本地好友在高尺天空巨蛋看台分享零食",
+    "visualBottomRightCaption": "巨蛋零食 9/5 ⚾",
     "errors": {
       "googleCancelled": "Google 登入已取消。",
       "missingCode": "Google 沒有回傳授權碼。",

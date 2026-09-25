@@ -139,31 +139,35 @@ describe("LandingPage", () => {
     const heroImages = heroRegion.querySelectorAll(".hero-media-image");
 
     expect(heroImages).toHaveLength(4);
-    expect(heroImages[0]).toHaveAttribute("src", expect.stringContaining("hanriver-picnic"));
-    expect(heroImages[1]).toHaveAttribute("src", expect.stringContaining("jamsil-stadium-0726"));
+    expect(heroImages[0]).toHaveAttribute("src", expect.stringContaining("kbo-0905-dome-friends"));
+    expect(heroImages[1]).toHaveAttribute("src", expect.stringContaining("kbo-0912-jamsil-crowd"));
     expect(heroImages[2]).toHaveAttribute("src", expect.stringContaining("kbo-0726-group.webp"));
     expect(heroImages[3]).toHaveAttribute("src", expect.stringContaining("kleague-0815-crew"));
     expect(heroImages[0]).toHaveAttribute("loading", "eager");
     expect(heroImages[1]).toHaveAttribute("loading", "lazy");
+    // 스포츠 전용 전환 뒤 한강 사진은 관광객 화면에서 쓰지 않는다
+    expect(heroRegion.innerHTML).not.toContain("hanriver");
     // AI로 좌우를 늘린 셀카와 4MB 원본 jpeg는 더 이상 쓰지 않는다
     expect(heroRegion.innerHTML).not.toContain("group-wide");
     expect(heroRegion.innerHTML).not.toContain("2%EC%B0%A8-4");
   });
 
-  it("blurs a backdrop behind close-up photos on desktop and keeps landscapes full-bleed", async () => {
+  it("places every hero photo on a blurred backdrop at the same 4:3 size on desktop", async () => {
     await renderLanding("en");
 
     const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
     const frames = heroRegion.querySelectorAll(".hero-media-frame");
     const backdrops = heroRegion.querySelectorAll(".hero-media-backdrop");
 
-    expect(backdrops).toHaveLength(2);
-    expect(frames[2]?.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
-    expect(frames[2]?.querySelector(".hero-media-image")).toHaveClass(
-      "hero-media-contain",
-      "md:object-contain",
-    );
-    expect(frames[0]?.querySelector(".hero-media-image")).not.toHaveClass("md:object-contain");
+    // 풀블리드 cover는 셀피 얼굴이 화면을 채우고 사진마다 크기가 달라져 4장 모두 contain으로 통일했다
+    expect(backdrops).toHaveLength(4);
+    frames.forEach((frame) => {
+      expect(frame.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
+      expect(frame.querySelector(".hero-media-image")).toHaveClass(
+        "hero-media-contain",
+        "md:object-contain",
+      );
+    });
     // 초점은 CSS 변수로 넘겨 md 이상의 contain 프레임에서는 스타일시트가 정중앙으로 되돌린다
     expect(frames[2]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
       "--hero-media-position: 85% 50%",

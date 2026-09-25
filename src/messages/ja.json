@@ -238,10 +238,9 @@
     },
     "visuals": {
       "ariaLabel": "ソウルでの本物のハンバディの瞬間",
-      "mainAlt": "漢江のほとりでピクニックを楽しむ友人たち",
-      "marketAlt": "ソウルの照明の下で野球の試合",
-      "teaAlt": "野球の試合を一緒に応援する旅行者と地元の仲間",
-      "fountainAlt": "夕暮れに輝く漢江噴水",
+      "gocheokAlt": "高尺スカイドームの観客席で笑顔の3人の友人",
+      "jamsilAlt": "蚕室野球場の一列を埋めた水色ユニフォームのゲストとバディ",
+      "kbo0726Alt": "野球の試合を一緒に応援する旅行者と地元の仲間",
       "kleagueAlt": "Kリーグの試合で一緒に過ごしたゲストとバディ",
       "mainCaption": "あなたの韓国を個人的なものにしましょう。"
     },
@@ -422,10 +421,10 @@
     "visualCaption": "新しい友達、7月26日 ⚾",
     "visualRightAlt": "野球スタンドで笑顔を見せるゲストと仲間たち",
     "visualRightCaption": "初めての野球の夜⚾",
-    "visualBottomLeftAlt": "漢江を照らす盤浦大橋の虹の噴水",
-    "visualBottomLeftCaption": "盤浦虹🌈",
-    "visualBottomRightAlt": "漢江沿いでシェアするフライドチキン、麺類、ドリンク",
-    "visualBottomRightCaption": "川沿いのチメク🍗",
+    "visualBottomLeftAlt": "蚕室野球場で斗山ベアーズのマスコットと一緒にポーズをとるゲストとバディ",
+    "visualBottomLeftCaption": "マスコットと 9/12 ⚾",
+    "visualBottomRightAlt": "高尺スカイドームの観客席でおやつを分け合うゲストとバディ",
+    "visualBottomRightCaption": "ドームでおやつ 9/5 ⚾",
     "errors": {
       "googleCancelled": "Google サインインがキャンセルされました。",
       "missingCode": "Google は認証コードを返しませんでした。",

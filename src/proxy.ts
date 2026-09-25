@@ -10,6 +10,7 @@ import { isLocale, LOCALE_COOKIE_NAME, routing } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getRouteAccessRedirect, parseUserType } from "@/lib/auth/routes";
+import { resolveLegacyLandingPath } from "@/lib/legacy-landing";
 
 import { isNoindexPath } from "@/lib/seo/indexing";
 
@@ -44,6 +45,17 @@ function routeRequest(request: NextRequest) {
     : isLocale(savedLocale)
       ? savedLocale
       : (pathnameLocale ?? routing.defaultLocale);
+  // 옛 정적 랜딩 링크(/apply?event=…, /events/…)는 로그인 여부와 무관하게 회차 상세나 홈으로 보낸다
+  const legacyTarget = resolveLegacyLandingPath(
+    pathnameWithoutLocale,
+    request.nextUrl.searchParams,
+  );
+  if (legacyTarget) {
+    const redirectUrl = new URL(localizePathname(legacyTarget.pathname, locale), request.url);
+    redirectUrl.search = legacyTarget.search;
+    return NextResponse.redirect(redirectUrl);
+  }
+
   const redirectPath = getRouteAccessRedirect({
     pathname: pathnameWithoutLocale,
     accessToken,

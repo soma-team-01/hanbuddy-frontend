@@ -7,16 +7,37 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
-// 실제 회차 사진(9/5 고척, 9/12 잠실, 8/15 K리그). 메인·로그인과 같은 파일을 재사용한다.
+// 실제 회차 사진. 9/12 잠실 2장과 가이드님이 함께한 9/13 잠실 좌석컷. position은 3:4 타일의 초점이다.
 const HERO_COLLAGE = [
-  { src: "/images/landing/kbo-0905-dome-friends.webp", altKey: "hero.collageAlt1" },
-  { src: "/images/landing/kbo-0912-mascot-crew.webp", altKey: "hero.collageAlt2" },
-  { src: "/images/landing/kleague-0815-crew.webp", altKey: "hero.collageAlt3" },
+  {
+    src: "/images/landing/kbo-0912-towel.webp",
+    altKey: "hero.collageAlt1",
+    position: "object-[50%_40%]",
+  },
+  {
+    src: "/images/landing/kbo-0912-mascot-crew.webp",
+    altKey: "hero.collageAlt2",
+    position: "object-[50%_62%]",
+  },
+  {
+    src: "/images/landing/kbo-0913-seats-five.webp",
+    altKey: "hero.collageAlt3",
+    position: "object-[22%_50%]",
+  },
 ] as const;
 
 const HOW_STEPS = ["plan", "confirm", "improve"] as const;
 const STAT_KEYS = ["runs", "rating", "stadiums"] as const;
-const TIMELINE_KEYS = ["june", "july", "august", "september"] as const;
+const TIMELINE_ITEMS = [
+  { key: "june", image: "/images/landing/1차-1.webp", position: "object-[50%_30%]" },
+  { key: "july", image: "/images/landing/kbo-0726-group.webp", position: "object-[70%_40%]" },
+  { key: "august", image: "/images/landing/kleague-0815-crew.webp", position: "object-[35%_50%]" },
+  {
+    key: "september",
+    image: "/images/landing/kbo-0905-dome-friends.webp",
+    position: "object-center",
+  },
+] as const;
 
 const TEAM_MEMBERS = [
   { key: "minhyung", linkedin: "https://www.linkedin.com/in/minbros/" },
@@ -102,7 +123,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                   fill
                   priority={index === 0}
                   sizes="(min-width: 1024px) 150px, 30vw"
-                  className="object-cover"
+                  className={`object-cover ${photo.position}`}
                 />
               </li>
             ))}
@@ -232,20 +253,31 @@ export default async function AboutPage({ params }: AboutPageProps) {
             </h2>
           </div>
           <ol className="mx-auto mt-10 grid max-w-5xl gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {TIMELINE_KEYS.map((item) => (
+            {TIMELINE_ITEMS.map((item) => (
               <li
-                key={item}
-                className="rounded-[1.5rem] border border-white/15 bg-white/5 px-5 py-6 sm:px-6"
+                key={item.key}
+                className="overflow-hidden rounded-[1.5rem] border border-white/15 bg-white/5"
               >
-                <p className="font-display text-xs font-bold tracking-[0.2em] text-primary-soft uppercase">
-                  {t(`timeline.items.${item}.date`)}
-                </p>
-                <h3 className="mt-3 font-display text-lg leading-snug font-bold">
-                  {t(`timeline.items.${item}.title`)}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-white/75">
-                  {t(`timeline.items.${item}.description`)}
-                </p>
+                <div className="relative aspect-[4/3]">
+                  <Image
+                    src={item.image}
+                    alt={t(`timeline.items.${item.key}.imageAlt`)}
+                    fill
+                    sizes="(min-width: 1024px) 280px, (min-width: 768px) 45vw, 92vw"
+                    className={`object-cover ${item.position}`}
+                  />
+                </div>
+                <div className="px-5 py-5 sm:px-6">
+                  <p className="font-display text-xs font-bold tracking-[0.2em] text-primary-soft uppercase">
+                    {t(`timeline.items.${item.key}.date`)}
+                  </p>
+                  <h3 className="mt-3 font-display text-lg leading-snug font-bold">
+                    {t(`timeline.items.${item.key}.title`)}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-white/75">
+                    {t(`timeline.items.${item.key}.description`)}
+                  </p>
+                </div>
               </li>
             ))}
           </ol>

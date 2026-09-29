@@ -37,7 +37,7 @@ describe("AboutPage", () => {
     expect(screen.getByRole("link", { name: secondary })).toHaveAttribute("href", "#about-team");
   });
 
-  it("shows the three September and August game-night photos in the hero", async () => {
+  it("shows September 12 and 13 game-night photos in the hero", async () => {
     await renderAbout("en");
 
     const collage = screen.getByRole("list", { name: "Our runs" });
@@ -46,10 +46,30 @@ describe("AboutPage", () => {
       .map((image) => image.getAttribute("src"));
 
     expect(sources).toHaveLength(3);
-    expect(sources[0]).toContain("kbo-0905-dome-friends");
+    expect(sources[0]).toContain("kbo-0912-towel");
     expect(sources[1]).toContain("kbo-0912-mascot-crew");
-    expect(sources[2]).toContain("kleague-0815-crew");
+    expect(sources[2]).toContain("kbo-0913-seats-five");
     expect(sources.join(" ")).not.toContain("hanriver");
+  });
+
+  it("illustrates each month of the timeline with a photo from that run", async () => {
+    await renderAbout("en");
+
+    const timeline = screen.getByRole("region", {
+      name: "Where we’ve been, and where we’re going next.",
+    });
+    const sources = within(timeline)
+      .getAllByRole("img")
+      .map((image) => decodeURIComponent(image.getAttribute("src") ?? ""));
+
+    expect(sources).toHaveLength(4);
+    expect(sources[0]).toContain("1차-1");
+    expect(sources[1]).toContain("kbo-0726-group");
+    expect(sources[2]).toContain("kleague-0815-crew");
+    expect(sources[3]).toContain("kbo-0905-dome-friends");
+    for (const image of within(timeline).getAllByRole("img")) {
+      expect(image.getAttribute("alt")).not.toBe("");
+    }
   });
 
   it("explains the sports-only, ticket-included way HanBuddy runs", async () => {
@@ -61,7 +81,7 @@ describe("AboutPage", () => {
     expect(screen.getByText(/ticket and stadium food are included/)).toBeInTheDocument();
     expect(screen.getByText("7")).toBeInTheDocument();
     expect(screen.getByText("4.9 / 5")).toBeInTheDocument();
-    expect(screen.getByText(/10 guest survey responses/)).toBeInTheDocument();
+    expect(screen.getByText(/12 guest survey responses/)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/Han River|picnic/i);
   });
 

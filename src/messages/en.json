@@ -398,9 +398,9 @@
       "description": "Small-group game nights in Seoul with a Korean buddy. We plan the night, buy your ticket, and sit next to you. You just show up.",
       "primaryCta": "Explore experiences",
       "secondaryCta": "Meet the team",
-      "collageAlt1": "Three friends smiling in the stands at Gocheok Sky Dome",
+      "collageAlt1": "Two guests holding up a Doosan cheering towel above the Jamsil field at night",
       "collageAlt2": "Guests and buddies posing with the Doosan Bears mascot at Jamsil Stadium",
-      "collageAlt3": "Guests and buddies at a K League match"
+      "collageAlt3": "Guests, a buddy, and their local guide sharing snacks in the Jamsil stands"
     },
     "origin": {
       "eyebrow": "Why we started",
@@ -445,7 +445,7 @@
           "label": "stadiums: Jamsil, Gocheok, Seoul World Cup"
         }
       },
-      "note": "Rating from 10 guest survey responses, June to September 2026."
+      "note": "Rating from 12 guest survey responses, June to September 2026."
     },
     "timeline": {
       "eyebrow": "Our runs",
@@ -454,22 +454,26 @@
         "june": {
           "date": "June 2026",
           "title": "First KBO night at Jamsil",
-          "description": "One guest, the whole team as buddies, and a lot to learn."
+          "description": "One guest, the whole team as buddies, and a lot to learn.",
+          "imageAlt": "Guests and buddies smiling in the stands on the first HanBuddy baseball night"
         },
         "july": {
           "date": "July 2026",
           "title": "KBO at Jamsil, round two",
-          "description": "Three guests, cheering songs, chicken and beer. Every survey came back 5 out of 5."
+          "description": "Three guests, cheering songs, chicken and beer. Every survey came back 5 out of 5.",
+          "imageAlt": "Travelers and local buddies cheering together at a baseball game"
         },
         "august": {
           "date": "August 2026",
           "title": "First football night: K League",
-          "description": "Seoul World Cup Stadium, scarves, and a guest who said it felt like being with friends."
+          "description": "Seoul World Cup Stadium, scarves, and a guest who said it felt like being with friends.",
+          "imageAlt": "Guests and buddies at a K League match"
         },
         "september": {
           "date": "September 2026",
           "title": "Four game nights, including our first indoor dome",
-          "description": "Gocheok Sky Dome and Jamsil, sky-blue jerseys, mascot photos. Every survey so far: 5 out of 5."
+          "description": "Gocheok Sky Dome and Jamsil, sky-blue jerseys, mascot photos. Every survey so far: 5 out of 5.",
+          "imageAlt": "Three friends smiling in the stands at Gocheok Sky Dome"
         }
       }
     },

@@ -30,9 +30,10 @@ const BUSINESS_DETAILS = {
 } as const;
 
 export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
-  const [authT, landingT] = await Promise.all([
+  const [authT, landingT, navT] = await Promise.all([
     getTranslations({ locale, namespace: "Auth" }),
     getTranslations({ locale, namespace: "Landing" }),
+    getTranslations({ locale, namespace: "Navigation" }),
   ]);
 
   return (
@@ -42,6 +43,12 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
           <div className="flex flex-wrap items-center gap-x-4 text-xs text-muted">
             <p>© 2026 HanBuddy</p>
             <AnalyticsSettings />
+            <Link
+              href={`/${locale}/about`}
+              className="inline-flex min-h-11 items-center transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+            >
+              {navT("about")}
+            </Link>
             <Link
               href={getPolicyPath(locale, "terms-of-service")}
               className="inline-flex min-h-11 items-center transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"

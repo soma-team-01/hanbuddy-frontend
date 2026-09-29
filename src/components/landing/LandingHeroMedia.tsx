@@ -15,6 +15,8 @@ interface HeroMediaItem {
   readonly position?: string;
 }
 
+const SLIDE_SECONDS = 5;
+
 interface LandingHeroMediaProps {
   readonly images: readonly HeroMediaItem[];
 }
@@ -30,8 +32,10 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
       className="hero-media relative h-[400px] w-full overflow-hidden md:absolute md:inset-0 md:h-auto"
     >
       {images.map((image, index) => {
+        // 한 장당 5초. 전체 주기는 장수에 비례한다 (키프레임 비율은 globals.css 참고)
         const style = {
-          "--hero-media-delay": `${index * 5}s`,
+          "--hero-media-delay": `${index * SLIDE_SECONDS}s`,
+          "--hero-media-duration": `${images.length * SLIDE_SECONDS}s`,
         } as CSSProperties;
         const isContain = image.fit === "contain";
 

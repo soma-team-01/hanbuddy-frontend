@@ -138,38 +138,50 @@ describe("LandingPage", () => {
     const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
     const heroImages = heroRegion.querySelectorAll(".hero-media-image");
 
-    expect(heroImages).toHaveLength(4);
-    expect(heroImages[0]).toHaveAttribute("src", expect.stringContaining("hanriver-picnic"));
-    expect(heroImages[1]).toHaveAttribute("src", expect.stringContaining("jamsil-stadium-0726"));
-    expect(heroImages[2]).toHaveAttribute("src", expect.stringContaining("kbo-0726-group.webp"));
-    expect(heroImages[3]).toHaveAttribute("src", expect.stringContaining("kleague-0815-crew"));
+    const heroSources = [...heroImages].map((image) => image.getAttribute("src") ?? "");
+    // 9/12 관중석 → 8/15 K리그 → 9/12 야간 단체컷 → 9/13 가이드 단체컷 → 7/26 잠실
+    expect(heroSources).toHaveLength(5);
+    expect(heroSources[0]).toContain("kbo-0912-jamsil-crowd");
+    expect(heroSources[1]).toContain("kleague-0815-crew");
+    expect(heroSources[2]).toContain("kbo-0912-group-night");
+    expect(heroSources[3]).toContain("kbo-0913-group-guide");
+    expect(heroSources[4]).toContain("kbo-0726-group.webp");
+    // 9/12 사진은 두 장까지만 쓴다
+    expect(heroSources.filter((source) => source.includes("kbo-0912"))).toHaveLength(2);
+    // 한 장당 5초, 장수에 맞춘 전체 주기를 CSS 변수로 넘긴다
+    const firstFrame = heroRegion.querySelector(".hero-media-frame");
+    expect(firstFrame?.getAttribute("style")).toContain("--hero-media-duration: 25s");
     expect(heroImages[0]).toHaveAttribute("loading", "eager");
     expect(heroImages[1]).toHaveAttribute("loading", "lazy");
+    // 스포츠 전용 전환 뒤 한강 사진은 관광객 화면에서 쓰지 않는다
+    expect(heroRegion.innerHTML).not.toContain("hanriver");
     // AI로 좌우를 늘린 셀카와 4MB 원본 jpeg는 더 이상 쓰지 않는다
     expect(heroRegion.innerHTML).not.toContain("group-wide");
     expect(heroRegion.innerHTML).not.toContain("2%EC%B0%A8-4");
   });
 
-  it("blurs a backdrop behind close-up photos on desktop and keeps landscapes full-bleed", async () => {
+  it("places every hero photo on a blurred backdrop at the same 4:3 size on desktop", async () => {
     await renderLanding("en");
 
     const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
     const frames = heroRegion.querySelectorAll(".hero-media-frame");
     const backdrops = heroRegion.querySelectorAll(".hero-media-backdrop");
 
-    expect(backdrops).toHaveLength(2);
-    expect(frames[2]?.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
-    expect(frames[2]?.querySelector(".hero-media-image")).toHaveClass(
-      "hero-media-contain",
-      "md:object-contain",
-    );
-    expect(frames[0]?.querySelector(".hero-media-image")).not.toHaveClass("md:object-contain");
+    // 풀블리드 cover는 셀피 얼굴이 화면을 채우고 사진마다 크기가 달라져 4장 모두 contain으로 통일했다
+    expect(backdrops).toHaveLength(5);
+    frames.forEach((frame) => {
+      expect(frame.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
+      expect(frame.querySelector(".hero-media-image")).toHaveClass(
+        "hero-media-contain",
+        "md:object-contain",
+      );
+    });
     // 초점은 CSS 변수로 넘겨 md 이상의 contain 프레임에서는 스타일시트가 정중앙으로 되돌린다
-    expect(frames[2]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
-      "--hero-media-position: 85% 50%",
+    expect(frames[1]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
+      "--hero-media-position: 32% 50%",
     );
-    expect(frames[2]?.querySelector(".hero-media-image")).not.toHaveStyle({
-      objectPosition: "85% 50%",
+    expect(frames[1]?.querySelector(".hero-media-image")).not.toHaveStyle({
+      objectPosition: "32% 50%",
     });
     // PC 히어로는 화면 전체가 아니라 72vh(560~760px)로 낮춰 원본 사진이 위아래를 꽉 채운다
     expect(heroRegion).toHaveClass("md:min-h-[clamp(560px,72svh,760px)]");
@@ -229,5 +241,12 @@ describe("LandingPage", () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
     expectLocalizedMetadata(metadata, title, canonicalPath, "");
+    // 카카오톡·SNS에 링크를 붙였을 때 대표 사진과 언어별 제목이 나온다
+    expect(metadata.openGraph).toMatchObject({
+      title,
+      url: `https://hanbuddy.kr${canonicalPath}`,
+      images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", width: 1200 }],
+    });
+    expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
   });
 });

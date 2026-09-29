@@ -1,3 +1,4 @@
+import { sharePreview } from "@/lib/seo/metadata";
 import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -13,30 +14,41 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
-  // position: 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 가로 초점. cover 사진은 PC 세로 크롭에도 쓰인다.
+  // 순서: 9/12 관중석 → 8/15 K리그 → 9/12 야간 단체컷 → 9/13 가이드 동행 단체컷 → 7/26 잠실
+  // (유현님 확정 2026-09-29: 앉아서 찍은 9/12 관중석이 1번, 9/12는 두 장, 9/13은 가이드님 단체컷 한 장).
+  // 장수를 바꾸면 globals.css의 hero-media-cycle 키프레임 비율도 같이 바꿔야 한다(5장 기준).
+  // PC(md 이상)는 모두 4:3 원본을 흐린 배경 위에 같은 크기로 놓는다(contain). 풀블리드 cover는
+  // 셀피의 얼굴이 화면을 가득 채워 부담스럽고, 사진마다 박스 크기가 달라지는 문제가 있었다.
+  // position은 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 초점이다.
   {
-    src: "/images/landing/hanriver-picnic.webp",
-    altKey: "visuals.mainAlt",
-    fit: "cover",
-    position: "50% 72%",
-  },
-  {
-    src: "/images/landing/jamsil-stadium-0726.webp",
-    altKey: "visuals.marketAlt",
-    fit: "cover",
-    position: "50% 55%",
-  },
-  {
-    src: "/images/landing/kbo-0726-group.webp",
-    altKey: "visuals.teaAlt",
+    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
+    altKey: "visuals.jamsilAlt",
     fit: "contain",
-    position: "85% 50%",
+    position: "50% 40%",
   },
   {
     src: "/images/landing/kleague-0815-crew.webp",
     altKey: "visuals.kleagueAlt",
     fit: "contain",
     position: "32% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0912-group-night.webp",
+    altKey: "visuals.jamsilGroupAlt",
+    fit: "contain",
+    position: "50% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0913-group-guide.webp",
+    altKey: "visuals.jamsilSundayGuideAlt",
+    fit: "contain",
+    position: "45% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0726-group.webp",
+    altKey: "visuals.kbo0726Alt",
+    fit: "contain",
+    position: "85% 50%",
   },
 ] as const;
 
@@ -61,6 +73,12 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
   return {
     title: t("metadataTitle"),
     description: t("metadataDescription"),
+    ...sharePreview({
+      locale,
+      path: "",
+      title: t("metadataTitle"),
+      description: t("metadataDescription"),
+    }),
     alternates: {
       canonical: `${APP_ORIGIN}/${locale}`,
       languages: {

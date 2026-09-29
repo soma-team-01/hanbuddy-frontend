@@ -87,6 +87,8 @@ interface OnboardingFormProps {
   userType?: UserType;
   resubmission?: BuddyResubmission;
   agreementDocuments?: SignupAgreementDocuments;
+  /** 가입 완료 후 돌아갈 내부 경로(예약 화면 등). 없으면 관광객은 홈으로 간다. */
+  returnTo?: string | null;
 }
 
 type OnboardingStep = 1 | 2 | 3;
@@ -160,6 +162,7 @@ export function OnboardingForm({
   userType = "TOURIST",
   resubmission,
   agreementDocuments,
+  returnTo = null,
 }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
   const buddyT = useTranslations("BuddyOnboarding");
@@ -637,7 +640,7 @@ export function OnboardingForm({
       if (signupResult.registered === true) trackSignup("google");
       if (authStatus === "ACTIVE") {
         discardDraft();
-        router.replace(userType === "BUDDY" ? "/dashboard" : "/");
+        router.replace(userType === "BUDDY" ? "/dashboard" : (returnTo ?? "/"));
       } else if (
         authStatus === "PENDING_APPROVAL" ||
         authStatus === "REJECTED" ||

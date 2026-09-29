@@ -53,6 +53,14 @@ describe("locale layout metadata", () => {
     await expect(generateMetadata({ params: Promise.resolve({ locale }) })).resolves.toMatchObject({
       title: "HanBuddy",
       description,
+      // 공유 정보를 따로 정하지 않은 페이지도 대표 사진을 물려받고, 메인의 제목·설명·주소는 물려받지 않는다
+      openGraph: {
+        url: undefined,
+        title: undefined,
+        description: undefined,
+        images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", width: 1200 }],
+      },
+      twitter: { card: "summary_large_image", title: undefined },
     });
   });
 });

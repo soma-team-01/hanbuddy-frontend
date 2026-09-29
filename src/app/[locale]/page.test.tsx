@@ -139,17 +139,19 @@ describe("LandingPage", () => {
     const heroImages = heroRegion.querySelectorAll(".hero-media-image");
 
     const heroSources = [...heroImages].map((image) => image.getAttribute("src") ?? "");
-    // 9/12 잠실 → 8/15 K리그 → 9/13 잠실 → 7/26 잠실 → 9/12 → 9/13
-    expect(heroSources).toHaveLength(6);
+    // 9/12 야간 단체컷 → 8/15 K리그 → 9/12 관중석 → 9/13 가이드 단체컷 → 9/12 응원 수건
+    expect(heroSources).toHaveLength(5);
     expect(heroSources[0]).toContain("kbo-0912-group-night");
     expect(heroSources[1]).toContain("kleague-0815-crew");
-    expect(heroSources[2]).toContain("kbo-0913-group-guide");
-    expect(heroSources[3]).toContain("kbo-0726-group.webp");
-    expect(heroSources[4]).toContain("kbo-0912-jamsil-crowd");
-    expect(heroSources[5]).toContain("kbo-0913-selfie-three");
+    expect(heroSources[2]).toContain("kbo-0912-jamsil-crowd");
+    expect(heroSources[3]).toContain("kbo-0913-group-guide");
+    expect(heroSources[4]).toContain("kbo-0912-towel-night");
+    // 7/26 사진과 9/13 셀피는 히어로에서 뺐다
+    expect(heroSources.join(" ")).not.toContain("kbo-0726");
+    expect(heroSources.join(" ")).not.toContain("selfie-three");
     // 한 장당 5초, 장수에 맞춘 전체 주기를 CSS 변수로 넘긴다
     const firstFrame = heroRegion.querySelector(".hero-media-frame");
-    expect(firstFrame?.getAttribute("style")).toContain("--hero-media-duration: 30s");
+    expect(firstFrame?.getAttribute("style")).toContain("--hero-media-duration: 25s");
     expect(heroImages[0]).toHaveAttribute("loading", "eager");
     expect(heroImages[1]).toHaveAttribute("loading", "lazy");
     // 스포츠 전용 전환 뒤 한강 사진은 관광객 화면에서 쓰지 않는다
@@ -167,7 +169,7 @@ describe("LandingPage", () => {
     const backdrops = heroRegion.querySelectorAll(".hero-media-backdrop");
 
     // 풀블리드 cover는 셀피 얼굴이 화면을 채우고 사진마다 크기가 달라져 4장 모두 contain으로 통일했다
-    expect(backdrops).toHaveLength(6);
+    expect(backdrops).toHaveLength(5);
     frames.forEach((frame) => {
       expect(frame.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
       expect(frame.querySelector(".hero-media-image")).toHaveClass(
@@ -176,11 +178,11 @@ describe("LandingPage", () => {
       );
     });
     // 초점은 CSS 변수로 넘겨 md 이상의 contain 프레임에서는 스타일시트가 정중앙으로 되돌린다
-    expect(frames[3]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
-      "--hero-media-position: 85% 50%",
+    expect(frames[1]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
+      "--hero-media-position: 32% 50%",
     );
-    expect(frames[3]?.querySelector(".hero-media-image")).not.toHaveStyle({
-      objectPosition: "85% 50%",
+    expect(frames[1]?.querySelector(".hero-media-image")).not.toHaveStyle({
+      objectPosition: "32% 50%",
     });
     // PC 히어로는 화면 전체가 아니라 72vh(560~760px)로 낮춰 원본 사진이 위아래를 꽉 채운다
     expect(heroRegion).toHaveClass("md:min-h-[clamp(560px,72svh,760px)]");

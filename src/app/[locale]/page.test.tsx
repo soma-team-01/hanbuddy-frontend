@@ -138,11 +138,18 @@ describe("LandingPage", () => {
     const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
     const heroImages = heroRegion.querySelectorAll(".hero-media-image");
 
-    expect(heroImages).toHaveLength(4);
-    expect(heroImages[0]).toHaveAttribute("src", expect.stringContaining("kbo-0905-dome-friends"));
-    expect(heroImages[1]).toHaveAttribute("src", expect.stringContaining("kbo-0912-jamsil-crowd"));
-    expect(heroImages[2]).toHaveAttribute("src", expect.stringContaining("kbo-0726-group.webp"));
-    expect(heroImages[3]).toHaveAttribute("src", expect.stringContaining("kleague-0815-crew"));
+    const heroSources = [...heroImages].map((image) => image.getAttribute("src") ?? "");
+    // 9/12 잠실 → 8/15 K리그 → 9/13 잠실 → 7/26 잠실 → 9/12 → 9/13
+    expect(heroSources).toHaveLength(6);
+    expect(heroSources[0]).toContain("kbo-0912-group-night");
+    expect(heroSources[1]).toContain("kleague-0815-crew");
+    expect(heroSources[2]).toContain("kbo-0913-group-guide");
+    expect(heroSources[3]).toContain("kbo-0726-group.webp");
+    expect(heroSources[4]).toContain("kbo-0912-jamsil-crowd");
+    expect(heroSources[5]).toContain("kbo-0913-selfie-three");
+    // 한 장당 5초, 장수에 맞춘 전체 주기를 CSS 변수로 넘긴다
+    const firstFrame = heroRegion.querySelector(".hero-media-frame");
+    expect(firstFrame?.getAttribute("style")).toContain("--hero-media-duration: 30s");
     expect(heroImages[0]).toHaveAttribute("loading", "eager");
     expect(heroImages[1]).toHaveAttribute("loading", "lazy");
     // 스포츠 전용 전환 뒤 한강 사진은 관광객 화면에서 쓰지 않는다
@@ -160,7 +167,7 @@ describe("LandingPage", () => {
     const backdrops = heroRegion.querySelectorAll(".hero-media-backdrop");
 
     // 풀블리드 cover는 셀피 얼굴이 화면을 채우고 사진마다 크기가 달라져 4장 모두 contain으로 통일했다
-    expect(backdrops).toHaveLength(4);
+    expect(backdrops).toHaveLength(6);
     frames.forEach((frame) => {
       expect(frame.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
       expect(frame.querySelector(".hero-media-image")).toHaveClass(
@@ -169,10 +176,10 @@ describe("LandingPage", () => {
       );
     });
     // 초점은 CSS 변수로 넘겨 md 이상의 contain 프레임에서는 스타일시트가 정중앙으로 되돌린다
-    expect(frames[2]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
+    expect(frames[3]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
       "--hero-media-position: 85% 50%",
     );
-    expect(frames[2]?.querySelector(".hero-media-image")).not.toHaveStyle({
+    expect(frames[3]?.querySelector(".hero-media-image")).not.toHaveStyle({
       objectPosition: "85% 50%",
     });
     // PC 히어로는 화면 전체가 아니라 72vh(560~760px)로 낮춰 원본 사진이 위아래를 꽉 채운다

@@ -78,6 +78,17 @@ describe("global korean line breaking", () => {
 });
 
 describe("landing hero media styles", () => {
+  it("times the hero slideshow for six photos at five seconds each", () => {
+    const cycle = stylesheet.match(/@keyframes hero-media-cycle\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+
+    // 6장 × 5초 = 30초 주기. 한 장은 4초(13.333%) 보이고 5초(16.667%)에 완전히 사라진다
+    expect(cycle).toMatch(/0%,\s*13\.333%\s*\{\s*opacity: 1/);
+    expect(cycle).toMatch(/16\.667%,\s*100%\s*\{\s*opacity: 0/);
+    expect(stylesheet).toMatch(
+      /\.hero-media-frame\s*\{[^}]*hero-media-cycle var\(--hero-media-duration, 30s\)/,
+    );
+  });
+
   it("feathers contained hero photos into the blurred backdrop from md up", () => {
     const block = stylesheet.match(
       /@media \(min-width: 768px\)\s*\{\s*\.hero-media-contain\s*\{([^}]*)\}/,

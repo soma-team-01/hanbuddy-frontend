@@ -136,11 +136,11 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             <span className="login-polaroid-tape" aria-hidden="true" />
             <span className="login-polaroid-frame">
               <Image
-                src="/images/landing/1차-1.webp"
+                src="/images/landing/kbo-0913-bear-ears.webp"
                 alt={t("visualRightAlt")}
                 fill
                 sizes="(min-width: 1440px) 232px, (min-width: 1024px) 176px, 45vw"
-                className="object-cover object-[50%_30%]"
+                className="object-cover object-[50%_32%]"
               />
             </span>
             <figcaption>{t("visualRightCaption")}</figcaption>

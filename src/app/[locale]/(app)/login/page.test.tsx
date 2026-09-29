@@ -131,6 +131,7 @@ describe("LoginPage", () => {
       const figureSources = figures.map((figure) =>
         figure.querySelector("img")?.getAttribute("src"),
       );
+      expect(figureSources[1]).toContain("kbo-0913-bear-ears");
       expect(figureSources[2]).toContain("kbo-0912-mascot-crew");
       expect(figureSources[3]).toContain("kbo-0905-dome-seats");
       expect(figureSources.join(" ")).not.toContain("hanriver");

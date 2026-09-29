@@ -13,20 +13,28 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
-  // PC(md 이상)는 4장 모두 4:3 원본을 흐린 배경 위에 같은 크기로 놓는다(contain). 풀블리드 cover는
+  // 순서: 9/12 잠실 → 8/15 K리그 → 9/13 잠실 → 7/26 잠실 → 9/12 → 9/13 (유현님 확정 2026-09-29).
+  // 장수를 바꾸면 globals.css의 hero-media-cycle 키프레임 비율도 같이 바꿔야 한다(6장 기준).
+  // PC(md 이상)는 모두 4:3 원본을 흐린 배경 위에 같은 크기로 놓는다(contain). 풀블리드 cover는
   // 셀피의 얼굴이 화면을 가득 채워 부담스럽고, 사진마다 박스 크기가 달라지는 문제가 있었다.
   // position은 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 초점이다.
   {
-    src: "/images/landing/kbo-0905-dome-friends.webp",
-    altKey: "visuals.gocheokAlt",
+    src: "/images/landing/kbo-0912-group-night.webp",
+    altKey: "visuals.jamsilGroupAlt",
     fit: "contain",
-    position: "50% 45%",
+    position: "50% 50%",
   },
   {
-    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
-    altKey: "visuals.jamsilAlt",
+    src: "/images/landing/kleague-0815-crew.webp",
+    altKey: "visuals.kleagueAlt",
     fit: "contain",
-    position: "50% 40%",
+    position: "32% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0913-group-guide.webp",
+    altKey: "visuals.jamsilSundayGuideAlt",
+    fit: "contain",
+    position: "45% 50%",
   },
   {
     src: "/images/landing/kbo-0726-group.webp",
@@ -35,10 +43,16 @@ const HERO_MEDIA = [
     position: "85% 50%",
   },
   {
-    src: "/images/landing/kleague-0815-crew.webp",
-    altKey: "visuals.kleagueAlt",
+    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
+    altKey: "visuals.jamsilAlt",
     fit: "contain",
-    position: "32% 50%",
+    position: "50% 40%",
+  },
+  {
+    src: "/images/landing/kbo-0913-selfie-three.webp",
+    altKey: "visuals.jamsilSundaySelfieAlt",
+    fit: "contain",
+    position: "50% 50%",
   },
 ] as const;
 

@@ -1,3 +1,4 @@
+import { sharePreview } from "@/lib/seo/metadata";
 import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -56,6 +57,12 @@ export async function generateMetadata({ params }: AboutPageProps): Promise<Meta
   return {
     title: t("metadataTitle"),
     description: t("metadataDescription"),
+    ...sharePreview({
+      locale,
+      path: "/about",
+      title: t("metadataTitle"),
+      description: t("metadataDescription"),
+    }),
     alternates: {
       canonical: `${APP_ORIGIN}/${locale}/about`,
       languages: {

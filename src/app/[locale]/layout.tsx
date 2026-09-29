@@ -15,6 +15,7 @@ import { isLocale, routing, type Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 import "../globals.css";
+import { sharePreview } from "@/lib/seo/metadata";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -56,9 +57,20 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Landing" });
 
+  // 페이지가 공유 정보를 따로 정하지 않아도 링크 미리보기에 대표 사진이 나오게 한다.
+  // 기본값을 물려받는 페이지(로그인·정책 등)가 홈 주소를 자기 주소로 내보내지 않도록 url은 뺀다.
+  const preview = sharePreview({
+    locale,
+    path: "",
+    title: t("metadataTitle"),
+    description: t("metadataDescription"),
+  });
+
   return {
     title: "HanBuddy",
     description: t("metadataDescription"),
+    openGraph: { ...preview.openGraph, url: undefined },
+    twitter: preview.twitter,
   };
 }
 

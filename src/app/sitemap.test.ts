@@ -33,6 +33,8 @@ describe("public sitemap and crawl policy", () => {
     const urls = (await sitemap()).map(({ url }) => url);
     expect(urls).toContain("https://hanbuddy.kr/en");
     expect(urls).toContain("https://hanbuddy.kr/en/explore");
+    expect(urls).toContain("https://hanbuddy.kr/en/about");
+    expect(urls).toContain("https://hanbuddy.kr/zh-Hant/about");
     expect(urls).toContain("https://hanbuddy.kr/en/activities/1");
     expect(urls).toContain("https://hanbuddy.kr/ko/activities/2");
     expect(urls).toContain("https://hanbuddy.kr/ko/buddy");

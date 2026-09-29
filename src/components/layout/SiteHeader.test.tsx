@@ -54,6 +54,10 @@ describe("SiteHeader", () => {
       "href",
       "/en/applications",
     );
+    expect(within(primaryNavigation).getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      "/en/about",
+    );
     expect(
       within(primaryNavigation).queryByRole("link", { name: "My Page" }),
     ).not.toBeInTheDocument();
@@ -356,6 +360,7 @@ describe("SiteHeader", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />, { locale: "ko" });
 
     expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/ko/explore");
+    expect(screen.getByRole("link", { name: "소개" })).toHaveAttribute("href", "/ko/about");
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(
       "href",
       "/ko/applications",

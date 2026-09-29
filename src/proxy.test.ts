@@ -317,13 +317,29 @@ describe("route access proxy", () => {
     });
 
     it("keeps a buddy on the Korean home when they open an old landing link", async () => {
-      const response = await runProxy("/about", {
+      const response = await runProxy("/events", {
         [AUTH_COOKIES.accessToken]: "access-token",
         [AUTH_COOKIES.userType]: "BUDDY",
       });
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe("http://localhost/ko");
+    });
+
+    it("sends the old privacy page to the localized privacy policy", async () => {
+      const response = await runProxy("/privacy?utm_source=ads");
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        "http://localhost/en/policies/privacy-policy?utm_source=ads",
+      );
+    });
+
+    it("sends the old about link to the new about page instead of the home", async () => {
+      const response = await runProxy("/about");
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("http://localhost/en/about");
     });
   });
 

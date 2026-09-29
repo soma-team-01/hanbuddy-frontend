@@ -16,7 +16,7 @@ vi.mock("next-intl/server", async () => {
       namespace,
     }: {
       locale: Locale;
-      namespace: "Auth" | "Landing";
+      namespace: "Auth" | "Landing" | "Navigation";
     }) => createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
   };
 });
@@ -90,6 +90,15 @@ describe("SiteFooter", () => {
       );
     },
   );
+
+  it.each([
+    ["en", "About"],
+    ["ko", "소개"],
+  ] as const)("links the about page for %s", async (locale, label) => {
+    renderWithIntl(await SiteFooter({ locale }), { locale });
+
+    expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/about`);
+  });
 
   it("gives social icons and policy links a 44px touch target", async () => {
     renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });

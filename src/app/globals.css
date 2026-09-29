@@ -301,12 +301,14 @@ button:not(:disabled),
   animation-delay: 260ms;
 }
 
+/* 히어로 사진 5장 기준: 한 장이 주기의 1/5(5초)을 쓰고, 그중 4초 보인 뒤 1초 동안 사라진다.
+   장수를 바꾸면 16%(=80/N)와 20%(=100/N)를 함께 바꾼다. */
 @keyframes hero-media-cycle {
   0%,
-  20% {
+  16% {
     opacity: 1;
   }
-  25%,
+  20%,
   100% {
     opacity: 0;
   }
@@ -323,7 +325,7 @@ button:not(:disabled),
 }
 
 .hero-media-frame {
-  animation: hero-media-cycle 20s linear infinite;
+  animation: hero-media-cycle var(--hero-media-duration, 25s) linear infinite;
   animation-delay: var(--hero-media-delay);
   opacity: 0;
 }
@@ -333,7 +335,7 @@ button:not(:disabled),
 }
 
 .hero-media-image {
-  animation: hero-media-zoom 20s ease-in-out infinite;
+  animation: hero-media-zoom var(--hero-media-duration, 25s) ease-in-out infinite;
   animation-delay: var(--hero-media-delay);
   /* 사진별 초점. 모바일 띠(가로 크롭)와 cover 사진의 PC 세로 크롭에 쓰인다 */
   object-position: var(--hero-media-position, center);

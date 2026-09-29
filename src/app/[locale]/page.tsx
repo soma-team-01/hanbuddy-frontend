@@ -1,3 +1,4 @@
+import { sharePreview } from "@/lib/seo/metadata";
 import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -72,6 +73,12 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
   return {
     title: t("metadataTitle"),
     description: t("metadataDescription"),
+    ...sharePreview({
+      locale,
+      path: "",
+      title: t("metadataTitle"),
+      description: t("metadataDescription"),
+    }),
     alternates: {
       canonical: `${APP_ORIGIN}/${locale}`,
       languages: {

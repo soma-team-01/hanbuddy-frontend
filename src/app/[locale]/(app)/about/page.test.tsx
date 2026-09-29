@@ -121,5 +121,11 @@ describe("AboutPage", () => {
       "/ko/about",
       "/about",
     );
+    expect(metadata.openGraph).toMatchObject({
+      title: "HanBuddy 소개 | 서울 직관의 밤을 함께 만드는 팀",
+      url: "https://hanbuddy.kr/ko/about",
+      locale: "ko_KR",
+      images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", height: 630 }],
+    });
   });
 });

@@ -241,5 +241,12 @@ describe("LandingPage", () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
     expectLocalizedMetadata(metadata, title, canonicalPath, "");
+    // 카카오톡·SNS에 링크를 붙였을 때 대표 사진과 언어별 제목이 나온다
+    expect(metadata.openGraph).toMatchObject({
+      title,
+      url: `https://hanbuddy.kr${canonicalPath}`,
+      images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", width: 1200 }],
+    });
+    expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
   });
 });

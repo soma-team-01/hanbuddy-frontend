@@ -58,7 +58,8 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Landing" });
 
   // 페이지가 공유 정보를 따로 정하지 않아도 링크 미리보기에 대표 사진이 나오게 한다.
-  // 기본값을 물려받는 페이지(로그인·정책 등)가 홈 주소를 자기 주소로 내보내지 않도록 url은 뺀다.
+  // 기본값을 물려받는 페이지(로그인·정책 등)가 메인의 제목·설명·주소를 자기 것으로 내보내지 않도록
+  // 사진과 사이트 정보만 남긴다. 제목과 설명은 각 페이지의 <title>과 description을 따른다.
   const preview = sharePreview({
     locale,
     path: "",
@@ -69,8 +70,8 @@ export async function generateMetadata({
   return {
     title: "HanBuddy",
     description: t("metadataDescription"),
-    openGraph: { ...preview.openGraph, url: undefined },
-    twitter: preview.twitter,
+    openGraph: { ...preview.openGraph, url: undefined, title: undefined, description: undefined },
+    twitter: { ...preview.twitter, title: undefined, description: undefined },
   };
 }
 

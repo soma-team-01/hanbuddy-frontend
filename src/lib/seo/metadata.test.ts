@@ -43,7 +43,7 @@ describe("sharePreview", () => {
     expect(preview.twitter?.images).toEqual(["https://cdn.example.com/activity.jpg"]);
   });
 
-  it.each(["javascript:alert(1)", "http://[bad", ""])(
+  it.each(["javascript:alert(1)", "http://[bad", "http://cdn.example.com/activity.jpg", ""])(
     "ignores the unusable image %j and keeps the brand image",
     (image) => {
       const preview = sharePreview({

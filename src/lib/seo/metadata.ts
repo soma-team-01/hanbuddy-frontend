@@ -15,7 +15,8 @@ function resolveShareImage(image?: string | null): string | typeof DEFAULT_SHARE
   if (image) {
     try {
       const imageUrl = new URL(image, APP_ORIGIN);
-      if (["https:", "http:"].includes(imageUrl.protocol)) return imageUrl.href;
+      // 공유 미리보기는 https 이미지만 쓴다. http 주소는 대표 이미지로 대체한다.
+      if (imageUrl.protocol === "https:") return imageUrl.href;
     } catch {
       /* Invalid optional image must not break the public document. */
     }

@@ -217,16 +217,17 @@ export default async function AboutPage({ params }: AboutPageProps) {
           </div>
           <dl className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-3">
             {STAT_KEYS.map((stat) => (
+              // dl 안에서는 이름(dt)이 값(dd)보다 먼저 와야 한다. 화면에서는 값을 위에 크게 보여준다.
               <div
                 key={stat}
-                className="rounded-[1.5rem] border border-line-soft bg-canvas-soft px-6 py-7 text-center"
+                className="flex flex-col-reverse rounded-[1.5rem] border border-line-soft bg-canvas-soft px-6 py-7 text-center"
               >
-                <dd className="font-display text-4xl leading-none font-extrabold tracking-[-0.04em] text-primary-strong sm:text-5xl">
-                  {t(`stats.items.${stat}.value`)}
-                </dd>
                 <dt className="mt-3 text-sm leading-6 text-muted">
                   {t(`stats.items.${stat}.label`)}
                 </dt>
+                <dd className="font-display text-4xl leading-none font-extrabold tracking-[-0.04em] text-primary-strong sm:text-5xl">
+                  {t(`stats.items.${stat}.value`)}
+                </dd>
               </div>
             ))}
           </dl>

@@ -82,6 +82,14 @@ describe("AboutPage", () => {
     expect(screen.getByText("7")).toBeInTheDocument();
     expect(screen.getByText("4.9 / 5")).toBeInTheDocument();
     expect(screen.getByText(/12 guest survey responses/)).toBeInTheDocument();
+    // 평균 4.9와 어긋나지 않게 "전원 만점" 문구는 범위를 밝힌다
+    expect(screen.getByText(/Every September survey: 5 out of 5/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Every survey so far/);
+    // 통계는 이름(dt) 다음에 값(dd)이 오는 정의 목록이다
+    const runsLabel = screen.getByText("game nights since June 2026");
+    expect(runsLabel.tagName).toBe("DT");
+    expect(runsLabel.nextElementSibling?.tagName).toBe("DD");
+    expect(runsLabel.nextElementSibling).toHaveTextContent("7");
     expect(document.body.textContent).not.toMatch(/Han River|picnic/i);
   });
 

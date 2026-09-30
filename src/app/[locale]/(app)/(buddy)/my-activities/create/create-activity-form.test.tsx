@@ -1,9 +1,10 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
 import { createApiClientError } from "@/lib/api/errors";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyKeys } from "@/lib/query/buddy";
 import type { MyActivityDetailResponse } from "@/types/buddy";
 import {
@@ -99,11 +100,15 @@ const revokeObjectUrlMock = vi.fn();
 const routerPush = vi.fn();
 const routerReplace = vi.fn();
 
-// 캘린더는 다음 달 15일/22일을 사용해 실제 날짜와 무관하게 항상 미래를 선택한다
-const utcNow = new Date();
-const scheduleDateA = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 15));
-const scheduleDateB = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 22));
-const pastProbeDate = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() - 1, 15));
+// UTC는 9월, 한국은 10월인 월 경계를 고정해 실행 날짜에 의존하지 않는다.
+const CALENDAR_TEST_NOW = "2026-09-30T15:30:00Z";
+// 화면과 같은 한국 날짜를 달력 연산용 UTC 자정으로 표현한다.
+const calendarToday = new Date(`${getSeoulDateTimeParts(CALENDAR_TEST_NOW)!.date}T00:00:00Z`);
+const calendarYear = calendarToday.getUTCFullYear();
+const calendarMonth = calendarToday.getUTCMonth();
+const scheduleDateA = new Date(Date.UTC(calendarYear, calendarMonth + 1, 15));
+const scheduleDateB = new Date(Date.UTC(calendarYear, calendarMonth + 1, 22));
+const pastProbeDate = new Date(Date.UTC(calendarYear, calendarMonth - 1, 15));
 const dateKeyA = scheduleDateA.toISOString().slice(0, 10);
 
 function calendarLabel(date: Date) {
@@ -320,6 +325,9 @@ describe("CreateActivityForm", () => {
     },
   );
   beforeEach(() => {
+    // 비동기 UI·네트워크 대기는 실제 타이머를 쓰고 Date만 고정한다.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(CALENDAR_TEST_NOW));
     createObjectUrlMock.mockClear();
     revokeObjectUrlMock.mockClear();
     mockedSearchGooglePlacePredictions.mockClear();
@@ -738,6 +746,32 @@ describe("CreateActivityForm", () => {
     expect(
       screen.getByRole("button", { name: `Select ${calendarLabel(pastProbeDate)}` }),
     ).toBeDisabled();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it.each([
+    ["2026-09-30T14:59:59Z", "September 30, 2026", "October 15, 2026", "August 15, 2026"],
+    ["2026-09-30T15:00:00Z", "October 1, 2026", "November 15, 2026", "September 15, 2026"],
+    ["2026-12-31T15:00:00Z", "January 1, 2027", "February 15, 2027", "December 15, 2026"],
+    ["2027-02-28T15:00:00Z", "March 1, 2027", "April 15, 2027", "February 15, 2027"],
+    ["2028-02-28T15:00:00Z", "February 29, 2028", "March 15, 2028", "January 15, 2028"],
+    ["2028-02-29T15:00:00Z", "March 1, 2028", "April 15, 2028", "February 15, 2028"],
+  ])("uses Seoul calendar navigation at %s", async (now, today, nextMonth, previousMonth) => {
+    vi.setSystemTime(new Date(now));
+    renderWithQueryClient(<CreateActivityForm />);
+    await fillStepsUntilSchedule();
+    expect(screen.getByRole("button", { name: `Select ${today}` })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    const futureDay = screen.getByRole("button", { name: `Select ${nextMonth}` });
+    expect(futureDay).toBeEnabled();
+    fireEvent.click(futureDay);
+    expect(futureDay).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
+    expect(screen.getByRole("button", { name: `Select ${previousMonth}` })).toBeDisabled();
   });
 
   it("uploads photos and registers the activity with the backend contract", async () => {

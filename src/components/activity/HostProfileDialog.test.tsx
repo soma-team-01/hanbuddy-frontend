@@ -1,11 +1,20 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
+import { getMyProfile } from "@/lib/api/users";
+import { useRouter } from "next/navigation";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
 import type { ActivityDisplayPrice } from "@/types/display-currency";
 import { HostProfileDialog } from "./HostProfileDialog";
+
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => router,
+  usePathname: () => "/en/activities/42",
+}));
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
@@ -15,6 +24,24 @@ vi.mock("@/lib/api/reviews", () => ({
   getBuddyProfile: vi.fn(),
   getBuddyReviews: vi.fn(),
 }));
+
+vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn() }));
+
+const mockedGetMyProfile = vi.mocked(getMyProfile);
+const profile = {
+  userId: 23,
+  email: "tourist@example.com",
+  name: "Tourist",
+  displayName: "Tourist",
+  userType: "TOURIST" as const,
+  profileImageKey: null,
+  profileImageUrl: null,
+  nationalityCode: "US",
+  birthDate: "1990-01-01",
+  contactMethod: "WHATSAPP" as const,
+  contactCountryCode: null,
+  contactIdentifier: "tourist@example.com",
+};
 
 const mockedGetTouristActivities = vi.mocked(getTouristActivities);
 const mockedGetBuddyProfile = vi.mocked(getBuddyProfile);
@@ -44,6 +71,8 @@ function createActivity(
 
 describe("HostProfileDialog", () => {
   beforeEach(() => {
+    router.push.mockClear();
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
     mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
     mockedGetBuddyProfile.mockResolvedValue({
       status: "success",
@@ -82,9 +111,65 @@ describe("HostProfileDialog", () => {
     );
 
     expect(await screen.findByText("Other experiences from this buddy")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Message Seoul Buddy" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Message Seoul Buddy" })).toBeDisabled();
     expect(screen.getByText("I know this neighborhood well.")).toBeInTheDocument();
     expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
+  });
+
+  it("hides chat for guests without redirecting or hiding the public profile", async () => {
+    mockedGetMyProfile.mockResolvedValue({ status: "unauthenticated" });
+    const { queryClient } = renderWithQueryClient(
+      <HostProfileDialog
+        host={{ id: 17, name: "Seoul Buddy", bio: "Local host", avatarUrl: null }}
+        hostIntroduction="Public introduction"
+        currentActivityId="42"
+        onClose={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    expect(mockedGetMyProfile).toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /Message/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Public introduction")).toBeInTheDocument();
+    expect(screen.getByText("Other experiences from this buddy")).toBeInTheDocument();
+    expect(useRouter().push).not.toHaveBeenCalled();
+  });
+
+  it("does not show chat until authentication has been confirmed", async () => {
+    let resolveProfile!: (result: Awaited<ReturnType<typeof getMyProfile>>) => void;
+    mockedGetMyProfile.mockReturnValue(
+      new Promise((resolve) => {
+        resolveProfile = resolve;
+      }),
+    );
+    renderWithQueryClient(
+      <HostProfileDialog
+        host={{ id: 17, name: "Seoul Buddy", bio: "Local host", avatarUrl: null }}
+        currentActivityId="42"
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Message/ })).not.toBeInTheDocument();
+    resolveProfile({ status: "success", profile });
+    expect(await screen.findByRole("button", { name: "Message Seoul Buddy" })).toBeEnabled();
+  });
+
+  it("does not trust a cached profile when the session has expired", async () => {
+    mockedGetMyProfile.mockResolvedValue({ status: "unauthenticated" });
+    const { createQueryClient } = await import("@/lib/query/client");
+    const { userKeys } = await import("@/lib/query/users");
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(userKeys.me(), profile);
+    renderWithQueryClient(
+      <HostProfileDialog
+        host={{ id: 17, name: "Seoul Buddy", bio: "Local host", avatarUrl: null }}
+        currentActivityId="42"
+        onClose={vi.fn()}
+      />,
+      { queryClient },
+    );
+    expect(screen.queryByRole("button", { name: /Message/ })).not.toBeInTheDocument();
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+    expect(screen.queryByRole("button", { name: /Message/ })).not.toBeInTheDocument();
   });
 
   it("does not repeat the activity currently being previewed", async () => {

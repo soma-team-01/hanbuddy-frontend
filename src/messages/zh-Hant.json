@@ -1512,6 +1512,7 @@
       "pastTimeHint": "今天的開始時間必須晚於目前時間 (KST)。"
     },
     "price": {
+      "minimum": "每人最低價格為{amount, number}韓元。",
       "notice": "該金額以每人韓元的價格顯示給客人。"
     },
     "inclusions": {
@@ -1592,7 +1593,7 @@
       "itineraryDurationInvalid": "每項活動輸入大於 0 的持續時間。",
       "itineraryPhotoRequired": "為每項活動新增照片。",
       "maxGuestsInvalid": "輸入大於 0 的整數容量。",
-      "priceInvalid": "輸入大於 0 的整數價格。",
+      "priceInvalid": "請輸入不低於15,000韓元的每人價格（整數）。",
       "inclusionsRequired": "至少增加一項包含的物品。",
       "discountInvalid": "選擇結束日期並輸入 1 到 100 之間的整數折扣。",
       "restrictionsRequired": "至少選擇一件事客人應該知道，或確認沒有什麼需要注意的。",

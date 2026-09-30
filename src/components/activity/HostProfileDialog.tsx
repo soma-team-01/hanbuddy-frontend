@@ -17,6 +17,7 @@ import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { buddyProfileQueryOptions, buddyReviewsQueryOptions } from "@/lib/query/reviews";
+import { myProfileQueryOptions } from "@/lib/query/users";
 import type { Host } from "@/types/activity";
 
 /** 버디를 특정할 수 없을 때 프로필·후기 조회를 끄기 위한 자리 표시자 */
@@ -51,6 +52,13 @@ export function HostProfileDialog({
   const tChat = useTranslations("Chat");
   const tAccessibility = useTranslations("Accessibility");
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // 공개 프로필은 비로그인 상태에도 열 수 있으므로 인증 실패 시 리다이렉트하지 않는다.
+  const sessionQuery = useQuery({
+    ...myProfileQueryOptions(),
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+  const authenticated = sessionQuery.isSuccess && sessionQuery.isFetchedAfterMount;
   const activitiesQuery = useQuery({
     ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
     enabled: showHostedActivities,
@@ -96,7 +104,7 @@ export function HostProfileDialog({
   }, canLoadMoreReviews);
 
   let contactAction = null;
-  if (hasBuddyId && canContact) {
+  if (authenticated && hasBuddyId && canContact) {
     contactAction = (
       <StartChatButton
         target={{ kind: "direct", targetUserId: buddyId }}
@@ -106,7 +114,7 @@ export function HostProfileDialog({
         className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-60"
       />
     );
-  } else if (hasBuddyId) {
+  } else if (authenticated && hasBuddyId) {
     contactAction = (
       <button
         type="button"

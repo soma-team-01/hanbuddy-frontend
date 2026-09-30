@@ -1512,6 +1512,7 @@
       "pastTimeHint": "오늘 날짜에는 현재 시각(KST) 이후의 시간만 추가할 수 있어요."
     },
     "price": {
+      "minimum": "1인당 최소 금액은 {amount, number}원입니다.",
       "notice": "설정한 금액은 게스트에게 1인당 원화 요금으로 표시됩니다."
     },
     "inclusions": {
@@ -1592,7 +1593,7 @@
       "itineraryDurationInvalid": "모든 활동에 1분 이상의 소요 시간을 입력해 주세요.",
       "itineraryPhotoRequired": "모든 활동에 사진을 추가해 주세요.",
       "maxGuestsInvalid": "최대 인원을 1명 이상의 정수로 입력해 주세요.",
-      "priceInvalid": "1인당 요금을 1원 이상의 정수로 입력해 주세요.",
+      "priceInvalid": "1인당 요금을 15,000원 이상의 정수로 입력해 주세요.",
       "inclusionsRequired": "포함 사항을 한 개 이상 입력해 주세요.",
       "discountInvalid": "할인 종료일을 선택하고 할인율을 1부터 100 사이의 정수로 입력해 주세요.",
       "restrictionsRequired": "확인사항을 한 개 이상 선택하거나 별도로 확인할 사항이 없음을 선택해 주세요.",

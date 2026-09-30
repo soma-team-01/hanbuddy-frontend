@@ -15,7 +15,6 @@ export function ChatNavIcon({ compact = false }: Readonly<{ compact?: boolean }>
   const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
   const unreadCount = (roomsQuery.data ?? []).reduce((sum, room) => sum + room.unreadCount, 0);
   const active = pathname === "/chat" || pathname.startsWith("/chat/");
-  const size = compact ? "size-10" : "size-11";
 
   return (
     // 테두리·배경 없이 아이콘만 둔다. 현재 화면은 색으로만 알린다
@@ -24,11 +23,11 @@ export function ChatNavIcon({ compact = false }: Readonly<{ compact?: boolean }>
       aria-label={unreadCount > 0 ? t("unreadLabel", { count: unreadCount }) : t("title")}
       title={t("title")}
       aria-current={active ? "page" : undefined}
-      className={`relative inline-flex ${size} items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+      className={`relative inline-flex size-11 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
         active ? "text-primary" : "text-ink hover:text-primary"
       }`}
     >
-      <MessageCircleIcon className="size-6" />
+      <MessageCircleIcon className={compact ? "size-5" : "size-6"} />
       {unreadCount > 0 ? (
         <span
           aria-hidden="true"

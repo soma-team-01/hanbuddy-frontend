@@ -1,6 +1,6 @@
 {
   "ActivitySearch": {
-    "placeholder": "選擇日期",
+    "placeholder": "您想哪天參加？",
     "apply": "套用",
     "timezone": "韓國時間 · KST",
     "close": "關閉日曆",
@@ -80,7 +80,7 @@
   },
   "ApiErrors": {
     "bookingClosed": "活動開始前24小時停止接受預訂及付款請求，請選擇其他場次。",
-    "scheduleCapacity": "場次人數上限須為1–100人，且不得低於已確認人數與已保留座位數之和。",
+    "scheduleCapacity": "人數上限須為1–100人，且不得低於預訂確認與待付款人數之和。",
     "scheduleEdit": "已開始或已取消的場次不能修改。有申請紀錄的場次不能更改開始時間。",
     "scheduleDuplicate": "已存在相同開始時間的場次。",
     "refundRecoveryPending": "正在確認退款結果，請勿重複申請取消或付款。",
@@ -1360,8 +1360,8 @@
         "description": "選擇客人可以預訂的每個日期並為每個日期設定開始時間。"
       },
       "capacity": {
-        "title": "設定每個場次的人數上限",
-        "description": "按日期和時間設定可接待的參與人數。"
+        "title": "設定最大組大小",
+        "description": "選擇您一次可以舒適地接待多少位客人。"
       },
       "price": {
         "title": "設定每人的價格",
@@ -1497,14 +1497,17 @@
       }
     },
     "capacity": {
+      "minimumHint": "人數上限不能低於預訂確認與待付款人數之和。",
       "previous": "上一組場次",
       "next": "下一組場次",
       "pageRange": "共{total}場，第{from}–{to}場",
       "defaultTitle": "預設人數上限",
+      "settings": "按日期詳細設定",
       "defaultHint": "用於新增場次，不改變既有場次的人數上限。",
       "scheduleTitle": "各日期及時段的人數上限",
-      "scheduleHint": "每場可設為1–100人，不得低於已確認人數與已保留座位數之和。",
-      "seats": "已確認 {booked}人 · 已保留 {held}人 · 已儲存餘位 {remaining}",
+      "scheduleHint": "人數上限不得低於預訂確認與待付款人數之和。",
+      "confirmed": "預訂確認 {count}人",
+      "pending": "待付款 {count}人",
       "decrease": "減少最大賓客人數",
       "increase": "增加最大賓客人數",
       "guests": "{count, plural, one {# 最多賓客人數} other {# 最多客人數}}"
@@ -1606,7 +1609,7 @@
       "backToActivity": "返回活動"
     },
     "errors": {
-      "scheduleCapacityOccupied": "場次人數上限不得低於已確認人數與已保留座位數之和。",
+      "scheduleCapacityOccupied": "人數上限不得低於預訂確認與待付款人數之和。",
       "categoryRequired": "選擇一個類別以繼續。",
       "hostIntroductionRequired": "寫一個 30 到 2000 個字元的簡介。",
       "photosMinimum": "新增 3 到 10 張體驗照片。",

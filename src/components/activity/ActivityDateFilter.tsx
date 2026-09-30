@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { getIntlLocale, getLocaleOrDefault } from "@/i18n/routing";
@@ -24,32 +25,42 @@ import {
 } from "@/lib/buddy-calendar";
 
 /** Compact date-only search: no unsupported destination or keyword filters. */
-export function ActivityDateFilter({ date = "" }: Readonly<{ date?: string }>) {
+export function ActivityDateFilter({
+  date = "",
+  destination,
+}: Readonly<{ date?: string; destination?: "/explore" }>) {
   const t = useTranslations("ActivitySearch");
   const locale = getLocaleOrDefault(useLocale());
   const id = useId();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [homeDate, setHomeDate] = useState(date);
   const root = useRef<HTMLDivElement>(null);
+  const calendar = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const value = isActivitySearchDate(date) ? date : "";
-  const invalid = Boolean(date) && !value;
+  const sourceDate = destination ? homeDate : date;
+  const value = isActivitySearchDate(sourceDate) ? sourceDate : "";
+  const invalid = Boolean(sourceDate) && !value;
 
   function close() {
     setOpen(false);
-    trigger.current?.focus();
+    trigger.current?.focus({ preventScroll: true });
   }
 
   useEffect(() => {
     if (!open) return;
     const outside = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
+      if (
+        !root.current?.contains(event.target as Node) &&
+        !calendar.current?.contains(event.target as Node)
+      )
+        setOpen(false);
     };
     const escape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setOpen(false);
-      trigger.current?.focus();
+      trigger.current?.focus({ preventScroll: true });
     };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
@@ -62,19 +73,30 @@ export function ActivityDateFilter({ date = "" }: Readonly<{ date?: string }>) {
   function apply(nextDate: string) {
     const search = new URLSearchParams(window.location.search);
     close();
-    router.push(withActivityDate(`${pathname}?${search.toString()}`, nextDate), { scroll: false });
+    router.push(withActivityDate(destination ?? `${pathname}?${search.toString()}`, nextDate), {
+      scroll: Boolean(destination),
+    });
+  }
+
+  function clear() {
+    if (destination) setHomeDate("");
+    else apply("");
   }
 
   return (
     <div
       ref={root}
-      className="relative w-full max-w-sm"
+      className="relative w-full max-w-xs text-ink md:max-w-md"
       onBlur={(event) => {
-        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget))
+        if (
+          event.relatedTarget &&
+          !event.currentTarget.contains(event.relatedTarget) &&
+          !calendar.current?.contains(event.relatedTarget)
+        )
           setOpen(false);
       }}
     >
-      <div className="flex items-center gap-2 rounded-full border border-line-strong bg-canvas-soft p-2 shadow-[0_3px_12px_rgba(38,27,24,0.04)]">
+      <div className="flex items-center gap-1 rounded-full border border-line-strong bg-canvas-soft shadow-[0_3px_12px_rgba(38,27,24,0.04)] md:p-1">
         <button
           ref={trigger}
           type="button"
@@ -83,23 +105,22 @@ export function ActivityDateFilter({ date = "" }: Readonly<{ date?: string }>) {
           aria-expanded={open}
           aria-controls={open ? id : undefined}
           onClick={() => setOpen(!open)}
-          className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-full px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-full px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:min-h-11 md:gap-3"
         >
-          <CalendarIcon className="size-5 shrink-0 text-muted" />
-          <span className="min-w-0">
-            <span className="block text-xs font-bold text-ink">{t("label")}</span>
-            <span className="mt-0.5 block truncate text-sm text-muted">
-              {value ? formatDateKeyLong(value, locale) : t("placeholder")}
-            </span>
+          <CalendarIcon className="size-4 shrink-0 text-muted md:size-5" />
+          <span className="min-w-0 truncate text-sm text-muted">
+            {value ? formatDateKeyLong(value, locale) : t("placeholder")}
           </span>
         </button>
         <button
           type="button"
           aria-label={t("search")}
-          onClick={() => (value ? apply(value) : setOpen(true))}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          onClick={() => setOpen(true)}
+          className="group flex size-10 shrink-0 items-center justify-center rounded-full text-on-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:size-11"
         >
-          <SearchIcon className="size-5" />
+          <span className="flex size-8 items-center justify-center rounded-full bg-primary transition group-hover:bg-primary-hover md:size-11">
+            <SearchIcon className="size-4 md:size-5" />
+          </span>
         </button>
       </div>
       {invalid ? (
@@ -107,7 +128,17 @@ export function ActivityDateFilter({ date = "" }: Readonly<{ date?: string }>) {
           {t("invalid")}
         </p>
       ) : null}
-      {open ? <DateCalendar id={id} value={value} onApply={apply} onClose={close} /> : null}
+      {open ? (
+        <DateCalendar
+          id={id}
+          value={value}
+          anchorRef={root}
+          panelRef={calendar}
+          onApply={apply}
+          onClear={clear}
+          onClose={close}
+        />
+      ) : null}
     </div>
   );
 }
@@ -115,9 +146,20 @@ export function ActivityDateFilter({ date = "" }: Readonly<{ date?: string }>) {
 function DateCalendar({
   id,
   value,
+  anchorRef,
+  panelRef,
   onApply,
+  onClear,
   onClose,
-}: Readonly<{ id: string; value: string; onApply: (value: string) => void; onClose: () => void }>) {
+}: Readonly<{
+  id: string;
+  value: string;
+  anchorRef: RefObject<HTMLDivElement | null>;
+  panelRef: RefObject<HTMLDivElement | null>;
+  onApply: (value: string) => void;
+  onClear: () => void;
+  onClose: () => void;
+}>) {
   const t = useTranslations("ActivitySearch");
   const locale = getLocaleOrDefault(useLocale());
   const today = getSeoulNowParts().date;
@@ -126,8 +168,11 @@ function DateCalendar({
   const [month, setMonth] = useState(initial.slice(0, 7));
   const [focused, setFocused] = useState(initial);
   const daysRef = useRef<HTMLDivElement>(null);
+  useCalendarPosition(anchorRef, panelRef);
   useEffect(() => {
-    daysRef.current?.querySelector<HTMLButtonElement>(`[data-date="${focused}"]`)?.focus();
+    daysRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-date="${focused}"]`)
+      ?.focus({ preventScroll: true });
   }, [focused]);
 
   function moveMonth(delta: number) {
@@ -136,55 +181,56 @@ function DateCalendar({
     setFocused(`${next}-01`);
   }
 
-  return (
+  return createPortal(
     <div
+      ref={panelRef}
       id={id}
       role="dialog"
       aria-label={t("label")}
-      className="absolute top-[calc(100%+10px)] right-0 z-40 w-full min-w-0 rounded-2xl border border-line-soft bg-canvas-soft p-4 shadow-[0_16px_48px_rgba(38,27,24,0.14)] sm:w-96"
+      className="fixed z-[60] max-h-[calc(100dvh-24px)] w-[304px] max-w-[calc(100vw-24px)] overflow-y-auto rounded-2xl border border-line-soft bg-canvas-soft p-3 text-ink shadow-[0_12px_36px_rgba(38,27,24,0.16)]"
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-xs text-muted">{t("timezone")}</span>
-        <button
-          type="button"
-          aria-label={t("close")}
-          onClick={onClose}
-          className="flex size-9 items-center justify-center rounded-full text-muted hover:bg-panel"
-        >
-          <XIcon className="size-4" />
-        </button>
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          aria-label={t("previousMonth")}
-          disabled={month <= "1000-01"}
-          onClick={() => moveMonth(-1)}
-          className="flex size-10 items-center justify-center rounded-full hover:bg-panel disabled:opacity-30"
-        >
-          <ArrowLeftIcon className="size-4" />
-        </button>
+      <div className="flex items-center justify-between gap-1">
         <p aria-live="polite" className="font-display text-sm font-bold">
           {formatMonthKeyTitle(month, locale)}
         </p>
-        <button
-          type="button"
-          aria-label={t("nextMonth")}
-          disabled={month >= "9999-12"}
-          onClick={() => moveMonth(1)}
-          className="flex size-10 items-center justify-center rounded-full hover:bg-panel disabled:opacity-30"
-        >
-          <ArrowRightIcon className="size-4" />
-        </button>
+        <div className="flex shrink-0 items-center">
+          <button
+            type="button"
+            aria-label={t("previousMonth")}
+            disabled={month <= "1000-01"}
+            onClick={() => moveMonth(-1)}
+            className="flex size-8 items-center justify-center rounded-full hover:bg-panel disabled:opacity-30"
+          >
+            <ArrowLeftIcon className="size-4" />
+          </button>
+          <button
+            type="button"
+            aria-label={t("nextMonth")}
+            disabled={month >= "9999-12"}
+            onClick={() => moveMonth(1)}
+            className="flex size-8 items-center justify-center rounded-full hover:bg-panel disabled:opacity-30"
+          >
+            <ArrowRightIcon className="size-4" />
+          </button>
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={onClose}
+            className="ml-1 flex size-8 items-center justify-center rounded-full text-muted hover:bg-panel"
+          >
+            <XIcon className="size-4" />
+          </button>
+        </div>
       </div>
-      <div aria-hidden className="mt-3 grid grid-cols-7 text-center text-xs text-muted">
+      <p className="text-xs text-muted">{t("timezone")}</p>
+      <div aria-hidden className="mt-2 grid grid-cols-7 text-center text-xs text-muted">
         {weekDateKeys(today).map((day) => (
-          <span key={day} className="py-2">
+          <span key={day} className="py-1">
             {formatDateKeyWeekday(day, locale)}
           </span>
         ))}
       </div>
-      <div ref={daysRef} className="grid grid-cols-7 gap-y-1">
+      <div ref={daysRef} className="grid grid-cols-7">
         {monthGridDateKeys(month).map((day, index) =>
           day ? (
             <button
@@ -216,7 +262,7 @@ function DateCalendar({
                 setMonth(next.slice(0, 7));
                 setFocused(next);
               }}
-              className={`mx-auto flex h-10 w-full max-w-10 items-center justify-center rounded-full text-sm focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary ${day === selected ? "bg-primary font-bold text-on-primary" : "text-ink hover:bg-primary-soft"} ${day === today ? "font-bold ring-1 ring-line-strong ring-inset" : ""}`}
+              className={`mx-auto flex size-8 items-center justify-center rounded-full text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary ${day === selected ? "bg-primary font-bold text-on-primary" : "text-ink hover:bg-primary-soft"} ${day === today ? "font-bold ring-1 ring-line-strong ring-inset" : ""}`}
             >
               {Number(day.slice(-2))}
             </button>
@@ -225,11 +271,14 @@ function DateCalendar({
           ),
         )}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-line-soft pt-4">
+      <div className="mt-2 grid grid-cols-2 gap-2 border-t border-line-soft pt-2">
         <button
           type="button"
-          onClick={() => onApply("")}
-          className="min-h-11 rounded-xl border border-line-strong text-sm font-bold hover:bg-panel"
+          onClick={() => {
+            setSelected("");
+            onClear();
+          }}
+          className="min-h-9 rounded-lg border border-line-strong text-xs font-bold hover:bg-panel"
         >
           {t("clear")}
         </button>
@@ -237,11 +286,54 @@ function DateCalendar({
           type="button"
           disabled={!selected}
           onClick={() => onApply(selected)}
-          className="min-h-11 rounded-xl bg-primary text-sm font-bold text-on-primary hover:bg-primary-hover disabled:opacity-40"
+          className="min-h-9 rounded-lg bg-primary text-xs font-bold text-on-primary hover:bg-primary-hover disabled:opacity-40"
         >
           {t("apply")}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
+}
+
+/** Position independently of hero transforms, without moving the page to reach a focused day. */
+function useCalendarPosition(
+  anchorRef: RefObject<HTMLDivElement | null>,
+  panelRef: RefObject<HTMLDivElement | null>,
+) {
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    const panel = panelRef.current;
+    if (!anchor || !panel) return;
+    const viewport = window.visualViewport;
+    function position() {
+      if (!anchor || !panel) return;
+      const rect = anchor.getBoundingClientRect();
+      const popup = panel.getBoundingClientRect();
+      const topEdge = (viewport?.offsetTop ?? 0) + 12;
+      const leftEdge = (viewport?.offsetLeft ?? 0) + 12;
+      const rightEdge = leftEdge + (viewport?.width ?? window.innerWidth) - 24;
+      const bottomEdge = topEdge + (viewport?.height ?? window.innerHeight) - 24;
+      const spaceAbove = rect.top - 8 - topEdge;
+      const spaceBelow = bottomEdge - rect.bottom - 8;
+      let top = rect.bottom + 8;
+      if (popup.height > spaceBelow && spaceAbove > spaceBelow) top = rect.top - 8 - popup.height;
+      panel.style.top = `${Math.max(topEdge, Math.min(top, bottomEdge - popup.height))}px`;
+      panel.style.left = `${Math.max(leftEdge, Math.min(rect.left, rightEdge - popup.width))}px`;
+    }
+    position();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(position);
+    observer?.observe(panel);
+    window.addEventListener("resize", position);
+    window.addEventListener("scroll", position, true);
+    viewport?.addEventListener("resize", position);
+    viewport?.addEventListener("scroll", position);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+      viewport?.removeEventListener("resize", position);
+      viewport?.removeEventListener("scroll", position);
+    };
+  }, [anchorRef, panelRef]);
 }

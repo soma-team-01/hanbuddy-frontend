@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
@@ -304,6 +304,8 @@ export interface CreateActivityFormProps {
   activityId?: string;
   /** edit 모드에서 기존 활동으로 채운 초기 draft */
   initialDraft?: ActivityCreateDraft;
+  /** Live occupancy only; never replaces user-edited dates or capacities. */
+  latestSchedules?: readonly ScheduleDraft[];
   /** edit 모드에서 유지할 기존 활동 상태 */
   initialStatus?: MyActivityStatus;
   /** edit 모드에서 기존 활동 원문의 언어를 유지한다 */
@@ -314,6 +316,7 @@ export function CreateActivityForm({
   mode = "create",
   activityId,
   initialDraft,
+  latestSchedules,
   initialStatus,
   initialSourceLanguage,
 }: Readonly<CreateActivityFormProps> = {}) {
@@ -340,9 +343,28 @@ export function CreateActivityForm({
   const [furthestStepIndex, setFurthestStepIndex] = useState(
     initialSnapshot?.furthestStepIndex ?? (isEdit ? ACTIVITY_CREATE_STEPS.length - 1 : 0),
   );
-  const [draft, setDraft] = useState<ActivityCreateDraft>(
+  const [editableDraft, setDraft] = useState<ActivityCreateDraft>(
     initialSnapshot?.draft ?? initialDraft ?? EMPTY_ACTIVITY_DRAFT,
   );
+  // Server occupancy stays fresh; only user-editable fields belong to the local draft.
+  const draft = useMemo(() => {
+    if (!isEdit || !latestSchedules) return editableDraft;
+    const occupancyById = new Map(latestSchedules.map((schedule) => [schedule.id, schedule]));
+    return {
+      ...editableDraft,
+      schedules: editableDraft.schedules.map((schedule) => {
+        const latest = occupancyById.get(schedule.id);
+        return latest
+          ? {
+              ...schedule,
+              bookedCount: latest.bookedCount,
+              heldSeats: latest.heldSeats,
+              remainingCapacity: latest.remainingCapacity,
+            }
+          : schedule;
+      }),
+    };
+  }, [editableDraft, latestSchedules, isEdit]);
   const [errorKey, setErrorKey] = useState<ActivityCreateErrorKey | null>(
     initialSnapshot?.errorKey ?? null,
   );

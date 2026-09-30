@@ -1,6 +1,6 @@
 {
   "ActivitySearch": {
-    "placeholder": "Select a date",
+    "placeholder": "When would you like to join?",
     "apply": "Apply",
     "timezone": "Korea time · KST",
     "close": "Close calendar",
@@ -80,7 +80,7 @@
   },
   "ApiErrors": {
     "bookingClosed": "Bookings and payment requests close 24 hours before the activity starts. Please choose another session.",
-    "scheduleCapacity": "Session capacity must be 1–100 and cover confirmed participants plus held seats.",
+    "scheduleCapacity": "Capacity must be 1–100 and at least the total of confirmed participants and those awaiting payment.",
     "scheduleEdit": "Started or cancelled sessions cannot be edited. Sessions with application history cannot change their start time.",
     "scheduleDuplicate": "A session with this start time already exists.",
     "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
@@ -1360,8 +1360,8 @@
         "description": "Choose every date guests can book and set a start time for each one."
       },
       "capacity": {
-        "title": "Set the capacity for each session",
-        "description": "Choose how many participants you can host on each date and time."
+        "title": "Set the maximum group size",
+        "description": "Choose how many guests you can host comfortably at one time."
       },
       "price": {
         "title": "Set the price per person",
@@ -1497,14 +1497,17 @@
       }
     },
     "capacity": {
+      "minimumHint": "Capacity cannot be lower than confirmed participants plus those awaiting payment.",
       "previous": "Previous sessions",
       "next": "Next sessions",
       "pageRange": "{from}–{to} of {total} sessions",
       "defaultTitle": "Default capacity",
+      "settings": "Date-specific settings",
       "defaultHint": "Used for new sessions. Existing session capacities stay unchanged.",
       "scheduleTitle": "Capacity by date and time",
-      "scheduleHint": "Set 1–100 participants per session, no fewer than confirmed participants plus held seats.",
-      "seats": "Confirmed {booked} · Held {held} · Saved remaining {remaining}",
+      "scheduleHint": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
+      "confirmed": "Confirmed: {count}",
+      "pending": "Awaiting payment: {count}",
       "decrease": "Decrease maximum guests",
       "increase": "Increase maximum guests",
       "guests": "{count, plural, one {# guest maximum} other {# guests maximum}}"
@@ -1606,7 +1609,7 @@
       "backToActivity": "Back to activity"
     },
     "errors": {
-      "scheduleCapacityOccupied": "Session capacity must cover confirmed participants and held seats.",
+      "scheduleCapacityOccupied": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
       "categoryRequired": "Choose a category to continue.",
       "hostIntroductionRequired": "Write an introduction between 30 and 2000 characters.",
       "photosMinimum": "Add between 3 and 10 experience photos.",

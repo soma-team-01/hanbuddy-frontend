@@ -11,7 +11,6 @@ import { getContentLanguage } from "@/lib/content-language";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
-import { ActivityDateFilter } from "@/components/activity/ActivityDateFilter";
 import { isActivitySearchDate, withActivityDate } from "@/lib/activity-booking-window";
 
 const RECOMMENDED_LIMIT = 4;
@@ -21,7 +20,7 @@ export function RecommendedExperiences({ date }: Readonly<{ date?: string }> = {
   return invalid ? (
     <section className="border-t border-line-soft bg-canvas-soft py-10 md:py-16">
       <PageContainer>
-        <RecommendedHeading date={date} />
+        <RecommendedHeading />
       </PageContainer>
     </section>
   ) : (
@@ -46,7 +45,7 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
         className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
       >
         <PageContainer>
-          <RecommendedHeading date={date} />
+          <RecommendedHeading />
           <p className="sr-only">{t("recommended.loading")}</p>
           <div
             data-testid="recommended-track"
@@ -74,7 +73,6 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
   if (activitiesQuery.error) {
     return (
       <RecommendedState
-        date={date}
         kind="error"
         onRetry={() => {
           void activitiesQuery.refetch();
@@ -83,7 +81,7 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
     );
   }
 
-  if (!activitiesQuery.data?.length) return <RecommendedState kind="empty" date={date} />;
+  if (!activitiesQuery.data?.length) return <RecommendedState kind="empty" />;
 
   const activities = activitiesQuery.data
     .slice(0, RECOMMENDED_LIMIT)
@@ -97,7 +95,7 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
-        <RecommendedHeading date={date} />
+        <RecommendedHeading />
         <div className="mt-4 flex justify-end">
           <Link
             href={withActivityDate("/explore", date)}
@@ -134,10 +132,9 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
 interface RecommendedStateProps {
   readonly kind: "empty" | "error";
   readonly onRetry?: () => void;
-  readonly date?: string;
 }
 
-function RecommendedState({ kind, onRetry, date }: RecommendedStateProps) {
+function RecommendedState({ kind, onRetry }: RecommendedStateProps) {
   const t = useTranslations("Landing");
   const isError = kind === "error";
   const Icon = isError ? CompassIcon : MapIcon;
@@ -150,7 +147,7 @@ function RecommendedState({ kind, onRetry, date }: RecommendedStateProps) {
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
-        <RecommendedHeading date={date} />
+        <RecommendedHeading />
         <div
           role={isError ? "alert" : undefined}
           className="mt-8 flex min-h-64 flex-col items-center justify-center rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-10 text-center shadow-[0_14px_35px_rgba(61,45,43,0.05)]"
@@ -183,7 +180,7 @@ function RecommendedState({ kind, onRetry, date }: RecommendedStateProps) {
   );
 }
 
-function RecommendedHeading({ date }: Readonly<{ date?: string }>) {
+function RecommendedHeading() {
   const t = useTranslations("Landing");
 
   return (
@@ -201,9 +198,6 @@ function RecommendedHeading({ date }: Readonly<{ date?: string }>) {
         <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
           {t("recommended.description")}
         </p>
-      </div>
-      <div className="w-full shrink-0 lg:w-80">
-        <ActivityDateFilter key={date ?? ""} date={date} />
       </div>
     </div>
   );

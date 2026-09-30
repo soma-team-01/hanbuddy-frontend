@@ -80,7 +80,7 @@
   },
   "ApiErrors": {
     "bookingClosed": "활동 시작 24시간 전까지만 신청·결제를 요청할 수 있습니다. 다른 일정을 선택해 주세요.",
-    "scheduleCapacity": "회차 정원은 1~100명이며, 확정 인원과 확보된 좌석의 합 이상이어야 합니다.",
+    "scheduleCapacity": "정원은 1~100명이며, 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
     "scheduleEdit": "이미 시작되거나 취소된 일정은 수정할 수 없습니다. 신청 이력이 있는 일정은 시작 시각을 변경할 수 없습니다.",
     "scheduleDuplicate": "동일한 시작 시각의 일정이 이미 있습니다.",
     "refundRecoveryPending": "환불 결과를 확인 중입니다. 취소나 결제를 다시 요청하지 마세요.",
@@ -1360,8 +1360,8 @@
         "description": "예약 가능한 날짜를 모두 선택하고 날짜별 시작 시간을 설정해 주세요."
       },
       "capacity": {
-        "title": "회차별 인원을 정해 주세요",
-        "description": "날짜와 시간별로 진행 가능한 참여 인원을 설정해 주세요."
+        "title": "최대 인원 수를 정해 주세요",
+        "description": "한 번에 편안하게 진행할 수 있는 게스트 수를 선택해 주세요."
       },
       "price": {
         "title": "1인당 요금을 정해 주세요",
@@ -1497,14 +1497,17 @@
       }
     },
     "capacity": {
+      "minimumHint": "예약 확정·결제 대기 인원의 합보다 적게 설정할 수 없어요.",
       "previous": "이전 회차",
       "next": "다음 회차",
       "pageRange": "전체 {total}개 중 {from}–{to}",
       "defaultTitle": "기본 정원",
+      "settings": "날짜별 상세 설정",
       "defaultHint": "새 회차의 기본값입니다. 기존 회차 정원은 바뀌지 않습니다.",
       "scheduleTitle": "날짜·시간별 정원",
-      "scheduleHint": "각 회차는 1~100명으로 설정할 수 있습니다. 정원은 확정 인원과 확보된 좌석의 합보다 적을 수 없습니다.",
-      "seats": "확정 {booked}명 · 확보 {held}명 · 저장된 잔여 {remaining}명",
+      "scheduleHint": "정원은 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
+      "confirmed": "예약 확정 {count}명",
+      "pending": "결제 대기 {count}명",
       "decrease": "최대 인원 줄이기",
       "increase": "최대 인원 늘리기",
       "guests": "{count, plural, one {최대 #명} other {최대 #명}}"
@@ -1606,7 +1609,7 @@
       "backToActivity": "활동 상세로 돌아가기"
     },
     "errors": {
-      "scheduleCapacityOccupied": "회차 정원은 확정 인원과 확보된 좌석의 합 이상이어야 합니다.",
+      "scheduleCapacityOccupied": "정원은 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
       "categoryRequired": "계속하려면 카테고리를 선택해 주세요.",
       "hostIntroductionRequired": "본인 소개를 30자 이상 2000자 이하로 입력해 주세요.",
       "photosMinimum": "체험 사진을 3장 이상 10장 이하로 추가해 주세요.",

@@ -40,6 +40,11 @@ describe("ExplorePage", () => {
     );
     expect(getPublicActivities).toHaveBeenCalledWith("en", "2026-10-10");
     expect(screen.getByRole("button", { name: /Participation date/ })).toHaveTextContent("Oct 10");
+    expect(screen.getByTestId("page-header")).toContainElement(
+      screen.getByRole("button", { name: /Participation date/ }),
+    );
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveAttribute("href", "/en");
+    expect(screen.getByRole("link", { name: "Go back" })).toHaveClass("md:hidden");
   });
   it("does not fetch an unfiltered list for a malformed date", async () => {
     vi.mocked(getPublicActivities).mockClear();

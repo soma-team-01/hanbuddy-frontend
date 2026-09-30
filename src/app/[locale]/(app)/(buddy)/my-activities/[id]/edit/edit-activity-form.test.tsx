@@ -1,9 +1,10 @@
-import { screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyActivity } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
+import { buddyKeys } from "@/lib/query/buddy";
 import type { MyActivityDetailResponse } from "@/types/buddy";
 import { EditActivityForm } from "./edit-activity-form";
 
@@ -131,5 +132,46 @@ describe("EditActivityForm", () => {
       "href",
       "/en/my-activities/42",
     );
+  });
+
+  it("refreshes occupancy and validation without overwriting edits or unmounting on refresh failure", async () => {
+    mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
+    const { queryClient } = renderWithQueryClient(<EditActivityForm activityId="42" />);
+    await screen.findByRole("heading", { name: "Preview your experience" });
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    for (let i = 0; i < 7; i++) {
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Date-specific settings" }));
+    const capacity = screen.getByRole("spinbutton");
+    fireEvent.change(capacity, { target: { value: "8" } });
+    const updated = {
+      ...activityDetail,
+      schedules: [{ ...activityDetail.schedules[0], bookedCount: 3, heldSeats: 2, maxCapacity: 4 }],
+    };
+    await act(async () => {
+      queryClient.setQueryData(buddyKeys.activityDetail("42"), updated);
+    });
+    expect(await screen.findByText("Confirmed: 3")).toBeVisible();
+    expect(screen.getByText("Awaiting payment: 2")).toBeVisible();
+    expect(capacity).toHaveValue(8);
+    expect(capacity).toHaveAttribute("min", "5");
+    fireEvent.change(capacity, { target: { value: "4" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(
+      screen.getByText(
+        "Capacity must be at least the total of confirmed participants and those awaiting payment.",
+      ),
+    ).toBeVisible();
+    fireEvent.change(capacity, { target: { value: "8" } });
+    mockedGetMyActivity.mockRejectedValue(new Error("temporary network failure"));
+    await act(async () => {
+      await queryClient.refetchQueries({ queryKey: buddyKeys.activityDetail("42") });
+    });
+    await waitFor(() =>
+      expect(queryClient.getQueryState(buddyKeys.activityDetail("42"))?.status).toBe("error"),
+    );
+    expect(screen.getByRole("spinbutton")).toHaveValue(8);
+    expect(screen.getByText("Confirmed: 3")).toBeVisible();
   });
 });

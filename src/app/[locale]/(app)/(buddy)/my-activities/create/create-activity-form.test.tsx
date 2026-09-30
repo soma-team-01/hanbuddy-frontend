@@ -659,9 +659,7 @@ describe("CreateActivityForm", () => {
     ).toBeInTheDocument();
     clickNext();
 
-    expect(
-      screen.getByRole("heading", { name: "Set the capacity for each session" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Set the maximum group size" })).toBeInTheDocument();
     clickNext();
 
     expect(screen.getByText("The minimum price per person is ₩15,000.")).toBeInTheDocument();

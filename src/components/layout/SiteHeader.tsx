@@ -160,17 +160,21 @@ function LocalizedSiteHeader({
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft bg-canvas/95 backdrop-blur">
       {!isMinimalHeader && effectiveAuthenticated ? <ChatRoomsPoller /> : null}
-      <PageContainer className="flex h-[76px] items-center justify-between gap-5">
-        <Link href={logoHref} aria-label="HanBuddy" className="flex shrink-0 items-center gap-2">
+      <PageContainer className="flex h-15 items-center justify-between gap-2 lg:h-[76px] lg:gap-5">
+        <Link
+          href={logoHref}
+          aria-label="HanBuddy"
+          className="flex min-h-11 shrink-0 items-center gap-1.5 lg:gap-2"
+        >
           <Image
             src="/images/brand/logo-borderless.webp"
             alt=""
             width={36}
             height={36}
             priority
-            className="size-9"
+            className="size-7 lg:size-9"
           />
-          <span className="font-display text-xl font-extrabold tracking-[-0.04em] text-ink">
+          <span className="font-display text-lg font-extrabold tracking-[-0.04em] text-ink lg:text-xl">
             HanBuddy
           </span>
         </Link>
@@ -215,7 +219,7 @@ function LocalizedSiteHeader({
         </div>
 
         {!isMinimalHeader ? (
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex shrink-0 items-center lg:hidden">
             {sessionStatus === "pending" ? (
               <span
                 aria-hidden

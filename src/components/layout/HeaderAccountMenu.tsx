@@ -62,27 +62,27 @@ export function HeaderAccountMenu({
           aria-label={t("openAccountMenu")}
           title={accountTitle}
           onClick={() => setIsOpen((open) => !open)}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full text-ink transition-colors hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className={`inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center ${compact ? "gap-1" : "gap-1.5"} rounded-full text-ink transition-colors hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`}
         >
           <span
             className={`inline-flex items-center justify-center rounded-full border border-line-strong bg-canvas-soft transition-colors hover:border-primary ${
-              compact ? "size-10" : "size-11"
+              compact ? "size-8" : "size-11"
             }`}
           >
             {profile ? (
               <Avatar
                 name={accountTitle}
                 src={profile.profileImageUrl}
-                size={compact ? 32 : 36}
+                size={compact ? 26 : 36}
                 eagerImage
               />
             ) : (
-              <UserIcon className="size-5 text-primary-strong" />
+              <UserIcon className={`${compact ? "size-4" : "size-5"} text-primary-strong`} />
             )}
           </span>
           <ChevronDownIcon
             aria-hidden
-            className={`size-3.5 text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
+            className={`${compact ? "size-3" : "size-3.5"} text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
           />
         </button>
 

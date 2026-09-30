@@ -1,6 +1,6 @@
 {
   "ActivitySearch": {
-    "placeholder": "日付を選択",
+    "placeholder": "いつ参加しますか？",
     "apply": "適用",
     "timezone": "韓国時間 · KST",
     "close": "カレンダーを閉じる",
@@ -80,7 +80,7 @@
   },
   "ApiErrors": {
     "bookingClosed": "予約・支払いのリクエストは開始24時間前までです。別の日時を選択してください。",
-    "scheduleCapacity": "各回の定員は1～100名で、確定人数と確保中の席数の合計以上が必要です。",
+    "scheduleCapacity": "定員は1～100名で、予約確定・支払い待ちの合計人数以上にしてください。",
     "scheduleEdit": "開始済み・キャンセル済みの回は変更できません。申込履歴のある回は開始時刻を変更できません。",
     "scheduleDuplicate": "同じ開始時刻の回がすでに存在します。",
     "refundRecoveryPending": "返金結果を確認しています。キャンセルや決済を再度リクエストしないでください。",
@@ -1360,8 +1360,8 @@
         "description": "ゲストが予約できるすべての日付を選択し、それぞれの開始時間を設定します。"
       },
       "capacity": {
-        "title": "各回の定員を設定してください",
-        "description": "日付と時間ごとに受け入れ可能な参加人数を設定してください。"
+        "title": "最大グループサイズを設定する",
+        "description": "一度に快適にホストできるゲストの数を選択してください。"
       },
       "price": {
         "title": "1人あたりの料金を設定する",
@@ -1497,14 +1497,17 @@
       }
     },
     "capacity": {
+      "minimumHint": "予約確定・支払い待ちの合計人数を下回る定員には設定できません。",
       "previous": "前の開催回",
       "next": "次の開催回",
       "pageRange": "全{total}回中 {from}–{to}",
       "defaultTitle": "基本定員",
+      "settings": "日付別の詳細設定",
       "defaultHint": "新しい回の初期値です。既存の回の定員は変わりません。",
       "scheduleTitle": "日時ごとの定員",
-      "scheduleHint": "各回1～100名で設定できます。確定人数と確保中の席数の合計以上が必要です。",
-      "seats": "確定 {booked}名 · 確保中 {held}名 · 保存済み残席 {remaining}",
+      "scheduleHint": "定員は予約確定・支払い待ちの合計人数以上にしてください。",
+      "confirmed": "予約確定 {count}名",
+      "pending": "支払い待ち {count}名",
       "decrease": "最大ゲスト数を減らす",
       "increase": "最大ゲスト数を増やす",
       "guests": "{count, plural, one {# ゲストの最大数} other {# 最大ゲスト数}}"
@@ -1606,7 +1609,7 @@
       "backToActivity": "アクティビティに戻る"
     },
     "errors": {
-      "scheduleCapacityOccupied": "各回の定員は確定人数と確保中の席数の合計以上にしてください。",
+      "scheduleCapacityOccupied": "定員は予約確定・支払い待ちの合計人数以上にしてください。",
       "categoryRequired": "続行するにはカテゴリを選択してください。",
       "hostIntroductionRequired": "30 文字から 2000 文字の間で紹介文を書きます。",
       "photosMinimum": "体験写真を 3 ～ 10 枚追加します。",

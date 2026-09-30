@@ -17,9 +17,9 @@ export function ChatWorkspace({ children }: Readonly<{ children: ReactNode }>) {
   const roomOpen = /^\/chat\/[^/]+$/.test(pathname);
 
   return (
-    // 전역 헤더(76px)를 뺀 높이를 채워 첫 화면에 대화가 통째로 들어오게 한다.
+    // 전역 헤더(모바일 60px, 데스크톱 76px)를 제외한 높이로 대화를 채운다.
     // 푸터는 그 아래에 남아 있어 스크롤하면 볼 수 있다.
-    <PageContainer className="h-[calc(100dvh-76px)] py-3 md:py-5">
+    <PageContainer className="h-[calc(100dvh-60px)] py-3 md:py-5 lg:h-[calc(100dvh-76px)]">
       <main className="flex h-full overflow-hidden rounded-3xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)]">
         <section
           aria-label={t("title")}

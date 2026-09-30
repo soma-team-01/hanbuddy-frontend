@@ -1,8 +1,9 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
 import { getMyProfile } from "@/lib/api/users";
+import { userKeys } from "@/lib/query/users";
 import { useRouter } from "next/navigation";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
@@ -72,6 +73,7 @@ function createActivity(
 describe("HostProfileDialog", () => {
   beforeEach(() => {
     router.push.mockClear();
+    mockedGetMyProfile.mockReset();
     mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
     mockedGetTouristActivities.mockResolvedValue({ status: "success", activities: [] });
     mockedGetBuddyProfile.mockResolvedValue({
@@ -156,7 +158,6 @@ describe("HostProfileDialog", () => {
   it("does not trust a cached profile when the session has expired", async () => {
     mockedGetMyProfile.mockResolvedValue({ status: "unauthenticated" });
     const { createQueryClient } = await import("@/lib/query/client");
-    const { userKeys } = await import("@/lib/query/users");
     const queryClient = createQueryClient();
     queryClient.setQueryData(userKeys.me(), profile);
     renderWithQueryClient(
@@ -171,6 +172,50 @@ describe("HostProfileDialog", () => {
     await waitFor(() => expect(queryClient.isFetching()).toBe(0));
     expect(screen.queryByRole("button", { name: /Message/ })).not.toBeInTheDocument();
   });
+
+  it.each(["success", "unauthenticated"] as const)(
+    "hides chat during a session recheck that resolves as %s",
+    async (status) => {
+      let resolveRecheck!: (result: Awaited<ReturnType<typeof getMyProfile>>) => void;
+      const pendingRecheck = new Promise<Awaited<ReturnType<typeof getMyProfile>>>((resolve) => {
+        resolveRecheck = resolve;
+      });
+      mockedGetMyProfile
+        .mockResolvedValueOnce({ status: "success", profile })
+        .mockReturnValueOnce(pendingRecheck);
+      const { queryClient } = renderWithQueryClient(
+        <HostProfileDialog
+          host={{ id: 17, name: "Seoul Buddy", bio: "Local host", avatarUrl: null }}
+          hostIntroduction="Public introduction"
+          currentActivityId="42"
+          onClose={vi.fn()}
+        />,
+      );
+      expect(await screen.findByRole("button", { name: "Message Seoul Buddy" })).toBeEnabled();
+
+      act(() => {
+        void queryClient.invalidateQueries({ queryKey: userKeys.me() });
+      });
+      await waitFor(() => expect(mockedGetMyProfile).toHaveBeenCalledTimes(2));
+      expect(queryClient.getQueryState(userKeys.me())?.fetchStatus).toBe("fetching");
+      await waitFor(() =>
+        expect(screen.queryByRole("button", { name: /Message/ })).not.toBeInTheDocument(),
+      );
+      expect(screen.getByText("Public introduction")).toBeInTheDocument();
+
+      await act(async () => {
+        resolveRecheck(status === "success" ? { status, profile } : { status });
+        await pendingRecheck;
+      });
+      await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+      if (status === "success") {
+        expect(await screen.findByRole("button", { name: "Message Seoul Buddy" })).toBeEnabled();
+      } else {
+        expect(screen.queryByRole("button", { name: /Message/ })).not.toBeInTheDocument();
+      }
+      expect(router.push).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not repeat the activity currently being previewed", async () => {
     mockedGetTouristActivities.mockResolvedValue({

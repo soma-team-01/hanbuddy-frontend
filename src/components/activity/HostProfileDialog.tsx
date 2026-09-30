@@ -58,7 +58,10 @@ export function HostProfileDialog({
     staleTime: 0,
     refetchOnMount: "always",
   });
-  const authenticated = sessionQuery.isSuccess && sessionQuery.isFetchedAfterMount;
+  const authenticated =
+    sessionQuery.isSuccess &&
+    sessionQuery.isFetchedAfterMount &&
+    sessionQuery.fetchStatus === "idle";
   const activitiesQuery = useQuery({
     ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
     enabled: showHostedActivities,

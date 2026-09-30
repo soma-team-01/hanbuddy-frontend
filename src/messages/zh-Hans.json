@@ -1,4 +1,17 @@
 {
+  "ActivitySearch": {
+    "placeholder": "您想哪天参加？",
+    "apply": "应用",
+    "timezone": "韩国时间 · KST",
+    "close": "关闭日历",
+    "previousMonth": "上个月",
+    "nextMonth": "下个月",
+    "label": "参加日期",
+    "search": "搜索",
+    "clear": "清除",
+    "hint": "按韩国标准时间（KST）的日期搜索可预订的活动。",
+    "invalid": "请选择有效日期。"
+  },
   "SignupExtra": {
     "sourceLabel": "您从哪里了解到我们？",
     "sourceDetailLabel": "请具体说明（最多100字）",
@@ -66,6 +79,10 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "bookingClosed": "活动开始前24小时停止接受预订及付款请求，请选择其他场次。",
+    "scheduleCapacity": "人数上限须为1–100人，且不得低于预订确认与待付款人数之和。",
+    "scheduleEdit": "已开始或已取消的场次不能修改。有申请记录的场次不能更改开始时间。",
+    "scheduleDuplicate": "已存在相同开始时间的场次。",
     "refundRecoveryPending": "正在确认退款结果，请勿重复申请取消或付款。",
     "scheduleCancellationReason": "请输入1至255个字符的公开取消原因。",
     "scheduleCancellationStarted": "已开始的日程无法取消。",
@@ -870,6 +887,7 @@
     "preferredMethod": "[希望使用的付款方式]"
   },
   "Booking": {
+    "bookingWindowNotice": "预订及付款请求须在活动开始至少24小时前提交。",
     "title": "预订活动",
     "loading": "正在加载预订...",
     "loadError": "无法加载预订详细信息。",
@@ -1479,6 +1497,17 @@
       }
     },
     "capacity": {
+      "minimumHint": "人数上限不能低于预订确认与待付款人数之和。",
+      "previous": "上一组场次",
+      "next": "下一组场次",
+      "pageRange": "共{total}场，第{from}–{to}场",
+      "defaultTitle": "默认人数上限",
+      "settings": "按日期详细设置",
+      "defaultHint": "用于新增场次，不改变已有场次的人数上限。",
+      "scheduleTitle": "各日期及时段的人数上限",
+      "scheduleHint": "人数上限不得低于预订确认与待付款人数之和。",
+      "confirmed": "预订确认 {count}人",
+      "pending": "待付款 {count}人",
       "decrease": "减少最大宾客人数",
       "increase": "增加最大宾客人数",
       "guests": "{count, plural, one {# 最多宾客人数} other {# 最多客人数}}"
@@ -1491,6 +1520,7 @@
       "mapTitle": "所选会议地址的地图"
     },
     "schedule": {
+      "bookingWindowNotice": "预订及付款请求须在活动开始至少24小时前提交。",
       "notice": "根据需要选择任意数量的日期。所有开始时间均以韩国标准时间 (KST) 显示。",
       "calendarLabel": "体验日期日历",
       "previousMonth": "上个月",
@@ -1512,6 +1542,7 @@
       "pastTimeHint": "今天的开始时间必须晚于当前时间 (KST)。"
     },
     "price": {
+      "minimum": "每人最低价格为{amount, number}韩元。",
       "notice": "该金额以每人韩元的价格显示给客人。"
     },
     "inclusions": {
@@ -1578,6 +1609,7 @@
       "backToActivity": "返回活动"
     },
     "errors": {
+      "scheduleCapacityOccupied": "人数上限不得低于预订确认与待付款人数之和。",
       "categoryRequired": "选择一个类别以继续。",
       "hostIntroductionRequired": "写一个 30 到 2000 个字符的简介。",
       "photosMinimum": "添加 3 到 10 张体验照片。",
@@ -1592,7 +1624,7 @@
       "itineraryDurationInvalid": "为每项活动输入大于 0 的持续时间。",
       "itineraryPhotoRequired": "为每项活动添加照片。",
       "maxGuestsInvalid": "输入大于 0 的整数容量。",
-      "priceInvalid": "输入大于 0 的整数价格。",
+      "priceInvalid": "请输入不低于15,000韩元的每人价格（整数）。",
       "inclusionsRequired": "添加至少一项包含的物品。",
       "discountInvalid": "选择结束日期并输入 1 到 100 之间的整数折扣。",
       "restrictionsRequired": "至少选择一件事客人应该知道，或确认没有什么需要注意的。",

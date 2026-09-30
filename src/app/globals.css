@@ -337,8 +337,16 @@ button:not(:disabled),
 .hero-media-image {
   animation: hero-media-zoom var(--hero-media-duration, 25s) ease-in-out infinite;
   animation-delay: var(--hero-media-delay);
-  /* 사진별 초점. 모바일 띠(가로 크롭)와 cover 사진의 PC 세로 크롭에 쓰인다 */
+  /* cover 사진의 초점. 모바일에서는 축소한 원본 전체를 가운데에 놓는다. */
   object-position: var(--hero-media-position, center);
+}
+
+@media (width < 768px) {
+  .hero-media-image {
+    animation: none;
+    object-position: center;
+    mask-image: linear-gradient(to bottom, #000 0%, #000 85%, transparent 100%);
+  }
 }
 
 /* md 이상에서 contain 프레임은 흐린 배경 위 정중앙에 두고, 원본 양옆을 배경에 녹인다 */

@@ -154,6 +154,7 @@ function buildMonthCells(monthKey: string) {
 export function AvailabilityCalendarDialog({
   sessions,
   selectedSessionId,
+  preferredDate,
   durationMinutes,
   weather,
   onSelectSession,
@@ -162,6 +163,7 @@ export function AvailabilityCalendarDialog({
   sessions: Session[];
   /** 하단 바에서 현재 선택된 세션 id */
   selectedSessionId: string | null;
+  preferredDate?: string;
   /** 총 소요시간(분) — 시간대의 종료 시간 표시에 사용 */
   durationMinutes?: number;
   /** 활동 장소의 기상청 시간별 예보. 없거나 사용 불가이면 일정만 표시한다 */
@@ -198,7 +200,9 @@ export function AvailabilityCalendarDialog({
   );
   const selectedSessionDate =
     sessions.find((session) => session.id === selectedSessionId)?.dateKey ?? null;
-  const initialDate = selectedSessionDate ?? firstBookableDate;
+  const initialDate =
+    selectedSessionDate ??
+    (preferredDate && bookableDates.has(preferredDate) ? preferredDate : firstBookableDate);
 
   const currentMonth = toMonthKey(getSeoulNowParts().date);
   const lastSessionMonth = useMemo(() => {

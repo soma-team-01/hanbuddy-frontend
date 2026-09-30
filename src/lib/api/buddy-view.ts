@@ -93,7 +93,7 @@ export interface PreviewHost {
 /**
  * 내 활동 상세 응답을 게스트에게 보이는 상세 화면과 동일한 뷰 모델로 변환한다.
  * 투어리스트 화면에 필요한 값은 같은 규칙으로 구성한다:
- * - 남은 자리 = maxCapacity - bookedCount (CLOSED 일정은 0)
+ * - 남은 자리는 서버의 회차별 remainingCapacity가 기준이다.
  * - 총 소요시간 = 백엔드가 제공한 일정표의 정확한 분 합계
  */
 export function mapMyActivityDetailToPreviewActivity(
@@ -115,7 +115,13 @@ export function mapMyActivityDetailToPreviewActivity(
       dateLabel: formatSeoulDate(schedule.startAt, locale) ?? dateTimeUnavailable,
       timeLabel: formatSeoulTime(schedule.startAt, locale) ?? "",
       spotsLeft:
-        schedule.status === "CLOSED" ? 0 : Math.max(0, detail.maxCapacity - schedule.bookedCount),
+        schedule.remainingCapacity ??
+        Math.max(
+          0,
+          (schedule.maxCapacity ?? detail.maxCapacity) -
+            schedule.bookedCount -
+            (schedule.heldSeats ?? 0),
+        ),
     }));
 
   return {

@@ -1,4 +1,17 @@
 {
+  "ActivitySearch": {
+    "placeholder": "When would you like to join?",
+    "apply": "Apply",
+    "timezone": "Korea time · KST",
+    "close": "Close calendar",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "label": "Participation date",
+    "search": "Search",
+    "clear": "Clear",
+    "hint": "Find bookable activities for a date in Korea Standard Time (KST).",
+    "invalid": "Please select a valid date."
+  },
   "SignupExtra": {
     "sourceLabel": "How did you hear about us?",
     "sourceDetailLabel": "Please specify (up to 100 characters)",
@@ -66,6 +79,10 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "bookingClosed": "Bookings and payment requests close 24 hours before the activity starts. Please choose another session.",
+    "scheduleCapacity": "Capacity must be 1–100 and at least the total of confirmed participants and those awaiting payment.",
+    "scheduleEdit": "Started or cancelled sessions cannot be edited. Sessions with application history cannot change their start time.",
+    "scheduleDuplicate": "A session with this start time already exists.",
     "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
     "scheduleCancellationReason": "Enter a public cancellation reason of 1–255 characters.",
     "scheduleCancellationStarted": "A schedule that has already started cannot be cancelled.",
@@ -870,6 +887,7 @@
     "preferredMethod": "[Your preferred payment method]"
   },
   "Booking": {
+    "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
     "title": "Book activity",
     "loading": "Loading booking...",
     "loadError": "Could not load booking details.",
@@ -1479,6 +1497,17 @@
       }
     },
     "capacity": {
+      "minimumHint": "Capacity cannot be lower than confirmed participants plus those awaiting payment.",
+      "previous": "Previous sessions",
+      "next": "Next sessions",
+      "pageRange": "{from}–{to} of {total} sessions",
+      "defaultTitle": "Default capacity",
+      "settings": "Date-specific settings",
+      "defaultHint": "Used for new sessions. Existing session capacities stay unchanged.",
+      "scheduleTitle": "Capacity by date and time",
+      "scheduleHint": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
+      "confirmed": "Confirmed: {count}",
+      "pending": "Awaiting payment: {count}",
       "decrease": "Decrease maximum guests",
       "increase": "Increase maximum guests",
       "guests": "{count, plural, one {# guest maximum} other {# guests maximum}}"
@@ -1491,6 +1520,7 @@
       "mapTitle": "Map of the selected meeting address"
     },
     "schedule": {
+      "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
       "notice": "Select as many dates as you need. All start times are shown in Korea Standard Time (KST).",
       "calendarLabel": "Experience dates calendar",
       "previousMonth": "Previous month",
@@ -1512,6 +1542,7 @@
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
+      "minimum": "The minimum price per person is ₩{amount, number}.",
       "notice": "This amount is shown to guests as the price per person in Korean won."
     },
     "inclusions": {
@@ -1578,6 +1609,7 @@
       "backToActivity": "Back to activity"
     },
     "errors": {
+      "scheduleCapacityOccupied": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
       "categoryRequired": "Choose a category to continue.",
       "hostIntroductionRequired": "Write an introduction between 30 and 2000 characters.",
       "photosMinimum": "Add between 3 and 10 experience photos.",
@@ -1592,7 +1624,7 @@
       "itineraryDurationInvalid": "Enter a duration greater than 0 for every activity.",
       "itineraryPhotoRequired": "Add a photo for every activity.",
       "maxGuestsInvalid": "Enter a whole-number capacity greater than 0.",
-      "priceInvalid": "Enter a whole-number price greater than 0.",
+      "priceInvalid": "Enter a whole-number price of at least ₩15,000 per person.",
       "inclusionsRequired": "Add at least one included item.",
       "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",

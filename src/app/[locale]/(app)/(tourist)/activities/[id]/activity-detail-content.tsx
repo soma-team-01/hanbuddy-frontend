@@ -20,7 +20,12 @@ import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 export function ActivityDetailContent({
   activityId,
   initialActivity,
-}: Readonly<{ activityId: string; initialActivity?: TouristActivityDetail }>) {
+  preferredDate,
+}: Readonly<{
+  activityId: string;
+  initialActivity?: TouristActivityDetail;
+  preferredDate?: string;
+}>) {
   const track = useFunnelEvent();
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
@@ -86,6 +91,7 @@ export function ActivityDetailContent({
       <PageHeader onLeftClick={goBack} />
       <ActivityDetailView
         activity={activity}
+        preferredDate={preferredDate}
         onBookingClick={() => track("booking_cta_click", Number(activityId))}
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />

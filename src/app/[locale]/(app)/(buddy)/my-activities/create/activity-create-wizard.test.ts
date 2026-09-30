@@ -59,6 +59,44 @@ function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): Acti
 }
 
 describe("activity creation wizard", () => {
+  it("validates each schedule capacity, including occupied and held seats", () => {
+    const base = createCompleteDraft();
+    const schedule = { ...base.schedules[0], bookedCount: 3, heldSeats: 1 };
+    for (const maxCapacity of ["0", "", "1.5", "101"]) {
+      expect(
+        validateActivityCreateStep("capacity", {
+          ...base,
+          schedules: [{ ...schedule, maxCapacity }],
+        }),
+      ).not.toBeNull();
+    }
+    expect(
+      validateActivityCreateStep("capacity", {
+        ...base,
+        schedules: [{ ...schedule, maxCapacity: "3" }],
+      }),
+    ).toBe("scheduleCapacityOccupied");
+    expect(
+      validateActivityCreateStep("capacity", {
+        ...base,
+        schedules: [{ ...schedule, maxCapacity: "4" }],
+      }),
+    ).toBeNull();
+  });
+  it("does not overwrite explicit session capacities when the default changes", () => {
+    const draft = createCompleteDraft({ maxGuests: "20" });
+    draft.schedules = draft.schedules.map((schedule, index) => ({
+      ...schedule,
+      maxCapacity: index === 0 ? "6" : "10",
+    }));
+    const activity = buildPreviewActivityFromDraft(draft, {
+      locale: "en",
+      dateTimeUnavailable: "Unavailable",
+      hostName: "Buddy",
+      hostBio: "Host",
+    });
+    expect(activity.sessions.map((session) => session.spotsLeft)).toEqual([6, 10]);
+  });
   it("keeps the edited activity id in the guest preview", () => {
     const activity = buildPreviewActivityFromDraft(createCompleteDraft(), {
       locale: "en",
@@ -153,6 +191,9 @@ describe("activity creation wizard", () => {
     ],
     ["capacity", { maxGuests: "0" }, "maxGuestsInvalid"],
     ["price", { pricePerPerson: "0" }, "priceInvalid"],
+    ["price", { pricePerPerson: "14999" }, "priceInvalid"],
+    ["price", { pricePerPerson: "15000.5" }, "priceInvalid"],
+    ["price", { pricePerPerson: "" }, "priceInvalid"],
     ["inclusions", { inclusions: "" }, "inclusionsRequired"],
     [
       "discount",
@@ -164,6 +205,10 @@ describe("activity creation wizard", () => {
 
   it.each(validationCases)("validates the %s step", (step, overrides, error) => {
     expect(validateActivityCreateStep(step, createCompleteDraft(overrides))).toBe(error);
+  });
+
+  it.each(["15000", "15001"])("accepts the minimum price boundary: %s", (pricePerPerson) => {
+    expect(validateActivityCreateStep("price", createCompleteDraft({ pricePerPerson }))).toBeNull();
   });
 
   it("accepts the expanded API limits without truncation", () => {
@@ -370,11 +415,11 @@ describe("activity creation wizard", () => {
       const draft = buildDraftFromMyActivityDetail(detail);
 
       expect(draft.schedules).toEqual([
-        {
+        expect.objectContaining({
           id: "existing-schedule-7",
           date: futureDateA,
           startTime: "10:00",
-        },
+        }),
       ]);
       expect(validateActivityCreateStep("schedule", draft)).toBeNull();
     });

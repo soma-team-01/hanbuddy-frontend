@@ -2,7 +2,7 @@ import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { createTestAnalytics } from "@/test/analytics";
 import { getMyProfile } from "@/lib/api/users";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
 import { activityKeys } from "@/lib/query/activities";
@@ -28,6 +28,11 @@ vi.mock("@/lib/api/applications", () => ({
 vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn() }));
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-07-18T00:00:00+09:00"));
+});
+afterEach(() => vi.useRealTimers());
 
 const activityDetail: TouristActivityDetail = {
   activityId: 42,

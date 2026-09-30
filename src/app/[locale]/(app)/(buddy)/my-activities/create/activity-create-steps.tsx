@@ -9,6 +9,7 @@ import {
   CalendarDaysIcon,
   CameraIcon,
   CheckIcon,
+  ChevronDownIcon,
   CompassIcon,
   ImagePlusIcon,
   MapPinIcon,
@@ -29,7 +30,7 @@ import {
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import type { Locale } from "@/i18n/routing";
-import { getSeoulNowParts } from "@/lib/datetime";
+import { formatSeoulWeekday, getSeoulNowParts } from "@/lib/datetime";
 import {
   buildGoogleMapsEmbedUrl,
   fetchGooglePlaceDetailsViaBff,
@@ -921,9 +922,25 @@ export function MeetingStep({
 export function CapacityStep({
   value,
   onChange,
+  schedules,
+  onScheduleCapacityChange,
   t,
-}: Readonly<{ value: string; onChange: (value: string) => void; t: Translator }>) {
+}: Readonly<{
+  value: string;
+  onChange: (value: string) => void;
+  schedules: ScheduleDraft[];
+  onScheduleCapacityChange: (id: string, value: string) => void;
+  t: Translator;
+}>) {
   const guests = Number(value) || 1;
+  const locale = useLocale() as Locale;
+  const [expanded, setExpanded] = useState(false);
+  const detailsId = useId();
+  const [page, setPage] = useState(0);
+  const pageSize = 5;
+  const lastPage = Math.max(0, Math.ceil(schedules.length / pageSize) - 1);
+  const currentPage = Math.min(page, lastPage);
+  const visibleSchedules = schedules.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   return (
     <div className="mx-auto flex max-w-xl flex-col items-center py-8 text-center sm:py-14">
       <UsersIcon className="size-9 text-primary" />
@@ -947,12 +964,98 @@ export function CapacityStep({
         </div>
         <button
           type="button"
+          disabled={guests >= ACTIVITY_CREATE_LIMITS.maxGuests.max}
           onClick={() => onChange(String(guests + 1))}
           aria-label={t("capacity.increase")}
           className="flex size-12 items-center justify-center rounded-full border border-line-strong text-ink transition hover:border-primary hover:text-primary"
         >
           <PlusIcon className="size-5" />
         </button>
+      </div>
+      <div className="mt-6 w-full border-t border-line-soft text-left">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={detailsId}
+          onClick={() => setExpanded((current) => !current)}
+          className="flex min-h-14 w-full items-center justify-between gap-3 rounded-lg py-4 text-left text-sm font-semibold text-ink hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <span>{t("capacity.settings")}</span>
+          <ChevronDownIcon className={`size-4 shrink-0 ${expanded ? "rotate-180" : ""}`} />
+        </button>
+        <div id={detailsId} hidden={!expanded}>
+          <p className="mt-2 text-sm leading-6 text-muted">{t("capacity.minimumHint")}</p>
+          <ul className="mt-4 divide-y divide-line-soft">
+            {visibleSchedules.map((schedule) => (
+              <li
+                key={schedule.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-4"
+              >
+                <div className="min-w-0 flex-1">
+                  <label htmlFor={`capacity-${schedule.id}`} className="block text-sm font-bold">
+                    {schedule.date} ({formatSeoulWeekday(`${schedule.date}T00:00:00+09:00`, locale)}
+                    ) · {schedule.startTime}
+                  </label>
+                  {schedule.bookedCount !== undefined ? (
+                    <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs leading-5 font-medium">
+                      <span className="text-success">
+                        {t("capacity.confirmed", { count: schedule.bookedCount })}
+                      </span>
+                      <span className="text-danger">
+                        {t("capacity.pending", { count: schedule.heldSeats ?? 0 })}
+                      </span>
+                    </p>
+                  ) : null}
+                </div>
+                <input
+                  id={`capacity-${schedule.id}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={Math.max(1, (schedule.bookedCount ?? 0) + (schedule.heldSeats ?? 0))}
+                  max={ACTIVITY_CREATE_LIMITS.maxGuests.max}
+                  step={1}
+                  value={schedule.maxCapacity ?? value}
+                  onChange={(event) => onScheduleCapacityChange(schedule.id, event.target.value)}
+                  className="h-11 w-24 rounded-xl border border-line-strong bg-canvas-soft px-3 text-center font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                />
+              </li>
+            ))}
+          </ul>
+          {lastPage > 0 ? (
+            <nav
+              aria-label={t("capacity.scheduleTitle")}
+              className="mt-2 flex items-center justify-between gap-3 border-t border-line-soft pt-3"
+            >
+              <p aria-live="polite" className="text-xs text-muted">
+                {t("capacity.pageRange", {
+                  from: currentPage * pageSize + 1,
+                  to: Math.min((currentPage + 1) * pageSize, schedules.length),
+                  total: schedules.length,
+                })}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  aria-label={t("capacity.previous")}
+                  disabled={currentPage === 0}
+                  onClick={() => setPage(currentPage - 1)}
+                  className="flex size-11 items-center justify-center rounded-full border border-line-soft hover:bg-panel disabled:opacity-30"
+                >
+                  <ArrowLeftIcon className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t("capacity.next")}
+                  disabled={currentPage === lastPage}
+                  onClick={() => setPage(currentPage + 1)}
+                  className="flex size-11 items-center justify-center rounded-full border border-line-soft hover:bg-panel disabled:opacity-30"
+                >
+                  <ArrowRightIcon className="size-4" />
+                </button>
+              </div>
+            </nav>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -1297,6 +1400,7 @@ export function ScheduleStep({
         </aside>
       </div>
       <p className="text-sm leading-6 text-muted">{t("schedule.notice")}</p>
+      <p className="text-sm leading-6 text-muted">{t("schedule.bookingWindowNotice")}</p>
     </div>
   );
 }
@@ -1315,6 +1419,7 @@ export function PriceStep({
         <span className="font-display text-4xl font-extrabold text-ink sm:text-5xl">₩</span>
         <input
           id="price-per-person"
+          aria-describedby="price-minimum price-notice"
           autoFocus
           inputMode="numeric"
           pattern="[0-9]*"
@@ -1324,7 +1429,12 @@ export function PriceStep({
           className="max-w-[8ch] min-w-0 bg-transparent text-center font-display text-4xl font-extrabold tracking-tight text-ink outline-none placeholder:text-muted/25 focus-visible:!outline-none sm:text-5xl"
         />
       </div>
-      <p className="mt-5 text-sm leading-6 text-muted">{t("price.notice")}</p>
+      <p id="price-minimum" className="mt-5 text-sm font-semibold text-primary">
+        {t("price.minimum", { amount: ACTIVITY_CREATE_LIMITS.pricePerPerson.min })}
+      </p>
+      <p id="price-notice" className="mt-2 text-sm leading-6 text-muted">
+        {t("price.notice")}
+      </p>
     </div>
   );
 }

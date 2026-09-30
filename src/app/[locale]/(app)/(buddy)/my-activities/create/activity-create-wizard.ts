@@ -35,6 +35,7 @@ export const ACTIVITY_CREATE_LIMITS = {
   meetingPlace: { max: 500 },
   listItem: { max: 500 },
   listItems: { max: 20 },
+  pricePerPerson: { min: 15000 },
   // 백엔드 ActivityUpsertRequest 계약 상한
   maxGuests: { max: 100 },
   itineraryItems: { max: 20 },
@@ -75,6 +76,11 @@ export interface ScheduleDraft {
   id: string;
   date: string;
   startTime: string;
+  maxCapacity?: string;
+  originalStartAt?: string;
+  bookedCount?: number;
+  heldSeats?: number;
+  remainingCapacity?: number;
 }
 
 export interface ActivityCreateDraft {
@@ -125,6 +131,7 @@ export type ActivityCreateErrorKey =
   | "itineraryTooMany"
   | "maxGuestsInvalid"
   | "maxGuestsTooMany"
+  | "scheduleCapacityOccupied"
   | "priceInvalid"
   | "inclusionsRequired"
   | "restrictionsRequired"
@@ -271,6 +278,11 @@ export function validateActivityCreateStep(
       ) {
         return "scheduleInvalid";
       }
+      if (
+        new Set(draft.schedules.map((schedule) => `${schedule.date}T${schedule.startTime}`))
+          .size !== draft.schedules.length
+      )
+        return "scheduleInvalid";
       const now = getSeoulNowParts();
       return draft.schedules.some((schedule) => isPastSchedule(schedule, now))
         ? "scheduleInPast"
@@ -278,11 +290,21 @@ export function validateActivityCreateStep(
     }
     case "capacity":
       if (!isPositiveInteger(draft.maxGuests)) return "maxGuestsInvalid";
+      for (const schedule of draft.schedules) {
+        const capacity = schedule.maxCapacity ?? draft.maxGuests;
+        if (!isPositiveInteger(capacity)) return "maxGuestsInvalid";
+        if (Number(capacity) > ACTIVITY_CREATE_LIMITS.maxGuests.max) return "maxGuestsTooMany";
+        if (Number(capacity) < (schedule.bookedCount ?? 0) + (schedule.heldSeats ?? 0))
+          return "scheduleCapacityOccupied";
+      }
       return Number(draft.maxGuests) <= ACTIVITY_CREATE_LIMITS.maxGuests.max
         ? null
         : "maxGuestsTooMany";
     case "price":
-      return isPositiveInteger(draft.pricePerPerson) ? null : "priceInvalid";
+      return isPositiveInteger(draft.pricePerPerson) &&
+        Number(draft.pricePerPerson) >= ACTIVITY_CREATE_LIMITS.pricePerPerson.min
+        ? null
+        : "priceInvalid";
     case "inclusions":
       return draft.inclusions.trim()
         ? validateActivityList(draft.inclusions)
@@ -331,13 +353,18 @@ export function buildDraftFromMyActivityDetail(
   const now = getSeoulNowParts();
   const schedules = detail.schedules
     .filter((schedule) => schedule.status !== "CANCELLED")
-    .map((schedule) => {
+    .map<ScheduleDraft | null>((schedule) => {
       const parts = getSeoulDateTimeParts(schedule.startAt);
       if (!parts) return null;
       return {
         id: `existing-schedule-${schedule.scheduleId}`,
         date: parts.date,
         startTime: parts.time,
+        originalStartAt: schedule.startAt,
+        maxCapacity: String(schedule.maxCapacity ?? detail.maxCapacity),
+        bookedCount: schedule.bookedCount,
+        heldSeats: schedule.heldSeats ?? 0,
+        remainingCapacity: schedule.remainingCapacity,
       };
     })
     .filter((schedule): schedule is ScheduleDraft => schedule !== null)
@@ -436,7 +463,12 @@ export function buildPreviewActivityFromDraft(
         dateKey: schedule.date,
         dateLabel: formatSeoulDate(startAt, locale) ?? dateTimeUnavailable,
         timeLabel: formatSeoulTime(startAt, locale) ?? "",
-        spotsLeft: maxGuests,
+        spotsLeft: Math.max(
+          0,
+          Number(schedule.maxCapacity ?? maxGuests) -
+            (schedule.bookedCount ?? 0) -
+            (schedule.heldSeats ?? 0),
+        ),
       };
     })
     .filter((session): session is Session => session !== null);

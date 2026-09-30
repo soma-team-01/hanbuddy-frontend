@@ -5,6 +5,7 @@ import type {
 } from "@/types/activity";
 import { withContentLanguage } from "@/lib/content-language";
 import { withDisplayCurrency } from "@/lib/display-currency";
+import { withActivityDate } from "@/lib/activity-booking-window";
 import type { ContentLanguage } from "@/types/content-language";
 import type { DisplayCurrency } from "@/types/display-currency";
 import { requestApiResult, type ApiResult } from "./result";
@@ -20,9 +21,13 @@ const DEFAULT_ACTIVITY_WEATHER_ERROR_MESSAGE = "활동 날씨를 불러오지 �
 export async function getTouristActivities(
   language: ContentLanguage,
   displayCurrency: DisplayCurrency = "KRW",
+  date?: string,
 ): Promise<TouristActivitiesResult> {
   return requestApiResult<TouristActivitySummary[], "activities">(
-    withDisplayCurrency(withContentLanguage("/api/activities", language), displayCurrency),
+    withActivityDate(
+      withDisplayCurrency(withContentLanguage("/api/activities", language), displayCurrency),
+      date,
+    ),
     "activities",
     undefined,
     DEFAULT_ACTIVITY_LIST_ERROR_MESSAGE,

@@ -1,4 +1,11 @@
 {
+  "ActivitySearch": {
+    "label": "参加希望日",
+    "search": "検索",
+    "clear": "クリア",
+    "hint": "韓国標準時（KST）の日付で予約可能な体験を検索します。",
+    "invalid": "有効な日付を選択してください。"
+  },
   "SignupExtra": {
     "sourceLabel": "どこで知りましたか？",
     "sourceDetailLabel": "詳しく教えてください（100文字以内）",
@@ -66,6 +73,10 @@
     "unavailable": "利用不可"
   },
   "ApiErrors": {
+    "bookingClosed": "予約・支払いのリクエストは開始24時間前までです。別の日時を選択してください。",
+    "scheduleCapacity": "各回の定員は1～100名で、確定人数と確保中の席数の合計以上が必要です。",
+    "scheduleEdit": "開始済み・キャンセル済みの回は変更できません。申込履歴のある回は開始時刻を変更できません。",
+    "scheduleDuplicate": "同じ開始時刻の回がすでに存在します。",
     "refundRecoveryPending": "返金結果を確認しています。キャンセルや決済を再度リクエストしないでください。",
     "scheduleCancellationReason": "公開するキャンセル理由を1～255文字で入力してください。",
     "scheduleCancellationStarted": "開始済みの日程はキャンセルできません。",
@@ -870,6 +881,7 @@
     "preferredMethod": "[希望する支払い方法]"
   },
   "Booking": {
+    "bookingWindowNotice": "予約・支払いのリクエストは体験開始の24時間前までです。",
     "title": "書籍活動",
     "loading": "予約を読み込んでいます...",
     "loadError": "予約の詳細を読み込めませんでした。",
@@ -1342,8 +1354,8 @@
         "description": "ゲストが予約できるすべての日付を選択し、それぞれの開始時間を設定します。"
       },
       "capacity": {
-        "title": "最大グループサイズを設定する",
-        "description": "一度に快適にホストできるゲストの数を選択してください。"
+        "title": "各回の定員を設定してください",
+        "description": "日付と時間ごとに受け入れ可能な参加人数を設定してください。"
       },
       "price": {
         "title": "1人あたりの料金を設定する",
@@ -1479,6 +1491,11 @@
       }
     },
     "capacity": {
+      "defaultTitle": "基本定員",
+      "defaultHint": "新しい回の初期値です。既存の回の定員は変わりません。",
+      "scheduleTitle": "日時ごとの定員",
+      "scheduleHint": "各回1～100名で設定できます。確定人数と確保中の席数の合計以上が必要です。",
+      "seats": "確定 {booked}名 · 確保中 {held}名 · 保存済み残席 {remaining}",
       "decrease": "最大ゲスト数を減らす",
       "increase": "最大ゲスト数を増やす",
       "guests": "{count, plural, one {# ゲストの最大数} other {# 最大ゲスト数}}"
@@ -1491,6 +1508,7 @@
       "mapTitle": "選択した会議住所の地図"
     },
     "schedule": {
+      "bookingWindowNotice": "予約・支払いのリクエストは体験開始の24時間前までです。",
       "notice": "必要なだけ日付を選択してください。すべての開始時間は韓国標準時 (KST) で表示されます。",
       "calendarLabel": "体験日カレンダー",
       "previousMonth": "前月",
@@ -1579,6 +1597,7 @@
       "backToActivity": "アクティビティに戻る"
     },
     "errors": {
+      "scheduleCapacityOccupied": "各回の定員は確定人数と確保中の席数の合計以上にしてください。",
       "categoryRequired": "続行するにはカテゴリを選択してください。",
       "hostIntroductionRequired": "30 文字から 2000 文字の間で紹介文を書きます。",
       "photosMinimum": "体験写真を 3 ～ 10 枚追加します。",

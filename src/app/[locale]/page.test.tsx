@@ -6,6 +6,11 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
+vi.mock("next/navigation", async (original) => ({
+  ...(await original<typeof import("next/navigation")>()),
+  usePathname: () => "/en",
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),

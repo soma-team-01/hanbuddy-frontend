@@ -51,6 +51,17 @@ function createJsonResponse(body: unknown, status = 200) {
 }
 
 describe("tourist activity API client", () => {
+  it("forwards the selected KST date with language and currency", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(createJsonResponse({ isSuccess: true, result: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+    await getTouristActivities("KO", "USD", "2026-10-10");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/activities?language=KO&displayCurrency=USD&date=2026-10-10",
+      { credentials: "same-origin" },
+    );
+  });
   afterEach(() => {
     vi.unstubAllGlobals();
   });

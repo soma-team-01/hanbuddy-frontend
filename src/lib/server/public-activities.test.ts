@@ -41,6 +41,38 @@ afterEach(() => {
 });
 
 describe("anonymous public activity documents", () => {
+  it("forwards date without authentication and preserves public schedule capacity", async () => {
+    respond(success([activity]));
+    await getPublicActivities("ko", "2026-10-10");
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      "/activities?date=2026-10-10&language=KO&displayCurrency=KRW",
+    );
+    respond(
+      success({
+        ...activity,
+        schedules: [
+          {
+            activityScheduleId: 1,
+            startAt: "2026-10-10T19:00:00+09:00",
+            remainingCapacity: 3,
+            maxCapacity: 10,
+            status: "OPEN",
+            heldSeats: 2,
+            internalSecret: "hidden",
+          },
+        ],
+      }),
+    );
+    expect((await getPublicActivity("42", "ko")).schedules).toEqual([
+      {
+        activityScheduleId: 1,
+        startAt: "2026-10-10T19:00:00+09:00",
+        remainingCapacity: 3,
+        maxCapacity: 10,
+        status: "OPEN",
+      },
+    ]);
+  });
   it.each([true, false, undefined])(
     "preserves actual translation metadata in the initial detail (%s)",
     async (isTranslated) => {

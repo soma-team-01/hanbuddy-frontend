@@ -6,6 +6,7 @@ import { getContentLanguage, withContentLanguage } from "@/lib/content-language"
 import { getDefaultDisplayCurrency, withDisplayCurrency } from "@/lib/display-currency";
 import type { TouristActivityDetail, TouristActivitySummary } from "@/types/activity";
 import { isContentLanguage } from "@/types/content-language";
+import { withActivityDate } from "@/lib/activity-booking-window";
 
 export class PublicActivityError extends Error {
   constructor(readonly kind: "missing" | "unavailable") {
@@ -162,7 +163,16 @@ function detail(value: unknown): TouristActivityDetail {
       const schedule = record(value);
       requireFields(schedule, ["startAt"], ["activityScheduleId", "remainingCapacity"]);
       if (schedule.status !== "OPEN" && schedule.status !== "CLOSED") unavailable();
+      if (
+        schedule.maxCapacity !== undefined &&
+        (typeof schedule.maxCapacity !== "number" ||
+          !Number.isInteger(schedule.maxCapacity) ||
+          schedule.maxCapacity < 1 ||
+          schedule.maxCapacity > 100)
+      )
+        unavailable();
       return {
+        ...(typeof schedule.maxCapacity === "number" ? { maxCapacity: schedule.maxCapacity } : {}),
         activityScheduleId: schedule.activityScheduleId as number,
         startAt: schedule.startAt as string,
         remainingCapacity: schedule.remainingCapacity as number,
@@ -219,8 +229,8 @@ async function readPublic(path: string, locale: Locale, isDetail: boolean): Prom
 
 // React cache deduplicates within this render only. getBackend uses no-store and
 // does not receive request headers, cookies or bearer tokens for these public reads.
-export const getPublicActivities = cache(async (locale: Locale) =>
-  array(await readPublic("/activities", locale, false)).map(summary),
+export const getPublicActivities = cache(async (locale: Locale, date?: string) =>
+  array(await readPublic(withActivityDate("/activities", date), locale, false)).map(summary),
 );
 
 export const getPublicActivity = cache(async (id: string, locale: Locale) => {

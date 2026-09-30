@@ -7,9 +7,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
-import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { ApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { toSeoulStartAt } from "@/lib/datetime";
+import { getSeoulDateTimeParts, toSeoulStartAt } from "@/lib/datetime";
 import { getContentLanguage } from "@/lib/content-language";
 import { uploadActivityImageSet } from "@/lib/images/presigned";
 import { activityKeys } from "@/lib/query/activities";
@@ -122,13 +123,25 @@ export function buildActivityUpsertRequest(
 ): ActivityUpsertRequest {
   // 화면에서 편집한 일정과, 편집 대상이 아닌 지난 일정을 함께 보낸다.
   // 지난 일정을 빼고 보내면 백엔드가 삭제로 보고 신청 내역이 있을 때 수정이 거절된다.
-  const startAts = [
-    ...draft.schedules
-      .map((schedule) => toSeoulStartAt(`${schedule.date}T${schedule.startTime}`))
-      .filter((startAt): startAt is string => startAt !== null),
-    ...draft.retainedScheduleStartAts,
-  ];
-  const schedules = [...new Set(startAts)].map((startAt) => ({ startAt }));
+  const schedules: ActivityUpsertRequest["schedules"] = draft.schedules.map((schedule) => {
+    const startAt = toSeoulStartAt(`${schedule.date}T${schedule.startTime}`);
+    if (!startAt) throw new Error("Invalid schedule");
+    // 원본 초·밀리초를 보존해야 기존 회차와 동일한 instant로 매칭된다.
+    const originalParts = schedule.originalStartAt
+      ? getSeoulDateTimeParts(schedule.originalStartAt)
+      : null;
+    return {
+      startAt:
+        originalParts?.date === schedule.date && originalParts.time === schedule.startTime
+          ? schedule.originalStartAt!
+          : startAt,
+      maxCapacity: Number(schedule.maxCapacity ?? draft.maxGuests),
+    };
+  });
+  for (const startAt of draft.retainedScheduleStartAts) {
+    if (!schedules.some((schedule) => Date.parse(schedule.startAt) === Date.parse(startAt)))
+      schedules.push({ startAt });
+  }
 
   return {
     sourceLanguage,
@@ -759,6 +772,37 @@ export function CreateActivityForm({
       );
     } catch (error) {
       setSubmissionError({ error, fallbackKey: "submissionFailed" });
+      if (
+        isEdit &&
+        activityId !== undefined &&
+        error instanceof ApiClientError &&
+        error.code?.startsWith("ACTIVITY_SCHEDULE")
+      ) {
+        try {
+          // A failed background refresh must not turn the parent edit query into an error.
+          const latest = unwrapApiResult(await getMyActivity(activityId), "activity");
+          queryClient.setQueryData(buddyKeys.activityDetail(activityId), latest);
+          // Refresh occupancy without discarding the user's form, images, times or capacities.
+          setDraft((current) => ({
+            ...current,
+            schedules: current.schedules.map((schedule) => {
+              const updated = latest.schedules.find(
+                (item) => `existing-schedule-${item.scheduleId}` === schedule.id,
+              );
+              return updated
+                ? {
+                    ...schedule,
+                    bookedCount: updated.bookedCount,
+                    heldSeats: updated.heldSeats ?? 0,
+                    remainingCapacity: updated.remainingCapacity,
+                  }
+                : schedule;
+            }),
+          }));
+        } catch {
+          // The original validation error and input remain available if refresh also fails.
+        }
+      }
     } finally {
       // router.push returns before unmount. Keep successful saves locked during navigation.
       if (!submissionSucceeded) {
@@ -896,6 +940,15 @@ export function CreateActivityForm({
           <CapacityStep
             value={draft.maxGuests}
             onChange={(value) => updateField("maxGuests", value)}
+            schedules={draft.schedules}
+            onScheduleCapacityChange={(id, maxCapacity) =>
+              setDraft((current) => ({
+                ...current,
+                schedules: current.schedules.map((schedule) =>
+                  schedule.id === id ? { ...schedule, maxCapacity } : schedule,
+                ),
+              }))
+            }
             t={t}
           />
         );

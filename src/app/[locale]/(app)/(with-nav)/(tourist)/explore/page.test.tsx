@@ -4,6 +4,11 @@ import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
 import ExplorePage, { generateMetadata } from "./page";
 import { getPublicActivities } from "@/lib/server/public-activities";
+vi.mock("next/navigation", async (original) => ({
+  ...(await original<typeof import("next/navigation")>()),
+  usePathname: () => "/en/explore",
+  useRouter: () => ({ push: vi.fn() }),
+}));
 vi.mock("@/lib/server/public-activities", () => ({
   getPublicActivities: vi.fn().mockResolvedValue([]),
 }));
@@ -26,6 +31,30 @@ vi.mock("./activity-feed", () => ({
 }));
 
 describe("ExplorePage", () => {
+  it("uses the same KST day for the server read and the visible filter", async () => {
+    renderWithIntl(
+      await ExplorePage({
+        params: Promise.resolve({ locale: "en" }),
+        searchParams: Promise.resolve({ date: "2026-10-10" }),
+      }),
+    );
+    expect(getPublicActivities).toHaveBeenCalledWith("en", "2026-10-10");
+    expect(screen.getByLabelText("Participation date", { selector: "input" })).toHaveValue(
+      "2026-10-10",
+    );
+  });
+  it("does not fetch an unfiltered list for a malformed date", async () => {
+    vi.mocked(getPublicActivities).mockClear();
+    renderWithIntl(
+      await ExplorePage({
+        params: Promise.resolve({ locale: "en" }),
+        searchParams: Promise.resolve({ date: "2026-02-30" }),
+      }),
+    );
+    expect(getPublicActivities).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent("valid date");
+    expect(screen.queryByText("activity feed")).not.toBeInTheDocument();
+  });
   it.each([
     ["en", "Explore experiences", "Discover Korea with a local buddy by your side."],
     ["ko", "액티비티 탐색", "현지 버디와 함께할 한국의 특별한 경험을 찾아보세요."],

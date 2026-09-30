@@ -206,13 +206,13 @@ describe("buddy view helpers", () => {
           dateKey: "2099-08-21",
           dateLabel: "Aug 21, 2099",
           timeLabel: "10:00 AM",
-          spotsLeft: 0,
+          spotsLeft: 5,
         },
       ]);
       expect(activity.isSoldOut).toBe(false);
     });
 
-    it("marks the preview as sold out when every schedule is closed or full", () => {
+    it("does not treat time-closed sessions as sold out and honors server held-seat counts", () => {
       const activity = mapMyActivityDetailToPreviewActivity(
         {
           ...detail,
@@ -222,12 +222,18 @@ describe("buddy view helpers", () => {
               startAt: "2099-08-20T10:00:00+09:00",
               bookedCount: 6,
               status: "OPEN",
+              maxCapacity: 10,
+              heldSeats: 4,
+              remainingCapacity: 0,
             },
             {
               scheduleId: 102,
               startAt: "2099-08-21T10:00:00+09:00",
               bookedCount: 1,
               status: "CLOSED",
+              maxCapacity: 8,
+              heldSeats: 1,
+              remainingCapacity: 6,
             },
           ],
         },
@@ -237,8 +243,8 @@ describe("buddy view helpers", () => {
         "Local HanBuddy host",
       );
 
-      expect(activity.sessions.map((session) => session.spotsLeft)).toEqual([0, 0]);
-      expect(activity.isSoldOut).toBe(true);
+      expect(activity.sessions.map((session) => session.spotsLeft)).toEqual([0, 6]);
+      expect(activity.isSoldOut).toBe(false);
     });
   });
 });

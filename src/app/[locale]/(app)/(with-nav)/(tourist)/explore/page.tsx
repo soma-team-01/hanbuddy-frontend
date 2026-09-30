@@ -6,6 +6,8 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { Locale } from "@/i18n/routing";
 import { ActivityFeed } from "./activity-feed";
+import { ActivityDateFilter } from "@/components/activity/ActivityDateFilter";
+import { isActivitySearchDate } from "@/lib/activity-booking-window";
 
 export async function generateMetadata({
   params,
@@ -28,18 +30,32 @@ export async function generateMetadata({
 
 export default async function ExplorePage({
   params,
-}: Readonly<{ params: Promise<{ locale: Locale }> }>) {
+  searchParams,
+}: Readonly<{
+  params: Promise<{ locale: Locale }>;
+  searchParams?: Promise<{ date?: string | string[] }>;
+}>) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Explore" });
 
-  const activities = await getPublicActivities(locale);
+  const query = await searchParams;
+  const date = Array.isArray(query?.date) ? query.date.join(",") : query?.date;
+  const invalid = Boolean(date) && !isActivitySearchDate(date!);
+  const activities = invalid ? [] : await getPublicActivities(locale, date || undefined);
 
   return (
     <>
       <PageHeader title={t("title")} />
       <PageContainer className="flex-1 py-6 md:py-10">
         <main>
-          <ActivityFeed key={locale} initialActivities={activities} />
+          <ActivityDateFilter key={date ?? ""} date={date} />
+          {!invalid ? (
+            <ActivityFeed
+              key={`${locale}-${date ?? ""}`}
+              date={date}
+              initialActivities={activities}
+            />
+          ) : null}
         </main>
       </PageContainer>
     </>

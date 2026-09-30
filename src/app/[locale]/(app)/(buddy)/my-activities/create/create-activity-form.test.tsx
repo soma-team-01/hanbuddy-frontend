@@ -2,7 +2,9 @@ import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createApiClientError } from "@/lib/api/errors";
+import { buddyKeys } from "@/lib/query/buddy";
 import type { MyActivityDetailResponse } from "@/types/buddy";
 import {
   fetchGooglePlaceDetailsViaBff,
@@ -57,6 +59,7 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/buddy")>()),
   createMyActivity: vi.fn(),
   updateMyActivity: vi.fn(),
+  getMyActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/api/useMyProfile", () => ({
@@ -656,7 +659,9 @@ describe("CreateActivityForm", () => {
     ).toBeInTheDocument();
     clickNext();
 
-    expect(screen.getByRole("heading", { name: "Set the maximum group size" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Set the capacity for each session" }),
+    ).toBeInTheDocument();
     clickNext();
 
     expect(screen.getByText("The minimum price per person is ₩15,000.")).toBeInTheDocument();
@@ -776,7 +781,7 @@ describe("CreateActivityForm", () => {
       meetingLatitude: 37.5701,
       meetingLongitude: 126.9996,
       status: "ACTIVE",
-      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00` }],
+      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00`, maxCapacity: 1 }],
       itineraries: [
         {
           title: "Meet market vendors",
@@ -1018,7 +1023,7 @@ describe("CreateActivityForm", () => {
       meetingPointName: "Gwangjang Market Gate 2",
       meetingPlaceId: "ChIJ-gwangjang",
       status: "ACTIVE",
-      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00` }],
+      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00`, maxCapacity: 4 }],
       itineraries: [
         {
           title: "Meet market vendors",
@@ -1040,6 +1045,32 @@ describe("CreateActivityForm", () => {
     expect(routerReplace).not.toHaveBeenCalled();
     fireEvent.click(save);
     expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the edit query successful and preserves input when occupancy refresh fails", async () => {
+    const detail = buildEditDetail();
+    mockedUpdateMyActivity.mockRejectedValueOnce(
+      createApiClientError(400, {
+        isSuccess: false,
+        code: "ACTIVITY_SCHEDULE400_CAPACITY",
+        message: "capacity changed",
+      }),
+    );
+    vi.mocked(getMyActivity).mockRejectedValueOnce(new Error("offline"));
+    const { queryClient } = renderEditForm(detail);
+    queryClient.setQueryData(buddyKeys.activityDetail("42"), detail);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(getMyActivity).toHaveBeenCalledWith("42"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled());
+    expect(queryClient.getQueryState(buddyKeys.activityDetail("42"))?.status).toBe("success");
+    expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
+    expect(routerPush).not.toHaveBeenCalled();
+    mockedUpdateMyActivity.mockResolvedValueOnce({ status: "success", activity: detail });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(2));
+    expect(mockedUpdateMyActivity.mock.calls[1][1]).toEqual(
+      mockedUpdateMyActivity.mock.calls[0][1],
+    );
   });
 
   it("saves from any step in edit mode without walking to the review screen", async () => {
@@ -1159,6 +1190,7 @@ describe("buildActivityUpsertRequest", () => {
     expect(request.schedules.slice(0, 31)).toEqual(
       schedules.map(({ date, startTime }) => ({
         startAt: `${date}T${startTime}:00+09:00`,
+        maxCapacity: Number(baseDraft.maxGuests),
       })),
     );
     expect(request.schedules.at(-1)).toEqual({ startAt: "2020-01-01T10:00:00+09:00" });
@@ -1168,6 +1200,33 @@ describe("buildActivityUpsertRequest", () => {
     });
   });
 
+  it("sends per-session capacities and preserves the original instant when only capacity changes", () => {
+    const request = buildActivityUpsertRequest(
+      {
+        ...baseDraft,
+        maxGuests: "20",
+        schedules: [
+          {
+            id: "existing-schedule-1",
+            date: "2099-07-20",
+            startTime: "10:00",
+            originalStartAt: "2099-07-20T01:00:25.123Z",
+            maxCapacity: "6",
+          },
+          { id: "new", date: "2099-07-21", startTime: "14:00", maxCapacity: "10" },
+        ],
+      },
+      [],
+      [],
+      "EN",
+    );
+    expect(request.maxCapacity).toBe(20);
+    expect(request.schedules).toEqual([
+      { startAt: "2099-07-20T01:00:25.123Z", maxCapacity: 6 },
+      { startAt: "2099-07-21T14:00:00+09:00", maxCapacity: 10 },
+    ]);
+  });
+
   it("submits all 100 future schedules without truncation", () => {
     const schedules = createSchedules(100);
     const request = buildActivityUpsertRequest({ ...baseDraft, schedules }, [], [], "EN");
@@ -1175,6 +1234,7 @@ describe("buildActivityUpsertRequest", () => {
     expect(request.schedules).toHaveLength(100);
     expect(request.schedules.at(-1)).toEqual({
       startAt: `${schedules.at(-1)?.date}T10:00:00+09:00`,
+      maxCapacity: Number(baseDraft.maxGuests),
     });
   });
 

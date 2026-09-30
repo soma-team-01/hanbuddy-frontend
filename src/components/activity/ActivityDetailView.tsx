@@ -32,6 +32,7 @@ import {
   getGoogleMapsApiKey,
 } from "@/lib/google/places";
 import type { Activity, ActivityWeatherResult } from "@/types/activity";
+import { useBookableSessions } from "@/lib/use-bookable-sessions";
 
 const SECTION_IDS = {
   aboutHost: "about-host",
@@ -63,6 +64,7 @@ export function ActivityDetailView({
   bottomBar = "fixed",
   showBookingBar = true,
   unoptimizedImages = false,
+  preferredDate,
 }: Readonly<{
   activity: Activity;
   onBookingClick?: () => void;
@@ -74,6 +76,7 @@ export function ActivityDetailView({
   showBookingBar?: boolean;
   /** blob 미리보기처럼 next/image 최적화가 불가능한 소스일 때 */
   unoptimizedImages?: boolean;
+  preferredDate?: string;
 }>) {
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
@@ -155,10 +158,7 @@ export function ActivityDetailView({
     [activity.images, activity.heroImageUrl],
   );
   const extraPhotoCount = galleryImages.length - 3;
-  const bookableSessions = useMemo(
-    () => activity.sessions.filter((session) => session.spotsLeft > 0),
-    [activity.sessions],
-  );
+  const bookableSessions = useBookableSessions(activity.sessions, preview);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const selectedSession =
     bookableSessions.find((session) => session.id === selectedSessionId) ?? null;
@@ -173,7 +173,7 @@ export function ActivityDetailView({
   } else if (activity.sessions.length === 0) {
     dateBoxLabel = t("noDates");
   } else if (bookableSessions.length === 0) {
-    dateBoxLabel = tExplore("soldOut");
+    dateBoxLabel = t("noDates");
   }
   const dateBoxDisabled = bookableSessions.length === 0;
 
@@ -622,7 +622,8 @@ export function ActivityDetailView({
 
       {showBookingBar && calendarOpen ? (
         <AvailabilityCalendarDialog
-          sessions={activity.sessions}
+          sessions={bookableSessions}
+          preferredDate={preferredDate}
           selectedSessionId={selectedSessionId}
           durationMinutes={activity.durationMinutes}
           weather={weather}

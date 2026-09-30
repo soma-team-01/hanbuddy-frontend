@@ -5,7 +5,10 @@ import { getPublicActivity, PublicActivityError } from "@/lib/server/public-acti
 import { publicPageMetadata, unavailableMetadata } from "@/lib/seo/metadata";
 import { ActivityDetailContent } from "./activity-detail-content";
 
-type PageProps = Readonly<{ params: Promise<{ id: string; locale: Locale }> }>;
+type PageProps = Readonly<{
+  params: Promise<{ id: string; locale: Locale }>;
+  searchParams?: Promise<{ date?: string | string[] }>;
+}>;
 
 async function readActivity(id: string, locale: Locale) {
   try {
@@ -34,10 +37,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function ActivityDetailPage({ params }: PageProps) {
+export default async function ActivityDetailPage({ params, searchParams }: PageProps) {
   const { id, locale } = await params;
+  const query = await searchParams;
   const activity = await readActivity(id, locale);
   return (
-    <ActivityDetailContent key={`${locale}:${id}`} activityId={id} initialActivity={activity} />
+    <ActivityDetailContent
+      key={`${locale}:${id}`}
+      activityId={id}
+      initialActivity={activity}
+      preferredDate={typeof query?.date === "string" ? query.date : undefined}
+    />
   );
 }

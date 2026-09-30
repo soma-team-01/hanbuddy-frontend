@@ -28,7 +28,10 @@ import {
   PAYMENT_PROVIDER_MODE,
   type PaymentProviderMode,
 } from "@/lib/payment-provider-visibility";
-import { activityKeys } from "@/lib/query/activities";
+import { activityKeys, touristActivityQueryOptions } from "@/lib/query/activities";
+import { getDefaultDisplayCurrency } from "@/lib/display-currency";
+import { isBookingOpen, isBookableSession } from "@/lib/activity-booking-window";
+import { useBookableSessions } from "@/lib/use-bookable-sessions";
 import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
@@ -46,7 +49,7 @@ import type { PolicyDocumentData } from "@/types/policy";
 import { BookingConflictDialog } from "./booking-conflict-dialog";
 import { AlternativePaymentDialog } from "@/components/booking/AlternativePaymentDialog";
 
-const MAX_GUESTS = 8;
+const MAX_GUESTS = 100;
 
 type BookingErrorKey =
   | "scheduleRequired"
@@ -89,14 +92,20 @@ export function BookingForm({
   const inquiryT = useTranslations("AlternativePayment");
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const getApiErrorMessage = useApiErrorMessage();
+  const bookableSessions = useBookableSessions(activity.sessions);
+  const [checkingSchedule, setCheckingSchedule] = useState(false);
   const [sessionId, setSessionId] = useState(() => {
     if (
       initialSessionId &&
-      activity.sessions.some((session) => session.id === initialSessionId && session.spotsLeft > 0)
+      activity.sessions.some(
+        (session) => session.id === initialSessionId && isBookableSession(session),
+      )
     ) {
       return initialSessionId;
     }
-    return activity.sessions[0]?.id ?? "";
+    return initialSessionId
+      ? ""
+      : (activity.sessions.find((session) => isBookableSession(session))?.id ?? "");
   });
   const [guests, setGuests] = useState(1);
   const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
@@ -148,7 +157,10 @@ export function BookingForm({
   });
   useAuthQueryRedirect(conflictCheckMutation.error ?? createApplicationMutation.error);
   const isSubmitting =
-    conflictCheckMutation.isPending || createApplicationMutation.isPending || paymentInFlight;
+    checkingSchedule ||
+    conflictCheckMutation.isPending ||
+    createApplicationMutation.isPending ||
+    paymentInFlight;
 
   const discountedUnitPrice = activity.price;
   const originalUnitPrice = activity.originalPrice ?? discountedUnitPrice;
@@ -198,6 +210,36 @@ export function BookingForm({
     paymentProvider: PaymentProvider,
   ) {
     try {
+      setCheckingSchedule(true);
+      // Do not trust a cached calendar or the device clock alone when starting a new payment.
+      const latest = await queryClient.fetchQuery({
+        ...touristActivityQueryOptions(
+          activity.id,
+          contentLanguage,
+          getDefaultDisplayCurrency(locale),
+        ),
+        staleTime: 0,
+      });
+      const schedule = latest.schedules.find(
+        (item) => item.activityScheduleId === request.activityScheduleId,
+      );
+      if (
+        !schedule ||
+        schedule.status !== "OPEN" ||
+        !isBookingOpen(schedule.startAt) ||
+        schedule.remainingCapacity < request.guestCount
+      ) {
+        setSessionId("");
+        throw new ApiClientError({
+          code:
+            schedule && schedule.remainingCapacity < request.guestCount
+              ? "APPLICATION400_CAPACITY_EXCEEDED"
+              : "APPLICATION400_BOOKING_CLOSED",
+          status: 400,
+          details: null,
+          backendMessage: null,
+        });
+      }
       const payment = await createApplicationMutation.mutateAsync({ request, paymentProvider });
       if (paymentProvider === "PAYPAL") {
         setPayPalPayment(payment);
@@ -211,6 +253,13 @@ export function BookingForm({
       // 결제 인증이 끝나면 successUrl(/payments/success)로 리다이렉트되어 승인 API를 호출한다
       await requestTossPayment(payment, locale as Locale);
     } catch (error) {
+      if (error instanceof ApiClientError && error.code === "APPLICATION400_BOOKING_CLOSED") {
+        setSessionId("");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+          queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+        ]);
+      }
       if (error instanceof UnauthenticatedQueryError) return;
       const blockingDialog = toBlockingDialog(error, paymentProvider);
       if (blockingDialog) {
@@ -221,6 +270,7 @@ export function BookingForm({
         setRequestFailure({ error, fallbackKey: "paymentProcessFailed" });
       }
     } finally {
+      setCheckingSchedule(false);
       setPaymentInFlight(false);
     }
   }
@@ -238,7 +288,14 @@ export function BookingForm({
   function handleSubmitClick(paymentProvider: PaymentProvider) {
     if (paymentProvider === "PAYPAL" && estimatedPayPalTotal === null) return;
     void runWithSubmissionLock(async () => {
-      const validationError = validateBookingSession(sessionId);
+      const validationError = validateBookingSession(
+        bookableSessions.some(
+          (session) =>
+            session.id === sessionId && isBookableSession(session) && session.spotsLeft >= guests,
+        )
+          ? sessionId
+          : "",
+      );
       if (validationError) {
         setRequestFailure(null);
         setErrorKey(validationError);
@@ -316,7 +373,8 @@ export function BookingForm({
     if (errorMessage) errorAlertRef.current?.focus();
   }, [errorMessage]);
 
-  const selectedSession = activity.sessions.find((session) => session.id === sessionId) ?? null;
+  const selectedSession = bookableSessions.find((session) => session.id === sessionId) ?? null;
+  const maxGuests = Math.min(MAX_GUESTS, selectedSession?.spotsLeft ?? 0);
   useBeginCheckout(
     Number(activity.id),
     Boolean(
@@ -363,6 +421,7 @@ export function BookingForm({
                 <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
               </button>
               <span className="text-xs text-muted">{t("kstNotice")}</span>
+              <p className="text-xs text-muted">{t("bookingWindowNotice")}</p>
             </section>
 
             <section className="flex flex-col gap-2.5 py-4">
@@ -385,8 +444,8 @@ export function BookingForm({
                   <button
                     type="button"
                     aria-label={t("increaseGuests")}
-                    disabled={guests >= MAX_GUESTS}
-                    onClick={() => setGuests((count) => Math.min(MAX_GUESTS, count + 1))}
+                    disabled={guests >= maxGuests}
+                    onClick={() => setGuests((count) => Math.min(maxGuests, count + 1))}
                     className="flex size-11 items-center justify-center rounded-full border border-line-strong text-ink transition-colors enabled:hover:border-primary enabled:hover:text-primary disabled:opacity-40"
                   >
                     <PlusIcon className="size-4" />
@@ -549,7 +608,12 @@ export function BookingForm({
                     {showTossPayment ? (
                       <button
                         type="button"
-                        disabled={!refundPolicyAgreed || isSubmitting}
+                        disabled={
+                          !refundPolicyAgreed ||
+                          isSubmitting ||
+                          !selectedSession ||
+                          guests > maxGuests
+                        }
                         onClick={() => handleSubmitClick("TOSS")}
                         className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
                           showProviderChoice
@@ -582,7 +646,11 @@ export function BookingForm({
                           <button
                             type="button"
                             disabled={
-                              !refundPolicyAgreed || isSubmitting || estimatedPayPalTotal === null
+                              !refundPolicyAgreed ||
+                              isSubmitting ||
+                              estimatedPayPalTotal === null ||
+                              !selectedSession ||
+                              guests > maxGuests
                             }
                             onClick={() => handleSubmitClick("PAYPAL")}
                             className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
@@ -636,7 +704,7 @@ export function BookingForm({
 
       {calendarOpen ? (
         <AvailabilityCalendarDialog
-          sessions={activity.sessions}
+          sessions={bookableSessions}
           selectedSessionId={sessionId || null}
           durationMinutes={activity.durationMinutes}
           onSelectSession={(nextSessionId) => {

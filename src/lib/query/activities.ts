@@ -6,8 +6,8 @@ import { unwrapApiResult } from "./result";
 
 export const activityKeys = {
   all: () => ["activities"] as const,
-  list: (language: ContentLanguage, displayCurrency: DisplayCurrency = "KRW") =>
-    [...activityKeys.all(), "list", language, displayCurrency] as const,
+  list: (language: ContentLanguage, displayCurrency: DisplayCurrency = "KRW", date?: string) =>
+    [...activityKeys.all(), "list", language, displayCurrency, date || null] as const,
   detail: (
     activityId: number | string,
     language: ContentLanguage,
@@ -20,11 +20,17 @@ export const activityKeys = {
 export function touristActivitiesQueryOptions(
   language: ContentLanguage,
   displayCurrency: DisplayCurrency = "KRW",
+  date?: string,
 ) {
   return queryOptions({
-    queryKey: activityKeys.list(language, displayCurrency),
+    queryKey: activityKeys.list(language, displayCurrency, date),
     queryFn: async () =>
-      unwrapApiResult(await getTouristActivities(language, displayCurrency), "activities"),
+      unwrapApiResult(
+        await (date
+          ? getTouristActivities(language, displayCurrency, date)
+          : getTouristActivities(language, displayCurrency)),
+        "activities",
+      ),
     staleTime: 60_000,
   });
 }

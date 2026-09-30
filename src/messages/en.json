@@ -1,4 +1,11 @@
 {
+  "ActivitySearch": {
+    "label": "Participation date",
+    "search": "Search",
+    "clear": "Clear",
+    "hint": "Find bookable activities for a date in Korea Standard Time (KST).",
+    "invalid": "Please select a valid date."
+  },
   "SignupExtra": {
     "sourceLabel": "How did you hear about us?",
     "sourceDetailLabel": "Please specify (up to 100 characters)",
@@ -66,6 +73,10 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "bookingClosed": "Bookings and payment requests close 24 hours before the activity starts. Please choose another session.",
+    "scheduleCapacity": "Session capacity must be 1–100 and cover confirmed participants plus held seats.",
+    "scheduleEdit": "Started or cancelled sessions cannot be edited. Sessions with application history cannot change their start time.",
+    "scheduleDuplicate": "A session with this start time already exists.",
     "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
     "scheduleCancellationReason": "Enter a public cancellation reason of 1–255 characters.",
     "scheduleCancellationStarted": "A schedule that has already started cannot be cancelled.",
@@ -870,6 +881,7 @@
     "preferredMethod": "[Your preferred payment method]"
   },
   "Booking": {
+    "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
     "title": "Book activity",
     "loading": "Loading booking...",
     "loadError": "Could not load booking details.",
@@ -1342,8 +1354,8 @@
         "description": "Choose every date guests can book and set a start time for each one."
       },
       "capacity": {
-        "title": "Set the maximum group size",
-        "description": "Choose how many guests you can host comfortably at one time."
+        "title": "Set the capacity for each session",
+        "description": "Choose how many participants you can host on each date and time."
       },
       "price": {
         "title": "Set the price per person",
@@ -1479,6 +1491,11 @@
       }
     },
     "capacity": {
+      "defaultTitle": "Default capacity",
+      "defaultHint": "Used for new sessions. Existing session capacities stay unchanged.",
+      "scheduleTitle": "Capacity by date and time",
+      "scheduleHint": "Set 1–100 participants per session, no fewer than confirmed participants plus held seats.",
+      "seats": "Confirmed {booked} · Held {held} · Saved remaining {remaining}",
       "decrease": "Decrease maximum guests",
       "increase": "Increase maximum guests",
       "guests": "{count, plural, one {# guest maximum} other {# guests maximum}}"
@@ -1491,6 +1508,7 @@
       "mapTitle": "Map of the selected meeting address"
     },
     "schedule": {
+      "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
       "notice": "Select as many dates as you need. All start times are shown in Korea Standard Time (KST).",
       "calendarLabel": "Experience dates calendar",
       "previousMonth": "Previous month",
@@ -1579,6 +1597,7 @@
       "backToActivity": "Back to activity"
     },
     "errors": {
+      "scheduleCapacityOccupied": "Session capacity must cover confirmed participants and held seats.",
       "categoryRequired": "Choose a category to continue.",
       "hostIntroductionRequired": "Write an introduction between 30 and 2000 characters.",
       "photosMinimum": "Add between 3 and 10 experience photos.",

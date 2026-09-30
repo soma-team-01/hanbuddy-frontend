@@ -921,13 +921,22 @@ export function MeetingStep({
 export function CapacityStep({
   value,
   onChange,
+  schedules,
+  onScheduleCapacityChange,
   t,
-}: Readonly<{ value: string; onChange: (value: string) => void; t: Translator }>) {
+}: Readonly<{
+  value: string;
+  onChange: (value: string) => void;
+  schedules: ScheduleDraft[];
+  onScheduleCapacityChange: (id: string, value: string) => void;
+  t: Translator;
+}>) {
   const guests = Number(value) || 1;
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-center py-8 text-center sm:py-14">
-      <UsersIcon className="size-9 text-primary" />
-      <div className="mt-8 flex w-full items-center justify-between gap-8">
+    <div className="mx-auto w-full max-w-xl py-4">
+      <h3 className="font-display font-bold">{t("capacity.defaultTitle")}</h3>
+      <p className="mt-2 text-sm leading-6 text-muted">{t("capacity.defaultHint")}</p>
+      <div className="mt-4 flex items-center justify-between gap-6 rounded-2xl bg-panel-raised p-4">
         <button
           type="button"
           disabled={guests <= 1}
@@ -937,22 +946,68 @@ export function CapacityStep({
         >
           <MinusIcon className="size-5" />
         </button>
-        <div>
-          <span className="font-display text-5xl font-extrabold tracking-tight text-ink tabular-nums sm:text-6xl">
+        <div className="text-center">
+          <span className="font-display text-3xl font-extrabold tracking-tight text-ink tabular-nums">
             {guests}
           </span>
-          <p className="mt-2 text-sm font-semibold text-muted">
+          <p className="mt-1 text-xs font-semibold text-muted">
             {t("capacity.guests", { count: guests })}
           </p>
         </div>
         <button
           type="button"
+          disabled={guests >= ACTIVITY_CREATE_LIMITS.maxGuests.max}
           onClick={() => onChange(String(guests + 1))}
           aria-label={t("capacity.increase")}
           className="flex size-12 items-center justify-center rounded-full border border-line-strong text-ink transition hover:border-primary hover:text-primary"
         >
           <PlusIcon className="size-5" />
         </button>
+      </div>
+      <div className="mt-8 w-full border-t border-line-soft pt-6 text-left">
+        <h3 className="font-display font-bold">{t("capacity.scheduleTitle")}</h3>
+        <p className="mt-2 text-sm leading-6 text-muted">{t("capacity.scheduleHint")}</p>
+        <ul className="mt-4 divide-y divide-line-soft">
+          {schedules.map((schedule) => (
+            <li
+              key={schedule.id}
+              className="flex flex-wrap items-center justify-between gap-3 py-4"
+            >
+              <div className="min-w-0 flex-1">
+                <label htmlFor={`capacity-${schedule.id}`} className="block text-sm font-bold">
+                  {schedule.date} · {schedule.startTime} (KST)
+                </label>
+                {schedule.bookedCount !== undefined ? (
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    {t("capacity.seats", {
+                      booked: schedule.bookedCount,
+                      held: schedule.heldSeats ?? 0,
+                      remaining:
+                        schedule.remainingCapacity ??
+                        Math.max(
+                          0,
+                          Number(schedule.maxCapacity ?? value) -
+                            schedule.bookedCount -
+                            (schedule.heldSeats ?? 0),
+                        ),
+                    })}
+                  </p>
+                ) : null}
+              </div>
+              <input
+                id={`capacity-${schedule.id}`}
+                type="number"
+                inputMode="numeric"
+                min={Math.max(1, (schedule.bookedCount ?? 0) + (schedule.heldSeats ?? 0))}
+                max={ACTIVITY_CREATE_LIMITS.maxGuests.max}
+                step={1}
+                value={schedule.maxCapacity ?? value}
+                onChange={(event) => onScheduleCapacityChange(schedule.id, event.target.value)}
+                className="h-11 w-24 rounded-xl border border-line-strong bg-canvas-soft px-3 text-center font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              />
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
@@ -1297,6 +1352,7 @@ export function ScheduleStep({
         </aside>
       </div>
       <p className="text-sm leading-6 text-muted">{t("schedule.notice")}</p>
+      <p className="text-sm leading-6 text-muted">{t("schedule.bookingWindowNotice")}</p>
     </div>
   );
 }

@@ -104,6 +104,14 @@ export function ApplicationsContent({
         await continueApplicationPayment(applicationId, language, paymentProvider),
         "payment",
       ),
+    onError: async (error) => {
+      if (error instanceof ApiClientError && error.code === "APPLICATION400_BOOKING_CLOSED") {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
+          queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+        ]);
+      }
+    },
   });
   useAuthQueryRedirect(
     applicationsQuery.error ??

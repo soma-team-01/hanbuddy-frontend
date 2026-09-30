@@ -1,4 +1,11 @@
 {
+  "ActivitySearch": {
+    "label": "参加日期",
+    "search": "搜索",
+    "clear": "清除",
+    "hint": "按韩国标准时间（KST）的日期搜索可预订的活动。",
+    "invalid": "请选择有效日期。"
+  },
   "SignupExtra": {
     "sourceLabel": "您从哪里了解到我们？",
     "sourceDetailLabel": "请具体说明（最多100字）",
@@ -66,6 +73,10 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "bookingClosed": "活动开始前24小时停止接受预订及付款请求，请选择其他场次。",
+    "scheduleCapacity": "场次人数上限须为1–100人，且不得低于已确认人数与已锁定座位数之和。",
+    "scheduleEdit": "已开始或已取消的场次不能修改。有申请记录的场次不能更改开始时间。",
+    "scheduleDuplicate": "已存在相同开始时间的场次。",
     "refundRecoveryPending": "正在确认退款结果，请勿重复申请取消或付款。",
     "scheduleCancellationReason": "请输入1至255个字符的公开取消原因。",
     "scheduleCancellationStarted": "已开始的日程无法取消。",
@@ -870,6 +881,7 @@
     "preferredMethod": "[希望使用的付款方式]"
   },
   "Booking": {
+    "bookingWindowNotice": "预订及付款请求须在活动开始至少24小时前提交。",
     "title": "预订活动",
     "loading": "正在加载预订...",
     "loadError": "无法加载预订详细信息。",
@@ -1342,8 +1354,8 @@
         "description": "选择客人可以预订的每个日期并为每个日期设置开始时间。"
       },
       "capacity": {
-        "title": "设置最大组大小",
-        "description": "选择您一次可以舒适地接待多少位客人。"
+        "title": "设置每个场次的人数上限",
+        "description": "按日期和时间设置可接待的参与人数。"
       },
       "price": {
         "title": "设定每人的价格",
@@ -1479,6 +1491,11 @@
       }
     },
     "capacity": {
+      "defaultTitle": "默认人数上限",
+      "defaultHint": "用于新增场次，不改变已有场次的人数上限。",
+      "scheduleTitle": "各日期及时段的人数上限",
+      "scheduleHint": "每场可设为1–100人，不得低于已确认人数与已锁定座位数之和。",
+      "seats": "已确认 {booked}人 · 已锁定 {held}人 · 已保存余位 {remaining}",
       "decrease": "减少最大宾客人数",
       "increase": "增加最大宾客人数",
       "guests": "{count, plural, one {# 最多宾客人数} other {# 最多客人数}}"
@@ -1491,6 +1508,7 @@
       "mapTitle": "所选会议地址的地图"
     },
     "schedule": {
+      "bookingWindowNotice": "预订及付款请求须在活动开始至少24小时前提交。",
       "notice": "根据需要选择任意数量的日期。所有开始时间均以韩国标准时间 (KST) 显示。",
       "calendarLabel": "体验日期日历",
       "previousMonth": "上个月",
@@ -1579,6 +1597,7 @@
       "backToActivity": "返回活动"
     },
     "errors": {
+      "scheduleCapacityOccupied": "场次人数上限不得低于已确认人数与已锁定座位数之和。",
       "categoryRequired": "选择一个类别以继续。",
       "hostIntroductionRequired": "写一个 30 到 2000 个字符的简介。",
       "photosMinimum": "添加 3 到 10 张体验照片。",

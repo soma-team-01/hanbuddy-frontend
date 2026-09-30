@@ -64,6 +64,7 @@ const CONTACT_DETAILS = {
 
 interface LandingPageProps {
   readonly params: Promise<{ locale: Locale }>;
+  readonly searchParams?: Promise<{ date?: string | string[] }>;
 }
 
 export async function generateMetadata({ params }: LandingPageProps): Promise<Metadata> {
@@ -92,8 +93,10 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
   };
 }
 
-export default async function LandingPage({ params }: LandingPageProps) {
+export default async function LandingPage({ params, searchParams }: LandingPageProps) {
   const { locale } = await params;
+  const query = await searchParams;
+  const date = Array.isArray(query?.date) ? query.date.join(",") : query?.date;
   const [t, cookieStore] = await Promise.all([
     getTranslations({ locale, namespace: "Landing" }),
     cookies(),
@@ -189,7 +192,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
         ))}
       </div>
 
-      <RecommendedExperiences />
+      <RecommendedExperiences date={date} />
 
       <section
         data-landing-section="booking_steps"

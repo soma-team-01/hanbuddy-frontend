@@ -59,6 +59,44 @@ function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): Acti
 }
 
 describe("activity creation wizard", () => {
+  it("validates each schedule capacity, including occupied and held seats", () => {
+    const base = createCompleteDraft();
+    const schedule = { ...base.schedules[0], bookedCount: 3, heldSeats: 1 };
+    for (const maxCapacity of ["0", "", "1.5", "101"]) {
+      expect(
+        validateActivityCreateStep("capacity", {
+          ...base,
+          schedules: [{ ...schedule, maxCapacity }],
+        }),
+      ).not.toBeNull();
+    }
+    expect(
+      validateActivityCreateStep("capacity", {
+        ...base,
+        schedules: [{ ...schedule, maxCapacity: "3" }],
+      }),
+    ).toBe("scheduleCapacityOccupied");
+    expect(
+      validateActivityCreateStep("capacity", {
+        ...base,
+        schedules: [{ ...schedule, maxCapacity: "4" }],
+      }),
+    ).toBeNull();
+  });
+  it("does not overwrite explicit session capacities when the default changes", () => {
+    const draft = createCompleteDraft({ maxGuests: "20" });
+    draft.schedules = draft.schedules.map((schedule, index) => ({
+      ...schedule,
+      maxCapacity: index === 0 ? "6" : "10",
+    }));
+    const activity = buildPreviewActivityFromDraft(draft, {
+      locale: "en",
+      dateTimeUnavailable: "Unavailable",
+      hostName: "Buddy",
+      hostBio: "Host",
+    });
+    expect(activity.sessions.map((session) => session.spotsLeft)).toEqual([6, 10]);
+  });
   it("keeps the edited activity id in the guest preview", () => {
     const activity = buildPreviewActivityFromDraft(createCompleteDraft(), {
       locale: "en",
@@ -377,11 +415,11 @@ describe("activity creation wizard", () => {
       const draft = buildDraftFromMyActivityDetail(detail);
 
       expect(draft.schedules).toEqual([
-        {
+        expect.objectContaining({
           id: "existing-schedule-7",
           date: futureDateA,
           startTime: "10:00",
-        },
+        }),
       ]);
       expect(validateActivityCreateStep("schedule", draft)).toBeNull();
     });

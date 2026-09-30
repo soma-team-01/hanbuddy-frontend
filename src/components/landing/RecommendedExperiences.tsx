@@ -11,15 +11,29 @@ import { getContentLanguage } from "@/lib/content-language";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
+import { ActivityDateFilter } from "@/components/activity/ActivityDateFilter";
+import { isActivitySearchDate, withActivityDate } from "@/lib/activity-booking-window";
 
 const RECOMMENDED_LIMIT = 4;
 
-export function RecommendedExperiences() {
+export function RecommendedExperiences({ date }: Readonly<{ date?: string }> = {}) {
+  const invalid = Boolean(date) && !isActivitySearchDate(date!);
+  return (
+    <>
+      <PageContainer className="pt-8">
+        <ActivityDateFilter key={date ?? ""} date={date} />
+      </PageContainer>
+      {!invalid ? <RecommendedResults date={date} /> : null}
+    </>
+  );
+}
+
+function RecommendedResults({ date }: Readonly<{ date?: string }>) {
   const t = useTranslations("Landing");
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const activitiesQuery = useQuery(
-    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
+    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale), date),
   );
 
   if (activitiesQuery.isPending) {
@@ -84,7 +98,7 @@ export function RecommendedExperiences() {
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <RecommendedHeading />
           <Link
-            href="/explore"
+            href={withActivityDate("/explore", date)}
             className="inline-flex min-h-11 items-center self-start font-display text-sm font-bold text-primary transition-colors hover:text-primary-hover"
           >
             {t("recommended.viewAll")}
@@ -102,7 +116,7 @@ export function RecommendedExperiences() {
           {activities.map((activity, index) => (
             <Link
               key={activity.id}
-              href={`/activities/${activity.id}`}
+              href={withActivityDate(`/activities/${activity.id}`, date)}
               className="motion-reveal motion-press block w-[78vw] max-w-[320px] shrink-0 snap-start rounded-2xl md:w-auto md:max-w-none"
               style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
             >

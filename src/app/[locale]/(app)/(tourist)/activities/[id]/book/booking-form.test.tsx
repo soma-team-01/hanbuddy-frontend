@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getTouristActivity } from "@/lib/api/activities";
 import {
   createApplication,
   getApplicationConflicts,
@@ -9,11 +10,15 @@ import { ApiClientError } from "@/lib/api/errors";
 import { isTossUserCancel, requestTossPayment } from "@/lib/payments/toss";
 import { activityKeys } from "@/lib/query/activities";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import type { Activity } from "@/types/activity";
+import type { Activity, TouristActivityDetail } from "@/types/activity";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
 import { BookingForm } from "./booking-form";
 
 const replace = vi.fn();
+vi.mock("@/lib/api/activities", async (original) => ({
+  ...(await original<typeof import("@/lib/api/activities")>()),
+  getTouristActivity: vi.fn(),
+}));
 vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn(() => new Promise(() => {})) }));
 
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -82,6 +87,7 @@ const activity: Activity = {
   sessions: [
     {
       id: "101",
+      startAt: "2026-07-20T10:00:00+09:00",
       dateLabel: "2026-07-20",
       timeLabel: "10:00",
       spotsLeft: 4,
@@ -145,14 +151,17 @@ async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
 }
 
 describe("BookingForm", () => {
-  it("passes selected date and time labels to the inquiry when startAt is absent", () => {
+  it("does not preselect a session without an authoritative start time", () => {
     renderWithQueryClient(
-      <BookingForm activity={activity} initialSessionId="101" paymentProviderMode="PAYPAL" />,
+      <BookingForm
+        activity={{ ...activity, sessions: [{ ...activity.sessions[0], startAt: undefined }] }}
+        initialSessionId="101"
+        paymentProviderMode="PAYPAL"
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Need another payment method?" }));
     const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveTextContent("2026-07-20 10:00 (KST)");
-    expect(dialog).not.toHaveTextContent("[Select a date and time]");
+    expect(dialog).toHaveTextContent("[Select a date and time]");
     expect(mockedCreateApplication).not.toHaveBeenCalled();
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
   });
@@ -222,6 +231,22 @@ describe("BookingForm", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-18T00:00:00+09:00"));
+    vi.mocked(getTouristActivity).mockResolvedValue({
+      status: "success",
+      activity: {
+        schedules: [
+          {
+            activityScheduleId: 101,
+            startAt: "2026-07-20T10:00:00+09:00",
+            remainingCapacity: 4,
+            status: "OPEN",
+            maxCapacity: 6,
+          },
+        ],
+      } as TouristActivityDetail,
+    });
     mockedGetApplicationConflicts.mockResolvedValue({
       status: "success",
       conflicts: { blocking: false, conflicts: [], sameDayWarnings: [] },
@@ -232,6 +257,68 @@ describe("BookingForm", () => {
       applications: [{ ...pendingApplication, applicationId: 10 }],
     });
     mockedRequestTossPayment.mockResolvedValue(undefined);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it.each(["TOSS", "PAYPAL"] as const)(
+    "rechecks a stale schedule before starting %s and keeps form input on rejection",
+    async (paymentProvider) => {
+      vi.mocked(getTouristActivity).mockResolvedValue({
+        status: "success",
+        activity: { schedules: [] } as unknown as TouristActivityDetail,
+      });
+      renderWithQueryClient(
+        <BookingForm activity={activity} paymentProviderMode={paymentProvider} />,
+      );
+      fireEvent.change(screen.getByPlaceholderText("Let your buddy know..."), {
+        target: { value: "Keep this request" },
+      });
+      await agreeAndSubmit(paymentProvider === "TOSS" ? "Pay now" : "Pay $32.50 with PayPal");
+      expect(await screen.findByRole("alert")).toHaveTextContent("24 hours");
+      expect(getTouristActivity).toHaveBeenCalledWith("42", "EN", "USD");
+      expect(mockedCreateApplication).not.toHaveBeenCalled();
+      expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+      expect(screen.getByPlaceholderText("Let your buddy know...")).toHaveValue(
+        "Keep this request",
+      );
+      expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
+    },
+  );
+
+  it("limits participants to the selected session's remaining seats", () => {
+    renderWithQueryClient(
+      <BookingForm
+        activity={{ ...activity, sessions: [{ ...activity.sessions[0], spotsLeft: 2 }] }}
+      />,
+    );
+    const increase = screen.getByRole("button", { name: "Increase participants" });
+    fireEvent.click(increase);
+    expect(increase).toBeDisabled();
+  });
+
+  it("does not abort an already-created payment when time crosses the cutoff", async () => {
+    mockedCreateApplication.mockImplementationOnce(async () => {
+      vi.setSystemTime(new Date("2026-07-20T00:00:00+09:00"));
+      return { status: "success", payment: paymentReady };
+    });
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+    await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
+    expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides a session that is less than 24 hours away", () => {
+    renderWithQueryClient(
+      <BookingForm
+        activity={{
+          ...activity,
+          sessions: [{ ...activity.sessions[0], startAt: "2026-07-18T23:59:59+09:00" }],
+        }}
+        initialSessionId="101"
+      />,
+    );
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
   });
 
   it("uses one responsive form layout with a sticky desktop summary", () => {
@@ -251,7 +338,7 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
     // 요약 카드: 선택한 일정과 총액이 보인다
-    expect(screen.getByText("2026-07-20")).toBeInTheDocument();
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 20");
     expect(screen.getByText("Total (KRW)")).toBeInTheDocument();
     expect(screen.getByText("≈ $32.50")).toHaveClass("text-muted");
     expect(screen.getByRole("button", { name: "Pay $32.50 with PayPal" })).toBeInTheDocument();
@@ -382,16 +469,22 @@ describe("BookingForm", () => {
       ...activity,
       sessions: [
         ...activity.sessions,
-        { id: "102", dateLabel: "2026-07-21", timeLabel: "14:00", spotsLeft: 2 },
+        {
+          id: "102",
+          dateLabel: "2026-07-21",
+          timeLabel: "14:00",
+          startAt: "2026-07-21T14:00:00+09:00",
+          spotsLeft: 2,
+        },
       ],
     };
 
     renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
-    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2026-07-21 14:00");
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 21");
   });
 
-  it("falls back to the first schedule when the requested one is unknown or full", () => {
+  it("clears an unavailable requested schedule instead of silently selecting a different date", () => {
     const twoSessionActivity: Activity = {
       ...activity,
       sessions: [
@@ -402,7 +495,7 @@ describe("BookingForm", () => {
 
     renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
-    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2026-07-20 10:00");
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
   });
 
   it("creates an application and opens the Toss payment window", async () => {
@@ -810,6 +903,17 @@ describe("BookingForm", () => {
       ],
     };
 
+    vi.mocked(getTouristActivity).mockResolvedValue({
+      status: "success",
+      activity: {
+        schedules: calendarActivity.sessions.map((session) => ({
+          activityScheduleId: Number(session.id),
+          startAt: session.startAt!,
+          remainingCapacity: session.spotsLeft,
+          status: "OPEN",
+        })),
+      } as TouristActivityDetail,
+    });
     renderWithQueryClient(<BookingForm activity={calendarActivity} />);
 
     fireEvent.click(screen.getByTestId("date-select-box"));

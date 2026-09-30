@@ -102,6 +102,7 @@ export interface ActivityItineraryResponse {
 export type TouristActivityScheduleStatus = "OPEN" | "CLOSED" | "CANCELLED";
 
 export interface TouristActivitySchedule {
+  maxCapacity?: number;
   activityScheduleId: number;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   startAt: string;

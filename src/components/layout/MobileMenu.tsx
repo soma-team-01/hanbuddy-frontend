@@ -69,7 +69,7 @@ export function MobileMenu({ title, openLabel, closeLabel, children }: Readonly<
         onClick={() => setIsOpen(true)}
         className="flex size-11 cursor-pointer items-center justify-center rounded-full text-ink transition-colors hover:bg-primary-soft lg:hidden"
       >
-        <MenuIcon className="size-6" />
+        <MenuIcon className="size-5" />
       </button>
       <dialog
         ref={dialogRef}

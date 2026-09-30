@@ -11,15 +11,29 @@ import { getContentLanguage } from "@/lib/content-language";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
+import { isActivitySearchDate, withActivityDate } from "@/lib/activity-booking-window";
 
 const RECOMMENDED_LIMIT = 4;
 
-export function RecommendedExperiences() {
+export function RecommendedExperiences({ date }: Readonly<{ date?: string }> = {}) {
+  const invalid = Boolean(date) && !isActivitySearchDate(date!);
+  return invalid ? (
+    <section className="border-t border-line-soft bg-canvas-soft py-10 md:py-16">
+      <PageContainer>
+        <RecommendedHeading />
+      </PageContainer>
+    </section>
+  ) : (
+    <RecommendedResults date={date} />
+  );
+}
+
+function RecommendedResults({ date }: Readonly<{ date?: string }>) {
   const t = useTranslations("Landing");
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const activitiesQuery = useQuery(
-    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
+    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale), date),
   );
 
   if (activitiesQuery.isPending) {
@@ -81,10 +95,10 @@ export function RecommendedExperiences() {
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <RecommendedHeading />
+        <RecommendedHeading />
+        <div className="mt-4 flex justify-end">
           <Link
-            href="/explore"
+            href={withActivityDate("/explore", date)}
             className="inline-flex min-h-11 items-center self-start font-display text-sm font-bold text-primary transition-colors hover:text-primary-hover"
           >
             {t("recommended.viewAll")}
@@ -102,7 +116,7 @@ export function RecommendedExperiences() {
           {activities.map((activity, index) => (
             <Link
               key={activity.id}
-              href={`/activities/${activity.id}`}
+              href={withActivityDate(`/activities/${activity.id}`, date)}
               className="motion-reveal motion-press block w-[78vw] max-w-[320px] shrink-0 snap-start rounded-2xl md:w-auto md:max-w-none"
               style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
             >
@@ -170,19 +184,21 @@ function RecommendedHeading() {
   const t = useTranslations("Landing");
 
   return (
-    <div className="max-w-2xl">
-      <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-        {t("recommended.eyebrow")}
-      </p>
-      <h2
-        id="recommended-title"
-        className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
-      >
-        {t("recommended.title")}
-      </h2>
-      <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
-        {t("recommended.description")}
-      </p>
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="max-w-2xl">
+        <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+          {t("recommended.eyebrow")}
+        </p>
+        <h2
+          id="recommended-title"
+          className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
+        >
+          {t("recommended.title")}
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
+          {t("recommended.description")}
+        </p>
+      </div>
     </div>
   );
 }

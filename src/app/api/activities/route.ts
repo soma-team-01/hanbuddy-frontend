@@ -7,13 +7,24 @@ import {
 import { appendRequestedActivityDisplayOptions } from "@/app/api/_utils/content-language";
 import type { TouristActivitySummary } from "@/types/activity";
 import type { ActivityUpsertRequest, MyActivityDetailResponse } from "@/types/buddy";
+import { isActivitySearchDate, withActivityDate } from "@/lib/activity-booking-window";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const date = request.nextUrl.searchParams.get("date");
+  if (date !== null && !isActivitySearchDate(date)) {
+    return Response.json(
+      { isSuccess: false, code: "VALIDATION400_FORMAT", message: "Invalid date" },
+      { status: 400 },
+    );
+  }
   return proxyPublicGet<TouristActivitySummary[]>(
     request,
-    appendRequestedActivityDisplayOptions(request, "/activities"),
+    withActivityDate(
+      appendRequestedActivityDisplayOptions(request, "/activities"),
+      date ?? undefined,
+    ),
     "활동 목록 서버에 연결할 수 없습니다.",
   );
 }

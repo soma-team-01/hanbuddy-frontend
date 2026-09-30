@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import type { Locale } from "@/i18n/routing";
@@ -6,6 +6,11 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
+vi.mock("next/navigation", async (original) => ({
+  ...(await original<typeof import("next/navigation")>()),
+  usePathname: () => "/en",
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
@@ -40,6 +45,12 @@ async function renderLanding(locale: Locale) {
 }
 
 describe("LandingPage", () => {
+  it("places the only date search in the hero instead of the recommendations", async () => {
+    await renderLanding("en");
+    const hero = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
+    expect(within(hero).getByRole("button", { name: /Participation date/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Participation date/ })).toHaveLength(1);
+  });
   beforeEach(() => {
     cookieJar.clear();
     vi.mocked(getTouristActivities).mockResolvedValue({
@@ -59,10 +70,7 @@ describe("LandingPage", () => {
       expect(screen.getByRole("main")).toHaveClass("w-full");
       expect(screen.getByRole("heading", { level: 1, name: headline })).toHaveClass("font-display");
       expect(screen.queryByRole("banner")).not.toBeInTheDocument();
-      expect(screen.getByRole("link", { name: explore })).toHaveAttribute(
-        "href",
-        `/${locale}/explore`,
-      );
+      expect(screen.queryByRole("link", { name: explore })).not.toBeInTheDocument();
     },
   );
 
@@ -170,7 +178,7 @@ describe("LandingPage", () => {
     // 풀블리드 cover는 셀피 얼굴이 화면을 채우고 사진마다 크기가 달라져 4장 모두 contain으로 통일했다
     expect(backdrops).toHaveLength(5);
     frames.forEach((frame) => {
-      expect(frame.querySelector(".hero-media-backdrop")).toHaveClass("hidden", "md:block");
+      expect(frame.querySelector(".hero-media-backdrop")).not.toHaveClass("hidden");
       expect(frame.querySelector(".hero-media-image")).toHaveClass(
         "hero-media-contain",
         "md:object-contain",
@@ -188,26 +196,28 @@ describe("LandingPage", () => {
     expect(heroRegion).not.toHaveClass("md:min-h-[calc(100svh-76px)]");
   });
 
-  it("stacks the hero as a photo band above the copy on mobile and keeps the full-bleed hero from md", async () => {
+  it("keeps the mobile copy, search and highlights together over the hero photo", async () => {
     await renderLanding("en");
 
     const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
-    expect(heroRegion).toHaveClass("flex-col", "md:block");
-    expect(heroRegion.querySelector(".hero-media")).toHaveClass(
-      "relative",
-      "h-[400px]",
-      "md:absolute",
+    expect(heroRegion.querySelector(".hero-media")).toHaveClass("absolute", "inset-0");
+    expect(heroRegion.querySelector(".hero-media-image")?.parentElement).toHaveClass(
+      "top-0",
+      "aspect-[4/3]",
       "md:inset-0",
+      "md:h-auto",
     );
     expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass("min-w-0");
-    // 하이라이트는 모바일에서 사진 밖의 밝은 띠로, md 이상에서는 히어로 안에
-    const strip = screen.getByTestId("hero-highlights-mobile");
-    expect(strip).toHaveClass("md:hidden", "bg-primary-soft");
-    expect(strip).toHaveTextContent("Local perspective");
-    expect(screen.getAllByText("Local perspective")).toHaveLength(2);
-    expect(screen.getAllByText("Local perspective")[0]?.closest(".md\\:grid")).toHaveClass(
+    expect(screen.queryByTestId("hero-highlights-mobile")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Local perspective")).toHaveLength(1);
+    expect(within(heroRegion).getByText("Local perspective")).toHaveClass("text-on-primary");
+    expect(within(heroRegion).getByText(/Go beyond the itinerary/)).toHaveClass(
       "hidden",
+      "md:block",
     );
+    expect(
+      within(heroRegion).queryByRole("link", { name: /Explore experiences/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("sends a logged-in tourist to explore instead of asking them to log in", async () => {
@@ -216,8 +226,8 @@ describe("LandingPage", () => {
     await renderLanding("en");
 
     expect(screen.queryByRole("link", { name: /Log in to book/ })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /Explore experiences/ })).toHaveLength(2);
-    expect(screen.getAllByRole("link", { name: /Explore experiences/ })[1]).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /Explore experiences/ })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /Explore experiences/ })).toHaveAttribute(
       "href",
       "/en/explore",
     );

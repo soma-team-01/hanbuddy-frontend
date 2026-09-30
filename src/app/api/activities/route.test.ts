@@ -27,6 +27,31 @@ const activityRequest = {
 };
 
 describe("GET /api/activities", () => {
+  it.each([undefined, `${AUTH_COOKIES.accessToken}=access-token`])(
+    "forwards a KST date for guest or member (%s)",
+    async (cookie) => {
+      mockedGetBackend.mockResolvedValue({
+        status: 200,
+        payload: { isSuccess: true, code: "200", message: "ok", result: [] },
+        setCookies: [],
+      });
+      const response = await GET(
+        new NextRequest(
+          "http://localhost/api/activities?language=KO&displayCurrency=USD&date=2026-10-10",
+          { headers: cookie ? { cookie } : {} },
+        ),
+      );
+      expect(response.status).toBe(200);
+      expect(mockedGetBackend).toHaveBeenCalledWith(
+        "/activities?language=KO&displayCurrency=USD&date=2026-10-10",
+      );
+    },
+  );
+  it("rejects impossible dates without an upstream request", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/activities?date=2026-02-30"));
+    expect(response.status).toBe(400);
+    expect(mockedGetBackend).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     mockedGetBackend.mockReset();
     mockedPostBackend.mockReset();

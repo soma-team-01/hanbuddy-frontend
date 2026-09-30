@@ -13,17 +13,19 @@ import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
+import { withActivityDate } from "@/lib/activity-booking-window";
 
 export function ActivityFeed({
   initialActivities,
-}: Readonly<{ initialActivities?: TouristActivitySummary[] }> = {}) {
+  date,
+}: Readonly<{ initialActivities?: TouristActivitySummary[]; date?: string }> = {}) {
   const t = useTranslations("Explore");
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const getApiErrorMessage = useApiErrorMessage();
   const { trackList, trackSelection } = useMeasurementEvents();
   const activitiesQuery = useQuery({
-    ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
+    ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale), date),
     initialData: initialActivities,
   });
 
@@ -93,7 +95,7 @@ export function ActivityFeed({
         {activities.map((activity, index) => (
           <Link
             key={activity.id}
-            href={`/activities/${activity.id}`}
+            href={withActivityDate(`/activities/${activity.id}`, date)}
             onClick={() => trackSelection(activity.id, index + 1)}
             className="motion-reveal motion-press block rounded-2xl"
             style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}

@@ -1,5 +1,6 @@
 import type {
   ActivityPricePreviewRequest,
+  ActivityScheduleRequest,
   ActivityPricePreviewResponse,
   ActivityStatusUpdateRequest,
   ActivityUpsertRequest,
@@ -35,6 +36,51 @@ const DEFAULT_MY_ACTIVITY_DELETE_ERROR_MESSAGE = "활동을 삭제하지 못했�
 const DEFAULT_MY_ACTIVITY_STATUS_ERROR_MESSAGE = "활동 공개 상태를 변경하지 못했습니다.";
 const DEFAULT_BUDDY_SCHEDULE_DATES_ERROR_MESSAGE = "활동 일정 날짜를 불러오지 못했습니다.";
 const DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE = "신청자 목록을 불러오지 못했습니다.";
+
+export function createActivitySchedule(
+  activityId: number | string,
+  request: ActivityScheduleRequest,
+): Promise<MyActivityResult> {
+  return requestApiResult<MyActivityDetailResponse, "activity">(
+    `/api/activities/me/${activityId}/schedules`,
+    "activity",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    },
+    DEFAULT_MY_ACTIVITY_SAVE_ERROR_MESSAGE,
+  );
+}
+
+export function updateActivitySchedule(
+  activityId: number | string,
+  scheduleId: number | string,
+  request: ActivityScheduleRequest,
+): Promise<MyActivityResult> {
+  return requestApiResult<MyActivityDetailResponse, "activity">(
+    `/api/activities/me/${activityId}/schedules/${scheduleId}`,
+    "activity",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    },
+    DEFAULT_MY_ACTIVITY_SAVE_ERROR_MESSAGE,
+  );
+}
+
+export function deleteActivitySchedule(
+  activityId: number | string,
+  scheduleId: number | string,
+): Promise<MyActivityResult> {
+  return requestApiResult<MyActivityDetailResponse, "activity">(
+    `/api/activities/me/${activityId}/schedules/${scheduleId}`,
+    "activity",
+    { method: "DELETE" },
+    DEFAULT_MY_ACTIVITY_SAVE_ERROR_MESSAGE,
+  );
+}
 
 export async function getMyActivities(): Promise<MyActivitiesResult> {
   return requestApiResult<MyActivitySummaryResponse[], "activities">(

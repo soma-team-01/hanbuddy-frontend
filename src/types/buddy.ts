@@ -10,6 +10,8 @@ export type ActivityScheduleStatus = "OPEN" | "CLOSED" | "CANCELLED";
 export interface ActivityScheduleRequest {
   /** Asia/Seoul 오프셋을 포함한 date-time (예: 2026-07-19T13:00:00+09:00) */
   startAt: string;
+  /** 생략하면 신규 회차는 활동 기본값, 기존 회차는 기존 정원을 유지한다. */
+  maxCapacity?: number;
 }
 
 export interface ActivityItineraryRequest {
@@ -93,6 +95,10 @@ export interface ActivityScheduleResponse {
   startAt: string;
   bookedCount: number;
   status: ActivityScheduleStatus;
+  /** #189 이전 응답과 단계적 배포 호환. 최신 응답은 세 필드를 모두 제공한다. */
+  maxCapacity?: number;
+  heldSeats?: number;
+  remainingCapacity?: number;
 }
 
 export interface MyActivitySummaryResponse {

@@ -932,6 +932,11 @@ export function CapacityStep({
   t: Translator;
 }>) {
   const guests = Number(value) || 1;
+  const [page, setPage] = useState(0);
+  const pageSize = 5;
+  const lastPage = Math.max(0, Math.ceil(schedules.length / pageSize) - 1);
+  const currentPage = Math.min(page, lastPage);
+  const visibleSchedules = schedules.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   return (
     <div className="mx-auto w-full max-w-xl py-4">
       <h3 className="font-display font-bold">{t("capacity.defaultTitle")}</h3>
@@ -968,7 +973,7 @@ export function CapacityStep({
         <h3 className="font-display font-bold">{t("capacity.scheduleTitle")}</h3>
         <p className="mt-2 text-sm leading-6 text-muted">{t("capacity.scheduleHint")}</p>
         <ul className="mt-4 divide-y divide-line-soft">
-          {schedules.map((schedule) => (
+          {visibleSchedules.map((schedule) => (
             <li
               key={schedule.id}
               className="flex flex-wrap items-center justify-between gap-3 py-4"
@@ -1008,6 +1013,40 @@ export function CapacityStep({
             </li>
           ))}
         </ul>
+        {lastPage > 0 ? (
+          <nav
+            aria-label={t("capacity.scheduleTitle")}
+            className="mt-2 flex items-center justify-between gap-3 border-t border-line-soft pt-3"
+          >
+            <p aria-live="polite" className="text-xs text-muted">
+              {t("capacity.pageRange", {
+                from: currentPage * pageSize + 1,
+                to: Math.min((currentPage + 1) * pageSize, schedules.length),
+                total: schedules.length,
+              })}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-label={t("capacity.previous")}
+                disabled={currentPage === 0}
+                onClick={() => setPage(currentPage - 1)}
+                className="flex size-11 items-center justify-center rounded-full border border-line-soft hover:bg-panel disabled:opacity-30"
+              >
+                <ArrowLeftIcon className="size-4" />
+              </button>
+              <button
+                type="button"
+                aria-label={t("capacity.next")}
+                disabled={currentPage === lastPage}
+                onClick={() => setPage(currentPage + 1)}
+                className="flex size-11 items-center justify-center rounded-full border border-line-soft hover:bg-panel disabled:opacity-30"
+              >
+                <ArrowRightIcon className="size-4" />
+              </button>
+            </div>
+          </nav>
+        ) : null}
       </div>
     </div>
   );

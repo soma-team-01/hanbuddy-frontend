@@ -1,5 +1,11 @@
 {
   "ActivitySearch": {
+    "placeholder": "日付を選択",
+    "apply": "適用",
+    "timezone": "韓国時間 · KST",
+    "close": "カレンダーを閉じる",
+    "previousMonth": "前月",
+    "nextMonth": "翌月",
     "label": "参加希望日",
     "search": "検索",
     "clear": "クリア",
@@ -1491,6 +1497,9 @@
       }
     },
     "capacity": {
+      "previous": "前の開催回",
+      "next": "次の開催回",
+      "pageRange": "全{total}回中 {from}–{to}",
       "defaultTitle": "基本定員",
       "defaultHint": "新しい回の初期値です。既存の回の定員は変わりません。",
       "scheduleTitle": "日時ごとの定員",

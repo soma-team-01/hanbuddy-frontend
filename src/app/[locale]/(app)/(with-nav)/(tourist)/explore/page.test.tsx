@@ -39,9 +39,7 @@ describe("ExplorePage", () => {
       }),
     );
     expect(getPublicActivities).toHaveBeenCalledWith("en", "2026-10-10");
-    expect(screen.getByLabelText("Participation date", { selector: "input" })).toHaveValue(
-      "2026-10-10",
-    );
+    expect(screen.getByRole("button", { name: /Participation date/ })).toHaveTextContent("Oct 10");
   });
   it("does not fetch an unfiltered list for a malformed date", async () => {
     vi.mocked(getPublicActivities).mockClear();

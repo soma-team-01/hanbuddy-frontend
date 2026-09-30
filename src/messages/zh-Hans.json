@@ -1,5 +1,11 @@
 {
   "ActivitySearch": {
+    "placeholder": "选择日期",
+    "apply": "应用",
+    "timezone": "韩国时间 · KST",
+    "close": "关闭日历",
+    "previousMonth": "上个月",
+    "nextMonth": "下个月",
     "label": "参加日期",
     "search": "搜索",
     "clear": "清除",
@@ -1491,6 +1497,9 @@
       }
     },
     "capacity": {
+      "previous": "上一组场次",
+      "next": "下一组场次",
+      "pageRange": "共{total}场，第{from}–{to}场",
       "defaultTitle": "默认人数上限",
       "defaultHint": "用于新增场次，不改变已有场次的人数上限。",
       "scheduleTitle": "各日期及时段的人数上限",

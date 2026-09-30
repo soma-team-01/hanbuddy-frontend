@@ -1,5 +1,11 @@
 {
   "ActivitySearch": {
+    "placeholder": "Select a date",
+    "apply": "Apply",
+    "timezone": "Korea time · KST",
+    "close": "Close calendar",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
     "label": "Participation date",
     "search": "Search",
     "clear": "Clear",
@@ -1491,6 +1497,9 @@
       }
     },
     "capacity": {
+      "previous": "Previous sessions",
+      "next": "Next sessions",
+      "pageRange": "{from}–{to} of {total} sessions",
       "defaultTitle": "Default capacity",
       "defaultHint": "Used for new sessions. Existing session capacities stay unchanged.",
       "scheduleTitle": "Capacity by date and time",

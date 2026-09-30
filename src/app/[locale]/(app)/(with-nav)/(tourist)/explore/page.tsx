@@ -48,7 +48,9 @@ export default async function ExplorePage({
       <PageHeader title={t("title")} />
       <PageContainer className="flex-1 py-6 md:py-10">
         <main>
-          <ActivityDateFilter key={date ?? ""} date={date} />
+          <div className="relative z-10 mb-8 flex justify-start md:justify-end">
+            <ActivityDateFilter key={date ?? ""} date={date} />
+          </div>
           {!invalid ? (
             <ActivityFeed
               key={`${locale}-${date ?? ""}`}

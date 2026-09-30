@@ -1,5 +1,11 @@
 {
   "ActivitySearch": {
+    "placeholder": "언제 참여하시나요?",
+    "apply": "적용",
+    "timezone": "한국 시간 · KST",
+    "close": "달력 닫기",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
     "label": "참여 날짜",
     "search": "검색",
     "clear": "초기화",
@@ -1491,6 +1497,9 @@
       }
     },
     "capacity": {
+      "previous": "이전 회차",
+      "next": "다음 회차",
+      "pageRange": "전체 {total}개 중 {from}–{to}",
       "defaultTitle": "기본 정원",
       "defaultHint": "새 회차의 기본값입니다. 기존 회차 정원은 바뀌지 않습니다.",
       "scheduleTitle": "날짜·시간별 정원",

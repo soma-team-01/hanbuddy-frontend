@@ -6,7 +6,7 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { CapacityStep } from "./activity-create-steps";
 import type { ScheduleDraft } from "./activity-create-wizard";
 
-function Form() {
+function Form({ many = false }: { many?: boolean }) {
   const t = useTranslations("CreateActivity");
   const [value, setValue] = useState("8");
   const [schedules, setSchedules] = useState<ScheduleDraft[]>([
@@ -20,6 +20,14 @@ function Form() {
       remainingCapacity: 2,
     },
     { id: "two", date: "2099-10-11", startTime: "14:00", maxCapacity: "10" },
+    ...(many
+      ? Array.from({ length: 10 }, (_, i) => ({
+          id: `extra-${i}`,
+          date: `2099-10-${String(i + 12).padStart(2, "0")}`,
+          startTime: "14:00",
+          maxCapacity: "8",
+        }))
+      : []),
   ]);
   return (
     <CapacityStep
@@ -35,6 +43,20 @@ function Form() {
 }
 
 describe("capacity editor", () => {
+  it("limits long lists to five sessions per page and preserves edits between pages", () => {
+    renderWithIntl(<Form many />);
+    expect(screen.getAllByRole("spinbutton")).toHaveLength(5);
+    fireEvent.change(screen.getByRole("spinbutton", { name: "2099-10-10 · 10:00 (KST)" }), {
+      target: { value: "7" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next sessions" }));
+    expect(screen.getAllByRole("spinbutton")).toHaveLength(5);
+    expect(
+      screen.queryByRole("spinbutton", { name: "2099-10-10 · 10:00 (KST)" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous sessions" }));
+    expect(screen.getByRole("spinbutton", { name: "2099-10-10 · 10:00 (KST)" })).toHaveValue(7);
+  });
   it("edits individual capacities without changing existing sessions when the default changes", () => {
     renderWithIntl(<Form />);
     const first = screen.getByRole("spinbutton", { name: "2099-10-10 · 10:00 (KST)" });

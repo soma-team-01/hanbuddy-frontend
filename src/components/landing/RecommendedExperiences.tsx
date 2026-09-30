@@ -18,13 +18,14 @@ const RECOMMENDED_LIMIT = 4;
 
 export function RecommendedExperiences({ date }: Readonly<{ date?: string }> = {}) {
   const invalid = Boolean(date) && !isActivitySearchDate(date!);
-  return (
-    <>
-      <PageContainer className="pt-8">
-        <ActivityDateFilter key={date ?? ""} date={date} />
+  return invalid ? (
+    <section className="border-t border-line-soft bg-canvas-soft py-10 md:py-16">
+      <PageContainer>
+        <RecommendedHeading date={date} />
       </PageContainer>
-      {!invalid ? <RecommendedResults date={date} /> : null}
-    </>
+    </section>
+  ) : (
+    <RecommendedResults date={date} />
   );
 }
 
@@ -45,7 +46,7 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
         className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
       >
         <PageContainer>
-          <RecommendedHeading />
+          <RecommendedHeading date={date} />
           <p className="sr-only">{t("recommended.loading")}</p>
           <div
             data-testid="recommended-track"
@@ -73,6 +74,7 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
   if (activitiesQuery.error) {
     return (
       <RecommendedState
+        date={date}
         kind="error"
         onRetry={() => {
           void activitiesQuery.refetch();
@@ -81,7 +83,7 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
     );
   }
 
-  if (!activitiesQuery.data?.length) return <RecommendedState kind="empty" />;
+  if (!activitiesQuery.data?.length) return <RecommendedState kind="empty" date={date} />;
 
   const activities = activitiesQuery.data
     .slice(0, RECOMMENDED_LIMIT)
@@ -95,8 +97,8 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <RecommendedHeading />
+        <RecommendedHeading date={date} />
+        <div className="mt-4 flex justify-end">
           <Link
             href={withActivityDate("/explore", date)}
             className="inline-flex min-h-11 items-center self-start font-display text-sm font-bold text-primary transition-colors hover:text-primary-hover"
@@ -132,9 +134,10 @@ function RecommendedResults({ date }: Readonly<{ date?: string }>) {
 interface RecommendedStateProps {
   readonly kind: "empty" | "error";
   readonly onRetry?: () => void;
+  readonly date?: string;
 }
 
-function RecommendedState({ kind, onRetry }: RecommendedStateProps) {
+function RecommendedState({ kind, onRetry, date }: RecommendedStateProps) {
   const t = useTranslations("Landing");
   const isError = kind === "error";
   const Icon = isError ? CompassIcon : MapIcon;
@@ -147,7 +150,7 @@ function RecommendedState({ kind, onRetry }: RecommendedStateProps) {
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
-        <RecommendedHeading />
+        <RecommendedHeading date={date} />
         <div
           role={isError ? "alert" : undefined}
           className="mt-8 flex min-h-64 flex-col items-center justify-center rounded-[2rem] border border-line-soft bg-canvas-soft px-6 py-10 text-center shadow-[0_14px_35px_rgba(61,45,43,0.05)]"
@@ -180,23 +183,28 @@ function RecommendedState({ kind, onRetry }: RecommendedStateProps) {
   );
 }
 
-function RecommendedHeading() {
+function RecommendedHeading({ date }: Readonly<{ date?: string }>) {
   const t = useTranslations("Landing");
 
   return (
-    <div className="max-w-2xl">
-      <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-        {t("recommended.eyebrow")}
-      </p>
-      <h2
-        id="recommended-title"
-        className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
-      >
-        {t("recommended.title")}
-      </h2>
-      <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
-        {t("recommended.description")}
-      </p>
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="max-w-2xl">
+        <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+          {t("recommended.eyebrow")}
+        </p>
+        <h2
+          id="recommended-title"
+          className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
+        >
+          {t("recommended.title")}
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
+          {t("recommended.description")}
+        </p>
+      </div>
+      <div className="w-full shrink-0 lg:w-80">
+        <ActivityDateFilter key={date ?? ""} date={date} />
+      </div>
     </div>
   );
 }

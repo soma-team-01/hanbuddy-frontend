@@ -285,6 +285,81 @@ describe("BookingForm", () => {
     },
   );
 
+  it.each(["TOSS", "PAYPAL"] as const)(
+    "keeps the selected schedule after a capacity-only rejection and retries %s with fewer guests",
+    async (paymentProvider) => {
+      vi.mocked(getTouristActivity).mockResolvedValue({
+        status: "success",
+        activity: {
+          schedules: [
+            {
+              activityScheduleId: 101,
+              startAt: "2026-07-20T10:00:00+09:00",
+              remainingCapacity: 1,
+              status: "OPEN",
+            },
+          ],
+        } as TouristActivityDetail,
+      });
+      renderWithQueryClient(
+        <BookingForm activity={activity} paymentProviderMode={paymentProvider} />,
+      );
+      const submitLabel = paymentProvider === "TOSS" ? "Pay now" : "Pay $65.00 with PayPal";
+      fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
+      fireEvent.change(screen.getByPlaceholderText("Let your buddy know..."), {
+        target: { value: "Keep this request" },
+      });
+      await agreeAndSubmit(submitLabel);
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
+      expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 20");
+      expect(screen.getByRole("checkbox")).toBeChecked();
+      expect(screen.getByPlaceholderText("Let your buddy know...")).toHaveValue(
+        "Keep this request",
+      );
+      expect(mockedCreateApplication).not.toHaveBeenCalled();
+      expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("paypal-checkout")).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Decrease participants" }));
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: paymentProvider === "TOSS" ? "Pay now" : "Pay $32.50 with PayPal",
+        }),
+      );
+      await waitFor(() =>
+        expect(mockedCreateApplication).toHaveBeenCalledWith(
+          expect.objectContaining({
+            activityScheduleId: 101,
+            guestCount: 1,
+            specialRequest: "Keep this request",
+            refundPolicyAgreed: true,
+          }),
+          "EN",
+          paymentProvider,
+        ),
+      );
+    },
+  );
+
+  it.each([
+    { status: "CANCELLED", startAt: "2026-07-20T10:00:00+09:00" },
+    { status: "OPEN", startAt: "2026-07-18T23:59:59+09:00" },
+  ])("clears a $status schedule at $startAt even when it also lacks capacity", async (schedule) => {
+    vi.mocked(getTouristActivity).mockResolvedValue({
+      status: "success",
+      activity: {
+        schedules: [{ activityScheduleId: 101, remainingCapacity: 0, ...schedule }],
+      } as TouristActivityDetail,
+    });
+    renderWithQueryClient(<BookingForm activity={activity} />);
+    await agreeAndSubmit();
+    expect(await screen.findByRole("alert")).toHaveTextContent("24 hours");
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+  });
+
   it("limits participants to the selected session's remaining seats", () => {
     renderWithQueryClient(
       <BookingForm

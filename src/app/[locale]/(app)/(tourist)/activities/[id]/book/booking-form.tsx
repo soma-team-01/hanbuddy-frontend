@@ -223,18 +223,19 @@ export function BookingForm({
       const schedule = latest.schedules.find(
         (item) => item.activityScheduleId === request.activityScheduleId,
       );
-      if (
-        !schedule ||
-        schedule.status !== "OPEN" ||
-        !isBookingOpen(schedule.startAt) ||
-        schedule.remainingCapacity < request.guestCount
-      ) {
+      if (!schedule || schedule.status !== "OPEN" || !isBookingOpen(schedule.startAt)) {
         setSessionId("");
         throw new ApiClientError({
-          code:
-            schedule && schedule.remainingCapacity < request.guestCount
-              ? "APPLICATION400_CAPACITY_EXCEEDED"
-              : "APPLICATION400_BOOKING_CLOSED",
+          code: "APPLICATION400_BOOKING_CLOSED",
+          status: 400,
+          details: null,
+          backendMessage: null,
+        });
+      }
+      if (schedule.remainingCapacity < request.guestCount) {
+        // Keep the date selected so the guest can reduce their party size and retry.
+        throw new ApiClientError({
+          code: "APPLICATION400_CAPACITY_EXCEEDED",
           status: 400,
           details: null,
           backendMessage: null,

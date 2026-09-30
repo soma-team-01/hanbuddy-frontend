@@ -1512,6 +1512,7 @@
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
+      "minimum": "The minimum price per person is ₩{amount, number}.",
       "notice": "This amount is shown to guests as the price per person in Korean won."
     },
     "inclusions": {
@@ -1592,7 +1593,7 @@
       "itineraryDurationInvalid": "Enter a duration greater than 0 for every activity.",
       "itineraryPhotoRequired": "Add a photo for every activity.",
       "maxGuestsInvalid": "Enter a whole-number capacity greater than 0.",
-      "priceInvalid": "Enter a whole-number price greater than 0.",
+      "priceInvalid": "Enter a whole-number price of at least ₩15,000 per person.",
       "inclusionsRequired": "Add at least one included item.",
       "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",

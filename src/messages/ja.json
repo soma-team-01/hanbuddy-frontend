@@ -1512,6 +1512,7 @@
       "pastTimeHint": "今日の開始時刻は現在時刻 (KST) より遅くする必要があります。"
     },
     "price": {
+      "minimum": "1人あたりの最低料金は{amount, number}ウォンです。",
       "notice": "この金額は、韓国ウォンでの 1 人あたりの料金としてゲストに表示されます。"
     },
     "inclusions": {
@@ -1592,7 +1593,7 @@
       "itineraryDurationInvalid": "すべてのアクティビティに 0 より大きい期間を入力します。",
       "itineraryPhotoRequired": "すべてのアクティビティに写真を追加します。",
       "maxGuestsInvalid": "0 より大きい整数の容量を入力します。",
-      "priceInvalid": "0 より大きい整数の価格を入力します。",
+      "priceInvalid": "1人あたりの料金を15,000ウォン以上の整数で入力してください。",
       "inclusionsRequired": "少なくとも 1 つの付属アイテムを追加します。",
       "discountInvalid": "終了日を選択し、1 ～ 100 の整数の割引を入力します。",
       "restrictionsRequired": "ゲストが知っておくべきことを少なくとも 1 つ選択するか、特筆すべき事項がないことを確認します。",

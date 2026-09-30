@@ -659,6 +659,15 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Set the maximum group size" })).toBeInTheDocument();
     clickNext();
 
+    expect(screen.getByText("The minimum price per person is ₩15,000.")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "Price per person" }), {
+      target: { value: "14999" },
+    });
+    clickNext();
+    expect(screen.getByRole("textbox", { name: "Price per person" })).toHaveValue("14999");
+    expect(screen.getByRole("alert")).toHaveTextContent("at least ₩15,000");
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+
     fireEvent.change(screen.getByRole("textbox", { name: "Price per person" }), {
       target: { value: "50000" },
     });
@@ -957,6 +966,26 @@ describe("CreateActivityForm", () => {
       />,
     );
   }
+
+  it("blocks next and edit submission below 15,000 won without silently changing the price", async () => {
+    const detail = { ...buildEditDetail(), price: 14999 };
+    renderEditForm(detail);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    const price = screen.getByRole("textbox", { name: "Price per person" });
+    expect(price).toHaveValue("14999");
+    expect(screen.getByRole("alert")).toHaveTextContent("at least ₩15,000");
+    expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
+    expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
+    clickNext();
+    expect(screen.getByRole("textbox", { name: "Price per person" })).toBeInTheDocument();
+    fireEvent.change(price, { target: { value: "15000" } });
+    clickNext();
+    expect(screen.getByRole("heading", { name: "Add a discount" })).toBeInTheDocument();
+    mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
+    expect(mockedUpdateMyActivity.mock.calls[0][1].price).toBe(15000);
+  });
 
   it("starts edit mode in review and saves reused image keys through the update API", async () => {
     const detail = buildEditDetail();

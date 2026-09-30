@@ -1315,6 +1315,7 @@ export function PriceStep({
         <span className="font-display text-4xl font-extrabold text-ink sm:text-5xl">₩</span>
         <input
           id="price-per-person"
+          aria-describedby="price-minimum price-notice"
           autoFocus
           inputMode="numeric"
           pattern="[0-9]*"
@@ -1324,7 +1325,12 @@ export function PriceStep({
           className="max-w-[8ch] min-w-0 bg-transparent text-center font-display text-4xl font-extrabold tracking-tight text-ink outline-none placeholder:text-muted/25 focus-visible:!outline-none sm:text-5xl"
         />
       </div>
-      <p className="mt-5 text-sm leading-6 text-muted">{t("price.notice")}</p>
+      <p id="price-minimum" className="mt-5 text-sm font-semibold text-primary">
+        {t("price.minimum", { amount: ACTIVITY_CREATE_LIMITS.pricePerPerson.min })}
+      </p>
+      <p id="price-notice" className="mt-2 text-sm leading-6 text-muted">
+        {t("price.notice")}
+      </p>
     </div>
   );
 }

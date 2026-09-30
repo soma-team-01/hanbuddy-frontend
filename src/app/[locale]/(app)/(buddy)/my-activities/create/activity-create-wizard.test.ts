@@ -153,6 +153,9 @@ describe("activity creation wizard", () => {
     ],
     ["capacity", { maxGuests: "0" }, "maxGuestsInvalid"],
     ["price", { pricePerPerson: "0" }, "priceInvalid"],
+    ["price", { pricePerPerson: "14999" }, "priceInvalid"],
+    ["price", { pricePerPerson: "15000.5" }, "priceInvalid"],
+    ["price", { pricePerPerson: "" }, "priceInvalid"],
     ["inclusions", { inclusions: "" }, "inclusionsRequired"],
     [
       "discount",
@@ -164,6 +167,10 @@ describe("activity creation wizard", () => {
 
   it.each(validationCases)("validates the %s step", (step, overrides, error) => {
     expect(validateActivityCreateStep(step, createCompleteDraft(overrides))).toBe(error);
+  });
+
+  it.each(["15000", "15001"])("accepts the minimum price boundary: %s", (pricePerPerson) => {
+    expect(validateActivityCreateStep("price", createCompleteDraft({ pricePerPerson }))).toBeNull();
   });
 
   it("accepts the expanded API limits without truncation", () => {

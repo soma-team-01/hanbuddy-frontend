@@ -1512,6 +1512,7 @@
       "pastTimeHint": "今天的开始时间必须晚于当前时间 (KST)。"
     },
     "price": {
+      "minimum": "每人最低价格为{amount, number}韩元。",
       "notice": "该金额以每人韩元的价格显示给客人。"
     },
     "inclusions": {
@@ -1592,7 +1593,7 @@
       "itineraryDurationInvalid": "为每项活动输入大于 0 的持续时间。",
       "itineraryPhotoRequired": "为每项活动添加照片。",
       "maxGuestsInvalid": "输入大于 0 的整数容量。",
-      "priceInvalid": "输入大于 0 的整数价格。",
+      "priceInvalid": "请输入不低于15,000韩元的每人价格（整数）。",
       "inclusionsRequired": "添加至少一项包含的物品。",
       "discountInvalid": "选择结束日期并输入 1 到 100 之间的整数折扣。",
       "restrictionsRequired": "至少选择一件事客人应该知道，或确认没有什么需要注意的。",

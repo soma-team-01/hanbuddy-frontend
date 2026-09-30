@@ -35,6 +35,7 @@ export const ACTIVITY_CREATE_LIMITS = {
   meetingPlace: { max: 500 },
   listItem: { max: 500 },
   listItems: { max: 20 },
+  pricePerPerson: { min: 15000 },
   // 백엔드 ActivityUpsertRequest 계약 상한
   maxGuests: { max: 100 },
   itineraryItems: { max: 20 },
@@ -282,7 +283,10 @@ export function validateActivityCreateStep(
         ? null
         : "maxGuestsTooMany";
     case "price":
-      return isPositiveInteger(draft.pricePerPerson) ? null : "priceInvalid";
+      return isPositiveInteger(draft.pricePerPerson) &&
+        Number(draft.pricePerPerson) >= ACTIVITY_CREATE_LIMITS.pricePerPerson.min
+        ? null
+        : "priceInvalid";
     case "inclusions":
       return draft.inclusions.trim()
         ? validateActivityList(draft.inclusions)

@@ -5,7 +5,7 @@ import { getReferralApplicants } from "@/lib/api/referral";
 import { unwrapApiResult } from "@/lib/query/result";
 import { isUnauthenticatedError } from "@/lib/api/errors";
 import { AdminPagination, formatAdminDate } from "@/app/admin/admin-ui";
-import type { MyActivitySummaryResponse } from "@/types/buddy";
+import type { MyActivitySummaryResponse, ActivityScheduleResponse } from "@/types/buddy";
 
 export const referralInputClass =
   "mt-1 min-h-11 w-full rounded-xl border border-line-strong bg-white px-3 text-sm outline-none focus:border-primary";
@@ -54,13 +54,17 @@ export function ReferralApplicants({
   admin = false,
   activities = [],
   initialActivityId = "",
+  fixedActivityId,
+  schedules = [],
 }: {
   admin?: boolean;
   activities?: MyActivitySummaryResponse[];
   initialActivityId?: string;
+  fixedActivityId?: string;
+  schedules?: ActivityScheduleResponse[];
 }) {
   const [filters, setFilters] = useState({
-    activityId: initialActivityId,
+    activityId: fixedActivityId ?? initialActivityId,
     scheduleId: "",
     status: "CONFIRMED",
     from: "",
@@ -73,6 +77,7 @@ export function ReferralApplicants({
   Object.entries(applied).forEach(([key, value]) => {
     if (value) params.set(key, value);
   });
+  if (fixedActivityId) params.set("activityId", fixedActivityId);
   const query = useQuery({
     queryKey: ["referral", admin ? "admin-applicants" : "partner-applicants", params.toString()],
     queryFn: async () => unwrapApiResult(await getReferralApplicants(admin, params), "data"),
@@ -81,6 +86,7 @@ export function ReferralApplicants({
   });
   return (
     <section className="space-y-5">
+      {fixedActivityId && <h2 className="text-lg font-bold">신청 내역</h2>}
       <form
         className="grid gap-3 rounded-2xl border border-line-soft p-4 sm:grid-cols-2 xl:grid-cols-5"
         onSubmit={(e) => {
@@ -94,25 +100,46 @@ export function ReferralApplicants({
           setPage(0);
         }}
       >
-        <label className="text-xs font-semibold text-muted">
-          활동
-          <select
-            value={filters.activityId}
-            className={referralInputClass}
-            onChange={(e) => setFilters({ ...filters, activityId: e.target.value, scheduleId: "" })}
-          >
-            <option value="">전체 활동</option>
-            {initialActivityId &&
-              !activities.some((a) => String(a.activityId) === initialActivityId) && (
-                <option value={initialActivityId}>선택한 활동</option>
-              )}
-            {activities.map((a) => (
-              <option value={a.activityId} key={a.activityId}>
-                {a.title}
-              </option>
-            ))}
-          </select>
-        </label>
+        {fixedActivityId ? (
+          <label className="min-w-0 text-xs font-semibold text-muted">
+            일정
+            <select
+              className={referralInputClass}
+              value={filters.scheduleId}
+              onChange={(e) => setFilters({ ...filters, scheduleId: e.target.value })}
+            >
+              <option value="">전체 일정</option>
+              {schedules.map((schedule) => (
+                <option key={schedule.scheduleId} value={schedule.scheduleId}>
+                  {formatAdminDate(schedule.startAt, true)}
+                  {schedule.status === "CANCELLED" ? " · 취소" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <label className="text-xs font-semibold text-muted">
+            활동
+            <select
+              value={filters.activityId}
+              className={referralInputClass}
+              onChange={(e) =>
+                setFilters({ ...filters, activityId: e.target.value, scheduleId: "" })
+              }
+            >
+              <option value="">전체 활동</option>
+              {initialActivityId &&
+                !activities.some((a) => String(a.activityId) === initialActivityId) && (
+                  <option value={initialActivityId}>선택한 활동</option>
+                )}
+              {activities.map((a) => (
+                <option value={a.activityId} key={a.activityId}>
+                  {a.title}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="text-xs font-semibold text-muted">
           신청 상태
           <select
@@ -161,8 +188,8 @@ export function ReferralApplicants({
         <>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-bold">
-              신청 <span className="text-primary">{query.data.totalElements.toLocaleString()}</span>
-              건
+              {fixedActivityId ? "조회 결과 " : "신청 "}
+              <span className="text-primary">{query.data.totalElements.toLocaleString()}</span>건
             </h2>
             <p className="text-xs text-muted">
               {applied.status ? "선택한 상태 기준" : "취소 건 포함"} · 참여 인원 합계가 아닙니다
@@ -180,7 +207,9 @@ export function ReferralApplicants({
                 className="min-w-0 rounded-2xl border border-line-soft p-5"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-bold break-words">{row.activityTitle}</h3>
+                  <h3 className="font-bold break-words">
+                    {fixedActivityId ? row.applicantName : row.activityTitle}
+                  </h3>
                   <span
                     className={`shrink-0 text-xs font-semibold ${row.status === "CANCELLED" ? "text-muted" : "text-primary"}`}
                   >
@@ -195,7 +224,7 @@ export function ReferralApplicants({
                   {formatAdminDate(row.startAt, true)} · {row.guestCount}명
                 </p>
                 <div className="mt-4 border-t border-line-soft pt-4">
-                  <p className="font-semibold">{row.applicantName}</p>
+                  {!fixedActivityId && <p className="font-semibold">{row.applicantName}</p>}
                   <p className="mt-1 text-sm break-all text-muted">
                     {row.contactMethod} ·{" "}
                     {[row.contactCountryCode, row.contactIdentifier].filter(Boolean).join(" ")}

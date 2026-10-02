@@ -1,8 +1,8 @@
 "use client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { getAdminBuddies } from "@/lib/api/admin";
+import { initialBuddySearchCursor, searchReferralBuddies } from "@/lib/api/referral-admin-search";
 import {
   getReferralInvitations,
   issueReferralInvitation,
@@ -18,16 +18,21 @@ import {
 } from "@/components/referral/ReferralApplicants";
 import type { AdminBuddySummary } from "@/types/admin";
 
-export function ReferralInvitations() {
+export function ReferralInvitations({
+  onPendingChange,
+  onNavigate,
+}: {
+  onPendingChange?: (pending: boolean) => void;
+  onNavigate?: () => void;
+}) {
   const client = useQueryClient();
-  const [searchField, setSearchField] = useState<"displayName" | "name" | "email">("displayName");
   const [term, setTerm] = useState("");
-  const [search, setSearch] = useState<{ field: typeof searchField; term: string } | null>(null);
-  const [searchPage, setSearchPage] = useState(0);
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<AdminBuddySummary | null>(null);
   const [days, setDays] = useState(7);
   const [page, setPage] = useState(0);
   const [issuedLink, setIssuedLink] = useState("");
+  const [issuedFor, setIssuedFor] = useState<{ id: number; name: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [pending, setPending] = useState(false);
   const lock = useRef(false);
@@ -38,26 +43,25 @@ export function ReferralInvitations() {
     retry: false,
     gcTime: 0,
   });
-  const buddies = useQuery({
-    queryKey: ["referral", "buddy-search", search, searchPage],
-    queryFn: async () =>
-      unwrapApiResult(
-        await getAdminBuddies({
-          [search!.field]: search!.term,
-          accountStatus: "ACTIVE",
-          page: searchPage,
-          size: 20,
-        }),
-        "buddies",
-      ),
+  const buddies = useInfiniteQuery({
+    queryKey: ["referral", "buddy-search-combined", search],
+    initialPageParam: initialBuddySearchCursor,
+    queryFn: ({ pageParam }) => searchReferralBuddies(search, pageParam),
+    getNextPageParam: (last) => last.next,
     enabled: !!search,
     retry: false,
     gcTime: 0,
   });
+  const uniqueBuddies = [
+    ...new Map(
+      buddies.data?.pages.flatMap((page) => page.buddies).map((buddy) => [buddy.buddyId, buddy]),
+    ).values(),
+  ];
   async function issue() {
     if (!selected || lock.current) return;
     lock.current = true;
     setPending(true);
+    onPendingChange?.(true);
     setError(null);
     setIssuedLink("");
     setCopied(false);
@@ -70,6 +74,7 @@ export function ReferralInvitations() {
         "data",
       );
       if (!result.code) throw new Error("Invitation code unavailable");
+      setIssuedFor({ id: result.invitationId, name: selected.displayName });
       setIssuedLink(
         `${window.location.origin}/ko/referral/create#code=${encodeURIComponent(result.code)}`,
       );
@@ -79,6 +84,7 @@ export function ReferralInvitations() {
     } finally {
       lock.current = false;
       setPending(false);
+      onPendingChange?.(false);
     }
   }
   return (
@@ -89,34 +95,24 @@ export function ReferralInvitations() {
           className="mt-4 flex flex-wrap items-end gap-3"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!term.trim()) return;
-            setSearch({ field: searchField, term: term.trim() });
-            setSearchPage(0);
+            if (!term.trim() || lock.current) return;
+            if (search === term.trim()) void buddies.refetch();
+            setSearch(term.trim());
             setSelected(null);
           }}
         >
-          <label className="text-xs font-semibold text-muted">
-            검색 조건
-            <select
-              className={referralInputClass}
-              value={searchField}
-              onChange={(e) => setSearchField(e.target.value as typeof searchField)}
-            >
-              <option value="displayName">닉네임</option>
-              <option value="name">이름</option>
-              <option value="email">이메일</option>
-            </select>
-          </label>
           <label className="min-w-0 flex-1 text-xs font-semibold text-muted">
-            활성 버디 검색
+            업체 검색
             <input
               required
+              disabled={pending}
+              placeholder="닉네임, 이름 또는 이메일"
               className={referralInputClass}
               value={term}
               onChange={(e) => setTerm(e.target.value)}
             />
           </label>
-          <button type="submit" className={referralButtonClass}>
+          <button type="submit" disabled={pending} className={referralButtonClass}>
             검색
           </button>
         </form>
@@ -126,16 +122,15 @@ export function ReferralInvitations() {
         )}
         {buddies.data && (
           <div className="mt-4 space-y-2">
-            {!buddies.data.content.length && (
-              <p className="text-sm text-muted">검색 결과가 없습니다.</p>
-            )}
-            {buddies.data.content.map((buddy) => (
+            {!uniqueBuddies.length && <p className="text-sm text-muted">검색 결과가 없습니다.</p>}
+            {uniqueBuddies.map((buddy) => (
               <label
                 key={buddy.buddyId}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm ${selected?.buddyId === buddy.buddyId ? "border-primary" : "border-line-soft"}`}
               >
                 <input
                   type="radio"
+                  disabled={pending}
                   name="partner"
                   className="accent-primary"
                   checked={selected?.buddyId === buddy.buddyId}
@@ -149,11 +144,16 @@ export function ReferralInvitations() {
                 </span>
               </label>
             ))}
-            <AdminPagination
-              page={searchPage}
-              totalPages={buddies.data.totalPages}
-              onPage={setSearchPage}
-            />
+            {buddies.hasNextPage && (
+              <button
+                type="button"
+                className={referralButtonClass}
+                disabled={buddies.isFetching || pending}
+                onClick={() => void buddies.fetchNextPage()}
+              >
+                {buddies.isFetchingNextPage ? "불러오는 중…" : "검색 결과 더 보기"}
+              </button>
+            )}
           </div>
         )}
         {selected && (
@@ -166,6 +166,7 @@ export function ReferralInvitations() {
               <select
                 className={referralInputClass}
                 value={days}
+                disabled={pending}
                 onChange={(e) => setDays(Number(e.target.value))}
               >
                 {[1, 7, 14, 30].map((day) => (
@@ -192,6 +193,7 @@ export function ReferralInvitations() {
         ) : null}
         {issuedLink && (
           <div className="mt-5 space-y-3 rounded-xl border border-primary/30 p-4">
+            <p className="text-sm font-bold">{issuedFor?.name} 등록 링크</p>
             <p className="text-sm font-semibold">이 링크는 지금만 복사할 수 있어요.</p>
             <input
               aria-label="발급된 등록 링크"
@@ -220,8 +222,8 @@ export function ReferralInvitations() {
           </div>
         )}
       </section>
-      <section>
-        <h2 className="mb-4 text-lg font-bold">발급 내역</h2>
+      <details className="rounded-2xl border border-line-soft p-5">
+        <summary className="mb-4 cursor-pointer font-semibold">발급 내역</summary>
         {list.isPending ? (
           <p>불러오는 중…</p>
         ) : list.error ? (
@@ -261,6 +263,11 @@ export function ReferralInvitations() {
                       {item.activityId && (
                         <Link
                           href={`/admin/referrals?activityId=${item.activityId}`}
+                          onClick={(e) => {
+                            if (lock.current) e.preventDefault();
+                            else onNavigate?.();
+                          }}
+                          aria-disabled={pending}
                           className="text-sm text-primary underline"
                         >
                           등록 활동
@@ -281,19 +288,21 @@ export function ReferralInvitations() {
                               return;
                             lock.current = true;
                             setPending(true);
+                            onPendingChange?.(true);
                             setError(null);
                             try {
                               unwrapApiResult(
                                 await revokeReferralInvitation(item.invitationId),
                                 "data",
                               );
-                              setIssuedLink("");
+                              if (issuedFor?.id === item.invitationId) setIssuedLink("");
                               await list.refetch();
                             } catch (failure) {
                               setError(failure);
                             } finally {
                               lock.current = false;
                               setPending(false);
+                              onPendingChange?.(false);
                             }
                           }}
                         >
@@ -308,7 +317,7 @@ export function ReferralInvitations() {
             <AdminPagination page={page} totalPages={list.data.totalPages} onPage={setPage} />
           </>
         ) : null}
-      </section>
+      </details>
     </div>
   );
 }

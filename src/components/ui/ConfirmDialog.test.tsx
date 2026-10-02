@@ -53,6 +53,38 @@ describe("ConfirmDialog", () => {
     );
   });
 
+  it("blurs the page behind the dialog by default", () => {
+    renderWithIntl(
+      <ConfirmDialog
+        title="Log out?"
+        confirmLabel="Log Out"
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("dialog")).toHaveClass(
+      "backdrop:bg-ink/45",
+      "backdrop:backdrop-blur-[3px]",
+    );
+  });
+
+  it("keeps the dim but drops the blur when backdropBlur is off", () => {
+    renderWithIntl(
+      <ConfirmDialog
+        title="Analytics & advertising"
+        confirmLabel="Allow"
+        backdropBlur={false}
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("backdrop:bg-ink/45");
+    expect(dialog).not.toHaveClass("backdrop:backdrop-blur-[3px]");
+  });
+
   it("calls onConfirm and onClose from the action buttons", () => {
     const onConfirm = vi.fn();
     const onClose = vi.fn();

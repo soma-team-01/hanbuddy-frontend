@@ -53,11 +53,16 @@ function BuddySearchOption({
     staleTime: Infinity,
     gcTime: 0,
   });
+  const emailLabel =
+    email.data ?? (email.isError ? "이메일을 불러오지 못했습니다." : "이메일 확인 중…");
   return (
     <div
       className={`rounded-xl border p-3 text-sm ${checked ? "border-primary" : "border-line-soft"}`}
     >
-      <label className="flex cursor-pointer items-center gap-3">
+      <label
+        aria-label={`${buddy.displayName} · ${buddy.name} ${emailLabel}`}
+        className="flex cursor-pointer items-center gap-3"
+      >
         <input
           type="radio"
           disabled={pending || !email.data}
@@ -70,9 +75,7 @@ function BuddySearchOption({
           <strong className="block break-words">
             {buddy.displayName} · {buddy.name}
           </strong>
-          <span className="block break-all text-muted">
-            {email.data ?? (email.isError ? "이메일을 불러오지 못했습니다." : "이메일 확인 중…")}
-          </span>
+          <span className="block break-all text-muted">{emailLabel}</span>
         </span>
       </label>
       {email.isError && (
@@ -179,7 +182,7 @@ export function ReferralInvitations({
           }}
         >
           <label className="min-w-0 flex-1 text-xs font-semibold text-muted">
-            업체 검색
+            <span>업체 검색</span>
             <input
               required
               disabled={pending}
@@ -230,7 +233,7 @@ export function ReferralInvitations({
               <strong>{selected.displayName}</strong> 계정 전용 링크
             </p>
             <label className="text-xs font-semibold text-muted">
-              유효 기간
+              <span>유효 기간</span>
               <select
                 className={referralInputClass}
                 value={days}

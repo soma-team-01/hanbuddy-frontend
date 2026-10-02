@@ -100,5 +100,5 @@ export async function getReferralApplicationDates(
       if (date && date >= from && date <= until) dates.add(date);
     }
   }
-  return [...dates].sort();
+  return [...dates].sort((a, b) => a.localeCompare(b));
 }

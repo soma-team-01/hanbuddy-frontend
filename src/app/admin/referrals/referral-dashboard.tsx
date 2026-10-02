@@ -143,7 +143,7 @@ function CreateInvitationButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
     >
       <span aria-hidden="true">+</span>
-      등록 링크 만들기
+      <span>등록 링크 만들기</span>
     </button>
   );
 }
@@ -188,7 +188,7 @@ function ReferralActivityList({ onCreateInvitation }: { onCreateInvitation: () =
         }}
       >
         <label className="min-w-0 flex-1 text-xs font-semibold text-muted">
-          활동 등록자 검색
+          <span>활동 등록자 검색</span>
           <input
             className={referralInputClass}
             placeholder="버디 닉네임, 이름 또는 이메일"

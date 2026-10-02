@@ -77,7 +77,8 @@ export async function handleReferralRoute(request: NextRequest, segments: string
       const body = parsed.body;
       if (admin && resource === "invitations" && segments.length === 1) {
         positiveReferralId(String(body.buddyId));
-        const expires = typeof body.expiresAt === "string" ? Date.parse(body.expiresAt) : NaN;
+        const expires =
+          typeof body.expiresAt === "string" ? Date.parse(body.expiresAt) : Number.NaN;
         if (
           !Number.isFinite(expires) ||
           expires <= Date.now() ||

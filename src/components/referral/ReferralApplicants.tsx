@@ -141,7 +141,7 @@ export function ReferralApplicants({
       >
         {compactStatus ? null : fixedActivityId ? (
           <label className="min-w-0 text-xs font-semibold text-muted">
-            일정
+            <span>일정</span>
             <select
               className={referralInputClass}
               value={filters.scheduleId}
@@ -158,7 +158,7 @@ export function ReferralApplicants({
           </label>
         ) : (
           <label className="text-xs font-semibold text-muted">
-            활동
+            <span>활동</span>
             <select
               value={filters.activityId}
               className={referralInputClass}
@@ -181,7 +181,7 @@ export function ReferralApplicants({
         )}
         {!compactStatus && (
           <label className="text-xs font-semibold text-muted">
-            신청 상태
+            <span>신청 상태</span>
             <select
               value={filters.status}
               className={referralInputClass}
@@ -204,7 +204,7 @@ export function ReferralApplicants({
         ) : (
           <>
             <label className="text-xs font-semibold text-muted">
-              신청일 시작 (한국 시간)
+              <span>신청일 시작 (한국 시간)</span>
               <input
                 type="date"
                 value={filters.from}
@@ -213,7 +213,7 @@ export function ReferralApplicants({
               />
             </label>
             <label className="text-xs font-semibold text-muted">
-              신청일 종료 (한국 시간)
+              <span>신청일 종료 (한국 시간)</span>
               <input
                 type="date"
                 value={filters.until}

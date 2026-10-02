@@ -1843,7 +1843,10 @@ export function RestrictionsStep({
 
   return (
     <div className="w-full space-y-6">
-      <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-primary/45 bg-white px-4 text-sm font-bold text-ink transition hover:border-primary lg:min-h-16">
+      <label
+        aria-label={`${t("restrictions.none")} ${t("restrictions.noneDescription")}`}
+        className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-primary/45 bg-white px-4 text-sm font-bold text-ink transition hover:border-primary lg:min-h-16"
+      >
         <input
           type="checkbox"
           checked={hasNoRestrictions}

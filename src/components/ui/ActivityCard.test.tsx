@@ -60,10 +60,22 @@ describe("ActivityCard", () => {
     expect(frame).not.toHaveClass("aspect-[3/2]");
   });
 
-  it("treats the photo as decorative so the link name reads the title once", () => {
-    const { container } = renderWithIntl(<ActivityCard activity={activity} />);
+  it("describes the photo with the activity title so image search can read it", () => {
+    renderWithIntl(<ActivityCard activity={activity} />);
 
-    expect(container.querySelector("img")).toHaveAttribute("alt", "");
+    expect(screen.getByRole("img", { name: "Market walk" })).toBeInTheDocument();
+  });
+
+  it("keeps the meeting place on its own line below the duration", () => {
+    const { container } = renderWithIntl(
+      <ActivityCard activity={{ ...activity, durationMinutes: 90 }} />,
+    );
+
+    const location = container.querySelector('[data-slot="activity-card-location"]');
+    const duration = screen.getByText("1 hour 30min").parentElement;
+    expect(location?.previousElementSibling).toBe(duration);
+    expect(location?.parentElement).toHaveClass("flex-col");
+    expect(location?.parentElement).not.toHaveClass("flex-wrap");
   });
 
   it("shows the discount percent chip and the signature-colored discounted price", () => {
@@ -178,8 +190,8 @@ describe("ActivityCard", () => {
   });
 
   it("loads the card image eagerly when requested", () => {
-    const { container } = renderWithIntl(<ActivityCard activity={activity} eagerImage />);
+    renderWithIntl(<ActivityCard activity={activity} eagerImage />);
 
-    expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
+    expect(screen.getByRole("img", { name: "Market walk" })).toHaveAttribute("loading", "eager");
   });
 });

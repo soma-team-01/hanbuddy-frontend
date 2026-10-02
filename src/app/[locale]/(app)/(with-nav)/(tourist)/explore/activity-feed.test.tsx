@@ -111,7 +111,10 @@ describe("ActivityFeed", () => {
       "lg:grid-cols-3",
       "xl:grid-cols-4",
     );
-    expect(activityLink.querySelector("img")).toHaveAttribute("loading", "eager");
+    expect(screen.getByRole("img", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
+      "loading",
+      "eager",
+    );
     expect(activityLink).toHaveClass("motion-reveal", "motion-press");
     expect(activityLink).toHaveStyle({ animationDelay: "0ms" });
     await waitFor(() => expect(analytics.trackList).toHaveBeenCalledWith(["42"], "42"));

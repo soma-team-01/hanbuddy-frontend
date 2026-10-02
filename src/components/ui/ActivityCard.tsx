@@ -24,10 +24,9 @@ export function ActivityCard({
   return (
     <article className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft shadow-[0_8px_22px_rgba(61,45,43,0.06)] transition duration-200 hover:shadow-[0_14px_32px_rgba(61,45,43,0.1)]">
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-panel">
-        {/* 제목이 바로 아래 있어 링크 이름에서 두 번 읽히지 않게 장식 이미지로 둔다 */}
         <Image
           src={activity.imageUrl}
-          alt=""
+          alt={activity.title}
           fill
           loading={eagerImage ? "eager" : undefined}
           sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, (max-width: 1279px) 33vw, 25vw"
@@ -52,15 +51,16 @@ export function ActivityCard({
         </h2>
 
         {activity.durationMinutes !== undefined || meetingPlace ? (
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-5 text-muted">
+          // 장소는 길이와 무관하게 항상 둘째 줄에 둬 카드마다 줄 수가 같게 한다
+          <div className="flex min-w-0 flex-col gap-1 text-sm leading-5 text-muted">
             {activity.durationMinutes !== undefined ? (
-              <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+              <p className="flex items-center gap-1.5">
                 <ClockIcon className="size-4 shrink-0" />
                 <span>{formatDuration(t, activity.durationMinutes)}</span>
               </p>
             ) : null}
             {meetingPlace ? (
-              <p data-slot="activity-card-location" className="flex min-w-0 items-center gap-1">
+              <p data-slot="activity-card-location" className="flex min-w-0 items-center gap-1.5">
                 <MapPinIcon className="size-4 shrink-0" />
                 <span className="truncate">{meetingPlace}</span>
               </p>

@@ -22,15 +22,62 @@ const activity: Activity = {
 };
 
 describe("ActivityCard", () => {
-  it("renders the title and per-person price without the buddy name or location", () => {
+  it("renders the title, meeting place and per-person price without the buddy name", () => {
     renderWithIntl(<ActivityCard activity={activity} />);
 
     expect(screen.getByRole("heading", { name: "Market walk" })).toHaveClass("text-ink");
     expect(screen.getByText("₩35,000")).toHaveClass("text-ink");
     expect(screen.getByText("per person")).toBeInTheDocument();
     expect(screen.queryByText("Min Buddy")).not.toBeInTheDocument();
+    expect(screen.getByText("Gwangjang Market")).toHaveClass("truncate");
     expect(screen.queryByText("Seoul")).not.toBeInTheDocument();
     expect(screen.queryByText("Sold out")).not.toBeInTheDocument();
+  });
+
+  it("omits the meeting place when the API does not provide one", () => {
+    const { container } = renderWithIntl(
+      <ActivityCard activity={{ ...activity, meetingPoint: { name: "", area: "" } }} />,
+    );
+
+    expect(container.querySelector('[data-slot="activity-card-location"]')).toBeNull();
+  });
+
+  it("orders the price group as KRW price, parenthesized reference price, then per person", () => {
+    renderWithIntl(
+      <ActivityCard activity={{ ...activity, referencePrice: 32.5, referenceCurrency: "USD" }} />,
+    );
+
+    const priceGroup = screen.getByText("₩35,000").parentElement;
+    expect(priceGroup).toHaveClass("flex-wrap", "items-baseline");
+    expect(priceGroup).toHaveTextContent(/^₩35,000\s*\(≈ \$32\.50\)\s*per person$/);
+  });
+
+  it("keeps a compact 16:9 photo at every width", () => {
+    const { container } = renderWithIntl(<ActivityCard activity={activity} />);
+
+    const frame = container.querySelector("img")?.parentElement;
+    expect(frame).toHaveClass("aspect-[16/9]");
+    expect(frame).not.toHaveClass("aspect-[3/2]");
+  });
+
+  it("describes the photo with the activity title so image search can read it", () => {
+    renderWithIntl(<ActivityCard activity={activity} />);
+
+    expect(screen.getByRole("img", { name: "Market walk" })).toBeInTheDocument();
+  });
+
+  it("puts the meeting place first and the duration after it on one line", () => {
+    const { container } = renderWithIntl(
+      <ActivityCard activity={{ ...activity, durationMinutes: 90 }} />,
+    );
+
+    const location = container.querySelector('[data-slot="activity-card-location"]');
+    const duration = screen.getByText("1 hour 30min").parentElement;
+    expect(location?.nextElementSibling).toBe(duration);
+    expect(location?.parentElement).not.toHaveClass("flex-col", "flex-wrap");
+    // 자리가 모자라면 장소만 줄어들고 소요시간은 끝까지 보인다
+    expect(location).toHaveClass("min-w-0");
+    expect(duration).toHaveClass("shrink-0", "whitespace-nowrap");
   });
 
   it("shows the discount percent chip and the signature-colored discounted price", () => {
@@ -64,11 +111,11 @@ describe("ActivityCard", () => {
     );
 
     const krwPrice = screen.getByText("₩35,000");
-    const referencePrice = screen.getByText("≈ $32.50");
+    const referencePrice = screen.getByText("(≈ $32.50)");
     expect(krwPrice).toHaveClass("text-ink");
     expect(referencePrice).toHaveClass("text-muted");
     expect(
-      referencePrice.compareDocumentPosition(krwPrice) & Node.DOCUMENT_POSITION_FOLLOWING,
+      krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.getByText("per person")).toBeInTheDocument();
   });
@@ -121,19 +168,38 @@ describe("ActivityCard", () => {
     expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 
-  it("shows the average rating alone, without the review count", () => {
+  it("shows the average rating with the review count as a chip on the photo", () => {
+    const { container } = renderWithIntl(
+      <ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />,
+    );
+
+    const rating = screen.getByLabelText("Rated 4.8 out of 5 from 12 reviews");
+    expect(screen.getByText("4.8")).toBeInTheDocument();
+    expect(screen.getByText("(12)")).toBeInTheDocument();
+    expect(rating.parentElement).toBe(container.querySelector("img")?.parentElement);
+    expect(rating).toHaveClass("absolute", "bottom-3", "left-3", "rounded-full");
+  });
+
+  it("leaves the full title width to the title", () => {
     renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
 
-    expect(screen.getByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();
-    expect(screen.getByText("4.8")).toBeInTheDocument();
-    expect(screen.queryByText("(12)")).not.toBeInTheDocument();
+    const heading = screen.getByRole("heading", { name: "Market walk" });
+    expect(heading.parentElement?.querySelector('[role="img"]')).toBeNull();
+  });
+
+  it("keeps the price row free of the rating", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
+
+    const priceRow = screen.getByText("₩35,000").parentElement?.parentElement;
+    expect(priceRow?.querySelector('[role="img"]')).toBeNull();
   });
 
   it("names the rating for assistive technology as an image", () => {
     renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
 
-    // 카드는 평균만 보여주므로 접근성 이름에도 후기 수를 넣지 않는다
-    expect(screen.getByRole("img", { name: "Rated 4.8 out of 5" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Rated 4.8 out of 5 from 12 reviews" }),
+    ).toBeInTheDocument();
     // 화면에 보이는 숫자는 중복 낭독되지 않도록 감춘다
     expect(screen.getByText("4.8")).toHaveAttribute("aria-hidden", "true");
   });

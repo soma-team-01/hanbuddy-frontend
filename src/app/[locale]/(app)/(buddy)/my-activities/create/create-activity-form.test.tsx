@@ -3,6 +3,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createReferralActivity, updateReferralActivity } from "@/lib/api/referral";
 import { createApiClientError } from "@/lib/api/errors";
 import { getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -61,6 +62,11 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
   createMyActivity: vi.fn(),
   updateMyActivity: vi.fn(),
   getMyActivity: vi.fn(),
+}));
+
+vi.mock("@/lib/api/referral", () => ({
+  createReferralActivity: vi.fn(),
+  updateReferralActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/api/useMyProfile", () => ({
@@ -226,6 +232,72 @@ async function completeAllStepsUntilReview(reorder = false) {
 }
 
 describe("CreateActivityForm", () => {
+  it("creates a referral without price steps or payment fields and keeps the standard draft separate", async () => {
+    vi.mocked(createReferralActivity).mockResolvedValue({
+      status: "success",
+      data: { activityId: 42 } as MyActivityDetailResponse,
+    });
+    renderWithQueryClient(<CreateActivityForm referral invitationCode={"a".repeat(43)} />);
+    await fillStepsUntilSchedule();
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
+    fireEvent.change(screen.getByLabelText("Add a start time"), { target: { value: "10:00" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add time" }));
+    clickNext();
+    clickNext();
+    expect(screen.queryByRole("textbox", { name: "Price per person" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Equipment rental" }));
+    clickNext();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Nothing guests need to know/ }));
+    clickNext();
+    expect(screen.getByText("Price confirmed with provider")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Register experience" }));
+    await waitFor(() => expect(createReferralActivity).toHaveBeenCalledTimes(1));
+    const [code, body] = vi.mocked(createReferralActivity).mock.calls[0];
+    expect(code).toHaveLength(43);
+    expect(body).toMatchObject({
+      status: "ACTIVE",
+      maxCapacity: 1,
+      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00`, maxCapacity: 1 }],
+    });
+    for (const key of [
+      "price",
+      "currency",
+      "discountPercent",
+      "discountEndDate",
+      "activityType",
+      "buddyId",
+    ])
+      expect(body).not.toHaveProperty(key);
+    expect(body.imageKeys).toHaveLength(3);
+    expect(body.itineraries).toHaveLength(1);
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("referral:create"),
+    );
+  });
+
+  it("edits a zero-price referral using the dedicated endpoint with no invitation wrapper", async () => {
+    vi.mocked(updateReferralActivity).mockResolvedValue({
+      status: "success",
+      data: { activityId: 42 } as MyActivityDetailResponse,
+    });
+    const detail = { ...buildEditDetail(), price: 0, activityType: "REFERRAL" as const };
+    renderWithQueryClient(
+      <CreateActivityForm
+        referral
+        mode="edit"
+        activityId="42"
+        initialDraft={buildDraftFromMyActivityDetail(detail)}
+        initialStatus="ACTIVE"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(updateReferralActivity).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(updateReferralActivity).mock.calls[0][1]).not.toHaveProperty("price");
+    expect(vi.mocked(updateReferralActivity).mock.calls[0][1]).not.toHaveProperty("code");
+    expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
+  });
   it("ignores the second click after entering preview instead of publishing", async () => {
     renderWithQueryClient(<CreateActivityForm />);
     await completeAllStepsUntilReview();

@@ -12,6 +12,7 @@ export function ActivityCard({
 }: Readonly<{ activity: Activity; eagerImage?: boolean }>) {
   const locale = useLocale();
   const t = useTranslations("Explore");
+  const referral = useTranslations("Referral");
   const hasDiscount =
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
   const hasReferencePrice =
@@ -76,6 +77,9 @@ export function ActivityCard({
 
         {/* 카드 하단: 원화 가격 · 환산가 · 1인당 */}
         <div className="mt-auto md:pt-1">
+          {activity.activityType === "REFERRAL" ? (
+            <p className="text-sm font-semibold text-primary">{referral("pricing")}</p>
+          ) : (
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
             {hasDiscount ? (
               <s className="text-xs leading-4 text-muted">
@@ -105,6 +109,7 @@ export function ActivityCard({
             ) : null}
             <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
           </div>
+          )}
         </div>
       </div>
     </article>

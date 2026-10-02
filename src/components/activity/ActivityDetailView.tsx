@@ -87,6 +87,7 @@ export function ActivityDetailView({
 }>) {
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
+  const tReferral = useTranslations("Referral");
   const tExplore = useTranslations("Explore");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
@@ -248,45 +249,49 @@ export function ActivityDetailView({
         className="flex items-center justify-between gap-3 md:contents"
       >
         {/* 모바일은 원화·환산가·1인당을 한 줄로 읽히게 하고, md 이상은 오른쪽 정렬 세로 블록으로 되돌린다 */}
-        <div className="flex min-w-0 flex-col items-start text-left md:shrink-0 md:items-end md:text-right">
-          {hasDiscount ? (
-            <span className="text-sm text-muted line-through">
-              {formatKrw(activity.originalPrice ?? activity.price, locale)}
-            </span>
-          ) : null}
-          <div
-            data-testid="booking-bar-price"
-            className="flex flex-wrap items-baseline gap-x-1.5 md:justify-end md:whitespace-nowrap"
-          >
-            <span className="font-display text-xl font-bold text-primary">
-              {formatKrw(activity.price, locale)}
-            </span>
-            {hasReferencePrice ? (
-              <span
-                className="text-xs font-medium text-muted"
-                title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
-              >
-                (≈{" "}
-                {formatDisplayCurrency(
-                  activity.referencePrice!,
-                  activity.referenceCurrency!,
-                  locale,
-                )}
-                )
+        {activity.activityType === "REFERRAL" ? (
+          <p className="text-sm font-semibold text-primary">{tReferral("pricing")}</p>
+        ) : (
+          <div className="flex min-w-0 flex-col items-start text-left md:shrink-0 md:items-end md:text-right">
+            {hasDiscount ? (
+              <span className="text-sm text-muted line-through">
+                {formatKrw(activity.originalPrice ?? activity.price, locale)}
               </span>
             ) : null}
-            <span className="text-xs text-muted md:basis-full md:text-right">
-              {tExplore("perPersonLabel")}
-            </span>
+            <div
+              data-testid="booking-bar-price"
+              className="flex flex-wrap items-baseline gap-x-1.5 md:justify-end md:whitespace-nowrap"
+            >
+              <span className="font-display text-xl font-bold text-primary">
+                {formatKrw(activity.price, locale)}
+              </span>
+              {hasReferencePrice ? (
+                <span
+                  className="text-xs font-medium text-muted"
+                  title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+                >
+                  (≈{" "}
+                  {formatDisplayCurrency(
+                    activity.referencePrice!,
+                    activity.referenceCurrency!,
+                    locale,
+                  )}
+                  )
+                </span>
+              ) : null}
+              <span className="text-xs text-muted md:basis-full md:text-right">
+                {tExplore("perPersonLabel")}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
         {preview || !bookingPath ? (
           <button
             type="button"
             disabled
             className="flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary opacity-60 md:px-8"
           >
-            {t("bookNow")}
+            {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow")}
           </button>
         ) : loginRequired ? (
           <button
@@ -298,11 +303,11 @@ export function ActivityDetailView({
             }}
             className={bookNowClassName}
           >
-            {t("bookNow")}
+            {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow")}
           </button>
         ) : (
           <Link href={bookingPath} onClick={onBookingClick} className={bookNowClassName}>
-            {t("bookNow")}
+            {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow")}
           </Link>
         )}
       </div>

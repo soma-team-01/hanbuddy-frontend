@@ -213,6 +213,11 @@ export function DashboardContent() {
                       </span>
                     </Link>
                     <ScheduleActions
+                      referral={
+                        myActivitiesQuery.data?.find(
+                          (item) => item.activityId === activity.activityId,
+                        )?.activityType === "REFERRAL"
+                      }
                       menuPlacement={menuInHeader ? "card-header" : "inline"}
                       scheduleId={schedule.activityScheduleId}
                       startAt={schedule.startAt}

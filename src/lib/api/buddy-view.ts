@@ -126,6 +126,7 @@ export function mapMyActivityDetailToPreviewActivity(
 
   return {
     id: String(detail.activityId),
+    activityType: detail.activityType ?? "STANDARD",
     title: detail.title,
     description: detail.description,
     location: detail.meetingPointName,

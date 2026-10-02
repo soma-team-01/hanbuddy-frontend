@@ -8,6 +8,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
 import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createReferralActivity, updateReferralActivity } from "@/lib/api/referral";
+import { clearReferralCode, referralActivityPayload } from "@/lib/referral";
 import { ApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getSeoulDateTimeParts, toSeoulStartAt } from "@/lib/datetime";
@@ -23,9 +25,6 @@ import {
   ACTIVITY_CREATE_LIMITS,
   ACTIVITY_CREATE_STEPS,
   EMPTY_ACTIVITY_DRAFT,
-  getNextActivityCreateStep,
-  getPreviousActivityCreateStep,
-  getStepIndex,
   type ActivityCreateDraft,
   type ActivityCreateErrorKey,
   type ActivityCreateStep,
@@ -81,6 +80,7 @@ type SubmissionPhase = "uploading" | "registering";
 type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed";
 
 interface ActivityCreateLocaleSnapshot {
+  referral?: boolean;
   mode: "create" | "edit";
   activityId?: string;
   currentStep: ActivityCreateStep;
@@ -183,6 +183,8 @@ export function buildActivityUpsertRequest(
 }
 
 function ProgressRail({
+  steps,
+  groups,
   currentStep,
   furthestStepIndex,
   reviewing,
@@ -192,6 +194,8 @@ function ProgressRail({
   label,
   onNavigate,
 }: Readonly<{
+  steps: readonly ActivityCreateStep[];
+  groups: readonly (typeof STEP_GROUPS)[number][];
   currentStep: ActivityCreateStep;
   furthestStepIndex: number;
   reviewing: boolean;
@@ -201,8 +205,9 @@ function ProgressRail({
   label: string;
   onNavigate: (step: ActivityCreateStep) => void;
 }>) {
+  const getStepIndex = (step: ActivityCreateStep) => steps.indexOf(step);
   const currentIndex = getStepIndex(currentStep);
-  const currentGroupIndex = STEP_GROUPS.findIndex((group) =>
+  const currentGroupIndex = groups.findIndex((group) =>
     group.steps.some((step) => step === currentStep),
   );
   const isVisitedAndComplete = (step: ActivityCreateStep) =>
@@ -211,16 +216,16 @@ function ProgressRail({
     const targetIndex = getStepIndex(step);
     if (reviewing || targetIndex <= currentIndex) return true;
     if (targetIndex > furthestStepIndex) return false;
-    return ACTIVITY_CREATE_STEPS.slice(0, targetIndex).every(isStepComplete);
+    return steps.slice(0, targetIndex).every(isStepComplete);
   };
 
   return (
     <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-primary/15 bg-[#fff] px-7 py-9 lg:block">
       <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase">
-        {currentIndex + 1} / {ACTIVITY_CREATE_STEPS.length}
+        {currentIndex + 1} / {steps.length}
       </p>
       <ol className="mt-7 space-y-3" aria-label={label}>
-        {STEP_GROUPS.map((group, index) => {
+        {groups.map((group, index) => {
           const isCurrent = !reviewing && index === currentGroupIndex;
           const groupSteps: ReadonlyArray<ActivityCreateStep> = group.steps;
           const isComplete = groupSteps.every(isVisitedAndComplete);
@@ -299,6 +304,8 @@ function ProgressRail({
 }
 
 export interface CreateActivityFormProps {
+  referral?: boolean;
+  invitationCode?: string;
   mode?: "create" | "edit";
   /** edit 모드에서 수정할 활동 id (라우트 파라미터 그대로) */
   activityId?: string;
@@ -313,6 +320,8 @@ export interface CreateActivityFormProps {
 }
 
 export function CreateActivityForm({
+  referral = false,
+  invitationCode,
   mode = "create",
   activityId,
   initialDraft,
@@ -321,6 +330,7 @@ export function CreateActivityForm({
   initialSourceLanguage,
 }: Readonly<CreateActivityFormProps> = {}) {
   const t = useTranslations("CreateActivity");
+  const tReferral = useTranslations("Referral");
   const currentLanguage = getContentLanguage(useLocale());
   const sourceLanguage =
     initialSourceLanguage && initialSourceLanguage !== "UNKNOWN"
@@ -330,18 +340,26 @@ export function CreateActivityForm({
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
   const isEdit = mode === "edit";
+  const steps = ACTIVITY_CREATE_STEPS.filter(
+    (step) => !referral || (step !== "price" && step !== "discount"),
+  );
+  const groups = STEP_GROUPS.filter((group) => !referral || group.key !== "pricing");
+  const getStepIndex = (step: ActivityCreateStep) => steps.indexOf(step);
   const storedSnapshot = activityCreateLocaleSnapshot;
   const initialSnapshot =
-    storedSnapshot && storedSnapshot.mode === mode && storedSnapshot.activityId === activityId
+    storedSnapshot &&
+    storedSnapshot.mode === mode &&
+    storedSnapshot.activityId === activityId &&
+    Boolean(storedSnapshot.referral) === referral
       ? storedSnapshot
       : null;
   const initialSnapshotRef = useRef(initialSnapshot);
-  const persistenceScope = getActivityCreateDraftScope(mode, activityId);
+  const persistenceScope = `${referral ? "referral:" : ""}${getActivityCreateDraftScope(mode, activityId)}`;
   const [currentStep, setCurrentStep] = useState<ActivityCreateStep>(
     initialSnapshot?.currentStep ?? "host",
   );
   const [furthestStepIndex, setFurthestStepIndex] = useState(
-    initialSnapshot?.furthestStepIndex ?? (isEdit ? ACTIVITY_CREATE_STEPS.length - 1 : 0),
+    initialSnapshot?.furthestStepIndex ?? (isEdit ? steps.length - 1 : 0),
   );
   const [editableDraft, setDraft] = useState<ActivityCreateDraft>(
     initialSnapshot?.draft ?? initialDraft ?? EMPTY_ACTIVITY_DRAFT,
@@ -382,10 +400,17 @@ export function CreateActivityForm({
   const [isDraftPersistenceReady, setIsDraftPersistenceReady] = useState(initialSnapshot !== null);
   const contentRef = useRef<HTMLDivElement>(null);
   const currentIndex = getStepIndex(currentStep);
-  const progressIndex = reviewing ? ACTIVITY_CREATE_STEPS.length : currentIndex + 1;
+  const progressIndex = reviewing ? steps.length : currentIndex + 1;
   const isSubmitting = submissionPhase !== null;
   const submitActivityMutation = useMutation({
     mutationFn: async (request: ActivityUpsertRequest) => {
+      if (referral) {
+        const body = referralActivityPayload(request);
+        if (isEdit && activityId)
+          return unwrapApiResult(await updateReferralActivity(activityId, body), "data");
+        if (!invitationCode) throw new Error("Missing invitation");
+        return unwrapApiResult(await createReferralActivity(invitationCode, body), "data");
+      }
       if (isEdit && activityId !== undefined) {
         return unwrapApiResult(await updateMyActivity(activityId, request), "activity");
       }
@@ -485,6 +510,7 @@ export function CreateActivityForm({
     // Block queued locale changes before the disabled state has rendered, too.
     if (submissionInFlight.current) return false;
     activityCreateLocaleSnapshot = {
+      referral,
       mode,
       activityId,
       currentStep,
@@ -729,9 +755,7 @@ export function CreateActivityForm({
     setSubmissionError(null);
 
     // 제출 직전 전체 단계를 한 번 더 검증해 리뷰 중 유실된 값이 있으면 해당 단계로 되돌린다
-    const invalidStep = ACTIVITY_CREATE_STEPS.find(
-      (step) => validateActivityCreateStep(step, draft) !== null,
-    );
+    const invalidStep = steps.find((step) => validateActivityCreateStep(step, draft) !== null);
     if (invalidStep) {
       setReviewing(false);
       setCurrentStep(invalidStep);
@@ -788,6 +812,7 @@ export function CreateActivityForm({
         ),
       );
       submissionSucceeded = true;
+      if (referral && !isEdit) clearReferralCode();
       clearPreservedDraft();
       router.push(
         isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/my-activities",
@@ -854,7 +879,7 @@ export function CreateActivityForm({
       return;
     }
 
-    const nextStep = getNextActivityCreateStep(currentStep);
+    const nextStep = steps[Math.min(steps.length - 1, currentIndex + 1)];
     setFurthestStepIndex((furthest) => Math.max(furthest, getStepIndex(nextStep)));
     setCurrentStep(nextStep);
     setErrorKey(null);
@@ -870,7 +895,7 @@ export function CreateActivityForm({
       return;
     }
     if (currentIndex === 0) return;
-    setCurrentStep(getPreviousActivityCreateStep(currentStep));
+    setCurrentStep(steps[Math.max(0, currentIndex - 1)]);
     setErrorKey(null);
     scrollToTop();
   }
@@ -879,9 +904,9 @@ export function CreateActivityForm({
     if (isSubmitting) return;
     const targetIndex = getStepIndex(step);
     if (!reviewing && targetIndex > currentIndex) {
-      const priorStepsAreComplete = ACTIVITY_CREATE_STEPS.slice(0, targetIndex).every(
-        (priorStep) => validateActivityCreateStep(priorStep, draft) === null,
-      );
+      const priorStepsAreComplete = steps
+        .slice(0, targetIndex)
+        .every((priorStep) => validateActivityCreateStep(priorStep, draft) === null);
       if (targetIndex > furthestStepIndex || !priorStepsAreComplete) return;
     }
     setCurrentStep(step);
@@ -896,7 +921,8 @@ export function CreateActivityForm({
   }
 
   function renderStep() {
-    if (reviewing) return <ReviewStep draft={draft} activityId={activityId} t={t} />;
+    if (reviewing)
+      return <ReviewStep draft={draft} activityId={activityId} t={t} referral={referral} />;
 
     switch (currentStep) {
       case "host":
@@ -1023,7 +1049,7 @@ export function CreateActivityForm({
     currentStep === "itinerary" ||
     currentStep === "schedule";
   const currentGroup =
-    STEP_GROUPS.find((group) => group.steps.some((step) => step === currentStep)) ?? STEP_GROUPS[0];
+    groups.find((group) => group.steps.some((step) => step === currentStep)) ?? groups[0];
   const exitHref =
     isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/dashboard";
   let phaseLabel: string | null = null;
@@ -1077,12 +1103,14 @@ export function CreateActivityForm({
       <div className="h-1 shrink-0 bg-line-soft lg:hidden">
         <div
           className="h-full bg-primary transition-[width]"
-          style={{ width: `${(progressIndex / ACTIVITY_CREATE_STEPS.length) * 100}%` }}
+          style={{ width: `${(progressIndex / steps.length) * 100}%` }}
         />
       </div>
 
       <div className="flex min-h-0 flex-1">
         <ProgressRail
+          steps={steps}
+          groups={groups}
           currentStep={currentStep}
           furthestStepIndex={furthestStepIndex}
           reviewing={reviewing}
@@ -1145,6 +1173,14 @@ export function CreateActivityForm({
                       t(`errors.${submissionError.fallbackKey}`),
                     )}
                   </p>
+                ) : null}
+                {referral && !isEdit && submissionError ? (
+                  <div className="mt-3 text-sm leading-6 text-muted">
+                    <p>{tReferral("checkActivities")}</p>
+                    <Link href="/my-activities" className="text-primary underline">
+                      {tReferral("myActivities")}
+                    </Link>
+                  </div>
                 ) : null}
               </div>
             </div>

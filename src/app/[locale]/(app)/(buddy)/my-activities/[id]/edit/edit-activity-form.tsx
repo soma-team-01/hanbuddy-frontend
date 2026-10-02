@@ -57,6 +57,7 @@ export function EditActivityForm({ activityId }: Readonly<{ activityId: string }
 
   return (
     <CreateActivityForm
+      referral={activityQuery.data.activityType === "REFERRAL"}
       mode="edit"
       activityId={activityId}
       initialDraft={initialDraft}

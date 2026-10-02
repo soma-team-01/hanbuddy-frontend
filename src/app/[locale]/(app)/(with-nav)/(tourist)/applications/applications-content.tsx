@@ -11,6 +11,7 @@ import {
   continueApplicationPayment,
 } from "@/lib/api/applications";
 import { mapApplicationResponseToApplication } from "@/lib/api/application-view";
+import { cancelReferralApplication } from "@/lib/api/referral";
 import { ApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
@@ -55,11 +56,20 @@ export function ApplicationsContent({
       applicationId: string;
       reason: ApplicationCancellationReason;
       detail?: string;
-    }) =>
-      unwrapApiResult(
+    }) => {
+      if (
+        applicationsQuery.data?.find((item) => String(item.applicationId) === applicationId)
+          ?.activityType === "REFERRAL"
+      ) {
+        const application = unwrapApiResult(await cancelReferralApplication(applicationId), "data");
+        if (application.status !== "CANCELLED") throw new Error("Application was not cancelled");
+        return application;
+      }
+      return unwrapApiResult(
         await cancelMyApplication(applicationId, reason, language, detail),
         "application",
-      ),
+      );
+    },
     onSuccess: async (application) => {
       queryClient.setQueryData<ApplicationResponse[]>(
         applicationKeys.mine(language),

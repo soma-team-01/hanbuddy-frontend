@@ -46,6 +46,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
 import { FreeCancellationWindow } from "./free-cancellation-window";
+import { ReferralApplicationCard } from "@/components/referral/ReferralApplicationCard";
 
 const TABS = ["upcoming", "past"] as const;
 
@@ -683,22 +684,30 @@ export function ApplicationList({
         })}
       </div>
       <div data-testid="application-list" className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
-        {visibleApplications.map((application) => (
-          <ApplicationCard
-            key={application.id}
-            application={application}
-            onCancel={() => setCancelTargetId(application.id)}
-            onCancelPending={() => {
-              setPendingCancelError(null);
-              setPendingCancelTargetId(application.id);
-            }}
-            onContinuePayment={onContinuePayment}
-            onHoldExpired={onHoldExpired}
-            isPaymentPending={isPaymentPending}
-            paymentProviderMode={paymentProviderMode}
-            refundPolicyDocument={refundPolicyDocument}
-          />
-        ))}
+        {visibleApplications.map((application) =>
+          application.activityType === "REFERRAL" ? (
+            <ReferralApplicationCard
+              key={application.id}
+              application={application}
+              onCancel={() => onCancelApplication(application.id, "OTHER")}
+            />
+          ) : (
+            <ApplicationCard
+              key={application.id}
+              application={application}
+              onCancel={() => setCancelTargetId(application.id)}
+              onCancelPending={() => {
+                setPendingCancelError(null);
+                setPendingCancelTargetId(application.id);
+              }}
+              onContinuePayment={onContinuePayment}
+              onHoldExpired={onHoldExpired}
+              isPaymentPending={isPaymentPending}
+              paymentProviderMode={paymentProviderMode}
+              refundPolicyDocument={refundPolicyDocument}
+            />
+          ),
+        )}
         {visibleApplications.length === 0 && (
           <div className="flex flex-col items-center gap-5 py-14 lg:col-span-2">
             <p className="text-center text-muted">{t("empty")}</p>

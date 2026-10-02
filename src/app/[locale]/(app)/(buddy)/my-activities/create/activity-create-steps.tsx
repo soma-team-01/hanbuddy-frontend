@@ -1881,10 +1881,16 @@ export function RestrictionsStep({
 }
 
 export function ReviewStep({
+  referral = false,
   draft,
   activityId,
   t,
-}: Readonly<{ draft: ActivityCreateDraft; activityId?: string; t: Translator }>) {
+}: Readonly<{
+  draft: ActivityCreateDraft;
+  activityId?: string;
+  t: Translator;
+  referral?: boolean;
+}>) {
   const locale = useLocale() as Locale;
   const tActivityDetail = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
@@ -1903,7 +1909,12 @@ export function ReviewStep({
 
   return (
     <div data-testid="activity-detail-preview">
-      <ActivityDetailView activity={activity} preview bottomBar="inline" unoptimizedImages />
+      <ActivityDetailView
+        activity={{ ...activity, activityType: referral ? "REFERRAL" : "STANDARD" }}
+        preview
+        bottomBar="inline"
+        unoptimizedImages
+      />
     </div>
   );
 }

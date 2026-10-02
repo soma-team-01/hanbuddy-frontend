@@ -31,6 +31,13 @@ describe("public detail document", () => {
     });
     expect((await Page({ params })).props.initialActivity).toBe(activity);
   });
+  it("tells the interactive view whether the login popup may offer email login", async () => {
+    vi.mocked(getPublicActivity).mockResolvedValue(activity);
+    expect((await Page({ params })).props.emailLoginEnabled).toBe(false);
+    vi.stubEnv("REVIEW_LOGIN_ENABLED", "true");
+    expect((await Page({ params })).props.emailLoginEnabled).toBe(true);
+    vi.unstubAllEnvs();
+  });
   it("raises Next notFound for a confirmed missing activity in metadata and body", async () => {
     vi.mocked(getPublicActivity).mockRejectedValue(new PublicActivityError("missing"));
     await expect(Page({ params })).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");

@@ -16,17 +16,22 @@ import { getLocaleOrDefault } from "@/i18n/routing";
 import { activityWeatherQueryOptions, touristActivityQueryOptions } from "@/lib/query/activities";
 import { useHistoryBack } from "@/lib/navigation/use-history-back";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import { useSessionRole } from "@/lib/auth/session-role-context";
 
 export function ActivityDetailContent({
   activityId,
   initialActivity,
   preferredDate,
+  emailLoginEnabled = false,
 }: Readonly<{
   activityId: string;
   initialActivity?: TouristActivityDetail;
   preferredDate?: string;
+  emailLoginEnabled?: boolean;
 }>) {
   const track = useFunnelEvent();
+  // 서버 쿠키 기준 로그인 여부. 비로그인이면 예약 화면 대신 로그인 팝업을 띄운다
+  const isGuest = useSessionRole() === null;
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const activityQuery = useQuery({
@@ -92,6 +97,8 @@ export function ActivityDetailContent({
       <ActivityDetailView
         activity={activity}
         preferredDate={preferredDate}
+        loginRequired={isGuest}
+        emailLoginEnabled={emailLoginEnabled}
         onBookingClick={() => track("booking_cta_click", Number(activityId))}
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />

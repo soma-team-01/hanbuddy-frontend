@@ -168,14 +168,23 @@ describe("ActivityCard", () => {
     expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 
-  it("shows the average rating with the review count next to the title", () => {
-    renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
+  it("shows the average rating with the review count as a chip on the photo", () => {
+    const { container } = renderWithIntl(
+      <ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />,
+    );
 
     const rating = screen.getByLabelText("Rated 4.8 out of 5 from 12 reviews");
     expect(screen.getByText("4.8")).toBeInTheDocument();
     expect(screen.getByText("(12)")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Market walk" }).nextElementSibling).toBe(rating);
-    expect(rating).toHaveClass("shrink-0");
+    expect(rating.parentElement).toBe(container.querySelector("img")?.parentElement);
+    expect(rating).toHaveClass("absolute", "bottom-3", "left-3", "rounded-full");
+  });
+
+  it("leaves the full title width to the title", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
+
+    const heading = screen.getByRole("heading", { name: "Market walk" });
+    expect(heading.parentElement?.querySelector('[role="img"]')).toBeNull();
   });
 
   it("keeps the price row free of the rating", () => {

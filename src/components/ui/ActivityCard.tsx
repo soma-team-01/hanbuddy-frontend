@@ -43,20 +43,18 @@ export function ActivityCard({
             {t("discountBadge", { percent: activity.discountPercent })}
           </span>
         ) : null}
+        {/* 평균 별점과 후기 수는 사진 위 칩으로 둬 제목이 카드 폭을 온전히 쓰게 한다 */}
+        <RatingSummary
+          rating={activity.rating}
+          reviewCount={activity.reviewCount}
+          className="absolute bottom-3 left-3 rounded-full bg-canvas-soft/95 px-2.5 py-0.5 shadow-[0_2px_8px_rgba(38,27,24,0.18)]"
+        />
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3.5 md:gap-2 md:p-4">
-        {/* 제목(좌) · 평균 별점과 후기 수(우) */}
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="line-clamp-2 min-w-0 font-display text-lg leading-6 font-bold text-ink">
-            {activity.title}
-          </h2>
-          <RatingSummary
-            rating={activity.rating}
-            reviewCount={activity.reviewCount}
-            className="shrink-0 pt-0.5"
-          />
-        </div>
+        <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
+          {activity.title}
+        </h2>
 
         {activity.durationMinutes !== undefined || meetingPlace ? (
           // 장소 → 소요시간 순서로 한 줄에 둔다. 자리가 모자라면 장소만 말줄임한다

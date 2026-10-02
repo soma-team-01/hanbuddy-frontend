@@ -46,30 +46,38 @@ export function ActivityCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3.5 md:gap-2 md:p-4">
-        <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
-          {activity.title}
-        </h2>
+        {/* 제목(좌) · 평균 별점과 후기 수(우) */}
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="line-clamp-2 min-w-0 font-display text-lg leading-6 font-bold text-ink">
+            {activity.title}
+          </h2>
+          <RatingSummary
+            rating={activity.rating}
+            reviewCount={activity.reviewCount}
+            className="shrink-0 pt-0.5"
+          />
+        </div>
 
         {activity.durationMinutes !== undefined || meetingPlace ? (
-          // 장소는 길이와 무관하게 항상 둘째 줄에 둬 카드마다 줄 수가 같게 한다
-          <div className="flex min-w-0 flex-col gap-1 text-sm leading-5 text-muted">
-            {activity.durationMinutes !== undefined ? (
-              <p className="flex items-center gap-1.5">
-                <ClockIcon className="size-4 shrink-0" />
-                <span>{formatDuration(t, activity.durationMinutes)}</span>
-              </p>
-            ) : null}
+          // 장소 → 소요시간 순서로 한 줄에 둔다. 자리가 모자라면 장소만 말줄임한다
+          <div className="flex min-w-0 items-center gap-x-3 text-sm leading-5 text-muted">
             {meetingPlace ? (
               <p data-slot="activity-card-location" className="flex min-w-0 items-center gap-1.5">
                 <MapPinIcon className="size-4 shrink-0" />
                 <span className="truncate">{meetingPlace}</span>
               </p>
             ) : null}
+            {activity.durationMinutes !== undefined ? (
+              <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+                <ClockIcon className="size-4 shrink-0" />
+                <span>{formatDuration(t, activity.durationMinutes)}</span>
+              </p>
+            ) : null}
           </div>
         ) : null}
 
-        {/* 카드 하단: 가격 묶음(좌) · 평균 별점(우) — 후기 수는 상세에서만 보여준다 */}
-        <div className="mt-auto flex items-end justify-between gap-3 md:pt-1">
+        {/* 카드 하단: 원화 가격 · 환산가 · 1인당 */}
+        <div className="mt-auto md:pt-1">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
             {hasDiscount ? (
               <s className="text-xs leading-4 text-muted">
@@ -99,7 +107,6 @@ export function ActivityCard({
             ) : null}
             <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
           </div>
-          <RatingSummary rating={activity.rating} className="shrink-0 pb-1" />
         </div>
       </div>
     </article>

@@ -66,16 +66,18 @@ describe("ActivityCard", () => {
     expect(screen.getByRole("img", { name: "Market walk" })).toBeInTheDocument();
   });
 
-  it("keeps the meeting place on its own line below the duration", () => {
+  it("puts the meeting place first and the duration after it on one line", () => {
     const { container } = renderWithIntl(
       <ActivityCard activity={{ ...activity, durationMinutes: 90 }} />,
     );
 
     const location = container.querySelector('[data-slot="activity-card-location"]');
     const duration = screen.getByText("1 hour 30min").parentElement;
-    expect(location?.previousElementSibling).toBe(duration);
-    expect(location?.parentElement).toHaveClass("flex-col");
-    expect(location?.parentElement).not.toHaveClass("flex-wrap");
+    expect(location?.nextElementSibling).toBe(duration);
+    expect(location?.parentElement).not.toHaveClass("flex-col", "flex-wrap");
+    // 자리가 모자라면 장소만 줄어들고 소요시간은 끝까지 보인다
+    expect(location).toHaveClass("min-w-0");
+    expect(duration).toHaveClass("shrink-0", "whitespace-nowrap");
   });
 
   it("shows the discount percent chip and the signature-colored discounted price", () => {
@@ -166,19 +168,29 @@ describe("ActivityCard", () => {
     expect(screen.getByText("1인당")).toBeInTheDocument();
   });
 
-  it("shows the average rating alone, without the review count", () => {
+  it("shows the average rating with the review count next to the title", () => {
     renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
 
-    expect(screen.getByLabelText("Rated 4.8 out of 5")).toBeInTheDocument();
+    const rating = screen.getByLabelText("Rated 4.8 out of 5 from 12 reviews");
     expect(screen.getByText("4.8")).toBeInTheDocument();
-    expect(screen.queryByText("(12)")).not.toBeInTheDocument();
+    expect(screen.getByText("(12)")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Market walk" }).nextElementSibling).toBe(rating);
+    expect(rating).toHaveClass("shrink-0");
+  });
+
+  it("keeps the price row free of the rating", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
+
+    const priceRow = screen.getByText("₩35,000").parentElement?.parentElement;
+    expect(priceRow?.querySelector('[role="img"]')).toBeNull();
   });
 
   it("names the rating for assistive technology as an image", () => {
     renderWithIntl(<ActivityCard activity={{ ...activity, rating: 4.8, reviewCount: 12 }} />);
 
-    // 카드는 평균만 보여주므로 접근성 이름에도 후기 수를 넣지 않는다
-    expect(screen.getByRole("img", { name: "Rated 4.8 out of 5" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Rated 4.8 out of 5 from 12 reviews" }),
+    ).toBeInTheDocument();
     // 화면에 보이는 숫자는 중복 낭독되지 않도록 감춘다
     expect(screen.getByText("4.8")).toHaveAttribute("aria-hidden", "true");
   });

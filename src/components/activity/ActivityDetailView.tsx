@@ -8,6 +8,7 @@ import {
   formatSessionTimeRange,
 } from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
+import { LoginPromptDialog } from "@/components/auth/LoginPromptDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ActivityReviewsSection } from "@/components/review/ActivityReviewsSection";
@@ -65,6 +66,8 @@ export function ActivityDetailView({
   showBookingBar = true,
   unoptimizedImages = false,
   preferredDate,
+  loginRequired = false,
+  emailLoginEnabled = false,
 }: Readonly<{
   activity: Activity;
   onBookingClick?: () => void;
@@ -77,6 +80,10 @@ export function ActivityDetailView({
   /** blob 미리보기처럼 next/image 최적화가 불가능한 소스일 때 */
   unoptimizedImages?: boolean;
   preferredDate?: string;
+  /** 비로그인이면 예약 화면으로 이동하지 않고 그 자리에서 로그인 팝업을 띄운다 */
+  loginRequired?: boolean;
+  /** 로그인 팝업에 이메일 로그인 링크를 함께 둘지 여부 */
+  emailLoginEnabled?: boolean;
 }>) {
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
@@ -84,6 +91,7 @@ export function ActivityDetailView({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const fixedBarRef = useRef<HTMLDivElement>(null);
   useFixedBarHeight(fixedBarRef, showBookingBar && bottomBar === "fixed");
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
@@ -176,6 +184,11 @@ export function ActivityDetailView({
     dateBoxLabel = t("noDates");
   }
   const dateBoxDisabled = bookableSessions.length === 0;
+  const bookingPath = selectedSession
+    ? `/activities/${activity.id}/book?scheduleId=${selectedSession.id}`
+    : null;
+  const bookNowClassName =
+    "flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8";
 
   function handleCalendarSelect(sessionId: string) {
     setSelectedSessionId(sessionId);
@@ -267,7 +280,7 @@ export function ActivityDetailView({
             </span>
           </div>
         </div>
-        {preview || !selectedSession ? (
+        {preview || !bookingPath ? (
           <button
             type="button"
             disabled
@@ -275,12 +288,20 @@ export function ActivityDetailView({
           >
             {t("bookNow")}
           </button>
-        ) : (
-          <Link
-            href={`/activities/${activity.id}/book?scheduleId=${selectedSession.id}`}
-            onClick={onBookingClick}
-            className="flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8"
+        ) : loginRequired ? (
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => {
+              onBookingClick?.();
+              setLoginPromptOpen(true);
+            }}
+            className={bookNowClassName}
           >
+            {t("bookNow")}
+          </button>
+        ) : (
+          <Link href={bookingPath} onClick={onBookingClick} className={bookNowClassName}>
             {t("bookNow")}
           </Link>
         )}
@@ -629,6 +650,14 @@ export function ActivityDetailView({
           weather={weather}
           onSelectSession={handleCalendarSelect}
           onClose={() => setCalendarOpen(false)}
+        />
+      ) : null}
+
+      {loginPromptOpen && bookingPath ? (
+        <LoginPromptDialog
+          returnTo={bookingPath}
+          emailLoginEnabled={emailLoginEnabled}
+          onClose={() => setLoginPromptOpen(false)}
         />
       ) : null}
 

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { ClockIcon } from "@/components/ui/icons";
+import { ClockIcon, MapPinIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { formatActivityDuration } from "@/lib/activity-duration";
 import { formatDisplayCurrency, formatKrw } from "@/lib/format";
@@ -16,6 +16,7 @@ export function ActivityCard({
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
   const hasReferencePrice =
     activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
+  const meetingPlace = activity.meetingPoint.name;
   const estimatedPriceTitle = activity.referencePriceExchangeRateDate
     ? t("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
     : t("estimatedPrice");
@@ -42,41 +43,44 @@ export function ActivityCard({
             {t("discountBadge", { percent: activity.discountPercent })}
           </span>
         ) : null}
+        {/* 평균 별점과 후기 수는 사진 위 칩으로 둬 제목이 카드 폭을 온전히 쓰게 한다 */}
+        <RatingSummary
+          rating={activity.rating}
+          reviewCount={activity.reviewCount}
+          className="absolute bottom-3 left-3 rounded-full bg-canvas-soft/95 px-2.5 py-0.5 shadow-[0_2px_8px_rgba(38,27,24,0.18)]"
+        />
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <div className="flex flex-1 flex-col gap-1.5 p-3.5 md:gap-2 md:p-4">
         <h2 className="line-clamp-2 font-display text-lg leading-6 font-bold text-ink">
           {activity.title}
         </h2>
 
-        {activity.durationMinutes !== undefined ? (
-          <p className="flex items-center gap-1.5 text-sm leading-5 text-muted">
-            <ClockIcon className="size-4 shrink-0" />
-            <span>{formatDuration(t, activity.durationMinutes)}</span>
-          </p>
+        {activity.durationMinutes !== undefined || meetingPlace ? (
+          // 장소 → 소요시간 순서로 한 줄에 둔다. 자리가 모자라면 장소만 말줄임한다
+          <div className="flex min-w-0 items-center gap-x-3 text-sm leading-5 text-muted">
+            {meetingPlace ? (
+              <p data-slot="activity-card-location" className="flex min-w-0 items-center gap-1.5">
+                <MapPinIcon className="size-4 shrink-0" />
+                <span className="truncate">{meetingPlace}</span>
+              </p>
+            ) : null}
+            {activity.durationMinutes !== undefined ? (
+              <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+                <ClockIcon className="size-4 shrink-0" />
+                <span>{formatDuration(t, activity.durationMinutes)}</span>
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
-        {/* 카드 하단: 평균 별점(좌) · 가격(우) — 후기 수는 상세에서만 보여준다 */}
-        <div className="mt-auto flex items-end justify-between gap-3">
-          <RatingSummary rating={activity.rating} className="pb-1" />
-          <div className="ml-auto flex flex-col items-end gap-0.5 text-right">
+        {/* 카드 하단: 원화 가격 · 환산가 · 1인당 */}
+        <div className="mt-auto md:pt-1">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
             {hasDiscount ? (
               <s className="text-xs leading-4 text-muted">
                 {formatKrw(activity.originalPrice ?? activity.price, locale)}
               </s>
-            ) : null}
-            {hasReferencePrice ? (
-              <p
-                className="text-xs leading-4 font-medium text-muted"
-                title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
-              >
-                ≈{" "}
-                {formatDisplayCurrency(
-                  activity.referencePrice!,
-                  activity.referenceCurrency!,
-                  locale,
-                )}
-              </p>
             ) : null}
             <p
               className={`font-display text-xl leading-7 ${
@@ -85,6 +89,20 @@ export function ActivityCard({
             >
               {formatKrw(activity.price, locale)}
             </p>
+            {hasReferencePrice ? (
+              <p
+                className="text-xs leading-4 font-medium text-muted"
+                title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+              >
+                (≈{" "}
+                {formatDisplayCurrency(
+                  activity.referencePrice!,
+                  activity.referenceCurrency!,
+                  locale,
+                )}
+                )
+              </p>
+            ) : null}
             <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "@/i18n/routing";
+import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { getPublicActivity, PublicActivityError } from "@/lib/server/public-activities";
 import { publicPageMetadata, unavailableMetadata } from "@/lib/seo/metadata";
 import { ActivityDetailContent } from "./activity-detail-content";
@@ -47,6 +48,7 @@ export default async function ActivityDetailPage({ params, searchParams }: PageP
       activityId={id}
       initialActivity={activity}
       preferredDate={typeof query?.date === "string" ? query.date : undefined}
+      emailLoginEnabled={isReviewLoginEnabled()}
     />
   );
 }

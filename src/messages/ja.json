@@ -527,6 +527,7 @@
     "welcome": "地元の人のように韓国を体験してください。",
     "introduction": "地元の友達と出会い、韓国を自分のものだと感じる瞬間を見つけてください。",
     "continueWithGoogle": "Google を続ける",
+    "bookingLoginPrompt": "予約を続けるにはログインしてください",
     "reviewLogin": {
       "title": "メールアドレスでログイン",
       "emailLabel": "メールアドレス",

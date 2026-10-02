@@ -90,6 +90,18 @@ it("keeps navigation usable with no operational policy and no consent collection
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Cookie settings" })).not.toBeInTheDocument();
 });
+it("leaves the page behind the consent dialog unblurred", () => {
+  pathname = "/en";
+  const { controller } = makeController();
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <Detail />
+    </AnalyticsProvider>,
+  );
+  const dialog = screen.getByRole("dialog");
+  expect(dialog).toHaveClass("backdrop:bg-ink/45");
+  expect(dialog).not.toHaveClass("backdrop:backdrop-blur-[3px]");
+});
 it.each([
   [
     "en",

@@ -158,6 +158,7 @@ function ConsentControl() {
       description={copy.body}
       cancelLabel={copy.reject}
       confirmLabel={copy.accept}
+      backdropBlur={false}
       onClose={() => {
         void controller.reject();
         close();

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { CreateActivityForm } from "@/app/[locale]/(app)/(buddy)/my-activities/create/create-activity-form";
@@ -10,6 +10,7 @@ import { validateReferralInvitation } from "@/lib/api/referral";
 
 export function ReferralCreateEntry() {
   const t = useTranslations("Referral");
+  const validationId = useId();
   const [invitation, setInvitation] = useState<{ code: string | null } | null>(null);
   useEffect(() => {
     const code = consumeReferralCode();
@@ -17,15 +18,17 @@ export function ReferralCreateEntry() {
     queueMicrotask(() => setInvitation({ code }));
   }, []);
   const query = useQuery({
-    queryKey: ["referral", "invitation-validation"],
+    // Isolate entry lifetimes without putting the secret invitation code in the cache key.
+    queryKey: ["referral", "invitation-validation", validationId],
     queryFn: async () => validateReferralInvitation(invitation!.code!),
     enabled: !!invitation?.code,
     retry: false,
     gcTime: 0,
-    staleTime: 0,
+    staleTime: Infinity,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
-  if (invitation?.code && query.data?.status === "success" && !query.isFetching)
+  if (invitation?.code && query.data?.status === "success")
     return <CreateActivityForm referral invitationCode={invitation.code} />;
   const login = query.data?.status === "unauthenticated";
   const loading = !invitation || (!!invitation.code && query.isPending);

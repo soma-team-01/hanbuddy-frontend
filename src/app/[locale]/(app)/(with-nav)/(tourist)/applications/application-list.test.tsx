@@ -220,7 +220,7 @@ describe("ApplicationList", () => {
     expect(screen.getByText("Toss")).toBeInTheDocument();
     expect(screen.getByText("PayPal")).toBeInTheDocument();
     const paymentActions = screen.getByText("Toss").closest("div")?.parentElement;
-    expect(paymentActions).toHaveClass("sm:row-start-1", "sm:row-span-2", "sm:self-center");
+    expect(paymentActions).toHaveClass("md:row-start-1", "md:row-span-2", "md:self-center");
     // 결제·취소가 붙어 있으므로 모바일 터치 타깃 48px과 간격 12px을 보장한다
     for (const name of ["Pay with Toss Payments", "Pay with PayPal", "Cancel"]) {
       expect(screen.getByRole("button", { name })).toHaveClass("h-12", "text-sm", "rounded-xl");
@@ -411,7 +411,7 @@ describe("ApplicationList", () => {
     const notice = await screen.findByTestId("free-cancellation-window");
     expect(notice).toHaveClass("text-success");
     expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
-    expect(notice.parentElement).toHaveClass("sm:mt-auto");
+    expect(notice.parentElement).toHaveClass("md:mt-auto");
   });
 
   it("shows the activity's 48-hour cutoff when it extends free cancellation", async () => {
@@ -582,6 +582,53 @@ describe("ApplicationList", () => {
 
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
+  });
+
+  it("uses the same card and host interactions for referral applications without payment content", async () => {
+    renderList({ applications: [{ ...paidApplication, activityType: "REFERRAL" }] });
+    const title = screen.getByRole("heading", { name: paidApplication.activityTitle });
+    expect(title).toHaveClass("text-base", "leading-6");
+    expect(title.closest("a")).toHaveAttribute("href", "/en/applications/3/activity");
+    expect(title.closest("article")).toHaveClass("rounded-3xl", "p-5", "md:p-6");
+    expect(title.closest("article")?.querySelector("img")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Partner activity|Service fees|Price breakdown|₩90,000/),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "View Jihoon Kim's profile" }));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(mockedGetCancellationQuote).not.toHaveBeenCalled();
+    expect(getApplicationScheduleCancellation).not.toHaveBeenCalled();
+  });
+
+  it("keeps desktop sizing while aligning mobile details beside a larger photo", () => {
+    renderList({ applications: [paidApplication] });
+    const title = screen.getByRole("heading", { name: paidApplication.activityTitle });
+    const card = title.closest("article")!;
+    expect(card).toHaveClass("md:p-6", "max-md:p-3.5", "max-md:gap-3");
+    expect(card.querySelector("img")?.closest("a")).toHaveClass("md:size-28", "max-md:w-20");
+    expect(title).toHaveClass("text-base", "max-md:text-sm", "max-md:truncate");
+    expect(within(card).getByText(paidApplication.dateLabel).closest("p")).toHaveClass(
+      "max-md:col-start-2",
+      "max-md:text-[11px]",
+    );
+    expect(within(card).getByRole("button", { name: "Cancel" })).toHaveClass(
+      "max-md:h-8",
+      "max-md:min-w-16",
+    );
+  });
+
+  it("cancels referral applications with the no-payment confirmation", async () => {
+    const cancel = vi.fn().mockResolvedValue({ ok: true });
+    renderList({
+      applications: [{ ...paidApplication, activityType: "REFERRAL" }],
+      onCancelApplication: cancel,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel application" }),
+    );
+    await waitFor(() => expect(cancel).toHaveBeenCalledWith("3", "OTHER"));
+    expect(mockedGetCancellationQuote).not.toHaveBeenCalled();
   });
 
   it("opens the host profile popup from the application card", async () => {
@@ -766,7 +813,7 @@ describe("ApplicationList", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps the buddy refund amount inside price details and labels the reason below its status", async () => {
+  it("keeps refund details intact and aligns mobile status left with the buddy reason right", async () => {
     vi.mocked(getApplicationScheduleCancellation).mockResolvedValue({
       status: "success",
       cancellation: {
@@ -791,6 +838,8 @@ describe("ApplicationList", () => {
     const status = await screen.findByText("Refund completed");
     const reason = screen.getByText("Cancellation reason from your buddy");
     expect(status.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(status.closest('[role="status"]')?.parentElement).toHaveClass("max-md:text-left");
+    expect(reason).toHaveClass("max-md:text-right", "max-md:flex-1");
     expect(screen.queryByText(/12.34/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Current refund/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
@@ -879,9 +928,9 @@ describe("ApplicationList", () => {
     });
 
     expect(screen.getByRole("button", { name: "Cancel" })).toHaveClass(
-      "sm:absolute",
-      "sm:top-1/2",
-      "sm:-translate-y-1/2",
+      "md:absolute",
+      "md:top-1/2",
+      "md:-translate-y-1/2",
     );
   });
 
@@ -911,7 +960,7 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Past" }));
     const writeReviewButton = screen.getByRole("button", { name: "Write a review" });
-    expect(writeReviewButton).toHaveClass("h-9", "sm:min-w-32");
+    expect(writeReviewButton).toHaveClass("h-9", "md:min-w-32");
     fireEvent.click(writeReviewButton);
 
     const dialog = await screen.findByRole("dialog");

@@ -4,7 +4,7 @@ import type { ContactMethod } from "@/lib/auth/types";
 export type ActivityType = "STANDARD" | "REFERRAL";
 export type ReferralActivityRequest = Omit<
   ActivityUpsertRequest,
-  "price" | "currency" | "discountPercent" | "discountEndDate"
+  "currency" | "discountPercent" | "discountEndDate"
 >;
 export interface ReferralInvitation {
   invitationId: number;
@@ -31,6 +31,9 @@ export interface ReferralApplicationRequest {
   guestCount: number;
   partnerSharingAgreed: boolean;
   consentVersion: string;
+  specialRequest?: string | null;
+  /** Explicit reapplication only: latest cancelled application for this activity/session. */
+  reapplyFromApplicationId?: number;
 }
 export interface ReferralApplicant {
   applicationId: number;
@@ -49,6 +52,7 @@ export interface ReferralApplicant {
   scheduleId: number | null;
   startAt: string | null;
   guestCount: number;
+  specialRequest?: string | null;
 }
 export interface ReferralActivitySummary {
   partnerUserId: number;

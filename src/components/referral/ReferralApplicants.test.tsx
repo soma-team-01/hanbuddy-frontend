@@ -44,6 +44,8 @@ describe("referral applicant reporting", () => {
     expect(await screen.findByText("신청 당시 이름")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /신청 42건/ })).toBeInTheDocument();
     expect(screen.getByText(/WHATSAPP · \+82 1012345678/)).toBeInTheDocument();
+    expect(screen.queryByText("동의 기록 · 신청 당시 정보")).not.toBeInTheDocument();
+    expect(screen.queryByText(/live-v2|신청 번호 #8/)).not.toBeInTheDocument();
     expect(vi.mocked(getReferralApplicants).mock.calls[0][0]).toBe(true);
     expect(vi.mocked(getReferralApplicants).mock.calls[0][1].get("status")).toBe("CONFIRMED");
     fireEvent.click(screen.getByRole("button", { name: "다음 페이지" }));
@@ -54,6 +56,7 @@ describe("referral applicant reporting", () => {
   it("uses creation-date filters, permits explicit all-status selection, and resets pagination", async () => {
     renderWithQueryClient(<ReferralApplicants />, { locale: "ko" });
     await screen.findByText("신청 당시 이름");
+    expect(screen.getByText("동의 기록 · 신청 당시 정보")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("신청 상태"), { target: { value: "" } });
     fireEvent.change(screen.getByLabelText("신청일 시작 (한국 시간)"), {
       target: { value: "2026-10-01" },

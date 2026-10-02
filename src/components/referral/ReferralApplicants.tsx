@@ -2,13 +2,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { getReferralApplicants } from "@/lib/api/referral";
+import { getRetainedApplicants } from "@/lib/api/referral-reporting";
+import { ReferralDateRange } from "./ReferralDateRange";
 import { unwrapApiResult } from "@/lib/query/result";
 import { isUnauthenticatedError } from "@/lib/api/errors";
 import { AdminPagination, formatAdminDate } from "@/app/admin/admin-ui";
 import type { MyActivitySummaryResponse, ActivityScheduleResponse } from "@/types/buddy";
 
 export const referralInputClass =
-  "mt-1 min-h-11 w-full rounded-xl border border-line-strong bg-white px-3 text-sm outline-none focus:border-primary";
+  "focus-border-only mt-1 min-h-11 w-full rounded-xl border border-line-strong bg-white px-3 text-sm outline-none focus:border-primary";
 export const referralButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-xl border border-primary px-4 text-sm font-semibold text-primary transition hover:bg-primary-soft disabled:opacity-40";
 export function ReferralError({
@@ -63,10 +65,11 @@ export function ReferralApplicants({
   fixedActivityId?: string;
   schedules?: ActivityScheduleResponse[];
 }) {
+  const compactStatus = admin && !!fixedActivityId;
   const [filters, setFilters] = useState({
     activityId: fixedActivityId ?? initialActivityId,
     scheduleId: "",
-    status: "CONFIRMED",
+    status: compactStatus ? "ACTIVE" : "CONFIRMED",
     from: "",
     until: "",
   });
@@ -78,17 +81,53 @@ export function ReferralApplicants({
     if (value) params.set(key, value);
   });
   if (fixedActivityId) params.set("activityId", fixedActivityId);
+  const retained = compactStatus && applied.status === "ACTIVE";
+  if (retained) params.set("page", "0");
   const query = useQuery({
     queryKey: ["referral", admin ? "admin-applicants" : "partner-applicants", params.toString()],
-    queryFn: async () => unwrapApiResult(await getReferralApplicants(admin, params), "data"),
+    queryFn: async ({ signal }) => {
+      if (!retained) return unwrapApiResult(await getReferralApplicants(admin, params), "data");
+      const content = await getRetainedApplicants(params, signal);
+      return {
+        content,
+        totalElements: content.length,
+        totalPages: Math.ceil(content.length / 20),
+        page: 0,
+        size: 20,
+        hasNext: false,
+      };
+    },
     gcTime: 0,
     retry: false,
   });
   return (
     <section className="space-y-5">
       {fixedActivityId && <h2 className="text-lg font-bold">신청 내역</h2>}
+      {compactStatus && (
+        <div role="group" aria-label="신청 상태" className="flex flex-wrap gap-2">
+          {[
+            ["", "전체"],
+            ["ACTIVE", "취소 제외"],
+            ["CANCELLED", "취소"],
+          ].map(([status, label]) => (
+            <button
+              key={status}
+              type="button"
+              aria-pressed={applied.status === status}
+              className={`min-h-9 rounded-lg border px-3 text-sm ${applied.status === status ? "border-primary font-semibold text-primary" : "border-line-soft text-muted hover:border-primary"}`}
+              onClick={() => {
+                setFilters({ ...filters, status });
+                setApplied({ ...applied, status });
+                setPage(0);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <form
-        className="grid gap-3 rounded-2xl border border-line-soft p-4 sm:grid-cols-2 xl:grid-cols-5"
+        className={`grid gap-3 rounded-2xl border border-line-soft p-4 ${compactStatus ? "sm:grid-cols-[1fr_auto]" : "sm:grid-cols-2 xl:grid-cols-5"}`}
         onSubmit={(e) => {
           e.preventDefault();
           if (filters.from && filters.until && filters.from > filters.until) {
@@ -100,7 +139,7 @@ export function ReferralApplicants({
           setPage(0);
         }}
       >
-        {fixedActivityId ? (
+        {compactStatus ? null : fixedActivityId ? (
           <label className="min-w-0 text-xs font-semibold text-muted">
             일정
             <select
@@ -140,37 +179,50 @@ export function ReferralApplicants({
             </select>
           </label>
         )}
-        <label className="text-xs font-semibold text-muted">
-          신청 상태
-          <select
-            value={filters.status}
-            className={referralInputClass}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-          >
-            <option value="">전체 (취소 포함)</option>
-            <option value="CONFIRMED">신청 확정</option>
-            <option value="COMPLETED">일정 종료</option>
-            <option value="CANCELLED">취소</option>
-          </select>
-        </label>
-        <label className="text-xs font-semibold text-muted">
-          신청일 시작 (한국 시간)
-          <input
-            type="date"
-            value={filters.from}
-            className={referralInputClass}
-            onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+        {!compactStatus && (
+          <label className="text-xs font-semibold text-muted">
+            신청 상태
+            <select
+              value={filters.status}
+              className={referralInputClass}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            >
+              <option value="">전체 (취소 포함)</option>
+              <option value="CONFIRMED">신청 확정</option>
+              <option value="COMPLETED">일정 종료</option>
+              <option value="CANCELLED">취소</option>
+            </select>
+          </label>
+        )}
+        {compactStatus ? (
+          <ReferralDateRange
+            activityId={Number(fixedActivityId)}
+            from={filters.from}
+            until={filters.until}
+            onChange={(from, until) => setFilters({ ...filters, from, until })}
           />
-        </label>
-        <label className="text-xs font-semibold text-muted">
-          신청일 종료 (한국 시간)
-          <input
-            type="date"
-            value={filters.until}
-            className={referralInputClass}
-            onChange={(e) => setFilters({ ...filters, until: e.target.value })}
-          />
-        </label>
+        ) : (
+          <>
+            <label className="text-xs font-semibold text-muted">
+              신청일 시작 (한국 시간)
+              <input
+                type="date"
+                value={filters.from}
+                className={referralInputClass}
+                onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+              />
+            </label>
+            <label className="text-xs font-semibold text-muted">
+              신청일 종료 (한국 시간)
+              <input
+                type="date"
+                value={filters.until}
+                className={referralInputClass}
+                onChange={(e) => setFilters({ ...filters, until: e.target.value })}
+              />
+            </label>
+          </>
+        )}
         <button className={`${referralButtonClass} self-end`} type="submit">
           조회
         </button>
@@ -192,7 +244,12 @@ export function ReferralApplicants({
               <span className="text-primary">{query.data.totalElements.toLocaleString()}</span>건
             </h2>
             <p className="text-xs text-muted">
-              {applied.status ? "선택한 상태 기준" : "취소 건 포함"} · 참여 인원 합계가 아닙니다
+              {retained
+                ? "취소 제외 · 일정 종료 포함"
+                : applied.status
+                  ? "선택한 상태 기준"
+                  : "취소 건 포함"}{" "}
+              · 참여 인원 합계가 아닙니다
             </p>
           </div>
           {!query.data.content.length && (
@@ -201,7 +258,10 @@ export function ReferralApplicants({
             </p>
           )}
           <div className="grid gap-3 lg:grid-cols-2">
-            {query.data.content.map((row) => (
+            {(retained
+              ? query.data.content.slice(page * 20, (page + 1) * 20)
+              : query.data.content
+            ).map((row) => (
               <article
                 key={row.applicationId}
                 className="min-w-0 rounded-2xl border border-line-soft p-5"
@@ -233,13 +293,23 @@ export function ReferralApplicants({
                     신청일 {formatAdminDate(row.createdAt, true)}
                   </p>
                 </div>
-                <details className="mt-3 text-xs text-muted">
-                  <summary className="cursor-pointer">동의 기록 · 신청 당시 정보</summary>
-                  <p className="mt-2">
-                    {row.consentVersion} · {formatAdminDate(row.consentedAt, true)}
-                  </p>
-                  <p className="mt-1">신청 번호 #{row.applicationId}</p>
-                </details>
+                {row.specialRequest && (
+                  <div className="mt-4 border-t border-line-soft pt-4 text-sm">
+                    <p className="font-semibold">특별 요청</p>
+                    <p className="mt-1 break-words whitespace-pre-wrap text-muted">
+                      {row.specialRequest}
+                    </p>
+                  </div>
+                )}
+                {!admin && (
+                  <details className="mt-3 text-xs text-muted">
+                    <summary className="cursor-pointer">동의 기록 · 신청 당시 정보</summary>
+                    <p className="mt-2">
+                      {row.consentVersion} · {formatAdminDate(row.consentedAt, true)}
+                    </p>
+                    <p className="mt-1">신청 번호 #{row.applicationId}</p>
+                  </details>
+                )}
               </article>
             ))}
           </div>

@@ -9,6 +9,7 @@ const ACTIVITY_FIELDS = [
   "includedItems",
   "restrictionNotes",
   "maxCapacity",
+  "price",
   "meetingPointName",
   "meetingPlaceId",
   "meetingLatitude",
@@ -18,8 +19,22 @@ const ACTIVITY_FIELDS = [
   "itineraries",
 ] as const;
 
-/** Whitelist, including at the BFF: never forward payment/owner fields. */
+export const REFERRAL_MAX_PRICE = 9_999_999_999;
+
+/** This is a service starting price, never a platform payment amount. */
+export function isReferralPrice(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= REFERRAL_MAX_PRICE
+  );
+}
+
+/** Whitelist, including at the BFF: never forward currency, discounts or ownership. */
 export function referralActivityPayload(input: object): ReferralActivityRequest {
+  if (!("price" in input) || !isReferralPrice(input.price))
+    throw new Error("Invalid referral price");
   return Object.fromEntries(
     Object.entries(input).filter(([key]) => (ACTIVITY_FIELDS as readonly string[]).includes(key)),
   ) as unknown as ReferralActivityRequest;

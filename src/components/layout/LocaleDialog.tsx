@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { CheckIcon, GlobeIcon, XIcon } from "@/components/ui/icons";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { reloadPolicyInLocale } from "@/lib/policy-locale-navigation";
 import { LOCALE_OPTIONS } from "./LocaleSwitcher";
 
 export function LocaleDialog({ onClose }: Readonly<{ onClose: () => void }>) {
@@ -23,6 +24,7 @@ export function LocaleDialog({ onClose }: Readonly<{ onClose: () => void }>) {
   const selectLocale = (nextLocale: Locale) => {
     dialogRef.current?.close();
     if (nextLocale === locale) return;
+    if (reloadPolicyInLocale(pathname, nextLocale)) return;
 
     const { search, hash } = window.location;
     router.replace(`${pathname}${search}${hash}`, { locale: nextLocale });

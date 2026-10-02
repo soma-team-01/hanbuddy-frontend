@@ -76,6 +76,68 @@ describe("referral BFF", () => {
     ).toBe(400);
     expect(postBackend).not.toHaveBeenCalled();
   });
+  it("forwards the explicit reapplication ID and preserves backend conflicts", async () => {
+    const body = {
+      activityScheduleId: 12,
+      guestCount: 2,
+      partnerSharingAgreed: true,
+      consentVersion: "v1",
+      reapplyFromApplicationId: 7,
+    };
+    await apply(req("POST", body), context);
+    expect(postBackend).toHaveBeenLastCalledWith("/activities/3/referral-applications", body, {
+      bearerToken: "token",
+    });
+    for (const code of [
+      "APPLICATION409_REFERRAL_EXISTS",
+      "APPLICATION409_REFERRAL_REAPPLICATION",
+    ]) {
+      vi.mocked(postBackend).mockResolvedValue({
+        status: 409,
+        payload: { isSuccess: false, code, message: "conflict" },
+        setCookies: [],
+      });
+      const response = await apply(req("POST", body), context);
+      expect(response.status).toBe(409);
+      expect(await response.json()).toMatchObject({ code });
+    }
+  });
+  it.each([0, -1, 1.5, "7", null, {}, Number.MAX_SAFE_INTEGER + 1])(
+    "rejects invalid reapplication ID %j",
+    async (reapplyFromApplicationId) => {
+      const response = await apply(
+        req("POST", {
+          activityScheduleId: 12,
+          guestCount: 1,
+          partnerSharingAgreed: true,
+          consentVersion: "v1",
+          reapplyFromApplicationId,
+        }),
+        context,
+      );
+      expect(response.status).toBe(400);
+      expect(postBackend).not.toHaveBeenCalled();
+    },
+  );
+  it("forwards an optional message and rejects malformed or oversized messages", async () => {
+    const body = {
+      activityScheduleId: 12,
+      guestCount: 1,
+      partnerSharingAgreed: true,
+      consentVersion: "v1",
+    };
+    await apply(req("POST", { ...body, specialRequest: "Please meet us outside." }), context);
+    expect(postBackend).toHaveBeenLastCalledWith(
+      "/activities/3/referral-applications",
+      { ...body, specialRequest: "Please meet us outside." },
+      { bearerToken: "token" },
+    );
+    for (const specialRequest of [42, {}, "x".repeat(1001)]) {
+      vi.mocked(postBackend).mockClear();
+      expect((await apply(req("POST", { ...body, specialRequest }), context)).status).toBe(400);
+      expect(postBackend).not.toHaveBeenCalled();
+    }
+  });
   it("uses POST bodies for codes and strips forbidden activity fields", async () => {
     await handleReferralRoute(req("POST", { code }), ["invitations", "validate"]);
     expect(postBackend).toHaveBeenLastCalledWith(
@@ -99,7 +161,7 @@ describe("referral BFF", () => {
     );
     expect(postBackend).toHaveBeenLastCalledWith(
       "/referral/activities",
-      { code, activity: { title: "Partner visit", status: "ACTIVE" } },
+      { code, activity: { title: "Partner visit", price: 3000, status: "ACTIVE" } },
       { bearerToken: "token" },
     );
     await handleReferralRoute(
@@ -108,10 +170,24 @@ describe("referral BFF", () => {
     );
     expect(patchBackend).toHaveBeenLastCalledWith(
       "/referral/activities/3",
-      { title: "Edited", status: "ACTIVE" },
+      { title: "Edited", price: 50, status: "ACTIVE" },
       { bearerToken: "token" },
     );
   });
+  it.each([undefined, null, -1, 1.5, 10000000000])(
+    "rejects invalid minimum prices before creation or editing (%s)",
+    async (price) => {
+      expect(
+        (await handleReferralRoute(req("POST", { code, activity: { price } }), ["activities"]))
+          .status,
+      ).toBe(400);
+      expect((await handleReferralRoute(req("PATCH", { price }), ["activities", "3"])).status).toBe(
+        400,
+      );
+      expect(postBackend).not.toHaveBeenCalled();
+      expect(patchBackend).not.toHaveBeenCalled();
+    },
+  );
   it("does not log raw code or PII when upstream fails", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(postBackend).mockRejectedValue(new Error(code));

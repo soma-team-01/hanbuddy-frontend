@@ -1,9 +1,18 @@
 {
   "Referral": {
+    "messagePlaceholder": "如有想對夥伴說的話，請在這裡填寫。",
+    "summaryTitle": "申請資訊",
+    "sharingTitle": "向商家提供個人資料的說明",
+    "servicePrice": "服務價格",
+    "sharedName": "姓名",
+    "sharedContactMethod": "聯絡方式類型",
+    "sharedCountryCode": "國際區號",
+    "sharedContact": "聯絡資訊",
+    "startingPrice": "{price}起",
+    "free": "免費",
     "label": "合作體驗",
     "apply": "申請",
     "notice": "實際服務費用及預約將在與商家溝通後另行確認。",
-    "pricing": "費用與商家溝通後確認",
     "title": "申請合作體驗",
     "schedule": "日程（韓國時間）",
     "guests": "參加人數",
@@ -15,12 +24,16 @@
     "failed": "無法處理請求，請重試。",
     "refreshConsent": "說明已更新，請查看最新內容並重新同意。",
     "success": "已收到您的申請。",
-    "cancelled": "該申請已取消，無法重新申請同一場次。",
+    "cancelled": "該申請已取消。",
+    "reapply": "重新申請",
+    "reapplyNotice": "您曾取消此場次。請確認資訊並重新同意，再點擊重新申請以建立新申請。",
+    "alreadyApplied": "您已申請此場次。請查看我的申請。",
+    "sessionCancelled": "無法重新申請嚮導已取消的場次。",
     "completed": "該申請已結束。",
     "applications": "查看我的申請",
     "unavailable": "暫無可申請的場次。",
-    "cancelTitle": "取消合作體驗申請？",
-    "cancelNotice": "取消後無法重新申請同一場次。如已另行預約或付款，請直接聯絡商家。",
+    "cancelTitle": "取消申請？",
+    "cancelNotice": "如未透過本網站，而是直接向商家另行預約或付款，請直接聯絡商家。",
     "cancel": "取消申請",
     "keep": "保留申請",
     "people": "{count}人",
@@ -115,6 +128,8 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "referralAlreadyApplied": "您已有有效申請。請查看我的申請。",
+    "referralReapplicationChanged": "申請紀錄已變更。請確認最新資訊並重新同意後，再次申請。",
     "bookingClosed": "活動開始前24小時停止接受預訂及付款請求，請選擇其他場次。",
     "scheduleCapacity": "人數上限須為1–100人，且不得低於預訂確認與待付款人數之和。",
     "scheduleEdit": "已開始或已取消的場次不能修改。有申請紀錄的場次不能更改開始時間。",
@@ -924,6 +939,7 @@
     "preferredMethod": "[希望使用的付款方式]"
   },
   "Booking": {
+    "applicationSummary": "申請摘要",
     "bookingWindowNotice": "預訂及付款請求須在活動開始至少24小時前提交。",
     "title": "預約活動",
     "loading": "正在加載預訂...",
@@ -1385,8 +1401,8 @@
         "description": "加入 3 到 10 張清晰的照片來記錄體驗。"
       },
       "itinerary": {
-        "title": "制定行程",
-        "description": "添加賓客從體驗開始到結束將遵循的活動。"
+        "title": "介紹活動內容",
+        "description": "請逐項新增將進行的活動或提供的商品。"
       },
       "meeting": {
         "title": "設定集合地點",
@@ -1472,7 +1488,7 @@
       "hostIntroduction": "介紹一下你自己以及為什麼你想舉辦這次體驗。",
       "qualifications": "分享相關的工作、學習、認證或生活經驗。",
       "pressHistory": "添加獎項、出版物、採訪或顯著認可。",
-      "experienceName": "例如，在韓國棒球之夜歡呼",
+      "experienceName": "e.g. Korean Baseball Fan Night",
       "experienceDescription": "告訴客人從開始到結束的體驗感覺如何。",
       "meetingAddress": "例如，首爾特別市松坡區奧林匹克路25號",
       "meetingPlace": "例如，1號門售票亭",
@@ -1501,15 +1517,15 @@
       "remove": "刪除體驗照片 {index, number}"
     },
     "itinerary": {
-      "item": "活動 {index, number}",
-      "remove": "刪除活動 {index, number}",
+      "item": "項目 {index, number}",
+      "remove": "刪除項目 {index, number}",
       "titleCount": "{count, number}/{max, number} 人物",
       "descriptionCount": "{count, number}/{max, number} 字元·最少 {min, number}",
       "addPhoto": "新增活動照片",
       "photoLabel": "上傳活動照片 {index, number}",
-      "add": "新增活動",
-      "edit": "編輯活動 {index, number}",
-      "untitled": "新活動",
+      "add": "新增項目",
+      "edit": "編輯項目 {index, number}",
+      "untitled": "新項目",
       "incomplete": "添加詳細信息",
       "durationSummary": "{minutes, number} 分鐘",
       "editor": {
@@ -1540,7 +1556,7 @@
       "pageRange": "共{total}場，第{from}–{to}場",
       "defaultTitle": "預設人數上限",
       "settings": "按日期詳細設定",
-      "defaultHint": "用於新增場次，不改變既有場次的人數上限。",
+      "defaultHint": "變更人數後，將統一套用至所有日期和時段。",
       "scheduleTitle": "各日期及時段的人數上限",
       "scheduleHint": "人數上限不得低於預訂確認與待付款人數之和。",
       "confirmed": "預訂確認 {count}人",
@@ -1557,6 +1573,16 @@
       "mapTitle": "所選會議地址的地圖"
     },
     "schedule": {
+      "am": "上午",
+      "pm": "下午",
+      "timePeriod": "上午/下午",
+      "hour": "小時 (1–12)",
+      "minute": "分鐘 (0–59)",
+      "hourPlaceholder": "時",
+      "minutePlaceholder": "分",
+      "morning": "上午",
+      "afternoon": "下午",
+      "timeSelectionHint": "可選擇多個開始時間，再次點擊即可取消選擇。",
       "bookingWindowNotice": "預訂及付款請求須在活動開始至少24小時前提交。",
       "notice": "根據需要選擇任意數量的日期。所有開始時間均以韓國標準時間 (KST) 顯示。",
       "calendarLabel": "體驗日期日曆",
@@ -1574,11 +1600,15 @@
       "addedTimes": "新增了開始時間",
       "noTimes": "還沒開始時間。在上面選擇一個時間並添加它。",
       "removeTime": "刪除 {time} 來自 {date}",
-      "applyDateTimesToAll": "將這些時間應用於所有 {count, number} 日期",
+      "applyDateTimesToAll": "所選日期使用相同時間",
       "removeDate": "刪除 {date}",
       "pastTimeHint": "今天的開始時間必須晚於目前時間 (KST)。"
     },
     "price": {
+      "referralTitle": "請輸入服務最低價格",
+      "referralDescription": "請輸入您提供的服務中的最低價格。",
+      "referralLabel": "服務最低價格",
+      "referralMinimum": "可輸入0韓元及以上的金額。",
       "minimum": "每人最低價格為{amount, number}韓元。",
       "notice": "該金額以每人韓元的價格顯示給客人。"
     },
@@ -1643,6 +1673,7 @@
     "edit": {
       "loading": "正在加載您的體驗...",
       "loadError": "無法載入要編輯的活動。",
+      "activityTypeUnavailable": "無法從伺服器確認活動類型，暫時無法編輯。為避免以錯誤的類型儲存，請稍後重試。",
       "backToActivity": "返回活動"
     },
     "errors": {
@@ -1662,6 +1693,7 @@
       "itineraryPhotoRequired": "為每項活動新增照片。",
       "maxGuestsInvalid": "輸入大於 0 的整數容量。",
       "priceInvalid": "請輸入不低於15,000韓元的每人價格（整數）。",
+      "referralPriceInvalid": "請輸入0至9,999,999,999韓元之間的整數金額。",
       "inclusionsRequired": "至少增加一項包含的物品。",
       "discountInvalid": "選擇結束日期並輸入 1 到 100 之間的整數折扣。",
       "restrictionsRequired": "至少選擇一件事客人應該知道，或確認沒有什麼需要注意的。",

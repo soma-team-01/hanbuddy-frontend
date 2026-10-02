@@ -145,7 +145,7 @@ describe("ApplicationsContent", () => {
       .mockReset()
       .mockResolvedValue({ status: "success", data: { ...referral, status: "CANCELLED" } });
     renderWithQueryClient(<ApplicationsContent />);
-    fireEvent.click(await screen.findByRole("button", { name: "Cancel application" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Cancel application" }).at(-1)!);
     await waitFor(() => expect(cancelReferralApplication).toHaveBeenCalledExactlyOnceWith("11"));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

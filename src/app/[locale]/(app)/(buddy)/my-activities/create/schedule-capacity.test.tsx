@@ -33,7 +33,10 @@ function Form({ many = false }: { many?: boolean }) {
     <CapacityStep
       t={t}
       value={value}
-      onChange={setValue}
+      onChange={(next) => {
+        setValue(next);
+        setSchedules((current) => current.map((schedule) => ({ ...schedule, maxCapacity: next })));
+      }}
       schedules={schedules}
       onScheduleCapacityChange={(id, maxCapacity) =>
         setSchedules((current) => current.map((s) => (s.id === id ? { ...s, maxCapacity } : s)))
@@ -89,7 +92,7 @@ describe("capacity editor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Previous sessions" }));
     expect(screen.getByRole("spinbutton", { name: "2099-10-10 (Sat) · 10:00" })).toHaveValue(7);
   });
-  it("edits individual capacities without changing existing sessions when the default changes", () => {
+  it("applies the top count to all sessions, then allows individual adjustments", () => {
     renderWithIntl(<Form />);
     fireEvent.click(screen.getByRole("button", { name: "Date-specific settings" }));
     const first = screen.getByRole("spinbutton", { name: "2099-10-10 (Sat) · 10:00" });
@@ -99,10 +102,18 @@ describe("capacity editor", () => {
     expect(first).toHaveAttribute("max", "100");
     expect(second).toHaveValue(10);
     fireEvent.click(screen.getByRole("button", { name: "Increase maximum guests" }));
-    expect(first).toHaveValue(6);
-    expect(second).toHaveValue(10);
+    expect(first).toHaveValue(9);
+    expect(second).toHaveValue(9);
     fireEvent.change(first, { target: { value: "7" } });
     expect(first).toHaveValue(7);
-    expect(second).toHaveValue(10);
+    expect(second).toHaveValue(9);
+  });
+  it("does not let the global count go below confirmed plus held seats", () => {
+    renderWithIntl(<Form />);
+    const decrease = screen.getByRole("button", { name: "Decrease maximum guests" });
+    for (let index = 0; index < 4; index++) fireEvent.click(decrease);
+    expect(decrease).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Date-specific settings" }));
+    screen.getAllByRole("spinbutton").forEach((input) => expect(input).toHaveValue(4));
   });
 });

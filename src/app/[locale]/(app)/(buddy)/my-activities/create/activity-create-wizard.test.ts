@@ -18,6 +18,27 @@ import {
 } from "./activity-create-wizard";
 
 const photo = { id: "photo", file: {} as File, previewUrl: "blob:photo" } satisfies PhotoDraft;
+
+describe("referral service starting price", () => {
+  it.each(["0", "5000", "9999999999"])(
+    "accepts %s without the standard minimum",
+    (pricePerPerson) => {
+      expect(
+        validateActivityCreateStep("price", { ...EMPTY_ACTIVITY_DRAFT, pricePerPerson }, true),
+      ).toBeNull();
+    },
+  );
+  it.each(["", " ", "-1", "1.5", "1e3", "10000000000"])("rejects %s", (pricePerPerson) => {
+    expect(
+      validateActivityCreateStep("price", { ...EMPTY_ACTIVITY_DRAFT, pricePerPerson }, true),
+    ).toBe("referralPriceInvalid");
+  });
+  it("keeps the standard 15,000 won minimum", () => {
+    expect(
+      validateActivityCreateStep("price", { ...EMPTY_ACTIVITY_DRAFT, pricePerPerson: "5000" }),
+    ).toBe("priceInvalid");
+  });
+});
 const itinerary = {
   id: "itinerary",
   title: "Taste market dishes",

@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyActivity } from "@/lib/api/buddy";
@@ -38,6 +38,7 @@ function futureSeoulDateKey(offsetDays: number) {
 
 const activityDetail: MyActivityDetailResponse = {
   activityId: 42,
+  activityType: "STANDARD",
   title: "Seoul market walk",
   description: "Meet local vendors and taste a neighborhood breakfast together.",
   totalDurationMinutes: 60,
@@ -113,6 +114,44 @@ describe("EditActivityForm", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
   });
 
+  it.each([undefined, null, "UNKNOWN"])(
+    "does not silently edit an unrecognized activity type (%s) as a standard activity",
+    async (activityType) => {
+      mockedGetMyActivity.mockResolvedValue({
+        status: "success",
+        activity: { ...activityDetail, activityType } as MyActivityDetailResponse,
+      });
+      renderWithQueryClient(<EditActivityForm activityId="42" />);
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "The server did not return the activity type.",
+      );
+      expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Preview your experience" }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([0, 5000])("uses the referral editor and minimum price for %s", async (price) => {
+    mockedGetMyActivity.mockResolvedValue({
+      status: "success",
+      activity: { ...activityDetail, activityType: "REFERRAL", price },
+    });
+    renderWithQueryClient(<EditActivityForm activityId="42" />);
+    await screen.findByRole("heading", { name: "Preview your experience" });
+    expect(screen.getByText(price === 0 ? "Free" : "₩5,000~")).toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
+    for (let i = 0; i < 8; i++) {
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    }
+    expect(
+      screen.getByRole("heading", { name: "Set the minimum service price" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Set your price per person")).not.toBeInTheDocument();
+    expect(screen.queryByText("Add a discount")).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveValue(String(price));
+  });
+
   it("shows an error with a way back when the activity cannot be loaded", async () => {
     mockedGetMyActivity.mockResolvedValue({
       status: "error",
@@ -138,7 +177,7 @@ describe("EditActivityForm", () => {
     mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
     const { queryClient } = renderWithQueryClient(<EditActivityForm activityId="42" />);
     await screen.findByRole("heading", { name: "Preview your experience" });
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
     for (let i = 0; i < 7; i++) {
       fireEvent.click(screen.getByRole("button", { name: "Next" }));
     }
@@ -156,6 +195,9 @@ describe("EditActivityForm", () => {
     expect(screen.getByText("Awaiting payment: 2")).toBeVisible();
     expect(capacity).toHaveValue(8);
     expect(capacity).toHaveAttribute("min", "5");
+    expect(screen.getByRole("button", { name: "Decrease maximum guests" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Increase maximum guests" }));
+    expect(capacity).toHaveValue(5);
     fireEvent.change(capacity, { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     expect(

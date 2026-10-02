@@ -7,7 +7,7 @@ import {
 } from "./referral";
 
 describe("referral contracts", () => {
-  it("never includes price, discounts, owner or type in the referral payload", () => {
+  it("keeps the starting price but strips currency, discounts, owner and type", () => {
     const input = {
       title: "Seoul visit",
       price: 15000,
@@ -20,9 +20,19 @@ describe("referral contracts", () => {
     };
     expect(referralActivityPayload(input)).toEqual({
       title: "Seoul visit",
+      price: 15000,
       status: "ACTIVE",
       schedules: input.schedules,
     });
+  });
+  it.each([undefined, null, "5000", -1, 1.5, 10000000000, NaN, Infinity])(
+    "rejects invalid referral starting prices (%s)",
+    (price) => {
+      expect(() => referralActivityPayload({ price })).toThrow();
+    },
+  );
+  it.each([0, 5000, 9999999999])("accepts a starting price of %s", (price) => {
+    expect(referralActivityPayload({ price })).toEqual({ price });
   });
   it("keeps applicant filters but never forwards buddyId to partner endpoints", () => {
     expect(

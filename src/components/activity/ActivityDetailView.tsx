@@ -25,6 +25,7 @@ import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { formatDisplayCurrency, formatKrw } from "@/lib/format";
+import { ReferralPrice } from "@/components/referral/ReferralPrice";
 import { formatActivityDuration } from "@/lib/activity-duration";
 import { useFixedBarHeight } from "@/lib/layout/use-fixed-bar-height";
 import {
@@ -150,6 +151,10 @@ export function ActivityDetailView({
     activity.originalPrice !== undefined && activity.originalPrice > activity.price;
   const hasReferencePrice =
     activity.referencePrice !== undefined && activity.referenceCurrency !== undefined;
+  const isFreeReferral = activity.activityType === "REFERRAL" && activity.price === 0;
+  // 무료는 가격·버튼의 자연스러운 폭만 사용해 날짜 입력을 길게 유지한다.
+  const priceSlotClass = isFreeReferral ? "" : hasReferencePrice ? "md:w-60" : "md:w-36";
+  const actionSlotClass = isFreeReferral ? "" : "md:min-w-44";
   const estimatedPriceTitle = activity.referencePriceExchangeRateDate
     ? tExplore("estimatedPriceWithDate", { date: activity.referencePriceExchangeRateDate })
     : tExplore("estimatedPrice");
@@ -188,8 +193,7 @@ export function ActivityDetailView({
   const bookingPath = selectedSession
     ? `/activities/${activity.id}/book?scheduleId=${selectedSession.id}`
     : null;
-  const bookNowClassName =
-    "flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8";
+  const bookNowClassName = `flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8 ${actionSlotClass}`;
 
   function handleCalendarSelect(sessionId: string) {
     setSelectedSessionId(sessionId);
@@ -250,9 +254,15 @@ export function ActivityDetailView({
       >
         {/* 모바일은 원화·환산가·1인당을 한 줄로 읽히게 하고, md 이상은 오른쪽 정렬 세로 블록으로 되돌린다 */}
         {activity.activityType === "REFERRAL" ? (
-          <p className="text-sm font-semibold text-primary">{tReferral("pricing")}</p>
+          <ReferralPrice
+            activity={activity}
+            variant="detail"
+            className={`${priceSlotClass} md:shrink-0 md:text-right`}
+          />
         ) : (
-          <div className="flex min-w-0 flex-col items-start text-left md:shrink-0 md:items-end md:text-right">
+          <div
+            className={`flex min-w-0 flex-col items-start text-left md:shrink-0 md:items-end md:text-right ${priceSlotClass}`}
+          >
             {hasDiscount ? (
               <span className="text-sm text-muted line-through">
                 {formatKrw(activity.originalPrice ?? activity.price, locale)}
@@ -289,7 +299,7 @@ export function ActivityDetailView({
           <button
             type="button"
             disabled
-            className="flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary opacity-60 md:px-8"
+            className={`flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary opacity-60 md:px-8 ${actionSlotClass}`}
           >
             {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow")}
           </button>
@@ -520,7 +530,9 @@ export function ActivityDetailView({
                           }`}
                         >
                           <p className="font-display text-[11px] font-bold tracking-[0.12em] text-primary uppercase">
-                            {t("itineraryStep", { number: index + 1 })} ·{" "}
+                            {activity.activityType !== "REFERRAL" && (
+                              <>{t("itineraryStep", { number: index + 1 })} · </>
+                            )}
                             {t("itineraryMinutes", { minutes: item.durationMinutes })}
                           </p>
                           <h3 className="font-display text-base font-bold text-ink md:text-lg">

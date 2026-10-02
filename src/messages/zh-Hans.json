@@ -1,9 +1,18 @@
 {
   "Referral": {
+    "messagePlaceholder": "如有想对伙伴说的话，请在这里填写。",
+    "summaryTitle": "申请信息",
+    "sharingTitle": "向商家提供个人信息的说明",
+    "servicePrice": "服务价格",
+    "sharedName": "姓名",
+    "sharedContactMethod": "联系方式类型",
+    "sharedCountryCode": "国际区号",
+    "sharedContact": "联系信息",
+    "startingPrice": "{price}起",
+    "free": "免费",
     "label": "合作体验",
     "apply": "申请",
     "notice": "实际服务费用及预约将在与商家沟通后另行确认。",
-    "pricing": "费用与商家沟通后确认",
     "title": "申请合作体验",
     "schedule": "日程（韩国时间）",
     "guests": "参加人数",
@@ -15,12 +24,16 @@
     "failed": "无法处理请求，请重试。",
     "refreshConsent": "说明已更新，请查看最新内容并重新同意。",
     "success": "已收到您的申请。",
-    "cancelled": "该申请已取消，无法重新申请同一场次。",
+    "cancelled": "该申请已取消。",
+    "reapply": "重新申请",
+    "reapplyNotice": "您曾取消此场次。请确认信息并重新同意，再点击重新申请以创建新申请。",
+    "alreadyApplied": "您已申请此场次。请查看我的申请。",
+    "sessionCancelled": "无法重新申请向导已取消的场次。",
     "completed": "该申请已结束。",
     "applications": "查看我的申请",
     "unavailable": "暂无可申请的场次。",
-    "cancelTitle": "取消合作体验申请？",
-    "cancelNotice": "取消后无法重新申请同一场次。如已另行预约或付款，请直接联系商家。",
+    "cancelTitle": "取消申请？",
+    "cancelNotice": "如未通过本网站，而是直接向商家另行预约或付款，请直接联系商家。",
     "cancel": "取消申请",
     "keep": "保留申请",
     "people": "{count}人",
@@ -115,6 +128,8 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "referralAlreadyApplied": "您已有有效申请。请查看我的申请。",
+    "referralReapplicationChanged": "申请记录已更改。请确认最新信息并重新同意后，再次申请。",
     "bookingClosed": "活动开始前24小时停止接受预订及付款请求，请选择其他场次。",
     "scheduleCapacity": "人数上限须为1–100人，且不得低于预订确认与待付款人数之和。",
     "scheduleEdit": "已开始或已取消的场次不能修改。有申请记录的场次不能更改开始时间。",
@@ -924,6 +939,7 @@
     "preferredMethod": "[希望使用的付款方式]"
   },
   "Booking": {
+    "applicationSummary": "申请摘要",
     "bookingWindowNotice": "预订及付款请求须在活动开始至少24小时前提交。",
     "title": "预订活动",
     "loading": "正在加载预订...",
@@ -1385,8 +1401,8 @@
         "description": "添加 3 到 10 张清晰的照片来记录体验。"
       },
       "itinerary": {
-        "title": "制定行程",
-        "description": "添加宾客从体验开始到结束将遵循的活动。"
+        "title": "介绍活动内容",
+        "description": "请逐项添加将开展的活动或提供的商品。"
       },
       "meeting": {
         "title": "设定集合地点",
@@ -1472,7 +1488,7 @@
       "hostIntroduction": "介绍一下你自己以及为什么你想举办这次体验。",
       "qualifications": "分享相关的工作、学习、认证或生活经验。",
       "pressHistory": "添加奖项、出版物、采访或显着认可。",
-      "experienceName": "例如，在韩国棒球之夜欢呼",
+      "experienceName": "e.g. Korean Baseball Fan Night",
       "experienceDescription": "告诉客人从开始到结束的体验感觉如何。",
       "meetingAddress": "例如，首尔特别市松坡区奥林匹克路25号",
       "meetingPlace": "例如，1号门售票亭",
@@ -1501,15 +1517,15 @@
       "remove": "删除体验照片 {index, number}"
     },
     "itinerary": {
-      "item": "活动 {index, number}",
-      "remove": "删除活动 {index, number}",
+      "item": "项目 {index, number}",
+      "remove": "删除项目 {index, number}",
       "titleCount": "{count, number}/{max, number} 人物",
       "descriptionCount": "{count, number}/{max, number} 字符·最少 {min, number}",
       "addPhoto": "添加活动照片",
       "photoLabel": "上传活动照片 {index, number}",
-      "add": "添加活动",
-      "edit": "编辑活动 {index, number}",
-      "untitled": "新活动",
+      "add": "添加项目",
+      "edit": "编辑项目 {index, number}",
+      "untitled": "新项目",
       "incomplete": "添加详细信息",
       "durationSummary": "{minutes, number} 分钟",
       "editor": {
@@ -1540,7 +1556,7 @@
       "pageRange": "共{total}场，第{from}–{to}场",
       "defaultTitle": "默认人数上限",
       "settings": "按日期详细设置",
-      "defaultHint": "用于新增场次，不改变已有场次的人数上限。",
+      "defaultHint": "更改人数后，将统一应用到所有日期和时段。",
       "scheduleTitle": "各日期及时段的人数上限",
       "scheduleHint": "人数上限不得低于预订确认与待付款人数之和。",
       "confirmed": "预订确认 {count}人",
@@ -1557,6 +1573,16 @@
       "mapTitle": "所选会议地址的地图"
     },
     "schedule": {
+      "am": "上午",
+      "pm": "下午",
+      "timePeriod": "上午/下午",
+      "hour": "小时 (1–12)",
+      "minute": "分钟 (0–59)",
+      "hourPlaceholder": "时",
+      "minutePlaceholder": "分",
+      "morning": "上午",
+      "afternoon": "下午",
+      "timeSelectionHint": "可选择多个开始时间，再次点击即可取消选择。",
       "bookingWindowNotice": "预订及付款请求须在活动开始至少24小时前提交。",
       "notice": "根据需要选择任意数量的日期。所有开始时间均以韩国标准时间 (KST) 显示。",
       "calendarLabel": "体验日期日历",
@@ -1574,11 +1600,15 @@
       "addedTimes": "添加了开始时间",
       "noTimes": "还没有开始时间。在上面选择一个时间并添加它。",
       "removeTime": "删除 {time} 来自 {date}",
-      "applyDateTimesToAll": "将这些时间应用于所有 {count, number} 日期",
+      "applyDateTimesToAll": "所选日期使用相同时间",
       "removeDate": "删除 {date}",
       "pastTimeHint": "今天的开始时间必须晚于当前时间 (KST)。"
     },
     "price": {
+      "referralTitle": "请输入服务最低价格",
+      "referralDescription": "请输入您提供的服务中的最低价格。",
+      "referralLabel": "服务最低价格",
+      "referralMinimum": "可输入0韩元及以上的金额。",
       "minimum": "每人最低价格为{amount, number}韩元。",
       "notice": "该金额以每人韩元的价格显示给客人。"
     },
@@ -1643,6 +1673,7 @@
     "edit": {
       "loading": "正在加载您的体验...",
       "loadError": "无法加载要编辑的活动。",
+      "activityTypeUnavailable": "无法从服务器确认活动类型，暂时无法编辑。为避免以错误的类型保存，请稍后重试。",
       "backToActivity": "返回活动"
     },
     "errors": {
@@ -1662,6 +1693,7 @@
       "itineraryPhotoRequired": "为每项活动添加照片。",
       "maxGuestsInvalid": "输入大于 0 的整数容量。",
       "priceInvalid": "请输入不低于15,000韩元的每人价格（整数）。",
+      "referralPriceInvalid": "请输入0至9,999,999,999韩元之间的整数金额。",
       "inclusionsRequired": "添加至少一项包含的物品。",
       "discountInvalid": "选择结束日期并输入 1 到 100 之间的整数折扣。",
       "restrictionsRequired": "至少选择一件事客人应该知道，或确认没有什么需要注意的。",

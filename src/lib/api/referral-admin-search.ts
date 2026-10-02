@@ -7,7 +7,11 @@ export type BuddySearchCursor = Record<(typeof fields)[number], number | null>;
 export const initialBuddySearchCursor: BuddySearchCursor = { displayName: 0, name: 0, email: 0 };
 
 /** Backend combines fields with AND. Separate paginated queries implement OR without omissions. */
-export async function searchReferralBuddies(term: string, cursor: BuddySearchCursor) {
+export async function searchReferralBuddies(
+  term: string,
+  cursor: BuddySearchCursor,
+  activeOnly = true,
+) {
   const pages = await Promise.all(
     fields.map(async (field) => {
       const page = cursor[field];
@@ -15,7 +19,12 @@ export async function searchReferralBuddies(term: string, cursor: BuddySearchCur
       return {
         field,
         data: unwrapApiResult(
-          await getAdminBuddies({ [field]: term.trim(), accountStatus: "ACTIVE", page, size: 20 }),
+          await getAdminBuddies({
+            [field]: term.trim(),
+            ...(activeOnly ? { accountStatus: "ACTIVE" as const } : {}),
+            page,
+            size: 20,
+          }),
           "buddies",
         ),
       };

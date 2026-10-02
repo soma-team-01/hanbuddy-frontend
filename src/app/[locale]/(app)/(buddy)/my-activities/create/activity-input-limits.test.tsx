@@ -30,6 +30,12 @@ function Fields() {
   );
 }
 
+function ReferralPriceField() {
+  const t = useTranslations("CreateActivity");
+  const [value, setValue] = useState("");
+  return <PriceStep value={value} onChange={setValue} t={t} referral />;
+}
+
 function ListHarness({
   kind,
   initial,
@@ -55,6 +61,21 @@ function ListHarness({
 }
 
 describe("activity input limits", () => {
+  it("explains referral pricing without silently turning negative or decimal input into a different price", () => {
+    renderWithIntl(<ReferralPriceField />);
+    const input = screen.getByRole("textbox", { name: "Minimum service price" });
+    expect(input).toHaveAccessibleDescription("You can enter an amount from ₩0.");
+    expect(
+      screen.queryByText(
+        "The final price is agreed with the provider. No payment is taken when applying.",
+      ),
+    ).not.toBeInTheDocument();
+    for (const value of ["-5000", "12.5", "0", "5000"]) {
+      fireEvent.change(input, { target: { value } });
+      expect(input).toHaveValue(value);
+    }
+    expect(screen.queryByText("The minimum price per person is ₩15,000.")).not.toBeInTheDocument();
+  });
   it.each([
     ["ko", "1인당 최소 금액은 15,000원입니다."],
     ["en", "The minimum price per person is ₩15,000."],
@@ -82,7 +103,7 @@ describe("activity input limits", () => {
 
   it("uses expanded input limits and accessible English-only title guidance", () => {
     renderWithIntl(<Fields />);
-    const title = screen.getByPlaceholderText("e.g., Cheer at a Korean Baseball Night");
+    const title = screen.getByPlaceholderText("e.g. Korean Baseball Fan Night");
     expect(title).toHaveAttribute("maxlength", "100");
     expect(title).toHaveAccessibleDescription(
       "Activity titles are not automatically translated. Please write the title in English.",

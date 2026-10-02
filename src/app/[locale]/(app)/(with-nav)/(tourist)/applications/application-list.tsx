@@ -46,7 +46,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
 import { FreeCancellationWindow } from "./free-cancellation-window";
-import { ReferralApplicationCard } from "@/components/referral/ReferralApplicationCard";
+import { ReferralApplicationCancelButton } from "@/components/referral/ReferralApplicationCancelButton";
 
 const TABS = ["upcoming", "past"] as const;
 
@@ -55,7 +55,7 @@ const TABS = ["upcoming", "past"] as const;
  * 좁은 화면에서는 제목이 설 자리가 없어지므로 최소 폭 대신 가로를 꽉 채운다.
  */
 const CARD_ACTION_CLASS =
-  "h-12 w-full shrink-0 rounded-xl px-4 font-display text-sm font-bold whitespace-nowrap transition-colors disabled:opacity-40 sm:w-auto sm:min-w-32";
+  "h-12 w-full shrink-0 rounded-xl px-4 font-display text-sm font-bold whitespace-nowrap transition-colors disabled:opacity-40 md:w-auto md:min-w-32 max-md:static max-md:h-8 max-md:w-auto max-md:min-w-16 max-md:translate-y-0 max-md:rounded-lg max-md:px-3 max-md:text-[11px]";
 
 const REASON_MESSAGE_KEY = {
   SCHEDULE_CONFLICT: "scheduleConflict",
@@ -108,19 +108,25 @@ function PriceBreakdown({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-ink"
+        className="flex w-full items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-ink max-md:min-h-9 max-md:gap-2 max-md:text-xs"
       >
-        <span>{t("priceBreakdown")}</span>
+        <span className="shrink-0">{t("priceBreakdown")}</span>
         {/* 접힌 상태에서는 요약 금액, 펼친 상태에서는 아래 상세 내역만 보여준다. */}
         <span className="flex items-center gap-1.5">
           {!open ? (
             <span className="flex flex-col items-end gap-0.5 font-display font-bold text-ink">
-              <span>{formatKrw(total, locale)}</span>
+              <span className="max-md:text-sm">{formatKrw(total, locale)}</span>
               {paymentCharge && isForeignCurrency ? (
-                <span className="font-sans text-xs font-medium text-muted">
-                  {paymentLabel} ·{" "}
-                  {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
-                </span>
+                <>
+                  <span className="font-sans text-xs font-medium text-muted max-md:hidden">
+                    {paymentLabel} ·{" "}
+                    {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
+                  </span>
+                  <span className="font-sans text-xs font-medium text-muted md:hidden">
+                    {providerName ?? paymentLabel} ·{" "}
+                    {formatCurrency(paymentCharge.amount, paymentCharge.currency, locale)}
+                  </span>
+                </>
               ) : null}
             </span>
           ) : null}
@@ -266,6 +272,7 @@ function ApplicationWeatherIndicator({
 function ApplicationCard({
   application,
   onCancel,
+  onCancelReferral,
   onCancelPending,
   onContinuePayment,
   onHoldExpired,
@@ -275,6 +282,7 @@ function ApplicationCard({
 }: Readonly<{
   application: Application;
   onCancel: () => void;
+  onCancelReferral: () => Promise<CancelDialogOutcome>;
   onCancelPending: () => void;
   onContinuePayment: (applicationId: string, paymentProvider: PaymentProvider) => Promise<void>;
   onHoldExpired?: () => void;
@@ -292,10 +300,11 @@ function ApplicationCard({
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
   const tCancellation = useTranslations("ScheduleCancellation");
+  const isReferral = application.activityType === "REFERRAL";
   const isBuddyCancellation = application.cancellationReason === "BUDDY_CANCELLATION";
   const scheduleRefundQuery = useApplicationScheduleRefundQuery(
     application.id,
-    isBuddyCancellation,
+    isBuddyCancellation && !isReferral,
   );
   const getApiErrorMessage = useApiErrorMessage();
   const paymentCharge =
@@ -343,7 +352,12 @@ function ApplicationCard({
 
   async function handleConfirmedPayment() {
     const paymentProvider = pendingPaymentProvider;
-    if (!paymentProvider || application.scheduleCancelled || application.refundRecoveryPending)
+    if (
+      isReferral ||
+      !paymentProvider ||
+      application.scheduleCancelled ||
+      application.refundRecoveryPending
+    )
       return;
 
     setPaymentError(null);
@@ -365,13 +379,13 @@ function ApplicationCard({
   const dDay = isUpcoming ? daysUntilSeoulDate(application.startAt) : null;
 
   return (
-    <article className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 transition-colors hover:border-primary/50 md:p-6">
-      <div className="flex gap-4">
+    <article className="relative flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 transition-colors hover:border-primary/50 max-md:gap-3 max-md:rounded-2xl max-md:p-3.5 md:p-6">
+      <div className="flex gap-4 max-md:grid max-md:grid-cols-[80px_minmax(0,1fr)] max-md:gap-x-3 max-md:gap-y-1.5">
         <Link
           href={`/applications/${application.id}/activity`}
           aria-hidden="true"
           tabIndex={-1}
-          className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-panel md:size-28"
+          className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-panel max-md:col-start-1 max-md:row-span-4 max-md:row-start-1 max-md:h-full max-md:min-h-20 max-md:w-20 max-md:rounded-xl md:size-28"
         >
           <Image
             src={getActivityThumbnail(application.thumbnailUrl)}
@@ -382,8 +396,8 @@ function ApplicationCard({
           />
         </Link>
         {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
-        <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="flex flex-wrap items-center gap-2 sm:col-start-1">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-1.5 max-md:contents md:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="flex flex-wrap items-center gap-2 max-md:col-start-2 max-md:row-start-1 max-md:gap-1.5 md:col-start-1 max-md:[&>span]:px-2 max-md:[&>span]:py-0.5">
             <StatusBadge status={application.status} />
             {dDay !== null && dDay >= 0 ? (
               <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
@@ -392,17 +406,25 @@ function ApplicationCard({
             ) : null}
           </div>
 
-          <div className="flex min-w-0 flex-col gap-1.5 sm:col-start-1">
-            <Link href={`/applications/${application.id}/activity`} className="min-w-0">
+          <div className="flex min-w-0 flex-col gap-1.5 max-md:contents md:col-start-1">
+            <Link
+              href={`/applications/${application.id}/activity`}
+              className={
+                isReferral
+                  ? "min-w-0 after:absolute after:inset-0 after:rounded-3xl max-md:col-start-2 max-md:row-start-2"
+                  : "min-w-0 max-md:col-start-2 max-md:row-start-2"
+              }
+            >
               <h3
-                className={`line-clamp-2 font-display text-base leading-6 font-bold ${
+                title={application.activityTitle}
+                className={`line-clamp-2 font-display text-base leading-6 font-bold max-md:block max-md:truncate max-md:text-sm max-md:leading-5 ${
                   isCancelled ? "text-muted" : "text-ink"
                 }`}
               >
                 {application.activityTitle}
               </h3>
             </Link>
-            <p className="flex items-center gap-2 text-sm text-muted">
+            <p className="flex items-center gap-2 text-sm text-muted max-md:col-start-2 max-md:row-start-4 max-md:gap-1 max-md:text-[11px] max-md:leading-4">
               <span>{application.dateLabel}</span>
               {application.status === "confirmed" && !hasEnded ? (
                 <ApplicationWeatherIndicator
@@ -416,24 +438,25 @@ function ApplicationCard({
               type="button"
               aria-label={tActivityDetail("viewHostProfile", { name: application.hostName })}
               onClick={() => setHostProfileOpen(true)}
-              className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary"
+              className="relative z-10 flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-primary max-md:col-start-2 max-md:row-start-3 max-md:max-w-full max-md:text-xs"
             >
               <Avatar name={application.hostName} src={application.hostAvatarUrl} size={20} />
-              <span>{application.hostName}</span>
+              <span className="max-md:truncate">{application.hostName}</span>
             </button>
           </div>
 
           {/* 넓은 화면에서는 제목·일정·버디 묶음 옆에 실행 버튼과 취소 사유를 담는다 */}
           <div
-            className={`relative order-last flex flex-col items-stretch gap-2 text-left sm:order-none sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:items-end sm:text-right ${
-              application.status === "confirmed" ? "sm:self-stretch" : "sm:self-center"
-            }`}
+            className={`relative z-10 order-last flex flex-col items-stretch gap-2 text-left max-md:col-span-2 max-md:col-start-1 max-md:row-span-1 max-md:row-start-5 max-md:mt-2 max-md:flex-row max-md:flex-wrap max-md:items-center max-md:justify-end max-md:gap-x-4 max-md:text-left max-md:empty:hidden md:order-none md:col-start-2 md:row-span-2 md:row-start-1 md:items-end md:text-right ${
+              application.status === "confirmed" ? "md:self-stretch" : "md:self-center"
+            } ${isBuddyCancellation ? "max-md:flex-nowrap max-md:items-start" : ""}`}
           >
-            {application.status === "pending_payment" &&
+            {!isReferral &&
+            application.status === "pending_payment" &&
             !application.scheduleCancelled &&
             !application.refundRecoveryPending ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
-              <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto">
+              <div className="flex w-full flex-col items-stretch gap-3 max-md:flex-row max-md:flex-wrap max-md:justify-end max-md:gap-2 md:w-auto">
                 {showTossPayment ? (
                   <button
                     type="button"
@@ -478,26 +501,34 @@ function ApplicationCard({
             !application.scheduleCancelled &&
             !application.refundRecoveryPending &&
             !hasEnded ? (
-              <button
-                type="button"
-                onClick={onCancel}
-                className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary sm:absolute sm:top-1/2 sm:right-0 sm:-translate-y-1/2`}
-              >
-                {t("cancel")}
-              </button>
+              isReferral ? (
+                <ReferralApplicationCancelButton
+                  onCancel={onCancelReferral}
+                  className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary md:absolute md:top-1/2 md:right-0 md:-translate-y-1/2`}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className={`${CARD_ACTION_CLASS} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary md:absolute md:top-1/2 md:right-0 md:-translate-y-1/2`}
+                >
+                  {t("cancel")}
+                </button>
+              )
             ) : null}
-            {application.status === "confirmed" &&
+            {!isReferral &&
+            application.status === "confirmed" &&
             !application.scheduleCancelled &&
             !application.refundRecoveryPending &&
             !hasEnded ? (
-              <div className="sm:mt-auto">
+              <div className="max-md:order-first max-md:mr-auto max-md:min-w-0 max-md:flex-1 md:mt-auto max-md:[&>p]:text-[10px] max-md:[&>p]:leading-4">
                 <FreeCancellationWindow
                   applicationId={application.id}
                   startAt={application.startAt}
                 />
               </div>
             ) : null}
-            {isCompleted && !application.myReview ? (
+            {!isReferral && isCompleted && !application.myReview ? (
               <ApplicationReviewActions
                 applicationId={application.id}
                 activityTitle={application.activityTitle}
@@ -505,11 +536,20 @@ function ApplicationCard({
                 variant="compact"
               />
             ) : null}
-            {isBuddyCancellation ? (
-              <ApplicationScheduleRefundStatus query={scheduleRefundQuery} />
+            {!isReferral && isBuddyCancellation ? (
+              <ApplicationScheduleRefundStatus
+                query={scheduleRefundQuery}
+                className="max-md:mt-0 max-md:mr-auto max-md:min-w-0 max-md:flex-1 max-md:text-left max-md:[&_[role=status]]:text-xs"
+              />
             ) : null}
             {isCancelled && application.cancellationReason ? (
-              <p className="mt-auto text-xs text-muted">
+              <p
+                className={`mt-auto text-xs text-muted max-md:leading-5 ${
+                  isBuddyCancellation
+                    ? "max-md:mt-0 max-md:min-w-0 max-md:flex-1 max-md:text-right max-md:text-[11px] max-md:break-words"
+                    : "max-md:w-full"
+                }`}
+              >
                 {application.cancellationReason === "BUDDY_CANCELLATION"
                   ? tCancellation("buddyCancellationReason")
                   : t("cancelledReason", {
@@ -527,18 +567,22 @@ function ApplicationCard({
           </div>
         </div>
       </div>
-      <PriceBreakdown
-        application={application}
-        paymentCharge={paymentCharge}
-        scheduleRefund={isBuddyCancellation ? scheduleRefundQuery.data : undefined}
-      />
-      {application.refundRecoveryPending &&
+      {!isReferral && (
+        <PriceBreakdown
+          application={application}
+          paymentCharge={paymentCharge}
+          scheduleRefund={isBuddyCancellation ? scheduleRefundQuery.data : undefined}
+        />
+      )}
+      {!isReferral &&
+      application.refundRecoveryPending &&
       application.cancellationReason !== "BUDDY_CANCELLATION" ? (
         <p role="status" className="border-l-2 border-primary pl-3 text-sm text-muted">
           {tCancellation("refundRecoveryPending")}
         </p>
       ) : null}
-      {application.status === "pending_payment" &&
+      {!isReferral &&
+        application.status === "pending_payment" &&
         !application.scheduleCancelled &&
         !application.refundRecoveryPending && (
           <div className="flex flex-col gap-2">
@@ -558,7 +602,7 @@ function ApplicationCard({
             )}
           </div>
         )}
-      {isCompleted && application.myReview ? (
+      {!isReferral && isCompleted && application.myReview ? (
         <ApplicationReviewActions
           applicationId={application.id}
           activityTitle={application.activityTitle}
@@ -576,7 +620,8 @@ function ApplicationCard({
           onClose={() => setHostProfileOpen(false)}
         />
       ) : null}
-      {pendingPaymentProvider &&
+      {!isReferral &&
+      pendingPaymentProvider &&
       !application.scheduleCancelled &&
       !application.refundRecoveryPending ? (
         <ConfirmDialog
@@ -683,31 +728,27 @@ export function ApplicationList({
           );
         })}
       </div>
-      <div data-testid="application-list" className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
-        {visibleApplications.map((application) =>
-          application.activityType === "REFERRAL" ? (
-            <ReferralApplicationCard
-              key={application.id}
-              application={application}
-              onCancel={() => onCancelApplication(application.id, "OTHER")}
-            />
-          ) : (
-            <ApplicationCard
-              key={application.id}
-              application={application}
-              onCancel={() => setCancelTargetId(application.id)}
-              onCancelPending={() => {
-                setPendingCancelError(null);
-                setPendingCancelTargetId(application.id);
-              }}
-              onContinuePayment={onContinuePayment}
-              onHoldExpired={onHoldExpired}
-              isPaymentPending={isPaymentPending}
-              paymentProviderMode={paymentProviderMode}
-              refundPolicyDocument={refundPolicyDocument}
-            />
-          ),
-        )}
+      <div
+        data-testid="application-list"
+        className="grid gap-5 max-md:gap-3 lg:grid-cols-2 xl:grid-cols-1"
+      >
+        {visibleApplications.map((application) => (
+          <ApplicationCard
+            key={application.id}
+            application={application}
+            onCancel={() => setCancelTargetId(application.id)}
+            onCancelReferral={() => onCancelApplication(application.id, "OTHER")}
+            onCancelPending={() => {
+              setPendingCancelError(null);
+              setPendingCancelTargetId(application.id);
+            }}
+            onContinuePayment={onContinuePayment}
+            onHoldExpired={onHoldExpired}
+            isPaymentPending={isPaymentPending}
+            paymentProviderMode={paymentProviderMode}
+            refundPolicyDocument={refundPolicyDocument}
+          />
+        ))}
         {visibleApplications.length === 0 && (
           <div className="flex flex-col items-center gap-5 py-14 lg:col-span-2">
             <p className="text-center text-muted">{t("empty")}</p>

@@ -4,16 +4,21 @@ import { LocaleDialog } from "@/components/layout/LocaleDialog";
 import { renderWithIntl } from "@/test/render-with-intl";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
+const pathnameMock = vi.hoisted(() => ({ value: "/explore" }));
+const reloadPolicyMock = vi.hoisted(() => vi.fn(() => false));
+vi.mock("@/lib/policy-locale-navigation", () => ({ reloadPolicyInLocale: reloadPolicyMock }));
 
 vi.mock("@/i18n/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/i18n/navigation")>()),
   useRouter: () => routerMock,
-  usePathname: () => "/explore",
+  usePathname: () => pathnameMock.value,
 }));
 
 describe("LocaleDialog", () => {
   beforeEach(() => {
     routerMock.replace.mockReset();
+    pathnameMock.value = "/explore";
+    reloadPolicyMock.mockReset().mockReturnValue(false);
     window.history.replaceState(null, "", "/en/explore?category=food#results");
   });
 
@@ -36,5 +41,14 @@ describe("LocaleDialog", () => {
 
     expect(routerMock.replace).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("reloads the chosen policy language without using a stale intercepted route", () => {
+    pathnameMock.value = "/policies/terms-of-service";
+    reloadPolicyMock.mockReturnValue(true);
+    renderWithIntl(<LocaleDialog onClose={vi.fn()} />, { locale: "en" });
+    fireEvent.click(screen.getByRole("radio", { name: "한국어" }));
+    expect(reloadPolicyMock).toHaveBeenCalledWith("/policies/terms-of-service", "ko");
+    expect(routerMock.replace).not.toHaveBeenCalled();
   });
 });

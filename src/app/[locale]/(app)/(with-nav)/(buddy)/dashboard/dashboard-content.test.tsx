@@ -12,6 +12,20 @@ import { DashboardContent } from "./dashboard-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
 
+vi.mock("@/lib/api/schedule-cancellation", () => ({
+  getScheduleCancellation: vi.fn(async () => ({
+    status: "success",
+    cancellation: {
+      activityScheduleId: 99,
+      status: "OPEN",
+      cancelledAt: null,
+      reason: null,
+      applicants: [],
+    },
+  })),
+  cancelSchedule: vi.fn(),
+}));
+
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
   useRouter: () => routerMock,
@@ -78,6 +92,32 @@ describe("DashboardContent", () => {
     mockedGetMyActivities.mockReset();
     mockedUpdateMyActivityStatus.mockReset();
     mockedGetMyActivities.mockResolvedValue({ status: "success", activities: [] });
+  });
+
+  it("anchors a single-schedule menu to the title while keeping chat beside the time", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          ...teaTastingActivities[0],
+          schedules: [
+            { ...teaTastingActivities[0].schedules[0], startAt: "2099-07-20T10:00:00+09:00" },
+          ],
+        },
+      ],
+    });
+    renderWithQueryClient(<DashboardContent />);
+    const title = await screen.findByRole("heading", { name: "Traditional Tea Tasting" });
+    const card = title.closest("article")!;
+    expect(card).toHaveClass("relative");
+    expect(title.closest("a")).toHaveClass("pr-10");
+    const menu = within(card).getByRole("button", { name: "Schedule options" });
+    expect(menu.parentElement).toHaveClass("absolute", "top-4", "right-4");
+    const chat = await within(card).findByRole("button", { name: "Create group chat" });
+    const timeRow = within(card).getByText("10:00 AM").closest("a")!.parentElement!;
+    expect(timeRow).toContainElement(chat);
+    expect(menu.parentElement).not.toContainElement(chat);
   });
 
   it("shows the week of the first activity date and its applicants", async () => {
@@ -508,8 +548,6 @@ describe("DashboardContent", () => {
     expect(screen.getAllByText("신청자 1명").length).toBeGreaterThan(0);
     // 몇 명이 오는지 신청자 줄에서 바로 보인다
     expect(screen.getByText("2명")).toBeInTheDocument();
-    // 방이 없을 때는 만들기, 호버 안내도 만들기 기준이다
-    expect(screen.getByRole("button", { name: "단체 채팅방 만들기" })).toBeInTheDocument();
-    expect(screen.getByRole("tooltip")).toHaveTextContent("한 번만 만들면");
+    expect(await screen.findByRole("button", { name: "단체 채팅방 만들기" })).toBeInTheDocument();
   });
 });

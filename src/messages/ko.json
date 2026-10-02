@@ -1,4 +1,17 @@
 {
+  "ActivitySearch": {
+    "placeholder": "언제 참여하시나요?",
+    "apply": "적용",
+    "timezone": "한국 시간 · KST",
+    "close": "달력 닫기",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "label": "참여 날짜",
+    "search": "검색",
+    "clear": "초기화",
+    "hint": "한국 시간(KST) 기준으로 신청 가능한 활동을 검색합니다.",
+    "invalid": "올바른 날짜를 선택해 주세요."
+  },
   "SignupExtra": {
     "sourceLabel": "HanBuddy를 어떻게 알게 되셨나요?",
     "sourceDetailLabel": "어떻게 알게 되셨나요? (최대 100자)",
@@ -29,6 +42,35 @@
       "bankInvalid": "은행과 계좌번호를 확인해 주세요."
     }
   },
+  "ScheduleCancellation": {
+    "refundAmount": "환불 금액",
+    "buddyCancellationReason": "버디가 남긴 취소 사유",
+    "refundRecoveryPending": "환불 결과를 확인 중입니다. 취소나 결제를 다시 요청하지 마세요.",
+    "more": "일정 옵션",
+    "cancelAction": "일정 취소",
+    "cancelled": "취소된 일정",
+    "title": "이 일정을 취소할까요?",
+    "irreversible": "일정 취소 후 재오픈·신규 신청은 불가하며, 환불은 자동 처리됩니다. 신청자에게 취소 사실을 꼭 알려주세요.",
+    "keep": "일정 유지",
+    "confirm": "일정 취소하기",
+    "pending": "취소 중…",
+    "reason": "취소 사유",
+    "reasonHint": "참여자에게 공개되는 사유입니다. 개인정보나 내부 메모는 적지 마세요.",
+    "success": "일정이 취소되었습니다. 환불은 순차적으로 진행됩니다.",
+    "loadError": "최신 취소 상태를 불러오지 못했습니다.",
+    "requestError": "취소 결과를 확인하지 못했습니다. 상태를 확인한 뒤 다시 시도해 주세요.",
+    "uncertain": "취소가 접수되었는지 확인되지 않았습니다. 다시 제출하기 전에 상태를 확인해 주세요.",
+    "retry": "상태 다시 확인",
+    "started": "이미 시작된 일정은 취소할 수 없습니다.",
+    "statuses": {
+      "QUEUED": "환불 처리 중",
+      "DISPATCHED": "환불 처리 중",
+      "REVIEW_REQUIRED": "환불 확인 중 · 완료까지 시간이 걸릴 수 있습니다.",
+      "COMPLETED": "환불 완료",
+      "NO_PAYMENT": "취소 완료 · 확인된 결제 없음",
+      "EXCLUDED": "기존 취소·환불 정책 유지"
+    }
+  },
   "Common": {
     "cancel": "취소",
     "close": "닫기",
@@ -37,6 +79,14 @@
     "unavailable": "사용할 수 없음"
   },
   "ApiErrors": {
+    "bookingClosed": "활동 시작 24시간 전까지만 신청·결제를 요청할 수 있습니다. 다른 일정을 선택해 주세요.",
+    "scheduleCapacity": "정원은 1~100명이며, 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
+    "scheduleEdit": "이미 시작되거나 취소된 일정은 수정할 수 없습니다. 신청 이력이 있는 일정은 시작 시각을 변경할 수 없습니다.",
+    "scheduleDuplicate": "동일한 시작 시각의 일정이 이미 있습니다.",
+    "refundRecoveryPending": "환불 결과를 확인 중입니다. 취소나 결제를 다시 요청하지 마세요.",
+    "scheduleCancellationReason": "공개 취소 사유를 1~255자로 입력해 주세요.",
+    "scheduleCancellationStarted": "시작한 일정은 취소할 수 없습니다.",
+    "scheduleNotCancelled": "일정 취소 내역이 없습니다. 내 신청을 새로고침해 최신 상태를 확인해 주세요.",
     "signupSourceInvalid": "가입 경로와 상세 내용을 확인해 주세요.",
     "signupBankAccountInvalid": "은행과 계좌번호를 확인해 주세요.",
     "authenticationRequired": "계속하려면 다시 로그인해 주세요.",
@@ -122,6 +172,7 @@
     "languageDialogDescription": "HanBuddy에서 사용할 언어를 선택하세요.",
     "home": "홈",
     "explore": "탐색",
+    "about": "소개",
     "applications": "내 신청",
     "dashboard": "대시보드",
     "buddyWorkspace": "버디 워크스페이스",
@@ -205,10 +256,10 @@
     },
     "visuals": {
       "ariaLabel": "서울에서 만나는 HanBuddy의 실제 순간",
-      "mainAlt": "한강에서 피크닉을 즐기는 친구들",
-      "marketAlt": "서울의 야간 야구 경기장",
-      "teaAlt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
-      "fountainAlt": "해 질 무렵 빛나는 한강 분수",
+      "jamsilGroupAlt": "잠실야구장 조명 아래에서 손하트를 만드는 하늘색 유니폼의 게스트와 버디",
+      "jamsilSundayGuideAlt": "일요일 밤 잠실 그라운드 앞에 선 게스트와 로컬 가이드",
+      "kbo0726Alt": "야구장에서 함께 응원하는 여행자와 로컬 버디",
+      "jamsilAlt": "잠실야구장 한 줄을 채운 하늘색 유니폼의 게스트와 버디",
       "kleagueAlt": "K리그 경기장에서 함께한 게스트와 버디",
       "mainCaption": "나만의 한국을 만나보세요."
     },
@@ -354,6 +405,121 @@
       "button": "버디로 시작하기"
     }
   },
+  "About": {
+    "metadataTitle": "HanBuddy 소개 | 서울 직관의 밤을 함께 만드는 팀",
+    "metadataDescription": "HanBuddy를 기획하고 운영하는 서울 팀 ZeroOne을 소개합니다. 잠실·고척 KBO 야구 직관과 축구 직관을 한국인 로컬 버디와 함께합니다.",
+    "hero": {
+      "eyebrow": "HanBuddy 소개",
+      "title": "‘현지인처럼’을 실제로 만드는 팀입니다.",
+      "description": "한국인 버디와 함께하는 서울 소규모 직관의 밤. 기획부터 티켓 구매까지 저희가 준비하고, 옆자리에 앉아 함께 응원합니다. 오시기만 하면 됩니다.",
+      "primaryCta": "액티비티 둘러보기",
+      "secondaryCta": "팀 소개 보기",
+      "collageAlt1": "밤의 잠실 그라운드를 배경으로 두산 응원 수건을 든 두 게스트",
+      "collageAlt2": "잠실야구장에서 두산 베어스 마스코트와 함께 포즈를 취한 게스트와 버디",
+      "collageAlt3": "잠실 관중석에서 간식을 나누는 게스트와 버디, 로컬 가이드"
+    },
+    "origin": {
+      "eyebrow": "시작한 이유",
+      "title": "한국의 가장 좋은 순간들은 ‘현지인 전용’ 뒤에 잠겨 있습니다.",
+      "body1": "눈앞에서 사라지는 티켓 한 장에서 시작했습니다. 잠실 야간 경기, 몇 초 만에 매진, 그리고 예매 앱이 요구하는",
+      "body1Strong": "한국 휴대폰 번호와 한국 카드.",
+      "body2": "한국 번호도, 한국 카드도 없으면 티켓도 없습니다.",
+      "body2Strong": "HanBuddy는 티켓을 사고 좌석을 잡고 옆자리에 앉아 주는 로컬 버디로 그 밤을 열어 드립니다."
+    },
+    "how": {
+      "eyebrow": "진행 방식",
+      "title": "모든 직관의 밤을 저희가 직접 운영합니다.",
+      "steps": {
+        "plan": {
+          "title": "회차 하나하나를 직접 기획합니다",
+          "description": "잠실·고척 야구, 서울월드컵경기장 축구. 실제 경기 한 편, 소규모 그룹, 그리고 응원가를 아는 버디."
+        },
+        "confirm": {
+          "title": "온라인으로 예약하면 바로 티켓을 구매합니다",
+          "description": "경기 티켓과 구장 음식이 가격에 포함되어 있습니다. 담당자가 직접 만남 장소를 안내하고 궁금한 점에 답합니다."
+        },
+        "improve": {
+          "title": "회차마다 더 나아집니다",
+          "description": "모든 게스트가 1분 설문을 남기고, 그 답이 다음 회차를 바꿉니다."
+        }
+      }
+    },
+    "stats": {
+      "eyebrow": "지금까지",
+      "title": "실제 직관의 밤에서 나온 숫자입니다.",
+      "items": {
+        "runs": {
+          "value": "7회",
+          "label": "2026년 6월부터 운영한 직관의 밤"
+        },
+        "rating": {
+          "value": "4.9 / 5",
+          "label": "게스트 평균 만족도"
+        },
+        "stadiums": {
+          "value": "3곳",
+          "label": "경기장: 잠실, 고척, 서울월드컵"
+        }
+      },
+      "note": "만족도는 2026년 6~9월 게스트 설문 응답 12건 기준입니다."
+    },
+    "timeline": {
+      "eyebrow": "운영 기록",
+      "title": "지나온 회차와 다음 회차.",
+      "items": {
+        "june": {
+          "date": "2026년 6월",
+          "title": "잠실 첫 KBO 직관",
+          "description": "게스트 한 명, 팀원 전원이 버디로, 그리고 배울 것이 가득했던 밤.",
+          "imageAlt": "첫 야구 직관 날 관중석에서 함께 웃는 게스트와 버디"
+        },
+        "july": {
+          "date": "2026년 7월",
+          "title": "잠실 KBO 두 번째 회차",
+          "description": "게스트 세 명, 응원가, 치킨과 맥주. 세 명 모두 설문 5점 만점.",
+          "imageAlt": "야구장에서 함께 응원하는 여행자와 로컬 버디"
+        },
+        "august": {
+          "date": "2026년 8월",
+          "title": "첫 축구 직관: K리그",
+          "description": "서울월드컵경기장, 머플러, 그리고 ‘친구들과 있는 것 같았다’는 게스트의 말.",
+          "imageAlt": "K리그 경기장에서 함께한 게스트와 버디"
+        },
+        "september": {
+          "date": "2026년 9월",
+          "title": "직관 4회, 첫 실내 돔 포함",
+          "description": "고척 스카이돔과 잠실, 하늘색 유니폼, 마스코트 사진. 9월 설문은 전원 5점 만점.",
+          "imageAlt": "고척 스카이돔 관중석에서 웃고 있는 세 친구"
+        }
+      }
+    },
+    "team": {
+      "eyebrow": "팀 소개",
+      "title": "서울의 세 친구, ZeroOne이 HanBuddy를 함께 운영합니다.",
+      "description": "회차를 기획하고, 티켓을 사고, 메시지에 답하고, 관중석에 함께 앉습니다.",
+      "backed": "HanBuddy는 과학기술정보통신부 주관 국가 SW 인재 양성 프로그램 AI·SW 마에스트로 17기 팀 ZeroOne의 공식 프로젝트입니다.",
+      "linkedin": "LinkedIn",
+      "members": {
+        "minhyung": {
+          "name": "김민형",
+          "role": "팀 리드 · 운영 총괄"
+        },
+        "yoohyun": {
+          "name": "김유현",
+          "role": "경험 기획 · 콘텐츠"
+        },
+        "junyoung": {
+          "name": "이준영",
+          "role": "예약 · 매칭 운영"
+        }
+      }
+    },
+    "cta": {
+      "title": "저희를 만나는 가장 좋은 방법은 경기장입니다.",
+      "description": "날짜를 고르고 좌석을 예약하세요. 나머지는 저희가 준비합니다.",
+      "button": "다가오는 직관 보기"
+    }
+  },
   "Auth": {
     "metadataTitle": "로그인 | HanBuddy",
     "metadataDescription": "현지 버디와 함께 여행 일정 너머의 한국을 경험해 보세요.",
@@ -361,6 +527,7 @@
     "welcome": "현지인처럼 한국을 경험해 보세요.",
     "introduction": "현지 버디와 만나 한국을 더 가까이, 더 나답게 경험해 보세요.",
     "continueWithGoogle": "Google로 계속하기",
+    "bookingLoginPrompt": "예약을 이어가려면 로그인해 주세요",
     "reviewLogin": {
       "title": "이메일로 로그인",
       "emailLabel": "이메일",
@@ -387,12 +554,12 @@
     "rightsReserved": "모든 권리를 보유합니다.",
     "visualAlt": "한버디 게스트와 버디가 야구장에서 함께 웃고 있는 모습",
     "visualCaption": "새 친구들, 7월 26일 ⚾",
-    "visualRightAlt": "야구장 관중석에서 게스트와 버디가 함께 웃고 있는 모습",
-    "visualRightCaption": "첫 야구 직관 ⚾",
-    "visualBottomLeftAlt": "한강을 밝히는 반포대교 무지개분수",
-    "visualBottomLeftCaption": "반포 무지개분수 🌈",
-    "visualBottomRightAlt": "한강에서 즐기는 치킨과 라면, 음료",
-    "visualBottomRightCaption": "한강 치맥 🍗",
+    "visualRightAlt": "잠실 관중석에서 곰 귀 머리띠를 쓴 게스트와 버디",
+    "visualRightCaption": "곰 귀 머리띠, 9월 13일 ⚾",
+    "visualBottomLeftAlt": "잠실야구장에서 두산 베어스 마스코트와 함께 포즈를 취한 게스트와 버디",
+    "visualBottomLeftCaption": "마스코트와, 9월 12일 ⚾",
+    "visualBottomRightAlt": "고척 스카이돔 관중석에서 간식을 나누는 게스트와 버디",
+    "visualBottomRightCaption": "돔 간식 타임, 9월 5일 ⚾",
     "errors": {
       "googleCancelled": "Google 로그인이 취소되었습니다.",
       "missingCode": "Google에서 인증 코드를 받지 못했습니다.",
@@ -652,9 +819,11 @@
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다.",
     "hostedActivities": "이 버디의 다른 체험",
     "noOtherActivities": "아직 다른 체험이 없습니다.",
-    "viewHostProfile": "{name} 프로필 보기"
+    "viewHostProfile": "{name} 프로필 보기",
+    "autoTranslated": "자동 번역됨"
   },
   "Reviews": {
+    "anonymous": "익명",
     "sectionTitle": "후기",
     "ratingAria": "5점 만점에 {rating}점",
     "countLabel": "{count, plural, =0 {아직 후기가 없습니다} other {후기 #개}}",
@@ -695,20 +864,31 @@
     "noneForRating": "해당 별점의 후기가 아직 없습니다.",
     "ratingWithCountAria": "{count, plural, other {후기 #개 기준 5점 만점에 {rating}점}}"
   },
+  "ActivityContact": {
+    "teaser": "궁금한 게 있으면 언제든지 물어보세요!",
+    "trigger": "문의하기",
+    "title": "더 궁금하신가요?",
+    "description": "언제든지 편한 연락 수단으로 HanBuddy 운영팀에 문의해 주세요.",
+    "hint": "활동 이름이나 페이지 링크를 함께 보내주시면 더 쉽게 안내해 드릴 수 있어요."
+  },
   "AlternativePayment": {
     "trigger": "다른 결제 방법이 필요하신가요?",
     "title": "다른 결제 방법을 원하시나요?",
-    "description": "아래 항목을 작성해 보내주세요.",
-    "message": "안녕하세요! 다른 결제 방법으로 참여하고 싶어요.\nHanBuddy 가입 이메일: [가입 이메일]\n버디 이름: [버디 이름]\n체험명: 서울숲 산책과 성수동 카페 투어\n일정: YYYY-MM-DD 14:00 (KST)\n인원: 2명\n원하는 결제 방법: 한국 은행 계좌로 입금",
-    "exampleTitle": "문의 작성 예시",
-    "exampleHint": "아래 내용은 예시예요. 복사 후 본인 정보와 원하는 버디·체험·일정으로 수정해 보내주세요.",
+    "description": "아래 예약 정보를 확인하고 원하는 결제 방법을 작성해 보내주세요.",
+    "message": "안녕하세요! 다른 결제 방법으로 참여하고 싶어요.\nHanBuddy 가입 이메일: {email}\n버디 이름: {buddy}\n체험명: {activity}\n일정: {schedule}\n인원(본인 포함): {participants}명\n원하는 결제 방법: {method}",
+    "exampleTitle": "문의 내용",
+    "exampleHint": "현재 선택한 정보가 반영되어 있어요. 내용을 확인하고 원하는 결제 방법을 작성한 후 보내주세요.",
     "copy": "템플릿 복사",
-    "copied": "복사했어요. 내용을 수정한 뒤 원하는 채널로 보내주세요.",
-    "copyFailed": "복사하지 못했어요. 위 예시를 직접 선택해 복사해 주세요.",
+    "copied": "복사했어요. 내용을 확인하고 원하는 결제 방법을 작성해 보내주세요.",
+    "copyFailed": "복사하지 못했어요. 위 문의 내용을 선택해 복사해 주세요.",
     "email": "이메일",
-    "notConfirmed": "문의만으로 예약이 확정되지는 않아요."
+    "notConfirmed": "문의만으로 예약이 확정되지는 않아요.",
+    "missingValue": "[직접 입력해 주세요]",
+    "missingSchedule": "[날짜와 시간을 선택해 주세요]",
+    "preferredMethod": "[원하는 결제 방법]"
   },
   "Booking": {
+    "bookingWindowNotice": "신청·결제는 활동 시작 24시간 전까지만 가능합니다.",
     "title": "액티비티 예약",
     "loading": "예약 정보를 불러오는 중...",
     "loadError": "예약 정보를 불러오지 못했습니다.",
@@ -894,8 +1074,8 @@
     "confirming": "결제를 승인하는 중...",
     "confirmFailed": "결제를 승인하지 못했습니다. 내 신청에서 다시 시도해 주세요.",
     "failTitle": "결제에 실패했습니다",
-    "failDescription": "결제가 완료되지 않았으며 금액은 청구되지 않았습니다.",
-    "retryFromApplications": "내 신청에서 다시 시도",
+    "failDescription": "결제 결과를 확인하지 못했습니다. 다시 결제하기 전에 내 신청에서 최신 상태를 확인해 주세요.",
+    "retryFromApplications": "내 신청에서 상태 확인",
     "failReasons": {
       "cancelled": "결제가 완료되기 전에 취소되었습니다.",
       "aborted": "결제가 중단되었습니다. 다시 시도해 주세요.",
@@ -1247,7 +1427,10 @@
       "characters": "{count, number}자 입력",
       "hostIntroductionCharacters": "{count, number}/{max, number}자 · 최소 {min, number}자",
       "experienceNameCharacters": "{count, number}/{max, number}자",
-      "experienceDescriptionCharacters": "{count, number}/{max, number}자 · 최소 {min, number}자"
+      "experienceDescriptionCharacters": "{count, number}/{max, number}자 · 최소 {min, number}자",
+      "experienceNameEnglish": "활동 제목은 자동 번역되지 않습니다. <emphasis>반드시 영어로</emphasis> 작성해 주세요.",
+      "fieldCharacters": "{count} / {max}자",
+      "listLimits": "{count} / {max}개 · 항목당 최대 {length}자"
     },
     "placeholders": {
       "hostIntroduction": "본인을 소개하고 이 체험을 호스팅하려는 이유를 알려 주세요.",
@@ -1258,7 +1441,7 @@
       "meetingAddress": "예: 서울특별시 송파구 올림픽로 25",
       "meetingPlace": "예: 1번 게이트 매표소",
       "itineraryTitle": "예: 응원가 배우기",
-      "itineraryDescription": "이 활동을 5자 이상 50자 이하로 설명해 주세요.",
+      "itineraryDescription": "이 활동을 5자 이상 1000자 이하로 설명해 주세요.",
       "duration": "예: 30",
       "maxGuests": "예: 8",
       "pricePerPerson": "예: 50000",
@@ -1268,6 +1451,9 @@
       "restrictions": "예: 편한 신발을 신고 와 주세요"
     },
     "photos": {
+      "reorderHint": "대표 사진을 변경하거나, 사진을 드래그해 순서를 바꾸세요.",
+      "move": "사진 {index} 순서 이동",
+      "moved": "사진이 전체 {count}장 중 {position}번째로 이동했습니다",
       "upload": "체험 사진 추가",
       "hint": "JPG, PNG, WebP · 최소 3장, 최대 10장",
       "label": "체험 사진 업로드",
@@ -1305,13 +1491,24 @@
         "done": "완료",
         "errors": {
           "photo": "계속하려면 사진을 추가해 주세요.",
-          "description": "활동 설명을 5자 이상 50자 이하로 입력해 주세요.",
+          "description": "활동 설명을 5자 이상 1000자 이하로 입력해 주세요.",
           "duration": "소요 시간을 1분 이상으로 설정해 주세요.",
-          "title": "활동 제목을 1자 이상 20자 이하로 입력해 주세요."
+          "title": "활동 제목을 1자 이상 100자 이하로 입력해 주세요."
         }
       }
     },
     "capacity": {
+      "minimumHint": "예약 확정·결제 대기 인원의 합보다 적게 설정할 수 없어요.",
+      "previous": "이전 회차",
+      "next": "다음 회차",
+      "pageRange": "전체 {total}개 중 {from}–{to}",
+      "defaultTitle": "기본 정원",
+      "settings": "날짜별 상세 설정",
+      "defaultHint": "새 회차의 기본값입니다. 기존 회차 정원은 바뀌지 않습니다.",
+      "scheduleTitle": "날짜·시간별 정원",
+      "scheduleHint": "정원은 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
+      "confirmed": "예약 확정 {count}명",
+      "pending": "결제 대기 {count}명",
       "decrease": "최대 인원 줄이기",
       "increase": "최대 인원 늘리기",
       "guests": "{count, plural, one {최대 #명} other {최대 #명}}"
@@ -1324,6 +1521,7 @@
       "mapTitle": "선택한 만남 주소 지도"
     },
     "schedule": {
+      "bookingWindowNotice": "신청·결제는 활동 시작 24시간 전까지만 가능합니다.",
       "notice": "필요한 날짜를 여러 개 선택할 수 있습니다. 모든 시작 시간은 한국 표준시(KST) 기준입니다.",
       "calendarLabel": "체험 진행 날짜 달력",
       "previousMonth": "이전 달",
@@ -1345,6 +1543,7 @@
       "pastTimeHint": "오늘 날짜에는 현재 시각(KST) 이후의 시간만 추가할 수 있어요."
     },
     "price": {
+      "minimum": "1인당 최소 금액은 {amount, number}원입니다.",
       "notice": "설정한 금액은 게스트에게 1인당 원화 요금으로 표시됩니다."
     },
     "inclusions": {
@@ -1411,21 +1610,22 @@
       "backToActivity": "활동 상세로 돌아가기"
     },
     "errors": {
+      "scheduleCapacityOccupied": "정원은 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
       "categoryRequired": "계속하려면 카테고리를 선택해 주세요.",
-      "hostIntroductionRequired": "본인 소개를 30자 이상 200자 이하로 입력해 주세요.",
+      "hostIntroductionRequired": "본인 소개를 30자 이상 2000자 이하로 입력해 주세요.",
       "photosMinimum": "체험 사진을 3장 이상 10장 이하로 추가해 주세요.",
-      "experienceNameRequired": "체험 이름을 1자 이상 20자 이하로 입력해 주세요.",
-      "experienceDescriptionRequired": "체험 상세 설명을 30자 이상 200자 이하로 입력해 주세요.",
+      "experienceNameRequired": "체험 이름을 1자 이상 100자 이하로 입력해 주세요.",
+      "experienceDescriptionRequired": "체험 상세 설명을 30자 이상 3000자 이하로 입력해 주세요.",
       "meetingAddressRequired": "만나는 장소의 주소를 입력해 주세요.",
       "meetingPlaceRequired": "짧은 만남 장소 이름을 입력해 주세요.",
       "scheduleInvalid": "날짜를 한 개 이상 선택하고 선택한 모든 날짜의 시작 시간을 설정해 주세요.",
       "itineraryRequired": "일정표에 활동을 한 개 이상 추가해 주세요.",
-      "itineraryTitleRequired": "모든 활동 제목을 1자 이상 20자 이하로 입력해 주세요.",
-      "itineraryDescriptionTooShort": "각 활동 설명을 5자 이상 50자 이하로 입력해 주세요.",
+      "itineraryTitleRequired": "모든 활동 제목을 1자 이상 100자 이하로 입력해 주세요.",
+      "itineraryDescriptionTooShort": "각 활동 설명을 5자 이상 1000자 이하로 입력해 주세요.",
       "itineraryDurationInvalid": "모든 활동에 1분 이상의 소요 시간을 입력해 주세요.",
       "itineraryPhotoRequired": "모든 활동에 사진을 추가해 주세요.",
       "maxGuestsInvalid": "최대 인원을 1명 이상의 정수로 입력해 주세요.",
-      "priceInvalid": "1인당 요금을 1원 이상의 정수로 입력해 주세요.",
+      "priceInvalid": "1인당 요금을 15,000원 이상의 정수로 입력해 주세요.",
       "inclusionsRequired": "포함 사항을 한 개 이상 입력해 주세요.",
       "discountInvalid": "할인 종료일을 선택하고 할인율을 1부터 100 사이의 정수로 입력해 주세요.",
       "restrictionsRequired": "확인사항을 한 개 이상 선택하거나 별도로 확인할 사항이 없음을 선택해 주세요.",
@@ -1433,7 +1633,10 @@
       "submissionFailed": "체험 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",
       "scheduleInPast": "이미 지난 날짜나 시작 시간이 포함되어 있어요. 미래의 일정만 선택해 주세요.",
       "maxGuestsTooMany": "최대 인원은 100명까지 설정할 수 있습니다.",
-      "itineraryTooMany": "일정표 활동은 최대 20개까지 추가할 수 있습니다."
+      "itineraryTooMany": "일정표 활동은 최대 20개까지 추가할 수 있습니다.",
+      "meetingPlaceTooLong": "만남 장소명은 500자 이하로 입력해 주세요.",
+      "listItemTooLong": "각 항목은 500자 이하로 입력해 주세요.",
+      "listTooMany": "항목은 최대 20개까지 추가할 수 있어요."
     }
   },
   "PayPalPayment": {

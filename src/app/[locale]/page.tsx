@@ -1,3 +1,4 @@
+import { sharePreview } from "@/lib/seo/metadata";
 import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -5,37 +6,50 @@ import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
+import { ActivityDateFilter } from "@/components/activity/ActivityDateFilter";
 import { MailIcon } from "@/components/ui/icons";
-import { Link } from "@/i18n/navigation";
+import { LandingAnalytics, LandingCtaLink } from "@/components/analytics/LandingAnalytics";
+import { TrackedInquiryLink } from "@/components/analytics/TrackedInquiryLink";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
-  // position: 모바일 사진 띠(가로 크롭)에서 사람이 보이도록 잡는 가로 초점. cover 사진은 PC 세로 크롭에도 쓰인다.
+  // 순서: 9/12 관중석 → 8/15 K리그 → 9/12 야간 단체컷 → 9/13 가이드 동행 단체컷 → 7/26 잠실
+  // (유현님 확정 2026-09-29: 앉아서 찍은 9/12 관중석이 1번, 9/12는 두 장, 9/13은 가이드님 단체컷 한 장).
+  // 장수를 바꾸면 globals.css의 hero-media-cycle 키프레임 비율도 같이 바꿔야 한다(5장 기준).
+  // PC(md 이상)는 모두 4:3 원본을 흐린 배경 위에 같은 크기로 놓는다(contain). 풀블리드 cover는
+  // 셀피의 얼굴이 화면을 가득 채워 부담스럽고, 사진마다 박스 크기가 달라지는 문제가 있었다.
+  // position은 모바일 배경 사진에서 사람이 보이도록 잡는 초점이다.
   {
-    src: "/images/landing/hanriver-picnic.webp",
-    altKey: "visuals.mainAlt",
-    fit: "cover",
-    position: "50% 72%",
-  },
-  {
-    src: "/images/landing/jamsil-stadium-0726.webp",
-    altKey: "visuals.marketAlt",
-    fit: "cover",
-    position: "50% 55%",
-  },
-  {
-    src: "/images/landing/kbo-0726-group.webp",
-    altKey: "visuals.teaAlt",
+    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
+    altKey: "visuals.jamsilAlt",
     fit: "contain",
-    position: "85% 50%",
+    position: "50% 40%",
   },
   {
     src: "/images/landing/kleague-0815-crew.webp",
     altKey: "visuals.kleagueAlt",
     fit: "contain",
     position: "32% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0912-group-night.webp",
+    altKey: "visuals.jamsilGroupAlt",
+    fit: "contain",
+    position: "50% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0913-group-guide.webp",
+    altKey: "visuals.jamsilSundayGuideAlt",
+    fit: "contain",
+    position: "45% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0726-group.webp",
+    altKey: "visuals.kbo0726Alt",
+    fit: "contain",
+    position: "85% 50%",
   },
 ] as const;
 
@@ -51,6 +65,7 @@ const CONTACT_DETAILS = {
 
 interface LandingPageProps {
   readonly params: Promise<{ locale: Locale }>;
+  readonly searchParams?: Promise<{ date?: string | string[] }>;
 }
 
 export async function generateMetadata({ params }: LandingPageProps): Promise<Metadata> {
@@ -60,6 +75,12 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
   return {
     title: t("metadataTitle"),
     description: t("metadataDescription"),
+    ...sharePreview({
+      locale,
+      path: "",
+      title: t("metadataTitle"),
+      description: t("metadataDescription"),
+    }),
     alternates: {
       canonical: `${APP_ORIGIN}/${locale}`,
       languages: {
@@ -73,8 +94,10 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
   };
 }
 
-export default async function LandingPage({ params }: LandingPageProps) {
+export default async function LandingPage({ params, searchParams }: LandingPageProps) {
   const { locale } = await params;
+  const query = await searchParams;
+  const date = Array.isArray(query?.date) ? query.date.join(",") : query?.date;
   const [t, cookieStore] = await Promise.all([
     getTranslations({ locale, namespace: "Landing" }),
     cookies(),
@@ -86,10 +109,13 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
-      {/* 모바일: 사진 띠 → 글자 영역 세로 배치. md 이상: 사진을 배경으로 깐 풀블리드 히어로 */}
+      <LandingAnalytics locale={locale} />
+      {/* 모바일도 사진 위에 제목·검색·소개를 함께 배치한다. */}
       <section
+        data-landing-section="hero"
+        data-landing-position="1"
         aria-label={t("visuals.ariaLabel")}
-        className="relative isolate flex flex-col overflow-hidden bg-ink text-on-primary md:block md:min-h-[clamp(560px,72svh,760px)]"
+        className="relative isolate z-20 bg-ink text-on-primary md:min-h-[clamp(560px,72svh,760px)]"
       >
         <LandingHeroMedia
           images={HERO_MEDIA.map((image) => ({
@@ -101,6 +127,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
         />
         <div
           aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(38,27,24,0.08)_0%,rgba(38,27,24,0.18)_20%,rgba(38,27,24,0.72)_48%,rgba(38,27,24,0.85)_100%)] md:hidden"
+        />
+        <div
+          aria-hidden
           className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(38,27,24,0.88)_0%,rgba(38,27,24,0.68)_38%,rgba(38,27,24,0.22)_78%,rgba(38,27,24,0.4)_100%)] md:block"
         />
         <div
@@ -108,34 +138,28 @@ export default async function LandingPage({ params }: LandingPageProps) {
           className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-ink/65 via-transparent to-ink/20 md:block"
         />
 
-        <PageContainer className="relative z-10 -mt-16 flex pt-0 pb-10 md:mt-0 md:min-h-[clamp(560px,72svh,760px)] md:items-end md:py-14 lg:py-16">
-          <div className="landing-reveal landing-reveal-delay-1 max-w-3xl min-w-0">
-            <p className="mb-6 font-display text-xs font-bold tracking-[0.28em] text-primary-soft uppercase">
+        <PageContainer className="relative z-10 flex min-h-[500px] items-end pt-36 pb-7 md:min-h-[clamp(560px,72svh,760px)] md:py-14 lg:py-16">
+          <div className="landing-reveal landing-reveal-delay-1 mx-auto w-full max-w-3xl min-w-0 text-center">
+            <p className="mb-3 font-display text-xs font-bold tracking-[0.28em] text-primary-soft uppercase md:mb-6">
               {t("eyebrow")}
             </p>
-            <h1 className="max-w-3xl font-display text-4xl leading-[1.04] font-extrabold tracking-[-0.06em] text-on-primary sm:text-5xl lg:text-[clamp(3.25rem,5vw,5.25rem)]">
+            <h1 className="max-w-3xl font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.06em] text-on-primary md:text-5xl md:leading-[1.04] lg:text-[clamp(3.25rem,5vw,5.25rem)]">
               {t("headline")}
             </h1>
-            <p className="mt-6 max-w-2xl text-sm leading-6 text-white/80 sm:text-base sm:leading-7">
+            <p className="mx-auto mt-6 hidden max-w-2xl text-base leading-7 text-white/80 md:block">
               {t("description")}
             </p>
-            <Link
-              href="/explore"
-              className="motion-press mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_14px_28px_rgba(209,63,50,0.36)] transition-colors hover:bg-primary-hover"
-            >
-              {t("exploreExperiences")}
-              <span aria-hidden className="ml-3 text-lg leading-none">
-                →
-              </span>
-            </Link>
+            <div className="relative z-20 mt-5 flex justify-center text-left md:mt-7">
+              <ActivityDateFilter key={date ?? ""} date={date} destination="/explore" />
+            </div>
 
-            <div className="mt-12 hidden max-w-3xl gap-4 border-t border-white/25 pt-6 md:grid md:grid-cols-3">
+            <div className="mt-7 grid max-w-3xl grid-cols-3 gap-3 border-t border-white/25 pt-4 md:mt-12 md:gap-4 md:pt-6">
               {HERO_HIGHLIGHTS.map((highlight) => (
                 <div key={highlight}>
-                  <p className="font-display text-sm font-bold text-primary-soft">
+                  <p className="font-display text-xs font-bold text-on-primary md:text-sm">
                     {t(`highlights.${highlight}.title`)}
                   </p>
-                  <p className="mt-1 text-sm leading-5 text-white/70">
+                  <p className="mt-1 text-xs leading-5 text-white/80 md:text-sm">
                     {t(`highlights.${highlight}.description`)}
                   </p>
                 </div>
@@ -145,26 +169,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
         </PageContainer>
       </section>
 
-      {/* 모바일 전용: 하이라이트를 사진 위가 아니라 히어로 아래 밝은 띠로 */}
-      <div
-        data-testid="hero-highlights-mobile"
-        className="grid grid-cols-3 gap-3 border-b border-line-soft bg-primary-soft px-5 py-4 md:hidden"
-      >
-        {HERO_HIGHLIGHTS.map((highlight) => (
-          <div key={highlight}>
-            <p className="font-display text-[13px] leading-[1.3] font-bold text-primary-strong">
-              {t(`highlights.${highlight}.title`)}
-            </p>
-            <p className="mt-0.5 text-xs leading-[1.35] text-muted">
-              {t(`highlights.${highlight}.description`)}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <RecommendedExperiences />
+      <RecommendedExperiences date={date} />
 
       <section
+        data-landing-section="booking_steps"
+        data-landing-position="3"
         aria-labelledby="booking-title"
         className="border-t border-line-soft bg-canvas-soft py-10 md:py-12"
       >
@@ -206,20 +215,27 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
 
           <div className="mt-7 text-center">
-            <Link
+            <LandingCtaLink
               href={isTourist ? "/explore" : "/login"}
+              ctaId="booking_start"
+              sectionId="booking_steps"
+              position={3}
+              destinationType={isTourist ? "explore" : "login"}
+              locale={locale}
               className="motion-press inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-7 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
             >
               {isTourist ? t("exploreExperiences") : t("booking.cta")}
               <span aria-hidden className="ml-2 text-lg leading-none">
                 →
               </span>
-            </Link>
+            </LandingCtaLink>
           </div>
         </PageContainer>
       </section>
 
       <section
+        data-landing-section="guest_reviews"
+        data-landing-position="4"
         aria-labelledby="reviews-title"
         className="bg-canvas-soft pt-20 pb-10 md:pt-28 md:pb-16"
       >
@@ -277,6 +293,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
       </section>
 
       <section
+        data-landing-section="contact"
+        data-landing-position="5"
         aria-labelledby="contact-title"
         className="bg-canvas-soft pt-8 pb-4 md:pt-12 md:pb-5"
       >
@@ -294,13 +312,16 @@ export default async function LandingPage({ params }: LandingPageProps) {
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted sm:text-base">
               {t("contact.description")}
             </p>
-            <a
+            <TrackedInquiryLink
+              channel="email"
+              placement="landing_contact"
+              locale={locale}
               href={`mailto:${CONTACT_DETAILS.email}`}
               className="motion-press mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_12px_24px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover"
             >
               <MailIcon className="size-5" />
               {t("contact.emailLabel")}
-            </a>
+            </TrackedInquiryLink>
             <p className="mt-4 text-sm text-muted">{t("contact.responseNote")}</p>
           </div>
         </PageContainer>

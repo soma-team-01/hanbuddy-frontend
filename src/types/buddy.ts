@@ -5,17 +5,19 @@ export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
 export interface ActivityStatusUpdateRequest {
   status: Extract<MyActivityStatus, "ACTIVE" | "INACTIVE">;
 }
-export type ActivityScheduleStatus = "OPEN" | "CLOSED";
+export type ActivityScheduleStatus = "OPEN" | "CLOSED" | "CANCELLED";
 
 export interface ActivityScheduleRequest {
   /** Asia/Seoul 오프셋을 포함한 date-time (예: 2026-07-19T13:00:00+09:00) */
   startAt: string;
+  /** 생략하면 신규 회차는 활동 기본값, 기존 회차는 기존 정원을 유지한다. */
+  maxCapacity?: number;
 }
 
 export interface ActivityItineraryRequest {
-  /** 1~20자 */
+  /** 1~100자 */
   title: string;
-  /** 5~50자 */
+  /** 5~1,000자 */
   description: string;
   /** 1 이상의 정수 (분) */
   durationMinutes: number;
@@ -36,18 +38,21 @@ export interface ActivityPricePreviewResponse {
   estimatedGuidePayoutAmountKrw: number;
 }
 
+/** 등록·수정 문자열 제한은 백엔드 ActivityTextLimits와 동기화한다. */
 export interface ActivityUpsertRequest {
   /** 사용자가 작성한 원문의 주 언어 */
   sourceLanguage: ContentLanguage;
-  /** 1~20자 */
+  /** 영어로 작성하는 대표 제목. 1~100자, 자동 번역 대상 아님 */
   title: string;
-  /** 30~200자 */
+  /** 30~3,000자 */
   description: string;
-  /** 버디 본인 소개. 30~200자, 활동별 저장 */
+  /** 버디 본인 소개. 30~2,000자, 활동별 저장 */
   hostIntroduction: string;
   /** 최소 3장, 최대 10장. 첫 번째 이미지가 대표 이미지 */
   imageKeys: string[];
+  /** 1~20개, 각 항목은 공백이 아닌 최대 500자 */
   includedItems: string[];
+  /** 최대 20개, 각 항목은 공백이 아닌 최대 500자 */
   restrictionNotes: string[];
   /** 1~100 */
   maxCapacity: number;
@@ -57,6 +62,7 @@ export interface ActivityUpsertRequest {
   discountPercent?: number;
   /** Asia/Seoul 기준 할인 종료일 (YYYY-MM-DD). 오늘 또는 이후 날짜 */
   discountEndDate?: string;
+  /** 공백이 아닌 최대 500자 */
   meetingPointName: string;
   meetingPlaceId: string;
   /** Google Place 미팅 장소 좌표. 둘 다 있을 때만 전송 */
@@ -89,6 +95,10 @@ export interface ActivityScheduleResponse {
   startAt: string;
   bookedCount: number;
   status: ActivityScheduleStatus;
+  /** #189 이전 응답과 단계적 배포 호환. 최신 응답은 세 필드를 모두 제공한다. */
+  maxCapacity?: number;
+  heldSeats?: number;
+  remainingCapacity?: number;
 }
 
 export interface MyActivitySummaryResponse {
@@ -165,7 +175,7 @@ export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicatio
   specialRequest: string | null;
   appliedAt: string;
   /** 취소된 신청의 사유. 취소가 아니면 null */
-  cancellationReason?: "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER" | null;
+  cancellationReason?: import("./application").ApplicationCancellationResponseReason | null;
   /** OTHER일 때 남긴 상세 사유 */
   cancellationDetail?: string | null;
 }

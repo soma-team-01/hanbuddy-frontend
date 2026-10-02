@@ -43,6 +43,7 @@ export interface ChatRoomMemberResponse {
 }
 
 export interface ChatRoomSummaryResponse {
+  activityScheduleCancelled?: boolean;
   chatRoomId: number;
   roomType: ChatRoomType;
   /** 1:1은 상대 닉네임, 단체는 활동 제목 */
@@ -61,6 +62,7 @@ export interface ChatRoomSummaryResponse {
 }
 
 export interface ChatRoomDetailResponse {
+  activityScheduleCancelled?: boolean;
   chatRoomId: number;
   roomType: ChatRoomType;
   title: string;

@@ -13,7 +13,13 @@ import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 export function EditActivityForm({ activityId }: Readonly<{ activityId: string }>) {
   const t = useTranslations("CreateActivity");
   const getApiErrorMessage = useApiErrorMessage();
-  const activityQuery = useQuery(myActivityQueryOptions(activityId));
+  const activityQuery = useQuery({
+    ...myActivityQueryOptions(activityId),
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
+    refetchOnReconnect: "always",
+  });
   useAuthQueryRedirect(activityQuery.error);
 
   const initialDraft = useMemo(
@@ -29,7 +35,8 @@ export function EditActivityForm({ activityId }: Readonly<{ activityId: string }
     );
   }
 
-  if (activityQuery.error || !initialDraft || !activityQuery.data) {
+  // Keep the mounted draft when a background refresh fails and cached data is available.
+  if (!initialDraft || !activityQuery.data) {
     return (
       <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 bg-[#fff] px-6">
         <p
@@ -53,6 +60,7 @@ export function EditActivityForm({ activityId }: Readonly<{ activityId: string }
       mode="edit"
       activityId={activityId}
       initialDraft={initialDraft}
+      latestSchedules={initialDraft.schedules}
       initialStatus={activityQuery.data.status}
       initialSourceLanguage={activityQuery.data.sourceLanguage}
     />

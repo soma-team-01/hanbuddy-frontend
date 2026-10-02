@@ -56,8 +56,8 @@ describe("chat polling", () => {
     expect(options.refetchOnMount).toBe(false);
   });
 
-  it("never replaces the room WebSocket with REST polling", () => {
-    expect(chatRoomQueryOptions(1, "EN").refetchInterval).toBe(false);
+  it("refreshes schedule metadata without replacing message WebSocket delivery", () => {
+    expect(chatRoomQueryOptions(1, "EN").refetchInterval).toEqual(expect.any(Function));
     expect(latestChatMessagesQueryOptions(1, "EN").refetchInterval).toBe(false);
   });
 });

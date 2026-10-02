@@ -2,6 +2,7 @@ import {
   eventFields,
   pageFields,
   safePage,
+  type AnalyticsFields,
   type AnalyticsEvent,
   type FunnelEvent,
   type SafePage,
@@ -19,15 +20,13 @@ interface ConsentRecord {
 }
 export interface AnalyticsBrowserPort {
   start: (policy: AnalyticsPolicy, page: ReturnType<typeof pageFields>) => Promise<void>;
-  send: (
-    name: AnalyticsEvent,
-    params: ReturnType<typeof pageFields> & { items?: { item_id: string }[] },
-  ) => void;
+  send: (name: AnalyticsEvent, params: AnalyticsFields) => void;
   identifiers: () => Promise<AnalyticsIdentifiers>;
   stop: (resetIdentity?: boolean) => void;
 }
 interface Options {
-  policy: AnalyticsPolicy | null;
+  // Historical unbound port; production uses the opaque cookie controller.
+  policy: (AnalyticsPolicy & { version: string; consentMaxAgeMs: number }) | null;
   link: ConsentLinkPort | null;
   browser: AnalyticsBrowserPort;
   storage: Pick<Storage, "getItem" | "setItem"> & Partial<Pick<Storage, "removeItem">>;

@@ -8,6 +8,7 @@ interface BackendRequestOptions {
   cookieHeader?: string | null;
   origin?: string;
   analyticsRequest?: true;
+  redirect?: RequestRedirect;
 }
 
 export interface BackendResponse<T> {
@@ -85,6 +86,7 @@ async function requestBackend<TBody, TResult>(
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
+      ...(options.redirect ? { redirect: options.redirect } : {}),
       signal: controller.signal,
     });
   } catch (error) {

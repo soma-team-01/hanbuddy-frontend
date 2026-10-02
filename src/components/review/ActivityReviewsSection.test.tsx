@@ -19,6 +19,8 @@ function createReview(reviewId: number): ReviewResponse {
     activityTitle: "Bukchon Hidden Gems",
     activityTitleLanguage: "EN",
     reviewerName: `Reviewer ${reviewId}`,
+    source: "PLATFORM",
+    originalReviewedAt: null,
     reviewerProfileImageUrl: null,
     rating: 5,
     content: `Loved every minute of it (${reviewId}).`,

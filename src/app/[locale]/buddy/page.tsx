@@ -1,3 +1,4 @@
+import { sharePreview } from "@/lib/seo/metadata";
 import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -56,6 +57,12 @@ export async function generateMetadata({ params }: BuddyHostingPageProps): Promi
   return {
     title: t("metadataTitle"),
     description: t("metadataDescription"),
+    ...sharePreview({
+      locale,
+      path: "/buddy",
+      title: t("metadataTitle"),
+      description: t("metadataDescription"),
+    }),
     alternates: {
       canonical: `${APP_ORIGIN}/${locale}/buddy`,
       languages: {
@@ -75,7 +82,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas-soft text-ink">
-      <section className="relative isolate min-h-[calc(100svh-76px)] overflow-hidden bg-ink text-white">
+      <section className="relative isolate min-h-[calc(100svh-60px)] overflow-hidden bg-ink text-white lg:min-h-[calc(100svh-76px)]">
         <Image
           src="/images/buddy/hosting-hero.jpg"
           alt={t("hero.imageAlt")}
@@ -93,7 +100,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
           className="absolute inset-0 bg-gradient-to-t from-ink/65 via-ink/10 to-ink/20 lg:hidden"
         />
 
-        <div className="relative z-10 grid min-h-[calc(100svh-76px)] lg:grid-cols-2">
+        <div className="relative z-10 grid min-h-[calc(100svh-60px)] lg:min-h-[calc(100svh-76px)] lg:grid-cols-2">
           <div className="mx-auto flex w-full max-w-[600px] items-center px-4 py-16 sm:py-20 md:px-6 lg:mr-0 lg:px-8">
             <div className="max-w-2xl">
               <p className="font-display text-xs font-bold tracking-[0.28em] text-[#ffb09f] uppercase">

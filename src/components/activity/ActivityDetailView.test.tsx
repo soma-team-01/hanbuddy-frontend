@@ -2,6 +2,11 @@ import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { Activity } from "@/types/activity";
+import en from "@/messages/en.json";
+import ko from "@/messages/ko.json";
+import ja from "@/messages/ja.json";
+import zhHans from "@/messages/zh-Hans.json";
+import zhHant from "@/messages/zh-Hant.json";
 
 vi.mock("@/components/activity/HostProfileDialog", () => ({
   HostProfileDialog: ({
@@ -57,6 +62,49 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it.each([true, false, undefined])("marks only actual translated content: %s", (isTranslated) => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{ ...activity, isTranslated }}
+        bottomBar="inline"
+        preview
+        unoptimizedImages
+      />,
+    );
+    if (isTranslated) expect(screen.getByText("Auto-translated")).toBeInTheDocument();
+    else expect(screen.queryByText("Auto-translated")).not.toBeInTheDocument();
+  });
+  it.each([
+    ["en", "Auto-translated", en],
+    ["ko", "자동 번역됨", ko],
+    ["ja", "自動翻訳済み", ja],
+    ["zh-Hans", "已自动翻译", zhHans],
+    ["zh-Hant", "已自動翻譯", zhHant],
+  ] as const)(
+    "places the translation notice before the location and title in %s",
+    (locale, label, messages) => {
+      renderWithIntl(
+        <ActivityDetailView
+          activity={{ ...activity, isTranslated: true }}
+          preview
+          bottomBar="inline"
+          unoptimizedImages
+        />,
+        { locale, messages },
+      );
+      const notice = screen.getByText(label);
+      const location = screen.getByText(activity.district, { exact: true });
+      expect(
+        notice.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        notice.compareDocumentPosition(screen.getByRole("heading", { level: 1 })) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(notice.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+      expect(notice.querySelector("svg rect")).not.toBeNull();
+    },
+  );
   it("keeps the guest host profile content visible while preview actions stay disabled", () => {
     renderWithIntl(
       <ActivityDetailView activity={activity} preview bottomBar="inline" unoptimizedImages />,

@@ -1,4 +1,17 @@
 {
+  "ActivitySearch": {
+    "placeholder": "When would you like to join?",
+    "apply": "Apply",
+    "timezone": "Korea time · KST",
+    "close": "Close calendar",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "label": "Participation date",
+    "search": "Search",
+    "clear": "Clear",
+    "hint": "Find bookable activities for a date in Korea Standard Time (KST).",
+    "invalid": "Please select a valid date."
+  },
   "SignupExtra": {
     "sourceLabel": "How did you hear about us?",
     "sourceDetailLabel": "Please specify (up to 100 characters)",
@@ -29,6 +42,35 @@
       "bankInvalid": "Check the bank and account number."
     }
   },
+  "ScheduleCancellation": {
+    "refundAmount": "Refund amount",
+    "buddyCancellationReason": "Cancellation reason from your buddy",
+    "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
+    "more": "Schedule options",
+    "cancelAction": "Cancel schedule",
+    "cancelled": "Cancelled schedule",
+    "title": "Cancel this schedule?",
+    "irreversible": "Cancellation prevents reopening and new bookings. Refunds are automatic. Please notify all applicants of the cancellation.",
+    "keep": "Keep schedule",
+    "confirm": "Cancel schedule",
+    "pending": "Cancelling…",
+    "reason": "Cancellation reason",
+    "reasonHint": "Guests will see this reason. Do not include personal information or internal notes.",
+    "success": "Schedule cancelled. Refunds will be processed in sequence.",
+    "loadError": "Unable to load the latest cancellation status.",
+    "requestError": "The cancellation could not be confirmed. Check the status before trying again.",
+    "uncertain": "We could not confirm whether the cancellation was saved. Check the status before submitting again.",
+    "retry": "Check status",
+    "started": "This schedule has already started and cannot be cancelled.",
+    "statuses": {
+      "QUEUED": "Refund processing",
+      "DISPATCHED": "Refund processing",
+      "REVIEW_REQUIRED": "Refund under review. This may take some time.",
+      "COMPLETED": "Refund completed",
+      "NO_PAYMENT": "Cancelled · No confirmed payment found",
+      "EXCLUDED": "Original cancellation and refund policy applies"
+    }
+  },
   "Common": {
     "cancel": "Cancel",
     "close": "Close",
@@ -37,6 +79,14 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "bookingClosed": "Bookings and payment requests close 24 hours before the activity starts. Please choose another session.",
+    "scheduleCapacity": "Capacity must be 1–100 and at least the total of confirmed participants and those awaiting payment.",
+    "scheduleEdit": "Started or cancelled sessions cannot be edited. Sessions with application history cannot change their start time.",
+    "scheduleDuplicate": "A session with this start time already exists.",
+    "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
+    "scheduleCancellationReason": "Enter a public cancellation reason of 1–255 characters.",
+    "scheduleCancellationStarted": "A schedule that has already started cannot be cancelled.",
+    "scheduleNotCancelled": "No schedule cancellation was found. Refresh your applications to check the latest status.",
     "signupSourceInvalid": "Check your signup source and details.",
     "signupBankAccountInvalid": "Check the bank and account number.",
     "authenticationRequired": "Please sign in again to continue.",
@@ -122,6 +172,7 @@
     "languageDialogDescription": "Choose the language used across HanBuddy.",
     "home": "Home",
     "explore": "Explore",
+    "about": "About",
     "applications": "My Applications",
     "dashboard": "Dashboard",
     "buddyWorkspace": "Buddy workspace",
@@ -205,10 +256,10 @@
     },
     "visuals": {
       "ariaLabel": "Real HanBuddy moments in Seoul",
-      "mainAlt": "Friends enjoying a picnic by the Han River",
-      "marketAlt": "A baseball game under the lights in Seoul",
-      "teaAlt": "Travelers and local buddies cheering together at a baseball game",
-      "fountainAlt": "The Han River fountain glowing at dusk",
+      "jamsilGroupAlt": "Guests and buddies in sky-blue jerseys making finger hearts under the Jamsil Stadium lights",
+      "jamsilSundayGuideAlt": "Guests with their local guide in front of the field on a Sunday night at Jamsil",
+      "kbo0726Alt": "Travelers and local buddies cheering together at a baseball game",
+      "jamsilAlt": "Guests and buddies in sky-blue jerseys filling a row at Jamsil Stadium",
       "kleagueAlt": "Guests and buddies at a K League match",
       "mainCaption": "Your Korea, made personal."
     },
@@ -354,6 +405,121 @@
       "button": "Start as a buddy"
     }
   },
+  "About": {
+    "metadataTitle": "About HanBuddy | The team behind your Seoul game night",
+    "metadataDescription": "Meet ZeroOne, the Seoul team that plans and runs HanBuddy: KBO baseball nights at Jamsil and Gocheok and football nights with a Korean local buddy.",
+    "hero": {
+      "eyebrow": "About HanBuddy",
+      "title": "The team that makes “like a local” happen.",
+      "description": "Small-group game nights in Seoul with a Korean buddy. We plan the night, buy your ticket, and sit next to you. You just show up.",
+      "primaryCta": "Explore experiences",
+      "secondaryCta": "Meet the team",
+      "collageAlt1": "Two guests holding up a Doosan cheering towel above the Jamsil field at night",
+      "collageAlt2": "Guests and buddies posing with the Doosan Bears mascot at Jamsil Stadium",
+      "collageAlt3": "Guests, a buddy, and their local guide sharing snacks in the Jamsil stands"
+    },
+    "origin": {
+      "eyebrow": "Why we started",
+      "title": "Some of Korea’s best moments are locked behind “locals only.”",
+      "body1": "It started with a ticket we watched disappear: a Jamsil night game, sold out in seconds, on an app that wants",
+      "body1Strong": "a Korean phone number and a Korean card.",
+      "body2": "No Korean number, no Korean card, no ticket.",
+      "body2Strong": "HanBuddy unlocks those nights with a local buddy who buys the ticket, saves the seat, and sits next to you."
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "title": "Run by us, every game night.",
+      "steps": {
+        "plan": {
+          "title": "We plan every game night ourselves",
+          "description": "Baseball at Jamsil and Gocheok, football at Seoul World Cup Stadium. One real match, a small group, and a buddy who knows the cheering songs."
+        },
+        "confirm": {
+          "title": "Book online, we buy your ticket right away",
+          "description": "Your match ticket and stadium food are included in the price. A real person confirms the meeting spot and answers your questions."
+        },
+        "improve": {
+          "title": "Every run gets better",
+          "description": "Every guest fills in a one-minute survey, and it changes the next run."
+        }
+      }
+    },
+    "stats": {
+      "eyebrow": "So far",
+      "title": "Numbers from real game nights.",
+      "items": {
+        "runs": {
+          "value": "7",
+          "label": "game nights since June 2026"
+        },
+        "rating": {
+          "value": "4.9 / 5",
+          "label": "average guest rating"
+        },
+        "stadiums": {
+          "value": "3",
+          "label": "stadiums: Jamsil, Gocheok, Seoul World Cup"
+        }
+      },
+      "note": "Rating from 12 guest survey responses, June to September 2026."
+    },
+    "timeline": {
+      "eyebrow": "Our runs",
+      "title": "Where we’ve been, and where we’re going next.",
+      "items": {
+        "june": {
+          "date": "June 2026",
+          "title": "First KBO night at Jamsil",
+          "description": "One guest, the whole team as buddies, and a lot to learn.",
+          "imageAlt": "Guests and buddies smiling in the stands on the first HanBuddy baseball night"
+        },
+        "july": {
+          "date": "July 2026",
+          "title": "KBO at Jamsil, round two",
+          "description": "Three guests, cheering songs, chicken and beer. All three surveys came back 5 out of 5.",
+          "imageAlt": "Travelers and local buddies cheering together at a baseball game"
+        },
+        "august": {
+          "date": "August 2026",
+          "title": "First football night: K League",
+          "description": "Seoul World Cup Stadium, scarves, and a guest who said it felt like being with friends.",
+          "imageAlt": "Guests and buddies at a K League match"
+        },
+        "september": {
+          "date": "September 2026",
+          "title": "Four game nights, including our first indoor dome",
+          "description": "Gocheok Sky Dome and Jamsil, sky-blue jerseys, mascot photos. Every September survey: 5 out of 5.",
+          "imageAlt": "Three friends smiling in the stands at Gocheok Sky Dome"
+        }
+      }
+    },
+    "team": {
+      "eyebrow": "Meet the team",
+      "title": "We’re ZeroOne, three friends from Seoul running HanBuddy together.",
+      "description": "We plan the nights, buy the tickets, answer your messages, and sit in the stands with you.",
+      "backed": "HanBuddy is the official project of team ZeroOne in AI·SW Maestro (17th), a national tech talent program by Korea’s Ministry of Science and ICT.",
+      "linkedin": "LinkedIn",
+      "members": {
+        "minhyung": {
+          "name": "Minhyung Kim",
+          "role": "Leads the team & operations"
+        },
+        "yoohyun": {
+          "name": "Yoohyun Kim",
+          "role": "Designs the experiences & content"
+        },
+        "junyoung": {
+          "name": "Junyoung Lee",
+          "role": "Keeps bookings & matching smooth"
+        }
+      }
+    },
+    "cta": {
+      "title": "The best way to meet us is at a game.",
+      "description": "Pick a date, book your seat, and we take it from there.",
+      "button": "See upcoming game nights"
+    }
+  },
   "Auth": {
     "metadataTitle": "Log in | HanBuddy",
     "metadataDescription": "Meet local buddies and experience Korea beyond the itinerary.",
@@ -361,6 +527,7 @@
     "welcome": "Experience Korea like a local.",
     "introduction": "Meet local buddies and discover the moments that make Korea feel like yours.",
     "continueWithGoogle": "Continue with Google",
+    "bookingLoginPrompt": "Log in to continue your booking",
     "reviewLogin": {
       "title": "Log in with email",
       "emailLabel": "Email",
@@ -387,12 +554,12 @@
     "rightsReserved": "All rights reserved.",
     "visualAlt": "HanBuddy guests and buddies smiling together at a baseball game",
     "visualCaption": "new friends, Jul 26 ⚾",
-    "visualRightAlt": "Guests and buddies smiling together in the baseball stands",
-    "visualRightCaption": "first baseball night ⚾",
-    "visualBottomLeftAlt": "Banpo Bridge rainbow fountain lighting up the Han River",
-    "visualBottomLeftCaption": "Banpo rainbow 🌈",
-    "visualBottomRightAlt": "Fried chicken, noodles, and drinks shared by the Han River",
-    "visualBottomRightCaption": "chimaek by the river 🍗",
+    "visualRightAlt": "A guest and a buddy wearing bear-ear headbands in the Jamsil stands",
+    "visualRightCaption": "bear ears on, Sep 13 ⚾",
+    "visualBottomLeftAlt": "Guests and buddies posing with the Doosan Bears mascot at Jamsil Stadium",
+    "visualBottomLeftCaption": "mascot crew, Sep 12 ⚾",
+    "visualBottomRightAlt": "Guests and a buddy sharing snacks in the stands at Gocheok Sky Dome",
+    "visualBottomRightCaption": "dome snacks, Sep 5 ⚾",
     "errors": {
       "googleCancelled": "Google sign-in was cancelled.",
       "missingCode": "Google did not return an authorization code.",
@@ -652,9 +819,11 @@
     "kstNotice": "All times are in Korea Standard Time (KST).",
     "hostedActivities": "Other experiences from this buddy",
     "noOtherActivities": "No other experiences yet.",
-    "viewHostProfile": "View {name}'s profile"
+    "viewHostProfile": "View {name}'s profile",
+    "autoTranslated": "Auto-translated"
   },
   "Reviews": {
+    "anonymous": "Anonymous",
     "sectionTitle": "Reviews",
     "ratingAria": "Rated {rating} out of 5",
     "countLabel": "{count, plural, =0 {No reviews yet} one {# review} other {# reviews}}",
@@ -695,20 +864,31 @@
     "noneForRating": "No reviews with this rating yet.",
     "ratingWithCountAria": "Rated {rating} out of 5 from {count, plural, one {# review} other {# reviews}}"
   },
+  "ActivityContact": {
+    "teaser": "Have a question? Feel free to ask us anytime!",
+    "trigger": "Contact us",
+    "title": "Have more questions?",
+    "description": "Feel free to reach out to the HanBuddy team through your preferred channel.",
+    "hint": "Share the activity name or page link so we can help with your question."
+  },
   "AlternativePayment": {
     "trigger": "Need another payment method?",
     "title": "Prefer another payment method?",
-    "description": "Fill in the details below and send them to us.",
-    "message": "Hi! I’d like to join using another payment method.\nHanBuddy sign-up email: [your email]\nBuddy: [buddy name]\nExperience: Seoul Forest Walk & Seongsu Cafe Tour\nSchedule: YYYY-MM-DD 14:00 (KST)\nParticipants: 2\nPreferred payment method: Transfer to a Korean bank account",
-    "exampleTitle": "Example inquiry",
-    "exampleHint": "This is an example. Copy it and replace the details with your own information and preferred buddy, experience and schedule before sending.",
+    "description": "Review your booking details below, add your preferred payment method, and send the message to us.",
+    "message": "Hi! I’d like to join using another payment method.\nHanBuddy sign-up email: {email}\nBuddy: {buddy}\nExperience: {activity}\nSchedule: {schedule}\nParticipants (including me): {participants}\nPreferred payment method: {method}",
+    "exampleTitle": "Your inquiry",
+    "exampleHint": "Filled from your current selections. Check the details and add your preferred payment method before sending.",
     "copy": "Copy template",
-    "copied": "Copied. Edit the details, then send it through your preferred channel.",
-    "copyFailed": "Could not copy. Please select and copy the example above.",
+    "copied": "Copied. Check the details and add your preferred payment method before sending.",
+    "copyFailed": "Could not copy. Please select and copy the message above.",
     "email": "Email",
-    "notConfirmed": "An inquiry does not confirm your booking."
+    "notConfirmed": "An inquiry does not confirm your booking.",
+    "missingValue": "[Please fill in]",
+    "missingSchedule": "[Select a date and time]",
+    "preferredMethod": "[Your preferred payment method]"
   },
   "Booking": {
+    "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
     "title": "Book activity",
     "loading": "Loading booking...",
     "loadError": "Could not load booking details.",
@@ -894,8 +1074,8 @@
     "confirming": "Confirming your payment...",
     "confirmFailed": "We couldn't confirm your payment. Please try again from My Applications.",
     "failTitle": "Payment failed",
-    "failDescription": "The payment was not completed and nothing has been charged.",
-    "retryFromApplications": "Try again in My Applications",
+    "failDescription": "We couldn’t confirm the payment result. Check the latest status in My Applications before paying again.",
+    "retryFromApplications": "Check My Applications",
     "failReasons": {
       "cancelled": "You cancelled the payment before it was completed.",
       "aborted": "The payment was interrupted. Please try again.",
@@ -1247,7 +1427,10 @@
       "characters": "{count, number} characters entered",
       "hostIntroductionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} characters",
-      "experienceDescriptionCharacters": "{count, number}/{max, number} characters · minimum {min, number}"
+      "experienceDescriptionCharacters": "{count, number}/{max, number} characters · minimum {min, number}",
+      "experienceNameEnglish": "Activity titles are not automatically translated. Please write the title <emphasis>in English</emphasis>.",
+      "fieldCharacters": "{count} / {max} characters",
+      "listLimits": "{count} / {max} items · Up to {length} characters per item"
     },
     "placeholders": {
       "hostIntroduction": "Introduce yourself and why you want to host this experience.",
@@ -1258,7 +1441,7 @@
       "meetingAddress": "e.g., 25 Olympic-ro, Songpa-gu, Seoul",
       "meetingPlace": "e.g., Gate 1 ticket booth",
       "itineraryTitle": "e.g., Learn the team chants",
-      "itineraryDescription": "Describe this activity in 5 to 50 characters.",
+      "itineraryDescription": "Describe this activity in 5 to 1000 characters.",
       "duration": "e.g., 30",
       "maxGuests": "e.g., 8",
       "pricePerPerson": "e.g., 50000",
@@ -1268,6 +1451,9 @@
       "restrictions": "e.g., Comfortable shoes are recommended"
     },
     "photos": {
+      "reorderHint": "Change the cover photo or drag photos to reorder them.",
+      "move": "Move photo {index}",
+      "moved": "Photo moved to position {position} of {count}",
       "upload": "Add experience photos",
       "hint": "JPG, PNG, or WebP · at least 3, up to 10",
       "label": "Upload experience photos",
@@ -1305,13 +1491,24 @@
         "done": "Done",
         "errors": {
           "photo": "Add a photo to continue.",
-          "description": "Write 5 to 50 characters.",
+          "description": "Write 5 to 1000 characters.",
           "duration": "Set a duration of at least 1 minute.",
-          "title": "Enter a 1 to 20 character activity title."
+          "title": "Enter a 1 to 100 character activity title."
         }
       }
     },
     "capacity": {
+      "minimumHint": "Capacity cannot be lower than confirmed participants plus those awaiting payment.",
+      "previous": "Previous sessions",
+      "next": "Next sessions",
+      "pageRange": "{from}–{to} of {total} sessions",
+      "defaultTitle": "Default capacity",
+      "settings": "Date-specific settings",
+      "defaultHint": "Used for new sessions. Existing session capacities stay unchanged.",
+      "scheduleTitle": "Capacity by date and time",
+      "scheduleHint": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
+      "confirmed": "Confirmed: {count}",
+      "pending": "Awaiting payment: {count}",
       "decrease": "Decrease maximum guests",
       "increase": "Increase maximum guests",
       "guests": "{count, plural, one {# guest maximum} other {# guests maximum}}"
@@ -1324,6 +1521,7 @@
       "mapTitle": "Map of the selected meeting address"
     },
     "schedule": {
+      "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
       "notice": "Select as many dates as you need. All start times are shown in Korea Standard Time (KST).",
       "calendarLabel": "Experience dates calendar",
       "previousMonth": "Previous month",
@@ -1345,6 +1543,7 @@
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
+      "minimum": "The minimum price per person is ₩{amount, number}.",
       "notice": "This amount is shown to guests as the price per person in Korean won."
     },
     "inclusions": {
@@ -1411,21 +1610,22 @@
       "backToActivity": "Back to activity"
     },
     "errors": {
+      "scheduleCapacityOccupied": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
       "categoryRequired": "Choose a category to continue.",
-      "hostIntroductionRequired": "Write an introduction between 30 and 200 characters.",
+      "hostIntroductionRequired": "Write an introduction between 30 and 2000 characters.",
       "photosMinimum": "Add between 3 and 10 experience photos.",
-      "experienceNameRequired": "Enter an experience name between 1 and 20 characters.",
-      "experienceDescriptionRequired": "Write a detailed description between 30 and 200 characters.",
+      "experienceNameRequired": "Enter an experience name between 1 and 100 characters.",
+      "experienceDescriptionRequired": "Write a detailed description between 30 and 3000 characters.",
       "meetingAddressRequired": "Enter the meeting address.",
       "meetingPlaceRequired": "Enter a short meeting place name.",
       "scheduleInvalid": "Choose at least one date and set a start time for every selected date.",
       "itineraryRequired": "Add at least one itinerary activity.",
-      "itineraryTitleRequired": "Every activity needs a title between 1 and 20 characters.",
-      "itineraryDescriptionTooShort": "Each activity description must be between 5 and 50 characters.",
+      "itineraryTitleRequired": "Every activity needs a title between 1 and 100 characters.",
+      "itineraryDescriptionTooShort": "Each activity description must be between 5 and 1000 characters.",
       "itineraryDurationInvalid": "Enter a duration greater than 0 for every activity.",
       "itineraryPhotoRequired": "Add a photo for every activity.",
       "maxGuestsInvalid": "Enter a whole-number capacity greater than 0.",
-      "priceInvalid": "Enter a whole-number price greater than 0.",
+      "priceInvalid": "Enter a whole-number price of at least ₩15,000 per person.",
       "inclusionsRequired": "Add at least one included item.",
       "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",
@@ -1433,7 +1633,10 @@
       "submissionFailed": "We couldn't register your experience. Please try again.",
       "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only.",
       "maxGuestsTooMany": "Capacity can be at most 100 guests.",
-      "itineraryTooMany": "You can add up to 20 itinerary activities."
+      "itineraryTooMany": "You can add up to 20 itinerary activities.",
+      "meetingPlaceTooLong": "Use no more than 500 characters for the meeting place.",
+      "listItemTooLong": "Each item must be 500 characters or fewer.",
+      "listTooMany": "You can add up to 20 items."
     }
   },
   "PayPalPayment": {

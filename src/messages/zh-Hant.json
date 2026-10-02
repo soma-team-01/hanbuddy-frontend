@@ -1,4 +1,17 @@
 {
+  "ActivitySearch": {
+    "placeholder": "您想哪天參加？",
+    "apply": "套用",
+    "timezone": "韓國時間 · KST",
+    "close": "關閉日曆",
+    "previousMonth": "上個月",
+    "nextMonth": "下個月",
+    "label": "參加日期",
+    "search": "搜尋",
+    "clear": "清除",
+    "hint": "按韓國標準時間（KST）的日期搜尋可預訂的活動。",
+    "invalid": "請選擇有效日期。"
+  },
   "SignupExtra": {
     "sourceLabel": "您從哪裡得知我們？",
     "sourceDetailLabel": "請具體說明（最多100字）",
@@ -29,6 +42,35 @@
       "bankInvalid": "請檢查銀行和帳號。"
     }
   },
+  "ScheduleCancellation": {
+    "refundAmount": "退款金額",
+    "buddyCancellationReason": "Buddy 提供的取消原因",
+    "refundRecoveryPending": "正在確認退款結果，請勿重複申請取消或付款。",
+    "more": "行程選項",
+    "cancelAction": "取消行程",
+    "cancelled": "已取消的行程",
+    "title": "確定取消此行程嗎？",
+    "irreversible": "取消後無法重新開放或接受新預訂，退款將自動處理。請務必通知報名者取消事宜。",
+    "keep": "保留行程",
+    "confirm": "取消行程",
+    "pending": "正在取消…",
+    "reason": "取消原因",
+    "reasonHint": "此原因將向參與者公開。請勿填寫個人資訊或內部備註。",
+    "success": "行程已取消，退款將依次處理。",
+    "loadError": "無法取得最新取消狀態。",
+    "requestError": "無法確認取消結果。請先查詢狀態再重試。",
+    "uncertain": "無法確認取消是否已受理。再次提交前請查詢狀態。",
+    "retry": "重新查詢狀態",
+    "started": "已開始的行程無法取消。",
+    "statuses": {
+      "QUEUED": "退款處理中",
+      "DISPATCHED": "退款處理中",
+      "REVIEW_REQUIRED": "退款確認中，完成可能需要一些時間。",
+      "COMPLETED": "退款完成",
+      "NO_PAYMENT": "已取消 · 未發現已確認的付款",
+      "EXCLUDED": "保留原取消及退款政策"
+    }
+  },
   "Common": {
     "cancel": "取消",
     "close": "關閉",
@@ -37,6 +79,14 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "bookingClosed": "活動開始前24小時停止接受預訂及付款請求，請選擇其他場次。",
+    "scheduleCapacity": "人數上限須為1–100人，且不得低於預訂確認與待付款人數之和。",
+    "scheduleEdit": "已開始或已取消的場次不能修改。有申請紀錄的場次不能更改開始時間。",
+    "scheduleDuplicate": "已存在相同開始時間的場次。",
+    "refundRecoveryPending": "正在確認退款結果，請勿重複申請取消或付款。",
+    "scheduleCancellationReason": "請輸入1至255個字元的公開取消原因。",
+    "scheduleCancellationStarted": "已開始的日程無法取消。",
+    "scheduleNotCancelled": "未找到日程取消紀錄，請重新整理我的報名以查看最新狀態。",
     "signupSourceInvalid": "請檢查註冊來源與詳細說明。",
     "signupBankAccountInvalid": "請檢查銀行和帳號。",
     "authenticationRequired": "請重新登入以繼續。",
@@ -122,6 +172,7 @@
     "languageDialogDescription": "請選擇在 HanBuddy 中使用的語言。",
     "home": "首頁",
     "explore": "探索",
+    "about": "關於我們",
     "applications": "我的預訂",
     "dashboard": "儀表板",
     "buddyWorkspace": "夥伴管理",
@@ -205,10 +256,10 @@
     },
     "visuals": {
       "ariaLabel": "首爾真正的 HanBuddy 時刻",
-      "mainAlt": "朋友們在漢江邊享受野餐",
-      "marketAlt": "首爾燈光下的棒球比賽",
-      "teaAlt": "旅客和當地好友在棒球比賽中一起歡呼",
-      "fountainAlt": "漢江噴泉在黃昏時閃閃發光",
+      "jamsilGroupAlt": "身穿天藍色球衣的旅客和本地好友在蠶室棒球場燈光下比手指愛心",
+      "jamsilSundayGuideAlt": "週日夜晚，旅客和本地嚮導站在蠶室球場前",
+      "kbo0726Alt": "旅客和當地好友在棒球比賽中一起歡呼",
+      "jamsilAlt": "身穿天藍色球衣的旅客和本地好友坐滿蠶室棒球場的一排座位",
       "kleagueAlt": "在K聯賽賽場同行的旅客與本地好友",
       "mainCaption": "您的韓國，個性化。"
     },
@@ -354,6 +405,121 @@
       "button": "從好友開始"
     }
   },
+  "About": {
+    "metadataTitle": "關於 HanBuddy | 陪你看首爾比賽之夜的團隊",
+    "metadataDescription": "認識策劃並營運 HanBuddy 的首爾團隊 ZeroOne：蠶室、高尺 KBO 棒球之夜和足球之夜，由韓國本地好友全程陪同。",
+    "hero": {
+      "eyebrow": "關於 HanBuddy",
+      "title": "讓「像本地人一樣」真正發生的團隊。",
+      "description": "和韓國本地好友一起的首爾小團比賽之夜。我們負責策劃、買票，並坐在你身邊一起加油。你只需到場。",
+      "primaryCta": "探索體驗",
+      "secondaryCta": "認識團隊",
+      "collageAlt1": "兩位旅客在夜晚的蠶室球場前舉起斗山加油毛巾",
+      "collageAlt2": "旅客和本地好友在蠶室棒球場與斗山熊隊吉祥物合影",
+      "collageAlt3": "旅客、本地好友和本地嚮導在蠶室看台分享零食"
+    },
+    "origin": {
+      "eyebrow": "我們為什麼開始",
+      "title": "韓國最精彩的時刻，往往鎖在「僅限本地人」之後。",
+      "body1": "一切始於一張眼睜睜消失的票：蠶室夜場比賽，幾秒售罄，而購票應用要求的是",
+      "body1Strong": "韓國手機號碼和韓國銀行卡。",
+      "body2": "沒有韓國號碼、沒有韓國卡，就沒有票。",
+      "body2Strong": "HanBuddy 用一位本地好友為你打開這些夜晚：買票、佔座，坐在你身邊。"
+    },
+    "how": {
+      "eyebrow": "運作方式",
+      "title": "每一個比賽之夜都由我們親自營運。",
+      "steps": {
+        "plan": {
+          "title": "每一場都由我們親自策劃",
+          "description": "蠶室、高尺的棒球，首爾世界盃競技場的足球。一場真實比賽、一個小團、一位會唱加油歌的好友。"
+        },
+        "confirm": {
+          "title": "線上預訂後，我們立即買票",
+          "description": "比賽門票和球場餐食已包含在價格中。專人確認集合地點，並解答你的問題。"
+        },
+        "improve": {
+          "title": "每一場都在變得更好",
+          "description": "每位旅客都會填寫一分鐘問卷，答案會改變下一場的安排。"
+        }
+      }
+    },
+    "stats": {
+      "eyebrow": "到目前為止",
+      "title": "來自真實比賽之夜的數字。",
+      "items": {
+        "runs": {
+          "value": "7 場",
+          "label": "自 2026 年 6 月以來的比賽之夜"
+        },
+        "rating": {
+          "value": "4.9 / 5",
+          "label": "旅客平均滿意度"
+        },
+        "stadiums": {
+          "value": "3 座",
+          "label": "球場：蠶室、高尺、首爾世界盃"
+        }
+      },
+      "note": "滿意度基於 2026 年 6 月至 9 月的 12 份旅客問卷。"
+    },
+    "timeline": {
+      "eyebrow": "活動記錄",
+      "title": "我們去過的地方，以及接下來的行程。",
+      "items": {
+        "june": {
+          "date": "2026 年 6 月",
+          "title": "蠶室首場 KBO 之夜",
+          "description": "一位旅客、全體成員擔任好友，以及滿滿的收穫。",
+          "imageAlt": "首場棒球之夜，旅客和本地好友在看台上微笑"
+        },
+        "july": {
+          "date": "2026 年 7 月",
+          "title": "蠶室 KBO 第二場",
+          "description": "三位旅客、加油歌、炸雞和啤酒。三份問卷全部 5 分滿分。",
+          "imageAlt": "旅客和當地好友在棒球比賽中一起歡呼"
+        },
+        "august": {
+          "date": "2026 年 8 月",
+          "title": "首場足球之夜：K 聯賽",
+          "description": "首爾世界盃競技場、圍巾，以及一位說「像和朋友在一起」的旅客。",
+          "imageAlt": "在K聯賽賽場同行的旅客與本地好友"
+        },
+        "september": {
+          "date": "2026 年 9 月",
+          "title": "四場比賽之夜，含首次室內巨蛋",
+          "description": "高尺天空巨蛋和蠶室、天藍色球衣、吉祥物合影。9 月問卷全部 5 分滿分。",
+          "imageAlt": "三位朋友在高尺天空巨蛋看台上開心微笑"
+        }
+      }
+    },
+    "team": {
+      "eyebrow": "認識團隊",
+      "title": "我們是 ZeroOne，三位來自首爾的朋友，一起營運 HanBuddy。",
+      "description": "我們策劃每一夜、購買門票、回覆訊息，並和你一起坐在看台上。",
+      "backed": "HanBuddy 是韓國科學技術資訊通訊部主辦的國家軟體人才計畫 AI·SW Maestro 第 17 期 ZeroOne 團隊的官方專案。",
+      "linkedin": "LinkedIn",
+      "members": {
+        "minhyung": {
+          "name": "Minhyung Kim",
+          "role": "團隊負責人 · 營運"
+        },
+        "yoohyun": {
+          "name": "Yoohyun Kim",
+          "role": "體驗策劃 · 內容"
+        },
+        "junyoung": {
+          "name": "Junyoung Lee",
+          "role": "預訂 · 配對營運"
+        }
+      }
+    },
+    "cta": {
+      "title": "認識我們最好的方式，就是在球場。",
+      "description": "選個日期，預訂座位，剩下的交給我們。",
+      "button": "查看即將到來的比賽之夜"
+    }
+  },
   "Auth": {
     "metadataTitle": "登入 |漢巴迪",
     "metadataDescription": "認識當地好友，體驗行程之外的韓國。",
@@ -361,6 +527,7 @@
     "welcome": "像當地人一樣體驗韓國。",
     "introduction": "認識當地好友，發現讓韓國感覺跟您一樣的時刻。",
     "continueWithGoogle": "繼續使用谷歌",
+    "bookingLoginPrompt": "請登入以繼續預訂",
     "reviewLogin": {
       "title": "使用電子郵件登入",
       "emailLabel": "電子郵件",
@@ -387,12 +554,12 @@
     "rightsReserved": "保留所有權利。",
     "visualAlt": "HanBuddy 嘉賓和好友一起微笑觀看棒球比賽",
     "visualCaption": "新朋友，7 月 26 日 ⚾",
-    "visualRightAlt": "嘉賓和好友在棒球看台上一起微笑",
-    "visualRightCaption": "第一個棒球之夜⚾",
-    "visualBottomLeftAlt": "半坡大橋彩虹噴泉點亮漢江",
-    "visualBottomLeftCaption": "半坡彩虹🌈",
-    "visualBottomRightAlt": "漢江邊共享的炸雞、麵條、飲料",
-    "visualBottomRightCaption": "河邊的奇美克🍗",
+    "visualRightAlt": "旅客和本地好友在蠶室看台戴著熊耳髮箍",
+    "visualRightCaption": "熊耳髮箍 9/13 ⚾",
+    "visualBottomLeftAlt": "旅客和本地好友在蠶室棒球場與斗山熊隊吉祥物合影",
+    "visualBottomLeftCaption": "吉祥物合影 9/12 ⚾",
+    "visualBottomRightAlt": "旅客和本地好友在高尺天空巨蛋看台分享零食",
+    "visualBottomRightCaption": "巨蛋零食 9/5 ⚾",
     "errors": {
       "googleCancelled": "Google 登入已取消。",
       "missingCode": "Google 沒有回傳授權碼。",
@@ -652,9 +819,11 @@
     "kstNotice": "所有時間均採用韓國標準時間 (KST)。",
     "hostedActivities": "這位朋友的其他經歷",
     "noOtherActivities": "還沒有其他經驗。",
-    "viewHostProfile": "查看 {name}的個人資料"
+    "viewHostProfile": "查看 {name}的個人資料",
+    "autoTranslated": "已自動翻譯"
   },
   "Reviews": {
+    "anonymous": "匿名",
     "sectionTitle": "評論",
     "ratingAria": "額定 {rating} 滿分 5",
     "countLabel": "{count, plural, =0 {還沒有評論} one {# 評論} other {# 評論}}",
@@ -695,20 +864,31 @@
     "noneForRating": "尚未有此評級的評論。",
     "ratingWithCountAria": "額定 {rating} 滿分 5 來自 {count, plural, one {# 評論} other {# 評論}}"
   },
+  "ActivityContact": {
+    "teaser": "有任何疑問，歡迎隨時聯絡我們！",
+    "trigger": "聯絡我們",
+    "title": "還有疑問嗎？",
+    "description": "歡迎隨時透過您方便的方式聯絡HanBuddy營運團隊。",
+    "hint": "請附上活動名稱或頁面連結，方便我們為您解答。"
+  },
   "AlternativePayment": {
     "trigger": "需要其他付款方式？",
     "title": "想使用其他付款方式？",
-    "description": "請填寫以下資訊並傳送給我們。",
-    "message": "您好！我想使用其他付款方式參加。\nHanBuddy註冊電子郵件：[註冊電子郵件]\n嚮導姓名：[嚮導姓名]\n體驗名稱：首爾林散步與聖水洞咖啡館之旅\n日期與時間：YYYY-MM-DD 14:00 (KST)\n參加人數：2人\n希望的付款方式：匯款至韓國銀行帳戶",
-    "exampleTitle": "諮詢內容範例",
-    "exampleHint": "以下僅為範例。請複製後替換為您的資訊及希望選擇的嚮導、體驗和時間，再傳送給我們。",
+    "description": "請確認以下預約資訊，填寫希望使用的付款方式後傳送給我們。",
+    "message": "您好！我想使用其他付款方式參加。\nHanBuddy註冊信箱: {email}\nBuddy姓名: {buddy}\n體驗名稱: {activity}\n日期與時間: {schedule}\n人數（含本人）: {participants}人\n希望使用的付款方式: {method}",
+    "exampleTitle": "詢問內容",
+    "exampleHint": "已填入您目前選擇的資訊。請核對內容並填寫希望使用的付款方式後再傳送。",
     "copy": "複製範本",
-    "copied": "已複製。請修改內容後透過您選擇的管道傳送。",
-    "copyFailed": "複製失敗。請選取上方範例並手動複製。",
+    "copied": "已複製。請核對內容並填寫希望使用的付款方式後傳送。",
+    "copyFailed": "複製失敗，請選取並複製上方訊息。",
     "email": "電子郵件",
-    "notConfirmed": "僅諮詢並不代表預訂已確認。"
+    "notConfirmed": "僅諮詢並不代表預訂已確認。",
+    "missingValue": "[請填寫]",
+    "missingSchedule": "[請選擇日期與時間]",
+    "preferredMethod": "[希望使用的付款方式]"
   },
   "Booking": {
+    "bookingWindowNotice": "預訂及付款請求須在活動開始至少24小時前提交。",
     "title": "預約活動",
     "loading": "正在加載預訂...",
     "loadError": "無法加載預訂詳細資訊。",
@@ -894,8 +1074,8 @@
     "confirming": "正在確認您的付款...",
     "confirmFailed": "我們無法確認您的付款。請從「我的應用程式」重試。",
     "failTitle": "付款失敗",
-    "failDescription": "付款尚未完成，也未收取任何費用。",
-    "retryFromApplications": "在“我的應用程式”中重試",
+    "failDescription": "無法確認付款結果。再次付款前，請在我的報名中查看最新狀態。",
+    "retryFromApplications": "查看我的報名狀態",
     "failReasons": {
       "cancelled": "您在付款完成之前取消了付款。",
       "aborted": "付款被中斷。請再試一次。",
@@ -1247,7 +1427,10 @@
       "characters": "{count, number} 輸入的字符",
       "hostIntroductionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} 人物",
-      "experienceDescriptionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}"
+      "experienceDescriptionCharacters": "{count, number}/{max, number} 字元·最少 {min, number}",
+      "experienceNameEnglish": "活動標題不會自動翻譯，請<emphasis>務必使用英語</emphasis>填寫。",
+      "fieldCharacters": "{count} / {max}字",
+      "listLimits": "{count} / {max}項 · 每項最多{length}字"
     },
     "placeholders": {
       "hostIntroduction": "介紹一下你自己以及為什麼你想舉辦這次體驗。",
@@ -1258,7 +1441,7 @@
       "meetingAddress": "例如，首爾特別市松坡區奧林匹克路25號",
       "meetingPlace": "例如，1號門售票亭",
       "itineraryTitle": "例如，學習團隊口號",
-      "itineraryDescription": "用 5 到 50 個字元描述此活動。",
+      "itineraryDescription": "用 5 到 1000 個字元描述此活動。",
       "duration": "例如，30",
       "maxGuests": "例如，8",
       "pricePerPerson": "例如，50000",
@@ -1268,6 +1451,9 @@
       "restrictions": "例如，建議穿著舒適的鞋子"
     },
     "photos": {
+      "reorderHint": "更換封面照片，或拖曳照片調整順序。",
+      "move": "移動第{index}張照片",
+      "moved": "照片已移至第{position}張，共{count}張",
       "upload": "新增體驗照片",
       "hint": "JPG、PNG 或 WebP · 至少 3 個，最多 10 個",
       "label": "上傳體驗照片",
@@ -1305,13 +1491,24 @@
         "done": "完成",
         "errors": {
           "photo": "添加照片以繼續。",
-          "description": "寫5到50個字元。",
+          "description": "寫5到1000個字元。",
           "duration": "設定至少 1 分鐘的持續時間。",
-          "title": "輸入 1 到 20 個字元的活動標題。"
+          "title": "輸入 1 到 100 個字元的活動標題。"
         }
       }
     },
     "capacity": {
+      "minimumHint": "人數上限不能低於預訂確認與待付款人數之和。",
+      "previous": "上一組場次",
+      "next": "下一組場次",
+      "pageRange": "共{total}場，第{from}–{to}場",
+      "defaultTitle": "預設人數上限",
+      "settings": "按日期詳細設定",
+      "defaultHint": "用於新增場次，不改變既有場次的人數上限。",
+      "scheduleTitle": "各日期及時段的人數上限",
+      "scheduleHint": "人數上限不得低於預訂確認與待付款人數之和。",
+      "confirmed": "預訂確認 {count}人",
+      "pending": "待付款 {count}人",
       "decrease": "減少最大賓客人數",
       "increase": "增加最大賓客人數",
       "guests": "{count, plural, one {# 最多賓客人數} other {# 最多客人數}}"
@@ -1324,6 +1521,7 @@
       "mapTitle": "所選會議地址的地圖"
     },
     "schedule": {
+      "bookingWindowNotice": "預訂及付款請求須在活動開始至少24小時前提交。",
       "notice": "根據需要選擇任意數量的日期。所有開始時間均以韓國標準時間 (KST) 顯示。",
       "calendarLabel": "體驗日期日曆",
       "previousMonth": "上個月",
@@ -1345,6 +1543,7 @@
       "pastTimeHint": "今天的開始時間必須晚於目前時間 (KST)。"
     },
     "price": {
+      "minimum": "每人最低價格為{amount, number}韓元。",
       "notice": "該金額以每人韓元的價格顯示給客人。"
     },
     "inclusions": {
@@ -1411,21 +1610,22 @@
       "backToActivity": "返回活動"
     },
     "errors": {
+      "scheduleCapacityOccupied": "人數上限不得低於預訂確認與待付款人數之和。",
       "categoryRequired": "選擇一個類別以繼續。",
-      "hostIntroductionRequired": "寫一個 30 到 200 個字元的簡介。",
+      "hostIntroductionRequired": "寫一個 30 到 2000 個字元的簡介。",
       "photosMinimum": "新增 3 到 10 張體驗照片。",
-      "experienceNameRequired": "輸入 1 到 20 個字元之間的體驗名稱。",
-      "experienceDescriptionRequired": "寫下 30 到 200 個字符的詳細描述。",
+      "experienceNameRequired": "輸入 1 到 100 個字元之間的體驗名稱。",
+      "experienceDescriptionRequired": "寫下 30 到 3000 個字符的詳細描述。",
       "meetingAddressRequired": "輸入會議地址。",
       "meetingPlaceRequired": "輸入簡短的會議地點名稱。",
       "scheduleInvalid": "至少選擇一個日期並為每個選定日期設定開始時間。",
       "itineraryRequired": "增加至少一項行程活動。",
-      "itineraryTitleRequired": "每個活動都需要一個 1 到 20 個字元的標題。",
-      "itineraryDescriptionTooShort": "每項活動描述必須在 5 到 50 個字元之間。",
+      "itineraryTitleRequired": "每個活動都需要一個 1 到 100 個字元的標題。",
+      "itineraryDescriptionTooShort": "每項活動描述必須在 5 到 1000 個字元之間。",
       "itineraryDurationInvalid": "每項活動輸入大於 0 的持續時間。",
       "itineraryPhotoRequired": "為每項活動新增照片。",
       "maxGuestsInvalid": "輸入大於 0 的整數容量。",
-      "priceInvalid": "輸入大於 0 的整數價格。",
+      "priceInvalid": "請輸入不低於15,000韓元的每人價格（整數）。",
       "inclusionsRequired": "至少增加一項包含的物品。",
       "discountInvalid": "選擇結束日期並輸入 1 到 100 之間的整數折扣。",
       "restrictionsRequired": "至少選擇一件事客人應該知道，或確認沒有什麼需要注意的。",
@@ -1433,7 +1633,10 @@
       "submissionFailed": "我們無法登記您的經驗。請再試一次。",
       "scheduleInPast": "某些選定的日期或開始時間已經過去。僅選擇未來的會話。",
       "maxGuestsTooMany": "最多可容納 100 位客人。",
-      "itineraryTooMany": "您最多可以新增 20 項行程活動。"
+      "itineraryTooMany": "您最多可以新增 20 項行程活動。",
+      "meetingPlaceTooLong": "集合地點名稱不得超過500字。",
+      "listItemTooLong": "每項不得超過500字。",
+      "listTooMany": "最多可新增20項。"
     }
   },
   "PayPalPayment": {

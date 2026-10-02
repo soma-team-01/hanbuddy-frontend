@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import {
   analyticsBackendOptions,
+  ANALYTICS_COOKIE_NAME,
   analyticsUnavailableResponse,
   createProjectedAnalyticsResponse,
   isConsentProof,
@@ -26,8 +27,12 @@ export async function POST(request: NextRequest) {
   const action = body?.action;
   if (action !== "ACCEPT" && action !== "RESTORE") return analyticsUnavailableResponse(400);
 
-  const existing = analyticsBackendOptions(request, policy, "granted");
-  if (action === "RESTORE" && !existing) return analyticsUnavailableResponse(410);
+  const raw = request.cookies.get(ANALYTICS_COOKIE_NAME)?.value;
+  const choice = isConsentProof(raw, "denied") ? "denied" : "granted";
+  const existing = analyticsBackendOptions(request, policy, choice);
+  if (raw && !existing) return analyticsUnavailableResponse(410);
+  if (action === "RESTORE" && (!existing || choice === "denied"))
+    return analyticsUnavailableResponse(410);
 
   try {
     const backend = await postBackend<{ action: "ACCEPT" | "RESTORE" }, ProofResult>(
@@ -38,7 +43,7 @@ export async function POST(request: NextRequest) {
     return createProjectedAnalyticsResponse(backend, (result) => {
       if (
         !result ||
-        !isConsentProof(result.proof, "granted", policy.version) ||
+        !isConsentProof(result.proof, "granted") ||
         typeof result.expiresAt !== "string" ||
         Number.isNaN(Date.parse(result.expiresAt))
       )

@@ -1,9 +1,10 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getActivityWeather, getTouristActivities } from "@/lib/api/activities";
 import { createReview, deleteReview, updateReview } from "@/lib/api/reviews";
 import { ApiClientError } from "@/lib/api/errors";
 import { getApplicationCancellationQuote } from "@/lib/api/applications";
+import { getApplicationScheduleCancellation } from "@/lib/api/schedule-cancellation";
 import { IntlTestProvider } from "@/test/render-with-intl";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { Locale } from "@/i18n/routing";
@@ -13,6 +14,7 @@ import type { Application } from "@/types/application";
 import { ApplicationList } from "./application-list";
 
 const routerMock = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }));
+vi.mock("@/lib/api/schedule-cancellation", () => ({ getApplicationScheduleCancellation: vi.fn() }));
 
 // 호스트 프로필의 "메시지 보내기"가 라우터를 쓰므로 앱 라우터를 대신 세워준다
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -171,6 +173,25 @@ describe("ApplicationList", () => {
       },
     });
   });
+
+  it.each(["pending_payment", "confirmed"] as const)(
+    "blocks repeat cancellation and payment for %s during refund recovery",
+    (status) => {
+      const onContinuePayment = vi.fn();
+      const onCancelApplication = vi.fn();
+      renderList({
+        applications: [{ ...applications[0], status, refundRecoveryPending: true }],
+        onContinuePayment,
+        onCancelApplication,
+      });
+      expect(screen.getByText(/We’re checking the refund result/)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Pay with|Cancel application|Cancel payment/i }),
+      ).not.toBeInTheDocument();
+      expect(onContinuePayment).not.toHaveBeenCalled();
+      expect(onCancelApplication).not.toHaveBeenCalled();
+    },
+  );
 
   it("shows a continue-payment action for pending applications", () => {
     const onContinuePayment = vi.fn().mockResolvedValue(undefined);
@@ -542,7 +563,9 @@ describe("ApplicationList", () => {
         isPaymentPending={false}
       />
     );
-    const { rerender } = render(<IntlTestProvider locale="en">{applicationList}</IntlTestProvider>);
+    const { rerender } = renderWithQueryClient(
+      <IntlTestProvider locale="en">{applicationList}</IntlTestProvider>,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Pay with Toss Payments" }));
     continuePaymentAfterReview("Continue payment with Toss Payments");
@@ -743,6 +766,39 @@ describe("ApplicationList", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps the buddy refund amount inside price details and labels the reason below its status", async () => {
+    vi.mocked(getApplicationScheduleCancellation).mockResolvedValue({
+      status: "success",
+      cancellation: {
+        applicationId: 1,
+        refundStatus: "COMPLETED",
+        reviewReason: null,
+        additionalRefundAmount: 12.34,
+        currency: "USD",
+      },
+    });
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          status: "cancelled",
+          cancellationReason: "BUDDY_CANCELLATION",
+          cancellationDetail: "Heavy rain expected.",
+        },
+      ],
+    });
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    const status = await screen.findByText("Refund completed");
+    const reason = screen.getByText("Cancellation reason from your buddy");
+    expect(status.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByText(/12.34/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Current refund/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(screen.getByText("Refund amount").parentElement).toHaveTextContent("$12.34");
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(screen.queryByText(/12.34/)).not.toBeInTheDocument();
+  });
+
   it("shows the cancellation reason on a cancelled application", () => {
     renderList({
       applications: [
@@ -839,6 +895,8 @@ describe("ApplicationList", () => {
         activityTitle: "Traditional Tea Tasting",
         activityTitleLanguage: "EN",
         reviewerName: "Nelli",
+        source: "PLATFORM",
+        originalReviewedAt: null,
         reviewerProfileImageUrl: null,
         rating: 5,
         content: "The tea master was wonderful.",
@@ -888,6 +946,8 @@ describe("ApplicationList", () => {
         activityTitle: "Traditional Tea Tasting",
         activityTitleLanguage: "EN",
         reviewerName: "Nelli",
+        source: "PLATFORM",
+        originalReviewedAt: null,
         reviewerProfileImageUrl: null,
         rating: 4,
         content: "Slightly rushed at the end.",

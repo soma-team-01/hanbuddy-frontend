@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { MobileMenu } from "@/components/layout/MobileMenu";
-import { UsersIcon } from "@/components/ui/icons";
+import { ChatBubbleDotsIcon, UsersIcon } from "@/components/ui/icons";
 
 export function AdminSiteHeader({ authenticated }: Readonly<{ authenticated: boolean }>) {
   const router = useRouter();
@@ -78,6 +78,14 @@ export function AdminSiteHeader({ authenticated }: Readonly<{ authenticated: boo
       >
         <UsersIcon className="size-5" />
         회원 관리
+      </Link>
+      <Link
+        href="/admin/reviews"
+        aria-current={pathname.startsWith("/admin/reviews") ? "page" : undefined}
+        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${pathname.startsWith("/admin/reviews") ? "bg-primary-soft text-primary-strong" : "text-muted hover:bg-panel hover:text-ink"}`}
+      >
+        <ChatBubbleDotsIcon className="size-5" />
+        리뷰 관리
       </Link>
     </nav>
   );

@@ -53,6 +53,19 @@ describe("ChatRoomList", () => {
     mockedUsePathname.mockReturnValue("/en/chat");
   });
 
+  it("keeps cancelled group conversations reachable with a schedule badge", async () => {
+    mockedGetMyChatRooms.mockResolvedValue({
+      status: "success",
+      rooms: [{ ...groupRoom, activityScheduleCancelled: true }],
+    });
+    renderWithQueryClient(<ChatRoomList />, { locale: "ko" });
+    expect(await screen.findByText("취소된 일정")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute(
+      "href",
+      "/ko/chat/2",
+    );
+  });
+
   it("links each conversation and shows its last message", async () => {
     mockedGetMyChatRooms.mockResolvedValue({ status: "success", rooms: [directRoom, groupRoom] });
 

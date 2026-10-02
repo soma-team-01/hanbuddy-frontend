@@ -41,6 +41,8 @@ export interface ActivityItineraryItem {
 }
 
 export interface Activity {
+  /** True only when the API actually returned a translated body, not for locale mismatch alone. */
+  isTranslated?: boolean;
   id: string;
   title: string;
   description: string;
@@ -97,9 +99,10 @@ export interface ActivityItineraryResponse {
   itemOrder: number;
 }
 
-export type TouristActivityScheduleStatus = "OPEN" | "CLOSED";
+export type TouristActivityScheduleStatus = "OPEN" | "CLOSED" | "CANCELLED";
 
 export interface TouristActivitySchedule {
+  maxCapacity?: number;
   activityScheduleId: number;
   /** Asia/Seoul 오프셋을 포함한 date-time */
   startAt: string;
@@ -142,6 +145,8 @@ export interface TouristActivitySummary {
 }
 
 export interface TouristActivityDetail extends TouristActivitySummary {
+  /** Optional during rolling deployment; absence means no translation disclosure. */
+  isTranslated?: boolean;
   /** 버디 본인 소개 (활동별 저장) */
   hostIntroduction?: string;
   includedItems: string[];

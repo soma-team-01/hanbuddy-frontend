@@ -233,6 +233,42 @@ describe("ChatRoomView", () => {
     );
   });
 
+  it("keeps messages and photo attachment available after schedule cancellation", async () => {
+    mockedGetChatRoom.mockResolvedValue({
+      status: "success",
+      room: {
+        chatRoomId: 1,
+        roomType: "GROUP",
+        title: "Cancelled group",
+        activityScheduleId: 99,
+        activityScheduleCancelled: true,
+        activityStartAt: "2026-09-20T10:00:00+09:00",
+        members: [
+          {
+            userId: 11,
+            userName: "Nelli",
+            profileImageUrl: null,
+            lastReadMessageId: 21,
+            left: false,
+          },
+        ],
+      },
+    });
+    mockedSendChatMessage.mockResolvedValue({
+      status: "success",
+      message: message(22, 11, "Thank you"),
+    });
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+    expect(await screen.findByText("Cancelled schedule")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Attach photos" })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Thank you" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() =>
+      expect(mockedSendChatMessage).toHaveBeenCalledWith("1", { content: "Thank you" }),
+    );
+    expect(mockedLeaveChatRoom).not.toHaveBeenCalled();
+  });
+
   it("sends a message and clears the draft", async () => {
     mockedSendChatMessage.mockResolvedValue({
       status: "success",

@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { createCookieRuntime } from "./cookie-runtime";
-import { createGoogleBrowser } from "./browser";
+import { createCookieRuntime, invalidateAnalyticsAccount } from "./cookie-runtime";
+import { createMeasurementBrowser } from "./browser";
 vi.mock("./browser", () => ({
-  createGoogleBrowser: vi.fn(() => ({
+  createMeasurementBrowser: vi.fn(() => ({
     start: vi.fn(async () => {}),
     send: vi.fn(),
     stop: vi.fn(),
@@ -12,17 +12,16 @@ vi.mock("./browser", () => ({
 const policy = {
   measurementId: "G-TEST",
   origin: "https://example.test",
-  version: "synthetic",
-  consentMaxAgeMs: 60000,
-  cookieMaxAgeSeconds: 60,
 };
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
-function environment() {
+function environment(origin = policy.origin) {
   let blocked = false;
   const cookies = new Map<string, string>();
+  const decisions = new Map<string, string>();
   let tail = Promise.resolve();
   const document = {
     get cookie() {
@@ -40,19 +39,23 @@ function environment() {
     if (String(path).includes("withdrawal"))
       return Response.json({ isSuccess: true, result: { withdrawalAcknowledged: true } });
     const now = Math.floor(Date.now() / 1000),
-      existing = cookies.get("__Host-hb_ga_consent");
+      existing = cookies.get("__Host-hb_measurement_consent");
     return Response.json({
       isSuccess: true,
       result: {
-        proof: existing?.startsWith("granted.")
-          ? existing
-          : `granted.v1.00000000-0000-4000-8000-000000000001.${now}.${now + 60}.synthetic.${"a".repeat(43)}`,
+        proof: existing?.startsWith("granted.") ? existing : `granted.v3.${"A".repeat(43)}`,
         expiresAt: new Date((now + 60) * 1000).toISOString(),
       },
     });
   });
   const target = {
-    location: { origin: policy.origin },
+    localStorage: {
+      getItem: (key: string) => decisions.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (!blocked) decisions.set(key, value);
+      },
+    },
+    location: { origin },
     navigator: {
       locks: {
         request: (_name: string, work: () => Promise<unknown>) => {
@@ -114,7 +117,7 @@ it("two tabs converge without RESTORE broadcast loops and stop on withdrawal", a
   expect(e.issue.mock.calls.length).toBeLessThan(5);
   await a.controller.reject();
   await vi.waitFor(() => expect(b.controller.isActive()).toBe(false));
-  const second = vi.mocked(createGoogleBrowser).mock.results[1].value;
+  const second = vi.mocked(createMeasurementBrowser).mock.results[1].value;
   expect(second.stop).toHaveBeenCalledWith(true);
   a.dispose();
   b.dispose();
@@ -132,6 +135,34 @@ it("unavailable channel construction cannot break the application", () => {
   const r = createCookieRuntime(policy, e.target, e.document);
   expect(r.controller.enabled).toBe(false);
   r.dispose();
+});
+it("bounds account invalidation when optional consent restoration stalls", async () => {
+  vi.stubGlobal(
+    "BroadcastChannel",
+    class {
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      postMessage() {}
+      close() {}
+    },
+  );
+  const e = environment();
+  const runtime = createCookieRuntime(policy, e.target, e.document);
+  runtime.controller.visit("/en/onboarding");
+  await runtime.controller.accept();
+  e.issue.mockImplementationOnce(() => new Promise<Response>(() => {}));
+  vi.useFakeTimers();
+  let settled = false;
+
+  const pending = invalidateAnalyticsAccount().then(() => {
+    settled = true;
+  });
+  await vi.advanceTimersByTimeAsync(2999);
+  expect(settled).toBe(false);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(settled).toBe(true);
+
+  await pending;
+  runtime.dispose();
 });
 it("withdraws another active tab even when all cookie writes silently fail", async () => {
   const channels = new Set<{ onmessage: ((e: { data: unknown }) => void) | null }>();
@@ -161,7 +192,22 @@ it("withdraws another active tab even when all cookie writes silently fail", asy
   await a.controller.reject();
   expect(b.controller.isActive()).toBe(false);
   expect(b.controller.track("booking_cta_click", "/en/activities/42", 42)).toBe(false);
-  expect(vi.mocked(createGoogleBrowser).mock.results[1].value.stop).toHaveBeenCalledWith(true);
+  expect(vi.mocked(createMeasurementBrowser).mock.results[1].value.stop).toHaveBeenCalledWith(true);
   a.dispose();
   b.dispose();
 });
+
+it.each(["http://localhost:3000", "https://preview.example", "https://staging.example"])(
+  "keeps transport disabled on noncanonical browser origin %s",
+  (origin) => {
+    const e = environment(origin);
+    const runtime = createCookieRuntime(
+      { ...policy, origin: "https://hanbuddy.kr" },
+      e.target,
+      e.document,
+    );
+    expect(runtime.controller.enabled).toBe(false);
+    expect(e.issue).not.toHaveBeenCalled();
+    runtime.dispose();
+  },
+);

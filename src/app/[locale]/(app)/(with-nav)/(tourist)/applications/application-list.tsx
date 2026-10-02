@@ -11,6 +11,12 @@ import {
 } from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
 import { RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
+import {
+  ApplicationScheduleRefundStatus,
+  ScheduleRefundAmount,
+  useApplicationScheduleRefundQuery,
+} from "@/components/booking/ScheduleRefundStatus";
+import type { ScheduleCancellationApplicant } from "@/types/schedule-cancellation";
 import { ApplicationReviewActions } from "@/components/review/ApplicationReviewActions";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
@@ -62,9 +68,11 @@ type TabKey = (typeof TABS)[number];
 function PriceBreakdown({
   application,
   paymentCharge,
+  scheduleRefund,
 }: Readonly<{
   application: Application;
   paymentCharge: { amount: number; currency: string } | null;
+  scheduleRefund?: ScheduleCancellationApplicant;
 }>) {
   const [open, setOpen] = useState(false);
   const locale = useLocale();
@@ -153,7 +161,10 @@ function PriceBreakdown({
               </span>
             </div>
           ) : null}
-          {application.status === "cancelled" && application.refund ? (
+          {scheduleRefund ? <ScheduleRefundAmount task={scheduleRefund} /> : null}
+          {application.status === "cancelled" &&
+          application.cancellationReason !== "BUDDY_CANCELLATION" &&
+          application.refund ? (
             <div className="mt-1 flex flex-col gap-2 border-t border-line-soft pt-2">
               <div className="flex justify-end gap-2 font-display font-semibold text-success">
                 <span>
@@ -279,6 +290,12 @@ function ApplicationCard({
   const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
+  const tCancellation = useTranslations("ScheduleCancellation");
+  const isBuddyCancellation = application.cancellationReason === "BUDDY_CANCELLATION";
+  const scheduleRefundQuery = useApplicationScheduleRefundQuery(
+    application.id,
+    isBuddyCancellation,
+  );
   const getApiErrorMessage = useApiErrorMessage();
   const paymentCharge =
     application.providerPaymentAmount !== null &&
@@ -325,7 +342,8 @@ function ApplicationCard({
 
   async function handleConfirmedPayment() {
     const paymentProvider = pendingPaymentProvider;
-    if (!paymentProvider) return;
+    if (!paymentProvider || application.scheduleCancelled || application.refundRecoveryPending)
+      return;
 
     setPaymentError(null);
     setPaymentInFlight(paymentProvider);
@@ -410,7 +428,9 @@ function ApplicationCard({
               application.status === "confirmed" ? "sm:self-stretch" : "sm:self-center"
             }`}
           >
-            {application.status === "pending_payment" ? (
+            {application.status === "pending_payment" &&
+            !application.scheduleCancelled &&
+            !application.refundRecoveryPending ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
               <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto">
                 {showTossPayment ? (
@@ -453,7 +473,10 @@ function ApplicationCard({
                 </button>
               </div>
             ) : null}
-            {application.status === "confirmed" && !hasEnded ? (
+            {application.status === "confirmed" &&
+            !application.scheduleCancelled &&
+            !application.refundRecoveryPending &&
+            !hasEnded ? (
               <button
                 type="button"
                 onClick={onCancel}
@@ -462,7 +485,10 @@ function ApplicationCard({
                 {t("cancel")}
               </button>
             ) : null}
-            {application.status === "confirmed" && !hasEnded ? (
+            {application.status === "confirmed" &&
+            !application.scheduleCancelled &&
+            !application.refundRecoveryPending &&
+            !hasEnded ? (
               <div className="sm:mt-auto">
                 <FreeCancellationWindow
                   applicationId={application.id}
@@ -478,37 +504,59 @@ function ApplicationCard({
                 variant="compact"
               />
             ) : null}
+            {isBuddyCancellation ? (
+              <ApplicationScheduleRefundStatus query={scheduleRefundQuery} />
+            ) : null}
             {isCancelled && application.cancellationReason ? (
               <p className="mt-auto text-xs text-muted">
-                {t("cancelledReason", {
-                  reason: t(
-                    `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
-                  ),
-                })}
+                {application.cancellationReason === "BUDDY_CANCELLATION"
+                  ? tCancellation("buddyCancellationReason")
+                  : t("cancelledReason", {
+                      reason: t(
+                        `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
+                      ),
+                    })}
+                {application.cancellationDetail ? (
+                  <span className="mt-1 block break-words text-ink">
+                    {application.cancellationDetail}
+                  </span>
+                ) : null}
               </p>
             ) : null}
           </div>
         </div>
       </div>
-      <PriceBreakdown application={application} paymentCharge={paymentCharge} />
-      {application.status === "pending_payment" && (
-        <div className="flex flex-col gap-2">
-          {application.holdExpiresAt ? (
-            <PaymentHoldCountdown
-              holdExpiresAt={application.holdExpiresAt}
-              onExpire={onHoldExpired}
-            />
-          ) : null}
-          {paymentError !== null && pendingPaymentProvider === null && (
-            <p
-              role="alert"
-              className="rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
-            >
-              {getApiErrorMessage(paymentError, t("paymentFailed"))}
-            </p>
-          )}
-        </div>
-      )}
+      <PriceBreakdown
+        application={application}
+        paymentCharge={paymentCharge}
+        scheduleRefund={isBuddyCancellation ? scheduleRefundQuery.data : undefined}
+      />
+      {application.refundRecoveryPending &&
+      application.cancellationReason !== "BUDDY_CANCELLATION" ? (
+        <p role="status" className="border-l-2 border-primary pl-3 text-sm text-muted">
+          {tCancellation("refundRecoveryPending")}
+        </p>
+      ) : null}
+      {application.status === "pending_payment" &&
+        !application.scheduleCancelled &&
+        !application.refundRecoveryPending && (
+          <div className="flex flex-col gap-2">
+            {application.holdExpiresAt ? (
+              <PaymentHoldCountdown
+                holdExpiresAt={application.holdExpiresAt}
+                onExpire={onHoldExpired}
+              />
+            ) : null}
+            {paymentError !== null && pendingPaymentProvider === null && (
+              <p
+                role="alert"
+                className="rounded-xl border border-danger/20 px-4 py-3 text-sm text-danger"
+              >
+                {getApiErrorMessage(paymentError, t("paymentFailed"))}
+              </p>
+            )}
+          </div>
+        )}
       {isCompleted && application.myReview ? (
         <ApplicationReviewActions
           applicationId={application.id}
@@ -527,7 +575,9 @@ function ApplicationCard({
           onClose={() => setHostProfileOpen(false)}
         />
       ) : null}
-      {pendingPaymentProvider ? (
+      {pendingPaymentProvider &&
+      !application.scheduleCancelled &&
+      !application.refundRecoveryPending ? (
         <ConfirmDialog
           title={t("paymentReviewTitle")}
           description={t("paymentReviewDescription")}
@@ -593,11 +643,20 @@ export function ApplicationList({
 
   const visibleApplications = applications.filter((application) =>
     tab === "upcoming"
-      ? application.status === "pending_payment" || application.status === "confirmed"
-      : application.status === "completed" || application.status === "cancelled",
+      ? !application.scheduleCancelled &&
+        (application.status === "pending_payment" || application.status === "confirmed")
+      : application.scheduleCancelled ||
+        application.status === "completed" ||
+        application.status === "cancelled",
   );
   const cancelTarget = cancelTargetId
-    ? applications.find((application) => application.id === cancelTargetId)
+    ? applications.find(
+        (application) =>
+          application.id === cancelTargetId &&
+          !application.scheduleCancelled &&
+          !application.refundRecoveryPending &&
+          application.status === "confirmed",
+      )
     : null;
 
   return (

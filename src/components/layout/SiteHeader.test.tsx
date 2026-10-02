@@ -28,6 +28,16 @@ const mockedUseRouter = vi.mocked(useRouter);
 const replace = vi.fn();
 
 describe("SiteHeader", () => {
+  it("uses a compact mobile header while preserving desktop sizing and touch targets", () => {
+    renderWithQueryClient(<SiteHeader role="tourist" />);
+    const brand = screen.getByRole("link", { name: "HanBuddy" });
+    expect(brand.parentElement).toHaveClass("h-15", "lg:h-[76px]");
+    expect(brand).toHaveClass("min-h-11");
+    expect(brand.querySelector("img")).toHaveClass("size-7", "lg:size-9");
+    expect(brand.querySelector("span")).toHaveClass("text-lg", "lg:text-xl");
+    expect(screen.getByRole("button", { name: "Open menu" })).toHaveClass("size-11");
+    expect(screen.getAllByRole("button", { name: "Open account menu" })[1]).toHaveClass("min-h-11");
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mockedUsePathname.mockReturnValue("/explore");
@@ -53,6 +63,10 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "My Applications" })).toHaveAttribute(
       "href",
       "/en/applications",
+    );
+    expect(within(primaryNavigation).getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      "/en/about",
     );
     expect(
       within(primaryNavigation).queryByRole("link", { name: "My Page" }),
@@ -356,6 +370,7 @@ describe("SiteHeader", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />, { locale: "ko" });
 
     expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/ko/explore");
+    expect(screen.getByRole("link", { name: "소개" })).toHaveAttribute("href", "/ko/about");
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(
       "href",
       "/ko/applications",

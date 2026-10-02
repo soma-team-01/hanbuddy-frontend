@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { RecommendedExperiences } from "./RecommendedExperiences";
+vi.mock("next/navigation", async (original) => ({
+  ...(await original<typeof import("next/navigation")>()),
+  usePathname: () => "/en",
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
@@ -35,6 +40,23 @@ function createActivity(activityId: number) {
 }
 
 describe("RecommendedExperiences", () => {
+  it("filters recommendations and preserves the date on detail and explore links", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [createActivity(1)],
+    });
+    renderWithQueryClient(<RecommendedExperiences date="2026-10-10" />);
+    expect(await screen.findByText("HanBuddy activity 1")).toBeInTheDocument();
+    expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD", "2026-10-10");
+    expect(screen.getByRole("link", { name: /HanBuddy activity 1/ })).toHaveAttribute(
+      "href",
+      "/en/activities/1?date=2026-10-10",
+    );
+    expect(screen.getByRole("link", { name: /View all experiences/ })).toHaveAttribute(
+      "href",
+      "/en/explore?date=2026-10-10",
+    );
+  });
   beforeEach(() => {
     mockedGetTouristActivities.mockReset();
   });

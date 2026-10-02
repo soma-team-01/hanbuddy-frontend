@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mapApplicationResponseToApplication } from "./application-view";
+import type { PaymentRefundResponse } from "@/types/application";
 
 const application = {
   applicationId: 11,
@@ -31,6 +32,83 @@ const application = {
 } as const;
 
 describe("application view adapters", () => {
+  it.each<PaymentRefundResponse["status"]>(["REQUESTED", "FAILED", "COMPLETED"])(
+    "preserves an earlier personal %s refund when the buddy later cancels",
+    (status) => {
+      const refund: PaymentRefundResponse = {
+        refundId: 18,
+        provider: "PAYPAL",
+        status,
+        policyVersion: "2026-09-07",
+        policyType: "BETWEEN_24_AND_48_HOURS",
+        refundPercent: 50,
+        refundAmount: 25,
+        refundCurrency: "USD",
+        cancellationFeeAmount: 25,
+        refundAmountKrw: 35000,
+        retainedAmountKrw: 35000,
+        platformCommissionAmountKrw: 0,
+        commissionVatAmountKrw: 0,
+        guidePayoutAmountKrw: 35000,
+        requestedAt: "2026-07-17T10:00:00+09:00",
+        completedAt: status === "COMPLETED" ? "2026-07-17T10:05:00+09:00" : null,
+      };
+      expect(
+        mapApplicationResponseToApplication(
+          {
+            ...application,
+            status: "CANCELLED",
+            scheduleCancelled: true,
+            cancellationReason: "ILLNESS",
+            cancellationDetail: "Original reason",
+            refund,
+          },
+          "Time unavailable.",
+        ),
+      ).toMatchObject({
+        cancellationReason: "ILLNESS",
+        cancellationDetail: "Original reason",
+        refund,
+        refundRecoveryPending: status !== "COMPLETED",
+      });
+    },
+  );
+  it("preserves prior personal cancellation policy when its schedule is later cancelled", () => {
+    const mapped = mapApplicationResponseToApplication(
+      {
+        ...application,
+        status: "CANCELLED",
+        scheduleCancelled: true,
+        scheduleCancelledAt: "2026-07-17T09:00:00+09:00",
+        cancellationReason: "ILLNESS",
+        cancellationDetail: "Prior personal reason",
+      },
+      "Time unavailable.",
+    );
+    expect(mapped).toMatchObject({
+      status: "cancelled",
+      scheduleCancelled: true,
+      cancellationReason: "ILLNESS",
+      cancellationDetail: "Prior personal reason",
+    });
+  });
+  it("treats a cancelled schedule as non-bookable even before application cleanup", () => {
+    expect(
+      mapApplicationResponseToApplication(
+        {
+          ...application,
+          scheduleCancelled: true,
+          cancellationReason: "BUDDY_CANCELLATION",
+          cancellationDetail: "Weather",
+        },
+        "Time unavailable.",
+      ),
+    ).toMatchObject({
+      status: "cancelled",
+      cancellationReason: "BUDDY_CANCELLATION",
+      cancellationDetail: "Weather",
+    });
+  });
   it("maps backend application fields to the existing card model", () => {
     expect(mapApplicationResponseToApplication(application, "Time unavailable.", "en")).toEqual({
       id: "11",
@@ -40,6 +118,10 @@ describe("application view adapters", () => {
       endAt: "2026-07-18T18:45:00Z",
       thumbnailUrl: "https://static.hanbuddy.com/activities/bukchon.webp",
       cancellationReason: null,
+      cancellationDetail: null,
+      scheduleCancelled: false,
+      scheduleCancelledAt: null,
+      refundRecoveryPending: false,
       holdExpiresAt: null,
       myReview: null,
       dateLabel: "Sun, Jul 19 · 1:30 AM ~ 3:45 AM",

@@ -9,29 +9,30 @@ interface HeroMediaItem {
   /** cover: 항상 꽉 채움. contain: md 이상에서 흐린 배경 위에 원본을 가운데 잘리지 않게 놓는다(셀카·크루 사진). */
   readonly fit?: HeroMediaFit;
   /**
-   * 사진 초점(object-position). cover 사진은 모든 폭에서, contain 사진은 모바일 띠에서만 쓰이고
+   * 사진 초점(object-position). cover 사진은 모든 폭에서, contain 사진은 모바일 배경에서만 쓰이고
    * md 이상에서는 흐린 배경 위 정중앙에 놓인다.
    */
   readonly position?: string;
 }
+
+const SLIDE_SECONDS = 5;
 
 interface LandingHeroMediaProps {
   readonly images: readonly HeroMediaItem[];
 }
 
 /**
- * 히어로 배경 사진 시퀀스. 모바일(<768px)에서는 히어로 상단의 사진 띠(400px)로,
- * md 이상에서는 섹션 전체를 덮는 배경으로 렌더링한다.
+ * 모든 화면에서 히어로 전체를 덮는 배경 사진 시퀀스.
+ * 모바일은 상단에 축소한 원본과 흐린 배경, md 이상은 기존 전체 배경을 유지한다.
  */
 export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
   return (
-    <div
-      aria-hidden="true"
-      className="hero-media relative h-[400px] w-full overflow-hidden md:absolute md:inset-0 md:h-auto"
-    >
+    <div aria-hidden="true" className="hero-media absolute inset-0 w-full overflow-hidden">
       {images.map((image, index) => {
+        // 한 장당 5초. 전체 주기는 장수에 비례한다 (키프레임 비율은 globals.css 참고)
         const style = {
-          "--hero-media-delay": `${index * 5}s`,
+          "--hero-media-delay": `${index * SLIDE_SECONDS}s`,
+          "--hero-media-duration": `${images.length * SLIDE_SECONDS}s`,
         } as CSSProperties;
         const isContain = image.fit === "contain";
 
@@ -44,10 +45,10 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
                 fill
                 loading="lazy"
                 sizes="50vw"
-                className="hero-media-backdrop hidden scale-110 object-cover blur-2xl brightness-50 md:block"
+                className="hero-media-backdrop scale-110 object-cover blur-2xl brightness-50"
               />
             ) : null}
-            <div className="absolute inset-0">
+            <div className="absolute inset-x-0 top-0 aspect-[4/3] md:inset-0 md:aspect-auto md:h-auto">
               <Image
                 src={image.src}
                 alt={image.alt}
@@ -55,8 +56,8 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
                 priority={index === 0}
                 loading={index === 0 ? "eager" : "lazy"}
                 sizes="100vw"
-                className={`hero-media-image object-cover ${
-                  isContain ? "hero-media-contain md:object-contain" : ""
+                className={`hero-media-image object-contain ${
+                  isContain ? "hero-media-contain md:object-contain" : "md:object-cover"
                 }`}
                 style={
                   image.position
@@ -68,8 +69,6 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
           </div>
         );
       })}
-      {/* 모바일: 사진 띠가 아래 어두운 글자 영역으로 녹아든다 */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-ink md:hidden" />
     </div>
   );
 }

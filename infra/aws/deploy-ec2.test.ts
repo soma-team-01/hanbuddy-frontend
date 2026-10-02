@@ -71,7 +71,16 @@ else
 fi
 `;
 
-function deploy(scenario = "success", redirect = "www.hanbuddy.kr") {
+function deploy(
+  scenario = "success",
+  redirect = "www.hanbuddy.kr",
+  analytics = {
+    GA_ENABLED: "false",
+    GA_MEASUREMENT_ID: "",
+    META_PIXEL_ENABLED: "false",
+    META_PIXEL_ID: "",
+  },
+) {
   const directory = mkdtempSync(join(tmpdir(), "hanbuddy-deploy-test-"));
   try {
     writeFileSync(join(directory, "aws"), awsMock, { mode: 0o755 });
@@ -100,6 +109,8 @@ function deploy(scenario = "success", redirect = "www.hanbuddy.kr") {
           REVIEW_LOGIN_ENABLED: "false",
           GOOGLE_CLIENT_ID: "test",
           GOOGLE_REDIRECT_URI: "https://hanbuddy.kr/auth/google/callback",
+          GA4_ORIGIN: redirect ? "https://hanbuddy.kr" : "https://staging.hanbuddy.kr",
+          ...analytics,
         }),
       },
     });
@@ -161,5 +172,48 @@ describe("EC2 deployment cutover (mock commands)", () => {
     expect(result.status, result.stderr).toBe(0);
     expect(result.records).toEqual(expect.arrayContaining(originalRecords));
     expect(result.curl).not.toContain("www.hanbuddy.kr");
+    expect(result.remote).toContain("ga_enabled=\"$(printf '%s' 'ZmFsc2U=' | base64 --decode)\"");
+    expect(result.remote).toContain("ga_measurement_id=\"$(printf '%s' '' | base64 --decode)\"");
+    expect(result.remote).toContain('-e "GA_ENABLED=${ga_enabled}"');
+    expect(result.remote).toContain('-e "GA4_ORIGIN=${ga4_origin}"');
+    expect(result.remote).toContain('-e "GA_MEASUREMENT_ID=${ga_measurement_id}"');
+    expect(result.remote).toContain('-e "META_PIXEL_ENABLED=${meta_pixel_enabled}"');
+    expect(result.remote).toContain('-e "META_PIXEL_ID=${meta_pixel_id}"');
+  });
+
+  it("encodes GA values without exposing shell syntax or changing docker argument boundaries", () => {
+    const gaEnabled = "false\n$(touch /tmp/ga-enabled-injection)";
+    const measurementId = "G-TEST'\" $(touch /tmp/ga-id-injection)";
+    const pixelEnabled = "false\n$(touch /tmp/meta-enabled-injection)";
+    const pixelId = "123'\" $(touch /tmp/meta-id-injection)";
+    const result = deploy("success", "", {
+      GA_ENABLED: gaEnabled,
+      GA_MEASUREMENT_ID: measurementId,
+      META_PIXEL_ENABLED: pixelEnabled,
+      META_PIXEL_ID: pixelId,
+    });
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.remote).not.toContain(gaEnabled);
+    expect(result.remote).not.toContain(measurementId);
+    expect(result.remote).not.toContain(pixelEnabled);
+    expect(result.remote).not.toContain(pixelId);
+    expect(result.remote).toContain(
+      `ga_enabled="$(printf '%s' '${Buffer.from(gaEnabled).toString("base64")}' | base64 --decode)"`,
+    );
+    expect(result.remote).toContain(
+      `ga_measurement_id="$(printf '%s' '${Buffer.from(measurementId).toString("base64")}' | base64 --decode)"`,
+    );
+    expect(result.remote).toContain(
+      `meta_pixel_enabled="$(printf '%s' '${Buffer.from(pixelEnabled).toString("base64")}' | base64 --decode)"`,
+    );
+    expect(result.remote).toContain(
+      `meta_pixel_id="$(printf '%s' '${Buffer.from(pixelId).toString("base64")}' | base64 --decode)"`,
+    );
+    expect(result.remote).toContain('-e "GA_ENABLED=${ga_enabled}"');
+    expect(result.remote).toContain('-e "GA4_ORIGIN=${ga4_origin}"');
+    expect(result.remote).toContain('-e "GA_MEASUREMENT_ID=${ga_measurement_id}"');
+    expect(result.remote).toContain('-e "META_PIXEL_ENABLED=${meta_pixel_enabled}"');
+    expect(result.remote).toContain('-e "META_PIXEL_ID=${meta_pixel_id}"');
   });
 });

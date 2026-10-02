@@ -1,12 +1,16 @@
 import type { ResolvedContentLanguage } from "./content-language";
 
+export type ReviewSource = "PLATFORM" | "LEGACY_IMPORT";
+
 export interface ReviewResponse {
   reviewId: number;
-  applicationId: number;
+  applicationId: number | null;
+  source: ReviewSource;
+  originalReviewedAt: string | null;
   activityId: number;
   activityTitle: string;
   activityTitleLanguage: ResolvedContentLanguage;
-  reviewerName: string;
+  reviewerName: string | null;
   reviewerProfileImageUrl: string | null;
   /** 1~5 정수 */
   rating: number;

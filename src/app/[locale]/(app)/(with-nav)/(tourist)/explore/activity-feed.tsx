@@ -1,6 +1,8 @@
 "use client";
 
+import type { TouristActivitySummary } from "@/types/activity";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityCard } from "@/components/ui/ActivityCard";
 import { Link } from "@/i18n/navigation";
@@ -10,17 +12,32 @@ import { getContentLanguage } from "@/lib/content-language";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
+import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
+import { withActivityDate } from "@/lib/activity-booking-window";
 
-export function ActivityFeed() {
+export function ActivityFeed({
+  initialActivities,
+  date,
+}: Readonly<{ initialActivities?: TouristActivitySummary[]; date?: string }> = {}) {
   const t = useTranslations("Explore");
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
   const getApiErrorMessage = useApiErrorMessage();
-  const activitiesQuery = useQuery(
-    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale)),
-  );
+  const { trackList, trackSelection } = useMeasurementEvents();
+  const activitiesQuery = useQuery({
+    ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale), date),
+    initialData: initialActivities,
+  });
 
-  const activities = (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity);
+  const activities = useMemo(
+    () => (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity),
+    [activitiesQuery.data],
+  );
+  const itemIds = useMemo(() => activities.map((activity) => activity.id), [activities]);
+  const listVersion = itemIds.join(".");
+  useEffect(() => {
+    if (activitiesQuery.isSuccess && activities.length > 0) trackList(itemIds, listVersion);
+  }, [activitiesQuery.isSuccess, activities.length, itemIds, listVersion, trackList]);
 
   if (activitiesQuery.isPending) {
     return (
@@ -78,7 +95,8 @@ export function ActivityFeed() {
         {activities.map((activity, index) => (
           <Link
             key={activity.id}
-            href={`/activities/${activity.id}`}
+            href={withActivityDate(`/activities/${activity.id}`, date)}
+            onClick={() => trackSelection(activity.id, index + 1)}
             className="motion-reveal motion-press block rounded-2xl"
             style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
           >

@@ -15,7 +15,6 @@ export function createTestAnalytics() {
       origin: "https://example.test",
       version: "synthetic",
       consentMaxAgeMs: 10000,
-      cookieMaxAgeSeconds: 10,
     },
     storage: {
       getItem: (key) => values.get(key) ?? null,

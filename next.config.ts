@@ -7,6 +7,8 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Resolve public activity existence before committing a document status for any UA.
+  htmlLimitedBots: /.*/,
   outputFileTracingIncludes: {
     "/*": ["content/policies/*.md"],
   },

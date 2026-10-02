@@ -11,6 +11,7 @@ import { createQueryClient } from "@/lib/query/client";
 import { createKrwDisplayPrice } from "@/test/fixtures/display-price";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { IntlTestProvider } from "@/test/render-with-intl";
+import { SessionRoleProvider } from "@/lib/auth/session-role-context";
 import { ActivityDetailContent } from "./activity-detail-content";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn() }));
@@ -128,6 +129,15 @@ function mockActivityDetail() {
 }
 
 describe("ActivityDetailContent", () => {
+  it("renders the initial public detail before a client request completes", () => {
+    mockedGetGoogleMapsApiKey.mockReturnValue("");
+    mockedGetTouristActivity.mockReturnValue(new Promise(() => {}));
+    renderWithQueryClient(
+      <ActivityDetailContent activityId="42" initialActivity={buildActivityDetail()} />,
+    );
+    expect(screen.getByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
+    expect(screen.getByText("Walk through quiet alleys with a local buddy.")).toBeInTheDocument();
+  });
   beforeEach(() => {
     routerMock.back.mockReset();
     routerMock.push.mockReset();
@@ -194,6 +204,7 @@ describe("ActivityDetailContent", () => {
       "eager",
     );
     expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Contact us" })).toBeInTheDocument();
     const krwPrice = screen.getByText("₩45,000");
     const referencePrice = screen.getByText("(≈ $32.50)");
     expect(referencePrice).toHaveClass("text-muted");
@@ -230,7 +241,11 @@ describe("ActivityDetailContent", () => {
       activity: buildActivityDetail(),
     });
 
-    renderWithQueryClient(<ActivityDetailContent activityId="42" />);
+    renderWithQueryClient(
+      <SessionRoleProvider role="tourist">
+        <ActivityDetailContent activityId="42" />
+      </SessionRoleProvider>,
+    );
 
     fireEvent.click(await screen.findByTestId("date-select-box"));
 
@@ -251,6 +266,54 @@ describe("ActivityDetailContent", () => {
       "href",
       "/en/activities/42/book?scheduleId=102",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Contact us" }));
+    expect(screen.getByRole("dialog", { name: "Have more questions?" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+    expect(screen.getByRole("link", { name: "Book now" })).toHaveAttribute(
+      "href",
+      "/en/activities/42/book?scheduleId=102",
+    );
+  });
+
+  it("asks a guest to log in from a popup instead of leaving the detail page", async () => {
+    mockedFetchGooglePlaceDetails.mockResolvedValue({
+      formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
+    });
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: buildActivityDetail(),
+    });
+
+    renderWithQueryClient(<ActivityDetailContent activityId="42" emailLoginEnabled />);
+
+    fireEvent.click(await screen.findByTestId("date-select-box"));
+    fireEvent.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: /2:00 PM/ }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+    // 비로그인이면 예약 화면 링크 대신 팝업을 여는 버튼이다
+    expect(screen.queryByRole("link", { name: "Book now" })).not.toBeInTheDocument();
+    const bookButton = screen.getByRole("button", { name: "Book now" });
+    expect(bookButton).toBeEnabled();
+    fireEvent.click(bookButton);
+
+    const prompt = screen.getByRole("dialog", { name: "Log in to continue your booking" });
+    const returnTo = encodeURIComponent("/activities/42/book?scheduleId=102");
+    expect(within(prompt).getByRole("link", { name: "Continue with Google" })).toHaveAttribute(
+      "href",
+      `/api/auth/google/start?locale=en&next=${returnTo}`,
+    );
+    expect(within(prompt).getByRole("link", { name: "Log in with email" })).toHaveAttribute(
+      "href",
+      `/en/login?next=${returnTo}`,
+    );
+    expect(routerMock.push).not.toHaveBeenCalled();
+
+    // 닫으면 고른 일정이 그대로 남는다
+    fireEvent.click(within(prompt).getByRole("button", { name: "Close dialog" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
   });
 
   it("shows only the forecast icon matching each schedule start time", async () => {
@@ -347,7 +410,12 @@ describe("ActivityDetailContent", () => {
       activity: buildActivityDetail(),
     });
 
-    renderWithQueryClient(<ActivityDetailContent activityId="42" />, { locale: "ko" });
+    renderWithQueryClient(
+      <SessionRoleProvider role="tourist">
+        <ActivityDetailContent activityId="42" />
+      </SessionRoleProvider>,
+      { locale: "ko" },
+    );
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
     expect(screen.getByText("호스트: Jihoon Kim")).toBeInTheDocument();
@@ -568,6 +636,8 @@ describe("ActivityDetailContent", () => {
             activityTitle: "Seoul Night Market Walk",
             activityTitleLanguage: "EN",
             reviewerName: "Nelli",
+            source: "PLATFORM",
+            originalReviewedAt: null,
             reviewerProfileImageUrl: null,
             rating: 5,
             content: "Jihoon knows every alley.",
@@ -730,7 +800,9 @@ it("measures valid detail once and tracks active reservation selection", async (
   });
   const view = renderWithQueryClient(
     <AnalyticsProvider policy={null} controller={controller}>
-      <ActivityDetailContent activityId="42" />
+      <SessionRoleProvider role="tourist">
+        <ActivityDetailContent activityId="42" />
+      </SessionRoleProvider>
     </AnalyticsProvider>,
   );
   await waitFor(() =>
@@ -738,7 +810,9 @@ it("measures valid detail once and tracks active reservation selection", async (
   );
   view.rerender(
     <AnalyticsProvider policy={null} controller={controller}>
-      <ActivityDetailContent activityId="42" />
+      <SessionRoleProvider role="tourist">
+        <ActivityDetailContent activityId="42" />
+      </SessionRoleProvider>
     </AnalyticsProvider>,
   );
   expect(browser.send.mock.calls.filter((c) => c[0] === "view_item")).toHaveLength(1);
@@ -750,6 +824,26 @@ it("measures valid detail once and tracks active reservation selection", async (
   const bookingLink = screen.getByRole("link", { name: "Book now" });
   bookingLink.addEventListener("click", (event) => event.preventDefault());
   fireEvent.click(bookingLink);
+  expect(browser.send.mock.calls.filter((c) => c[0] === "booking_cta_click")).toHaveLength(1);
+});
+it("tracks the booking click of a guest who is asked to log in", async () => {
+  const { controller, browser } = createTestAnalytics();
+  controller.visit("/en/activities/42");
+  await controller.accept();
+  mockedGetTouristActivity.mockResolvedValue({
+    status: "success",
+    activity: { ...buildActivityDetail(), activityId: 42 },
+  });
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <ActivityDetailContent activityId="42" />
+    </AnalyticsProvider>,
+  );
+  fireEvent.click(await screen.findByTestId("date-select-box"));
+  fireEvent.click(
+    within(await screen.findByRole("dialog")).getByRole("button", { name: /2:00 PM/ }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Book now" }));
   expect(browser.send.mock.calls.filter((c) => c[0] === "booking_cta_click")).toHaveLength(1);
 });
 it.each(["loading", "error"])("does not measure %s activity detail", async (kind) => {

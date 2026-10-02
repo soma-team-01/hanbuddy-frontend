@@ -1,4 +1,5 @@
 "use client";
+import { CancelledScheduleBadge } from "./CancelledScheduleBadge";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -258,7 +259,8 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-display text-base font-bold text-ink">{room.title}</h1>
           {isGroup ? (
-            <div className="flex min-w-0 items-center gap-1.5 text-xs">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
+              {room.activityScheduleCancelled ? <CancelledScheduleBadge /> : null}
               {scheduleLabel ? (
                 <>
                   <span className="truncate font-semibold text-primary">{scheduleLabel}</span>

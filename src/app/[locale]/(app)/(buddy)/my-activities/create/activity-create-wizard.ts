@@ -26,12 +26,16 @@ export const ACTIVITY_CREATE_STEPS = [
 ] as const;
 
 export const ACTIVITY_CREATE_LIMITS = {
-  hostIntroduction: { min: 30, max: 200 },
-  experienceName: { min: 1, max: 20 },
-  experienceDescription: { min: 30, max: 200 },
+  hostIntroduction: { min: 30, max: 2000 },
+  experienceName: { min: 1, max: 100 },
+  experienceDescription: { min: 30, max: 3000 },
   photos: { min: 3, max: 10 },
-  itineraryTitle: { min: 1, max: 20 },
-  itineraryDescription: { min: 5, max: 50 },
+  itineraryTitle: { min: 1, max: 100 },
+  itineraryDescription: { min: 5, max: 1000 },
+  meetingPlace: { max: 500 },
+  listItem: { max: 500 },
+  listItems: { max: 20 },
+  pricePerPerson: { min: 15000 },
   // 백엔드 ActivityUpsertRequest 계약 상한
   maxGuests: { max: 100 },
   itineraryItems: { max: 20 },
@@ -49,6 +53,17 @@ export interface PhotoDraft {
   existingKey?: string;
 }
 
+/** Move a photo without recreating its File, preview URL, or existing upload key. */
+export function reorderPhotos(photos: PhotoDraft[], id: string, targetId: string): PhotoDraft[] {
+  const from = photos.findIndex((photo) => photo.id === id);
+  const to = photos.findIndex((photo) => photo.id === targetId);
+  if (from < 0 || to < 0 || from === to) return photos;
+  const next = [...photos];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
+
 export interface ItineraryDraft {
   id: string;
   title: string;
@@ -61,6 +76,11 @@ export interface ScheduleDraft {
   id: string;
   date: string;
   startTime: string;
+  maxCapacity?: string;
+  originalStartAt?: string;
+  bookedCount?: number;
+  heldSeats?: number;
+  remainingCapacity?: number;
 }
 
 export interface ActivityCreateDraft {
@@ -98,6 +118,9 @@ export type ActivityCreateErrorKey =
   | "experienceDescriptionRequired"
   | "meetingAddressRequired"
   | "meetingPlaceRequired"
+  | "meetingPlaceTooLong"
+  | "listItemTooLong"
+  | "listTooMany"
   | "scheduleInvalid"
   | "scheduleInPast"
   | "itineraryRequired"
@@ -108,6 +131,7 @@ export type ActivityCreateErrorKey =
   | "itineraryTooMany"
   | "maxGuestsInvalid"
   | "maxGuestsTooMany"
+  | "scheduleCapacityOccupied"
   | "priceInvalid"
   | "inclusionsRequired"
   | "restrictionsRequired"
@@ -145,6 +169,14 @@ function isPositiveInteger(value: string) {
 function isWithinLength(value: string, min: number, max: number) {
   const length = value.trim().length;
   return length >= min && length <= max;
+}
+
+export function validateActivityList(value: string): ActivityCreateErrorKey | null {
+  const lines = splitLines(value);
+  if (lines.length > ACTIVITY_CREATE_LIMITS.listItems.max) return "listTooMany";
+  return lines.some((line) => line.length > ACTIVITY_CREATE_LIMITS.listItem.max)
+    ? "listItemTooLong"
+    : null;
 }
 
 /** 일정이 Asia/Seoul 기준 현재보다 과거인지 판단한다 (오늘 날짜는 지나간 시각까지 과거로 본다) */
@@ -228,6 +260,8 @@ export function validateActivityCreateStep(
     }
     case "meeting":
       if (!draft.meetingAddress.trim()) return "meetingAddressRequired";
+      if (draft.meetingPlace.trim().length > ACTIVITY_CREATE_LIMITS.meetingPlace.max)
+        return "meetingPlaceTooLong";
       return draft.meetingPlace.trim() ? null : "meetingPlaceRequired";
     case "schedule": {
       if (
@@ -244,6 +278,11 @@ export function validateActivityCreateStep(
       ) {
         return "scheduleInvalid";
       }
+      if (
+        new Set(draft.schedules.map((schedule) => `${schedule.date}T${schedule.startTime}`))
+          .size !== draft.schedules.length
+      )
+        return "scheduleInvalid";
       const now = getSeoulNowParts();
       return draft.schedules.some((schedule) => isPastSchedule(schedule, now))
         ? "scheduleInPast"
@@ -251,13 +290,25 @@ export function validateActivityCreateStep(
     }
     case "capacity":
       if (!isPositiveInteger(draft.maxGuests)) return "maxGuestsInvalid";
+      for (const schedule of draft.schedules) {
+        const capacity = schedule.maxCapacity ?? draft.maxGuests;
+        if (!isPositiveInteger(capacity)) return "maxGuestsInvalid";
+        if (Number(capacity) > ACTIVITY_CREATE_LIMITS.maxGuests.max) return "maxGuestsTooMany";
+        if (Number(capacity) < (schedule.bookedCount ?? 0) + (schedule.heldSeats ?? 0))
+          return "scheduleCapacityOccupied";
+      }
       return Number(draft.maxGuests) <= ACTIVITY_CREATE_LIMITS.maxGuests.max
         ? null
         : "maxGuestsTooMany";
     case "price":
-      return isPositiveInteger(draft.pricePerPerson) ? null : "priceInvalid";
+      return isPositiveInteger(draft.pricePerPerson) &&
+        Number(draft.pricePerPerson) >= ACTIVITY_CREATE_LIMITS.pricePerPerson.min
+        ? null
+        : "priceInvalid";
     case "inclusions":
-      return draft.inclusions.trim() ? null : "inclusionsRequired";
+      return draft.inclusions.trim()
+        ? validateActivityList(draft.inclusions)
+        : "inclusionsRequired";
     case "discount": {
       if (draft.discountType !== "none") {
         const discount = Number(draft.discountPercent);
@@ -275,7 +326,10 @@ export function validateActivityCreateStep(
       return null;
     }
     case "restrictions":
-      return draft.hasNoRestrictions || draft.restrictions.trim() ? null : "restrictionsRequired";
+      if (draft.hasNoRestrictions) return null;
+      return draft.restrictions.trim()
+        ? validateActivityList(draft.restrictions)
+        : "restrictionsRequired";
   }
 }
 
@@ -298,13 +352,19 @@ export function buildDraftFromMyActivityDetail(
 ): ActivityCreateDraft {
   const now = getSeoulNowParts();
   const schedules = detail.schedules
-    .map((schedule) => {
+    .filter((schedule) => schedule.status !== "CANCELLED")
+    .map<ScheduleDraft | null>((schedule) => {
       const parts = getSeoulDateTimeParts(schedule.startAt);
       if (!parts) return null;
       return {
         id: `existing-schedule-${schedule.scheduleId}`,
         date: parts.date,
         startTime: parts.time,
+        originalStartAt: schedule.startAt,
+        maxCapacity: String(schedule.maxCapacity ?? detail.maxCapacity),
+        bookedCount: schedule.bookedCount,
+        heldSeats: schedule.heldSeats ?? 0,
+        remainingCapacity: schedule.remainingCapacity,
       };
     })
     .filter((schedule): schedule is ScheduleDraft => schedule !== null)
@@ -312,6 +372,7 @@ export function buildDraftFromMyActivityDetail(
     .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
   const retainedScheduleStartAts = detail.schedules
     .filter((schedule) => {
+      if (schedule.status === "CANCELLED") return true;
       const parts = getSeoulDateTimeParts(schedule.startAt);
       return parts !== null && isPastSchedule({ date: parts.date, startTime: parts.time }, now);
     })
@@ -402,7 +463,12 @@ export function buildPreviewActivityFromDraft(
         dateKey: schedule.date,
         dateLabel: formatSeoulDate(startAt, locale) ?? dateTimeUnavailable,
         timeLabel: formatSeoulTime(startAt, locale) ?? "",
-        spotsLeft: maxGuests,
+        spotsLeft: Math.max(
+          0,
+          Number(schedule.maxCapacity ?? maxGuests) -
+            (schedule.bookedCount ?? 0) -
+            (schedule.heldSeats ?? 0),
+        ),
       };
     })
     .filter((session): session is Session => session !== null);

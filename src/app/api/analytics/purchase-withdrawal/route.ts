@@ -5,7 +5,9 @@ import {
   analyticsUnavailableResponse,
   createProjectedAnalyticsResponse,
   readAnalyticsJson,
-  readServerAnalyticsPolicy,
+  readAnalyticsOrigin,
+  ANALYTICS_COOKIE_NAME,
+  isConsentProof,
   validateAnalyticsRequest,
 } from "@/app/api/_utils/analytics-bff";
 import { postBackend } from "@/lib/auth/backend";
@@ -17,16 +19,19 @@ interface WithdrawalResult {
 }
 
 export async function POST(request: NextRequest) {
-  const policy = readServerAnalyticsPolicy();
-  if (!policy) return analyticsUnavailableResponse(503);
+  const origin = readAnalyticsOrigin();
+  if (!origin) return analyticsUnavailableResponse(503);
+  const policy = { origin };
   if (!validateAnalyticsRequest(request, policy)) return analyticsUnavailableResponse(403);
 
   const body = await readAnalyticsJson(request);
   if (!body || Object.keys(body).length !== 0) return analyticsUnavailableResponse(400);
 
   const explicitProof = request.headers.get(ANALYTICS_PROOF_HEADER);
+  const raw = explicitProof ?? request.cookies.get(ANALYTICS_COOKIE_NAME)?.value;
+  if (isConsentProof(raw, "granted")) return analyticsUnavailableResponse(403);
   const analytics = analyticsBackendOptions(request, policy, "denied", explicitProof);
-  if (!analytics) return analyticsUnavailableResponse(400);
+  if (!analytics) return analyticsUnavailableResponse(410);
 
   try {
     const backend = await postBackend<Record<string, never>, WithdrawalResult>(

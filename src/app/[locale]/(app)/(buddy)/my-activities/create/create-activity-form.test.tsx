@@ -1,8 +1,11 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
-import { createMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createApiClientError } from "@/lib/api/errors";
+import { getSeoulDateTimeParts } from "@/lib/datetime";
+import { buddyKeys } from "@/lib/query/buddy";
 import type { MyActivityDetailResponse } from "@/types/buddy";
 import {
   fetchGooglePlaceDetailsViaBff,
@@ -57,6 +60,7 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/buddy")>()),
   createMyActivity: vi.fn(),
   updateMyActivity: vi.fn(),
+  getMyActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/api/useMyProfile", () => ({
@@ -96,11 +100,15 @@ const revokeObjectUrlMock = vi.fn();
 const routerPush = vi.fn();
 const routerReplace = vi.fn();
 
-// 캘린더는 다음 달 15일/22일을 사용해 실제 날짜와 무관하게 항상 미래를 선택한다
-const utcNow = new Date();
-const scheduleDateA = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 15));
-const scheduleDateB = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() + 1, 22));
-const pastProbeDate = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth() - 1, 15));
+// UTC는 9월, 한국은 10월인 월 경계를 고정해 실행 날짜에 의존하지 않는다.
+const CALENDAR_TEST_NOW = "2026-09-30T15:30:00Z";
+// 화면과 같은 한국 날짜를 달력 연산용 UTC 자정으로 표현한다.
+const calendarToday = new Date(`${getSeoulDateTimeParts(CALENDAR_TEST_NOW)!.date}T00:00:00Z`);
+const calendarYear = calendarToday.getUTCFullYear();
+const calendarMonth = calendarToday.getUTCMonth();
+const scheduleDateA = new Date(Date.UTC(calendarYear, calendarMonth + 1, 15));
+const scheduleDateB = new Date(Date.UTC(calendarYear, calendarMonth + 1, 22));
+const pastProbeDate = new Date(Date.UTC(calendarYear, calendarMonth - 1, 15));
 const dateKeyA = scheduleDateA.toISOString().slice(0, 10);
 
 function calendarLabel(date: Date) {
@@ -123,7 +131,7 @@ function clickEditorNext() {
   fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Next" }));
 }
 
-async function fillStepsUntilSchedule() {
+async function fillStepsUntilSchedule(reorder = false) {
   fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
     target: { value: "I have guided friends through this market for years." },
   });
@@ -147,6 +155,11 @@ async function fillStepsUntilSchedule() {
   fireEvent.change(screen.getByLabelText("Upload experience photos"), {
     target: { files: photos },
   });
+  if (reorder) {
+    const handle = screen.getByRole("button", { name: "Move photo 3" });
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+  }
   clickNext();
 
   fireEvent.click(screen.getByRole("button", { name: "Add an activity" }));
@@ -183,8 +196,8 @@ async function fillStepsUntilSchedule() {
   expect(screen.getByRole("heading", { name: "Set dates and start times" })).toBeInTheDocument();
 }
 
-async function completeAllStepsUntilReview() {
-  await fillStepsUntilSchedule();
+async function completeAllStepsUntilReview(reorder = false) {
+  await fillStepsUntilSchedule(reorder);
 
   fireEvent.click(screen.getByRole("button", { name: "Next month" }));
   fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
@@ -312,6 +325,9 @@ describe("CreateActivityForm", () => {
     },
   );
   beforeEach(() => {
+    // 비동기 UI·네트워크 대기는 실제 타이머를 쓰고 Date만 고정한다.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(CALENDAR_TEST_NOW));
     createObjectUrlMock.mockClear();
     revokeObjectUrlMock.mockClear();
     mockedSearchGooglePlacePredictions.mockClear();
@@ -487,7 +503,7 @@ describe("CreateActivityForm", () => {
     clickNext();
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Write an introduction between 30 and 200 characters.",
+      "Write an introduction between 30 and 2000 characters.",
     );
     expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
   });
@@ -654,6 +670,15 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Set the maximum group size" })).toBeInTheDocument();
     clickNext();
 
+    expect(screen.getByText("The minimum price per person is ₩15,000.")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "Price per person" }), {
+      target: { value: "14999" },
+    });
+    clickNext();
+    expect(screen.getByRole("textbox", { name: "Price per person" })).toHaveValue("14999");
+    expect(screen.getByRole("alert")).toHaveTextContent("at least ₩15,000");
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+
     fireEvent.change(screen.getByRole("textbox", { name: "Price per person" }), {
       target: { value: "50000" },
     });
@@ -723,6 +748,32 @@ describe("CreateActivityForm", () => {
     ).toBeDisabled();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it.each([
+    ["2026-09-30T14:59:59Z", "September 30, 2026", "October 15, 2026", "August 15, 2026"],
+    ["2026-09-30T15:00:00Z", "October 1, 2026", "November 15, 2026", "September 15, 2026"],
+    ["2026-12-31T15:00:00Z", "January 1, 2027", "February 15, 2027", "December 15, 2026"],
+    ["2027-02-28T15:00:00Z", "March 1, 2027", "April 15, 2027", "February 15, 2027"],
+    ["2028-02-28T15:00:00Z", "February 29, 2028", "March 15, 2028", "January 15, 2028"],
+    ["2028-02-29T15:00:00Z", "March 1, 2028", "April 15, 2028", "February 15, 2028"],
+  ])("uses Seoul calendar navigation at %s", async (now, today, nextMonth, previousMonth) => {
+    vi.setSystemTime(new Date(now));
+    renderWithQueryClient(<CreateActivityForm />);
+    await fillStepsUntilSchedule();
+    expect(screen.getByRole("button", { name: `Select ${today}` })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    const futureDay = screen.getByRole("button", { name: `Select ${nextMonth}` });
+    expect(futureDay).toBeEnabled();
+    fireEvent.click(futureDay);
+    expect(futureDay).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
+    fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
+    expect(screen.getByRole("button", { name: `Select ${previousMonth}` })).toBeDisabled();
+  });
+
   it("uploads photos and registers the activity with the backend contract", async () => {
     renderWithQueryClient(<CreateActivityForm />);
 
@@ -762,7 +813,7 @@ describe("CreateActivityForm", () => {
       meetingLatitude: 37.5701,
       meetingLongitude: 126.9996,
       status: "ACTIVE",
-      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00` }],
+      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00`, maxCapacity: 1 }],
       itineraries: [
         {
           title: "Meet market vendors",
@@ -779,6 +830,24 @@ describe("CreateActivityForm", () => {
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("create");
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities");
+  });
+
+  it("uploads reordered photos in display order when creating an activity", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    await completeAllStepsUntilReview(true);
+    fireEvent.click(screen.getByRole("button", { name: "Register experience" }));
+    await waitFor(() => expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1));
+    expect(mockedUploadActivityImageSet.mock.calls[0][0].map((file: File) => file.name)).toEqual([
+      "market-2.webp",
+      "market-0.webp",
+      "market-1.webp",
+      "market-0.webp",
+    ]);
+    expect(mockedCreateMyActivity.mock.calls[0][0].imageKeys).toEqual([
+      "activities/2026/08/07/key-0.webp",
+      "activities/2026/08/07/key-1.webp",
+      "activities/2026/08/07/key-2.webp",
+    ]);
   });
 
   it("keeps the review open and shows an error message when registration fails", async () => {
@@ -935,6 +1004,26 @@ describe("CreateActivityForm", () => {
     );
   }
 
+  it("blocks next and edit submission below 15,000 won without silently changing the price", async () => {
+    const detail = { ...buildEditDetail(), price: 14999 };
+    renderEditForm(detail);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    const price = screen.getByRole("textbox", { name: "Price per person" });
+    expect(price).toHaveValue("14999");
+    expect(screen.getByRole("alert")).toHaveTextContent("at least ₩15,000");
+    expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
+    expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
+    clickNext();
+    expect(screen.getByRole("textbox", { name: "Price per person" })).toBeInTheDocument();
+    fireEvent.change(price, { target: { value: "15000" } });
+    clickNext();
+    expect(screen.getByRole("heading", { name: "Add a discount" })).toBeInTheDocument();
+    mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
+    expect(mockedUpdateMyActivity.mock.calls[0][1].price).toBe(15000);
+  });
+
   it("starts edit mode in review and saves reused image keys through the update API", async () => {
     const detail = buildEditDetail();
     mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
@@ -966,7 +1055,7 @@ describe("CreateActivityForm", () => {
       meetingPointName: "Gwangjang Market Gate 2",
       meetingPlaceId: "ChIJ-gwangjang",
       status: "ACTIVE",
-      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00` }],
+      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00`, maxCapacity: 4 }],
       itineraries: [
         {
           title: "Meet market vendors",
@@ -988,6 +1077,32 @@ describe("CreateActivityForm", () => {
     expect(routerReplace).not.toHaveBeenCalled();
     fireEvent.click(save);
     expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the edit query successful and preserves input when occupancy refresh fails", async () => {
+    const detail = buildEditDetail();
+    mockedUpdateMyActivity.mockRejectedValueOnce(
+      createApiClientError(400, {
+        isSuccess: false,
+        code: "ACTIVITY_SCHEDULE400_CAPACITY",
+        message: "capacity changed",
+      }),
+    );
+    vi.mocked(getMyActivity).mockRejectedValueOnce(new Error("offline"));
+    const { queryClient } = renderEditForm(detail);
+    queryClient.setQueryData(buddyKeys.activityDetail("42"), detail);
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(getMyActivity).toHaveBeenCalledWith("42"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled());
+    expect(queryClient.getQueryState(buddyKeys.activityDetail("42"))?.status).toBe("success");
+    expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
+    expect(routerPush).not.toHaveBeenCalled();
+    mockedUpdateMyActivity.mockResolvedValueOnce({ status: "success", activity: detail });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(2));
+    expect(mockedUpdateMyActivity.mock.calls[1][1]).toEqual(
+      mockedUpdateMyActivity.mock.calls[0][1],
+    );
   });
 
   it("saves from any step in edit mode without walking to the review screen", async () => {
@@ -1024,7 +1139,7 @@ describe("CreateActivityForm", () => {
     expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
   });
 
-  it("uploads only newly added photos in edit mode and appends their keys", async () => {
+  it("uploads only new photos in edit mode and preserves their reordered position among existing keys", async () => {
     const detail = buildEditDetail();
     mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
 
@@ -1039,6 +1154,8 @@ describe("CreateActivityForm", () => {
     fireEvent.change(screen.getByLabelText("Upload experience photos"), {
       target: { files: [new File([new Uint8Array([9])], "new-shot.webp", { type: "image/webp" })] },
     });
+    const handle = screen.getByRole("button", { name: "Move photo 4" });
+    for (let move = 0; move < 3; move += 1) fireEvent.keyDown(handle, { key: "ArrowLeft" });
 
     for (let step = 0; step < 9; step += 1) {
       clickNext();
@@ -1055,10 +1172,10 @@ describe("CreateActivityForm", () => {
 
     const [, request] = mockedUpdateMyActivity.mock.calls[0];
     expect(request.imageKeys).toEqual([
+      "activities/2026/08/07/key-0.webp",
       "activities/cover.webp",
       "activities/two.webp",
       "activities/three.webp",
-      "activities/2026/08/07/key-0.webp",
     ]);
     expect(request.itineraries[0].imageKey).toBe("activities/itinerary.webp");
   });
@@ -1105,6 +1222,7 @@ describe("buildActivityUpsertRequest", () => {
     expect(request.schedules.slice(0, 31)).toEqual(
       schedules.map(({ date, startTime }) => ({
         startAt: `${date}T${startTime}:00+09:00`,
+        maxCapacity: Number(baseDraft.maxGuests),
       })),
     );
     expect(request.schedules.at(-1)).toEqual({ startAt: "2020-01-01T10:00:00+09:00" });
@@ -1114,6 +1232,33 @@ describe("buildActivityUpsertRequest", () => {
     });
   });
 
+  it("sends per-session capacities and preserves the original instant when only capacity changes", () => {
+    const request = buildActivityUpsertRequest(
+      {
+        ...baseDraft,
+        maxGuests: "20",
+        schedules: [
+          {
+            id: "existing-schedule-1",
+            date: "2099-07-20",
+            startTime: "10:00",
+            originalStartAt: "2099-07-20T01:00:25.123Z",
+            maxCapacity: "6",
+          },
+          { id: "new", date: "2099-07-21", startTime: "14:00", maxCapacity: "10" },
+        ],
+      },
+      [],
+      [],
+      "EN",
+    );
+    expect(request.maxCapacity).toBe(20);
+    expect(request.schedules).toEqual([
+      { startAt: "2099-07-20T01:00:25.123Z", maxCapacity: 6 },
+      { startAt: "2099-07-21T14:00:00+09:00", maxCapacity: 10 },
+    ]);
+  });
+
   it("submits all 100 future schedules without truncation", () => {
     const schedules = createSchedules(100);
     const request = buildActivityUpsertRequest({ ...baseDraft, schedules }, [], [], "EN");
@@ -1121,6 +1266,7 @@ describe("buildActivityUpsertRequest", () => {
     expect(request.schedules).toHaveLength(100);
     expect(request.schedules.at(-1)).toEqual({
       startAt: `${schedules.at(-1)?.date}T10:00:00+09:00`,
+      maxCapacity: Number(baseDraft.maxGuests),
     });
   });
 

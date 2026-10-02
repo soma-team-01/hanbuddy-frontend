@@ -348,6 +348,39 @@ describe("ApplicationsContent", () => {
     ]);
   });
 
+  it("refreshes a pending refund result without offering another cancellation or claiming completion", async () => {
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [confirmedApplication],
+    });
+    mockedCancelMyApplication.mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "PAYMENT_RECOVERY409_PENDING",
+        status: 409,
+        details: null,
+        backendMessage: "internal recovery details",
+      }),
+    });
+    renderWithQueryClient(<ApplicationsContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Yes, Cancel" }));
+    expect(
+      await screen.findByText(
+        "We’re checking the refund result. Please do not submit another cancellation or payment.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Cancelled", { exact: true })).not.toBeInTheDocument();
+    expect(mockedCancelMyApplication).toHaveBeenCalledTimes(1);
+    expect(mockedContinueApplicationPayment).not.toHaveBeenCalled();
+    expect(mockedGetMyApplications.mock.calls.length).toBeGreaterThan(1);
+  });
+
   it("passes a cancellation API error to the dialog for localized rendering", async () => {
     mockedGetMyApplications.mockResolvedValue({
       status: "success",

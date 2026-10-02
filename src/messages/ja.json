@@ -1,4 +1,17 @@
 {
+  "ActivitySearch": {
+    "placeholder": "いつ参加しますか？",
+    "apply": "適用",
+    "timezone": "韓国時間 · KST",
+    "close": "カレンダーを閉じる",
+    "previousMonth": "前月",
+    "nextMonth": "翌月",
+    "label": "参加希望日",
+    "search": "検索",
+    "clear": "クリア",
+    "hint": "韓国標準時（KST）の日付で予約可能な体験を検索します。",
+    "invalid": "有効な日付を選択してください。"
+  },
   "SignupExtra": {
     "sourceLabel": "どこで知りましたか？",
     "sourceDetailLabel": "詳しく教えてください（100文字以内）",
@@ -29,6 +42,35 @@
       "bankInvalid": "銀行と口座番号を確認してください。"
     }
   },
+  "ScheduleCancellation": {
+    "refundAmount": "返金額",
+    "buddyCancellationReason": "バディからのキャンセル理由",
+    "refundRecoveryPending": "返金結果を確認しています。キャンセルや決済を再度リクエストしないでください。",
+    "more": "日程のオプション",
+    "cancelAction": "日程をキャンセル",
+    "cancelled": "キャンセルされた日程",
+    "title": "この日程をキャンセルしますか？",
+    "irreversible": "キャンセル後は再開・新規予約ができず、返金は自動処理されます。申込者には必ずキャンセルをお知らせください。",
+    "keep": "日程を維持",
+    "confirm": "日程をキャンセルする",
+    "pending": "キャンセル中…",
+    "reason": "キャンセル理由",
+    "reasonHint": "参加者に公開されます。個人情報や内部メモを記載しないでください。",
+    "success": "日程をキャンセルしました。返金は順次処理されます。",
+    "loadError": "最新のキャンセル状況を取得できませんでした。",
+    "requestError": "キャンセル結果を確認できませんでした。状況を確認してから再試行してください。",
+    "uncertain": "キャンセルが受け付けられたか確認できません。再送信の前に状況を確認してください。",
+    "retry": "状況を再確認",
+    "started": "開始済みの日程はキャンセルできません。",
+    "statuses": {
+      "QUEUED": "返金処理中",
+      "DISPATCHED": "返金処理中",
+      "REVIEW_REQUIRED": "返金を確認中です。完了まで時間がかかる場合があります。",
+      "COMPLETED": "返金完了",
+      "NO_PAYMENT": "キャンセル完了 · 確認済みの決済なし",
+      "EXCLUDED": "元のキャンセル・返金ポリシーを適用"
+    }
+  },
   "Common": {
     "cancel": "キャンセル",
     "close": "閉じる",
@@ -37,6 +79,14 @@
     "unavailable": "利用不可"
   },
   "ApiErrors": {
+    "bookingClosed": "予約・支払いのリクエストは開始24時間前までです。別の日時を選択してください。",
+    "scheduleCapacity": "定員は1～100名で、予約確定・支払い待ちの合計人数以上にしてください。",
+    "scheduleEdit": "開始済み・キャンセル済みの回は変更できません。申込履歴のある回は開始時刻を変更できません。",
+    "scheduleDuplicate": "同じ開始時刻の回がすでに存在します。",
+    "refundRecoveryPending": "返金結果を確認しています。キャンセルや決済を再度リクエストしないでください。",
+    "scheduleCancellationReason": "公開するキャンセル理由を1～255文字で入力してください。",
+    "scheduleCancellationStarted": "開始済みの日程はキャンセルできません。",
+    "scheduleNotCancelled": "日程のキャンセル履歴がありません。申込一覧を更新して最新の状態を確認してください。",
     "signupSourceInvalid": "登録経路と詳細を確認してください。",
     "signupBankAccountInvalid": "銀行と口座番号を確認してください。",
     "authenticationRequired": "続行するには、もう一度サインインしてください。",
@@ -122,6 +172,7 @@
     "languageDialogDescription": "HanBuddyで使用する言語を選択してください。",
     "home": "ホーム",
     "explore": "体験を探す",
+    "about": "HanBuddyについて",
     "applications": "予約一覧",
     "dashboard": "ダッシュボード",
     "buddyWorkspace": "バディ管理",
@@ -205,10 +256,10 @@
     },
     "visuals": {
       "ariaLabel": "ソウルでの本物のハンバディの瞬間",
-      "mainAlt": "漢江のほとりでピクニックを楽しむ友人たち",
-      "marketAlt": "ソウルの照明の下で野球の試合",
-      "teaAlt": "野球の試合を一緒に応援する旅行者と地元の仲間",
-      "fountainAlt": "夕暮れに輝く漢江噴水",
+      "jamsilGroupAlt": "蚕室野球場の照明の下で指ハートを作る水色ユニフォームのゲストとバディ",
+      "jamsilSundayGuideAlt": "日曜の夜、蚕室のグラウンド前に立つゲストとローカルガイド",
+      "kbo0726Alt": "野球の試合を一緒に応援する旅行者と地元の仲間",
+      "jamsilAlt": "蚕室野球場の一列を埋めた水色ユニフォームのゲストとバディ",
       "kleagueAlt": "Kリーグの試合で一緒に過ごしたゲストとバディ",
       "mainCaption": "あなたの韓国を個人的なものにしましょう。"
     },
@@ -354,6 +405,121 @@
       "button": "仲間として始める"
     }
   },
+  "About": {
+    "metadataTitle": "HanBuddyについて | ソウルの観戦ナイトを支えるチーム",
+    "metadataDescription": "HanBuddyを企画・運営するソウルのチームZeroOneをご紹介します。蚕室・高尺のKBO野球観戦とサッカー観戦を、韓国人のローカルバディと一緒に。",
+    "hero": {
+      "eyebrow": "HanBuddyについて",
+      "title": "「地元の人のように」を本当に実現するチームです。",
+      "description": "韓国人バディと楽しむ、ソウルの少人数観戦ナイト。企画からチケット購入まで私たちが準備し、隣の席で一緒に応援します。あなたは来るだけでOKです。",
+      "primaryCta": "体験を探す",
+      "secondaryCta": "チームを見る",
+      "collageAlt1": "夜の蚕室のグラウンドを背景に斗山の応援タオルを掲げる2人のゲスト",
+      "collageAlt2": "蚕室野球場で斗山ベアーズのマスコットと一緒にポーズをとるゲストとバディ",
+      "collageAlt3": "蚕室の観客席でおやつを分け合うゲストとバディ、ローカルガイド"
+    },
+    "origin": {
+      "eyebrow": "始めた理由",
+      "title": "韓国で一番いい瞬間は「地元の人限定」の向こうにあります。",
+      "body1": "目の前で消えていく1枚のチケットから始まりました。蚕室のナイトゲーム、数秒で完売、そして予約アプリが求めるのは",
+      "body1Strong": "韓国の電話番号と韓国のカード。",
+      "body2": "韓国の番号もカードもなければ、チケットもありません。",
+      "body2Strong": "HanBuddyは、チケットを買い、席を確保し、隣に座るローカルバディでその夜を開きます。"
+    },
+    "how": {
+      "eyebrow": "進め方",
+      "title": "すべての観戦ナイトを私たちが直接運営します。",
+      "steps": {
+        "plan": {
+          "title": "一回一回を自分たちで企画します",
+          "description": "蚕室・高尺の野球、ソウルワールドカップ競技場のサッカー。本物の試合1つ、少人数グループ、応援歌を知るバディ。"
+        },
+        "confirm": {
+          "title": "オンライン予約後、すぐにチケットを購入します",
+          "description": "試合チケットと球場フードは料金に含まれています。担当者が集合場所を案内し、質問にお答えします。"
+        },
+        "improve": {
+          "title": "回を重ねるごとに良くなります",
+          "description": "すべてのゲストが1分アンケートに答え、その回答が次の回を変えます。"
+        }
+      }
+    },
+    "stats": {
+      "eyebrow": "これまで",
+      "title": "本物の観戦ナイトから生まれた数字です。",
+      "items": {
+        "runs": {
+          "value": "7回",
+          "label": "2026年6月からの観戦ナイト"
+        },
+        "rating": {
+          "value": "4.9 / 5",
+          "label": "ゲスト平均満足度"
+        },
+        "stadiums": {
+          "value": "3か所",
+          "label": "スタジアム：蚕室・高尺・ソウルワールドカップ"
+        }
+      },
+      "note": "満足度は2026年6〜9月のゲストアンケート回答12件に基づきます。"
+    },
+    "timeline": {
+      "eyebrow": "開催記録",
+      "title": "これまでの回と、これからの回。",
+      "items": {
+        "june": {
+          "date": "2026年6月",
+          "title": "蚕室で初めてのKBO観戦",
+          "description": "ゲスト1名、チーム全員がバディ、そして学ぶことがたくさんあった夜。",
+          "imageAlt": "初めての野球観戦の日、観客席で笑顔のゲストとバディ"
+        },
+        "july": {
+          "date": "2026年7月",
+          "title": "蚕室KBO、2回目",
+          "description": "ゲスト3名、応援歌、チキンとビール。3名ともアンケートは5点満点。",
+          "imageAlt": "野球の試合を一緒に応援する旅行者と地元の仲間"
+        },
+        "august": {
+          "date": "2026年8月",
+          "title": "初めてのサッカー観戦：Kリーグ",
+          "description": "ソウルワールドカップ競技場、マフラー、そして「友達といるみたいだった」というゲストの言葉。",
+          "imageAlt": "Kリーグの試合で一緒に過ごしたゲストとバディ"
+        },
+        "september": {
+          "date": "2026年9月",
+          "title": "観戦4回、初の屋内ドームも",
+          "description": "高尺スカイドームと蚕室、水色のユニフォーム、マスコットとの写真。9月のアンケートは全員5点満点。",
+          "imageAlt": "高尺スカイドームの観客席で笑顔の3人の友人"
+        }
+      }
+    },
+    "team": {
+      "eyebrow": "チーム紹介",
+      "title": "ソウルの3人の友人、ZeroOneがHanBuddyを一緒に運営しています。",
+      "description": "回を企画し、チケットを買い、メッセージに答え、観客席に一緒に座ります。",
+      "backed": "HanBuddyは、韓国科学技術情報通信部が主催する国家SW人材育成プログラム「AI·SW Maestro」第17期チームZeroOneの公式プロジェクトです。",
+      "linkedin": "LinkedIn",
+      "members": {
+        "minhyung": {
+          "name": "Minhyung Kim",
+          "role": "チームリード・運営統括"
+        },
+        "yoohyun": {
+          "name": "Yoohyun Kim",
+          "role": "体験企画・コンテンツ"
+        },
+        "junyoung": {
+          "name": "Junyoung Lee",
+          "role": "予約・マッチング運営"
+        }
+      }
+    },
+    "cta": {
+      "title": "私たちに会う一番の方法は、スタジアムです。",
+      "description": "日程を選んで席を予約するだけ。あとは私たちが準備します。",
+      "button": "今後の観戦ナイトを見る"
+    }
+  },
   "Auth": {
     "metadataTitle": "ログイン |ハンバディ",
     "metadataDescription": "地元の友達と出会い、旅程を超えて韓国を体験してください。",
@@ -361,6 +527,7 @@
     "welcome": "地元の人のように韓国を体験してください。",
     "introduction": "地元の友達と出会い、韓国を自分のものだと感じる瞬間を見つけてください。",
     "continueWithGoogle": "Google を続ける",
+    "bookingLoginPrompt": "予約を続けるにはログインしてください",
     "reviewLogin": {
       "title": "メールアドレスでログイン",
       "emailLabel": "メールアドレス",
@@ -387,12 +554,12 @@
     "rightsReserved": "無断転載を禁じます。",
     "visualAlt": "HanBuddy のゲストと仲間が野球の試合で一緒に笑顔",
     "visualCaption": "新しい友達、7月26日 ⚾",
-    "visualRightAlt": "野球スタンドで笑顔を見せるゲストと仲間たち",
-    "visualRightCaption": "初めての野球の夜⚾",
-    "visualBottomLeftAlt": "漢江を照らす盤浦大橋の虹の噴水",
-    "visualBottomLeftCaption": "盤浦虹🌈",
-    "visualBottomRightAlt": "漢江沿いでシェアするフライドチキン、麺類、ドリンク",
-    "visualBottomRightCaption": "川沿いのチメク🍗",
+    "visualRightAlt": "蚕室の観客席でクマ耳カチューシャをつけたゲストとバディ",
+    "visualRightCaption": "クマ耳で応援 9/13 ⚾",
+    "visualBottomLeftAlt": "蚕室野球場で斗山ベアーズのマスコットと一緒にポーズをとるゲストとバディ",
+    "visualBottomLeftCaption": "マスコットと 9/12 ⚾",
+    "visualBottomRightAlt": "高尺スカイドームの観客席でおやつを分け合うゲストとバディ",
+    "visualBottomRightCaption": "ドームでおやつ 9/5 ⚾",
     "errors": {
       "googleCancelled": "Google サインインがキャンセルされました。",
       "missingCode": "Google は認証コードを返しませんでした。",
@@ -652,9 +819,11 @@
     "kstNotice": "時間はすべて韓国標準時 (KST) です。",
     "hostedActivities": "この仲間の他の経験",
     "noOtherActivities": "他の経験はまだありません。",
-    "viewHostProfile": "見る {name}さんのプロフィール"
+    "viewHostProfile": "見る {name}さんのプロフィール",
+    "autoTranslated": "自動翻訳済み"
   },
   "Reviews": {
+    "anonymous": "匿名",
     "sectionTitle": "レビュー",
     "ratingAria": "評価済み {rating} 5つのうち",
     "countLabel": "{count, plural, =0 {まだレビューはありません} one {# レビュー} other {# レビュー}}",
@@ -695,20 +864,31 @@
     "noneForRating": "この評価のレビューはまだありません。",
     "ratingWithCountAria": "評価済み {rating} 5つ中から {count, plural, one {# レビュー} other {# レビュー}}"
   },
+  "ActivityContact": {
+    "teaser": "気になることがあれば、いつでもお気軽にご相談ください！",
+    "trigger": "お問い合わせ",
+    "title": "ご不明な点はありますか？",
+    "description": "ご都合のよい連絡方法で、いつでもHanBuddy運営チームにお問い合わせください。",
+    "hint": "アクティビティ名やページのリンクを添えていただくと、スムーズにご案内できます。"
+  },
   "AlternativePayment": {
     "trigger": "他のお支払い方法をご希望ですか？",
     "title": "他のお支払い方法について",
-    "description": "以下の項目を記入してお送りください。",
-    "message": "こんにちは。他の支払い方法で参加を希望しています。\nHanBuddy登録メールアドレス: [登録メールアドレス]\nバディの名前: [バディの名前]\n体験名: ソウルの森散策と聖水洞カフェ巡り\n日時: YYYY-MM-DD 14:00 (KST)\n参加人数: 2名\n希望する支払い方法: 韓国の銀行口座への振込",
-    "exampleTitle": "お問い合わせの記入例",
-    "exampleHint": "以下は記入例です。コピー後、ご自身の情報とご希望のバディ・体験・日時に書き換えて送信してください。",
+    "description": "以下の予約情報を確認し、希望する支払い方法を記入してお送りください。",
+    "message": "こんにちは！別の支払い方法で参加したいです。\nHanBuddy登録メール: {email}\nバディ名: {buddy}\n体験名: {activity}\n日時: {schedule}\n人数（本人を含む）: {participants}名\n希望する支払い方法: {method}",
+    "exampleTitle": "お問い合わせ内容",
+    "exampleHint": "現在の選択内容を反映しています。内容を確認し、希望する支払い方法を記入してから送信してください。",
     "copy": "テンプレートをコピー",
-    "copied": "コピーしました。内容を書き換えて、ご希望の連絡先へ送信してください。",
-    "copyFailed": "コピーできませんでした。上の記入例を選択してコピーしてください。",
+    "copied": "コピーしました。内容を確認し、希望する支払い方法を記入してお送りください。",
+    "copyFailed": "コピーできませんでした。上のメッセージを選択してコピーしてください。",
     "email": "メール",
-    "notConfirmed": "お問い合わせだけでは予約は確定しません。"
+    "notConfirmed": "お問い合わせだけでは予約は確定しません。",
+    "missingValue": "[ご記入ください]",
+    "missingSchedule": "[日時を選択してください]",
+    "preferredMethod": "[希望する支払い方法]"
   },
   "Booking": {
+    "bookingWindowNotice": "予約・支払いのリクエストは体験開始の24時間前までです。",
     "title": "書籍活動",
     "loading": "予約を読み込んでいます...",
     "loadError": "予約の詳細を読み込めませんでした。",
@@ -894,8 +1074,8 @@
     "confirming": "お支払いを確認しています...",
     "confirmFailed": "お支払いを確認できませんでした。マイアプリケーションから再度お試しください。",
     "failTitle": "支払いに失敗しました",
-    "failDescription": "支払いは完了しておらず、何も請求されていません。",
-    "retryFromApplications": "マイアプリケーションで再試行してください",
+    "failDescription": "決済結果を確認できませんでした。再決済の前に申込一覧で最新の状態を確認してください。",
+    "retryFromApplications": "申込一覧で状態を確認",
     "failReasons": {
       "cancelled": "支払いが完了する前にキャンセルしました。",
       "aborted": "支払いが中断されました。もう一度試してください。",
@@ -1247,7 +1427,10 @@
       "characters": "{count, number} 入力された文字",
       "hostIntroductionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}",
       "experienceNameCharacters": "{count, number}/{max, number} キャラクター",
-      "experienceDescriptionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}"
+      "experienceDescriptionCharacters": "{count, number}/{max, number} 文字数・最小値 {min, number}",
+      "experienceNameEnglish": "アクティビティ名は自動翻訳されません。<emphasis>必ず英語で</emphasis>入力してください。",
+      "fieldCharacters": "{count} / {max}文字",
+      "listLimits": "{count} / {max}項目 · 各項目は{length}文字まで"
     },
     "placeholders": {
       "hostIntroduction": "自己紹介と、この体験を主催したい理由を説明します。",
@@ -1258,7 +1441,7 @@
       "meetingAddress": "例: ソウル特別市松坡区オリンピック路25",
       "meetingPlace": "例：ゲート1チケットブース",
       "itineraryTitle": "例: チームのチャントを学ぶ",
-      "itineraryDescription": "このアクティビティを 5 ～ 50 文字で説明してください。",
+      "itineraryDescription": "このアクティビティを 5 ～ 1000 文字で説明してください。",
       "duration": "例: 30",
       "maxGuests": "例: 8",
       "pricePerPerson": "例: 50000",
@@ -1268,6 +1451,9 @@
       "restrictions": "例: 歩きやすい靴をお勧めします"
     },
     "photos": {
+      "reorderHint": "カバー写真を変更したり、写真をドラッグして並べ替えたりできます。",
+      "move": "写真{index}を移動",
+      "moved": "写真を全{count}枚中{position}番目に移動しました",
       "upload": "体験写真を追加",
       "hint": "JPG、PNG、または WebP · 少なくとも 3、最大 10",
       "label": "体験写真をアップロードする",
@@ -1305,13 +1491,24 @@
         "done": "完了",
         "errors": {
           "photo": "続行するには写真を追加してください。",
-          "description": "5文字から50文字まで書きます。",
+          "description": "5文字から1000文字まで書きます。",
           "duration": "少なくとも 1 分間の継続時間を設定します。",
-          "title": "アクティビティのタイトルを 1 ～ 20 文字で入力します。"
+          "title": "アクティビティのタイトルを 1 ～ 100 文字で入力します。"
         }
       }
     },
     "capacity": {
+      "minimumHint": "予約確定・支払い待ちの合計人数を下回る定員には設定できません。",
+      "previous": "前の開催回",
+      "next": "次の開催回",
+      "pageRange": "全{total}回中 {from}–{to}",
+      "defaultTitle": "基本定員",
+      "settings": "日付別の詳細設定",
+      "defaultHint": "新しい回の初期値です。既存の回の定員は変わりません。",
+      "scheduleTitle": "日時ごとの定員",
+      "scheduleHint": "定員は予約確定・支払い待ちの合計人数以上にしてください。",
+      "confirmed": "予約確定 {count}名",
+      "pending": "支払い待ち {count}名",
       "decrease": "最大ゲスト数を減らす",
       "increase": "最大ゲスト数を増やす",
       "guests": "{count, plural, one {# ゲストの最大数} other {# 最大ゲスト数}}"
@@ -1324,6 +1521,7 @@
       "mapTitle": "選択した会議住所の地図"
     },
     "schedule": {
+      "bookingWindowNotice": "予約・支払いのリクエストは体験開始の24時間前までです。",
       "notice": "必要なだけ日付を選択してください。すべての開始時間は韓国標準時 (KST) で表示されます。",
       "calendarLabel": "体験日カレンダー",
       "previousMonth": "前月",
@@ -1345,6 +1543,7 @@
       "pastTimeHint": "今日の開始時刻は現在時刻 (KST) より遅くする必要があります。"
     },
     "price": {
+      "minimum": "1人あたりの最低料金は{amount, number}ウォンです。",
       "notice": "この金額は、韓国ウォンでの 1 人あたりの料金としてゲストに表示されます。"
     },
     "inclusions": {
@@ -1411,21 +1610,22 @@
       "backToActivity": "アクティビティに戻る"
     },
     "errors": {
+      "scheduleCapacityOccupied": "定員は予約確定・支払い待ちの合計人数以上にしてください。",
       "categoryRequired": "続行するにはカテゴリを選択してください。",
-      "hostIntroductionRequired": "30 文字から 200 文字の間で紹介文を書きます。",
+      "hostIntroductionRequired": "30 文字から 2000 文字の間で紹介文を書きます。",
       "photosMinimum": "体験写真を 3 ～ 10 枚追加します。",
-      "experienceNameRequired": "エクスペリエンス名を 1 ～ 20 文字で入力します。",
-      "experienceDescriptionRequired": "詳細な説明を 30 ～ 200 文字で入力します。",
+      "experienceNameRequired": "エクスペリエンス名を 1 ～ 100 文字で入力します。",
+      "experienceDescriptionRequired": "詳細な説明を 30 ～ 3000 文字で入力します。",
       "meetingAddressRequired": "会議のアドレスを入力します。",
       "meetingPlaceRequired": "短い集合場所の名前を入力します。",
       "scheduleInvalid": "少なくとも 1 つの日付を選択し、選択した日付ごとに開始時刻を設定します。",
       "itineraryRequired": "少なくとも 1 つの旅程アクティビティを追加します。",
-      "itineraryTitleRequired": "すべてのアクティビティには 1 ～ 20 文字のタイトルが必要です。",
-      "itineraryDescriptionTooShort": "各アクティビティの説明は 5 ～ 50 文字にする必要があります。",
+      "itineraryTitleRequired": "すべてのアクティビティには 1 ～ 100 文字のタイトルが必要です。",
+      "itineraryDescriptionTooShort": "各アクティビティの説明は 5 ～ 1000 文字にする必要があります。",
       "itineraryDurationInvalid": "すべてのアクティビティに 0 より大きい期間を入力します。",
       "itineraryPhotoRequired": "すべてのアクティビティに写真を追加します。",
       "maxGuestsInvalid": "0 より大きい整数の容量を入力します。",
-      "priceInvalid": "0 より大きい整数の価格を入力します。",
+      "priceInvalid": "1人あたりの料金を15,000ウォン以上の整数で入力してください。",
       "inclusionsRequired": "少なくとも 1 つの付属アイテムを追加します。",
       "discountInvalid": "終了日を選択し、1 ～ 100 の整数の割引を入力します。",
       "restrictionsRequired": "ゲストが知っておくべきことを少なくとも 1 つ選択するか、特筆すべき事項がないことを確認します。",
@@ -1433,7 +1633,10 @@
       "submissionFailed": "あなたの体験を登録できませんでした。もう一度試してください。",
       "scheduleInPast": "選択した日付または開始時刻の一部がすでに過ぎています。今後のセッションのみを選択してください。",
       "maxGuestsTooMany": "収容人数は最大 100 名です。",
-      "itineraryTooMany": "旅程アクティビティは最大 20 件追加できます。"
+      "itineraryTooMany": "旅程アクティビティは最大 20 件追加できます。",
+      "meetingPlaceTooLong": "集合場所名は500文字以内で入力してください。",
+      "listItemTooLong": "各項目は500文字以内で入力してください。",
+      "listTooMany": "項目は20件まで追加できます。"
     }
   },
   "PayPalPayment": {

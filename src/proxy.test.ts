@@ -290,6 +290,59 @@ describe("route access proxy", () => {
     },
   );
 
+  describe("legacy landing links", () => {
+    it("sends the old apply link to the activity detail and keeps the UTM parameters", async () => {
+      const response = await runProxy(
+        "/apply?event=korea-football&utm_source=meetup&utm_medium=social&utm_campaign=korea-football-20260928&utm_content=event-description",
+      );
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        "http://localhost/en/activities/4?utm_source=meetup&utm_medium=social&utm_campaign=korea-football-20260928&utm_content=event-description",
+      );
+    });
+
+    it("honors the saved locale even when the old link already carries one", async () => {
+      const response = await runProxy("/ko/apply/?event=kbo-jamsil", { NEXT_LOCALE: "ko" });
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("http://localhost/ko/activities/2");
+    });
+
+    it("sends a retired landing page to the localized home instead of a 404", async () => {
+      const response = await runProxy("/events/hanriver?utm_source=ads");
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("http://localhost/en?utm_source=ads");
+    });
+
+    it("keeps a buddy on the Korean home when they open an old landing link", async () => {
+      const response = await runProxy("/events", {
+        [AUTH_COOKIES.accessToken]: "access-token",
+        [AUTH_COOKIES.userType]: "BUDDY",
+      });
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("http://localhost/ko");
+    });
+
+    it("sends the old privacy page to the localized privacy policy", async () => {
+      const response = await runProxy("/privacy?utm_source=ads");
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        "http://localhost/en/policies/privacy-policy?utm_source=ads",
+      );
+    });
+
+    it("sends the old about link to the new about page instead of the home", async () => {
+      const response = await runProxy("/about");
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("http://localhost/en/about");
+    });
+  });
+
   it("lets an unsupported language segment reach the locale 404 boundary", async () => {
     const response = await runProxy("/fr/explore");
 
@@ -326,4 +379,48 @@ describe("route access proxy", () => {
       expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(false);
     },
   );
+});
+
+describe("document indexing boundaries", () => {
+  it.each([
+    "/en/login",
+    "/en/onboarding",
+    "/ko/buddy/onboarding",
+    "/en/home",
+    "/en/my-page",
+    "/en/chat",
+    "/en/applications",
+    "/ko/dashboard",
+    "/ko/my-activities/create",
+    "/en/activities/42/book?scheduleId=101",
+    "/en/payments/success",
+    "/en/auth/status",
+    "/ko/buddy/auth/status",
+    "/ko/buddy/resubmission",
+    "/admin/login",
+    "/admin/users",
+  ])("marks %s noindex without blocking crawl", async (path) => {
+    const response = await runProxy(path);
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+  it("keeps authenticated private documents noindex", async () => {
+    const response = await runProxy("/en/my-page", {
+      [AUTH_COOKIES.accessToken]: "fixture",
+      [AUTH_COOKIES.userType]: "TOURIST",
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+  it.each(["/en", "/en/explore", "/en/activities/42", "/ko/buddy"])(
+    "keeps public document %s indexable",
+    async (path) => {
+      const response = await runProxy(path);
+      expect(response.headers.get("x-robots-tag")).toBeNull();
+    },
+  );
+  it("excludes locale redirects from indexing without dropping their query", async () => {
+    const response = await runProxy("/en/explore?utm_source=fixture", { NEXT_LOCALE: "ko" });
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+    expect(response.headers.get("location")).toBe("http://localhost/ko/explore?utm_source=fixture");
+  });
 });

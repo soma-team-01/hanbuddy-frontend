@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -16,7 +16,7 @@ vi.mock("next-intl/server", async () => {
       namespace,
     }: {
       locale: Locale;
-      namespace: "Auth" | "Landing";
+      namespace: "Auth" | "Landing" | "Navigation";
     }) => createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
   };
 });
@@ -28,6 +28,12 @@ vi.mock("@/components/layout/FooterLocaleSwitcher", () => ({
         English(en)
       </button>
     ),
+}));
+
+const analytics = vi.hoisted(() => ({ trackInquiry: vi.fn() }));
+vi.mock("@/components/analytics/AnalyticsProvider", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/analytics/AnalyticsProvider")>()),
+  useMeasurementEvents: () => analytics,
 }));
 
 import { SiteFooter } from "./SiteFooter";
@@ -84,6 +90,15 @@ describe("SiteFooter", () => {
       );
     },
   );
+
+  it.each([
+    ["en", "About"],
+    ["ko", "소개"],
+  ] as const)("links the about page for %s", async (locale, label) => {
+    renderWithIntl(await SiteFooter({ locale }), { locale });
+
+    expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/about`);
+  });
 
   it("gives social icons and policy links a 44px touch target", async () => {
     renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });
@@ -155,5 +170,19 @@ describe("SiteFooter", () => {
     const kakaoLink = screen.getByRole("link", { name: kakao });
     expect(kakaoLink).toHaveAttribute("href", "https://pf.kakao.com/_qapJX/chat");
     expect(kakaoLink).toHaveAttribute("target", "_blank");
+
+    analytics.trackInquiry.mockClear();
+    fireEvent.click(whatsappLink);
+    fireEvent.click(kakaoLink);
+    expect(analytics.trackInquiry).toHaveBeenNthCalledWith(1, {
+      channel: "whatsapp",
+      placement: "site_footer",
+      locale,
+    });
+    expect(analytics.trackInquiry).toHaveBeenNthCalledWith(2, {
+      channel: "kakao",
+      placement: "site_footer",
+      locale,
+    });
   });
 });

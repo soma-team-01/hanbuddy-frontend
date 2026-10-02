@@ -1,6 +1,14 @@
 import { ApiClientError } from "./errors";
 
 export const BACKEND_ERROR_CODES = [
+  "APPLICATION400_BOOKING_CLOSED",
+  "ACTIVITY_SCHEDULE400_CAPACITY",
+  "ACTIVITY_SCHEDULE400_EDIT",
+  "ACTIVITY_SCHEDULE400_DUPLICATE",
+  "PAYMENT_RECOVERY409_PENDING",
+  "SCHEDULE400_REASON",
+  "SCHEDULE400_STARTED",
+  "SCHEDULE400_NOT_CANCELLED",
   "ACTIVITY400_CURRENCY",
   "ACTIVITY400_DISCOUNT",
   "ACTIVITY400_DISCOUNT_END_DATE",
@@ -78,6 +86,14 @@ export const BACKEND_ERROR_CODES = [
 export type KnownBackendErrorCode = (typeof BACKEND_ERROR_CODES)[number];
 
 export const API_ERROR_MESSAGE_KEYS = [
+  "bookingClosed",
+  "scheduleCapacity",
+  "scheduleEdit",
+  "scheduleDuplicate",
+  "refundRecoveryPending",
+  "scheduleCancellationReason",
+  "scheduleCancellationStarted",
+  "scheduleNotCancelled",
   "authenticationRequired",
   "googleAuthenticationInvalid",
   "signupAgreementsInvalid",
@@ -154,6 +170,14 @@ export const API_ERROR_MESSAGE_KEYS = [
 export type ApiErrorMessageKey = (typeof API_ERROR_MESSAGE_KEYS)[number];
 
 export const ERROR_CODE_MESSAGE_KEYS = {
+  APPLICATION400_BOOKING_CLOSED: "bookingClosed",
+  ACTIVITY_SCHEDULE400_CAPACITY: "scheduleCapacity",
+  ACTIVITY_SCHEDULE400_EDIT: "scheduleEdit",
+  ACTIVITY_SCHEDULE400_DUPLICATE: "scheduleDuplicate",
+  PAYMENT_RECOVERY409_PENDING: "refundRecoveryPending",
+  SCHEDULE400_REASON: "scheduleCancellationReason",
+  SCHEDULE400_STARTED: "scheduleCancellationStarted",
+  SCHEDULE400_NOT_CANCELLED: "scheduleNotCancelled",
   ACTIVITY400_CURRENCY: "activityCurrency",
   ACTIVITY400_DISCOUNT: "activityDiscountInvalid",
   ACTIVITY400_DISCOUNT_END_DATE: "activityDiscountEndDate",

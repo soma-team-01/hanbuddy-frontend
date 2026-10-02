@@ -8,11 +8,19 @@ import {
   formatSessionTimeRange,
 } from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
+import { LoginPromptDialog } from "@/components/auth/LoginPromptDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ActivityReviewsSection } from "@/components/review/ActivityReviewsSection";
 import { Avatar } from "@/components/ui/Avatar";
-import { CalendarDaysIcon, CheckIcon, ClockIcon, MapPinIcon, XIcon } from "@/components/ui/icons";
+import {
+  CalendarDaysIcon,
+  CheckIcon,
+  ClockIcon,
+  MapPinIcon,
+  XIcon,
+  TranslationIcon,
+} from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
@@ -25,6 +33,7 @@ import {
   getGoogleMapsApiKey,
 } from "@/lib/google/places";
 import type { Activity, ActivityWeatherResult } from "@/types/activity";
+import { useBookableSessions } from "@/lib/use-bookable-sessions";
 
 const SECTION_IDS = {
   aboutHost: "about-host",
@@ -56,6 +65,9 @@ export function ActivityDetailView({
   bottomBar = "fixed",
   showBookingBar = true,
   unoptimizedImages = false,
+  preferredDate,
+  loginRequired = false,
+  emailLoginEnabled = false,
 }: Readonly<{
   activity: Activity;
   onBookingClick?: () => void;
@@ -67,6 +79,11 @@ export function ActivityDetailView({
   showBookingBar?: boolean;
   /** blob 미리보기처럼 next/image 최적화가 불가능한 소스일 때 */
   unoptimizedImages?: boolean;
+  preferredDate?: string;
+  /** 비로그인이면 예약 화면으로 이동하지 않고 그 자리에서 로그인 팝업을 띄운다 */
+  loginRequired?: boolean;
+  /** 로그인 팝업에 이메일 로그인 링크를 함께 둘지 여부 */
+  emailLoginEnabled?: boolean;
 }>) {
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
@@ -74,6 +91,7 @@ export function ActivityDetailView({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const [hostProfileOpen, setHostProfileOpen] = useState(false);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const fixedBarRef = useRef<HTMLDivElement>(null);
   useFixedBarHeight(fixedBarRef, showBookingBar && bottomBar === "fixed");
   const [googleMeetingAddress, setGoogleMeetingAddress] = useState<GoogleMeetingAddress | null>(
@@ -148,10 +166,7 @@ export function ActivityDetailView({
     [activity.images, activity.heroImageUrl],
   );
   const extraPhotoCount = galleryImages.length - 3;
-  const bookableSessions = useMemo(
-    () => activity.sessions.filter((session) => session.spotsLeft > 0),
-    [activity.sessions],
-  );
+  const bookableSessions = useBookableSessions(activity.sessions, preview);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const selectedSession =
     bookableSessions.find((session) => session.id === selectedSessionId) ?? null;
@@ -166,9 +181,14 @@ export function ActivityDetailView({
   } else if (activity.sessions.length === 0) {
     dateBoxLabel = t("noDates");
   } else if (bookableSessions.length === 0) {
-    dateBoxLabel = tExplore("soldOut");
+    dateBoxLabel = t("noDates");
   }
   const dateBoxDisabled = bookableSessions.length === 0;
+  const bookingPath = selectedSession
+    ? `/activities/${activity.id}/book?scheduleId=${selectedSession.id}`
+    : null;
+  const bookNowClassName =
+    "flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8";
 
   function handleCalendarSelect(sessionId: string) {
     setSelectedSessionId(sessionId);
@@ -260,7 +280,7 @@ export function ActivityDetailView({
             </span>
           </div>
         </div>
-        {preview || !selectedSession ? (
+        {preview || !bookingPath ? (
           <button
             type="button"
             disabled
@@ -268,12 +288,20 @@ export function ActivityDetailView({
           >
             {t("bookNow")}
           </button>
-        ) : (
-          <Link
-            href={`/activities/${activity.id}/book?scheduleId=${selectedSession.id}`}
-            onClick={onBookingClick}
-            className="flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8"
+        ) : loginRequired ? (
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => {
+              onBookingClick?.();
+              setLoginPromptOpen(true);
+            }}
+            className={bookNowClassName}
           >
+            {t("bookNow")}
+          </button>
+        ) : (
+          <Link href={bookingPath} onClick={onBookingClick} className={bookNowClassName}>
             {t("bookNow")}
           </Link>
         )}
@@ -366,8 +394,14 @@ export function ActivityDetailView({
               ) : null}
             </div>
 
-            <div className="flex flex-col gap-10 py-8 md:py-10">
+            <div className="flex min-w-0 flex-col gap-10 py-8 [overflow-wrap:anywhere] md:py-10">
               <section className="flex flex-col gap-3">
+                {activity.isTranslated === true && (
+                  <p className="mb-1 flex items-center gap-1.5 text-xs leading-5 text-muted">
+                    <TranslationIcon className="size-4 shrink-0" />
+                    {t("autoTranslated")}
+                  </p>
+                )}
                 <p className="font-display text-xs font-bold tracking-[0.14em] text-primary uppercase">
                   {activity.categoryLabel
                     ? `${activity.district} · ${activity.categoryLabel}`
@@ -398,7 +432,9 @@ export function ActivityDetailView({
                     />
                   )
                 ) : null}
-                <p className="max-w-2xl leading-7 text-muted">{activity.description}</p>
+                <p className="max-w-2xl leading-7 whitespace-pre-line text-muted">
+                  {activity.description}
+                </p>
               </section>
 
               <section className="grid gap-4 border-t border-line-soft pt-6 md:grid-cols-2 xl:grid-cols-3">
@@ -485,7 +521,9 @@ export function ActivityDetailView({
                           <h3 className="font-display text-base font-bold text-ink md:text-lg">
                             {item.title}
                           </h3>
-                          <p className="text-sm leading-6 text-muted">{item.description}</p>
+                          <p className="text-sm leading-6 whitespace-pre-line text-muted">
+                            {item.description}
+                          </p>
                         </div>
                       </li>
                     ))}
@@ -605,12 +643,21 @@ export function ActivityDetailView({
 
       {showBookingBar && calendarOpen ? (
         <AvailabilityCalendarDialog
-          sessions={activity.sessions}
+          sessions={bookableSessions}
+          preferredDate={preferredDate}
           selectedSessionId={selectedSessionId}
           durationMinutes={activity.durationMinutes}
           weather={weather}
           onSelectSession={handleCalendarSelect}
           onClose={() => setCalendarOpen(false)}
+        />
+      ) : null}
+
+      {loginPromptOpen && bookingPath ? (
+        <LoginPromptDialog
+          returnTo={bookingPath}
+          emailLoginEnabled={emailLoginEnabled}
+          onClose={() => setLoginPromptOpen(false)}
         />
       ) : null}
 

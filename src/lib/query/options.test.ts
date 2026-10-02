@@ -20,7 +20,13 @@ import { myProfileQueryOptions, userKeys } from "./users";
 
 describe("domain query options", () => {
   it("builds stable activity keys", () => {
-    expect(activityKeys.list("EN")).toEqual(["activities", "list", "EN", "KRW"]);
+    expect(activityKeys.list("EN")).toEqual(["activities", "list", "EN", "KRW", null]);
+    expect(activityKeys.list("EN", "USD", "2026-10-10")).not.toEqual(
+      activityKeys.list("EN", "USD", "2026-10-11"),
+    );
+    expect(activityKeys.list("EN", "USD", "2026-10-10")).not.toEqual(
+      activityKeys.list("EN", "USD"),
+    );
     expect(activityKeys.list("EN", "USD")).not.toEqual(activityKeys.list("EN", "KRW"));
     expect(activityKeys.detail("42", "EN")).toEqual(["activities", "detail", "42", "EN", "KRW"]);
     expect(touristActivityQueryOptions("42", "EN").queryKey).toEqual(
@@ -79,7 +85,7 @@ describe("domain query options", () => {
 
     // 좌석 선점이 풀린 결제 대기 신청은 백엔드 목록에서 사라지므로 주기적으로 확인한다
     expect(refetchInterval(withStatus("PENDING_PAYMENT"))).toBe(60_000);
-    expect(refetchInterval(withStatus("CONFIRMED"))).toBe(false);
+    expect(refetchInterval(withStatus("CONFIRMED"))).toBe(60_000);
     expect(refetchInterval(withStatus())).toBe(false);
   });
 

@@ -34,7 +34,7 @@ export function mapApplicationResponseToApplication(
   return {
     id: String(response.applicationId),
     activityId: response.activityId,
-    status: STATUS_BY_BACKEND_STATUS[response.status],
+    status: response.scheduleCancelled ? "cancelled" : STATUS_BY_BACKEND_STATUS[response.status],
     startAt: response.startAt,
     endAt: response.endAt,
     dateLabel:
@@ -44,6 +44,9 @@ export function mapApplicationResponseToApplication(
     activityTitle: response.activityTitle,
     thumbnailUrl: response.thumbnailImageUrl,
     cancellationReason: response.cancellationReason,
+    cancellationDetail: response.cancellationDetail,
+    scheduleCancelled: response.scheduleCancelled ?? false,
+    scheduleCancelledAt: response.scheduleCancelledAt ?? null,
     holdExpiresAt: response.holdExpiresAt,
     myReview: response.myReview ?? null,
     breakdown: {
@@ -63,5 +66,7 @@ export function mapApplicationResponseToApplication(
     providerPaymentAmount: response.providerPaymentAmount,
     providerPaymentCurrency: response.providerPaymentCurrency,
     refund: response.refund,
+    refundRecoveryPending:
+      response.refund?.status === "REQUESTED" || response.refund?.status === "FAILED",
   };
 }

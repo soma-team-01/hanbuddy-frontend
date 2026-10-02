@@ -1,6 +1,7 @@
 "use client";
 
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
+import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
 import { SignupExtraFields } from "./SignupExtraFields";
 import {
   buildSignupExtra,
@@ -86,6 +87,8 @@ interface OnboardingFormProps {
   userType?: UserType;
   resubmission?: BuddyResubmission;
   agreementDocuments?: SignupAgreementDocuments;
+  /** 가입 완료 후 돌아갈 내부 경로(예약 화면 등). 없으면 관광객은 홈으로 간다. */
+  returnTo?: string | null;
 }
 
 type OnboardingStep = 1 | 2 | 3;
@@ -159,6 +162,7 @@ export function OnboardingForm({
   userType = "TOURIST",
   resubmission,
   agreementDocuments,
+  returnTo = null,
 }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
   const buddyT = useTranslations("BuddyOnboarding");
@@ -167,6 +171,7 @@ export function OnboardingForm({
   const accessibilityT = useTranslations("Accessibility");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
+  const { trackSignup } = useMeasurementEvents();
   const isResubmission = Boolean(resubmission);
   const isBuddyFlow = userType === "BUDDY";
   // Signup-only fields deliberately stay out of persistent onboarding drafts.
@@ -586,7 +591,6 @@ export function OnboardingForm({
             agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
 
-      if (!isResubmission) invalidateAnalyticsAccount();
       const response = await fetch(
         isResubmission ? "/api/auth/buddy/resubmission" : "/api/auth/google/signup",
         {
@@ -615,6 +619,8 @@ export function OnboardingForm({
         return;
       }
 
+      if (!isResubmission) await invalidateAnalyticsAccount();
+
       if (isResubmission) {
         if ((body.result as BuddyResubmission).accountStatus !== "PENDING_APPROVAL") {
           setRequestFailure({
@@ -629,10 +635,12 @@ export function OnboardingForm({
         return;
       }
 
-      const authStatus = (body.result as GoogleLoginResponse).authStatus;
+      const signupResult = body.result as GoogleLoginResponse;
+      const authStatus = signupResult.authStatus;
+      if (signupResult.registered === true) trackSignup("google");
       if (authStatus === "ACTIVE") {
         discardDraft();
-        router.replace(userType === "BUDDY" ? "/dashboard" : "/");
+        router.replace(userType === "BUDDY" ? "/dashboard" : (returnTo ?? "/"));
       } else if (
         authStatus === "PENDING_APPROVAL" ||
         authStatus === "REJECTED" ||

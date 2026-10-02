@@ -161,6 +161,10 @@ Repository variables:
 | `GOOGLE_REDIRECT_URI`    | `https://staging.hanbuddy.kr/auth/google/callback` |
 | `PAYMENT_PROVIDER`       | `TOSS`                                             |
 | `PAYPAL_CLIENT_ID`       | PayPal Sandbox 공개 Client ID (`PAYPAL`/`BOTH` 시) |
+| `GA_ENABLED`             | GA runtime 활성화 시에만 literal `true`            |
+| `GA_MEASUREMENT_ID`      | GA web stream ID; 없으면 GA runtime OFF            |
+| `META_PIXEL_ENABLED`     | Meta Pixel 활성화 시에만 literal `true`            |
+| `META_PIXEL_ID`          | Meta Pixel ID; 없으면 Meta runtime OFF             |
 
 Environment secret:
 
@@ -183,6 +187,10 @@ Environment secret:
 | `GOOGLE_REDIRECT_URI`    | 운영 frontend domain의 Google OAuth callback URL |
 | `PAYMENT_PROVIDER`       | `PAYPAL`                                         |
 | `PAYPAL_CLIENT_ID`       | PayPal Live 공개 Client ID (`PAYPAL`/`BOTH` 시)  |
+| `GA_ENABLED`             | GA runtime 활성화 시에만 literal `true`          |
+| `GA_MEASUREMENT_ID`      | 검증된 GA web stream ID                          |
+| `META_PIXEL_ENABLED`     | Meta Pixel 활성화 시에만 literal `true`          |
+| `META_PIXEL_ID`          | 검증된 Meta Pixel ID                             |
 
 Production environment secret:
 
@@ -201,6 +209,13 @@ secret에 두고, 호출받는 job의 `environment: production`도 유지한다.
 대신할 수 없다.
 
 `REVIEW_LOGIN_ENABLED`는 `true` 또는 `false`만 허용하는 서버 런타임 변수다. `true`이면 일반 로그인 화면에 이메일·비밀번호 입력 영역이 추가되고 same-origin `/api/auth/review/login` BFF가 활성화된다. `false`이거나 로컬에서 설정하지 않으면 기존 Google 로그인만 노출되며 BFF 직접 호출도 거부한다. 값 변경 후 해당 환경을 다시 배포해야 하며, 심사 계정 이메일과 비밀번호 해시는 백엔드 Parameter Store에서만 관리한다.
+
+`GA_ENABLED`, `GA_MEASUREMENT_ID`, `META_PIXEL_ENABLED`, `META_PIXEL_ID`는 image build arg나
+`NEXT_PUBLIC_*`가 아니라 컨테이너 실행 시점의 서버 환경변수다. deploy action은 네 값을 JSON 문자열로 인코딩하고 EC2 배포
+스크립트는 다시 base64로 감싸 최종 `docker run -e`에 전달한다. 값을 로그에 출력하지 않는다.
+현재 staging에 `GA_MEASUREMENT_ID`가 없으면 GitHub expression과 optional action input을 거친
+빈 문자열이 그대로 컨테이너에 전달되며, 애플리케이션의 정책 검증이 해당 provider를
+fail-closed로 유지한다. Production의 실제 값과 실제 GA/Meta 수신은 별도 운영 검증 대상이다.
 
 토스 결제용 frontend 환경변수는 없다. 결제 준비 API가 `clientKey`, 주문번호, 금액을 내려준다.
 PayPal `PAYPAL_CLIENT_ID`는 브라우저 SDK에 공개되는 값이므로 environment variable로 관리한다.
@@ -327,3 +342,12 @@ curl --fail --retry 20 --retry-connrefused --retry-delay 1 \
 docker stop "${container_id}"
 trap - EXIT
 ```
+
+### GA4_ORIGIN
+
+GitHub의 각 environment variable `GA4_ORIGIN`은 서버 컨테이너에 런타임으로 전달된다.
+미설정 또는 빈 값은 `https://hanbuddy.kr`를 사용한다. Staging에서 GA4를 검증하려면
+`https://staging.hanbuddy.kr`로 지정한 뒤 재배포한다. HTTPS origin만 허용하며 경로나 끝 슬래시는 넣지 않는다.
+GA4/Meta 수집 및 동의 BFF의 origin 검사에만 적용된다. canonical URL, robots, sitemap은 기존 운영 도메인을 유지한다.
+각 provider 수집에는 해당 enable flag, 유효한 ID와 통합 사용자 동의가 필요하다.
+백엔드의 analytics origin 허용 설정도 해당 도메인을 허용해야 한다.

@@ -6,6 +6,8 @@ import { ReviewCard } from "./ReviewCard";
 
 const translatedReview = {
   reviewId: 31,
+  source: "PLATFORM",
+  originalReviewedAt: null,
   applicationId: 82,
   activityId: 14,
   activityTitle: "Traditional Tea Experience",
@@ -21,6 +23,34 @@ const translatedReview = {
 } satisfies ReviewResponse;
 
 describe("ReviewCard", () => {
+  it("renders anonymous imported reviews without inventing a writing date", () => {
+    renderWithQueryClient(
+      <ReviewCard
+        review={{
+          ...translatedReview,
+          source: "LEGACY_IMPORT",
+          applicationId: null,
+          reviewerName: null,
+          originalReviewedAt: null,
+        }}
+      />,
+    );
+    expect(screen.getByText("Anonymous")).toBeInTheDocument();
+    expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
+  });
+  it("uses the original date instead of the import date", () => {
+    renderWithQueryClient(
+      <ReviewCard
+        review={{
+          ...translatedReview,
+          source: "LEGACY_IMPORT",
+          originalReviewedAt: "2020-02-01T12:00:00+09:00",
+        }}
+      />,
+    );
+    expect(screen.getByText(/2020/)).toBeInTheDocument();
+    expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
+  });
   it("shows the requested translation first and lets the reader switch to the original", () => {
     renderWithQueryClient(<ReviewCard review={translatedReview} />);
 

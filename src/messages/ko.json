@@ -527,6 +527,7 @@
     "welcome": "현지인처럼 한국을 경험해 보세요.",
     "introduction": "현지 버디와 만나 한국을 더 가까이, 더 나답게 경험해 보세요.",
     "continueWithGoogle": "Google로 계속하기",
+    "bookingLoginPrompt": "예약을 이어가려면 로그인해 주세요",
     "reviewLogin": {
       "title": "이메일로 로그인",
       "emailLabel": "이메일",

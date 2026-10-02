@@ -527,6 +527,7 @@
     "welcome": "像当地人一样体验韩国。",
     "introduction": "结识当地好友，发现让韩国感觉像您一样的时刻。",
     "continueWithGoogle": "继续使用谷歌",
+    "bookingLoginPrompt": "请登录以继续预订",
     "reviewLogin": {
       "title": "使用邮箱登录",
       "emailLabel": "邮箱",

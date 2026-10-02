@@ -527,6 +527,7 @@
     "welcome": "Experience Korea like a local.",
     "introduction": "Meet local buddies and discover the moments that make Korea feel like yours.",
     "continueWithGoogle": "Continue with Google",
+    "bookingLoginPrompt": "Log in to continue your booking",
     "reviewLogin": {
       "title": "Log in with email",
       "emailLabel": "Email",

@@ -469,7 +469,8 @@
       "secondaryCta": "Meet the team",
       "collageAlt1": "Two guests holding up a Doosan cheering towel above the Jamsil field at night",
       "collageAlt2": "Guests and buddies posing with the Doosan Bears mascot at Jamsil Stadium",
-      "collageAlt3": "Guests, a buddy, and their local guide sharing snacks in the Jamsil stands"
+      "collageAlt3": "Guests, a buddy, and their local guide sharing snacks in the Jamsil stands",
+      "photoAlt": "Guests and their tour guide buddy outside Seoul World Cup Stadium after a Korea national team match"
     },
     "origin": {
       "eyebrow": "Why we started",
@@ -542,7 +543,12 @@
           "date": "September 2026",
           "title": "Five game nights, and our first buddies from outside the team",
           "description": "Gocheok Sky Dome, Jamsil, and a national team match at Seoul World Cup Stadium. Licensed tour guides joined us as buddies.",
-          "imageAlt": "Three friends smiling in the stands at Gocheok Sky Dome"
+          "imageAlt": "Three friends smiling in the stands at Gocheok Sky Dome",
+          "nights": {
+            "sep12": "Guests in Doosan jerseys making finger hearts at Jamsil Stadium at night",
+            "sep18": "Four guests in front of the Jamsil outfield under the night lights",
+            "sep28": "Guests and their tour guide buddy in the stands at a Korea national team match"
+          }
         }
       },
       "next": {
@@ -576,7 +582,8 @@
       "eyebrow": "Host with us",
       "title": "Know something about Korea worth sharing?",
       "description": "If you can host it in English and enjoy meeting people, become a buddy. Local businesses can list a partner experience.",
-      "button": "Become a buddy"
+      "button": "Become a buddy",
+      "photoAlt": "Guests with their licensed tour guide buddy at Jamsil Stadium"
     },
     "faq": {
       "metadataTitle": "HanBuddy FAQ | Booking, payment and what to expect",

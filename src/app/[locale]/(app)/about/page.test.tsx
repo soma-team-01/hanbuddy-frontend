@@ -37,39 +37,66 @@ describe("AboutPage", () => {
     expect(screen.getByRole("link", { name: secondary })).toHaveAttribute("href", "#about-team");
   });
 
-  it("shows September 12 and 13 game-night photos in the hero", async () => {
+  it("opens with the national team night hosted by a tour guide buddy", async () => {
     await renderAbout("en");
 
-    const collage = screen.getByRole("list", { name: "Our runs" });
-    const sources = within(collage)
-      .getAllByRole("img")
-      .map((image) => image.getAttribute("src"));
-
-    expect(sources).toHaveLength(3);
-    expect(sources[0]).toContain("kbo-0912-towel");
-    expect(sources[1]).toContain("kbo-0912-mascot-crew");
-    expect(sources[2]).toContain("kbo-0913-seats-five");
-    expect(sources.join(" ")).not.toContain("hanriver");
+    const hero = screen.getByRole("region", {
+      name: "We connect you with local buddies in Korea.",
+    });
+    const photo = within(hero).getByRole("img", {
+      name: /tour guide buddy outside Seoul World Cup Stadium/,
+    });
+    expect(photo.getAttribute("src")).toContain("football-0928-night-group");
+    expect(document.body.innerHTML).not.toContain("hanriver");
   });
 
-  it("illustrates each month of the timeline with a photo from that run", async () => {
+  it("illustrates each run with a photo from that night", async () => {
     await renderAbout("en");
+
+    // 6월 첫 회차 사진은 시작한 이유 옆에 둔다
+    const origin = screen.getByRole("region", {
+      name: "The best nights in Korea are the ones you spend with locals.",
+    });
+    expect(
+      decodeURIComponent(
+        within(origin)
+          .getByRole("img", { name: /first HanBuddy baseball night/ })
+          .getAttribute("src") ?? "",
+      ),
+    ).toContain("1차-1");
 
     const timeline = screen.getByRole("region", {
       name: "Where we’ve been, and where we’re going next.",
     });
-    const sources = within(timeline)
-      .getAllByRole("img")
-      .map((image) => decodeURIComponent(image.getAttribute("src") ?? ""));
-
-    expect(sources).toHaveLength(4);
-    expect(sources[0]).toContain("1차-1");
-    expect(sources[1]).toContain("kbo-0726-group");
-    expect(sources[2]).toContain("kleague-0815-crew");
-    expect(sources[3]).toContain("kbo-0905-dome-friends");
+    const sources = [...timeline.querySelectorAll("img")].map((image) =>
+      decodeURIComponent(image.getAttribute("src") ?? ""),
+    );
+    expect(sources.some((src) => src.includes("kbo-0726-group"))).toBe(true);
+    expect(sources.some((src) => src.includes("kleague-0815-crew"))).toBe(true);
     for (const image of within(timeline).getAllByRole("img")) {
       expect(image.getAttribute("alt")).not.toBe("");
     }
+  });
+
+  it("gathers the September nights in one album", async () => {
+    await renderAbout("en");
+
+    const album = screen.getByRole("group", {
+      name: "Five game nights, and our first buddies from outside the team",
+    });
+    const nights = within(album).getAllByRole("button");
+    expect(nights.map((night) => night.textContent)).toEqual([
+      "09.05",
+      "09.12",
+      "09.13",
+      "09.18",
+      "09.28",
+    ]);
+    const sources = [...album.querySelectorAll("img")].map(
+      (image) => image.getAttribute("src") ?? "",
+    );
+    expect(sources.some((src) => src.includes("football-0928-seats-guide"))).toBe(true);
+    expect(sources.some((src) => src.includes("kbo-0918-field-group"))).toBe(true);
   });
 
   it("introduces HanBuddy as a platform where buddies and partners host", async () => {
@@ -107,11 +134,22 @@ describe("AboutPage", () => {
     const timeline = screen.getByRole("region", {
       name: "Where we’ve been, and where we’re going next.",
     });
-    expect(
-      within(timeline).getByRole("heading", { name: "Indoor sports and partner experiences" }),
-    ).toBeInTheDocument();
+    const next = within(timeline).getByRole("heading", {
+      name: "Indoor sports and partner experiences",
+    });
     expect(within(timeline).getByText(/basketball and volleyball/)).toBeInTheDocument();
-    expect(within(timeline).getAllByRole("img")).toHaveLength(4);
+    expect(next.closest("li")?.querySelector("img")).toBeNull();
+  });
+
+  it("invites buddies with the photo of the first guide-hosted night", async () => {
+    await renderAbout("en");
+
+    const host = screen.getByRole("region", { name: "Know something about Korea worth sharing?" });
+    expect(
+      within(host)
+        .getByRole("img", { name: /licensed tour guide buddy/ })
+        .getAttribute("src"),
+    ).toContain("kbo-0913-group-guide");
   });
 
   it.each([

@@ -1,0 +1,48 @@
+/* 회차를 잇는 "실밥" 세로선. 야구공 실밥을 닮은 작은 V자 땀이 아래로 이어진다. 본문보다 튀지 않게 흐리게 둔다. */
+.stitch {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='12'%3E%3Cpath d='M2 4 5 7 8 4' fill='none' stroke='%23d13f32' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: center top;
+  background-repeat: repeat-y;
+  background-size: 10px 12px;
+  opacity: 0.45;
+  /* 끝(겨울 계획)으로 갈수록 흐려져 "아직 오지 않은 장"으로 넘어간다. */
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 12rem), transparent 100%);
+}
+
+@keyframes story-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 스크롤로 화면에 들어올 때만 살짝 떠오른다. 지원하지 않는 브라우저와 동작 줄이기 설정에서는 그대로 보인다. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: story-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+@keyframes album-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* 9월 앨범: 지금 사진의 썸네일 아래에서 다음 사진까지 남은 시간이 차오른다. 길이는 인라인 animation-duration. */
+.albumProgress {
+  animation-name: album-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}

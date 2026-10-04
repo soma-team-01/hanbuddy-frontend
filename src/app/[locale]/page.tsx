@@ -146,7 +146,10 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
             <h1 className="max-w-3xl font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.06em] text-on-primary md:text-5xl md:leading-[1.04] lg:text-[clamp(3.25rem,5vw,5.25rem)]">
               {t("headline")}
             </h1>
-            <p className="mx-auto mt-6 hidden max-w-2xl text-base leading-7 text-white/80 md:block">
+            <p className="mx-auto mt-3 max-w-2xl font-display text-sm font-bold text-on-primary md:mt-6 md:text-xl">
+              {t("tagline")}
+            </p>
+            <p className="mx-auto mt-3 hidden max-w-2xl text-base leading-7 text-white/80 md:block">
               {t("description")}
             </p>
             <div className="relative z-20 mt-5 flex justify-center text-left md:mt-7">

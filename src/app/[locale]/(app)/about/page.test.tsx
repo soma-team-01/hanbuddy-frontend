@@ -24,8 +24,8 @@ async function renderAbout(locale: Locale) {
 
 describe("AboutPage", () => {
   it.each([
-    ["en", "The team that makes “like a local” happen.", "Explore experiences", "Meet the team"],
-    ["ko", "‘현지인처럼’을 실제로 만드는 팀입니다.", "액티비티 둘러보기", "팀 소개 보기"],
+    ["en", "We connect you with local buddies in Korea.", "Explore experiences", "Meet the team"],
+    ["ko", "한국의 로컬 버디와 당신을 연결합니다.", "액티비티 둘러보기", "팀 소개 보기"],
   ] as const)("renders the localized hero for %s", async (locale, title, primary, secondary) => {
     await renderAbout(locale);
 
@@ -72,25 +72,71 @@ describe("AboutPage", () => {
     }
   });
 
-  it("explains the sports-only, ticket-included way HanBuddy runs", async () => {
+  it("introduces HanBuddy as a platform where buddies and partners host", async () => {
     await renderAbout("en");
 
     expect(
-      screen.getByRole("heading", { name: "Book online, we buy your ticket right away" }),
+      screen.getByRole("heading", { name: "Buddies host. You join. We connect you." }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/ticket and stadium food are included/)).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Buddies and partners host" })).toBeInTheDocument();
+    expect(screen.getByText(/labelled as partner/)).toBeInTheDocument();
+    expect(screen.getByText(/your buddy sorts out the tickets/)).toBeInTheDocument();
+    // 팀이 모든 활동을 직접 운영한다는 예전 표현은 남기지 않는다
+    expect(document.body.textContent).not.toMatch(/Run by us|locals only/i);
+    expect(document.body.textContent).not.toMatch(/Han River|picnic/i);
+  });
+
+  it("keeps the team-hosted record as proof", async () => {
+    await renderAbout("en");
+
     expect(screen.getByText("4.9 / 5")).toBeInTheDocument();
-    expect(screen.getByText(/12 guest survey responses/)).toBeInTheDocument();
-    // 평균 4.9와 어긋나지 않게 "전원 만점" 문구는 범위를 밝힌다
-    expect(screen.getByText(/Every September survey: 5 out of 5/)).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/Every survey so far/);
+    expect(screen.getByText(/15 guest survey responses/)).toBeInTheDocument();
+    // 9/28 회차에 4점 응답이 있어 "전원 만점" 문구는 쓰지 않는다
+    expect(document.body.textContent).not.toMatch(/Every September survey/);
     // 통계는 이름(dt) 다음에 값(dd)이 오는 정의 목록이다
     const runsLabel = screen.getByText("game nights since June 2026");
     expect(runsLabel.tagName).toBe("DT");
     expect(runsLabel.nextElementSibling?.tagName).toBe("DD");
-    expect(runsLabel.nextElementSibling).toHaveTextContent("7");
-    expect(document.body.textContent).not.toMatch(/Han River|picnic/i);
+    expect(runsLabel.nextElementSibling).toHaveTextContent("8");
+    expect(screen.getByText("guests so far").nextElementSibling).toHaveTextContent("20");
+  });
+
+  it("shows what comes next without a photo or a partner name", async () => {
+    await renderAbout("en");
+
+    const timeline = screen.getByRole("region", {
+      name: "Where we’ve been, and where we’re going next.",
+    });
+    expect(
+      within(timeline).getByRole("heading", { name: "Indoor sports and partner experiences" }),
+    ).toBeInTheDocument();
+    expect(within(timeline).getByText(/basketball and volleyball/)).toBeInTheDocument();
+    expect(within(timeline).getAllByRole("img")).toHaveLength(4);
+  });
+
+  it.each([
+    ["en", "Become a buddy"],
+    ["ko", "버디 되기"],
+  ] as const)("invites buddies to host for %s", async (locale, button) => {
+    await renderAbout(locale);
+
+    expect(screen.getByRole("link", { name: button })).toHaveAttribute("href", `/${locale}/buddy`);
+  });
+
+  it("answers the questions guests ask before booking", async () => {
+    await renderAbout("en");
+
+    const faq = screen.getByRole("region", { name: "Questions guests ask before booking" });
+    const questions = within(faq).getAllByRole("term");
+    expect(questions).toHaveLength(10);
+    expect(questions[0]).toHaveTextContent("What is HanBuddy?");
+    for (const question of questions) {
+      expect(question.nextElementSibling?.tagName).toBe("DD");
+      expect(question.nextElementSibling?.textContent).not.toBe("");
+    }
+    expect(within(faq).getByText(/Online with PayPal/)).toBeInTheDocument();
+    expect(within(faq).getByText(/Need another payment method\?/)).toBeInTheDocument();
+    expect(within(faq).getByText(/Special Requests/)).toBeInTheDocument();
   });
 
   it.each([
@@ -117,12 +163,12 @@ describe("AboutPage", () => {
 
     expectLocalizedMetadata(
       metadata,
-      "HanBuddy 소개 | 서울 직관의 밤을 함께 만드는 팀",
+      "HanBuddy 소개 | 로컬 버디와 함께하는 진짜 한국 경험",
       "/ko/about",
       "/about",
     );
     expect(metadata.openGraph).toMatchObject({
-      title: "HanBuddy 소개 | 서울 직관의 밤을 함께 만드는 팀",
+      title: "HanBuddy 소개 | 로컬 버디와 함께하는 진짜 한국 경험",
       url: "https://hanbuddy.kr/ko/about",
       locale: "ko_KR",
       images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", height: 630 }],

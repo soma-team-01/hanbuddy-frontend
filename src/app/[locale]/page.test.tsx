@@ -209,9 +209,13 @@ describe("LandingPage", () => {
     );
     expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass("min-w-0");
     expect(screen.queryByTestId("hero-highlights-mobile")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Local perspective")).toHaveLength(1);
-    expect(within(heroRegion).getByText("Local perspective")).toHaveClass("text-on-primary");
-    expect(within(heroRegion).getByText(/Go beyond the itinerary/)).toHaveClass(
+    expect(screen.getAllByText("A local buddy")).toHaveLength(1);
+    expect(within(heroRegion).getByText("A local buddy")).toHaveClass("text-on-primary");
+    // 슬로건 보조 문구는 모바일에서도 보이고, 긴 설명은 태블릿부터 보인다
+    expect(
+      within(heroRegion).getByText("Go with a local buddy. Leave with new friends."),
+    ).not.toHaveClass("hidden");
+    expect(within(heroRegion).getByText(/HanBuddy connects you with Koreans/)).toHaveClass(
       "hidden",
       "md:block",
     );

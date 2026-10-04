@@ -28,7 +28,7 @@ const HERO_COLLAGE = [
 ] as const;
 
 const HOW_STEPS = ["plan", "confirm", "improve"] as const;
-const STAT_KEYS = ["runs", "rating", "stadiums"] as const;
+const STAT_KEYS = ["runs", "rating", "guests"] as const;
 const TIMELINE_ITEMS = [
   { key: "june", image: "/images/landing/1차-1.webp", position: "object-[50%_30%]" },
   { key: "july", image: "/images/landing/kbo-0726-group.webp", position: "object-[70%_40%]" },
@@ -38,6 +38,20 @@ const TIMELINE_ITEMS = [
     image: "/images/landing/kbo-0905-dome-friends.webp",
     position: "object-center",
   },
+] as const;
+
+// 참가자 대화에서 실제로 많이 나온 질문 순서다.
+const FAQ_KEYS = [
+  "what",
+  "buddies",
+  "solo",
+  "pay",
+  "included",
+  "dietary",
+  "meet",
+  "deadline",
+  "cancel",
+  "language",
 ] as const;
 
 const TEAM_MEMBERS = [
@@ -289,6 +303,20 @@ export default async function AboutPage({ params }: AboutPageProps) {
               </li>
             ))}
           </ol>
+          {/* 아직 사진이 없는 다음 계획은 사진 카드와 구분해 글로만 보여준다. */}
+          <div className="mx-auto mt-4 max-w-5xl rounded-[1.5rem] border border-dashed border-white/30 px-5 py-5 sm:px-6 md:flex md:items-baseline md:gap-6">
+            <p className="shrink-0 font-display text-xs font-bold tracking-[0.2em] text-primary-soft uppercase">
+              {t("timeline.next.date")}
+            </p>
+            <div className="mt-3 md:mt-0">
+              <h3 className="font-display text-lg leading-snug font-bold">
+                {t("timeline.next.title")}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-white/75">
+                {t("timeline.next.description")}
+              </p>
+            </div>
+          </div>
         </PageContainer>
       </section>
 
@@ -347,7 +375,70 @@ export default async function AboutPage({ params }: AboutPageProps) {
         </PageContainer>
       </section>
 
-      <section aria-labelledby="about-cta-title" className="bg-canvas-soft pt-4 pb-16 md:pb-20">
+      <section
+        aria-labelledby="about-host-title"
+        className="border-t border-line-soft bg-primary-soft py-14 md:py-20"
+      >
+        <PageContainer className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16">
+          <div className="max-w-3xl">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              {t("host.eyebrow")}
+            </p>
+            <h2
+              id="about-host-title"
+              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+            >
+              {t("host.title")}
+            </h2>
+            <p className="mt-4 text-base leading-7 text-muted sm:text-lg sm:leading-8">
+              {t("host.description")}
+            </p>
+          </div>
+          <Link
+            href="/buddy"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border border-line-strong bg-canvas-soft px-7 font-display text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+          >
+            {t("host.button")}
+            <span aria-hidden className="ml-3 text-lg leading-none">
+              →
+            </span>
+          </Link>
+        </PageContainer>
+      </section>
+
+      <section
+        aria-labelledby="about-faq-title"
+        className="border-t border-line-soft bg-canvas py-14 md:py-20"
+      >
+        <PageContainer>
+          <div className="mx-auto max-w-3xl">
+            <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+              {t("faq.eyebrow")}
+            </p>
+            <h2
+              id="about-faq-title"
+              className="mt-4 font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-4xl"
+            >
+              {t("faq.title")}
+            </h2>
+            {/* 답을 접지 않고 모두 펼쳐 둔다. 사람과 검색엔진이 같은 글을 읽는다. */}
+            <dl className="mt-8 divide-y divide-line-soft border-y border-line-soft">
+              {FAQ_KEYS.map((key) => (
+                <div key={key} className="py-5">
+                  <dt className="font-display text-lg font-bold text-ink">
+                    {t(`faq.items.${key}.question`)}
+                  </dt>
+                  <dd className="mt-2 text-sm leading-6 text-muted sm:text-base sm:leading-7">
+                    {t(`faq.items.${key}.answer`)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </PageContainer>
+      </section>
+
+      <section aria-labelledby="about-cta-title" className="bg-canvas-soft pt-14 pb-16 md:pb-20">
         <PageContainer>
           <div className="rounded-[2rem] border border-line-soft bg-canvas px-6 py-12 text-center shadow-[0_16px_36px_rgba(61,45,43,0.05)] sm:px-12 md:py-14">
             <h2

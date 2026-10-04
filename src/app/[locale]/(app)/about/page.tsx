@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { ClosingCta } from "./ClosingCta";
@@ -340,10 +339,9 @@ export default async function AboutPage({ params }: AboutPageProps) {
               return (
                 <li
                   key={member.key}
-                  className="flex items-center gap-4 rounded-[1.5rem] border border-line-soft bg-panel-raised px-5 py-5 sm:block sm:px-6 sm:py-6"
+                  className="rounded-[1.5rem] border border-line-soft bg-panel-raised px-5 py-5 sm:px-6 sm:py-6"
                 >
-                  <Avatar name={name} size={56} className="border-line-soft bg-primary-soft" />
-                  <div className="min-w-0 sm:mt-4">
+                  <div className="min-w-0">
                     <p className="font-display text-lg font-bold text-ink">{name}</p>
                     <p className="mt-1 text-sm leading-6 text-muted">
                       {t(`team.members.${member.key}.role`)}

@@ -160,6 +160,10 @@ describe("AboutPage", () => {
       expect(link.getAttribute("href")).toContain("linkedin.com");
     }
     expect(screen.getByText(/AI·SW/)).toBeInTheDocument();
+    // 사진 없이 이니셜만 크게 넣은 동그라미(김·김·이)는 쓰지 않는다
+    for (const initial of ["김", "이", "MK", "YK", "JL"]) {
+      expect(screen.queryByText(initial, { exact: true })).not.toBeInTheDocument();
+    }
   });
 
   it("publishes localized metadata for the about page", async () => {

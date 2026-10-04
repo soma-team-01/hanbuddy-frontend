@@ -67,6 +67,7 @@ describe("EditProfilePage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(uploadProfileImage).mockReset();
+    mockedGetMyProfile.mockReset();
     mockedGetMyProfile.mockResolvedValue({ status: "success", profile });
   });
 
@@ -354,6 +355,58 @@ describe("EditProfilePage", () => {
       ),
     );
     expect(screen.queryByText("지원하지 않는 이미지 형식입니다.")).not.toBeInTheDocument();
+    expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+  });
+
+  it("stays on the form with an upload error when the image upload is rejected with 401", async () => {
+    vi.mocked(uploadProfileImage).mockRejectedValue(
+      new ApiClientError({
+        code: "TOKEN401",
+        status: 401,
+        details: null,
+        backendMessage: "토큰이 유효하지 않습니다.",
+        fallbackMessage: "프로필 이미지 업로드 URL을 발급받지 못했습니다.",
+      }),
+    );
+
+    renderWithQueryClient(<EditProfilePage />);
+    fireEvent.change(await screen.findByLabelText("Add profile photo"), {
+      target: { files: [createImageFile()] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not upload the profile photo. Please try again.",
+    );
+    expect(screen.queryByText("Please sign in again to continue.")).not.toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+    expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+    expect(screen.getByAltText("Selected profile photo preview")).toBeInTheDocument();
+  });
+
+  it("redirects to login when the image upload 401 comes from an ended session", async () => {
+    vi.mocked(uploadProfileImage).mockRejectedValue(
+      new ApiClientError({
+        code: "TOKEN401",
+        status: 401,
+        details: null,
+        backendMessage: "토큰이 유효하지 않습니다.",
+      }),
+    );
+    mockedGetMyProfile
+      .mockResolvedValueOnce({ status: "success", profile })
+      .mockResolvedValueOnce({ status: "unauthenticated" });
+
+    renderWithQueryClient(<EditProfilePage />);
+    fireEvent.change(await screen.findByLabelText("Add profile photo"), {
+      target: { files: [createImageFile()] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(replace).toHaveBeenCalledWith("/en/login");
+    });
     expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
   });
 

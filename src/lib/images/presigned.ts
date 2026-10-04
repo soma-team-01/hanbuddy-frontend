@@ -1,4 +1,5 @@
 import type { ApiResponse, ErrorApiResponse } from "@/lib/auth/types";
+import { fetchWithAuthRetry } from "@/lib/api/client";
 import { createApiClientError } from "@/lib/api/errors";
 
 export const PROFILE_IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
@@ -75,9 +76,14 @@ function isRequestTimeoutError(error: unknown) {
   );
 }
 
-async function fetchWithTimeoutMessage(input: string, init: RequestInit, timeoutMessage: string) {
+async function fetchWithTimeoutMessage(
+  input: string,
+  init: RequestInit,
+  timeoutMessage: string,
+  request: (input: string, init: RequestInit) => Promise<Response> = fetch,
+) {
   try {
-    return await fetch(input, init);
+    return await request(input, init);
   } catch (error) {
     if (isRequestTimeoutError(error)) {
       throw new Error(timeoutMessage);
@@ -107,6 +113,8 @@ export async function uploadProfileImage(file: File): Promise<PresignedImageItem
       } satisfies PresignedImageUploadRequest),
     },
     PROFILE_UPLOAD_TIMEOUT_ERROR_MESSAGE,
+    // 프로필 수정 중 accessToken이 만료됐으면 세션을 한 번 갱신해 다시 발급받는다
+    fetchWithAuthRetry,
   );
   const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
     PresignedResponseBody | undefined;

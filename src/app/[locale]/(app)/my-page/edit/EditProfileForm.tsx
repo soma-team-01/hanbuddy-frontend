@@ -17,10 +17,11 @@ import {
 } from "@/components/ui/MessagingAppField";
 import { CameraIcon } from "@/components/ui/icons";
 import { useRouter } from "@/i18n/navigation";
+import { isUnauthenticatedError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { DISPLAY_NAME_PATTERN, isValidDisplayName } from "@/lib/display-name";
 import { useMyProfile } from "@/lib/api/useMyProfile";
-import { updateMyProfile } from "@/lib/api/users";
+import { getMyProfile, updateMyProfile } from "@/lib/api/users";
 import { COUNTRIES, findCountry } from "@/lib/countries";
 import {
   MAX_PROFILE_IMAGE_BYTES,
@@ -188,7 +189,14 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       try {
         profileImageKey = await resolveProfileImageKey();
       } catch (error) {
-        setRequestFailure({ error, fallbackKey: "profileUploadFailed" });
+        // 업로드 단계의 401은 세션 만료일 수도, 이미지 발급 거절일 수도 있다.
+        // 세션이 실제로 끝났을 때만 로그인 화면으로 보내고, 아니면 업로드 실패 문구를 보여 준다
+        const uploadRejected =
+          isUnauthenticatedError(error) && (await getMyProfile()).status !== "unauthenticated";
+        setRequestFailure({
+          error: uploadRejected ? null : error,
+          fallbackKey: "profileUploadFailed",
+        });
         return;
       }
 

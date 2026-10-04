@@ -215,6 +215,32 @@ describe("uploadProfileImage", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("refreshes the session once and retries issuance when the presigned request returns 401", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse(
+          { isSuccess: false, code: "TOKEN401", message: "토큰이 유효하지 않습니다." },
+          401,
+        ),
+      )
+      .mockResolvedValueOnce(createJsonResponse({ isSuccess: true, result: {} }))
+      .mockResolvedValueOnce(createJsonResponse(presignedSuccessBody))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const file = new File([new Uint8Array([1])], "me.png", { type: "image/png" });
+    const uploaded = await uploadProfileImage(file);
+
+    expect(uploaded.imageKey).toBe("profiles/2026/07/07/uuid.png");
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/images/presigned-urls",
+      "/api/auth/refresh",
+      "/api/images/presigned-urls",
+      "https://bucket.s3.amazonaws.com/profiles/2026/07/07/uuid.png?signed",
+    ]);
+  });
+
   it("throws when the S3 upload responds with a non-200 status", async () => {
     const fetchMock = vi
       .fn()

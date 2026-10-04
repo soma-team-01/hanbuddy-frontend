@@ -1,4 +1,51 @@
 {
+  "Referral": {
+    "messagePlaceholder": "Leave a message for your buddy, if you have one.",
+    "summaryTitle": "Application details",
+    "sharingTitle": "Information shared with the provider",
+    "servicePrice": "Service price",
+    "sharedName": "Name",
+    "sharedContactMethod": "Contact method",
+    "sharedCountryCode": "Country calling code",
+    "sharedContact": "Contact details",
+    "startingPrice": "From {price}",
+    "free": "Free",
+    "label": "Partner experience",
+    "apply": "Apply",
+    "notice": "Service fees and the final booking will be confirmed separately with the provider.",
+    "title": "Apply for a partner experience",
+    "schedule": "Schedule (Korea time)",
+    "guests": "Participants",
+    "consent": "I agree to share my personal information with the provider as described above.",
+    "recipient": "Recipient",
+    "fields": "Information shared",
+    "purpose": "Purpose",
+    "loading": "Loading…",
+    "failed": "We couldn’t process your request. Please try again.",
+    "refreshConsent": "The notice has changed. Review the latest information and agree again.",
+    "success": "Your application has been received.",
+    "cancelled": "This application was cancelled.",
+    "reapply": "Reapply",
+    "reapplyNotice": "You previously cancelled this session. Review the details and agree again, then reapply to create a new application.",
+    "alreadyApplied": "You already have an application for this session. Check My Applications.",
+    "sessionCancelled": "You cannot reapply for a session cancelled by the buddy.",
+    "completed": "This application has already ended.",
+    "applications": "View my applications",
+    "unavailable": "No sessions are available.",
+    "cancelTitle": "Cancel this application?",
+    "cancelNotice": "If you booked or paid directly with the provider outside this website, please contact the provider directly.",
+    "cancel": "Cancel application",
+    "keep": "Keep application",
+    "people": "{count} participants",
+    "agreementRequired": "Please agree to share your information.",
+    "invitationTitle": "Create a partner experience",
+    "invitationInvalid": "This invitation cannot be used. Check your account or contact the administrator.",
+    "invitationLogin": "Sign in with the buddy account that received this invitation.",
+    "login": "Sign in",
+    "retry": "Try again",
+    "checkActivities": "If the result is unclear, check My Activities before trying again.",
+    "myActivities": "Check My Activities"
+  },
   "ActivitySearch": {
     "placeholder": "When would you like to join?",
     "apply": "Apply",
@@ -43,6 +90,8 @@
     }
   },
   "ScheduleCancellation": {
+    "referralIrreversible": "Cancelled sessions cannot reopen or accept new applications. Please notify applicants. Check any payments made directly to the provider separately.",
+    "referralSuccess": "The session has been cancelled.",
     "refundAmount": "Refund amount",
     "buddyCancellationReason": "Cancellation reason from your buddy",
     "refundRecoveryPending": "We’re checking the refund result. Please do not submit another cancellation or payment.",
@@ -79,6 +128,8 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "referralAlreadyApplied": "You already have an active application. Check My Applications.",
+    "referralReapplicationChanged": "Your application history has changed. Review the latest details and agree again before reapplying.",
     "bookingClosed": "Bookings and payment requests close 24 hours before the activity starts. Please choose another session.",
     "scheduleCapacity": "Capacity must be 1–100 and at least the total of confirmed participants and those awaiting payment.",
     "scheduleEdit": "Started or cancelled sessions cannot be edited. Sessions with application history cannot change their start time.",
@@ -888,6 +939,7 @@
     "preferredMethod": "[Your preferred payment method]"
   },
   "Booking": {
+    "applicationSummary": "Application summary",
     "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
     "title": "Book activity",
     "loading": "Loading booking...",
@@ -1349,8 +1401,8 @@
         "description": "Add 3 to 10 clear photos that capture the experience."
       },
       "itinerary": {
-        "title": "Build the itinerary",
-        "description": "Add the activities guests will follow from the beginning of the experience to the end."
+        "title": "Introduce your offering",
+        "description": "Add each activity or product you offer as a separate item."
       },
       "meeting": {
         "title": "Set the meeting place",
@@ -1436,7 +1488,7 @@
       "hostIntroduction": "Introduce yourself and why you want to host this experience.",
       "qualifications": "Share relevant work, study, certifications, or lived experience.",
       "pressHistory": "Add awards, publications, interviews, or notable recognition.",
-      "experienceName": "e.g., Cheer at a Korean Baseball Night",
+      "experienceName": "e.g. Korean Baseball Fan Night",
       "experienceDescription": "Tell guests what the experience feels like from start to finish.",
       "meetingAddress": "e.g., 25 Olympic-ro, Songpa-gu, Seoul",
       "meetingPlace": "e.g., Gate 1 ticket booth",
@@ -1465,15 +1517,15 @@
       "remove": "Remove experience photo {index, number}"
     },
     "itinerary": {
-      "item": "Activity {index, number}",
-      "remove": "Remove activity {index, number}",
+      "item": "Item {index, number}",
+      "remove": "Remove item {index, number}",
       "titleCount": "{count, number}/{max, number} characters",
       "descriptionCount": "{count, number}/{max, number} characters · minimum {min, number}",
       "addPhoto": "Add an activity photo",
       "photoLabel": "Upload a photo for activity {index, number}",
-      "add": "Add an activity",
-      "edit": "Edit activity {index, number}",
-      "untitled": "New activity",
+      "add": "Add an item",
+      "edit": "Edit item {index, number}",
+      "untitled": "New item",
       "incomplete": "Add the details",
       "durationSummary": "{minutes, number} min",
       "editor": {
@@ -1504,7 +1556,7 @@
       "pageRange": "{from}–{to} of {total} sessions",
       "defaultTitle": "Default capacity",
       "settings": "Date-specific settings",
-      "defaultHint": "Used for new sessions. Existing session capacities stay unchanged.",
+      "defaultHint": "Changing this number applies it to every date and time.",
       "scheduleTitle": "Capacity by date and time",
       "scheduleHint": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
       "confirmed": "Confirmed: {count}",
@@ -1521,6 +1573,16 @@
       "mapTitle": "Map of the selected meeting address"
     },
     "schedule": {
+      "am": "AM",
+      "pm": "PM",
+      "timePeriod": "AM/PM",
+      "hour": "Hour (1–12)",
+      "minute": "Minute (0–59)",
+      "hourPlaceholder": "hh",
+      "minutePlaceholder": "mm",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "timeSelectionHint": "Select one or more start times. Select again to remove.",
       "bookingWindowNotice": "Bookings and payment requests close 24 hours before the activity starts.",
       "notice": "Select as many dates as you need. All start times are shown in Korea Standard Time (KST).",
       "calendarLabel": "Experience dates calendar",
@@ -1538,11 +1600,15 @@
       "addedTimes": "Added start times",
       "noTimes": "No start times yet. Choose a time above and add it.",
       "removeTime": "Remove {time} from {date}",
-      "applyDateTimesToAll": "Apply these times to all {count, number} dates",
+      "applyDateTimesToAll": "Use the same times for all selected dates",
       "removeDate": "Remove {date}",
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
+      "referralTitle": "Set the minimum service price",
+      "referralDescription": "Enter the lowest price among the services you offer.",
+      "referralLabel": "Minimum service price",
+      "referralMinimum": "You can enter an amount from ₩0.",
       "minimum": "The minimum price per person is ₩{amount, number}.",
       "notice": "This amount is shown to guests as the price per person in Korean won."
     },
@@ -1607,6 +1673,7 @@
     "edit": {
       "loading": "Loading your experience…",
       "loadError": "Could not load the activity to edit.",
+      "activityTypeUnavailable": "The server did not return the activity type. Editing is unavailable to avoid using the wrong form. Please try again later.",
       "backToActivity": "Back to activity"
     },
     "errors": {
@@ -1626,6 +1693,7 @@
       "itineraryPhotoRequired": "Add a photo for every activity.",
       "maxGuestsInvalid": "Enter a whole-number capacity greater than 0.",
       "priceInvalid": "Enter a whole-number price of at least ₩15,000 per person.",
+      "referralPriceInvalid": "Enter a whole amount from ₩0 to ₩9,999,999,999.",
       "inclusionsRequired": "Add at least one included item.",
       "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",

@@ -30,6 +30,12 @@ export default async function MyActivitiesPage({
       />
       <PageContainer className="flex-1 py-6 md:py-10">
         <main>
+          <Link
+            href="/my-activities/referrals"
+            className="mb-5 inline-flex min-h-11 items-center rounded-xl border border-line-strong px-4 text-sm font-semibold text-primary hover:border-primary"
+          >
+            제휴 신청 내역
+          </Link>
           <MyActivitiesContent />
         </main>
       </PageContainer>

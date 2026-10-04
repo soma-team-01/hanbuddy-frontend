@@ -6,7 +6,6 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  CalendarDaysIcon,
   CameraIcon,
   CheckIcon,
   ChevronDownIcon,
@@ -72,8 +71,8 @@ const RESTRICTION_OPTIONS = [
 ] as const;
 
 export const INPUT_CLASS =
-  "w-full rounded-xl border border-line-strong bg-white px-4 py-3.5 text-base text-ink outline-none transition placeholder:text-muted/55 focus:border-primary focus:ring-3 focus:ring-primary-soft focus-visible:!outline-none";
-export const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-36 resize-y leading-7`;
+  "w-full rounded-xl border border-line-strong bg-white px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/55 focus:border-primary focus:ring-3 focus:ring-primary-soft focus-visible:!outline-none lg:px-4 lg:py-3.5";
+export const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-28 resize-y leading-6 lg:min-h-36 lg:leading-7`;
 
 export function Field({
   label,
@@ -101,8 +100,8 @@ export function HostStep({
   t: Translator;
 }>) {
   return (
-    <div className="mx-auto w-full max-w-2xl py-4 text-center sm:py-8">
-      <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+    <div className="mx-auto w-full max-w-2xl py-2 text-center lg:py-8">
+      <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-primary-soft text-primary lg:size-14">
         <UsersIcon className="size-6" />
       </div>
       <label className="sr-only" htmlFor="host-introduction">
@@ -113,7 +112,7 @@ export function HostStep({
         autoFocus
         rows={1}
         maxLength={ACTIVITY_CREATE_LIMITS.hostIntroduction.max}
-        className="mt-7 [field-sizing:content] max-h-80 min-h-0 w-full resize-none overflow-y-auto border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-center text-lg leading-8 font-semibold text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none sm:text-xl"
+        className="mt-4 [field-sizing:content] max-h-80 min-h-0 w-full resize-none overflow-y-auto border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-center text-base leading-6 font-semibold text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none lg:mt-7 lg:text-xl lg:leading-8"
         value={draft.hostIntroduction}
         onChange={(event) => onChange("hostIntroduction", event.target.value)}
         placeholder={t("placeholders.hostIntroduction")}
@@ -135,7 +134,7 @@ export function NameStep({
   t,
 }: Readonly<{ value: string; onChange: (value: string) => void; t: Translator }>) {
   return (
-    <div className="mx-auto w-full max-w-2xl py-4 text-center sm:py-10">
+    <div className="mx-auto w-full max-w-2xl py-2 text-center lg:py-10">
       <label className="sr-only" htmlFor="experience-name">
         {t("fields.experienceName")}
       </label>
@@ -147,7 +146,7 @@ export function NameStep({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={t("placeholders.experienceName")}
-        className="w-full border-b-2 border-line-strong bg-transparent px-2 py-2 text-center font-display text-2xl font-bold tracking-tight text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none sm:text-4xl"
+        className="w-full border-b-2 border-line-strong bg-transparent px-2 py-2 text-center font-display text-xl font-bold tracking-tight text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none lg:text-4xl"
       />
       <p id="experience-name-guidance" className="mt-4 text-sm leading-6 text-muted">
         {t.rich("hints.experienceNameEnglish", {
@@ -431,7 +430,7 @@ export function ItineraryStep({
             key={item.id}
             className="group flex items-center gap-4 rounded-2xl border border-line-soft bg-white p-3 shadow-[0_8px_30px_rgba(38,27,24,0.05)] transition hover:border-primary/45"
           >
-            <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-white">
+            <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-white lg:size-20">
               {item.photo ? (
                 <Image
                   src={item.photo.previewUrl}
@@ -491,7 +490,7 @@ export function ItineraryStep({
       <button
         type="button"
         onClick={addItem}
-        className="flex min-h-16 w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-primary/55 bg-white px-5 text-sm font-bold text-primary-strong transition hover:border-primary hover:bg-primary-soft/30"
+        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-dashed border-primary/55 bg-white px-5 text-sm font-bold text-primary-strong transition hover:border-primary hover:bg-primary-soft/30 lg:min-h-16"
       >
         <span className="flex size-8 items-center justify-center rounded-full bg-primary-soft text-primary">
           <PlusIcon className="size-4" />
@@ -541,7 +540,7 @@ export function ItineraryStep({
                 />
               ))}
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-8 sm:px-12 sm:py-10">
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 lg:px-12 lg:py-10">
               {editorStep === 0 ? (
                 <div className="mx-auto max-w-xl text-center">
                   <h2
@@ -627,7 +626,7 @@ export function ItineraryStep({
                   >
                     {t("itinerary.editor.durationTitle")}
                   </h2>
-                  <div className="mt-16 flex items-center justify-center gap-8">
+                  <div className="mt-8 flex items-center justify-center gap-6 lg:mt-16 lg:gap-8">
                     <button
                       type="button"
                       onClick={() =>
@@ -695,7 +694,7 @@ export function ItineraryStep({
                     }}
                     placeholder={t("placeholders.itineraryTitle")}
                     aria-label={t("fields.itineraryTitle")}
-                    className="mt-16 w-full border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-center font-display text-2xl font-bold outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none"
+                    className="mt-8 w-full border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-center font-display text-xl font-bold outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none lg:mt-16 lg:text-2xl"
                   />
                   <p className="mt-4 text-sm text-muted tabular-nums">
                     {t("itinerary.titleCount", {
@@ -819,7 +818,7 @@ export function MeetingStep({
   }
 
   return (
-    <div className="grid w-full gap-7">
+    <div className="grid w-full gap-4 lg:gap-7">
       <Field label={t("fields.meetingPlace")} hint={t("hints.meetingPlace")}>
         <input
           className={INPUT_CLASS}
@@ -842,14 +841,14 @@ export function MeetingStep({
           {t("fields.meetingAddress")}
         </label>
         <div className="relative">
-          <SearchIcon className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary" />
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary" />
           <input
             id="meeting-address"
             role="combobox"
             aria-expanded={predictions.length > 0}
             aria-controls="meeting-address-results"
             aria-autocomplete="list"
-            className={`${INPUT_CLASS} pl-12`}
+            className={`${INPUT_CLASS} pl-12 lg:pl-12`}
             value={query}
             onChange={(event) => updateQuery(event.target.value)}
             placeholder={t("placeholders.meetingAddress")}
@@ -906,7 +905,7 @@ export function MeetingStep({
               <iframe
                 title={t("meeting.mapTitle")}
                 src={mapUrl}
-                className="h-64 w-full border-0 sm:h-72"
+                className="h-44 w-full border-0 lg:h-72"
                 loading="lazy"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
@@ -933,6 +932,11 @@ export function CapacityStep({
   t: Translator;
 }>) {
   const guests = Number(value) || 1;
+  const minimumGuests = schedules.reduce(
+    (minimum, schedule) =>
+      Math.max(minimum, (schedule.bookedCount ?? 0) + (schedule.heldSeats ?? 0)),
+    1,
+  );
   const locale = useLocale() as Locale;
   const [expanded, setExpanded] = useState(false);
   const detailsId = useId();
@@ -942,13 +946,13 @@ export function CapacityStep({
   const currentPage = Math.min(page, lastPage);
   const visibleSchedules = schedules.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-center py-8 text-center sm:py-14">
+    <div className="mx-auto flex max-w-xl flex-col items-center py-3 text-center lg:py-14">
       <UsersIcon className="size-9 text-primary" />
-      <div className="mt-8 flex w-full items-center justify-between gap-8">
+      <div className="mt-4 flex w-full items-center justify-between gap-6 lg:mt-8 lg:gap-8">
         <button
           type="button"
-          disabled={guests <= 1}
-          onClick={() => onChange(String(Math.max(1, guests - 1)))}
+          disabled={guests <= minimumGuests}
+          onClick={() => onChange(String(Math.max(minimumGuests, guests - 1)))}
           aria-label={t("capacity.decrease")}
           className="flex size-12 items-center justify-center rounded-full border border-line-strong text-ink transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
         >
@@ -965,7 +969,7 @@ export function CapacityStep({
         <button
           type="button"
           disabled={guests >= ACTIVITY_CREATE_LIMITS.maxGuests.max}
-          onClick={() => onChange(String(guests + 1))}
+          onClick={() => onChange(String(Math.max(minimumGuests, guests + 1)))}
           aria-label={t("capacity.increase")}
           className="flex size-12 items-center justify-center rounded-full border border-line-strong text-ink transition hover:border-primary hover:text-primary"
         >
@@ -1089,26 +1093,21 @@ function formatScheduleDate(dateKey: string, locale: string, options: Intl.DateT
   );
 }
 
-function formatScheduleTime(time: string, locale: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  return new Intl.DateTimeFormat(locale, {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "UTC",
-  }).format(new Date(Date.UTC(2024, 0, 1, hours, minutes)));
-}
+// Common daytime starts; hosts can still enter any other time to the minute.
+const SCHEDULE_TIME_PRESETS = Array.from({ length: 28 }, (_, index) => {
+  const minutes = 8 * 60 + index * 30;
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+});
 
 export function ScheduleStep({
   schedules,
   onToggleDate,
   onSetTimesForDate,
-  onApplyTimesToAll,
   t,
 }: Readonly<{
   schedules: ScheduleDraft[];
   onToggleDate: (date: string) => void;
   onSetTimesForDate: (date: string, startTimes: string[]) => void;
-  onApplyTimesToAll: (sourceDate: string) => void;
   t: Translator;
 }>) {
   const locale = useLocale();
@@ -1123,7 +1122,19 @@ export function ScheduleStep({
     a.localeCompare(b),
   );
   const [focusedDate, setFocusedDate] = useState<string | null>(selectedDateList[0] ?? null);
-  const [customTime, setCustomTime] = useState("");
+  const [customHour, setCustomHour] = useState("");
+  const [customMinute, setCustomMinute] = useState("");
+  const [customPeriod, setCustomPeriod] = useState<"am" | "pm">("am");
+  const validCustomTime =
+    /^\d{1,2}$/.test(customHour) &&
+    /^\d{1,2}$/.test(customMinute) &&
+    Number(customHour) >= 1 &&
+    Number(customHour) <= 12 &&
+    Number(customMinute) <= 59;
+  const customTime = validCustomTime
+    ? `${String((Number(customHour) % 12) + (customPeriod === "pm" ? 12 : 0)).padStart(2, "0")}:${customMinute.padStart(2, "0")}`
+    : "";
+  const [applyToAll, setApplyToAll] = useState(false);
   const selectedDates = new Set(selectedDateList);
   const activeDate =
     focusedDate && selectedDates.has(focusedDate) ? focusedDate : (selectedDateList[0] ?? null);
@@ -1132,8 +1143,8 @@ export function ScheduleStep({
     .map((schedule) => schedule.startTime)
     .sort((a, b) => a.localeCompare(b));
   // 오늘 날짜에는 Asia/Seoul 기준으로 이미 지난 시각을 추가할 수 없다
-  const isPastCustomTime =
-    activeDate === today.date && Boolean(customTime) && customTime <= today.time;
+  const includesToday = applyToAll ? selectedDates.has(today.date) : activeDate === today.date;
+  const isPastCustomTime = includesToday && Boolean(customTime) && customTime <= today.time;
   const sessionCount = schedules.filter((schedule) => schedule.startTime).length;
   const calendarDays = getCalendarDays(visibleMonth.year, visibleMonth.month);
   const monthLabel = new Intl.DateTimeFormat(locale, {
@@ -1153,23 +1164,46 @@ export function ScheduleStep({
   }
 
   function selectCalendarDate(dateKey: string, selected: boolean) {
-    if (!selected) onToggleDate(dateKey);
+    if (!selected) {
+      onToggleDate(dateKey);
+      if (applyToAll) {
+        const times =
+          dateKey === today.date ? activeTimes.filter((time) => time > today.time) : activeTimes;
+        for (const date of [...selectedDateList, dateKey]) onSetTimesForDate(date, times);
+      }
+    }
     setFocusedDate(dateKey);
-    setCustomTime("");
+    setCustomHour("");
+    setCustomMinute("");
   }
 
   function addCustomTime() {
     if (!activeDate || !customTime || isPastCustomTime || activeTimes.includes(customTime)) return;
-    onSetTimesForDate(activeDate, [...activeTimes, customTime]);
-    setCustomTime("");
+    updateTimes([...activeTimes, customTime]);
+    setCustomHour("");
+    setCustomMinute("");
+  }
+
+  function updateTimes(times: string[]) {
+    if (!activeDate) return;
+    for (const date of applyToAll ? selectedDateList : [activeDate]) {
+      onSetTimesForDate(date, times);
+    }
+  }
+
+  function togglePresetTime(time: string) {
+    if (!activeDate) return;
+    const selected = activeTimes.includes(time);
+    if (!selected && includesToday && time <= today.time) return;
+    updateTimes(selected ? activeTimes.filter((value) => value !== time) : [...activeTimes, time]);
   }
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         <section
           aria-label={t("schedule.calendarLabel")}
-          className="rounded-2xl border border-line-soft bg-white p-4 sm:p-6"
+          className="flex flex-col p-0 lg:min-h-[440px] lg:p-5"
         >
           <div className="flex items-center justify-between gap-4">
             <button
@@ -1190,7 +1224,7 @@ export function ScheduleStep({
               <ArrowRightIcon className="size-4" />
             </button>
           </div>
-          <div className="mt-4 grid grid-cols-7 text-center">
+          <div className="mt-1 grid flex-1 grid-cols-7 content-start text-center lg:mt-4">
             {weekdayLabels.map((label, index) => (
               <span key={`${label}-${index}`} className="py-2 text-xs font-bold text-muted">
                 {label}
@@ -1210,152 +1244,155 @@ export function ScheduleStep({
                 day: "numeric",
               });
               return (
-                <button
-                  key={dateKey}
-                  type="button"
-                  disabled={isPast}
-                  aria-pressed={selected}
-                  aria-label={
-                    selected
-                      ? t("schedule.editDate", { date: fullDate })
-                      : t("schedule.selectDate", { date: fullDate })
-                  }
-                  onClick={() => {
-                    selectCalendarDate(dateKey, selected);
-                    if (!isVisibleMonth) {
-                      setVisibleMonth({ year: date.getUTCFullYear(), month: date.getUTCMonth() });
+                <div key={dateKey} className="flex min-h-11 flex-col items-center">
+                  <button
+                    type="button"
+                    disabled={isPast}
+                    aria-pressed={selected}
+                    aria-current={activeDate === dateKey ? "date" : undefined}
+                    aria-label={
+                      selected
+                        ? t("schedule.editDate", { date: fullDate })
+                        : t("schedule.selectDate", { date: fullDate })
                     }
-                  }}
-                  className="group flex aspect-square items-center justify-center p-0.5 disabled:cursor-not-allowed"
-                >
-                  <span
-                    className={`relative flex size-9 items-center justify-center rounded-full text-sm font-semibold transition sm:size-10 ${
-                      selected && activeDate === dateKey
-                        ? "bg-primary text-white shadow-[0_6px_14px_rgba(209,63,50,0.2)] ring-2 ring-primary/20 ring-offset-2"
-                        : selected
-                          ? "border border-primary bg-white text-primary-strong"
-                          : isPast
-                            ? "text-muted/25"
-                            : isVisibleMonth
-                              ? "text-ink group-hover:bg-primary-soft group-hover:text-primary-strong"
-                              : "text-muted/35 group-hover:bg-primary-soft/35"
-                    }`}
+                    onClick={() => {
+                      selectCalendarDate(dateKey, selected);
+                      if (!isVisibleMonth) {
+                        setVisibleMonth({ year: date.getUTCFullYear(), month: date.getUTCMonth() });
+                      }
+                    }}
+                    className="group flex size-11 items-center justify-center rounded-full disabled:cursor-not-allowed"
                   >
-                    {date.getUTCDate()}
-                    {hasStartTime ? (
-                      <span
-                        aria-hidden
-                        data-testid={`schedule-status-${dateKey}`}
-                        className={`absolute bottom-1 size-1 rounded-full ${
-                          activeDate === dateKey ? "bg-white" : "bg-primary"
-                        }`}
-                      />
-                    ) : null}
-                  </span>
-                </button>
+                    <span
+                      className={`relative flex size-9 items-center justify-center rounded-full text-sm font-semibold transition sm:size-10 ${
+                        selected && activeDate === dateKey
+                          ? "bg-primary text-white ring-2 ring-primary/25 ring-offset-2"
+                          : selected
+                            ? "border border-primary/50 bg-white text-primary-strong"
+                            : isPast
+                              ? "text-muted/25"
+                              : isVisibleMonth
+                                ? "text-ink group-hover:text-primary-strong group-hover:outline group-hover:outline-primary/50"
+                                : "text-muted/35 group-hover:outline group-hover:outline-primary/50"
+                      }`}
+                    >
+                      {date.getUTCDate()}
+                      {hasStartTime ? (
+                        <span
+                          aria-hidden
+                          data-testid={`schedule-status-${dateKey}`}
+                          className={`absolute bottom-1 size-1 rounded-full ${activeDate === dateKey ? "bg-white" : "bg-primary"}`}
+                        />
+                      ) : null}
+                    </span>
+                  </button>
+                  {selected ? (
+                    <button
+                      type="button"
+                      onClick={() => onToggleDate(dateKey)}
+                      aria-label={t("schedule.removeDate", { date: fullDate })}
+                      className="group flex h-6 w-9 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary"
+                    >
+                      <span className="flex size-4 items-center justify-center rounded-full bg-muted/30 text-white transition group-hover:bg-primary">
+                        <XIcon className="size-3" />
+                      </span>
+                    </button>
+                  ) : null}
+                </div>
               );
             })}
           </div>
         </section>
 
-        <aside className="flex flex-col rounded-2xl border border-primary/35 bg-white p-5 shadow-[0_12px_30px_rgba(209,63,50,0.05)]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="font-display text-base font-bold text-ink">
-                {t("schedule.selectedTitle")}
-              </h2>
-              <p className="mt-1 text-xs text-muted">
-                {t("schedule.selectedCount", { count: selectedDateList.length })} ·{" "}
-                {t("schedule.sessionCount", { count: sessionCount })}
-              </p>
-            </div>
-            <CalendarDaysIcon className="size-5 text-primary" />
-          </div>
+        <aside className="min-w-0 px-1 lg:px-0" data-testid="schedule-time-panel">
+          <p className="sr-only" aria-live="polite">
+            {t("schedule.selectedCount", { count: selectedDateList.length })} ·{" "}
+            {t("schedule.sessionCount", { count: sessionCount })}
+          </p>
 
           {activeDate ? (
-            <div className="mt-5 min-h-0 flex-1">
-              <div className="flex items-center justify-between gap-3 border-b border-line-soft pb-4">
-                <div>
-                  <p className="text-xs font-semibold text-primary-strong">
-                    {t("schedule.editingDate")}
-                  </p>
-                  <h3 className="mt-1 text-sm font-bold text-ink">
-                    {formatScheduleDate(activeDate, locale, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onToggleDate(activeDate)}
-                  aria-label={t("schedule.removeDate", {
-                    date: formatScheduleDate(activeDate, locale, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }),
-                  })}
-                  className="flex size-8 items-center justify-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-                >
-                  <XIcon className="size-4" />
-                </button>
+            <div>
+              <label className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 text-sm text-ink lg:min-h-9">
+                <input
+                  type="checkbox"
+                  checked={applyToAll}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setApplyToAll(checked);
+                    if (checked) {
+                      const times = selectedDates.has(today.date)
+                        ? activeTimes.filter((time) => time > today.time)
+                        : activeTimes;
+                      for (const date of selectedDateList) onSetTimesForDate(date, times);
+                    }
+                  }}
+                  className="size-4 shrink-0 accent-primary"
+                />
+                {t("schedule.applyDateTimesToAll", { count: selectedDateList.length })}
+              </label>
+              <div
+                className="space-y-4 py-3 lg:space-y-3 lg:py-2"
+                data-testid="schedule-time-options"
+              >
+                {(["morning", "afternoon"] as const).map((period) => (
+                  <fieldset key={period} className="min-w-0">
+                    <legend className="mb-2 text-sm font-bold text-ink">
+                      {t(`schedule.${period}`)}
+                    </legend>
+                    <div className="grid grid-cols-4 gap-2 lg:grid-cols-5 lg:gap-1.5">
+                      {SCHEDULE_TIME_PRESETS.filter((time) =>
+                        period === "morning" ? time < "12:00" : time >= "12:00",
+                      ).map((time) => {
+                        const selected = activeTimes.includes(time);
+                        const elapsed = includesToday && time <= today.time;
+                        return (
+                          <button
+                            key={time}
+                            type="button"
+                            aria-pressed={selected}
+                            disabled={elapsed && !selected}
+                            data-testid={
+                              selected ? `schedule-time-${activeDate}-${time}` : undefined
+                            }
+                            onClick={() => togglePresetTime(time)}
+                            className={`min-h-11 rounded-lg border px-1 py-2 text-sm font-semibold tabular-nums transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:min-h-7 lg:py-1 lg:text-xs ${
+                              selected
+                                ? "border-primary bg-primary text-white"
+                                : "border-line-soft bg-white text-ink hover:border-primary hover:bg-primary-soft disabled:cursor-not-allowed disabled:border-line-soft disabled:bg-panel disabled:text-muted/35"
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                ))}
               </div>
-
-              <div className="space-y-4 py-5">
-                <div>
-                  <label htmlFor="custom-schedule-time" className="text-xs font-bold text-ink">
-                    {t("schedule.customTime")}
-                  </label>
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      id="custom-schedule-time"
-                      type="time"
-                      value={customTime}
-                      onChange={(event) => setCustomTime(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          addCustomTime();
-                        }
-                      }}
-                      className="min-w-0 flex-1 rounded-xl border border-line-strong bg-white px-3 py-2.5 text-sm font-semibold text-ink outline-none focus:border-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={addCustomTime}
-                      disabled={!customTime || isPastCustomTime || activeTimes.includes(customTime)}
-                      className="rounded-xl border border-primary bg-white px-3 text-xs font-bold text-primary transition hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:border-line-strong disabled:text-muted/35"
-                    >
-                      {t("schedule.addTime")}
-                    </button>
-                  </div>
-                  {isPastCustomTime ? (
-                    <p className="mt-2 text-xs font-semibold text-primary-strong">
-                      {t("schedule.pastTimeHint")}
-                    </p>
-                  ) : null}
-                </div>
-
-                {activeTimes.length ? (
-                  <div className="flex flex-wrap gap-2" aria-label={t("schedule.addedTimes")}>
-                    {activeTimes.map((time) => {
-                      const timeLabel = formatScheduleTime(time, locale);
+              {activeTimes.some((time) => !SCHEDULE_TIME_PRESETS.includes(time)) && (
+                <div
+                  role="group"
+                  aria-label={t("schedule.addedTimes")}
+                  className="grid grid-cols-3 gap-2 lg:grid-cols-4 lg:gap-1.5"
+                >
+                  {activeTimes
+                    .filter((time) => !SCHEDULE_TIME_PRESETS.includes(time))
+                    .map((time) => {
+                      const [hour, minute] = time.split(":");
+                      const periodLabel = t(Number(hour) < 12 ? "schedule.am" : "schedule.pm");
+                      const timeLabel = `${String(Number(hour) % 12 || 12).padStart(2, "0")}:${minute}`;
+                      const label = `${periodLabel} ${timeLabel}`;
                       return (
                         <div
                           key={time}
                           data-testid={`schedule-time-${activeDate}-${time}`}
-                          className="flex min-h-10 items-center gap-2 rounded-xl border border-primary bg-primary py-2 pr-2 pl-3 text-sm font-bold text-white shadow-[0_5px_14px_rgba(209,63,50,0.16)]"
+                          className="flex min-h-11 min-w-0 items-center justify-center rounded-lg border border-primary bg-primary px-0.5 text-[11px] font-semibold text-white tabular-nums min-[360px]:text-xs lg:min-h-7 lg:px-0 lg:text-[10px] xl:text-xs"
                         >
-                          <span>{timeLabel}</span>
+                          <span className="whitespace-nowrap">{label}</span>
                           <button
                             type="button"
                             onClick={() =>
-                              onSetTimesForDate(
-                                activeDate,
-                                activeTimes.filter((selectedTime) => selectedTime !== time),
-                              )
+                              updateTimes(activeTimes.filter((value) => value !== time))
                             }
                             aria-label={t("schedule.removeTime", {
                               date: formatScheduleDate(activeDate, locale, {
@@ -1363,34 +1400,85 @@ export function ScheduleStep({
                                 month: "long",
                                 day: "numeric",
                               }),
-                              time: timeLabel,
+                              time: label,
                             })}
-                            className="flex size-6 items-center justify-center rounded-full text-white/80 transition hover:bg-white/15 hover:text-white"
+                            className="flex size-6 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
                           >
                             <XIcon className="size-3.5" />
                           </button>
                         </div>
                       );
                     })}
+                </div>
+              )}
+              <fieldset className="mt-3 min-w-0 shrink-0 border-t border-line-soft pt-3">
+                <legend className="sr-only">{t("schedule.customTime")}</legend>
+                <p className="text-xs font-bold text-ink">{t("schedule.customTime")}</p>
+                <div className="mt-2 flex flex-wrap items-end gap-2">
+                  <div
+                    role="group"
+                    aria-label={t("schedule.timePeriod")}
+                    className="flex min-h-10 shrink-0 rounded-lg border border-line-strong p-0.5"
+                  >
+                    {(["am", "pm"] as const).map((period) => (
+                      <button
+                        key={period}
+                        type="button"
+                        aria-pressed={customPeriod === period}
+                        onClick={() => setCustomPeriod(period)}
+                        className={`rounded-md px-2 text-xs font-semibold transition ${customPeriod === period ? "bg-primary text-white" : "text-muted hover:bg-primary-soft"}`}
+                      >
+                        {t(`schedule.${period}`)}
+                      </button>
+                    ))}
                   </div>
-                ) : (
-                  <p className="rounded-xl border border-dashed border-line-strong px-4 py-5 text-center text-xs leading-5 text-muted">
-                    {t("schedule.noTimes")}
-                  </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-1">
+                    {(["hour", "minute"] as const).map((part, index) => (
+                      <span key={part} className="contents">
+                        {index > 0 && (
+                          <span aria-hidden className="text-muted">
+                            :
+                          </span>
+                        )}
+                        <label className="min-w-0 flex-1">
+                          <span className="sr-only">{t(`schedule.${part}`)}</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={2}
+                            autoComplete="off"
+                            value={part === "hour" ? customHour : customMinute}
+                            onChange={(event) =>
+                              (part === "hour" ? setCustomHour : setCustomMinute)(
+                                event.target.value.replace(/\D/g, "").slice(0, 2),
+                              )
+                            }
+                            placeholder={t(`schedule.${part}Placeholder`)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                addCustomTime();
+                              }
+                            }}
+                            className="h-10 w-full min-w-0 rounded-lg border border-line-strong px-1 text-center text-base font-semibold text-ink tabular-nums outline-none focus:border-primary"
+                          />
+                        </label>
+                      </span>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addCustomTime}
+                    disabled={!customTime || isPastCustomTime || activeTimes.includes(customTime)}
+                    className="min-h-10 shrink-0 rounded-lg border border-primary px-2 text-xs font-bold text-primary transition enabled:hover:bg-primary enabled:hover:text-white disabled:cursor-not-allowed disabled:border-line-strong disabled:text-muted/35"
+                  >
+                    {t("schedule.addTime")}
+                  </button>
+                </div>
+                {isPastCustomTime && (
+                  <p className="mt-2 text-xs text-primary-strong">{t("schedule.pastTimeHint")}</p>
                 )}
-              </div>
-
-              {selectedDateList.length > 1 ? (
-                <button
-                  type="button"
-                  disabled={!activeTimes.length}
-                  onClick={() => onApplyTimesToAll(activeDate)}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary bg-white px-4 py-3 text-sm font-bold text-primary-strong transition hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:border-line-strong disabled:text-muted/35"
-                >
-                  <CheckIcon className="size-4" />
-                  {t("schedule.applyDateTimesToAll", { count: selectedDateList.length })}
-                </button>
-              ) : null}
+              </fieldset>
             </div>
           ) : (
             <p className="mt-5 rounded-xl border border-dashed border-line-strong px-4 py-8 text-center text-sm leading-6 text-muted">
@@ -1399,8 +1487,6 @@ export function ScheduleStep({
           )}
         </aside>
       </div>
-      <p className="text-sm leading-6 text-muted">{t("schedule.notice")}</p>
-      <p className="text-sm leading-6 text-muted">{t("schedule.bookingWindowNotice")}</p>
     </div>
   );
 }
@@ -1409,32 +1495,44 @@ export function PriceStep({
   value,
   onChange,
   t,
-}: Readonly<{ value: string; onChange: (value: string) => void; t: Translator }>) {
+  referral = false,
+}: Readonly<{
+  value: string;
+  onChange: (value: string) => void;
+  t: Translator;
+  referral?: boolean;
+}>) {
   return (
-    <div className="mx-auto max-w-2xl py-6 text-center sm:py-12">
+    <div className="mx-auto max-w-2xl py-3 text-center lg:py-12">
       <label htmlFor="price-per-person" className="sr-only">
-        {t("fields.pricePerPerson")}
+        {t(referral ? "price.referralLabel" : "fields.pricePerPerson")}
       </label>
       <div className="flex items-center justify-center gap-2 border-b-2 border-line-strong px-2 py-3 focus-within:border-primary">
         <span className="font-display text-4xl font-extrabold text-ink sm:text-5xl">₩</span>
         <input
           id="price-per-person"
-          aria-describedby="price-minimum price-notice"
+          aria-describedby={referral ? "price-minimum" : "price-minimum price-notice"}
           autoFocus
           inputMode="numeric"
           pattern="[0-9]*"
           value={value}
-          onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))}
+          onChange={(event) =>
+            onChange(referral ? event.target.value : event.target.value.replace(/\D/g, ""))
+          }
           placeholder="0"
           className="max-w-[8ch] min-w-0 bg-transparent text-center font-display text-4xl font-extrabold tracking-tight text-ink outline-none placeholder:text-muted/25 focus-visible:!outline-none sm:text-5xl"
         />
       </div>
       <p id="price-minimum" className="mt-5 text-sm font-semibold text-primary">
-        {t("price.minimum", { amount: ACTIVITY_CREATE_LIMITS.pricePerPerson.min })}
+        {referral
+          ? t("price.referralMinimum")
+          : t("price.minimum", { amount: ACTIVITY_CREATE_LIMITS.pricePerPerson.min })}
       </p>
-      <p id="price-notice" className="mt-2 text-sm leading-6 text-muted">
-        {t("price.notice")}
-      </p>
+      {!referral && (
+        <p id="price-notice" className="mt-2 text-sm leading-6 text-muted">
+          {t("price.notice")}
+        </p>
+      )}
     </div>
   );
 }
@@ -1516,7 +1614,7 @@ export function InclusionsStep({
               aria-pressed={selected}
               disabled={!selected && !!validateActivityList([...lines, label].join("\n"))}
               onClick={() => toggle(key, label)}
-              className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`flex min-h-12 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-16 ${
                 selected
                   ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-[0_6px_18px_rgba(5,150,105,0.12)]"
                   : "border-line-strong text-ink hover:border-primary/60"
@@ -1635,7 +1733,7 @@ export function DiscountStep({
               type="button"
               aria-pressed={selected}
               onClick={() => onTypeChange(option)}
-              className={`flex min-h-28 w-full items-center gap-4 rounded-2xl border px-5 py-5 text-left transition ${
+              className={`flex min-h-20 w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition lg:min-h-28 lg:gap-4 lg:px-5 lg:py-5 ${
                 selected
                   ? "border-primary shadow-[0_8px_24px_rgba(209,63,50,0.08)]"
                   : "border-line-strong hover:border-primary/60"
@@ -1677,7 +1775,7 @@ export function DiscountStep({
                 type="number"
                 min="1"
                 max="100"
-                className={`${INPUT_CLASS} pr-12`}
+                className={`${INPUT_CLASS} pr-12 lg:pr-12`}
                 value={percent}
                 onChange={(event) => onPercentChange(event.target.value)}
                 placeholder={t("placeholders.discount")}
@@ -1745,7 +1843,10 @@ export function RestrictionsStep({
 
   return (
     <div className="w-full space-y-6">
-      <label className="flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border border-primary/45 bg-white px-4 text-sm font-bold text-ink transition hover:border-primary">
+      <label
+        aria-label={`${t("restrictions.none")} ${t("restrictions.noneDescription")}`}
+        className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-primary/45 bg-white px-4 text-sm font-bold text-ink transition hover:border-primary lg:min-h-16"
+      >
         <input
           type="checkbox"
           checked={hasNoRestrictions}
@@ -1783,7 +1884,7 @@ export function RestrictionsStep({
                 }
                 aria-pressed={selected}
                 onClick={() => toggle(key, label)}
-                className={`flex min-h-16 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`flex min-h-12 items-center gap-3 rounded-xl border px-4 text-left text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-16 ${
                   selected
                     ? "border-primary bg-primary-soft text-primary-strong shadow-[0_6px_18px_rgba(209,63,50,0.12)]"
                     : "border-line-strong bg-white text-ink hover:border-primary/60"
@@ -1881,10 +1982,16 @@ export function RestrictionsStep({
 }
 
 export function ReviewStep({
+  referral = false,
   draft,
   activityId,
   t,
-}: Readonly<{ draft: ActivityCreateDraft; activityId?: string; t: Translator }>) {
+}: Readonly<{
+  draft: ActivityCreateDraft;
+  activityId?: string;
+  t: Translator;
+  referral?: boolean;
+}>) {
   const locale = useLocale() as Locale;
   const tActivityDetail = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
@@ -1903,7 +2010,12 @@ export function ReviewStep({
 
   return (
     <div data-testid="activity-detail-preview">
-      <ActivityDetailView activity={activity} preview bottomBar="inline" unoptimizedImages />
+      <ActivityDetailView
+        activity={{ ...activity, activityType: referral ? "REFERRAL" : "STANDARD" }}
+        preview
+        bottomBar="inline"
+        unoptimizedImages
+      />
     </div>
   );
 }

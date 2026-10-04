@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { CheckIcon, ChevronDownIcon, GlobeIcon } from "@/components/ui/icons";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { reloadPolicyInLocale } from "@/lib/policy-locale-navigation";
 
 export const LOCALE_OPTIONS = [
   { code: "en", shortLabel: "EN", label: "English" },
@@ -74,6 +75,7 @@ export function LocaleSwitcher({
     setIsOpen(false);
     if (nextLocale !== locale) {
       if (onBeforeLocaleChange?.() === false) return;
+      if (reloadPolicyInLocale(pathname, nextLocale)) return;
       // usePathname은 쿼리를 뺀 경로만 준다 — ?scheduleId= 같은 파라미터가 유실되지 않게 붙여 준다
       const { search, hash } = window.location;
       router.replace(`${pathname}${search}${hash}`, { locale: nextLocale });

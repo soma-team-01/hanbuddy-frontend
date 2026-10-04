@@ -69,6 +69,7 @@ These Terms set out the rights, obligations and responsibilities of Zero One (th
 3. Payment providers’ policies may also apply to authorization, refund processing times and identity verification.
 4. The Company does not directly store full card numbers or payment passwords. Payment information is processed through payment providers.
 5. Platform fees charged to Buddies and VAT on those fees follow the [Buddy Commission and Settlement Policy](./buddy-commission-settlement-policy.en.md) and are shown separately in settlement statements.
+6. The maximum service provision period, from the time of payment until the end of the booked activity, is 3 months.
 
 ## Article 10. Cancellation, Refunds and Schedule Changes
 

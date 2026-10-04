@@ -9,6 +9,7 @@ import {
 import { extractImageKeyFromUrl } from "@/lib/images/presigned";
 import type { Activity, Session } from "@/types/activity";
 import type { MyActivityDetailResponse } from "@/types/buddy";
+import { isReferralPrice } from "@/lib/referral";
 
 export const ACTIVITY_CREATE_STEPS = [
   "host",
@@ -133,6 +134,7 @@ export type ActivityCreateErrorKey =
   | "maxGuestsTooMany"
   | "scheduleCapacityOccupied"
   | "priceInvalid"
+  | "referralPriceInvalid"
   | "inclusionsRequired"
   | "restrictionsRequired"
   | "discountInvalid";
@@ -193,6 +195,7 @@ export function isPastSchedule(
 export function validateActivityCreateStep(
   step: ActivityCreateStep,
   draft: ActivityCreateDraft,
+  referral = false,
 ): ActivityCreateErrorKey | null {
   switch (step) {
     case "host":
@@ -301,6 +304,11 @@ export function validateActivityCreateStep(
         ? null
         : "maxGuestsTooMany";
     case "price":
+      if (referral) {
+        return /^\d+$/.test(draft.pricePerPerson) && isReferralPrice(Number(draft.pricePerPerson))
+          ? null
+          : "referralPriceInvalid";
+      }
       return isPositiveInteger(draft.pricePerPerson) &&
         Number(draft.pricePerPerson) >= ACTIVITY_CREATE_LIMITS.pricePerPerson.min
         ? null

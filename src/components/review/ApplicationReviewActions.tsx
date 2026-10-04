@@ -92,11 +92,11 @@ export function ApplicationReviewActions({
         <div className="flex items-start gap-4">
           <span
             aria-hidden="true"
-            className="flex size-24 shrink-0 items-start justify-end pt-3 pr-1 text-line-strong md:size-28"
+            className="flex size-24 shrink-0 items-start justify-end pt-3 pr-1 text-line-strong max-md:hidden md:size-28"
           >
             <CornerDownRightIcon className="size-5" />
           </span>
-          <section className="min-w-0 flex-1 rounded-2xl border border-primary/30 p-4">
+          <section className="min-w-0 flex-1 rounded-2xl border border-primary/30 p-4 max-md:rounded-xl max-md:p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-display text-[11px] font-bold tracking-[0.12em] text-primary uppercase">
@@ -138,7 +138,10 @@ export function ApplicationReviewActions({
                 </button>
               </div>
             </div>
-            <TranslatedReviewContent review={review} className="mt-3" />
+            <TranslatedReviewContent
+              review={review}
+              className="mt-3 max-md:mt-2 max-md:[&>p]:leading-5"
+            />
           </section>
         </div>
       ) : (
@@ -150,7 +153,7 @@ export function ApplicationReviewActions({
           }}
           className={
             variant === "compact"
-              ? "h-9 w-full rounded-lg bg-primary px-4 font-display text-xs font-bold whitespace-nowrap text-on-primary transition-colors hover:bg-primary-hover sm:w-auto sm:min-w-32"
+              ? "h-9 w-full rounded-lg bg-primary px-4 font-display text-xs font-bold whitespace-nowrap text-on-primary transition-colors hover:bg-primary-hover max-md:h-8 max-md:w-auto max-md:min-w-16 max-md:px-3 max-md:text-[11px] md:w-auto md:min-w-32"
               : "h-11 w-full rounded-lg bg-primary font-display text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
           }
         >

@@ -111,6 +111,8 @@ describe("application view adapters", () => {
   });
   it("maps backend application fields to the existing card model", () => {
     expect(mapApplicationResponseToApplication(application, "Time unavailable.", "en")).toEqual({
+      activityType: "STANDARD",
+      guestCount: 2,
       id: "11",
       activityId: 42,
       status: "confirmed",

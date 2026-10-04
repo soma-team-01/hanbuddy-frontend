@@ -41,6 +41,7 @@ export interface ActivityItineraryItem {
 }
 
 export interface Activity {
+  activityType?: import("./referral").ActivityType;
   /** True only when the API actually returned a translated body, not for locale mismatch alone. */
   isTranslated?: boolean;
   id: string;
@@ -111,6 +112,7 @@ export interface TouristActivitySchedule {
 }
 
 export interface TouristActivitySummary {
+  activityType?: import("./referral").ActivityType;
   activityId: number;
   buddyId: number;
   title: string;

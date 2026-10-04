@@ -22,6 +22,7 @@ const CHAT_CLASS =
   "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-primary px-2.5 py-1 font-display text-xs font-bold text-primary transition-colors hover:border-primary-strong hover:text-primary-strong disabled:opacity-60";
 
 export function ScheduleActions({
+  referral = false,
   scheduleId,
   startAt,
   applicantCount,
@@ -30,6 +31,7 @@ export function ScheduleActions({
   menuPlacement = "inline",
   showCancelledBadge = true,
 }: Readonly<{
+  referral?: boolean;
   scheduleId: number;
   startAt: string;
   applicantCount: number;
@@ -197,13 +199,13 @@ export function ScheduleActions({
             menuPlacement === "card-header" ? "sr-only" : "max-w-64 text-right text-xs text-muted"
           }
         >
-          {t("success")}
+          {t(referral ? "referralSuccess" : "success")}
         </p>
       ) : null}
       {dialogOpen && !cancelled ? (
         <ConfirmDialog
           title={t("title")}
-          description={t("irreversible")}
+          description={t(referral ? "referralIrreversible" : "irreversible")}
           descriptionClassName="text-sm leading-6"
           cancelVariant="outline"
           cancelLabel={t("keep")}

@@ -41,6 +41,14 @@ afterEach(() => {
 });
 
 describe("anonymous public activity documents", () => {
+  it("preserves referral type in both initial list and detail documents", async () => {
+    respond(success([{ ...activity, activityType: "REFERRAL", price: 0 }]));
+    expect((await getPublicActivities("ko"))[0].activityType).toBe("REFERRAL");
+    respond(success({ ...activity, activityType: "REFERRAL", price: 0 }));
+    expect((await getPublicActivity("42", "ko")).activityType).toBe("REFERRAL");
+    respond(success({ ...activity, activityType: "UNKNOWN" }));
+    await expect(getPublicActivity("42", "ko")).rejects.toMatchObject({ kind: "unavailable" });
+  });
   it("forwards date without authentication and preserves public schedule capacity", async () => {
     respond(success([activity]));
     await getPublicActivities("ko", "2026-10-10");

@@ -14,6 +14,7 @@ import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { TouristActivityDetail } from "@/types/activity";
 import type { PolicyDocumentData } from "@/types/policy";
 import { BookingForm } from "./booking-form";
+import { ReferralBookingForm } from "@/components/referral/ReferralBookingForm";
 
 function getPayPalUnitPriceUsd(detail: TouristActivityDetail | undefined): number | undefined {
   if (detail?.displayPrice?.currency !== "USD") return undefined;
@@ -40,7 +41,10 @@ export function BookingContent({
   // 화면 참고 가격과 별개로 PayPal 버튼에는 실제 결제 통화인 USD 예상액을 표시한다.
   const payPalActivityQuery = useQuery({
     ...touristActivityQueryOptions(activityId, language, "USD"),
-    enabled: needsPayPalUsdEstimate,
+    enabled:
+      needsPayPalUsdEstimate &&
+      activityQuery.data?.activityType !== "REFERRAL" &&
+      !!activityQuery.data,
   });
   const t = useTranslations("Booking");
   const tErrors = useTranslations("Errors");
@@ -75,6 +79,9 @@ export function BookingContent({
       </PageContainer>
     );
   }
+
+  if (activity.activityType === "REFERRAL")
+    return <ReferralBookingForm activity={activity} initialSessionId={initialScheduleId} />;
 
   return (
     <BookingForm

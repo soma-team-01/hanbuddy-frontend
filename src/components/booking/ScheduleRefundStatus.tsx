@@ -58,11 +58,12 @@ export function useApplicationScheduleRefundQuery(applicationId: string, enabled
 
 export function ApplicationScheduleRefundStatus({
   query,
-}: Readonly<{ query: ReturnType<typeof useApplicationScheduleRefundQuery> }>) {
+  className = "",
+}: Readonly<{ query: ReturnType<typeof useApplicationScheduleRefundQuery>; className?: string }>) {
   const t = useTranslations("ScheduleCancellation");
   const getApiErrorMessage = useApiErrorMessage();
   return (
-    <div className="mt-2">
+    <div className={`mt-2 ${className}`}>
       {query.data ? (
         <ScheduleRefundStatus task={query.data} />
       ) : (

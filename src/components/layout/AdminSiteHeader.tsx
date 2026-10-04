@@ -68,6 +68,14 @@ export function AdminSiteHeader({ authenticated }: Readonly<{ authenticated: boo
   const navigation = (
     <nav aria-label="관리자 메뉴" className="flex flex-col gap-1">
       <Link
+        href="/admin/referrals"
+        aria-current={pathname.startsWith("/admin/referrals") ? "page" : undefined}
+        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold ${pathname.startsWith("/admin/referrals") ? "bg-primary-soft text-primary-strong" : "text-muted hover:bg-panel hover:text-ink"}`}
+      >
+        <UsersIcon className="size-5" />
+        제휴 활동
+      </Link>
+      <Link
         href="/admin/users"
         aria-current={memberActive ? "page" : undefined}
         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${

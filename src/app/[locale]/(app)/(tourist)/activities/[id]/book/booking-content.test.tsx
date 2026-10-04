@@ -1,6 +1,8 @@
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { createTestAnalytics } from "@/test/analytics";
 import { getMyProfile } from "@/lib/api/users";
+import { getReferralNotice, submitReferralApplication } from "@/lib/api/referral";
+import { createApplication } from "@/lib/api/applications";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivity } from "@/lib/api/activities";
@@ -26,6 +28,10 @@ vi.mock("@/lib/api/applications", () => ({
 }));
 
 vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn() }));
+vi.mock("@/lib/api/referral", () => ({
+  getReferralNotice: vi.fn(),
+  submitReferralApplication: vi.fn(),
+}));
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
 beforeEach(() => {
@@ -83,6 +89,34 @@ describe("BookingContent", () => {
     mockedGetTouristActivity.mockReset();
   });
 
+  it("routes referral applications away from payment and USD estimates", async () => {
+    mockedGetTouristActivity.mockResolvedValue({
+      status: "success",
+      activity: { ...cnyActivityDetail, activityType: "REFERRAL", price: 0 },
+    });
+    vi.mocked(getReferralNotice).mockResolvedValue({
+      status: "success",
+      data: {
+        activityId: 42,
+        partnerUserId: 7,
+        partnerName: "Seoul studio",
+        consentVersion: "referral-v1",
+        sharedFields: ["Name", "Contact"],
+        purpose: "Consultation",
+        serviceNotice: "Fees are confirmed separately.",
+      },
+    });
+    vi.mocked(submitReferralApplication).mockClear();
+    vi.mocked(createApplication).mockClear();
+    renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
+    await screen.findByText("Consultation");
+    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    expect(screen.queryByText(/PayPal|Toss/)).not.toBeInTheDocument();
+    expect(mockedGetTouristActivity.mock.calls.every((call) => call[2] === "CNY")).toBe(true);
+    expect(createApplication).not.toHaveBeenCalled();
+    expect(submitReferralApplication).not.toHaveBeenCalled();
+  });
+
   it("renders booking form with activity detail loaded from the API", async () => {
     mockedGetTouristActivity.mockResolvedValue({
       status: "success",
@@ -116,7 +150,9 @@ describe("BookingContent", () => {
     renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
 
     expect(await screen.findByText("≈ ¥240.00")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Pay US$32.50 with PayPal" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Pay US$32.50 with PayPal" }),
+    ).toBeInTheDocument();
     expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "ZH_HANS", "CNY");
     expect(mockedGetTouristActivity).toHaveBeenCalledWith("42", "ZH_HANS", "USD");
   });

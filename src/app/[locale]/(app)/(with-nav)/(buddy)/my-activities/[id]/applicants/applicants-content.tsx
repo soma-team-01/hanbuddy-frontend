@@ -157,6 +157,7 @@ export function ApplicantsContent({
       {applications ? (
         <div className="mt-4 flex justify-end">
           <ScheduleActions
+            referral={activityQuery.data?.activityType === "REFERRAL"}
             key={scheduleId}
             scheduleId={Number(scheduleId)}
             startAt={applications.startAt}

@@ -28,6 +28,22 @@ function flatten(value: unknown, prefix = ""): Record<string, string> {
 }
 
 describe("locale messages", () => {
+  it.each(localeMessages)("uses an English activity title example in %s", (_, messages) => {
+    expect(messages.CreateActivity.placeholders.experienceName).toBe(
+      "e.g. Korean Baseball Fan Night",
+    );
+  });
+
+  it("uses shared wording for activity steps and product offerings", () => {
+    expect(ko.CreateActivity.steps.itinerary).toEqual({
+      title: "활동 구성을 소개해 주세요",
+      description: "진행할 활동이나 제공할 상품을 항목별로 추가해 주세요.",
+    });
+    expect(ko.CreateActivity.itinerary.item).toBe("항목 {index, number}");
+    expect(ko.CreateActivity.itinerary.add).toBe("항목 추가하기");
+    expect(ko.CreateActivity.itinerary.untitled).toBe("새 항목");
+  });
+
   it.each(localeMessages)("keeps the %s key contract identical to English", (_, messages) => {
     expect(Object.keys(flatten(messages)).sort()).toEqual(Object.keys(flatten(en)).sort());
   });

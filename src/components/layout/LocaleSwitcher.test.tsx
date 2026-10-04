@@ -5,6 +5,8 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
 const pathnameMock = vi.hoisted(() => ({ value: "/my-activities/42/applicants" }));
+const reloadPolicyMock = vi.hoisted(() => vi.fn(() => false));
+vi.mock("@/lib/policy-locale-navigation", () => ({ reloadPolicyInLocale: reloadPolicyMock }));
 
 vi.mock("@/i18n/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/i18n/navigation")>()),
@@ -15,6 +17,8 @@ vi.mock("@/i18n/navigation", async (importOriginal) => ({
 describe("LocaleSwitcher", () => {
   beforeEach(() => {
     routerMock.replace.mockReset();
+    pathnameMock.value = "/my-activities/42/applicants";
+    reloadPolicyMock.mockReset().mockReturnValue(false);
     window.history.replaceState(null, "", "/en/my-activities/42/applicants?scheduleId=99");
   });
 
@@ -28,6 +32,16 @@ describe("LocaleSwitcher", () => {
     expect(routerMock.replace).toHaveBeenCalledWith("/my-activities/42/applicants?scheduleId=99", {
       locale: "ko",
     });
+  });
+
+  it("reloads policy documents instead of retaining an old-language overlay", () => {
+    pathnameMock.value = "/policies/terms-of-service";
+    reloadPolicyMock.mockReturnValue(true);
+    renderWithIntl(<LocaleSwitcher />, { locale: "en" });
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
+    expect(reloadPolicyMock).toHaveBeenCalledWith("/policies/terms-of-service", "ko");
+    expect(routerMock.replace).not.toHaveBeenCalled();
   });
 
   it("does not navigate when the same locale is picked", () => {

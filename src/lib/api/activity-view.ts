@@ -23,6 +23,7 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
   const hasReferencePrice = displayPrice.currency !== "KRW";
 
   return {
+    activityType: summary.activityType ?? "STANDARD",
     id: String(summary.activityId),
     title: summary.title,
     description: summary.description,

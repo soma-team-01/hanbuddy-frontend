@@ -144,13 +144,7 @@ export function ReferralInvitations({
     setIssuedLink("");
     setCopied(false);
     try {
-      const result = unwrapApiResult(
-        await issueReferralInvitation(
-          selected.buddyId,
-          new Date(Date.now() + days * 86400000).toISOString(),
-        ),
-        "data",
-      );
+      const result = unwrapApiResult(await issueReferralInvitation(selected.buddyId, days), "data");
       if (!result.code) throw new Error("Invitation code unavailable");
       setIssuedFor({ id: result.invitationId, name: selected.displayName });
       setIssuedLink(

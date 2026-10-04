@@ -275,6 +275,7 @@ describe("activity-first referral admin", () => {
     expect(screen.queryByText("s***@example.com")).not.toBeInTheDocument();
     expect(getAdminBuddy).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getAllByRole("radio")[0]);
+    fireEvent.change(screen.getByLabelText("유효 기간"), { target: { value: "30" } });
     fireEvent.click(screen.getByRole("button", { name: "링크 발급" }));
     expect(screen.getByLabelText("업체 검색")).toBeDisabled();
     expect(screen.getByLabelText("유효 기간")).toBeDisabled();
@@ -292,7 +293,7 @@ describe("activity-first referral admin", () => {
     expect(
       ((await screen.findByLabelText("발급된 등록 링크")) as HTMLInputElement).value,
     ).toContain("#code=");
-    expect(issueReferralInvitation).toHaveBeenCalledExactlyOnceWith(7, expect.any(String));
+    expect(issueReferralInvitation).toHaveBeenCalledExactlyOnceWith(7, 30);
     fireEvent.click(screen.getByRole("button", { name: "등록 링크 닫기" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

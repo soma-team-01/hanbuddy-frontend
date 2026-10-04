@@ -52,8 +52,8 @@ export const updateReferralActivity = (id: string, activity: ReferralActivityReq
     referralActivityPayload(activity),
     "PATCH",
   );
-export const issueReferralInvitation = (buddyId: number, expiresAt: string) =>
-  send<ReferralInvitation>("/api/admin/referral-invitations", { buddyId, expiresAt });
+export const issueReferralInvitation = (buddyId: number, validityDays: number) =>
+  send<ReferralInvitation>("/api/admin/referral-invitations", { buddyId, validityDays });
 export const revokeReferralInvitation = (id: number) =>
   send<ReferralInvitation>(`/api/admin/referral-invitations/${id}/revoke`);
 export const getReferralInvitations = (page = 0) =>

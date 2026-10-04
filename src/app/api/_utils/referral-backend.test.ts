@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getBackend, patchBackend, postBackend } from "@/lib/auth/backend";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { handleReferralRoute } from "./referral-backend";
@@ -27,6 +27,7 @@ function req(method = "GET", body?: object, query = "", token = true) {
 }
 const context = { params: Promise.resolve({ activityId: "3" }) };
 describe("referral BFF", () => {
+  afterEach(() => vi.restoreAllMocks());
   beforeEach(() => {
     vi.mocked(getBackend)
       .mockReset()
@@ -44,6 +45,62 @@ describe("referral BFF", () => {
     );
     vi.mocked(getBackend).mockResolvedValue(ok({ userType: "BUDDY" }));
     expect((await handleReferralRoute(req("POST", {}), ["invitations"], true)).status).toBe(403);
+    expect(postBackend).not.toHaveBeenCalled();
+  });
+  it.each([1, 7, 14, 30])(
+    "calculates %i-day invitations from server time",
+    async (validityDays) => {
+      const now = Date.parse("2026-10-04T10:00:00Z");
+      vi.spyOn(Date, "now").mockReturnValue(now);
+      const response = await handleReferralRoute(
+        req("POST", { buddyId: 7, validityDays }),
+        ["invitations"],
+        true,
+      );
+      expect(response.status).toBe(200);
+      const expiresAt = new Date(
+        now + validityDays * 86_400_000 - (validityDays === 30 ? 600_000 : 0),
+      ).toISOString();
+      expect(postBackend).toHaveBeenCalledWith(
+        "/admin/referral-invitations",
+        { buddyId: 7, expiresAt },
+        { bearerToken: "token" },
+      );
+      // The 30-day expiry also remains below the backend cap when its clock is five minutes behind.
+      if (validityDays === 30)
+        expect(Date.parse(expiresAt)).toBeLessThan(now - 300_000 + 30 * 86_400_000);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    },
+  );
+  it.each([0, -1, 31, 1.5, "30", null, {}, Number.MAX_SAFE_INTEGER])(
+    "rejects invalid validityDays %j without falling back to expiresAt",
+    async (validityDays) => {
+      for (const extra of [{}, { expiresAt: new Date(Date.now() + 86_400_000).toISOString() }]) {
+        const response = await handleReferralRoute(
+          req("POST", { buddyId: 7, validityDays, ...extra }),
+          ["invitations"],
+          true,
+        );
+        expect(response.status).toBe(400);
+      }
+      expect(postBackend).not.toHaveBeenCalled();
+    },
+  );
+  it("rejects ambiguous expiry formats and legacy dates outside the original limit", async () => {
+    const now = Date.parse("2026-10-04T10:00:00Z");
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    for (const input of [
+      { validityDays: 30, expiresAt: new Date(now + 86_400_000).toISOString() },
+      {},
+      { expiresAt: "invalid" },
+      { expiresAt: new Date(now).toISOString() },
+      { expiresAt: new Date(now + 30 * 86_400_000 + 1).toISOString() },
+    ]) {
+      expect(
+        (await handleReferralRoute(req("POST", { buddyId: 7, ...input }), ["invitations"], true))
+          .status,
+      ).toBe(400);
+    }
     expect(postBackend).not.toHaveBeenCalled();
   });
   it("allows public notice but authenticates applications", async () => {

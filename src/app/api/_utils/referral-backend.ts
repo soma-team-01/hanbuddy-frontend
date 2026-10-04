@@ -11,6 +11,34 @@ import {
 } from "./authenticated-backend";
 import { positiveReferralId, referralActivityPayload, referralQuery } from "@/lib/referral";
 
+const DAY_MS = 86_400_000;
+const MAX_INVITATION_DAYS = 30;
+const INVITATION_CLOCK_MARGIN_MS = 10 * 60_000;
+
+function resolveInvitationExpiry(body: Record<string, unknown>, now = Date.now()): string | null {
+  if ("validityDays" in body) {
+    const days = body.validityDays;
+    if (
+      "expiresAt" in body ||
+      typeof days !== "number" ||
+      !Number.isInteger(days) ||
+      days < 1 ||
+      days > MAX_INVITATION_DAYS
+    )
+      return null;
+    // Leave room for small BFF/backend clock differences at the backend's 30-day cap.
+    const margin = days === MAX_INVITATION_DAYS ? INVITATION_CLOCK_MARGIN_MS : 0;
+    return new Date(now + days * DAY_MS - margin).toISOString();
+  }
+
+  // Keep accepting absolute timestamps from already-deployed frontend bundles.
+  if (typeof body.expiresAt !== "string") return null;
+  const expires = Date.parse(body.expiresAt);
+  return Number.isFinite(expires) && expires > now && expires <= now + MAX_INVITATION_DAYS * DAY_MS
+    ? body.expiresAt
+    : null;
+}
+
 /** Invitation bodies/PII must never be included in caught error logs. */
 export async function referralProxy(
   request: NextRequest,
@@ -77,17 +105,11 @@ export async function handleReferralRoute(request: NextRequest, segments: string
       const body = parsed.body;
       if (admin && resource === "invitations" && segments.length === 1) {
         positiveReferralId(String(body.buddyId));
-        const expires =
-          typeof body.expiresAt === "string" ? Date.parse(body.expiresAt) : Number.NaN;
-        if (
-          !Number.isFinite(expires) ||
-          expires <= Date.now() ||
-          expires > Date.now() + 30 * 86400000
-        )
-          return badRequestResponse("만료일은 현재 이후 30일 이내로 선택해 주세요.");
+        const expiresAt = resolveInvitationExpiry(body);
+        if (!expiresAt) return badRequestResponse("만료일은 현재 이후 30일 이내로 선택해 주세요.");
         return referralProxy(request, "/admin/referral-invitations", {
           buddyId: body.buddyId,
-          expiresAt: body.expiresAt,
+          expiresAt,
         });
       }
       if (

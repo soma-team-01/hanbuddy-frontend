@@ -3,6 +3,7 @@ import {
   createReferralActivity,
   updateReferralActivity,
   submitReferralApplication,
+  issueReferralInvitation,
 } from "./referral";
 import type { ReferralActivityRequest } from "@/types/referral";
 
@@ -26,7 +27,35 @@ const activity: ReferralActivityRequest = {
 };
 
 describe("referral activity API", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+  it.each([-172_800_000, 172_800_000])(
+    "sends validity days without using browser time (%i ms skew)",
+    async (skew) => {
+      vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-10-04T10:00:00Z") + skew);
+      const fetchMock = vi.fn().mockImplementation(
+        async () =>
+          new Response(
+            JSON.stringify({
+              isSuccess: true,
+              code: "200",
+              message: "OK",
+              result: { invitationId: 1 },
+            }),
+            { headers: { "Content-Type": "application/json" } },
+          ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      for (const validityDays of [1, 7, 14, 30]) {
+        await issueReferralInvitation(7, validityDays);
+        const [path, options] = fetchMock.mock.calls.at(-1)!;
+        expect(path).toBe("/api/admin/referral-invitations");
+        expect(JSON.parse(options.body)).toEqual({ buddyId: 7, validityDays });
+      }
+    },
+  );
   it.each([undefined, 7])(
     "sends only explicit reapplication IDs (%s) through the same-origin BFF",
     async (reapplyFromApplicationId) => {

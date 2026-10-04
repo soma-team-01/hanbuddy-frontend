@@ -1,6 +1,6 @@
 {
   "Referral": {
-    "messagePlaceholder": "如有想对伙伴说的话，请在这里填写。",
+    "messagePlaceholder": "如有想对好友说的话，请在这里填写。",
     "summaryTitle": "申请信息",
     "sharingTitle": "向商家提供个人信息的说明",
     "servicePrice": "服务价格",
@@ -224,9 +224,10 @@
     "home": "首页",
     "explore": "探索",
     "about": "关于我们",
+    "faq": "常见问题",
     "applications": "我的预订",
     "dashboard": "仪表板",
-    "buddyWorkspace": "伙伴管理",
+    "buddyWorkspace": "好友管理",
     "myActivities": "我的活动",
     "applicants": "申请人",
     "createActivity": "创建活动",
@@ -254,15 +255,15 @@
   },
   "Landing": {
     "metadataTitle": "HanBuddy | 像当地人一样体验韩国",
-    "metadataDescription": "HanBuddy 连接在韩国生活或旅行的外国人与韩国当地伙伴。预订由当地人发起并全程同行的首尔小团体验。",
-    "eyebrow": "首尔 · 当地伙伴带你体验",
+    "metadataDescription": "HanBuddy 连接在韩国生活或旅行的外国人与韩国本地好友。预订由当地人发起并全程同行的首尔小团体验。",
+    "eyebrow": "首尔 · 本地好友带你体验",
     "headline": "像当地人一样体验韩国！",
-    "tagline": "和当地伙伴一起出发，带着新朋友回来。",
+    "tagline": "和本地好友一起出发，带着新朋友回来。",
     "description": "HanBuddy 为你连接发起小团体验并全程同行的韩国当地人。",
     "exploreExperiences": "探索体验",
     "highlights": {
       "localPerspective": {
-        "title": "当地伙伴",
+        "title": "本地好友",
         "description": "由韩国当地人发起并陪你同行。"
       },
       "realConnection": {
@@ -277,7 +278,7 @@
     "booking": {
       "eyebrow": "预订方式",
       "title": "三个简单步骤，预订韩国体验",
-      "description": "选择体验与日期，然后与当地伙伴见面。",
+      "description": "选择体验与日期，然后与本地好友见面。",
       "steps": {
         "experience": {
           "title": "选择体验",
@@ -405,7 +406,7 @@
         "food": {
           "title": "讲述美食背后的故事",
           "description": "通过使其有意义的记忆和习俗来介绍市场、咖啡馆或休闲食品。",
-          "imageAlt": "当地小伙伴与游客分享韩国市场美食"
+          "imageAlt": "本地好友与游客分享韩国市场美食"
         }
       }
     },
@@ -547,7 +548,7 @@
       "next": {
         "date": "2026 年冬季",
         "title": "室内运动与合作体验",
-        "description": "随着棒球赛季结束，我们正在筹备篮球、排球等室内运动，以及 K-Beauty、本地美食等合作体验。"
+        "description": "随着棒球赛季结束，我们正在筹备篮球、排球等室内运动，以及 <nowrap>K-Beauty</nowrap>、本地美食等合作体验。"
       }
     },
     "team": {
@@ -578,6 +579,8 @@
       "button": "成为好友"
     },
     "faq": {
+      "metadataTitle": "HanBuddy 常见问题 | 预订、付款与当天安排",
+      "metadataDescription": "解答旅客在预订 HanBuddy 体验前最常问的问题：好友是谁、如何付款、价格包含什么、在哪里集合，以及如何取消。",
       "eyebrow": "常见问题",
       "title": "旅客预订前常问的问题",
       "items": {
@@ -755,25 +758,25 @@
     "title": "完成您的好友个人资料",
     "metadataTitle": "创建您的好友个人资料 |汉巴迪",
     "metadataDescription": "完成您的好友资料并开始与 HanBuddy 一起举办本地体验。",
-    "eyebrow": "欢迎，未来的伙伴",
+    "eyebrow": "欢迎，未来的好友",
     "headline": "一些细节，然后您的本地故事就可以开始了。",
-    "description": "请填写伙伴注册指引所需的基本信息。注册后可继续补充活动运营信息。",
+    "description": "请填写好友注册指引所需的基本信息。注册后可继续补充活动运营信息。",
     "profilePhotoOptional": "选择一张清晰的脸部照片，以便客人在见面时能够认出您。",
     "contactMethods": "联系方式与收款信息",
-    "contactDescription": "请输入工作人员可用于提供伙伴注册说明的电话号码。",
+    "contactDescription": "请输入工作人员可用于提供好友注册说明的电话号码。",
     "completing": "正在创建好友帐户...",
     "completeRegistration": "注册成为好友"
   },
   "BuddyResubmission": {
-    "metadataTitle": "重新提交伙伴申请 | HanBuddy",
-    "metadataDescription": "修改伙伴资料并再次提交审核。",
-    "title": "重新提交伙伴申请",
+    "metadataTitle": "重新提交好友申请 | HanBuddy",
+    "metadataDescription": "修改好友资料并再次提交审核。",
+    "title": "重新提交好友申请",
     "eyebrow": "再次申请",
     "headline": "完善资料并再次请求审核。",
     "description": "之前填写的资料已载入。已有同意事项将继续有效。",
     "profilePhotoOptional": "可以保留、替换或删除当前照片。",
     "contactMethods": "请填写可联系您的电话号码。",
-    "contactDescription": "请输入工作人员可用于提供伙伴注册说明的电话号码。",
+    "contactDescription": "请输入工作人员可用于提供好友注册说明的电话号码。",
     "rejectionReason": "上次未通过的原因",
     "removeProfilePhoto": "删除头像",
     "submit": "再次提交审核",
@@ -791,8 +794,8 @@
     "metadataTitle": "账户状态 |汉巴迪",
     "metadataDescription": "查看您的HanBuddy帐号的审核状态。",
     "pending": {
-      "title": "等待伙伴注册指引",
-      "description": "工作人员将通过您注册时填写的电子邮箱或电话号码与您联系，并提供伙伴注册说明。",
+      "title": "等待好友注册指引",
+      "description": "工作人员将通过您注册时填写的电子邮箱或电话号码与您联系，并提供好友注册说明。",
       "touristDescription": "您的账户正在审核中。审核完成后即可使用HanBuddy。",
       "reviewTime": "我们将在1至3个工作日内联系您"
     },
@@ -870,7 +873,7 @@
     "description": "与您身边的当地好友一起探索韩国。",
     "loading": "正在加载活动...",
     "empty": "尚无活动。",
-    "emptyDescription": "当地的小伙伴正在准备新的体验。请尽快回来查看！",
+    "emptyDescription": "本地好友正在准备新的体验。请尽快回来查看！",
     "loadError": "无法加载活动。",
     "perPersonLabel": "每人",
     "estimatedPrice": "参考价格",

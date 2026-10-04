@@ -100,6 +100,15 @@ describe("SiteFooter", () => {
     expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/about`);
   });
 
+  it.each([
+    ["en", "FAQ"],
+    ["ko", "자주 묻는 질문"],
+  ] as const)("links the FAQ page for %s", async (locale, label) => {
+    renderWithIntl(await SiteFooter({ locale }), { locale });
+
+    expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/faq`);
+  });
+
   it("groups compact mobile links and retains desktop touch targets", async () => {
     renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });
 

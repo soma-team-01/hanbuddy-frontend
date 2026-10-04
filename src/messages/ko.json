@@ -224,6 +224,7 @@
     "home": "홈",
     "explore": "탐색",
     "about": "소개",
+    "faq": "자주 묻는 질문",
     "applications": "내 신청",
     "dashboard": "대시보드",
     "buddyWorkspace": "버디 워크스페이스",
@@ -547,7 +548,7 @@
       "next": {
         "date": "2026년 겨울",
         "title": "실내 스포츠와 파트너 활동",
-        "description": "야구 시즌이 끝나면서 농구·배구 같은 실내 스포츠와 K-뷰티·로컬 푸드 같은 파트너 활동을 준비하고 있습니다."
+        "description": "야구 시즌이 끝나면서 농구·배구 같은 실내 스포츠와 <nowrap>K-뷰티</nowrap>·로컬 푸드 같은 파트너 활동을 준비하고 있습니다."
       }
     },
     "team": {
@@ -578,6 +579,8 @@
       "button": "버디 되기"
     },
     "faq": {
+      "metadataTitle": "HanBuddy 자주 묻는 질문 | 예약·결제·당일 안내",
+      "metadataDescription": "HanBuddy 활동을 예약하기 전에 게스트가 자주 묻는 질문에 답합니다. 버디는 누구인지, 결제 방법, 포함 내역, 만남 장소, 취소 규정을 확인하세요.",
       "eyebrow": "자주 묻는 질문",
       "title": "예약 전에 게스트가 자주 묻는 질문",
       "items": {

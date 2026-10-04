@@ -123,20 +123,24 @@ describe("AboutPage", () => {
     expect(screen.getByRole("link", { name: button })).toHaveAttribute("href", `/${locale}/buddy`);
   });
 
-  it("answers the questions guests ask before booking", async () => {
+  it.each([
+    ["en", "Questions guests ask before booking"],
+    ["ko", "예약 전에 게스트가 자주 묻는 질문"],
+  ] as const)("sends booking questions to the FAQ page for %s", async (locale, label) => {
+    await renderAbout(locale);
+
+    // FAQ 본문은 /faq에만 둔다. About에는 같은 문답을 중복해서 싣지 않는다.
+    expect(screen.queryByText(/Online with PayPal|PayPal로 온라인 결제/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/faq`);
+  });
+
+  it("keeps K-beauty on one line in the winter plan", async () => {
     await renderAbout("en");
 
-    const faq = screen.getByRole("region", { name: "Questions guests ask before booking" });
-    const questions = within(faq).getAllByRole("term");
-    expect(questions).toHaveLength(10);
-    expect(questions[0]).toHaveTextContent("What is HanBuddy?");
-    for (const question of questions) {
-      expect(question.nextElementSibling?.tagName).toBe("DD");
-      expect(question.nextElementSibling?.textContent).not.toBe("");
-    }
-    expect(within(faq).getByText(/Online with PayPal/)).toBeInTheDocument();
-    expect(within(faq).getByText(/Need another payment method\?/)).toBeInTheDocument();
-    expect(within(faq).getByText(/Special Requests/)).toBeInTheDocument();
+    expect(screen.getByText("K-beauty")).toHaveClass("whitespace-nowrap");
+    expect(screen.getByText(/plus partner experiences such as/)).toHaveTextContent(
+      "plus partner experiences such as K-beauty and local food.",
+    );
   });
 
   it.each([

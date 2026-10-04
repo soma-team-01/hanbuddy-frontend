@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   urls.add(`${APP_ORIGIN}/ko/buddy`);
   for (const locale of LOCALES) {
     urls.add(`${APP_ORIGIN}/${locale}/about`);
+    urls.add(`${APP_ORIGIN}/${locale}/faq`);
     const activities = await getPublicActivities(locale);
     urls.add(`${APP_ORIGIN}/${locale}/explore`);
     const ids = [...new Set(activities.map(({ activityId }) => String(activityId)))];

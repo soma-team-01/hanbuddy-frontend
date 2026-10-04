@@ -224,6 +224,7 @@
     "home": "Home",
     "explore": "Explore",
     "about": "About",
+    "faq": "FAQ",
     "applications": "My Applications",
     "dashboard": "Dashboard",
     "buddyWorkspace": "Buddy workspace",
@@ -547,7 +548,7 @@
       "next": {
         "date": "Winter 2026",
         "title": "Indoor sports and partner experiences",
-        "description": "As the baseball season ends, we are lining up indoor sports like basketball and volleyball, plus partner experiences such as K-beauty and local food."
+        "description": "As the baseball season ends, we are lining up indoor sports like basketball and volleyball, plus partner experiences such as <nowrap>K-beauty</nowrap> and local food."
       }
     },
     "team": {
@@ -578,6 +579,8 @@
       "button": "Become a buddy"
     },
     "faq": {
+      "metadataTitle": "HanBuddy FAQ | Booking, payment and what to expect",
+      "metadataDescription": "Answers to what guests ask before booking a HanBuddy experience: who the buddies are, how to pay, what is included, where to meet, and how cancellations work.",
       "eyebrow": "FAQ",
       "title": "Questions guests ask before booking",
       "items": {

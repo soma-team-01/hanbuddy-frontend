@@ -3,6 +3,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
+import { createReferralActivity, updateReferralActivity } from "@/lib/api/referral";
 import { createApiClientError } from "@/lib/api/errors";
 import { getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyKeys } from "@/lib/query/buddy";
@@ -61,6 +62,11 @@ vi.mock("@/lib/api/buddy", async (importOriginal) => ({
   createMyActivity: vi.fn(),
   updateMyActivity: vi.fn(),
   getMyActivity: vi.fn(),
+}));
+
+vi.mock("@/lib/api/referral", () => ({
+  createReferralActivity: vi.fn(),
+  updateReferralActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/api/useMyProfile", () => ({
@@ -162,7 +168,7 @@ async function fillStepsUntilSchedule(reorder = false) {
   }
   clickNext();
 
-  fireEvent.click(screen.getByRole("button", { name: "Add an activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add an item" }));
   fireEvent.change(screen.getByLabelText("Upload a photo for activity 1"), {
     target: { files: [photos[0]] },
   });
@@ -201,9 +207,8 @@ async function completeAllStepsUntilReview(reorder = false) {
 
   fireEvent.click(screen.getByRole("button", { name: "Next month" }));
   fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
-  fireEvent.change(screen.getByLabelText("Add a start time"), {
-    target: { value: "10:00" },
-  });
+  fireEvent.change(screen.getByLabelText("Hour (1–12)"), { target: { value: "10" } });
+  fireEvent.change(screen.getByLabelText("Minute (0–59)"), { target: { value: "00" } });
   fireEvent.click(screen.getByRole("button", { name: "Add time" }));
   clickNext();
 
@@ -226,6 +231,125 @@ async function completeAllStepsUntilReview(reorder = false) {
 }
 
 describe("CreateActivityForm", () => {
+  it.each([false, true])(
+    "navigates back from the mobile footer without losing input (referral=%s)",
+    (referral) => {
+      renderWithQueryClient(<CreateActivityForm referral={referral} />);
+      const footer = screen.getByRole("contentinfo");
+      expect(screen.getByRole("heading", { level: 1 })).toHaveClass("text-xl", "lg:text-3xl");
+      expect(footer).toHaveClass("pt-2");
+      const back = within(footer).getByRole("button", { name: "Back" });
+      expect(back).toHaveClass("lg:hidden");
+      expect(back).toBeDisabled();
+      fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
+        target: { value: "I have guided friends through this market for years." },
+      });
+      clickNext();
+      fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
+        target: { value: "Seoul market walk" },
+      });
+      fireEvent.click(back);
+      expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(
+        "I have guided friends through this market for years.",
+      );
+      expect(back).toBeDisabled();
+      clickNext();
+      expect(screen.getByRole("textbox", { name: "Experience name" })).toHaveValue(
+        "Seoul market walk",
+      );
+    },
+  );
+  it.each(["create", "edit"] as const)(
+    "shows Exit without a language selector in %s mode",
+    (mode) => {
+      renderWithQueryClient(
+        <CreateActivityForm
+          mode={mode}
+          activityId={mode === "edit" ? "42" : undefined}
+          initialDraft={
+            mode === "edit" ? buildDraftFromMyActivityDetail(buildEditDetail()) : undefined
+          }
+        />,
+      );
+      expect(screen.getByRole("link", { name: "Exit" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Select language/ })).not.toBeInTheDocument();
+    },
+  );
+  it("creates a referral with a starting price but no discounts or payment fields", async () => {
+    vi.mocked(createReferralActivity).mockResolvedValue({
+      status: "success",
+      data: { activityId: 42 } as MyActivityDetailResponse,
+    });
+    renderWithQueryClient(<CreateActivityForm referral invitationCode={"a".repeat(43)} />);
+    await fillStepsUntilSchedule();
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
+    fireEvent.change(screen.getByLabelText("Hour (1–12)"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Minute (0–59)"), { target: { value: "00" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add time" }));
+    clickNext();
+    clickNext();
+    expect(screen.queryByRole("textbox", { name: "Price per person" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Set the minimum service price" }),
+    ).toBeInTheDocument();
+    const minimumPrice = screen.getByRole("textbox", { name: "Minimum service price" });
+    clickNext();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter a whole amount from ₩0 to ₩9,999,999,999.",
+    );
+    fireEvent.change(minimumPrice, { target: { value: "5000" } });
+    clickNext();
+    fireEvent.click(screen.getByRole("button", { name: "Equipment rental" }));
+    clickNext();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Nothing guests need to know/ }));
+    clickNext();
+    expect(screen.getByText("₩5,000~")).toBeInTheDocument();
+    expect(screen.queryByText("Agreed with provider")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Register experience" }));
+    await waitFor(() => expect(createReferralActivity).toHaveBeenCalledTimes(1));
+    const [code, body] = vi.mocked(createReferralActivity).mock.calls[0];
+    expect(code).toHaveLength(43);
+    expect(body).toMatchObject({
+      status: "ACTIVE",
+      price: 5000,
+      maxCapacity: 1,
+      schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00`, maxCapacity: 1 }],
+    });
+    for (const key of ["currency", "discountPercent", "discountEndDate", "activityType", "buddyId"])
+      expect(body).not.toHaveProperty(key);
+    expect(body.imageKeys).toHaveLength(3);
+    expect(body.itineraries).toHaveLength(1);
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("referral:create"),
+    );
+  });
+
+  it.each([0, 5000])(
+    "preserves referral price %s when editing without an invitation wrapper",
+    async (price) => {
+      vi.mocked(updateReferralActivity).mockResolvedValue({
+        status: "success",
+        data: { activityId: 42 } as MyActivityDetailResponse,
+      });
+      const detail = { ...buildEditDetail(), price, activityType: "REFERRAL" as const };
+      renderWithQueryClient(
+        <CreateActivityForm
+          referral
+          mode="edit"
+          activityId="42"
+          initialDraft={buildDraftFromMyActivityDetail(detail)}
+          initialStatus="ACTIVE"
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+      await waitFor(() => expect(updateReferralActivity).toHaveBeenCalledTimes(1));
+      expect(vi.mocked(updateReferralActivity).mock.calls[0][1]).toHaveProperty("price", price);
+      expect(vi.mocked(updateReferralActivity).mock.calls[0][1]).not.toHaveProperty("code");
+      expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
+    },
+  );
   it("ignores the second click after entering preview instead of publishing", async () => {
     renderWithQueryClient(<CreateActivityForm />);
     await completeAllStepsUntilReview();
@@ -254,16 +378,9 @@ describe("CreateActivityForm", () => {
     await completeAllStepsUntilReview();
     const submit = screen.getByRole("button", { name: "Register experience" });
 
-    const language = screen.getByRole("button", {
-      name: "Select language, current language: English",
-    });
-    fireEvent.click(language);
-    const korean = screen.getByRole("menuitemradio", { name: "한국어" });
-
     // Keep events in one batch to cover requests queued before disabled is rendered.
     act(() => {
       fireEvent.click(submit, { detail: 1 });
-      fireEvent.click(korean);
       fireEvent.click(submit, { detail: 2 });
       for (let repeat = 0; repeat < 3; repeat += 1) {
         expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
@@ -271,7 +388,6 @@ describe("CreateActivityForm", () => {
       fireEvent.click(submit, { detail: 0 }); // An already queued keyboard activation.
     });
     expect(submit).toBeDisabled();
-    expect(language).toBeDisabled();
     expect(routerReplace).not.toHaveBeenCalled();
     expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
@@ -279,7 +395,6 @@ describe("CreateActivityForm", () => {
     await act(async () => uploadGate.resolve());
     await waitFor(() => expect(mockedCreateMyActivity).toHaveBeenCalledTimes(1));
     expect(submit).toBeDisabled();
-    expect(language).toBeDisabled();
     fireEvent.click(submit, { detail: 2 });
     expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
     expect(routerPush).not.toHaveBeenCalled();
@@ -288,8 +403,6 @@ describe("CreateActivityForm", () => {
     await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/en/my-activities"));
     // router.push has returned, but the old screen remains mounted until navigation completes.
     expect(submit).toBeDisabled();
-    expect(language).toBeDisabled();
-    fireEvent.click(language);
     expect(routerReplace).not.toHaveBeenCalled();
     fireEvent.click(submit, { detail: 1 });
     fireEvent.click(submit, { detail: 0 });
@@ -311,10 +424,10 @@ describe("CreateActivityForm", () => {
       const retry = screen.getByRole("button", { name: "Register experience" });
       expect(retry).toBeEnabled();
       expect(
-        screen.getByRole("button", {
+        screen.queryByRole("button", {
           name: "Select language, current language: English",
         }),
-      ).toBeEnabled();
+      ).not.toBeInTheDocument();
       expect(routerPush).not.toHaveBeenCalled();
       expect(mockedClearActivityCreateDraft).not.toHaveBeenCalled();
       fireEvent.click(retry);
@@ -345,6 +458,8 @@ describe("CreateActivityForm", () => {
     );
     mockedUpdateMyActivity.mockReset();
     mockedCreateMyActivity.mockReset();
+    vi.mocked(createReferralActivity).mockReset();
+    vi.mocked(updateReferralActivity).mockReset();
     mockedClearActivityCreateDraft.mockReset();
     mockedClearActivityCreateDraft.mockResolvedValue(undefined);
     mockedLoadActivityCreateDraft.mockReset();
@@ -404,8 +519,8 @@ describe("CreateActivityForm", () => {
     );
     expect(screen.queryByRole("button", { name: "Food & drink" })).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Select language, current language: English" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "Select language, current language: English" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Exit" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
     expect(container.querySelector('img[src*="logo-borderless"]')).toBeInTheDocument();
@@ -508,33 +623,6 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
   });
 
-  it("preserves the draft and current step while changing the language", () => {
-    const firstRender = renderWithQueryClient(<CreateActivityForm />);
-
-    fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
-      target: { value: "I have guided sports fans around Seoul for many years." },
-    });
-    clickNext();
-    fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
-      target: { value: "Seoul stadium night" },
-    });
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Select language, current language: English" }),
-    );
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
-    firstRender.unmount();
-
-    renderWithQueryClient(<CreateActivityForm />);
-
-    expect(screen.getByRole("heading", { name: "Name your experience" })).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Experience name" })).toHaveValue(
-      "Seoul stadium night",
-    );
-
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  });
-
   it("starts directly with the host introduction step", () => {
     renderWithQueryClient(<CreateActivityForm />);
 
@@ -542,9 +630,15 @@ describe("CreateActivityForm", () => {
     const hostIntroductionInput = screen.getByRole("textbox", { name: "About you" });
     expect(hostIntroductionInput).toHaveClass("border-b-2", "min-h-0");
     expect(hostIntroductionInput).not.toHaveClass("min-h-36");
-    const backButton = screen.getByRole("button", { name: "Back" });
-    expect(backButton).toHaveClass("absolute");
-    expect(backButton.parentElement).toHaveClass("relative");
+    const backButton = within(screen.getByRole("main")).getByRole("button", { name: "Back" });
+    expect(backButton).not.toHaveClass("absolute");
+    expect(backButton).toHaveClass("hidden", "lg:flex");
+    expect(backButton.parentElement).toContainElement(
+      screen.getByRole("heading", { name: "Introduce yourself" }),
+    );
+    expect(
+      within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }),
+    ).toBeDisabled();
     expect(
       screen.queryByRole("textbox", { name: "Qualifications and experience" }),
     ).not.toBeInTheDocument();
@@ -585,7 +679,7 @@ describe("CreateActivityForm", () => {
     });
     clickNext();
 
-    fireEvent.click(screen.getByRole("button", { name: "Add an activity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add an item" }));
     expect(screen.getByRole("dialog", { name: "Choose an activity photo" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Upload a photo for activity 1"), {
       target: { files: [photos[0]] },
@@ -610,8 +704,8 @@ describe("CreateActivityForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    const editItineraryButton = screen.getByRole("button", { name: "Edit activity 1" });
-    const removeItineraryButton = screen.getByRole("button", { name: "Remove activity 1" });
+    const editItineraryButton = screen.getByRole("button", { name: "Edit item 1" });
+    const removeItineraryButton = screen.getByRole("button", { name: "Remove item 1" });
     const itineraryActions = editItineraryButton.parentElement;
     expect(itineraryActions).not.toBeNull();
     expect(itineraryActions?.querySelectorAll("svg")).toHaveLength(2);
@@ -621,6 +715,7 @@ describe("CreateActivityForm", () => {
 
     const meetingPlaceInput = screen.getByRole("textbox", { name: "Meeting place name" });
     const addressInput = screen.getByRole("combobox", { name: "Search address" });
+    expect(addressInput).toHaveClass("pl-12", "lg:pl-12");
     expect(
       meetingPlaceInput.compareDocumentPosition(addressInput) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -643,10 +738,7 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Set dates and start times" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));
     fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
-    fireEvent.change(screen.getByLabelText("Add a start time"), {
-      target: { value: "10:00" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add time" }));
+    fireEvent.click(screen.getByRole("button", { name: "10:00" }));
     expect(screen.getByTestId(`schedule-time-${dateKeyA}-10:00`)).toHaveClass(
       "bg-primary",
       "text-white",
@@ -654,10 +746,15 @@ describe("CreateActivityForm", () => {
     expect(screen.getByTestId(`schedule-status-${dateKeyA}`)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: `Select ${labelB}` }));
     fireEvent.click(screen.getByRole("button", { name: `Edit start times for ${labelA}` }));
-    fireEvent.click(screen.getByRole("button", { name: "Apply these times to all 2 dates" }));
-    fireEvent.change(screen.getByLabelText("Add a start time"), {
-      target: { value: "16:00" },
-    });
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Use the same times for all selected dates" }),
+    );
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Use the same times for all selected dates" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "PM" }));
+    fireEvent.change(screen.getByLabelText("Hour (1–12)"), { target: { value: "4" } });
+    fireEvent.change(screen.getByLabelText("Minute (0–59)"), { target: { value: "00" } });
     fireEvent.click(screen.getByRole("button", { name: "Add time" }));
     expect(
       screen.getByText(
@@ -1004,6 +1101,77 @@ describe("CreateActivityForm", () => {
     );
   }
 
+  it.each([
+    ["create", false],
+    ["create", true],
+    ["edit", false],
+    ["edit", true],
+  ] as const)(
+    "applies the top capacity to every session and saves it (%s, referral=%s)",
+    async (mode, referral) => {
+      const detail = buildEditDetail();
+      detail.schedules = Array.from({ length: 7 }, (_, index) => ({
+        scheduleId: index + 7,
+        startAt: `${dateKeyA}T${10 + index}:00:00+09:00`,
+        bookedCount: 0,
+        heldSeats: 0,
+        maxCapacity: 1,
+        status: "OPEN" as const,
+      }));
+      mockedCreateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+      mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+      vi.mocked(createReferralActivity).mockResolvedValue({ status: "success", data: detail });
+      vi.mocked(updateReferralActivity).mockResolvedValue({ status: "success", data: detail });
+      renderWithQueryClient(
+        <CreateActivityForm
+          mode={mode}
+          referral={referral}
+          invitationCode={referral ? "a".repeat(43) : undefined}
+          activityId={mode === "edit" ? "42" : undefined}
+          initialDraft={buildDraftFromMyActivityDetail(detail)}
+          initialStatus="ACTIVE"
+        />,
+      );
+      if (mode === "edit") {
+        fireEvent.click(
+          within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }),
+        );
+      }
+      for (let index = 0; index < 7; index++) clickNext();
+      fireEvent.click(screen.getByRole("button", { name: "Date-specific settings" }));
+      fireEvent.change(screen.getAllByRole("spinbutton")[0], { target: { value: "9" } });
+      fireEvent.click(screen.getByRole("button", { name: "Increase maximum guests" }));
+      screen.getAllByRole("spinbutton").forEach((input) => expect(input).toHaveValue(5));
+      fireEvent.click(screen.getByRole("button", { name: "Next sessions" }));
+      screen.getAllByRole("spinbutton").forEach((input) => expect(input).toHaveValue(5));
+      fireEvent.click(screen.getByRole("button", { name: "Decrease maximum guests" }));
+      screen.getAllByRole("spinbutton").forEach((input) => expect(input).toHaveValue(4));
+      if (mode === "create") {
+        for (let index = 0; index < (referral ? 4 : 5); index++) clickNext();
+      }
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: mode === "edit" ? "Save changes" : "Register experience",
+        }),
+      );
+      const submit = referral
+        ? mode === "edit"
+          ? vi.mocked(updateReferralActivity)
+          : vi.mocked(createReferralActivity)
+        : mode === "edit"
+          ? mockedUpdateMyActivity
+          : mockedCreateMyActivity;
+      await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+      const request = submit.mock.calls[0][mode === "edit" || referral ? 1 : 0] as {
+        maxCapacity: number;
+        schedules: { maxCapacity: number }[];
+      };
+      expect(request.maxCapacity).toBe(4);
+      expect(request.schedules).toHaveLength(7);
+      request.schedules.forEach((schedule) => expect(schedule.maxCapacity).toBe(4));
+    },
+  );
+
   it("blocks next and edit submission below 15,000 won without silently changing the price", async () => {
     const detail = { ...buildEditDetail(), price: 14999 };
     renderEditForm(detail);
@@ -1069,11 +1237,7 @@ describe("CreateActivityForm", () => {
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
     expect(save).toBeDisabled();
-    const language = screen.getByRole("button", {
-      name: "Select language, current language: English",
-    });
-    expect(language).toBeDisabled();
-    fireEvent.click(language);
+    expect(screen.queryByRole("button", { name: /Select language/ })).not.toBeInTheDocument();
     expect(routerReplace).not.toHaveBeenCalled();
     fireEvent.click(save);
     expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
@@ -1112,7 +1276,7 @@ describe("CreateActivityForm", () => {
     renderEditForm(detail);
 
     // 리뷰에서 첫 단계로 돌아가면 단계 전용 저장 버튼이 생긴다
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
     expect(
       screen.queryByRole("heading", { name: "Preview your experience" }),
     ).not.toBeInTheDocument();

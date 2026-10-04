@@ -17,7 +17,7 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(80);
+    expect(BACKEND_ERROR_CODES).toHaveLength(82);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
   });
 
@@ -68,6 +68,12 @@ describe("API error message registry", () => {
   });
 
   it("distinguishes duplicate schedules from overlapping reservations", () => {
+    expect(resolveApiErrorMessageKey(apiError("APPLICATION409_REFERRAL_EXISTS", 409))).toBe(
+      "referralAlreadyApplied",
+    );
+    expect(resolveApiErrorMessageKey(apiError("APPLICATION409_REFERRAL_REAPPLICATION", 409))).toBe(
+      "referralReapplicationChanged",
+    );
     expect(resolveApiErrorMessageKey(apiError("APPLICATION409_SAME_SCHEDULE", 409))).toBe(
       "applicationSameSchedule",
     );

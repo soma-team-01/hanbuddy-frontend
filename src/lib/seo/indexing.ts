@@ -1,6 +1,7 @@
 import { stripLocaleFromPathname } from "@/i18n/pathname";
 
 const PRIVATE_ROUTES = [
+  "/referral",
   "/admin",
   "/login",
   "/onboarding",

@@ -11,6 +11,8 @@ interface ConfirmDialogBaseProps {
   cancelLabel?: string;
   cancelVariant?: "soft" | "outline";
   tone?: "default" | "danger";
+  /** Match the application cancellation dialog, including its outlined actions. */
+  variant?: "default" | "cancellation";
   isPending?: boolean;
   confirmDisabled?: boolean;
   /** false면 뒤 화면을 흐리지 않고 딤만 적용한다 (예: 첫 접속 시 자동으로 뜨는 쿠키 동의) */
@@ -46,6 +48,7 @@ export function ConfirmDialog({
   cancelLabel,
   cancelVariant = "soft",
   tone = "default",
+  variant = "default",
   isPending = false,
   confirmDisabled = false,
   backdropBlur = true,
@@ -74,7 +77,7 @@ export function ConfirmDialog({
       }}
       className={`motion-dialog m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 ${
         backdropBlur ? "backdrop:backdrop-blur-[3px]" : ""
-      } max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:rounded-2xl md:p-8`}
+      } max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:p-8 ${variant === "cancellation" ? "max-h-[calc(100dvh-1rem)] overflow-y-auto md:rounded-3xl" : "md:rounded-2xl"}`}
     >
       <div className="flex items-start justify-between gap-4">
         <h2 id="confirm-dialog-title" className="font-display text-xl font-bold text-ink">
@@ -96,7 +99,9 @@ export function ConfirmDialog({
         <p className={`mt-2 text-muted ${descriptionClassName}`}>{description}</p>
       ) : null}
       {children ? <div className="mt-4">{children}</div> : null}
-      <div className={`mt-6 ${confirmSlot ? "" : "flex gap-3"}`}>
+      <div
+        className={`mt-6 ${confirmSlot ? "" : variant === "cancellation" ? "flex gap-2.5" : "flex gap-3"}`}
+      >
         {confirmSlot ? (
           <div className="w-full">{confirmSlot}</div>
         ) : (
@@ -106,9 +111,11 @@ export function ConfirmDialog({
               onClick={onClose}
               disabled={isPending}
               className={`h-12 flex-1 rounded-xl border font-display text-sm font-semibold text-ink transition-colors disabled:opacity-60 ${
-                cancelVariant === "outline"
-                  ? "border-ink enabled:hover:border-primary enabled:hover:text-primary"
-                  : "border-line-strong bg-panel enabled:hover:bg-panel-raised"
+                variant === "cancellation"
+                  ? "border-line-strong enabled:hover:border-ink"
+                  : cancelVariant === "outline"
+                    ? "border-ink enabled:hover:border-primary enabled:hover:text-primary"
+                    : "border-line-strong bg-panel enabled:hover:bg-panel-raised"
               }`}
             >
               {cancelLabel ?? tCommon("cancel")}
@@ -117,10 +124,14 @@ export function ConfirmDialog({
               type="button"
               onClick={onConfirm}
               disabled={isPending || confirmDisabled}
-              className={`h-12 flex-1 rounded-xl font-display text-sm font-semibold text-on-primary transition-colors disabled:opacity-60 ${
-                tone === "danger"
-                  ? "bg-danger enabled:hover:bg-danger/90"
-                  : "bg-primary enabled:hover:bg-primary-hover"
+              className={`h-12 flex-1 rounded-xl font-display text-sm transition-colors ${
+                variant === "cancellation"
+                  ? "border border-primary font-bold text-primary enabled:hover:bg-primary enabled:hover:text-on-primary disabled:opacity-40"
+                  : `font-semibold text-on-primary disabled:opacity-60 ${
+                      tone === "danger"
+                        ? "bg-danger enabled:hover:bg-danger/90"
+                        : "bg-primary enabled:hover:bg-primary-hover"
+                    }`
               }`}
             >
               {isPending ? (pendingLabel ?? confirmLabel) : confirmLabel}

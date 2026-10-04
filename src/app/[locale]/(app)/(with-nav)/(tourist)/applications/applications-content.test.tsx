@@ -16,6 +16,9 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
 import { requestTossPayment } from "@/lib/payments/toss";
 import { ApplicationsContent } from "./applications-content";
+import { cancelReferralApplication } from "@/lib/api/referral";
+
+vi.mock("@/lib/api/referral", () => ({ cancelReferralApplication: vi.fn() }));
 
 const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
 
@@ -126,6 +129,30 @@ describe("ApplicationsContent", () => {
         forecasts: [],
       },
     });
+  });
+
+  it("cancels referral applications without payment or refund APIs", async () => {
+    const referral = {
+      ...confirmedApplication,
+      activityType: "REFERRAL" as const,
+      price: 0,
+      totalPrice: 0,
+      paymentAmount: null,
+      paymentCurrency: null,
+    };
+    mockedGetMyApplications.mockResolvedValue({ status: "success", applications: [referral] });
+    vi.mocked(cancelReferralApplication)
+      .mockReset()
+      .mockResolvedValue({ status: "success", data: { ...referral, status: "CANCELLED" } });
+    renderWithQueryClient(<ApplicationsContent />);
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Cancel application" }).at(-1)!);
+    await waitFor(() => expect(cancelReferralApplication).toHaveBeenCalledExactlyOnceWith("11"));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(mockedCancelMyApplication).not.toHaveBeenCalled();
+    expect(mockedGetCancellationQuote).not.toHaveBeenCalled();
+    expect(mockedRequestTossPayment).not.toHaveBeenCalled();
+    expect(screen.queryByText(/₩0|Refund complete/)).not.toBeInTheDocument();
   });
 
   it("continues a pending payment through the Toss window", async () => {

@@ -100,7 +100,7 @@ describe("SiteFooter", () => {
     expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/about`);
   });
 
-  it("gives social icons and policy links a 44px touch target", async () => {
+  it("groups compact mobile links and retains desktop touch targets", async () => {
     renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });
 
     for (const name of [
@@ -111,8 +111,13 @@ describe("SiteFooter", () => {
       "Open HanBuddy on Instagram",
     ]) {
       expect(screen.getByRole("link", { name })).toHaveClass("size-11");
+      expect(screen.getByRole("link", { name })).toHaveClass("max-md:w-8", "max-md:shrink-0");
     }
     expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveClass("min-h-11");
+    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveClass("max-md:min-h-8");
+    expect(screen.getByRole("contentinfo")).toHaveClass("max-md:py-4");
+    expect(screen.getByTestId("footer-links")).toHaveClass("max-md:flex", "max-md:flex-wrap");
+    expect(screen.getByText("© 2026 HanBuddy")).toHaveClass("max-md:order-4");
     expect(screen.getByRole("link", { name: "Cancellation & Refund Policy" })).toHaveClass(
       "min-h-11",
     );

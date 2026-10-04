@@ -102,6 +102,7 @@ export interface ActivityScheduleResponse {
 }
 
 export interface MyActivitySummaryResponse {
+  activityType?: import("./referral").ActivityType;
   activityId: number;
   title: string;
   description: string;

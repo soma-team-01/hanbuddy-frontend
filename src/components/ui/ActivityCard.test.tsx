@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest";
 import type { Activity } from "@/types/activity";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { ActivityCard } from "./ActivityCard";
+import en from "@/messages/en.json";
+import ko from "@/messages/ko.json";
+import ja from "@/messages/ja.json";
+import zhHans from "@/messages/zh-Hans.json";
+import zhHant from "@/messages/zh-Hant.json";
 
 const activity: Activity = {
   id: "1",
@@ -22,6 +27,63 @@ const activity: Activity = {
 };
 
 describe("ActivityCard", () => {
+  it.each([
+    ["ko", "무료", ko],
+    ["en", "Free", en],
+    ["ja", "無料", ja],
+    ["zh-Hans", "免费", zhHans],
+    ["zh-Hant", "免費", zhHant],
+  ] as const)(
+    "shows only the free price for a zero-priced referral in %s",
+    (locale, label, messages) => {
+      renderWithIntl(
+        <ActivityCard
+          activity={{
+            ...activity,
+            activityType: "REFERRAL",
+            price: 0,
+            referencePrice: 0,
+            referenceCurrency: "USD",
+          }}
+        />,
+        { locale, messages },
+      );
+      expect(screen.getByText(label)).toHaveClass(
+        "font-display",
+        "text-xl",
+        "leading-7",
+        "font-bold",
+        "text-ink",
+      );
+      expect(screen.queryByText(/₩|\$|≈/)).not.toBeInTheDocument();
+      expect(screen.queryByText(messages.Explore.perPersonLabel)).not.toBeInTheDocument();
+    },
+  );
+
+  it("matches standard card price typography and adds a localized per-person label for referrals", () => {
+    renderWithIntl(
+      <ActivityCard
+        activity={{
+          ...activity,
+          activityType: "REFERRAL",
+          price: 5000,
+          referencePrice: 3.5,
+          referenceCurrency: "USD",
+        }}
+      />,
+    );
+    expect(screen.getByText("₩5,000~")).toHaveClass(
+      "font-display",
+      "text-xl",
+      "leading-7",
+      "font-bold",
+      "text-ink",
+    );
+    expect(screen.getByText("(≈ $3.50~)")).toBeInTheDocument();
+    expect(screen.queryByText("No payment when applying")).not.toBeInTheDocument();
+    expect(screen.getByText("per person")).toHaveClass("text-xs", "text-muted");
+    expect(screen.getByText("₩5,000~").parentElement).toHaveClass("flex-wrap", "items-baseline");
+  });
   it("renders the title, meeting place and per-person price without the buddy name", () => {
     renderWithIntl(<ActivityCard activity={activity} />);
 

@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon, MapPinIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
+import { ReferralPrice } from "@/components/referral/ReferralPrice";
 import { formatActivityDuration } from "@/lib/activity-duration";
 import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import type { Activity } from "@/types/activity";
@@ -76,35 +77,39 @@ export function ActivityCard({
 
         {/* 카드 하단: 원화 가격 · 환산가 · 1인당 */}
         <div className="mt-auto md:pt-1">
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            {hasDiscount ? (
-              <s className="text-xs leading-4 text-muted">
-                {formatKrw(activity.originalPrice ?? activity.price, locale)}
-              </s>
-            ) : null}
-            <p
-              className={`font-display text-xl leading-7 ${
-                hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
-              }`}
-            >
-              {formatKrw(activity.price, locale)}
-            </p>
-            {hasReferencePrice ? (
+          {activity.activityType === "REFERRAL" ? (
+            <ReferralPrice activity={activity} variant="card" />
+          ) : (
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              {hasDiscount ? (
+                <s className="text-xs leading-4 text-muted">
+                  {formatKrw(activity.originalPrice ?? activity.price, locale)}
+                </s>
+              ) : null}
               <p
-                className="text-xs leading-4 font-medium text-muted"
-                title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+                className={`font-display text-xl leading-7 ${
+                  hasDiscount ? "font-extrabold text-primary" : "font-bold text-ink"
+                }`}
               >
-                (≈{" "}
-                {formatDisplayCurrency(
-                  activity.referencePrice!,
-                  activity.referenceCurrency!,
-                  locale,
-                )}
-                )
+                {formatKrw(activity.price, locale)}
               </p>
-            ) : null}
-            <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
-          </div>
+              {hasReferencePrice ? (
+                <p
+                  className="text-xs leading-4 font-medium text-muted"
+                  title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
+                >
+                  (≈{" "}
+                  {formatDisplayCurrency(
+                    activity.referencePrice!,
+                    activity.referenceCurrency!,
+                    locale,
+                  )}
+                  )
+                </p>
+              ) : null}
+              <p className="text-xs leading-4 text-muted">{t("perPersonLabel")}</p>
+            </div>
+          )}
         </div>
       </div>
     </article>

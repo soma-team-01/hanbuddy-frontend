@@ -1,4 +1,51 @@
 {
+  "Referral": {
+    "messagePlaceholder": "버디에게 전할 말이 있으면 적어주세요.",
+    "summaryTitle": "신청 정보",
+    "sharingTitle": "업체 개인정보 제공 안내",
+    "servicePrice": "서비스 금액",
+    "sharedName": "이름",
+    "sharedContactMethod": "연락 수단",
+    "sharedCountryCode": "국가 전화번호",
+    "sharedContact": "연락처",
+    "startingPrice": "{price}부터",
+    "free": "무료",
+    "label": "제휴 활동",
+    "apply": "신청하기",
+    "notice": "실제 서비스 요금과 예약은 업체 상담 후 별도로 확정됩니다.",
+    "title": "제휴 활동 신청",
+    "schedule": "일정 (한국 시간)",
+    "guests": "참여 인원",
+    "consent": "위 내용에 따라 업체에 개인정보를 제공하는 데 동의합니다.",
+    "recipient": "제공받는 업체",
+    "fields": "제공 항목",
+    "purpose": "이용 목적",
+    "loading": "불러오는 중…",
+    "failed": "요청을 처리하지 못했습니다. 다시 시도해 주세요.",
+    "refreshConsent": "안내가 변경되었습니다. 최신 내용을 확인하고 다시 동의해 주세요.",
+    "success": "신청이 접수되었습니다.",
+    "cancelled": "이미 취소한 신청입니다.",
+    "reapply": "재신청하기",
+    "reapplyNotice": "취소한 일정입니다. 내용을 확인하고 다시 동의한 뒤 재신청하면 새 신청이 생성됩니다.",
+    "alreadyApplied": "이미 신청한 일정입니다. 내 신청에서 확인해 주세요.",
+    "sessionCancelled": "버디가 취소한 일정에는 다시 신청할 수 없습니다.",
+    "completed": "이미 종료된 신청입니다.",
+    "applications": "내 신청 보기",
+    "unavailable": "신청 가능한 일정이 없습니다.",
+    "cancelTitle": "신청을 취소할까요?",
+    "cancelNotice": "홈페이지가 아닌 업체에 별도로 예약·결제했다면 업체에 직접 확인해 주세요.",
+    "cancel": "신청 취소",
+    "keep": "신청 유지",
+    "people": "{count}명",
+    "agreementRequired": "개인정보 제공에 동의해 주세요.",
+    "invitationTitle": "제휴 활동 등록",
+    "invitationInvalid": "등록 링크를 사용할 수 없습니다. 대상 계정을 확인하거나 관리자에게 문의해 주세요.",
+    "invitationLogin": "등록 링크를 받은 버디 계정으로 로그인해 주세요.",
+    "login": "로그인",
+    "retry": "다시 시도",
+    "checkActivities": "등록 결과가 불확실하면 내 활동에서 먼저 확인해 주세요.",
+    "myActivities": "내 활동 확인"
+  },
   "ActivitySearch": {
     "placeholder": "언제 참여하시나요?",
     "apply": "적용",
@@ -43,6 +90,8 @@
     }
   },
   "ScheduleCancellation": {
+    "referralIrreversible": "일정 취소 후 재오픈·신규 신청은 불가합니다. 신청자에게 취소 사실을 꼭 알려주세요. 업체에서 별도로 받은 결제는 직접 확인해 주세요.",
+    "referralSuccess": "일정이 취소되었습니다.",
     "refundAmount": "환불 금액",
     "buddyCancellationReason": "버디가 남긴 취소 사유",
     "refundRecoveryPending": "환불 결과를 확인 중입니다. 취소나 결제를 다시 요청하지 마세요.",
@@ -79,6 +128,8 @@
     "unavailable": "사용할 수 없음"
   },
   "ApiErrors": {
+    "referralAlreadyApplied": "이미 유효한 신청이 있습니다. 내 신청에서 확인해 주세요.",
+    "referralReapplicationChanged": "신청 이력이 변경되었습니다. 최신 내용을 확인하고 다시 동의한 뒤 재신청해 주세요.",
     "bookingClosed": "활동 시작 24시간 전까지만 신청·결제를 요청할 수 있습니다. 다른 일정을 선택해 주세요.",
     "scheduleCapacity": "정원은 1~100명이며, 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
     "scheduleEdit": "이미 시작되거나 취소된 일정은 수정할 수 없습니다. 신청 이력이 있는 일정은 시작 시각을 변경할 수 없습니다.",
@@ -888,6 +939,7 @@
     "preferredMethod": "[원하는 결제 방법]"
   },
   "Booking": {
+    "applicationSummary": "신청 요약",
     "bookingWindowNotice": "신청·결제는 활동 시작 24시간 전까지만 가능합니다.",
     "title": "액티비티 예약",
     "loading": "예약 정보를 불러오는 중...",
@@ -1349,8 +1401,8 @@
         "description": "체험의 특징이 잘 드러나는 선명한 사진을 3장 이상 10장 이하로 추가해 주세요."
       },
       "itinerary": {
-        "title": "활동 일정표를 만들어 주세요",
-        "description": "체험이 시작해서 끝날 때까지 게스트가 하게 될 활동을 순서대로 적어 주세요."
+        "title": "활동 구성을 소개해 주세요",
+        "description": "진행할 활동이나 제공할 상품을 항목별로 추가해 주세요."
       },
       "meeting": {
         "title": "만나는 장소를 정해 주세요",
@@ -1436,7 +1488,7 @@
       "hostIntroduction": "본인을 소개하고 이 체험을 호스팅하려는 이유를 알려 주세요.",
       "qualifications": "관련 직업, 전공, 자격증 또는 직접 쌓은 경험을 적어 주세요.",
       "pressHistory": "수상, 출판, 인터뷰 또는 주목할 만한 이력을 적어 주세요.",
-      "experienceName": "예: 한국 프로야구 응원 나이트",
+      "experienceName": "e.g. Korean Baseball Fan Night",
       "experienceDescription": "체험이 시작해서 끝날 때까지 게스트가 무엇을 느끼고 경험하는지 알려 주세요.",
       "meetingAddress": "예: 서울특별시 송파구 올림픽로 25",
       "meetingPlace": "예: 1번 게이트 매표소",
@@ -1465,15 +1517,15 @@
       "remove": "{index, number}번째 체험 사진 삭제"
     },
     "itinerary": {
-      "item": "활동 {index, number}",
-      "remove": "{index, number}번째 활동 삭제",
+      "item": "항목 {index, number}",
+      "remove": "{index, number}번째 항목 삭제",
       "titleCount": "{count, number}/{max, number}자",
       "descriptionCount": "{count, number}/{max, number}자 · 최소 {min, number}자",
       "addPhoto": "활동 사진 추가",
       "photoLabel": "{index, number}번째 활동 사진 업로드",
-      "add": "활동 추가하기",
-      "edit": "{index, number}번째 활동 수정",
-      "untitled": "새 활동",
+      "add": "항목 추가하기",
+      "edit": "{index, number}번째 항목 수정",
+      "untitled": "새 항목",
       "incomplete": "세부 정보를 추가해 주세요",
       "durationSummary": "{minutes, number}분",
       "editor": {
@@ -1504,7 +1556,7 @@
       "pageRange": "전체 {total}개 중 {from}–{to}",
       "defaultTitle": "기본 정원",
       "settings": "날짜별 상세 설정",
-      "defaultHint": "새 회차의 기본값입니다. 기존 회차 정원은 바뀌지 않습니다.",
+      "defaultHint": "인원수를 변경하면 모든 날짜와 시간대에 일괄 적용됩니다.",
       "scheduleTitle": "날짜·시간별 정원",
       "scheduleHint": "정원은 예약 확정·결제 대기 인원의 합 이상이어야 해요.",
       "confirmed": "예약 확정 {count}명",
@@ -1521,6 +1573,16 @@
       "mapTitle": "선택한 만남 주소 지도"
     },
     "schedule": {
+      "am": "오전",
+      "pm": "오후",
+      "timePeriod": "오전/오후",
+      "hour": "시 (1–12)",
+      "minute": "분 (0–59)",
+      "hourPlaceholder": "시",
+      "minutePlaceholder": "분",
+      "morning": "오전",
+      "afternoon": "오후",
+      "timeSelectionHint": "시작 시간을 여러 개 선택할 수 있어요. 다시 누르면 선택이 해제됩니다.",
       "bookingWindowNotice": "신청·결제는 활동 시작 24시간 전까지만 가능합니다.",
       "notice": "필요한 날짜를 여러 개 선택할 수 있습니다. 모든 시작 시간은 한국 표준시(KST) 기준입니다.",
       "calendarLabel": "체험 진행 날짜 달력",
@@ -1538,11 +1600,15 @@
       "addedTimes": "추가한 시작 시간",
       "noTimes": "아직 시작 시간이 없습니다. 위에서 시간을 선택해 추가해 주세요.",
       "removeTime": "{date}에서 {time} 삭제",
-      "applyDateTimesToAll": "이 시간들을 선택한 날짜 {count, number}개에 일괄 적용",
+      "applyDateTimesToAll": "해당 시간 일괄 적용",
       "removeDate": "{date} 삭제",
       "pastTimeHint": "오늘 날짜에는 현재 시각(KST) 이후의 시간만 추가할 수 있어요."
     },
     "price": {
+      "referralTitle": "서비스 최소 금액을 입력해 주세요",
+      "referralDescription": "제공하는 서비스 중 가장 낮은 금액을 입력해 주세요.",
+      "referralLabel": "서비스 최소 금액",
+      "referralMinimum": "0원부터 입력할 수 있습니다.",
       "minimum": "1인당 최소 금액은 {amount, number}원입니다.",
       "notice": "설정한 금액은 게스트에게 1인당 원화 요금으로 표시됩니다."
     },
@@ -1607,6 +1673,7 @@
     "edit": {
       "loading": "활동 정보를 불러오는 중…",
       "loadError": "수정할 활동 정보를 불러오지 못했습니다.",
+      "activityTypeUnavailable": "서버에서 활동 유형을 확인할 수 없어 수정 화면을 열 수 없습니다. 잘못된 유형으로 저장되지 않도록 잠시 후 다시 시도해 주세요.",
       "backToActivity": "활동 상세로 돌아가기"
     },
     "errors": {
@@ -1626,6 +1693,7 @@
       "itineraryPhotoRequired": "모든 활동에 사진을 추가해 주세요.",
       "maxGuestsInvalid": "최대 인원을 1명 이상의 정수로 입력해 주세요.",
       "priceInvalid": "1인당 요금을 15,000원 이상의 정수로 입력해 주세요.",
+      "referralPriceInvalid": "0원 이상 9,999,999,999원 이하의 정수 금액을 입력해 주세요.",
       "inclusionsRequired": "포함 사항을 한 개 이상 입력해 주세요.",
       "discountInvalid": "할인 종료일을 선택하고 할인율을 1부터 100 사이의 정수로 입력해 주세요.",
       "restrictionsRequired": "확인사항을 한 개 이상 선택하거나 별도로 확인할 사항이 없음을 선택해 주세요.",

@@ -4,6 +4,25 @@ import { LOCALES } from "@/i18n/routing";
 import { getPolicyDocument, getSignupAgreementDocuments } from "./policy-content";
 
 describe("policy content", () => {
+  it.each([
+    ["ko", "결제 시점으로부터 예약된 활동 종료까지의 최대 서비스 제공기간은 3개월입니다."],
+    [
+      "en",
+      "The maximum service provision period, from the time of payment until the end of the booked activity, is 3 months.",
+    ],
+    ["ja", "決済時点から予約したアクティビティの終了までのサービス提供期間は、最長3か月です。"],
+    ["zh-Hans", "从付款时点至所预订活动结束的服务提供期限最长为3个月。"],
+    ["zh-Hant", "從付款時點至所預訂活動結束的服務提供期限最長為3個月。"],
+  ] as const)(
+    "includes the three-month service period in the payment article in %s",
+    async (locale, clause) => {
+      const policy = await getPolicyDocument("terms-of-service", locale);
+      const paymentArticle = policy.source.split(/^## /m)[9];
+      expect(paymentArticle).toContain(`6. ${clause}`);
+      expect(policy.source.split(clause)).toHaveLength(2);
+    },
+  );
+
   it("keeps the company as the requester in Japanese buddy publishing terms", async () => {
     const policy = await getPolicyDocument("buddy-operation-terms", "ja");
     expect(policy.source).toContain(

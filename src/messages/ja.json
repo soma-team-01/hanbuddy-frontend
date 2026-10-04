@@ -1,4 +1,51 @@
 {
+  "Referral": {
+    "messagePlaceholder": "バディに伝えたいことがあればご記入ください。",
+    "summaryTitle": "申込情報",
+    "sharingTitle": "事業者への個人情報提供について",
+    "servicePrice": "サービス料金",
+    "sharedName": "氏名",
+    "sharedContactMethod": "連絡方法",
+    "sharedCountryCode": "国番号",
+    "sharedContact": "連絡先",
+    "startingPrice": "{price}〜",
+    "free": "無料",
+    "label": "提携体験",
+    "apply": "申し込む",
+    "notice": "実際のサービス料金と予約は、事業者との相談後に別途確定します。",
+    "title": "提携体験への申し込み",
+    "schedule": "日程（韓国時間）",
+    "guests": "参加人数",
+    "consent": "上記の内容に従い、事業者への個人情報の提供に同意します。",
+    "recipient": "提供先",
+    "fields": "提供する情報",
+    "purpose": "利用目的",
+    "loading": "読み込み中…",
+    "failed": "処理できませんでした。もう一度お試しください。",
+    "refreshConsent": "案内が更新されました。最新の内容を確認し、再度同意してください。",
+    "success": "申し込みを受け付けました。",
+    "cancelled": "この申し込みはキャンセル済みです。",
+    "reapply": "再申し込み",
+    "reapplyNotice": "以前キャンセルした日程です。内容を確認して改めて同意し、再申し込みすると新しい申し込みが作成されます。",
+    "alreadyApplied": "この日程にはすでに申し込みがあります。申し込み一覧をご確認ください。",
+    "sessionCancelled": "バディがキャンセルした日程には再申し込みできません。",
+    "completed": "この申し込みは終了しています。",
+    "applications": "申し込み一覧へ",
+    "unavailable": "申し込み可能な日程がありません。",
+    "cancelTitle": "申し込みをキャンセルしますか？",
+    "cancelNotice": "このサイトを通さず事業者に別途予約・支払いをした場合は、事業者に直接ご確認ください。",
+    "cancel": "申し込みをキャンセル",
+    "keep": "申し込みを維持",
+    "people": "{count}名",
+    "agreementRequired": "個人情報の提供に同意してください。",
+    "invitationTitle": "提携体験を登録",
+    "invitationInvalid": "この招待は利用できません。アカウントを確認するか、管理者にお問い合わせください。",
+    "invitationLogin": "招待を受け取ったバディのアカウントでログインしてください。",
+    "login": "ログイン",
+    "retry": "再試行",
+    "checkActivities": "結果が不明な場合は、まず自分の体験一覧をご確認ください。",
+    "myActivities": "自分の体験を確認"
+  },
   "ActivitySearch": {
     "placeholder": "いつ参加しますか？",
     "apply": "適用",
@@ -43,6 +90,8 @@
     }
   },
   "ScheduleCancellation": {
+    "referralIrreversible": "キャンセル後は再開・新規申し込みを受け付けられません。申込者に必ずお知らせください。事業者が別途受け取った支払いは直接ご確認ください。",
+    "referralSuccess": "日程をキャンセルしました。",
     "refundAmount": "返金額",
     "buddyCancellationReason": "バディからのキャンセル理由",
     "refundRecoveryPending": "返金結果を確認しています。キャンセルや決済を再度リクエストしないでください。",
@@ -79,6 +128,8 @@
     "unavailable": "利用不可"
   },
   "ApiErrors": {
+    "referralAlreadyApplied": "有効な申し込みがすでにあります。申し込み一覧をご確認ください。",
+    "referralReapplicationChanged": "申し込み履歴が変更されました。最新の内容を確認し、改めて同意してから再申し込みしてください。",
     "bookingClosed": "予約・支払いのリクエストは開始24時間前までです。別の日時を選択してください。",
     "scheduleCapacity": "定員は1～100名で、予約確定・支払い待ちの合計人数以上にしてください。",
     "scheduleEdit": "開始済み・キャンセル済みの回は変更できません。申込履歴のある回は開始時刻を変更できません。",
@@ -888,6 +939,7 @@
     "preferredMethod": "[希望する支払い方法]"
   },
   "Booking": {
+    "applicationSummary": "申込内容の概要",
     "bookingWindowNotice": "予約・支払いのリクエストは体験開始の24時間前までです。",
     "title": "書籍活動",
     "loading": "予約を読み込んでいます...",
@@ -1349,8 +1401,8 @@
         "description": "体験を捉えた鮮明な写真を 3 ～ 10 枚追加します。"
       },
       "itinerary": {
-        "title": "旅程を立てる",
-        "description": "ゲストが体験の開始から終了まで行うアクティビティを追加します。"
+        "title": "体験の構成を紹介してください",
+        "description": "実施するアクティビティや提供する商品を、項目ごとに追加してください。"
       },
       "meeting": {
         "title": "集合場所を設定する",
@@ -1436,7 +1488,7 @@
       "hostIntroduction": "自己紹介と、この体験を主催したい理由を説明します。",
       "qualifications": "関連する仕事、勉強、資格、または実際の経験を共有します。",
       "pressHistory": "賞、出版物、インタビュー、または注目すべき表彰を追加します。",
-      "experienceName": "例: 韓国野球の夜を応援する",
+      "experienceName": "e.g. Korean Baseball Fan Night",
       "experienceDescription": "最初から最後まで体験がどのような感じかをゲストに伝えます。",
       "meetingAddress": "例: ソウル特別市松坡区オリンピック路25",
       "meetingPlace": "例：ゲート1チケットブース",
@@ -1465,15 +1517,15 @@
       "remove": "体験写真を削除 {index, number}"
     },
     "itinerary": {
-      "item": "アクティビティ {index, number}",
-      "remove": "アクティビティを削除する {index, number}",
+      "item": "項目 {index, number}",
+      "remove": "項目 {index, number} を削除",
       "titleCount": "{count, number}/{max, number} キャラクター",
       "descriptionCount": "{count, number}/{max, number} 文字数・最小値 {min, number}",
       "addPhoto": "アクティビティの写真を追加する",
       "photoLabel": "アクティビティ用の写真をアップロードする {index, number}",
-      "add": "アクティビティを追加する",
-      "edit": "アクティビティの編集 {index, number}",
-      "untitled": "新しいアクティビティ",
+      "add": "項目を追加",
+      "edit": "項目 {index, number} を編集",
+      "untitled": "新しい項目",
       "incomplete": "詳細を追加",
       "durationSummary": "{minutes, number} 分",
       "editor": {
@@ -1504,7 +1556,7 @@
       "pageRange": "全{total}回中 {from}–{to}",
       "defaultTitle": "基本定員",
       "settings": "日付別の詳細設定",
-      "defaultHint": "新しい回の初期値です。既存の回の定員は変わりません。",
+      "defaultHint": "人数を変更すると、すべての日付と時間帯に一括適用されます。",
       "scheduleTitle": "日時ごとの定員",
       "scheduleHint": "定員は予約確定・支払い待ちの合計人数以上にしてください。",
       "confirmed": "予約確定 {count}名",
@@ -1521,6 +1573,16 @@
       "mapTitle": "選択した会議住所の地図"
     },
     "schedule": {
+      "am": "午前",
+      "pm": "午後",
+      "timePeriod": "午前・午後",
+      "hour": "時 (1–12)",
+      "minute": "分 (0–59)",
+      "hourPlaceholder": "時",
+      "minutePlaceholder": "分",
+      "morning": "午前",
+      "afternoon": "午後",
+      "timeSelectionHint": "開始時刻は複数選択できます。もう一度押すと選択を解除します。",
       "bookingWindowNotice": "予約・支払いのリクエストは体験開始の24時間前までです。",
       "notice": "必要なだけ日付を選択してください。すべての開始時間は韓国標準時 (KST) で表示されます。",
       "calendarLabel": "体験日カレンダー",
@@ -1538,11 +1600,15 @@
       "addedTimes": "開始時間を追加しました",
       "noTimes": "開始時間はまだありません。上から時間を選択して追加します。",
       "removeTime": "削除 {time} から {date}",
-      "applyDateTimesToAll": "これらの時間をすべてに適用します {count, number} 日付",
+      "applyDateTimesToAll": "選択した日付に同じ時間を適用",
       "removeDate": "削除 {date}",
       "pastTimeHint": "今日の開始時刻は現在時刻 (KST) より遅くする必要があります。"
     },
     "price": {
+      "referralTitle": "サービスの最低料金を入力してください",
+      "referralDescription": "提供するサービスの中で最も低い料金を入力してください。",
+      "referralLabel": "サービスの最低料金",
+      "referralMinimum": "0ウォンから入力できます。",
       "minimum": "1人あたりの最低料金は{amount, number}ウォンです。",
       "notice": "この金額は、韓国ウォンでの 1 人あたりの料金としてゲストに表示されます。"
     },
@@ -1607,6 +1673,7 @@
     "edit": {
       "loading": "エクスペリエンスを読み込んでいます…",
       "loadError": "編集するアクティビティをロードできませんでした。",
+      "activityTypeUnavailable": "サーバーからアクティビティの種類を取得できないため、編集できません。誤った形式で保存されないよう、しばらくしてからもう一度お試しください。",
       "backToActivity": "アクティビティに戻る"
     },
     "errors": {
@@ -1626,6 +1693,7 @@
       "itineraryPhotoRequired": "すべてのアクティビティに写真を追加します。",
       "maxGuestsInvalid": "0 より大きい整数の容量を入力します。",
       "priceInvalid": "1人あたりの料金を15,000ウォン以上の整数で入力してください。",
+      "referralPriceInvalid": "0〜9,999,999,999ウォンの整数を入力してください。",
       "inclusionsRequired": "少なくとも 1 つの付属アイテムを追加します。",
       "discountInvalid": "終了日を選択し、1 ～ 100 の整数の割引を入力します。",
       "restrictionsRequired": "ゲストが知っておくべきことを少なくとも 1 つ選択するか、特筆すべき事項がないことを確認します。",

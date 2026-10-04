@@ -32,6 +32,8 @@ export function mapApplicationResponseToApplication(
   const endTime = formatSeoulTime(response.endAt, locale);
   const timeLabel = startTime && endTime ? `${startTime} ~ ${endTime}` : startTime;
   return {
+    activityType: response.activityType ?? "STANDARD",
+    guestCount: response.guestCount,
     id: String(response.applicationId),
     activityId: response.activityId,
     status: response.scheduleCancelled ? "cancelled" : STATUS_BY_BACKEND_STATUS[response.status],

@@ -62,6 +62,143 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it.each([
+    ["ko", "무료", ko],
+    ["en", "Free", en],
+    ["ja", "無料", ja],
+    ["zh-Hans", "免费", zhHans],
+    ["zh-Hant", "免費", zhHant],
+  ] as const)(
+    "shows only a free label for a zero-priced referral in %s",
+    (locale, label, messages) => {
+      renderWithIntl(
+        <ActivityDetailView
+          activity={{
+            ...activity,
+            activityType: "REFERRAL",
+            price: 0,
+            referencePrice: 0,
+            referenceCurrency: "USD",
+          }}
+          preview
+          bottomBar="inline"
+        />,
+        { locale, messages },
+      );
+      const actions = screen.getByTestId("booking-bar-actions");
+      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getByText(label)).toHaveClass(
+        "font-display",
+        "text-xl",
+        "font-bold",
+        "text-primary",
+      );
+      expect(actions.querySelectorAll("p")).toHaveLength(1);
+      expect(actions).not.toHaveTextContent("₩0");
+      expect(actions).not.toHaveTextContent("≈");
+      expect(screen.getByText(label).parentElement).toHaveClass("md:pb-4", "md:text-right");
+      expect(screen.getByText(label).parentElement).not.toHaveClass("md:w-60", "md:w-36");
+      expect(actions.querySelector("button")).not.toHaveClass("md:min-w-44");
+    },
+  );
+  it.each([
+    ["ko", "10분", ko],
+    ["en", "10 min", en],
+    ["ja", "10 分", ja],
+    ["zh-Hans", "10 分钟", zhHans],
+    ["zh-Hant", "10 分鐘", zhHant],
+  ] as const)("labels referral items with duration only in %s", (locale, label, messages) => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{
+          ...activity,
+          activityType: "REFERRAL",
+          itinerary: [
+            {
+              id: "1",
+              title: "Pottery workshop",
+              description: "Make a ceramic cup",
+              durationMinutes: 10,
+              imageUrl: activity.imageUrl,
+            },
+          ],
+        }}
+        preview
+        unoptimizedImages
+      />,
+      { locale, messages },
+    );
+    const item = screen.getByRole("heading", { name: "Pottery workshop" }).parentElement;
+    expect(item?.querySelector("p")?.textContent).toBe(label);
+  });
+  it("keeps the step label for a standard activity", () => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{
+          ...activity,
+          itinerary: [
+            {
+              id: "1",
+              title: "Meet the host",
+              description: "Meet at the studio",
+              durationMinutes: 10,
+              imageUrl: activity.imageUrl,
+            },
+          ],
+        }}
+        preview
+        unoptimizedImages
+      />,
+      { locale: "ko" },
+    );
+    expect(screen.getByText("1단계 · 10분")).toBeInTheDocument();
+  });
+  it.each([
+    ["ko", "₩50,000~", ko],
+    ["en", "₩50,000~", en],
+    ["ja", "₩50,000~", ja],
+    ["zh-Hans", "₩50,000~", zhHans],
+    ["zh-Hant", "₩50,000~", zhHant],
+  ] as const)(
+    "shows localized referral starting prices with a naturally flexible date field in %s",
+    (locale, label, messages) => {
+      renderWithIntl(
+        <ActivityDetailView
+          activity={{ ...activity, activityType: "REFERRAL" }}
+          preview
+          bottomBar="inline"
+          unoptimizedImages
+        />,
+        { locale, messages },
+      );
+      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getByText(label)).toHaveClass(
+        "font-display",
+        "text-xl",
+        "font-bold",
+        "text-primary",
+      );
+      expect(screen.getByText(messages.Explore.perPersonLabel)).toHaveClass(
+        "text-xs",
+        "md:basis-full",
+        "md:text-right",
+      );
+      expect(screen.getByTestId("booking-bar-actions").querySelectorAll("p")).toHaveLength(2);
+      expect(screen.getByText(label)).not.toHaveClass("md:ml-auto", "md:text-2xl");
+      expect(screen.getByTestId("date-select-box")).toHaveClass("md:flex-1");
+      expect(screen.getByTestId("date-select-box")).toHaveClass("h-12");
+      expect(screen.getByTestId("date-select-box")).not.toHaveClass("md:max-w-[480px]");
+    },
+  );
+  it("preserves the full flexible date selector for standard activities", () => {
+    renderWithIntl(<ActivityDetailView activity={activity} preview bottomBar="inline" />);
+    expect(screen.getByTestId("date-select-box")).toHaveClass("md:flex-1");
+    expect(screen.getByTestId("date-select-box")).not.toHaveClass("md:max-w-[480px]");
+    expect(screen.getByTestId("booking-bar-price").parentElement).toHaveClass("md:w-36");
+    expect(screen.getByTestId("booking-bar-actions").querySelector("button")).toHaveClass(
+      "md:min-w-44",
+    );
+  });
   it.each([true, false, undefined])("marks only actual translated content: %s", (isTranslated) => {
     renderWithIntl(
       <ActivityDetailView

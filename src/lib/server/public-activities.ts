@@ -79,6 +79,7 @@ function summary(value: unknown): TouristActivitySummary {
   if (item.buddyProfileImageUrl !== null && typeof item.buddyProfileImageUrl !== "string")
     unavailable();
   const result = select(item, [
+    "activityType",
     "activityId",
     "buddyId",
     "title",
@@ -101,6 +102,12 @@ function summary(value: unknown): TouristActivitySummary {
     "discountedPrice",
     "isSoldOut",
   ]);
+  if (
+    item.activityType !== undefined &&
+    item.activityType !== "STANDARD" &&
+    item.activityType !== "REFERRAL"
+  )
+    unavailable();
   const nullableNumbers = [
     "averageRating",
     "reviewCount",

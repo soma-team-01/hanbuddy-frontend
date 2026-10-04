@@ -36,14 +36,18 @@ export function EditActivityForm({ activityId }: Readonly<{ activityId: string }
   }
 
   // Keep the mounted draft when a background refresh fails and cached data is available.
-  if (!initialDraft || !activityQuery.data) {
+  const activityType = activityQuery.data?.activityType;
+  const hasActivityType = activityType === "STANDARD" || activityType === "REFERRAL";
+  if (!initialDraft || !activityQuery.data || !hasActivityType) {
     return (
       <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 bg-[#fff] px-6">
         <p
           role="alert"
           className="max-w-md rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-center text-sm text-danger"
         >
-          {getApiErrorMessage(activityQuery.error, t("edit.loadError"))}
+          {activityQuery.data && !hasActivityType
+            ? t("edit.activityTypeUnavailable")
+            : getApiErrorMessage(activityQuery.error, t("edit.loadError"))}
         </p>
         <Link
           href={`/my-activities/${activityId}`}
@@ -57,6 +61,7 @@ export function EditActivityForm({ activityId }: Readonly<{ activityId: string }
 
   return (
     <CreateActivityForm
+      referral={activityQuery.data.activityType === "REFERRAL"}
       mode="edit"
       activityId={activityId}
       initialDraft={initialDraft}

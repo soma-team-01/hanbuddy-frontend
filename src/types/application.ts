@@ -77,6 +77,8 @@ export interface PriceBreakdown {
 }
 
 export interface Application {
+  activityType?: import("./referral").ActivityType;
+  guestCount?: number;
   /** A saved refund intent is awaiting confirmation; never treat this as refund completion. */
   refundRecoveryPending?: boolean;
   id: string;
@@ -143,6 +145,7 @@ export interface CapturePayPalPaymentRequest {
 }
 
 export interface ApplicationResponse {
+  activityType?: import("./referral").ActivityType;
   applicationId: number;
   activityId: number;
   activityScheduleId: number;

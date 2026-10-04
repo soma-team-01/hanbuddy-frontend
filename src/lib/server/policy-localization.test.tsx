@@ -54,6 +54,14 @@ describe("policy locale at server entry points", () => {
     async (locale) => {
       const refund = await getPolicyDocument("cancellation-refund-policy", locale);
       const terms = await getPolicyDocument("terms-of-service", locale);
+      const servicePeriod = terms.source.split(/^## /m)[9].match(/^6\. (.+)$/m)?.[1];
+      expect(servicePeriod).toBeTruthy();
+      const termsParams = Promise.resolve({ locale, slug: "terms-of-service" });
+      for (const page of [PolicyPage, InterceptedPolicyPage]) {
+        renderWithIntl(await page({ params: termsParams }), { locale });
+        expect(screen.getByText(servicePeriod!)).toBeInTheDocument();
+        cleanup();
+      }
       const params = Promise.resolve({ locale, slug: "cancellation-refund-policy" });
       expect(await generateMetadata({ params })).toMatchObject({
         title: `${refund.title} | HanBuddy`,

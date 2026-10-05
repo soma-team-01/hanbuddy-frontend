@@ -114,13 +114,17 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
       src: "/images/landing/1차-1.webp",
       alt: aboutT("timeline.items.june.imageAlt"),
       position: "object-[50%_49%]",
+      zoom: "",
     },
     {
       key: "faq",
       href: "/faq",
-      src: "/images/landing/football-0928-mural-group.webp",
-      alt: aboutT("faq.meetPhotoAlt"),
-      position: "object-[50%_70%]",
+      // 밝은 낮 사진. 구장 입구에서 마스코트와 만난 단체컷이라 "어디서 만나나요"와도 맞다.
+      src: "/images/landing/kbo-0912-mascot-crew.webp",
+      alt: aboutT("hero.collageAlt2"),
+      position: "object-[50%_64%]",
+      // 세로 사진이라 사람이 작게 보여 아래쪽 단체를 확대한다. 가로 상자(md 이상)는 덜 확대해 양끝이 잘리지 않게 한다.
+      zoom: "scale-[1.6] origin-[50%_72%] md:scale-[1.25] md:origin-[50%_66%]",
     },
   ] as const;
   // 로그인한 관광객에게는 로그인 유도 대신 탐색으로 보낸다 (layout.tsx와 같은 판별 규칙)
@@ -331,7 +335,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
                   alt={card.alt}
                   fill
                   sizes="(min-width: 1024px) 192px, (min-width: 768px) 160px, 112px"
-                  className={`object-cover ${card.position}`}
+                  className={`object-cover ${card.position} ${card.zoom}`}
                 />
               </div>
               <div className="min-w-0">

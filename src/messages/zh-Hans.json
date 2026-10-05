@@ -1,4 +1,30 @@
 {
+  "ActivityLanguages": {
+    "hostedIn": "服务语言",
+    "title": "活动服务语言",
+    "hint": "请选择至少一种您能用于实际带领此活动的语言。",
+    "loading": "正在加载语言…",
+    "loadFailed": "无法加载活动服务语言，请重试。",
+    "retry": "重新加载语言",
+    "names": {
+      "KO": "韩语",
+      "EN": "英语",
+      "JA": "日语",
+      "ZH": "普通话",
+      "YUE": "粤语",
+      "ES": "西班牙语",
+      "FR": "法语",
+      "DE": "德语",
+      "VI": "越南语",
+      "TH": "泰语",
+      "ID": "印度尼西亚语"
+    }
+  },
+  "CancellationTranslation": {
+    "loading": "正在翻译…",
+    "retry": "重试翻译",
+    "unavailable": "暂时无法翻译，已显示原文。"
+  },
   "Referral": {
     "messagePlaceholder": "如有想对伙伴说的话，请在这里填写。",
     "summaryTitle": "申请信息",
@@ -140,6 +166,7 @@
     "scheduleNotCancelled": "未找到日程取消记录，请刷新我的报名以查看最新状态。",
     "signupSourceInvalid": "请检查注册来源和详细说明。",
     "signupBankAccountInvalid": "请检查银行和账号。",
+    "profileContactInvalid": "请检查联系方式。Buddy须填写韩国（+82）电话号码，去除空格和连字符后为6至15位数字。",
     "authenticationRequired": "请重新登录以继续。",
     "googleAuthenticationInvalid": "无法验证 Google 身份验证。请尝试重新登录。",
     "signupAgreementsInvalid": "查看注册协议并重试。",
@@ -152,6 +179,7 @@
     "imageContentType": "只能上传 JPEG、PNG 或 WebP 图像。",
     "imageCount": "选择上传的图像太多。",
     "activityCurrency": "活动目前只能以韩元定价。",
+    "activityLanguages": "请至少选择一种活动服务语言，不可重复。",
     "activityScheduleFuture": "活动日程必须在未来开始。",
     "activityOwner": "您只能访问您创建的活动。",
     "activityNotFound": "无法找到此活动。",
@@ -789,6 +817,11 @@
     "nationality": "国籍",
     "age": "出生日期",
     "contactDetails": "联系方式",
+    "contactUpdateRequired": "可用的联系方式已变更。请重新输入联系信息后再保存。保存前，原有联系信息将保持不变。",
+    "legacyContact": "已保留原有的{method}联系方式。仅在需要更改时选择其他联系方式。",
+    "legacyBank": "原银行：{bank}。更改账户时请从列表中选择银行。",
+    "bankNotRegistered": "未登记",
+    "phoneUpdateRequired": "请更新电话号码",
     "preferredMessagingApp": "首选消息应用程序",
     "addProfilePhoto": "添加个人资料照片",
     "selectedProfilePhotoPreview": "选定的个人资料照片预览",
@@ -797,6 +830,7 @@
       "nationalityRequired": "请选择国籍。",
       "ageInvalid": "请输入有效的出生日期。",
       "contactInvalid": "输入至少 2 个字符的联系人 ID 或号码。",
+      "koreanPhoneInvalid": "请输入韩国电话号码，去除空格和连字符后为6至15位数字。",
       "unsupportedImageType": "只能上传 JPEG、PNG 或 WebP 图像。",
       "imageTooLarge": "个人资料照片必须为 5MB 或更小。"
     },
@@ -1375,6 +1409,10 @@
     }
   },
   "CreateActivity": {
+    "languageStep": {
+      "title": "请选择活动使用的语言",
+      "description": "请选择至少一种您能用来带领此活动的语言。"
+    },
     "eyebrow": "创造体验",
     "title": "设计您的 HanBuddy 体验",
     "progress": "步骤 {current, number} 的 {total, number}",
@@ -1576,7 +1614,7 @@
       "am": "上午",
       "pm": "下午",
       "timePeriod": "上午/下午",
-      "hour": "小时 (1–12)",
+      "hour": "小时 (0–23)",
       "minute": "分钟 (0–59)",
       "hourPlaceholder": "时",
       "minutePlaceholder": "分",
@@ -1680,6 +1718,7 @@
       "scheduleCapacityOccupied": "人数上限不得低于预订确认与待付款人数之和。",
       "categoryRequired": "选择一个类别以继续。",
       "hostIntroductionRequired": "写一个 30 到 2000 个字符的简介。",
+      "availableLanguagesRequired": "请至少选择一种活动服务语言，不可重复。",
       "photosMinimum": "添加 3 到 10 张体验照片。",
       "experienceNameRequired": "输入 1 到 100 个字符之间的体验名称。",
       "experienceDescriptionRequired": "写下 30 到 3000 个字符的详细描述。",

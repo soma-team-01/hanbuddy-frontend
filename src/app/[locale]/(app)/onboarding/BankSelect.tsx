@@ -15,11 +15,13 @@ export function BankSelect({
   onChange,
   invalid,
   describedBy,
+  required = true,
 }: Readonly<{
   value: string;
   onChange: (value: string) => void;
   invalid?: boolean;
   describedBy?: string;
+  required?: boolean;
 }>) {
   const t = useTranslations("SignupExtra");
   const id = useId();
@@ -128,7 +130,7 @@ export function BankSelect({
         role="combobox"
         value={value}
         aria-label={t("bankLabel")}
-        aria-required="true"
+        aria-required={required || undefined}
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={open ? id : undefined}

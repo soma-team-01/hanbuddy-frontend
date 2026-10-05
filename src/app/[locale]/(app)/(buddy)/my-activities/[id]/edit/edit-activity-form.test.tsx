@@ -141,7 +141,7 @@ describe("EditActivityForm", () => {
     await screen.findByRole("heading", { name: "Preview your experience" });
     expect(screen.getByText(price === 0 ? "Free" : "₩5,000~")).toBeInTheDocument();
     fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       fireEvent.click(screen.getByRole("button", { name: "Next" }));
     }
     expect(
@@ -178,7 +178,7 @@ describe("EditActivityForm", () => {
     const { queryClient } = renderWithQueryClient(<EditActivityForm activityId="42" />);
     await screen.findByRole("heading", { name: "Preview your experience" });
     fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       fireEvent.click(screen.getByRole("button", { name: "Next" }));
     }
     fireEvent.click(screen.getByRole("button", { name: "Date-specific settings" }));

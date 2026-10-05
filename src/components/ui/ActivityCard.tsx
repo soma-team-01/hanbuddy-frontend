@@ -76,7 +76,7 @@ export function ActivityCard({
         ) : null}
 
         {/* 카드 하단: 원화 가격 · 환산가 · 1인당 */}
-        <div className="mt-auto md:pt-1">
+        <div className="pt-1">
           {activity.activityType === "REFERRAL" ? (
             <ReferralPrice activity={activity} variant="card" />
           ) : (

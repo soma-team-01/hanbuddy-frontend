@@ -60,6 +60,7 @@ describe("GET /api/users/me", () => {
 
     expect(mockedGetBackend).toHaveBeenCalledWith("/users/me", { bearerToken: "access-token" });
     expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     await expect(response.json()).resolves.toMatchObject({
       isSuccess: true,
       result: { userId: 1, name: "Sarah Jenkins" },
@@ -110,6 +111,38 @@ const updateRequest: MyProfileUpdateRequest = {
 describe("PATCH /api/users/me", () => {
   beforeEach(() => {
     mockedPatchBackend.mockReset();
+  });
+
+  it("passes bank enum and account strings through and never caches the returned account", async () => {
+    const request = { ...updateRequest, bankName: "KB", bankAccountNumber: "001-234" };
+    const bankAccount = {
+      bank: "KB",
+      bankCode: "004",
+      bankName: "KB국민은행",
+      accountNumber: "001234",
+    };
+    mockedPatchBackend.mockResolvedValue({
+      status: 200,
+      payload: {
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: { ...profile, userType: "BUDDY", bankAccount },
+      },
+      setCookies: [],
+    });
+    const response = await PATCH(
+      new NextRequest("http://localhost/api/users/me", {
+        method: "PATCH",
+        body: JSON.stringify(request),
+        headers: { cookie: `${AUTH_COOKIES.accessToken}=access-token` },
+      }),
+    );
+    expect(mockedPatchBackend).toHaveBeenCalledWith("/users/me", request, {
+      bearerToken: "access-token",
+    });
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toMatchObject({ result: { bankAccount } });
   });
 
   it("returns 401 without calling the backend when the access token cookie is missing", async () => {

@@ -129,6 +129,7 @@ export function mapMyActivityDetailToPreviewActivity(
     activityType: detail.activityType ?? "STANDARD",
     title: detail.title,
     description: detail.description,
+    availableLanguages: detail.availableLanguages ?? [],
     location: detail.meetingPointName,
     district: detail.meetingPointName,
     imageUrl: detail.thumbnailImageUrl || heroImageUrl,

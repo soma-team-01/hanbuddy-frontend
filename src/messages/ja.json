@@ -1,4 +1,30 @@
 {
+  "ActivityLanguages": {
+    "hostedIn": "対応言語",
+    "title": "対応言語",
+    "hint": "このアクティビティを実際に案内できる言語を1つ以上選んでください。",
+    "loading": "言語を読み込み中…",
+    "loadFailed": "対応言語を読み込めませんでした。もう一度お試しください。",
+    "retry": "言語を再読み込み",
+    "names": {
+      "KO": "韓国語",
+      "EN": "英語",
+      "JA": "日本語",
+      "ZH": "中国語（普通話）",
+      "YUE": "広東語",
+      "ES": "スペイン語",
+      "FR": "フランス語",
+      "DE": "ドイツ語",
+      "VI": "ベトナム語",
+      "TH": "タイ語",
+      "ID": "インドネシア語"
+    }
+  },
+  "CancellationTranslation": {
+    "loading": "翻訳中…",
+    "retry": "翻訳を再試行",
+    "unavailable": "翻訳を取得できないため、原文を表示しています。"
+  },
   "Referral": {
     "messagePlaceholder": "バディに伝えたいことがあればご記入ください。",
     "summaryTitle": "申込情報",
@@ -140,6 +166,7 @@
     "scheduleNotCancelled": "日程のキャンセル履歴がありません。申込一覧を更新して最新の状態を確認してください。",
     "signupSourceInvalid": "登録経路と詳細を確認してください。",
     "signupBankAccountInvalid": "銀行と口座番号を確認してください。",
+    "profileContactInvalid": "連絡先を確認してください。バディは韓国（+82）の電話番号を、空白・ハイフンを除く6〜15桁で入力してください。",
     "authenticationRequired": "続行するには、もう一度サインインしてください。",
     "googleAuthenticationInvalid": "Google認証が確認できませんでした。もう一度サインインしてください。",
     "signupAgreementsInvalid": "サインアップ規約を確認して、もう一度お試しください。",
@@ -152,6 +179,7 @@
     "imageContentType": "JPEG、PNG、または WebP 画像のみをアップロードできます。",
     "imageCount": "アップロードするために選択された画像が多すぎます。",
     "activityCurrency": "現在、アクティビティの価格は KRW のみで設定できます。",
+    "activityLanguages": "対応言語を重複なく1つ以上選んでください。",
     "activityScheduleFuture": "アクティビティのスケジュールは将来的に開始する必要があります。",
     "activityOwner": "自分が作成したアクティビティのみにアクセスできます。",
     "activityNotFound": "このアクティビティは見つかりませんでした。",
@@ -789,6 +817,11 @@
     "nationality": "国籍",
     "age": "生年月日",
     "contactDetails": "連絡先",
+    "contactUpdateRequired": "利用できる連絡方法が変更されました。保存する前に連絡先を再入力してください。保存するまでは以前の連絡先が維持されます。",
+    "legacyContact": "保存済みの{method}の連絡先を維持しています。変更する場合のみ別の連絡方法を選択してください。",
+    "legacyBank": "登録済みの銀行：{bank}。口座を変更するには一覧から銀行を選択してください。",
+    "bankNotRegistered": "未登録",
+    "phoneUpdateRequired": "電話番号の更新が必要です",
     "preferredMessagingApp": "優先メッセージング アプリ",
     "addProfilePhoto": "プロフィール写真を追加",
     "selectedProfilePhotoPreview": "選択したプロフィール写真のプレビュー",
@@ -797,6 +830,7 @@
       "nationalityRequired": "国籍を選択してください。",
       "ageInvalid": "有効な生年月日を入力してください。",
       "contactInvalid": "連絡先 ID または番号を 2 文字以上で入力します。",
+      "koreanPhoneInvalid": "韓国の電話番号を、空白・ハイフンを除く6〜15桁で入力してください。",
       "unsupportedImageType": "JPEG、PNG、または WebP 画像のみをアップロードできます。",
       "imageTooLarge": "プロフィール写真は 5MB 以下である必要があります。"
     },
@@ -1375,6 +1409,10 @@
     }
   },
   "CreateActivity": {
+    "languageStep": {
+      "title": "対応できる言語を選んでください",
+      "description": "このアクティビティを実際に案内できる言語を1つ以上選んでください。"
+    },
     "eyebrow": "体験を作成する",
     "title": "HanBuddy 体験をデザインする",
     "progress": "ステップ {current, number} の {total, number}",
@@ -1576,7 +1614,7 @@
       "am": "午前",
       "pm": "午後",
       "timePeriod": "午前・午後",
-      "hour": "時 (1–12)",
+      "hour": "時 (0–23)",
       "minute": "分 (0–59)",
       "hourPlaceholder": "時",
       "minutePlaceholder": "分",
@@ -1680,6 +1718,7 @@
       "scheduleCapacityOccupied": "定員は予約確定・支払い待ちの合計人数以上にしてください。",
       "categoryRequired": "続行するにはカテゴリを選択してください。",
       "hostIntroductionRequired": "30 文字から 2000 文字の間で紹介文を書きます。",
+      "availableLanguagesRequired": "対応言語を重複なく1つ以上選んでください。",
       "photosMinimum": "体験写真を 3 ～ 10 枚追加します。",
       "experienceNameRequired": "エクスペリエンス名を 1 ～ 100 文字で入力します。",
       "experienceDescriptionRequired": "詳細な説明を 30 ～ 3000 文字で入力します。",

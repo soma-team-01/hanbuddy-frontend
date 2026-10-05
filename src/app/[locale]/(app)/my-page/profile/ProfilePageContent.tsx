@@ -11,6 +11,7 @@ import {
   MailIcon,
   MessageCircleIcon,
   PencilIcon,
+  WonSignIcon,
 } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
 import { getIntlLocale, type Locale } from "@/i18n/routing";
@@ -21,6 +22,7 @@ import type { ContactMethod } from "@/lib/auth/types";
 import type { MyProfile } from "@/types/user";
 import type { SignupAgreementDocuments } from "@/lib/auth/signup-agreement-notices";
 import { ProfileAgreements } from "@/app/[locale]/(app)/my-page/profile/ProfileAgreements";
+import { getBuddyPhoneInput } from "@/lib/phone";
 
 type DetailIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -54,9 +56,22 @@ function formatContactValue(profile: MyProfile) {
 function ContactValue({
   profile,
   phoneLabel,
-}: Readonly<{ profile: MyProfile; phoneLabel: string }>) {
+  missingPhoneLabel,
+}: Readonly<{ profile: MyProfile; phoneLabel: string; missingPhoneLabel: string }>) {
   const methodLabel = getContactMethodLabel(profile.contactMethod, phoneLabel);
   const value = formatContactValue(profile);
+
+  if (profile.userType === "BUDDY") {
+    return (
+      <span className="min-w-0 break-all text-ink">
+        {getBuddyPhoneInput(
+          profile.contactMethod,
+          profile.contactCountryCode,
+          profile.contactIdentifier,
+        ) || missingPhoneLabel}
+      </span>
+    );
+  }
 
   return (
     <span
@@ -105,6 +120,7 @@ function ProfileView({
   const locale = useLocale() as Locale;
   const t = useTranslations("Profile");
   const tMessaging = useTranslations("Messaging");
+  const tBank = useTranslations("SignupExtra");
 
   return (
     <div className="flex flex-1 flex-col">
@@ -163,9 +179,42 @@ function ProfileView({
                     Icon={MessageCircleIcon}
                     label={t("contactDetails")}
                     value={
-                      <ContactValue profile={profile} phoneLabel={tMessaging("phoneNumber")} />
+                      <ContactValue
+                        profile={profile}
+                        phoneLabel={tMessaging("phoneNumber")}
+                        missingPhoneLabel={t("phoneUpdateRequired")}
+                      />
                     }
                   />
+                  {profile.userType === "BUDDY" && (
+                    <ProfileDetail
+                      Icon={WonSignIcon}
+                      label={tBank("bankTitle")}
+                      value={
+                        profile.bankAccount ? (
+                          <span
+                            data-testid="profile-bank-value"
+                            tabIndex={0}
+                            className="inline-flex max-w-full items-center gap-2 overflow-x-auto align-middle text-sm whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-primary md:gap-2.5 md:text-base"
+                          >
+                            <span className="shrink-0 text-xs font-bold text-primary md:text-sm">
+                              {profile.bankAccount.bankName}
+                            </span>
+                            <span
+                              aria-hidden
+                              data-testid="bank-account-divider"
+                              className="h-4 w-px shrink-0 bg-line-strong"
+                            />
+                            <span className="shrink-0 text-ink">
+                              {profile.bankAccount.accountNumber}
+                            </span>
+                          </span>
+                        ) : (
+                          t("bankNotRegistered")
+                        )
+                      }
+                    />
+                  )}
                 </dl>
               </div>
             </section>

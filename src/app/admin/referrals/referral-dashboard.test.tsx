@@ -76,6 +76,31 @@ beforeEach(() => {
   });
 });
 describe("activity-first referral admin", () => {
+  it("hides available languages on registered activity cards", async () => {
+    vi.mocked(getReferralActivities).mockResolvedValue({
+      status: "success",
+      data: {
+        content: [
+          {
+            partnerUserId: 7,
+            partnerName: "서울 공방",
+            activity: { ...activity, availableLanguages: ["KO", "EN"] },
+          },
+        ],
+        totalElements: 1,
+        totalPages: 1,
+        page: 0,
+        size: 20,
+        hasNext: false,
+      },
+    });
+    renderWithQueryClient(<ReferralDashboard />, { locale: "ko" });
+    const card = await screen.findByRole("link", { name: /서울 공방 방문/ });
+    expect(card).toHaveTextContent("서울 공방");
+    expect(card).toHaveTextContent("신청 현황 보기");
+    expect(card).not.toHaveTextContent(/한국어|영어/);
+    expect(card).toHaveAttribute("href", "/admin/referrals?activityId=42");
+  });
   it("searches activities by owner across all pages and resets the search", async () => {
     vi.mocked(getReferralActivities).mockImplementation(async (page = 0) => ({
       status: "success",

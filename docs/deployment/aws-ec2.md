@@ -218,6 +218,8 @@ secret에 두고, 호출받는 job의 `environment: production`도 유지한다.
 fail-closed로 유지한다. Production의 실제 값과 실제 GA/Meta 수신은 별도 운영 검증 대상이다.
 
 토스 결제용 frontend 환경변수는 없다. 결제 준비 API가 `clientKey`, 주문번호, 금액을 내려준다.
+토스는 사이트 언어와 무관하게 한국어 선택 시와 동일한 일반 결제창을 사용한다. 선택한 사이트
+언어는 결제 성공·실패 복귀 URL에 유지하며, 해외카드 전용 결제창으로 자동 전환하지 않는다.
 PayPal `PAYPAL_CLIENT_ID`는 브라우저 SDK에 공개되는 값이므로 environment variable로 관리한다.
 `PAYMENT_PROVIDER`는 `TOSS`, `PAYPAL`, `BOTH` 중 하나이며 신규 신청과 결제 대기 신청의 결제 버튼
 노출을 결정한다. 값을 바꾼 뒤에는 해당 환경을 다시 배포해야 하며 코드 변경은 필요하지 않다.

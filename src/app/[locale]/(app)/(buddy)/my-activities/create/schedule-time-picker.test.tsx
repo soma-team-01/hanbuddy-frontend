@@ -68,7 +68,7 @@ describe("schedule time cards", () => {
   it("supports custom times, avoids duplicate presets and applies times across dates", () => {
     renderWithIntl(<Form />);
     fireEvent.click(screen.getByRole("button", { name: "09:00" }));
-    const hour = screen.getByRole("textbox", { name: "Hour (1–12)" });
+    const hour = screen.getByRole("textbox", { name: "Hour (0–23)" });
     const minute = screen.getByRole("textbox", { name: "Minute (0–59)" });
     fireEvent.change(hour, { target: { value: "9" } });
     fireEvent.change(minute, { target: { value: "00" } });
@@ -82,7 +82,7 @@ describe("schedule time cards", () => {
     expect(customCard.parentElement).toHaveClass("grid", "grid-cols-3", "lg:grid-cols-4");
     expect(customCard.firstElementChild).toHaveClass("whitespace-nowrap");
     expect(
-      customCard.compareDocumentPosition(screen.getByRole("textbox", { name: "Hour (1–12)" })) &
+      customCard.compareDocumentPosition(screen.getByRole("textbox", { name: "Hour (0–23)" })) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     fireEvent.click(
@@ -94,31 +94,33 @@ describe("schedule time cards", () => {
     expect(
       within(screen.getByRole("group", { name: "Morning" })).queryByText("07:15"),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Remove AM 07:15 from October 11, 2099" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove 07:15 from October 11, 2099" }));
     expect(screen.queryByTestId("schedule-time-2099-10-11-07:15")).not.toBeInTheDocument();
   });
 
   it.each([
-    ["AM", "00:05"],
-    ["PM", "12:05"],
-  ])("converts 12 %s correctly and adds a separate removable card", (period, expected) => {
+    ["0", "5", "00:05"],
+    ["12", "5", "12:05"],
+    ["21", "53", "21:53"],
+    ["23", "59", "23:59"],
+  ])("accepts 24-hour input %s:%s as %s", (hour, minute, expected) => {
     renderWithIntl(<Form />);
-    fireEvent.click(screen.getByRole("button", { name: period }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Hour (1–12)" }), {
-      target: { value: "12" },
+    expect(screen.queryByRole("button", { name: /^(AM|PM)$/ })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "Hour (0–23)" }), {
+      target: { value: hour },
     });
     fireEvent.change(screen.getByRole("textbox", { name: "Minute (0–59)" }), {
-      target: { value: "5" },
+      target: { value: minute },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add time" }));
-    const group = screen.getByRole("group", { name: period === "AM" ? "Morning" : "Afternoon" });
+    const group = screen.getByRole("group", { name: Number(hour) < 12 ? "Morning" : "Afternoon" });
     const times = within(group)
       .getAllByRole("button")
       .map((button) => button.textContent);
     expect(times).toEqual([...times].sort());
     expect(within(group).queryByRole("button", { name: expected })).not.toBeInTheDocument();
     const card = screen.getByTestId(`schedule-time-2099-10-10-${expected}`);
-    expect(card).toHaveTextContent(`${period} 12:05`);
+    expect(card).toHaveTextContent(expected);
     fireEvent.click(within(card).getByRole("button", { name: /Remove/ }));
     expect(card).not.toBeInTheDocument();
     expect(
@@ -128,13 +130,13 @@ describe("schedule time cards", () => {
 
   it("requires valid typed hours and minutes", () => {
     renderWithIntl(<Form />);
-    const hour = screen.getByRole("textbox", { name: "Hour (1–12)" });
+    const hour = screen.getByRole("textbox", { name: "Hour (0–23)" });
     const minute = screen.getByRole("textbox", { name: "Minute (0–59)" });
     expect(hour).toHaveAttribute("inputmode", "numeric");
     for (const [h, m] of [
       ["", "00"],
-      ["0", "00"],
-      ["13", "00"],
+      ["24", "00"],
+      ["99", "00"],
       ["5", "60"],
       ["5", ""],
     ]) {
@@ -215,6 +217,22 @@ describe("schedule time cards", () => {
     expect(screen.getByRole("button", { name: "09:30" })).toBeEnabled();
   });
 
+  it("keeps elapsed custom times blocked in KST and supports Enter with a future 24-hour time", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-02T10:53:00Z"));
+    renderWithIntl(<Form date="2026-10-02" />);
+    const hour = screen.getByRole("textbox", { name: "Hour (0–23)" });
+    const minute = screen.getByRole("textbox", { name: "Minute (0–59)" });
+    fireEvent.change(hour, { target: { value: "19" } });
+    fireEvent.change(minute, { target: { value: "53" } });
+    expect(screen.getByRole("button", { name: "Add time" })).toBeDisabled();
+    fireEvent.keyDown(minute, { key: "Enter" });
+    expect(screen.queryByTestId("schedule-time-2026-10-02-19:53")).not.toBeInTheDocument();
+    fireEvent.change(hour, { target: { value: "21" } });
+    fireEvent.keyDown(minute, { key: "Enter" });
+    expect(screen.getByTestId("schedule-time-2026-10-02-21:53")).toHaveTextContent("21:53");
+  });
+
   it.each<[Locale, string, string]>([
     ["ko", "오전", "오후"],
     ["en", "Morning", "Afternoon"],
@@ -226,5 +244,15 @@ describe("schedule time cards", () => {
     renderWithIntl(<Form />, { locale, messages: messages[locale] });
     expect(screen.getByRole("group", { name: morning })).toBeVisible();
     expect(screen.getByRole("group", { name: afternoon })).toBeVisible();
+    const schedule = messages[locale].CreateActivity.schedule;
+    expect(screen.queryByRole("group", { name: schedule.timePeriod })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: schedule.hour }), {
+      target: { value: "21" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: schedule.minute }), {
+      target: { value: "53" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: schedule.addTime }));
+    expect(screen.getByTestId("schedule-time-2099-10-10-21:53")).toHaveTextContent("21:53");
   });
 });

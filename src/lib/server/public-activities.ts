@@ -7,6 +7,7 @@ import { getDefaultDisplayCurrency, withDisplayCurrency } from "@/lib/display-cu
 import type { TouristActivityDetail, TouristActivitySummary } from "@/types/activity";
 import { isContentLanguage } from "@/types/content-language";
 import { withActivityDate } from "@/lib/activity-booking-window";
+import { isActivityLanguage } from "@/types/activity-language";
 
 export class PublicActivityError extends Error {
   constructor(readonly kind: "missing" | "unavailable") {
@@ -139,6 +140,9 @@ function summary(value: unknown): TouristActivitySummary {
   )
     unavailable();
   if (item.displayPrice !== undefined) result.displayPrice = publicDisplayPrice(item.displayPrice);
+  if (Array.isArray(item.availableLanguages)) {
+    result.availableLanguages = item.availableLanguages.filter(isActivityLanguage);
+  }
   return result as unknown as TouristActivitySummary;
 }
 

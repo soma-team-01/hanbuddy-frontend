@@ -27,6 +27,26 @@ const activity: Activity = {
 };
 
 describe("ActivityCard", () => {
+  it.each(["STANDARD", "REFERRAL"] as const)(
+    "keeps the %s price directly below metadata without an expanding spacer",
+    (activityType) => {
+      const { container } = renderWithIntl(
+        <ActivityCard activity={{ ...activity, activityType, durationMinutes: 60 }} />,
+      );
+      const metadata = container.querySelector(
+        '[data-slot="activity-card-location"]',
+      )?.parentElement;
+      const price = metadata?.nextElementSibling;
+      expect(price).toHaveTextContent("₩35,000");
+      expect(price).not.toHaveClass("mt-auto");
+      expect(price).toHaveClass("pt-1");
+    },
+  );
+  it("keeps language metadata out of discovery cards", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, availableLanguages: ["KO", "EN"] }} />);
+    expect(screen.queryByText(/Korean|English|Activity languages/)).not.toBeInTheDocument();
+    expect(screen.getByText(activity.title)).toBeVisible();
+  });
   it.each([
     ["ko", "무료", ko],
     ["en", "Free", en],

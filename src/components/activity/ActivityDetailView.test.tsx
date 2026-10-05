@@ -62,6 +62,54 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it("uses compact borderless information rows only on mobile", () => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{ ...activity, availableLanguages: ["EN"], durationMinutes: 60 }}
+        preview
+      />,
+    );
+    const heading = screen.getByRole("heading", { name: "Hosted in" });
+    const section = heading.closest("section");
+    expect(section?.children).toHaveLength(4);
+    for (const row of Array.from(section?.children ?? [])) {
+      expect(row).toHaveClass(
+        "max-md:border-0",
+        "max-md:rounded-none",
+        "max-md:px-0",
+        "max-md:py-1.5",
+      );
+      expect(row).toHaveClass("rounded-2xl", "border", "p-5");
+      expect(row.querySelector("h3")).toHaveClass("max-md:text-[13px]");
+    }
+  });
+  it.each([
+    ["en", "Hosted in", "Korean · English", en],
+    ["ko", "제공 언어", "한국어 · 영어", ko],
+  ] as const)(
+    "shows languages in the detail information cards in %s",
+    (locale, title, labels, messages) => {
+      renderWithIntl(
+        <ActivityDetailView activity={{ ...activity, availableLanguages: ["KO", "EN"] }} preview />,
+        { locale, messages },
+      );
+      const heading = screen.getByRole("heading", { name: title });
+      const card = heading.closest("[data-slot='activity-languages']");
+      expect(card).toHaveTextContent(labels);
+      expect(card?.querySelector("svg")).toBeInTheDocument();
+      expect(card?.parentElement).toContainElement(
+        screen.getByRole("button", { name: /Gwangjang Market Gate 2/ }),
+      );
+      expect(screen.getAllByText(labels)).toHaveLength(1);
+      expect(screen.getByRole("heading", { level: 1 }).closest("section")).not.toHaveTextContent(
+        labels,
+      );
+    },
+  );
+  it("does not add an empty language card for legacy activities", () => {
+    renderWithIntl(<ActivityDetailView activity={activity} preview />);
+    expect(screen.queryByRole("heading", { name: "Hosted in" })).not.toBeInTheDocument();
+  });
   it.each([
     ["ko", "무료", ko],
     ["en", "Free", en],

@@ -188,7 +188,7 @@ export function OnboardingForm({
     signupSource: "",
     signupSourceDetail: "",
     bankName: resubmission?.bankAccount?.bank ?? "",
-    bankAccountNumber: resubmission?.bankAccount?.accountNumber.replace(/[ -]/g, "") ?? "",
+    bankAccountNumber: resubmission?.bankAccount?.accountNumber.replace(/\D/g, "") ?? "",
   });
   const [signupExtraError, setSignupExtraError] = useState<SignupExtraError | null>(null);
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;

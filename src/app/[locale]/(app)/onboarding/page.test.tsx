@@ -982,6 +982,44 @@ describe("OnboardingForm", () => {
     );
   });
 
+  it.each(["00A1-234.567", "001\t234\n567"])(
+    "normalizes legacy resubmission account %j without requiring an input edit",
+    async (accountNumber) => {
+      const application: BuddyResubmission = {
+        ...createRejectedApplication(),
+        contactMethod: "PHONE",
+        contactCountryCode: "+82",
+        contactIdentifier: "01012345678",
+        bankAccount: { bank: "SHINHAN", bankCode: "088", bankName: "신한은행", accountNumber },
+      };
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            isSuccess: true,
+            code: "200",
+            message: "OK",
+            result: { ...application, accountStatus: "PENDING_APPROVAL", rejectionReason: null },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(<OnboardingForm userType="BUDDY" resubmission={application} />);
+      fireEvent.click(screen.getByRole("button", { name: "Next" }));
+      expect(screen.getByLabelText("Account number")).toHaveValue("001234567");
+      fireEvent.click(screen.getByRole("button", { name: "Request another review" }));
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/auth/buddy/resubmission",
+        expect.objectContaining({ method: "PUT" }),
+      );
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+        bankName: "SHINHAN",
+        bankAccountNumber: "001234567",
+      });
+    },
+  );
+
   it("prefills a rejected buddy application and resubmits without agreements", async () => {
     const application: BuddyResubmission = {
       bankAccount: createRejectedApplication().bankAccount,

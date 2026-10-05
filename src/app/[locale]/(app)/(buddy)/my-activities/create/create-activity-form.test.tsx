@@ -146,10 +146,11 @@ function clickEditorNext() {
 }
 
 async function fillStepsUntilSchedule(reorder = false) {
-  fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
   fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
     target: { value: "I have guided friends through this market for years." },
   });
+  clickNext();
+  fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
   clickNext();
 
   fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
@@ -241,6 +242,31 @@ async function completeAllStepsUntilReview(reorder = false) {
 
 describe("CreateActivityForm", () => {
   it.each([false, true])(
+    "separates introduction and language steps (referral=%s)",
+    async (referral) => {
+      renderWithQueryClient(<CreateActivityForm referral={referral} />);
+      expect(screen.queryByRole("checkbox", { name: "English" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Choose activity languages" })).toBeDisabled();
+      fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
+        target: { value: "I have guided friends through this market for years." },
+      });
+      clickNext();
+      expect(screen.getByRole("heading", { name: "Choose activity languages" })).toBeVisible();
+      expect(screen.queryByRole("textbox", { name: "About you" })).not.toBeInTheDocument();
+      clickNext();
+      expect(screen.getByRole("alert")).toHaveTextContent("Select at least one activity language");
+      fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
+      fireEvent.click(screen.getByRole("button", { name: "Introduce yourself" }));
+      expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(
+        "I have guided friends through this market for years.",
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Choose activity languages" }));
+      expect(screen.getByRole("checkbox", { name: "English" })).toBeChecked();
+      clickNext();
+      expect(screen.getByRole("textbox", { name: "Experience name" })).toBeVisible();
+    },
+  );
+  it.each([false, true])(
     "replaces spoken languages without changing source language (referral=%s)",
     async (referral) => {
       const detail = { ...buildEditDetail(), availableLanguages: ["KO"] as const };
@@ -260,6 +286,7 @@ describe("CreateActivityForm", () => {
         />,
       );
       fireEvent.click(screen.getByRole("button", { name: "Intro" }));
+      fireEvent.click(screen.getByRole("button", { name: "Choose activity languages" }));
       const korean = await screen.findByRole("checkbox", { name: "Korean" });
       expect(korean).toBeChecked();
       fireEvent.click(korean);
@@ -281,7 +308,6 @@ describe("CreateActivityForm", () => {
     "navigates back from the mobile footer without losing input (referral=%s)",
     async (referral) => {
       renderWithQueryClient(<CreateActivityForm referral={referral} />);
-      fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
       const footer = screen.getByRole("contentinfo");
       expect(screen.getByRole("heading", { level: 1 })).toHaveClass("text-xl", "lg:text-3xl");
       expect(footer).toHaveClass("pt-2");
@@ -292,14 +318,19 @@ describe("CreateActivityForm", () => {
         target: { value: "I have guided friends through this market for years." },
       });
       clickNext();
+      fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
+      clickNext();
       fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
         target: { value: "Seoul market walk" },
       });
+      fireEvent.click(back);
+      expect(screen.getByRole("checkbox", { name: "English" })).toBeChecked();
       fireEvent.click(back);
       expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(
         "I have guided friends through this market for years.",
       );
       expect(back).toBeDisabled();
+      clickNext();
       clickNext();
       expect(screen.getByRole("textbox", { name: "Experience name" })).toHaveValue(
         "Seoul market walk",
@@ -560,11 +591,14 @@ describe("CreateActivityForm", () => {
     } as unknown as ReturnType<typeof useRouter>);
   });
 
-  it("shows the twelve-step full-screen sports experience flow without calling an API", () => {
+  it("shows the thirteen-step full-screen sports experience flow without calling an API", () => {
     const { container } = renderWithQueryClient(<CreateActivityForm />);
 
     expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Introduce yourself" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Introduce yourself" })).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
     expect(screen.getByRole("list", { name: "Activity creation progress" })).toHaveTextContent(
       "Intro",
     );
@@ -695,13 +729,14 @@ describe("CreateActivityForm", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps all twelve inputs in sequence and opens review after restrictions", async () => {
+  it("keeps all thirteen inputs in sequence and opens review after restrictions", async () => {
     renderWithQueryClient(<CreateActivityForm />);
-    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
 
     fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
       target: { value: "I have guided friends through this market for years." },
     });
+    clickNext();
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
     clickNext();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
@@ -1021,7 +1056,6 @@ describe("CreateActivityForm", () => {
 
   it("only allows progress navigation to the current or previous steps", async () => {
     renderWithQueryClient(<CreateActivityForm />);
-    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
 
     expect(screen.getByRole("button", { name: "Activity" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Operations" })).toBeDisabled();
@@ -1033,9 +1067,11 @@ describe("CreateActivityForm", () => {
       target: { value: "A local host who knows this neighborhood well." },
     });
     clickNext();
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
+    clickNext();
     fireEvent.click(screen.getByRole("button", { name: "Intro" }));
     expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Introduce yourself" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Introduce yourself" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Activity" })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: "Activity" }));
     expect(screen.getByRole("heading", { name: "Name your experience" })).toBeInTheDocument();
@@ -1043,11 +1079,12 @@ describe("CreateActivityForm", () => {
 
   it("revokes photo object URLs when a preview is removed", async () => {
     renderWithQueryClient(<CreateActivityForm />);
-    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
 
     fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
       target: { value: "I have hosted neighborhood walks for many years." },
     });
+    clickNext();
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
     clickNext();
     fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
       target: { value: "Market walk" },
@@ -1070,10 +1107,11 @@ describe("CreateActivityForm", () => {
 
   it("lets the buddy choose any uploaded photo as the cover", async () => {
     renderWithQueryClient(<CreateActivityForm />);
-    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
     fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
       target: { value: "I have hosted neighborhood walks for many years." },
     });
+    clickNext();
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
     clickNext();
     fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
       target: { value: "Market walk" },
@@ -1194,7 +1232,7 @@ describe("CreateActivityForm", () => {
           within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }),
         );
       }
-      for (let index = 0; index < 7; index++) clickNext();
+      for (let index = 0; index < 8; index++) clickNext();
       fireEvent.click(screen.getByRole("button", { name: "Date-specific settings" }));
       fireEvent.change(screen.getAllByRole("spinbutton")[0], { target: { value: "9" } });
       fireEvent.click(screen.getByRole("button", { name: "Increase maximum guests" }));

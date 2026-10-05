@@ -1400,6 +1400,10 @@
     }
   },
   "CreateActivity": {
+    "languageStep": {
+      "title": "请选择活动使用的语言",
+      "description": "请选择至少一种您能用来带领此活动的语言。"
+    },
     "eyebrow": "创造体验",
     "title": "设计您的 HanBuddy 体验",
     "progress": "步骤 {current, number} 的 {total, number}",

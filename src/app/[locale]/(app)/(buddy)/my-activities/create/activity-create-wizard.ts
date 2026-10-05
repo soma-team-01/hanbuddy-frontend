@@ -15,6 +15,7 @@ import type { ActivityLanguage } from "@/types/activity-language";
 
 export const ACTIVITY_CREATE_STEPS = [
   "host",
+  "languages",
   "name",
   "description",
   "photos",
@@ -213,6 +214,8 @@ export function validateActivityCreateStep(
         )
       )
         return "hostIntroductionRequired";
+      return null;
+    case "languages":
       if (
         (draft.availableLanguages?.length || draft.availableLanguagesTouched || !isEdit) &&
         !isValidActivityLanguages(draft.availableLanguages)

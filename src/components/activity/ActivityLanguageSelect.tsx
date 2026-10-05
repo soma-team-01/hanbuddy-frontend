@@ -23,9 +23,8 @@ export function ActivityLanguageSelect({
     retry: false,
   });
   return (
-    <fieldset disabled={disabled} className="mt-6 border-t border-line-soft pt-5">
-      <legend className="px-1 text-sm font-bold text-ink">{t("title")}</legend>
-      <p className="mb-3 text-xs leading-5 text-muted">{t("hint")}</p>
+    <fieldset disabled={disabled}>
+      <legend className="sr-only">{t("title")}</legend>
       {query.isPending ? (
         <p role="status" className="text-sm text-muted">
           {t("loading")}

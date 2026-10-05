@@ -83,20 +83,21 @@ function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): Acti
 describe("activity creation wizard", () => {
   it("requires actual languages for creation, but preserves untouched legacy empty edits", () => {
     const draft = createCompleteDraft({ availableLanguages: [] });
-    expect(validateActivityCreateStep("host", draft)).toBe("availableLanguagesRequired");
-    expect(validateActivityCreateStep("host", draft, true)).toBe("availableLanguagesRequired");
-    expect(validateActivityCreateStep("host", draft, false, true)).toBeNull();
+    expect(validateActivityCreateStep("host", draft)).toBeNull();
+    expect(validateActivityCreateStep("languages", draft)).toBe("availableLanguagesRequired");
+    expect(validateActivityCreateStep("languages", draft, true)).toBe("availableLanguagesRequired");
+    expect(validateActivityCreateStep("languages", draft, false, true)).toBeNull();
     expect(
       validateActivityCreateStep(
-        "host",
+        "languages",
         { ...draft, availableLanguagesTouched: true },
         false,
         true,
       ),
     ).toBe("availableLanguagesRequired");
-    expect(validateActivityCreateStep("host", { ...draft, availableLanguages: ["KO", "KO"] })).toBe(
-      "availableLanguagesRequired",
-    );
+    expect(
+      validateActivityCreateStep("languages", { ...draft, availableLanguages: ["KO", "KO"] }),
+    ).toBe("availableLanguagesRequired");
   });
   it("validates each schedule capacity, including occupied and held seats", () => {
     const base = createCompleteDraft();
@@ -167,9 +168,10 @@ describe("activity creation wizard", () => {
     },
   );
 
-  it("keeps the requested fields in twelve focused steps", () => {
+  it("keeps the requested fields in thirteen focused steps", () => {
     expect(ACTIVITY_CREATE_STEPS).toEqual([
       "host",
+      "languages",
       "name",
       "description",
       "photos",

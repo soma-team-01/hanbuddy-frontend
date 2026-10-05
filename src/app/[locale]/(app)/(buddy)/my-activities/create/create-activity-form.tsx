@@ -61,7 +61,7 @@ import {
 const MAX_EXPERIENCE_PHOTOS = ACTIVITY_CREATE_LIMITS.photos.max;
 
 const STEP_GROUPS = [
-  { key: "intro", steps: ["host"] },
+  { key: "intro", steps: ["host", "languages"] },
   { key: "activity", steps: ["name", "description", "photos", "itinerary"] },
   { key: "operation", steps: ["meeting", "schedule", "capacity"] },
   { key: "pricing", steps: ["price", "discount"] },
@@ -864,6 +864,7 @@ export function CreateActivityForm({
   }
 
   function getStepTitle(step: ActivityCreateStep) {
+    if (step === "languages") return t("languageStep.title");
     if (referral && step === "price") return t("price.referralTitle");
     return t(`steps.${step}.title`);
   }
@@ -875,6 +876,21 @@ export function CreateActivityForm({
     switch (currentStep) {
       case "host":
         return <HostStep draft={draft} onChange={updateField} t={t} />;
+      case "languages":
+        return (
+          <ActivityLanguageSelect
+            value={draft.availableLanguages ?? []}
+            disabled={isSubmitting}
+            onChange={(availableLanguages) => {
+              setDraft((current) => ({
+                ...current,
+                availableLanguages,
+                availableLanguagesTouched: true,
+              }));
+              setErrorKey(null);
+            }}
+          />
+        );
       case "name":
         return (
           <NameStep
@@ -992,9 +1008,11 @@ export function CreateActivityForm({
   const title = reviewing ? t("review.title") : getStepTitle(currentStep);
   const description = reviewing
     ? t("review.description")
-    : referral && currentStep === "price"
-      ? t("price.referralDescription")
-      : t(`steps.${currentStep}.description`);
+    : currentStep === "languages"
+      ? t("languageStep.description")
+      : referral && currentStep === "price"
+        ? t("price.referralDescription")
+        : t(`steps.${currentStep}.description`);
   const isLongStep =
     reviewing ||
     currentStep === "photos" ||
@@ -1104,20 +1122,6 @@ export function CreateActivityForm({
                   {description}
                 </p>
                 <div className="mt-4 lg:mt-10">{renderStep()}</div>
-                {!reviewing && currentStep === "host" ? (
-                  <ActivityLanguageSelect
-                    value={draft.availableLanguages ?? []}
-                    disabled={isSubmitting}
-                    onChange={(availableLanguages) => {
-                      setDraft((current) => ({
-                        ...current,
-                        availableLanguages,
-                        availableLanguagesTouched: true,
-                      }));
-                      setErrorKey(null);
-                    }}
-                  />
-                ) : null}
                 {errorKey ? (
                   <p
                     role="alert"

@@ -1400,6 +1400,10 @@
     }
   },
   "CreateActivity": {
+    "languageStep": {
+      "title": "Choose activity languages",
+      "description": "Select at least one language you can use to lead this activity."
+    },
     "eyebrow": "Create an experience",
     "title": "Design your HanBuddy experience",
     "progress": "Step {current, number} of {total, number}",

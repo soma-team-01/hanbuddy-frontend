@@ -1400,6 +1400,10 @@
     }
   },
   "CreateActivity": {
+    "languageStep": {
+      "title": "対応できる言語を選んでください",
+      "description": "このアクティビティを実際に案内できる言語を1つ以上選んでください。"
+    },
     "eyebrow": "体験を作成する",
     "title": "HanBuddy 体験をデザインする",
     "progress": "ステップ {current, number} の {total, number}",

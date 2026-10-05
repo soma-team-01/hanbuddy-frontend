@@ -19,11 +19,8 @@
     }
   },
   "CancellationTranslation": {
-    "translate": "查看翻譯",
     "loading": "正在翻譯…",
     "retry": "重試翻譯",
-    "showOriginal": "查看原文",
-    "showTranslation": "查看譯文",
     "unavailable": "暫時無法翻譯，已顯示原文。"
   },
   "Referral": {

@@ -19,11 +19,8 @@
     }
   },
   "CancellationTranslation": {
-    "translate": "翻訳を見る",
     "loading": "翻訳中…",
     "retry": "翻訳を再試行",
-    "showOriginal": "原文を見る",
-    "showTranslation": "翻訳文を見る",
     "unavailable": "翻訳を取得できないため、原文を表示しています。"
   },
   "Referral": {

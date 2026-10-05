@@ -19,11 +19,8 @@
     }
   },
   "CancellationTranslation": {
-    "translate": "번역 보기",
     "loading": "번역 중…",
     "retry": "번역 다시 시도",
-    "showOriginal": "원문 보기",
-    "showTranslation": "번역문 보기",
     "unavailable": "번역을 불러오지 못해 원문을 표시합니다."
   },
   "Referral": {

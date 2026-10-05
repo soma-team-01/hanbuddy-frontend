@@ -49,17 +49,17 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("automatic visible cancellation translation", () => {
-  it("starts with the original, translates when visible, and toggles without another request", async () => {
+  it("shows only the automatic translation, without a toggle or original flash", async () => {
     renderWithQueryClient(<CancellationReasonText {...props} />);
-    expect(screen.getByText(props.originalText)).toBeVisible();
+    expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Translating…");
     expect(api).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Translate" })).not.toBeInTheDocument();
     reveal();
     expect(await screen.findByText("Personal reasons")).toBeVisible();
     expect(api).toHaveBeenCalledWith("application", 42, "EN", expect.any(AbortSignal));
-    fireEvent.click(screen.getByRole("button", { name: "Show original" }));
-    expect(screen.getByText(props.originalText)).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Show translation" }));
+    expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(api).toHaveBeenCalledTimes(1);
   });
   it.each(["ORIGINAL", "UNAVAILABLE", "NOT_APPLICABLE"] as const)(
@@ -86,8 +86,12 @@ describe("automatic visible cancellation translation", () => {
     api.mockRejectedValueOnce(new Error("timeout"));
     renderWithQueryClient(<CancellationReasonText {...props} />);
     reveal();
-    fireEvent.click(await screen.findByRole("button", { name: "Retry translation" }));
+    const retry = await screen.findByRole("button", { name: "Retry translation" });
+    expect(screen.getByText(props.originalText)).toBeVisible();
+    fireEvent.click(retry);
     expect(await screen.findByText("Personal reasons")).toBeVisible();
+    expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(api).toHaveBeenCalledTimes(2);
   });
   it("automatically translates the new locale without an old response overwriting it", async () => {
@@ -108,6 +112,7 @@ describe("automatic visible cancellation translation", () => {
         <CancellationReasonText {...props} />
       </IntlTestProvider>,
     );
+    expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
     reveal();
     await screen.findByText("個人的な事情");
     await act(async () => finish(success));
@@ -125,6 +130,7 @@ describe("automatic visible cancellation translation", () => {
     session.userId = null;
     view.rerender(<CancellationReasonText {...props} />);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
     expect(api).toHaveBeenCalledTimes(1);
   });
 });

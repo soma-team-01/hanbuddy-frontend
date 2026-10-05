@@ -19,11 +19,8 @@
     }
   },
   "CancellationTranslation": {
-    "translate": "Translate",
     "loading": "Translating…",
     "retry": "Retry translation",
-    "showOriginal": "Show original",
-    "showTranslation": "Show translation",
     "unavailable": "Translation unavailable. Showing the original text."
   },
   "Referral": {

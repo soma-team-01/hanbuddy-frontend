@@ -21,6 +21,13 @@ interface Props {
 export function CancellationReasonText(props: Readonly<Props>) {
   const profile = useMyProfile();
   const language = getContentLanguage(useLocale() as Locale);
+  const t = useTranslations("CancellationTranslation");
+  if (!profile)
+    return (
+      <span role="status" className="block text-xs text-muted">
+        {t("loading")}
+      </span>
+    );
   if (profile?.status !== "success")
     return <span className="block whitespace-pre-line">{props.originalText}</span>;
   // Remount on account/target/locale/source changes; no previous private state is reused.
@@ -57,7 +64,6 @@ function Reason({
     observer.observe(element);
     return () => observer.disconnect();
   }, [visible]);
-  const [showOriginal, setShowOriginal] = useState(false);
   const query = useQuery({
     queryKey: ["cancellation-translation", userId, kind, String(id), language, instanceId],
     queryFn: async ({ signal }) =>
@@ -75,34 +81,29 @@ function Reason({
   const result = query.data?.targetLanguage === language ? query.data : undefined;
   const translated = result?.status === "TRANSLATED" && !!result.displayText;
   const unavailable = query.isError || result?.status === "UNAVAILABLE";
-  const text =
-    translated && !showOriginal ? result.displayText : (result?.originalText ?? originalText);
+  const text = translated ? result.displayText : (result?.originalText ?? originalText);
+  const loading = !result && !query.isError;
   return (
     <span ref={containerRef} className="block">
-      <span
-        className="block break-words whitespace-pre-line"
-        lang={
-          translated && !showOriginal
-            ? getContentLanguageTag(language)
-            : result
-              ? getContentLanguageTag(result.sourceLanguage)
-              : undefined
-        }
-      >
-        {text}
-      </span>
-      {translated ? (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            setShowOriginal(!showOriginal);
-          }}
-          className="min-h-9 text-xs text-primary underline underline-offset-2"
+      {loading ? (
+        <span role="status" className="block text-xs text-muted">
+          {t("loading")}
+        </span>
+      ) : (
+        <span
+          className="block break-words whitespace-pre-line"
+          lang={
+            translated
+              ? getContentLanguageTag(language)
+              : result
+                ? getContentLanguageTag(result.sourceLanguage)
+                : undefined
+          }
         >
-          {t(showOriginal ? "showTranslation" : "showOriginal")}
-        </button>
-      ) : unavailable ? (
+          {text}
+        </span>
+      )}
+      {unavailable ? (
         <button
           type="button"
           disabled={query.isFetching}
@@ -114,11 +115,6 @@ function Reason({
         >
           {t(query.isFetching ? "loading" : "retry")}
         </button>
-      ) : null}
-      {query.isFetching && !unavailable ? (
-        <span role="status" className="block text-xs text-muted">
-          {t("loading")}
-        </span>
       ) : null}
       {unavailable ? (
         <span role="status" className="block text-xs text-muted">

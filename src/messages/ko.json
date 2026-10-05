@@ -590,6 +590,12 @@
       "metadataDescription": "HanBuddy 활동을 예약하기 전에 게스트가 자주 묻는 질문에 답합니다. 버디는 누구인지, 결제 방법, 포함 내역, 만남 장소, 취소 규정을 확인하세요.",
       "eyebrow": "자주 묻는 질문",
       "title": "예약 전에 게스트가 자주 묻는 질문",
+      "groups": {
+        "hanbuddy": "HanBuddy와 버디",
+        "booking": "예약과 결제",
+        "day": "활동 당일"
+      },
+      "meetPhotoAlt": "서울월드컵경기장 대표팀 벽화 아래에서 만난 게스트와 버디",
       "items": {
         "what": {
           "question": "HanBuddy는 무엇인가요?",

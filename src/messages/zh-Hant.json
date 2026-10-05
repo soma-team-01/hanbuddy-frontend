@@ -590,6 +590,12 @@
       "metadataDescription": "解答旅客在預訂 HanBuddy 體驗前最常問的問題：好友是誰、如何付款、價格包含什麼、在哪裡集合，以及如何取消。",
       "eyebrow": "常見問題",
       "title": "旅客預訂前常問的問題",
+      "groups": {
+        "hanbuddy": "HanBuddy 與好友",
+        "booking": "預訂與付款",
+        "day": "活動當天"
+      },
+      "meetPhotoAlt": "在首爾世界盃競技場國家隊壁畫下集合的旅客與好友",
       "items": {
         "what": {
           "question": "HanBuddy 是什麼？",

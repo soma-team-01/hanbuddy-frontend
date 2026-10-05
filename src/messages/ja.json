@@ -590,6 +590,12 @@
       "metadataDescription": "HanBuddyの体験を予約する前によくいただく質問にお答えします。バディについて、支払い方法、料金に含まれるもの、集合場所、キャンセルについてご確認ください。",
       "eyebrow": "よくある質問",
       "title": "予約前によくいただく質問",
+      "groups": {
+        "hanbuddy": "HanBuddyとバディ",
+        "booking": "予約と支払い",
+        "day": "当日について"
+      },
+      "meetPhotoAlt": "ソウルワールドカップ競技場の代表チームの壁画の下で集まったゲストとバディ",
       "items": {
         "what": {
           "question": "HanBuddyとは何ですか？",

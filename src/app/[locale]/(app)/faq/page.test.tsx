@@ -32,22 +32,28 @@ describe("FaqPage", () => {
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
   });
 
-  it("shows all ten questions with their answers open, in the order guests ask them", async () => {
+  it("groups the ten questions by topic and keeps every answer open", async () => {
     await renderFaq("en");
 
     const faq = screen.getByRole("region", { name: "Questions guests ask before booking" });
-    const questions = within(faq).getAllByRole("heading", { level: 2 });
+    expect(
+      within(faq)
+        .getAllByRole("heading", { level: 2 })
+        .map((group) => group.textContent),
+    ).toEqual(["HanBuddy & buddies", "Booking & payment", "On the day"]);
+
+    const questions = within(faq).getAllByRole("heading", { level: 3 });
     expect(questions.map((question) => question.textContent)).toEqual([
       "What is HanBuddy?",
       "Who are the buddies?",
       "Can I come alone?",
+      "Do I need to speak Korean or know the sport?",
       "How do I pay?",
       "What is included in the price?",
-      "I have dietary restrictions. Is that a problem?",
-      "Where do we meet?",
       "How late can I book?",
       "What if I need to cancel?",
-      "Do I need to speak Korean or know the sport?",
+      "I have dietary restrictions. Is that a problem?",
+      "Where do we meet?",
     ]);
     for (const question of questions) {
       const answer = question.nextElementSibling;
@@ -58,6 +64,14 @@ describe("FaqPage", () => {
     // 답은 접지 않는다. 사람과 검색엔진이 같은 글을 읽는다.
     expect(document.querySelector("details")).toBeNull();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("names the topic groups in Korean", async () => {
+    await renderFaq("ko");
+
+    for (const name of ["HanBuddy와 버디", "예약과 결제", "활동 당일"]) {
+      expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
+    }
   });
 
   it("keeps the confirmed booking facts in the answers", async () => {
@@ -72,13 +86,24 @@ describe("FaqPage", () => {
   it("gives every question a stable anchor and lists them for jumping", async () => {
     await renderFaq("en");
 
-    const pay = screen.getByRole("heading", { level: 2, name: "How do I pay?" }).closest("section");
-    expect(pay).toHaveAttribute("id", "faq-pay");
+    const pay = screen.getByRole("heading", { level: 3, name: "How do I pay?" });
+    expect(pay.closest("article")).toHaveAttribute("id", "faq-pay");
 
-    const jumpList = screen.getByRole("navigation", { name: "FAQ" });
-    const links = within(jumpList).getAllByRole("link");
-    expect(links).toHaveLength(10);
-    expect(within(jumpList).getByRole("link", { name: "How do I pay?" })).toHaveAttribute(
+    // 모바일은 묶음 칩, 데스크톱은 묶음과 질문 목차. 둘 다 같은 이름의 내비게이션이다.
+    const [chips, rail] = screen.getAllByRole("navigation", { name: "FAQ" });
+    expect(within(chips).getByRole("link", { name: /Booking & payment/ })).toHaveAttribute(
+      "href",
+      "#faq-group-booking",
+    );
+    const questionLinks = within(rail)
+      .getAllByRole("link")
+      .filter(
+        (link) =>
+          link.getAttribute("href")?.startsWith("#faq-") &&
+          !link.getAttribute("href")?.startsWith("#faq-group-"),
+      );
+    expect(questionLinks).toHaveLength(10);
+    expect(within(rail).getByRole("link", { name: "How do I pay?" })).toHaveAttribute(
       "href",
       "#faq-pay",
     );

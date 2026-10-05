@@ -590,6 +590,12 @@
       "metadataDescription": "解答旅客在预订 HanBuddy 体验前最常问的问题：好友是谁、如何付款、价格包含什么、在哪里集合，以及如何取消。",
       "eyebrow": "常见问题",
       "title": "旅客预订前常问的问题",
+      "groups": {
+        "hanbuddy": "HanBuddy 与好友",
+        "booking": "预订与付款",
+        "day": "活动当天"
+      },
+      "meetPhotoAlt": "在首尔世界杯体育场国家队壁画下集合的旅客与好友",
       "items": {
         "what": {
           "question": "HanBuddy 是什么？",

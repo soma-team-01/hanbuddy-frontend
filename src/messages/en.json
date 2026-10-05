@@ -590,6 +590,12 @@
       "metadataDescription": "Answers to what guests ask before booking a HanBuddy experience: who the buddies are, how to pay, what is included, where to meet, and how cancellations work.",
       "eyebrow": "FAQ",
       "title": "Questions guests ask before booking",
+      "groups": {
+        "hanbuddy": "HanBuddy & buddies",
+        "booking": "Booking & payment",
+        "day": "On the day"
+      },
+      "meetPhotoAlt": "Guests and their buddy meeting under the national team mural at Seoul World Cup Stadium",
       "items": {
         "what": {
           "question": "What is HanBuddy?",

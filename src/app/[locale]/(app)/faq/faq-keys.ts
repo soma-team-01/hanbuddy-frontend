@@ -14,3 +14,11 @@ export const FAQ_KEYS = [
 ] as const;
 
 export type FaqKey = (typeof FAQ_KEYS)[number];
+
+// /faq 화면은 질문을 세 묶음으로 나눠 보여준다. 묶음 이름은 About.faq.groups.*.
+// 묶음 안 순서는 FAQ_KEYS 순서를 따른다.
+export const FAQ_GROUPS = [
+  { key: "hanbuddy", questions: ["what", "buddies", "solo", "language"] },
+  { key: "booking", questions: ["pay", "included", "deadline", "cancel"] },
+  { key: "day", questions: ["dietary", "meet"] },
+] as const satisfies readonly { key: string; questions: readonly FaqKey[] }[];

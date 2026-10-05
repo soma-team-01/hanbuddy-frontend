@@ -344,6 +344,18 @@
       "title": "오래 기억에 남는 순간.",
       "description": "HanBuddy와 함께 한국을 경험한 참여자들의 이야기입니다."
     },
+    "learnMore": {
+      "about": {
+        "title": "우리 이야기",
+        "description": "직관을 직접 호스팅하며 시작한 이야기와 버디가 어떤 사람들인지 소개합니다.",
+        "button": "HanBuddy 소개 보기"
+      },
+      "faq": {
+        "title": "예약 전에 궁금한 점이 있나요?",
+        "description": "결제, 만남 장소, 음식 제한 등을 확인하세요.",
+        "button": "자주 묻는 질문 보기"
+      }
+    },
     "contact": {
       "eyebrow": "계속 소통해요",
       "title": "HanBuddy에 대해 더 궁금하다면",

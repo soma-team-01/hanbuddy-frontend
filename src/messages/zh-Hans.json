@@ -344,6 +344,18 @@
       "title": "那些与你同在的时刻。",
       "description": "与 HanBuddy 一起体验韩国的客人的几句话。"
     },
+    "learnMore": {
+      "about": {
+        "title": "我们的故事",
+        "description": "我们如何从亲自举办比赛之夜开始，以及好友都是什么样的人。",
+        "button": "关于 HanBuddy"
+      },
+      "faq": {
+        "title": "预订前有疑问吗？",
+        "description": "付款、集合地点、饮食限制等。",
+        "button": "查看常见问题"
+      }
+    },
     "contact": {
       "eyebrow": "保持联系",
       "title": "想了解更多关于HanBuddy的信息",

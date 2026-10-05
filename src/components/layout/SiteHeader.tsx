@@ -23,8 +23,6 @@ const DESTINATIONS = {
     { href: "/", labelKey: "home" },
     { href: "/explore", labelKey: "explore" },
     { href: "/applications", labelKey: "applications" },
-    { href: "/about", labelKey: "about" },
-    { href: "/faq", labelKey: "faq" },
   ],
   buddy: [
     { href: "/home", labelKey: "home" },
@@ -34,8 +32,6 @@ const DESTINATIONS = {
   guest: [
     { href: "/", labelKey: "home" },
     { href: "/explore", labelKey: "explore" },
-    { href: "/about", labelKey: "about" },
-    { href: "/faq", labelKey: "faq" },
   ],
 } as const;
 

@@ -344,6 +344,18 @@
       "title": "あなたとともに残る瞬間。",
       "description": "HanBuddyで韓国を体験したゲストからの一言。"
     },
+    "learnMore": {
+      "about": {
+        "title": "私たちのストーリー",
+        "description": "観戦ナイトを自分たちで主催して始まった話と、バディがどんな人たちかを紹介します。",
+        "button": "HanBuddyについて"
+      },
+      "faq": {
+        "title": "予約前の疑問はありますか？",
+        "description": "支払い、集合場所、食事制限などはこちら。",
+        "button": "よくある質問を見る"
+      }
+    },
     "contact": {
       "eyebrow": "連絡を取り合う",
       "title": "ハンバディについてもっと知りたい",

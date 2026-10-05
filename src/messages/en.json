@@ -344,6 +344,18 @@
       "title": "The moments that stay with you.",
       "description": "A few words from guests who experienced Korea with HanBuddy."
     },
+    "learnMore": {
+      "about": {
+        "title": "Our story",
+        "description": "How we started hosting game nights, and who the buddies are.",
+        "button": "About HanBuddy"
+      },
+      "faq": {
+        "title": "Questions before booking?",
+        "description": "Payment, meeting point, dietary needs, and more.",
+        "button": "Read the FAQ"
+      }
+    },
     "contact": {
       "eyebrow": "Stay in touch",
       "title": "Want to learn more about HanBuddy",

@@ -64,14 +64,11 @@ describe("SiteHeader", () => {
       "href",
       "/en/applications",
     );
-    expect(within(primaryNavigation).getByRole("link", { name: "About" })).toHaveAttribute(
-      "href",
-      "/en/about",
-    );
-    expect(within(primaryNavigation).getByRole("link", { name: "FAQ" })).toHaveAttribute(
-      "href",
-      "/en/faq",
-    );
+    // About·FAQ는 상단 메뉴가 아니라 메인 화면 카드와 푸터에서 이어진다
+    expect(
+      within(primaryNavigation).queryByRole("link", { name: "About" }),
+    ).not.toBeInTheDocument();
+    expect(within(primaryNavigation).queryByRole("link", { name: "FAQ" })).not.toBeInTheDocument();
     expect(
       within(primaryNavigation).queryByRole("link", { name: "My Page" }),
     ).not.toBeInTheDocument();
@@ -128,10 +125,21 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
     expect(screen.queryByRole("link", { name: "Host an experience" })).not.toBeInTheDocument();
     const primaryNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
-    expect(within(primaryNavigation).getByRole("link", { name: "FAQ" })).toHaveAttribute(
-      "href",
-      "/en/faq",
-    );
+    expect(
+      within(primaryNavigation).queryByRole("link", { name: "About" }),
+    ).not.toBeInTheDocument();
+    expect(within(primaryNavigation).queryByRole("link", { name: "FAQ" })).not.toBeInTheDocument();
+  });
+
+  it("leaves About and FAQ out of the opened mobile menu too", () => {
+    mockedUsePathname.mockReturnValue("/");
+    renderWithQueryClient(<SiteHeader />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("link", { name: "Explore" })).toBeInTheDocument();
+    expect(within(dialog).queryByRole("link", { name: "About" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("link", { name: "FAQ" })).not.toBeInTheDocument();
   });
 
   it("does not offer role switching to authenticated accounts", () => {
@@ -379,8 +387,8 @@ describe("SiteHeader", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />, { locale: "ko" });
 
     expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/ko/explore");
-    expect(screen.getByRole("link", { name: "소개" })).toHaveAttribute("href", "/ko/about");
-    expect(screen.getByRole("link", { name: "자주 묻는 질문" })).toHaveAttribute("href", "/ko/faq");
+    expect(screen.queryByRole("link", { name: "소개" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "자주 묻는 질문" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(
       "href",
       "/ko/applications",

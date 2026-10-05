@@ -2,6 +2,7 @@ import { sharePreview } from "@/lib/seo/metadata";
 import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
@@ -10,6 +11,7 @@ import { ActivityDateFilter } from "@/components/activity/ActivityDateFilter";
 import { MailIcon } from "@/components/ui/icons";
 import { LandingAnalytics, LandingCtaLink } from "@/components/analytics/LandingAnalytics";
 import { TrackedInquiryLink } from "@/components/analytics/TrackedInquiryLink";
+import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
@@ -98,10 +100,29 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
   const { locale } = await params;
   const query = await searchParams;
   const date = Array.isArray(query?.date) ? query.date.join(",") : query?.date;
-  const [t, cookieStore] = await Promise.all([
+  const [t, aboutT, cookieStore] = await Promise.all([
     getTranslations({ locale, namespace: "Landing" }),
+    getTranslations({ locale, namespace: "About" }),
     cookies(),
   ]);
+
+  // 상단 메뉴 대신 후기 아래에서 About·FAQ로 잇는 카드. 사진 설명은 About 메시지를 그대로 쓴다.
+  const learnMore = [
+    {
+      key: "about",
+      href: "/about",
+      src: "/images/landing/1차-1.webp",
+      alt: aboutT("timeline.items.june.imageAlt"),
+      position: "object-[50%_49%]",
+    },
+    {
+      key: "faq",
+      href: "/faq",
+      src: "/images/landing/football-0928-mural-group.webp",
+      alt: aboutT("faq.meetPhotoAlt"),
+      position: "object-[50%_70%]",
+    },
+  ] as const;
   // 로그인한 관광객에게는 로그인 유도 대신 탐색으로 보낸다 (layout.tsx와 같은 판별 규칙)
   const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
   const isTourist =
@@ -295,6 +316,43 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
           </div>
         </PageContainer>
       </section>
+
+      {/* About·FAQ로 이어지는 카드. 사진은 왼쪽에 작게 두어 높이를 아끼고 얼굴이 크게 나오지 않게 한다. 카드 전체가 링크다. */}
+      <div className="bg-canvas-soft pb-14 md:pb-20">
+        <PageContainer className="grid gap-3 md:gap-4 lg:grid-cols-2">
+          {learnMore.map((card) => (
+            <article
+              key={card.key}
+              className="group relative flex items-center gap-4 rounded-[1.5rem] border border-line-soft bg-panel-raised p-3 pr-5 transition-colors hover:border-primary md:gap-6 md:p-4 md:pr-8"
+            >
+              <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-[1rem] bg-panel sm:w-28 md:aspect-[4/3] md:w-40 lg:w-48">
+                <Image
+                  src={card.src}
+                  alt={card.alt}
+                  fill
+                  sizes="(min-width: 1024px) 192px, (min-width: 768px) 160px, 112px"
+                  className={`object-cover ${card.position}`}
+                />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-display text-lg leading-snug font-bold text-ink md:text-xl">
+                  {t(`learnMore.${card.key}.title`)}
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted md:mt-2 md:text-base md:leading-7">
+                  {t(`learnMore.${card.key}.description`)}
+                </p>
+                <Link
+                  href={card.href}
+                  className="mt-2 inline-flex items-center gap-1.5 font-display text-sm font-bold text-primary-strong group-hover:text-primary after:absolute after:inset-0 after:rounded-[1.5rem] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-primary-strong md:mt-4"
+                >
+                  {t(`learnMore.${card.key}.button`)}
+                  <span aria-hidden>→</span>
+                </Link>
+              </div>
+            </article>
+          ))}
+        </PageContainer>
+      </div>
 
       <section
         data-landing-section="contact"

@@ -224,6 +224,33 @@ describe("LandingPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it.each([
+    ["en", "About HanBuddy", "Read the FAQ"],
+    ["ko", "HanBuddy 소개 보기", "자주 묻는 질문 보기"],
+  ] as const)(
+    "links to the About story and the FAQ between the reviews and contact for %s",
+    async (locale, aboutLink, faqLink) => {
+      await renderLanding(locale);
+
+      const about = screen.getByRole("link", { name: aboutLink });
+      const faq = screen.getByRole("link", { name: faqLink });
+      expect(about).toHaveAttribute("href", `/${locale}/about`);
+      expect(faq).toHaveAttribute("href", `/${locale}/faq`);
+
+      // 상단 메뉴에서 빠진 About·FAQ는 후기를 읽은 뒤, 문의 앞에서 이어진다
+      const reviews = document.querySelector("[data-landing-section='guest_reviews']")!;
+      const contact = document.querySelector("[data-landing-section='contact']")!;
+      for (const link of [about, faq]) {
+        expect(
+          reviews.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(
+          contact.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_PRECEDING,
+        ).toBeTruthy();
+      }
+    },
+  );
+
   it("sends a logged-in tourist to explore instead of asking them to log in", async () => {
     cookieJar.set(AUTH_COOKIES.userType, "TOURIST");
     cookieJar.set(AUTH_COOKIES.accessToken, "token");

@@ -31,6 +31,9 @@ export const BACKEND_ERROR_CODES = [
   "AUTH400_AGREEMENT",
   "AUTH400_SIGNUP_SOURCE",
   "AUTH400_BANK_ACCOUNT",
+  "AUTH400_CONTACT",
+  "USER400_CONTACT",
+  "USER400_BANK_ACCOUNT",
   "AUTH400_AGREEMENT_VERSION",
   "AUTH409",
   "COMMON401",
@@ -102,6 +105,7 @@ export const API_ERROR_MESSAGE_KEYS = [
   "signupAgreementsInvalid",
   "signupSourceInvalid",
   "signupBankAccountInvalid",
+  "profileContactInvalid",
   "signupAgreementsOutdated",
   "emailAlreadyRegistered",
   "validationRequired",
@@ -176,6 +180,9 @@ export const API_ERROR_MESSAGE_KEYS = [
 export type ApiErrorMessageKey = (typeof API_ERROR_MESSAGE_KEYS)[number];
 
 export const ERROR_CODE_MESSAGE_KEYS = {
+  AUTH400_CONTACT: "profileContactInvalid",
+  USER400_CONTACT: "profileContactInvalid",
+  USER400_BANK_ACCOUNT: "signupBankAccountInvalid",
   APPLICATION400_BOOKING_CLOSED: "bookingClosed",
   ACTIVITY_SCHEDULE400_CAPACITY: "scheduleCapacity",
   ACTIVITY_SCHEDULE400_EDIT: "scheduleEdit",

@@ -33,8 +33,11 @@ import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import { userKeys } from "@/lib/query/users";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
+import { getBuddyPhoneInput, isKoreanPhoneNumber } from "@/lib/phone";
 import type messages from "@/messages/en.json";
 import type { MyProfile } from "@/types/user";
+import { isBankName, validateSignupBank, type SignupExtraError } from "@/lib/auth/signup-extra";
+import { BankSelect } from "@/app/[locale]/(app)/onboarding/BankSelect";
 
 function getLocalDateInputValue(date: Date) {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
@@ -57,14 +60,10 @@ function toMessagingCountry(profile: MyProfile) {
   );
 }
 
-function resolveContactCountryCode(
-  isBuddy: boolean,
-  messagingApp: MessagingAppKey,
-  messagingCountry: string,
-) {
-  const usesKoreanPhoneNumber =
-    isBuddy && (messagingApp === "whatsapp" || messagingApp === "phone");
-  return usesKoreanPhoneNumber ? "+82" : (findCountry(messagingCountry)?.dialCode ?? "");
+function resolveContactCountryCode(messagingApp: MessagingAppKey, messagingCountry: string) {
+  return messagingApp === "whatsapp" || messagingApp === "phone"
+    ? (findCountry(messagingCountry)?.dialCode ?? "")
+    : "";
 }
 
 interface EditProfileFormProps {
@@ -73,13 +72,32 @@ interface EditProfileFormProps {
 
 export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const t = useTranslations("Profile");
+  const tMessaging = useTranslations("Messaging");
+  const tBank = useTranslations("SignupExtra");
   const getApiErrorMessage = useApiErrorMessage();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
-    APP_BY_CONTACT_METHOD[profile.contactMethod],
+  const isBuddy = profile.userType === "BUDDY";
+  const buddyPhone = getBuddyPhoneInput(
+    profile.contactMethod,
+    profile.contactCountryCode,
+    profile.contactIdentifier,
   );
-  const [messagingContact, setMessagingContact] = useState(profile.contactIdentifier);
+  const needsContactUpdate = isBuddy && !buddyPhone;
+  const [bankName, setBankName] = useState(profile.bankAccount?.bank ?? "");
+  const [bankAccountNumber, setBankAccountNumber] = useState(
+    profile.bankAccount?.accountNumber.replace(/[ -]/g, "") ?? "",
+  );
+  const [bankError, setBankError] = useState<SignupExtraError | null>(null);
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(() => {
+    if (isBuddy) return "phone";
+    return APP_BY_CONTACT_METHOD[profile.contactMethod];
+  });
+  // 기존 메신저 ID를 새로운 연락 수단의 ID/전화번호로 재해석하지 않는다.
+  const [messagingContact, setMessagingContact] = useState(() => {
+    if (isBuddy) return buddyPhone;
+    return profile.contactIdentifier;
+  });
   const [errorKey, setErrorKey] = useState<ProfileErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
     error: unknown;
@@ -93,7 +111,6 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
   const { nationality, messagingCountry, handleNationalityChange, handleMessagingCountryChange } =
     useMessagingCountrySync(profile.nationalityCode, toMessagingCountry(profile));
 
-  const isBuddy = profile.userType === "BUDDY";
   const updateProfileMutation = useMutation({
     mutationFn: async (request: Parameters<typeof updateMyProfile>[0]) =>
       unwrapApiResult(await updateMyProfile(request), "profile"),
@@ -159,6 +176,7 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     setRequestFailure(null);
 
     const formData = new FormData(event.currentTarget);
+    setBankError(null);
     const displayNameEntry = formData.get("displayName");
     const birthDateEntry = formData.get("birthDate");
     const rawDisplayName = typeof displayNameEntry === "string" ? displayNameEntry : "";
@@ -181,6 +199,36 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     if (contactIdentifier.length < 2) {
       setErrorKey("validation.contactInvalid");
       return;
+    }
+    if (isBuddy && !isKoreanPhoneNumber(contactIdentifier)) {
+      setErrorKey("validation.koreanPhoneInvalid");
+      return;
+    }
+    const phoneContact = messagingApp === "phone" || messagingApp === "whatsapp";
+    if (
+      !isBuddy &&
+      (phoneContact
+        ? !/^\d{6,15}$/.test(contactIdentifier.replace(/[ -]/g, "")) ||
+          !/^\+\d{1,4}$/.test(resolveContactCountryCode(messagingApp, messagingCountry))
+        : !/^[A-Za-z0-9@._+\-]{2,100}$/.test(contactIdentifier))
+    ) {
+      setErrorKey("validation.contactInvalid");
+      return;
+    }
+
+    const bankChanged =
+      isBuddy &&
+      (bankName !== (profile.bankAccount?.bank ?? "") ||
+        bankAccountNumber !== (profile.bankAccount?.accountNumber.replace(/[ -]/g, "") ?? ""));
+    if (bankChanged) {
+      const error = validateSignupBank(
+        { bankName, bankAccountNumber, signupSource: "", signupSourceDetail: "" },
+        "BUDDY",
+      );
+      if (error) {
+        setBankError(error);
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -206,8 +254,13 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
         nationalityCode: nationality,
         birthDate,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-        contactCountryCode: resolveContactCountryCode(isBuddy, messagingApp, messagingCountry),
-        contactIdentifier,
+        contactCountryCode: isBuddy
+          ? "+82"
+          : resolveContactCountryCode(messagingApp, messagingCountry),
+        contactIdentifier: isBuddy ? contactIdentifier.replace(/[ -]/g, "") : contactIdentifier,
+        ...(bankChanged && isBankName(bankName)
+          ? { bankName, bankAccountNumber: bankAccountNumber.trim() }
+          : {}),
       });
     } catch (error) {
       if (error instanceof UnauthenticatedQueryError) return;
@@ -342,9 +395,12 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                   </h2>
                   <div className="flex flex-col gap-2">
                     <span className="text-sm font-medium text-ink">
-                      {t("preferredMessagingApp")}
+                      {isBuddy ? tMessaging("phoneNumber") : t("preferredMessagingApp")}
                     </span>
                     <MessagingAppField
+                      touristSignup={!isBuddy}
+                      showAppSelector={!isBuddy}
+                      koreanOnly={isBuddy}
                       app={messagingApp}
                       onAppChange={handleMessagingAppChange}
                       country={messagingCountry}
@@ -352,12 +408,71 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
                       contactValue={messagingContact}
                       onContactChange={setMessagingContact}
                       inputRequired
-                      koreanOnly={isBuddy}
                       variant="cards"
                       singleRowOnDesktop
                     />
+                    {needsContactUpdate && (
+                      <p className="text-sm leading-6 text-muted">{t("contactUpdateRequired")}</p>
+                    )}
+                    {!isBuddy && (messagingApp === "line" || messagingApp === "wechat") && (
+                      <p className="text-sm leading-6 text-muted">
+                        {t("legacyContact", {
+                          method: messagingApp === "line" ? "LINE" : "WeChat",
+                        })}
+                      </p>
+                    )}
                   </div>
                 </section>
+
+                {isBuddy && (
+                  <section
+                    aria-labelledby="profile-bank-title"
+                    className="mt-5 flex flex-col gap-3 border-t border-line-soft pt-5"
+                  >
+                    <h2 id="profile-bank-title" className="font-display text-lg font-bold text-ink">
+                      {tBank("bankTitle")}
+                    </h2>
+                    {profile.bankAccount && !profile.bankAccount.bank && (
+                      <p className="text-sm break-words text-muted">
+                        {t("legacyBank", { bank: profile.bankAccount.bankName })}
+                      </p>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+                      <div className="flex min-w-0 flex-col gap-1.5">
+                        <span className="text-sm font-medium text-ink">{tBank("bankLabel")}</span>
+                        <BankSelect
+                          value={bankName}
+                          onChange={setBankName}
+                          required={false}
+                          invalid={!!bankError}
+                          describedBy={bankError ? "profile-bank-error" : undefined}
+                        />
+                      </div>
+                      <label className="flex min-w-0 flex-col gap-1.5">
+                        <span className="text-sm font-medium text-ink">
+                          {tBank("accountLabel")}
+                        </span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={bankAccountNumber}
+                          onChange={(event) =>
+                            setBankAccountNumber(event.target.value.replace(/\D/g, ""))
+                          }
+                          aria-invalid={!!bankError}
+                          aria-describedby={bankError ? "profile-bank-error" : undefined}
+                          className="w-full rounded-xl border border-line-strong bg-white px-4 py-2.5 text-base text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                        />
+                      </label>
+                    </div>
+                    {bankError && (
+                      <p id="profile-bank-error" role="alert" className="text-sm text-danger">
+                        {tBank(`errors.${bankError.key}`)}
+                      </p>
+                    )}
+                  </section>
+                )}
 
                 {errorMessage ? (
                   <p

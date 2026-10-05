@@ -89,6 +89,66 @@ function createRejectedApplication(): BuddyResubmission {
 }
 
 describe("OnboardingForm", () => {
+  it.each([
+    ["KR", "phone", "01012345678", "01012345678"],
+    ["US", "phone", "2025550114", ""],
+    ["KR", "line", "legacy-id", ""],
+  ] as const)(
+    "restores a buddy draft safely for %s/%s",
+    async (messagingCountry, messagingApp, messagingContact, expected) => {
+      saveOnboardingDraft("signup:BUDDY:domestic", {
+        currentStep: 2,
+        displayName: "Test Buddy",
+        nationality: "US",
+        birthDate: "1998-04-12",
+        messagingCountry,
+        messagingApp,
+        messagingContact,
+        agreementDecisions: {},
+        profileImageFile: null,
+        existingProfileImageKey: null,
+        existingProfileImageUrl: null,
+      });
+      renderWithIntl(<OnboardingForm userType="BUDDY" signupDraftAccountId="domestic" />);
+      expect(await screen.findByLabelText("Phone number")).toHaveValue(expected);
+      expect(screen.queryByLabelText("Country code")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    },
+  );
+  it("hides the buddy phone country code even for a foreign nationality", () => {
+    renderWithIntl(
+      <OnboardingForm
+        userType="BUDDY"
+        resubmission={{
+          ...createRejectedApplication(),
+          nationalityCode: "US",
+          contactMethod: "PHONE",
+          contactCountryCode: "+82",
+          contactIdentifier: "01012345678",
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByLabelText("Phone number")).toHaveValue("01012345678");
+    expect(screen.queryByLabelText("Country code")).not.toBeInTheDocument();
+    expect(screen.queryByText("+82")).not.toBeInTheDocument();
+  });
+
+  it("does not prefill an overseas buddy resubmission phone as a Korean number", () => {
+    renderWithIntl(
+      <OnboardingForm
+        userType="BUDDY"
+        resubmission={{
+          ...createRejectedApplication(),
+          contactMethod: "PHONE",
+          contactCountryCode: "+1",
+          contactIdentifier: "2025550114",
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByLabelText("Phone number")).toHaveValue("");
+  });
   it("limits compact header and form spacing to mobile breakpoints", () => {
     renderWithIntl(<OnboardingForm />);
     const close = screen.getByRole("link", { name: "Close" });
@@ -235,7 +295,7 @@ describe("OnboardingForm", () => {
     });
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body).toMatchObject({ bankName: "SHINHAN", bankAccountNumber: "009-876543" });
+    expect(body).toMatchObject({ bankName: "SHINHAN", bankAccountNumber: "009876543" });
     expect(body).not.toHaveProperty("signupSource");
     expect(body).not.toHaveProperty("agreements");
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
@@ -290,7 +350,7 @@ describe("OnboardingForm", () => {
       renderWithIntl(<OnboardingForm userType="BUDDY" />);
       fillAboutYou("en", { birthDate: "1998-04-12" });
       clickContinue("en");
-      fireEvent.change(screen.getByLabelText("Phone number"), { target: { value: "2025550114" } });
+      fireEvent.change(screen.getByLabelText("Phone number"), { target: { value: "01012345678" } });
       fillBank("en");
       clickContinue("en");
       fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
@@ -328,7 +388,7 @@ describe("OnboardingForm", () => {
       expect(screen.queryByRole("radio")).not.toBeInTheDocument();
       fireEvent.change(
         screen.getByLabelText(userType === "BUDDY" ? "Phone number" : "Messaging app ID"),
-        { target: { value: userType === "BUDDY" ? "2025550114" : "traveler_id" } },
+        { target: { value: userType === "BUDDY" ? "01012345678" : "traveler_id" } },
       );
       if (userType === "BUDDY") fillBank("en");
       clickContinue("en");
@@ -362,7 +422,7 @@ describe("OnboardingForm", () => {
       expect(screen.queryByRole("radio")).not.toBeInTheDocument();
       if (userType === "BUDDY")
         fireEvent.change(screen.getByLabelText("Phone number"), {
-          target: { value: "2025550114" },
+          target: { value: "01012345678" },
         });
       else fillContact("en", "synthetic-id");
       if (userType === "BUDDY") {
@@ -377,14 +437,14 @@ describe("OnboardingForm", () => {
         });
       } else expect(screen.queryByLabelText("Account number")).not.toBeInTheDocument();
       clickContinue("en");
-      expect(JSON.stringify(window.sessionStorage)).not.toContain("001-234");
+      expect(JSON.stringify(window.sessionStorage)).not.toContain("001234567890");
       fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
       fireEvent.submit(screen.getByRole("checkbox", { name: "Agree to all" }).closest("form")!);
       await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
       const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
       expect(payload).toMatchObject({ signupSource: "OTHER", signupSourceDetail: "Travel club" });
       if (userType === "BUDDY")
-        expect(payload).toMatchObject({ bankName: "SHINHAN", bankAccountNumber: "001-234 567890" });
+        expect(payload).toMatchObject({ bankName: "SHINHAN", bankAccountNumber: "001234567890" });
       else {
         expect(payload).not.toHaveProperty("bankName");
         expect(payload).not.toHaveProperty("bankAccountNumber");
@@ -440,12 +500,12 @@ describe("OnboardingForm", () => {
   );
 
   it.each([
-    ["KakaoTalk", "KAKAOTALK", "카카오 사용자 / a"],
-    ["Instagram", "INSTAGRAM", "https://instagram.com/synthetic.user"],
+    ["KakaoTalk", "KAKAOTALK", "kakao-user_a"],
+    ["Instagram", "INSTAGRAM", "@synthetic.user"],
     ["KakaoTalk", "KAKAOTALK", "a".repeat(100)],
     ["Instagram", "INSTAGRAM", "a".repeat(100)],
   ])(
-    "submits %s with an unrestricted identifier and LocalDate birthDate",
+    "submits %s with a valid identifier and LocalDate birthDate",
     async (label, method, identifier) => {
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(
@@ -812,7 +872,7 @@ describe("OnboardingForm", () => {
     expect(screen.getByRole("heading", { name: "Contact & payout details" })).toBeInTheDocument();
     expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Phone number"), {
-      target: { value: "2025550114" },
+      target: { value: "01012345678" },
     });
     fillBank("en");
     clickContinue("en");
@@ -825,8 +885,8 @@ describe("OnboardingForm", () => {
       userType: "BUDDY",
       displayName: "Google Buddy",
       contactMethod: "PHONE",
-      contactCountryCode: "+1",
-      contactIdentifier: "2025550114",
+      contactCountryCode: "+82",
+      contactIdentifier: "01012345678",
       agreements: expect.arrayContaining([
         expect.objectContaining({ type: "BUDDY_OPERATION_TERMS", agreed: true }),
         expect.objectContaining({ type: "BUDDY_COMMISSION_POLICY", agreed: true }),
@@ -991,7 +1051,7 @@ describe("OnboardingForm", () => {
       contactCountryCode: "+82",
       contactIdentifier: "01012345678",
       bankName: "SHINHAN",
-      bankAccountNumber: "001-234567",
+      bankAccountNumber: "001234567",
     });
     expect(routerMocks.replace).toHaveBeenCalledWith(
       "/en/buddy/auth/status?status=PENDING_APPROVAL",
@@ -1064,7 +1124,7 @@ describe("OnboardingForm", () => {
     fillAboutYou("en", { birthDate: "1998-04-12" });
     clickContinue("en");
     fireEvent.change(screen.getByLabelText("Phone number"), {
-      target: { value: "2025550114" },
+      target: { value: "01012345678" },
     });
     fillBank("en");
     clickContinue("en");
@@ -1326,7 +1386,7 @@ it.each(["en", "ko"] as const)(
     expect(screen.getByRole("heading", { name: heading }).nextElementSibling).toBeNull();
     expect(screen.getByRole("navigation")).toHaveTextContent(heading);
     fireEvent.change(screen.getByLabelText(locale === "en" ? "Phone number" : "전화번호"), {
-      target: { value: "2025550114" },
+      target: { value: "01012345678" },
     });
     clickContinue(locale);
     expect(screen.getByRole("alert")).toHaveTextContent(

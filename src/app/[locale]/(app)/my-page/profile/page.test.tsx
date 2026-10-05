@@ -86,6 +86,59 @@ describe("ProfilePage", () => {
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 
+  it.each(["KB", null] as const)(
+    "shows the buddy's own bank %s including legacy labels and leading zeroes",
+    async (bank) => {
+      mockedGetMyProfile.mockResolvedValue({
+        status: "success",
+        profile: createMockProfile({
+          userType: "BUDDY",
+          bankAccount: {
+            bank,
+            bankCode: null,
+            bankName: bank ? "KB국민은행" : "Legacy Bank",
+            accountNumber: "0012345678",
+          },
+        }),
+      });
+      renderWithQueryClient(<ProfilePage />);
+      expect(await screen.findByText("0012345678")).toBeInTheDocument();
+      expect(screen.getByText(bank ? "KB국민은행" : "Legacy Bank")).toHaveClass("text-primary");
+      expect(screen.getByTestId("bank-account-divider")).toBeInTheDocument();
+      expect(screen.getByTestId("profile-bank-value")).toHaveClass(
+        "whitespace-nowrap",
+        "overflow-x-auto",
+      );
+    },
+  );
+
+  it("shows an unregistered bank without inventing an account", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: createMockProfile({ userType: "BUDDY", bankAccount: null }),
+    });
+    renderWithQueryClient(<ProfilePage />);
+    expect(await screen.findByText("Not registered")).toBeInTheDocument();
+  });
+
+  it("does not expose bank data on a tourist profile even if included in the response", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: createMockProfile({
+        bankAccount: {
+          bank: "KB",
+          bankCode: "004",
+          bankName: "KB국민은행",
+          accountNumber: "0012345678",
+        },
+      }),
+    });
+    renderWithQueryClient(<ProfilePage />);
+    await screen.findByText("Sarah");
+    expect(screen.queryByText("0012345678")).not.toBeInTheDocument();
+    expect(screen.queryByText("Bank account")).not.toBeInTheDocument();
+  });
+
   it("links to the separate profile editing screen", async () => {
     renderWithQueryClient(<ProfilePage />);
 
@@ -94,6 +147,28 @@ describe("ProfilePage", () => {
       "/en/my-page/edit",
     );
   });
+
+  it.each([
+    ["LINE", null, "legacy-id", "Phone number update required"],
+    ["PHONE", "+82", "01012345678", "01012345678"],
+  ] as const)(
+    "shows buddy %s contact values without a messenger label",
+    async (contactMethod, contactCountryCode, contactIdentifier, value) => {
+      mockedGetMyProfile.mockResolvedValue({
+        status: "success",
+        profile: createMockProfile({
+          userType: "BUDDY",
+          contactMethod,
+          contactCountryCode,
+          contactIdentifier,
+        }),
+      });
+      renderWithQueryClient(<ProfilePage />);
+      expect(await screen.findByText(value)).toBeInTheDocument();
+      expect(screen.queryByTestId("contact-method-divider")).not.toBeInTheDocument();
+      expect(screen.queryByText("LINE")).not.toBeInTheDocument();
+    },
+  );
 
   it("separates the saved messaging service name from the contact ID", async () => {
     mockedGetMyProfile.mockResolvedValue({

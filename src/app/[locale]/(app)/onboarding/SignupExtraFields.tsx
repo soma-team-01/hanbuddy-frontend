@@ -104,7 +104,9 @@ export function SignupExtraFields({
                 maxLength={50}
                 required
                 value={value.bankAccountNumber}
-                onChange={(event) => onChange({ ...value, bankAccountNumber: event.target.value })}
+                onChange={(event) =>
+                  onChange({ ...value, bankAccountNumber: event.target.value.replace(/\D/g, "") })
+                }
                 aria-invalid={error?.field === "bank" || undefined}
                 aria-describedby={error?.field === "bank" ? `${id}-bank-error` : undefined}
               />

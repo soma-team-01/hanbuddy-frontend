@@ -21,7 +21,6 @@ import { CountrySelect } from "@/components/ui/CountrySelect";
 import {
   APP_BY_CONTACT_METHOD,
   CONTACT_METHOD_BY_APP,
-  MAX_MESSENGER_ID_LENGTH,
   MessagingAppField,
   type MessagingAppKey,
 } from "@/components/ui/MessagingAppField";
@@ -45,6 +44,7 @@ import {
   uploadProfileImage,
 } from "@/lib/images/presigned";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
+import { getBuddyPhoneInput, isKoreanPhoneNumber } from "@/lib/phone";
 import type messages from "@/messages/en.json";
 import type {
   ApiResponse,
@@ -65,6 +65,7 @@ import {
   getOnboardingMemoryDraft,
   loadOnboardingDraft,
   saveOnboardingDraft,
+  type OnboardingDraftSnapshot,
 } from "./onboarding-draft-storage";
 
 import { BirthDatePicker } from "./BirthDatePicker";
@@ -150,6 +151,14 @@ function getInitialMessagingApp(
   return "kakaotalk";
 }
 
+function getBuddyDraftPhone(draft: OnboardingDraftSnapshot) {
+  return getBuddyPhoneInput(
+    CONTACT_METHOD_BY_APP[draft.messagingApp],
+    findCountry(draft.messagingCountry)?.dialCode,
+    draft.messagingContact,
+  );
+}
+
 function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
   if (isResubmission) return "/buddy/auth/status?status=REJECTED" as const;
   if (isBuddyFlow) return "/buddy" as const;
@@ -179,7 +188,7 @@ export function OnboardingForm({
     signupSource: "",
     signupSourceDetail: "",
     bankName: resubmission?.bankAccount?.bank ?? "",
-    bankAccountNumber: resubmission?.bankAccount?.accountNumber ?? "",
+    bankAccountNumber: resubmission?.bankAccount?.accountNumber.replace(/[ -]/g, "") ?? "",
   });
   const [signupExtraError, setSignupExtraError] = useState<SignupExtraError | null>(null);
   const finalStep: OnboardingStep = isResubmission ? 2 : 3;
@@ -198,15 +207,22 @@ export function OnboardingForm({
   const [birthDate, setBirthDate] = useState(
     initialDraft?.birthDate ?? resubmission?.birthDate ?? "",
   );
-  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(
-    () => initialDraft?.messagingApp ?? getInitialMessagingApp(isBuddyFlow, resubmission),
+  const [messagingApp, setMessagingApp] = useState<MessagingAppKey>(() =>
+    isBuddyFlow
+      ? "phone"
+      : (initialDraft?.messagingApp ?? getInitialMessagingApp(isBuddyFlow, resubmission)),
   );
-  const [messagingContact, setMessagingContact] = useState(
-    initialDraft?.messagingContact ??
-      (resubmission && (!isBuddyFlow || resubmission.contactMethod === "PHONE")
-        ? resubmission.contactIdentifier
-        : ""),
-  );
+  const [messagingContact, setMessagingContact] = useState(() => {
+    if (!isBuddyFlow)
+      return initialDraft?.messagingContact ?? resubmission?.contactIdentifier ?? "";
+    if (initialDraft) return getBuddyDraftPhone(initialDraft);
+    if (!resubmission) return "";
+    return getBuddyPhoneInput(
+      resubmission.contactMethod,
+      resubmission.contactCountryCode,
+      resubmission.contactIdentifier,
+    );
+  });
   const [agreementDecisions, setAgreementDecisions] = useState<
     Partial<Record<SignupAgreementType, boolean>>
   >(initialDraft?.agreementDecisions ?? {});
@@ -287,8 +303,8 @@ export function OnboardingForm({
         setDisplayName(restored.displayName);
         setBirthDate(restored.birthDate);
         restoreMessagingCountries(restored.nationality, restored.messagingCountry);
-        setMessagingApp(restored.messagingApp);
-        setMessagingContact(restored.messagingContact);
+        setMessagingApp(isBuddyFlow ? "phone" : restored.messagingApp);
+        setMessagingContact(isBuddyFlow ? getBuddyDraftPhone(restored) : restored.messagingContact);
         setAgreementDecisions(restored.agreementDecisions);
         setProfileImageFile(restored.profileImageFile);
         setExistingProfileImageKey(restored.existingProfileImageKey);
@@ -300,7 +316,7 @@ export function OnboardingForm({
     return () => {
       cancelled = true;
     };
-  }, [draftScope, finalStep, initialDraft, restoreMessagingCountries]);
+  }, [draftScope, finalStep, initialDraft, isBuddyFlow, restoreMessagingCountries]);
 
   useEffect(() => {
     if (!draftScope || !isDraftPersistenceReady || draftPersistenceDisabledRef.current) return;
@@ -311,7 +327,7 @@ export function OnboardingForm({
       birthDate,
       nationality,
       messagingApp,
-      messagingCountry,
+      messagingCountry: isBuddyFlow ? "KR" : messagingCountry,
       messagingContact,
       agreementDecisions,
       profileImageFile,
@@ -326,6 +342,7 @@ export function OnboardingForm({
     draftScope,
     existingProfileImageKey,
     existingProfileImageUrl,
+    isBuddyFlow,
     isDraftPersistenceReady,
     messagingApp,
     messagingContact,
@@ -456,14 +473,15 @@ export function OnboardingForm({
     const contactIdentifier = messagingContact.trim();
     const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
     const contactCountryCode = requiresContactCountryCode
-      ? findCountry(messagingCountry)?.dialCode
+      ? findCountry(isBuddyFlow ? "KR" : messagingCountry)?.dialCode
       : "";
 
     const normalizedPhoneNumber = contactIdentifier.replace(/[ -]/g, "");
-    const isUnrestrictedMessenger = messagingApp === "kakaotalk" || messagingApp === "instagram";
-    const isValidMessengerId = isUnrestrictedMessenger
-      ? contactIdentifier.length > 0 && contactIdentifier.length <= MAX_MESSENGER_ID_LENGTH
-      : MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
+    if (isBuddyFlow && !isKoreanPhoneNumber(normalizedPhoneNumber)) {
+      setErrorKey("validation.contactInvalid");
+      return false;
+    }
+    const isValidMessengerId = MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
     const isValidContact = requiresContactCountryCode
       ? COUNTRY_CALLING_CODE_PATTERN.test(contactCountryCode ?? "") &&
         PHONE_CONTACT_PATTERN.test(normalizedPhoneNumber)
@@ -550,7 +568,7 @@ export function OnboardingForm({
     const contactIdentifier = messagingContact.trim();
     const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
     const contactCountryCode = requiresContactCountryCode
-      ? findCountry(messagingCountry)?.dialCode
+      ? findCountry(isBuddyFlow ? "KR" : messagingCountry)?.dialCode
       : "";
 
     submissionInFlight.current = true;
@@ -1022,6 +1040,7 @@ export function OnboardingForm({
                       inputRequired
                       variant="cards"
                       showAppSelector={!isBuddyFlow}
+                      koreanOnly={isBuddyFlow}
                     />
                   </div>
                   {isBuddyFlow && (

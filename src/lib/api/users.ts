@@ -10,7 +10,7 @@ export function getMyProfile() {
   return requestApiResult<MyProfile, "profile">(
     "/api/users/me",
     "profile",
-    undefined,
+    { cache: "no-store" },
     DEFAULT_PROFILE_ERROR_MESSAGE,
   );
 }
@@ -21,6 +21,7 @@ export function updateMyProfile(request: MyProfileUpdateRequest) {
     "profile",
     {
       method: "PATCH",
+      cache: "no-store",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },

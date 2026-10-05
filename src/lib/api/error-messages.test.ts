@@ -17,7 +17,7 @@ function apiError(code: string | null, status: number | null) {
 
 describe("API error message registry", () => {
   it("recognizes every OpenAPI error code", () => {
-    expect(BACKEND_ERROR_CODES).toHaveLength(83);
+    expect(BACKEND_ERROR_CODES).toHaveLength(86);
     expect(Object.keys(ERROR_CODE_MESSAGE_KEYS).sort()).toEqual([...BACKEND_ERROR_CODES].sort());
   });
 
@@ -33,6 +33,19 @@ describe("API error message registry", () => {
     );
     expect(resolveApiErrorMessageKey(apiError("SCHEDULE400_NOT_CANCELLED", 400))).toBe(
       "scheduleNotCancelled",
+    );
+  });
+
+  it.each(["AUTH400_CONTACT", "USER400_CONTACT"])(
+    "maps %s to localized contact guidance",
+    (code) => {
+      expect(resolveApiErrorMessageKey(apiError(code, 400))).toBe("profileContactInvalid");
+    },
+  );
+
+  it("maps own-profile bank validation errors", () => {
+    expect(resolveApiErrorMessageKey(apiError("USER400_BANK_ACCOUNT", 400))).toBe(
+      "signupBankAccountInvalid",
     );
   });
 

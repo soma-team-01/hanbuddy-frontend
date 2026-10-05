@@ -23,6 +23,10 @@ describe("getMyProfile", () => {
     );
 
     await expect(getMyProfile()).resolves.toEqual({ status: "success", profile });
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/users/me",
+      expect.objectContaining({ cache: "no-store" }),
+    );
   });
 
   it("returns unauthenticated when the request keeps failing with 401", async () => {

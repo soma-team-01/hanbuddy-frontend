@@ -10,22 +10,24 @@ import type { MyProfile, MyProfileUpdateRequest } from "@/types/user";
 
 export const dynamic = "force-dynamic";
 
+function privateProfileResponse(body: unknown, status: number) {
+  return NextResponse.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
+}
+
 export async function GET(request: NextRequest) {
   const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
 
   if (!accessToken) {
-    return NextResponse.json(createProxyErrorResponse("로그인이 필요합니다."), { status: 401 });
+    return privateProfileResponse(createProxyErrorResponse("로그인이 필요합니다."), 401);
   }
 
   try {
     const backend = await getBackend<MyProfile>("/users/me", { bearerToken: accessToken });
-    const response = NextResponse.json(backend.payload, { status: backend.status });
+    const response = privateProfileResponse(backend.payload, backend.status);
     appendBackendSetCookies(response, backend.setCookies);
     return response;
   } catch {
-    return NextResponse.json(createProxyErrorResponse("인증 서버에 연결할 수 없습니다."), {
-      status: 502,
-    });
+    return privateProfileResponse(createProxyErrorResponse("인증 서버에 연결할 수 없습니다."), 502);
   }
 }
 
@@ -33,28 +35,27 @@ export async function PATCH(request: NextRequest) {
   const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
 
   if (!accessToken) {
-    return NextResponse.json(createProxyErrorResponse("로그인이 필요합니다."), { status: 401 });
+    return privateProfileResponse(createProxyErrorResponse("로그인이 필요합니다."), 401);
   }
 
   let body: MyProfileUpdateRequest;
   try {
     body = (await request.json()) as MyProfileUpdateRequest;
   } catch {
-    return NextResponse.json(createProxyErrorResponse("프로필 수정 요청을 읽을 수 없습니다."), {
-      status: 400,
-    });
+    return privateProfileResponse(
+      createProxyErrorResponse("프로필 수정 요청을 읽을 수 없습니다."),
+      400,
+    );
   }
 
   try {
     const backend = await patchBackend<MyProfileUpdateRequest, MyProfile>("/users/me", body, {
       bearerToken: accessToken,
     });
-    const response = NextResponse.json(backend.payload, { status: backend.status });
+    const response = privateProfileResponse(backend.payload, backend.status);
     appendBackendSetCookies(response, backend.setCookies);
     return response;
   } catch {
-    return NextResponse.json(createProxyErrorResponse("인증 서버에 연결할 수 없습니다."), {
-      status: 502,
-    });
+    return privateProfileResponse(createProxyErrorResponse("인증 서버에 연결할 수 없습니다."), 502);
   }
 }

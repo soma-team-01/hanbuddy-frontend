@@ -31,13 +31,18 @@ export function ActivityLanguageSelect({
         </p>
       ) : null}
       {query.isError ? (
-        <button
-          type="button"
-          onClick={() => void query.refetch()}
-          className="min-h-11 text-sm text-primary underline"
-        >
-          {t("retry")}
-        </button>
+        <>
+          <p role="alert" className="text-sm text-danger">
+            {t("loadFailed")}
+          </p>
+          <button
+            type="button"
+            onClick={() => void query.refetch()}
+            className="min-h-11 text-sm text-primary underline"
+          >
+            {t("retry")}
+          </button>
+        </>
       ) : null}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {(query.data ?? []).filter(isActivityLanguage).map((code) => (

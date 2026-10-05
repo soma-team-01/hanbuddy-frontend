@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useIsFetching, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Locale } from "@/i18n/routing";
@@ -9,6 +9,7 @@ import { getCancellationTranslation } from "@/lib/api/cancellation-translation";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
+import { userKeys } from "@/lib/query/users";
 import type { CancellationTranslationTarget } from "@/types/cancellation-translation";
 import type { ContentLanguage } from "@/types/content-language";
 
@@ -29,7 +30,7 @@ export function CancellationReasonText(props: Readonly<Props>) {
       </span>
     );
   if (profile?.status !== "success")
-    return <span className="block whitespace-pre-line">{props.originalText}</span>;
+    return <ProfileUnavailable originalText={props.originalText} />;
   // Remount on account/target/locale/source changes; no previous private state is reused.
   return (
     <Reason
@@ -38,6 +39,50 @@ export function CancellationReasonText(props: Readonly<Props>) {
       userId={profile.profile.userId}
       language={language}
     />
+  );
+}
+
+function ProfileUnavailable({ originalText }: Readonly<{ originalText: string }>) {
+  const queryClient = useQueryClient();
+  const isFetching = useIsFetching({ queryKey: userKeys.me(), exact: true }) > 0;
+  return (
+    <span className="block">
+      <span className="block break-words whitespace-pre-line">{originalText}</span>
+      <TranslationRetry
+        isFetching={isFetching}
+        onRetry={() => {
+          void queryClient.refetchQueries(
+            { queryKey: userKeys.me(), exact: true },
+            { cancelRefetch: false },
+          );
+        }}
+      />
+    </span>
+  );
+}
+
+function TranslationRetry({
+  isFetching,
+  onRetry,
+}: Readonly<{ isFetching: boolean; onRetry: () => void }>) {
+  const t = useTranslations("CancellationTranslation");
+  return (
+    <>
+      <button
+        type="button"
+        disabled={isFetching}
+        onClick={(event) => {
+          event.stopPropagation();
+          onRetry();
+        }}
+        className="min-h-9 text-xs text-primary underline underline-offset-2 disabled:opacity-50"
+      >
+        {t(isFetching ? "loading" : "retry")}
+      </button>
+      <span role="status" className="block text-xs text-muted">
+        {t("unavailable")}
+      </span>
+    </>
   );
 }
 
@@ -80,9 +125,10 @@ function Reason({
   useAuthQueryRedirect(query.error);
   const result = query.data?.targetLanguage === language ? query.data : undefined;
   const translated = result?.status === "TRANSLATED" && !!result.displayText;
-  const unavailable = query.isError || result?.status === "UNAVAILABLE";
+  const mismatched = query.isSuccess && !result;
+  const unavailable = query.isError || mismatched || result?.status === "UNAVAILABLE";
   const text = translated ? result.displayText : (result?.originalText ?? originalText);
-  const loading = !result && !query.isError;
+  const loading = !result && !query.isError && !mismatched;
   return (
     <span ref={containerRef} className="block">
       {loading ? (
@@ -104,22 +150,12 @@ function Reason({
         </span>
       )}
       {unavailable ? (
-        <button
-          type="button"
-          disabled={query.isFetching}
-          onClick={(event) => {
-            event.stopPropagation();
+        <TranslationRetry
+          isFetching={query.isFetching}
+          onRetry={() => {
             void query.refetch();
           }}
-          className="min-h-9 text-xs text-primary underline underline-offset-2 disabled:opacity-50"
-        >
-          {t(query.isFetching ? "loading" : "retry")}
-        </button>
-      ) : null}
-      {unavailable ? (
-        <span role="status" className="block text-xs text-muted">
-          {t("unavailable")}
-        </span>
+        />
       ) : null}
     </span>
   );

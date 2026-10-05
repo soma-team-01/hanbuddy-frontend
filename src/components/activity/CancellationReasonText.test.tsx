@@ -94,6 +94,32 @@ describe("automatic visible cancellation translation", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(api).toHaveBeenCalledTimes(2);
   });
+  it.each(["TRANSLATED", "ORIGINAL", "UNAVAILABLE", "NOT_APPLICABLE"] as const)(
+    "falls back and allows retry when a %s response has the wrong target language",
+    async (status) => {
+      api.mockResolvedValueOnce({
+        ...success,
+        translation: {
+          ...success.translation,
+          status,
+          targetLanguage: "JA",
+          originalText: "Ignored mismatched source",
+          displayText: "Ignored mismatched translation",
+        },
+      });
+      renderWithQueryClient(<CancellationReasonText {...props} />);
+      reveal();
+      const retry = await screen.findByRole("button", { name: "Retry translation" });
+      expect(screen.queryByText("Translating…")).not.toBeInTheDocument();
+      expect(screen.getByText(props.originalText)).toBeVisible();
+      expect(screen.queryByText(/Ignored mismatched/)).not.toBeInTheDocument();
+      expect(api).toHaveBeenCalledTimes(1);
+      fireEvent.click(retry);
+      expect(await screen.findByText("Personal reasons")).toBeVisible();
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+      expect(api).toHaveBeenCalledTimes(2);
+    },
+  );
   it("automatically translates the new locale without an old response overwriting it", async () => {
     let finish!: (value: typeof success) => void;
     api.mockReturnValueOnce(

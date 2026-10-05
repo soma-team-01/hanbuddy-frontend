@@ -62,6 +62,27 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it("uses compact borderless information rows only on mobile", () => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{ ...activity, availableLanguages: ["EN"], durationMinutes: 60 }}
+        preview
+      />,
+    );
+    const heading = screen.getByRole("heading", { name: "Hosted in" });
+    const section = heading.closest("section");
+    expect(section?.children).toHaveLength(4);
+    for (const row of Array.from(section?.children ?? [])) {
+      expect(row).toHaveClass(
+        "max-md:border-0",
+        "max-md:rounded-none",
+        "max-md:px-0",
+        "max-md:py-1.5",
+      );
+      expect(row).toHaveClass("rounded-2xl", "border", "p-5");
+      expect(row.querySelector("h3")).toHaveClass("max-md:text-[13px]");
+    }
+  });
   it.each([
     ["en", "Hosted in", "Korean · English", en],
     ["ko", "제공 언어", "한국어 · 영어", ko],

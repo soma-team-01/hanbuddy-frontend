@@ -455,16 +455,21 @@ export function ActivityDetailView({
               </section>
 
               <section
-                className={`grid gap-4 border-t border-line-soft pt-6 md:grid-cols-2 ${activity.availableLanguages?.some(isActivityLanguage) ? "xl:grid-cols-2" : "xl:grid-cols-3"}`}
+                className={`grid gap-4 border-t border-line-soft pt-6 max-md:gap-2 max-md:pt-4 md:grid-cols-2 ${activity.availableLanguages?.some(isActivityLanguage) ? "xl:grid-cols-2" : "xl:grid-cols-3"}`}
               >
                 <button
                   type="button"
                   onClick={() => scrollToSection(SECTION_IDS.aboutHost)}
-                  className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5 text-left transition-colors hover:border-primary"
+                  className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5 text-left transition-colors hover:border-primary max-md:min-h-11 max-md:gap-3 max-md:rounded-none max-md:border-0 max-md:px-0 max-md:py-1.5"
                 >
-                  <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={48} />
+                  <Avatar
+                    name={activity.host.name}
+                    src={activity.host.avatarUrl}
+                    size={48}
+                    className="max-md:size-8! max-md:text-xs!"
+                  />
                   <div className="min-w-0">
-                    <h3 className="font-display text-sm font-bold text-ink">
+                    <h3 className="font-display text-sm font-bold text-ink max-md:text-[13px]">
                       {t("host", { name: activity.host.name })}
                     </h3>
                     <p className="text-xs text-muted">{activity.host.bio}</p>
@@ -473,13 +478,13 @@ export function ActivityDetailView({
                 <button
                   type="button"
                   onClick={() => scrollToSection(SECTION_IDS.meetingPoint)}
-                  className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5 text-left transition-colors hover:border-primary"
+                  className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5 text-left transition-colors hover:border-primary max-md:min-h-11 max-md:gap-3 max-md:rounded-none max-md:border-0 max-md:px-0 max-md:py-1.5"
                 >
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-primary/40 bg-canvas-soft">
-                    <MapPinIcon className="size-5 text-primary" />
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-primary/40 bg-canvas-soft max-md:size-8 max-md:rounded-none max-md:border-0">
+                    <MapPinIcon className="size-5 text-primary max-md:size-[18px]" />
                   </span>
                   <div className="min-w-0">
-                    <h3 className="font-display text-sm font-bold text-ink">
+                    <h3 className="font-display text-sm font-bold text-ink max-md:text-[13px]">
                       {activity.meetingPoint.name}
                     </h3>
                     {meetingAddress ? (
@@ -491,13 +496,15 @@ export function ActivityDetailView({
                   <button
                     type="button"
                     onClick={() => scrollToSection(SECTION_IDS.itinerary)}
-                    className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5 text-left transition-colors hover:border-primary"
+                    className="flex items-center gap-4 rounded-2xl border border-line-soft bg-canvas-soft p-5 text-left transition-colors hover:border-primary max-md:min-h-11 max-md:gap-3 max-md:rounded-none max-md:border-0 max-md:px-0 max-md:py-1.5"
                   >
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-primary/40 bg-canvas-soft">
-                      <ClockIcon className="size-5 text-primary" />
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-primary/40 bg-canvas-soft max-md:size-8 max-md:rounded-none max-md:border-0">
+                      <ClockIcon className="size-5 text-primary max-md:size-[18px]" />
                     </span>
                     <div className="min-w-0">
-                      <h3 className="font-display text-sm font-bold text-ink">{t("duration")}</h3>
+                      <h3 className="font-display text-sm font-bold text-ink max-md:text-[13px]">
+                        {t("duration")}
+                      </h3>
                       <p className="text-xs text-muted">{totalDurationLabel}</p>
                     </div>
                   </button>

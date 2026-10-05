@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
+import { LOCALES } from "@/i18n/routing";
 import type { PaymentReadyResponse } from "@/types/application";
 import { isTossUserCancel, requestTossPayment } from "./toss";
 
@@ -60,34 +61,19 @@ describe("requestTossPayment", () => {
     } as unknown as Awaited<ReturnType<typeof loadTossPayments>>);
   });
 
-  it("opens the domestic payment window for the Korean locale", async () => {
-    await requestTossPayment(paymentReady, "ko");
+  it.each(LOCALES)("opens the same domestic payment window for %s", async (locale) => {
+    await requestTossPayment(paymentReady, locale);
 
     expect(mockedLoadTossPayments).toHaveBeenCalledWith("test_ck_client-key");
-    expect(requestPayment).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: "CARD",
-        amount: { currency: "KRW", value: 90000 },
-        orderId: "hanbuddy-11-order",
-        orderName: "Bukchon Hidden Gems",
-        card: undefined,
-      }),
-    );
-    const request = requestPayment.mock.calls[0][0];
-    expect(request.successUrl).toContain("/ko/payments/success?applicationId=11");
-    expect(request.failUrl).toContain("/ko/payments/fail?applicationId=11");
-  });
-
-  it("opens the multilingual international window for non-Korean locales", async () => {
-    await requestTossPayment(paymentReady, "en");
-
-    expect(requestPayment).toHaveBeenCalledWith(
-      expect.objectContaining({
-        card: { useInternationalCardOnly: true, showEstimatedAmount: false },
-      }),
-    );
-    const request = requestPayment.mock.calls[0][0];
-    expect(request.successUrl).toContain("/en/payments/success?applicationId=11");
+    expect(requestPayment).toHaveBeenCalledExactlyOnceWith({
+      method: "CARD",
+      amount: { currency: "KRW", value: 90000 },
+      orderId: "hanbuddy-11-order",
+      orderName: "Bukchon Hidden Gems",
+      successUrl: `${window.location.origin}/${locale}/payments/success?applicationId=11`,
+      failUrl: `${window.location.origin}/${locale}/payments/fail?applicationId=11`,
+    });
+    expect(requestPayment.mock.calls[0][0]).not.toHaveProperty("card");
   });
 
   it("rejects payment data created for another provider", async () => {

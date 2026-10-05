@@ -9,6 +9,16 @@ import { withActivityDate } from "@/lib/activity-booking-window";
 import type { ContentLanguage } from "@/types/content-language";
 import type { DisplayCurrency } from "@/types/display-currency";
 import { requestApiResult, type ApiResult } from "./result";
+import type { ActivityLanguage } from "@/types/activity-language";
+
+export function getActivityLanguages() {
+  return requestApiResult<ActivityLanguage[], "languages">(
+    "/api/activities/languages",
+    "languages",
+    undefined,
+    "진행 언어를 불러오지 못했습니다.",
+  );
+}
 
 export type TouristActivitiesResult = ApiResult<TouristActivitySummary[], "activities">;
 export type TouristActivityResult = ApiResult<TouristActivityDetail, "activity">;

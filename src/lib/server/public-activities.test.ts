@@ -41,6 +41,20 @@ afterEach(() => {
 });
 
 describe("anonymous public activity documents", () => {
+  it.each(
+    [undefined, [], ["KO", "EN", "YUE"]].map((availableLanguages) => ({ availableLanguages })),
+  )("preserves spoken languages in public list and detail (%j)", async ({ availableLanguages }) => {
+    respond(success([{ ...activity, availableLanguages }]));
+    expect((await getPublicActivities("ko"))[0].availableLanguages).toEqual(availableLanguages);
+    respond(success({ ...activity, availableLanguages }));
+    expect((await getPublicActivity("42", "ko")).availableLanguages).toEqual(availableLanguages);
+  });
+  it("only serializes supported spoken-language codes", async () => {
+    respond(
+      success({ ...activity, availableLanguages: ["KO", "FUTURE", { privateNote: "hidden" }] }),
+    );
+    expect((await getPublicActivity("42", "ko")).availableLanguages).toEqual(["KO"]);
+  });
   it("preserves referral type in both initial list and detail documents", async () => {
     respond(success([{ ...activity, activityType: "REFERRAL", price: 0 }]));
     expect((await getPublicActivities("ko"))[0].activityType).toBe("REFERRAL");

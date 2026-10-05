@@ -112,7 +112,7 @@ export function HostStep({
         autoFocus
         rows={1}
         maxLength={ACTIVITY_CREATE_LIMITS.hostIntroduction.max}
-        className="mt-4 [field-sizing:content] max-h-80 min-h-0 w-full resize-none overflow-y-auto border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-center text-base leading-6 font-semibold text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none lg:mt-7 lg:text-xl lg:leading-8"
+        className="mt-4 [field-sizing:content] max-h-80 min-h-0 w-full resize-none overflow-y-auto border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-left text-base leading-6 font-semibold text-ink transition outline-none placeholder:text-muted/35 focus:border-primary focus-visible:!outline-none lg:mt-7 lg:text-xl lg:leading-8"
         value={draft.hostIntroduction}
         onChange={(event) => onChange("hostIntroduction", event.target.value)}
         placeholder={t("placeholders.hostIntroduction")}
@@ -190,7 +190,7 @@ export function DescriptionStep({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={t("placeholders.experienceDescription")}
-        className="mt-7 [field-sizing:content] max-h-64 min-h-0 w-full resize-none overflow-y-auto border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-center text-base leading-7 font-medium text-ink transition outline-none placeholder:text-muted/45 focus:border-primary focus-visible:!outline-none sm:text-lg"
+        className="mt-7 [field-sizing:content] max-h-64 min-h-0 w-full resize-none overflow-y-auto border-0 border-b-2 border-line-strong bg-transparent px-3 py-2 text-left text-base leading-7 font-medium text-ink transition outline-none placeholder:text-muted/45 focus:border-primary focus-visible:!outline-none sm:text-lg"
       />
       <p className="mt-4 text-center text-sm text-muted tabular-nums">
         {t("hints.experienceDescriptionCharacters", {
@@ -1124,15 +1124,14 @@ export function ScheduleStep({
   const [focusedDate, setFocusedDate] = useState<string | null>(selectedDateList[0] ?? null);
   const [customHour, setCustomHour] = useState("");
   const [customMinute, setCustomMinute] = useState("");
-  const [customPeriod, setCustomPeriod] = useState<"am" | "pm">("am");
   const validCustomTime =
     /^\d{1,2}$/.test(customHour) &&
     /^\d{1,2}$/.test(customMinute) &&
-    Number(customHour) >= 1 &&
-    Number(customHour) <= 12 &&
+    Number(customHour) >= 0 &&
+    Number(customHour) <= 23 &&
     Number(customMinute) <= 59;
   const customTime = validCustomTime
-    ? `${String((Number(customHour) % 12) + (customPeriod === "pm" ? 12 : 0)).padStart(2, "0")}:${customMinute.padStart(2, "0")}`
+    ? `${customHour.padStart(2, "0")}:${customMinute.padStart(2, "0")}`
     : "";
   const [applyToAll, setApplyToAll] = useState(false);
   const selectedDates = new Set(selectedDateList);
@@ -1378,17 +1377,13 @@ export function ScheduleStep({
                   {activeTimes
                     .filter((time) => !SCHEDULE_TIME_PRESETS.includes(time))
                     .map((time) => {
-                      const [hour, minute] = time.split(":");
-                      const periodLabel = t(Number(hour) < 12 ? "schedule.am" : "schedule.pm");
-                      const timeLabel = `${String(Number(hour) % 12 || 12).padStart(2, "0")}:${minute}`;
-                      const label = `${periodLabel} ${timeLabel}`;
                       return (
                         <div
                           key={time}
                           data-testid={`schedule-time-${activeDate}-${time}`}
                           className="flex min-h-11 min-w-0 items-center justify-center rounded-lg border border-primary bg-primary px-0.5 text-[11px] font-semibold text-white tabular-nums min-[360px]:text-xs lg:min-h-7 lg:px-0 lg:text-[10px] xl:text-xs"
                         >
-                          <span className="whitespace-nowrap">{label}</span>
+                          <span className="whitespace-nowrap">{time}</span>
                           <button
                             type="button"
                             onClick={() =>
@@ -1400,7 +1395,7 @@ export function ScheduleStep({
                                 month: "long",
                                 day: "numeric",
                               }),
-                              time: label,
+                              time,
                             })}
                             className="flex size-6 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
                           >
@@ -1415,33 +1410,18 @@ export function ScheduleStep({
                 <legend className="sr-only">{t("schedule.customTime")}</legend>
                 <p className="text-xs font-bold text-ink">{t("schedule.customTime")}</p>
                 <div className="mt-2 flex flex-wrap items-end gap-2">
-                  <div
-                    role="group"
-                    aria-label={t("schedule.timePeriod")}
-                    className="flex min-h-10 shrink-0 rounded-lg border border-line-strong p-0.5"
-                  >
-                    {(["am", "pm"] as const).map((period) => (
-                      <button
-                        key={period}
-                        type="button"
-                        aria-pressed={customPeriod === period}
-                        onClick={() => setCustomPeriod(period)}
-                        className={`rounded-md px-2 text-xs font-semibold transition ${customPeriod === period ? "bg-primary text-white" : "text-muted hover:bg-primary-soft"}`}
-                      >
-                        {t(`schedule.${period}`)}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex min-w-0 flex-1 items-center gap-1">
+                  <div className="flex min-w-0 flex-1 items-end gap-1">
                     {(["hour", "minute"] as const).map((part, index) => (
                       <span key={part} className="contents">
                         {index > 0 && (
-                          <span aria-hidden className="text-muted">
+                          <span aria-hidden className="flex h-10 items-center text-muted">
                             :
                           </span>
                         )}
                         <label className="min-w-0 flex-1">
-                          <span className="sr-only">{t(`schedule.${part}`)}</span>
+                          <span className="mb-1 block text-left text-xs text-muted">
+                            {t(`schedule.${part}`)}
+                          </span>
                           <input
                             type="text"
                             inputMode="numeric"

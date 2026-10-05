@@ -60,6 +60,7 @@ const futureDateB = seoulDateKey(14);
 function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): ActivityCreateDraft {
   return {
     ...EMPTY_ACTIVITY_DRAFT,
+    availableLanguages: ["EN"],
     hostIntroduction: "I have hosted neighborhood walks for many years.",
     photos: Array.from({ length: 3 }, (_, index) => ({ ...photo, id: `photo-${index}` })),
     experienceName: "Seoul market walk",
@@ -80,6 +81,24 @@ function createCompleteDraft(overrides: Partial<ActivityCreateDraft> = {}): Acti
 }
 
 describe("activity creation wizard", () => {
+  it("requires actual languages for creation, but preserves untouched legacy empty edits", () => {
+    const draft = createCompleteDraft({ availableLanguages: [] });
+    expect(validateActivityCreateStep("host", draft)).toBeNull();
+    expect(validateActivityCreateStep("languages", draft)).toBe("availableLanguagesRequired");
+    expect(validateActivityCreateStep("languages", draft, true)).toBe("availableLanguagesRequired");
+    expect(validateActivityCreateStep("languages", draft, false, true)).toBeNull();
+    expect(
+      validateActivityCreateStep(
+        "languages",
+        { ...draft, availableLanguagesTouched: true },
+        false,
+        true,
+      ),
+    ).toBe("availableLanguagesRequired");
+    expect(
+      validateActivityCreateStep("languages", { ...draft, availableLanguages: ["KO", "KO"] }),
+    ).toBe("availableLanguagesRequired");
+  });
   it("validates each schedule capacity, including occupied and held seats", () => {
     const base = createCompleteDraft();
     const schedule = { ...base.schedules[0], bookedCount: 3, heldSeats: 1 };
@@ -149,9 +168,10 @@ describe("activity creation wizard", () => {
     },
   );
 
-  it("keeps the requested fields in twelve focused steps", () => {
+  it("keeps the requested fields in thirteen focused steps", () => {
     expect(ACTIVITY_CREATE_STEPS).toEqual([
       "host",
+      "languages",
       "name",
       "description",
       "photos",
@@ -394,6 +414,13 @@ describe("activity creation wizard", () => {
       expect(draft.schedules.map((schedule) => schedule.date)).toEqual([futureDateA]);
       // 지난 일정을 빼고 제출하면 백엔드가 삭제로 보고 신청 내역이 있으면 거절한다
       expect(draft.retainedScheduleStartAts).toEqual(["2020-01-01T10:00:00+09:00"]);
+    });
+    it("restores spoken languages and does not invent languages for legacy responses", () => {
+      expect(
+        buildDraftFromMyActivityDetail({ ...detail, availableLanguages: ["JA", "YUE"] })
+          .availableLanguages,
+      ).toEqual(["JA", "YUE"]);
+      expect(buildDraftFromMyActivityDetail(detail).availableLanguages).toEqual([]);
     });
 
     it("prefills the draft from the detail response with reusable image keys", () => {

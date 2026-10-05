@@ -10,6 +10,7 @@ describe("referral contracts", () => {
   it("keeps the starting price but strips currency, discounts, owner and type", () => {
     const input = {
       title: "Seoul visit",
+      availableLanguages: ["KO", "EN"],
       price: 15000,
       currency: "KRW",
       discountPercent: 10,
@@ -20,6 +21,7 @@ describe("referral contracts", () => {
     };
     expect(referralActivityPayload(input)).toEqual({
       title: "Seoul visit",
+      availableLanguages: ["KO", "EN"],
       price: 15000,
       status: "ACTIVE",
       schedules: input.schedules,

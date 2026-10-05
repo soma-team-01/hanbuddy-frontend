@@ -1,4 +1,29 @@
 {
+  "ActivityLanguages": {
+    "hostedIn": "服務語言",
+    "title": "活動服務語言",
+    "hint": "請選擇至少一種您能用於實際帶領此活動的語言。",
+    "loading": "正在載入語言…",
+    "retry": "重新載入語言",
+    "names": {
+      "KO": "韓語",
+      "EN": "英語",
+      "JA": "日語",
+      "ZH": "普通話",
+      "YUE": "粵語",
+      "ES": "西班牙語",
+      "FR": "法語",
+      "DE": "德語",
+      "VI": "越南語",
+      "TH": "泰語",
+      "ID": "印尼語"
+    }
+  },
+  "CancellationTranslation": {
+    "loading": "正在翻譯…",
+    "retry": "重試翻譯",
+    "unavailable": "暫時無法翻譯，已顯示原文。"
+  },
   "Referral": {
     "messagePlaceholder": "如有想對夥伴說的話，請在這裡填寫。",
     "summaryTitle": "申請資訊",
@@ -152,6 +177,7 @@
     "imageContentType": "只能上傳 JPEG、PNG 或 WebP 映像。",
     "imageCount": "選擇上傳的圖像太多。",
     "activityCurrency": "活動目前只能以韓元定價。",
+    "activityLanguages": "請至少選擇一種活動服務語言，不可重複。",
     "activityScheduleFuture": "活動行程必須在未來開始。",
     "activityOwner": "您只能存取您建立的活動。",
     "activityNotFound": "無法找到此活動。",
@@ -1375,6 +1401,10 @@
     }
   },
   "CreateActivity": {
+    "languageStep": {
+      "title": "請選擇活動使用的語言",
+      "description": "請選擇至少一種您能用來帶領此活動的語言。"
+    },
     "eyebrow": "創造體驗",
     "title": "設計您的 HanBuddy 體驗",
     "progress": "步驟 {current, number} 的 {total, number}",
@@ -1576,7 +1606,7 @@
       "am": "上午",
       "pm": "下午",
       "timePeriod": "上午/下午",
-      "hour": "小時 (1–12)",
+      "hour": "小時 (0–23)",
       "minute": "分鐘 (0–59)",
       "hourPlaceholder": "時",
       "minutePlaceholder": "分",
@@ -1680,6 +1710,7 @@
       "scheduleCapacityOccupied": "人數上限不得低於預訂確認與待付款人數之和。",
       "categoryRequired": "選擇一個類別以繼續。",
       "hostIntroductionRequired": "寫一個 30 到 2000 個字元的簡介。",
+      "availableLanguagesRequired": "請至少選擇一種活動服務語言，不可重複。",
       "photosMinimum": "新增 3 到 10 張體驗照片。",
       "experienceNameRequired": "輸入 1 到 100 個字元之間的體驗名稱。",
       "experienceDescriptionRequired": "寫下 30 到 3000 個字符的詳細描述。",

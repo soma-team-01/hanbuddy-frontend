@@ -1,4 +1,5 @@
 "use client";
+import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
 
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
@@ -559,7 +560,15 @@ function ApplicationCard({
                     })}
                 {application.cancellationDetail ? (
                   <span className="mt-1 block break-words text-ink">
-                    {application.cancellationDetail}
+                    {application.cancellationReason === "OTHER" || isBuddyCancellation ? (
+                      <CancellationReasonText
+                        kind="application"
+                        id={application.id}
+                        originalText={application.cancellationDetail}
+                      />
+                    ) : (
+                      application.cancellationDetail
+                    )}
                   </span>
                 ) : null}
               </p>

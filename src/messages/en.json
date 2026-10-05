@@ -1,4 +1,29 @@
 {
+  "ActivityLanguages": {
+    "hostedIn": "Hosted in",
+    "title": "Activity languages",
+    "hint": "Select at least one language you can use to lead this activity.",
+    "loading": "Loading languages…",
+    "retry": "Reload languages",
+    "names": {
+      "KO": "Korean",
+      "EN": "English",
+      "JA": "Japanese",
+      "ZH": "Mandarin Chinese",
+      "YUE": "Cantonese",
+      "ES": "Spanish",
+      "FR": "French",
+      "DE": "German",
+      "VI": "Vietnamese",
+      "TH": "Thai",
+      "ID": "Indonesian"
+    }
+  },
+  "CancellationTranslation": {
+    "loading": "Translating…",
+    "retry": "Retry translation",
+    "unavailable": "Translation unavailable. Showing the original text."
+  },
   "Referral": {
     "messagePlaceholder": "Leave a message for your buddy, if you have one.",
     "summaryTitle": "Application details",
@@ -152,6 +177,7 @@
     "imageContentType": "Only JPEG, PNG, or WebP images can be uploaded.",
     "imageCount": "Too many images were selected for upload.",
     "activityCurrency": "Activities can currently be priced in KRW only.",
+    "activityLanguages": "Select at least one activity language without duplicates.",
     "activityScheduleFuture": "Activity schedules must start in the future.",
     "activityOwner": "You can only access activities you created.",
     "activityNotFound": "This activity could not be found.",
@@ -1375,6 +1401,10 @@
     }
   },
   "CreateActivity": {
+    "languageStep": {
+      "title": "Choose activity languages",
+      "description": "Select at least one language you can use to lead this activity."
+    },
     "eyebrow": "Create an experience",
     "title": "Design your HanBuddy experience",
     "progress": "Step {current, number} of {total, number}",
@@ -1576,7 +1606,7 @@
       "am": "AM",
       "pm": "PM",
       "timePeriod": "AM/PM",
-      "hour": "Hour (1–12)",
+      "hour": "Hour (0–23)",
       "minute": "Minute (0–59)",
       "hourPlaceholder": "hh",
       "minutePlaceholder": "mm",
@@ -1680,6 +1710,7 @@
       "scheduleCapacityOccupied": "Capacity must be at least the total of confirmed participants and those awaiting payment.",
       "categoryRequired": "Choose a category to continue.",
       "hostIntroductionRequired": "Write an introduction between 30 and 2000 characters.",
+      "availableLanguagesRequired": "Select at least one activity language without duplicates.",
       "photosMinimum": "Add between 3 and 10 experience photos.",
       "experienceNameRequired": "Enter an experience name between 1 and 100 characters.",
       "experienceDescriptionRequired": "Write a detailed description between 30 and 3000 characters.",

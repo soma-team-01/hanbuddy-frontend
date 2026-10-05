@@ -24,6 +24,7 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
 
   return {
     activityType: summary.activityType ?? "STANDARD",
+    availableLanguages: summary.availableLanguages ?? [],
     id: String(summary.activityId),
     title: summary.title,
     description: summary.description,

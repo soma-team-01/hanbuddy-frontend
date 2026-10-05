@@ -40,6 +40,8 @@ export interface ActivityPricePreviewResponse {
 
 /** 등록·수정 문자열 제한은 백엔드 ActivityTextLimits와 동기화한다. */
 export interface ActivityUpsertRequest {
+  /** Required for creation; omit on edit to preserve legacy unset languages. */
+  availableLanguages?: import("./activity-language").ActivityLanguage[];
   /** 사용자가 작성한 원문의 주 언어 */
   sourceLanguage: ContentLanguage;
   /** 영어로 작성하는 대표 제목. 1~100자, 자동 번역 대상 아님 */
@@ -102,6 +104,7 @@ export interface ActivityScheduleResponse {
 }
 
 export interface MyActivitySummaryResponse {
+  availableLanguages?: import("./activity-language").ActivityLanguage[];
   activityType?: import("./referral").ActivityType;
   activityId: number;
   title: string;

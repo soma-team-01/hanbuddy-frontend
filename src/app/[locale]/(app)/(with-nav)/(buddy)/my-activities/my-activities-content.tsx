@@ -1,4 +1,5 @@
 "use client";
+import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
 
 import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -158,6 +159,7 @@ export function MyActivitiesContent() {
               </h2>
             </Link>
             <p className="line-clamp-2 text-sm leading-5 text-muted">{activity.description}</p>
+            <ActivityLanguages languages={activity.availableLanguages} compact />
           </article>
         ))}
       </div>

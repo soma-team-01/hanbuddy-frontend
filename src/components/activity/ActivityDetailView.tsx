@@ -1,4 +1,5 @@
 "use client";
+import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
@@ -450,6 +451,7 @@ export function ActivityDetailView({
                 <p className="max-w-2xl leading-7 whitespace-pre-line text-muted">
                   {activity.description}
                 </p>
+                <ActivityLanguages languages={activity.availableLanguages} />
               </section>
 
               <section className="grid gap-4 border-t border-line-soft pt-6 md:grid-cols-2 xl:grid-cols-3">

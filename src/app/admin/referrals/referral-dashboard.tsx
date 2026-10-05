@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import ko from "@/messages/ko.json";
+import { isActivityLanguage } from "@/types/activity-language";
 import {
   getAdminReferralActivity,
   getReferralActivities,
@@ -235,6 +237,14 @@ function ReferralActivityList({ onCreateInvitation }: { onCreateInvitation: () =
               <div className="min-w-0 flex-1">
                 <h3 className="font-bold break-words group-hover:text-primary">{activity.title}</h3>
                 <p className="mt-1 text-xs text-muted">{partnerName}</p>
+                {!!activity.availableLanguages?.length && (
+                  <p className="mt-1 text-xs text-muted">
+                    {activity.availableLanguages
+                      .filter(isActivityLanguage)
+                      .map((code) => ko.ActivityLanguages.names[code])
+                      .join(" · ")}
+                  </p>
+                )}
                 <p className="mt-3 text-xs text-primary">신청 현황 보기</p>
               </div>
               <span aria-hidden="true" className="text-muted group-hover:text-primary">

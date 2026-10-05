@@ -69,6 +69,14 @@ vi.mock("@/lib/api/referral", () => ({
   updateReferralActivity: vi.fn(),
 }));
 
+vi.mock("@/lib/api/activities", async (original) => ({
+  ...(await original<typeof import("@/lib/api/activities")>()),
+  getActivityLanguages: vi.fn().mockResolvedValue({
+    status: "success",
+    languages: ["KO", "EN", "JA", "ZH", "YUE", "ES", "FR", "DE", "VI", "TH", "ID"],
+  }),
+}));
+
 vi.mock("@/lib/api/useMyProfile", () => ({
   useMyProfile: () => ({
     status: "success",
@@ -138,6 +146,7 @@ function clickEditorNext() {
 }
 
 async function fillStepsUntilSchedule(reorder = false) {
+  fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
   fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
     target: { value: "I have guided friends through this market for years." },
   });
@@ -232,9 +241,47 @@ async function completeAllStepsUntilReview(reorder = false) {
 
 describe("CreateActivityForm", () => {
   it.each([false, true])(
+    "replaces spoken languages without changing source language (referral=%s)",
+    async (referral) => {
+      const detail = { ...buildEditDetail(), availableLanguages: ["KO"] as const };
+      const draft = buildDraftFromMyActivityDetail({ ...detail, availableLanguages: ["KO"] });
+      mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: buildEditDetail() });
+      vi.mocked(updateReferralActivity).mockResolvedValue({
+        status: "success",
+        data: buildEditDetail(),
+      });
+      renderWithQueryClient(
+        <CreateActivityForm
+          mode="edit"
+          referral={referral}
+          activityId="42"
+          initialDraft={draft}
+          initialSourceLanguage="JA"
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Intro" }));
+      const korean = await screen.findByRole("checkbox", { name: "Korean" });
+      expect(korean).toBeChecked();
+      fireEvent.click(korean);
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+      expect(screen.getByRole("alert")).toHaveTextContent("Select at least one activity language");
+      expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
+      expect(updateReferralActivity).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("checkbox", { name: "French" }));
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+      const submit = referral ? vi.mocked(updateReferralActivity) : mockedUpdateMyActivity;
+      await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+      expect(submit.mock.calls[0][1]).toMatchObject({
+        availableLanguages: ["FR"],
+        sourceLanguage: "JA",
+      });
+    },
+  );
+  it.each([false, true])(
     "navigates back from the mobile footer without losing input (referral=%s)",
-    (referral) => {
+    async (referral) => {
       renderWithQueryClient(<CreateActivityForm referral={referral} />);
+      fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
       const footer = screen.getByRole("contentinfo");
       expect(screen.getByRole("heading", { level: 1 })).toHaveClass("text-xl", "lg:text-3xl");
       expect(footer).toHaveClass("pt-2");
@@ -312,6 +359,7 @@ describe("CreateActivityForm", () => {
     expect(code).toHaveLength(43);
     expect(body).toMatchObject({
       status: "ACTIVE",
+      availableLanguages: ["EN"],
       price: 5000,
       maxCapacity: 1,
       schedules: [{ startAt: `${dateKeyA}T10:00:00+09:00`, maxCapacity: 1 }],
@@ -347,6 +395,9 @@ describe("CreateActivityForm", () => {
       await waitFor(() => expect(updateReferralActivity).toHaveBeenCalledTimes(1));
       expect(vi.mocked(updateReferralActivity).mock.calls[0][1]).toHaveProperty("price", price);
       expect(vi.mocked(updateReferralActivity).mock.calls[0][1]).not.toHaveProperty("code");
+      expect(vi.mocked(updateReferralActivity).mock.calls[0][1]).not.toHaveProperty(
+        "availableLanguages",
+      );
       expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
     },
   );
@@ -646,6 +697,7 @@ describe("CreateActivityForm", () => {
 
   it("keeps all twelve inputs in sequence and opens review after restrictions", async () => {
     renderWithQueryClient(<CreateActivityForm />);
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
 
     fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
       target: { value: "I have guided friends through this market for years." },
@@ -892,6 +944,7 @@ describe("CreateActivityForm", () => {
 
     expect(mockedCreateMyActivity).toHaveBeenCalledWith({
       sourceLanguage: "EN",
+      availableLanguages: ["EN"],
       title: "Seoul market walk",
       description: "Meet local vendors and taste a neighborhood breakfast together.",
       hostIntroduction: "I have guided friends through this market for years.",
@@ -966,8 +1019,9 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("button", { name: "Register experience" })).toBeEnabled();
   });
 
-  it("only allows progress navigation to the current or previous steps", () => {
+  it("only allows progress navigation to the current or previous steps", async () => {
     renderWithQueryClient(<CreateActivityForm />);
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
 
     expect(screen.getByRole("button", { name: "Activity" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Operations" })).toBeDisabled();
@@ -987,8 +1041,9 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Name your experience" })).toBeInTheDocument();
   });
 
-  it("revokes photo object URLs when a preview is removed", () => {
+  it("revokes photo object URLs when a preview is removed", async () => {
     renderWithQueryClient(<CreateActivityForm />);
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
 
     fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
       target: { value: "I have hosted neighborhood walks for many years." },
@@ -1013,8 +1068,9 @@ describe("CreateActivityForm", () => {
     expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:market.webp");
   });
 
-  it("lets the buddy choose any uploaded photo as the cover", () => {
+  it("lets the buddy choose any uploaded photo as the cover", async () => {
     renderWithQueryClient(<CreateActivityForm />);
+    fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
     fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
       target: { value: "I have hosted neighborhood walks for many years." },
     });
@@ -1110,6 +1166,7 @@ describe("CreateActivityForm", () => {
     "applies the top capacity to every session and saves it (%s, referral=%s)",
     async (mode, referral) => {
       const detail = buildEditDetail();
+      detail.availableLanguages = ["EN"];
       detail.schedules = Array.from({ length: 7 }, (_, index) => ({
         scheduleId: index + 7,
         startAt: `${dateKeyA}T${10 + index}:00:00+09:00`,

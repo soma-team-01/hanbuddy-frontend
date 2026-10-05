@@ -1,4 +1,31 @@
 {
+  "ActivityLanguages": {
+    "title": "活动服务语言",
+    "hint": "请选择至少一种您能用于实际带领此活动的语言。",
+    "loading": "正在加载语言…",
+    "retry": "重新加载语言",
+    "names": {
+      "KO": "韩语",
+      "EN": "英语",
+      "JA": "日语",
+      "ZH": "普通话",
+      "YUE": "粤语",
+      "ES": "西班牙语",
+      "FR": "法语",
+      "DE": "德语",
+      "VI": "越南语",
+      "TH": "泰语",
+      "ID": "印度尼西亚语"
+    }
+  },
+  "CancellationTranslation": {
+    "translate": "查看翻译",
+    "loading": "正在翻译…",
+    "retry": "重试翻译",
+    "showOriginal": "查看原文",
+    "showTranslation": "查看译文",
+    "unavailable": "暂时无法翻译，已显示原文。"
+  },
   "Referral": {
     "messagePlaceholder": "如有想对伙伴说的话，请在这里填写。",
     "summaryTitle": "申请信息",
@@ -152,6 +179,7 @@
     "imageContentType": "只能上传 JPEG、PNG 或 WebP 图像。",
     "imageCount": "选择上传的图像太多。",
     "activityCurrency": "活动目前只能以韩元定价。",
+    "activityLanguages": "请至少选择一种活动服务语言，不可重复。",
     "activityScheduleFuture": "活动日程必须在未来开始。",
     "activityOwner": "您只能访问您创建的活动。",
     "activityNotFound": "无法找到此活动。",
@@ -1680,6 +1708,7 @@
       "scheduleCapacityOccupied": "人数上限不得低于预订确认与待付款人数之和。",
       "categoryRequired": "选择一个类别以继续。",
       "hostIntroductionRequired": "写一个 30 到 2000 个字符的简介。",
+      "availableLanguagesRequired": "请至少选择一种活动服务语言，不可重复。",
       "photosMinimum": "添加 3 到 10 张体验照片。",
       "experienceNameRequired": "输入 1 到 100 个字符之间的体验名称。",
       "experienceDescriptionRequired": "写下 30 到 3000 个字符的详细描述。",

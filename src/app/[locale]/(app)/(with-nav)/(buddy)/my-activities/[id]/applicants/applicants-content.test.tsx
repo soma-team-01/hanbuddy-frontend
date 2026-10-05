@@ -352,7 +352,7 @@ describe("ApplicantsContent", () => {
     // 결제 대기 신청자는 어디에도 없다
     expect(screen.queryByText("Wait Choi")).not.toBeInTheDocument();
     expect(screen.queryByText(/Cancellation reason: Other reason/)).not.toBeInTheDocument();
-    expect(screen.queryByText("My flight was cancelled.")).not.toBeInTheDocument();
+    expect(screen.getByText("My flight was cancelled.")).toBeInTheDocument();
   });
 
   it("falls back to the first activity schedule when no schedule query is provided", async () => {

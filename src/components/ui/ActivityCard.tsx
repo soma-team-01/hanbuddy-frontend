@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
 import { useLocale, useTranslations } from "next-intl";
 import { ClockIcon, MapPinIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
@@ -76,6 +77,7 @@ export function ActivityCard({
         ) : null}
 
         {/* 카드 하단: 원화 가격 · 환산가 · 1인당 */}
+        <ActivityLanguages languages={activity.availableLanguages} compact />
         <div className="mt-auto md:pt-1">
           {activity.activityType === "REFERRAL" ? (
             <ReferralPrice activity={activity} variant="card" />

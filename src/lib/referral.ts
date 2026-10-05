@@ -2,6 +2,7 @@ import type { ReferralActivityRequest, ReferralInvitation } from "@/types/referr
 
 const ACTIVITY_FIELDS = [
   "sourceLanguage",
+  "availableLanguages",
   "title",
   "description",
   "hostIntroduction",

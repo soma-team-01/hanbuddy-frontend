@@ -9,6 +9,7 @@ import type { ReferralActivityRequest } from "@/types/referral";
 
 const activity: ReferralActivityRequest = {
   sourceLanguage: "EN",
+  availableLanguages: ["KO", "EN", "YUE"],
   title: "Seoul pottery workshop",
   description: "Explore pottery techniques with a local studio host.",
   hostIntroduction: "We run a pottery studio in Seoul and welcome first-time visitors.",

@@ -1,4 +1,5 @@
 "use client";
+import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
 
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -172,7 +173,13 @@ export function ApplicantsContent({
         <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-y border-line-soft py-3 text-sm text-muted">
           <p className="min-w-0 [overflow-wrap:anywhere] break-words">
             <span className="font-medium">{tCancellation("reason")}:</span>{" "}
-            {cancellationQuery.data.reason}
+            {cancellationQuery.data.reason ? (
+              <CancellationReasonText
+                kind="schedule"
+                id={scheduleId}
+                originalText={cancellationQuery.data.reason}
+              />
+            ) : null}
           </p>
           {cancellationQuery.data.cancelledAt ? (
             <p className="text-xs">
@@ -271,6 +278,18 @@ export function ApplicantsContent({
                         <span className="font-semibold text-primary">{t("guestNoteLabel")} </span>
                         {applicant.specialRequest}
                       </p>
+                    ) : null}
+                    {applicant.status === "CANCELLED" &&
+                    applicant.cancellationReason === "OTHER" &&
+                    applicant.cancellationDetail ? (
+                      <div className="ml-16 text-sm text-muted md:col-span-2">
+                        <span className="font-semibold">{tCancellation("reason")}</span>
+                        <CancellationReasonText
+                          kind="application"
+                          id={applicant.applicationId}
+                          originalText={applicant.cancellationDetail}
+                        />
+                      </div>
                     ) : null}
                   </article>
                 ))}

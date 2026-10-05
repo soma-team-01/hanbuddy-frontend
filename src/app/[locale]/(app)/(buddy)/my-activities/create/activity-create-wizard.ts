@@ -10,6 +10,8 @@ import { extractImageKeyFromUrl } from "@/lib/images/presigned";
 import type { Activity, Session } from "@/types/activity";
 import type { MyActivityDetailResponse } from "@/types/buddy";
 import { isReferralPrice } from "@/lib/referral";
+import { isValidActivityLanguages } from "@/lib/activity-languages";
+import type { ActivityLanguage } from "@/types/activity-language";
 
 export const ACTIVITY_CREATE_STEPS = [
   "host",
@@ -85,6 +87,8 @@ export interface ScheduleDraft {
 }
 
 export interface ActivityCreateDraft {
+  availableLanguages?: ActivityLanguage[];
+  availableLanguagesTouched?: boolean;
   category: string;
   hostIntroduction: string;
   photos: PhotoDraft[];
@@ -113,6 +117,7 @@ export interface ActivityCreateDraft {
 }
 
 export type ActivityCreateErrorKey =
+  | "availableLanguagesRequired"
   | "hostIntroductionRequired"
   | "photosMinimum"
   | "experienceNameRequired"
@@ -196,16 +201,24 @@ export function validateActivityCreateStep(
   step: ActivityCreateStep,
   draft: ActivityCreateDraft,
   referral = false,
+  isEdit = false,
 ): ActivityCreateErrorKey | null {
   switch (step) {
     case "host":
-      return isWithinLength(
-        draft.hostIntroduction,
-        ACTIVITY_CREATE_LIMITS.hostIntroduction.min,
-        ACTIVITY_CREATE_LIMITS.hostIntroduction.max,
+      if (
+        !isWithinLength(
+          draft.hostIntroduction,
+          ACTIVITY_CREATE_LIMITS.hostIntroduction.min,
+          ACTIVITY_CREATE_LIMITS.hostIntroduction.max,
+        )
       )
-        ? null
-        : "hostIntroductionRequired";
+        return "hostIntroductionRequired";
+      if (
+        (draft.availableLanguages?.length || draft.availableLanguagesTouched || !isEdit) &&
+        !isValidActivityLanguages(draft.availableLanguages)
+      )
+        return "availableLanguagesRequired";
+      return null;
     case "name":
       return isWithinLength(
         draft.experienceName,
@@ -394,6 +407,7 @@ export function buildDraftFromMyActivityDetail(
   return {
     ...EMPTY_ACTIVITY_DRAFT,
     retainedScheduleStartAts,
+    availableLanguages: detail.availableLanguages ?? [],
     hostIntroduction: detail.hostIntroduction,
     photos: [...detail.images]
       .sort((left, right) => left.imageOrder - right.imageOrder)
@@ -491,6 +505,7 @@ export function buildPreviewActivityFromDraft(
 
   return {
     id: activityId ?? "preview",
+    availableLanguages: draft.availableLanguages ?? [],
     title: draft.experienceName,
     description: draft.experienceDescription,
     location: draft.meetingPlace,

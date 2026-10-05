@@ -1,4 +1,31 @@
 {
+  "ActivityLanguages": {
+    "title": "対応言語",
+    "hint": "このアクティビティを実際に案内できる言語を1つ以上選んでください。",
+    "loading": "言語を読み込み中…",
+    "retry": "言語を再読み込み",
+    "names": {
+      "KO": "韓国語",
+      "EN": "英語",
+      "JA": "日本語",
+      "ZH": "中国語（普通話）",
+      "YUE": "広東語",
+      "ES": "スペイン語",
+      "FR": "フランス語",
+      "DE": "ドイツ語",
+      "VI": "ベトナム語",
+      "TH": "タイ語",
+      "ID": "インドネシア語"
+    }
+  },
+  "CancellationTranslation": {
+    "translate": "翻訳を見る",
+    "loading": "翻訳中…",
+    "retry": "翻訳を再試行",
+    "showOriginal": "原文を見る",
+    "showTranslation": "翻訳文を見る",
+    "unavailable": "翻訳を取得できないため、原文を表示しています。"
+  },
   "Referral": {
     "messagePlaceholder": "バディに伝えたいことがあればご記入ください。",
     "summaryTitle": "申込情報",
@@ -152,6 +179,7 @@
     "imageContentType": "JPEG、PNG、または WebP 画像のみをアップロードできます。",
     "imageCount": "アップロードするために選択された画像が多すぎます。",
     "activityCurrency": "現在、アクティビティの価格は KRW のみで設定できます。",
+    "activityLanguages": "対応言語を重複なく1つ以上選んでください。",
     "activityScheduleFuture": "アクティビティのスケジュールは将来的に開始する必要があります。",
     "activityOwner": "自分が作成したアクティビティのみにアクセスできます。",
     "activityNotFound": "このアクティビティは見つかりませんでした。",
@@ -1680,6 +1708,7 @@
       "scheduleCapacityOccupied": "定員は予約確定・支払い待ちの合計人数以上にしてください。",
       "categoryRequired": "続行するにはカテゴリを選択してください。",
       "hostIntroductionRequired": "30 文字から 2000 文字の間で紹介文を書きます。",
+      "availableLanguagesRequired": "対応言語を重複なく1つ以上選んでください。",
       "photosMinimum": "体験写真を 3 ～ 10 枚追加します。",
       "experienceNameRequired": "エクスペリエンス名を 1 ～ 100 文字で入力します。",
       "experienceDescriptionRequired": "詳細な説明を 30 ～ 3000 文字で入力します。",

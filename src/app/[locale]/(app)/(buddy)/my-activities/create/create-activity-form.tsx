@@ -1,4 +1,6 @@
 "use client";
+import { ActivityLanguageSelect } from "@/components/activity/ActivityLanguageSelect";
+import { activityLanguagesForRequest } from "@/lib/activity-languages";
 
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -128,6 +130,7 @@ export function buildActivityUpsertRequest(
 
   return {
     sourceLanguage,
+    ...activityLanguagesForRequest(draft.availableLanguages),
     title: draft.experienceName.trim(),
     description: draft.experienceDescription.trim(),
     hostIntroduction: draft.hostIntroduction.trim(),
@@ -696,12 +699,12 @@ export function CreateActivityForm({
 
     // 제출 직전 전체 단계를 한 번 더 검증해 리뷰 중 유실된 값이 있으면 해당 단계로 되돌린다
     const invalidStep = steps.find(
-      (step) => validateActivityCreateStep(step, draft, referral) !== null,
+      (step) => validateActivityCreateStep(step, draft, referral, isEdit) !== null,
     );
     if (invalidStep) {
       setReviewing(false);
       setCurrentStep(invalidStep);
-      setErrorKey(validateActivityCreateStep(invalidStep, draft, referral));
+      setErrorKey(validateActivityCreateStep(invalidStep, draft, referral, isEdit));
       scrollToTop();
       return;
     }
@@ -808,7 +811,7 @@ export function CreateActivityForm({
       return;
     }
 
-    const validationError = validateActivityCreateStep(currentStep, draft, referral);
+    const validationError = validateActivityCreateStep(currentStep, draft, referral, isEdit);
     if (validationError) {
       setErrorKey(validationError);
       return;
@@ -848,7 +851,9 @@ export function CreateActivityForm({
     if (!reviewing && targetIndex > currentIndex) {
       const priorStepsAreComplete = steps
         .slice(0, targetIndex)
-        .every((priorStep) => validateActivityCreateStep(priorStep, draft, referral) === null);
+        .every(
+          (priorStep) => validateActivityCreateStep(priorStep, draft, referral, isEdit) === null,
+        );
       if (targetIndex > furthestStepIndex || !priorStepsAreComplete) return;
     }
     setCurrentStep(step);
@@ -1058,7 +1063,9 @@ export function CreateActivityForm({
           reviewing={reviewing}
           getTitle={getStepTitle}
           getGroupTitle={(group) => t(`groups.${group}`)}
-          isStepComplete={(step) => validateActivityCreateStep(step, draft, referral) === null}
+          isStepComplete={(step) =>
+            validateActivityCreateStep(step, draft, referral, isEdit) === null
+          }
           label={t("progressLabel")}
           onNavigate={navigateToStep}
         />
@@ -1097,6 +1104,20 @@ export function CreateActivityForm({
                   {description}
                 </p>
                 <div className="mt-4 lg:mt-10">{renderStep()}</div>
+                {!reviewing && currentStep === "host" ? (
+                  <ActivityLanguageSelect
+                    value={draft.availableLanguages ?? []}
+                    disabled={isSubmitting}
+                    onChange={(availableLanguages) => {
+                      setDraft((current) => ({
+                        ...current,
+                        availableLanguages,
+                        availableLanguagesTouched: true,
+                      }));
+                      setErrorKey(null);
+                    }}
+                  />
+                ) : null}
                 {errorKey ? (
                   <p
                     role="alert"

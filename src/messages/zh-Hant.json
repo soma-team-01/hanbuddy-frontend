@@ -1,5 +1,6 @@
 {
   "ActivityLanguages": {
+    "hostedIn": "服務語言",
     "title": "活動服務語言",
     "hint": "請選擇至少一種您能用於實際帶領此活動的語言。",
     "loading": "正在載入語言…",

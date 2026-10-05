@@ -27,6 +27,11 @@ const activity: Activity = {
 };
 
 describe("ActivityCard", () => {
+  it("keeps language metadata out of discovery cards", () => {
+    renderWithIntl(<ActivityCard activity={{ ...activity, availableLanguages: ["KO", "EN"] }} />);
+    expect(screen.queryByText(/Korean|English|Activity languages/)).not.toBeInTheDocument();
+    expect(screen.getByText(activity.title)).toBeVisible();
+  });
   it.each([
     ["ko", "무료", ko],
     ["en", "Free", en],

@@ -1,5 +1,6 @@
 {
   "ActivityLanguages": {
+    "hostedIn": "Hosted in",
     "title": "Activity languages",
     "hint": "Select at least one language you can use to lead this activity.",
     "loading": "Loading languages…",

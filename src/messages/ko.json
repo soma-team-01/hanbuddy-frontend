@@ -1,5 +1,6 @@
 {
   "ActivityLanguages": {
+    "hostedIn": "제공 언어",
     "title": "진행 가능 언어",
     "hint": "이 활동을 실제로 진행할 수 있는 언어를 1개 이상 선택해 주세요.",
     "loading": "진행 언어를 불러오는 중…",

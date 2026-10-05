@@ -36,6 +36,7 @@ import {
 } from "@/lib/google/places";
 import type { Activity, ActivityWeatherResult } from "@/types/activity";
 import { useBookableSessions } from "@/lib/use-bookable-sessions";
+import { isActivityLanguage } from "@/types/activity-language";
 
 const SECTION_IDS = {
   aboutHost: "about-host",
@@ -451,10 +452,11 @@ export function ActivityDetailView({
                 <p className="max-w-2xl leading-7 whitespace-pre-line text-muted">
                   {activity.description}
                 </p>
-                <ActivityLanguages languages={activity.availableLanguages} />
               </section>
 
-              <section className="grid gap-4 border-t border-line-soft pt-6 md:grid-cols-2 xl:grid-cols-3">
+              <section
+                className={`grid gap-4 border-t border-line-soft pt-6 md:grid-cols-2 ${activity.availableLanguages?.some(isActivityLanguage) ? "xl:grid-cols-2" : "xl:grid-cols-3"}`}
+              >
                 <button
                   type="button"
                   onClick={() => scrollToSection(SECTION_IDS.aboutHost)}
@@ -500,6 +502,7 @@ export function ActivityDetailView({
                     </div>
                   </button>
                 ) : null}
+                <ActivityLanguages languages={activity.availableLanguages} summary />
               </section>
 
               {itinerary.length > 0 ? (

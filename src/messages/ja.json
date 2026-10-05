@@ -1,5 +1,6 @@
 {
   "ActivityLanguages": {
+    "hostedIn": "対応言語",
     "title": "対応言語",
     "hint": "このアクティビティを実際に案内できる言語を1つ以上選んでください。",
     "loading": "言語を読み込み中…",

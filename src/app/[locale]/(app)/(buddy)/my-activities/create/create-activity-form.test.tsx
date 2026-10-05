@@ -217,7 +217,7 @@ async function completeAllStepsUntilReview(reorder = false) {
 
   fireEvent.click(screen.getByRole("button", { name: "Next month" }));
   fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
-  fireEvent.change(screen.getByLabelText("Hour (1–12)"), { target: { value: "10" } });
+  fireEvent.change(screen.getByLabelText("Hour (0–23)"), { target: { value: "10" } });
   fireEvent.change(screen.getByLabelText("Minute (0–59)"), { target: { value: "00" } });
   fireEvent.click(screen.getByRole("button", { name: "Add time" }));
   clickNext();
@@ -362,7 +362,7 @@ describe("CreateActivityForm", () => {
     await fillStepsUntilSchedule();
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));
     fireEvent.click(screen.getByRole("button", { name: `Select ${labelA}` }));
-    fireEvent.change(screen.getByLabelText("Hour (1–12)"), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText("Hour (0–23)"), { target: { value: "10" } });
     fireEvent.change(screen.getByLabelText("Minute (0–59)"), { target: { value: "00" } });
     fireEvent.click(screen.getByRole("button", { name: "Add time" }));
     clickNext();
@@ -839,8 +839,7 @@ describe("CreateActivityForm", () => {
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Use the same times for all selected dates" }),
     );
-    fireEvent.click(screen.getByRole("button", { name: "PM" }));
-    fireEvent.change(screen.getByLabelText("Hour (1–12)"), { target: { value: "4" } });
+    fireEvent.change(screen.getByLabelText("Hour (0–23)"), { target: { value: "16" } });
     fireEvent.change(screen.getByLabelText("Minute (0–59)"), { target: { value: "00" } });
     fireEvent.click(screen.getByRole("button", { name: "Add time" }));
     expect(

@@ -1606,7 +1606,7 @@
       "am": "오전",
       "pm": "오후",
       "timePeriod": "오전/오후",
-      "hour": "시 (1–12)",
+      "hour": "시 (0–23)",
       "minute": "분 (0–59)",
       "hourPlaceholder": "시",
       "minutePlaceholder": "분",

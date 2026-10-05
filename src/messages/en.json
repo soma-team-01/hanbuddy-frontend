@@ -1606,7 +1606,7 @@
       "am": "AM",
       "pm": "PM",
       "timePeriod": "AM/PM",
-      "hour": "Hour (1–12)",
+      "hour": "Hour (0–23)",
       "minute": "Minute (0–59)",
       "hourPlaceholder": "hh",
       "minutePlaceholder": "mm",

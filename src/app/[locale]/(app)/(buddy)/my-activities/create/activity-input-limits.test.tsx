@@ -61,6 +61,12 @@ function ListHarness({
 }
 
 describe("activity input limits", () => {
+  it.each(["Detailed description", "About you"])("left-aligns the %s input", (name) => {
+    renderWithIntl(<Fields />);
+    const description = screen.getByRole("textbox", { name });
+    expect(description).toHaveClass("text-left");
+    expect(description).not.toHaveClass("text-center");
+  });
   it("explains referral pricing without silently turning negative or decimal input into a different price", () => {
     renderWithIntl(<ReferralPriceField />);
     const input = screen.getByRole("textbox", { name: "Minimum service price" });

@@ -1606,7 +1606,7 @@
       "am": "上午",
       "pm": "下午",
       "timePeriod": "上午/下午",
-      "hour": "小时 (1–12)",
+      "hour": "小时 (0–23)",
       "minute": "分钟 (0–59)",
       "hourPlaceholder": "时",
       "minutePlaceholder": "分",

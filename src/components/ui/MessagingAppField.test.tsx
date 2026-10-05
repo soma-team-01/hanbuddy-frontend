@@ -95,16 +95,16 @@ describe("MessagingAppField", () => {
     expect(screen.getByPlaceholderText("Phone number")).toBeInTheDocument();
   });
 
-  it("renders a fixed +82 chip instead of the country selector when koreanOnly", () => {
+  it("hides both the country selector and country code when koreanOnly", () => {
     renderField({ koreanOnly: true });
     expect(screen.queryByLabelText("Country code")).not.toBeInTheDocument();
-    expect(screen.getByText("+82")).toBeInTheDocument();
+    expect(screen.queryByText("+82")).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText("010-XXXX-XXXX")).toBeInTheDocument();
   });
 
-  it("displays stored digits with Korean hyphen format when koreanOnly", () => {
+  it("preserves stored digits without forcing a mobile phone format", () => {
     renderField({ koreanOnly: true, contactValue: "01012345678" });
-    expect(screen.getByLabelText("Phone number")).toHaveValue("010-1234-5678");
+    expect(screen.getByLabelText("Phone number")).toHaveValue("01012345678");
   });
 
   it("reports digits only from the koreanOnly input", () => {
@@ -115,12 +115,12 @@ describe("MessagingAppField", () => {
     expect(props.onContactChange).toHaveBeenCalledWith("0101234");
   });
 
-  it("caps koreanOnly phone input to 11 digits", () => {
+  it("does not truncate Korean phone input to 11 digits", () => {
     const props = renderField({ koreanOnly: true });
     fireEvent.change(screen.getByLabelText("Phone number"), {
       target: { value: "010-1234-5678-99" },
     });
-    expect(props.onContactChange).toHaveBeenCalledWith("01012345678");
+    expect(props.onContactChange).toHaveBeenCalledWith("0101234567899");
   });
 
   it("keeps the ID input for ID-based apps regardless of koreanOnly", () => {

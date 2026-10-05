@@ -96,6 +96,166 @@ describe("EditProfilePage", () => {
     };
   }
 
+  it("saves a changed buddy account as an enum and string, preserving the image key", async () => {
+    const buddy = createMockProfile({
+      userType: "BUDDY",
+      contactMethod: "PHONE",
+      contactCountryCode: "+82",
+      contactIdentifier: "021234567",
+      bankAccount: { bank: "KB", bankCode: "004", bankName: "KB국민은행", accountNumber: "001234" },
+    });
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile: buddy });
+    mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: buddy });
+    renderWithQueryClient(<EditProfilePage />);
+    fireEvent.change(await screen.findByLabelText("Account number"), {
+      target: { value: "00-987 654" },
+    });
+    expect(screen.getByLabelText("Account number")).toHaveValue("00987654");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bankName: "KB",
+          bankAccountNumber: "00987654",
+          profileImageKey: buddy.profileImageKey,
+          contactIdentifier: "021234567",
+        }),
+      ),
+    );
+  });
+
+  it("registers a previously missing bank account and refreshes the own-profile cache", async () => {
+    const buddy = createMockProfile({
+      userType: "BUDDY",
+      contactMethod: "PHONE",
+      contactCountryCode: "+82",
+      contactIdentifier: "01012345678",
+      bankAccount: null,
+    });
+    const updated = {
+      ...buddy,
+      bankAccount: {
+        bank: "KB" as const,
+        bankCode: "004",
+        bankName: "KB국민은행",
+        accountNumber: "001234",
+      },
+    };
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile: buddy });
+    mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: updated });
+    const { queryClient } = renderWithQueryClient(<EditProfilePage />);
+    fireEvent.click(await screen.findByRole("combobox", { name: "Bank" }));
+    fireEvent.click(screen.getByRole("option", { name: "KB국민은행" }));
+    fireEvent.change(screen.getByLabelText("Account number"), { target: { value: "001234" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(queryClient.getQueryData(userKeys.me())).toEqual(updated));
+    expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ bankName: "KB", bankAccountNumber: "001234" }),
+    );
+  });
+
+  it("requires a supported bank when editing a legacy account number", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: createMockProfile({
+        userType: "BUDDY",
+        contactMethod: "PHONE",
+        contactCountryCode: "+82",
+        contactIdentifier: "01012345678",
+        bankAccount: {
+          bank: null,
+          bankCode: null,
+          bankName: "Legacy Bank",
+          accountNumber: "001234",
+        },
+      }),
+    });
+    renderWithQueryClient(<EditProfilePage />);
+    fireEvent.change(await screen.findByLabelText("Account number"), {
+      target: { value: "009876" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Select a bank and enter your account number.",
+    );
+    expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+  });
+
+  it.each(["KB", null] as const)(
+    "omits unchanged bank fields even for legacy bank %s",
+    async (bank) => {
+      const buddy = createMockProfile({
+        userType: "BUDDY",
+        contactMethod: "PHONE",
+        contactCountryCode: "+82",
+        contactIdentifier: "07012345678",
+        bankAccount: {
+          bank,
+          bankCode: bank ? "004" : null,
+          bankName: bank ? "KB국민은행" : "Legacy Bank",
+          accountNumber: "001-234",
+        },
+      });
+      mockedGetMyProfile.mockResolvedValue({ status: "success", profile: buddy });
+      mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: buddy });
+      renderWithQueryClient(<EditProfilePage />);
+      expect(await screen.findByLabelText("Account number")).toHaveValue("001234");
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      await waitFor(() => expect(mockedUpdateMyProfile).toHaveBeenCalled());
+      expect(mockedUpdateMyProfile.mock.calls[0][0]).not.toHaveProperty("bankName");
+      expect(mockedUpdateMyProfile.mock.calls[0][0]).not.toHaveProperty("bankAccountNumber");
+    },
+  );
+
+  it.each(["", "abc", "---", "1".repeat(51)])(
+    "rejects an invalid changed account %s",
+    async (value) => {
+      mockedGetMyProfile.mockResolvedValue({
+        status: "success",
+        profile: createMockProfile({
+          userType: "BUDDY",
+          contactMethod: "PHONE",
+          contactCountryCode: "+82",
+          contactIdentifier: "01012345678",
+          bankAccount: {
+            bank: "KB",
+            bankCode: "004",
+            bankName: "KB국민은행",
+            accountNumber: "001234",
+          },
+        }),
+      });
+      renderWithQueryClient(<EditProfilePage />);
+      fireEvent.change(await screen.findByLabelText("Account number"), { target: { value } });
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+      expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["LINE", "WECHAT"] as const)(
+    "preserves a tourist's legacy %s contact and never sends bank fields",
+    async (contactMethod) => {
+      const tourist = createMockProfile({ contactMethod, contactIdentifier: "old-contact" });
+      mockedGetMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+      mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+      renderWithQueryClient(<EditProfilePage />);
+      expect(await screen.findByLabelText("Messaging app ID")).toHaveValue("old-contact");
+      expect(screen.queryByLabelText("Account number")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      await waitFor(() =>
+        expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            contactMethod,
+            contactIdentifier: "old-contact",
+            contactCountryCode: "",
+          }),
+        ),
+      );
+      expect(mockedUpdateMyProfile.mock.calls[0][0]).not.toHaveProperty("bankName");
+    },
+  );
+
   it("populates the form with the loaded profile", async () => {
     renderWithQueryClient(<EditProfilePage />);
 
@@ -264,6 +424,123 @@ describe("EditProfilePage", () => {
     // 프로필의 연락 수단이 WHATSAPP이므로 국가 선택이 바로 렌더된다
     expect(await screen.findByLabelText("Country code")).toBeInTheDocument();
   });
+
+  it("offers the same four contact methods as tourist signup", async () => {
+    renderWithQueryClient(<EditProfilePage />);
+
+    const options = await screen.findByTestId("messaging-app-options");
+    expect(within(options).getAllByRole("button")).toHaveLength(4);
+    for (const name of ["WhatsApp", "KakaoTalk", "Instagram", "Phone Number"]) {
+      expect(within(options).getByRole("button", { name })).toBeInTheDocument();
+    }
+    expect(within(options).queryByText("Line")).not.toBeInTheDocument();
+    expect(within(options).queryByText("WeChat")).not.toBeInTheDocument();
+  });
+
+  it("edits buddy domestic phone numbers without showing a country code", async () => {
+    const buddy = createMockProfile({
+      userType: "BUDDY",
+      contactMethod: "PHONE",
+      contactCountryCode: "+82",
+      contactIdentifier: "01012345678",
+    });
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile: buddy });
+    mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: buddy });
+    renderWithQueryClient(<EditProfilePage />);
+
+    expect(await screen.findByLabelText("Phone number")).toHaveValue("01012345678");
+    expect(screen.queryByTestId("messaging-app-options")).not.toBeInTheDocument();
+    expect(screen.queryByText("Preferred Messaging App")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Country code")).not.toBeInTheDocument();
+    expect(screen.queryByText("+82")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contactMethod: "PHONE",
+          contactCountryCode: "+82",
+          contactIdentifier: "01012345678",
+        }),
+      ),
+    );
+  });
+
+  it("requires a new domestic number instead of relabeling a buddy's overseas phone", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: createMockProfile({
+        userType: "BUDDY",
+        contactMethod: "PHONE",
+        contactCountryCode: "+1",
+        contactIdentifier: "2025550114",
+      }),
+    });
+    renderWithQueryClient(<EditProfilePage />);
+    expect(await screen.findByLabelText("Phone number")).toHaveValue("");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+  });
+
+  it("rejects too-short buddy phone numbers before saving", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: createMockProfile({
+        userType: "BUDDY",
+        contactMethod: "PHONE",
+        contactCountryCode: "+82",
+        contactIdentifier: "01012345678",
+      }),
+    });
+    renderWithQueryClient(<EditProfilePage />);
+    fireEvent.change(await screen.findByLabelText("Phone number"), {
+      target: { value: "12345" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter a Korean phone number");
+    expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+  });
+
+  it.each(["BUDDY"] as const)(
+    "does not reinterpret a legacy %s LINE ID as a new contact",
+    async (userType) => {
+      mockedGetMyProfile.mockResolvedValue({
+        status: "success",
+        profile: createMockProfile({
+          userType,
+          contactMethod: "LINE",
+          contactIdentifier: "old-line-id",
+        }),
+      });
+      renderWithQueryClient(<EditProfilePage />);
+
+      await screen.findByRole("form");
+      expect(screen.queryByDisplayValue("old-line-id")).not.toBeInTheDocument();
+      expect(screen.getByText(/Please enter your contact details again/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["KakaoTalk", "Instagram"])(
+    "saves %s IDs without an unrelated phone country code",
+    async (name) => {
+      mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile });
+      renderWithQueryClient(<EditProfilePage />);
+      fireEvent.click(await screen.findByRole("button", { name }));
+      fireEvent.change(screen.getByLabelText("Messaging app ID"), { target: { value: "new-id" } });
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      await waitFor(() =>
+        expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            contactMethod: name.toUpperCase(),
+            contactCountryCode: "",
+            contactIdentifier: "new-id",
+          }),
+        ),
+      );
+    },
+  );
 
   it("submits the updated profile and returns to my page", async () => {
     mockedUpdateMyProfile.mockResolvedValue({

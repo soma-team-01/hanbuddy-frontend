@@ -12,7 +12,7 @@ import {
   WhatsAppIcon,
 } from "@/components/ui/icons";
 import type { ContactMethod } from "@/lib/auth/types";
-import { formatKoreanPhone, toDigits } from "@/lib/phone";
+import { toDigits } from "@/lib/phone";
 
 export const MESSAGING_APPS = [
   { key: "whatsapp", label: "WhatsApp", Icon: WhatsAppIcon },
@@ -55,7 +55,7 @@ interface MessagingAppFieldProps {
   onContactChange: (value: string) => void;
   inputName?: string;
   inputRequired?: boolean;
-  /** true면 국가 선택 대신 +82를 고정 표시한다 (버디 - 한국 번호 전제) */
+  /** true면 국가번호 UI 없이 국내 전화번호만 입력한다 (요청의 +82는 호출자가 설정). */
   koreanOnly?: boolean;
   /** 온보딩에서는 한눈에 비교할 수 있는 카드형 선택지를 사용한다. */
   variant?: "list" | "cards";
@@ -220,11 +220,7 @@ function PhoneContactInput({
 
   return (
     <div className="mt-1 flex gap-2">
-      {koreanOnly ? (
-        <span className="flex shrink-0 items-center rounded-xl border border-line-soft bg-panel-raised px-4 py-3.5 text-base text-ink">
-          +82
-        </span>
-      ) : (
+      {!koreanOnly && (
         <div className="shrink-0">
           <CountrySelect
             value={country}
@@ -239,10 +235,11 @@ function PhoneContactInput({
         name={inputName}
         type="tel"
         required={inputRequired}
-        value={koreanOnly ? formatKoreanPhone(contactValue) : contactValue}
+        value={contactValue}
         onChange={(event) => {
-          const digits = toDigits(event.target.value);
-          onContactChange(koreanOnly ? digits.slice(0, 11) : digits);
+          onContactChange(
+            koreanOnly ? event.target.value.replace(/[ -]/g, "") : toDigits(event.target.value),
+          );
         }}
         placeholder={koreanOnly ? koreanPhonePlaceholder : phonePlaceholder}
         aria-label={phoneInputLabel}

@@ -151,5 +151,7 @@ it("requires buddy bank fields without optional labels or helper copy", () => {
     "Select a bank and enter your account number.",
   );
   fireEvent.change(account, { target: { value: "001-234" } });
-  expect(account).toHaveValue("001-234");
+  expect(account).toHaveValue("001234");
+  fireEvent.change(account, { target: { value: "00 12-34abc" } });
+  expect(account).toHaveValue("001234");
 });

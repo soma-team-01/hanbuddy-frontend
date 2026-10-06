@@ -5,16 +5,16 @@ import { getPolicyDocument, getSignupAgreementDocuments } from "./policy-content
 
 describe("policy content", () => {
   it.each([
-    ["ko", "결제 시점으로부터 예약된 활동 종료까지의 최대 서비스 제공기간은 3개월입니다."],
+    ["ko", "결제 시점으로부터 예약된 활동 종료까지의 최대 서비스 제공기간은 1년입니다."],
     [
       "en",
-      "The maximum service provision period, from the time of payment until the end of the booked activity, is 3 months.",
+      "The maximum service provision period, from the time of payment until the end of the booked activity, is 1 year.",
     ],
-    ["ja", "決済時点から予約したアクティビティの終了までのサービス提供期間は、最長3か月です。"],
-    ["zh-Hans", "从付款时点至所预订活动结束的服务提供期限最长为3个月。"],
-    ["zh-Hant", "從付款時點至所預訂活動結束的服務提供期限最長為3個月。"],
+    ["ja", "決済時点から予約したアクティビティの終了までのサービス提供期間は、最長1年です。"],
+    ["zh-Hans", "从付款时点至所预订活动结束的服务提供期限最长为1年。"],
+    ["zh-Hant", "從付款時點至所預訂活動結束的服務提供期限最長為1年。"],
   ] as const)(
-    "includes the three-month service period in the payment article in %s",
+    "includes the one-year service period in the payment article in %s",
     async (locale, clause) => {
       const policy = await getPolicyDocument("terms-of-service", locale);
       const paymentArticle = policy.source.split(/^## /m)[9];
@@ -107,9 +107,12 @@ describe("policy content", () => {
     expect(policy.slug).toBe(slug);
     expect(policy.title).toMatch(/^HanBuddy /);
     expect(policy.version).toBe(
-      ["buddy-operation-terms", "buddy-commission-settlement-policy", "consent-notices"].includes(
-        slug,
-      )
+      [
+        "buddy-operation-terms",
+        "buddy-commission-settlement-policy",
+        "consent-notices",
+        "terms-of-service",
+      ].includes(slug)
         ? "2026-10-06"
         : ["cancellation-refund-policy", "terms-of-service"].includes(slug)
           ? "2026-09-08"

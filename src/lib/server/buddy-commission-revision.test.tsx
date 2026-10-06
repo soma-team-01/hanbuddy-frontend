@@ -57,7 +57,7 @@ describe("buddy commission revision at policy and signup boundaries", () => {
         "2026-10-06",
       );
       expect(agreements.find(({ type }) => type === "TERMS_OF_SERVICE")?.version).toBe(
-        "2026-09-08",
+        "2026-10-06",
       );
     },
   );

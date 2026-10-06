@@ -2,6 +2,8 @@
 
 Version: 2026-10-06
 
+For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date.
+
 ## Article 1. Purpose
 
 These Terms set out the rights, obligations and responsibilities of Zero One (the “Company”) and members, and the conditions and procedures for using the HanBuddy website and related services (the “Service”).

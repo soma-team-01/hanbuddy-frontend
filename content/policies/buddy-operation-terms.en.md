@@ -4,7 +4,7 @@ Version: 2026-10-06
 
 These Terms apply alongside the Terms of Service to Buddies listing and providing activities on HanBuddy.
 
-The document version identifies revised wording, not its legal effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
+For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
 
 ## Article 1. Eligibility and Approval
 

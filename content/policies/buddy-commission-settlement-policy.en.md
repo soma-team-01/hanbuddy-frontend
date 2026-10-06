@@ -4,7 +4,7 @@ Version: 2026-10-06
 
 This policy applies to activity sales proceeds, platform fees, cancellations, refunds and settlements for Buddies providing activities on HanBuddy.
 
-The document version identifies revised wording, not its legal effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
+For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
 
 ## 1. Commission Rates
 
@@ -41,8 +41,8 @@ New applicants who complete Buddy onboarding and their application by 2026-11-30
 
 ## 4. Settlement Schedule and Payment
 
-1. Activities completed in a month are closed for settlement on that month’s last day. In principle, payment is made by the last business day of the following month to the Buddy’s registered account in their own name.
-2. If the settlement day is a bank holiday, payment may be made on the next business day.
+1. Activities completed in a month are closed for settlement on that month’s last calendar day. The Company transfers payment to the Buddy’s registered settlement account in their own name by the 5th business day of the following month.
+2. Bank holidays are excluded when counting business days. This is the transfer deadline; the time funds actually reach the account may vary with bank processing.
 3. Account errors, incomplete identity verification, missing tax information or banking failures may delay settlement. The Company explains the reason and required action.
 4. Buddies may dispute a settlement within 14 days of receiving the statement. Clear calculation errors or statutory rights are reviewed even after this period.
 

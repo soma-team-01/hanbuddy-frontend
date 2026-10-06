@@ -97,8 +97,8 @@ describe("policy content", () => {
   it("passes the language through to signup policy documents", async () => {
     const documents = await getSignupAgreementDocuments("BUDDY", "en");
     expect(documents.TERMS_OF_SERVICE?.source).toContain("## Article 1.");
-    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("22%");
-    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("11%");
+    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("20%");
+    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("15%");
     expect(documents.BUDDY_OPERATION_TERMS?.source).not.toMatch(/[가-힣]/);
   });
   it.each(POLICY_SLUGS)("loads the published Korean source for %s", async (slug) => {
@@ -107,9 +107,13 @@ describe("policy content", () => {
     expect(policy.slug).toBe(slug);
     expect(policy.title).toMatch(/^HanBuddy /);
     expect(policy.version).toBe(
-      ["cancellation-refund-policy", "terms-of-service", "consent-notices"].includes(slug)
-        ? "2026-09-08"
-        : "2026-09-07",
+      ["buddy-operation-terms", "buddy-commission-settlement-policy", "consent-notices"].includes(
+        slug,
+      )
+        ? "2026-10-06"
+        : ["cancellation-refund-policy", "terms-of-service"].includes(slug)
+          ? "2026-09-08"
+          : "2026-09-07",
     );
     expect(policy.source).not.toContain("버전:");
     expect(policy.source).not.toContain("시행일:");

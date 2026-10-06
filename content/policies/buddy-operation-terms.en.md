@@ -1,8 +1,10 @@
 # HanBuddy Buddy Operating Terms
 
-Version: 2026-09-07
+Version: 2026-10-06
 
 These Terms apply alongside the Terms of Service to Buddies listing and providing activities on HanBuddy.
+
+The document version identifies revised wording, not its legal effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
 
 ## Article 1. Eligibility and Approval
 
@@ -72,8 +74,8 @@ These Terms apply alongside the Terms of Service to Buddies listing and providin
 ## Article 10. Fees, Settlement and Taxes
 
 1. Compensation, platform fees, refunds and cancellation fees follow the [Buddy Commission and Settlement Policy](./buddy-commission-settlement-policy.en.md).
-2. The standard platform fee excluding VAT is 20% of actual sales and VAT on that fee is 2% of actual sales, totaling 22%. Early Buddies have a 10% fee plus 1% VAT, totaling 11%.
-3. Buddies are responsible for reporting activity income and paying taxes. The Company may carry out legally required withholding or reporting.
+2. The total platform fee is 20% of actual sales for standard Buddies and 15% for approved Early Buddies. Both rates include VAT and payment-processing fees, which are not deducted again. New applicants who complete Buddy onboarding and their application by 2026-11-30 Korea Standard Time (KST) receive the permanent Early Buddy rate after review and approval. Approval in December or later does not disqualify applicants who completed their application by the deadline. This is the deadline for new applications, not the expiry of the discount. Completing an application does not automatically approve an activity.
+3. Buddies are responsible for reporting income and paying taxes under applicable law. The Company and Buddy fulfill applicable duties to issue and receive supporting documents according to business registration, tax status, income type and the actual transaction. The Company fulfills its statutory withholding, remittance and payment-statement filing duties and does not transfer them to the Buddy.
 
 ## Article 11. Restrictions and Termination
 

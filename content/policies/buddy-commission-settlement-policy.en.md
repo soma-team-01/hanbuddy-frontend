@@ -1,28 +1,32 @@
 # HanBuddy Buddy Commission and Settlement Policy
 
-Version: 2026-09-07
+Version: 2026-10-06
 
 This policy applies to activity sales proceeds, platform fees, cancellations, refunds and settlements for Buddies providing activities on HanBuddy.
 
+The document version identifies revised wording, not its legal effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
+
 ## 1. Commission Rates
 
-1. The standard platform fee excluding VAT is 20% of actual sales. VAT on that fee is 10% of the fee, equivalent to 2% of actual sales. The total standard deduction is therefore 22% of actual sales.
-2. Approved Early Buddies may receive a 10% platform fee rate excluding VAT. VAT is equivalent to 1% of actual sales, making the total deduction 11%.
-3. These 22% and 11% figures are total deductions combining the platform fee and VAT on that fee, not separate platform fee rates. They do not mean an additional 10% VAT deduction from activity sales themselves.
-4. The applicable fee rate, VAT and total deduction must be separately identifiable in settlement screens or notices before a Buddy lists an activity or accepts a booking.
+1. The total standard platform fee is 20% of actual sales, including VAT and payment-processing fees.
+2. Approved Early Buddies receive a permanent total rate of 15%, including VAT and payment-processing fees.
+3. VAT and payment-processing fees included in these totals are not deducted separately. Withholding, refunds and adjustments to amounts already paid are separate from platform fees.
+4. The applicable total fee rate and the VAT included in that total must be separately identifiable in settlement screens or notices before a Buddy lists an activity or accepts a booking.
 5. Fee-rate changes are announced 30 days before taking effect. Bookings confirmed before the change use the rate applicable at payment. If VAT law changes, the amended statutory rate applies.
+
+New applicants who complete Buddy onboarding and their application by 2026-11-30 Korea Standard Time (KST) receive the permanent Early Buddy rate after review and approval. Approval in December or later does not disqualify applicants who completed their application by the deadline. This is the deadline for new applications, not the expiry of the discount. Completing an application does not automatically approve an activity.
 
 ## 2. Calculation Basis
 
 1. “Actual sales” is the portion allocated to the activity of the amount the Tourist actually paid after coupons, promotions and discounts.
 2. Company-funded discounts may be added back before fee calculation if separate promotion conditions provide for this. Buddy-funded discounts use the discounted amount.
-3. For completed bookings:
+3. For completed bookings, the total platform fee and expected settlement are calculated as follows:
 
-   `Platform fee excluding VAT = Actual sales × Applicable platform fee rate`
+   `Total platform fee = Actual sales × Applicable total fee rate`
 
-   `VAT on platform fee = Platform fee excluding VAT × 10%`
+   `Expected settlement = Actual sales − Total platform fee − Separate settlement deductions and adjustments`
 
-   `Expected settlement = Actual sales − Platform fee excluding VAT − VAT on platform fee − Other deductions disclosed in advance`
+   VAT included in the total fee is not an additional deduction. Where the statutory VAT rate is 10%, the fee excluding VAT is the total platform fee ÷ 1.1, and included VAT is the total platform fee minus that amount. Separate deductions and adjustments require a basis, such as statutory withholding, refunds and cancellation fees under this policy, or adjustments to amounts already paid; the calculation basis is disclosed. Advance notice does not permit duplicate deductions of VAT or payment-processing fees.
 
 4. Settlement statements separately identify each booking’s actual sales, discounts, fee rate, fee excluding VAT, VAT, total deductions, refunds, adjustments and final payout.
 
@@ -57,7 +61,7 @@ The Company informs the Buddy of the reason, amount and release requirements. Un
 
 1. Buddies report income and pay taxes under applicable law.
 2. VAT on platform fees taxes the platform service supplied by the Company to the Buddy. It is distinct from income tax, VAT or other taxes on the Buddy’s activity sales.
-3. The Company issues legally required tax invoices, receipts or settlement documents and may withhold taxes, submit payment statements or request tax information as required.
+3. Business registration, tax status, income type and the actual supply, contract and collection arrangements determine the required tax invoices, invoices, receipts or other documents and who issues and receives them. The Company and Buddy each fulfill their statutory documentation duties. Tax invoices do not follow one unconditional issuing direction for all transactions. Whether withholding applies and at what rate depends on statutory conditions, including income type and the actual transaction; a single rate does not apply to every person without business registration. The Company fulfills legally required withholding, remittance of withheld taxes and payment-statement filing, and may request necessary tax information. The Buddy’s reporting and tax responsibilities do not remove the Company’s statutory duties.
 4. Buddies must keep settlement account and tax information accurate.
 
 ## 7. Settlement after Termination

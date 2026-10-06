@@ -50,7 +50,7 @@ describe("refund policy revision", () => {
     for (const clause of clauses[locale]) expect(policy.source).toContain(clause);
     for (const slug of ["terms-of-service", "consent-notices"] as const) {
       const document = await getPolicyDocument(slug, locale);
-      expect(document.version).toBe("2026-09-08");
+      expect(document.version).toBe(slug === "consent-notices" ? "2026-10-06" : "2026-09-08");
       expect(document.source).toContain(clauses[locale][0]);
       expect(document.source).toContain(clauses[locale][1]);
       expect(document.source).toContain(clauses[locale][2]);

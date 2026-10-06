@@ -7,10 +7,11 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import type { Locale } from "@/i18n/routing";
 import { ClosingCta } from "../about/ClosingCta";
 import { FAQ_GROUPS } from "./faq-keys";
+import { OpenFromHash } from "./OpenFromHash";
 import { type NavTopic, TopicChips, TopicRail } from "./TopicNav";
 
 // FAQ는 10문항을 세 묶음으로 나눈다. 모바일은 헤더 아래 붙는 묶음 칩, 데스크톱은 왼쪽 목차로
-// 원하는 질문까지 바로 간다. 답은 접지 않고 모두 펼쳐 둔다(사람과 검색엔진이 같은 글을 읽는다).
+// 원하는 질문까지 바로 간다. 답은 질문을 눌러야 열리지만(<details>) HTML에는 모두 들어 있어 검색엔진이 읽는다.
 
 const PHOTO = "/images/landing";
 const EYEBROW = "font-display text-xs font-bold tracking-[0.26em] uppercase";
@@ -79,6 +80,7 @@ export default async function FaqPage({ params }: FaqPageProps) {
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <OpenFromHash />
       <section aria-labelledby="faq-title">
         {/* 표지: About 표지와 같은 진한 바탕. 사진은 4:3 작은 액자 세 장으로 낮게 둔다. */}
         <div className="bg-ink text-on-primary">
@@ -160,25 +162,37 @@ export default async function FaqPage({ params }: FaqPageProps) {
                       </div>
                     </header>
 
-                    {/* 질문마다 상자로 묶지 않고 가는 구분선으로만 나눈다. */}
+                    {/* 질문을 누르면 답이 열린다. 상자 없이 가는 구분선으로만 나눈다. */}
                     <div className="divide-y divide-line-soft">
                       {group.questions.map((key) => (
-                        <article
-                          key={key}
-                          id={`faq-${key}`}
-                          aria-labelledby={`faq-${key}-question`}
-                          className={`${SCROLL_OFFSET} group py-6 md:py-7`}
-                        >
-                          <h3
-                            id={`faq-${key}-question`}
-                            className="font-display text-lg leading-snug font-bold text-ink transition-colors group-target:text-primary-strong md:text-xl"
-                          >
-                            {t(`faq.items.${key}.question`)}
-                          </h3>
-                          <p className="mt-2.5 text-base leading-7 text-muted">
+                        <details key={key} id={`faq-${key}`} className={`${SCROLL_OFFSET} group`}>
+                          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong md:py-5 [&::-webkit-details-marker]:hidden">
+                            <h3
+                              id={`faq-${key}-question`}
+                              className="font-display text-lg leading-snug font-bold text-ink transition-colors group-open:text-primary-strong md:text-xl"
+                            >
+                              {t(`faq.items.${key}.question`)}
+                            </h3>
+                            <span
+                              aria-hidden
+                              className="grid size-8 shrink-0 place-items-center rounded-full bg-panel text-primary transition-transform duration-200 group-open:rotate-45 motion-reduce:transition-none"
+                            >
+                              <svg
+                                viewBox="0 0 16 16"
+                                className="size-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              >
+                                <path d="M8 3v10M3 8h10" />
+                              </svg>
+                            </span>
+                          </summary>
+                          <p className="-mt-1 pr-12 pb-5 text-base leading-7 text-muted md:pb-6">
                             {t(`faq.items.${key}.answer`)}
                           </p>
-                        </article>
+                        </details>
                       ))}
                     </div>
                   </section>

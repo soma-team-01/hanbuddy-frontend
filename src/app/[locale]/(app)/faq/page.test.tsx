@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
@@ -32,7 +32,7 @@ describe("FaqPage", () => {
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
   });
 
-  it("groups the ten questions by topic and keeps every answer open", async () => {
+  it("groups the ten questions by topic and folds each answer under its question", async () => {
     await renderFaq("en");
 
     const faq = screen.getByRole("region", { name: "Questions guests ask before booking" });
@@ -56,14 +56,22 @@ describe("FaqPage", () => {
       "Where do we meet?",
     ]);
     for (const question of questions) {
-      const answer = question.nextElementSibling;
-      expect(answer?.tagName).toBe("P");
+      // 답은 접혀 있어도 HTML에 들어 있어 검색엔진이 읽는다.
+      const item = question.closest("details");
+      expect(item).not.toHaveAttribute("open");
+      const answer = item?.querySelector(":scope > p");
       expect(answer?.textContent).not.toBe("");
-      expect(answer).toBeVisible();
     }
-    // 답은 접지 않는다. 사람과 검색엔진이 같은 글을 읽는다.
-    expect(document.querySelector("details")).toBeNull();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("opens an answer when its question is tapped", async () => {
+    await renderFaq("en");
+
+    const pay = screen.getByRole("heading", { level: 3, name: "How do I pay?" });
+    const item = pay.closest("details")!;
+    fireEvent.click(pay.closest("summary")!);
+    expect(item).toHaveAttribute("open");
+    expect(within(item).getByText(/Online with PayPal/)).toBeVisible();
   });
 
   it("names the topic groups in Korean", async () => {
@@ -80,14 +88,16 @@ describe("FaqPage", () => {
     expect(screen.getByText(/Online with PayPal/)).toBeInTheDocument();
     expect(screen.getByText(/Need another payment method\?/)).toBeInTheDocument();
     expect(screen.getByText(/Special Requests/)).toBeInTheDocument();
-    expect(screen.getByText("Bookings close 24 hours before the experience starts.")).toBeVisible();
+    expect(
+      screen.getByText("Bookings close 24 hours before the experience starts."),
+    ).toBeInTheDocument();
   });
 
   it("gives every question a stable anchor and lists them for jumping", async () => {
     await renderFaq("en");
 
     const pay = screen.getByRole("heading", { level: 3, name: "How do I pay?" });
-    expect(pay.closest("article")).toHaveAttribute("id", "faq-pay");
+    expect(pay.closest("details")).toHaveAttribute("id", "faq-pay");
 
     // 모바일은 묶음 칩, 데스크톱은 묶음과 질문 목차. 둘 다 같은 이름의 내비게이션이다.
     const [chips, rail] = screen.getAllByRole("navigation", { name: "FAQ" });

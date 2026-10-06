@@ -35,6 +35,8 @@ describe("public sitemap and crawl policy", () => {
     expect(urls).toContain("https://hanbuddy.kr/en/explore");
     expect(urls).toContain("https://hanbuddy.kr/en/about");
     expect(urls).toContain("https://hanbuddy.kr/zh-Hant/about");
+    expect(urls).toContain("https://hanbuddy.kr/en/faq");
+    expect(urls).toContain("https://hanbuddy.kr/zh-Hant/faq");
     expect(urls).toContain("https://hanbuddy.kr/en/activities/1");
     expect(urls).toContain("https://hanbuddy.kr/ko/activities/2");
     expect(urls).toContain("https://hanbuddy.kr/ko/buddy");

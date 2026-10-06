@@ -54,6 +54,12 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
                 {navT("about")}
               </Link>
               <Link
+                href={`/${locale}/faq`}
+                className="inline-flex min-h-11 items-center transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong max-md:min-h-8"
+              >
+                {navT("faq")}
+              </Link>
+              <Link
                 href={getPolicyPath(locale, "terms-of-service")}
                 className="inline-flex min-h-11 items-center transition-colors hover:text-primary focus-visible:rounded-sm focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong max-md:min-h-8"
               >

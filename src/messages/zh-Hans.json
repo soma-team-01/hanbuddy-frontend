@@ -26,7 +26,7 @@
     "unavailable": "暂时无法翻译，已显示原文。"
   },
   "Referral": {
-    "messagePlaceholder": "如有想对伙伴说的话，请在这里填写。",
+    "messagePlaceholder": "如有想对好友说的话，请在这里填写。",
     "summaryTitle": "申请信息",
     "sharingTitle": "向商家提供个人信息的说明",
     "servicePrice": "服务价格",
@@ -252,9 +252,10 @@
     "home": "首页",
     "explore": "探索",
     "about": "关于我们",
+    "faq": "常见问题",
     "applications": "我的预订",
     "dashboard": "仪表板",
-    "buddyWorkspace": "伙伴管理",
+    "buddyWorkspace": "好友管理",
     "myActivities": "我的活动",
     "applicants": "申请人",
     "createActivity": "创建活动",
@@ -282,29 +283,30 @@
   },
   "Landing": {
     "metadataTitle": "HanBuddy | 像当地人一样体验韩国",
-    "metadataDescription": "认识当地伙伴，体验真实的韩国生活。",
-    "eyebrow": "首尔 · 当地伙伴带你体验",
+    "metadataDescription": "HanBuddy 连接在韩国生活或旅行的外国人与韩国本地好友。预订由当地人发起并全程同行的首尔小团体验。",
+    "eyebrow": "首尔 · 本地好友带你体验",
     "headline": "像当地人一样体验韩国！",
-    "description": "不止于常规行程。与熟悉韩国的当地伙伴一起，发现更有意义的美食、地点与日常瞬间。",
+    "tagline": "和本地好友一起出发，带着新朋友回来。",
+    "description": "HanBuddy 为你连接发起小团体验并全程同行的韩国当地人。",
     "exploreExperiences": "探索体验",
     "highlights": {
       "localPerspective": {
-        "title": "本地视角",
-        "description": "从当地伙伴的视角感受韩国。"
+        "title": "本地好友",
+        "description": "由韩国当地人发起并陪你同行。"
       },
       "realConnection": {
-        "title": "真诚相遇",
-        "description": "不只打卡景点，也与当地人相遇。"
+        "title": "小团出行",
+        "description": "认识来自世界各地的旅客。"
       },
       "sharedMoments": {
-        "title": "共享时光",
-        "description": "带回一段值得分享的故事。"
+        "title": "安排妥当",
+        "description": "预订、集合地点和疑问，都有人负责。"
       }
     },
     "booking": {
       "eyebrow": "预订方式",
       "title": "三个简单步骤，预订韩国体验",
-      "description": "选择体验与日期，然后与当地伙伴见面。",
+      "description": "选择体验与日期，然后与本地好友见面。",
       "steps": {
         "experience": {
           "title": "选择体验",
@@ -347,28 +349,38 @@
         "rating": "5.0",
         "starLabel": "5 颗星（满分 5 颗星）",
         "event": "KBO 棒球之夜",
-        "meta": "宾客评论 · 2026 年 7 月",
-        "quote": "一起看比赛、一起加油真是太有趣了！"
+        "meta": "宾客评论 · 2026 年 9 月",
+        "quote": "感觉真的像和朋友一起度过，而不是普通旅行团里的客人。"
       },
       "localBuddy": {
         "rating": "5.0",
         "starLabel": "5 颗星（满分 5 颗星）",
-        "event": "KBO 棒球之夜",
-        "meta": "宾客评论 · 2026 年 7 月",
-        "quote": "与当地人一起享受棒球比赛的绝佳体验。"
+        "event": "K 联赛足球比赛日",
+        "meta": "宾客评论 · 2026 年 8 月",
+        "quote": "向导很友好，就像和朋友在一起。整个活动中我都被照顾得很好。"
       },
       "lookedAfter": {
         "rating": "5.0",
         "starLabel": "5 颗星（满分 5 颗星）",
         "event": "KBO 棒球之夜",
         "meta": "宾客评论 · 2026 年 8 月",
-        "quote": "和 HanBuddy 一起观看棒球比赛，玩得很开心！在整个体验过程中我们都得到了很好的照顾。"
+        "quote": "比赛中发生了什么，他们都解释得非常清楚。"
       }
     },
     "reviewsSection": {
       "eyebrow": "来自社区的故事",
       "title": "那些与你同在的时刻。",
       "description": "与 HanBuddy 一起体验韩国的客人的几句话。"
+    },
+    "learnMore": {
+      "about": {
+        "title": "我们的故事",
+        "button": "关于 HanBuddy"
+      },
+      "faq": {
+        "title": "预订前有疑问吗？",
+        "button": "查看常见问题"
+      }
     },
     "contact": {
       "eyebrow": "保持联系",
@@ -432,7 +444,7 @@
         "food": {
           "title": "讲述美食背后的故事",
           "description": "通过使其有意义的记忆和习俗来介绍市场、咖啡馆或休闲食品。",
-          "imageAlt": "当地小伙伴与游客分享韩国市场美食"
+          "imageAlt": "本地好友与游客分享韩国市场美食"
         }
       }
     },
@@ -485,62 +497,63 @@
     }
   },
   "About": {
-    "metadataTitle": "关于 HanBuddy | 陪你看首尔比赛之夜的团队",
-    "metadataDescription": "认识策划并运营 HanBuddy 的首尔团队 ZeroOne：蚕室、高尺 KBO 棒球之夜和足球之夜，由韩国本地好友全程陪同。",
+    "metadataTitle": "关于 HanBuddy | 与本地好友一起的真实韩国体验",
+    "metadataDescription": "HanBuddy 是连接在韩国生活或旅行的外国人与韩国本地好友的平台。2026 年，我们从亲自在首尔举办棒球和足球之夜开始。",
     "hero": {
       "eyebrow": "关于 HanBuddy",
-      "title": "让“像本地人一样”真正发生的团队。",
-      "description": "和韩国本地好友一起的首尔小团比赛之夜。我们负责策划、买票，并坐在你身边一起加油。你只需到场。",
+      "title": "我们为你连接韩国的本地好友。",
+      "description": "本地好友是发起小团体验并全程同行的韩国当地人。在 HanBuddy 找到好友、完成预订，疑问由专人为你解答。",
       "primaryCta": "探索体验",
       "secondaryCta": "认识团队",
       "collageAlt1": "两位旅客在夜晚的蚕室球场前举起斗山加油毛巾",
       "collageAlt2": "旅客和本地好友在蚕室棒球场与斗山熊队吉祥物合影",
-      "collageAlt3": "旅客、本地好友和本地向导在蚕室看台分享零食"
+      "collageAlt3": "旅客、本地好友和本地向导在蚕室看台分享零食",
+      "photoAlt": "国家队比赛结束后，在首尔世界杯体育场外与导游好友合影的旅客"
     },
     "origin": {
       "eyebrow": "我们为什么开始",
-      "title": "韩国最精彩的时刻，往往锁在“仅限本地人”之后。",
-      "body1": "一切始于一张眼睁睁消失的票：蚕室夜场比赛，几秒售罄，而购票应用要求的是",
-      "body1Strong": "韩国手机号和韩国银行卡。",
-      "body2": "没有韩国号码、没有韩国卡，就没有票。",
-      "body2Strong": "HanBuddy 用一位本地好友为你打开这些夜晚：买票、占座，坐在你身边。"
+      "title": "在韩国最好的夜晚，是和当地人一起度过的夜晚。",
+      "body1": "第一位旅客告诉我们，",
+      "body1Strong": "光看比赛还不够，他们想认识坐在旁边的韩国人。",
+      "body2": "于是我们改变了举办方式。",
+      "body2Strong": "三个月后，一位旅客写道：“感觉像是和朋友们一起度过时光。”"
     },
     "how": {
       "eyebrow": "运作方式",
-      "title": "每一个比赛之夜都由我们亲自运营。",
+      "title": "好友发起，你来参加，我们负责连接。",
       "steps": {
         "plan": {
-          "title": "每一场都由我们亲自策划",
-          "description": "蚕室、高尺的棒球，首尔世界杯体育场的足球。一场真实比赛、一个小团、一位会唱加油歌的好友。"
+          "title": "由好友和合作商家发起",
+          "description": "从会唱所有加油歌的球迷到持证导游，本地好友发起体验并全程同行。由本地商家进行的合作体验会单独标示，所有发起者都会先经过我们确认。"
         },
         "confirm": {
-          "title": "在线预订后，我们立即买票",
-          "description": "比赛门票和球场餐食已包含在价格中。专人确认集合地点，并解答你的问题。"
+          "title": "在 HanBuddy 预订",
+          "description": "选择日期并在线付款。比赛之夜包含比赛门票和球场餐食。"
         },
         "improve": {
-          "title": "每一场都在变得更好",
-          "description": "每位旅客都会填写一分钟问卷，答案会改变下一场的安排。"
+          "title": "陪你到结束",
+          "description": "活动前由专人解答问题，活动后的一分钟问卷帮助我们持续改进。"
         }
       }
     },
     "stats": {
       "eyebrow": "到目前为止",
-      "title": "来自真实比赛之夜的数字。",
+      "title": "我们先亲自办过，所以知道一个好夜晚需要什么。",
       "items": {
         "runs": {
-          "value": "7 场",
+          "value": "8 场",
           "label": "自 2026 年 6 月以来的比赛之夜"
         },
         "rating": {
           "value": "4.9 / 5",
           "label": "旅客平均满意度"
         },
-        "stadiums": {
-          "value": "3 座",
-          "label": "球场：蚕室、高尺、首尔世界杯"
+        "guests": {
+          "value": "20 位",
+          "label": "至今参加的旅客"
         }
       },
-      "note": "满意度基于 2026 年 6 月至 9 月的 12 份旅客问卷。"
+      "note": "满意度基于 2026 年 6 月至 10 月的 15 份旅客问卷。"
     },
     "timeline": {
       "eyebrow": "活动记录",
@@ -566,16 +579,26 @@
         },
         "september": {
           "date": "2026 年 9 月",
-          "title": "四场比赛之夜，含首次室内巨蛋",
-          "description": "高尺天空巨蛋和蚕室、天蓝色球衣、吉祥物合影。9 月问卷全部 5 分满分。",
-          "imageAlt": "三位朋友在高尺天空巨蛋看台上开心微笑"
+          "title": "五场比赛之夜，以及首批团队之外的好友",
+          "description": "高尺天空巨蛋、蚕室，以及首尔世界杯体育场的国家队比赛。持证导游以好友身份加入了我们。",
+          "imageAlt": "三位朋友在高尺天空巨蛋看台上开心微笑",
+          "nights": {
+            "sep12": "夜晚在蚕室棒球场穿着斗山球衣比心的旅客",
+            "sep18": "在夜间灯光下站在蚕室外野前的四位旅客",
+            "sep28": "在国家队比赛看台上与导游好友在一起的旅客"
+          }
         }
+      },
+      "next": {
+        "date": "2026 年冬季",
+        "title": "室内运动与合作体验",
+        "description": "随着棒球赛季结束，我们正在筹备篮球、排球等室内运动，以及 <nowrap>K-Beauty</nowrap>、本地美食等合作体验。"
       }
     },
     "team": {
       "eyebrow": "认识团队",
-      "title": "我们是 ZeroOne，三位来自首尔的朋友，一起运营 HanBuddy。",
-      "description": "我们策划每一夜、购买门票、回复消息，并和你一起坐在看台上。",
+      "title": "我们是 ZeroOne，三位来自首尔的朋友，也是 HanBuddy 的第一批好友。",
+      "description": "最初的比赛之夜由我们亲自举办。现在我们运营平台、回复消息，也依然会出现在看台上。",
       "backed": "HanBuddy 是韩国科学技术信息通信部主办的国家软件人才计划 AI·SW Maestro 第 17 期 ZeroOne 团队的官方项目。",
       "linkedin": "LinkedIn",
       "members": {
@@ -593,10 +616,71 @@
         }
       }
     },
+    "host": {
+      "eyebrow": "一起发起体验",
+      "title": "有想分享的韩国吗？",
+      "description": "如果你能用英语带领体验，也喜欢认识新朋友，欢迎成为好友。本地商家可以上架合作体验。",
+      "button": "成为好友",
+      "photoAlt": "在蚕室棒球场与持证导游好友在一起的旅客"
+    },
+    "faq": {
+      "metadataTitle": "HanBuddy 常见问题 | 预订、付款与当天安排",
+      "metadataDescription": "解答旅客在预订 HanBuddy 体验前最常问的问题：好友是谁、如何付款、价格包含什么、在哪里集合，以及如何取消。",
+      "eyebrow": "常见问题",
+      "title": "旅客预订前常问的问题",
+      "groups": {
+        "hanbuddy": "HanBuddy 与好友",
+        "booking": "预订与付款",
+        "day": "活动当天"
+      },
+      "meetPhotoAlt": "在首尔世界杯体育场国家队壁画下集合的旅客与好友",
+      "items": {
+        "what": {
+          "question": "HanBuddy 是什么？",
+          "answer": "HanBuddy 是连接在韩国生活或旅行的外国人与韩国本地好友的平台。本地好友是发起小团体验并全程同行的韩国当地人。"
+        },
+        "buddies": {
+          "question": "好友是什么样的人？",
+          "answer": "用英语带领体验的韩国当地人。到目前为止是我们团队成员和持证导游。每位好友和合作商家在发起体验前都由我们团队确认，新好友的第一次体验一定由我们一起带领。"
+        },
+        "solo": {
+          "question": "可以一个人参加吗？",
+          "answer": "可以。有人独自来，也有情侣和朋友结伴而来，大家坐在一起。"
+        },
+        "pay": {
+          "question": "如何付款？",
+          "answer": "预订时通过 PayPal 在线支付。如果想用韩国银行转账等其他方式，请在预订页面点击“需要其他付款方式？”并给我们留言。"
+        },
+        "included": {
+          "question": "价格包含什么？",
+          "answer": "每个体验页面都有说明。比赛之夜包含比赛门票和球场餐食。"
+        },
+        "dietary": {
+          "question": "我有饮食限制，可以吗？",
+          "answer": "可以。预订时写在“特殊要求”栏，好友会据此安排餐食。"
+        },
+        "meet": {
+          "question": "在哪里集合？",
+          "answer": "集合地点写在体验页面，具体位置会在当天之前通过消息确认。"
+        },
+        "deadline": {
+          "question": "最晚什么时候可以预订？",
+          "answer": "体验开始前 24 小时截止预订。"
+        },
+        "cancel": {
+          "question": "需要取消怎么办？",
+          "answer": "开始前 48 小时以上全额退款，48 至 24 小时之间退款 50%。如果好友取消，全额退款。"
+        },
+        "language": {
+          "question": "需要会韩语或懂这项运动吗？",
+          "answer": "不需要。好友会讲解规则，并教你加油歌。"
+        }
+      }
+    },
     "cta": {
-      "title": "认识我们最好的方式，就是在球场。",
-      "description": "选个日期，预订座位，剩下的交给我们。",
-      "button": "查看即将到来的比赛之夜"
+      "title": "认识我们最好的方式，就是参加一次体验。",
+      "description": "选个日期，预订名额，剩下的交给好友。",
+      "button": "查看即将到来的体验"
     }
   },
   "Auth": {
@@ -725,25 +809,25 @@
     "title": "完成您的好友个人资料",
     "metadataTitle": "创建您的好友个人资料 |汉巴迪",
     "metadataDescription": "完成您的好友资料并开始与 HanBuddy 一起举办本地体验。",
-    "eyebrow": "欢迎，未来的伙伴",
+    "eyebrow": "欢迎，未来的好友",
     "headline": "一些细节，然后您的本地故事就可以开始了。",
-    "description": "请填写伙伴注册指引所需的基本信息。注册后可继续补充活动运营信息。",
+    "description": "请填写好友注册指引所需的基本信息。注册后可继续补充活动运营信息。",
     "profilePhotoOptional": "选择一张清晰的脸部照片，以便客人在见面时能够认出您。",
     "contactMethods": "联系方式与收款信息",
-    "contactDescription": "请输入工作人员可用于提供伙伴注册说明的电话号码。",
+    "contactDescription": "请输入工作人员可用于提供好友注册说明的电话号码。",
     "completing": "正在创建好友帐户...",
     "completeRegistration": "注册成为好友"
   },
   "BuddyResubmission": {
-    "metadataTitle": "重新提交伙伴申请 | HanBuddy",
-    "metadataDescription": "修改伙伴资料并再次提交审核。",
-    "title": "重新提交伙伴申请",
+    "metadataTitle": "重新提交好友申请 | HanBuddy",
+    "metadataDescription": "修改好友资料并再次提交审核。",
+    "title": "重新提交好友申请",
     "eyebrow": "再次申请",
     "headline": "完善资料并再次请求审核。",
     "description": "之前填写的资料已载入。已有同意事项将继续有效。",
     "profilePhotoOptional": "可以保留、替换或删除当前照片。",
     "contactMethods": "请填写可联系您的电话号码。",
-    "contactDescription": "请输入工作人员可用于提供伙伴注册说明的电话号码。",
+    "contactDescription": "请输入工作人员可用于提供好友注册说明的电话号码。",
     "rejectionReason": "上次未通过的原因",
     "removeProfilePhoto": "删除头像",
     "submit": "再次提交审核",
@@ -761,8 +845,8 @@
     "metadataTitle": "账户状态 |汉巴迪",
     "metadataDescription": "查看您的HanBuddy帐号的审核状态。",
     "pending": {
-      "title": "等待伙伴注册指引",
-      "description": "工作人员将通过您注册时填写的电子邮箱或电话号码与您联系，并提供伙伴注册说明。",
+      "title": "等待好友注册指引",
+      "description": "工作人员将通过您注册时填写的电子邮箱或电话号码与您联系，并提供好友注册说明。",
       "touristDescription": "您的账户正在审核中。审核完成后即可使用HanBuddy。",
       "reviewTime": "我们将在1至3个工作日内联系您"
     },
@@ -846,7 +930,7 @@
     "description": "与您身边的当地好友一起探索韩国。",
     "loading": "正在加载活动...",
     "empty": "尚无活动。",
-    "emptyDescription": "当地的小伙伴正在准备新的体验。请尽快回来查看！",
+    "emptyDescription": "本地好友正在准备新的体验。请尽快回来查看！",
     "loadError": "无法加载活动。",
     "perPersonLabel": "每人",
     "estimatedPrice": "参考价格",

@@ -209,15 +209,63 @@ describe("LandingPage", () => {
     );
     expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass("min-w-0");
     expect(screen.queryByTestId("hero-highlights-mobile")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Local perspective")).toHaveLength(1);
-    expect(within(heroRegion).getByText("Local perspective")).toHaveClass("text-on-primary");
-    expect(within(heroRegion).getByText(/Go beyond the itinerary/)).toHaveClass(
+    expect(screen.getAllByText("A local buddy")).toHaveLength(1);
+    expect(within(heroRegion).getByText("A local buddy")).toHaveClass("text-on-primary");
+    // 슬로건 보조 문구는 모바일에서도 보이고, 긴 설명은 태블릿부터 보인다
+    expect(
+      within(heroRegion).getByText("Go with a local buddy. Leave with new friends."),
+    ).not.toHaveClass("hidden");
+    expect(within(heroRegion).getByText(/HanBuddy connects you with Koreans/)).toHaveClass(
       "hidden",
       "md:block",
     );
     expect(
       within(heroRegion).queryByRole("link", { name: /Explore experiences/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["en", "About HanBuddy", "Read the FAQ"],
+    ["ko", "HanBuddy 소개 보기", "자주 묻는 질문 보기"],
+  ] as const)(
+    "links to the About story and the FAQ between the reviews and contact for %s",
+    async (locale, aboutLink, faqLink) => {
+      await renderLanding(locale);
+
+      const about = screen.getByRole("link", { name: aboutLink });
+      const faq = screen.getByRole("link", { name: faqLink });
+      expect(about).toHaveAttribute("href", `/${locale}/about`);
+      expect(faq).toHaveAttribute("href", `/${locale}/faq`);
+
+      // 상단 메뉴에서 빠진 About·FAQ는 후기를 읽은 뒤, 문의 앞에서 이어진다
+      const reviews = document.querySelector("[data-landing-section='guest_reviews']")!;
+      const contact = document.querySelector("[data-landing-section='contact']")!;
+      for (const link of [about, faq]) {
+        expect(
+          reviews.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(
+          contact.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_PRECEDING,
+        ).toBeTruthy();
+      }
+    },
+  );
+
+  it("previews the guest numbers and the questions guests ask most before booking", async () => {
+    await renderLanding("en");
+
+    expect(screen.getByText("game nights since June 2026")).toBeInTheDocument();
+    expect(screen.getByText("guests so far")).toBeInTheDocument();
+    for (const [question, key] of [
+      ["How do I pay?", "pay"],
+      ["Where do we meet?", "meet"],
+      ["I have dietary restrictions. Is that a problem?", "dietary"],
+    ] as const) {
+      expect(screen.getByRole("link", { name: question })).toHaveAttribute(
+        "href",
+        `/en/faq#faq-${key}`,
+      );
+    }
   });
 
   it("sends a logged-in tourist to explore instead of asking them to log in", async () => {

@@ -251,6 +251,23 @@ describe("LandingPage", () => {
     },
   );
 
+  it("previews the guest numbers and the questions guests ask most before booking", async () => {
+    await renderLanding("en");
+
+    expect(screen.getByText("game nights since June 2026")).toBeInTheDocument();
+    expect(screen.getByText("guests so far")).toBeInTheDocument();
+    for (const [question, key] of [
+      ["How do I pay?", "pay"],
+      ["Where do we meet?", "meet"],
+      ["I have dietary restrictions. Is that a problem?", "dietary"],
+    ] as const) {
+      expect(screen.getByRole("link", { name: question })).toHaveAttribute(
+        "href",
+        `/en/faq#faq-${key}`,
+      );
+    }
+  });
+
   it("sends a logged-in tourist to explore instead of asking them to log in", async () => {
     cookieJar.set(AUTH_COOKIES.userType, "TOURIST");
     cookieJar.set(AUTH_COOKIES.accessToken, "token");

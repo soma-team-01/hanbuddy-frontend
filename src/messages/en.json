@@ -347,12 +347,10 @@
     "learnMore": {
       "about": {
         "title": "Our story",
-        "description": "How we started hosting game nights, and who the buddies are.",
         "button": "About HanBuddy"
       },
       "faq": {
         "title": "Questions before booking?",
-        "description": "Payment, meeting point, dietary needs, and more.",
         "button": "Read the FAQ"
       }
     },

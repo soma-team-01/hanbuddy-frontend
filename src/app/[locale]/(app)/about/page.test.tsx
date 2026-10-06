@@ -107,7 +107,7 @@ describe("AboutPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Buddies and partners host" })).toBeInTheDocument();
     expect(screen.getByText(/labelled as partner/)).toBeInTheDocument();
-    expect(screen.getByText(/your buddy sorts out the tickets/)).toBeInTheDocument();
+    expect(screen.getByText(/your ticket and stadium food are included/)).toBeInTheDocument();
     // 팀이 모든 활동을 직접 운영한다는 예전 표현은 남기지 않는다
     expect(document.body.textContent).not.toMatch(/Run by us|locals only/i);
     expect(document.body.textContent).not.toMatch(/Han River|picnic/i);

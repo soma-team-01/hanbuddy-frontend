@@ -485,10 +485,10 @@
     "origin": {
       "eyebrow": "Why we started",
       "title": "The best nights in Korea are the ones you spend with locals.",
-      "body1": "It started at Jamsil Stadium in June 2026: one guest, the three of us, and a baseball game. Afterwards our first guest told us that",
-      "body1Strong": "watching the game was not enough. They wanted to get to know the Koreans sitting next to them.",
-      "body2": "So we changed how we host. We meet before the game, learn the cheering songs together, and share the food.",
-      "body2Strong": "Three months later a guest wrote that it “felt like spending time with friends rather than being a customer on a typical tour.” That is what HanBuddy is for."
+      "body1": "Our first guest told us",
+      "body1Strong": "the game alone was not enough. They wanted to meet the Koreans beside them.",
+      "body2": "So we changed how we host.",
+      "body2Strong": "Three months later, a guest said it “felt like spending time with friends.”"
     },
     "how": {
       "eyebrow": "How it works",
@@ -496,15 +496,15 @@
       "steps": {
         "plan": {
           "title": "Buddies and partners host",
-          "description": "Buddies are Korean locals who host an experience and go with you, from fans who know every cheering song to licensed tour guides. Partner experiences are run by local businesses and labelled as partner. Our team checks every buddy and partner first."
+          "description": "Korean locals host and go with you, from cheering-song fans to licensed tour guides. Partner experiences are run by local businesses and labelled as partner. We check every host first."
         },
         "confirm": {
           "title": "You book on HanBuddy",
-          "description": "Pick a date and pay online. Each experience page lists what is included. For a game night, that is your match ticket and stadium food, and your buddy sorts out the tickets."
+          "description": "Pick a date and pay online. For a game night, your ticket and stadium food are included."
         },
         "improve": {
           "title": "We stay with you until it is done",
-          "description": "A real person confirms the meeting spot and answers your questions before the day. After every experience, a one-minute survey tells us and your buddy what to fix."
+          "description": "A real person answers your questions before the day, and a one-minute survey after helps us improve."
         }
       }
     },

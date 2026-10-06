@@ -272,11 +272,10 @@ export default async function AboutPage({ params }: AboutPageProps) {
               <div
                 className={`mt-8 space-y-5 pl-9 text-base leading-7 text-muted sm:text-lg sm:leading-8 lg:col-start-2 lg:row-start-3 lg:mt-8 lg:pl-0 ${styles.reveal}`}
               >
+                {/* 모바일에서 5줄 안쪽으로 읽히게 한 문단으로 둔다. */}
                 <p>
                   {t("origin.body1")}{" "}
-                  <strong className="font-bold text-ink">{t("origin.body1Strong")}</strong>
-                </p>
-                <p>
+                  <strong className="font-bold text-ink">{t("origin.body1Strong")}</strong>{" "}
                   {t("origin.body2")}{" "}
                   <strong className="font-bold text-ink">{t("origin.body2Strong")}</strong>
                 </p>

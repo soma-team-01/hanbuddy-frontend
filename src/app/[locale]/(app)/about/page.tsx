@@ -157,7 +157,8 @@ export default async function AboutPage({ params }: AboutPageProps) {
               src={`${PHOTO}/football-0928-night-group.webp`}
               alt={t("hero.photoAlt")}
               fill
-              preload
+              loading="eager"
+              fetchPriority="high"
               sizes="(min-width: 1024px) 400px, 100vw"
               className="object-cover object-[50%_66%]"
             />

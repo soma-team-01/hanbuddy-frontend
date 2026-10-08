@@ -63,6 +63,18 @@ describe("ActivityReviewsSection", () => {
     expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 3, "EN");
   });
 
+  it("renders the server preview immediately without asking the browser to fetch it", () => {
+    renderWithQueryClient(
+      <ActivityReviewsSection activityId={42} initialReviews={createPage(0, 3, true)} />,
+    );
+
+    // 첫 렌더에서 바로 후기가 보인다(크롤러가 읽는 첫 HTML과 같다). 로딩 문구도, 브라우저 요청도 없다.
+    expect(screen.getByText("Loved every minute of it (1).")).toBeInTheDocument();
+    expect(screen.getByText("31 reviews")).toBeInTheDocument();
+    expect(screen.queryByText("Loading reviews...")).not.toBeInTheDocument();
+    expect(mockedGetActivityReviews).not.toHaveBeenCalled();
+  });
+
   it("opens the full list in a dialog that pages twelve at a time", async () => {
     mockedGetActivityReviews.mockImplementation(async (_activityId, page, size) => ({
       status: "success",

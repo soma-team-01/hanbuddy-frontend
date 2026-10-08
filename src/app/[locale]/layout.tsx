@@ -15,6 +15,7 @@ import { isLocale, routing, type Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 import "../globals.css";
+import { koreanFontRootProps } from "@/lib/fonts/korean-font";
 import { sharePreview } from "@/lib/seo/metadata";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -29,10 +30,16 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
+// 한글 글꼴은 미리 받지 않는다. 라틴 글자는 앞 순서의 DM Sans·Plus Jakarta Sans가 그리므로, 미리 받던
+// 라틴 부분 파일은 어느 언어에서도 쓰이지 않았다. 한국어 페이지에서만 글꼴 변수를 연결하고(koreanFontRootProps),
+// 화면에 있는 한글 글자 묶음만 받는다.
 const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
   variable: "--font-noto-sans-kr",
-  weight: ["400", "500", "600", "700"],
+  // 가변 글꼴 하나로 400~700을 모두 그린다. 굵기별 정적 글꼴 4벌은 한글 글자 묶음(약 124개)마다
+  // @font-face가 4개씩 생겨 렌더링을 막는 CSS가 105KB(gzip)였다. 가변 글꼴은 묶음마다 1개다.
+  weight: "variable",
+  preload: false,
 });
 
 const caveat = Caveat({
@@ -105,10 +112,13 @@ export default async function LocaleLayout({
     role = "tourist";
   }
 
+  const koreanFont = koreanFontRootProps(locale, notoSansKr.variable);
+
   return (
     <html
       lang={locale}
-      className={`${plusJakartaSans.variable} ${dmSans.variable} ${notoSansKr.variable} ${caveat.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${koreanFont.className} ${caveat.variable} h-full antialiased`}
+      style={koreanFont.style}
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>

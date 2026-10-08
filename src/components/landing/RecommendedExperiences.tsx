@@ -12,10 +12,18 @@ import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { touristActivitiesQueryOptions } from "@/lib/query/activities";
 import { isActivitySearchDate, withActivityDate } from "@/lib/activity-booking-window";
+import type { TouristActivitySummary } from "@/types/activity";
 
 const RECOMMENDED_LIMIT = 4;
 
-export function RecommendedExperiences({ date }: Readonly<{ date?: string }> = {}) {
+export function RecommendedExperiences({
+  date,
+  initialActivities,
+}: Readonly<{
+  date?: string;
+  /** 서버가 첫 HTML에 넣은 목록. 없으면(서버 조회 실패) 브라우저가 지금처럼 불러온다 */
+  initialActivities?: TouristActivitySummary[];
+}> = {}) {
   const invalid = Boolean(date) && !isActivitySearchDate(date!);
   return invalid ? (
     <section className="border-t border-line-soft bg-canvas-soft py-10 md:py-16">
@@ -24,17 +32,21 @@ export function RecommendedExperiences({ date }: Readonly<{ date?: string }> = {
       </PageContainer>
     </section>
   ) : (
-    <RecommendedResults date={date} />
+    <RecommendedResults date={date} initialActivities={initialActivities} />
   );
 }
 
-function RecommendedResults({ date }: Readonly<{ date?: string }>) {
+function RecommendedResults({
+  date,
+  initialActivities,
+}: Readonly<{ date?: string; initialActivities?: TouristActivitySummary[] }>) {
   const t = useTranslations("Landing");
   const locale = getLocaleOrDefault(useLocale());
   const language = getContentLanguage(locale);
-  const activitiesQuery = useQuery(
-    touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale), date),
-  );
+  const activitiesQuery = useQuery({
+    ...touristActivitiesQueryOptions(language, getDefaultDisplayCurrency(locale), date),
+    initialData: initialActivities,
+  });
 
   if (activitiesQuery.isPending) {
     return (

@@ -1,5 +1,7 @@
 "use client";
+
 import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
+import { LazyMapFrame } from "@/components/activity/LazyMapFrame";
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
@@ -37,6 +39,7 @@ import {
 import type { Activity, ActivityWeatherResult } from "@/types/activity";
 import { useBookableSessions } from "@/lib/use-bookable-sessions";
 import { isActivityLanguage } from "@/types/activity-language";
+import type { ReviewPageResponse } from "@/types/review";
 
 const SECTION_IDS = {
   aboutHost: "about-host",
@@ -71,6 +74,7 @@ export function ActivityDetailView({
   preferredDate,
   loginRequired = false,
   emailLoginEnabled = false,
+  initialReviews,
 }: Readonly<{
   activity: Activity;
   onBookingClick?: () => void;
@@ -87,6 +91,8 @@ export function ActivityDetailView({
   loginRequired?: boolean;
   /** 로그인 팝업에 이메일 로그인 링크를 함께 둘지 여부 */
   emailLoginEnabled?: boolean;
+  /** 서버에서 미리 받은 후기 미리보기(공개 활동 상세만) */
+  initialReviews?: ReviewPageResponse;
 }>) {
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");
@@ -209,13 +215,10 @@ export function ActivityDetailView({
   );
   if (googleMapsUrl) {
     meetingMapMedia = (
-      <iframe
+      <LazyMapFrame
         title={t("mapTitle", { place: activity.meetingPoint.name })}
         src={googleMapsUrl}
         className="mt-3 h-[204px] w-full rounded-xl border-0"
-        loading="lazy"
-        referrerPolicy="strict-origin-when-cross-origin"
-        allowFullScreen
       />
     );
   } else if (activity.meetingPoint.mapImageUrl) {
@@ -343,6 +346,7 @@ export function ActivityDetailView({
                   alt={activity.title}
                   fill
                   loading="eager"
+                  fetchPriority="high"
                   sizes="(max-width: 767px) 100vw, 560px"
                   unoptimized={unoptimizedImages}
                   className="object-cover"
@@ -597,7 +601,11 @@ export function ActivityDetailView({
               </section>
 
               {showReviews ? (
-                <ActivityReviewsSection activityId={activity.id} id={SECTION_IDS.reviews} />
+                <ActivityReviewsSection
+                  activityId={activity.id}
+                  id={SECTION_IDS.reviews}
+                  initialReviews={initialReviews}
+                />
               ) : null}
 
               {activity.included.length > 0 || activity.restrictions.length > 0 ? (

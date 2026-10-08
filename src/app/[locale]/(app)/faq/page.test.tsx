@@ -171,8 +171,8 @@ describe("FaqPage", () => {
   it("shows the breadcrumb that the structured data describes", async () => {
     await renderFaq("en");
 
-    const current = screen.getByText("FAQ", { selector: "[aria-current=page]" });
-    const trail = current.closest("ol")!;
+    const trail = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(within(trail).getByText("FAQ")).toHaveAttribute("aria-current", "page");
     expect(within(trail).getByRole("link", { name: "Home" })).toHaveAttribute("href", "/en");
   });
 });

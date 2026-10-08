@@ -225,7 +225,8 @@ describe("AboutPage", () => {
   it("adds a visible breadcrumb and only BreadcrumbList structured data", async () => {
     await renderAbout("ko");
 
-    expect(screen.getByText("소개", { selector: "[aria-current=page]" })).toBeInTheDocument();
+    const trail = screen.getByRole("navigation", { name: "이동 경로" });
+    expect(within(trail).getByText("소개")).toHaveAttribute("aria-current", "page");
     const data = extractJsonLd(document.body.innerHTML);
     expect(data).toEqual([
       {

@@ -148,7 +148,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
         {/* 모바일은 사진 위 얇은 띠, 데스크톱은 표지 위 여백 안에 놓여 표지 높이를 바꾸지 않는다. */}
         <div className="relative z-20 mx-auto w-full max-w-[1200px] px-4 py-1.5 md:px-6 lg:absolute lg:inset-x-0 lg:top-5 lg:px-8 lg:py-0">
-          <Breadcrumbs items={breadcrumbs} tone="dark" />
+          <Breadcrumbs items={breadcrumbs} label={navT("breadcrumb")} tone="dark" />
         </div>
 
         <div className="mx-auto grid max-w-[1200px] lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:items-center lg:gap-x-16 lg:px-8 lg:pt-20 lg:pb-14">

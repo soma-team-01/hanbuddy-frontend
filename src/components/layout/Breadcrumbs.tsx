@@ -13,16 +13,19 @@ const TONE_CLASS = {
  */
 export function Breadcrumbs({
   items,
+  label,
   tone = "light",
   className = "",
 }: Readonly<{
   items: readonly BreadcrumbItem[];
+  /** 화면 낭독기가 상단 메뉴와 구분하도록 붙이는 이름(Navigation.breadcrumb) */
+  label: string;
   tone?: keyof typeof TONE_CLASS;
   className?: string;
 }>) {
   const style = TONE_CLASS[tone];
   return (
-    <nav className={className}>
+    <nav aria-label={label} className={className}>
       <ol className={`flex min-w-0 items-center gap-1 text-xs font-medium ${style.list}`}>
         {items.map((item, index) => {
           const last = index === items.length - 1;

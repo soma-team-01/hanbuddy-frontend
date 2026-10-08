@@ -95,7 +95,12 @@ export default async function FaqPage({ params }: FaqPageProps) {
         <div className="bg-ink text-on-primary">
           <PageContainer className="pt-2 pb-8 md:pt-4 md:pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-x-16 lg:pt-5 lg:pb-14">
             {/* 표지 위쪽 여백 안에 위치 표시를 둔다. 제목까지의 거리는 예전과 같다. */}
-            <Breadcrumbs items={breadcrumbs} tone="dark" className="lg:col-span-2" />
+            <Breadcrumbs
+              items={breadcrumbs}
+              label={navT("breadcrumb")}
+              tone="dark"
+              className="lg:col-span-2"
+            />
             <div className="mt-6 md:mt-8 lg:mt-9">
               <p className={`${EYEBROW} text-primary-soft`}>{t("faq.eyebrow")}</p>
               <h1

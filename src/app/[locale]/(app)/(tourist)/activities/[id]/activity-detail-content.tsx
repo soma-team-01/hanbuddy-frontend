@@ -101,6 +101,7 @@ export function ActivityDetailContent({
       <PageContainer className="pt-1 md:-mb-6 md:pt-0">
         <Breadcrumbs
           items={activityBreadcrumbs(activity, (key) => tNavigation(key))}
+          label={tNavigation("breadcrumb")}
           className="mx-auto max-w-[840px]"
         />
       </PageContainer>

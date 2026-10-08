@@ -18,91 +18,106 @@ interface PolicyRevisionExpectations {
   };
 }
 
-/** Literal test expectations shared by the two policy revision suites. */
+/** Keep the locale mapping in one place while retaining literal test expectations. */
+function localized(
+  ko: string,
+  en: string,
+  ja: string,
+  zhHans: string,
+  zhHant: string,
+): Record<Locale, string> {
+  return { ko, en, ja, "zh-Hans": zhHans, "zh-Hant": zhHant };
+}
+
+const cancellation = {
+  timing: localized(
+    "남은 기간과 관계없이",
+    "regardless of the time remaining",
+    "残りの期間にかかわらず",
+    "无论距离活动开始还有多久",
+    "無論距離活動開始還有多久",
+  ),
+  excludedMinimumParticipantText: localized(
+    "최소 참가 인원",
+    "minimum participant",
+    "最低参加人数",
+    "最低参与人数",
+    "最低參與人數",
+  ),
+  discretion: localized(
+    "부과할 수 있습니다",
+    "may impose",
+    "課すことができます",
+    "可收取",
+    "可收取",
+  ),
+  venue: localized("장소 폐쇄", "venue closure", "会場の閉鎖", "场地关闭", "場地關閉"),
+  safety: localized(
+    "심각한 안전 위험",
+    "serious safety danger",
+    "重大な安全上の危険",
+    "严重安全危险",
+    "嚴重安全危險",
+  ),
+  weather: localized("기상 상황", "weather", "天候", "天气", "天氣"),
+  previousDate: localized(
+    "기존 개정의 시행일",
+    "effective date of the earlier revision",
+    "従前の改訂の施行日",
+    "既有修订的生效日期",
+    "既有修訂的生效日期",
+  ),
+};
+
+const settlement = {
+  deadline: localized(
+    "다음 달 제5영업일까지",
+    "5th business day of the following month",
+    "翌月の第5営業日まで",
+    "次月第5个工作日之前（含当日）",
+    "次月第5個工作日之前（含當日）",
+  ),
+  holidays: localized(
+    "금융기관 휴무일을 제외",
+    "Bank holidays are excluded",
+    "金融機関休業日を除いて",
+    "不计银行休息日",
+    "不計銀行休息日",
+  ),
+  effective: localized(
+    "시행일은 2026-10-06 한국시간(KST)",
+    "effective date is 2026-10-06 Korea Standard Time (KST)",
+    "施行日は2026-10-06韓国標準時（KST）",
+    "生效日期为2026-10-06韩国标准时间（KST）",
+    "生效日期為2026-10-06韓國標準時間（KST）",
+  ),
+  transfer: localized("송금 기한", "transfer deadline", "送金期限", "汇款期限", "匯款期限"),
+};
+
+function forLocale(locale: Locale): PolicyRevisionExpectations {
+  return {
+    cancellation: {
+      timing: cancellation.timing[locale],
+      excludedMinimumParticipantText: cancellation.excludedMinimumParticipantText[locale],
+      discretion: cancellation.discretion[locale],
+      venue: cancellation.venue[locale],
+      safety: cancellation.safety[locale],
+      weather: cancellation.weather[locale],
+      previousDate: cancellation.previousDate[locale],
+    },
+    settlement: {
+      deadline: settlement.deadline[locale],
+      holidays: settlement.holidays[locale],
+      effective: settlement.effective[locale],
+      transfer: settlement.transfer[locale],
+    },
+  };
+}
+
 export const policyRevisionExpectations = {
-  ko: {
-    cancellation: {
-      timing: "남은 기간과 관계없이",
-      excludedMinimumParticipantText: "최소 참가 인원",
-      discretion: "부과할 수 있습니다",
-      venue: "장소 폐쇄",
-      safety: "심각한 안전 위험",
-      weather: "기상 상황",
-      previousDate: "기존 개정의 시행일",
-    },
-    settlement: {
-      deadline: "다음 달 제5영업일까지",
-      holidays: "금융기관 휴무일을 제외",
-      effective: "시행일은 2026-10-06 한국시간(KST)",
-      transfer: "송금 기한",
-    },
-  },
-  en: {
-    cancellation: {
-      timing: "regardless of the time remaining",
-      excludedMinimumParticipantText: "minimum participant",
-      discretion: "may impose",
-      venue: "venue closure",
-      safety: "serious safety danger",
-      weather: "weather",
-      previousDate: "effective date of the earlier revision",
-    },
-    settlement: {
-      deadline: "5th business day of the following month",
-      holidays: "Bank holidays are excluded",
-      effective: "effective date is 2026-10-06 Korea Standard Time (KST)",
-      transfer: "transfer deadline",
-    },
-  },
-  ja: {
-    cancellation: {
-      timing: "残りの期間にかかわらず",
-      excludedMinimumParticipantText: "最低参加人数",
-      discretion: "課すことができます",
-      venue: "会場の閉鎖",
-      safety: "重大な安全上の危険",
-      weather: "天候",
-      previousDate: "従前の改訂の施行日",
-    },
-    settlement: {
-      deadline: "翌月の第5営業日まで",
-      holidays: "金融機関休業日を除いて",
-      effective: "施行日は2026-10-06韓国標準時（KST）",
-      transfer: "送金期限",
-    },
-  },
-  "zh-Hans": {
-    cancellation: {
-      timing: "无论距离活动开始还有多久",
-      excludedMinimumParticipantText: "最低参与人数",
-      discretion: "可收取",
-      venue: "场地关闭",
-      safety: "严重安全危险",
-      weather: "天气",
-      previousDate: "既有修订的生效日期",
-    },
-    settlement: {
-      deadline: "次月第5个工作日之前（含当日）",
-      holidays: "不计银行休息日",
-      effective: "生效日期为2026-10-06韩国标准时间（KST）",
-      transfer: "汇款期限",
-    },
-  },
-  "zh-Hant": {
-    cancellation: {
-      timing: "無論距離活動開始還有多久",
-      excludedMinimumParticipantText: "最低參與人數",
-      discretion: "可收取",
-      venue: "場地關閉",
-      safety: "嚴重安全危險",
-      weather: "天氣",
-      previousDate: "既有修訂的生效日期",
-    },
-    settlement: {
-      deadline: "次月第5個工作日之前（含當日）",
-      holidays: "不計銀行休息日",
-      effective: "生效日期為2026-10-06韓國標準時間（KST）",
-      transfer: "匯款期限",
-    },
-  },
+  ko: forLocale("ko"),
+  en: forLocale("en"),
+  ja: forLocale("ja"),
+  "zh-Hans": forLocale("zh-Hans"),
+  "zh-Hant": forLocale("zh-Hant"),
 } satisfies Record<Locale, PolicyRevisionExpectations>;

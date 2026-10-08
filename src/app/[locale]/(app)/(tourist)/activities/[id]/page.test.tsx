@@ -3,11 +3,16 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getPublicActivity, PublicActivityError } from "@/lib/server/public-activities";
+import { getPublicActivityReviewSummary } from "@/lib/server/public-reviews";
+import type { ReviewPageResponse } from "@/types/review";
 import { extractJsonLd } from "@/test/json-ld";
 import Page, { generateMetadata } from "./page";
 import { ActivityDetailContent } from "./activity-detail-content";
 import type { TouristActivityDetail } from "@/types/activity";
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/server/public-reviews", () => ({
+  getPublicActivityReviewSummary: vi.fn(async () => undefined),
+}));
 vi.mock("next-intl/server", async () => {
   const [{ createTranslator }, { default: en }] = await Promise.all([
     import("next-intl"),
@@ -45,7 +50,11 @@ function contentProps(page: ReactElement) {
   const content = children(page).find(
     (child): child is ReactElement => isValidElement(child) && child.type === ActivityDetailContent,
   );
-  return content!.props as { initialActivity: TouristActivityDetail; emailLoginEnabled: boolean };
+  return content!.props as {
+    initialActivity: TouristActivityDetail;
+    initialReviews?: ReviewPageResponse;
+    emailLoginEnabled: boolean;
+  };
 }
 
 /** 서버가 첫 HTML에 넣는 구조화 데이터만 그려서 파싱한다. */
@@ -125,6 +134,24 @@ describe("public detail document", () => {
         },
       ],
     });
+  });
+  it("hands the server-fetched review preview to the view so reviews are in the first HTML", async () => {
+    vi.mocked(getPublicActivity).mockResolvedValue(activity);
+    const reviews = {
+      averageRating: 4.9,
+      totalCount: 10,
+      reviews: [],
+    } as unknown as ReviewPageResponse;
+    vi.mocked(getPublicActivityReviewSummary).mockResolvedValueOnce(reviews);
+
+    expect(contentProps(await Page({ params })).initialReviews).toBe(reviews);
+    expect(getPublicActivityReviewSummary).toHaveBeenCalledWith("42", "en");
+  });
+  it("still renders when the review preview could not be fetched on the server", async () => {
+    vi.mocked(getPublicActivity).mockResolvedValue(activity);
+    vi.mocked(getPublicActivityReviewSummary).mockResolvedValueOnce(undefined);
+
+    expect(contentProps(await Page({ params })).initialReviews).toBeUndefined();
   });
   it("raises Next notFound for a confirmed missing activity in metadata and body", async () => {
     vi.mocked(getPublicActivity).mockRejectedValue(new PublicActivityError("missing"));

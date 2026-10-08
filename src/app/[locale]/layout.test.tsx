@@ -83,7 +83,7 @@ describe("locale layout viewport", () => {
 });
 
 describe("locale layout fonts", () => {
-  it("loads the approved display, interface, and Korean font weights as CSS variables", () => {
+  it("loads the approved display, interface, and Korean fonts as CSS variables", () => {
     expect(fontMocks.plusJakartaSans).toHaveBeenCalledWith({
       subsets: ["latin"],
       variable: "--font-plus-jakarta-sans",
@@ -94,10 +94,12 @@ describe("locale layout fonts", () => {
       variable: "--font-dm-sans",
       weight: ["400", "500", "600", "700"],
     });
+    // 한글은 가변 글꼴 하나로 그리고 미리 받지 않는다(글꼴 선언 CSS 105KB → 27KB, gzip).
     expect(fontMocks.notoSansKr).toHaveBeenCalledWith({
       subsets: ["latin"],
       variable: "--font-noto-sans-kr",
-      weight: ["400", "500", "600", "700"],
+      weight: "variable",
+      preload: false,
     });
     expect(fontMocks.caveat).toHaveBeenCalledWith({
       subsets: ["latin"],

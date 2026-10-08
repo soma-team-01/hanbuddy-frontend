@@ -1,6 +1,7 @@
 "use client";
 
 import type { TouristActivityDetail } from "@/types/activity";
+import type { ReviewPageResponse } from "@/types/review";
 import { useAnalyticsView, useFunnelEvent } from "@/components/analytics/AnalyticsProvider";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -23,11 +24,13 @@ import { activityBreadcrumbs } from "@/lib/seo/activity-breadcrumbs";
 export function ActivityDetailContent({
   activityId,
   initialActivity,
+  initialReviews,
   preferredDate,
   emailLoginEnabled = false,
 }: Readonly<{
   activityId: string;
   initialActivity?: TouristActivityDetail;
+  initialReviews?: ReviewPageResponse;
   preferredDate?: string;
   emailLoginEnabled?: boolean;
 }>) {
@@ -110,6 +113,7 @@ export function ActivityDetailContent({
         preferredDate={preferredDate}
         loginRequired={isGuest}
         emailLoginEnabled={emailLoginEnabled}
+        initialReviews={initialReviews}
         onBookingClick={() => track("booking_cta_click", Number(activityId))}
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />

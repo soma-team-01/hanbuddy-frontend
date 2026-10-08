@@ -1,6 +1,7 @@
 import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
+import { getPublicActivities, PublicActivityError } from "@/lib/server/public-activities";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
@@ -16,6 +17,34 @@ vi.mock("next/navigation", async (original) => ({
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
 }));
+
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/server/public-activities", async (original) => ({
+  ...(await original<typeof import("@/lib/server/public-activities")>()),
+  getPublicActivities: vi.fn(),
+}));
+
+const serverActivity = {
+  activityId: 42,
+  buddyId: 7,
+  title: "Bukchon Hidden Gems",
+  description: "Walk through quiet alleys with a local buddy.",
+  totalDurationMinutes: 90,
+  thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+  buddyName: "Jihoon Kim",
+  buddyProfileImageUrl: null,
+  meetingPlaceId: "ChIJtest-place-id",
+  meetingPointName: "Anguk Station Exit 2",
+  price: 45000,
+  currency: "KRW",
+  displayPrice: {
+    price: 45000,
+    discountedPrice: null,
+    currency: "KRW",
+    exchangeRateDate: null,
+    estimated: false,
+  },
+} as const;
 
 const cookieJar = vi.hoisted(() => new Map<string, string>());
 
@@ -54,6 +83,10 @@ describe("LandingPage", () => {
   });
   beforeEach(() => {
     cookieJar.clear();
+    // 기본은 서버 조회 실패: 브라우저가 지금처럼 다시 불러오는 경로를 그대로 검증한다.
+    vi.mocked(getPublicActivities).mockReset();
+    vi.mocked(getPublicActivities).mockRejectedValue(new PublicActivityError("unavailable"));
+    vi.mocked(getTouristActivities).mockReset();
     vi.mocked(getTouristActivities).mockResolvedValue({
       status: "success",
       activities: [],
@@ -325,5 +358,32 @@ describe("LandingPage", () => {
       expect.objectContaining({ "@type": "WebSite", url: "https://hanbuddy.kr/en" }),
     ]);
     expect(JSON.stringify(data)).not.toContain("SearchAction");
+  });
+
+  it("puts the recommended activity cards into the first HTML from the server", async () => {
+    vi.mocked(getPublicActivities).mockResolvedValue([serverActivity]);
+    vi.mocked(getTouristActivities).mockReturnValue(new Promise(() => {}));
+
+    await renderLanding("en");
+
+    // 브라우저 요청이 끝나기 전에도 서버가 받은 카드가 이미 그려져 있다.
+    expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute(
+      "href",
+      "/en/activities/42",
+    );
+    expect(screen.queryByText("Loading recommended experiences...")).not.toBeInTheDocument();
+    expect(getPublicActivities).toHaveBeenCalledWith("en", undefined);
+  });
+
+  it("falls back to the browser request when the server request fails", async () => {
+    vi.mocked(getTouristActivities).mockResolvedValue({
+      status: "success",
+      activities: [serverActivity],
+    });
+
+    await renderLanding("en");
+
+    expect(await screen.findByRole("link", { name: /Bukchon Hidden Gems/ })).toBeInTheDocument();
+    expect(getTouristActivities).toHaveBeenCalled();
   });
 });

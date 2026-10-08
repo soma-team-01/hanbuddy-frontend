@@ -8,6 +8,7 @@ import { ReviewCard } from "@/components/review/ReviewCard";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { activityReviewSummaryQueryOptions } from "@/lib/query/reviews";
 import { getContentLanguage } from "@/lib/content-language";
+import type { ReviewPageResponse } from "@/types/review";
 
 /**
  * 활동 상세의 후기 섹션.
@@ -16,11 +17,20 @@ import { getContentLanguage } from "@/lib/content-language";
 export function ActivityReviewsSection({
   activityId,
   id,
-}: Readonly<{ activityId: number | string; id?: string }>) {
+  initialReviews,
+}: Readonly<{
+  activityId: number | string;
+  id?: string;
+  /** 서버가 첫 HTML에 넣은 미리보기. 없으면(서버 조회 실패) 브라우저가 지금처럼 불러온다 */
+  initialReviews?: ReviewPageResponse;
+}>) {
   const t = useTranslations("Reviews");
   const language = getContentLanguage(useLocale());
   const [dialogOpen, setDialogOpen] = useState(false);
-  const previewQuery = useQuery(activityReviewSummaryQueryOptions(activityId, language));
+  const previewQuery = useQuery({
+    ...activityReviewSummaryQueryOptions(activityId, language),
+    initialData: initialReviews,
+  });
 
   const preview = previewQuery.data;
   const reviews = preview?.reviews ?? [];

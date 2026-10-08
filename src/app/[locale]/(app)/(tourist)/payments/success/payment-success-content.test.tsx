@@ -270,7 +270,7 @@ describe("PaymentSuccessContent", () => {
       "href",
       "/ko/applications",
     );
-    expect(screen.getByRole("link", { name: "액티비티 더 둘러보기" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "활동 더 둘러보기" })).toHaveAttribute(
       "href",
       "/ko/explore",
     );

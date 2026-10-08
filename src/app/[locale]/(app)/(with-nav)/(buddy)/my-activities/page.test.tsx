@@ -24,7 +24,7 @@ vi.mock("./my-activities-content", () => ({
 describe("MyActivitiesPage", () => {
   it.each([
     ["en", "My Activities", "Manage your hosted cultural experiences.", "Create Activity"],
-    ["ko", "내 액티비티", "내가 호스팅하는 문화 체험을 관리하세요.", "액티비티 만들기"],
+    ["ko", "내 활동", "내가 여는 활동을 관리하세요.", "활동 만들기"],
   ] as const)(
     "renders localized headings and actions for %s",
     async (locale, title, description, action) => {

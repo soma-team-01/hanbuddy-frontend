@@ -156,12 +156,12 @@ describe("ActivityFeed", () => {
 
     renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
 
-    expect(screen.getByText("액티비티를 불러오는 중...")).toBeInTheDocument();
+    expect(screen.getByText("활동을 불러오는 중...")).toBeInTheDocument();
 
     await act(async () => {
       resolveActivities({ status: "success", activities: [] });
     });
-    expect(await screen.findByText("아직 등록된 액티비티가 없습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("아직 등록된 활동이 없습니다.")).toBeInTheDocument();
   });
 
   it("maps a BFF proxy error to localized safe Korean copy", async () => {

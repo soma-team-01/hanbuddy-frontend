@@ -301,8 +301,8 @@ describe("SiteHeader", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "로그인" }));
-    expect(screen.getByRole("dialog", { name: "버디 여정을 시작해 보세요" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Google로 버디 시작하기" })).toHaveAttribute(
+    expect(screen.getByRole("dialog", { name: "Google 계정으로 시작해요" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Google 계정으로 계속하기" })).toHaveAttribute(
       "href",
       "/api/auth/google/start?locale=ko&intent=buddy",
     );
@@ -396,7 +396,7 @@ describe("SiteHeader", () => {
   it("localizes the site navigation and mobile menu in Korean", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />, { locale: "ko" });
 
-    expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/ko/explore");
+    expect(screen.getByRole("link", { name: "둘러보기" })).toHaveAttribute("href", "/ko/explore");
     expect(screen.getByRole("link", { name: "소개" })).toHaveAttribute("href", "/ko/about");
     expect(screen.getByRole("link", { name: "자주 묻는 질문" })).toHaveAttribute("href", "/ko/faq");
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(

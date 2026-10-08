@@ -26,7 +26,7 @@ async function renderAbout(locale: Locale) {
 describe("AboutPage", () => {
   it.each([
     ["en", "We connect you with local buddies in Korea.", "Explore experiences", "Meet the team"],
-    ["ko", "한국의 로컬 버디와 당신을 연결합니다.", "액티비티 둘러보기", "팀 소개 보기"],
+    ["ko", "외국인 게스트와 한국인 버디를 잇습니다", "활동 둘러보기", "팀 소개 보기"],
   ] as const)("renders the localized hero for %s", async (locale, title, primary, secondary) => {
     await renderAbout(locale);
 
@@ -155,7 +155,7 @@ describe("AboutPage", () => {
 
   it.each([
     ["en", "Become a buddy"],
-    ["ko", "버디 되기"],
+    ["ko", "버디 신청하기"],
   ] as const)("invites buddies to host for %s", async (locale, button) => {
     await renderAbout(locale);
 
@@ -164,7 +164,7 @@ describe("AboutPage", () => {
 
   it.each([
     ["en", "Questions guests ask before booking"],
-    ["ko", "예약 전에 게스트가 자주 묻는 질문"],
+    ["ko", "예약 전에 많이 묻는 질문"],
   ] as const)("sends booking questions to the FAQ page for %s", async (locale, label) => {
     await renderAbout(locale);
 
@@ -210,12 +210,12 @@ describe("AboutPage", () => {
 
     expectLocalizedMetadata(
       metadata,
-      "HanBuddy 소개 | 로컬 버디와 함께하는 진짜 한국 경험",
+      "한버디 소개 | 한국인 버디와 함께하는 서울 활동 | HanBuddy",
       "/ko/about",
       "/about",
     );
     expect(metadata.openGraph).toMatchObject({
-      title: "HanBuddy 소개 | 로컬 버디와 함께하는 진짜 한국 경험",
+      title: "한버디 소개 | 한국인 버디와 함께하는 서울 활동 | HanBuddy",
       url: "https://hanbuddy.kr/ko/about",
       locale: "ko_KR",
       images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", height: 630 }],

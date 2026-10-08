@@ -26,7 +26,7 @@ async function renderFaq(locale: Locale) {
 describe("FaqPage", () => {
   it.each([
     ["en", "Questions guests ask before booking"],
-    ["ko", "예약 전에 게스트가 자주 묻는 질문"],
+    ["ko", "예약 전에 많이 묻는 질문"],
   ] as const)("titles the page with the FAQ heading for %s", async (locale, title) => {
     await renderFaq(locale);
 
@@ -78,7 +78,7 @@ describe("FaqPage", () => {
   it("names the topic groups in Korean", async () => {
     await renderFaq("ko");
 
-    for (const name of ["HanBuddy와 버디", "예약과 결제", "활동 당일"]) {
+    for (const name of ["한버디와 버디", "예약과 결제", "활동 당일"]) {
       expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
     }
   });

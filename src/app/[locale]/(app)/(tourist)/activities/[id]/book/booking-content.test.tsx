@@ -238,7 +238,7 @@ describe("BookingContent", () => {
       );
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 찾을 수 없습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("활동을 찾을 수 없습니다.");
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 });

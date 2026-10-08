@@ -240,6 +240,7 @@
   },
   "Navigation": {
     "primaryNavigation": "プライマリナビゲーション",
+    "breadcrumb": "パンくずリスト",
     "navigationMenu": "ナビゲーションメニュー",
     "openMenu": "メニューを開く",
     "closeMenu": "メニューを閉じる",

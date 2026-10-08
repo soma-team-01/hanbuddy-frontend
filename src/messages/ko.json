@@ -240,6 +240,7 @@
   },
   "Navigation": {
     "primaryNavigation": "주요 내비게이션",
+    "breadcrumb": "이동 경로",
     "navigationMenu": "내비게이션 메뉴",
     "openMenu": "메뉴 열기",
     "closeMenu": "메뉴 닫기",

@@ -1,5 +1,6 @@
-import { sharePreview } from "@/lib/seo/metadata";
-import { APP_ORIGIN } from "@/lib/site";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { organizationJsonLd } from "@/lib/seo/json-ld";
+import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
@@ -83,16 +84,7 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
       title: t("metadataTitle"),
       description: t("metadataDescription"),
     }),
-    alternates: {
-      canonical: `${APP_ORIGIN}/${locale}`,
-      languages: {
-        en: `${APP_ORIGIN}/en`,
-        ko: `${APP_ORIGIN}/ko`,
-        ja: `${APP_ORIGIN}/ja`,
-        "zh-Hans": `${APP_ORIGIN}/zh-Hans`,
-        "zh-Hant": `${APP_ORIGIN}/zh-Hant`,
-      },
-    },
+    alternates: pageAlternates(locale, ""),
   };
 }
 
@@ -128,6 +120,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <JsonLd data={organizationJsonLd(locale)} />
       <LandingAnalytics locale={locale} />
       {/* 모바일도 사진 위에 제목·검색·소개를 함께 배치한다. */}
       <section

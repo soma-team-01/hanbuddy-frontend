@@ -47,7 +47,7 @@ describe("locale layout metadata", () => {
     ],
     [
       "ko",
-      "HanBuddy는 한국에 살거나 여행 온 외국인과 한국 로컬 버디를 연결합니다. 현지인이 열고 함께 가는 서울의 소규모 활동을 예약하세요.",
+      "한버디는 한국에 사는 외국인과 여행자를 한국인 버디와 이어 줍니다. 야구·축구 직관처럼 버디가 직접 열고 함께 가는 서울의 소규모 활동을 예약하세요.",
     ],
   ] as const)("provides a localized default description for %s", async (locale, description) => {
     const generateMetadata = (

@@ -61,7 +61,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "Experience Korea like a local!", "Explore experiences"],
-    ["ko", "현지인처럼 한국을 경험하세요!", "액티비티 둘러보기"],
+    ["ko", "한국인 친구와 함께라서 더 즐거운 서울", "활동 둘러보기"],
   ] as const)(
     "renders localized landing content and CTA for %s",
     async (locale, headline, explore) => {
@@ -76,7 +76,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "Log in to book"],
-    ["ko", "예약하려면 로그인"],
+    ["ko", "로그인하고 예약하기"],
   ] as const)("links the booking CTA to login for %s", async (locale, cta) => {
     await renderLanding(locale);
 
@@ -85,7 +85,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "The moments that stay with you.", "5 out of 5 stars"],
-    ["ko", "오래 기억에 남는 순간.", "별점 5점 만점에 5점"],
+    ["ko", "다녀온 분들이 남긴 말", "별점 5점 만점에 5점"],
   ] as const)(
     "renders anonymous positive reviews with ratings for %s",
     async (locale, title, starLabel) => {
@@ -113,10 +113,10 @@ describe("LandingPage", () => {
     ],
     [
       "ko",
-      "세 단계로 간단하게 신청해 보세요.",
-      "오래 기억에 남는 순간.",
-      "HanBuddy에 대해 더 궁금하다면",
-      "무엇이든 이메일로 물어보세요",
+      "신청은 세 단계면 충분해요",
+      "다녀온 분들이 남긴 말",
+      "한버디에 궁금한 점이 있다면",
+      "이메일로 문의하기",
       "mailto:contact@hanbuddy.kr",
     ],
   ] as const)(
@@ -133,7 +133,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "Real HanBuddy moments in Seoul"],
-    ["ko", "서울에서 만나는 HanBuddy의 실제 순간"],
+    ["ko", "한버디 활동 현장 사진"],
   ] as const)("localizes the hero experience context for %s", async (locale, ariaLabel) => {
     await renderLanding(locale);
 
@@ -226,7 +226,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "About HanBuddy", "Read the FAQ"],
-    ["ko", "HanBuddy 소개 보기", "자주 묻는 질문 보기"],
+    ["ko", "한버디 소개 보기", "자주 묻는 질문 보기"],
   ] as const)(
     "links to the About story and the FAQ between the reviews and contact for %s",
     async (locale, aboutLink, faqLink) => {
@@ -294,7 +294,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "HanBuddy | Experience Korea like a local!", "/en"],
-    ["ko", "HanBuddy | 현지인처럼 한국을 경험하세요!", "/ko"],
+    ["ko", "HanBuddy(한버디) | 한국인 버디와 함께 가는 서울 로컬 활동", "/ko"],
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 

@@ -6,7 +6,7 @@ describe("sharePreview", () => {
     const preview = sharePreview({
       locale: "ko",
       path: "/about",
-      title: "HanBuddy 소개",
+      title: "한버디 소개",
       description: "  서울  직관의 밤을\n함께 만드는 팀  ",
     });
 
@@ -18,7 +18,7 @@ describe("sharePreview", () => {
     expect(preview.openGraph).toMatchObject({
       type: "website",
       siteName: "HanBuddy",
-      title: "HanBuddy 소개",
+      title: "한버디 소개",
       description: "서울 직관의 밤을 함께 만드는 팀",
       url: "https://hanbuddy.kr/ko/about",
       locale: "ko_KR",

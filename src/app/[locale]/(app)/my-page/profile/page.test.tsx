@@ -193,7 +193,7 @@ describe("ProfilePage", () => {
 
     expect(screen.getByRole("heading", { name: "프로필" })).toBeInTheDocument();
     expect(await screen.findByText("미국")).toBeInTheDocument();
-    expect(screen.queryByText("여행자")).not.toBeInTheDocument();
+    expect(screen.queryByText("게스트")).not.toBeInTheDocument();
     expect(screen.getByText("1998년 4월 12일")).toBeInTheDocument();
     expect(screen.getByText("연락처")).toBeInTheDocument();
   });

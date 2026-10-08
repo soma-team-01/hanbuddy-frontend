@@ -60,7 +60,7 @@ describe("ExplorePage", () => {
   });
   it.each([
     ["en", "Explore experiences", "Discover Korea with a local buddy by your side."],
-    ["ko", "액티비티 탐색", "현지 버디와 함께할 한국의 특별한 경험을 찾아보세요."],
+    ["ko", "활동 둘러보기", "현지 버디와 함께할 한국의 특별한 경험을 찾아보세요."],
   ] as const)("renders only the localized title for %s", async (locale, title, description) => {
     renderWithIntl(await ExplorePage({ params: Promise.resolve({ locale }) }), { locale });
 

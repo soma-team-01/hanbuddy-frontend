@@ -36,8 +36,8 @@ describe("locale messages", () => {
 
   it("uses shared wording for activity steps and product offerings", () => {
     expect(ko.CreateActivity.steps.itinerary).toEqual({
-      title: "활동 구성을 소개해 주세요",
-      description: "진행할 활동이나 제공할 상품을 항목별로 추가해 주세요.",
+      title: "활동 코스를 소개해 주세요",
+      description: "진행 순서나 제공할 상품을 항목별로 추가해 주세요.",
     });
     expect(ko.CreateActivity.itinerary.item).toBe("항목 {index, number}");
     expect(ko.CreateActivity.itinerary.add).toBe("항목 추가하기");

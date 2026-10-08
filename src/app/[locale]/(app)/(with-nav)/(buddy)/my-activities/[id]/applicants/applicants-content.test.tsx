@@ -512,7 +512,7 @@ describe("ApplicantsContent", () => {
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "본인이 등록한 액티비티만 이용할 수 있습니다.",
+      "본인이 등록한 활동만 이용할 수 있습니다.",
     );
     expect(screen.queryByText("raw applicant service failure")).not.toBeInTheDocument();
   });

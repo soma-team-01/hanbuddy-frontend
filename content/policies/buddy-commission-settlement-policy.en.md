@@ -38,7 +38,7 @@ New applicants who complete Buddy onboarding and their application by 2026-11-30
 2. For a general Tourist cancellation with a 50% refund, fees, VAT and Buddy settlement are calculated from the remaining 50% of actual sales retained by the Company.
 3. For non-refundable general cancellations or no-shows, calculation uses the full actual sales amount.
 4. Partial refunds caused by Buddy fault use the remaining amount after refund. No Buddy compensation is paid for fully refunded bookings.
-5. For cancellation of a confirmed booking attributable to the Buddy, the Company may impose a cancellation fee of 20% of that booking’s actual payment amount regardless of the time remaining before the activity. The sanctions and exemption criteria for minimum participant shortfalls and unavoidable reasons follow Article 4 of the [Buddy Operating Terms](./buddy-operation-terms.en.md). A Buddy no-show may incur a separate 20% cancellation fee in addition to the full refund.
+5. For cancellation of a confirmed booking attributable to the Buddy, the Company may impose a cancellation fee of 20% of that booking’s actual payment amount regardless of the time remaining before the activity. The sanctions and exemption criteria for unavoidable reasons follow Article 4 of the [Buddy Operating Terms](./buddy-operation-terms.en.md). A Buddy no-show may incur a separate 20% cancellation fee in addition to the full refund.
 6. Refunds advanced by the Company and cancellation fees owed by the Buddy may be offset against pending settlements. If insufficient, the Company explains the calculation and payment method in writing.
 
 ## 4. Settlement Schedule and Payment

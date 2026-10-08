@@ -7,7 +7,7 @@ const cases = [
   [
     "ko",
     "남은 기간과 관계없이",
-    "최소 참가 인원 미달은 제재 면제 사유가 아닙니다",
+    "최소 참가 인원",
     "부과할 수 있습니다",
     "장소 폐쇄",
     "심각한 안전 위험",
@@ -17,7 +17,7 @@ const cases = [
   [
     "en",
     "regardless of the time remaining",
-    "Falling short of the minimum participant count is not a ground for exemption from sanctions",
+    "minimum participant",
     "may impose",
     "venue closure",
     "serious safety danger",
@@ -27,7 +27,7 @@ const cases = [
   [
     "ja",
     "残りの期間にかかわらず",
-    "最低参加人数の未達は制裁の免除理由にはなりません",
+    "最低参加人数",
     "課すことができます",
     "会場の閉鎖",
     "重大な安全上の危険",
@@ -37,7 +37,7 @@ const cases = [
   [
     "zh-Hans",
     "无论距离活动开始还有多久",
-    "未达到最低参与人数不是免除处罚的理由",
+    "最低参与人数",
     "可收取",
     "场地关闭",
     "严重安全危险",
@@ -47,7 +47,7 @@ const cases = [
   [
     "zh-Hant",
     "無論距離活動開始還有多久",
-    "未達到最低參與人數不是免除處罰的理由",
+    "最低參與人數",
     "可收取",
     "場地關閉",
     "嚴重安全危險",
@@ -66,12 +66,12 @@ describe("Buddy-attributable cancellation terms", () => {
         const { container } = render(<PolicyDocument locale={locale} source={doc.source} />);
         for (const phrase of [timing, discretion, "20%", previousDate])
           expect(container).toHaveTextContent(phrase);
+        expect(container).not.toHaveTextContent(minimum);
         expect(doc.version).toBe("2026-10-08");
         cleanup();
       }
       const cancellation = operation.source.split(/^## /m)[4];
-      for (const phrase of [minimum, venue, safety, weather])
-        expect(cancellation).toContain(phrase);
+      for (const phrase of [venue, safety, weather]) expect(cancellation).toContain(phrase);
       expect(cancellation).not.toMatch(/7일|7 days|7日|7天/);
       expect(settlement.source.split(/^## /m)[3]).not.toMatch(/7일|7 days|7日|7天/);
       const documents = await getSignupAgreementDocuments("BUDDY", locale);

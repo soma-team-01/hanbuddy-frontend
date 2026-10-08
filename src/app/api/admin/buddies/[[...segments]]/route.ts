@@ -82,7 +82,7 @@ export async function PATCH(
   if (
     !reason ||
     reason.length > 500 ||
-    !["EARLY_10", "STANDARD_20"].includes(parsed.body.commissionPolicy)
+    !["EARLY_10", "EARLY_15", "STANDARD_20"].includes(parsed.body.commissionPolicy)
   ) {
     return badRequestResponse("수수료 정책과 500자 이하의 변경 사유를 확인해 주세요.");
   }

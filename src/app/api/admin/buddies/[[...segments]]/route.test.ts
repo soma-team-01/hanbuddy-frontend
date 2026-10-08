@@ -54,32 +54,35 @@ describe("admin buddies BFF", () => {
     });
   });
 
-  it("validates and forwards a commission policy change", async () => {
-    mockedGetBackend.mockResolvedValueOnce(adminProfile);
-    mockedPatchBackend.mockResolvedValueOnce({
-      status: 200,
-      payload: { isSuccess: true, code: "OK", message: "ok", result: {} },
-      setCookies: [],
-    });
+  it.each(["EARLY_15", "EARLY_10", "STANDARD_20"])(
+    "validates and forwards %s",
+    async (commissionPolicy) => {
+      mockedGetBackend.mockResolvedValueOnce(adminProfile);
+      mockedPatchBackend.mockResolvedValueOnce({
+        status: 200,
+        payload: { isSuccess: true, code: "OK", message: "ok", result: {} },
+        setCookies: [],
+      });
 
-    const response = await PATCH(
-      adminRequest("http://localhost/api/admin/buddies/7/commission", {
-        method: "PATCH",
-        body: JSON.stringify({
-          commissionPolicy: "STANDARD_20",
-          reason: "  초기 버디 혜택 기간 종료  ",
+      const response = await PATCH(
+        adminRequest("http://localhost/api/admin/buddies/7/commission", {
+          method: "PATCH",
+          body: JSON.stringify({
+            commissionPolicy,
+            reason: "  초기 버디 혜택 기간 종료  ",
+          }),
         }),
-      }),
-      { params: Promise.resolve({ segments: ["7", "commission"] }) },
-    );
+        { params: Promise.resolve({ segments: ["7", "commission"] }) },
+      );
 
-    expect(response.status).toBe(200);
-    expect(mockedPatchBackend).toHaveBeenCalledWith(
-      "/admin/buddies/7/commission",
-      { commissionPolicy: "STANDARD_20", reason: "초기 버디 혜택 기간 종료" },
-      { bearerToken: "admin-token" },
-    );
-  });
+      expect(response.status).toBe(200);
+      expect(mockedPatchBackend).toHaveBeenCalledWith(
+        "/admin/buddies/7/commission",
+        { commissionPolicy, reason: "초기 버디 혜택 기간 종료" },
+        { bearerToken: "admin-token" },
+      );
+    },
+  );
 
   it("rejects a null commission body without calling the backend mutation", async () => {
     mockedGetBackend.mockResolvedValueOnce(adminProfile);
@@ -108,6 +111,72 @@ describe("admin buddies BFF", () => {
     );
 
     expect(response.status).toBe(400);
+    expect(mockedPatchBackend).not.toHaveBeenCalled();
+  });
+  it.each([
+    { commissionPolicy: "UNKNOWN", reason: "manual" },
+    { commissionPolicy: "EARLY_15", reason: " " },
+    { commissionPolicy: "EARLY_15", reason: "a".repeat(501) },
+    { reason: "manual" },
+  ])("rejects invalid policy/reason %j without mutation", async (body) => {
+    mockedGetBackend.mockResolvedValueOnce(adminProfile);
+    const response = await PATCH(
+      adminRequest("http://localhost/api/admin/buddies/7/commission", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+      { params: Promise.resolve({ segments: ["7", "commission"] }) },
+    );
+    expect(response.status).toBe(400);
+    expect(mockedPatchBackend).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [400, "VALIDATION400_FORMAT", "요청 값 형식이 올바르지 않습니다."],
+    [403, "USER403_ADMIN", "관리자만 접근할 수 있습니다."],
+    [404, "ADMIN_BUDDY404_PROFILE", "버디 프로필을 찾을 수 없습니다."],
+    [409, "ADMIN_BUDDY409_COMMISSION", "현재와 동일한 수수료 정책으로 변경할 수 없습니다."],
+  ])("preserves backend error %s and its payload", async (status, code, message) => {
+    mockedGetBackend.mockResolvedValueOnce(adminProfile);
+    const payload = { isSuccess: false as const, code, message, result: null };
+    mockedPatchBackend.mockResolvedValueOnce({ status, payload, setCookies: [] });
+    const response = await PATCH(
+      adminRequest("http://localhost/api/admin/buddies/7/commission", {
+        method: "PATCH",
+        body: JSON.stringify({ commissionPolicy: "EARLY_15", reason: "manual" }),
+      }),
+      { params: Promise.resolve({ segments: ["7", "commission"] }) },
+    );
+    expect(response.status).toBe(status);
+    expect(await response.json()).toEqual(payload);
+  });
+
+  it("rejects unauthenticated commission changes", async () => {
+    const response = await PATCH(
+      new NextRequest("http://localhost/api/admin/buddies/7/commission", {
+        method: "PATCH",
+        body: JSON.stringify({ commissionPolicy: "EARLY_15", reason: "manual" }),
+      }),
+      { params: Promise.resolve({ segments: ["7", "commission"] }) },
+    );
+    expect(response.status).toBe(401);
+    expect(mockedGetBackend).not.toHaveBeenCalled();
+    expect(mockedPatchBackend).not.toHaveBeenCalled();
+  });
+
+  it("checks server role rather than trusting the ADMIN cookie", async () => {
+    mockedGetBackend.mockResolvedValueOnce({
+      ...adminProfile,
+      payload: { isSuccess: true, code: "OK", message: "ok", result: { userType: "BUDDY" } },
+    });
+    const response = await PATCH(
+      adminRequest("http://localhost/api/admin/buddies/7/commission", {
+        method: "PATCH",
+        body: JSON.stringify({ commissionPolicy: "EARLY_15", reason: "manual" }),
+      }),
+      { params: Promise.resolve({ segments: ["7", "commission"] }) },
+    );
+    expect(response.status).toBe(403);
     expect(mockedPatchBackend).not.toHaveBeenCalled();
   });
 });

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { extractJsonLd } from "@/test/json-ld";
 import AboutPage, { generateMetadata } from "./page";
 
 vi.mock("next-intl/server", async () => {
@@ -219,5 +220,25 @@ describe("AboutPage", () => {
       locale: "ko_KR",
       images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", height: 630 }],
     });
+  });
+
+  it("adds a visible breadcrumb and only BreadcrumbList structured data", async () => {
+    await renderAbout("ko");
+
+    const trail = screen.getByRole("navigation", { name: "이동 경로" });
+    expect(within(trail).getByText("소개")).toHaveAttribute("aria-current", "page");
+    const data = extractJsonLd(document.body.innerHTML);
+    expect(data).toEqual([
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "홈", item: "https://hanbuddy.kr/ko" },
+          { "@type": "ListItem", position: 2, name: "소개", item: "https://hanbuddy.kr/ko/about" },
+        ],
+      },
+    ]);
+    // 설문 평점(4.9)은 자기 평가로 취급되므로 조직 평점으로 넣지 않는다.
+    expect(JSON.stringify(data)).not.toContain("aggregateRating");
   });
 });

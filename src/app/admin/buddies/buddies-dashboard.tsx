@@ -263,7 +263,7 @@ function TabCount({ children, pending = false }: { children: number; pending?: b
 }
 
 function commissionLabel(policy: string | null) {
-  if (policy === "EARLY_10") return "초기 수수료 10% + VAT 1% (총 11%)";
-  if (policy === "STANDARD_20") return "일반 수수료 20% + VAT 2% (총 22%)";
+  if (policy === "EARLY_10" || policy === "EARLY_15") return "초기 버디";
+  if (policy === "STANDARD_20") return "일반";
   return "승인 전";
 }

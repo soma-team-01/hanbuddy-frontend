@@ -5,8 +5,26 @@ import type { NextConfig } from "next";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+// 모든 응답에 붙는 보안 헤더. Caddy는 TLS와 프록시만 맡고, 헤더는 앱이 운영·staging·로컬에서 똑같이 낸다.
+// HSTS는 서브도메인을 묶지 않는다(includeSubDomains·preload는 되돌리기 어려워 서브도메인 https 확인 후 검토).
+// Content-Security-Policy는 결제(PayPal·토스)·GA4·Meta Pixel·Google Maps·카카오 스크립트 허용 목록 검토 후 별도로 넣는다.
+export const SECURITY_HEADERS = [
+  { key: "Strict-Transport-Security", value: "max-age=31536000" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+  },
+] as const;
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: [...SECURITY_HEADERS] }];
+  },
   // Resolve public activity existence before committing a document status for any UA.
   htmlLimitedBots: /.*/,
   outputFileTracingIncludes: {

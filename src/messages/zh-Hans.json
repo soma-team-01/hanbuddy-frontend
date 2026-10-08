@@ -240,6 +240,7 @@
   },
   "Navigation": {
     "primaryNavigation": "主要导航",
+    "breadcrumb": "面包屑导航",
     "navigationMenu": "导航菜单",
     "openMenu": "打开菜单",
     "closeMenu": "关闭菜单",

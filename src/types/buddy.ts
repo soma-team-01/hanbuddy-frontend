@@ -34,7 +34,10 @@ export interface ActivityPricePreviewResponse {
   unitPriceKrw: number;
   currency: string;
   commissionRate: number;
+  /** 총 공제액에서 포함 VAT를 분리한 공급가액. */
   platformCommissionAmountKrw: number;
+  /** 총 공제액에 포함된 VAT — 추가 공제하지 않는다. */
+  commissionVatAmountKrw: number;
   estimatedGuidePayoutAmountKrw: number;
 }
 

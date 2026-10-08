@@ -1,5 +1,7 @@
-import { sharePreview } from "@/lib/seo/metadata";
-import { APP_ORIGIN } from "@/lib/site";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd, faqPageJsonLd, type BreadcrumbItem } from "@/lib/seo/json-ld";
+import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
@@ -54,22 +56,27 @@ export async function generateMetadata({ params }: FaqPageProps): Promise<Metada
       title: t("faq.metadataTitle"),
       description: t("faq.metadataDescription"),
     }),
-    alternates: {
-      canonical: `${APP_ORIGIN}/${locale}/faq`,
-      languages: {
-        en: `${APP_ORIGIN}/en/faq`,
-        ko: `${APP_ORIGIN}/ko/faq`,
-        ja: `${APP_ORIGIN}/ja/faq`,
-        "zh-Hans": `${APP_ORIGIN}/zh-Hans/faq`,
-        "zh-Hant": `${APP_ORIGIN}/zh-Hant/faq`,
-      },
-    },
+    alternates: pageAlternates(locale, "/faq"),
   };
 }
 
 export default async function FaqPage({ params }: FaqPageProps) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "About" });
+  const [t, navT] = await Promise.all([
+    getTranslations({ locale, namespace: "About" }),
+    getTranslations({ locale, namespace: "Navigation" }),
+  ]);
+  const breadcrumbs: BreadcrumbItem[] = [
+    { name: navT("home"), path: "" },
+    { name: navT("faq"), path: "/faq" },
+  ];
+  // 화면과 같은 묶음 순서·같은 메시지 키로 FAQ 구조화 데이터를 만든다.
+  const faqEntries = FAQ_GROUPS.flatMap((group) =>
+    group.questions.map((key) => ({
+      question: t(`faq.items.${key}.question`),
+      answer: t(`faq.items.${key}.answer`),
+    })),
+  );
 
   const topics: NavTopic[] = FAQ_GROUPS.map((group, index) => ({
     id: `faq-group-${group.key}`,
@@ -80,12 +87,21 @@ export default async function FaqPage({ params }: FaqPageProps) {
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <JsonLd data={faqPageJsonLd(locale, faqEntries)} />
+      <JsonLd data={breadcrumbJsonLd(locale, breadcrumbs)} />
       <OpenFromHash />
       <section aria-labelledby="faq-title">
         {/* 표지: About 표지와 같은 진한 바탕. 사진은 4:3 작은 액자 세 장으로 낮게 둔다. */}
         <div className="bg-ink text-on-primary">
-          <PageContainer className="pt-10 pb-8 md:pt-14 md:pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16 lg:pt-16 lg:pb-14">
-            <div>
+          <PageContainer className="pt-2 pb-8 md:pt-4 md:pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-x-16 lg:pt-5 lg:pb-14">
+            {/* 표지 위쪽 여백 안에 위치 표시를 둔다. 제목까지의 거리는 예전과 같다. */}
+            <Breadcrumbs
+              items={breadcrumbs}
+              label={navT("breadcrumb")}
+              tone="dark"
+              className="lg:col-span-2"
+            />
+            <div className="mt-6 md:mt-8 lg:mt-9">
               <p className={`${EYEBROW} text-primary-soft`}>{t("faq.eyebrow")}</p>
               <h1
                 id="faq-title"

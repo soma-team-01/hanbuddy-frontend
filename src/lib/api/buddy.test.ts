@@ -1,3 +1,4 @@
+import type { ActivityPricePreviewResponse } from "@/types/buddy";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createMyActivity,
@@ -171,12 +172,13 @@ describe("buddy API client", () => {
   });
 
   it("previews the buddy payout through the internal API", async () => {
-    const preview = {
+    const preview: ActivityPricePreviewResponse = {
       unitPriceKrw: 50000,
       currency: "KRW",
-      commissionRate: 0.1,
-      platformCommissionAmountKrw: 5000,
-      estimatedGuidePayoutAmountKrw: 45000,
+      commissionRate: 0.15,
+      platformCommissionAmountKrw: 6818,
+      commissionVatAmountKrw: 682,
+      estimatedGuidePayoutAmountKrw: 42500,
     };
     const fetchMock = vi
       .fn()

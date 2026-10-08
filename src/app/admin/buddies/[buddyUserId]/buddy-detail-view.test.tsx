@@ -1,4 +1,5 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { ApiClientError } from "@/lib/api/errors";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getAdminAuditLogs,
@@ -75,7 +76,7 @@ function mockBuddyRequests(logs: Awaited<ReturnType<typeof getAdminAuditLogs>>) 
         updatedAt: "2026-08-02T10:00:00+09:00",
       },
       commissionPolicy: "EARLY_10",
-      commissionRate: 0.1,
+      commissionRate: 0.15,
       averageRating: 5,
       reviewCount: 1,
     },
@@ -171,7 +172,7 @@ describe("AdminBuddyDetailView", () => {
     expect(screen.getByText("1998. 4. 12.")).toBeInTheDocument();
     expect(screen.getByText("+82")).toBeInTheDocument();
     expect(screen.getByText("01012345678")).toBeInTheDocument();
-    expect(screen.getByText("초기 버디 수수료 10% + VAT 1% (총 11%)")).toBeInTheDocument();
+    expect(screen.getByText("초기 버디 수수료 15% (VAT·결제수수료 포함)")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "계정 정지" })).toHaveLength(2);
     expect(screen.queryByRole("link", { name: "회원 정보 보기" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "운영 정보" })).toBeInTheDocument();
@@ -181,7 +182,7 @@ describe("AdminBuddyDetailView", () => {
     expect(mockedGetAuditLogs).toHaveBeenCalledWith(27, 0);
   });
 
-  it("수수료 정책을 10%와 20% 중 직접 선택하게 한다", async () => {
+  it("수수료 정책을 15%와 20% 중 직접 선택하게 한다", async () => {
     mockBuddyRequests({
       status: "success",
       auditLogs: {
@@ -205,20 +206,120 @@ describe("AdminBuddyDetailView", () => {
       ),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("radio", { name: "초기 버디 수수료 10%, 부가세 1%, 총 11%" }),
-    ).toHaveAttribute("aria-checked", "true");
+      screen.getByRole("radio", { name: "초기 버디 수수료 15%, VAT·결제수수료 포함" }),
+    ).not.toBeChecked();
     expect(screen.getByRole("button", { name: "수수료 정책 변경" })).toBeDisabled();
 
-    fireEvent.click(screen.getByRole("radio", { name: "일반 수수료 20%, 부가세 2%, 총 22%" }));
+    fireEvent.click(screen.getByRole("radio", { name: "일반 수수료 20%, VAT·결제수수료 포함" }));
     fireEvent.change(screen.getByRole("textbox", { name: "변경 사유" }), {
       target: { value: "초기 운영 정책 종료" },
     });
 
     expect(
-      screen.getByRole("radio", { name: "일반 수수료 20%, 부가세 2%, 총 22%" }),
-    ).toHaveAttribute("aria-checked", "true");
+      screen.getByRole("radio", { name: "일반 수수료 20%, VAT·결제수수료 포함" }),
+    ).toBeChecked();
     expect(screen.getByRole("button", { name: "수수료 정책 변경" })).toBeEnabled();
   });
+
+  it.each(["2026-01-01T00:00:00+09:00", "2030-01-01T00:00:00+09:00"])(
+    "saves EARLY_15 from a legacy policy regardless of signup date %s and reloads the returned rate",
+    async (createdAt) => {
+      mockBuddyRequests({
+        status: "success",
+        auditLogs: { logs: [], totalElements: 0, totalPages: 0, page: 0, size: 20, hasNext: false },
+      });
+      const initial = await mockedGetBuddy("9");
+      if (initial.status !== "success") throw new Error("fixture unavailable");
+      initial.buddy.user.createdAt = createdAt;
+      const view = renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
+      fireEvent.click(await screen.findByRole("button", { name: "변경" }));
+      const early = screen.getByRole("radio", {
+        name: "초기 버디 수수료 15%, VAT·결제수수료 포함",
+      });
+      expect(early).toHaveAttribute("type", "radio");
+      fireEvent.click(early);
+      fireEvent.change(screen.getByRole("textbox", { name: "변경 사유" }), {
+        target: { value: "  수동 적용  " },
+      });
+      const updated = {
+        ...initial,
+        buddy: { ...initial.buddy, commissionPolicy: "EARLY_15" as const, commissionRate: 0.15 },
+      };
+      mockedUpdateCommission.mockResolvedValue(updated);
+      mockedGetBuddy.mockResolvedValue(updated);
+      fireEvent.click(screen.getByRole("button", { name: "수수료 정책 변경" }));
+      await waitFor(() =>
+        expect(mockedUpdateCommission).toHaveBeenCalledWith("9", {
+          commissionPolicy: "EARLY_15",
+          reason: "수동 적용",
+        }),
+      );
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      view.unmount();
+      renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
+      expect(
+        await screen.findByText("초기 버디 수수료 15% (VAT·결제수수료 포함)"),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "변경" }));
+      expect(
+        screen.getByRole("radio", { name: "초기 버디 수수료 15%, VAT·결제수수료 포함" }),
+      ).toBeChecked();
+      fireEvent.change(screen.getByRole("textbox", { name: "변경 사유" }), {
+        target: { value: "동일 정책" },
+      });
+      expect(screen.getByRole("button", { name: "수수료 정책 변경" })).toBeDisabled();
+    },
+  );
+
+  it("displays the returned rate rather than deriving it from the policy name", async () => {
+    mockBuddyRequests({
+      status: "success",
+      auditLogs: { logs: [], totalElements: 0, totalPages: 0, page: 0, size: 20, hasNext: false },
+    });
+    const initial = await mockedGetBuddy("9");
+    if (initial.status !== "success") throw new Error("fixture unavailable");
+    mockedGetBuddy.mockResolvedValue({
+      ...initial,
+      buddy: { ...initial.buddy, commissionRate: 0.17 },
+    });
+    renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
+    expect(
+      await screen.findByText("초기 버디 수수료 17% (VAT·결제수수료 포함)"),
+    ).toBeInTheDocument();
+  });
+
+  it.each([401, 403, 404, 409])(
+    "keeps commission errors visible for status %s without showing a saved policy",
+    async (status) => {
+      mockBuddyRequests({
+        status: "success",
+        auditLogs: { logs: [], totalElements: 0, totalPages: 0, page: 0, size: 20, hasNext: false },
+      });
+      mockedUpdateCommission.mockResolvedValue({
+        status: "error",
+        error: new ApiClientError({
+          status,
+          code: "TEST_ERROR",
+          details: null,
+          backendMessage: "변경 실패",
+          fallbackMessage: "변경 실패",
+        }),
+      });
+      renderWithQueryClient(<AdminBuddyDetailView buddyId="9" />);
+      fireEvent.click(await screen.findByRole("button", { name: "변경" }));
+      fireEvent.click(screen.getByRole("radio", { name: "일반 수수료 20%, VAT·결제수수료 포함" }));
+      fireEvent.change(screen.getByRole("textbox", { name: "변경 사유" }), {
+        target: { value: "수동 변경" },
+      });
+      const reads = mockedGetBuddy.mock.calls.length;
+      fireEvent.click(screen.getByRole("button", { name: "수수료 정책 변경" }));
+      expect(await screen.findByText("변경 실패")).toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByText("초기 버디 수수료 15% (VAT·결제수수료 포함)")).toBeInTheDocument();
+      if (status === 409)
+        await waitFor(() => expect(mockedGetBuddy.mock.calls.length).toBeGreaterThan(reads));
+    },
+  );
 
   it("감사 로그 목록을 표시한다", async () => {
     mockBuddyRequests({

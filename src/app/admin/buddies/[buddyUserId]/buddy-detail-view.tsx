@@ -207,7 +207,7 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
               label="수수료 정책"
               value={
                 <div className="flex flex-wrap items-center gap-2">
-                  <span>{commissionLabel(buddy.commissionPolicy)}</span>
+                  <span>{commissionLabel(buddy.commissionPolicy, buddy.commissionRate)}</span>
                   {buddy.commissionPolicy ? (
                     <button
                       type="button"
@@ -215,7 +215,9 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
                         setAccountAction(null);
                         setReason("");
                         setActionError("");
-                        setNextPolicy(buddy.commissionPolicy);
+                        setNextPolicy(
+                          buddy.commissionPolicy === "EARLY_10" ? null : buddy.commissionPolicy,
+                        );
                         setCommissionDialogOpen(true);
                       }}
                       className="rounded-full border border-primary/45 px-3 py-1 text-xs font-bold text-primary hover:border-primary hover:bg-primary-soft"
@@ -384,34 +386,37 @@ export function AdminBuddyDetailView({ buddyId }: { buddyId: string }) {
           onConfirm={() => mutation.mutate()}
         >
           <div role="radiogroup" aria-label="수수료 정책" className="grid grid-cols-2 gap-3">
-            {(["EARLY_10", "STANDARD_20"] as const).map((policy) => {
+            {(["EARLY_15", "STANDARD_20"] as const).map((policy) => {
               const selected = nextPolicy === policy;
               return (
-                <button
+                <label
                   key={policy}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  aria-label={
-                    policy === "EARLY_10"
-                      ? "초기 버디 수수료 10%, 부가세 1%, 총 11%"
-                      : "일반 수수료 20%, 부가세 2%, 총 22%"
-                  }
-                  onClick={() => setNextPolicy(policy)}
-                  className={`rounded-2xl border p-4 text-left transition-all ${selected ? "border-primary bg-primary-soft shadow-[0_8px_24px_rgba(209,63,50,0.1)]" : "border-line-strong hover:border-primary/60"}`}
+                  className={`relative cursor-pointer rounded-2xl border p-4 text-left transition-all focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${selected ? "border-primary bg-primary-soft shadow-[0_8px_24px_rgba(209,63,50,0.1)]" : "border-line-strong hover:border-primary/60"}`}
                 >
+                  <input
+                    type="radio"
+                    name="commissionPolicy"
+                    value={policy}
+                    checked={selected}
+                    disabled={mutation.isPending}
+                    aria-label={
+                      policy === "EARLY_15"
+                        ? "초기 버디 수수료 15%, VAT·결제수수료 포함"
+                        : "일반 수수료 20%, VAT·결제수수료 포함"
+                    }
+                    onChange={() => setNextPolicy(policy)}
+                    className="sr-only"
+                  />
                   <span
                     className={`block text-xs font-bold ${selected ? "text-primary" : "text-muted"}`}
                   >
-                    {policy === "EARLY_10" ? "초기 버디" : "일반"}
+                    {policy === "EARLY_15" ? "초기 버디" : "일반"}
                   </span>
                   <span className="mt-1 block font-display text-2xl font-extrabold">
-                    {policy === "EARLY_10" ? "총 11%" : "총 22%"}
+                    {policy === "EARLY_15" ? "총 15%" : "총 20%"}
                   </span>
-                  <span className="mt-1 block text-xs text-muted">
-                    {policy === "EARLY_10" ? "수수료 10% + VAT 1%" : "수수료 20% + VAT 2%"}
-                  </span>
-                </button>
+                  <span className="mt-1 block text-xs text-muted">VAT·결제수수료 포함</span>
+                </label>
               );
             })}
           </div>
@@ -473,8 +478,9 @@ function Metric({ label, value, detail }: { label: string; value: string; detail
   );
 }
 
-function commissionLabel(policy: AdminCommissionPolicy | null) {
-  if (policy === "EARLY_10") return "초기 버디 수수료 10% + VAT 1% (총 11%)";
-  if (policy === "STANDARD_20") return "일반 수수료 20% + VAT 2% (총 22%)";
-  return "승인 후 설정";
+function commissionLabel(policy: AdminCommissionPolicy | null, rate: number | null) {
+  if (!policy) return "승인 후 설정";
+  const name = policy === "STANDARD_20" ? "일반" : "초기 버디";
+  if (rate === null) return `${name} (요율 확인 필요)`;
+  return `${name} 수수료 ${(rate * 100).toLocaleString("ko-KR")}% (VAT·결제수수료 포함)`;
 }

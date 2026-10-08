@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { findJsonLd } from "@/test/json-ld";
 import FaqPage, { generateMetadata } from "./page";
 
 vi.mock("next-intl/server", async () => {
@@ -139,5 +140,39 @@ describe("FaqPage", () => {
     );
     expect(metadata.description).toMatch(/^Answers to what guests ask before booking/);
     expect(metadata.openGraph).toMatchObject({ url: "https://hanbuddy.kr/en/faq" });
+  });
+
+  it.each(["en", "ko"] as const)(
+    "publishes FAQPage structured data with the same questions and answers as the page in %s",
+    async (locale) => {
+      await renderFaq(locale);
+      const html = document.body.innerHTML;
+      const faq = findJsonLd(html, "FAQPage") as {
+        mainEntity: { name: string; acceptedAnswer: { text: string } }[];
+      };
+
+      const items = [...document.querySelectorAll("details")];
+      expect(faq.mainEntity).toHaveLength(10);
+      expect(faq.mainEntity.map((entry) => entry.name)).toEqual(
+        screen.getAllByRole("heading", { level: 3 }).map((question) => question.textContent),
+      );
+      faq.mainEntity.forEach((entry, index) => {
+        expect(items[index].textContent).toContain(entry.acceptedAnswer.text);
+      });
+      expect(findJsonLd(html, "BreadcrumbList")).toMatchObject({
+        itemListElement: [
+          { position: 1, item: `https://hanbuddy.kr/${locale}` },
+          { position: 2, item: `https://hanbuddy.kr/${locale}/faq` },
+        ],
+      });
+    },
+  );
+
+  it("shows the breadcrumb that the structured data describes", async () => {
+    await renderFaq("en");
+
+    const current = screen.getByText("FAQ", { selector: "[aria-current=page]" });
+    const trail = current.closest("ol")!;
+    expect(within(trail).getByRole("link", { name: "Home" })).toHaveAttribute("href", "/en");
   });
 });

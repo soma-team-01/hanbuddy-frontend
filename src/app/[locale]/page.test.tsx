@@ -4,6 +4,7 @@ import { getTouristActivities } from "@/lib/api/activities";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
+import { extractJsonLd } from "@/test/json-ld";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
 vi.mock("next/navigation", async (original) => ({
@@ -306,5 +307,23 @@ describe("LandingPage", () => {
       images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", width: 1200 }],
     });
     expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
+  });
+
+  it("publishes Organization and WebSite structured data without a search action", async () => {
+    await renderLanding("en");
+
+    const [data, ...rest] = extractJsonLd(document.body.innerHTML);
+    expect(rest).toEqual([]);
+    expect(data["@graph"]).toEqual([
+      expect.objectContaining({
+        "@type": "Organization",
+        name: "HanBuddy",
+        alternateName: "한버디",
+        legalName: "제로원",
+        email: "contact@hanbuddy.kr",
+      }),
+      expect.objectContaining({ "@type": "WebSite", url: "https://hanbuddy.kr/en" }),
+    ]);
+    expect(JSON.stringify(data)).not.toContain("SearchAction");
   });
 });

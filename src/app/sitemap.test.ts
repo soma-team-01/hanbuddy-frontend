@@ -45,6 +45,50 @@ describe("public sitemap and crawl policy", () => {
     expect(urls.every((url) => !/login|book|payments|admin|my-page|\?/.test(url))).toBe(true);
     expect(new Set(urls).size).toBe(urls.length);
   });
+  it("adds lastmod, language alternates with an English x-default, and public policy pages", async () => {
+    vi.mocked(getPublicActivities).mockResolvedValue([{ activityId: 2 } as TouristActivitySummary]);
+    vi.mocked(getPublicActivity).mockResolvedValue({
+      activityId: 2,
+    } as unknown as TouristActivityDetail);
+    const entries = await sitemap();
+    const byUrl = new Map(entries.map((entry) => [entry.url, entry]));
+
+    expect(byUrl.get("https://hanbuddy.kr/ko/faq")).toEqual({
+      url: "https://hanbuddy.kr/ko/faq",
+      lastModified: "2026-10-06",
+      alternates: {
+        languages: {
+          en: "https://hanbuddy.kr/en/faq",
+          ko: "https://hanbuddy.kr/ko/faq",
+          ja: "https://hanbuddy.kr/ja/faq",
+          "zh-Hans": "https://hanbuddy.kr/zh-Hans/faq",
+          "zh-Hant": "https://hanbuddy.kr/zh-Hant/faq",
+          "x-default": "https://hanbuddy.kr/en/faq",
+        },
+      },
+    });
+    const policyUrls = entries.map(({ url }) => url).filter((url) => url.includes("/policies/"));
+    expect(policyUrls).toHaveLength(15);
+    expect(policyUrls).toContain("https://hanbuddy.kr/zh-Hant/policies/cancellation-refund-policy");
+    expect(policyUrls.some((url) => /buddy-|consent-notices|community-safety/.test(url))).toBe(
+      false,
+    );
+    expect(byUrl.get("https://hanbuddy.kr/ko/buddy")?.alternates?.languages).toEqual({
+      ko: "https://hanbuddy.kr/ko/buddy",
+      "x-default": "https://hanbuddy.kr/ko/buddy",
+    });
+    const activity = byUrl.get("https://hanbuddy.kr/ja/activities/2");
+    expect(activity?.lastModified).toBeUndefined();
+    expect(activity?.alternates?.languages?.["x-default"]).toBe(
+      "https://hanbuddy.kr/en/activities/2",
+    );
+    expect(
+      entries.filter(({ url }) => !url.includes("/activities/")).every((e) => e.lastModified),
+    ).toBe(true);
+    // 5 locales x (home, about, faq, explore, 3 policies, activity 2) + ko/buddy
+    expect(entries).toHaveLength(5 * 8 + 1);
+  });
+
   it("fails instead of publishing an empty success sitemap during an API outage", async () => {
     vi.mocked(getPublicActivities).mockRejectedValue(new PublicActivityError("unavailable"));
     await expect(sitemap()).rejects.toMatchObject({ kind: "unavailable" });

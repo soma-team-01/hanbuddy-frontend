@@ -1,5 +1,4 @@
-import { sharePreview } from "@/lib/seo/metadata";
-import { APP_ORIGIN } from "@/lib/site";
+import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
@@ -63,16 +62,8 @@ export async function generateMetadata({ params }: BuddyHostingPageProps): Promi
       title: t("metadataTitle"),
       description: t("metadataDescription"),
     }),
-    alternates: {
-      canonical: `${APP_ORIGIN}/${locale}/buddy`,
-      languages: {
-        en: `${APP_ORIGIN}/en/buddy`,
-        ko: `${APP_ORIGIN}/ko/buddy`,
-        ja: `${APP_ORIGIN}/ja/buddy`,
-        "zh-Hans": `${APP_ORIGIN}/zh-Hans/buddy`,
-        "zh-Hant": `${APP_ORIGIN}/zh-Hant/buddy`,
-      },
-    },
+    // 다른 언어 버디 주소는 모두 /ko/buddy로 리다이렉트되므로 실제로 열리는 한국어만 선언한다.
+    alternates: pageAlternates(locale, "/buddy", { locales: ["ko"], xDefault: "ko" }),
   };
 }
 

@@ -1,7 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
-import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithIntl } from "@/test/render-with-intl";
 import BuddyHostingPage, { generateMetadata } from "./page";
 
@@ -96,6 +95,12 @@ describe("BuddyHostingPage", () => {
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
-    expectLocalizedMetadata(metadata, title, canonicalPath, "/buddy");
+    expect(metadata.title).toBe(title);
+    expect(metadata.alternates?.canonical).toBe(`https://hanbuddy.kr${canonicalPath}`);
+    // 다른 언어 버디 주소는 /ko/buddy로 리다이렉트되므로 실제로 열리는 한국어만 대체 주소로 둔다.
+    expect(metadata.alternates?.languages).toEqual({
+      ko: "https://hanbuddy.kr/ko/buddy",
+      "x-default": "https://hanbuddy.kr/ko/buddy",
+    });
   });
 });

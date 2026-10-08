@@ -30,7 +30,7 @@ describe("buddy commission revision at policy and signup boundaries", () => {
         expect(text).toContain("15%");
         expect(text).not.toMatch(/22%|11%/);
         for (const clause of eligibility[locale]) expect(text).toContain(clause);
-        expect(document.version).toBe("2026-10-06");
+        expect(document.version).toBe(slug === "consent-notices" ? "2026-10-06" : "2026-10-08");
         cleanup();
       }
       const notice = getSignupAgreementNotice(
@@ -51,10 +51,10 @@ describe("buddy commission revision at policy and signup boundaries", () => {
       const documents = await getSignupAgreementDocuments("BUDDY", locale);
       const agreements = buildSignupAgreements("BUDDY", {}, documents);
       expect(agreements.find(({ type }) => type === "BUDDY_OPERATION_TERMS")?.version).toBe(
-        "2026-10-06",
+        "2026-10-08",
       );
       expect(agreements.find(({ type }) => type === "BUDDY_COMMISSION_POLICY")?.version).toBe(
-        "2026-10-06",
+        "2026-10-08",
       );
       expect(agreements.find(({ type }) => type === "TERMS_OF_SERVICE")?.version).toBe(
         "2026-10-06",

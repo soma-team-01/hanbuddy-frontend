@@ -107,16 +107,13 @@ describe("policy content", () => {
     expect(policy.slug).toBe(slug);
     expect(policy.title).toMatch(/^HanBuddy /);
     expect(policy.version).toBe(
-      [
-        "buddy-operation-terms",
-        "buddy-commission-settlement-policy",
-        "consent-notices",
-        "terms-of-service",
-      ].includes(slug)
-        ? "2026-10-06"
-        : ["cancellation-refund-policy", "terms-of-service"].includes(slug)
-          ? "2026-09-08"
-          : "2026-09-07",
+      ["buddy-operation-terms", "buddy-commission-settlement-policy"].includes(slug)
+        ? "2026-10-08"
+        : ["consent-notices", "terms-of-service"].includes(slug)
+          ? "2026-10-06"
+          : slug === "cancellation-refund-policy"
+            ? "2026-09-08"
+            : "2026-09-07",
     );
     expect(policy.source).not.toContain("버전:");
     expect(policy.source).not.toContain("시행일:");

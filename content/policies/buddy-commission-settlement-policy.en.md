@@ -1,10 +1,12 @@
 # HanBuddy Buddy Commission and Settlement Policy
 
-Version: 2026-10-06
+Version: 2026-10-08
 
 This policy applies to activity sales proceeds, platform fees, cancellations, refunds and settlements for Buddies providing activities on HanBuddy.
 
-For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
+For the earlier revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
+
+The application date and transitional arrangements for the proposed cancellation amendment remain to be determined separately. Neither the document version nor the effective date of the earlier revision establishes the effective date or retroactive application of this proposed cancellation amendment.
 
 ## 1. Commission Rates
 
@@ -36,7 +38,7 @@ New applicants who complete Buddy onboarding and their application by 2026-11-30
 2. For a general Tourist cancellation with a 50% refund, fees, VAT and Buddy settlement are calculated from the remaining 50% of actual sales retained by the Company.
 3. For non-refundable general cancellations or no-shows, calculation uses the full actual sales amount.
 4. Partial refunds caused by Buddy fault use the remaining amount after refund. No Buddy compensation is paid for fully refunded bookings.
-5. Buddy cancellation less than 7 days before the activity may incur a fee of 20% of the amount actually paid. A Buddy no-show may incur a separate 20% cancellation fee in addition to the full refund.
+5. For cancellation of a confirmed booking attributable to the Buddy, the Company may impose a cancellation fee of 20% of that booking’s actual payment amount regardless of the time remaining before the activity. The sanctions and exemption criteria for minimum participant shortfalls and unavoidable reasons follow Article 4 of the [Buddy Operating Terms](./buddy-operation-terms.en.md). A Buddy no-show may incur a separate 20% cancellation fee in addition to the full refund.
 6. Refunds advanced by the Company and cancellation fees owed by the Buddy may be offset against pending settlements. If insufficient, the Company explains the calculation and payment method in writing.
 
 ## 4. Settlement Schedule and Payment

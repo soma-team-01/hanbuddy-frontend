@@ -1,10 +1,12 @@
 # HanBuddy Buddy Operating Terms
 
-Version: 2026-10-06
+Version: 2026-10-08
 
 These Terms apply alongside the Terms of Service to Buddies listing and providing activities on HanBuddy.
 
-For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
+For the earlier revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
+
+The application date and transitional arrangements for the proposed cancellation amendment remain to be determined separately. Neither the document version nor the effective date of the earlier revision establishes the effective date or retroactive application of this proposed cancellation amendment.
 
 ## Article 1. Eligibility and Approval
 
@@ -31,8 +33,8 @@ For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commi
 
 1. Material changes to the date, start time, location, key itinerary, language or inclusions require the Tourist’s consent through the Service and are not confirmed before consent.
 2. Unavoidable cancellations must be submitted as soon as possible through the Service with reasons to the Company and Tourist. Buddies must not ask Tourists to cancel instead.
-3. Buddy cancellations at least 7 days before the activity may incur no cancellation fee, but frequency and harm may lead to warnings or reduced listing visibility.
-4. Cancellations less than 7 days before the activity may incur 20% of the booking’s actual payment amount. The Company may waive fees or sanctions for objectively proven serious illness, accidents, government restrictions or other events difficult to foresee or avoid.
+3. Confirmed bookings must be fulfilled. For cancellation of a confirmed booking attributable to the Buddy, the Company considers sanctions such as warnings or reduced listing visibility regardless of the time remaining before the activity. Falling short of the minimum participant count is not a ground for exemption from sanctions.
+4. For cancellation of a confirmed booking attributable to the Buddy, the Company may impose a cancellation fee of 20% of that booking’s actual payment amount. However, the Company may waive fees or sanctions for objectively verifiable unavoidable reasons, such as serious illness or injury, accidents, government restrictions, venue closure or serious safety danger, or weather outside the Buddy’s control that prevents performance.
 5. Cancelled bookings are fully refunded to Tourists and generate no Buddy compensation.
 
 ## Article 5. Lateness and No-Shows

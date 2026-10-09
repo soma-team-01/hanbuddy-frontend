@@ -598,7 +598,7 @@
     },
     "team": {
       "eyebrow": "팀 소개",
-      "title": "서울에 사는 세 친구, 팀 ZeroOne이 한버디의 첫 버디였습니다",
+      "title": "<nowrap>한버디를 만드는 팀,</nowrap> ZeroOne입니다",
       "description": "첫 직관은 저희가 직접 버디로 나섰습니다. 지금은 서비스를 운영하고 문의에 답하면서, 여전히 관중석에서 게스트와 함께 응원합니다.",
       "backed": "한버디는 과학기술정보통신부가 주관하는 SW 인재 양성 프로그램 ‘AI·SW 마에스트로’ 17기 ZeroOne 팀의 프로젝트입니다.",
       "linkedin": "LinkedIn",

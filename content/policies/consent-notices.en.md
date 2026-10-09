@@ -1,8 +1,10 @@
 # HanBuddy Consent Notices
 
-Version: 2026-09-08
+Version: 2026-10-06
 
 These notices explain registration consents. Required and optional items are distinguished. Refusing optional consent does not prevent use of basic Service features.
+
+For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
 
 ## 1. General Registration
 
@@ -46,7 +48,9 @@ I have read the [Buddy Operating Terms](./buddy-operation-terms.en.md) and agree
 
 ### [Required] Buddy Commission and Settlement Policy
 
-I have read the [Buddy Commission and Settlement Policy](./buddy-commission-settlement-policy.en.md). I acknowledge that standard Buddies have 20% platform fees excluding VAT plus 2% VAT on the fee, totaling 22% of actual sales; Early Buddies have 10% fees plus 1% VAT, totaling 11%. I also agree to the displayed settlement schedule and treatment of cancellations, refunds and chargebacks.
+[Buddy Commission and Settlement Policy](./buddy-commission-settlement-policy.en.md)
+
+I have read the Buddy Commission and Settlement Policy. The total platform fee is 20% of actual sales for standard Buddies and 15% for approved Early Buddies. Both rates include VAT and payment-processing fees, which are not deducted again. New applicants who complete Buddy onboarding and their application by 2026-11-30 Korea Standard Time (KST) receive the permanent Early Buddy rate after review and approval. Approval in December or later does not disqualify applicants who completed their application by the deadline. This is the deadline for new applications, not the expiry of the discount. Completing an application does not automatically approve an activity. I also agree to the displayed settlement schedule and treatment of cancellations, refunds and chargebacks.
 
 ## 3. Booking Applications and Payment
 

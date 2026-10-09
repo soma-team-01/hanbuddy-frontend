@@ -1,8 +1,10 @@
 # HanBuddy Buddy Operating Terms
 
-Version: 2026-09-07
+Version: 2026-10-08
 
 These Terms apply alongside the Terms of Service to Buddies listing and providing activities on HanBuddy.
+
+For the earlier revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
 
 ## Article 1. Eligibility and Approval
 
@@ -29,8 +31,8 @@ These Terms apply alongside the Terms of Service to Buddies listing and providin
 
 1. Material changes to the date, start time, location, key itinerary, language or inclusions require the Tourist’s consent through the Service and are not confirmed before consent.
 2. Unavoidable cancellations must be submitted as soon as possible through the Service with reasons to the Company and Tourist. Buddies must not ask Tourists to cancel instead.
-3. Buddy cancellations at least 7 days before the activity may incur no cancellation fee, but frequency and harm may lead to warnings or reduced listing visibility.
-4. Cancellations less than 7 days before the activity may incur 20% of the booking’s actual payment amount. The Company may waive fees or sanctions for objectively proven serious illness, accidents, government restrictions or other events difficult to foresee or avoid.
+3. Confirmed bookings must be fulfilled. For cancellation of a confirmed booking attributable to the Buddy, the Company considers sanctions such as warnings or reduced listing visibility regardless of the time remaining before the activity.
+4. For cancellation of a confirmed booking attributable to the Buddy, the Company may impose a cancellation fee of 20% of that booking’s actual payment amount. However, the Company may waive fees or sanctions for objectively verifiable unavoidable reasons, such as serious illness or injury, accidents, government restrictions, venue closure or serious safety danger, or weather outside the Buddy’s control that prevents performance.
 5. Cancelled bookings are fully refunded to Tourists and generate no Buddy compensation.
 
 ## Article 5. Lateness and No-Shows
@@ -72,8 +74,8 @@ These Terms apply alongside the Terms of Service to Buddies listing and providin
 ## Article 10. Fees, Settlement and Taxes
 
 1. Compensation, platform fees, refunds and cancellation fees follow the [Buddy Commission and Settlement Policy](./buddy-commission-settlement-policy.en.md).
-2. The standard platform fee excluding VAT is 20% of actual sales and VAT on that fee is 2% of actual sales, totaling 22%. Early Buddies have a 10% fee plus 1% VAT, totaling 11%.
-3. Buddies are responsible for reporting activity income and paying taxes. The Company may carry out legally required withholding or reporting.
+2. The total platform fee is 20% of actual sales for standard Buddies and 15% for approved Early Buddies. Both rates include VAT and payment-processing fees, which are not deducted again. New applicants who complete Buddy onboarding and their application by 2026-11-30 Korea Standard Time (KST) receive the permanent Early Buddy rate after review and approval. Approval in December or later does not disqualify applicants who completed their application by the deadline. This is the deadline for new applications, not the expiry of the discount. Completing an application does not automatically approve an activity.
+3. Buddies are responsible for reporting income and paying taxes under applicable law. The Company and Buddy fulfill applicable duties to issue and receive supporting documents according to business registration, tax status, income type and the actual transaction. The Company fulfills its statutory withholding, remittance and payment-statement filing duties and does not transfer them to the Buddy.
 
 ## Article 11. Restrictions and Termination
 

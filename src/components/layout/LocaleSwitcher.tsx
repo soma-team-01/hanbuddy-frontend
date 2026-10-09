@@ -24,6 +24,8 @@ export function LocaleSwitcher({
   disabled = false,
   dismissMenu = false,
   labelStyle = "short",
+  menuAlign = "end",
+  menuPlacement,
   onBeforeLocaleChange,
   variant = "default",
 }: Readonly<{
@@ -31,6 +33,10 @@ export function LocaleSwitcher({
   disabled?: boolean;
   dismissMenu?: boolean;
   labelStyle?: "short" | "name" | "nameWithCode";
+  /** 목록을 버튼의 어느 쪽 끝에 맞출지. 버튼이 왼쪽에 있는 모바일 메뉴는 start */
+  menuAlign?: "start" | "end";
+  /** 목록이 열리는 방향. 기본값은 footer=위, 그 외=아래 */
+  menuPlacement?: "top" | "bottom";
   onBeforeLocaleChange?: () => void | boolean;
   variant?: "default" | "footer";
 }>) {
@@ -39,6 +45,7 @@ export function LocaleSwitcher({
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const opensUpward = (menuPlacement ?? (variant === "footer" ? "top" : "bottom")) === "top";
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const currentOption =
@@ -112,10 +119,8 @@ export function LocaleSwitcher({
         <div
           role="menu"
           aria-label={t("languageMenu")}
-          className={`right-0 z-50 min-w-44 overflow-hidden rounded-2xl border border-line-soft bg-white p-1.5 shadow-[0_18px_48px_rgba(38,27,24,0.14)] ${
-            variant === "footer"
-              ? "absolute bottom-[calc(100%+10px)]"
-              : "absolute top-[calc(100%+10px)]"
+          className={`${menuAlign === "start" ? "left-0" : "right-0"} z-50 min-w-44 overflow-hidden rounded-2xl border border-line-soft bg-white p-1.5 shadow-[0_18px_48px_rgba(38,27,24,0.14)] ${
+            opensUpward ? "absolute bottom-[calc(100%+10px)]" : "absolute top-[calc(100%+10px)]"
           }`}
         >
           {LOCALE_OPTIONS.map((option) => {

@@ -248,7 +248,13 @@ function LocalizedSiteHeader({
               {(showLanguageSwitcher && !effectiveAuthenticated) || sessionStatus === "guest" ? (
                 <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
                   {showLanguageSwitcher && !effectiveAuthenticated ? (
-                    <LocaleSwitcher labelStyle="name" dismissMenu className="justify-start px-1" />
+                    <LocaleSwitcher
+                      labelStyle="name"
+                      dismissMenu
+                      menuAlign="start"
+                      menuPlacement="top"
+                      className="justify-start px-1"
+                    />
                   ) : null}
                   {sessionStatus === "guest" ? (
                     <Link

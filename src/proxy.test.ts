@@ -23,6 +23,13 @@ async function runProxy(
   );
 }
 
+function getSavedLocale(response: Response) {
+  const localeCookie = response.headers
+    .getSetCookie()
+    .find((cookie) => cookie.startsWith("NEXT_LOCALE="));
+  return localeCookie ? localeCookie.split(";")[0].slice("NEXT_LOCALE=".length) : null;
+}
+
 describe("route access proxy", () => {
   it.each(["/dashboard", "/my-activities/create", "/my-page/edit"])(
     "redirects unauthenticated access to %s before rendering",
@@ -201,15 +208,49 @@ describe("route access proxy", () => {
     },
   );
 
-  it("keeps the saved tourist locale when a navigation points at another locale", async () => {
+  it("keeps the URL locale for a tourist who saved another locale", async () => {
     const response = await runProxy("/en/explore", {
       NEXT_LOCALE: "ja",
       [AUTH_COOKIES.accessToken]: "access-token",
       [AUTH_COOKIES.userType]: "TOURIST",
     });
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/ja/explore");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  // 다른 탭에서 한국어로 바꾸거나 버디 화면을 거쳐 쿠키가 ko가 돼도, 영어 링크는 영어로 열려야 한다
+  it("keeps an English page in English after Korean was saved elsewhere", async () => {
+    const response = await runProxy("/en/explore", { NEXT_LOCALE: "ko" });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    expect(getSavedLocale(response)).toBe("en");
+  });
+
+  it.each([
+    ["/ko/buddy", { NEXT_LOCALE: "en" }, {}],
+    ["/ko/buddy", {}, { "accept-language": "en-US,en;q=0.9" }],
+    ["/ko/buddy/onboarding", { NEXT_LOCALE: "ja", [AUTH_COOKIES.signupToken]: "signup-token" }, {}],
+  ] as const)(
+    "does not save Korean when a guest browses the Korean-only %s page",
+    async (pathname, cookies, headers) => {
+      const response = await runProxy(pathname, { ...cookies }, { ...headers });
+
+      expect(response.headers.get("location")).toBeNull();
+      expect(getSavedLocale(response)).toBeNull();
+    },
+  );
+
+  it("still saves Korean for a signed-in buddy", async () => {
+    const response = await runProxy("/ko/dashboard", {
+      NEXT_LOCALE: "en",
+      [AUTH_COOKIES.accessToken]: "access-token",
+      [AUTH_COOKIES.userType]: "BUDDY",
+    });
+
+    expect(response.status).toBe(200);
+    expect(getSavedLocale(response)).toBe("ko");
   });
 
   it("keeps a guest's selected locale across unprefixed page navigation", async () => {
@@ -419,8 +460,8 @@ describe("document indexing boundaries", () => {
     },
   );
   it("excludes locale redirects from indexing without dropping their query", async () => {
-    const response = await runProxy("/en/explore?utm_source=fixture", { NEXT_LOCALE: "ko" });
+    const response = await runProxy("/en/buddy?utm_source=fixture");
     expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
-    expect(response.headers.get("location")).toBe("http://localhost/ko/explore?utm_source=fixture");
+    expect(response.headers.get("location")).toBe("http://localhost/ko/buddy?utm_source=fixture");
   });
 });

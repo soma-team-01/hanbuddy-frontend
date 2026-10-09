@@ -38,13 +38,15 @@ function routeRequest(request: NextRequest) {
   const pathnameWithoutLocale = stripLocaleFromPathname(pathname);
   const userType = parseUserType(request.cookies.get(AUTH_COOKIES.userType)?.value);
   const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
-  const isKoreanOnly = userType === "BUDDY" || isBuddyEntryPath(pathnameWithoutLocale);
+  const isBuddy = userType === "BUDDY";
+  const isBuddyEntry = isBuddyEntryPath(pathnameWithoutLocale);
   const savedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
-  const locale = isKoreanOnly
-    ? "ko"
-    : isLocale(savedLocale)
-      ? savedLocale
-      : (pathnameLocale ?? routing.defaultLocale);
+  // 언어 쿠키는 브라우저 전체가 공유하므로, 주소에 적힌 언어를 먼저 따라야 탭마다 언어가 유지된다.
+  // 저장된 언어는 언어 없이 들어온 주소(/explore 등)에만 쓴다.
+  const locale =
+    isBuddy || isBuddyEntry
+      ? "ko"
+      : (pathnameLocale ?? (isLocale(savedLocale) ? savedLocale : routing.defaultLocale));
   // 옛 정적 랜딩 링크(/apply?event=…, /events/…)는 로그인 여부와 무관하게 회차 상세나 홈으로 보낸다
   const legacyTarget = resolveLegacyLandingPath(
     pathnameWithoutLocale,
@@ -80,7 +82,11 @@ function routeRequest(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (pathnameLocale) return handleI18nRouting(request);
+  if (pathnameLocale) {
+    const response = handleI18nRouting(request);
+    // 한국어 전용 버디 화면을 둘러본 것만으로 관광객이 고른 언어를 ko로 덮어쓰지 않는다
+    return isBuddyEntry && !isBuddy ? withoutLocaleCookie(response) : response;
+  }
 
   const redirectUrl = new URL(localizePathname(pathname, locale), request.url);
   redirectUrl.search = request.nextUrl.search;
@@ -89,6 +95,18 @@ function routeRequest(request: NextRequest) {
 
 function isBuddyEntryPath(pathname: string) {
   return pathname === "/buddy" || pathname.startsWith("/buddy/");
+}
+
+function withoutLocaleCookie(response: NextResponse) {
+  const setCookies = response.headers.getSetCookie();
+  const kept = setCookies.filter((cookie) => !cookie.startsWith(`${LOCALE_COOKIE_NAME}=`));
+  if (kept.length === setCookies.length) return response;
+
+  response.headers.delete("set-cookie");
+  for (const cookie of kept) response.headers.append("set-cookie", cookie);
+  // 렌더링 쪽에 전달되는 같은 쿠키 복사본도 함께 지운다
+  if (kept.length === 0) response.headers.delete("x-middleware-set-cookie");
+  return response;
 }
 
 function handleAdminRoute(request: NextRequest) {

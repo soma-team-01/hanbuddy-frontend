@@ -3,6 +3,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, type BreadcrumbItem } from "@/lib/seo/json-ld";
 import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -38,6 +39,8 @@ const H2 =
 const RUN_PHOTO =
   "relative mt-4 ml-9 aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-panel md:max-w-[560px] md:rounded-[1.5rem] lg:mt-0 lg:ml-0 lg:max-w-none";
 const RUN_PHOTO_SIZES = "(min-width: 1024px) 540px, (min-width: 768px) 640px, 85vw";
+
+const renderNowrap = (chunks: ReactNode) => <span className="whitespace-nowrap">{chunks}</span>;
 
 interface AboutPageProps {
   readonly params: Promise<{ locale: Locale }>;
@@ -387,7 +390,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                   </h3>
                   <p className="mt-2 text-base leading-7 text-muted">
                     {t.rich("timeline.next.description", {
-                      nowrap: (chunks) => <span className="whitespace-nowrap">{chunks}</span>,
+                      nowrap: renderNowrap,
                     })}
                   </p>
                 </div>
@@ -441,7 +444,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
             <p className={`${EYEBROW} text-primary`}>{t("team.eyebrow")}</p>
             <h2 id="about-team-title" className={`mt-4 ${H2}`}>
               {t.rich("team.title", {
-                nowrap: (chunks) => <span className="whitespace-nowrap">{chunks}</span>,
+                nowrap: renderNowrap,
               })}
             </h2>
             <p className="mt-5 text-base leading-7 text-muted sm:text-lg sm:leading-8">

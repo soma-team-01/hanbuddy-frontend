@@ -41,21 +41,16 @@ export function ActivityFeed({
 
   if (activitiesQuery.isPending) {
     return (
-      <div
-        data-testid="activity-grid"
-        className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      >
+      <div data-testid="activity-list" className="flex flex-col divide-y divide-line-soft">
         <p className="sr-only">{t("loading")}</p>
-        {Array.from({ length: 6 }, (_, index) => (
-          <div
-            key={index}
-            className="overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft"
-          >
-            <div className="aspect-[16/9] w-full animate-pulse bg-panel-raised" />
-            <div className="flex flex-col gap-3 p-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="flex gap-3.5 py-4 md:gap-5 md:py-5">
+            <div className="aspect-square w-[36%] max-w-44 shrink-0 animate-pulse rounded-xl bg-panel-raised md:w-44 md:max-w-none lg:w-52" />
+            <div className="flex flex-1 flex-col gap-2.5 pt-1">
+              <div className="h-3 w-1/3 animate-pulse rounded-full bg-panel-raised" />
               <div className="h-4 w-3/4 animate-pulse rounded-full bg-panel-raised" />
-              <div className="h-3.5 w-1/2 animate-pulse rounded-full bg-panel-raised" />
-              <div className="h-5 w-1/3 animate-pulse rounded-full bg-panel-raised" />
+              <div className="h-3.5 w-1/4 animate-pulse rounded-full bg-panel-raised" />
+              <div className="mt-auto ml-auto h-5 w-1/3 animate-pulse rounded-full bg-panel-raised" />
             </div>
           </div>
         ))}
@@ -88,19 +83,17 @@ export function ActivityFeed({
 
   return (
     <div className="flex flex-col gap-4">
-      <div
-        data-testid="activity-grid"
-        className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      >
+      {/* GetYourGuide처럼 모든 폭에서 구분선으로 나눈 가로형 행 목록 */}
+      <div data-testid="activity-list" className="flex flex-col divide-y divide-line-soft">
         {activities.map((activity, index) => (
           <Link
             key={activity.id}
             href={withActivityDate(`/activities/${activity.id}`, date)}
             onClick={() => trackSelection(activity.id, index + 1)}
-            className="motion-reveal motion-press block rounded-2xl"
+            className="motion-reveal motion-press block"
             style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
           >
-            <ActivityCard activity={activity} eagerImage={index === 0} />
+            <ActivityCard activity={activity} variant="row" eagerImage={index === 0} />
           </Link>
         ))}
       </div>

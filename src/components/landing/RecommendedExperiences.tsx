@@ -61,18 +61,18 @@ function RecommendedResults({
           <p className="sr-only">{t("recommended.loading")}</p>
           <div
             data-testid="recommended-track"
-            className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4"
+            className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-3 overflow-x-auto px-4 pb-2 md:-mx-6 md:scroll-px-6 md:gap-4 md:px-6 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0"
           >
             {Array.from({ length: RECOMMENDED_LIMIT }, (_, index) => (
               <div
                 key={index}
-                className="w-[78vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl border border-line-soft bg-canvas-soft md:w-auto md:max-w-none"
+                className="flex w-[44vw] max-w-[220px] shrink-0 snap-start flex-col gap-2.5 md:w-[30vw] md:max-w-[260px] lg:w-auto lg:max-w-none"
               >
-                <div className="aspect-[16/9] w-full animate-pulse bg-panel-raised" />
-                <div className="flex flex-col gap-3 p-4">
+                <div className="aspect-square w-full animate-pulse rounded-2xl bg-panel-raised" />
+                <div className="flex flex-col gap-2">
                   <div className="h-4 w-3/4 animate-pulse rounded-full bg-panel-raised" />
                   <div className="h-3.5 w-1/2 animate-pulse rounded-full bg-panel-raised" />
-                  <div className="h-5 w-1/3 animate-pulse rounded-full bg-panel-raised" />
+                  <div className="h-4 w-2/3 animate-pulse rounded-full bg-panel-raised" />
                 </div>
               </div>
             ))}
@@ -120,19 +120,19 @@ function RecommendedResults({
           </Link>
         </div>
 
-        {/* 모바일은 스냅 가로 스와이프(다음 카드가 살짝 보임), md 이상은 그리드 */}
+        {/* Airbnb 체험처럼 태블릿까지는 다음 카드가 살짝 보이는 스냅 가로 스와이프, lg 이상은 4열 그리드 */}
         <div
           data-testid="recommended-track"
-          className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-4"
+          className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-3 overflow-x-auto px-4 pb-2 md:-mx-6 md:scroll-px-6 md:gap-4 md:px-6 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0"
         >
           {activities.map((activity, index) => (
             <Link
               key={activity.id}
               href={withActivityDate(`/activities/${activity.id}`, date)}
-              className="motion-reveal motion-press block w-[78vw] max-w-[320px] shrink-0 snap-start rounded-2xl md:w-auto md:max-w-none"
+              className="motion-reveal motion-press block w-[44vw] max-w-[220px] shrink-0 snap-start rounded-2xl md:w-[30vw] md:max-w-[260px] lg:w-auto lg:max-w-none"
               style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
             >
-              <ActivityCard activity={activity} eagerImage={index === 0} />
+              <ActivityCard activity={activity} variant="tile" eagerImage={index === 0} />
             </Link>
           ))}
         </div>

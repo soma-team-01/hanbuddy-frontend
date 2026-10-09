@@ -79,7 +79,7 @@ describe("RecommendedExperiences", () => {
     expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
   });
 
-  it("scrolls cards horizontally with snapping on mobile and keeps the grid from md up", async () => {
+  it("scrolls cards horizontally with snapping up to tablet and uses a grid from lg up", async () => {
     mockedGetTouristActivities.mockResolvedValue({
       status: "success",
       activities: [1, 2, 3, 4].map(createActivity),
@@ -89,9 +89,11 @@ describe("RecommendedExperiences", () => {
     await screen.findByText("HanBuddy activity 1");
 
     const track = screen.getByTestId("recommended-track");
-    expect(track).toHaveClass("snap-x", "overflow-x-auto", "md:grid", "lg:grid-cols-4");
+    expect(track).toHaveClass("snap-x", "overflow-x-auto", "lg:grid", "lg:grid-cols-4");
     const card = screen.getByRole("link", { name: /HanBuddy activity 1/ });
-    expect(card).toHaveClass("snap-start", "shrink-0", "w-[78vw]", "md:w-auto");
+    // Airbnb처럼 모바일 한 화면에 두 장 남짓이 보이도록 좁은 타일을 쓴다
+    expect(card).toHaveClass("snap-start", "shrink-0", "w-[44vw]", "md:w-[30vw]", "lg:w-auto");
+    expect(card.querySelector("article")).toHaveAttribute("data-variant", "tile");
     // 44px 터치 타깃
     expect(screen.getByRole("link", { name: /View all experiences/ })).toHaveClass("min-h-11");
   });

@@ -16,13 +16,12 @@ describe("Buddy-attributable cancellation terms", () => {
         venue,
         safety,
         weather,
-        previousDate,
       } = policyRevisionExpectations[locale].cancellation;
       const operation = await getPolicyDocument("buddy-operation-terms", locale);
       const settlement = await getPolicyDocument("buddy-commission-settlement-policy", locale);
       for (const doc of [operation, settlement]) {
         const { container } = render(<PolicyDocument locale={locale} source={doc.source} />);
-        for (const phrase of [timing, discretion, "20%", previousDate])
+        for (const phrase of [timing, discretion, "20%"])
           expect(container).toHaveTextContent(phrase);
         expect(container).not.toHaveTextContent(minimum);
         expect(doc.version).toBe("2026-10-08");

@@ -6,8 +6,6 @@ These Terms apply alongside the Terms of Service to Buddies listing and providin
 
 For the earlier revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date. Advance notice of fee changes, protection for confirmed bookings and the amendment procedures in the Terms of Service continue to apply.
 
-The application date and transitional arrangements for the proposed cancellation amendment remain to be determined separately. Neither the document version nor the effective date of the earlier revision establishes the effective date or retroactive application of this proposed cancellation amendment.
-
 ## Article 1. Eligibility and Approval
 
 1. Buddies must be at least 19 and accurately submit identity, profile, contact, settlement and activity-review information requested by the Company.

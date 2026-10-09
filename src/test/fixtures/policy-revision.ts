@@ -8,7 +8,6 @@ interface PolicyRevisionExpectations {
     venue: string;
     safety: string;
     weather: string;
-    previousDate: string;
   };
   settlement: {
     deadline: string;
@@ -60,13 +59,6 @@ const cancellation = {
     "嚴重安全危險",
   ),
   weather: localized("기상 상황", "weather", "天候", "天气", "天氣"),
-  previousDate: localized(
-    "기존 개정의 시행일",
-    "effective date of the earlier revision",
-    "従前の改訂の施行日",
-    "既有修订的生效日期",
-    "既有修訂的生效日期",
-  ),
 };
 
 const settlement = {
@@ -103,7 +95,6 @@ function forLocale(locale: Locale): PolicyRevisionExpectations {
       venue: cancellation.venue[locale],
       safety: cancellation.safety[locale],
       weather: cancellation.weather[locale],
-      previousDate: cancellation.previousDate[locale],
     },
     settlement: {
       deadline: settlement.deadline[locale],

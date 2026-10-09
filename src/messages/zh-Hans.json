@@ -598,7 +598,7 @@
     },
     "team": {
       "eyebrow": "认识团队",
-      "title": "我们是 ZeroOne，三位来自首尔的朋友，也是 HanBuddy 的第一批好友。",
+      "title": "我们是 <nowrap>ZeroOne</nowrap>，三位来自首尔的朋友，也是 HanBuddy 的第一批好友。",
       "description": "最初的比赛之夜由我们亲自举办。现在我们运营平台、回复消息，也依然会出现在看台上。",
       "backed": "HanBuddy 是韩国科学技术信息通信部主办的国家软件人才计划 AI·SW Maestro 第 17 期 ZeroOne 团队的官方项目。",
       "linkedin": "LinkedIn",

@@ -440,7 +440,9 @@ export default async function AboutPage({ params }: AboutPageProps) {
           <div>
             <p className={`${EYEBROW} text-primary`}>{t("team.eyebrow")}</p>
             <h2 id="about-team-title" className={`mt-4 ${H2}`}>
-              {t("team.title")}
+              {t.rich("team.title", {
+                nowrap: (chunks) => <span className="whitespace-nowrap">{chunks}</span>,
+              })}
             </h2>
             <p className="mt-5 text-base leading-7 text-muted sm:text-lg sm:leading-8">
               {t("team.description")}

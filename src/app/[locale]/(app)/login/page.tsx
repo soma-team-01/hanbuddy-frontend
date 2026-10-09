@@ -1,4 +1,3 @@
-import { APP_ORIGIN } from "@/lib/site";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +10,7 @@ import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getPolicyPath } from "@/lib/policy-routes";
 import { ReviewLoginForm } from "./review-login-form";
+import { pageAlternates } from "@/lib/seo/metadata";
 
 interface LoginPageProps {
   readonly params: Promise<{ locale: Locale }>;
@@ -26,16 +26,7 @@ export async function generateMetadata({
   return {
     title: t("metadataTitle"),
     description: t("metadataDescription"),
-    alternates: {
-      canonical: `${APP_ORIGIN}/${locale}/login`,
-      languages: {
-        en: `${APP_ORIGIN}/en/login`,
-        ko: `${APP_ORIGIN}/ko/login`,
-        ja: `${APP_ORIGIN}/ja/login`,
-        "zh-Hans": `${APP_ORIGIN}/zh-Hans/login`,
-        "zh-Hant": `${APP_ORIGIN}/zh-Hant/login`,
-      },
-    },
+    alternates: pageAlternates(locale, "/login"),
   };
 }
 

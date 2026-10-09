@@ -68,6 +68,10 @@ describe("SiteHeader", () => {
       "href",
       "/en/about",
     );
+    expect(within(primaryNavigation).getByRole("link", { name: "FAQ" })).toHaveAttribute(
+      "href",
+      "/en/faq",
+    );
     expect(
       within(primaryNavigation).queryByRole("link", { name: "My Page" }),
     ).not.toBeInTheDocument();
@@ -123,6 +127,29 @@ describe("SiteHeader", () => {
 
     expect(screen.getByRole("link", { name: "HanBuddy" })).toHaveAttribute("href", "/en");
     expect(screen.queryByRole("link", { name: "Host an experience" })).not.toBeInTheDocument();
+    const primaryNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
+    expect(within(primaryNavigation).getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      "/en/about",
+    );
+    expect(within(primaryNavigation).getByRole("link", { name: "FAQ" })).toHaveAttribute(
+      "href",
+      "/en/faq",
+    );
+  });
+
+  it("lists About and FAQ in the opened mobile menu too", () => {
+    mockedUsePathname.mockReturnValue("/");
+    renderWithQueryClient(<SiteHeader />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByRole("link", { name: "Explore" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      "/en/about",
+    );
+    expect(within(dialog).getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/en/faq");
   });
 
   it("does not offer role switching to authenticated accounts", () => {
@@ -274,8 +301,8 @@ describe("SiteHeader", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "로그인" }));
-    expect(screen.getByRole("dialog", { name: "버디 여정을 시작해 보세요" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Google로 버디 시작하기" })).toHaveAttribute(
+    expect(screen.getByRole("dialog", { name: "Google 계정으로 시작해요" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Google 계정으로 계속하기" })).toHaveAttribute(
       "href",
       "/api/auth/google/start?locale=ko&intent=buddy",
     );
@@ -369,8 +396,9 @@ describe("SiteHeader", () => {
   it("localizes the site navigation and mobile menu in Korean", () => {
     renderWithQueryClient(<SiteHeader role="tourist" />, { locale: "ko" });
 
-    expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/ko/explore");
+    expect(screen.getByRole("link", { name: "둘러보기" })).toHaveAttribute("href", "/ko/explore");
     expect(screen.getByRole("link", { name: "소개" })).toHaveAttribute("href", "/ko/about");
+    expect(screen.getByRole("link", { name: "자주 묻는 질문" })).toHaveAttribute("href", "/ko/faq");
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(
       "href",
       "/ko/applications",

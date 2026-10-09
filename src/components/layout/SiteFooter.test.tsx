@@ -100,6 +100,15 @@ describe("SiteFooter", () => {
     expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/about`);
   });
 
+  it.each([
+    ["en", "FAQ"],
+    ["ko", "자주 묻는 질문"],
+  ] as const)("links the FAQ page for %s", async (locale, label) => {
+    renderWithIntl(await SiteFooter({ locale }), { locale });
+
+    expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/faq`);
+  });
+
   it("groups compact mobile links and retains desktop touch targets", async () => {
     renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });
 
@@ -131,7 +140,7 @@ describe("SiteFooter", () => {
 
   it.each([
     ["en", "Email HanBuddy", "Open HanBuddy on Facebook", "Open HanBuddy on Instagram"],
-    ["ko", "HanBuddy에 이메일 보내기", "HanBuddy Facebook 열기", "HanBuddy Instagram 열기"],
+    ["ko", "한버디에 이메일 보내기", "한버디 페이스북 열기", "한버디 인스타그램 열기"],
   ] as const)(
     "connects the shared contact icons for %s",
     async (locale, emailLabel, facebookLabel, instagramLabel) => {
@@ -151,7 +160,7 @@ describe("SiteFooter", () => {
       expect(instagramLink).toHaveAttribute("href", "https://www.instagram.com/hanbuddy_kr/");
 
       const whatsappLink = screen.getByRole("link", {
-        name: locale === "ko" ? "왓츠앱으로 HanBuddy와 대화하기" : "Chat with HanBuddy on WhatsApp",
+        name: locale === "ko" ? "왓츠앱으로 한버디와 대화하기" : "Chat with HanBuddy on WhatsApp",
       });
       expect(
         emailLink.compareDocumentPosition(whatsappLink) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -164,7 +173,7 @@ describe("SiteFooter", () => {
 
   it.each([
     ["en", "Chat with HanBuddy on WhatsApp", "Chat with HanBuddy on KakaoTalk"],
-    ["ko", "왓츠앱으로 HanBuddy와 대화하기", "카카오톡으로 HanBuddy와 대화하기"],
+    ["ko", "왓츠앱으로 한버디와 대화하기", "카카오톡으로 한버디와 대화하기"],
   ] as const)("links messenger contacts in a new tab for %s", async (locale, whatsapp, kakao) => {
     renderWithIntl(await SiteFooter({ locale }), { locale });
 

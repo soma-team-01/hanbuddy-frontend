@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "../styles/fonts/noto-sans-kr.css";
 
-:root {
+.font-noto-sans-kr {
   --font-noto-sans-kr: "Noto Sans KR";
 }
 
@@ -243,6 +243,23 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+}
+
+/*
+ * 본문은 마지막 줄에 "with you." 한 단어나 "餐/食。"의 한 글자만 남지 않게 마지막 몇 줄을 다시 나눈다.
+ * balance와 달리 긴 문단에도 비용이 적다. 미지원 브라우저는 일반 줄바꿈으로 동작한다.
+ */
+p,
+dd {
+  text-wrap: pretty;
+}
+
+/*
+ * 영문 대문자 eyebrow에 맞춘 넓은 자간(0.2em 이상)이 한글·가나·한자에서는 "자 주  묻 는"처럼 글자를 흩어 놓는다.
+ * 레이어 밖 규칙이라 Tailwind tracking-* 유틸리티보다 우선한다.
+ */
+:is(:lang(ko), :lang(ja), :lang(zh)) .uppercase {
+  letter-spacing: 0.08em;
 }
 
 :focus-visible {

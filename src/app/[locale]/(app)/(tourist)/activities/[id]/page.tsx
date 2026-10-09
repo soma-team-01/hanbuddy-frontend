@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { JsonLd } from "@/components/seo/JsonLd";
 import type { Locale } from "@/i18n/routing";
 import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { getPublicActivity, PublicActivityError } from "@/lib/server/public-activities";
-import { publicPageMetadata, unavailableMetadata } from "@/lib/seo/metadata";
+import { getPublicActivityReviewSummary } from "@/lib/server/public-reviews";
+import { activityBreadcrumbs } from "@/lib/seo/activity-breadcrumbs";
+import { activityProductJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { activityShareImage, publicPageMetadata, unavailableMetadata } from "@/lib/seo/metadata";
 import { ActivityDetailContent } from "./activity-detail-content";
 
 type PageProps = Readonly<{
@@ -29,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       path: `/activities/${activity.activityId}`,
       title: activity.title,
       description: activity.description,
-      image: activity.thumbnailImageUrl,
+      image: activityShareImage(activity.activityId, activity.title),
     });
   } catch (error) {
     if (error instanceof PublicActivityError && error.kind === "unavailable")
@@ -41,14 +46,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ActivityDetailPage({ params, searchParams }: PageProps) {
   const { id, locale } = await params;
   const query = await searchParams;
-  const activity = await readActivity(id, locale);
+  // 후기 미리보기도 함께 받아 첫 HTML에 넣는다(크롤러가 후기를 읽게). 실패해도 페이지는 그대로 그린다.
+  const [activity, navT, initialReviews] = await Promise.all([
+    readActivity(id, locale),
+    getTranslations({ locale, namespace: "Navigation" }),
+    getPublicActivityReviewSummary(id, locale),
+  ]);
+  const breadcrumbs = activityBreadcrumbs(
+    { id: activity.activityId, title: activity.title },
+    (key) => navT(key),
+  );
   return (
-    <ActivityDetailContent
-      key={`${locale}:${id}`}
-      activityId={id}
-      initialActivity={activity}
-      preferredDate={typeof query?.date === "string" ? query.date : undefined}
-      emailLoginEnabled={isReviewLoginEnabled()}
-    />
+    <>
+      <JsonLd data={activityProductJsonLd(locale, activity)} />
+      <JsonLd data={breadcrumbJsonLd(locale, breadcrumbs)} />
+      <ActivityDetailContent
+        key={`${locale}:${id}`}
+        activityId={id}
+        initialActivity={activity}
+        initialReviews={initialReviews}
+        preferredDate={typeof query?.date === "string" ? query.date : undefined}
+        emailLoginEnabled={isReviewLoginEnabled()}
+      />
+    </>
   );
 }

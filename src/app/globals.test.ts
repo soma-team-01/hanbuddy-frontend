@@ -77,6 +77,22 @@ describe("global korean line breaking", () => {
   });
 });
 
+describe("CJK line and letter spacing", () => {
+  it("avoids a lone last word or character in body text", () => {
+    const body = stylesheet.match(/\np,\s*dd\s*\{([^}]*)\}/)?.[1];
+
+    expect(body).toContain("text-wrap: pretty");
+  });
+
+  it("tightens the wide eyebrow letter spacing for Korean, Japanese and Chinese", () => {
+    const eyebrow = stylesheet.match(
+      /\n:is\(:lang\(ko\),\s*:lang\(ja\),\s*:lang\(zh\)\)\s*\.uppercase\s*\{([^}]*)\}/,
+    )?.[1];
+
+    expect(eyebrow).toContain("letter-spacing: 0.08em");
+  });
+});
+
 describe("landing hero media styles", () => {
   it("times the hero slideshow for five photos at five seconds each", () => {
     const cycle = stylesheet.match(/@keyframes hero-media-cycle\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";

@@ -1,15 +1,20 @@
-import { sharePreview } from "@/lib/seo/metadata";
-import { APP_ORIGIN } from "@/lib/site";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { organizationJsonLd } from "@/lib/seo/json-ld";
+import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
+import { isActivitySearchDate } from "@/lib/activity-booking-window";
+import { getPublicActivities } from "@/lib/server/public-activities";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
 import { ActivityDateFilter } from "@/components/activity/ActivityDateFilter";
 import { MailIcon } from "@/components/ui/icons";
 import { LandingAnalytics, LandingCtaLink } from "@/components/analytics/LandingAnalytics";
 import { TrackedInquiryLink } from "@/components/analytics/TrackedInquiryLink";
+import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
@@ -81,16 +86,7 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
       title: t("metadataTitle"),
       description: t("metadataDescription"),
     }),
-    alternates: {
-      canonical: `${APP_ORIGIN}/${locale}`,
-      languages: {
-        en: `${APP_ORIGIN}/en`,
-        ko: `${APP_ORIGIN}/ko`,
-        ja: `${APP_ORIGIN}/ja`,
-        "zh-Hans": `${APP_ORIGIN}/zh-Hans`,
-        "zh-Hant": `${APP_ORIGIN}/zh-Hant`,
-      },
-    },
+    alternates: pageAlternates(locale, ""),
   };
 }
 
@@ -98,10 +94,30 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
   const { locale } = await params;
   const query = await searchParams;
   const date = Array.isArray(query?.date) ? query.date.join(",") : query?.date;
-  const [t, cookieStore] = await Promise.all([
+  // 추천 활동도 서버에서 먼저 받아 첫 HTML에 카드로 넣는다. 실패하면 undefined로 두고 브라우저가 다시 불러온다.
+  const validDate = !date || isActivitySearchDate(date);
+  const [t, aboutT, cookieStore, initialActivities] = await Promise.all([
     getTranslations({ locale, namespace: "Landing" }),
+    getTranslations({ locale, namespace: "About" }),
     cookies(),
+    validDate ? getPublicActivities(locale, date || undefined).catch(() => undefined) : undefined,
   ]);
+
+  // 후기 아래 About·FAQ 미리보기. About의 실제 숫자와 예약 전에 가장 많이 묻는 질문 세 개를 먼저 보여준다.
+  const aboutStats = (["runs", "rating", "guests"] as const).map((key) => {
+    // "4.9 / 5"처럼 만점 표기가 붙은 값은 앞 숫자만 크게, "/ 5"는 작게 붙여 좁은 칸에서도 한 줄로 둔다.
+    const [lead, ...rest] = aboutT(`stats.items.${key}.value`).split(" / ");
+    return {
+      key,
+      lead,
+      scale: rest.length > 0 ? `/ ${rest.join(" / ")}` : null,
+      label: aboutT(`stats.items.${key}.label`),
+    };
+  });
+  const faqPreview = (["pay", "meet", "dietary"] as const).map((key) => ({
+    key,
+    question: aboutT(`faq.items.${key}.question`),
+  }));
   // 로그인한 관광객에게는 로그인 유도 대신 탐색으로 보낸다 (layout.tsx와 같은 판별 규칙)
   const userType = parseUserType(cookieStore.get(AUTH_COOKIES.userType)?.value);
   const isTourist =
@@ -109,6 +125,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <JsonLd data={organizationJsonLd(locale)} />
       <LandingAnalytics locale={locale} />
       {/* 모바일도 사진 위에 제목·검색·소개를 함께 배치한다. */}
       <section
@@ -146,7 +163,11 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
             <h1 className="max-w-3xl font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.06em] text-on-primary md:text-5xl md:leading-[1.04] lg:text-[clamp(3.25rem,5vw,5.25rem)]">
               {t("headline")}
             </h1>
-            <p className="mx-auto mt-6 hidden max-w-2xl text-base leading-7 text-white/80 md:block">
+            {/* 보조 문구는 슬로건의 둘째 줄처럼 붙이고, 설명 문단과는 간격과 굵기로 떼어 놓는다. */}
+            <p className="mx-auto mt-3 max-w-2xl font-display text-sm font-bold text-on-primary md:mt-4 md:text-2xl md:leading-snug md:font-semibold md:tracking-[-0.02em]">
+              {t("tagline")}
+            </p>
+            <p className="mx-auto mt-6 hidden max-w-xl text-base leading-7 text-white/75 md:block">
               {t("description")}
             </p>
             <div className="relative z-20 mt-5 flex justify-center text-left md:mt-7">
@@ -169,7 +190,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
         </PageContainer>
       </section>
 
-      <RecommendedExperiences date={date} />
+      <RecommendedExperiences date={date} initialActivities={initialActivities} />
 
       <section
         data-landing-section="booking_steps"
@@ -291,6 +312,113 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
           </div>
         </PageContainer>
       </section>
+
+      {/* About·FAQ 미리보기. 모바일은 위아래, 1024px부터 나란히. */}
+      <div className="bg-canvas-soft pb-14 md:pb-20">
+        <PageContainer className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-12">
+          {/* About: 깊은 브랜드 레드 위에 실제 숫자 3개를 크게 */}
+          <section
+            aria-labelledby="learn-more-about"
+            className="relative overflow-hidden rounded-[1.75rem] bg-primary-strong p-5 text-on-primary-strong shadow-[0_18px_40px_rgba(143,47,40,0.22)] md:p-8 lg:p-10"
+          >
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -top-28 -right-24 size-64 rounded-full bg-primary opacity-45 md:size-80"
+            />
+            <div className="relative flex items-start justify-between gap-4">
+              <h2
+                id="learn-more-about"
+                className="pt-1 font-display text-xl leading-snug font-extrabold tracking-[-0.03em] md:text-2xl lg:text-3xl"
+              >
+                {t("learnMore.about.title")}
+              </h2>
+              {/* 밝은 낮 사진 1장을 작게. 얼굴이 크게 나오지 않도록 4:3 썸네일로 둔다. */}
+              <div className="relative aspect-[4/3] w-[76px] shrink-0 -rotate-3 overflow-hidden rounded-xl bg-panel ring-2 ring-on-primary-strong/90 md:w-32 lg:w-40">
+                <Image
+                  src="/images/landing/kbo-0726-group.webp"
+                  alt={aboutT("timeline.items.july.imageAlt")}
+                  fill
+                  sizes="(min-width: 1024px) 160px, (min-width: 768px) 128px, 76px"
+                  className="object-cover object-[70%_45%]"
+                />
+              </div>
+            </div>
+
+            <dl className="relative mt-5 grid grid-cols-3 divide-x divide-on-primary-strong/20 md:mt-8">
+              {aboutStats.map((stat) => (
+                // 화면에는 숫자를 위에 두되(flex-col-reverse), 마크업 순서는 dt → dd를 지킨다.
+                <div
+                  key={stat.key}
+                  className="flex min-w-0 flex-col-reverse justify-end gap-1.5 px-3 first:pl-0 last:pr-0 md:px-5"
+                >
+                  <dt className="text-xs leading-4 text-on-primary-strong/80 md:text-sm md:leading-5">
+                    {stat.label}
+                  </dt>
+                  <dd className="font-display text-[1.75rem] leading-none font-extrabold tracking-[-0.04em] whitespace-nowrap md:text-5xl">
+                    {stat.lead}
+                    {stat.scale ? (
+                      <span className="ml-1 text-sm font-bold tracking-normal text-on-primary-strong/80 md:text-lg">
+                        {stat.scale}
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <Link
+              href="/about"
+              className="relative mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-canvas-soft px-5 font-display text-sm font-bold text-primary-strong transition-colors hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-primary-strong md:mt-8"
+            >
+              {t("learnMore.about.button")}
+              <span aria-hidden>→</span>
+            </Link>
+          </section>
+
+          {/* FAQ: 상자 없이 구분선 목록. 각 질문은 FAQ 페이지의 해당 답으로 바로 간다. */}
+          <section aria-labelledby="learn-more-faq" className="flex flex-col lg:justify-center">
+            <h2
+              id="learn-more-faq"
+              className="font-display text-xl leading-snug font-extrabold tracking-[-0.03em] text-ink md:text-2xl lg:text-3xl"
+            >
+              {t("learnMore.faq.title")}
+            </h2>
+            <ol className="mt-3 divide-y divide-line-soft border-y border-line-soft md:mt-5">
+              {faqPreview.map((item, index) => (
+                <li key={item.key}>
+                  <Link
+                    href={`/faq#faq-${item.key}`}
+                    className="group flex min-h-[52px] items-center gap-3 py-2 text-ink transition-colors hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong md:min-h-16 md:gap-4"
+                  >
+                    <span
+                      aria-hidden
+                      className="w-6 shrink-0 font-display text-xs font-extrabold tracking-[0.08em] text-primary tabular-nums"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[0.95rem] leading-6 font-medium md:text-lg">
+                      {item.question}
+                    </span>
+                    <span
+                      aria-hidden
+                      className="shrink-0 text-lg text-primary transition-transform group-hover:translate-x-1"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+            <Link
+              href="/faq"
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 self-start font-display text-sm font-bold text-primary-strong transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong md:mt-4"
+            >
+              {t("learnMore.faq.button")}
+              <span aria-hidden>→</span>
+            </Link>
+          </section>
+        </PageContainer>
+      </div>
 
       <section
         data-landing-section="contact"

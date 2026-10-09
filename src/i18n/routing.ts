@@ -12,6 +12,9 @@ export const routing = defineRouting({
   locales: LOCALES,
   defaultLocale: "en",
   localePrefix: "always",
+  // 언어별 대체 주소는 각 페이지 메타데이터(<link hreflang>)에서 선언한다. 미들웨어가 붙이는 Link 헤더는
+  // x-default를 리다이렉트되는 접두사 없는 주소로 잡고, 버디 화면처럼 리다이렉트되는 언어까지 선언한다.
+  alternateLinks: false,
   localeCookie: {
     name: LOCALE_COOKIE_NAME,
     maxAge: 60 * 60 * 24 * 365,

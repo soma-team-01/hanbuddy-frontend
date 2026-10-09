@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PolicyPageContent } from "@/components/policy/PolicyPageContent";
 import { isLocale } from "@/i18n/routing";
 import { isPolicySlug, POLICY_SLUGS } from "@/lib/policy-routes";
+import { pageAlternates } from "@/lib/seo/metadata";
 import { getPolicyDocument } from "@/lib/server/policy-content";
 
 interface PolicyPageProps {
@@ -21,6 +22,7 @@ export async function generateMetadata({ params }: PolicyPageProps): Promise<Met
   return {
     title: `${policy.title} | HanBuddy`,
     description: policy.title,
+    alternates: pageAlternates(locale, `/policies/${slug}`),
   };
 }
 

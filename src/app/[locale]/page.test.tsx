@@ -1,9 +1,11 @@
 import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
+import { getPublicActivities, PublicActivityError } from "@/lib/server/public-activities";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
+import { extractJsonLd } from "@/test/json-ld";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import LandingPage, { generateMetadata } from "./page";
 vi.mock("next/navigation", async (original) => ({
@@ -15,6 +17,34 @@ vi.mock("next/navigation", async (original) => ({
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivities: vi.fn(),
 }));
+
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/server/public-activities", async (original) => ({
+  ...(await original<typeof import("@/lib/server/public-activities")>()),
+  getPublicActivities: vi.fn(),
+}));
+
+const serverActivity = {
+  activityId: 42,
+  buddyId: 7,
+  title: "Bukchon Hidden Gems",
+  description: "Walk through quiet alleys with a local buddy.",
+  totalDurationMinutes: 90,
+  thumbnailImageUrl: "/images/activities/hanok-hero.jpg",
+  buddyName: "Jihoon Kim",
+  buddyProfileImageUrl: null,
+  meetingPlaceId: "ChIJtest-place-id",
+  meetingPointName: "Anguk Station Exit 2",
+  price: 45000,
+  currency: "KRW",
+  displayPrice: {
+    price: 45000,
+    discountedPrice: null,
+    currency: "KRW",
+    exchangeRateDate: null,
+    estimated: false,
+  },
+} as const;
 
 const cookieJar = vi.hoisted(() => new Map<string, string>());
 
@@ -53,6 +83,10 @@ describe("LandingPage", () => {
   });
   beforeEach(() => {
     cookieJar.clear();
+    // 기본은 서버 조회 실패: 브라우저가 지금처럼 다시 불러오는 경로를 그대로 검증한다.
+    vi.mocked(getPublicActivities).mockReset();
+    vi.mocked(getPublicActivities).mockRejectedValue(new PublicActivityError("unavailable"));
+    vi.mocked(getTouristActivities).mockReset();
     vi.mocked(getTouristActivities).mockResolvedValue({
       status: "success",
       activities: [],
@@ -61,7 +95,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "Experience Korea like a local!", "Explore experiences"],
-    ["ko", "현지인처럼 한국을 경험하세요!", "액티비티 둘러보기"],
+    ["ko", "한국인 친구와 함께라서 더 즐거운 서울", "활동 둘러보기"],
   ] as const)(
     "renders localized landing content and CTA for %s",
     async (locale, headline, explore) => {
@@ -76,7 +110,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "Log in to book"],
-    ["ko", "예약하려면 로그인"],
+    ["ko", "로그인하고 예약하기"],
   ] as const)("links the booking CTA to login for %s", async (locale, cta) => {
     await renderLanding(locale);
 
@@ -85,7 +119,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "The moments that stay with you.", "5 out of 5 stars"],
-    ["ko", "오래 기억에 남는 순간.", "별점 5점 만점에 5점"],
+    ["ko", "다녀온 분들이 남긴 말", "별점 5점 만점에 5점"],
   ] as const)(
     "renders anonymous positive reviews with ratings for %s",
     async (locale, title, starLabel) => {
@@ -113,10 +147,10 @@ describe("LandingPage", () => {
     ],
     [
       "ko",
-      "세 단계로 간단하게 신청해 보세요.",
-      "오래 기억에 남는 순간.",
-      "HanBuddy에 대해 더 궁금하다면",
-      "무엇이든 이메일로 물어보세요",
+      "신청은 세 단계면 충분해요",
+      "다녀온 분들이 남긴 말",
+      "한버디에 궁금한 점이 있다면",
+      "이메일로 문의하기",
       "mailto:contact@hanbuddy.kr",
     ],
   ] as const)(
@@ -133,7 +167,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "Real HanBuddy moments in Seoul"],
-    ["ko", "서울에서 만나는 HanBuddy의 실제 순간"],
+    ["ko", "한버디 활동 현장 사진"],
   ] as const)("localizes the hero experience context for %s", async (locale, ariaLabel) => {
     await renderLanding(locale);
 
@@ -209,15 +243,63 @@ describe("LandingPage", () => {
     );
     expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass("min-w-0");
     expect(screen.queryByTestId("hero-highlights-mobile")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Local perspective")).toHaveLength(1);
-    expect(within(heroRegion).getByText("Local perspective")).toHaveClass("text-on-primary");
-    expect(within(heroRegion).getByText(/Go beyond the itinerary/)).toHaveClass(
+    expect(screen.getAllByText("A local buddy")).toHaveLength(1);
+    expect(within(heroRegion).getByText("A local buddy")).toHaveClass("text-on-primary");
+    // 슬로건 보조 문구는 모바일에서도 보이고, 긴 설명은 태블릿부터 보인다
+    expect(
+      within(heroRegion).getByText("Go with a local buddy. Leave with new friends."),
+    ).not.toHaveClass("hidden");
+    expect(within(heroRegion).getByText(/HanBuddy connects you with Koreans/)).toHaveClass(
       "hidden",
       "md:block",
     );
     expect(
       within(heroRegion).queryByRole("link", { name: /Explore experiences/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["en", "About HanBuddy", "Read the FAQ"],
+    ["ko", "한버디 소개 보기", "자주 묻는 질문 보기"],
+  ] as const)(
+    "links to the About story and the FAQ between the reviews and contact for %s",
+    async (locale, aboutLink, faqLink) => {
+      await renderLanding(locale);
+
+      const about = screen.getByRole("link", { name: aboutLink });
+      const faq = screen.getByRole("link", { name: faqLink });
+      expect(about).toHaveAttribute("href", `/${locale}/about`);
+      expect(faq).toHaveAttribute("href", `/${locale}/faq`);
+
+      // 상단 메뉴에서 빠진 About·FAQ는 후기를 읽은 뒤, 문의 앞에서 이어진다
+      const reviews = document.querySelector("[data-landing-section='guest_reviews']")!;
+      const contact = document.querySelector("[data-landing-section='contact']")!;
+      for (const link of [about, faq]) {
+        expect(
+          reviews.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(
+          contact.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_PRECEDING,
+        ).toBeTruthy();
+      }
+    },
+  );
+
+  it("previews the guest numbers and the questions guests ask most before booking", async () => {
+    await renderLanding("en");
+
+    expect(screen.getByText("game nights since June 2026")).toBeInTheDocument();
+    expect(screen.getByText("guests so far")).toBeInTheDocument();
+    for (const [question, key] of [
+      ["How do I pay?", "pay"],
+      ["Where do we meet?", "meet"],
+      ["I have dietary restrictions. Is that a problem?", "dietary"],
+    ] as const) {
+      expect(screen.getByRole("link", { name: question })).toHaveAttribute(
+        "href",
+        `/en/faq#faq-${key}`,
+      );
+    }
   });
 
   it("sends a logged-in tourist to explore instead of asking them to log in", async () => {
@@ -246,7 +328,7 @@ describe("LandingPage", () => {
 
   it.each([
     ["en", "HanBuddy | Experience Korea like a local!", "/en"],
-    ["ko", "HanBuddy | 현지인처럼 한국을 경험하세요!", "/ko"],
+    ["ko", "HanBuddy(한버디) | 한국인 버디와 함께 가는 서울 로컬 활동", "/ko"],
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
@@ -258,5 +340,50 @@ describe("LandingPage", () => {
       images: [{ url: "https://hanbuddy.kr/images/og/hanbuddy-share.jpg", width: 1200 }],
     });
     expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
+  });
+
+  it("publishes Organization and WebSite structured data without a search action", async () => {
+    await renderLanding("en");
+
+    const [data, ...rest] = extractJsonLd(document.body.innerHTML);
+    expect(rest).toEqual([]);
+    expect(data["@graph"]).toEqual([
+      expect.objectContaining({
+        "@type": "Organization",
+        name: "HanBuddy",
+        alternateName: "한버디",
+        legalName: "제로원",
+        email: "contact@hanbuddy.kr",
+      }),
+      expect.objectContaining({ "@type": "WebSite", url: "https://hanbuddy.kr/en" }),
+    ]);
+    expect(JSON.stringify(data)).not.toContain("SearchAction");
+  });
+
+  it("puts the recommended activity cards into the first HTML from the server", async () => {
+    vi.mocked(getPublicActivities).mockResolvedValue([serverActivity]);
+    vi.mocked(getTouristActivities).mockReturnValue(new Promise(() => {}));
+
+    await renderLanding("en");
+
+    // 브라우저 요청이 끝나기 전에도 서버가 받은 카드가 이미 그려져 있다.
+    expect(screen.getByRole("link", { name: /Bukchon Hidden Gems/ })).toHaveAttribute(
+      "href",
+      "/en/activities/42",
+    );
+    expect(screen.queryByText("Loading recommended experiences...")).not.toBeInTheDocument();
+    expect(getPublicActivities).toHaveBeenCalledWith("en", undefined);
+  });
+
+  it("falls back to the browser request when the server request fails", async () => {
+    vi.mocked(getTouristActivities).mockResolvedValue({
+      status: "success",
+      activities: [serverActivity],
+    });
+
+    await renderLanding("en");
+
+    expect(await screen.findByRole("link", { name: /Bukchon Hidden Gems/ })).toBeInTheDocument();
+    expect(getTouristActivities).toHaveBeenCalled();
   });
 });

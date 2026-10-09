@@ -240,6 +240,7 @@
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
+    "breadcrumb": "Breadcrumb",
     "navigationMenu": "Navigation menu",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
@@ -252,6 +253,7 @@
     "home": "Home",
     "explore": "Explore",
     "about": "About",
+    "faq": "FAQ",
     "applications": "My Applications",
     "dashboard": "Dashboard",
     "buddyWorkspace": "Buddy workspace",
@@ -282,23 +284,24 @@
   },
   "Landing": {
     "metadataTitle": "HanBuddy | Experience Korea like a local!",
-    "metadataDescription": "Connect with local buddies for authentic Korean experiences.",
+    "metadataDescription": "HanBuddy connects travelers and foreign residents in Korea with local buddies. Book small-group experiences in Seoul, hosted by locals who go with you.",
     "eyebrow": "Seoul · hosted by local buddies",
     "headline": "Experience Korea like a local!",
-    "description": "Go beyond the itinerary. Find the food, places, and small moments that feel more meaningful with someone who knows Korea by heart.",
+    "tagline": "Go with a local buddy. Leave with new friends.",
+    "description": "HanBuddy connects you with Koreans who host small-group experiences and come along with you.",
     "exploreExperiences": "Explore experiences",
     "highlights": {
       "localPerspective": {
-        "title": "Local perspective",
-        "description": "See Korea through a buddy's eyes."
+        "title": "A local buddy",
+        "description": "A Korean local hosts and goes with you."
       },
       "realConnection": {
-        "title": "Real connection",
-        "description": "Meet people, not just places."
+        "title": "A small group",
+        "description": "Meet guests from around the world."
       },
       "sharedMoments": {
-        "title": "Shared moments",
-        "description": "Bring home a story worth telling."
+        "title": "Everything sorted",
+        "description": "Booking, meeting spot, questions. Handled."
       }
     },
     "booking": {
@@ -347,28 +350,38 @@
         "rating": "5.0",
         "starLabel": "5 out of 5 stars",
         "event": "KBO Baseball Night",
-        "meta": "Guest review · July 2026",
-        "quote": "It was fun to watch the game and cheer together!"
+        "meta": "Guest review · September 2026",
+        "quote": "It genuinely felt like spending time with friends rather than being a customer on a typical tour."
       },
       "localBuddy": {
         "rating": "5.0",
         "starLabel": "5 out of 5 stars",
-        "event": "KBO Baseball Night",
-        "meta": "Guest review · July 2026",
-        "quote": "Great experience to enjoy a baseball game with a local."
+        "event": "K League Football Matchday",
+        "meta": "Guest review · August 2026",
+        "quote": "The guide was nice and it was like being with friends. I felt very well taken care of throughout the whole event."
       },
       "lookedAfter": {
         "rating": "5.0",
         "starLabel": "5 out of 5 stars",
         "event": "KBO Baseball Night",
         "meta": "Guest review · August 2026",
-        "quote": "Had such a great time at the baseball game with HanBuddy! We were looked after so well throughout the whole experience."
+        "quote": "They did a fantastic job of explaining what was happening during the game."
       }
     },
     "reviewsSection": {
       "eyebrow": "Stories from the community",
       "title": "The moments that stay with you.",
       "description": "A few words from guests who experienced Korea with HanBuddy."
+    },
+    "learnMore": {
+      "about": {
+        "title": "Our story",
+        "button": "About HanBuddy"
+      },
+      "faq": {
+        "title": "Questions before booking?",
+        "button": "Read the FAQ"
+      }
     },
     "contact": {
       "eyebrow": "Stay in touch",
@@ -485,62 +498,63 @@
     }
   },
   "About": {
-    "metadataTitle": "About HanBuddy | The team behind your Seoul game night",
-    "metadataDescription": "Meet ZeroOne, the Seoul team that plans and runs HanBuddy: KBO baseball nights at Jamsil and Gocheok and football nights with a Korean local buddy.",
+    "metadataTitle": "About HanBuddy | Local buddies, real Korean experiences",
+    "metadataDescription": "HanBuddy is a platform that connects travelers and foreign residents in Korea with local buddies. We started in 2026 by hosting baseball and football nights in Seoul ourselves.",
     "hero": {
       "eyebrow": "About HanBuddy",
-      "title": "The team that makes “like a local” happen.",
-      "description": "Small-group game nights in Seoul with a Korean buddy. We plan the night, buy your ticket, and sit next to you. You just show up.",
+      "title": "We connect you with local buddies in Korea.",
+      "description": "A buddy is a Korean local who hosts a small-group experience and goes with you. HanBuddy is where you find one, book, and get your questions answered by a real person.",
       "primaryCta": "Explore experiences",
       "secondaryCta": "Meet the team",
       "collageAlt1": "Two guests holding up a Doosan cheering towel above the Jamsil field at night",
       "collageAlt2": "Guests and buddies posing with the Doosan Bears mascot at Jamsil Stadium",
-      "collageAlt3": "Guests, a buddy, and their local guide sharing snacks in the Jamsil stands"
+      "collageAlt3": "Guests, a buddy, and their local guide sharing snacks in the Jamsil stands",
+      "photoAlt": "Guests and their tour guide buddy outside Seoul World Cup Stadium after a Korea national team match"
     },
     "origin": {
       "eyebrow": "Why we started",
-      "title": "Some of Korea’s best moments are locked behind “locals only.”",
-      "body1": "It started with a ticket we watched disappear: a Jamsil night game, sold out in seconds, on an app that wants",
-      "body1Strong": "a Korean phone number and a Korean card.",
-      "body2": "No Korean number, no Korean card, no ticket.",
-      "body2Strong": "HanBuddy unlocks those nights with a local buddy who buys the ticket, saves the seat, and sits next to you."
+      "title": "The best nights in Korea are the ones you spend with locals.",
+      "body1": "Our first guest told us",
+      "body1Strong": "the game alone was not enough. They wanted to meet the Koreans beside them.",
+      "body2": "So we changed how we host.",
+      "body2Strong": "Three months later, a guest said it “felt like spending time with friends.”"
     },
     "how": {
       "eyebrow": "How it works",
-      "title": "Run by us, every game night.",
+      "title": "Buddies host. You join. We connect you.",
       "steps": {
         "plan": {
-          "title": "We plan every game night ourselves",
-          "description": "Baseball at Jamsil and Gocheok, football at Seoul World Cup Stadium. One real match, a small group, and a buddy who knows the cheering songs."
+          "title": "Buddies and partners host",
+          "description": "Korean locals host and go with you, from cheering-song fans to licensed tour guides. Partner experiences are run by local businesses and labelled as partner. We check every host first."
         },
         "confirm": {
-          "title": "Book online, we buy your ticket right away",
-          "description": "Your match ticket and stadium food are included in the price. A real person confirms the meeting spot and answers your questions."
+          "title": "You book on HanBuddy",
+          "description": "Pick a date and pay online. For a game night, your ticket and stadium food are included."
         },
         "improve": {
-          "title": "Every run gets better",
-          "description": "Every guest fills in a one-minute survey, and it changes the next run."
+          "title": "We stay with you until it is done",
+          "description": "A real person answers your questions before the day, and a one-minute survey after helps us improve."
         }
       }
     },
     "stats": {
       "eyebrow": "So far",
-      "title": "Numbers from real game nights.",
+      "title": "We hosted first, so we know what a good night takes.",
       "items": {
         "runs": {
-          "value": "7",
+          "value": "8",
           "label": "game nights since June 2026"
         },
         "rating": {
           "value": "4.9 / 5",
           "label": "average guest rating"
         },
-        "stadiums": {
-          "value": "3",
-          "label": "stadiums: Jamsil, Gocheok, Seoul World Cup"
+        "guests": {
+          "value": "20",
+          "label": "guests so far"
         }
       },
-      "note": "Rating from 12 guest survey responses, June to September 2026."
+      "note": "Rating from 15 guest survey responses, June to October 2026."
     },
     "timeline": {
       "eyebrow": "Our runs",
@@ -566,16 +580,26 @@
         },
         "september": {
           "date": "September 2026",
-          "title": "Four game nights, including our first indoor dome",
-          "description": "Gocheok Sky Dome and Jamsil, sky-blue jerseys, mascot photos. Every September survey: 5 out of 5.",
-          "imageAlt": "Three friends smiling in the stands at Gocheok Sky Dome"
+          "title": "Five game nights, and our first buddies from outside the team",
+          "description": "Gocheok Sky Dome, Jamsil, and a national team match at Seoul World Cup Stadium. Licensed tour guides joined us as buddies.",
+          "imageAlt": "Three friends smiling in the stands at Gocheok Sky Dome",
+          "nights": {
+            "sep12": "Guests in Doosan jerseys making finger hearts at Jamsil Stadium at night",
+            "sep18": "Four guests in front of the Jamsil outfield under the night lights",
+            "sep28": "Guests and their tour guide buddy in the stands at a Korea national team match"
+          }
         }
+      },
+      "next": {
+        "date": "Winter 2026",
+        "title": "Indoor sports and partner experiences",
+        "description": "As the baseball season ends, we are lining up indoor sports like basketball and volleyball, plus partner experiences such as <nowrap>K-beauty</nowrap> and local food."
       }
     },
     "team": {
       "eyebrow": "Meet the team",
-      "title": "We’re ZeroOne, three friends from Seoul running HanBuddy together.",
-      "description": "We plan the nights, buy the tickets, answer your messages, and sit in the stands with you.",
+      "title": "We’re ZeroOne, three friends from Seoul and HanBuddy’s first buddies.",
+      "description": "We hosted the first game nights ourselves. Now we run the platform, answer your messages, and still show up in the stands.",
       "backed": "HanBuddy is the official project of team ZeroOne in AI·SW Maestro (17th), a national tech talent program by Korea’s Ministry of Science and ICT.",
       "linkedin": "LinkedIn",
       "members": {
@@ -593,10 +617,71 @@
         }
       }
     },
+    "host": {
+      "eyebrow": "Host with us",
+      "title": "Know something about Korea worth sharing?",
+      "description": "If you can host it in English and enjoy meeting people, become a buddy. Local businesses can list a partner experience.",
+      "button": "Become a buddy",
+      "photoAlt": "Guests with their licensed tour guide buddy at Jamsil Stadium"
+    },
+    "faq": {
+      "metadataTitle": "HanBuddy FAQ | Booking, payment and what to expect",
+      "metadataDescription": "Answers to what guests ask before booking a HanBuddy experience: who the buddies are, how to pay, what is included, where to meet, and how cancellations work.",
+      "eyebrow": "FAQ",
+      "title": "Questions guests ask before booking",
+      "groups": {
+        "hanbuddy": "HanBuddy & buddies",
+        "booking": "Booking & payment",
+        "day": "On the day"
+      },
+      "meetPhotoAlt": "Guests and their buddy meeting under the national team mural at Seoul World Cup Stadium",
+      "items": {
+        "what": {
+          "question": "What is HanBuddy?",
+          "answer": "HanBuddy is a platform that connects travelers and foreign residents in Korea with local buddies. A buddy is a Korean local who hosts a small-group experience and goes with you."
+        },
+        "buddies": {
+          "question": "Who are the buddies?",
+          "answer": "Korean locals who host in English. So far they are our own team and licensed tour guides. Our team checks every buddy and partner before they host, and a new buddy’s first experience is always hosted together with us."
+        },
+        "solo": {
+          "question": "Can I come alone?",
+          "answer": "Yes. Guests come solo, as couples, and with friends, and everyone sits together."
+        },
+        "pay": {
+          "question": "How do I pay?",
+          "answer": "Online with PayPal when you book. If you would rather pay another way, such as a Korean bank transfer, tap “Need another payment method?” on the booking page and message us."
+        },
+        "included": {
+          "question": "What is included in the price?",
+          "answer": "Each experience page lists it. For game nights it is the match ticket and stadium food."
+        },
+        "dietary": {
+          "question": "I have dietary restrictions. Is that a problem?",
+          "answer": "No. Write it under Special Requests when you book, and your buddy plans the food around it."
+        },
+        "meet": {
+          "question": "Where do we meet?",
+          "answer": "The meeting point is on each experience page, and we confirm the exact spot by message before the day."
+        },
+        "deadline": {
+          "question": "How late can I book?",
+          "answer": "Bookings close 24 hours before the experience starts."
+        },
+        "cancel": {
+          "question": "What if I need to cancel?",
+          "answer": "You get a full refund up to 48 hours before the start, and 50% between 48 and 24 hours. If your buddy cancels, you get a full refund."
+        },
+        "language": {
+          "question": "Do I need to speak Korean or know the sport?",
+          "answer": "No. Your buddy explains the rules and teaches you the cheering songs as you go."
+        }
+      }
+    },
     "cta": {
-      "title": "The best way to meet us is at a game.",
-      "description": "Pick a date, book your seat, and we take it from there.",
-      "button": "See upcoming game nights"
+      "title": "The best way to meet us is at an experience.",
+      "description": "Pick a date, book your spot, and your buddy takes it from there.",
+      "button": "See upcoming experiences"
     }
   },
   "Auth": {

@@ -33,8 +33,14 @@ type LayoutMetadataGenerator = (props: {
 
 describe("locale layout metadata", () => {
   it.each([
-    ["en", "Connect with local buddies for authentic Korean experiences."],
-    ["ko", "현지 버디와 함께 진짜 한국을 경험해 보세요."],
+    [
+      "en",
+      "HanBuddy connects travelers and foreign residents in Korea with local buddies. Book small-group experiences in Seoul, hosted by locals who go with you.",
+    ],
+    [
+      "ko",
+      "한버디는 한국에 사는 외국인과 여행자를 한국인 버디와 이어 줍니다. 야구·축구 직관처럼 버디가 직접 열고 함께 가는 서울의 소규모 활동을 예약하세요.",
+    ],
   ] as const)("provides a localized default description for %s", async (locale, description) => {
     const generateMetadata = (
       localeLayout as typeof localeLayout & { generateMetadata?: LayoutMetadataGenerator }

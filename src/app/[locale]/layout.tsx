@@ -15,6 +15,7 @@ import { isLocale, routing, type Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 import "../globals.css";
+import { koreanFontRootProps } from "@/lib/fonts/korean-font";
 import { sharePreview } from "@/lib/seo/metadata";
 
 // iOS 세이프에어리어(env(safe-area-inset-*))와 키보드 대응 레이아웃을 켠다. 확대는 막지 않는다(접근성).
@@ -81,10 +82,13 @@ export default async function LocaleLayout({
     role = "tourist";
   }
 
+  const koreanFont = koreanFontRootProps(locale, "font-noto-sans-kr");
+
   return (
     <html
       lang={locale}
-      className={`${plusJakartaSans.variable} ${dmSans.variable} ${caveat.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${koreanFont.className} ${caveat.variable} h-full antialiased`}
+      style={koreanFont.style}
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>

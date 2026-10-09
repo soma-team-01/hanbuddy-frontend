@@ -105,12 +105,11 @@ describe("ActivityFeed", () => {
     expect(screen.getByText("Anguk Station Exit 2")).toBeInTheDocument();
 
     const activityLink = screen.getByRole("link", { name: /Bukchon Hidden Gems/ });
-    expect(screen.getByTestId("activity-grid")).toHaveClass(
-      "grid-cols-1",
-      "md:grid-cols-2",
-      "lg:grid-cols-3",
-      "xl:grid-cols-4",
-    );
+    // GetYourGuide처럼 모든 폭에서 구분선으로 나눈 가로형 행 목록
+    const list = screen.getByTestId("activity-list");
+    expect(list).toHaveClass("flex-col", "divide-y");
+    expect(list).not.toHaveClass("grid");
+    expect(activityLink.querySelector("article")).toHaveAttribute("data-variant", "row");
     expect(screen.getByRole("img", { name: "Bukchon Hidden Gems" })).toHaveAttribute(
       "loading",
       "eager",
@@ -156,12 +155,12 @@ describe("ActivityFeed", () => {
 
     renderWithQueryClient(<ActivityFeed />, { locale: "ko" });
 
-    expect(screen.getByText("액티비티를 불러오는 중...")).toBeInTheDocument();
+    expect(screen.getByText("활동을 불러오는 중...")).toBeInTheDocument();
 
     await act(async () => {
       resolveActivities({ status: "success", activities: [] });
     });
-    expect(await screen.findByText("아직 등록된 액티비티가 없습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("아직 등록된 활동이 없습니다.")).toBeInTheDocument();
   });
 
   it("maps a BFF proxy error to localized safe Korean copy", async () => {

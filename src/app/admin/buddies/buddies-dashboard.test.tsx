@@ -112,8 +112,9 @@ describe("AdminBuddiesDashboard", () => {
   });
 
   it.each([
-    ["STANDARD_20", "일반 수수료 20% + VAT 2% (총 22%)"],
-    ["EARLY_10", "초기 수수료 10% + VAT 1% (총 11%)"],
+    ["STANDARD_20", "일반"],
+    ["EARLY_10", "초기 버디"],
+    ["EARLY_15", "초기 버디"],
   ] as const)(
     "shows the %s commission breakdown and paginates buddies",
     async (commissionPolicy, label) => {

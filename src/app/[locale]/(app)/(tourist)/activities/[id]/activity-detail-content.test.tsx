@@ -673,7 +673,7 @@ describe("ActivityDetailContent", () => {
 
     renderWithQueryClient(<ActivityDetailContent activityId="42" />, { locale: "ko" });
 
-    expect(screen.getByText("액티비티를 불러오는 중...")).toBeInTheDocument();
+    expect(screen.getByText("활동을 불러오는 중...")).toBeInTheDocument();
 
     rejectActivity(
       new ApiClientError({
@@ -684,7 +684,7 @@ describe("ActivityDetailContent", () => {
       }),
     );
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("액티비티를 찾을 수 없습니다.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("활동을 찾을 수 없습니다.");
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
 

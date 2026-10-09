@@ -39,9 +39,10 @@ describe("POST /api/activities/price-preview", () => {
         result: {
           unitPriceKrw: 50000,
           currency: "KRW",
-          commissionRate: 0.1,
-          platformCommissionAmountKrw: 5000,
-          estimatedGuidePayoutAmountKrw: 45000,
+          commissionRate: 0.15,
+          platformCommissionAmountKrw: 6818,
+          commissionVatAmountKrw: 682,
+          estimatedGuidePayoutAmountKrw: 42500,
         },
       },
       setCookies: [],
@@ -59,5 +60,13 @@ describe("POST /api/activities/price-preview", () => {
       bearerToken: "access-token",
     });
     expect(response.status).toBe(200);
+    expect((await response.json()).result).toEqual({
+      unitPriceKrw: 50000,
+      currency: "KRW",
+      commissionRate: 0.15,
+      platformCommissionAmountKrw: 6818,
+      commissionVatAmountKrw: 682,
+      estimatedGuidePayoutAmountKrw: 42500,
+    });
   });
 });

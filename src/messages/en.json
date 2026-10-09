@@ -598,7 +598,7 @@
     },
     "team": {
       "eyebrow": "Meet the team",
-      "title": "We’re ZeroOne, three friends from Seoul and HanBuddy’s first buddies.",
+      "title": "We’re <nowrap>ZeroOne</nowrap>, three friends from Seoul and HanBuddy’s first buddies.",
       "description": "We hosted the first game nights ourselves. Now we run the platform, answer your messages, and still show up in the stands.",
       "backed": "HanBuddy is the official project of team ZeroOne in AI·SW Maestro (17th), a national tech talent program by Korea’s Ministry of Science and ICT.",
       "linkedin": "LinkedIn",

@@ -23,6 +23,15 @@ const descriptions = {
   en: "Explore quiet Seoul streets with a local fixture buddy.",
   ko: "테스트 버디와 서울의 조용한 골목을 둘러봅니다.",
 };
+// 문구가 바뀌어도 검증이 낡지 않도록 탐색 페이지가 쓰는 번역 파일에서 기대값을 읽는다.
+const exploreMessages = Object.fromEntries(
+  await Promise.all(
+    ["en", "ko"].map(async (locale) => {
+      const file = new URL(`../src/messages/${locale}.json`, import.meta.url);
+      return [locale, JSON.parse(await readFile(file, "utf8")).Explore];
+    }),
+  ),
+);
 const control = async (mode, clearRequests = false) => {
   const response = await fetch(`${fixture}/__control`, {
     method: "POST",
@@ -135,9 +144,8 @@ try {
     const doc = document(html);
     assert.ok(doc.body.textContent.includes(titles[locale]));
     assert.ok(doc.querySelector(`a[href="/${locale}/activities/1"]`));
-    // 문구가 바뀌어도 검증이 낡지 않도록 페이지가 쓰는 번역 파일에서 기대값을 읽는다.
-    const { Explore } = JSON.parse(await readFile(`src/messages/${locale}.json`, "utf8"));
-    metadata(doc, `/${locale}/explore`, Explore.title, Explore.description);
+    const { title, description } = exploreMessages[locale];
+    metadata(doc, `/${locale}/explore`, title, description);
   }
   for (const ua of uas) {
     for (const [id, status] of [
@@ -240,13 +248,13 @@ try {
     "/activities/2",
   ];
   assert.deepEqual(
-    [...urls].sort(),
+    [...urls].sort((left, right) => left.localeCompare(right)),
     [
       ...Object.keys(titles).flatMap((locale) =>
         sitemapPaths.map((path) => `https://hanbuddy.kr/${locale}${path}`),
       ),
       "https://hanbuddy.kr/ko/buddy",
-    ].sort(),
+    ].sort((left, right) => left.localeCompare(right)),
   );
   for (const url of urls) {
     const path = new URL(url).pathname;

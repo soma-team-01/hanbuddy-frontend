@@ -140,4 +140,32 @@ describe("LocaleSwitcher", () => {
     expect(screen.getByRole("menu")).toHaveClass("top-[calc(100%+10px)]", "min-w-44");
     expect(screen.queryByText("Language")).not.toBeInTheDocument();
   });
+
+  it("opens the default menu upward when placed at the top", () => {
+    renderWithIntl(<LocaleSwitcher labelStyle="name" menuPlacement="top" />, { locale: "ko" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("bottom-[calc(100%+10px)]");
+    expect(screen.getByRole("menu")).not.toHaveClass("top-[calc(100%+10px)]");
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(5);
+  });
+
+  it("aligns the menu to the trigger's right edge by default", () => {
+    renderWithIntl(<LocaleSwitcher />, { locale: "en" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("right-0");
+    expect(screen.getByRole("menu")).not.toHaveClass("left-0");
+  });
+
+  it("aligns the menu to the trigger's left edge when requested", () => {
+    renderWithIntl(<LocaleSwitcher menuAlign="start" menuPlacement="top" />, { locale: "en" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("left-0");
+    expect(screen.getByRole("menu")).not.toHaveClass("right-0");
+  });
 });

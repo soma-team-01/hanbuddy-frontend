@@ -7,7 +7,14 @@ export function ReferralPrice({
   activity,
   className = "",
   variant = "default",
-}: Readonly<{ activity: Activity; className?: string; variant?: "default" | "card" | "detail" }>) {
+  compact = false,
+}: Readonly<{
+  activity: Activity;
+  className?: string;
+  variant?: "default" | "card" | "detail";
+  /** card 변형에서 좁은 타일용 작은 가격 글자를 쓴다 */
+  compact?: boolean;
+}>) {
   const locale = useLocale();
   const t = useTranslations("Referral");
   const tExplore = useTranslations("Explore");
@@ -28,7 +35,9 @@ export function ReferralPrice({
       <p
         className={
           isCard
-            ? "font-display text-xl leading-7 font-bold text-ink"
+            ? compact
+              ? "font-display text-base leading-6 font-bold text-ink"
+              : "font-display text-lg leading-7 font-bold text-ink"
             : isDetail
               ? "font-display text-xl font-bold text-primary"
               : "text-base font-semibold text-primary"

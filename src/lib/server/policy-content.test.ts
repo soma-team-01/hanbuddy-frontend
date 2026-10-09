@@ -5,16 +5,16 @@ import { getPolicyDocument, getSignupAgreementDocuments } from "./policy-content
 
 describe("policy content", () => {
   it.each([
-    ["ko", "결제 시점으로부터 예약된 활동 종료까지의 최대 서비스 제공기간은 3개월입니다."],
+    ["ko", "결제 시점으로부터 예약된 활동 종료까지의 최대 서비스 제공기간은 1년입니다."],
     [
       "en",
-      "The maximum service provision period, from the time of payment until the end of the booked activity, is 3 months.",
+      "The maximum service provision period, from the time of payment until the end of the booked activity, is 1 year.",
     ],
-    ["ja", "決済時点から予約したアクティビティの終了までのサービス提供期間は、最長3か月です。"],
-    ["zh-Hans", "从付款时点至所预订活动结束的服务提供期限最长为3个月。"],
-    ["zh-Hant", "從付款時點至所預訂活動結束的服務提供期限最長為3個月。"],
+    ["ja", "決済時点から予約したアクティビティの終了までのサービス提供期間は、最長1年です。"],
+    ["zh-Hans", "从付款时点至所预订活动结束的服务提供期限最长为1年。"],
+    ["zh-Hant", "從付款時點至所預訂活動結束的服務提供期限最長為1年。"],
   ] as const)(
-    "includes the three-month service period in the payment article in %s",
+    "includes the one-year service period in the payment article in %s",
     async (locale, clause) => {
       const policy = await getPolicyDocument("terms-of-service", locale);
       const paymentArticle = policy.source.split(/^## /m)[9];
@@ -97,8 +97,8 @@ describe("policy content", () => {
   it("passes the language through to signup policy documents", async () => {
     const documents = await getSignupAgreementDocuments("BUDDY", "en");
     expect(documents.TERMS_OF_SERVICE?.source).toContain("## Article 1.");
-    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("22%");
-    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("11%");
+    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("20%");
+    expect(documents.BUDDY_COMMISSION_POLICY?.source).toContain("15%");
     expect(documents.BUDDY_OPERATION_TERMS?.source).not.toMatch(/[가-힣]/);
   });
   it.each(POLICY_SLUGS)("loads the published Korean source for %s", async (slug) => {
@@ -107,9 +107,13 @@ describe("policy content", () => {
     expect(policy.slug).toBe(slug);
     expect(policy.title).toMatch(/^HanBuddy /);
     expect(policy.version).toBe(
-      ["cancellation-refund-policy", "terms-of-service", "consent-notices"].includes(slug)
-        ? "2026-09-08"
-        : "2026-09-07",
+      ["buddy-operation-terms", "buddy-commission-settlement-policy"].includes(slug)
+        ? "2026-10-08"
+        : ["consent-notices", "terms-of-service"].includes(slug)
+          ? "2026-10-06"
+          : slug === "cancellation-refund-policy"
+            ? "2026-09-08"
+            : "2026-09-07",
     );
     expect(policy.source).not.toContain("버전:");
     expect(policy.source).not.toContain("시행일:");

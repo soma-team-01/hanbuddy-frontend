@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
-import { Caveat, DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
+import { caveat, dmSans, plusJakartaSans } from "@/styles/fonts";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -17,36 +17,6 @@ import { parseUserType } from "@/lib/auth/routes";
 import "../globals.css";
 import { koreanFontRootProps } from "@/lib/fonts/korean-font";
 import { sharePreview } from "@/lib/seo/metadata";
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-plus-jakarta-sans",
-  weight: ["600", "700", "800"],
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  weight: ["400", "500", "600", "700"],
-});
-
-// 한글 글꼴은 미리 받지 않는다. 라틴 글자는 앞 순서의 DM Sans·Plus Jakarta Sans가 그리므로, 미리 받던
-// 라틴 부분 파일은 어느 언어에서도 쓰이지 않았다. 한국어 페이지에서만 글꼴 변수를 연결하고(koreanFontRootProps),
-// 화면에 있는 한글 글자 묶음만 받는다.
-const notoSansKr = Noto_Sans_KR({
-  subsets: ["latin"],
-  variable: "--font-noto-sans-kr",
-  // 가변 글꼴 하나로 400~700을 모두 그린다. 굵기별 정적 글꼴 4벌은 한글 글자 묶음(약 124개)마다
-  // @font-face가 4개씩 생겨 렌더링을 막는 CSS가 105KB(gzip)였다. 가변 글꼴은 묶음마다 1개다.
-  weight: "variable",
-  preload: false,
-});
-
-const caveat = Caveat({
-  subsets: ["latin"],
-  variable: "--font-caveat",
-  weight: ["400", "500", "600", "700"],
-});
 
 // iOS 세이프에어리어(env(safe-area-inset-*))와 키보드 대응 레이아웃을 켠다. 확대는 막지 않는다(접근성).
 export const viewport: Viewport = {
@@ -112,7 +82,7 @@ export default async function LocaleLayout({
     role = "tourist";
   }
 
-  const koreanFont = koreanFontRootProps(locale, notoSansKr.variable);
+  const koreanFont = koreanFontRootProps(locale, "font-noto-sans-kr");
 
   return (
     <html

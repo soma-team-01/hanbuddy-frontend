@@ -2,21 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 import type { Metadata } from "next";
 import type { Locale } from "@/i18n/routing";
 
-const fontMocks = vi.hoisted(() => ({
-  caveat: vi.fn(() => ({ variable: "--font-caveat-class" })),
-  dmSans: vi.fn(() => ({ variable: "--font-dm-sans-class" })),
-  notoSansKr: vi.fn(() => ({ variable: "--font-noto-sans-kr-class" })),
-  plusJakartaSans: vi.fn(() => ({ variable: "--font-plus-jakarta-sans-class" })),
-}));
+const localFontMock = vi.hoisted(() =>
+  vi.fn((options: { variable: string }) => ({
+    variable: `${options.variable}-class`,
+  })),
+);
 
-vi.mock("next/font/google", () => ({
-  Be_Vietnam_Pro: vi.fn(() => ({ variable: "--font-be-vietnam-pro-class" })),
-  Caveat: fontMocks.caveat,
-  DM_Sans: fontMocks.dmSans,
-  Manrope: vi.fn(() => ({ variable: "--font-manrope-class" })),
-  Noto_Sans_KR: fontMocks.notoSansKr,
-  Plus_Jakarta_Sans: fontMocks.plusJakartaSans,
-}));
+vi.mock("next/font/local", () => ({ default: localFontMock }));
 
 vi.mock("next-intl/server", async () => {
   const [{ createTranslator }, { default: en }, { default: ko }] = await Promise.all([
@@ -83,28 +75,15 @@ describe("locale layout viewport", () => {
 });
 
 describe("locale layout fonts", () => {
-  it("loads the approved display, interface, and Korean fonts as CSS variables", () => {
-    expect(fontMocks.plusJakartaSans).toHaveBeenCalledWith({
-      subsets: ["latin"],
-      variable: "--font-plus-jakarta-sans",
-      weight: ["600", "700", "800"],
-    });
-    expect(fontMocks.dmSans).toHaveBeenCalledWith({
-      subsets: ["latin"],
-      variable: "--font-dm-sans",
-      weight: ["400", "500", "600", "700"],
-    });
-    // 한글은 가변 글꼴 하나로 그리고 미리 받지 않는다(글꼴 선언 CSS 105KB → 27KB, gzip).
-    expect(fontMocks.notoSansKr).toHaveBeenCalledWith({
-      subsets: ["latin"],
-      variable: "--font-noto-sans-kr",
-      weight: "variable",
-      preload: false,
-    });
-    expect(fontMocks.caveat).toHaveBeenCalledWith({
-      subsets: ["latin"],
-      variable: "--font-caveat",
-      weight: ["400", "500", "600", "700"],
-    });
+  it("loads bundled display, interface, and handwriting fonts", () => {
+    for (const variable of ["--font-plus-jakarta-sans", "--font-dm-sans", "--font-caveat"]) {
+      expect(localFontMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          src: expect.stringMatching(/\.woff2$/),
+          variable,
+          display: "swap",
+        }),
+      );
+    }
   });
 });

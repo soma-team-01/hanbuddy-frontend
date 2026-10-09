@@ -251,6 +251,7 @@ function LocalizedSiteHeader({
                     <LocaleSwitcher
                       labelStyle="name"
                       dismissMenu
+                      menuAlign="start"
                       menuPlacement="top"
                       className="justify-start px-1"
                     />

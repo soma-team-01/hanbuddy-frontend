@@ -394,8 +394,8 @@ describe("MyActivitiesContent", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Traditional Tea Tasting 삭제" }));
 
-    expect(screen.getByRole("heading", { name: "이 액티비티를 삭제할까요?" })).toBeInTheDocument();
-    expect(screen.getByText("삭제한 액티비티는 복구할 수 없습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "이 활동을 삭제할까요?" })).toBeInTheDocument();
+    expect(screen.getByText("삭제한 활동은 복구할 수 없습니다.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "삭제" })).toBeInTheDocument();
   });
 
@@ -404,7 +404,7 @@ describe("MyActivitiesContent", () => {
 
     renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
 
-    expect(screen.getByText("액티비티를 불러오는 중...")).toBeInTheDocument();
+    expect(screen.getByText("활동을 불러오는 중...")).toBeInTheDocument();
   });
 
   it("localizes the empty activity state in Korean", async () => {
@@ -412,7 +412,7 @@ describe("MyActivitiesContent", () => {
 
     renderWithQueryClient(<MyActivitiesContent />, { locale: "ko" });
 
-    expect(await screen.findByText("아직 등록한 액티비티가 없습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("아직 등록한 활동이 없습니다.")).toBeInTheDocument();
   });
 
   it("maps the buddy-role activity error in Korean", async () => {

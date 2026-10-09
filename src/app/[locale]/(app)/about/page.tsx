@@ -1,5 +1,7 @@
-import { sharePreview } from "@/lib/seo/metadata";
-import { APP_ORIGIN } from "@/lib/site";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd, type BreadcrumbItem } from "@/lib/seo/json-ld";
+import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
@@ -54,16 +56,7 @@ export async function generateMetadata({ params }: AboutPageProps): Promise<Meta
       title: t("metadataTitle"),
       description: t("metadataDescription"),
     }),
-    alternates: {
-      canonical: `${APP_ORIGIN}/${locale}/about`,
-      languages: {
-        en: `${APP_ORIGIN}/en/about`,
-        ko: `${APP_ORIGIN}/ko/about`,
-        ja: `${APP_ORIGIN}/ja/about`,
-        "zh-Hans": `${APP_ORIGIN}/zh-Hans/about`,
-        "zh-Hant": `${APP_ORIGIN}/zh-Hant/about`,
-      },
-    },
+    alternates: pageAlternates(locale, "/about"),
   };
 }
 
@@ -94,7 +87,14 @@ function DateLabel({ children, hollow = false }: { children: React.ReactNode; ho
 
 export default async function AboutPage({ params }: AboutPageProps) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "About" });
+  const [t, navT] = await Promise.all([
+    getTranslations({ locale, namespace: "About" }),
+    getTranslations({ locale, namespace: "Navigation" }),
+  ]);
+  const breadcrumbs: BreadcrumbItem[] = [
+    { name: navT("home"), path: "" },
+    { name: navT("about"), path: "/about" },
+  ];
 
   // 9월 다섯 번의 밤. 큰 사진이 자동으로 바뀌고 아래 썸네일이 지금 사진을 표시한다.
   const septemberNights = [
@@ -128,6 +128,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <JsonLd data={breadcrumbJsonLd(locale, breadcrumbs)} />
       {/* 표지: 9/28 국가대표전 밤, 문정수 가이드님과 게스트들. 데스크톱은 얼굴이 화면을 채우지 않게 3:4 액자에 담는다. */}
       <section
         aria-labelledby="about-hero-title"
@@ -145,13 +146,19 @@ export default async function AboutPage({ params }: AboutPageProps) {
           <div className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-ink to-transparent" />
         </div>
 
+        {/* 모바일은 사진 위 얇은 띠, 데스크톱은 표지 위 여백 안에 놓여 표지 높이를 바꾸지 않는다. */}
+        <div className="relative z-20 mx-auto w-full max-w-[1200px] px-4 py-1.5 md:px-6 lg:absolute lg:inset-x-0 lg:top-5 lg:px-8 lg:py-0">
+          <Breadcrumbs items={breadcrumbs} label={navT("breadcrumb")} tone="dark" />
+        </div>
+
         <div className="mx-auto grid max-w-[1200px] lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:items-center lg:gap-x-16 lg:px-8 lg:pt-20 lg:pb-14">
           <div className="relative h-[min(50svh,26rem)] min-h-[19rem] md:h-[min(54svh,32rem)] lg:col-start-2 lg:row-start-1 lg:aspect-[3/4] lg:h-auto lg:min-h-0 lg:overflow-hidden lg:rounded-[2rem] lg:shadow-[0_30px_80px_rgba(0,0,0,0.45)] lg:ring-1 lg:ring-white/15">
             <Image
               src={`${PHOTO}/football-0928-night-group.webp`}
               alt={t("hero.photoAlt")}
               fill
-              preload
+              loading="eager"
+              fetchPriority="high"
               sizes="(min-width: 1024px) 400px, 100vw"
               className="object-cover object-[50%_66%]"
             />

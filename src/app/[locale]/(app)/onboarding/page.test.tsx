@@ -569,9 +569,9 @@ describe("OnboardingForm", () => {
     ],
     [
       "ko",
-      "여행자님, 반가워요",
+      "게스트님, 반가워요",
       "몇 가지만 알려주면, 한버디 여행 준비가 끝나요.",
-      "활동이 확정되었을 때 버디가 여행자님을 잘 맞이하고 연락할 수 있도록 사용해요.",
+      "활동이 확정되었을 때 버디가 게스트님을 잘 맞이하고 연락할 수 있도록 사용해요.",
       "만날 때 버디가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
       "기본 정보",
       "국적",
@@ -1420,7 +1420,7 @@ it.each(["en", "ko"] as const)(
     expect(screen.getByRole("heading", { level: 1 }).nextElementSibling).toBeNull();
     fillAboutYou(locale, { birthDate: "1998-04-12" });
     clickContinue(locale);
-    const heading = locale === "en" ? "Contact & payout details" : "연락처 및 정산 정보";
+    const heading = locale === "en" ? "Contact & payout details" : "연락처와 정산 정보";
     expect(screen.getByRole("heading", { name: heading }).nextElementSibling).toBeNull();
     expect(screen.getByRole("navigation")).toHaveTextContent(heading);
     fireEvent.change(screen.getByLabelText(locale === "en" ? "Phone number" : "전화번호"), {

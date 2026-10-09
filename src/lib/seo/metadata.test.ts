@@ -6,7 +6,7 @@ describe("sharePreview", () => {
     const preview = sharePreview({
       locale: "ko",
       path: "/about",
-      title: "HanBuddy 소개",
+      title: "한버디 소개",
       description: "  서울  직관의 밤을\n함께 만드는 팀  ",
     });
 
@@ -18,7 +18,7 @@ describe("sharePreview", () => {
     expect(preview.openGraph).toMatchObject({
       type: "website",
       siteName: "HanBuddy",
-      title: "HanBuddy 소개",
+      title: "한버디 소개",
       description: "서울 직관의 밤을 함께 만드는 팀",
       url: "https://hanbuddy.kr/ko/about",
       locale: "ko_KR",
@@ -70,6 +70,15 @@ describe("publicPageMetadata", () => {
 
     expect(metadata.title).toBe("Explore | HanBuddy");
     expect(metadata.alternates?.canonical).toBe("https://hanbuddy.kr/en/explore");
+    // 탐색·활동 페이지도 HTML에서 언어별 대체 주소를 선언한다(예전에는 응답 헤더에만 있었다).
+    expect(metadata.alternates?.languages).toEqual({
+      en: "https://hanbuddy.kr/en/explore",
+      ko: "https://hanbuddy.kr/ko/explore",
+      ja: "https://hanbuddy.kr/ja/explore",
+      "zh-Hans": "https://hanbuddy.kr/zh-Hans/explore",
+      "zh-Hant": "https://hanbuddy.kr/zh-Hant/explore",
+      "x-default": "https://hanbuddy.kr/en/explore",
+    });
     expect(metadata.openGraph).toMatchObject({
       title: "Explore | HanBuddy",
       images: [DEFAULT_SHARE_IMAGE],

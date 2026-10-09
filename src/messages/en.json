@@ -240,6 +240,7 @@
   },
   "Navigation": {
     "primaryNavigation": "Primary navigation",
+    "breadcrumb": "Breadcrumb",
     "navigationMenu": "Navigation menu",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",

@@ -53,8 +53,9 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
                 src={image.src}
                 alt={image.alt}
                 fill
-                priority={index === 0}
+                // 첫 장이 첫 화면의 가장 큰 요소(LCP)라 먼저 받는다. Next 16 권장대로 preload 대신 fetchPriority를 쓴다.
                 loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : undefined}
                 sizes="100vw"
                 className={`hero-media-image object-contain ${
                   isContain ? "hero-media-contain md:object-contain" : "md:object-cover"

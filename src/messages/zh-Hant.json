@@ -240,6 +240,7 @@
   },
   "Navigation": {
     "primaryNavigation": "主要導航",
+    "breadcrumb": "麵包屑導覽",
     "navigationMenu": "導航選單",
     "openMenu": "開啟選單",
     "closeMenu": "關閉選單",

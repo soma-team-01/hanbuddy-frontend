@@ -1,7 +1,6 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
-import { expectLocalizedMetadata } from "@/test/expect-localized-metadata";
 import { renderWithIntl } from "@/test/render-with-intl";
 import BuddyHostingPage, { generateMetadata } from "./page";
 
@@ -32,9 +31,9 @@ describe("BuddyHostingPage", () => {
     ],
     [
       "ko",
-      "당신의 평범한 한국이 누군가에게는 가장 특별한 기억이 됩니다.",
-      "버디로 시작하기",
-      "HanBuddy 버디가 되어야 하는 이유",
+      "내가 늘 즐기던 한국이, 누군가에겐 여행의 하이라이트가 돼요",
+      "버디 신청하기",
+      "버디가 되면",
     ],
   ] as const)(
     "renders the localized buddy hosting journey for %s",
@@ -56,7 +55,7 @@ describe("BuddyHostingPage", () => {
       );
       expect(screen.getByText(why)).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { level: 2, name: /local idea|로컬의 아이디어/ }),
+        screen.getByRole("heading", { level: 2, name: /local idea|버디 신청부터 첫 만남까지/ }),
       ).toBeInTheDocument();
     },
   );
@@ -92,10 +91,16 @@ describe("BuddyHostingPage", () => {
 
   it.each([
     ["en", "Become a buddy host | HanBuddy", "/en/buddy"],
-    ["ko", "버디로 호스팅하기 | HanBuddy", "/ko/buddy"],
+    ["ko", "버디 모집 | HanBuddy(한버디)", "/ko/buddy"],
   ] as const)("generates localized metadata for %s", async (locale, title, canonicalPath) => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale }) });
 
-    expectLocalizedMetadata(metadata, title, canonicalPath, "/buddy");
+    expect(metadata.title).toBe(title);
+    expect(metadata.alternates?.canonical).toBe(`https://hanbuddy.kr${canonicalPath}`);
+    // 다른 언어 버디 주소는 /ko/buddy로 리다이렉트되므로 실제로 열리는 한국어만 대체 주소로 둔다.
+    expect(metadata.alternates?.languages).toEqual({
+      ko: "https://hanbuddy.kr/ko/buddy",
+      "x-default": "https://hanbuddy.kr/ko/buddy",
+    });
   });
 });

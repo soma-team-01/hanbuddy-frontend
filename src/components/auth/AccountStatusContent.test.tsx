@@ -82,7 +82,7 @@ describe("AccountStatusContent", () => {
 
     expect(screen.getByRole("heading", { name: "관광객 계정 이용 정지" })).toBeInTheDocument();
     expect(
-      screen.getByText("HanBuddy 서비스를 이용할 수 없습니다.", { exact: false }),
+      screen.getByText("한버디 서비스를 이용할 수 없습니다.", { exact: false }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "홈으로 돌아가기" })).toHaveAttribute("href", "/ko");
   });

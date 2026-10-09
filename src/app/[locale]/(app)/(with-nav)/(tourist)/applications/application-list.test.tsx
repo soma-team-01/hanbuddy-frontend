@@ -1120,7 +1120,7 @@ describe("ApplicationList", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "지난 내역" }));
     expect(screen.getByText("아직 신청 내역이 없습니다.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "액티비티 둘러보기" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "활동 둘러보기" })).toHaveAttribute(
       "href",
       "/ko/explore",
     );

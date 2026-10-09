@@ -47,7 +47,7 @@ describe("locale layout metadata", () => {
     ],
     [
       "ko",
-      "HanBuddy는 한국에 살거나 여행 온 외국인과 한국 로컬 버디를 연결합니다. 현지인이 열고 함께 가는 서울의 소규모 활동을 예약하세요.",
+      "한버디는 한국에 사는 외국인과 여행자를 한국인 버디와 이어 줍니다. 야구·축구 직관처럼 버디가 직접 열고 함께 가는 서울의 소규모 활동을 예약하세요.",
     ],
   ] as const)("provides a localized default description for %s", async (locale, description) => {
     const generateMetadata = (
@@ -83,7 +83,7 @@ describe("locale layout viewport", () => {
 });
 
 describe("locale layout fonts", () => {
-  it("loads the approved display, interface, and Korean font weights as CSS variables", () => {
+  it("loads the approved display, interface, and Korean fonts as CSS variables", () => {
     expect(fontMocks.plusJakartaSans).toHaveBeenCalledWith({
       subsets: ["latin"],
       variable: "--font-plus-jakarta-sans",
@@ -94,10 +94,12 @@ describe("locale layout fonts", () => {
       variable: "--font-dm-sans",
       weight: ["400", "500", "600", "700"],
     });
+    // 한글은 가변 글꼴 하나로 그리고 미리 받지 않는다(글꼴 선언 CSS 105KB → 27KB, gzip).
     expect(fontMocks.notoSansKr).toHaveBeenCalledWith({
       subsets: ["latin"],
       variable: "--font-noto-sans-kr",
-      weight: ["400", "500", "600", "700"],
+      weight: "variable",
+      preload: false,
     });
     expect(fontMocks.caveat).toHaveBeenCalledWith({
       subsets: ["latin"],

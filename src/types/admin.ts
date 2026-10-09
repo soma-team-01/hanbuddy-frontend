@@ -44,7 +44,7 @@ export interface RejectBuddyApplicationRequest {
 }
 
 export type AdminAccountStatus = BuddyApplicationStatus;
-export type AdminCommissionPolicy = "EARLY_10" | "STANDARD_20";
+export type AdminCommissionPolicy = "EARLY_10" | "EARLY_15" | "STANDARD_20";
 export type AdminActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
 export type AdminApplicationStatus =
   "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";

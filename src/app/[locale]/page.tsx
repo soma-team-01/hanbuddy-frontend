@@ -1,11 +1,14 @@
-import { sharePreview } from "@/lib/seo/metadata";
-import { APP_ORIGIN } from "@/lib/site";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { organizationJsonLd } from "@/lib/seo/json-ld";
+import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
+import { isActivitySearchDate } from "@/lib/activity-booking-window";
+import { getPublicActivities } from "@/lib/server/public-activities";
 import { LandingHeroMedia } from "@/components/landing/LandingHeroMedia";
 import { ActivityDateFilter } from "@/components/activity/ActivityDateFilter";
 import { MailIcon } from "@/components/ui/icons";
@@ -83,16 +86,7 @@ export async function generateMetadata({ params }: LandingPageProps): Promise<Me
       title: t("metadataTitle"),
       description: t("metadataDescription"),
     }),
-    alternates: {
-      canonical: `${APP_ORIGIN}/${locale}`,
-      languages: {
-        en: `${APP_ORIGIN}/en`,
-        ko: `${APP_ORIGIN}/ko`,
-        ja: `${APP_ORIGIN}/ja`,
-        "zh-Hans": `${APP_ORIGIN}/zh-Hans`,
-        "zh-Hant": `${APP_ORIGIN}/zh-Hant`,
-      },
-    },
+    alternates: pageAlternates(locale, ""),
   };
 }
 
@@ -100,10 +94,13 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
   const { locale } = await params;
   const query = await searchParams;
   const date = Array.isArray(query?.date) ? query.date.join(",") : query?.date;
-  const [t, aboutT, cookieStore] = await Promise.all([
+  // 추천 활동도 서버에서 먼저 받아 첫 HTML에 카드로 넣는다. 실패하면 undefined로 두고 브라우저가 다시 불러온다.
+  const validDate = !date || isActivitySearchDate(date);
+  const [t, aboutT, cookieStore, initialActivities] = await Promise.all([
     getTranslations({ locale, namespace: "Landing" }),
     getTranslations({ locale, namespace: "About" }),
     cookies(),
+    validDate ? getPublicActivities(locale, date || undefined).catch(() => undefined) : undefined,
   ]);
 
   // 후기 아래 About·FAQ 미리보기. About의 실제 숫자와 예약 전에 가장 많이 묻는 질문 세 개를 먼저 보여준다.
@@ -128,6 +125,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
+      <JsonLd data={organizationJsonLd(locale)} />
       <LandingAnalytics locale={locale} />
       {/* 모바일도 사진 위에 제목·검색·소개를 함께 배치한다. */}
       <section
@@ -192,7 +190,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
         </PageContainer>
       </section>
 
-      <RecommendedExperiences date={date} />
+      <RecommendedExperiences date={date} initialActivities={initialActivities} />
 
       <section
         data-landing-section="booking_steps"

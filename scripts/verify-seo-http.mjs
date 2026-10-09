@@ -1,6 +1,6 @@
 // HTTP/HTML only. jsdom parses inert HTML; no browser, scripts or subresources run.
 import assert from "node:assert/strict";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { JSDOM } from "jsdom";
 
@@ -114,7 +114,14 @@ try {
     if (descriptions[locale])
       assert.ok(doc.querySelector("main article")?.textContent.includes(descriptions[locale]));
     metadata(doc, `/${locale}/activities/1`, title, descriptions[locale]);
-    assert.match(response.headers.get("link") || "", /hreflang="x-default"/);
+    // hreflang은 미들웨어 Link 헤더(alternateLinks: false로 끔)가 아니라 페이지 메타데이터 <link>로 나간다.
+    assert.doesNotMatch(response.headers.get("link") || "", /hreflang/);
+    for (const hreflang of [...Object.keys(titles), "x-default"])
+      assert.equal(
+        doc.head.querySelector(`link[rel="alternate"][hreflang="${hreflang}"]`)?.href,
+        `https://hanbuddy.kr/${hreflang === "x-default" ? "en" : hreflang}/activities/1`,
+        hreflang,
+      );
     assert.ok(!html.includes("PRIVATE_FIXTURE_SENTINEL"));
     assert.ok(!html.includes("hanbuddy_access_token"));
   }
@@ -128,14 +135,9 @@ try {
     const doc = document(html);
     assert.ok(doc.body.textContent.includes(titles[locale]));
     assert.ok(doc.querySelector(`a[href="/${locale}/activities/1"]`));
-    metadata(
-      doc,
-      `/${locale}/explore`,
-      locale === "en" ? "Explore experiences" : "액티비티 탐색",
-      locale === "en"
-        ? "Discover Korea with a local buddy by your side."
-        : "현지 버디와 함께할 한국의 특별한 경험을 찾아보세요.",
-    );
+    // 문구가 바뀌어도 검증이 낡지 않도록 페이지가 쓰는 번역 파일에서 기대값을 읽는다.
+    const { Explore } = JSON.parse(await readFile(`src/messages/${locale}.json`, "utf8"));
+    metadata(doc, `/${locale}/explore`, Explore.title, Explore.description);
   }
   for (const ua of uas) {
     for (const [id, status] of [
@@ -225,8 +227,27 @@ try {
   assert.match(robots.html, /Sitemap: https:\/\/hanbuddy.kr\/sitemap.xml/);
   const sitemap = await request("/sitemap.xml", 200);
   const urls = [...sitemap.html.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
-  assert.equal(urls.length, 21);
-  assert.equal(new Set(urls).size, urls.length);
+  // 공개 경로는 5개 언어 모두, 버디 소개는 한국어 정본만 싣는다 (다른 언어는 한국어로 리다이렉트).
+  const sitemapPaths = [
+    "",
+    "/about",
+    "/faq",
+    "/explore",
+    "/policies/cancellation-refund-policy",
+    "/policies/privacy-policy",
+    "/policies/terms-of-service",
+    "/activities/1",
+    "/activities/2",
+  ];
+  assert.deepEqual(
+    [...urls].sort(),
+    [
+      ...Object.keys(titles).flatMap((locale) =>
+        sitemapPaths.map((path) => `https://hanbuddy.kr/${locale}${path}`),
+      ),
+      "https://hanbuddy.kr/ko/buddy",
+    ].sort(),
+  );
   for (const url of urls) {
     const path = new URL(url).pathname;
     assert.ok(!/login|book|payments|admin|my-page|\?/.test(url));

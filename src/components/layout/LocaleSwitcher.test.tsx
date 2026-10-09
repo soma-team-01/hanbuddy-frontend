@@ -140,4 +140,14 @@ describe("LocaleSwitcher", () => {
     expect(screen.getByRole("menu")).toHaveClass("top-[calc(100%+10px)]", "min-w-44");
     expect(screen.queryByText("Language")).not.toBeInTheDocument();
   });
+
+  it("opens the default menu upward when placed at the top", () => {
+    renderWithIntl(<LocaleSwitcher labelStyle="name" menuPlacement="top" />, { locale: "ko" });
+
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+
+    expect(screen.getByRole("menu")).toHaveClass("bottom-[calc(100%+10px)]");
+    expect(screen.getByRole("menu")).not.toHaveClass("top-[calc(100%+10px)]");
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(5);
+  });
 });

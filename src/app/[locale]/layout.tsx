@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
-import { Caveat, DM_Sans, Noto_Sans_KR, Plus_Jakarta_Sans } from "next/font/google";
+import { caveat, dmSans, plusJakartaSans } from "@/styles/fonts";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -16,30 +16,6 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 import "../globals.css";
 import { sharePreview } from "@/lib/seo/metadata";
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-plus-jakarta-sans",
-  weight: ["600", "700", "800"],
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  weight: ["400", "500", "600", "700"],
-});
-
-const notoSansKr = Noto_Sans_KR({
-  subsets: ["latin"],
-  variable: "--font-noto-sans-kr",
-  weight: ["400", "500", "600", "700"],
-});
-
-const caveat = Caveat({
-  subsets: ["latin"],
-  variable: "--font-caveat",
-  weight: ["400", "500", "600", "700"],
-});
 
 // iOS 세이프에어리어(env(safe-area-inset-*))와 키보드 대응 레이아웃을 켠다. 확대는 막지 않는다(접근성).
 export const viewport: Viewport = {
@@ -108,7 +84,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${plusJakartaSans.variable} ${dmSans.variable} ${notoSansKr.variable} ${caveat.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${caveat.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>

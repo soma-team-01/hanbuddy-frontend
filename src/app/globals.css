@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@import "../styles/fonts/noto-sans-kr.css";
+
+:root {
+  --font-noto-sans-kr: "Noto Sans KR";
+}
 
 @theme inline {
   --color-canvas: #ffffff;

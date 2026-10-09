@@ -210,13 +210,8 @@ try {
   assert.match(privateRedirect.response.headers.get("location"), /\/en\/my-page\/profile$/);
   const privatePage = await request("/en/my-page/profile", 200, { cookie });
   assert.match(privatePage.response.headers.get("x-robots-tag") || "", /noindex/);
-  const localeRedirect = await request("/en/explore?utm_source=fixture", 307, {
-    cookie: "NEXT_LOCALE=ko",
-  });
-  assert.match(
-    localeRedirect.response.headers.get("location"),
-    /\/ko\/explore\?utm_source=fixture$/,
-  );
+  const localeRedirect = await request("/en/buddy?utm_source=fixture", 307);
+  assert.match(localeRedirect.response.headers.get("location"), /\/ko\/buddy\?utm_source=fixture$/);
   assert.match(localeRedirect.response.headers.get("x-robots-tag") || "", /noindex/);
   const robots = await request("/robots.txt", 200);
   assert.match(robots.html, /User-Agent: \*/i);

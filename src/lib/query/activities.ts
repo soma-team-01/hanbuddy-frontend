@@ -1,11 +1,18 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getActivityWeather, getTouristActivities, getTouristActivity } from "@/lib/api/activities";
+import {
+  getActivityWeather,
+  getTouristActivities,
+  getTouristActivity,
+  getActivityPriceQuote,
+} from "@/lib/api/activities";
 import type { ContentLanguage } from "@/types/content-language";
 import type { DisplayCurrency } from "@/types/display-currency";
 import { unwrapApiResult } from "./result";
 
 export const activityKeys = {
   all: () => ["activities"] as const,
+  quote: (activityId: number | string, guestCount: number) =>
+    ["activities", "price-quote", String(activityId), guestCount] as const,
   list: (language: ContentLanguage, displayCurrency: DisplayCurrency = "KRW", date?: string) =>
     [...activityKeys.all(), "list", language, displayCurrency, date || null] as const,
   detail: (
@@ -16,6 +23,41 @@ export const activityKeys = {
   weather: (activityId: number | string) =>
     [...activityKeys.all(), "weather", String(activityId)] as const,
 };
+
+export function activityPriceQuoteQueryOptions(activityId: number | string, guestCount: number) {
+  return queryOptions({
+    queryKey: activityKeys.quote(activityId, guestCount),
+    queryFn: async ({ signal }) => {
+      const quote = unwrapApiResult(
+        await getActivityPriceQuote(activityId, guestCount, signal),
+        "quote",
+      );
+      if (
+        !quote ||
+        String(quote.activityId) !== String(activityId) ||
+        quote.guestCount !== guestCount ||
+        quote.currency !== "KRW" ||
+        quote.amount <= 0 ||
+        quote.unitPrice <= 0 ||
+        [
+          quote.amount,
+          quote.unitPrice,
+          quote.originalUnitPrice,
+          quote.originalAmount,
+          quote.quantityUnitPrice,
+          quote.discountAmount,
+          quote.quantityDiscountAmount,
+          quote.periodDiscountAmount,
+        ].some((amount) => !Number.isSafeInteger(amount) || amount < 0)
+      ) {
+        throw new Error("Invalid activity price quote");
+      }
+      return quote;
+    },
+    staleTime: 0,
+    retry: false,
+  });
+}
 
 export function touristActivitiesQueryOptions(
   language: ContentLanguage,

@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithQueryClient as renderWithIntl } from "@/test/render-with-query-client";
 import en from "@/messages/en.json";
 import ko from "@/messages/ko.json";
 import ja from "@/messages/ja.json";
@@ -17,6 +17,11 @@ import {
   PriceStep,
 } from "./activity-create-steps";
 import { EMPTY_ACTIVITY_DRAFT } from "./activity-create-wizard";
+
+vi.mock("next/navigation", async (original) => ({
+  ...(await original<typeof import("next/navigation")>()),
+  useRouter: () => ({ replace: vi.fn() }),
+}));
 
 function Fields() {
   const t = useTranslations("CreateActivity");
@@ -35,6 +40,50 @@ function ReferralPriceField() {
   const [value, setValue] = useState("");
   return <PriceStep value={value} onChange={setValue} t={t} referral />;
 }
+
+function TierPriceField({
+  referral = false,
+  enabled = true,
+}: {
+  referral?: boolean;
+  enabled?: boolean;
+}) {
+  const t = useTranslations("CreateActivity");
+  const [value, setValue] = useState("45000");
+  return (
+    <PriceStep
+      value={value}
+      onChange={setValue}
+      t={t}
+      referral={referral}
+      priceTiers={enabled ? [{ minGuests: "2", maxGuests: "3", unitPrice: "40000" }] : []}
+    />
+  );
+}
+
+it("immediately explains when the base price falls below an existing group rate and clears on correction", () => {
+  renderWithIntl(<TierPriceField />, { locale: "ko" });
+  const input = screen.getByRole("textbox");
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  fireEvent.change(input, { target: { value: "35000" } });
+  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(input).toHaveAttribute("aria-describedby", "price-minimum price-tier-warning");
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "기본 요금보다 높은 인원별 요금이 있어요. 다음 단계에서 조정해 주세요.",
+  );
+  fireEvent.change(input, { target: { value: "40000" } });
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  expect(input).not.toHaveAttribute("aria-invalid", "true");
+});
+
+it.each([{ referral: true }, { enabled: false }])(
+  "does not warn for referrals or disabled group rates: %j",
+  (props) => {
+    renderWithIntl(<TierPriceField {...props} />);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "35000" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  },
+);
 
 function ListHarness({
   kind,
@@ -78,7 +127,7 @@ describe("activity input limits", () => {
     ).not.toBeInTheDocument();
     for (const value of ["-5000", "12.5", "0", "5000"]) {
       fireEvent.change(input, { target: { value } });
-      expect(input).toHaveValue(value);
+      expect(input).toHaveValue(value === "5000" ? "5,000" : value);
     }
     expect(screen.queryByText("The minimum price per person is ₩15,000.")).not.toBeInTheDocument();
   });

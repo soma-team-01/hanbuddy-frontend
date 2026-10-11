@@ -41,6 +41,29 @@ afterEach(() => {
 });
 
 describe("anonymous public activity documents", () => {
+  it("preserves public price tiers in the first list and detail render without private fields", async () => {
+    const priceTiers = [
+      { minGuests: 2, maxGuests: 3, unitPrice: 35000 },
+      { minGuests: 6, maxGuests: null, unitPrice: 28000 },
+    ];
+    const responseTiers = priceTiers.map((tier) => ({ ...tier, privateNote: "hidden" }));
+    respond(success([{ ...activity, priceTiers: responseTiers }]));
+    expect((await getPublicActivities("ko"))[0].priceTiers).toEqual(priceTiers);
+    respond(success({ ...activity, priceTiers: responseTiers }));
+    expect((await getPublicActivity("42", "ko")).priceTiers).toEqual(priceTiers);
+  });
+  it.each([undefined, null, []])("normalizes legacy price tiers (%j)", async (priceTiers) => {
+    respond(success({ ...activity, priceTiers }));
+    expect((await getPublicActivity("42", "ko")).priceTiers).toEqual([]);
+  });
+  it.each([
+    [{ minGuests: "2", maxGuests: null, unitPrice: 35000 }],
+    [{ minGuests: 2, maxGuests: 1, unitPrice: 35000 }],
+    [{ minGuests: 2, maxGuests: null, unitPrice: -1 }],
+  ])("rejects malformed price tiers (%j)", async (tier) => {
+    respond(success({ ...activity, priceTiers: [tier] }));
+    await expect(getPublicActivity("42", "ko")).rejects.toMatchObject({ kind: "unavailable" });
+  });
   it.each(
     [undefined, [], ["KO", "EN", "YUE"]].map((availableLanguages) => ({ availableLanguages })),
   )("preserves spoken languages in public list and detail (%j)", async ({ availableLanguages }) => {

@@ -24,10 +24,12 @@ function getPayPalUnitPriceUsd(detail: TouristActivityDetail | undefined): numbe
 export function BookingContent({
   activityId,
   initialScheduleId,
+  initialGuestCount,
   refundPolicyDocument,
 }: Readonly<{
   activityId: string;
   initialScheduleId?: string;
+  initialGuestCount?: number;
   refundPolicyDocument?: PolicyDocumentData;
 }>) {
   const locale = getLocaleOrDefault(useLocale());
@@ -87,6 +89,7 @@ export function BookingContent({
     <BookingForm
       activity={activity}
       initialSessionId={initialScheduleId}
+      initialGuestCount={initialGuestCount}
       payPalPricePending={payPalPricePending}
       payPalUnitPriceUsd={payPalUnitPriceUsd}
       refundPolicyDocument={refundPolicyDocument}

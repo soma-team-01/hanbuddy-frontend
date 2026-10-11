@@ -1,4 +1,68 @@
 {
+  "QuantityPricing": {
+    "options": {
+      "none": "No discount",
+      "enabled": "Apply discount"
+    },
+    "pricingTitle": "Pricing",
+    "discountedPriceColumn": "Discounted price",
+    "selectEndDate": "Select date",
+    "previewPrompt": "Enter the end date and discount rate to see final prices.",
+    "fromGuests": "From",
+    "toGuests": "To",
+    "optionalBound": "Optional",
+    "appliedGuests": "Applies to: {guests}",
+    "rangeInput": "Guest count",
+    "addRow": "Add",
+    "priceColumn": "Price / person",
+    "payoutColumn": "Payout / person",
+    "tableNote": "Before period discounts · Base price outside these ranges",
+    "basePayout": "Estimated payout per person {amount}",
+    "enable": "Set group prices",
+    "hint": "Enter the per-person price for everyone in one application. The base price applies outside these ranges. Any period discount applies on top.",
+    "range": "Price tier {count}",
+    "minGuests": "Minimum guests",
+    "maxGuests": "Maximum guests",
+    "unitPrice": "Per person (KRW)",
+    "unlimited": "No upper limit",
+    "removeRange": "Remove price tier {count}",
+    "remove": "Remove",
+    "add": "+ Add price tier",
+    "preview": "Final price preview",
+    "invalid": "Check prices, group sizes and discounts. Ranges cannot overlap and the final price must be at least ₩1.",
+    "error": "Could not load the estimated payout.",
+    "retry": "Try again",
+    "loading": "Checking the latest price…",
+    "rate": "Total deduction {rate}% · includes VAT and payment fees",
+    "guests": "Guests",
+    "unit": "Unit price",
+    "total": "Total payment",
+    "deduction": "Total deduction",
+    "payout": "Estimated payout",
+    "guestCount": "{count, plural, one {# guest} other {# guests}}",
+    "notice": "Group sizes do not indicate seat availability. Payouts may change with the rate at saving or payment.",
+    "quoteError": "Could not confirm the price. Please try again.",
+    "quantityDiscount": "Group discount",
+    "periodDiscount": "Period discount",
+    "invalidTiers": "Use 2–100 guests, unit prices no higher than the base price, and non-overlapping ranges.",
+    "invalidAmount": "The final payment must be at least ₩1.",
+    "base": "Base price per person",
+    "fallback": "Bookings outside your tiers use the base price.",
+    "viewTiers": "View quantity rates",
+    "tierNotice": "The same rate applies to everyone in one booking. Rates below are before any period discount.",
+    "rangeLabel": "{min}–{max} guests",
+    "openRangeLabel": "{min}+ guests",
+    "previewGuests": "Preview booking size",
+    "expand": "View all guest counts and payouts",
+    "collapse": "Hide payout table",
+    "selectedTotal": "{count, plural, one {Total for # guest} other {Total for # guests}}",
+    "perGuest": "{price} per person",
+    "guestsLabel": "Guests",
+    "less": "Remove a guest",
+    "more": "Add a guest",
+    "baseApplied": "Base rate applied",
+    "tierApplied": "Quantity rate applied"
+  },
   "ActivityLanguages": {
     "hostedIn": "Hosted in",
     "title": "Activity languages",
@@ -213,6 +277,7 @@
     "conflict": "This action cannot be completed in the current state.",
     "serverUnavailable": "The service is temporarily unavailable. Please try again shortly.",
     "activityDiscountInvalid": "Set the discount rate and end date together.",
+    "activityPriceTiersInvalid": "Check for overlapping guest ranges and enter unit prices no higher than the base price.",
     "activityDiscountEndDate": "The discount end date must be today or a later date.",
     "reviewNotReviewable": "You can leave a review after the activity ends.",
     "reviewOwner": "You can only edit reviews you wrote.",
@@ -942,6 +1007,8 @@
     "soldOut": "Sold out"
   },
   "ActivityDetail": {
+    "selectDateCompact": "Date",
+    "bookCompact": "Book",
     "loading": "Loading activity...",
     "loadError": "Could not load activity details.",
     "notFound": "This activity could not be found.",
@@ -1088,6 +1155,7 @@
     "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. The 30-minute benefit and separate refund rights, including unprovided portions, take priority.",
     "actualPaymentRefundNotice": "Discounted bookings are refunded from the amount paid.",
     "agreement": "[Required] I agree to the cancellation and refund policy.",
+    "agreementCompact": "[Required] Agree to cancellation/refunds",
     "submit": "Apply & Pay",
     "payNow": "Pay now",
     "payWithToss": "Pay with Toss Payments",
@@ -1540,20 +1608,24 @@
         "description": "Choose how many guests you can host comfortably at one time."
       },
       "price": {
-        "title": "Set the price per person",
-        "description": "Enter the amount each guest will pay in Korean won."
+        "title": "Base price",
+        "description": "Enter the price per person."
       },
       "inclusions": {
         "title": "Tell guests what's included",
         "description": "Be precise about what the price covers."
       },
       "discount": {
-        "title": "Add a discount",
-        "description": "Optionally set a limited-time discount with an end date."
+        "title": "Period discount",
+        "description": "Apply a period discount?"
       },
       "restrictions": {
         "title": "Before guests join",
         "description": "Select anything guests should know before taking part in the activity."
+      },
+      "quantity": {
+        "title": "Quantity rates",
+        "description": "Apply a quantity discount?"
       }
     },
     "groups": {
@@ -1728,12 +1800,13 @@
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
+      "tierPriceWarning": "A group rate exceeds the base price. Adjust it in the next step.",
       "referralTitle": "Set the minimum service price",
       "referralDescription": "Enter the lowest price among the services you offer.",
       "referralLabel": "Minimum service price",
       "referralMinimum": "You can enter an amount from ₩0.",
       "minimum": "The minimum price per person is ₩{amount, number}.",
-      "notice": "This amount is shown to guests as the price per person in Korean won."
+      "notice": "This price applies when no quantity rate matches the booking."
     },
     "inclusions": {
       "custom": "Other included items",
@@ -1752,14 +1825,14 @@
       }
     },
     "discount": {
-      "policyNotice": "The discount applies to every session until the end date you set.",
+      "policyNotice": "Book by the end date · Group discounts also apply",
       "options": {
         "none": {
           "title": "No discount",
-          "description": "List the experience at its standard price."
+          "description": "Your quantity rates still apply."
         },
         "limited": {
-          "title": "Limited-time discount",
+          "title": "Apply discount",
           "description": "Offer a lower price for a limited promotional period."
         }
       }
@@ -1820,6 +1893,8 @@
       "referralPriceInvalid": "Enter a whole amount from ₩0 to ₩9,999,999,999.",
       "inclusionsRequired": "Add at least one included item.",
       "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
+      "priceTiersInvalid": "Use non-overlapping guest ranges and per-person prices no higher than the base price.",
+      "pricingInvalid": "Check prices, guest counts and period discounts. The final price must be at least ₩1.",
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",
       "imageUploadFailed": "We couldn't upload your photos. Please try again.",
       "submissionFailed": "We couldn't register your experience. Please try again.",

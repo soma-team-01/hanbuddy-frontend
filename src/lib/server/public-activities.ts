@@ -8,6 +8,7 @@ import type { TouristActivityDetail, TouristActivitySummary } from "@/types/acti
 import { isContentLanguage } from "@/types/content-language";
 import { withActivityDate } from "@/lib/activity-booking-window";
 import { isActivityLanguage } from "@/types/activity-language";
+import type { ActivityPriceTier } from "@/types/activity-pricing";
 
 export class PublicActivityError extends Error {
   constructor(readonly kind: "missing" | "unavailable") {
@@ -54,6 +55,31 @@ function publicDisplayPrice(value: unknown) {
   )
     unavailable();
   return select(price, ["price", "discountedPrice", "currency", "exchangeRateDate", "estimated"]);
+}
+
+function publicPriceTiers(value: unknown): ActivityPriceTier[] {
+  if (value == null) return [];
+  return array(value).map((entry) => {
+    const tier = record(entry);
+    requireFields(tier, [], ["minGuests", "unitPrice"]);
+    const minGuests = tier.minGuests as number;
+    const unitPrice = tier.unitPrice as number;
+    const maxGuests = tier.maxGuests;
+    if (
+      !Number.isSafeInteger(minGuests) ||
+      minGuests < 2 ||
+      minGuests > 100 ||
+      !Number.isSafeInteger(unitPrice) ||
+      unitPrice < 1 ||
+      (maxGuests !== null &&
+        (typeof maxGuests !== "number" ||
+          !Number.isSafeInteger(maxGuests) ||
+          maxGuests < minGuests ||
+          maxGuests > 100))
+    )
+      unavailable();
+    return { minGuests, maxGuests: maxGuests as number | null, unitPrice };
+  });
 }
 
 function summary(value: unknown): TouristActivitySummary {
@@ -140,6 +166,7 @@ function summary(value: unknown): TouristActivitySummary {
   )
     unavailable();
   if (item.displayPrice !== undefined) result.displayPrice = publicDisplayPrice(item.displayPrice);
+  result.priceTiers = publicPriceTiers(item.priceTiers);
   if (Array.isArray(item.availableLanguages)) {
     result.availableLanguages = item.availableLanguages.filter(isActivityLanguage);
   }

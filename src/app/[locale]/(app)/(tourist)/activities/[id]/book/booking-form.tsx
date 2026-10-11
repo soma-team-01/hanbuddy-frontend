@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useBeginCheckout } from "@/components/analytics/use-begin-checkout";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
@@ -28,7 +28,11 @@ import {
   PAYMENT_PROVIDER_MODE,
   type PaymentProviderMode,
 } from "@/lib/payment-provider-visibility";
-import { activityKeys, touristActivityQueryOptions } from "@/lib/query/activities";
+import {
+  activityKeys,
+  touristActivityQueryOptions,
+  activityPriceQuoteQueryOptions,
+} from "@/lib/query/activities";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { isBookingOpen, isBookableSession } from "@/lib/activity-booking-window";
 import { useBookableSessions } from "@/lib/use-bookable-sessions";
@@ -72,6 +76,7 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 export function BookingForm({
   activity,
   initialSessionId,
+  initialGuestCount = 1,
   payPalPricePending = false,
   payPalUnitPriceUsd,
   refundPolicyDocument,
@@ -79,6 +84,7 @@ export function BookingForm({
 }: Readonly<{
   activity: Activity;
   initialSessionId?: string;
+  initialGuestCount?: number;
   payPalPricePending?: boolean;
   payPalUnitPriceUsd?: number;
   refundPolicyDocument?: PolicyDocumentData;
@@ -89,6 +95,7 @@ export function BookingForm({
   const locale = useLocale();
   const contentLanguage = getContentLanguage(locale);
   const t = useTranslations("Booking");
+  const pricingT = useTranslations("QuantityPricing");
   const inquiryT = useTranslations("AlternativePayment");
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const getApiErrorMessage = useApiErrorMessage();
@@ -107,7 +114,36 @@ export function BookingForm({
       ? ""
       : (activity.sessions.find((session) => isBookableSession(session))?.id ?? "");
   });
-  const [guests, setGuests] = useState(1);
+  const [guests, setGuests] = useState(() => {
+    const capacity =
+      activity.sessions.find((session) => session.id === sessionId)?.spotsLeft ?? MAX_GUESTS;
+    return Number.isInteger(initialGuestCount) &&
+      initialGuestCount >= 1 &&
+      initialGuestCount <= MAX_GUESTS
+      ? Math.max(1, Math.min(initialGuestCount, capacity))
+      : 1;
+  });
+  // 언어 전환은 쿼리를 보존한다. 최신 선택을 URL에 동기화해 폼이 다시 마운트되어도 복원한다.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (
+      url.searchParams.get("guestCount") === String(guests) &&
+      url.searchParams.get("scheduleId") === sessionId
+    )
+      return;
+    url.searchParams.set("guestCount", String(guests));
+    url.searchParams.set("scheduleId", sessionId);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [guests, sessionId]);
+  const quoteQuery = useQuery(activityPriceQuoteQueryOptions(activity.id, guests));
+  const quote =
+    !quoteQuery.isFetching &&
+    !quoteQuery.isError &&
+    quoteQuery.data?.guestCount === guests &&
+    String(quoteQuery.data.activityId) === activity.id
+      ? quoteQuery.data
+      : null;
+  const quoteReady = Boolean(quote && quote.currency === "KRW" && quote.amount > 0);
   const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorKey, setErrorKey] = useState<BookingErrorKey | null>(null);
@@ -155,30 +191,38 @@ export function BookingForm({
       ]);
     },
   });
-  useAuthQueryRedirect(conflictCheckMutation.error ?? createApplicationMutation.error);
+  useAuthQueryRedirect(
+    quoteQuery.error ?? conflictCheckMutation.error ?? createApplicationMutation.error,
+  );
   const isSubmitting =
     checkingSchedule ||
     conflictCheckMutation.isPending ||
     createApplicationMutation.isPending ||
     paymentInFlight;
 
-  const discountedUnitPrice = activity.price;
-  const originalUnitPrice = activity.originalPrice ?? discountedUnitPrice;
-  const originalSubtotal = originalUnitPrice * guests;
-  const total = discountedUnitPrice * guests;
-  const discountAmount = Math.max(0, originalSubtotal - total);
+  const originalUnitPrice = quote?.originalUnitPrice ?? 0;
+  const originalSubtotal = quote?.originalAmount ?? 0;
+  const total = quote?.amount ?? 0;
+  const discountAmount = quote?.discountAmount ?? 0;
   const hasDiscount = discountAmount > 0;
   const localeReferenceTotal =
-    activity.referenceCurrency && activity.referencePrice !== undefined
-      ? activity.referencePrice * guests
+    quoteReady &&
+    activity.price > 0 &&
+    activity.referenceCurrency &&
+    activity.referencePrice !== undefined
+      ? total * (activity.referencePrice / activity.price)
       : null;
   const payPalReferenceUnitPrice =
     payPalUnitPriceUsd ??
     (activity.referenceCurrency === "USD" ? activity.referencePrice : undefined);
   const estimatedPayPalTotal =
-    payPalReferenceUnitPrice !== undefined ? payPalReferenceUnitPrice * guests : null;
+    quoteReady && activity.price > 0 && payPalReferenceUnitPrice !== undefined
+      ? total * (payPalReferenceUnitPrice / activity.price)
+      : null;
   const isPayPalPricePending =
-    showPayPalPayment && estimatedPayPalTotal === null && payPalPricePending;
+    showPayPalPayment &&
+    estimatedPayPalTotal === null &&
+    (payPalPricePending || quoteQuery.isPending || quoteQuery.isFetching);
   const isPayPalPriceUnavailable =
     showPayPalPayment && estimatedPayPalTotal === null && !isPayPalPricePending;
   const tossPaymentLabel = showProviderChoice ? t("payWithToss") : t("payNow");
@@ -209,6 +253,7 @@ export function BookingForm({
     request: CreateApplicationRequest,
     paymentProvider: PaymentProvider,
   ) {
+    if (!quoteReady) return;
     try {
       setCheckingSchedule(true);
       // Do not trust a cached calendar or the device clock alone when starting a new payment.
@@ -287,6 +332,7 @@ export function BookingForm({
   }
 
   function handleSubmitClick(paymentProvider: PaymentProvider) {
+    if (!quoteReady) return;
     if (paymentProvider === "PAYPAL" && estimatedPayPalTotal === null) return;
     void runWithSubmissionLock(async () => {
       const validationError = validateBookingSession(
@@ -380,6 +426,7 @@ export function BookingForm({
     Number(activity.id),
     Boolean(
       selectedSession &&
+      quoteReady &&
       selectedSession.spotsLeft >= guests &&
       (showTossPayment ||
         (showPayPalPayment &&
@@ -534,51 +581,100 @@ export function BookingForm({
                 </div>
               </dl>
 
-              <div className="flex flex-col gap-2 border-t border-line-soft pt-4 text-sm">
-                <h2 className="font-display text-sm font-bold text-ink">{t("priceDetails")}</h2>
-                <div className="flex items-center justify-between text-muted">
-                  <span>
-                    {t("subtotal", { price: formatKrw(originalUnitPrice, locale), count: guests })}
-                  </span>
-                  <span className={hasDiscount ? "line-through" : undefined}>
-                    {formatKrw(originalSubtotal, locale)}
-                  </span>
+              {!quoteReady ? (
+                <div
+                  className="border-t border-line-soft pt-4 text-sm"
+                  role={quoteQuery.isError ? "alert" : "status"}
+                >
+                  <p className={quoteQuery.isError ? "text-danger" : "text-muted"}>
+                    {quoteQuery.isError
+                      ? getApiErrorMessage(quoteQuery.error, pricingT("quoteError"))
+                      : pricingT("loading")}
+                  </p>
+                  {quoteQuery.isError && (
+                    <button
+                      type="button"
+                      onClick={() => void quoteQuery.refetch()}
+                      className="min-h-11 text-primary underline"
+                    >
+                      {pricingT("retry")}
+                    </button>
+                  )}
                 </div>
-                {hasDiscount ? (
-                  <div className="flex items-center justify-between font-semibold text-primary">
-                    <span>
-                      {activity.discountPercent
-                        ? t("discount", { percent: activity.discountPercent })
-                        : t("discountAmount")}
-                    </span>
-                    <span>-{formatKrw(discountAmount, locale)}</span>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-2 border-t border-line-soft pt-4 text-sm">
+                    <h2 className="font-display text-sm font-bold text-ink">{t("priceDetails")}</h2>
+                    <div className="flex items-center justify-between text-muted">
+                      <span>
+                        {t("subtotal", {
+                          price: formatKrw(originalUnitPrice, locale),
+                          count: guests,
+                        })}
+                      </span>
+                      <span className={hasDiscount ? "line-through" : undefined}>
+                        {formatKrw(originalSubtotal, locale)}
+                      </span>
+                    </div>
+                    {hasDiscount &&
+                    quote &&
+                    (quote.quantityDiscountAmount > 0 || quote.periodDiscountAmount > 0) ? (
+                      <>
+                        {quote.quantityDiscountAmount > 0 && (
+                          <div className="flex items-center justify-between gap-3 font-semibold text-primary">
+                            <span>{pricingT("quantityDiscount")}</span>
+                            <span>-{formatKrw(quote.quantityDiscountAmount, locale)}</span>
+                          </div>
+                        )}
+                        {quote.periodDiscountAmount > 0 && (
+                          <div className="flex items-center justify-between gap-3 font-semibold text-primary">
+                            <span>
+                              {pricingT("periodDiscount")}
+                              {quote.discountPercent ? ` (${quote.discountPercent}%)` : ""}
+                            </span>
+                            <span>-{formatKrw(quote.periodDiscountAmount, locale)}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : hasDiscount ? (
+                      <div className="flex items-center justify-between font-semibold text-primary">
+                        <span>
+                          {quote?.discountPercent
+                            ? t("discount", { percent: quote.discountPercent })
+                            : t("discountAmount")}
+                        </span>
+                        <span>-{formatKrw(discountAmount, locale)}</span>
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
 
-              <div className="flex items-end justify-between border-t border-line-soft pt-4">
-                <span className="font-display text-base font-bold text-ink">{t("totalLabel")}</span>
-                <div className="flex flex-col items-end gap-0.5">
-                  {localeReferenceTotal !== null && activity.referenceCurrency ? (
-                    <span className="text-xs font-medium text-muted">
-                      ≈{" "}
-                      {formatDisplayCurrency(
-                        localeReferenceTotal,
-                        activity.referenceCurrency,
-                        locale,
-                      )}
+                  <div className="flex items-end justify-between border-t border-line-soft pt-4">
+                    <span className="font-display text-base font-bold text-ink">
+                      {t("totalLabel")}
                     </span>
-                  ) : null}
-                  <span className="font-display text-xl font-bold text-primary">
-                    {formatKrw(total, locale)}
-                  </span>
-                </div>
-              </div>
+                    <div className="flex flex-col items-end gap-0.5">
+                      {localeReferenceTotal !== null && activity.referenceCurrency ? (
+                        <span className="text-xs font-medium text-muted">
+                          ≈{" "}
+                          {formatDisplayCurrency(
+                            localeReferenceTotal,
+                            activity.referenceCurrency,
+                            locale,
+                          )}
+                        </span>
+                      ) : null}
+                      <span className="font-display text-xl font-bold text-primary">
+                        {formatKrw(total, locale)}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="lg:pt-6">
-              <BottomActionBar>
-                <div className="flex w-full flex-col gap-2">
+              <BottomActionBar compact>
+                <div className="flex w-full flex-col gap-1 lg:gap-2">
                   {errorMessage ? (
                     <div
                       ref={errorAlertRef}
@@ -610,13 +706,14 @@ export function BookingForm({
                       <button
                         type="button"
                         disabled={
+                          !quoteReady ||
                           !refundPolicyAgreed ||
                           isSubmitting ||
                           !selectedSession ||
                           guests > maxGuests
                         }
                         onClick={() => handleSubmitClick("TOSS")}
-                        className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
+                        className={`flex h-11 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 lg:h-13 ${
                           showProviderChoice
                             ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
                             : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
@@ -647,6 +744,7 @@ export function BookingForm({
                           <button
                             type="button"
                             disabled={
+                              !quoteReady ||
                               !refundPolicyAgreed ||
                               isSubmitting ||
                               estimatedPayPalTotal === null ||
@@ -654,7 +752,7 @@ export function BookingForm({
                               guests > maxGuests
                             }
                             onClick={() => handleSubmitClick("PAYPAL")}
-                            className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                            className="flex h-11 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40 lg:h-13"
                           >
                             {isSubmitting ? t("processing") : payPalPaymentLabel}
                           </button>

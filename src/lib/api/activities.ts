@@ -10,6 +10,42 @@ import type { ContentLanguage } from "@/types/content-language";
 import type { DisplayCurrency } from "@/types/display-currency";
 import { requestApiResult, type ApiResult } from "./result";
 import type { ActivityLanguage } from "@/types/activity-language";
+import type {
+  ActivityPriceQuote,
+  ActivityPricingPreview,
+  ActivityPricingPreviewRequest,
+} from "@/types/activity-pricing";
+
+export function getActivityPriceQuote(
+  activityId: number | string,
+  guestCount: number,
+  signal?: AbortSignal,
+) {
+  return requestApiResult<ActivityPriceQuote, "quote">(
+    `/api/activities/${encodeURIComponent(activityId)}/price-quote?guestCount=${guestCount}`,
+    "quote",
+    { signal, cache: "no-store" },
+    "신청 가격을 불러오지 못했습니다.",
+  );
+}
+
+export function getActivityPricingPreview(
+  request: ActivityPricingPreviewRequest,
+  signal?: AbortSignal,
+) {
+  return requestApiResult<ActivityPricingPreview, "preview">(
+    "/api/activities/pricing-preview",
+    "preview",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      signal,
+      cache: "no-store",
+    },
+    "예상 정산액을 불러오지 못했습니다.",
+  );
+}
 
 export function getActivityLanguages() {
   return requestApiResult<ActivityLanguage[], "languages">(

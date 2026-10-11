@@ -1,4 +1,68 @@
 {
+  "QuantityPricing": {
+    "options": {
+      "none": "할인 없음",
+      "enabled": "할인 적용"
+    },
+    "pricingTitle": "요금",
+    "discountedPriceColumn": "할인 후 가격",
+    "selectEndDate": "날짜 선택",
+    "previewPrompt": "할인 종료일과 할인율을 입력하면 최종 요금이 표시돼요.",
+    "fromGuests": "몇 명부터",
+    "toGuests": "몇 명까지",
+    "optionalBound": "선택",
+    "appliedGuests": "적용 인원: {guests}",
+    "rangeInput": "인원수",
+    "addRow": "추가",
+    "priceColumn": "1인 가격",
+    "payoutColumn": "1인 정산액",
+    "tableNote": "기간 할인 전 예상액 · 구간 외에는 기본 요금 적용",
+    "basePayout": "1인 예상 정산 {amount}",
+    "enable": "인원별 가격 설정",
+    "hint": "한 신청의 인원수에 따라 모든 참여자에게 적용할 1인 가격을 입력하세요. 구간 밖은 기본 가격이며, 기간 할인은 추가 적용됩니다.",
+    "range": "가격 구간 {count}",
+    "minGuests": "최소 인원",
+    "maxGuests": "최대 인원",
+    "unitPrice": "1인 가격 (KRW)",
+    "unlimited": "상한 없음",
+    "removeRange": "가격 구간 {count} 삭제",
+    "remove": "삭제",
+    "add": "+ 가격 구간 추가",
+    "preview": "최종 요금 미리보기",
+    "invalid": "가격·인원·할인 설정을 확인해 주세요. 구간은 겹칠 수 없고, 할인 후 금액은 1원 이상이어야 합니다.",
+    "error": "예상 정산액을 불러오지 못했습니다.",
+    "retry": "다시 시도",
+    "loading": "최신 가격을 확인하고 있어요.",
+    "rate": "총 공제율 {rate}% · VAT 및 결제 수수료 포함",
+    "guests": "인원",
+    "unit": "적용 단가",
+    "total": "결제 총액",
+    "deduction": "총 공제액",
+    "payout": "예상 정산액",
+    "guestCount": "{count, plural, other {#명}}",
+    "notice": "표의 인원은 잔여 좌석과 무관합니다. 정산액은 저장·결제 시점의 요율에 따라 달라질 수 있습니다.",
+    "quoteError": "가격을 확인하지 못했습니다. 다시 시도해 주세요.",
+    "quantityDiscount": "인원 할인",
+    "periodDiscount": "기간 할인",
+    "invalidTiers": "인원은 2~100명, 단가는 기본 가격 이하로 입력하고 구간이 겹치지 않게 해 주세요.",
+    "invalidAmount": "할인 후 결제 금액은 1원 이상이어야 합니다.",
+    "base": "기본 1인 요금",
+    "fallback": "설정하지 않은 인원 구간에는 기본 요금이 적용돼요.",
+    "viewTiers": "인원별 요금 보기",
+    "tierNotice": "한 예약의 모든 참여자에게 같은 단가가 적용됩니다. 아래는 기간 할인 전 요금이에요.",
+    "rangeLabel": "{min}~{max}명",
+    "openRangeLabel": "{min}명 이상",
+    "previewGuests": "미리볼 예약 인원",
+    "expand": "전체 인원별 정산표 보기",
+    "collapse": "정산표 접기",
+    "selectedTotal": "{count, plural, other {#명 총액}}",
+    "perGuest": "1인 {price}",
+    "guestsLabel": "참여 인원",
+    "less": "인원 줄이기",
+    "more": "인원 늘리기",
+    "baseApplied": "기본 요금 적용",
+    "tierApplied": "인원별 요금 적용"
+  },
   "ActivityLanguages": {
     "hostedIn": "제공 언어",
     "title": "진행 가능 언어",
@@ -213,6 +277,7 @@
     "conflict": "현재 상태에서는 이 작업을 완료할 수 없습니다.",
     "serverUnavailable": "서비스를 일시적으로 이용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "activityDiscountInvalid": "할인율과 할인 종료일은 함께 설정해야 합니다.",
+    "activityPriceTiersInvalid": "인원 구간이 겹치지 않는지 확인하고, 단가는 기본 가격 이하로 입력해 주세요.",
     "activityDiscountEndDate": "할인 종료일은 오늘 또는 이후 날짜여야 합니다.",
     "reviewNotReviewable": "활동이 끝난 뒤에 후기를 남길 수 있습니다.",
     "reviewOwner": "본인이 작성한 후기만 수정할 수 있습니다.",
@@ -942,6 +1007,8 @@
     "soldOut": "예약 마감"
   },
   "ActivityDetail": {
+    "selectDateCompact": "날짜 선택",
+    "bookCompact": "예약",
     "loading": "활동을 불러오는 중...",
     "loadError": "활동 상세 정보를 불러오지 못했습니다.",
     "notFound": "활동을 찾을 수 없습니다.",
@@ -1088,6 +1155,7 @@
     "refundExceptionsNotice": "일반 취소 기준은 법정 기간 경과 또는 법령상 제한 사유가 인정될 때 적용합니다. 30분 무료 취소와 미제공 부분 등 별도 환불 권리는 우선 보장합니다.",
     "actualPaymentRefundNotice": "할인 결제는 실제 결제금액을 기준으로 환불합니다.",
     "agreement": "[필수] 취소 및 환불 규정에 동의합니다.",
+    "agreementCompact": "[필수] 취소·환불 규정에 동의합니다.",
     "submit": "신청 및 결제",
     "payNow": "결제하기",
     "payWithToss": "토스페이먼츠로 결제",
@@ -1540,20 +1608,24 @@
         "description": "한 번에 편안하게 진행할 수 있는 게스트 수를 선택해 주세요."
       },
       "price": {
-        "title": "1인당 요금을 정해 주세요",
-        "description": "게스트 한 명이 결제할 금액을 원화로 입력해 주세요."
+        "title": "기본 요금",
+        "description": "1인 기준으로 입력해 주세요."
       },
       "inclusions": {
         "title": "포함 사항을 알려 주세요",
         "description": "요금에 무엇이 포함되는지 정확하게 알려 주세요."
       },
       "discount": {
-        "title": "할인을 추가해 보세요",
-        "description": "원한다면 종료일이 있는 기간 한정 할인을 설정해 주세요."
+        "title": "기간 할인",
+        "description": "기간 할인을 적용할까요?"
       },
       "restrictions": {
         "title": "참여 전 확인사항",
         "description": "게스트가 활동에 참여하기 전에 알아야 할 내용을 선택해 주세요."
+      },
+      "quantity": {
+        "title": "인원별 요금",
+        "description": "인원별 할인을 적용할까요?"
       }
     },
     "groups": {
@@ -1728,12 +1800,13 @@
       "pastTimeHint": "오늘 날짜에는 현재 시각(KST) 이후의 시간만 추가할 수 있어요."
     },
     "price": {
+      "tierPriceWarning": "기본 요금보다 높은 인원별 요금이 있어요. 다음 단계에서 조정해 주세요.",
       "referralTitle": "서비스 최소 금액을 입력해 주세요",
       "referralDescription": "제공하는 서비스 중 가장 낮은 금액을 입력해 주세요.",
       "referralLabel": "서비스 최소 금액",
       "referralMinimum": "0원부터 입력할 수 있습니다.",
       "minimum": "1인당 최소 금액은 {amount, number}원입니다.",
-      "notice": "설정한 금액은 게스트에게 1인당 원화 요금으로 표시됩니다."
+      "notice": "별도의 인원별 요금이 없는 경우 적용할 기본 금액이에요."
     },
     "inclusions": {
       "custom": "기타 포함사항",
@@ -1752,14 +1825,14 @@
       }
     },
     "discount": {
-      "policyNotice": "할인은 설정한 종료일까지 모든 일정에 적용됩니다.",
+      "policyNotice": "종료일까지 예약 시 적용 · 인원 할인 중복 가능",
       "options": {
         "none": {
           "title": "할인 없음",
-          "description": "활동을 기본 요금으로 등록합니다."
+          "description": "인원별 요금은 설정한 대로 유지됩니다."
         },
         "limited": {
-          "title": "기간 한정 할인",
+          "title": "할인 적용",
           "description": "한정된 프로모션 기간에 더 낮은 요금을 제공합니다."
         }
       }
@@ -1820,6 +1893,8 @@
       "referralPriceInvalid": "0원 이상 9,999,999,999원 이하의 정수 금액을 입력해 주세요.",
       "inclusionsRequired": "포함 사항을 한 개 이상 입력해 주세요.",
       "discountInvalid": "할인 종료일을 선택하고 할인율을 1부터 100 사이의 정수로 입력해 주세요.",
+      "priceTiersInvalid": "인원 구간이 겹치지 않게 설정하고, 1인 가격은 기본 가격 이하로 입력해 주세요.",
+      "pricingInvalid": "가격·인원·기간 할인을 확인해 주세요. 할인 후 금액은 1원 이상이어야 합니다.",
       "restrictionsRequired": "확인사항을 한 개 이상 선택하거나 별도로 확인할 사항이 없음을 선택해 주세요.",
       "imageUploadFailed": "사진 업로드에 실패했어요. 잠시 후 다시 시도해 주세요.",
       "submissionFailed": "활동 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",

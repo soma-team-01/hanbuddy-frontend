@@ -5,7 +5,7 @@ import { getReferralNotice, submitReferralApplication } from "@/lib/api/referral
 import { createApplication } from "@/lib/api/applications";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivity } from "@/lib/api/activities";
+import { getActivityPriceQuote, getTouristActivity } from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
 import { activityKeys } from "@/lib/query/activities";
 import { createQueryClient } from "@/lib/query/client";
@@ -21,6 +21,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivity: vi.fn(),
+  getActivityPriceQuote: vi.fn(),
 }));
 
 vi.mock("@/lib/api/applications", () => ({
@@ -37,6 +38,24 @@ const mockedGetTouristActivity = vi.mocked(getTouristActivity);
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-07-18T00:00:00+09:00"));
+  vi.mocked(getActivityPriceQuote).mockResolvedValue({
+    status: "success",
+    quote: {
+      activityId: 42,
+      guestCount: 1,
+      currency: "KRW",
+      originalUnitPrice: 45000,
+      quantityUnitPrice: 45000,
+      unitPrice: 45000,
+      originalAmount: 45000,
+      amount: 45000,
+      discountAmount: 0,
+      discountPercent: null,
+      appliedPriceTier: null,
+      quantityDiscountAmount: 0,
+      periodDiscountAmount: 0,
+    },
+  });
 });
 afterEach(() => vi.useRealTimers());
 
@@ -115,6 +134,7 @@ describe("BookingContent", () => {
     expect(mockedGetTouristActivity.mock.calls.every((call) => call[2] === "CNY")).toBe(true);
     expect(createApplication).not.toHaveBeenCalled();
     expect(submitReferralApplication).not.toHaveBeenCalled();
+    expect(getActivityPriceQuote).not.toHaveBeenCalled();
   });
 
   it("renders booking form with activity detail loaded from the API", async () => {

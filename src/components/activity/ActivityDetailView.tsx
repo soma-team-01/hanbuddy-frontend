@@ -1,6 +1,7 @@
 "use client";
 
 import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
+import { ActivityPriceTiers } from "@/components/activity/ActivityPriceTiers";
 import { LazyMapFrame } from "@/components/activity/LazyMapFrame";
 
 import Image from "next/image";
@@ -198,10 +199,30 @@ export function ActivityDetailView({
     dateBoxLabel = t("noDates");
   }
   const dateBoxDisabled = bookableSessions.length === 0;
+  const mobileDateLabel = selectedSession
+    ? selectedSession.startAt && !Number.isNaN(Date.parse(selectedSession.startAt))
+      ? new Intl.DateTimeFormat(locale, {
+          month: "numeric",
+          day: "numeric",
+          timeZone: "Asia/Seoul",
+        }).format(new Date(selectedSession.startAt))
+      : selectedSession.dateLabel
+    : dateBoxDisabled
+      ? t("noDates")
+      : t("selectDateCompact");
   const bookingPath = selectedSession
     ? `/activities/${activity.id}/book?scheduleId=${selectedSession.id}`
     : null;
-  const bookNowClassName = `flex h-12 shrink-0 items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary shadow-[0_10px_22px_rgba(209,63,50,0.2)] transition-colors hover:bg-primary-hover md:px-8 ${actionSlotClass}`;
+  const bookNowClassName = `flex h-11 shrink-0 items-center justify-center rounded-full bg-primary px-4 font-display text-xs font-bold text-on-primary transition-colors hover:bg-primary-hover md:h-12 md:px-8 md:text-sm ${actionSlotClass}`;
+  const bookingLabel = activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow");
+  const bookingButtonContent = (
+    <>
+      <span className="md:hidden">
+        {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookCompact")}
+      </span>
+      <span className="hidden md:inline">{bookingLabel}</span>
+    </>
+  );
 
   function handleCalendarSelect(sessionId: string) {
     setSelectedSessionId(sessionId);
@@ -236,53 +257,60 @@ export function ActivityDetailView({
     );
   }
 
+  const dateControl = (
+    <button
+      type="button"
+      data-testid="date-select-box"
+      aria-label={dateBoxLabel}
+      title={dateBoxLabel}
+      onClick={() => setCalendarOpen(true)}
+      disabled={dateBoxDisabled}
+      className={`flex h-11 w-full min-w-0 items-center justify-between gap-1.5 rounded-xl border border-line-strong bg-canvas-soft px-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:h-12 md:flex-1 md:gap-2 md:px-4 ${
+        selectedSession
+          ? "text-ink enabled:hover:border-ink"
+          : "text-muted enabled:hover:border-ink enabled:hover:text-ink"
+      }`}
+    >
+      <span className="min-w-0 text-xs leading-4 font-semibold md:hidden">
+        <span className="block truncate">{mobileDateLabel}</span>
+        {selectedSession && (
+          <span className="block truncate font-normal text-muted">{selectedSession.timeLabel}</span>
+        )}
+      </span>
+      <span className="hidden truncate text-sm font-semibold md:block">{dateBoxLabel}</span>
+      <CalendarDaysIcon className="size-4 shrink-0 text-primary md:size-5" />
+    </button>
+  );
   const bottomBarContent = (
-    <div className="mx-auto flex w-full max-w-[840px] flex-col gap-2.5 md:flex-row md:items-center md:gap-4">
-      <button
-        type="button"
-        data-testid="date-select-box"
-        onClick={() => setCalendarOpen(true)}
-        disabled={dateBoxDisabled}
-        className={`flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:flex-1 ${
-          selectedSession
-            ? "text-ink enabled:hover:border-ink"
-            : "text-muted enabled:hover:border-ink enabled:hover:text-ink"
-        }`}
-      >
-        <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
-        <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
-      </button>
-      {/* 모바일(<768px)은 가격+버튼을 2행에 묶고, md 이상은 래퍼를 없애 날짜·가격·버튼 1행을 유지한다 */}
-      <div
-        data-testid="booking-bar-actions"
-        className="flex items-center justify-between gap-3 md:contents"
-      >
-        {/* 모바일은 원화·환산가·1인당을 한 줄로 읽히게 하고, md 이상은 오른쪽 정렬 세로 블록으로 되돌린다 */}
+    <div className="mx-auto grid w-full max-w-[840px] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 md:flex md:gap-4">
+      {dateControl}
+      {/* 날짜·가격·예약을 모바일에서도 한 행으로 유지한다. */}
+      <div data-testid="booking-bar-actions" className="contents">
         {activity.activityType === "REFERRAL" ? (
           <ReferralPrice
             activity={activity}
             variant="detail"
-            className={`${priceSlotClass} md:shrink-0 md:text-right`}
+            className={`${priceSlotClass} max-md:max-w-32 max-md:flex-col max-md:items-end md:shrink-0 md:text-right max-md:[&>p]:text-xs max-md:[&>p:first-child]:text-base`}
           />
         ) : (
           <div
-            className={`flex min-w-0 flex-col items-start text-left md:shrink-0 md:items-end md:text-right ${priceSlotClass}`}
+            className={`flex min-w-0 flex-col items-end text-right md:shrink-0 ${priceSlotClass}`}
           >
             {hasDiscount ? (
-              <span className="text-sm text-muted line-through">
+              <span className="text-xs leading-4 text-muted line-through md:text-sm">
                 {formatKrw(activity.originalPrice ?? activity.price, locale)}
               </span>
             ) : null}
             <div
               data-testid="booking-bar-price"
-              className="flex flex-wrap items-baseline gap-x-1.5 md:justify-end md:whitespace-nowrap"
+              className="flex flex-col items-end md:flex-row md:flex-wrap md:items-baseline md:justify-end md:gap-x-1.5 md:whitespace-nowrap"
             >
-              <span className="font-display text-xl font-bold text-primary">
+              <span className="font-display text-base leading-5 font-bold text-primary md:text-xl md:leading-normal">
                 {formatKrw(activity.price, locale)}
               </span>
               {hasReferencePrice ? (
                 <span
-                  className="text-xs font-medium text-muted"
+                  className="text-xs leading-4 font-medium text-muted"
                   title={activity.referencePriceEstimated ? estimatedPriceTitle : undefined}
                 >
                   (≈{" "}
@@ -294,7 +322,7 @@ export function ActivityDetailView({
                   )
                 </span>
               ) : null}
-              <span className="text-xs text-muted md:basis-full md:text-right">
+              <span className="sr-only text-xs text-muted md:not-sr-only md:basis-full md:text-right">
                 {tExplore("perPersonLabel")}
               </span>
             </div>
@@ -303,14 +331,16 @@ export function ActivityDetailView({
         {preview || !bookingPath ? (
           <button
             type="button"
+            aria-label={bookingLabel}
             disabled
-            className={`flex h-12 shrink-0 cursor-not-allowed items-center justify-center rounded-full bg-primary px-6 font-display text-sm font-bold text-on-primary opacity-60 md:px-8 ${actionSlotClass}`}
+            className={`${bookNowClassName} cursor-not-allowed opacity-60`}
           >
-            {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow")}
+            {bookingButtonContent}
           </button>
         ) : loginRequired ? (
           <button
             type="button"
+            aria-label={bookingLabel}
             aria-haspopup="dialog"
             onClick={() => {
               onBookingClick?.();
@@ -318,11 +348,16 @@ export function ActivityDetailView({
             }}
             className={bookNowClassName}
           >
-            {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow")}
+            {bookingButtonContent}
           </button>
         ) : (
-          <Link href={bookingPath} onClick={onBookingClick} className={bookNowClassName}>
-            {activity.activityType === "REFERRAL" ? tReferral("apply") : t("bookNow")}
+          <Link
+            href={bookingPath}
+            aria-label={bookingLabel}
+            onClick={onBookingClick}
+            className={bookNowClassName}
+          >
+            {bookingButtonContent}
           </Link>
         )}
       </div>
@@ -569,30 +604,27 @@ export function ActivityDetailView({
                 className="flex scroll-mt-24 flex-col gap-4 border-t border-line-soft pt-6"
               >
                 <h2 className="font-display text-xl font-bold text-ink">{t("aboutHost")}</h2>
-                <div className="flex flex-col gap-4 rounded-3xl border border-line-soft bg-canvas-soft p-5 sm:flex-row sm:gap-5 md:p-6">
+                <div className="flex items-start gap-3 rounded-2xl border border-line-soft bg-canvas-soft p-4">
                   <button
                     type="button"
                     aria-label={t("viewHostProfile", { name: activity.host.name })}
                     onClick={() => setHostProfileOpen(true)}
-                    className="flex shrink-0 items-center gap-4 self-start rounded-full transition-opacity hover:opacity-80 sm:block"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80"
                   >
-                    <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={64} />
-                    <span className="font-display text-lg font-bold text-primary sm:hidden">
-                      {activity.host.name}
-                    </span>
+                    <Avatar name={activity.host.name} src={activity.host.avatarUrl} size={40} />
                   </button>
                   <div className="min-w-0">
-                    <h3 className="max-sm:hidden">
+                    <h3>
                       <button
                         type="button"
                         onClick={() => setHostProfileOpen(true)}
-                        className="font-display text-lg font-bold text-ink transition-colors hover:text-primary"
+                        className="min-h-11 font-display text-sm font-bold text-primary transition-colors hover:text-primary-hover"
                       >
                         {activity.host.name}
                       </button>
                     </h3>
                     {activity.hostIntroduction ? (
-                      <p className="mt-3 text-sm leading-7 whitespace-pre-line text-ink">
+                      <p className="text-[13px] leading-6 whitespace-pre-line text-ink md:text-sm">
                         {activity.hostIntroduction}
                       </p>
                     ) : null}
@@ -643,6 +675,14 @@ export function ActivityDetailView({
                 </section>
               ) : null}
 
+              {activity.activityType !== "REFERRAL" && (
+                <ActivityPriceTiers
+                  tiers={activity.priceTiers ?? []}
+                  basePrice={activity.originalPrice ?? activity.price}
+                  discountPercent={hasDiscount ? activity.discountPercent : undefined}
+                />
+              )}
+
               <section
                 id={SECTION_IDS.meetingPoint}
                 className="flex scroll-mt-24 flex-col gap-1 border-t border-line-soft pt-6"
@@ -672,7 +712,7 @@ export function ActivityDetailView({
         <div
           ref={fixedBarRef}
           data-testid="booking-bottom-bar"
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-canvas-soft/95 px-4 pt-2.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(61,45,43,0.08)] backdrop-blur"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-line-soft bg-canvas-soft/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(61,45,43,0.08)] backdrop-blur md:pt-2.5 md:pb-[max(0.875rem,env(safe-area-inset-bottom))]"
         >
           {bottomBarContent}
         </div>

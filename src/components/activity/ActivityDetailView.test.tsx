@@ -1,12 +1,17 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithQueryClient as renderWithIntl } from "@/test/render-with-query-client";
 import type { Activity } from "@/types/activity";
 import en from "@/messages/en.json";
 import ko from "@/messages/ko.json";
 import ja from "@/messages/ja.json";
 import zhHans from "@/messages/zh-Hans.json";
 import zhHant from "@/messages/zh-Hant.json";
+
+vi.mock("@/lib/api/activities", async (original) => ({
+  ...(await original<typeof import("@/lib/api/activities")>()),
+  getActivityPriceQuote: vi.fn(() => new Promise(() => {})),
+}));
 
 vi.mock("@/components/activity/HostProfileDialog", () => ({
   HostProfileDialog: ({
@@ -62,6 +67,59 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it.each([
+    ["en", en],
+    ["ko", ko],
+  ] as const)(
+    "shows pricing as an expanded body section in %s, independent of the booking bar",
+    (locale, messages) => {
+      renderWithIntl(
+        <ActivityDetailView
+          activity={{
+            ...activity,
+            price: 36000,
+            originalPrice: 40000,
+            discountPercent: 10,
+            priceTiers: [
+              { minGuests: 6, maxGuests: null, unitPrice: 28000 },
+              { minGuests: 2, maxGuests: 3, unitPrice: 35000 },
+            ],
+          }}
+          preview
+          showBookingBar={false}
+        />,
+        { locale, messages },
+      );
+      const section = screen.getByRole("region", { name: messages.QuantityPricing.pricingTitle });
+      expect(section.closest("article")).not.toBeNull();
+      expect(section.querySelector("details")).toBeNull();
+      const rows = within(section).getAllByRole("row");
+      expect(rows).toHaveLength(4);
+      expect(rows[1]).toHaveTextContent("40,000");
+      expect(rows[2]).toHaveTextContent("35,000");
+      expect(rows[3]).toHaveTextContent("28,000");
+      expect(within(rows[1]).getByText("₩36,000")).toHaveClass("text-primary");
+      expect(screen.getByRole("heading", { level: 1 }).closest("section")).not.toContainElement(
+        section,
+      );
+    },
+  );
+
+  it.each([
+    activity,
+    { ...activity, priceTiers: [] },
+    { ...activity, price: 40000, originalPrice: 50000, discountPercent: 20 },
+    {
+      ...activity,
+      activityType: "REFERRAL" as const,
+      priceTiers: [{ minGuests: 2, maxGuests: null, unitPrice: 30000 }],
+    },
+  ])("omits the pricing section without tiers or for referrals", (example) => {
+    renderWithIntl(<ActivityDetailView activity={example} preview />);
+    expect(
+      screen.queryByRole("region", { name: en.QuantityPricing.pricingTitle }),
+    ).not.toBeInTheDocument();
+  });
   it("uses compact borderless information rows only on mobile", () => {
     renderWithIntl(
       <ActivityDetailView
@@ -234,7 +292,7 @@ describe("ActivityDetailView", () => {
       expect(screen.getByTestId("booking-bar-actions").querySelectorAll("p")).toHaveLength(2);
       expect(screen.getByText(label)).not.toHaveClass("md:ml-auto", "md:text-2xl");
       expect(screen.getByTestId("date-select-box")).toHaveClass("md:flex-1");
-      expect(screen.getByTestId("date-select-box")).toHaveClass("h-12");
+      expect(screen.getByTestId("date-select-box")).toHaveClass("h-11", "md:h-12");
       expect(screen.getByTestId("date-select-box")).not.toHaveClass("md:max-w-[480px]");
     },
   );
@@ -305,24 +363,34 @@ describe("ActivityDetailView", () => {
     expect(hostProfile).toHaveAttribute("data-can-contact", "false");
   });
 
-  it("stacks the fixed booking bar into two rows on mobile and keeps one row from sm up", () => {
+  it("keeps mobile date, price and booking action in a single compact row", () => {
     renderWithIntl(<ActivityDetailView activity={activity} unoptimizedImages />, { locale: "en" });
 
     const bar = screen.getByTestId("booking-bottom-bar");
     expect(bar).toHaveClass("fixed");
     const row = bar.firstElementChild as HTMLElement;
-    expect(row).toHaveClass("flex-col", "md:flex-row");
+    expect(row).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto_auto]");
     expect(screen.getByTestId("date-select-box")).toHaveClass("w-full", "md:flex-1");
     expect(screen.getByTestId("date-select-box")).not.toHaveClass("flex-1");
-    // 가격과 버튼은 모바일에서 한 줄로 묶이고 md 이상에서는 래퍼가 사라져 기존 1행이 된다
-    expect(screen.getByText("₩50,000").closest("[data-testid=booking-bar-actions]")).toHaveClass(
-      "md:contents",
+    expect(screen.queryByRole("group", { name: "Guests" })).not.toBeInTheDocument();
+    expect(within(bar).getByText("per person")).toBeInTheDocument();
+    expect(screen.getByTestId("booking-bar-actions")).toHaveClass("contents");
+    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+  });
+
+  it("uses a smaller host portrait and compact introduction without hiding its text", () => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{ ...activity, hostIntroduction: "A local guide who loves sharing Seoul." }}
+        preview
+      />,
     );
-    // 1인당 문구는 모바일에서 가격과 한 줄에 놓이고 길면 줄바꿈되며, 잘리지 않는다
-    const priceRow = screen.getByTestId("booking-bar-price");
-    expect(priceRow).toHaveClass("flex-wrap", "items-baseline");
-    expect(priceRow).not.toHaveClass("whitespace-nowrap");
-    expect(screen.getByText("per person").parentElement).toBe(priceRow);
+    const profile = screen.getByRole("button", { name: "View Seoul Buddy's profile" });
+    expect(profile).toHaveClass("size-11");
+    expect(screen.getByText("A local guide who loves sharing Seoul.")).toHaveClass("leading-6");
+    expect(profile.parentElement).toHaveClass("gap-3", "p-4");
+    fireEvent.click(profile);
+    expect(screen.getByTestId("host-profile-dialog")).toBeInTheDocument();
   });
 
   it("marks the body and exposes the bar height while the fixed bar is mounted", () => {

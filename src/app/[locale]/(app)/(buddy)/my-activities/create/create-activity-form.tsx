@@ -1,6 +1,12 @@
 "use client";
 import { ActivityLanguageSelect } from "@/components/activity/ActivityLanguageSelect";
 import { activityLanguagesForRequest } from "@/lib/activity-languages";
+import {
+  ActivityPriceTierEditor,
+  ActivityPricingTable,
+} from "@/components/buddy/ActivityQuantityPricing";
+import { buildPricingRequest, pricingTiers } from "@/lib/activity-pricing";
+import { getActivityPricingPreview } from "@/lib/api/activities";
 
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -64,7 +70,7 @@ const STEP_GROUPS = [
   { key: "intro", steps: ["host", "languages"] },
   { key: "activity", steps: ["name", "description", "photos", "itinerary"] },
   { key: "operation", steps: ["meeting", "schedule", "capacity"] },
-  { key: "pricing", steps: ["price", "discount"] },
+  { key: "pricing", steps: ["price", "quantity", "discount"] },
   { key: "policy", steps: ["inclusions", "restrictions"] },
 ] as const satisfies ReadonlyArray<{
   key: "intro" | "activity" | "operation" | "pricing" | "policy";
@@ -140,12 +146,13 @@ export function buildActivityUpsertRequest(
     maxCapacity: Number(draft.maxGuests),
     price: Number(draft.pricePerPerson),
     currency: "KRW",
+    priceTiers: pricingTiers(draft),
     ...(draft.discountType === "limited"
       ? {
           discountPercent: Number(draft.discountPercent),
           discountEndDate: draft.discountEndsAt,
         }
-      : {}),
+      : { discountPercent: null, discountEndDate: null }),
     meetingPointName: draft.meetingPlace.trim(),
     meetingPlaceId: draft.meetingPlaceId,
     ...(typeof draft.meetingLatitude === "number" &&
@@ -320,6 +327,7 @@ export function CreateActivityForm({
 }: Readonly<CreateActivityFormProps> = {}) {
   const t = useTranslations("CreateActivity");
   const tReferral = useTranslations("Referral");
+  const pricingT = useTranslations("QuantityPricing");
   const currentLanguage = getContentLanguage(useLocale());
   const sourceLanguage =
     initialSourceLanguage && initialSourceLanguage !== "UNKNOWN"
@@ -329,10 +337,12 @@ export function CreateActivityForm({
   const queryClient = useQueryClient();
   const getApiErrorMessage = useApiErrorMessage();
   const isEdit = mode === "edit";
-  const steps = ACTIVITY_CREATE_STEPS.filter((step) => !referral || step !== "discount");
+  const steps = ACTIVITY_CREATE_STEPS.filter(
+    (step) => !referral || (step !== "discount" && step !== "quantity"),
+  );
   const groups = STEP_GROUPS.map((group) => ({
     ...group,
-    steps: group.steps.filter((step) => !referral || step !== "discount"),
+    steps: group.steps.filter((step) => !referral || (step !== "discount" && step !== "quantity")),
   }));
   const getStepIndex = (step: ActivityCreateStep) => steps.indexOf(step);
   const persistenceScope = `${referral ? "referral:" : ""}${getActivityCreateDraftScope(mode, activityId)}`;
@@ -713,6 +723,12 @@ export function CreateActivityForm({
     setSubmissionPhase("uploading");
     let submissionSucceeded = false;
     try {
+      if (!referral) {
+        const pricing = buildPricingRequest(draft);
+        if (!pricing) throw new Error(t("errors.pricingInvalid"));
+        // Recheck with the current authenticated buddy's rate before saving, even from another step.
+        unwrapApiResult(await getActivityPricingPreview(pricing), "preview");
+      }
       // 기존 이미지는 발급받았던 key를 그대로 쓰고, 새로 고른 파일만 업로드한다
       const newGalleryFiles = draft.photos
         .map((photo) => photo.file)
@@ -965,11 +981,24 @@ export function CreateActivityForm({
         );
       case "price":
         return (
-          <PriceStep
-            value={draft.pricePerPerson}
-            referral={referral}
-            onChange={(value) => updateField("pricePerPerson", value)}
-            t={t}
+          <>
+            <PriceStep
+              value={draft.pricePerPerson}
+              priceTiers={draft.quantityPricingEnabled ? draft.priceTiers : []}
+              referral={referral}
+              onChange={(value) => updateField("pricePerPerson", value)}
+              t={t}
+            />
+          </>
+        );
+      case "quantity":
+        return (
+          <ActivityPriceTierEditor
+            draft={draft}
+            onChange={(quantityPricingEnabled, priceTiers) => {
+              setDraft((current) => ({ ...current, quantityPricingEnabled, priceTiers }));
+              setErrorKey(null);
+            }}
           />
         );
       case "inclusions":
@@ -982,15 +1011,20 @@ export function CreateActivityForm({
         );
       case "discount":
         return (
-          <DiscountStep
-            type={draft.discountType}
-            percent={draft.discountPercent}
-            endsAt={draft.discountEndsAt}
-            onTypeChange={updateDiscountType}
-            onPercentChange={(value) => updateField("discountPercent", value)}
-            onEndsAtChange={(value) => updateField("discountEndsAt", value)}
-            t={t}
-          />
+          <>
+            <DiscountStep
+              type={draft.discountType}
+              percent={draft.discountPercent}
+              endsAt={draft.discountEndsAt}
+              onTypeChange={updateDiscountType}
+              onPercentChange={(value) => updateField("discountPercent", value)}
+              onEndsAtChange={(value) => updateField("discountEndsAt", value)}
+              t={t}
+            />
+            {!referral && draft.discountType === "limited" && (
+              <ActivityPricingTable draft={draft} />
+            )}
+          </>
         );
       case "restrictions":
         return (
@@ -1135,10 +1169,13 @@ export function CreateActivityForm({
                     role="alert"
                     className="mt-6 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm font-semibold text-danger"
                   >
-                    {getApiErrorMessage(
-                      submissionError.error,
-                      t(`errors.${submissionError.fallbackKey}`),
-                    )}
+                    {submissionError.error instanceof ApiClientError &&
+                    submissionError.error.code === "PAYMENT400_AMOUNT"
+                      ? pricingT("invalidAmount")
+                      : getApiErrorMessage(
+                          submissionError.error,
+                          t(`errors.${submissionError.fallbackKey}`),
+                        )}
                   </p>
                 ) : null}
                 {referral && !isEdit && submissionError ? (

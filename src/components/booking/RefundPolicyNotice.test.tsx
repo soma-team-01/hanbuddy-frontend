@@ -63,6 +63,24 @@ describe("RefundPolicyAgreement", () => {
     const checkbox = screen.getByRole("checkbox");
     expect(checkbox).toHaveClass("size-5");
     expect(checkbox.parentElement).toHaveClass("min-h-11", "items-center");
-    expect(checkbox.nextElementSibling).toHaveClass("text-[13px]", "leading-5");
+    expect(checkbox.nextElementSibling).toHaveClass("text-xs", "leading-4");
   });
+
+  it.each(LOCALES)(
+    "keeps the full accessible agreement with concise mobile copy in %s",
+    (locale) => {
+      renderWithIntl(<RefundPolicyAgreement agreed={false} onAgreedChange={vi.fn()} />, {
+        locale,
+        messages: messages[locale],
+      });
+      expect(
+        screen.getByRole("checkbox", { name: messages[locale].Booking.agreement }),
+      ).toBeRequired();
+      expect(
+        screen
+          .getAllByText(messages[locale].Booking.agreementCompact)
+          .some((element) => element.classList.contains("lg:hidden")),
+      ).toBe(true);
+    },
+  );
 });

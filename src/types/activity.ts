@@ -41,6 +41,7 @@ export interface ActivityItineraryItem {
 }
 
 export interface Activity {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   activityType?: import("./referral").ActivityType;
   /** True only when the API actually returned a translated body, not for locale mismatch alone. */
@@ -113,6 +114,7 @@ export interface TouristActivitySchedule {
 }
 
 export interface TouristActivitySummary {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   activityType?: import("./referral").ActivityType;
   activityId: number;

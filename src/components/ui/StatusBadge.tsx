@@ -8,12 +8,13 @@ const STATUS_KEYS = {
   cancelled: "cancelled",
   completed: "completed",
 } as const satisfies Record<
-  ApplicationStatus,
+  Exclude<ApplicationStatus, "pending_approval">,
   "pendingPayment" | "confirmed" | "cancelled" | "completed"
 >;
 
 // 배경은 채우지 않고 테두리와 글씨 색으로만 상태를 구분한다
 const STYLES: Record<ApplicationStatus, { className: string; Icon: typeof ClockIcon }> = {
+  pending_approval: { className: "border-primary/40 text-primary", Icon: ClockIcon },
   pending_payment: {
     className: "border-warning/40 text-warning",
     Icon: ClockIcon,
@@ -34,13 +35,14 @@ const STYLES: Record<ApplicationStatus, { className: string; Icon: typeof ClockI
 
 export function StatusBadge({ status }: Readonly<{ status: ApplicationStatus }>) {
   const t = useTranslations("Status");
+  const approval = useTranslations("Approval");
   const { className, Icon } = STYLES[status];
   return (
     <span
       className={`flex items-center gap-1.5 rounded-full border px-3 py-1 font-display text-xs font-bold ${className}`}
     >
       <Icon className="size-3.5" />
-      {t(STATUS_KEYS[status])}
+      {status === "pending_approval" ? approval("pending") : t(STATUS_KEYS[status])}
     </span>
   );
 }

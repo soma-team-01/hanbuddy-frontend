@@ -54,7 +54,7 @@ export function referralQuery(input: URLSearchParams, admin: boolean, applicants
   if (applicants) {
     const status = input.get("status");
     if (status) {
-      if (!["CONFIRMED", "CANCELLED", "COMPLETED"].includes(status))
+      if (!["PENDING_APPROVAL", "CONFIRMED", "CANCELLED", "COMPLETED"].includes(status))
         throw new Error("Invalid status");
       output.set("status", status);
     }

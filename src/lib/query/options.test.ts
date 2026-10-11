@@ -74,7 +74,7 @@ describe("domain query options", () => {
     expect(reviewKeys.activity(42, "EN")).not.toEqual(reviewKeys.activity(42, "JA"));
   });
 
-  it("polls my applications only while a pending payment can expire", () => {
+  it("polls pending approvals, active bookings and unsettled refunds", () => {
     const { refetchInterval } = myApplicationsQueryOptions("EN");
     expect(typeof refetchInterval).toBe("function");
     if (typeof refetchInterval !== "function") return;
@@ -85,7 +85,14 @@ describe("domain query options", () => {
 
     // 좌석 선점이 풀린 결제 대기 신청은 백엔드 목록에서 사라지므로 주기적으로 확인한다
     expect(refetchInterval(withStatus("PENDING_PAYMENT"))).toBe(60_000);
+    expect(refetchInterval(withStatus("PENDING_APPROVAL"))).toBe(60_000);
     expect(refetchInterval(withStatus("CONFIRMED"))).toBe(60_000);
+    for (const status of ["REQUESTED", "FAILED", "COMPLETED"]) {
+      const query = {
+        state: { data: [{ status: "CANCELLED", refund: { status } }] },
+      } as unknown as QueryArg;
+      expect(refetchInterval(query)).toBe(status === "COMPLETED" ? false : 60_000);
+    }
     expect(refetchInterval(withStatus())).toBe(false);
   });
 

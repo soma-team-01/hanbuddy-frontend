@@ -1,4 +1,43 @@
 {
+  "Approval": {
+    "pending": "承認待ち",
+    "approve": "承認",
+    "reject": "お断り",
+    "deadline": "承認期限：{date}",
+    "processing": "処理中",
+    "expired": "承認期限を過ぎました。状況を確認中です。",
+    "paid": "支払い完了 · バディの承認待ち",
+    "applied": "申込完了 · バディの承認待ち",
+    "waiting": "バディが申込内容を確認しています。",
+    "details": "詳細を見る",
+    "rejectTitle": "この申込を断りますか？",
+    "rejectHint": "理由はゲストに伝えられます。",
+    "detail": "理由",
+    "keep": "戻る",
+    "working": "処理中…",
+    "error": "処理結果を確認できませんでした。状況を更新してください。",
+    "retry": "状況を更新",
+    "invalid": "理由を1～255文字で入力してください。",
+    "changed": "申込状況が変わりました。更新してください。",
+    "forbidden": "この申込を処理する権限がありません。",
+    "original": "原文を見る",
+    "translated": "翻訳を見る",
+    "free": "バディ承認前は全額返金",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "日程の実施が難しい",
+      "INSUFFICIENT_PARTICIPANTS": "参加人数が不足",
+      "RESOURCE_UNAVAILABLE": "施設・チケットの予約が難しい",
+      "EXTERNAL_CIRCUMSTANCES": "天候など外部の事情",
+      "BUDDY_OTHER": "その他（入力）"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "この日程を実施できないため、申込がキャンセルされました。",
+      "INSUFFICIENT_PARTICIPANTS": "参加人数不足によりキャンセルされました。",
+      "RESOURCE_UNAVAILABLE": "施設・チケットの予約事情によりキャンセルされました。",
+      "EXTERNAL_CIRCUMSTANCES": "天候など外部の事情によりキャンセルされました。",
+      "BUDDY_OTHER": "バディからのキャンセル理由"
+    }
+  },
   "QuantityPricing": {
     "options": {
       "none": "割引なし",

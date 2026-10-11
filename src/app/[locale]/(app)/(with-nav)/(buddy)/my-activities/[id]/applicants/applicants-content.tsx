@@ -1,5 +1,7 @@
 "use client";
 import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
+import { ApplicationApprovalActions } from "@/components/buddy/ApplicationApprovalActions";
+import { isBuddyRejection } from "@/lib/application-approval";
 
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -37,6 +39,7 @@ function toActivityId(value: string) {
  * 새 신청으로 대체된 신청(SUPERSEDED)은 취소와 같이 묶는다.
  */
 const STATUS_SECTIONS = [
+  { key: "pendingApproval", statuses: ["PENDING_APPROVAL"] },
   { key: "sectionCompleted", statuses: ["COMPLETED"] },
   { key: "sectionConfirmed", statuses: ["CONFIRMED"] },
   { key: "sectionCancelled", statuses: ["CANCELLED", "SUPERSEDED"] },
@@ -49,6 +52,7 @@ export function ApplicantsContent({
   const locale = useLocale() as Locale;
   const language = getContentLanguage(locale);
   const t = useTranslations("Applicants");
+  const approval = useTranslations("Approval");
   const tChat = useTranslations("Chat");
   const tCancellation = useTranslations("ScheduleCancellation");
   const tErrors = useTranslations("Errors");
@@ -134,7 +138,7 @@ export function ApplicantsContent({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <h2 className="min-w-0 font-display text-3xl leading-8 font-extrabold tracking-[-0.04em] break-words text-ink md:text-4xl">
+            <h2 className="min-w-0 font-display text-xl leading-7 font-bold tracking-tight break-words text-ink md:text-3xl">
               {activityQuery.data?.title ?? applications?.activityTitle}
             </h2>
             {isCancelled ? (
@@ -162,7 +166,11 @@ export function ApplicantsContent({
             key={scheduleId}
             scheduleId={Number(scheduleId)}
             startAt={applications.startAt}
-            applicantCount={applications.applicantCount}
+            applicantCount={applications.applicants
+              .filter(
+                (applicant) => applicant.status === "CONFIRMED" || applicant.status === "COMPLETED",
+              )
+              .reduce((count, applicant) => count + applicant.guestCount, 0)}
             roomId={room?.chatRoomId}
             knownCancelled={isCancelled}
             showCancelledBadge={false}
@@ -211,16 +219,18 @@ export function ApplicantsContent({
           {sections.map(({ key, applicants }) => (
             <section key={key} className="flex flex-col gap-3">
               <div className="flex items-baseline gap-2">
-                <h3 className="font-display text-lg font-bold text-primary">{t(key)}</h3>
+                <h3 className="font-display text-sm font-bold text-primary">
+                  {key === "pendingApproval" ? approval("pending") : t(key)}
+                </h3>
                 <span className="font-display text-sm font-semibold text-muted tabular-nums">
                   {t("guestApplicantCount", { count: applicants.length })}
                 </span>
               </div>
-              <div className="overflow-hidden rounded-3xl border border-line-soft md:divide-y md:divide-line-soft">
+              <div className="divide-y divide-line-soft border-y border-line-soft">
                 {applicants.map((applicant) => (
                   <article
                     key={applicant.applicationId}
-                    className="flex flex-col gap-4 border-b border-line-soft p-4 last:border-b-0 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:border-b-0 md:p-5"
+                    className="flex flex-col gap-3 py-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:py-5"
                   >
                     <div className="flex items-center gap-4">
                       {/* 이름·사진을 누르면 연락처가 담긴 프로필이 뜬다 */}
@@ -232,10 +242,10 @@ export function ApplicantsContent({
                         <Avatar
                           name={applicant.applicantName}
                           src={applicant.applicantProfileImageUrl}
-                          size={48}
+                          size={40}
                         />
                         <span className="min-w-0 text-sm">
-                          <span className="block font-display text-lg font-semibold text-ink">
+                          <span className="block font-display text-sm font-semibold text-ink">
                             {applicant.applicantName}
                           </span>
                           <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-muted">
@@ -251,7 +261,14 @@ export function ApplicantsContent({
                         </span>
                       </button>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted md:max-w-md md:justify-end md:text-right">
+                    {applicant.status === "PENDING_APPROVAL" && !isCancelled && (
+                      <ApplicationApprovalActions
+                        applicationId={applicant.applicationId}
+                        expiresAt={applicant.approvalExpiresAt}
+                        name={applicant.applicantName}
+                      />
+                    )}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted md:col-start-2 md:max-w-md md:justify-end md:text-right">
                       <StartChatButton
                         target={{ kind: "direct", targetUserId: applicant.applicantUserId }}
                         label={tChat("messageApplicant", { name: applicant.applicantName })}
@@ -273,14 +290,19 @@ export function ApplicantsContent({
                       </span>
                     </div>
                     {applicant.specialRequest ? (
-                      // 이름 시작 위치(아바타 48 + 간격 16)에 맞춰 라벨과 함께 적는다
-                      <p className="ml-16 text-sm text-ink md:col-span-2">
-                        <span className="font-semibold text-primary">{t("guestNoteLabel")} </span>
-                        {applicant.specialRequest}
-                      </p>
+                      <details className="text-sm text-ink md:col-span-2">
+                        <summary className="w-fit cursor-pointer py-2 text-xs text-muted">
+                          {approval("details")}
+                        </summary>
+                        <p className="pt-2 break-words whitespace-pre-line">
+                          <span className="font-semibold text-primary">{t("guestNoteLabel")} </span>
+                          {applicant.specialRequest}
+                        </p>
+                      </details>
                     ) : null}
                     {applicant.status === "CANCELLED" &&
-                    applicant.cancellationReason === "OTHER" &&
+                    (applicant.cancellationReason === "OTHER" ||
+                      applicant.cancellationReason === "BUDDY_OTHER") &&
                     applicant.cancellationDetail ? (
                       <div className="ml-16 text-sm text-muted md:col-span-2">
                         <span className="font-semibold">{tCancellation("reason")}</span>
@@ -291,6 +313,14 @@ export function ApplicantsContent({
                         />
                       </div>
                     ) : null}
+                    {applicant.status === "CANCELLED" &&
+                      applicant.cancellationReason &&
+                      isBuddyRejection(applicant.cancellationReason) &&
+                      applicant.cancellationReason !== "BUDDY_OTHER" && (
+                        <p className="text-xs leading-5 text-muted md:col-span-2">
+                          {approval(`cancelled.${applicant.cancellationReason}`)}
+                        </p>
+                      )}
                   </article>
                 ))}
               </div>

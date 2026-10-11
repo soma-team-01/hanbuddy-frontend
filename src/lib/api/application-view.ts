@@ -9,6 +9,7 @@ import type {
 
 const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStatus> = {
   PENDING_PAYMENT: "pending_payment",
+  PENDING_APPROVAL: "pending_approval",
   // 새 신청으로 대체된 신청은 목록에서 걸러지지만, 방어적으로 취소와 동일하게 취급한다
   SUPERSEDED: "cancelled",
   CONFIRMED: "confirmed",
@@ -32,6 +33,8 @@ export function mapApplicationResponseToApplication(
   const endTime = formatSeoulTime(response.endAt, locale);
   const timeLabel = startTime && endTime ? `${startTime} ~ ${endTime}` : startTime;
   return {
+    approvalExpiresAt: response.approvalExpiresAt ?? null,
+    buddyApprovedAt: response.buddyApprovedAt ?? null,
     activityType: response.activityType ?? "STANDARD",
     guestCount: response.guestCount,
     id: String(response.applicationId),

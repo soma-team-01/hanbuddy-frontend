@@ -1,6 +1,8 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { ApplicationApprovalActions } from "@/components/buddy/ApplicationApprovalActions";
 import { getReferralApplicants } from "@/lib/api/referral";
 import { getRetainedApplicants } from "@/lib/api/referral-reporting";
 import { ReferralDateRange } from "./ReferralDateRange";
@@ -66,10 +68,11 @@ export function ReferralApplicants({
   schedules?: ActivityScheduleResponse[];
 }) {
   const compactStatus = admin && !!fixedActivityId;
+  const approval = useTranslations("Approval");
   const [filters, setFilters] = useState({
     activityId: fixedActivityId ?? initialActivityId,
     scheduleId: "",
-    status: compactStatus ? "ACTIVE" : "CONFIRMED",
+    status: compactStatus ? "ACTIVE" : "",
     from: "",
     until: "",
   });
@@ -99,6 +102,8 @@ export function ReferralApplicants({
     },
     gcTime: 0,
     retry: false,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
   return (
     <section className="space-y-5">
@@ -189,6 +194,7 @@ export function ReferralApplicants({
             >
               <option value="">전체 (취소 포함)</option>
               <option value="CONFIRMED">신청 확정</option>
+              <option value="PENDING_APPROVAL">{approval("pending")}</option>
               <option value="COMPLETED">일정 종료</option>
               <option value="CANCELLED">취소</option>
             </select>
@@ -273,16 +279,25 @@ export function ReferralApplicants({
                   <span
                     className={`shrink-0 text-xs font-semibold ${row.status === "CANCELLED" ? "text-muted" : "text-primary"}`}
                   >
-                    {row.status === "CONFIRMED"
-                      ? "신청 확정"
-                      : row.status === "CANCELLED"
-                        ? "취소"
-                        : "일정 종료"}
+                    {row.status === "PENDING_APPROVAL"
+                      ? approval("pending")
+                      : row.status === "CONFIRMED"
+                        ? "신청 확정"
+                        : row.status === "CANCELLED"
+                          ? "취소"
+                          : "일정 종료"}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted">
                   {formatAdminDate(row.startAt, true)} · {row.guestCount}명
                 </p>
+                {!admin && row.status === "PENDING_APPROVAL" && (
+                  <ApplicationApprovalActions
+                    applicationId={row.applicationId}
+                    expiresAt={row.approvalExpiresAt}
+                    name={row.applicantName}
+                  />
+                )}
                 <div className="mt-4 border-t border-line-soft pt-4">
                   {!fixedActivityId && <p className="font-semibold">{row.applicantName}</p>}
                   <p className="mt-1 text-sm break-all text-muted">

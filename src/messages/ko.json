@@ -1,4 +1,43 @@
 {
+  "Approval": {
+    "pending": "확정 대기",
+    "approve": "승인",
+    "reject": "거절",
+    "deadline": "확정 기한: {date}",
+    "processing": "처리 중",
+    "expired": "확정 기한이 지났어요. 상태를 확인 중입니다.",
+    "paid": "결제 완료 · 버디 확정 대기",
+    "applied": "신청 완료 · 버디 확정 대기",
+    "waiting": "버디가 신청을 확인 중이에요.",
+    "details": "상세 보기",
+    "rejectTitle": "신청을 거절할까요?",
+    "rejectHint": "거절 사유가 게스트에게 전달됩니다.",
+    "detail": "상세 사유",
+    "keep": "돌아가기",
+    "working": "처리 중…",
+    "error": "처리 결과를 확인하지 못했어요. 다시 확인해 주세요.",
+    "retry": "상태 새로고침",
+    "invalid": "사유를 1~255자로 입력해 주세요.",
+    "changed": "신청 상태가 변경됐어요. 새로고침해 주세요.",
+    "forbidden": "이 신청을 처리할 권한이 없어요.",
+    "original": "원문 보기",
+    "translated": "번역 보기",
+    "free": "버디 승인 전 전액 환불",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "일정 진행이 어려워요",
+      "INSUFFICIENT_PARTICIPANTS": "진행 인원이 부족해요",
+      "RESOURCE_UNAVAILABLE": "시설·티켓 예약이 어려워요",
+      "EXTERNAL_CIRCUMSTANCES": "날씨 등 외부 사정이 있어요",
+      "BUDDY_OTHER": "기타 (직접 입력)"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "해당 일정의 진행이 어려워 신청이 취소되었습니다.",
+      "INSUFFICIENT_PARTICIPANTS": "진행 인원 부족으로 취소되었습니다.",
+      "RESOURCE_UNAVAILABLE": "시설·티켓 예약 사정으로 취소되었습니다.",
+      "EXTERNAL_CIRCUMSTANCES": "날씨 등 외부 사정으로 취소되었습니다.",
+      "BUDDY_OTHER": "버디가 전달한 취소 사유"
+    }
+  },
   "QuantityPricing": {
     "options": {
       "none": "할인 없음",

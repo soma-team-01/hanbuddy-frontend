@@ -1,5 +1,7 @@
 "use client";
 import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
+import { ApprovalDeadline } from "@/components/booking/ApprovalDeadline";
+import { isBuddyRejection } from "@/lib/application-approval";
 
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
@@ -90,6 +92,7 @@ function PriceBreakdown({
   const discountAmount = breakdown.discountAmount ?? Math.max(0, originalTotalPrice - total);
   const hasDiscount = discountAmount > 0;
   const hasCompletedPayment =
+    application.status === "pending_approval" ||
     application.status === "confirmed" ||
     application.status === "completed" ||
     application.status === "cancelled";
@@ -319,6 +322,7 @@ function ApplicationCard({
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
   const tCancellation = useTranslations("ScheduleCancellation");
+  const approval = useTranslations("Approval");
   const isReferral = application.activityType === "REFERRAL";
   const isBuddyCancellation = application.cancellationReason === "BUDDY_CANCELLATION";
   const scheduleRefundQuery = useApplicationScheduleRefundQuery(
@@ -341,7 +345,10 @@ function ApplicationCard({
         : null;
   const isCompleted = application.status === "completed";
   const isCancelled = application.status === "cancelled";
-  const isUpcoming = application.status === "pending_payment" || application.status === "confirmed";
+  const isUpcoming =
+    application.status === "pending_payment" ||
+    application.status === "pending_approval" ||
+    application.status === "confirmed";
   const isPaymentBusy =
     isPaymentPending || paymentInFlight !== null || pendingPaymentProvider !== null;
   const showTossPayment = isPaymentProviderVisible("TOSS", paymentProviderMode);
@@ -516,7 +523,7 @@ function ApplicationCard({
                 </button>
               </div>
             ) : null}
-            {application.status === "confirmed" &&
+            {(application.status === "confirmed" || application.status === "pending_approval") &&
             !application.scheduleCancelled &&
             !application.refundRecoveryPending &&
             !hasEnded ? (
@@ -571,14 +578,18 @@ function ApplicationCard({
               >
                 {application.cancellationReason === "BUDDY_CANCELLATION"
                   ? tCancellation("buddyCancellationReason")
-                  : t("cancelledReason", {
-                      reason: t(
-                        `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
-                      ),
-                    })}
+                  : isBuddyRejection(application.cancellationReason)
+                    ? approval(`cancelled.${application.cancellationReason}`)
+                    : t("cancelledReason", {
+                        reason: t(
+                          `cancellationReasons.${REASON_MESSAGE_KEY[application.cancellationReason]}`,
+                        ),
+                      })}
                 {application.cancellationDetail ? (
                   <span className="mt-1 block break-words text-ink">
-                    {application.cancellationReason === "OTHER" || isBuddyCancellation ? (
+                    {application.cancellationReason === "OTHER" ||
+                    application.cancellationReason === "BUDDY_OTHER" ||
+                    isBuddyCancellation ? (
                       <CancellationReasonText
                         kind="application"
                         id={application.id}
@@ -594,6 +605,9 @@ function ApplicationCard({
           </div>
         </div>
       </div>
+      {application.status === "pending_approval" && (
+        <ApprovalDeadline expiresAt={application.approvalExpiresAt} />
+      )}
       {!isReferral && (
         <PriceBreakdown
           application={application}
@@ -717,7 +731,9 @@ export function ApplicationList({
   const visibleApplications = applications.filter((application) =>
     tab === "upcoming"
       ? !application.scheduleCancelled &&
-        (application.status === "pending_payment" || application.status === "confirmed")
+        (application.status === "pending_payment" ||
+          application.status === "pending_approval" ||
+          application.status === "confirmed")
       : application.scheduleCancelled ||
         application.status === "completed" ||
         application.status === "cancelled",
@@ -728,7 +744,7 @@ export function ApplicationList({
           application.id === cancelTargetId &&
           !application.scheduleCancelled &&
           !application.refundRecoveryPending &&
-          application.status === "confirmed",
+          (application.status === "confirmed" || application.status === "pending_approval"),
       )
     : null;
 

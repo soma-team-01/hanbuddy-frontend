@@ -60,6 +60,8 @@ export function buddyApplicationsQueryOptions(date: string, language: ContentLan
     queryKey: buddyKeys.applicationsByDate(date, language),
     queryFn: async () => unwrapApiResult(await getBuddyApplications(date, language), "activities"),
     enabled: Boolean(date),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -75,5 +77,7 @@ export function buddyActivityApplicationsQueryOptions(
         "applications",
       ),
     enabled: Boolean(activityScheduleId),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
 }

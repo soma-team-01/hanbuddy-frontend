@@ -108,6 +108,7 @@ describe("referral application form", () => {
   });
 
   it.each([
+    { status: "PENDING_APPROVAL" as const },
     { status: "CONFIRMED" as const },
     { scheduleCancelled: true },
     { cancellationReason: "BUDDY_CANCELLATION" as const },
@@ -180,7 +181,7 @@ describe("referral application form", () => {
         status: "success",
         data: {
           applicationId: 1,
-          status: "CONFIRMED",
+          status: "PENDING_APPROVAL",
           activityTitle: "Saved studio visit",
           buddyName: "Saved buddy",
           thumbnailImageUrl: null,

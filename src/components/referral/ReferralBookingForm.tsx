@@ -148,7 +148,7 @@ export function ReferralBookingForm({
   });
   useAuthQueryRedirect(mutation.error ?? history.error ?? notice.error);
   const result = mutation.data;
-  if (result?.status === "CONFIRMED")
+  if (result?.status === "CONFIRMED" || result?.status === "PENDING_APPROVAL")
     return <ApplicationConfirmation application={result} referralServicePrice={activity.price} />;
   if (result)
     return (

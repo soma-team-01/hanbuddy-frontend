@@ -95,6 +95,8 @@ function Reason({
 }: Props & { userId: number; language: ContentLanguage }) {
   const t = useTranslations("CancellationTranslation");
   const instanceId = useId();
+  const approval = useTranslations("Approval");
+  const [showOriginal, setShowOriginal] = useState(false);
   const containerRef = useRef<HTMLSpanElement>(null);
   const [visible, setVisible] = useState(() => typeof IntersectionObserver === "undefined");
   useEffect(() => {
@@ -127,7 +129,8 @@ function Reason({
   const translated = result?.status === "TRANSLATED" && !!result.displayText;
   const mismatched = query.isSuccess && !result;
   const unavailable = query.isError || mismatched || result?.status === "UNAVAILABLE";
-  const text = translated ? result.displayText : (result?.originalText ?? originalText);
+  const text =
+    translated && !showOriginal ? result.displayText : (result?.originalText ?? originalText);
   const loading = !result && !query.isError && !mismatched;
   return (
     <span ref={containerRef} className="block">
@@ -139,7 +142,7 @@ function Reason({
         <span
           className="block break-words whitespace-pre-line"
           lang={
-            translated
+            translated && !showOriginal
               ? getContentLanguageTag(language)
               : result
                 ? getContentLanguageTag(result.sourceLanguage)
@@ -157,6 +160,18 @@ function Reason({
           }}
         />
       ) : null}
+      {translated && (
+        <button
+          type="button"
+          className="min-h-9 text-xs text-primary underline underline-offset-2"
+          onClick={(event) => {
+            event.stopPropagation();
+            setShowOriginal((value) => !value);
+          }}
+        >
+          {approval(showOriginal ? "translated" : "original")}
+        </button>
+      )}
     </span>
   );
 }

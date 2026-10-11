@@ -145,6 +145,22 @@ function continuePaymentAfterReview(buttonName: string) {
 }
 
 describe("ApplicationList", () => {
+  it("keeps pending approval upcoming and cancellable, without payment or review actions", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          status: "pending_approval",
+          approvalExpiresAt: "2099-10-12T09:00:00+09:00",
+        },
+      ],
+    });
+    expect(screen.getByText("Awaiting approval")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Pay now|Continue Payment|Write.*review/i }),
+    ).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetActivityWeather.mockResolvedValue({

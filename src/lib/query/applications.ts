@@ -31,20 +31,24 @@ export const applicationKeys = {
     ] as const,
 };
 
-/** 결제 대기 신청의 좌석 선점이 풀리는 주기(15분)보다 짧게 다시 확인한다 */
-const PENDING_PAYMENT_REFRESH_MS = 60_000;
+/** 승인·예약·환불의 서버 상태를 주기적으로 다시 확인한다. */
+const APPLICATION_REFRESH_MS = 60_000;
 
 export function myApplicationsQueryOptions(language: ContentLanguage) {
   return queryOptions({
     queryKey: applicationKeys.mine(language),
     queryFn: async () => unwrapApiResult(await getMyApplications(language), "applications"),
-    // 선점이 만료된 결제 대기 신청은 백엔드 목록에서 빠지므로 주기적으로 다시 불러온다
+    // 결제 선점 만료, 버디 응답, 비동기 환불은 서버 응답으로만 확정한다.
     refetchInterval: (query) =>
       query.state.data?.some(
         (application) =>
-          application.status === "PENDING_PAYMENT" || application.status === "CONFIRMED",
+          application.status === "PENDING_PAYMENT" ||
+          application.status === "PENDING_APPROVAL" ||
+          application.status === "CONFIRMED" ||
+          application.refund?.status === "REQUESTED" ||
+          application.refund?.status === "FAILED",
       )
-        ? PENDING_PAYMENT_REFRESH_MS
+        ? APPLICATION_REFRESH_MS
         : false,
     refetchOnWindowFocus: true,
   });

@@ -2,14 +2,25 @@ import type { MyReviewResponse } from "./review";
 import type { ResolvedContentLanguage } from "./content-language";
 import type { TouristActivityDetail } from "./activity";
 
-export type ApplicationStatus = "pending_payment" | "confirmed" | "cancelled" | "completed";
+export type ApplicationStatus =
+  "pending_payment" | "pending_approval" | "confirmed" | "cancelled" | "completed";
 export type BackendApplicationStatus =
-  "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  "PENDING_PAYMENT" | "PENDING_APPROVAL" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+export type BuddyRejectionReason =
+  | "BOOKING_UNAVAILABLE"
+  | "INSUFFICIENT_PARTICIPANTS"
+  | "RESOURCE_UNAVAILABLE"
+  | "EXTERNAL_CIRCUMSTANCES"
+  | "BUDDY_OTHER";
+export interface BuddyRejectionRequest {
+  reason: BuddyRejectionReason;
+  detail?: string;
+}
 export type ApplicationCancellationReason =
   "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER";
 /** Response only: never offered in a tourist cancellation request. */
 export type ApplicationCancellationResponseReason =
-  ApplicationCancellationReason | "BUDDY_CANCELLATION";
+  ApplicationCancellationReason | BuddyRejectionReason | "BUDDY_CANCELLATION";
 
 export type AppliedActivityStatus = "ACTIVE" | "INACTIVE" | "DELETED";
 
@@ -26,7 +37,11 @@ export interface AppliedActivityDetailResponse {
 }
 
 export type CancellationPolicyType =
-  "FREE_CANCELLATION_WINDOW" | "BEFORE_48_HOURS" | "BETWEEN_24_AND_48_HOURS" | "WITHIN_24_HOURS";
+  | "PENDING_APPROVAL"
+  | "FREE_CANCELLATION_WINDOW"
+  | "BEFORE_48_HOURS"
+  | "BETWEEN_24_AND_48_HOURS"
+  | "WITHIN_24_HOURS";
 
 export interface CancellationQuoteResponse {
   policyVersion: string;
@@ -35,7 +50,7 @@ export interface CancellationQuoteResponse {
   refundAmount: number;
   refundCurrency: string;
   cancellationFeeAmount: number;
-  freeCancellationUntil: string;
+  freeCancellationUntil: string | null;
   quotedAt: string;
 }
 
@@ -80,6 +95,8 @@ export interface PriceBreakdown {
 }
 
 export interface Application {
+  approvalExpiresAt?: string | null;
+  buddyApprovedAt?: string | null;
   activityType?: import("./referral").ActivityType;
   guestCount?: number;
   /** A saved refund intent is awaiting confirmation; never treat this as refund completion. */
@@ -148,6 +165,8 @@ export interface CapturePayPalPaymentRequest {
 }
 
 export interface ApplicationResponse {
+  approvalExpiresAt?: string | null;
+  buddyApprovedAt?: string | null;
   appliedPriceTier?: import("./activity-pricing").ActivityPriceTier | null;
   quantityDiscountAmount?: number | null;
   periodDiscountAmount?: number | null;

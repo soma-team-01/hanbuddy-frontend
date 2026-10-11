@@ -1,4 +1,6 @@
 "use client";
+import { ApplicationApprovalActions } from "@/components/buddy/ApplicationApprovalActions";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -221,7 +223,14 @@ export function DashboardContent() {
                       menuPlacement={menuInHeader ? "card-header" : "inline"}
                       scheduleId={schedule.activityScheduleId}
                       startAt={schedule.startAt}
-                      applicantCount={schedule.applicantCount}
+                      applicantCount={schedule.applicants
+                        .filter(
+                          (applicant) =>
+                            !applicant.status ||
+                            applicant.status === "CONFIRMED" ||
+                            applicant.status === "COMPLETED",
+                        )
+                        .reduce((count, applicant) => count + applicant.guestCount, 0)}
                       roomId={groupRooms.get(schedule.activityScheduleId)?.chatRoomId}
                       knownCancelled={
                         groupRooms.get(schedule.activityScheduleId)?.activityScheduleCancelled
@@ -280,6 +289,16 @@ export function DashboardContent() {
                                 className="flex size-8 shrink-0 items-center justify-center text-muted transition-colors enabled:hover:text-primary disabled:opacity-60"
                               />
                             </div>
+                            {applicant.status === "PENDING_APPROVAL" && (
+                              <div className="border-l-2 border-primary pl-3">
+                                <StatusBadge status="pending_approval" />
+                                <ApplicationApprovalActions
+                                  applicationId={applicant.applicationId}
+                                  expiresAt={applicant.approvalExpiresAt}
+                                  name={applicant.applicantName}
+                                />
+                              </div>
+                            )}
                             {hasRequest ? (
                               // 요청 사항은 놓치면 안 되는 정보라 접지 않고 바로 보여준다
                               <div className="ml-10 border-l-2 border-primary/40 pl-3">

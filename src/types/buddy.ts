@@ -149,6 +149,9 @@ export interface BuddyScheduleDateResponse {
 }
 
 export interface BuddyApplicationApplicantSummaryResponse {
+  /** Optional only for compatibility with pre-approval servers. */
+  status?: import("./application").BackendApplicationStatus;
+  approvalExpiresAt?: string | null;
   applicationId: number;
   applicantUserId: number;
   applicantName: string;
@@ -180,7 +183,8 @@ export interface BuddyDateActivityApplicationsResponse {
 }
 
 export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicationApplicantSummaryResponse {
-  status: "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: import("./application").BackendApplicationStatus;
+  buddyApprovedAt?: string | null;
   specialRequest: string | null;
   appliedAt: string;
   /** 취소된 신청의 사유. 취소가 아니면 null */

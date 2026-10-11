@@ -47,7 +47,7 @@ describe("referral applicant reporting", () => {
     expect(screen.queryByText("동의 기록 · 신청 당시 정보")).not.toBeInTheDocument();
     expect(screen.queryByText(/live-v2|신청 번호 #8/)).not.toBeInTheDocument();
     expect(vi.mocked(getReferralApplicants).mock.calls[0][0]).toBe(true);
-    expect(vi.mocked(getReferralApplicants).mock.calls[0][1].get("status")).toBe("CONFIRMED");
+    expect(vi.mocked(getReferralApplicants).mock.calls[0][1].get("status")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "다음 페이지" }));
     await waitFor(() =>
       expect(vi.mocked(getReferralApplicants).mock.lastCall?.[1].get("page")).toBe("1"),

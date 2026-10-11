@@ -1,4 +1,43 @@
 {
+  "Approval": {
+    "pending": "待确认",
+    "approve": "确认",
+    "reject": "拒绝",
+    "deadline": "确认截止：{date}",
+    "processing": "处理中",
+    "expired": "确认期限已过，正在核实状态。",
+    "paid": "支付成功 · 等待伙伴确认",
+    "applied": "申请已提交 · 等待伙伴确认",
+    "waiting": "伙伴正在查看你的申请。",
+    "details": "查看详情",
+    "rejectTitle": "拒绝此申请？",
+    "rejectHint": "原因将发送给游客。",
+    "detail": "具体原因",
+    "keep": "返回",
+    "working": "处理中…",
+    "error": "未能确认处理结果，请刷新状态。",
+    "retry": "刷新状态",
+    "invalid": "请输入1至255字的原因。",
+    "changed": "申请状态已变更，请刷新。",
+    "forbidden": "你无权处理此申请。",
+    "original": "查看原文",
+    "translated": "查看译文",
+    "free": "伙伴确认前取消可全额退款",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "行程无法进行",
+      "INSUFFICIENT_PARTICIPANTS": "参与人数不足",
+      "RESOURCE_UNAVAILABLE": "无法预订场地或门票",
+      "EXTERNAL_CIRCUMSTANCES": "天气等外部原因",
+      "BUDDY_OTHER": "其他（填写）"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "由于此行程无法进行，申请已取消。",
+      "INSUFFICIENT_PARTICIPANTS": "由于参与人数不足，申请已取消。",
+      "RESOURCE_UNAVAILABLE": "由于场地或门票预订问题，申请已取消。",
+      "EXTERNAL_CIRCUMSTANCES": "由于天气等外部原因，申请已取消。",
+      "BUDDY_OTHER": "伙伴提供的取消原因"
+    }
+  },
   "QuantityPricing": {
     "options": {
       "none": "不打折",

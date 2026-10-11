@@ -1,4 +1,43 @@
 {
+  "Approval": {
+    "pending": "Awaiting approval",
+    "approve": "Approve",
+    "reject": "Decline",
+    "deadline": "Approval deadline: {date}",
+    "processing": "Processing",
+    "expired": "The approval deadline has passed. Checking status.",
+    "paid": "Payment complete · Awaiting buddy approval",
+    "applied": "Request sent · Awaiting buddy approval",
+    "waiting": "Your buddy is reviewing your request.",
+    "details": "View details",
+    "rejectTitle": "Decline this request?",
+    "rejectHint": "The reason will be shared with the guest.",
+    "detail": "Reason",
+    "keep": "Go back",
+    "working": "Processing…",
+    "error": "We couldn’t confirm the result. Check the latest status.",
+    "retry": "Refresh status",
+    "invalid": "Enter a reason of 1–255 characters.",
+    "changed": "This request has changed. Refresh its status.",
+    "forbidden": "You don’t have permission to process this request.",
+    "original": "Show original",
+    "translated": "Show translation",
+    "free": "Full refund before buddy approval",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "Session unavailable",
+      "INSUFFICIENT_PARTICIPANTS": "Not enough participants",
+      "RESOURCE_UNAVAILABLE": "Venue or tickets unavailable",
+      "EXTERNAL_CIRCUMSTANCES": "Weather or other external circumstances",
+      "BUDDY_OTHER": "Other reason"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "Your booking has been cancelled because this session could not proceed.",
+      "INSUFFICIENT_PARTICIPANTS": "Cancelled due to insufficient participants.",
+      "RESOURCE_UNAVAILABLE": "Cancelled due to venue or ticket availability.",
+      "EXTERNAL_CIRCUMSTANCES": "Cancelled due to weather or other external circumstances.",
+      "BUDDY_OTHER": "Cancellation reason from your buddy"
+    }
+  },
   "QuantityPricing": {
     "options": {
       "none": "No discount",

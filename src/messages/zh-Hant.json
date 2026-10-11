@@ -1,4 +1,43 @@
 {
+  "Approval": {
+    "pending": "待確認",
+    "approve": "確認",
+    "reject": "拒絕",
+    "deadline": "確認截止：{date}",
+    "processing": "處理中",
+    "expired": "確認期限已過，正在核實狀態。",
+    "paid": "付款成功 · 等待夥伴確認",
+    "applied": "申請已提交 · 等待夥伴確認",
+    "waiting": "夥伴正在查看你的申請。",
+    "details": "查看詳情",
+    "rejectTitle": "拒絕此申請？",
+    "rejectHint": "原因將傳送給旅客。",
+    "detail": "具體原因",
+    "keep": "返回",
+    "working": "處理中…",
+    "error": "未能確認處理結果，請重新整理狀態。",
+    "retry": "重新整理狀態",
+    "invalid": "請輸入1至255字的原因。",
+    "changed": "申請狀態已變更，請重新整理。",
+    "forbidden": "你無權處理此申請。",
+    "original": "查看原文",
+    "translated": "查看譯文",
+    "free": "夥伴確認前取消可全額退款",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "行程無法進行",
+      "INSUFFICIENT_PARTICIPANTS": "參與人數不足",
+      "RESOURCE_UNAVAILABLE": "無法預訂場地或門票",
+      "EXTERNAL_CIRCUMSTANCES": "天氣等外部原因",
+      "BUDDY_OTHER": "其他（填寫）"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "由於此行程無法進行，申請已取消。",
+      "INSUFFICIENT_PARTICIPANTS": "由於參與人數不足，申請已取消。",
+      "RESOURCE_UNAVAILABLE": "由於場地或門票預訂問題，申請已取消。",
+      "EXTERNAL_CIRCUMSTANCES": "由於天氣等外部原因，申請已取消。",
+      "BUDDY_OTHER": "夥伴提供的取消原因"
+    }
+  },
   "QuantityPricing": {
     "options": {
       "none": "不折扣",

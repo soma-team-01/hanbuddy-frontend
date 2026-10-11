@@ -5,6 +5,7 @@ import { renderWithQueryClient } from "@/test/render-with-query-client";
 import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
 import { createReferralActivity, updateReferralActivity } from "@/lib/api/referral";
 import { createApiClientError } from "@/lib/api/errors";
+import { getActivityPricingPreview } from "@/lib/api/activities";
 import { getSeoulDateTimeParts } from "@/lib/datetime";
 import { buddyKeys } from "@/lib/query/buddy";
 import type { MyActivityDetailResponse } from "@/types/buddy";
@@ -71,6 +72,10 @@ vi.mock("@/lib/api/referral", () => ({
 
 vi.mock("@/lib/api/activities", async (original) => ({
   ...(await original<typeof import("@/lib/api/activities")>()),
+  getActivityPricingPreview: vi.fn().mockResolvedValue({
+    status: "success",
+    preview: { currency: "KRW", commissionRate: 0.2, rows: [] },
+  }),
   getActivityLanguages: vi.fn().mockResolvedValue({
     status: "success",
     languages: ["KO", "EN", "JA", "ZH", "YUE", "ES", "FR", "DE", "VI", "TH", "ID"],
@@ -231,6 +236,7 @@ async function completeAllStepsUntilReview(reorder = false) {
 
   clickNext();
 
+  clickNext(); // Optional quantity rates
   fireEvent.click(screen.getByRole("button", { name: "Equipment rental" }));
   clickNext();
 
@@ -241,6 +247,17 @@ async function completeAllStepsUntilReview(reorder = false) {
 }
 
 describe("CreateActivityForm", () => {
+  it("restores open-ended tiers independently of an expired period discount", () => {
+    const draft = buildDraftFromMyActivityDetail({
+      ...buildEditDetail(),
+      discountPercent: 10,
+      discountEndDate: "2000-01-01",
+      priceTiers: [{ minGuests: 2, maxGuests: null, unitPrice: 30000 }],
+    });
+    expect(draft.quantityPricingEnabled).toBe(true);
+    expect(draft.priceTiers).toEqual([{ minGuests: "2", maxGuests: "", unitPrice: "30000" }]);
+    expect(draft.discountType).toBe("none");
+  });
   it.each([false, true])(
     "separates introduction and language steps (referral=%s)",
     async (referral) => {
@@ -471,7 +488,7 @@ describe("CreateActivityForm", () => {
     });
     expect(submit).toBeDisabled();
     expect(routerReplace).not.toHaveBeenCalled();
-    expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(mockedUploadActivityImageSet).toHaveBeenCalledTimes(1));
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
 
     await act(async () => uploadGate.resolve());
@@ -729,7 +746,7 @@ describe("CreateActivityForm", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps all thirteen inputs in sequence and opens review after restrictions", async () => {
+  it("keeps all fourteen inputs in sequence and opens review after restrictions", async () => {
     renderWithQueryClient(<CreateActivityForm />);
 
     fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
@@ -858,7 +875,7 @@ describe("CreateActivityForm", () => {
       target: { value: "14999" },
     });
     clickNext();
-    expect(screen.getByRole("textbox", { name: "Price per person" })).toHaveValue("14999");
+    expect(screen.getByRole("textbox", { name: "Price per person" })).toHaveValue("14,999");
     expect(screen.getByRole("alert")).toHaveTextContent("at least ₩15,000");
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
 
@@ -867,12 +884,14 @@ describe("CreateActivityForm", () => {
     });
     clickNext();
 
-    expect(screen.getByRole("heading", { name: "Add a discount" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Quantity rates" })).toBeInTheDocument();
+    clickNext();
+    expect(screen.getByRole("heading", { name: "Period discount" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /No discount/ })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    expect(screen.getByRole("button", { name: /Limited-time discount/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Apply discount/ })).toBeInTheDocument();
     clickNext();
 
     expect(
@@ -977,6 +996,9 @@ describe("CreateActivityForm", () => {
     ]);
 
     expect(mockedCreateMyActivity).toHaveBeenCalledWith({
+      priceTiers: [],
+      discountPercent: null,
+      discountEndDate: null,
       sourceLanguage: "EN",
       availableLanguages: ["EN"],
       title: "Seoul market walk",
@@ -1008,8 +1030,8 @@ describe("CreateActivityForm", () => {
       ],
     });
     const request = mockedCreateMyActivity.mock.calls[0][0];
-    expect(request).not.toHaveProperty("discountPercent");
-    expect(request).not.toHaveProperty("discountEndDate");
+    expect(request).toMatchObject({ discountPercent: null, discountEndDate: null, priceTiers: [] });
+    expect(request.discountEndDate).toBeNull();
 
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("create");
@@ -1241,7 +1263,7 @@ describe("CreateActivityForm", () => {
       fireEvent.click(screen.getByRole("button", { name: "Decrease maximum guests" }));
       screen.getAllByRole("spinbutton").forEach((input) => expect(input).toHaveValue(4));
       if (mode === "create") {
-        for (let index = 0; index < (referral ? 4 : 5); index++) clickNext();
+        for (let index = 0; index < (referral ? 4 : 6); index++) clickNext();
       }
       fireEvent.click(
         screen.getByRole("button", {
@@ -1271,15 +1293,29 @@ describe("CreateActivityForm", () => {
     renderEditForm(detail);
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     const price = screen.getByRole("textbox", { name: "Price per person" });
-    expect(price).toHaveValue("14999");
+    expect(price).toHaveValue("14,999");
     expect(screen.getByRole("alert")).toHaveTextContent("at least ₩15,000");
     expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
     expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
     clickNext();
     expect(screen.getByRole("textbox", { name: "Price per person" })).toBeInTheDocument();
     fireEvent.change(price, { target: { value: "15000" } });
+    expect(price).toHaveValue("15,000");
+    expect(
+      screen.queryByText("This price applies when no quantity rate matches the booking."),
+    ).not.toBeInTheDocument();
     clickNext();
-    expect(screen.getByRole("heading", { name: "Add a discount" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Quantity rates" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Apply discount" }));
+    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "No discount" }));
+    expect(screen.getByRole("heading", { name: "Quantity rates" })).toBeInTheDocument();
+    clickNext();
+    expect(screen.getByRole("heading", { name: "Period discount" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "No discount" }));
+    expect(screen.getByRole("heading", { name: "Period discount" })).toBeInTheDocument();
+    clickNext();
+    expect(screen.queryByRole("heading", { name: "Period discount" })).not.toBeInTheDocument();
     mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(() => expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1));
@@ -1327,7 +1363,7 @@ describe("CreateActivityForm", () => {
         },
       ],
     });
-    expect(request).not.toHaveProperty("discountPercent");
+    expect(request).toMatchObject({ discountPercent: null, discountEndDate: null, priceTiers: [] });
     await waitFor(() => expect(routerPush).toHaveBeenCalled());
     expect(String(routerPush.mock.calls[0][0])).toContain("/my-activities/42");
     expect(save).toBeDisabled();
@@ -1335,6 +1371,22 @@ describe("CreateActivityForm", () => {
     expect(routerReplace).not.toHaveBeenCalled();
     fireEvent.click(save);
     expect(mockedUpdateMyActivity).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks saving when the authenticated pricing preview rejects the configuration", async () => {
+    vi.mocked(getActivityPricingPreview).mockResolvedValueOnce({
+      status: "error",
+      error: createApiClientError(
+        400,
+        { isSuccess: false, code: "PAYMENT400_AMOUNT", message: "Invalid amount" },
+        "Invalid amount",
+      ),
+    });
+    renderEditForm(buildEditDetail());
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await screen.findByRole("alert");
+    expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
+    expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
   });
 
   it("keeps the edit query successful and preserves input when occupancy refresh fails", async () => {
@@ -1415,7 +1467,7 @@ describe("CreateActivityForm", () => {
     const handle = screen.getByRole("button", { name: "Move photo 4" });
     for (let move = 0; move < 3; move += 1) fireEvent.keyDown(handle, { key: "ArrowLeft" });
 
-    for (let step = 0; step < 9; step += 1) {
+    for (let step = 0; step < 10; step += 1) {
       clickNext();
     }
     expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
@@ -1440,6 +1492,21 @@ describe("CreateActivityForm", () => {
 });
 
 describe("buildActivityUpsertRequest", () => {
+  it("submits stored tiers and explicitly clears them when disabled", () => {
+    const draft = {
+      ...EMPTY_ACTIVITY_DRAFT,
+      pricePerPerson: "45000",
+      quantityPricingEnabled: true,
+      priceTiers: [{ minGuests: "2", maxGuests: "", unitPrice: "30000" }],
+    };
+    expect(buildActivityUpsertRequest(draft, [], [], "KO").priceTiers).toEqual([
+      { minGuests: 2, maxGuests: null, unitPrice: 30000 },
+    ]);
+    expect(
+      buildActivityUpsertRequest({ ...draft, quantityPricingEnabled: false }, [], [], "KO")
+        .priceTiers,
+    ).toEqual([]);
+  });
   const baseDraft = {
     ...EMPTY_ACTIVITY_DRAFT,
     experienceName: "Seoul market walk",

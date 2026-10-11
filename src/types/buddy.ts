@@ -43,6 +43,7 @@ export interface ActivityPricePreviewResponse {
 
 /** 등록·수정 문자열 제한은 백엔드 ActivityTextLimits와 동기화한다. */
 export interface ActivityUpsertRequest {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[] | null;
   /** Required for creation; omit on edit to preserve legacy unset languages. */
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   /** 사용자가 작성한 원문의 주 언어 */
@@ -63,10 +64,10 @@ export interface ActivityUpsertRequest {
   maxCapacity: number;
   price: number;
   currency: string;
-  /** 1~100 (%). 할인 미사용 시 discountEndDate와 함께 생략 */
-  discountPercent?: number;
+  /** 1~100 (%). 할인 미사용 시 discountEndDate와 함께 null */
+  discountPercent?: number | null;
   /** Asia/Seoul 기준 할인 종료일 (YYYY-MM-DD). 오늘 또는 이후 날짜 */
-  discountEndDate?: string;
+  discountEndDate?: string | null;
   /** 공백이 아닌 최대 500자 */
   meetingPointName: string;
   meetingPlaceId: string;
@@ -120,6 +121,7 @@ export interface MyActivitySummaryResponse {
 }
 
 export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
   hostIntroduction: string;
   includedItems: string[];
   restrictionNotes: string[];

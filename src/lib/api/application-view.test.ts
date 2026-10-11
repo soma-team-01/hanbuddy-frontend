@@ -32,6 +32,32 @@ const application = {
 } as const;
 
 describe("application view adapters", () => {
+  it("preserves the historical quantity/period discount snapshot and server total", () => {
+    const tier = { minGuests: 2, maxGuests: 2, unitPrice: 40000 };
+    const result = mapApplicationResponseToApplication(
+      {
+        ...application,
+        price: 99999,
+        totalPrice: 72000,
+        originalUnitPrice: 45000,
+        discountedUnitPrice: 36000,
+        originalTotalPrice: 90000,
+        discountAmount: 18000,
+        discountPercent: 10,
+        appliedPriceTier: tier,
+        quantityDiscountAmount: 10000,
+        periodDiscountAmount: 8000,
+      },
+      "Unknown",
+    );
+    expect(result.breakdown).toMatchObject({
+      finalTotalPrice: 72000,
+      unitPrice: 36000,
+      appliedPriceTier: tier,
+      quantityDiscountAmount: 10000,
+      periodDiscountAmount: 8000,
+    });
+  });
   it.each<PaymentRefundResponse["status"]>(["REQUESTED", "FAILED", "COMPLETED"])(
     "preserves an earlier personal %s refund when the buddy later cancels",
     (status) => {

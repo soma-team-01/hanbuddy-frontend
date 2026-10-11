@@ -59,6 +59,9 @@ export interface PaymentRefundResponse {
 }
 
 export interface PriceBreakdown {
+  appliedPriceTier?: import("./activity-pricing").ActivityPriceTier | null;
+  quantityDiscountAmount?: number | null;
+  periodDiscountAmount?: number | null;
   unitPrice: number;
   guests: number;
   serviceFee: number;
@@ -145,6 +148,9 @@ export interface CapturePayPalPaymentRequest {
 }
 
 export interface ApplicationResponse {
+  appliedPriceTier?: import("./activity-pricing").ActivityPriceTier | null;
+  quantityDiscountAmount?: number | null;
+  periodDiscountAmount?: number | null;
   activityType?: import("./referral").ActivityType;
   applicationId: number;
   activityId: number;

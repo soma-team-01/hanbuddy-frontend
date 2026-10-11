@@ -80,6 +80,7 @@ function PriceBreakdown({
   const locale = useLocale();
   const t = useTranslations("Applications");
   const breakdown = application.breakdown;
+  const pricingT = useTranslations("QuantityPricing");
   if (!breakdown) return null;
 
   const originalUnitPrice = breakdown.originalUnitPrice ?? breakdown.unitPrice;
@@ -147,7 +148,24 @@ function PriceBreakdown({
               {formatKrw(originalTotalPrice, locale)}
             </span>
           </div>
-          {hasDiscount ? (
+          {hasDiscount &&
+          ((breakdown.quantityDiscountAmount ?? 0) > 0 ||
+            (breakdown.periodDiscountAmount ?? 0) > 0) ? (
+            <>
+              {(breakdown.quantityDiscountAmount ?? 0) > 0 && (
+                <div className="flex justify-between gap-3 font-semibold text-primary">
+                  <span>{pricingT("quantityDiscount")}</span>
+                  <span>-{formatKrw(breakdown.quantityDiscountAmount!, locale)}</span>
+                </div>
+              )}
+              {(breakdown.periodDiscountAmount ?? 0) > 0 && (
+                <div className="flex justify-between gap-3 font-semibold text-primary">
+                  <span>{pricingT("periodDiscount")}</span>
+                  <span>-{formatKrw(breakdown.periodDiscountAmount!, locale)}</span>
+                </div>
+              )}
+            </>
+          ) : hasDiscount ? (
             <div className="flex justify-between font-semibold text-primary">
               <span>
                 {breakdown.discountPercent

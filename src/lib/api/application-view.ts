@@ -52,6 +52,15 @@ export function mapApplicationResponseToApplication(
     holdExpiresAt: response.holdExpiresAt,
     myReview: response.myReview ?? null,
     breakdown: {
+      ...(response.appliedPriceTier !== undefined
+        ? { appliedPriceTier: response.appliedPriceTier }
+        : {}),
+      ...(response.quantityDiscountAmount !== undefined
+        ? { quantityDiscountAmount: response.quantityDiscountAmount }
+        : {}),
+      ...(response.periodDiscountAmount !== undefined
+        ? { periodDiscountAmount: response.periodDiscountAmount }
+        : {}),
       unitPrice: discountedUnitPrice,
       guests: response.guestCount,
       serviceFee: 0,

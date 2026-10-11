@@ -12,6 +12,12 @@ import type { MyActivityDetailResponse } from "@/types/buddy";
 import { isReferralPrice } from "@/lib/referral";
 import { isValidActivityLanguages } from "@/lib/activity-languages";
 import type { ActivityLanguage } from "@/types/activity-language";
+import {
+  buildPricingRequest,
+  pricingTiers,
+  validatePriceTiers,
+  type PriceTierDraft,
+} from "@/lib/activity-pricing";
 
 export const ACTIVITY_CREATE_STEPS = [
   "host",
@@ -24,6 +30,7 @@ export const ACTIVITY_CREATE_STEPS = [
   "schedule",
   "capacity",
   "price",
+  "quantity",
   "discount",
   "inclusions",
   "restrictions",
@@ -88,6 +95,8 @@ export interface ScheduleDraft {
 }
 
 export interface ActivityCreateDraft {
+  quantityPricingEnabled?: boolean;
+  priceTiers?: PriceTierDraft[];
   availableLanguages?: ActivityLanguage[];
   availableLanguagesTouched?: boolean;
   category: string;
@@ -140,6 +149,8 @@ export type ActivityCreateErrorKey =
   | "maxGuestsTooMany"
   | "scheduleCapacityOccupied"
   | "priceInvalid"
+  | "priceTiersInvalid"
+  | "pricingInvalid"
   | "referralPriceInvalid"
   | "inclusionsRequired"
   | "restrictionsRequired"
@@ -325,15 +336,26 @@ export function validateActivityCreateStep(
           ? null
           : "referralPriceInvalid";
       }
-      return isPositiveInteger(draft.pricePerPerson) &&
-        Number(draft.pricePerPerson) >= ACTIVITY_CREATE_LIMITS.pricePerPerson.min
-        ? null
-        : "priceInvalid";
+      if (
+        !isPositiveInteger(draft.pricePerPerson) ||
+        Number(draft.pricePerPerson) < ACTIVITY_CREATE_LIMITS.pricePerPerson.min ||
+        Number(draft.pricePerPerson) > 99_999_999
+      )
+        return "priceInvalid";
+      return null;
+    case "quantity":
+      if (referral) return null;
+      return draft.quantityPricingEnabled &&
+        (draft.priceTiers?.length ?? 0) > 0 &&
+        !validatePriceTiers(draft.priceTiers ?? [], Number(draft.pricePerPerson))
+        ? "priceTiersInvalid"
+        : null;
     case "inclusions":
       return draft.inclusions.trim()
         ? validateActivityList(draft.inclusions)
         : "inclusionsRequired";
     case "discount": {
+      if (referral) return null;
       if (draft.discountType !== "none") {
         const discount = Number(draft.discountPercent);
         if (
@@ -347,7 +369,7 @@ export function validateActivityCreateStep(
           return "discountInvalid";
         }
       }
-      return null;
+      return buildPricingRequest(draft) ? null : "pricingInvalid";
     }
     case "restrictions":
       if (draft.hasNoRestrictions) return null;
@@ -434,6 +456,12 @@ export function buildDraftFromMyActivityDetail(
       })),
     maxGuests: String(detail.maxCapacity),
     pricePerPerson: String(detail.price),
+    quantityPricingEnabled: Boolean(detail.priceTiers?.length),
+    priceTiers: (detail.priceTiers ?? []).map((tier) => ({
+      minGuests: String(tier.minGuests),
+      maxGuests: tier.maxGuests === null ? "" : String(tier.maxGuests),
+      unitPrice: String(tier.unitPrice),
+    })),
     inclusions: detail.includedItems.join("\n"),
     discountType: hasDiscount ? "limited" : "none",
     discountPercent: hasDiscount ? String(detail.discountPercent) : "",
@@ -517,6 +545,7 @@ export function buildPreviewActivityFromDraft(
     heroImageUrl: images[0] ?? "",
     images,
     price: hasDiscount ? discountedPrice : price,
+    priceTiers: pricingTiers(draft),
     originalPrice: hasDiscount ? price : undefined,
     discountPercent: hasDiscount ? discountPercent : undefined,
     durationMinutes: itineraryMinutes > 0 ? itineraryMinutes : undefined,

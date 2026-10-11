@@ -1,6 +1,7 @@
 "use client";
 
 import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
+import { ActivityPriceTiers } from "@/components/activity/ActivityPriceTiers";
 import { LazyMapFrame } from "@/components/activity/LazyMapFrame";
 
 import Image from "next/image";
@@ -236,22 +237,25 @@ export function ActivityDetailView({
     );
   }
 
+  const dateControl = (
+    <button
+      type="button"
+      data-testid="date-select-box"
+      onClick={() => setCalendarOpen(true)}
+      disabled={dateBoxDisabled}
+      className={`flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:flex-1 ${
+        selectedSession
+          ? "text-ink enabled:hover:border-ink"
+          : "text-muted enabled:hover:border-ink enabled:hover:text-ink"
+      }`}
+    >
+      <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
+      <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
+    </button>
+  );
   const bottomBarContent = (
     <div className="mx-auto flex w-full max-w-[840px] flex-col gap-2.5 md:flex-row md:items-center md:gap-4">
-      <button
-        type="button"
-        data-testid="date-select-box"
-        onClick={() => setCalendarOpen(true)}
-        disabled={dateBoxDisabled}
-        className={`flex h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:flex-1 ${
-          selectedSession
-            ? "text-ink enabled:hover:border-ink"
-            : "text-muted enabled:hover:border-ink enabled:hover:text-ink"
-        }`}
-      >
-        <span className="truncate text-sm font-semibold">{dateBoxLabel}</span>
-        <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
-      </button>
+      {dateControl}
       {/* 모바일(<768px)은 가격+버튼을 2행에 묶고, md 이상은 래퍼를 없애 날짜·가격·버튼 1행을 유지한다 */}
       <div
         data-testid="booking-bar-actions"
@@ -642,6 +646,14 @@ export function ActivityDetailView({
                   ) : null}
                 </section>
               ) : null}
+
+              {activity.activityType !== "REFERRAL" && (
+                <ActivityPriceTiers
+                  tiers={activity.priceTiers ?? []}
+                  basePrice={activity.originalPrice ?? activity.price}
+                  discountPercent={hasDiscount ? activity.discountPercent : undefined}
+                />
+              )}
 
               <section
                 id={SECTION_IDS.meetingPoint}

@@ -168,7 +168,7 @@ describe("activity creation wizard", () => {
     },
   );
 
-  it("keeps the requested fields in thirteen focused steps", () => {
+  it("separates base price, optional quantity pricing and period discounts", () => {
     expect(ACTIVITY_CREATE_STEPS).toEqual([
       "host",
       "languages",
@@ -180,10 +180,23 @@ describe("activity creation wizard", () => {
       "schedule",
       "capacity",
       "price",
+      "quantity",
       "discount",
       "inclusions",
       "restrictions",
     ]);
+  });
+
+  it("validates quantity tiers separately from the base price", () => {
+    const draft = createCompleteDraft({
+      quantityPricingEnabled: true,
+      priceTiers: [{ minGuests: "2", maxGuests: "", unitPrice: "999999" }],
+    });
+    expect(validateActivityCreateStep("price", draft)).toBeNull();
+    expect(validateActivityCreateStep("quantity", draft)).toBe("priceTiersInvalid");
+    expect(
+      validateActivityCreateStep("quantity", { ...draft, quantityPricingEnabled: false }),
+    ).toBeNull();
   });
 
   const validationCases: Array<

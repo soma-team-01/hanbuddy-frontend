@@ -9,10 +9,17 @@ export default async function BookingPage({
   searchParams,
 }: Readonly<{
   params: Promise<{ id: string; locale: Locale }>;
-  searchParams: Promise<{ scheduleId?: string | string[] }>;
+  searchParams: Promise<{ scheduleId?: string | string[]; guestCount?: string | string[] }>;
 }>) {
   const { id, locale } = await params;
-  const { scheduleId } = await searchParams;
+  const { scheduleId, guestCount } = await searchParams;
+  const initialGuestCount =
+    typeof guestCount === "string" &&
+    /^\d{1,3}$/.test(guestCount) &&
+    Number(guestCount) >= 1 &&
+    Number(guestCount) <= 100
+      ? Number(guestCount)
+      : 1;
   const initialScheduleId = typeof scheduleId === "string" ? scheduleId : undefined;
   const [t, refundPolicyDocument] = await Promise.all([
     getTranslations({ locale, namespace: "Booking" }),
@@ -25,6 +32,7 @@ export default async function BookingPage({
       <BookingContent
         activityId={id}
         initialScheduleId={initialScheduleId}
+        initialGuestCount={initialGuestCount}
         refundPolicyDocument={refundPolicyDocument}
       />
     </div>

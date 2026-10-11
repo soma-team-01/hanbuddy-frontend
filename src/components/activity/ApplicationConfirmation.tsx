@@ -40,6 +40,7 @@ export function ApplicationConfirmation({
   const locale = useLocale();
   const t = useTranslations("Payment");
   const tBooking = useTranslations("Booking");
+  const pricingT = useTranslations("QuantityPricing");
   const tErrors = useTranslations("Errors");
   const scheduleLabel =
     formatSeoulDateTime(application.startAt, locale) ?? tErrors("dateTimeUnavailable");
@@ -146,7 +147,24 @@ export function ApplicationConfirmation({
                 </span>
               </div>
 
-              {hasDiscount ? (
+              {hasDiscount &&
+              ((application.quantityDiscountAmount ?? 0) > 0 ||
+                (application.periodDiscountAmount ?? 0) > 0) ? (
+                <>
+                  {(application.quantityDiscountAmount ?? 0) > 0 && (
+                    <div className="flex items-center justify-between gap-3 text-sm font-semibold text-primary max-md:text-xs">
+                      <span>{pricingT("quantityDiscount")}</span>
+                      <span>-{formatKrw(application.quantityDiscountAmount!, locale)}</span>
+                    </div>
+                  )}
+                  {(application.periodDiscountAmount ?? 0) > 0 && (
+                    <div className="flex items-center justify-between gap-3 text-sm font-semibold text-primary max-md:text-xs">
+                      <span>{pricingT("periodDiscount")}</span>
+                      <span>-{formatKrw(application.periodDiscountAmount!, locale)}</span>
+                    </div>
+                  )}
+                </>
+              ) : hasDiscount ? (
                 <div className="flex items-center justify-between text-sm font-semibold text-primary max-md:text-xs">
                   <span>
                     {application.discountPercent

@@ -2,7 +2,7 @@ import { fireEvent, screen } from "@testing-library/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { renderWithIntl } from "@/test/render-with-intl";
+import { renderWithQueryClient as renderWithIntl } from "@/test/render-with-query-client";
 import en from "@/messages/en.json";
 import ko from "@/messages/ko.json";
 import ja from "@/messages/ja.json";
@@ -17,6 +17,11 @@ import {
   PriceStep,
 } from "./activity-create-steps";
 import { EMPTY_ACTIVITY_DRAFT } from "./activity-create-wizard";
+
+vi.mock("next/navigation", async (original) => ({
+  ...(await original<typeof import("next/navigation")>()),
+  useRouter: () => ({ replace: vi.fn() }),
+}));
 
 function Fields() {
   const t = useTranslations("CreateActivity");
@@ -78,7 +83,7 @@ describe("activity input limits", () => {
     ).not.toBeInTheDocument();
     for (const value of ["-5000", "12.5", "0", "5000"]) {
       fireEvent.change(input, { target: { value } });
-      expect(input).toHaveValue(value);
+      expect(input).toHaveValue(value === "5000" ? "5,000" : value);
     }
     expect(screen.queryByText("The minimum price per person is ₩15,000.")).not.toBeInTheDocument();
   });

@@ -23,6 +23,24 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/activities", () => ({
+  getActivityPriceQuote: vi.fn(async (id, guestCount) => ({
+    status: "success",
+    quote: {
+      activityId: Number(id),
+      guestCount,
+      currency: "KRW",
+      originalUnitPrice: 45000,
+      unitPrice: 45000,
+      quantityUnitPrice: 45000,
+      originalAmount: 45000 * guestCount,
+      amount: 45000 * guestCount,
+      discountAmount: 0,
+      quantityDiscountAmount: 0,
+      periodDiscountAmount: 0,
+      discountPercent: null,
+      appliedPriceTier: null,
+    },
+  })),
   getActivityWeather: vi.fn(),
   getTouristActivity: vi.fn(),
   getTouristActivities: vi.fn(),
@@ -205,17 +223,11 @@ describe("ActivityDetailContent", () => {
     );
     expect(screen.getByTestId("booking-bottom-bar")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Contact us" })).toBeInTheDocument();
-    const krwPrice = screen.getByText("₩45,000");
-    const referencePrice = screen.getByText("(≈ $32.50)");
-    expect(referencePrice).toHaveClass("text-muted");
     expect(
-      krwPrice.compareDocumentPosition(referencePrice) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    // 모바일은 가격과 같은 줄에 붙고, md 이상에서만 제 줄로 내려가 오른쪽 정렬된다
-    expect(screen.getByText("per person")).toHaveClass("md:basis-full", "md:text-right");
-    expect(screen.getByText("per person").parentElement).toBe(
-      screen.getByTestId("booking-bar-price"),
-    );
+      await within(screen.getByTestId("booking-bottom-bar")).findByText("₩45,000"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("per person")).toBeInTheDocument();
+    expect(screen.getByText("(≈ $32.50)")).toBeInTheDocument();
     // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();

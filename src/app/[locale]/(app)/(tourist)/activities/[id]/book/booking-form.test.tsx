@@ -637,12 +637,40 @@ describe("BookingForm", () => {
     expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
       "bg-primary",
       "text-on-primary",
+      "h-11",
+      "lg:h-13",
     );
     expect(
       screen.queryByRole("button", { name: "Pay with Toss Payments" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Pay .* with PayPal/ })).not.toBeInTheDocument();
     expect(screen.queryByText("PayPal charges in USD.")).not.toBeInTheDocument();
+  });
+
+  it("keeps guest count in the URL for a locale remount without dropping other parameters", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/en/activities/42/book?scheduleId=101&source=detail#summary",
+    );
+    const view = await renderBooking(<BookingForm activity={activity} initialSessionId="101" />);
+    fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
+    expect(new URLSearchParams(window.location.search).get("guestCount")).toBe("2");
+    expect(new URLSearchParams(window.location.search).get("scheduleId")).toBe("101");
+    expect(new URLSearchParams(window.location.search).get("source")).toBe("detail");
+    expect(window.location.hash).toBe("#summary");
+    view.unmount();
+    await renderBooking(
+      <BookingForm
+        activity={activity}
+        initialSessionId="101"
+        initialGuestCount={Number(new URLSearchParams(window.location.search).get("guestCount"))}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Increase participants" }).previousElementSibling,
+    ).toHaveTextContent("2");
+    window.history.replaceState(null, "", "/");
   });
 
   it("keeps the branded PayPal action in PAYPAL mode", async () => {

@@ -1151,6 +1151,7 @@
     "refundExceptionsNotice": "一般基準は法定期間経過後または法定制限事由が認められる場合に適用します。30分無料キャンセルや未提供部分等の別途返金権を優先します。",
     "actualPaymentRefundNotice": "割引決済は実際の支払金額を基準に返金します。",
     "agreement": "【必須】キャンセル・返金規定に同意します。",
+    "agreementCompact": "【必須】キャンセル・返金規定に同意",
     "submit": "申し込みと支払い",
     "payNow": "支払う",
     "payWithToss": "Toss Paymentsで支払う",

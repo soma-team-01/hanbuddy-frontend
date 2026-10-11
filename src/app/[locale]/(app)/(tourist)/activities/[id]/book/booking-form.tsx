@@ -123,6 +123,18 @@ export function BookingForm({
       ? Math.max(1, Math.min(initialGuestCount, capacity))
       : 1;
   });
+  // 언어 전환은 쿼리를 보존한다. 최신 선택을 URL에 동기화해 폼이 다시 마운트되어도 복원한다.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (
+      url.searchParams.get("guestCount") === String(guests) &&
+      url.searchParams.get("scheduleId") === sessionId
+    )
+      return;
+    url.searchParams.set("guestCount", String(guests));
+    url.searchParams.set("scheduleId", sessionId);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [guests, sessionId]);
   const quoteQuery = useQuery(activityPriceQuoteQueryOptions(activity.id, guests));
   const quote =
     !quoteQuery.isFetching &&
@@ -661,8 +673,8 @@ export function BookingForm({
             </div>
 
             <div className="lg:pt-6">
-              <BottomActionBar>
-                <div className="flex w-full flex-col gap-2">
+              <BottomActionBar compact>
+                <div className="flex w-full flex-col gap-1 lg:gap-2">
                   {errorMessage ? (
                     <div
                       ref={errorAlertRef}
@@ -701,7 +713,7 @@ export function BookingForm({
                           guests > maxGuests
                         }
                         onClick={() => handleSubmitClick("TOSS")}
-                        className={`flex h-13 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 ${
+                        className={`flex h-11 w-full items-center justify-center rounded-full px-4 font-display text-sm font-bold transition-colors disabled:opacity-40 lg:h-13 ${
                           showProviderChoice
                             ? "bg-[#3182f6] text-white enabled:hover:bg-[#1b64da]"
                             : "bg-primary text-on-primary enabled:hover:bg-primary-hover"
@@ -740,7 +752,7 @@ export function BookingForm({
                               guests > maxGuests
                             }
                             onClick={() => handleSubmitClick("PAYPAL")}
-                            className="flex h-13 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40"
+                            className="flex h-11 w-full items-center justify-center rounded-full bg-[#ffc439] px-4 font-display text-sm font-bold text-[#111] transition-opacity enabled:hover:opacity-90 disabled:opacity-40 lg:h-13"
                           >
                             {isSubmitting ? t("processing") : payPalPaymentLabel}
                           </button>

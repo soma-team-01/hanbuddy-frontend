@@ -1151,6 +1151,7 @@
     "refundExceptionsNotice": "一般标准适用于法定期间已过或法定限制事由获认可的情况。30分钟免费取消及未提供部分等独立退款权利优先。",
     "actualPaymentRefundNotice": "折扣订单按实际支付金额退款。",
     "agreement": "【必选】我同意取消与退款政策。",
+    "agreementCompact": "【必选】我同意取消与退款政策。",
     "submit": "申请并付款",
     "payNow": "立即支付",
     "payWithToss": "使用Toss Payments付款",

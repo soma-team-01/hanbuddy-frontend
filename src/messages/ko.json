@@ -1151,6 +1151,7 @@
     "refundExceptionsNotice": "일반 취소 기준은 법정 기간 경과 또는 법령상 제한 사유가 인정될 때 적용합니다. 30분 무료 취소와 미제공 부분 등 별도 환불 권리는 우선 보장합니다.",
     "actualPaymentRefundNotice": "할인 결제는 실제 결제금액을 기준으로 환불합니다.",
     "agreement": "[필수] 취소 및 환불 규정에 동의합니다.",
+    "agreementCompact": "[필수] 취소·환불 규정에 동의합니다.",
     "submit": "신청 및 결제",
     "payNow": "결제하기",
     "payWithToss": "토스페이먼츠로 결제",

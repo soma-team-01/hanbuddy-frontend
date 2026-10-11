@@ -1151,6 +1151,7 @@
     "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. The 30-minute benefit and separate refund rights, including unprovided portions, take priority.",
     "actualPaymentRefundNotice": "Discounted bookings are refunded from the amount paid.",
     "agreement": "[Required] I agree to the cancellation and refund policy.",
+    "agreementCompact": "[Required] Agree to cancellation/refunds",
     "submit": "Apply & Pay",
     "payNow": "Pay now",
     "payWithToss": "Pay with Toss Payments",

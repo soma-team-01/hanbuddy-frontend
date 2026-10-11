@@ -20,6 +20,20 @@ const activitySummary = {
   description: "Learn Korean tea etiquette.",
   thumbnailImageUrl: "https://static.hanbuddy.com/activities/tea.webp",
   status: "ACTIVE",
+  totalDurationMinutes: 60,
+  meetingPointName: "Anguk Station",
+  meetingPlaceId: "place-1",
+  meetingLatitude: 37.5,
+  meetingLongitude: 127,
+  price: 50000,
+  currency: "KRW",
+  discountPercent: 2,
+  discountedPrice: 49000,
+  discountEndDate: "2099-12-31",
+  priceTiers: [{ minGuests: 2, maxGuests: null, unitPrice: 45000 }],
+  averageRating: 4.8,
+  reviewCount: 7,
+  isSoldOut: false,
 };
 
 const activityDetail = {

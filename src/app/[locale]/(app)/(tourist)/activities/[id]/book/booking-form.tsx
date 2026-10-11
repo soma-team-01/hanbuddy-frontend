@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { BookingPanel } from "@/components/layout/BookingPanel";
+import { ApprovalNotice } from "@/components/booking/ApprovalNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RefundPolicyAgreement, RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
 import { PayPalCheckoutButton } from "@/components/payment/PayPalCheckoutDialog";
@@ -145,6 +146,7 @@ export function BookingForm({
       : null;
   const quoteReady = Boolean(quote && quote.currency === "KRW" && quote.amount > 0);
   const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
+  const [approvalAcknowledged, setApprovalAcknowledged] = useState(false);
   const [specialRequest, setSpecialRequest] = useState("");
   const [errorKey, setErrorKey] = useState<BookingErrorKey | null>(null);
   const [requestFailure, setRequestFailure] = useState<{
@@ -253,7 +255,7 @@ export function BookingForm({
     request: CreateApplicationRequest,
     paymentProvider: PaymentProvider,
   ) {
-    if (!quoteReady) return;
+    if (!quoteReady || !refundPolicyAgreed || !approvalAcknowledged) return;
     try {
       setCheckingSchedule(true);
       // Do not trust a cached calendar or the device clock alone when starting a new payment.
@@ -332,7 +334,7 @@ export function BookingForm({
   }
 
   function handleSubmitClick(paymentProvider: PaymentProvider) {
-    if (!quoteReady) return;
+    if (!quoteReady || !refundPolicyAgreed || !approvalAcknowledged) return;
     if (paymentProvider === "PAYPAL" && estimatedPayPalTotal === null) return;
     void runWithSubmissionLock(async () => {
       const validationError = validateBookingSession(
@@ -387,6 +389,7 @@ export function BookingForm({
   }
 
   function handleContinueApplication() {
+    if (!refundPolicyAgreed || !approvalAcknowledged) return;
     void runWithSubmissionLock(async () => {
       const paymentProvider = conflictDialog?.paymentProvider ?? "TOSS";
       setConflictDialog(null);
@@ -465,7 +468,9 @@ export function BookingForm({
                 onClick={() => setCalendarOpen(true)}
                 className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left text-sm font-semibold text-ink transition-colors hover:border-primary"
               >
-                <span className="truncate">{sessionSummaryLabel}</span>
+                <span className={`truncate ${selectedSession ? "text-ink" : "text-muted"}`}>
+                  {sessionSummaryLabel}
+                </span>
                 <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
               </button>
               <span className="text-xs text-muted">{t("kstNotice")}</span>
@@ -474,9 +479,9 @@ export function BookingForm({
 
             <section className="flex flex-col gap-2.5 py-4">
               <h2 className="font-display text-base font-bold text-ink">{t("guestsHeading")}</h2>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted">{t("guestCount")}</span>
-                <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm whitespace-nowrap text-ink">{t("guestCount")}</span>
+                <div className="flex shrink-0 items-center gap-1 sm:gap-3">
                   <button
                     type="button"
                     aria-label={t("decreaseGuests")}
@@ -486,8 +491,13 @@ export function BookingForm({
                   >
                     <MinusIcon className="size-4" />
                   </button>
-                  <span className="min-w-14 text-center font-display text-base font-semibold text-ink">
-                    {t("guests", { count: guests })}
+                  <span
+                    aria-live="polite"
+                    role="status"
+                    aria-label={t("guests", { count: guests })}
+                    className="min-w-8 text-center text-xl font-semibold whitespace-nowrap text-ink tabular-nums"
+                  >
+                    {guests}
                   </span>
                   <button
                     type="button"
@@ -565,8 +575,10 @@ export function BookingForm({
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-muted">{t("guestCount")}</dt>
-                  <dd className="font-semibold text-ink">{t("guests", { count: guests })}</dd>
+                  <dt className="text-sm whitespace-nowrap text-ink">{t("guestCount")}</dt>
+                  <dd className="shrink-0 font-semibold whitespace-nowrap text-ink">
+                    {t("guests", { count: guests })}
+                  </dd>
                 </div>
                 <div className="flex items-start justify-between gap-4">
                   <dt className="shrink-0 text-muted">{t("specialRequest")}</dt>
@@ -699,6 +711,10 @@ export function BookingForm({
                     describedBy="booking-refund-policy-notice booking-refund-policy-summary"
                     className="px-1 py-1"
                   />
+                  <ApprovalNotice
+                    agreed={approvalAcknowledged}
+                    onAgreedChange={setApprovalAcknowledged}
+                  />
                   <div
                     className={`grid w-full gap-2 ${showTossPayment && showPayPalPayment ? "md:grid-cols-2 lg:grid-cols-1" : ""}`}
                   >
@@ -708,6 +724,7 @@ export function BookingForm({
                         disabled={
                           !quoteReady ||
                           !refundPolicyAgreed ||
+                          !approvalAcknowledged ||
                           isSubmitting ||
                           !selectedSession ||
                           guests > maxGuests
@@ -746,6 +763,7 @@ export function BookingForm({
                             disabled={
                               !quoteReady ||
                               !refundPolicyAgreed ||
+                              !approvalAcknowledged ||
                               isSubmitting ||
                               estimatedPayPalTotal === null ||
                               !selectedSession ||

@@ -88,20 +88,7 @@ describe("SiteHeader", () => {
       screen.queryByRole("navigation", { name: "Primary navigation" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Open menu" }));
-
-    const mobileNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
-    expect(within(mobileNavigation).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
-      "href",
-      "/en/dashboard",
-    );
-    expect(within(mobileNavigation).getByRole("link", { name: "My Activities" })).toHaveAttribute(
-      "href",
-      "/en/my-activities",
-    );
-    expect(
-      within(mobileNavigation).queryByRole("link", { name: "My Page" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Select language/ })).not.toBeInTheDocument();
   });
 

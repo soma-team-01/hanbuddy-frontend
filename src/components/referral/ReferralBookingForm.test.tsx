@@ -66,9 +66,43 @@ beforeEach(() => {
 async function ready() {
   renderWithQueryClient(<ReferralBookingForm activity={activity} initialSessionId="12" />);
   await screen.findByText("Contact for consultation");
-  await waitFor(() => expect(screen.getByRole("checkbox")).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole("checkbox", { name: /share personal data/i })).toBeEnabled(),
+  );
 }
+function acknowledgeApproval() {
+  const checkbox = screen.getByRole("checkbox", { name: /Buddy approval is required/i });
+  if (!(checkbox as HTMLInputElement).checked) fireEvent.click(checkbox);
+}
+
 describe("referral application form", () => {
+  it("translates the server's versioned Korean notice and explains approval before submission", async () => {
+    vi.mocked(getReferralNotice).mockResolvedValue({
+      status: "success",
+      data: {
+        ...notice,
+        consentVersion: "referral-v1",
+        serviceNotice: "실제 서비스 요금과 예약은 업체 상담 후 별도로 확정됩니다.",
+        purpose: "업체의 상담 연락 및 신청 확인",
+      },
+    });
+    renderWithQueryClient(<ReferralBookingForm activity={activity} initialSessionId="12" />);
+    expect(
+      await screen.findByText("Provider contact for consultation and application confirmation"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Service fees and the final booking will be confirmed separately with the provider.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("업체의 상담 연락 및 신청 확인")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "I understand that submitting a request does not confirm my booking. Buddy approval is required.",
+      ),
+    ).toBeInTheDocument();
+    expect(submitReferralApplication).not.toHaveBeenCalled();
+  });
   const cancelled = (id: number, overrides: Partial<ApplicationResponse> = {}) =>
     ({
       applicationId: id,
@@ -79,35 +113,53 @@ describe("referral application form", () => {
       ...overrides,
     }) as ApplicationResponse;
 
-  it("explicitly reapplies using the highest cancelled ID for this activity and session", async () => {
-    vi.mocked(getMyApplications).mockResolvedValue({
-      status: "success",
-      applications: [
-        cancelled(7),
-        cancelled(99, { activityScheduleId: 13 }),
-        cancelled(5),
-        cancelled(100, { activityId: 4 }),
-      ],
-    });
+  it("requires approval acknowledgment as well as provider sharing consent", async () => {
     await ready();
-    const button = await screen.findByRole("button", { name: "Reapply" });
-    expect(button).toBeDisabled();
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
+    const submit = screen.getByRole("button", { name: "Apply" });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
     expect(submitReferralApplication).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(button);
-    await waitFor(() =>
-      expect(submitReferralApplication).toHaveBeenCalledExactlyOnceWith("3", {
-        activityScheduleId: 12,
-        guestCount: 1,
-        partnerSharingAgreed: true,
-        consentVersion: "live-v3",
-        reapplyFromApplicationId: 7,
-      }),
-    );
+    acknowledgeApproval();
+    expect(submit).toBeEnabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Buddy approval is required/i }));
+    expect(submit).toBeDisabled();
   });
 
+  it.each(["CANCELLED", "REJECTED", "EXPIRED"] as const)(
+    "explicitly reapplies using the highest %s ID for this activity and session",
+    async (status) => {
+      vi.mocked(getMyApplications).mockResolvedValue({
+        status: "success",
+        applications: [
+          cancelled(7, { status }),
+          cancelled(99, { activityScheduleId: 13 }),
+          cancelled(5),
+          cancelled(100, { activityId: 4 }),
+        ],
+      });
+      await ready();
+      const button = await screen.findByRole("button", { name: "Reapply" });
+      expect(button).toBeDisabled();
+      expect(screen.getByRole("checkbox", { name: /share personal data/i })).not.toBeChecked();
+      expect(submitReferralApplication).not.toHaveBeenCalled();
+      acknowledgeApproval();
+      fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
+      fireEvent.click(button);
+      await waitFor(() =>
+        expect(submitReferralApplication).toHaveBeenCalledExactlyOnceWith("3", {
+          activityScheduleId: 12,
+          guestCount: 1,
+          partnerSharingAgreed: true,
+          consentVersion: "live-v3",
+          reapplyFromApplicationId: 7,
+        }),
+      );
+    },
+  );
+
   it.each([
+    { status: "PENDING_APPROVAL" as const },
     { status: "CONFIRMED" as const },
     { scheduleCancelled: true },
     { cancellationReason: "BUDDY_CANCELLATION" as const },
@@ -119,7 +171,8 @@ describe("referral application form", () => {
         applications: [cancelled(7, overrides)],
       });
       await ready();
-      fireEvent.click(screen.getByRole("checkbox"));
+      acknowledgeApproval();
+      fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
       expect(screen.getByRole("button", { name: /^(Apply|Reapply)$/ })).toBeDisabled();
       expect(screen.getByRole("link", { name: "View my applications" })).toBeInTheDocument();
       expect(submitReferralApplication).not.toHaveBeenCalled();
@@ -140,7 +193,8 @@ describe("referral application form", () => {
       }),
     });
     await ready();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     vi.mocked(getMyApplications).mockResolvedValue({
       status: "success",
       applications: [cancelled(9)],
@@ -148,10 +202,11 @@ describe("referral application form", () => {
     fireEvent.click(screen.getByRole("button", { name: "Reapply" }));
     await screen.findByRole("alert");
     await waitFor(() => expect(getMyApplications).toHaveBeenCalledTimes(2));
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /share personal data/i })).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Reapply" })).toBeDisabled();
     expect(submitReferralApplication).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Reapply" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Reapply" }));
     await waitFor(() =>
@@ -169,7 +224,8 @@ describe("referral application form", () => {
     });
     await ready();
     await screen.findByRole("alert");
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
   });
@@ -180,7 +236,7 @@ describe("referral application form", () => {
         status: "success",
         data: {
           applicationId: 1,
-          status: "CONFIRMED",
+          status: "PENDING_APPROVAL",
           activityTitle: "Saved studio visit",
           buddyName: "Saved buddy",
           thumbnailImageUrl: null,
@@ -196,7 +252,8 @@ describe("referral application form", () => {
         <ReferralBookingForm activity={{ ...activity, price }} initialSessionId="12" />,
       );
       await screen.findByText("Contact for consultation");
-      fireEvent.click(screen.getByRole("checkbox"));
+      acknowledgeApproval();
+      fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
       fireEvent.click(screen.getByRole("button", { name: "Apply" }));
       const result = await screen.findByTestId("referral-result");
       expect(result).toHaveClass("max-w-2xl", "rounded-3xl");
@@ -227,6 +284,31 @@ describe("referral application form", () => {
     expect(noticePanel.querySelectorAll("dl > div")).toHaveLength(3);
     expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
   });
+  it("keeps approval beside the action and uses a neutral numeric participant control", async () => {
+    await ready();
+    const bar = screen.getByTestId("bottom-action-bar");
+    expect(
+      within(bar)
+        .getByRole("checkbox", { name: /Buddy approval is required/i })
+        .closest("label"),
+    ).toHaveClass("text-ink");
+    expect(
+      screen.getAllByText(
+        "I understand that submitting a request does not confirm my booking. Buddy approval is required.",
+      ),
+    ).toHaveLength(1);
+    expect(
+      within(bar).getByRole("checkbox", { name: /share personal data/i }),
+    ).toHaveAccessibleName("I agree to share personal data with the provider.");
+    expect(screen.getByRole("button", { name: "Date and time" }).querySelector("span")).toHaveClass(
+      "text-ink",
+    );
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveClass("text-xl");
+    for (const count of screen.getAllByText("1 participant")) {
+      expect(count).toHaveClass("text-ink", "whitespace-nowrap");
+    }
+  });
   it("updates the summary and clamps participants when switching to a smaller session", async () => {
     vi.mocked(getMyApplications).mockResolvedValue({
       status: "success",
@@ -252,15 +334,17 @@ describe("referral application form", () => {
     );
     await screen.findByText("Contact for consultation");
     await screen.findByRole("button", { name: "Reapply" });
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
     fireEvent.click(screen.getByRole("button", { name: "Date and time" }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /3 PM/ }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /share personal data/i })).not.toBeChecked();
     expect(within(screen.getByTestId("booking-panel")).getByText("3 PM")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Increase participants" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     await waitFor(() =>
       expect(submitReferralApplication).toHaveBeenCalledWith("3", {
@@ -280,7 +364,8 @@ describe("referral application form", () => {
     expect(screen.getByText("No sessions are available.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Date and time" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Increase participants" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
   });
 
@@ -339,7 +424,8 @@ describe("referral application form", () => {
     expect(
       within(screen.getByTestId("booking-panel")).getByText("Please meet us outside."),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     await waitFor(() =>
       expect(submitReferralApplication).toHaveBeenCalledWith("3", {
@@ -367,7 +453,8 @@ describe("referral application form", () => {
     await ready();
     expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
     expect(screen.queryByText(/PayPal|Toss|Refund policy/)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     await screen.findByText("Your application has been received.");
@@ -378,7 +465,7 @@ describe("referral application form", () => {
       consentVersion: "live-v3",
     });
   });
-  it.each(["CANCELLED", "COMPLETED"] as const)(
+  it.each(["CANCELLED", "COMPLETED", "REJECTED", "EXPIRED"] as const)(
     "does not show confirmation for returned %s applications",
     async (status) => {
       vi.mocked(submitReferralApplication).mockResolvedValue({
@@ -386,12 +473,17 @@ describe("referral application form", () => {
         data: { status } as ApplicationResponse,
       });
       await ready();
-      fireEvent.click(screen.getByRole("checkbox"));
+      acknowledgeApproval();
+      fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
       fireEvent.click(screen.getByRole("button", { name: "Apply" }));
       await screen.findByRole("link", { name: "View my applications" });
       expect(screen.queryByText("Your application has been received.")).not.toBeInTheDocument();
       expect(screen.getByRole("status")).toHaveTextContent(
-        status === "CANCELLED" ? "was cancelled" : "already ended",
+        status === "CANCELLED"
+          ? "was cancelled"
+          : status === "COMPLETED"
+            ? "already ended"
+            : "Declined",
       );
     },
   );
@@ -409,14 +501,16 @@ describe("referral application form", () => {
       status: "success",
       data: { ...notice, consentVersion: "live-v4" },
     });
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     await screen.findByText(
       "The notice has changed. Review the latest information and agree again.",
     );
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /share personal data/i })).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Apply" })).toBeEnabled());
   });
   it("refreshes duplicate applications instead of retrying the POST", async () => {
@@ -433,11 +527,12 @@ describe("referral application form", () => {
       status: "success",
       applications: [cancelled(9, { status: "CONFIRMED" })],
     });
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     await screen.findByText("You already have an active application. Check My Applications.");
     await screen.findByRole("link", { name: "View my applications" });
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /share personal data/i })).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
     expect(submitReferralApplication).toHaveBeenCalledTimes(1);
   });
@@ -464,7 +559,8 @@ describe("referral application form", () => {
       }),
     });
     await ready();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     fireEvent.click(screen.getByRole("button", { name: "Reapply" }));
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(message);
@@ -474,7 +570,8 @@ describe("referral application form", () => {
   });
   it("blocks excess participants and repeated submits while the request is in flight", async () => {
     await ready();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /share personal data/i }));
     expect(screen.getByRole("button", { name: "Decrease participants" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
     fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));

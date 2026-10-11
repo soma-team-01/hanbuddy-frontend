@@ -8,6 +8,7 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "@/i18n/navigation";
 import { confirmApplicationPayment } from "@/lib/api/applications";
+import { isPaidApplicationStatus } from "@/lib/application-approval";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import { activityKeys } from "@/lib/query/activities";
@@ -129,7 +130,7 @@ export function PaymentSuccessContent({
   if (!application) {
     return <RecoveryState message={t("confirmationNotFound")} />;
   }
-  if (application.status !== "CONFIRMED" && application.status !== "COMPLETED") {
+  if (!isPaidApplicationStatus(application.status)) {
     return <RecoveryState message={t("notPaid")} />;
   }
 

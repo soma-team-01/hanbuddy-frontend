@@ -155,9 +155,17 @@ async function renderBooking(...args: Parameters<typeof renderWithQueryClient>) 
 }
 
 async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
-  fireEvent.click(screen.getByRole("checkbox"));
+  acknowledgeApproval();
+  fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
   await waitFor(() => expect(screen.getByRole("button", { name: submitLabel })).toBeEnabled());
   fireEvent.click(screen.getByRole("button", { name: submitLabel }));
+}
+
+function acknowledgeApproval() {
+  const checkbox = screen.getByRole("checkbox", {
+    name: /Buddy approval is required|버디 승인 후/i,
+  });
+  if (!(checkbox as HTMLInputElement).checked) fireEvent.click(checkbox);
 }
 
 describe("BookingForm", () => {
@@ -214,7 +222,8 @@ describe("BookingForm", () => {
           resolve = done;
         }),
     );
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
     expect(screen.queryByText("₩45,000")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pay now" })).toBeDisabled();
@@ -439,7 +448,9 @@ describe("BookingForm", () => {
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
       expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 20");
-      expect(screen.getByRole("checkbox")).toBeChecked();
+      expect(
+        screen.getByRole("checkbox", { name: /cancellation and refund policy/i }),
+      ).toBeChecked();
       expect(screen.getByPlaceholderText("Let your buddy know...")).toHaveValue(
         "Keep this request",
       );
@@ -545,6 +556,22 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("booking-layout").parentElement).toHaveClass("py-3", "md:py-4");
     expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
+    expect(
+      within(screen.getByTestId("bottom-action-bar")).getByText(
+        "I understand that payment alone does not confirm my booking. Buddy approval is required.",
+      ),
+    ).toHaveTextContent("Buddy approval is required.");
+    expect(
+      screen.getAllByText(
+        "I understand that payment alone does not confirm my booking. Buddy approval is required.",
+      ),
+    ).toHaveLength(1);
+    expect(screen.getByTestId("date-select-box").querySelector("span")).toHaveClass("text-ink");
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveClass("text-xl");
+    for (const count of screen.getAllByText("1 participant")) {
+      expect(count).toHaveClass("text-ink", "whitespace-nowrap");
+    }
     // 요약 카드: 선택한 일정과 총액이 보인다
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 20");
     expect(screen.getByText("Total (KRW)")).toBeInTheDocument();
@@ -584,10 +611,16 @@ describe("BookingForm", () => {
       name: /agree to the cancellation and refund policy/i,
     });
     expect(agreement).toBeRequired();
-    expect(within(screen.getByTestId("bottom-action-bar")).getByRole("checkbox")).toBe(agreement);
+    expect(
+      within(screen.getByTestId("bottom-action-bar")).getByRole("checkbox", {
+        name: /cancellation and refund policy/i,
+      }),
+    ).toBe(agreement);
     expect(agreement.parentElement).not.toHaveClass("border", "rounded-lg", "bg-canvas-soft");
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
     fireEvent.click(agreement);
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    acknowledgeApproval();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
   });
 
@@ -597,7 +630,8 @@ describe("BookingForm", () => {
     );
     const request = screen.getByPlaceholderText(/Let your buddy know/i);
     fireEvent.change(request, { target: { value: "Meet me by exit 2." } });
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
 
     fireEvent.click(screen.getByRole("button", { name: "View full policy" }));
     expect(
@@ -613,7 +647,7 @@ describe("BookingForm", () => {
       ).not.toBeInTheDocument(),
     );
     expect(request).toHaveValue("Meet me by exit 2.");
-    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /cancellation and refund policy/i })).toBeChecked();
 
     fireEvent.click(screen.getByRole("button", { name: "View full policy" }));
     expect(
@@ -628,7 +662,7 @@ describe("BookingForm", () => {
       ).not.toBeInTheDocument(),
     );
     expect(request).toHaveValue("Meet me by exit 2.");
-    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /cancellation and refund policy/i })).toBeChecked();
   });
 
   it("uses the HanBuddy payment action in TOSS mode", async () => {
@@ -769,7 +803,8 @@ describe("BookingForm", () => {
       }),
     );
     await renderBooking(<BookingForm activity={activity} />);
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     const submitButton = screen.getByRole("button", { name: /Pay with Toss Payments/ });
 
     fireEvent.click(submitButton);
@@ -1067,7 +1102,8 @@ describe("BookingForm", () => {
     await renderBooking(<BookingForm activity={activity} />);
 
     // 스테퍼와 우측 요약 모두 1명으로 시작한다
-    expect(screen.getAllByText("1 participant")).toHaveLength(2);
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
+    expect(screen.getAllByText("1 participant")).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
     await agreeAndSubmit();
@@ -1177,7 +1213,8 @@ describe("BookingForm", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
 
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     fireEvent.click(screen.getByRole("button", { name: /Pay with Toss Payments/ }));
 
     await waitFor(() =>
@@ -1193,7 +1230,8 @@ describe("BookingForm", () => {
     await renderBooking(<BookingForm activity={activity} />, { locale: "ko" });
 
     expect(screen.getByText("가격 상세")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /취소 및 환불/ }));
     fireEvent.click(screen.getByRole("button", { name: /토스페이먼츠로 결제/ }));
 
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));

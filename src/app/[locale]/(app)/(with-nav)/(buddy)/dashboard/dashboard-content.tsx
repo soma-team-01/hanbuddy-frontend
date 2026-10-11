@@ -1,14 +1,13 @@
 "use client";
+import { PendingReservationInbox } from "@/components/buddy/PendingReservationInbox";
 
 import Image from "next/image";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
-import { ActivityVisibilityControl } from "@/components/buddy/ActivityVisibilityControl";
 import { ScheduleActions } from "@/components/buddy/ScheduleActions";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ApplicantProfileDialog } from "@/components/buddy/ApplicantProfileDialog";
 import { Avatar } from "@/components/ui/Avatar";
 import {
@@ -16,9 +15,6 @@ import {
   ArrowRightIcon,
   ChatBubbleDotsIcon,
   MapPinIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon,
   UsersIcon,
 } from "@/components/ui/icons";
 import { Link } from "@/i18n/navigation";
@@ -27,17 +23,14 @@ import { getContentLanguage } from "@/lib/content-language";
 import { formatNationalityCode, getActivityThumbnail } from "@/lib/api/buddy-view";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulTime, getSeoulDateTimeParts, getSeoulNowParts } from "@/lib/datetime";
-import { deleteMyActivity } from "@/lib/api/buddy";
 import {
   buddyApplicationsQueryOptions,
-  buddyKeys,
   buddyScheduleDatesQueryOptions,
   myActivitiesQueryOptions,
 } from "@/lib/query/buddy";
-import { unwrapApiResult } from "@/lib/query/result";
 import { myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { BuddyApplicationApplicantSummaryResponse, MyActivityStatus } from "@/types/buddy";
+import type { BuddyApplicationApplicantSummaryResponse } from "@/types/buddy";
 import {
   addDaysToDateKey,
   dayNumberOf,
@@ -53,27 +46,17 @@ function SectionHeading({ children }: Readonly<{ children: ReactNode }>) {
   return <h2 className="font-display text-lg font-bold text-primary">{children}</h2>;
 }
 
-const ACTIVITY_STATUS_TEXT_CLASS: Record<MyActivityStatus, string> = {
-  ACTIVE: "text-success",
-  DRAFT: "text-muted",
-  INACTIVE: "text-warning",
-  DELETED: "text-danger",
-};
-
 export function DashboardContent() {
   const locale = useLocale() as Locale;
   const language = getContentLanguage(locale);
   const t = useTranslations("BuddyDashboard");
-  const tMyActivities = useTranslations("MyActivities");
   const tChat = useTranslations("Chat");
   const getApiErrorMessage = useApiErrorMessage();
-  const queryClient = useQueryClient();
 
   const todayDate = getSeoulNowParts().date;
   const [selectedDate, setSelectedDate] = useState("");
   // 주간 스트립이 보여주는 주. 화살표로만 움직이고 날짜 선택과는 분리되어 있다
   const [weekAnchor, setWeekAnchor] = useState("");
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [profileApplicant, setProfileApplicant] =
     useState<BuddyApplicationApplicantSummaryResponse | null>(null);
 
@@ -117,22 +100,38 @@ export function DashboardContent() {
     ...buddyApplicationsQueryOptions(activeDate, language),
     enabled: Boolean(selectedDate) || !scheduleDatesQuery.isPending,
   });
-  const activities = applicationsQuery.data ?? [];
-  const myActivities = (myActivitiesQuery.data ?? []).filter(({ status }) => status !== "DELETED");
-
-  const deleteActivityMutation = useMutation({
-    mutationFn: async (activityId: number) =>
-      unwrapApiResult(await deleteMyActivity(activityId), "message"),
-    // 활동이 사라지면 일정·신청자 목록도 함께 달라진다
-    onSettled: () => queryClient.invalidateQueries({ queryKey: buddyKeys.all() }),
-  });
+  // Approval requests live in the date-independent inbox, never in calendar applicant rows.
+  const activities = (applicationsQuery.data ?? [])
+    .map((activity) => {
+      const schedules = activity.schedules.flatMap((schedule) => {
+        const applicants = schedule.applicants.filter(
+          (applicant) =>
+            !applicant.status ||
+            applicant.status === "CONFIRMED" ||
+            applicant.status === "COMPLETED",
+        );
+        if (schedule.applicants.length > 0 && applicants.length === 0) return [];
+        return [
+          {
+            ...schedule,
+            applicants,
+            applicantCount: applicants.reduce((sum, item) => sum + item.guestCount, 0),
+          },
+        ];
+      });
+      return {
+        ...activity,
+        schedules,
+        totalApplicantCount: schedules.reduce((sum, item) => sum + item.applicantCount, 0),
+      };
+    })
+    .filter((activity) => activity.schedules.length > 0);
 
   useAuthQueryRedirect(
     scheduleDatesQuery.error ??
       weekDatesQuery.error ??
       applicationsQuery.error ??
-      myActivitiesQuery.error ??
-      deleteActivityMutation.error,
+      myActivitiesQuery.error,
   );
 
   function selectDate(date: string) {
@@ -221,7 +220,14 @@ export function DashboardContent() {
                       menuPlacement={menuInHeader ? "card-header" : "inline"}
                       scheduleId={schedule.activityScheduleId}
                       startAt={schedule.startAt}
-                      applicantCount={schedule.applicantCount}
+                      applicantCount={schedule.applicants
+                        .filter(
+                          (applicant) =>
+                            !applicant.status ||
+                            applicant.status === "CONFIRMED" ||
+                            applicant.status === "COMPLETED",
+                        )
+                        .reduce((count, applicant) => count + applicant.guestCount, 0)}
                       roomId={groupRooms.get(schedule.activityScheduleId)?.chatRoomId}
                       knownCancelled={
                         groupRooms.get(schedule.activityScheduleId)?.activityScheduleCancelled
@@ -302,101 +308,6 @@ export function DashboardContent() {
           );
         })}
       </div>
-    );
-  }
-
-  let myActivitiesContent: ReactNode;
-  if (myActivitiesQuery.error) {
-    myActivitiesContent = (
-      <p role="alert" className="border-l-2 border-danger py-1 pl-3 text-sm text-danger">
-        {getApiErrorMessage(myActivitiesQuery.error, t("activitiesLoadError"))}
-      </p>
-    );
-  } else if (myActivitiesQuery.isPending) {
-    myActivitiesContent = (
-      <p className="py-4 text-center text-sm text-muted">{t("loadingActivities")}</p>
-    );
-  } else if (myActivities.length === 0) {
-    myActivitiesContent = (
-      <p className="rounded-2xl border border-dashed border-line-soft px-4 py-6 text-center text-sm text-muted">
-        {t("noActivities")}
-      </p>
-    );
-  } else {
-    myActivitiesContent = (
-      <ul className="grid grid-cols-1 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
-        {myActivities.map((activity, activityIndex) => (
-          <li
-            key={activity.activityId}
-            className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-line-soft bg-canvas-soft p-2.5 shadow-[0_5px_14px_rgba(61,45,43,0.05)] transition-colors hover:border-primary"
-          >
-            <Link
-              href={`/my-activities/${activity.activityId}`}
-              className="relative block aspect-video w-full overflow-hidden rounded-lg transition-opacity hover:opacity-90"
-            >
-              <Image
-                src={getActivityThumbnail(activity.thumbnailImageUrl)}
-                alt={activity.title}
-                fill
-                loading={activityIndex === 0 ? "eager" : undefined}
-                sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                className="object-cover"
-              />
-            </Link>
-            <div className="flex min-w-0 items-center justify-between gap-2">
-              {activity.status === "ACTIVE" || activity.status === "INACTIVE" ? (
-                <ActivityVisibilityControl
-                  activityId={activity.activityId}
-                  title={activity.title}
-                  status={activity.status}
-                  compact
-                  disabled={deleteActivityMutation.isPending}
-                />
-              ) : (
-                <span
-                  className={`text-[10px] font-semibold ${ACTIVITY_STATUS_TEXT_CLASS[activity.status]}`}
-                >
-                  {tMyActivities(
-                    `status.${activity.status.toLowerCase() as Lowercase<MyActivityStatus>}`,
-                  )}
-                </span>
-              )}
-              {/* 홈에서도 상태 확인 뒤 바로 수정·삭제할 수 있다. */}
-              <span className="flex shrink-0 items-center gap-0.5">
-                <Link
-                  href={`/my-activities/${activity.activityId}/edit`}
-                  aria-label={tMyActivities("editActivity", { title: activity.title })}
-                  className="flex size-6 items-center justify-center rounded-full text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                >
-                  <PencilIcon className="size-3" />
-                </Link>
-                <button
-                  type="button"
-                  aria-label={tMyActivities("deleteActivity", { title: activity.title })}
-                  disabled={deleteActivityMutation.isPending}
-                  onClick={() => setDeleteTargetId(activity.activityId)}
-                  className="flex size-6 items-center justify-center rounded-full text-muted transition-colors enabled:hover:bg-primary-soft enabled:hover:text-danger disabled:opacity-50"
-                >
-                  <TrashIcon className="size-3" />
-                </button>
-              </span>
-            </div>
-            <Link
-              href={`/my-activities/${activity.activityId}`}
-              className="block min-w-0 hover:underline"
-            >
-              <h3 className="line-clamp-2 font-display text-xs leading-4 font-bold text-ink">
-                {activity.title}
-              </h3>
-            </Link>
-            {activity.description.trim() ? (
-              <p className="line-clamp-2 text-[11px] leading-4 text-muted">
-                {activity.description}
-              </p>
-            ) : null}
-          </li>
-        ))}
-      </ul>
     );
   }
 
@@ -487,54 +398,13 @@ export function DashboardContent() {
         <div className="mt-1.5">{applicationsContent}</div>
       </section>
 
-      {/* 내 활동 — 정산은 상단바의 지폐 아이콘으로 옮겼다 */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <SectionHeading>{t("myActivitiesHeading")}</SectionHeading>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/my-activities/create"
-              className="flex h-8 items-center gap-1 rounded-full bg-primary px-3 font-display text-[11px] font-bold text-on-primary transition-colors hover:bg-primary-hover"
-            >
-              <PlusIcon className="size-3.5" />
-              {t("createActivity")}
-            </Link>
-            <Link
-              href="/my-activities"
-              className="font-display text-xs font-semibold text-muted transition-colors hover:text-primary"
-            >
-              {t("viewAllActivities")}
-            </Link>
-          </div>
-        </div>
-        {deleteActivityMutation.error ? (
-          <p role="alert" className="border-l-2 border-danger py-1 pl-3 text-sm text-danger">
-            {getApiErrorMessage(deleteActivityMutation.error, tMyActivities("deleteError"))}
-          </p>
-        ) : null}
-        {myActivitiesContent}
-      </section>
+      <PendingReservationInbox />
 
       {profileApplicant ? (
         <ApplicantProfileDialog
           applicant={profileApplicant}
           locale={locale}
           onClose={() => setProfileApplicant(null)}
-        />
-      ) : null}
-
-      {deleteTargetId !== null ? (
-        <ConfirmDialog
-          title={tMyActivities("deleteTitle")}
-          description={tMyActivities("deleteDescription")}
-          confirmLabel={tMyActivities("delete")}
-          tone="danger"
-          onConfirm={() => {
-            const activityId = deleteTargetId;
-            setDeleteTargetId(null);
-            deleteActivityMutation.mutate(activityId);
-          }}
-          onClose={() => setDeleteTargetId(null)}
         />
       ) : null}
     </div>

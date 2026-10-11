@@ -6,6 +6,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link, useRouter } from "@/i18n/navigation";
 import { capturePayPalApplicationPayment } from "@/lib/api/applications";
+import { isPaidApplicationStatus } from "@/lib/application-approval";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import {
@@ -42,7 +43,7 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
         await capturePayPalApplicationPayment(resolvedApplicationId, { orderId: token }, language),
         "application",
       );
-      if (application.status !== "CONFIRMED") {
+      if (!isPaidApplicationStatus(application.status)) {
         throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
       }
       return application;
@@ -73,7 +74,8 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
     if (!applicationId || !applicationsQuery.data) return;
     const confirmed = applicationsQuery.data.find(
       (application) =>
-        String(application.applicationId) === applicationId && application.status === "CONFIRMED",
+        String(application.applicationId) === applicationId &&
+        isPaidApplicationStatus(application.status),
     );
     if (!confirmed) return;
     clearPayPalRedirectContext();

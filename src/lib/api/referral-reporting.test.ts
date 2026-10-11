@@ -45,16 +45,17 @@ it("searches all three account fields and every activity page, including inactiv
   );
   expect((await getReferralActivityOwner(42)).partnerUserId).toBe(8);
 });
-it("combines confirmed and completed applications across pages without including cancellations", async () => {
+it("combines pending, confirmed and completed applications across pages without cancellations", async () => {
   vi.mocked(getReferralApplicants).mockImplementation(async (_admin, params) => {
     const index = Number(params.get("page"));
     const completed = params.get("status") === "COMPLETED";
+    const pending = params.get("status") === "PENDING_APPROVAL";
     return {
       status: "success",
       data: page(
         [
           {
-            applicationId: completed ? 3 : index + 1,
+            applicationId: completed ? 3 : index + (pending ? 4 : 1),
             status: params.get("status"),
             createdAt: completed ? "2026-09-01" : "2026-10-01",
           },
@@ -67,7 +68,7 @@ it("combines confirmed and completed applications across pages without including
   const rows = await getRetainedApplicants(
     new URLSearchParams("activityId=42&scheduleId=12&from=2026-09-01"),
   );
-  expect(rows.map((row) => row.applicationId)).toEqual([2, 1, 3]);
+  expect(rows.map((row) => row.applicationId)).toEqual([5, 4, 2, 1, 3]);
   expect(
     vi
       .mocked(getReferralApplicants)

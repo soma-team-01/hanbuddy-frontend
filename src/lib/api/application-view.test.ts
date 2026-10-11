@@ -32,6 +32,42 @@ const application = {
 } as const;
 
 describe("application view adapters", () => {
+  it.each(["REJECTED", "EXPIRED"] as const)(
+    "preserves %s even after session cancellation",
+    (status) => {
+      const result = mapApplicationResponseToApplication(
+        { ...application, status, scheduleCancelled: true },
+        "Unknown",
+      );
+      expect(result.status).toBe(status.toLowerCase());
+      expect(result.scheduleCancelled).toBe(true);
+      expect(result.refund).toBeNull();
+    },
+  );
+  it("preserves approval status and server deadlines without treating rejection as session cancellation", () => {
+    const expiresAt = "2026-10-12T09:00:00+09:00";
+    const pending = mapApplicationResponseToApplication(
+      {
+        ...application,
+        status: "PENDING_APPROVAL",
+        approvalExpiresAt: expiresAt,
+        buddyApprovedAt: null,
+      },
+      "Unknown",
+    );
+    expect(pending).toMatchObject({
+      status: "pending_approval",
+      approvalExpiresAt: expiresAt,
+      buddyApprovedAt: null,
+      scheduleCancelled: false,
+    });
+    const cancelled = mapApplicationResponseToApplication(
+      { ...application, status: "CANCELLED", cancellationReason: "BOOKING_UNAVAILABLE" },
+      "Unknown",
+    );
+    expect(cancelled.scheduleCancelled).toBe(false);
+    expect(cancelled.cancellationReason).toBe("BOOKING_UNAVAILABLE");
+  });
   it("preserves the historical quantity/period discount snapshot and server total", () => {
     const tier = { minGuests: 2, maxGuests: 2, unitPrice: 40000 };
     const result = mapApplicationResponseToApplication(
@@ -137,6 +173,8 @@ describe("application view adapters", () => {
   });
   it("maps backend application fields to the existing card model", () => {
     expect(mapApplicationResponseToApplication(application, "Time unavailable.", "en")).toEqual({
+      approvalExpiresAt: null,
+      buddyApprovedAt: null,
       activityType: "STANDARD",
       guestCount: 2,
       id: "11",

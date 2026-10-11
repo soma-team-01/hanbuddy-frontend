@@ -57,7 +57,7 @@ export async function searchReferralActivities(term: string, signal?: AbortSigna
 
 export async function getRetainedApplicants(filters: URLSearchParams, signal?: AbortSignal) {
   const groups = await Promise.all(
-    ["CONFIRMED", "COMPLETED"].map(async (status) => {
+    ["PENDING_APPROVAL", "CONFIRMED", "COMPLETED"].map(async (status) => {
       const matches = new Map<number, ReferralApplicant>();
       for await (const rows of pages(async (page) => {
         const params = new URLSearchParams(filters);

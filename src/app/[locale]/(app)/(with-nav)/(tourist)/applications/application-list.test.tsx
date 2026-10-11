@@ -134,17 +134,105 @@ function renderList(
 }
 
 function continuePaymentAfterReview(buttonName: string) {
-  expect(
-    screen.queryByRole("checkbox", {
-      name: /agree to the cancellation and refund policy/i,
-    }),
-  ).not.toBeInTheDocument();
   const confirmButton = screen.getByRole("button", { name: buttonName });
+  expect(confirmButton).toBeDisabled();
+  fireEvent.click(screen.getByRole("checkbox", { name: /payment alone/i }));
+  expect(confirmButton).toBeDisabled();
+  fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
   expect(confirmButton).toBeEnabled();
   fireEvent.click(confirmButton);
 }
 
 describe("ApplicationList", () => {
+  it.each(["rejected", "expired"] as const)(
+    "keeps %s in past applications without payment, cancellation or review actions",
+    (status) => {
+      renderList({
+        applications: [{ ...paidApplication, status, cancellationReason: "BOOKING_UNAVAILABLE" }],
+      });
+      expect(screen.queryByText(paidApplication.activityTitle)).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+      expect(screen.getByText("Declined")).toBeInTheDocument();
+      expect(screen.getByText(paidApplication.activityTitle)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Pay now|Continue payment|Cancel|Write review/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(["rejected", "expired"] as const)(
+    "shows the independent refund state for %s",
+    (status) => {
+      renderList({
+        applications: [
+          {
+            ...paidApplication,
+            status,
+            cancellationReason: "BOOKING_UNAVAILABLE",
+            refund: {
+              refundId: 1,
+              provider: "TOSS",
+              status: "REQUESTED",
+              policyVersion: "v1",
+              policyType: "PENDING_APPROVAL",
+              refundPercent: 100,
+              refundAmount: 88200,
+              refundCurrency: "KRW",
+              cancellationFeeAmount: 0,
+              refundAmountKrw: 88200,
+              retainedAmountKrw: 0,
+              platformCommissionAmountKrw: 0,
+              commissionVatAmountKrw: 0,
+              guidePayoutAmountKrw: 0,
+              requestedAt: "2026-10-12T00:00:00+09:00",
+              completedAt: null,
+            },
+          },
+        ],
+      });
+      fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+      expect(screen.getByText("Declined")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+      expect(screen.getByText("₩88,200")).toBeInTheDocument();
+      expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(["rejected", "expired"] as const)(
+    "does not show refund UI for a %s referral",
+    (status) => {
+      renderList({
+        applications: [
+          {
+            ...paidApplication,
+            status,
+            activityType: "REFERRAL",
+            cancellationReason: "BOOKING_UNAVAILABLE",
+          },
+        ],
+      });
+      fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+      expect(screen.getByText("Declined")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Price Breakdown/ })).not.toBeInTheDocument();
+    },
+  );
+  it("keeps pending approval upcoming and cancellable, without payment or review actions", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          status: "pending_approval",
+          approvalExpiresAt: "2099-10-12T09:00:00+09:00",
+        },
+      ],
+    });
+    expect(screen.getByText("Awaiting approval")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Pay now|Continue Payment|Write.*review/i }),
+    ).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetActivityWeather.mockResolvedValue({
@@ -237,6 +325,29 @@ describe("ApplicationList", () => {
     ).toBeInTheDocument();
     expect(onContinuePayment).not.toHaveBeenCalled();
     expect(mockedGetActivityWeather).not.toHaveBeenCalled();
+  });
+
+  it("requires a fresh approval acknowledgment whenever payment review is reopened", () => {
+    const onContinuePayment = vi.fn();
+    renderList({ paymentProviderMode: "TOSS", onContinuePayment });
+    fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    const confirm = screen.getByRole("button", { name: "Continue payment with Toss Payments" });
+    expect(confirm).toBeDisabled();
+    fireEvent.click(confirm);
+    expect(onContinuePayment).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("checkbox", { name: /payment alone/i }));
+    expect(confirm).toBeDisabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
+    expect(confirm).toBeEnabled();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay now" }));
+    expect(screen.getByRole("checkbox", { name: /payment alone/i })).not.toBeChecked();
+    expect(
+      screen.getByRole("checkbox", { name: /cancellation and refund policy/i }),
+    ).not.toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "Continue payment with Toss Payments" }),
+    ).toBeDisabled();
   });
 
   it("shows one generic payment action while routing to the configured provider", async () => {

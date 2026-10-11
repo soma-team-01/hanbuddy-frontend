@@ -10,6 +10,14 @@ import type {
 } from "@/types/activity";
 
 export function mapTouristActivitySummaryToActivity(summary: TouristActivitySummary): Activity {
+  return mapActivitySummaryToActivity(summary);
+}
+
+/** Shared card mapping for discovery and the buddy's own activity list. */
+export function mapActivitySummaryToActivity(
+  summary: Omit<TouristActivitySummary, "buddyId" | "buddyName" | "buddyProfileImageUrl"> &
+    Partial<Pick<TouristActivitySummary, "buddyId" | "buddyName" | "buddyProfileImageUrl">>,
+): Activity {
   // 프론트·백엔드의 순차 배포 중에도 기존 응답은 원화 가격으로 안전하게 표시한다.
   const displayPrice = summary.displayPrice ?? {
     price: summary.price,
@@ -50,9 +58,9 @@ export function mapTouristActivitySummaryToActivity(summary: TouristActivitySumm
     reviewCount: summary.reviewCount ?? undefined,
     host: {
       id: summary.buddyId,
-      name: summary.buddyName,
+      name: summary.buddyName ?? "",
       bio: "Local HanBuddy host",
-      avatarUrl: summary.buddyProfileImageUrl,
+      avatarUrl: summary.buddyProfileImageUrl ?? null,
     },
     included: [],
     restrictions: [],

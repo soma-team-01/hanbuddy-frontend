@@ -10,7 +10,8 @@ import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 
 const FULL_REFUND_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 
-function getFullRefundUntil(startAt: string, freeCancellationUntil: string) {
+function getFullRefundUntil(startAt: string, freeCancellationUntil: string | null) {
+  if (!freeCancellationUntil) return null;
   const startAtMs = Date.parse(startAt);
   const freeCancellationUntilMs = Date.parse(freeCancellationUntil);
   if (!Number.isFinite(startAtMs) || !Number.isFinite(freeCancellationUntilMs)) return null;

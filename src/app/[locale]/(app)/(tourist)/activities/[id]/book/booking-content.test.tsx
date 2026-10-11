@@ -129,7 +129,7 @@ describe("BookingContent", () => {
     vi.mocked(createApplication).mockClear();
     renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
     await screen.findByText("Consultation");
-    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    expect(screen.getAllByRole("checkbox")[0]).toBeInTheDocument();
     expect(screen.queryByText(/PayPal|Toss/)).not.toBeInTheDocument();
     expect(mockedGetTouristActivity.mock.calls.every((call) => call[2] === "CNY")).toBe(true);
     expect(createApplication).not.toHaveBeenCalled();
@@ -194,7 +194,7 @@ describe("BookingContent", () => {
     renderWithQueryClient(<BookingContent activityId="42" />, { locale: "zh-Hans" });
 
     expect(await screen.findByText("≈ ¥240.00")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("checkbox"));
+    screen.getAllByRole("checkbox").forEach((checkbox) => fireEvent.click(checkbox));
     expect(screen.getByRole("button", { name: "Loading PayPal amount..." })).toBeDisabled();
 
     await act(async () => {
@@ -218,7 +218,7 @@ describe("BookingContent", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Could not load the PayPal USD amount. Please try again.",
     );
-    fireEvent.click(screen.getByRole("checkbox"));
+    screen.getAllByRole("checkbox").forEach((checkbox) => fireEvent.click(checkbox));
     expect(screen.getByRole("button", { name: "Pay with PayPal" })).toBeDisabled();
   });
 

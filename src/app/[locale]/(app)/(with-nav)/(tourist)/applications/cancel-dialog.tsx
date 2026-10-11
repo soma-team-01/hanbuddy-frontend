@@ -22,11 +22,11 @@ const HOUR_MS = 60 * 60 * 1000;
 const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
 
 /** 열려 있는 취소 모달의 견적이 달라질 수 있는 가장 가까운 정책 경계를 구한다. */
-function getNextQuoteBoundary(startAt: string, freeCancellationUntil: string) {
+function getNextQuoteBoundary(startAt: string, freeCancellationUntil: string | null) {
   const now = Date.now();
   const startAtMs = Date.parse(startAt);
   const boundaries = [
-    Date.parse(freeCancellationUntil),
+    freeCancellationUntil ? Date.parse(freeCancellationUntil) : Number.NaN,
     startAtMs - 48 * HOUR_MS,
     startAtMs - 24 * HOUR_MS,
     startAtMs,
@@ -52,6 +52,7 @@ export function CancelDialog({
   ) => Promise<CancelDialogOutcome>;
 }>) {
   const t = useTranslations("Applications");
+  const approval = useTranslations("Approval");
   const locale = useLocale();
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
@@ -166,7 +167,10 @@ export function CancelDialog({
             <div className="flex justify-between gap-4">
               <span className="text-muted">{t("refundPolicy")}</span>
               <span className="text-right font-semibold text-ink">
-                {t(`refundPolicyTypes.${quote.policyType}`)} · {quote.refundPercent}%
+                {quote.policyType === "PENDING_APPROVAL"
+                  ? approval("free")
+                  : t(`refundPolicyTypes.${quote.policyType}`)}{" "}
+                · {quote.refundPercent}%
               </span>
             </div>
             <div className="flex justify-between gap-4">

@@ -49,7 +49,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("automatic visible cancellation translation", () => {
-  it("shows only the automatic translation, without a toggle or original flash", async () => {
+  it("automatically translates and lets the guest switch to the original without refetching", async () => {
     renderWithQueryClient(<CancellationReasonText {...props} />);
     expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Translating…");
@@ -59,7 +59,10 @@ describe("automatic visible cancellation translation", () => {
     expect(await screen.findByText("Personal reasons")).toBeVisible();
     expect(api).toHaveBeenCalledWith("application", 42, "EN", expect.any(AbortSignal));
     expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show original" }));
+    expect(screen.getByText(props.originalText)).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Show translation" }));
+    expect(screen.getByText("Personal reasons")).toBeVisible();
     expect(api).toHaveBeenCalledTimes(1);
   });
   it.each(["ORIGINAL", "UNAVAILABLE", "NOT_APPLICABLE"] as const)(
@@ -91,7 +94,8 @@ describe("automatic visible cancellation translation", () => {
     fireEvent.click(retry);
     expect(await screen.findByText("Personal reasons")).toBeVisible();
     expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry translation" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show original" })).toBeVisible();
     expect(api).toHaveBeenCalledTimes(2);
   });
   it.each(["TRANSLATED", "ORIGINAL", "UNAVAILABLE", "NOT_APPLICABLE"] as const)(
@@ -116,7 +120,7 @@ describe("automatic visible cancellation translation", () => {
       expect(api).toHaveBeenCalledTimes(1);
       fireEvent.click(retry);
       expect(await screen.findByText("Personal reasons")).toBeVisible();
-      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Retry translation" })).not.toBeInTheDocument();
       expect(api).toHaveBeenCalledTimes(2);
     },
   );

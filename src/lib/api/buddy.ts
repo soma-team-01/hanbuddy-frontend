@@ -7,6 +7,7 @@ import type {
   BuddyActivityApplicationsResponse,
   BuddyDateActivityApplicationsResponse,
   BuddyScheduleDateResponse,
+  BuddyPendingApprovalPage,
   MyActivityDetailResponse,
   MyActivitySummaryResponse,
 } from "@/types/buddy";
@@ -36,6 +37,18 @@ const DEFAULT_MY_ACTIVITY_DELETE_ERROR_MESSAGE = "활동을 삭제하지 못했�
 const DEFAULT_MY_ACTIVITY_STATUS_ERROR_MESSAGE = "활동 공개 상태를 변경하지 못했습니다.";
 const DEFAULT_BUDDY_SCHEDULE_DATES_ERROR_MESSAGE = "활동 일정 날짜를 불러오지 못했습니다.";
 const DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE = "신청자 목록을 불러오지 못했습니다.";
+
+export function getBuddyPendingApprovals(
+  page = 0,
+  size = 20,
+): Promise<ApiResult<BuddyPendingApprovalPage, "page">> {
+  return requestApiResult<BuddyPendingApprovalPage, "page">(
+    `/api/applications/buddy/pending-approvals?page=${page}&size=${size}`,
+    "page",
+    undefined,
+    DEFAULT_BUDDY_APPLICATIONS_ERROR_MESSAGE,
+  );
+}
 
 export function createActivitySchedule(
   activityId: number | string,

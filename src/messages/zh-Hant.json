@@ -1,5 +1,15 @@
 {
   "Approval": {
+    "inboxPageTitle": "預訂申請",
+    "deadlineHint": "未在截止時間前核准的申請將自動取消。",
+    "inboxTitle": "新的預訂申請",
+    "inboxAll": "查看全部",
+    "inboxMore": "載入更多",
+    "inboxLess": "收起",
+    "inboxEmpty": "暫無待確認的申請。",
+    "inboxActivity": "查看活動",
+    "beforePayment": "我已了解：付款不代表預訂確認，須經夥伴核准後才會確認。",
+    "beforeReferral": "我已了解：提交申請不代表預訂確認，須經夥伴核准後才會確認。",
     "pending": "待確認",
     "approve": "確認",
     "reject": "拒絕",
@@ -129,6 +139,7 @@
     "unavailable": "暫時無法翻譯，已顯示原文。"
   },
   "Referral": {
+    "sharingPurpose": "服務商聯繫諮詢及確認申請",
     "messagePlaceholder": "如有想對好友說的話，請在這裡填寫。",
     "summaryTitle": "申請資訊",
     "sharingTitle": "向商家提供個人資料的說明",
@@ -145,7 +156,7 @@
     "title": "申請合作體驗",
     "schedule": "日程（韓國時間）",
     "guests": "參加人數",
-    "consent": "我同意按上述說明向商家提供個人資訊。",
+    "consent": "我同意向商家提供個人資訊。",
     "recipient": "接收商家",
     "fields": "提供的資訊",
     "purpose": "使用目的",
@@ -156,7 +167,7 @@
     "cancelled": "該申請已取消。",
     "reapply": "重新申請",
     "reapplyNotice": "您曾取消此場次。請確認資訊並重新同意，再點擊重新申請以建立新申請。",
-    "alreadyApplied": "您已申請此場次。請查看我的申請。",
+    "alreadyApplied": "您已申請此場次。",
     "sessionCancelled": "無法重新申請嚮導已取消的場次。",
     "completed": "該申請已結束。",
     "applications": "查看我的申請",
@@ -381,6 +392,7 @@
     "closeDialog": "關閉對話框"
   },
   "Status": {
+    "declined": "已拒絕",
     "pendingPayment": "待付款",
     "confirmed": "已確認",
     "cancelled": "取消",
@@ -1193,8 +1205,8 @@
     "statutoryWithdrawalNotice": "可在收到合約書面內容後7天內請求撤回；供應更晚時，從收到供應或供應開始之日起7天內計算。法定權利優先。",
     "refundExceptionsNotice": "一般標準適用於法定期間已過或法定限制事由獲認可的情況。30分鐘免費取消及未提供部分等獨立退款權利優先。",
     "actualPaymentRefundNotice": "折扣訂單按實際支付金額退款。",
-    "agreement": "【必選】我同意取消與退款政策。",
-    "agreementCompact": "【必選】我同意取消與退款政策。",
+    "agreement": "我同意取消與退款政策。",
+    "agreementCompact": "我同意取消與退款政策。",
     "submit": "申請並付款",
     "payNow": "立即付款",
     "payWithToss": "使用Toss Payments付款",
@@ -1533,6 +1545,7 @@
     "mockNotice": "範例數據－支出很快就會與真實數據連結。"
   },
   "MyActivities": {
+    "referralApplications": "合作活動申請",
     "title": "我的活動",
     "description": "管理您主辦的文化體驗。",
     "createActivity": "建立活動",

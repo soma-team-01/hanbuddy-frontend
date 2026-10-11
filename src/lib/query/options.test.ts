@@ -87,11 +87,13 @@ describe("domain query options", () => {
     expect(refetchInterval(withStatus("PENDING_PAYMENT"))).toBe(60_000);
     expect(refetchInterval(withStatus("PENDING_APPROVAL"))).toBe(60_000);
     expect(refetchInterval(withStatus("CONFIRMED"))).toBe(60_000);
-    for (const status of ["REQUESTED", "FAILED", "COMPLETED"]) {
-      const query = {
-        state: { data: [{ status: "CANCELLED", refund: { status } }] },
-      } as unknown as QueryArg;
-      expect(refetchInterval(query)).toBe(status === "COMPLETED" ? false : 60_000);
+    for (const applicationStatus of ["CANCELLED", "REJECTED", "EXPIRED"]) {
+      for (const status of ["REQUESTED", "FAILED", "COMPLETED"]) {
+        const query = {
+          state: { data: [{ status: applicationStatus, refund: { status } }] },
+        } as unknown as QueryArg;
+        expect(refetchInterval(query)).toBe(status === "COMPLETED" ? false : 60_000);
+      }
     }
     expect(refetchInterval(withStatus())).toBe(false);
   });

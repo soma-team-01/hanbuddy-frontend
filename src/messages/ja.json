@@ -1,5 +1,15 @@
 {
   "Approval": {
+    "inboxPageTitle": "予約リクエスト",
+    "deadlineHint": "期限までに承認しない場合、申し込みは自動キャンセルされます。",
+    "inboxTitle": "新しい予約リクエスト",
+    "inboxAll": "すべて見る",
+    "inboxMore": "もっと見る",
+    "inboxLess": "折りたたむ",
+    "inboxEmpty": "承認待ちの申請はありません。",
+    "inboxActivity": "体験を見る",
+    "beforePayment": "支払いだけでは予約は確定せず、バディの承認が必要なことを確認しました。",
+    "beforeReferral": "申し込みだけでは予約は確定せず、バディの承認が必要なことを確認しました。",
     "pending": "承認待ち",
     "approve": "承認",
     "reject": "お断り",
@@ -129,6 +139,7 @@
     "unavailable": "翻訳を取得できないため、原文を表示しています。"
   },
   "Referral": {
+    "sharingPurpose": "事業者による相談のご連絡および申請確認",
     "messagePlaceholder": "バディに伝えたいことがあればご記入ください。",
     "summaryTitle": "申込情報",
     "sharingTitle": "事業者への個人情報提供について",
@@ -145,7 +156,7 @@
     "title": "提携体験への申し込み",
     "schedule": "日程（韓国時間）",
     "guests": "参加人数",
-    "consent": "上記の内容に従い、事業者への個人情報の提供に同意します。",
+    "consent": "事業者への個人情報提供に同意します。",
     "recipient": "提供先",
     "fields": "提供する情報",
     "purpose": "利用目的",
@@ -156,7 +167,7 @@
     "cancelled": "この申し込みはキャンセル済みです。",
     "reapply": "再申し込み",
     "reapplyNotice": "以前キャンセルした日程です。内容を確認して改めて同意し、再申し込みすると新しい申し込みが作成されます。",
-    "alreadyApplied": "この日程にはすでに申し込みがあります。申し込み一覧をご確認ください。",
+    "alreadyApplied": "この日程は申し込み済みです。",
     "sessionCancelled": "バディがキャンセルした日程には再申し込みできません。",
     "completed": "この申し込みは終了しています。",
     "applications": "申し込み一覧へ",
@@ -381,6 +392,7 @@
     "closeDialog": "ダイアログを閉じる"
   },
   "Status": {
+    "declined": "お断り",
     "pendingPayment": "支払い保留中",
     "confirmed": "確認済み",
     "cancelled": "キャンセルされました",
@@ -1193,8 +1205,8 @@
     "statutoryWithdrawalNotice": "契約内容の書面受領から7日以内、供給が遅い場合は供給を受けた日または供給開始日から7日以内に撤回を請求できます。法定権利が優先します。",
     "refundExceptionsNotice": "一般基準は法定期間経過後または法定制限事由が認められる場合に適用します。30分無料キャンセルや未提供部分等の別途返金権を優先します。",
     "actualPaymentRefundNotice": "割引決済は実際の支払金額を基準に返金します。",
-    "agreement": "【必須】キャンセル・返金規定に同意します。",
-    "agreementCompact": "【必須】キャンセル・返金規定に同意",
+    "agreement": "キャンセル・返金規定に同意します。",
+    "agreementCompact": "キャンセル・返金規定に同意",
     "submit": "申し込みと支払い",
     "payNow": "支払う",
     "payWithToss": "Toss Paymentsで支払う",
@@ -1533,6 +1545,7 @@
     "mockNotice": "サンプル数値 — 支払いはすぐに実際のデータに関連付けられます。"
   },
   "MyActivities": {
+    "referralApplications": "紹介アクティビティの申し込み",
     "title": "私の活動",
     "description": "主催する文化体験を管理します。",
     "createActivity": "アクティビティの作成",

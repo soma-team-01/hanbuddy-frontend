@@ -1,5 +1,15 @@
 {
   "Approval": {
+    "inboxPageTitle": "Booking requests",
+    "deadlineHint": "Requests not approved by the deadline are automatically cancelled.",
+    "inboxTitle": "New booking requests",
+    "inboxAll": "View all",
+    "inboxMore": "Load more",
+    "inboxLess": "Show less",
+    "inboxEmpty": "No requests awaiting approval.",
+    "inboxActivity": "View activity",
+    "beforePayment": "I understand that payment alone does not confirm my booking. Buddy approval is required.",
+    "beforeReferral": "I understand that submitting a request does not confirm my booking. Buddy approval is required.",
     "pending": "Awaiting approval",
     "approve": "Approve",
     "reject": "Decline",
@@ -129,6 +139,7 @@
     "unavailable": "Translation unavailable. Showing the original text."
   },
   "Referral": {
+    "sharingPurpose": "Provider contact for consultation and application confirmation",
     "messagePlaceholder": "Leave a message for your buddy, if you have one.",
     "summaryTitle": "Application details",
     "sharingTitle": "Information shared with the provider",
@@ -145,7 +156,7 @@
     "title": "Apply for a partner experience",
     "schedule": "Schedule (Korea time)",
     "guests": "Participants",
-    "consent": "I agree to share my personal information with the provider as described above.",
+    "consent": "I agree to share personal data with the provider.",
     "recipient": "Recipient",
     "fields": "Information shared",
     "purpose": "Purpose",
@@ -156,7 +167,7 @@
     "cancelled": "This application was cancelled.",
     "reapply": "Reapply",
     "reapplyNotice": "You previously cancelled this session. Review the details and agree again, then reapply to create a new application.",
-    "alreadyApplied": "You already have an application for this session. Check My Applications.",
+    "alreadyApplied": "Already applied for this session.",
     "sessionCancelled": "You cannot reapply for a session cancelled by the buddy.",
     "completed": "This application has already ended.",
     "applications": "View my applications",
@@ -381,6 +392,7 @@
     "closeDialog": "Close dialog"
   },
   "Status": {
+    "declined": "Declined",
     "pendingPayment": "Pending Payment",
     "confirmed": "Confirmed",
     "cancelled": "Cancelled",
@@ -1193,8 +1205,8 @@
     "statutoryWithdrawalNotice": "Withdrawal may be requested within 7 days of receiving the written contract details, or of receipt or commencement of supply if later. Statutory rights take priority.",
     "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. The 30-minute benefit and separate refund rights, including unprovided portions, take priority.",
     "actualPaymentRefundNotice": "Discounted bookings are refunded from the amount paid.",
-    "agreement": "[Required] I agree to the cancellation and refund policy.",
-    "agreementCompact": "[Required] Agree to cancellation/refunds",
+    "agreement": "I agree to the cancellation and refund policy.",
+    "agreementCompact": "Agree to cancellation/refunds",
     "submit": "Apply & Pay",
     "payNow": "Pay now",
     "payWithToss": "Pay with Toss Payments",
@@ -1533,6 +1545,7 @@
     "mockNotice": "Sample figures — payouts will connect to real data soon."
   },
   "MyActivities": {
+    "referralApplications": "Referral applications",
     "title": "My Activities",
     "description": "Manage your hosted cultural experiences.",
     "createActivity": "Create Activity",

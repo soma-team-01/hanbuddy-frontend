@@ -27,6 +27,9 @@ import { useBookableSessions } from "@/lib/use-bookable-sessions";
 import type { Activity } from "@/types/activity";
 import { ReferralPrice } from "./ReferralPrice";
 import { ApplicationConfirmation } from "@/components/activity/ApplicationConfirmation";
+import { ApprovalNotice } from "@/components/booking/ApprovalNotice";
+import { referralNoticeMessage } from "@/lib/referral-notice";
+import { isClosedApplicationStatus, isDeclinedApplicationStatus } from "@/lib/application-approval";
 
 export function ReferralBookingForm({
   activity,
@@ -37,6 +40,7 @@ export function ReferralBookingForm({
 }) {
   const t = useTranslations("Referral");
   const booking = useTranslations("Booking");
+  const statusLabel = useTranslations("Status");
   const detail = useTranslations("ActivityDetail");
   const locale = useLocale() as Locale;
   const getError = useApiErrorMessage();
@@ -47,6 +51,7 @@ export function ReferralBookingForm({
   const [count, setCount] = useState(1);
   const [specialRequest, setSpecialRequest] = useState("");
   const [agreedContext, setAgreedContext] = useState<string | null>(null);
+  const [approvalAcknowledged, setApprovalAcknowledged] = useState(false);
   const [consentChanged, setConsentChanged] = useState(false);
   const lock = useRef(false);
   const notice = useQuery({
@@ -67,12 +72,12 @@ export function ReferralBookingForm({
       String(item.activityScheduleId) === selectedId,
   );
   const latestCancelled = previous
-    .filter((item) => item.status === "CANCELLED")
+    .filter((item) => isClosedApplicationStatus(item.status))
     .reduce<(typeof previous)[number] | undefined>(
       (latest, item) => (!latest || item.applicationId > latest.applicationId ? item : latest),
       undefined,
     );
-  const alreadyApplied = previous.some((item) => item.status !== "CANCELLED");
+  const alreadyApplied = previous.some((item) => !isClosedApplicationStatus(item.status));
   const scheduleCancelled = previous.some(
     (item) => item.scheduleCancelled || item.cancellationReason === "BUDDY_CANCELLATION",
   );
@@ -105,6 +110,7 @@ export function ReferralBookingForm({
         count > Math.min(100, selected.spotsLeft) ||
         !notice.data ||
         !historyReady ||
+        !approvalAcknowledged ||
         agreedContext !== consentContext
       )
         throw new Error(t("agreementRequired"));
@@ -148,6 +154,12 @@ export function ReferralBookingForm({
   });
   useAuthQueryRedirect(mutation.error ?? history.error ?? notice.error);
   const result = mutation.data;
+  const serviceNoticeKey =
+    notice.data &&
+    referralNoticeMessage(notice.data.consentVersion, "serviceNotice", notice.data.serviceNotice);
+  const purposeKey =
+    notice.data &&
+    referralNoticeMessage(notice.data.consentVersion, "purpose", notice.data.purpose);
   if (result?.status === "CONFIRMED" || result?.status === "PENDING_APPROVAL")
     return <ApplicationConfirmation application={result} referralServicePrice={activity.price} />;
   if (result)
@@ -158,11 +170,13 @@ export function ReferralBookingForm({
           role="status"
         >
           <h1 className="text-xl font-bold">
-            {result.status === "CANCELLED"
-              ? t("cancelled")
-              : result.status === "COMPLETED"
-                ? t("completed")
-                : t("failed")}
+            {isDeclinedApplicationStatus(result.status)
+              ? statusLabel("declined")
+              : result.status === "CANCELLED"
+                ? t("cancelled")
+                : result.status === "COMPLETED"
+                  ? t("completed")
+                  : t("failed")}
           </h1>
           <p className="mt-3 text-sm text-muted">{t("notice")}</p>
           <Link
@@ -184,6 +198,7 @@ export function ReferralBookingForm({
     !notice.isFetching &&
     !notice.error &&
     historyReady &&
+    approvalAcknowledged &&
     agreedContext === consentContext;
   return (
     <PageContainer className="py-3 md:py-4">
@@ -215,7 +230,7 @@ export function ReferralBookingForm({
               disabled={!sessions.length || mutation.isPending}
               className="flex min-h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 py-3 text-left text-sm font-semibold text-ink transition-colors hover:border-primary disabled:opacity-40"
             >
-              <span>
+              <span className={selected ? "text-ink" : "text-muted"}>
                 {selected ? `${dateLabel} ${timeLabel}` : detail("selectDatePlaceholder")}
               </span>
               <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
@@ -231,9 +246,9 @@ export function ReferralBookingForm({
             <h2 className="font-display text-base font-bold text-ink">
               {booking("guestsHeading")}
             </h2>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="text-sm text-muted">{booking("guestCount")}</span>
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm whitespace-nowrap text-ink">{booking("guestCount")}</span>
+              <div className="flex shrink-0 items-center gap-1 sm:gap-3">
                 <button
                   type="button"
                   aria-label={booking("decreaseGuests")}
@@ -244,10 +259,12 @@ export function ReferralBookingForm({
                   <MinusIcon className="size-4" />
                 </button>
                 <span
-                  className="min-w-14 text-center font-display text-base font-semibold"
+                  className="min-w-8 text-center text-xl font-semibold whitespace-nowrap text-ink tabular-nums"
+                  role="status"
+                  aria-label={booking("guests", { count })}
                   aria-live="polite"
                 >
-                  {booking("guests", { count })}
+                  {count}
                 </span>
                 <button
                   type="button"
@@ -300,7 +317,7 @@ export function ReferralBookingForm({
               ) : notice.data ? (
                 <div>
                   <p className="mt-2 rounded-md bg-primary-soft/65 px-3 py-2 text-[13px] leading-5 text-ink/80">
-                    {notice.data.serviceNotice}
+                    {serviceNoticeKey ? t(serviceNoticeKey) : notice.data.serviceNotice}
                   </p>
                   <dl
                     id="referral-sharing-details"
@@ -328,7 +345,9 @@ export function ReferralBookingForm({
                     </div>
                     <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3 px-3 py-1.5">
                       <dt className="text-muted">{t("purpose")}</dt>
-                      <dd className="break-words">{notice.data.purpose}</dd>
+                      <dd className="break-words">
+                        {purposeKey ? t(purposeKey) : notice.data.purpose}
+                      </dd>
                     </div>
                   </dl>
                 </div>
@@ -370,14 +389,16 @@ export function ReferralBookingForm({
               <dl className="flex flex-col gap-3 text-sm">
                 <div className="flex justify-between gap-4">
                   <dt className="shrink-0 text-muted">{booking("dateTime")}</dt>
-                  <dd className="text-right font-semibold">
+                  <dd className="text-right font-semibold text-ink">
                     <span className="block">{dateLabel}</span>
                     <span className="block text-xs font-medium text-muted">{timeLabel}</span>
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted">{booking("guestCount")}</dt>
-                  <dd className="shrink-0 font-semibold">{booking("guests", { count })}</dd>
+                  <dt className="text-sm whitespace-nowrap text-ink">{booking("guestCount")}</dt>
+                  <dd className="shrink-0 font-semibold whitespace-nowrap text-ink">
+                    {booking("guests", { count })}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-4">
                   <dt className="shrink-0 text-muted">{booking("specialRequest")}</dt>
@@ -393,8 +414,8 @@ export function ReferralBookingForm({
             </div>
           </div>
           <div className="pt-4 lg:pt-6">
-            <BottomActionBar>
-              <div className="flex w-full flex-col gap-3">
+            <BottomActionBar compact>
+              <div className="flex w-full flex-col gap-1 lg:gap-2">
                 {history.isPending ? (
                   <p role="status" className="text-sm text-muted">
                     {t("loading")}
@@ -411,9 +432,12 @@ export function ReferralBookingForm({
                     </button>
                   </div>
                 ) : alreadyApplied || scheduleCancelled ? (
-                  <div role="status" className="text-sm text-muted">
+                  <div role="status" className="text-xs leading-5 text-muted">
                     <p>{t(scheduleCancelled ? "sessionCancelled" : "alreadyApplied")}</p>
-                    <Link href="/applications" className="mt-2 inline-block text-primary underline">
+                    <Link
+                      href="/applications"
+                      className="inline-flex min-h-8 items-center text-primary underline"
+                    >
                       {t("applications")}
                     </Link>
                   </div>
@@ -423,11 +447,11 @@ export function ReferralBookingForm({
                   </p>
                 ) : null}
                 {notice.data && (
-                  <label className="flex items-start gap-3 text-sm leading-6 font-semibold">
+                  <label className="flex min-h-11 items-center gap-2 text-xs leading-5 font-medium">
                     <input
                       type="checkbox"
                       aria-describedby="referral-sharing-details"
-                      className="mt-1 size-5 shrink-0 accent-primary"
+                      className="size-5 shrink-0 accent-primary"
                       disabled={notice.isFetching || !!notice.error || mutation.isPending}
                       checked={agreedContext === consentContext}
                       onChange={(e) => {
@@ -447,10 +471,15 @@ export function ReferralBookingForm({
                     {getError(mutation.error, t("failed"))}
                   </p>
                 ) : null}
+                <ApprovalNotice
+                  referral
+                  agreed={approvalAcknowledged}
+                  onAgreedChange={setApprovalAcknowledged}
+                />
                 <button
                   type="submit"
                   disabled={!valid || mutation.isPending}
-                  className="min-h-13 w-full rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary hover:bg-primary-hover disabled:opacity-40"
+                  className="min-h-11 w-full rounded-full bg-primary px-4 font-display text-sm font-bold text-on-primary hover:bg-primary-hover disabled:opacity-40 lg:min-h-13"
                 >
                   {mutation.isPending ? t("loading") : t(latestCancelled ? "reapply" : "apply")}
                 </button>

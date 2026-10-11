@@ -36,5 +36,10 @@ describe("DashboardPage", () => {
     expect(layout).toHaveClass("max-w-4xl");
     expect(layout.className).not.toContain("grid-cols");
     expect(screen.queryByText("Quick Actions")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "My Activities" })).toHaveAttribute(
+      "href",
+      "/en/my-activities",
+    );
   });
 });

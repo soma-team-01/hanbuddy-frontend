@@ -1,5 +1,25 @@
 import type { ContentLanguage, ResolvedContentLanguage } from "./content-language";
 
+export interface BuddyPendingApprovalResponse {
+  applicationId: number;
+  activityId: number;
+  activityType: import("./referral").ActivityType;
+  activityTitle: string;
+  thumbnailImageUrl: string | null;
+  activityScheduleId: number;
+  startAt: string;
+  applicantUserId: number;
+  applicantName: string;
+  guestCount: number;
+  specialRequest: string | null;
+  status: import("./application").BackendApplicationStatus;
+  appliedAt: string;
+  approvalExpiresAt: string;
+}
+
+export type BuddyPendingApprovalPage =
+  import("./admin").AdminPageResponse<BuddyPendingApprovalResponse>;
+
 /** DELETED는 soft delete된 활동 — 목록·상세 응답에서 제외되지만 계약상 존재한다 */
 export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
 export interface ActivityStatusUpdateRequest {
@@ -108,6 +128,21 @@ export interface ActivityScheduleResponse {
 }
 
 export interface MyActivitySummaryResponse {
+  meetingPointName: string;
+  meetingPlaceId: string | null;
+  meetingLatitude?: number | null;
+  meetingLongitude?: number | null;
+  price: number;
+  currency: string;
+  /** Only currently active discounts are returned by the list endpoint. */
+  discountPercent?: number | null;
+  discountEndDate?: string | null;
+  discountedPrice?: number | null;
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
+  averageRating?: number | null;
+  reviewCount?: number | null;
+  /** Schedule/seat availability, independent of publication status. */
+  isSoldOut?: boolean;
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   activityType?: import("./referral").ActivityType;
   activityId: number;

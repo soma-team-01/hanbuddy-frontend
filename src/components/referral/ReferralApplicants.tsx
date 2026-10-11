@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ApplicationApprovalActions } from "@/components/buddy/ApplicationApprovalActions";
+import { isDeclinedApplicationStatus } from "@/lib/application-approval";
 import { getReferralApplicants } from "@/lib/api/referral";
 import { getRetainedApplicants } from "@/lib/api/referral-reporting";
 import { ReferralDateRange } from "./ReferralDateRange";
@@ -69,6 +70,7 @@ export function ReferralApplicants({
 }) {
   const compactStatus = admin && !!fixedActivityId;
   const approval = useTranslations("Approval");
+  const statusLabel = useTranslations("Status");
   const [filters, setFilters] = useState({
     activityId: fixedActivityId ?? initialActivityId,
     scheduleId: "",
@@ -279,13 +281,15 @@ export function ReferralApplicants({
                   <span
                     className={`shrink-0 text-xs font-semibold ${row.status === "CANCELLED" ? "text-muted" : "text-primary"}`}
                   >
-                    {row.status === "PENDING_APPROVAL"
-                      ? approval("pending")
-                      : row.status === "CONFIRMED"
-                        ? "신청 확정"
-                        : row.status === "CANCELLED"
-                          ? "취소"
-                          : "일정 종료"}
+                    {isDeclinedApplicationStatus(row.status)
+                      ? statusLabel("declined")
+                      : row.status === "PENDING_APPROVAL"
+                        ? approval("pending")
+                        : row.status === "CONFIRMED"
+                          ? "신청 확정"
+                          : row.status === "CANCELLED"
+                            ? "취소"
+                            : "일정 종료"}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted">

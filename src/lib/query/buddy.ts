@@ -1,8 +1,9 @@
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import {
   getBuddyActivityApplications,
   getBuddyApplications,
   getBuddyScheduleDates,
+  getBuddyPendingApprovals,
   getMyActivities,
   getMyActivity,
 } from "@/lib/api/buddy";
@@ -16,6 +17,7 @@ export const buddyKeys = {
   activityDetail: (activityId: number | string) =>
     [...buddyKeys.activities(), "detail", String(activityId)] as const,
   applications: () => [...buddyKeys.all(), "applications"] as const,
+  pendingApprovals: () => [...buddyKeys.applications(), "pending-approvals"] as const,
   /** 인자 없이 부르면 모든 기간 조회를 덮는 접두사가 된다 (무효화용) */
   scheduleDates: (range?: { from: string; to: string }) =>
     range
@@ -30,6 +32,18 @@ export const buddyKeys = {
       ? ([...buddyKeys.applications(), "schedule", String(activityScheduleId), language] as const)
       : ([...buddyKeys.applications(), "schedule", String(activityScheduleId)] as const),
 };
+
+export function buddyPendingApprovalsQueryOptions() {
+  return infiniteQueryOptions({
+    queryKey: buddyKeys.pendingApprovals(),
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) =>
+      unwrapApiResult(await getBuddyPendingApprovals(pageParam), "page"),
+    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+}
 
 export function myActivitiesQueryOptions() {
   return queryOptions({

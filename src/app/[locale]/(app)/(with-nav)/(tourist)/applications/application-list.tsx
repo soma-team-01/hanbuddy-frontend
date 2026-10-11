@@ -1,7 +1,8 @@
 "use client";
 import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
 import { ApprovalDeadline } from "@/components/booking/ApprovalDeadline";
-import { isBuddyRejection } from "@/lib/application-approval";
+import { ApprovalNotice } from "@/components/booking/ApprovalNotice";
+import { isBuddyRejection, isClosedApplicationStatus } from "@/lib/application-approval";
 
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
@@ -13,7 +14,7 @@ import {
   WeatherConditionIcon,
 } from "@/components/activity/AvailabilityCalendarDialog";
 import { HostProfileDialog } from "@/components/activity/HostProfileDialog";
-import { RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
+import { RefundPolicyAgreement, RefundPolicyNotice } from "@/components/booking/RefundPolicyNotice";
 import {
   ApplicationScheduleRefundStatus,
   ScheduleRefundAmount,
@@ -95,7 +96,7 @@ function PriceBreakdown({
     application.status === "pending_approval" ||
     application.status === "confirmed" ||
     application.status === "completed" ||
-    application.status === "cancelled";
+    isClosedApplicationStatus(application.status);
   const providerName =
     application.paymentProvider === "PAYPAL"
       ? "PayPal"
@@ -191,7 +192,7 @@ function PriceBreakdown({
             </div>
           ) : null}
           {scheduleRefund ? <ScheduleRefundAmount task={scheduleRefund} /> : null}
-          {application.status === "cancelled" &&
+          {isClosedApplicationStatus(application.status) &&
           application.cancellationReason !== "BUDDY_CANCELLATION" &&
           application.refund ? (
             <div className="mt-1 flex flex-col gap-2 border-t border-line-soft pt-2">
@@ -319,6 +320,8 @@ function ApplicationCard({
   );
   // 결제창이 열려 있는 동안에도 버튼을 잠가 중복 요청을 막는다
   const [paymentInFlight, setPaymentInFlight] = useState<PaymentProvider | null>(null);
+  const [approvalAcknowledged, setApprovalAcknowledged] = useState(false);
+  const [refundPolicyAgreed, setRefundPolicyAgreed] = useState(false);
   const t = useTranslations("Applications");
   const tActivityDetail = useTranslations("ActivityDetail");
   const tCancellation = useTranslations("ScheduleCancellation");
@@ -344,7 +347,7 @@ function ApplicationCard({
         ? { amount: application.paymentAmount, currency: application.paymentCurrency }
         : null;
   const isCompleted = application.status === "completed";
-  const isCancelled = application.status === "cancelled";
+  const isCancelled = isClosedApplicationStatus(application.status);
   const isUpcoming =
     application.status === "pending_payment" ||
     application.status === "pending_approval" ||
@@ -367,6 +370,8 @@ function ApplicationCard({
   }
 
   function openPaymentReview(paymentProvider: PaymentProvider) {
+    setApprovalAcknowledged(false);
+    setRefundPolicyAgreed(false);
     setPaymentError(null);
     setPendingPaymentProvider(paymentProvider);
   }
@@ -380,6 +385,8 @@ function ApplicationCard({
     const paymentProvider = pendingPaymentProvider;
     if (
       isReferral ||
+      !approvalAcknowledged ||
+      !refundPolicyAgreed ||
       !paymentProvider ||
       application.scheduleCancelled ||
       application.refundRecoveryPending
@@ -674,13 +681,26 @@ function ApplicationCard({
           pendingLabel={t("paymentProcessing")}
           cancelVariant="outline"
           isPending={paymentInFlight !== null}
+          confirmDisabled={!approvalAcknowledged || !refundPolicyAgreed}
           onConfirm={() => void handleConfirmedPayment()}
           onClose={closePaymentReview}
         >
-          <div className="max-h-[60vh] overflow-y-auto pr-1">
+          <div className="max-h-[45dvh] overflow-y-auto pr-1">
             <RefundPolicyNotice
               document={refundPolicyDocument}
               idPrefix={`application-${application.id}-refund-policy`}
+            />
+          </div>
+          <div className="mt-3">
+            <RefundPolicyAgreement
+              agreed={refundPolicyAgreed}
+              onAgreedChange={setRefundPolicyAgreed}
+              describedBy={`application-${application.id}-refund-policy-notice application-${application.id}-refund-policy-summary`}
+              className="px-1 py-1"
+            />
+            <ApprovalNotice
+              agreed={approvalAcknowledged}
+              onAgreedChange={setApprovalAcknowledged}
             />
           </div>
           {paymentError !== null ? (
@@ -736,7 +756,7 @@ export function ApplicationList({
           application.status === "confirmed")
       : application.scheduleCancelled ||
         application.status === "completed" ||
-        application.status === "cancelled",
+        isClosedApplicationStatus(application.status),
   );
   const cancelTarget = cancelTargetId
     ? applications.find(

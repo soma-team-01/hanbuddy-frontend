@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  mapActivitySummaryToActivity,
   mapTouristActivityDetailToActivity,
   mapTouristActivitySummaryToActivity,
 } from "./activity-view";
@@ -29,6 +30,44 @@ const summary = {
 };
 
 describe("activity view adapters", () => {
+  it("uses the same card mapping without inventing buddy data or applying group discounts", () => {
+    const cardSummary = {
+      activityId: 7,
+      title: "Tea",
+      description: "Tea tour",
+      thumbnailImageUrl: "/tea.png",
+      totalDurationMinutes: 60,
+      meetingPointName: "Anguk",
+      meetingPlaceId: "anguk",
+      price: 40000,
+      currency: "KRW",
+      discountedPrice: 39200,
+      discountPercent: 2,
+      averageRating: 4.8,
+      reviewCount: 7,
+      isSoldOut: false,
+      priceTiers: [{ minGuests: 2, maxGuests: null, unitPrice: 30000 }],
+    };
+    const mapped = mapActivitySummaryToActivity(cardSummary);
+    expect(mapped).toMatchObject({
+      price: 39200,
+      originalPrice: 40000,
+      discountPercent: 2,
+      rating: 4.8,
+      reviewCount: 7,
+      isSoldOut: false,
+      referencePrice: undefined,
+      host: { id: undefined, name: "", avatarUrl: null },
+    });
+    const tourist = mapTouristActivitySummaryToActivity({
+      ...cardSummary,
+      buddyId: 10,
+      buddyName: "Buddy",
+      buddyProfileImageUrl: null,
+    });
+    expect(mapped).toEqual({ ...tourist, host: mapped.host });
+    expect(mapped.priceTiers).toEqual(cardSummary.priceTiers);
+  });
   it.each([true, false, undefined])(
     "preserves the server translation decision: %s",
     (isTranslated) => {

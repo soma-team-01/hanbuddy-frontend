@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/routing";
+import { isDeclinedApplicationStatus } from "@/lib/application-approval";
 import { formatSeoulDateWithWeekday, formatSeoulTime } from "@/lib/datetime";
 import type {
   Application,
@@ -13,6 +14,8 @@ const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStat
   // 새 신청으로 대체된 신청은 목록에서 걸러지지만, 방어적으로 취소와 동일하게 취급한다
   SUPERSEDED: "cancelled",
   CONFIRMED: "confirmed",
+  REJECTED: "rejected",
+  EXPIRED: "expired",
   CANCELLED: "cancelled",
   COMPLETED: "completed",
 };
@@ -39,7 +42,10 @@ export function mapApplicationResponseToApplication(
     guestCount: response.guestCount,
     id: String(response.applicationId),
     activityId: response.activityId,
-    status: response.scheduleCancelled ? "cancelled" : STATUS_BY_BACKEND_STATUS[response.status],
+    status:
+      response.scheduleCancelled && !isDeclinedApplicationStatus(response.status)
+        ? "cancelled"
+        : STATUS_BY_BACKEND_STATUS[response.status],
     startAt: response.startAt,
     endAt: response.endAt,
     dateLabel:

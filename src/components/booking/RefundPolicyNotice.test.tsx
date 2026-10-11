@@ -76,6 +76,8 @@ describe("RefundPolicyAgreement", () => {
       expect(
         screen.getByRole("checkbox", { name: messages[locale].Booking.agreement }),
       ).toBeRequired();
+      expect(messages[locale].Booking.agreement).not.toMatch(/Required|필수|必須|必选|必選/);
+      expect(messages[locale].Booking.agreementCompact).not.toMatch(/Required|필수|必須|必选|必選/);
       expect(
         screen
           .getAllByText(messages[locale].Booking.agreementCompact)

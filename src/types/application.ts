@@ -3,9 +3,22 @@ import type { ResolvedContentLanguage } from "./content-language";
 import type { TouristActivityDetail } from "./activity";
 
 export type ApplicationStatus =
-  "pending_payment" | "pending_approval" | "confirmed" | "cancelled" | "completed";
+  | "pending_payment"
+  | "pending_approval"
+  | "confirmed"
+  | "rejected"
+  | "expired"
+  | "cancelled"
+  | "completed";
 export type BackendApplicationStatus =
-  "PENDING_PAYMENT" | "PENDING_APPROVAL" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  | "PENDING_PAYMENT"
+  | "PENDING_APPROVAL"
+  | "SUPERSEDED"
+  | "CONFIRMED"
+  | "REJECTED"
+  | "EXPIRED"
+  | "CANCELLED"
+  | "COMPLETED";
 export type BuddyRejectionReason =
   | "BOOKING_UNAVAILABLE"
   | "INSUFFICIENT_PARTICIPANTS"

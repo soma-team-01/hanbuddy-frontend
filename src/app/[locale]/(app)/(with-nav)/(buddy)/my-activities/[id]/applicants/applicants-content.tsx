@@ -1,7 +1,11 @@
 "use client";
 import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
 import { ApplicationApprovalActions } from "@/components/buddy/ApplicationApprovalActions";
-import { isBuddyRejection } from "@/lib/application-approval";
+import {
+  isBuddyRejection,
+  isClosedApplicationStatus,
+  isDeclinedApplicationStatus,
+} from "@/lib/application-approval";
 
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -43,6 +47,7 @@ const STATUS_SECTIONS = [
   { key: "sectionCompleted", statuses: ["COMPLETED"] },
   { key: "sectionConfirmed", statuses: ["CONFIRMED"] },
   { key: "sectionCancelled", statuses: ["CANCELLED", "SUPERSEDED"] },
+  { key: "declined", statuses: ["REJECTED", "EXPIRED"] },
 ] as const;
 
 export function ApplicantsContent({
@@ -53,6 +58,7 @@ export function ApplicantsContent({
   const language = getContentLanguage(locale);
   const t = useTranslations("Applicants");
   const approval = useTranslations("Approval");
+  const statusLabel = useTranslations("Status");
   const tChat = useTranslations("Chat");
   const tCancellation = useTranslations("ScheduleCancellation");
   const tErrors = useTranslations("Errors");
@@ -129,7 +135,11 @@ export function ApplicantsContent({
   const sections = STATUS_SECTIONS.map(({ key, statuses }) => ({
     key,
     applicants: (applications?.applicants ?? []).filter((applicant) =>
-      (statuses as readonly string[]).includes(isCancelled ? "CANCELLED" : applicant.status),
+      (statuses as readonly string[]).includes(
+        isCancelled && !isDeclinedApplicationStatus(applicant.status)
+          ? "CANCELLED"
+          : applicant.status,
+      ),
     ),
   })).filter(({ applicants }) => applicants.length > 0);
 
@@ -220,7 +230,11 @@ export function ApplicantsContent({
             <section key={key} className="flex flex-col gap-3">
               <div className="flex items-baseline gap-2">
                 <h3 className="font-display text-sm font-bold text-primary">
-                  {key === "pendingApproval" ? approval("pending") : t(key)}
+                  {key === "declined"
+                    ? statusLabel("declined")
+                    : key === "pendingApproval"
+                      ? approval("pending")
+                      : t(key)}
                 </h3>
                 <span className="font-display text-sm font-semibold text-muted tabular-nums">
                   {t("guestApplicantCount", { count: applicants.length })}
@@ -300,7 +314,7 @@ export function ApplicantsContent({
                         </p>
                       </details>
                     ) : null}
-                    {applicant.status === "CANCELLED" &&
+                    {isClosedApplicationStatus(applicant.status) &&
                     (applicant.cancellationReason === "OTHER" ||
                       applicant.cancellationReason === "BUDDY_OTHER") &&
                     applicant.cancellationDetail ? (
@@ -313,7 +327,7 @@ export function ApplicantsContent({
                         />
                       </div>
                     ) : null}
-                    {applicant.status === "CANCELLED" &&
+                    {isClosedApplicationStatus(applicant.status) &&
                       applicant.cancellationReason &&
                       isBuddyRejection(applicant.cancellationReason) &&
                       applicant.cancellationReason !== "BUDDY_OTHER" && (

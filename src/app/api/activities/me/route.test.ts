@@ -24,9 +24,30 @@ describe("GET /api/activities/me", () => {
   });
 
   it("proxies the buddy activity list with the access token as bearer", async () => {
+    const activity = {
+      activityId: 7,
+      status: "INACTIVE",
+      title: "Tea",
+      description: "Tea tour",
+      totalDurationMinutes: 60,
+      thumbnailImageUrl: null,
+      meetingPointName: "Anguk",
+      meetingPlaceId: null,
+      meetingLatitude: 37.5,
+      meetingLongitude: 127,
+      price: 40000,
+      currency: "KRW",
+      discountPercent: 2,
+      discountEndDate: "2099-12-31",
+      discountedPrice: 39200,
+      priceTiers: [{ minGuests: 2, maxGuests: null, unitPrice: 30000 }],
+      averageRating: 4.8,
+      reviewCount: 7,
+      isSoldOut: false,
+    };
     mockedGetBackend.mockResolvedValue({
       status: 200,
-      payload: { isSuccess: true, code: "200", message: "ok", result: [] },
+      payload: { isSuccess: true, code: "200", message: "ok", result: [activity] },
       setCookies: [],
     });
 
@@ -40,5 +61,6 @@ describe("GET /api/activities/me", () => {
       bearerToken: "access-token",
     });
     expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ result: [activity] });
   });
 });

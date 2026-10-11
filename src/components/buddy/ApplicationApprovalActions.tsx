@@ -18,7 +18,15 @@ export function ApplicationApprovalActions({
   applicationId,
   expiresAt,
   name,
-}: Readonly<{ applicationId: number; expiresAt?: string | null; name: string }>) {
+  onPendingChange,
+  fullWidth = false,
+}: Readonly<{
+  applicationId: number;
+  expiresAt?: string | null;
+  name: string;
+  onPendingChange?: (pending: boolean) => void;
+  fullWidth?: boolean;
+}>) {
   const t = useTranslations("Approval");
   const queryClient = useQueryClient();
   const getError = useApiErrorMessage();
@@ -37,6 +45,9 @@ export function ApplicationApprovalActions({
     onSettled: refresh,
   });
   useAuthQueryRedirect(mutation.error);
+  useEffect(() => {
+    onPendingChange?.(mutation.isPending);
+  }, [mutation.isPending, onPendingChange]);
   const code = mutation.error instanceof ApiClientError ? mutation.error.code : null;
   const forbidden = code === "USER403_BUDDY" || code === "ACTIVITY403_OWNER";
   const stale =
@@ -65,8 +76,22 @@ export function ApplicationApprovalActions({
   return (
     <div className="min-w-0 text-left">
       <ApprovalDeadline expiresAt={expiresAt} />
+      {fullWidth && !expired && (
+        <p className="mt-1 text-xs leading-5 text-muted">{t("deadlineHint")}</p>
+      )}
       {!forbidden && (
-        <div className="mt-2 flex flex-wrap gap-2" aria-label={name}>
+        <div
+          className={fullWidth ? "mt-5 grid grid-cols-2 gap-2" : "mt-2 flex flex-wrap gap-2"}
+          aria-label={name}
+        >
+          <button
+            type="button"
+            disabled={disabled}
+            className={`${buttonClass} border border-line-strong text-ink enabled:hover:border-primary enabled:hover:text-primary`}
+            onClick={() => setRejectOpen(true)}
+          >
+            {t("reject")}
+          </button>
           <button
             type="button"
             disabled={disabled}
@@ -74,14 +99,6 @@ export function ApplicationApprovalActions({
             onClick={() => void submit()}
           >
             {t(mutation.isPending ? "working" : "approve")}
-          </button>
-          <button
-            type="button"
-            disabled={disabled}
-            className={`${buttonClass} border border-line-strong text-muted enabled:hover:border-primary enabled:hover:text-primary`}
-            onClick={() => setRejectOpen(true)}
-          >
-            {t("reject")}
           </button>
         </div>
       )}

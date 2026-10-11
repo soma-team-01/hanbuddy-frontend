@@ -237,36 +237,38 @@ function LocalizedSiteHeader({
                 userType={accountUserType}
               />
             ) : null}
-            <MobileMenu
-              title={t("navigationMenu")}
-              openLabel={t("openMenu")}
-              closeLabel={t("closeMenu")}
-            >
-              <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
-                {navigationLinks}
-              </nav>
-              {(showLanguageSwitcher && !effectiveAuthenticated) || sessionStatus === "guest" ? (
-                <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
-                  {showLanguageSwitcher && !effectiveAuthenticated ? (
-                    <LocaleSwitcher
-                      labelStyle="name"
-                      dismissMenu
-                      menuAlign="start"
-                      menuPlacement="top"
-                      className="justify-start px-1"
-                    />
-                  ) : null}
-                  {sessionStatus === "guest" ? (
-                    <Link
-                      href="/login"
-                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
-                    >
-                      {t("login")}
-                    </Link>
-                  ) : null}
-                </div>
-              ) : null}
-            </MobileMenu>
+            {effectiveRole !== "buddy" && (
+              <MobileMenu
+                title={t("navigationMenu")}
+                openLabel={t("openMenu")}
+                closeLabel={t("closeMenu")}
+              >
+                <nav aria-label={t("primaryNavigation")} className="flex flex-col gap-1">
+                  {navigationLinks}
+                </nav>
+                {(showLanguageSwitcher && !effectiveAuthenticated) || sessionStatus === "guest" ? (
+                  <div className="mt-auto flex flex-col gap-3 border-t border-line-soft pt-5">
+                    {showLanguageSwitcher && !effectiveAuthenticated ? (
+                      <LocaleSwitcher
+                        labelStyle="name"
+                        dismissMenu
+                        menuAlign="start"
+                        menuPlacement="top"
+                        className="justify-start px-1"
+                      />
+                    ) : null}
+                    {sessionStatus === "guest" ? (
+                      <Link
+                        href="/login"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+                      >
+                        {t("login")}
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : null}
+              </MobileMenu>
+            )}
           </div>
         ) : null}
       </PageContainer>

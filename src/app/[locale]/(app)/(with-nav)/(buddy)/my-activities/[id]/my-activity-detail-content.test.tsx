@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getMyActivity, updateMyActivityStatus } from "@/lib/api/buddy";
+import { deleteMyActivity, getMyActivity, updateMyActivityStatus } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -8,14 +8,17 @@ import type { MyActivityDetailResponse } from "@/types/buddy";
 import type { MyProfile } from "@/types/user";
 import { MyActivityDetailContent } from "./my-activity-detail-content";
 
+const routerMock = vi.hoisted(() => ({ replace: vi.fn() }));
+
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => routerMock,
 }));
 
 vi.mock("@/lib/api/buddy", () => ({
   getMyActivity: vi.fn(),
   updateMyActivityStatus: vi.fn(),
+  deleteMyActivity: vi.fn(),
 }));
 
 vi.mock("@/lib/api/useMyProfile", () => ({
@@ -94,6 +97,8 @@ const profile = {
 
 describe("MyActivityDetailContent", () => {
   beforeEach(() => {
+    vi.mocked(deleteMyActivity).mockReset();
+    routerMock.replace.mockReset();
     mockedGetMyActivity.mockReset();
     mockedUpdateMyActivityStatus.mockReset();
     mockedUseMyProfile.mockReset();
@@ -121,7 +126,7 @@ describe("MyActivityDetailContent", () => {
     expect(
       screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
     ).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByRole("link", { name: /Edit activity/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Edit Traditional Tea Tasting" })).toHaveAttribute(
       "href",
       "/en/my-activities/42/edit",
     );
@@ -203,7 +208,7 @@ describe("MyActivityDetailContent", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("공개 중")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /활동 수정/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Traditional Tea Tasting 수정" })).toHaveAttribute(
       "href",
       "/ko/my-activities/42/edit",
     );
@@ -239,4 +244,66 @@ describe("MyActivityDetailContent", () => {
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(screen.queryByText("raw server detail")).not.toBeInTheDocument();
   });
+
+  it("deletes only after confirmation and returns to my activities", async () => {
+    mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
+    vi.mocked(deleteMyActivity).mockResolvedValue({ status: "success", message: "Deleted" });
+    renderWithQueryClient(<MyActivityDetailContent activityId="42" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
+    expect(deleteMyActivity).not.toHaveBeenCalled();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+    expect(deleteMyActivity).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Delete Traditional Tea Tasting" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(deleteMyActivity).toHaveBeenCalledWith(42));
+    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledWith("/en/my-activities"));
+  });
+
+  it("keeps deletion errors in the dialog without navigating away", async () => {
+    mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
+    vi.mocked(deleteMyActivity).mockResolvedValue({
+      status: "error",
+      error: new ApiClientError({
+        code: "ACTIVITY409",
+        status: 409,
+        details: null,
+        backendMessage: "Cannot delete",
+      }),
+    });
+    renderWithQueryClient(<MyActivityDetailContent activityId="42" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Delete Traditional Tea Tasting" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      "ACTIVE",
+      "이 활동을 비공개로 바꿀까요?",
+      "관광객 활동 목록에 더 이상 표시되지 않아요. 언제든 다시 공개할 수 있어요.",
+    ],
+    [
+      "INACTIVE",
+      "이 활동을 공개할까요?",
+      "관광객이 활동을 볼 수 있어요. 예약 가능한 일정이 있으면 신청도 받을 수 있어요.",
+    ],
+  ] as const)(
+    "uses a neutral toggle and natural Korean confirmation for %s",
+    async (status, title, description) => {
+      mockedGetMyActivity.mockResolvedValue({
+        status: "success",
+        activity: { ...activityDetail, status },
+      });
+      renderWithQueryClient(<MyActivityDetailContent activityId="42" />, { locale: "ko" });
+      const toggle = await screen.findByRole("switch");
+      expect(toggle).toHaveClass("bg-transparent");
+      expect(toggle).not.toHaveClass("bg-primary-soft");
+      fireEvent.click(toggle);
+      expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
+      expect(screen.getByText(description)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "취소" })).not.toHaveClass("bg-panel");
+    },
+  );
 });

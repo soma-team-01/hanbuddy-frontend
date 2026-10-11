@@ -12,3 +12,12 @@ export function isBuddyRejection(reason: string): reason is BuddyRejectionReason
 export function isPaidApplicationStatus(status: BackendApplicationStatus) {
   return status === "PENDING_APPROVAL" || status === "CONFIRMED" || status === "COMPLETED";
 }
+
+/** Display both outcomes as Declined, while preserving their distinct server states. */
+export function isDeclinedApplicationStatus(status: string) {
+  return ["REJECTED", "EXPIRED", "rejected", "expired"].includes(status);
+}
+
+export function isClosedApplicationStatus(status: string) {
+  return status === "CANCELLED" || status === "cancelled" || isDeclinedApplicationStatus(status);
+}

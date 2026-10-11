@@ -32,6 +32,18 @@ const application = {
 } as const;
 
 describe("application view adapters", () => {
+  it.each(["REJECTED", "EXPIRED"] as const)(
+    "preserves %s even after session cancellation",
+    (status) => {
+      const result = mapApplicationResponseToApplication(
+        { ...application, status, scheduleCancelled: true },
+        "Unknown",
+      );
+      expect(result.status).toBe(status.toLowerCase());
+      expect(result.scheduleCancelled).toBe(true);
+      expect(result.refund).toBeNull();
+    },
+  );
   it("preserves approval status and server deadlines without treating rejection as session cancellation", () => {
     const expiresAt = "2026-10-12T09:00:00+09:00";
     const pending = mapApplicationResponseToApplication(

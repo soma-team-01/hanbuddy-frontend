@@ -194,7 +194,9 @@ describe("ApplicationsContent", () => {
       screen.queryByRole("checkbox", {
         name: /agree to the cancellation and refund policy/i,
       }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: /payment alone/i }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     fireEvent.click(screen.getByRole("button", { name: "Continue payment with Toss Payments" }));
 
     await waitFor(() => {
@@ -240,7 +242,9 @@ describe("ApplicationsContent", () => {
       screen.queryByRole("checkbox", {
         name: /agree to the cancellation and refund policy/i,
       }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: /payment alone/i }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     fireEvent.click(screen.getByRole("button", { name: "Continue payment with PayPal" }));
 
     await waitFor(() =>
@@ -496,6 +500,8 @@ it("measures usable continuation without a detail CTA or frontend purchase", asy
     </AnalyticsProvider>,
   );
   fireEvent.click(await screen.findByRole("button", { name: "Pay with Toss Payments" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: /payment alone/i }));
+  fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
   fireEvent.click(screen.getByRole("button", { name: "Continue payment with Toss Payments" }));
   await waitFor(() =>
     expect(browser.send.mock.calls.filter((c) => c[0] === "begin_checkout")).toHaveLength(1),
@@ -537,6 +543,8 @@ it.each(["error", "expired", "review", "malformed"])(
       </AnalyticsProvider>,
     );
     fireEvent.click(await screen.findByRole("button", { name: "Pay with Toss Payments" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /payment alone/i }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     fireEvent.click(screen.getByRole("button", { name: "Continue payment with Toss Payments" }));
     await act(async () => {
       await Promise.resolve();

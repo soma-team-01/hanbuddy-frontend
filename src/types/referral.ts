@@ -45,7 +45,7 @@ export interface ReferralApplicant {
   contactMethod: ContactMethod;
   contactCountryCode: string | null;
   contactIdentifier: string;
-  status: "PENDING_APPROVAL" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: "PENDING_APPROVAL" | "CONFIRMED" | "REJECTED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
   approvalExpiresAt?: string | null;
   buddyApprovedAt?: string | null;
   createdAt: string;

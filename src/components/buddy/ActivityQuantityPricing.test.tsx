@@ -9,6 +9,7 @@ import {
   ActivityPricingTable,
 } from "./ActivityQuantityPricing";
 import type { ActivityPricingPreviewRow } from "@/types/activity-pricing";
+import ko from "@/messages/ko.json";
 vi.mock("@/lib/api/activities", () => ({ getActivityPricingPreview: vi.fn() }));
 vi.mock("next/navigation", async (original) => ({
   ...(await original<typeof import("next/navigation")>()),
@@ -46,6 +47,24 @@ const result = {
 };
 beforeEach(() => {
   vi.mocked(getActivityPricingPreview).mockReset();
+});
+it("uses quantity-specific translations instead of period-discount labels", () => {
+  renderWithQueryClient(<ActivityPriceTierEditor draft={draft} onChange={vi.fn()} />, {
+    locale: "ko",
+    messages: {
+      ...ko,
+      QuantityPricing: {
+        ...ko.QuantityPricing,
+        options: { none: "기본 요금만", enabled: "인원별 요금 설정" },
+      },
+    },
+  });
+  expect(screen.getByRole("button", { name: "기본 요금만" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(screen.getByRole("button", { name: "인원별 요금 설정" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "할인 적용" })).not.toBeInTheDocument();
 });
 it("shows original rates, red discounted rates and final server per-person payouts in four columns", async () => {
   vi.mocked(getActivityPricingPreview).mockResolvedValue(result);

@@ -1,5 +1,9 @@
 {
   "QuantityPricing": {
+    "options": {
+      "none": "割引なし",
+      "enabled": "割引を適用"
+    },
     "pricingTitle": "料金",
     "discountedPriceColumn": "割引後の料金",
     "selectEndDate": "日付を選択",
@@ -1796,6 +1800,7 @@
       "pastTimeHint": "今日の開始時刻は現在時刻 (KST) より遅くする必要があります。"
     },
     "price": {
+      "tierPriceWarning": "基本料金より高い人数別料金があります。次のステップで調整してください。",
       "referralTitle": "サービスの最低料金を入力してください",
       "referralDescription": "提供するサービスの中で最も低い料金を入力してください。",
       "referralLabel": "サービスの最低料金",

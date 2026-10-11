@@ -1,5 +1,9 @@
 {
   "QuantityPricing": {
+    "options": {
+      "none": "不打折",
+      "enabled": "应用折扣"
+    },
     "pricingTitle": "价格",
     "discountedPriceColumn": "折后价格",
     "selectEndDate": "选择日期",
@@ -1796,6 +1800,7 @@
       "pastTimeHint": "今天的开始时间必须晚于当前时间 (KST)。"
     },
     "price": {
+      "tierPriceWarning": "有按人数设置的单价高于基础价，请在下一步调整。",
       "referralTitle": "请输入服务最低价格",
       "referralDescription": "请输入您提供的服务中的最低价格。",
       "referralLabel": "服务最低价格",

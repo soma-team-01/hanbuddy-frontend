@@ -984,6 +984,7 @@ export function CreateActivityForm({
           <>
             <PriceStep
               value={draft.pricePerPerson}
+              priceTiers={draft.quantityPricingEnabled ? draft.priceTiers : []}
               referral={referral}
               onChange={(value) => updateField("pricePerPerson", value)}
               t={t}

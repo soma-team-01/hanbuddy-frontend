@@ -1,5 +1,9 @@
 {
   "QuantityPricing": {
+    "options": {
+      "none": "할인 없음",
+      "enabled": "할인 적용"
+    },
     "pricingTitle": "요금",
     "discountedPriceColumn": "할인 후 가격",
     "selectEndDate": "날짜 선택",
@@ -1796,6 +1800,7 @@
       "pastTimeHint": "오늘 날짜에는 현재 시각(KST) 이후의 시간만 추가할 수 있어요."
     },
     "price": {
+      "tierPriceWarning": "기본 요금보다 높은 인원별 요금이 있어요. 다음 단계에서 조정해 주세요.",
       "referralTitle": "서비스 최소 금액을 입력해 주세요",
       "referralDescription": "제공하는 서비스 중 가장 낮은 금액을 입력해 주세요.",
       "referralLabel": "서비스 최소 금액",

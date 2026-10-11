@@ -73,6 +73,8 @@ export function ActivityPriceTierEditor({
     <section className="space-y-5">
       <PricingChoice
         enabled={enabled}
+        disabledLabel={t("options.none")}
+        enabledLabel={t("options.enabled")}
         onChange={(value) => {
           onChange(value, tiers);
         }}

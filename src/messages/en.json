@@ -1,5 +1,9 @@
 {
   "QuantityPricing": {
+    "options": {
+      "none": "No discount",
+      "enabled": "Apply discount"
+    },
     "pricingTitle": "Pricing",
     "discountedPriceColumn": "Discounted price",
     "selectEndDate": "Select date",
@@ -1796,6 +1800,7 @@
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
+      "tierPriceWarning": "A group rate exceeds the base price. Adjust it in the next step.",
       "referralTitle": "Set the minimum service price",
       "referralDescription": "Enter the lowest price among the services you offer.",
       "referralLabel": "Minimum service price",

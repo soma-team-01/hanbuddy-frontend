@@ -1479,12 +1479,19 @@ export function PriceStep({
   onChange,
   t,
   referral = false,
+  priceTiers = [],
 }: Readonly<{
   value: string;
   onChange: (value: string) => void;
   t: Translator;
   referral?: boolean;
+  priceTiers?: ActivityCreateDraft["priceTiers"];
 }>) {
+  const tierPriceConflict =
+    !referral &&
+    /^\d+$/.test(value) &&
+    Number(value) >= ACTIVITY_CREATE_LIMITS.pricePerPerson.min &&
+    priceTiers.some((tier) => Number(tier.unitPrice) > Number(value));
   return (
     <div className="mx-auto max-w-2xl py-3 text-center lg:py-12">
       <label htmlFor="price-per-person" className="sr-only">
@@ -1494,7 +1501,10 @@ export function PriceStep({
         <span className="font-display text-4xl font-extrabold text-ink sm:text-5xl">₩</span>
         <input
           id="price-per-person"
-          aria-describedby="price-minimum"
+          aria-describedby={
+            tierPriceConflict ? "price-minimum price-tier-warning" : "price-minimum"
+          }
+          aria-invalid={tierPriceConflict || undefined}
           autoFocus
           inputMode="numeric"
           pattern="[0-9,]*"
@@ -1515,6 +1525,11 @@ export function PriceStep({
           ? t("price.referralMinimum")
           : t("price.minimum", { amount: ACTIVITY_CREATE_LIMITS.pricePerPerson.min })}
       </p>
+      {tierPriceConflict && (
+        <p id="price-tier-warning" role="alert" className="mt-2 text-xs text-danger">
+          {t("price.tierPriceWarning")}
+        </p>
+      )}
       {!referral && <ActivityBasePayout price={value} />}
     </div>
   );
@@ -1709,6 +1724,8 @@ export function DiscountStep({
     <div className="w-full space-y-6">
       <PricingChoice
         enabled={enabled}
+        disabledLabel={t("discount.options.none.title")}
+        enabledLabel={t("discount.options.limited.title")}
         onChange={(value) => onTypeChange(value ? "limited" : "none")}
       />
       {enabled ? (

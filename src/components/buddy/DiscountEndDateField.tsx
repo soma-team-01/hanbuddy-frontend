@@ -99,6 +99,26 @@ function EndDateCalendar({
       ?.querySelector<HTMLButtonElement>(`[data-date="${value >= minDate ? value : minDate}"]`)
       ?.focus();
   }, [value, minDate]);
+  useEffect(() => {
+    // Native dialogs expose backdrop clicks with the dialog itself as the target.
+    // Check the bounds so clicking its padding does not dismiss the calendar.
+    function dismissBackdrop(event: MouseEvent) {
+      const element = dialog.current;
+      if (!element || event.target !== element) return;
+      const { left, right, top, bottom } = element.getBoundingClientRect();
+      if (
+        event.clientX < left ||
+        event.clientX > right ||
+        event.clientY < top ||
+        event.clientY > bottom
+      ) {
+        element.close();
+        onClose();
+      }
+    }
+    document.addEventListener("click", dismissBackdrop);
+    return () => document.removeEventListener("click", dismissBackdrop);
+  }, [onClose]);
   function close() {
     dialog.current?.close();
     onClose();
@@ -110,9 +130,6 @@ function EndDateCalendar({
       onCancel={(event) => {
         event.preventDefault();
         close();
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) close();
       }}
       className="motion-dialog m-0 mt-auto w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-5 text-ink shadow-xl backdrop:bg-ink/40 md:m-auto md:w-[360px] md:rounded-2xl"
     >

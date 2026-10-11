@@ -38,3 +38,40 @@ it("opens on the selected month, supports month navigation and cancels without c
   expect(onChange).not.toHaveBeenCalled();
   expect(trigger).toHaveFocus();
 });
+
+it("dismisses with native Escape cancellation and restores focus without changing the date", () => {
+  const onChange = vi.fn();
+  renderWithQueryClient(
+    <DiscountEndDateField value="" minDate="2026-10-11" onChange={onChange} />,
+    { locale: "en" },
+  );
+  const trigger = screen.getByRole("button", { name: /Discount ends on/ });
+  fireEvent.click(trigger);
+  fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  expect(onChange).not.toHaveBeenCalled();
+});
+
+it("closes on a backdrop click but keeps clicks on dialog padding open", () => {
+  const onChange = vi.fn();
+  renderWithQueryClient(
+    <DiscountEndDateField value="" minDate="2026-10-11" onChange={onChange} />,
+    { locale: "en" },
+  );
+  const trigger = screen.getByRole("button", { name: /Discount ends on/ });
+  fireEvent.click(trigger);
+  const dialog = screen.getByRole("dialog");
+  vi.spyOn(dialog, "getBoundingClientRect").mockReturnValue({
+    left: 100,
+    right: 460,
+    top: 100,
+    bottom: 500,
+  } as DOMRect);
+  fireEvent.click(dialog, { clientX: 110, clientY: 110 });
+  expect(dialog).toBeInTheDocument();
+  fireEvent.click(dialog, { clientX: 50, clientY: 50 });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  expect(onChange).not.toHaveBeenCalled();
+});

@@ -74,6 +74,9 @@ it("shows original rates, red discounted rates and final server per-person payou
   expect(screen.getByText("₩40,000")).toBeInTheDocument();
   expect(screen.getByText("₩36,000")).toHaveClass("text-primary");
   expect(screen.getAllByRole("columnheader")).toHaveLength(4);
+  const tableContainer = screen.getByRole("table").parentElement;
+  expect(tableContainer).not.toHaveAttribute("tabindex");
+  expect(tableContainer).not.toHaveClass("overflow-y-auto");
   expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   expect(screen.queryByText("₩10,800")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "전체 인원별 정산표 보기" })).not.toBeInTheDocument();

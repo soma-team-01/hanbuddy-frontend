@@ -424,9 +424,9 @@ function PricingResult({
           {t("loading")}
         </p>
       ) : (
-        <div className="max-h-[28rem] overflow-y-auto" tabIndex={0} aria-label={t("preview")}>
+        <div>
           <table className="w-full table-fixed border-collapse text-xs sm:text-sm">
-            <thead className="sticky top-0 bg-canvas-soft">
+            <thead className="bg-canvas-soft">
               <tr className="border-b border-line-strong text-left text-xs text-muted">
                 <th scope="col" className="w-[21%] py-3 font-medium">
                   {t("guests")}

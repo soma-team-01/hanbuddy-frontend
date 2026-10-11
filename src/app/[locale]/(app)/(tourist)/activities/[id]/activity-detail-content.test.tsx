@@ -516,7 +516,7 @@ describe("ActivityDetailContent", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("2 hours 30min")).toBeInTheDocument();
     // 일정이 없으면 칩 대신 안내 문구가 뜨고 Book now가 비활성화된다
-    expect(screen.getByText("No dates available yet")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "No dates available yet" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
   });
 

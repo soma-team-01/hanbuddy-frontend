@@ -1003,6 +1003,8 @@
     "soldOut": "已售完"
   },
   "ActivityDetail": {
+    "selectDateCompact": "選擇日期",
+    "bookCompact": "預訂",
     "loading": "正在加載活動...",
     "loadError": "無法載入活動詳細資訊。",
     "notFound": "無法找到此活動。",

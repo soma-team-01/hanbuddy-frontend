@@ -292,7 +292,7 @@ describe("ActivityDetailView", () => {
       expect(screen.getByTestId("booking-bar-actions").querySelectorAll("p")).toHaveLength(2);
       expect(screen.getByText(label)).not.toHaveClass("md:ml-auto", "md:text-2xl");
       expect(screen.getByTestId("date-select-box")).toHaveClass("md:flex-1");
-      expect(screen.getByTestId("date-select-box")).toHaveClass("h-12");
+      expect(screen.getByTestId("date-select-box")).toHaveClass("h-11", "md:h-12");
       expect(screen.getByTestId("date-select-box")).not.toHaveClass("md:max-w-[480px]");
     },
   );
@@ -363,19 +363,34 @@ describe("ActivityDetailView", () => {
     expect(hostProfile).toHaveAttribute("data-can-contact", "false");
   });
 
-  it("keeps the original date, per-person price and booking action without guest controls", () => {
+  it("keeps mobile date, price and booking action in a single compact row", () => {
     renderWithIntl(<ActivityDetailView activity={activity} unoptimizedImages />, { locale: "en" });
 
     const bar = screen.getByTestId("booking-bottom-bar");
     expect(bar).toHaveClass("fixed");
     const row = bar.firstElementChild as HTMLElement;
-    expect(row).toHaveClass("flex", "flex-col", "md:flex-row");
+    expect(row).toHaveClass("grid", "grid-cols-[minmax(0,1fr)_auto_auto]");
     expect(screen.getByTestId("date-select-box")).toHaveClass("w-full", "md:flex-1");
     expect(screen.getByTestId("date-select-box")).not.toHaveClass("flex-1");
     expect(screen.queryByRole("group", { name: "Guests" })).not.toBeInTheDocument();
     expect(within(bar).getByText("per person")).toBeInTheDocument();
-    expect(screen.getByTestId("booking-bar-actions")).toHaveClass("flex", "justify-between");
+    expect(screen.getByTestId("booking-bar-actions")).toHaveClass("contents");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+  });
+
+  it("uses a smaller host portrait and compact introduction without hiding its text", () => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{ ...activity, hostIntroduction: "A local guide who loves sharing Seoul." }}
+        preview
+      />,
+    );
+    const profile = screen.getByRole("button", { name: "View Seoul Buddy's profile" });
+    expect(profile).toHaveClass("size-11");
+    expect(screen.getByText("A local guide who loves sharing Seoul.")).toHaveClass("leading-6");
+    expect(profile.parentElement).toHaveClass("gap-3", "p-4");
+    fireEvent.click(profile);
+    expect(screen.getByTestId("host-profile-dialog")).toBeInTheDocument();
   });
 
   it("marks the body and exposes the bar height while the fixed bar is mounted", () => {

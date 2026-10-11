@@ -1003,6 +1003,8 @@
     "soldOut": "예약 마감"
   },
   "ActivityDetail": {
+    "selectDateCompact": "날짜 선택",
+    "bookCompact": "예약",
     "loading": "활동을 불러오는 중...",
     "loadError": "활동 상세 정보를 불러오지 못했습니다.",
     "notFound": "활동을 찾을 수 없습니다.",

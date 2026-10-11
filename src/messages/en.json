@@ -1003,6 +1003,8 @@
     "soldOut": "Sold out"
   },
   "ActivityDetail": {
+    "selectDateCompact": "Date",
+    "bookCompact": "Book",
     "loading": "Loading activity...",
     "loadError": "Could not load activity details.",
     "notFound": "This activity could not be found.",

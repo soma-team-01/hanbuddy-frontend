@@ -72,6 +72,21 @@ describe("anonymous public activity documents", () => {
     respond(success({ ...activity, availableLanguages }));
     expect((await getPublicActivity("42", "ko")).availableLanguages).toEqual(availableLanguages);
   });
+  it("keeps the backend content update time for the sitemap", async () => {
+    respond(success({ ...activity, updatedAt: "2026-10-11T23:03:38.593286+09:00" }));
+    await expect(getPublicActivity("42", "en")).resolves.toMatchObject({
+      updatedAt: "2026-10-11T23:03:38.593286+09:00",
+    });
+  });
+  it.each([undefined, null, "", "yesterday", "2026-10-11", 1760191418])(
+    "drops an unusable update time %s instead of failing the page",
+    async (updatedAt) => {
+      respond(success({ ...activity, updatedAt }));
+      const result = await getPublicActivity("42", "en");
+      expect(result.title).toBe("Public walk");
+      expect(result).not.toHaveProperty("updatedAt");
+    },
+  );
   it("only serializes supported spoken-language codes", async () => {
     respond(
       success({ ...activity, availableLanguages: ["KO", "FUTURE", { privateNote: "hidden" }] }),

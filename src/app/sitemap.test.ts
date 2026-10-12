@@ -89,6 +89,36 @@ describe("public sitemap and crawl policy", () => {
     expect(entries).toHaveLength(5 * 8 + 1);
   });
 
+  it("uses each language's activity update time as its lastmod", async () => {
+    vi.mocked(getPublicActivities).mockResolvedValue([{ activityId: 6 } as TouristActivitySummary]);
+    vi.mocked(getPublicActivity).mockImplementation(
+      async (id, locale) =>
+        ({
+          activityId: Number(id),
+          ...(locale === "ja"
+            ? {}
+            : {
+                updatedAt:
+                  locale === "ko"
+                    ? "2026-10-12T09:00:00+09:00"
+                    : "2026-10-11T23:03:38.593286+09:00",
+              }),
+        }) as unknown as TouristActivityDetail,
+    );
+    const byUrl = new Map((await sitemap()).map((entry) => [entry.url, entry]));
+
+    expect(byUrl.get("https://hanbuddy.kr/en/activities/6")?.lastModified).toBe(
+      "2026-10-11T23:03:38.593286+09:00",
+    );
+    expect(byUrl.get("https://hanbuddy.kr/ko/activities/6")?.lastModified).toBe(
+      "2026-10-12T09:00:00+09:00",
+    );
+    expect(byUrl.get("https://hanbuddy.kr/ja/activities/6")).not.toHaveProperty("lastModified");
+    expect(byUrl.get("https://hanbuddy.kr/ko/activities/6")?.alternates?.languages).toEqual(
+      byUrl.get("https://hanbuddy.kr/en/activities/6")?.alternates?.languages,
+    );
+  });
+
   it("fails instead of publishing an empty success sitemap during an API outage", async () => {
     vi.mocked(getPublicActivities).mockRejectedValue(new PublicActivityError("unavailable"));
     await expect(sitemap()).rejects.toMatchObject({ kind: "unavailable" });

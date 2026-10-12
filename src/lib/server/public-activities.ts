@@ -173,6 +173,17 @@ function summary(value: unknown): TouristActivitySummary {
   return result as unknown as TouristActivitySummary;
 }
 
+// 오프셋까지 있는 시각만 쓴다. 날짜만 있거나 해석이 안 되면 사이트맵에서 lastmod를 생략한다.
+const OFFSET_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+
+function contentUpdatedAt(value: unknown) {
+  return typeof value === "string" &&
+    OFFSET_DATE_TIME.test(value) &&
+    !Number.isNaN(Date.parse(value))
+    ? { updatedAt: value }
+    : {};
+}
+
 function detail(value: unknown): TouristActivityDetail {
   const item = record(value);
   const result = summary(item);
@@ -190,6 +201,7 @@ function detail(value: unknown): TouristActivityDetail {
     ...(item.hostIntroduction !== undefined
       ? { hostIntroduction: item.hostIntroduction as string }
       : {}),
+    ...contentUpdatedAt(item.updatedAt),
     includedItems: strings(item.includedItems),
     restrictionNotes: strings(item.restrictionNotes),
     images: array(item.images).map((value) => {

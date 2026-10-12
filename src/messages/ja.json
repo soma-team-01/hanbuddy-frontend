@@ -386,6 +386,17 @@
     "viewProfile": "プロフィールを見る",
     "chat": "メッセージ"
   },
+  "Footer": {
+    "navigationLabel": "フッターメニュー",
+    "support": "サポート",
+    "hosting": "バディ",
+    "company": "HanBuddy",
+    "contactUs": "お問い合わせ",
+    "communitySafety": "コミュニティ・安全ポリシー",
+    "buddyOperationTerms": "バディ運営規約",
+    "buddyCommissionSettlement": "バディ手数料・精算ポリシー",
+    "exploreExperiences": "体験を探す"
+  },
   "Accessibility": {
     "goBack": "戻る",
     "close": "閉じる",

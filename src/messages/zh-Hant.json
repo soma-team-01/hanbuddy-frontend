@@ -386,6 +386,17 @@
     "viewProfile": "查看個人資料",
     "chat": "訊息"
   },
+  "Footer": {
+    "navigationLabel": "頁尾導覽",
+    "support": "幫助與支援",
+    "hosting": "夥伴",
+    "company": "HanBuddy",
+    "contactUs": "聯絡我們",
+    "communitySafety": "社區與安全政策",
+    "buddyOperationTerms": "夥伴運營條款",
+    "buddyCommissionSettlement": "夥伴傭金與結算政策",
+    "exploreExperiences": "探索體驗"
+  },
   "Accessibility": {
     "goBack": "返回",
     "close": "關閉",

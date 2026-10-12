@@ -32,7 +32,7 @@ function schedule(startAt: string, remainingCapacity = 4, status: "OPEN" | "CLOS
 
 describe("organizationJsonLd", () => {
   it("describes HanBuddy with the footer's legal name, contact email and social profiles", () => {
-    const data = organizationJsonLd("ko");
+    const data = organizationJsonLd("ko", "한버디는 외국인과 여행자를 한국인 버디와 이어 줍니다.");
     const [organization, website] = data["@graph"] as Record<string, unknown>[];
 
     expect(organization).toEqual({
@@ -41,6 +41,7 @@ describe("organizationJsonLd", () => {
       name: "HanBuddy",
       alternateName: "한버디",
       legalName: "제로원",
+      description: "한버디는 외국인과 여행자를 한국인 버디와 이어 줍니다.",
       url: "https://hanbuddy.kr/ko",
       logo: {
         "@type": "ImageObject",
@@ -52,6 +53,7 @@ describe("organizationJsonLd", () => {
       sameAs: [
         "https://www.instagram.com/hanbuddy_kr/",
         "https://www.facebook.com/profile.php?id=61593105057939",
+        "https://www.meetup.com/discover-korea-with-local-buddies/",
       ],
     });
     expect(website).toMatchObject({ "@type": "WebSite", url: "https://hanbuddy.kr/ko" });

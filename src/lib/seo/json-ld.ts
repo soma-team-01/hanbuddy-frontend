@@ -1,5 +1,5 @@
 import { isBookingOpen } from "@/lib/activity-booking-window";
-import { CONTACT_DETAILS } from "@/lib/contact-details";
+import { CONTACT_DETAILS, MEETUP_GROUP_URL } from "@/lib/contact-details";
 import { APP_ORIGIN } from "@/lib/site";
 import type { Locale } from "@/i18n/routing";
 import type { TouristActivityDetail } from "@/types/activity";
@@ -12,8 +12,11 @@ export const ORGANIZATION_ID = `${APP_ORIGIN}/#organization`;
 const WEBSITE_ID = `${APP_ORIGIN}/#website`;
 const BRAND_NAME = "HanBuddy";
 
-/** 메인: 서비스 운영 조직과 웹사이트. 사업자 상호(제로원)는 푸터의 사업자 정보와 같다. SearchAction은 넣지 않는다. */
-export function organizationJsonLd(locale: Locale): JsonLdNode {
+/**
+ * 메인: 서비스 운영 조직과 웹사이트. 사업자 상호(제로원)는 푸터의 사업자 정보와 같다. SearchAction은 넣지 않는다.
+ * description은 메인 메타 설명과 같은 문장을 받는다. 검색엔진이 브랜드 정의를 Meetup 소개글보다 이 사이트에서 가져가게 한다.
+ */
+export function organizationJsonLd(locale: Locale, description: string): JsonLdNode {
   const url = `${APP_ORIGIN}/${locale}`;
   return {
     "@context": "https://schema.org",
@@ -24,6 +27,7 @@ export function organizationJsonLd(locale: Locale): JsonLdNode {
         name: BRAND_NAME,
         alternateName: "한버디",
         legalName: "제로원",
+        description,
         url,
         logo: {
           "@type": "ImageObject",
@@ -32,7 +36,7 @@ export function organizationJsonLd(locale: Locale): JsonLdNode {
           height: 512,
         },
         email: CONTACT_DETAILS.email,
-        sameAs: [CONTACT_DETAILS.instagramUrl, CONTACT_DETAILS.facebookUrl],
+        sameAs: [CONTACT_DETAILS.instagramUrl, CONTACT_DETAILS.facebookUrl, MEETUP_GROUP_URL],
       },
       {
         "@type": "WebSite",

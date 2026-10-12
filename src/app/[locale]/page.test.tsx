@@ -353,7 +353,11 @@ describe("LandingPage", () => {
         name: "HanBuddy",
         alternateName: "한버디",
         legalName: "제로원",
+        description: expect.stringMatching(/^HanBuddy connects/),
         email: "contact@hanbuddy.kr",
+        sameAs: expect.arrayContaining([
+          "https://www.meetup.com/discover-korea-with-local-buddies/",
+        ]),
       }),
       expect.objectContaining({ "@type": "WebSite", url: "https://hanbuddy.kr/en" }),
     ]);

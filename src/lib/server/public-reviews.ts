@@ -4,13 +4,33 @@ import type { Locale } from "@/i18n/routing";
 import { getBackend } from "@/lib/auth/backend";
 import { getContentLanguage, withContentLanguage } from "@/lib/content-language";
 import { REVIEW_PREVIEW_SIZE } from "@/lib/query/reviews";
-import type { ReviewPageResponse } from "@/types/review";
+import type { ReviewPageResponse, ReviewResponse } from "@/types/review";
+
+const nullableString = (value: unknown) => value == null || typeof value === "string";
+
+/** 화면이 바로 읽는 필드만 확인한다. 하나라도 어긋나면 첫 HTML에 넣지 않고 브라우저 재조회에 맡긴다. */
+function isReview(value: unknown): value is ReviewResponse {
+  if (!value || typeof value !== "object") return false;
+  const review = value as Partial<Record<keyof ReviewResponse, unknown>>;
+  return (
+    Number.isSafeInteger(review.reviewId) &&
+    typeof review.rating === "number" &&
+    Number.isFinite(review.rating) &&
+    ["content", "originalContent", "contentLanguage", "sourceLanguage", "createdAt"].every(
+      (key) => typeof review[key as keyof ReviewResponse] === "string",
+    ) &&
+    nullableString(review.reviewerName) &&
+    nullableString(review.reviewerProfileImageUrl) &&
+    nullableString(review.originalReviewedAt)
+  );
+}
 
 function isReviewPage(value: unknown): value is ReviewPageResponse {
   if (!value || typeof value !== "object") return false;
   const page = value as Partial<ReviewPageResponse>;
   return (
     Array.isArray(page.reviews) &&
+    page.reviews.every(isReview) &&
     typeof page.totalCount === "number" &&
     (page.averageRating === null || typeof page.averageRating === "number")
   );

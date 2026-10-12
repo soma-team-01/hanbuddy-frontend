@@ -173,14 +173,18 @@ function summary(value: unknown): TouristActivitySummary {
   return result as unknown as TouristActivitySummary;
 }
 
-// 오프셋까지 있는 시각만 쓴다. 날짜만 있거나 해석이 안 되면 사이트맵에서 lastmod를 생략한다.
-const OFFSET_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+// 오프셋까지 있는 시각만 쓴다. 날짜만 있거나, 해석이 안 되거나, 달력에 없는 날짜(2월 30일 등)면
+// 사이트맵에서 lastmod를 생략한다. Date.parse는 2월 30일을 3월 2일로 넘겨 받아 주므로 따로 확인한다.
+const OFFSET_DATE_TIME =
+  /^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
 function contentUpdatedAt(value: unknown) {
-  return typeof value === "string" &&
-    OFFSET_DATE_TIME.test(value) &&
-    !Number.isNaN(Date.parse(value))
-    ? { updatedAt: value }
+  const match = typeof value === "string" ? OFFSET_DATE_TIME.exec(value) : null;
+  if (!match || Number.isNaN(Date.parse(match[0]))) return {};
+  const [year, month, day] = match.slice(1, 4).map(Number);
+  const calendar = new Date(Date.UTC(year, month - 1, day));
+  return calendar.getUTCMonth() === month - 1 && calendar.getUTCDate() === day
+    ? { updatedAt: match[0] }
     : {};
 }
 

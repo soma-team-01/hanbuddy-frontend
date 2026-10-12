@@ -78,15 +78,21 @@ describe("anonymous public activity documents", () => {
       updatedAt: "2026-10-11T23:03:38.593286+09:00",
     });
   });
-  it.each([undefined, null, "", "yesterday", "2026-10-11", 1760191418])(
-    "drops an unusable update time %s instead of failing the page",
-    async (updatedAt) => {
-      respond(success({ ...activity, updatedAt }));
-      const result = await getPublicActivity("42", "en");
-      expect(result.title).toBe("Public walk");
-      expect(result).not.toHaveProperty("updatedAt");
-    },
-  );
+  it.each([
+    undefined,
+    null,
+    "",
+    "yesterday",
+    "2026-10-11",
+    "2026-02-30T12:00:00+09:00",
+    "2026-10-11T25:00:00+09:00",
+    1760191418,
+  ])("drops an unusable update time %s instead of failing the page", async (updatedAt) => {
+    respond(success({ ...activity, updatedAt }));
+    const result = await getPublicActivity("42", "en");
+    expect(result.title).toBe("Public walk");
+    expect(result).not.toHaveProperty("updatedAt");
+  });
   it("only serializes supported spoken-language codes", async () => {
     respond(
       success({ ...activity, availableLanguages: ["KO", "FUTURE", { privateNote: "hidden" }] }),

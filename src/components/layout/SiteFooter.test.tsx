@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/render-with-intl";
@@ -16,7 +16,7 @@ vi.mock("next-intl/server", async () => {
       namespace,
     }: {
       locale: Locale;
-      namespace: "Auth" | "Landing" | "Navigation";
+      namespace: "Auth" | "Footer" | "Landing" | "Navigation";
     }) => createTranslator({ locale, messages: locale === "ko" ? ko : en, namespace }),
   };
 });
@@ -109,7 +109,110 @@ describe("SiteFooter", () => {
     expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", `/${locale}/faq`);
   });
 
-  it("groups compact mobile links and retains desktop touch targets", async () => {
+  it.each([
+    {
+      locale: "en",
+      navigation: "Footer",
+      columns: [
+        [
+          "Support",
+          [
+            ["FAQ", "/en/faq"],
+            ["Contact us", "mailto:contact@hanbuddy.kr"],
+            ["Cancellation & Refund Policy", "/en/policies/cancellation-refund-policy"],
+            ["Community & Safety Policy", "/en/policies/community-safety-policy"],
+          ],
+        ],
+        [
+          "Hosting",
+          [
+            ["Host an experience", "/ko/buddy"],
+            ["Buddy Operating Terms", "/en/policies/buddy-operation-terms"],
+            [
+              "Buddy Commission & Settlement Policy",
+              "/en/policies/buddy-commission-settlement-policy",
+            ],
+          ],
+        ],
+        [
+          "HanBuddy",
+          [
+            ["About", "/en/about"],
+            ["Explore experiences", "/en/explore"],
+            ["Terms of Service", "/en/policies/terms-of-service"],
+            ["Privacy Policy", "/en/policies/privacy-policy"],
+          ],
+        ],
+      ],
+    },
+    {
+      locale: "ko",
+      navigation: "하단 메뉴",
+      columns: [
+        [
+          "고객 지원",
+          [
+            ["자주 묻는 질문", "/ko/faq"],
+            ["문의하기", "mailto:contact@hanbuddy.kr"],
+            ["취소 및 환불 정책", "/ko/policies/cancellation-refund-policy"],
+            ["커뮤니티 및 안전 정책", "/ko/policies/community-safety-policy"],
+          ],
+        ],
+        [
+          "버디",
+          [
+            ["버디 신청하기", "/ko/buddy"],
+            ["버디 운영약관", "/ko/policies/buddy-operation-terms"],
+            ["버디 수수료·정산 정책", "/ko/policies/buddy-commission-settlement-policy"],
+          ],
+        ],
+        [
+          "한버디",
+          [
+            ["소개", "/ko/about"],
+            ["체험 둘러보기", "/ko/explore"],
+            ["이용약관", "/ko/policies/terms-of-service"],
+            ["개인정보 처리방침", "/ko/policies/privacy-policy"],
+          ],
+        ],
+      ],
+    },
+  ] as const)(
+    "groups existing pages into labelled footer columns for $locale",
+    async ({ locale, navigation, columns }) => {
+      renderWithIntl(await SiteFooter({ locale }), { locale });
+
+      const nav = screen.getByRole("navigation", { name: navigation });
+      expect(
+        within(nav)
+          .getAllByRole("heading", { level: 2 })
+          .map((heading) => heading.textContent),
+      ).toEqual(columns.map(([title]) => title));
+
+      for (const [title, links] of columns) {
+        const list = within(nav).getByRole("list", { name: title });
+        expect(
+          within(list)
+            .getAllByRole("link")
+            .map((link) => [link.textContent, link.getAttribute("href")]),
+        ).toEqual(links.map(([name, href]) => [name, href]));
+      }
+    },
+  );
+
+  it("tracks the footer contact link as a footer email inquiry", async () => {
+    renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });
+
+    analytics.trackInquiry.mockClear();
+    fireEvent.click(screen.getByRole("link", { name: "Contact us" }));
+    expect(analytics.trackInquiry).toHaveBeenCalledWith({
+      channel: "email",
+      placement: "site_footer",
+      locale: "en",
+    });
+  });
+
+  it("uses two columns on mobile and keeps desktop touch targets", async () => {
     renderWithIntl(await SiteFooter({ locale: "en" }), { locale: "en" });
 
     for (const name of [
@@ -122,14 +225,15 @@ describe("SiteFooter", () => {
       expect(screen.getByRole("link", { name })).toHaveClass("size-11");
       expect(screen.getByRole("link", { name })).toHaveClass("max-md:w-8", "max-md:shrink-0");
     }
-    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveClass("min-h-11");
-    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveClass("max-md:min-h-8");
-    expect(screen.getByRole("contentinfo")).toHaveClass("max-md:py-4");
-    expect(screen.getByTestId("footer-links")).toHaveClass("max-md:flex", "max-md:flex-wrap");
-    expect(screen.getByText("© 2026 HanBuddy")).toHaveClass("max-md:order-4");
-    expect(screen.getByRole("link", { name: "Cancellation & Refund Policy" })).toHaveClass(
-      "min-h-11",
+    expect(screen.getByRole("navigation", { name: "Footer" })).toHaveClass(
+      "grid-cols-2",
+      "md:grid-cols-3",
     );
+    expect(screen.getByRole("link", { name: "Terms of Service" })).toHaveClass(
+      "min-h-11",
+      "max-md:min-h-8",
+    );
+    expect(screen.getByRole("contentinfo")).toHaveClass("max-md:py-6");
   });
 
   it("hides the language switcher for buddies", async () => {

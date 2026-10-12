@@ -386,6 +386,17 @@
     "viewProfile": "프로필 보기",
     "chat": "메시지"
   },
+  "Footer": {
+    "navigationLabel": "하단 메뉴",
+    "support": "고객 지원",
+    "hosting": "버디",
+    "company": "한버디",
+    "contactUs": "문의하기",
+    "communitySafety": "커뮤니티 및 안전 정책",
+    "buddyOperationTerms": "버디 운영약관",
+    "buddyCommissionSettlement": "버디 수수료·정산 정책",
+    "exploreExperiences": "체험 둘러보기"
+  },
   "Accessibility": {
     "goBack": "뒤로 가기",
     "close": "닫기",

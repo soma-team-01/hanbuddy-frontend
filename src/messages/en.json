@@ -386,6 +386,17 @@
     "viewProfile": "View profile",
     "chat": "Messages"
   },
+  "Footer": {
+    "navigationLabel": "Footer",
+    "support": "Support",
+    "hosting": "Hosting",
+    "company": "HanBuddy",
+    "contactUs": "Contact us",
+    "communitySafety": "Community & Safety Policy",
+    "buddyOperationTerms": "Buddy Operating Terms",
+    "buddyCommissionSettlement": "Buddy Commission & Settlement Policy",
+    "exploreExperiences": "Explore experiences"
+  },
   "Accessibility": {
     "goBack": "Go back",
     "close": "Close",

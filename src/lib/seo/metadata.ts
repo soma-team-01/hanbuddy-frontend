@@ -84,12 +84,15 @@ export function sharePreview({
 
 /**
  * 언어별 대체 주소(hreflang). 같은 내용의 다른 언어 주소와, 언어를 못 정한 방문자에게 보낼
- * x-default(영어)를 함께 선언한다. 다른 언어 주소가 리다이렉트되는 화면(버디 모집)은
- * 실제로 열리는 언어만 넘긴다.
+ * x-default(기본은 넘긴 언어 중 첫 번째, 전체 언어면 영어)를 함께 선언한다. 다른 언어 주소가
+ * 리다이렉트되는 화면(버디 모집)이나 일부 언어로만 공개된 활동은 실제로 열리는 언어만 넘긴다.
  */
 export function languageAlternates(
   path: string,
-  { locales = LOCALES, xDefault = "en" }: { locales?: readonly Locale[]; xDefault?: Locale } = {},
+  {
+    locales = LOCALES,
+    xDefault = locales[0],
+  }: { locales?: readonly Locale[]; xDefault?: Locale } = {},
 ): Record<string, string> {
   return {
     ...Object.fromEntries(locales.map((locale) => [locale, `${APP_ORIGIN}/${locale}${path}`])),
@@ -115,12 +118,15 @@ export function publicPageMetadata({
   title,
   description,
   image,
+  locales,
 }: {
   locale: Locale;
   path: string;
   title: string;
   description: string;
   image?: string | ShareImage;
+  /** 일부 언어로만 공개된 페이지의 공개 언어. 보는 언어가 빠져 있으면 canonical만 남긴다. */
+  locales?: readonly Locale[];
 }): Metadata {
   const pageTitle = `${title.trim()} | HanBuddy`;
   const summary = description.replace(/\s+/g, " ").trim().slice(0, 200);
@@ -128,7 +134,10 @@ export function publicPageMetadata({
   return {
     title: pageTitle,
     description: summary,
-    alternates: pageAlternates(locale, path),
+    alternates:
+      locales && !locales.includes(locale)
+        ? { canonical: `${APP_ORIGIN}/${locale}${path}` }
+        : pageAlternates(locale, path, { locales }),
     ...sharePreview({ locale, path, title: pageTitle, description: summary, image }),
   };
 }

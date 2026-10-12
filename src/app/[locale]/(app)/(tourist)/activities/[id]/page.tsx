@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { JsonLd } from "@/components/seo/JsonLd";
-import type { Locale } from "@/i18n/routing";
+import { LOCALES, type Locale } from "@/i18n/routing";
 import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { getPublicActivity, PublicActivityError } from "@/lib/server/public-activities";
+import { publishedActivityLocales } from "@/lib/server/published-activities";
 import { getPublicActivityReviewSummary } from "@/lib/server/public-reviews";
 import { activityBreadcrumbs } from "@/lib/seo/activity-breadcrumbs";
 import { activityProductJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
@@ -25,12 +26,22 @@ async function readActivity(id: string, locale: Locale) {
   }
 }
 
+/** 사이트맵과 같은 공개 언어로 hreflang을 만든다. 다른 언어 확인이 실패하면 5개 언어 전체로 둔다. */
+async function hreflangLocales(id: string): Promise<readonly Locale[]> {
+  try {
+    return await publishedActivityLocales(id);
+  } catch {
+    return LOCALES;
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id, locale } = await params;
   try {
-    const activity = await readActivity(id, locale);
+    const [activity, locales] = await Promise.all([readActivity(id, locale), hreflangLocales(id)]);
     return publicPageMetadata({
       locale,
+      locales,
       path: `/activities/${activity.activityId}`,
       title: activity.title,
       description: activity.description,

@@ -66,7 +66,7 @@ function contentProps(page: ReactElement) {
   );
   return content!.props as {
     initialActivity: TouristActivityDetail;
-    initialReviews?: ReviewPageResponse;
+    initialReviews: Promise<ReviewPageResponse | undefined>;
     emailLoginEnabled: boolean;
   };
 }
@@ -221,14 +221,23 @@ describe("public detail document", () => {
     } as unknown as ReviewPageResponse;
     vi.mocked(getPublicActivityReviewSummary).mockResolvedValueOnce(reviews);
 
-    expect(contentProps(await Page({ params })).initialReviews).toBe(reviews);
+    await expect(contentProps(await Page({ params })).initialReviews).resolves.toBe(reviews);
     expect(getPublicActivityReviewSummary).toHaveBeenCalledWith("42", "en");
   });
   it("still renders when the review preview could not be fetched on the server", async () => {
     vi.mocked(getPublicActivity).mockResolvedValue(activity);
     vi.mocked(getPublicActivityReviewSummary).mockResolvedValueOnce(undefined);
 
-    expect(contentProps(await Page({ params })).initialReviews).toBeUndefined();
+    await expect(contentProps(await Page({ params })).initialReviews).resolves.toBeUndefined();
+  });
+  it("renders the activity body without waiting for a slow review preview", async () => {
+    vi.mocked(getPublicActivity).mockResolvedValue(activity);
+    // 후기 API가 응답하지 않아도 본문은 바로 그린다. 후기는 같은 HTML 응답 뒤쪽으로 이어서 보낸다.
+    vi.mocked(getPublicActivityReviewSummary).mockReturnValueOnce(new Promise(() => {}));
+
+    const page = await Page({ params });
+    expect(contentProps(page).initialActivity).toBe(activity);
+    expect(contentProps(page).initialReviews).toBeInstanceOf(Promise);
   });
   it("raises Next notFound for a confirmed missing activity in metadata and body", async () => {
     vi.mocked(getPublicActivity).mockRejectedValue(new PublicActivityError("missing"));

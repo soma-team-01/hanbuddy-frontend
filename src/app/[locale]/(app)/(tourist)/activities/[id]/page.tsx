@@ -57,11 +57,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ActivityDetailPage({ params, searchParams }: PageProps) {
   const { id, locale } = await params;
   const query = await searchParams;
-  // 후기 미리보기도 함께 받아 첫 HTML에 넣는다(크롤러가 후기를 읽게). 실패해도 페이지는 그대로 그린다.
-  const [activity, navT, initialReviews] = await Promise.all([
+  // 후기 미리보기는 기다리지 않고 promise로 넘긴다. 본문을 먼저 보내고 후기는 같은 HTML 응답 뒤쪽에
+  // 이어 보내므로(크롤러는 끝까지 받아 읽는다) 후기 API가 느려도 본문이 붙잡히지 않는다.
+  const initialReviews = getPublicActivityReviewSummary(id, locale);
+  const [activity, navT] = await Promise.all([
     readActivity(id, locale),
     getTranslations({ locale, namespace: "Navigation" }),
-    getPublicActivityReviewSummary(id, locale),
   ]);
   const breadcrumbs = activityBreadcrumbs(
     { id: activity.activityId, title: activity.title },

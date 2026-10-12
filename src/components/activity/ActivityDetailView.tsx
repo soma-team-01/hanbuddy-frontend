@@ -93,7 +93,7 @@ export function ActivityDetailView({
   /** 로그인 팝업에 이메일 로그인 링크를 함께 둘지 여부 */
   emailLoginEnabled?: boolean;
   /** 서버에서 미리 받은 후기 미리보기(공개 활동 상세만) */
-  initialReviews?: ReviewPageResponse;
+  initialReviews?: ReviewPageResponse | Promise<ReviewPageResponse | undefined>;
 }>) {
   const locale = useLocale();
   const t = useTranslations("ActivityDetail");

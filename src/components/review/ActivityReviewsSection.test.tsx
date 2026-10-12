@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getActivityReviews } from "@/lib/api/reviews";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -73,6 +73,53 @@ describe("ActivityReviewsSection", () => {
     expect(screen.getByText("31 reviews")).toBeInTheDocument();
     expect(screen.queryByText("Loading reviews...")).not.toBeInTheDocument();
     expect(mockedGetActivityReviews).not.toHaveBeenCalled();
+  });
+
+  it("keeps the section and its anchor in place while the server preview is still streaming", () => {
+    const { container } = renderWithQueryClient(
+      <ActivityReviewsSection
+        activityId={42}
+        id="reviews"
+        initialReviews={new Promise(() => {})}
+      />,
+    );
+
+    // 후기 응답을 기다리는 동안에도 본문 목차의 #reviews 이동이 깨지지 않게 섹션 틀을 먼저 그린다.
+    expect(container.querySelector("section#reviews")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Reviews" })).toBeInTheDocument();
+    expect(screen.getByText("Loading reviews...")).toBeInTheDocument();
+    expect(mockedGetActivityReviews).not.toHaveBeenCalled();
+  });
+
+  it("renders the streamed server preview without asking the browser to fetch it", async () => {
+    // use()로 promise를 기다렸다 다시 그리는 과정은 act 안에서 끝까지 진행시킨다.
+    await act(async () => {
+      renderWithQueryClient(
+        <ActivityReviewsSection
+          activityId={42}
+          initialReviews={Promise.resolve(createPage(0, 3, true))}
+        />,
+      );
+    });
+
+    expect(await screen.findByText("Loved every minute of it (1).")).toBeInTheDocument();
+    expect(screen.getByText("31 reviews")).toBeInTheDocument();
+    expect(mockedGetActivityReviews).not.toHaveBeenCalled();
+  });
+
+  it("lets the browser fetch the preview when the server could not stream one", async () => {
+    mockedGetActivityReviews.mockResolvedValue({
+      status: "success",
+      reviews: createPage(0, 3, false),
+    });
+    await act(async () => {
+      renderWithQueryClient(
+        <ActivityReviewsSection activityId={42} initialReviews={Promise.resolve(undefined)} />,
+      );
+    });
+
+    expect(await screen.findByText("Loved every minute of it (1).")).toBeInTheDocument();
+    expect(mockedGetActivityReviews).toHaveBeenCalledWith(42, 0, 3, "EN");
   });
 
   it("opens the full list in a dialog that pages twelve at a time", async () => {

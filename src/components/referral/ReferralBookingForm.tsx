@@ -453,7 +453,7 @@ export function ReferralBookingForm({
                   </p>
                 ) : null}
                 {notice.data && (
-                  <label className="flex min-h-11 items-center gap-2 text-xs leading-5 font-medium">
+                  <label className="flex min-h-11 cursor-pointer items-start gap-2 py-3 text-xs leading-5 font-medium text-ink lg:text-[13px]">
                     <input
                       type="checkbox"
                       aria-describedby="referral-sharing-details"
@@ -465,7 +465,7 @@ export function ReferralBookingForm({
                         setConsentChanged(false);
                       }}
                     />
-                    {t("consent")}
+                    <span>{t("consent")}</span>
                   </label>
                 )}
                 {consentChanged ? (

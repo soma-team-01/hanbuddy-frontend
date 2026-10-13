@@ -1683,8 +1683,7 @@
       "saveExit": "저장하고 나가기",
       "saveShort": "저장",
       "preview": "미리보기",
-      "register": "활동 등록",
-      "draftHint": "작성 내용은 이 브라우저 탭에 임시저장돼요. 등록은 미리보기에서 완료해 주세요."
+      "register": "활동 등록"
     },
     "steps": {
       "category": {

@@ -89,9 +89,9 @@ type DraftScalarField = Exclude<
   "photos" | "itinerary" | "schedules" | "discountType" | "hasNoRestrictions"
 >;
 
-type SubmissionPhase = "uploading" | "registering" | "draft";
+type SubmissionPhase = "uploading" | "registering";
 
-type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed" | "draftSaveFailed";
+type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed";
 
 function makeId(prefix: string, sequence: number) {
   return `${prefix}-${Date.now()}-${sequence}`;
@@ -933,39 +933,6 @@ export function CreateActivityForm({
     scrollToTop();
   }
 
-  async function saveAndExit() {
-    if (submissionInFlight.current || !isDraftPersistenceReady) return;
-    if (isEdit) {
-      await submitActivity();
-      return;
-    }
-    submissionInFlight.current = true;
-    setSubmissionPhase("draft");
-    setSubmissionError(null);
-    try {
-      await saveActivityCreateDraft(
-        persistenceScope,
-        {
-          currentStep,
-          furthestStepIndex,
-          draft,
-          errorKey,
-          reviewing,
-          fileSequence: fileSequence.current,
-          scheduleSequence: scheduleSequence.current,
-        },
-        { required: true },
-      );
-      // Stop delayed autosaves without deleting the explicitly preserved draft.
-      draftWasDiscarded.current = true;
-      router.push("/dashboard");
-    } catch (error) {
-      setSubmissionError({ error, fallbackKey: "draftSaveFailed" });
-      submissionInFlight.current = false;
-      setSubmissionPhase(null);
-    }
-  }
-
   function getStepTitle(step: ActivityCreateStep) {
     if (step === "languages") return t("languageStep.title");
     if (referral && step === "price") return t("price.referralTitle");
@@ -1147,7 +1114,6 @@ export function CreateActivityForm({
   const exitHref =
     isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/dashboard";
   let phaseLabel: string | null = null;
-  if (submissionPhase === "draft") phaseLabel = t("actions.submitSaving");
   if (submissionPhase === "uploading") phaseLabel = t("actions.submitUploading");
   if (submissionPhase === "registering") {
     phaseLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
@@ -1192,17 +1158,19 @@ export function CreateActivityForm({
               <LogOutIcon className="size-4" />
               <span className="hidden lg:inline">{t("actions.exit")}</span>
             </Link>
-            <button
-              type="button"
-              onClick={() => void saveAndExit()}
-              disabled={isSubmitting || !isDraftPersistenceReady}
-              aria-label={phaseLabel ?? t("mobileNavigation.saveExit")}
-              title={t("mobileNavigation.saveExit")}
-              aria-busy={isSubmitting}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:text-ink focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 lg:hidden"
-            >
-              <SaveIcon className="size-4" />
-            </button>
+            {isEdit ? (
+              <button
+                type="button"
+                onClick={() => void submitActivity()}
+                disabled={isSubmitting || !isDraftPersistenceReady}
+                aria-label={phaseLabel ?? t("mobileNavigation.saveExit")}
+                title={t("mobileNavigation.saveExit")}
+                aria-busy={isSubmitting}
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:text-ink focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 lg:hidden"
+              >
+                <SaveIcon className="size-4" />
+              </button>
+            ) : null}
           </div>
         </div>
       </header>
@@ -1231,11 +1199,6 @@ export function CreateActivityForm({
         disabled={isSubmitting}
         onNavigate={navigateMobileSection}
       />
-      {!isEdit ? (
-        <p className="shrink-0 px-4 py-1 text-xs leading-5 text-muted lg:hidden">
-          {t("mobileNavigation.draftHint")}
-        </p>
-      ) : null}
 
       <div className="flex min-h-0 flex-1">
         <ProgressRail

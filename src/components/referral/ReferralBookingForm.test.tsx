@@ -287,6 +287,12 @@ describe("referral application form", () => {
   it("keeps approval beside the action and uses a neutral numeric participant control", async () => {
     await ready();
     const bar = screen.getByTestId("bottom-action-bar");
+    for (const checkbox of within(bar).getAllByRole("checkbox")) {
+      const label = checkbox.closest("label");
+      expect(label).toHaveClass("items-start", "gap-2", "py-3", "leading-5");
+      expect(label).not.toHaveClass("px-1", "items-center");
+      expect(checkbox).toHaveClass("size-5", "shrink-0");
+    }
     expect(
       within(bar)
         .getByRole("checkbox", { name: /Buddy approval is required/i })

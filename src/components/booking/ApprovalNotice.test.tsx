@@ -25,6 +25,8 @@ it.each(Object.keys(messages) as Locale[])(
     expect(checkbox).toBeRequired();
     expect(checkbox).not.toBeChecked();
     expect(checkbox.closest("label")).toHaveClass("text-ink");
+    expect(checkbox.closest("label")).toHaveClass("items-start", "gap-2", "py-3");
+    expect(checkbox.closest("label")).not.toHaveClass("px-1", "items-center");
     fireEvent.click(checkbox);
     expect(onAgreedChange).toHaveBeenCalledWith(true);
   },

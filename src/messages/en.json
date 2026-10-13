@@ -1683,8 +1683,7 @@
       "saveExit": "Save and exit",
       "saveShort": "Save",
       "preview": "Preview",
-      "register": "Register activity",
-      "draftHint": "Drafts stay in this browser tab. Complete registration in Preview."
+      "register": "Register activity"
     },
     "steps": {
       "category": {

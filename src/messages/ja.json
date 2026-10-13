@@ -1683,8 +1683,7 @@
       "saveExit": "保存して終了",
       "saveShort": "保存",
       "preview": "プレビュー",
-      "register": "アクティビティを登録",
-      "draftHint": "下書きはこのブラウザのタブに保存されます。登録はプレビューから完了してください。"
+      "register": "アクティビティを登録"
     },
     "steps": {
       "category": {

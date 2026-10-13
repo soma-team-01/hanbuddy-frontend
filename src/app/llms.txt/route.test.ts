@@ -26,6 +26,7 @@ describe("llms.txt", () => {
     const body = await response.text();
 
     expect(response.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=3600");
     expect(body).toMatch(/^# HanBuddy\n\n> HanBuddy is a platform that connects/);
     expect(body).toContain(
       "- [⚾ Open-Air KBO Baseball Night](https://hanbuddy.kr/en/activities/2): Jamsil Baseball Stadium, 4 hours",
@@ -36,8 +37,11 @@ describe("llms.txt", () => {
   it("still serves the guide without the experiences section when activities are unavailable", async () => {
     vi.mocked(getPublicActivities).mockRejectedValue(new PublicActivityError("unavailable"));
 
-    const body = await (await GET()).text();
+    const response = await GET();
+    const body = await response.text();
 
+    // 복구된 뒤 활동이 빠진 안내문이 캐시에 남지 않게 한다.
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(body).toContain("## Main pages");
     expect(body).not.toContain("## Experiences");
   });

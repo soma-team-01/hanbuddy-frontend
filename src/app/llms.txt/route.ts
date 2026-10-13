@@ -19,8 +19,8 @@ function activityLine(activity: TouristActivitySummary): string {
 }
 
 export async function GET() {
-  // 활동 목록을 못 받으면 활동 절만 빼고 나머지 안내는 그대로 낸다.
-  const activities = await getPublicActivities("en").catch(() => []);
+  // 활동 목록을 못 받으면 활동 절만 빼고 나머지 안내는 그대로 낸다. 이 응답은 캐시하지 않는다.
+  const activities = await getPublicActivities("en").catch(() => null);
 
   const lines = [
     "# HanBuddy",
@@ -36,7 +36,7 @@ export async function GET() {
     `- [About](${APP_ORIGIN}/en/about): Who we are, how an experience runs, and the numbers so far.`,
     `- [FAQ](${APP_ORIGIN}/en/faq): Payment, meeting points, cancellation and what buddies do.`,
     "",
-    ...(activities.length > 0 ? ["## Experiences", "", ...activities.map(activityLine), ""] : []),
+    ...(activities?.length ? ["## Experiences", "", ...activities.map(activityLine), ""] : []),
     "## Other languages",
     "",
     `- [한국어](${APP_ORIGIN}/ko)`,
@@ -55,7 +55,7 @@ export async function GET() {
   return new Response(lines.join("\n"), {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": activities ? "public, max-age=3600" : "no-store",
     },
   });
 }

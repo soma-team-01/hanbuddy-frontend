@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useTranslations } from "next-intl";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
 import { Avatar } from "./Avatar";
@@ -10,6 +10,12 @@ export function ZoomableAvatar(props: Readonly<ComponentProps<typeof Avatar>>) {
   const t = useTranslations("Accessibility");
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    // Restore focus after the native modal is removed and the trigger is no longer inert.
+    if (!open && wasOpen.current) triggerRef.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
   if (!props.src) return <Avatar {...props} />;
 
   return (
@@ -33,7 +39,6 @@ export function ZoomableAvatar(props: Readonly<ComponentProps<typeof Avatar>>) {
           alt={props.name}
           onClose={() => {
             setOpen(false);
-            triggerRef.current?.focus();
           }}
         />
       ) : null}

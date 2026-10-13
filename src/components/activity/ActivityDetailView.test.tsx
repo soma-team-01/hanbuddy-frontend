@@ -7,6 +7,7 @@ import ko from "@/messages/ko.json";
 import ja from "@/messages/ja.json";
 import zhHans from "@/messages/zh-Hans.json";
 import zhHant from "@/messages/zh-Hant.json";
+import { getIntlLocale } from "@/i18n/routing";
 
 vi.mock("@/lib/api/activities", async (original) => ({
   ...(await original<typeof import("@/lib/api/activities")>()),
@@ -67,6 +68,61 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it.each([
+    ["zh-Hans", zhHans],
+    ["zh-Hant", zhHant],
+  ] as const)(
+    "uses the mapped Intl locale for the compact mobile date in %s",
+    (locale, messages) => {
+      const start = new Date("2099-10-15T08:30:00+09:00");
+      const formatter = new Intl.DateTimeFormat(getIntlLocale(locale), {
+        timeZone: "Asia/Seoul",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+      const expected = formatter.formatRange(start, new Date(start.getTime() + 5 * 60_000));
+      const OriginalDateTimeFormat = Intl.DateTimeFormat;
+      const spy = vi.spyOn(Intl, "DateTimeFormat").mockImplementation(function (locales, options) {
+        return new OriginalDateTimeFormat(locales, options);
+      });
+      try {
+        renderWithIntl(
+          <ActivityDetailView
+            activity={{
+              ...activity,
+              durationMinutes: 5,
+              sessions: [
+                {
+                  id: "future",
+                  startAt: start.toISOString(),
+                  dateKey: "2099-10-15",
+                  dateLabel: "10/15",
+                  timeLabel: "8:30",
+                  spotsLeft: 3,
+                },
+              ],
+            }}
+            preview
+          />,
+          { locale, messages },
+        );
+        fireEvent.click(screen.getByTestId("date-select-box"));
+        fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /8:30/ }));
+        expect(
+          within(screen.getByTestId("date-select-box")).getByText(expected, { exact: true }),
+        ).toHaveClass("md:hidden");
+        const compactCalls = spy.mock.calls.filter(
+          ([, options]) => options?.month === "numeric" && options?.minute === "2-digit",
+        );
+        expect(compactCalls.length).toBeGreaterThan(0);
+        expect(compactCalls.every(([value]) => value === getIntlLocale(locale))).toBe(true);
+      } finally {
+        spy.mockRestore();
+      }
+    },
+  );
   it.each([
     ["en", en],
     ["ko", ko],

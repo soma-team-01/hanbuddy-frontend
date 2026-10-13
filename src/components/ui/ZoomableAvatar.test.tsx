@@ -22,6 +22,24 @@ describe("ZoomableAvatar", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("restores focus only after the modal is removed, not while the trigger is inert", () => {
+    renderWithIntl(<ZoomableAvatar name="Alex" src="/avatar.jpg" />);
+    const trigger = screen.getByRole("button", { name: "Enlarge photo: Alex" });
+    expect(trigger).not.toHaveFocus();
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "Alex" });
+    const focus = trigger.focus.bind(trigger);
+    const connectedAtFocus: boolean[] = [];
+    vi.spyOn(trigger, "focus").mockImplementation(() => {
+      connectedAtFocus.push(dialog.isConnected);
+      // Model native modal inertness, which jsdom does not implement.
+      if (!dialog.isConnected) focus();
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close dialog" }));
+    expect(connectedAtFocus).toEqual([false]);
+    expect(trigger).toHaveFocus();
+  });
+
   it("keeps the underlying profile dialog open when the photo closes or is cancelled", () => {
     const closeProfile = vi.fn();
     const cancelProfile = vi.fn();

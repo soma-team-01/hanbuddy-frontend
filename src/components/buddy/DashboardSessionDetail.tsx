@@ -79,7 +79,6 @@ export function DashboardSessionDetail({
     history: records.filter(
       (item) =>
         item.status === "CANCELLED" ||
-        item.status === "SUPERSEDED" ||
         (isCancelled &&
           (item.status === "CONFIRMED" ||
             item.status === "COMPLETED" ||
@@ -285,9 +284,7 @@ function SessionApplicant({
   const approval = useTranslations("Approval");
   const contact = getApplicantContactParts(applicant, locale);
   const declined = isDeclinedApplicationStatus(applicant.status ?? "");
-  const isCancelled =
-    !declined &&
-    (cancelled || applicant.status === "CANCELLED" || applicant.status === "SUPERSEDED");
+  const isCancelled = !declined && (cancelled || applicant.status === "CANCELLED");
   const pending = !cancelled && applicant.status === "PENDING_APPROVAL";
   return (
     <li className="py-5">

@@ -271,6 +271,27 @@ describe("DashboardApplicationsList", () => {
     expect(await screen.findByText("No booking records on this date.")).toBeVisible();
     expect(screen.queryByRole("heading", { name: activity.activityTitle })).not.toBeInTheDocument();
   });
+  it("counts actual cancellations consistently in the list and detail, excluding superseded attempts", async () => {
+    const superseded = {
+      ...guest,
+      applicationId: 9,
+      applicantName: "Superseded attempt",
+      status: "SUPERSEDED" as const,
+    };
+    vi.mocked(getBuddyActivityApplications).mockImplementation(async (id) => ({
+      status: "success",
+      applications: detail(Number(id), Number(id) === 3 ? [cancelled, superseded] : [superseded]),
+    }));
+    renderList();
+    const row = await screen.findByRole("button", { name: /9:00 AM.*1 cancellation/ });
+    await waitFor(() => expect(getBuddyActivityApplications).toHaveBeenCalledTimes(16));
+    expect(screen.queryByText("8:00 AM")).not.toBeInTheDocument();
+    fireEvent.click(row);
+    const tab = screen.getByRole("button", { name: "Cancellations 1 booking" });
+    fireEvent.click(tab);
+    expect(screen.getByText("Cancelled Guest")).toBeVisible();
+    expect(screen.queryByText("Superseded attempt")).not.toBeInTheDocument();
+  });
   it("includes pending-only sessions and counts bookings separately from participant seats", async () => {
     vi.mocked(getBuddyActivityApplications).mockImplementation(async (id) => ({
       status: "success",

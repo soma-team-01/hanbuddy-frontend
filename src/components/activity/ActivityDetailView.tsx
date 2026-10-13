@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
+import { getIntlLocale } from "@/i18n/routing";
 import { formatSeoulDateWithWeekday } from "@/lib/datetime";
 import { formatDisplayCurrency, formatKrw } from "@/lib/format";
 import { ReferralPrice } from "@/components/referral/ReferralPrice";
@@ -203,7 +204,7 @@ export function ActivityDetailView({
   let mobileDateLabel = dateBoxLabel;
   if (selectedSession?.startAt && !Number.isNaN(Date.parse(selectedSession.startAt))) {
     const start = new Date(selectedSession.startAt);
-    const formatter = new Intl.DateTimeFormat(locale, {
+    const formatter = new Intl.DateTimeFormat(getIntlLocale(locale), {
       timeZone: "Asia/Seoul",
       month: "numeric",
       day: "numeric",

@@ -75,7 +75,7 @@ describe("ApplicantProfileDialog", () => {
   it.each([
     ["CONFIRMED", null],
     ["CANCELLED", "취소 시각"],
-    ["SUPERSEDED", "취소 시각"],
+    ["SUPERSEDED", null],
     ["REJECTED", "거절 시각"],
     ["EXPIRED", "자동 만료 시각"],
   ] as const)("shows accurate application timestamps for %s", (status, label) => {
@@ -94,6 +94,25 @@ describe("ApplicantProfileDialog", () => {
     expect(dialog).toHaveClass("max-h-[90dvh]", "overflow-y-auto");
     fireEvent.click(within(dialog).getByRole("button", { name: "대화상자 닫기" }));
     expect(close).toHaveBeenCalledOnce();
+  });
+
+  it("does not label a superseded attempt as a guest cancellation", () => {
+    renderWithQueryClient(
+      <ApplicantProfileDialog
+        applicant={{
+          ...applicant,
+          status: "SUPERSEDED",
+          cancellationReason: "OTHER",
+          cancellationDetail: "Old attempt",
+        }}
+        locale="ko"
+        onClose={vi.fn()}
+      />,
+      { locale: "ko" },
+    );
+    expect(screen.queryByText("취소됨")).not.toBeInTheDocument();
+    expect(screen.queryByText("Old attempt")).not.toBeInTheDocument();
+    expect(screen.queryByText(/취소 시각:/)).not.toBeInTheDocument();
   });
 
   it.each([null, undefined, "invalid"])(

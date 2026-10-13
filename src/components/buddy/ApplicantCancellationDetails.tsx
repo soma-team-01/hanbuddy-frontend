@@ -22,7 +22,7 @@ export function ApplicantCancellationDetails({
   const statusLabel = useTranslations("Status");
   const applications = useTranslations("Applications");
   const declined = isDeclinedApplicationStatus(applicant.status ?? "");
-  const cancelled = applicant.status === "CANCELLED" || applicant.status === "SUPERSEDED";
+  const cancelled = applicant.status === "CANCELLED";
   const reason = applicant.cancellationReason;
   const reasonKeys = {
     SCHEDULE_CONFLICT: "scheduleConflict",

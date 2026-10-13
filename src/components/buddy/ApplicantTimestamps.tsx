@@ -18,7 +18,7 @@ export function ApplicantTimestamps({
       ? "rejectedAt"
       : applicant.status === "EXPIRED"
         ? "expiredAt"
-        : applicant.status === "CANCELLED" || applicant.status === "SUPERSEDED"
+        : applicant.status === "CANCELLED"
           ? "cancelledAt"
           : null;
   const closedAt =

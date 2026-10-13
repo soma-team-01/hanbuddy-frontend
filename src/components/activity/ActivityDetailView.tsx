@@ -3,6 +3,7 @@
 import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
 import { ActivityPriceTiers } from "@/components/activity/ActivityPriceTiers";
 import { LazyMapFrame } from "@/components/activity/LazyMapFrame";
+import { SessionWeatherSummary } from "@/components/activity/SessionWeatherSummary";
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
@@ -199,17 +200,20 @@ export function ActivityDetailView({
     dateBoxLabel = t("noDates");
   }
   const dateBoxDisabled = bookableSessions.length === 0;
-  const mobileDateLabel = selectedSession
-    ? selectedSession.startAt && !Number.isNaN(Date.parse(selectedSession.startAt))
-      ? new Intl.DateTimeFormat(locale, {
-          month: "numeric",
-          day: "numeric",
-          timeZone: "Asia/Seoul",
-        }).format(new Date(selectedSession.startAt))
-      : selectedSession.dateLabel
-    : dateBoxDisabled
-      ? t("noDates")
-      : t("selectDateCompact");
+  let mobileDateLabel = dateBoxLabel;
+  if (selectedSession?.startAt && !Number.isNaN(Date.parse(selectedSession.startAt))) {
+    const start = new Date(selectedSession.startAt);
+    const formatter = new Intl.DateTimeFormat(locale, {
+      timeZone: "Asia/Seoul",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    mobileDateLabel = activity.durationMinutes
+      ? formatter.formatRange(start, new Date(start.getTime() + activity.durationMinutes * 60_000))
+      : formatter.format(start);
+  }
   const bookingPath = selectedSession
     ? `/activities/${activity.id}/book?scheduleId=${selectedSession.id}`
     : null;
@@ -265,26 +269,23 @@ export function ActivityDetailView({
       title={dateBoxLabel}
       onClick={() => setCalendarOpen(true)}
       disabled={dateBoxDisabled}
-      className={`flex h-11 w-full min-w-0 items-center justify-between gap-1.5 rounded-xl border border-line-strong bg-canvas-soft px-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:h-12 md:flex-1 md:gap-2 md:px-4 ${
+      className={`flex min-h-11 w-full min-w-0 items-center justify-between gap-1.5 rounded-xl border border-line-strong bg-canvas-soft px-2 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 md:min-h-12 md:flex-1 md:gap-2 md:px-4 ${
         selectedSession
           ? "text-ink enabled:hover:border-ink"
           : "text-muted enabled:hover:border-ink enabled:hover:text-ink"
       }`}
     >
-      <span className="min-w-0 text-xs leading-4 font-semibold md:hidden">
-        <span className="block truncate">{mobileDateLabel}</span>
-        {selectedSession && (
-          <span className="block truncate font-normal text-muted">{selectedSession.timeLabel}</span>
-        )}
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] leading-4 font-semibold md:gap-x-3 md:text-sm">
+        <span className="md:hidden">{mobileDateLabel}</span>
+        <span className="hidden md:inline">{dateBoxLabel}</span>
+        <SessionWeatherSummary session={selectedSession} weather={weather} />
       </span>
-      <span className="hidden truncate text-sm font-semibold md:block">{dateBoxLabel}</span>
       <CalendarDaysIcon className="size-4 shrink-0 text-primary md:size-5" />
     </button>
   );
   const bottomBarContent = (
     <div className="mx-auto grid w-full max-w-[840px] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 md:flex md:gap-4">
       {dateControl}
-      {/* 날짜·가격·예약을 모바일에서도 한 행으로 유지한다. */}
       <div data-testid="booking-bar-actions" className="contents">
         {activity.activityType === "REFERRAL" ? (
           <ReferralPrice
@@ -458,11 +459,6 @@ export function ActivityDetailView({
                     {t("autoTranslated")}
                   </p>
                 )}
-                <p className="font-display text-xs font-bold tracking-[0.14em] text-primary uppercase">
-                  {activity.categoryLabel
-                    ? `${activity.district} · ${activity.categoryLabel}`
-                    : activity.district}
-                </p>
                 <h1 className="font-display text-3xl leading-tight font-extrabold tracking-[-0.04em] text-ink md:text-5xl">
                   {activity.title}
                 </h1>
@@ -509,9 +505,8 @@ export function ActivityDetailView({
                   />
                   <div className="min-w-0">
                     <h3 className="font-display text-sm font-bold text-ink max-md:text-[13px]">
-                      {t("host", { name: activity.host.name })}
+                      {activity.host.name}
                     </h3>
-                    <p className="text-xs text-muted">{activity.host.bio}</p>
                   </div>
                 </button>
                 <button
@@ -724,7 +719,6 @@ export function ActivityDetailView({
           preferredDate={preferredDate}
           selectedSessionId={selectedSessionId}
           durationMinutes={activity.durationMinutes}
-          weather={weather}
           onSelectSession={handleCalendarSelect}
           onClose={() => setCalendarOpen(false)}
         />

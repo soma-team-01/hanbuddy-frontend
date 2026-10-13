@@ -17,7 +17,7 @@ it.each(["ko", "ja", "zh-Hans", "zh-Hant"] as const)(
   "localizes both declined states in %s",
   (locale) => {
     const labels = {
-      ko: "거절됨",
+      ko: "거절",
       ja: "お断り",
       "zh-Hans": "已拒绝",
       "zh-Hant": "已拒絕",

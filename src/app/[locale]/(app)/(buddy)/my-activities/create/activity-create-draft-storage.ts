@@ -346,8 +346,12 @@ export function getActivityCreateDraftScope(mode: "create" | "edit", activityId?
 export async function saveActivityCreateDraft(
   scope: string,
   snapshot: ActivityCreateDraftSnapshot,
+  options: { required?: boolean } = {},
 ) {
-  if (!canPersistDraft()) return;
+  if (!canPersistDraft()) {
+    if (options.required) throw new Error("Activity draft storage is unavailable.");
+    return;
+  }
   const id = getOrCreateRecordId(scope);
   const photoRecords = collectPhotoRecords(snapshot);
   const photoFileIds = photoRecords.map((photo) => photo.id);

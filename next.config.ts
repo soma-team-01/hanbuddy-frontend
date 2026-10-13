@@ -21,6 +21,8 @@ export const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Keep local responsive QA unobstructed; compile/runtime error overlays still work.
+  devIndicators: false,
   poweredByHeader: false,
   async headers() {
     return [{ source: "/:path*", headers: [...SECURITY_HEADERS] }];

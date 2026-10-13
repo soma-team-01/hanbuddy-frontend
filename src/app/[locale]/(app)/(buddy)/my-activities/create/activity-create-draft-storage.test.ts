@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { EMPTY_ACTIVITY_DRAFT } from "./activity-create-wizard";
 import {
   getActivityCreateDraftScope,
   isActivityCreateDraftRecord,
+  saveActivityCreateDraft,
 } from "./activity-create-draft-storage";
 
 const validRecord = {
@@ -23,6 +24,20 @@ const validRecord = {
 };
 
 describe("activity create draft storage", () => {
+  it("does not silently report success when explicit saving is unavailable", async () => {
+    vi.stubGlobal("indexedDB", undefined);
+    try {
+      await expect(
+        saveActivityCreateDraft(
+          "create",
+          { ...validRecord.snapshot, currentStep: "host" },
+          { required: true },
+        ),
+      ).rejects.toThrow("unavailable");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
   it("separates creation and activity edit draft scopes", () => {
     expect(getActivityCreateDraftScope("create")).toBe("create");
     expect(getActivityCreateDraftScope("edit", "42")).toBe("edit:42");

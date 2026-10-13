@@ -89,17 +89,17 @@ function RowCard({ activity, eagerImage }: CardProps) {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <h2 className="line-clamp-2 font-display text-base leading-snug font-bold wrap-break-word break-keep text-ink md:text-lg lg:text-xl">
+          {activity.title}
+        </h2>
         {meetingPlace ? (
           <div
             data-slot="activity-card-location"
-            className="truncate text-xs leading-4 font-semibold tracking-wide text-muted uppercase"
+            className="mt-1 truncate text-sm leading-5 text-muted"
           >
             {meetingPlace}
           </div>
         ) : null}
-        <h2 className="mt-1 line-clamp-2 font-display text-base leading-snug font-bold wrap-break-word break-keep text-ink md:text-lg lg:text-xl">
-          {activity.title}
-        </h2>
         {activity.durationMinutes !== undefined ? (
           <p className="mt-1 text-sm leading-5 text-muted">
             {formatDuration(t, activity.durationMinutes)}

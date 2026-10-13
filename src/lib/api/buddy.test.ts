@@ -325,6 +325,19 @@ describe("buddy API client", () => {
           status: "CONFIRMED",
           specialRequest: "No pork",
           appliedAt: "2026-07-07T10:00:00Z",
+          cancelledAt: null,
+        },
+        {
+          ...applicantSummary,
+          applicationId: 98,
+          status: "CANCELLED",
+          cancelledAt: "2026-07-08T12:30:00+09:00",
+        },
+        {
+          ...applicantSummary,
+          applicationId: 99,
+          status: "REJECTED",
+          cancelledAt: "2026-07-08T13:30:00+09:00",
         },
       ],
     };

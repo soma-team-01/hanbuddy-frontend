@@ -14,6 +14,7 @@
     "approve": "Approve",
     "reject": "Decline",
     "deadline": "Approval deadline: {date}",
+    "deadlineCompact": "Approve by {date}",
     "processing": "Processing",
     "expired": "The approval deadline has passed. Checking status.",
     "paid": "Payment complete · Awaiting buddy approval",
@@ -67,6 +68,7 @@
     "payoutColumn": "Payout / person",
     "tableNote": "Before period discounts · Base price outside these ranges",
     "basePayout": "Estimated payout per person {amount}",
+    "commissionDeducted": "{rate} fee deducted",
     "enable": "Set group prices",
     "hint": "Enter the per-person price for everyone in one application. The base price applies outside these ranges. Any period discount applies on top.",
     "range": "Price tier {count}",
@@ -230,6 +232,7 @@
     }
   },
   "ScheduleCancellation": {
+    "cancellationFeeWarning": "If you cancel without a valid reason, a 20% cancellation fee will be deducted from your payout.",
     "referralIrreversible": "Cancelled sessions cannot reopen or accept new applications. Please notify applicants. Check any payments made directly to the provider separately.",
     "referralSuccess": "The session has been cancelled.",
     "refundAmount": "Refund amount",
@@ -400,7 +403,8 @@
   "Accessibility": {
     "goBack": "Go back",
     "close": "Close",
-    "closeDialog": "Close dialog"
+    "closeDialog": "Close dialog",
+    "enlargePhoto": "Enlarge photo: {name}"
   },
   "Status": {
     "declined": "Declined",
@@ -1069,6 +1073,7 @@
     "soldOut": "Sold out"
   },
   "ActivityDetail": {
+    "timePeriods": { "morning": "Morning", "afternoon": "Afternoon" },
     "selectDateCompact": "Date",
     "bookCompact": "Book",
     "loading": "Loading activity...",
@@ -1418,6 +1423,7 @@
     "memberCount": "{count, plural, one {# member} other {# members}}",
     "leftMember": "left",
     "messagePlaceholder": "Recipients see a translation when available; otherwise, they see the original.",
+    "messagePlaceholderShort": "Auto-translation",
     "messageLabel": "Message",
     "send": "Send",
     "sending": "Sending...",
@@ -1514,6 +1520,25 @@
     "kstNotice": "All times are in Korea Standard Time (KST)."
   },
   "BuddyDashboard": {
+    "applicationViews": "Application records",
+    "noMatchingApplications": "No applications in this category.",
+    "recordCount": "{count, plural, one {# booking} other {# bookings}}",
+    "sessions": "Sessions",
+    "sessionCount": "{count, plural, one {# session} other {# sessions}}",
+    "backToSessions": "Back to sessions",
+    "cancellationCount": "{count, plural, one {# cancellation} other {# cancellations}}",
+    "noSessionParticipants": "No confirmed participants for this session.",
+    "noSessionCancellations": "No cancellations for this session.",
+    "refreshRecords": "Refresh records",
+    "noSessionRecords": "No booking records on this date.",
+    "sessionDetails": "Session details",
+    "participants": "Participants",
+    "cancellationHistory": "Cancellations",
+    "recordsLoadError": "Could not refresh session records. Cancellation history may be unavailable.",
+    "retryRecords": "Try again",
+    "loadingRecords": "Checking session records…",
+    "cancelledRecord": "Cancelled",
+    "hostCancelled": "Session cancelled by the host",
     "title": "Buddy dashboard",
     "description": "Stay on top of upcoming schedules and guest applications.",
     "createActivity": "Create Activity",
@@ -1614,6 +1639,10 @@
     "sectionCancelled": "Cancelled bookings",
     "guestApplicantCount": "{count, plural, one {# applicant} other {# applicants}}",
     "appliedOn": "Applied on {date}",
+    "appliedAt": "Applied at: {date}",
+    "cancelledAt": "Cancelled at: {date}",
+    "rejectedAt": "Declined at: {date}",
+    "expiredAt": "Automatically expired at: {date}",
     "confirmedCount": "{count, plural, one {# confirmed} other {# confirmed}}",
     "pendingCount": "{count, plural, one {# pending payment} other {# pending payment}}",
     "guestCount": "{count, plural, one {# guest} other {# guests}}",
@@ -1633,6 +1662,30 @@
     "title": "Design your HanBuddy experience",
     "progress": "Step {current, number} of {total, number}",
     "progressLabel": "Activity creation progress",
+    "mobileNavigation": {
+      "steps": {
+        "host": "About you",
+        "languages": "Languages",
+        "name": "Title",
+        "description": "Description",
+        "photos": "Photos",
+        "itinerary": "Itinerary",
+        "meeting": "Location",
+        "schedule": "Dates",
+        "capacity": "Guests",
+        "price": "Price",
+        "quantity": "Group pricing",
+        "discount": "Discount",
+        "inclusions": "Included",
+        "restrictions": "Requirements"
+      },
+      "label": "Jump to section",
+      "saveExit": "Save and exit",
+      "saveShort": "Save",
+      "preview": "Preview",
+      "register": "Register activity",
+      "draftHint": "Drafts stay in this browser tab. Complete registration in Preview."
+    },
     "steps": {
       "category": {
         "title": "Choose a category",
@@ -1732,6 +1785,7 @@
       "experienceName": "Use a short, specific name that tells guests what makes it special.",
       "meetingAddress": "Search for an address and select it from the suggestions.",
       "meetingPlace": "Use a short recognizable name, separate from the address.",
+      "meetingPlaceMobile": "Use a short, recognizable place name.",
       "onePerLine": "Enter one item per line.",
       "restrictionsList": "Add one thing guests should know at a time.",
       "characters": "{count, number} characters entered",
@@ -1755,7 +1809,7 @@
       "duration": "e.g., 30",
       "maxGuests": "e.g., 8",
       "pricePerPerson": "e.g., 50000",
-      "inclusionsCustom": "e.g., Team cap",
+      "inclusionsCustom": "Enter any other items provided",
       "inclusions": "Ticket\nWelcome snack\nCheering kit",
       "discount": "e.g., 10",
       "restrictions": "e.g., Comfortable shoes are recommended"
@@ -1775,14 +1829,15 @@
       "remove": "Remove experience photo {index, number}"
     },
     "itinerary": {
+      "actions": "Item {index, number} actions",
       "item": "Item {index, number}",
-      "remove": "Remove item {index, number}",
+      "remove": "Delete",
       "titleCount": "{count, number}/{max, number} characters",
       "descriptionCount": "{count, number}/{max, number} characters · minimum {min, number}",
       "addPhoto": "Add an activity photo",
       "photoLabel": "Upload a photo for activity {index, number}",
       "add": "Add an item",
-      "edit": "Edit item {index, number}",
+      "edit": "Edit",
       "untitled": "New item",
       "incomplete": "Add the details",
       "durationSummary": "{minutes, number} min",
@@ -1883,6 +1938,7 @@
         "drinks": "Specialty drinks",
         "transport": "Public transportation",
         "parking": "Parking",
+        "serviceFee": "Service fee",
         "equipment": "Equipment rental",
         "souvenir": "Special souvenir"
       }
@@ -1961,6 +2017,7 @@
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",
       "imageUploadFailed": "We couldn't upload your photos. Please try again.",
       "submissionFailed": "We couldn't register your experience. Please try again.",
+      "draftSaveFailed": "Could not save your draft. Your input is still here. Please try again before leaving.",
       "scheduleInPast": "Some selected dates or start times have already passed. Choose future sessions only.",
       "maxGuestsTooMany": "Capacity can be at most 100 guests.",
       "itineraryTooMany": "You can add up to 20 itinerary activities.",

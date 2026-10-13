@@ -300,9 +300,9 @@ describe("referral application form", () => {
     expect(
       within(bar).getByRole("checkbox", { name: /share personal data/i }),
     ).toHaveAccessibleName("I agree to share personal data with the provider.");
-    expect(screen.getByRole("button", { name: "Date and time" }).querySelector("span")).toHaveClass(
-      "text-ink",
-    );
+    expect(
+      within(screen.getByRole("button", { name: "Date and time" })).getByText(/Oct 10/),
+    ).toHaveClass("text-ink");
     expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
     expect(screen.getByRole("status", { name: "1 participant" })).toHaveClass("text-xl");
     for (const count of screen.getAllByText("1 participant")) {

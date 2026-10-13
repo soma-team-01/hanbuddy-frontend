@@ -9,7 +9,7 @@ import { getContentLanguage } from "@/lib/content-language";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { isPaymentProviderVisible, PAYMENT_PROVIDER_MODE } from "@/lib/payment-provider-visibility";
-import { touristActivityQueryOptions } from "@/lib/query/activities";
+import { activityWeatherQueryOptions, touristActivityQueryOptions } from "@/lib/query/activities";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import type { TouristActivityDetail } from "@/types/activity";
 import type { PolicyDocumentData } from "@/types/policy";
@@ -40,6 +40,11 @@ export function BookingContent({
   const activityQuery = useQuery(
     touristActivityQueryOptions(activityId, language, displayCurrency),
   );
+  const weatherQuery = useQuery({
+    ...activityWeatherQueryOptions(activityId),
+    enabled: activityQuery.isSuccess,
+  });
+  const weather = weatherQuery.data?.available ? weatherQuery.data : undefined;
   // 화면 참고 가격과 별개로 PayPal 버튼에는 실제 결제 통화인 USD 예상액을 표시한다.
   const payPalActivityQuery = useQuery({
     ...touristActivityQueryOptions(activityId, language, "USD"),
@@ -83,11 +88,18 @@ export function BookingContent({
   }
 
   if (activity.activityType === "REFERRAL")
-    return <ReferralBookingForm activity={activity} initialSessionId={initialScheduleId} />;
+    return (
+      <ReferralBookingForm
+        activity={activity}
+        initialSessionId={initialScheduleId}
+        weather={weather}
+      />
+    );
 
   return (
     <BookingForm
       activity={activity}
+      weather={weather}
       initialSessionId={initialScheduleId}
       initialGuestCount={initialGuestCount}
       payPalPricePending={payPalPricePending}

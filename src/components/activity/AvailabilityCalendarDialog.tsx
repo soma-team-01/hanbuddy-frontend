@@ -14,7 +14,7 @@ import {
   SunIcon,
   XIcon,
 } from "@/components/ui/icons";
-import { formatSeoulTime, getSeoulNowParts } from "@/lib/datetime";
+import { formatSeoulTime, getSeoulDateTimeParts, getSeoulNowParts } from "@/lib/datetime";
 import { getIntlLocale, type Locale } from "@/i18n/routing";
 import type {
   ActivityWeatherForecast,
@@ -42,6 +42,16 @@ export function formatSessionTimeRange(
 }
 
 const WEEK_LENGTH = 7;
+
+export const WEATHER_CONDITION_KEYS = {
+  CLEAR: "clear",
+  PARTLY_CLOUDY: "partlyCloudy",
+  CLOUDY: "cloudy",
+  RAIN: "rain",
+  RAIN_SNOW: "rainSnow",
+  SNOW: "snow",
+  SHOWER: "shower",
+} as const satisfies Record<WeatherCondition, string>;
 
 export function getSessionWeather(
   session: Session,
@@ -156,7 +166,6 @@ export function AvailabilityCalendarDialog({
   selectedSessionId,
   preferredDate,
   durationMinutes,
-  weather,
   onSelectSession,
   onClose,
 }: Readonly<{
@@ -166,8 +175,6 @@ export function AvailabilityCalendarDialog({
   preferredDate?: string;
   /** 총 소요시간(분) — 시간대의 종료 시간 표시에 사용 */
   durationMinutes?: number;
-  /** 활동 장소의 기상청 시간별 예보. 없거나 사용 불가이면 일정만 표시한다 */
-  weather?: ActivityWeatherResult;
   /** 시간대 선택 시 호출 — 호출부가 하단 바 선택을 갱신하고 다이얼로그를 닫는다 */
   onSelectSession: (sessionId: string) => void;
   onClose: () => void;
@@ -252,13 +259,6 @@ export function AvailabilityCalendarDialog({
       }),
     [locale],
   );
-  const weatherTemperatureFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(getIntlLocale(locale), {
-        maximumFractionDigits: 1,
-      }),
-    [locale],
-  );
   // 2023-01-01은 일요일 — 일~토 순서의 요일 표기를 만든다
   const weekdayLabels = Array.from({ length: WEEK_LENGTH }, (_, index) =>
     weekdayFormatter.format(new Date(Date.UTC(2023, 0, 1 + index))),
@@ -272,18 +272,24 @@ export function AvailabilityCalendarDialog({
     (dateKey) => toMonthKey(dateKey) === viewMonth,
   );
   const selectedSessions = selectedDate ? (sessionsByDate.get(selectedDate) ?? []) : [];
-  const weatherConditionLabels: Record<WeatherCondition, string> = {
-    CLEAR: t("weatherConditions.clear"),
-    PARTLY_CLOUDY: t("weatherConditions.partlyCloudy"),
-    CLOUDY: t("weatherConditions.cloudy"),
-    RAIN: t("weatherConditions.rain"),
-    RAIN_SNOW: t("weatherConditions.rainSnow"),
-    SNOW: t("weatherConditions.snow"),
-    SHOWER: t("weatherConditions.shower"),
-  };
-  const hasVisibleWeather = selectedSessions.some(
-    (session) => getSessionWeather(session, weather) !== null,
-  );
+  const periods = ["morning", "afternoon", "other"] as const;
+  const sessionsByPeriod = selectedSessions
+    .toSorted((a, b) => {
+      const left = a.startAt ? Date.parse(a.startAt) : NaN;
+      const right = b.startAt ? Date.parse(b.startAt) : NaN;
+      if (!Number.isFinite(left)) return Number.isFinite(right) ? 1 : 0;
+      if (!Number.isFinite(right)) return -1;
+      return left - right;
+    })
+    .reduce<Record<(typeof periods)[number], Session[]>>(
+      (groups, session) => {
+        const time = session.startAt ? getSeoulDateTimeParts(session.startAt)?.time : undefined;
+        const period = time ? (Number(time.slice(0, 2)) < 12 ? "morning" : "afternoon") : "other";
+        groups[period].push(session);
+        return groups;
+      },
+      { morning: [], afternoon: [], other: [] },
+    );
 
   function formatCellDate(dateKey: string) {
     return cellDateFormatter.format(
@@ -302,7 +308,7 @@ export function AvailabilityCalendarDialog({
       ref={dialogRef}
       aria-labelledby="availability-calendar-title"
       onClose={onClose}
-      className="motion-dialog m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-md md:rounded-2xl md:p-7"
+      className="motion-dialog m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-xl md:rounded-2xl md:p-7"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -321,7 +327,7 @@ export function AvailabilityCalendarDialog({
         </button>
       </div>
 
-      <div className="mt-5 flex items-center justify-between">
+      <div className="mt-5 flex items-center justify-between md:mx-auto md:max-w-sm">
         <button
           type="button"
           aria-label={t("previousMonth")}
@@ -343,7 +349,7 @@ export function AvailabilityCalendarDialog({
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-1 text-center">
+      <div className="mt-3 grid grid-cols-7 gap-1 text-center md:mx-auto md:max-w-sm">
         {weekdayLabels.map((label) => (
           <span key={label} className="py-1 text-xs font-semibold text-muted">
             {label}
@@ -392,83 +398,58 @@ export function AvailabilityCalendarDialog({
       {selectedDate ? (
         <div className="mt-5 border-t border-line-soft pt-4">
           <p className="font-display text-sm font-bold text-ink">{t("availableTimes")}</p>
-          <ul className="mt-3 flex flex-col gap-2">
-            {selectedSessions.map((session) => {
-              const slotSelected = session.id === selectedSessionId;
-              const sessionWeather = getSessionWeather(session, weather);
-              const weatherTooltipId = `weather-tooltip-${session.id}`;
+          {periods
+            .filter((period) => sessionsByPeriod[period].length > 0)
+            .map((period) => (
+              <div
+                key={period}
+                role="group"
+                aria-label={period === "other" ? t("availableTimes") : t(`timePeriods.${period}`)}
+                className="mt-4"
+              >
+                {period !== "other" ? (
+                  <p className="mb-2 text-xs font-semibold text-muted">
+                    {t(`timePeriods.${period}`)}
+                  </p>
+                ) : null}
+                <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-3">
+                  {sessionsByPeriod[period].map((session) => {
+                    const slotSelected = session.id === selectedSessionId;
+                    const timeRange = formatSessionTimeRange(session, durationMinutes, locale);
+                    const endTime =
+                      timeRange === session.timeLabel
+                        ? null
+                        : timeRange.slice(session.timeLabel.length).trim();
 
-              return (
-                <li key={session.id}>
-                  <button
-                    type="button"
-                    disabled={session.spotsLeft === 0}
-                    aria-pressed={slotSelected}
-                    aria-describedby={sessionWeather ? weatherTooltipId : undefined}
-                    onClick={() => onSelectSession(session.id)}
-                    className={`group/slot flex w-full items-center justify-between rounded-xl border px-4 py-3 transition-colors disabled:cursor-not-allowed ${
-                      slotSelected
-                        ? "border-primary bg-primary text-on-primary"
-                        : "border-line-soft bg-canvas-soft text-ink enabled:hover:border-primary enabled:hover:text-primary disabled:bg-panel disabled:text-muted"
-                    }`}
-                  >
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      {sessionWeather ? (
-                        <span className="group/weather relative flex shrink-0 items-center">
-                          <span
-                            role="img"
-                            aria-label={weatherConditionLabels[sessionWeather.condition]}
-                            className={`flex items-center justify-center ${
-                              slotSelected ? "size-7 rounded-full bg-white shadow-sm" : "size-5"
-                            } ${getWeatherIconColor(sessionWeather.condition)}`}
-                          >
-                            <WeatherConditionIcon
-                              condition={sessionWeather.condition}
-                              className="size-5 shrink-0"
-                            />
+                    return (
+                      <li key={session.id} className="min-w-0">
+                        <button
+                          type="button"
+                          disabled={session.spotsLeft === 0}
+                          aria-pressed={slotSelected}
+                          aria-label={`${timeRange}, ${t("remaining", { count: session.spotsLeft })}`}
+                          title={timeRange}
+                          onClick={() => onSelectSession(session.id)}
+                          className={`flex h-full min-h-20 w-full flex-col items-center justify-center gap-1 rounded-lg border px-1.5 py-2.5 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed ${
+                            slotSelected
+                              ? "border-primary bg-primary-soft text-primary-strong ring-1 ring-primary"
+                              : "border-line-soft bg-canvas-soft text-ink enabled:hover:border-primary enabled:hover:text-primary disabled:bg-panel disabled:text-muted"
+                          }`}
+                        >
+                          <span className="font-display text-sm leading-5 font-semibold">
+                            {session.timeLabel}
                           </span>
-                          <span
-                            id={weatherTooltipId}
-                            role="tooltip"
-                            className="invisible absolute bottom-full left-0 z-20 mb-2 w-max max-w-56 rounded-lg bg-ink px-3 py-2 text-left font-sans text-xs text-white opacity-0 shadow-lg transition-opacity group-hover/weather:visible group-hover/weather:opacity-100 group-focus-visible/slot:visible group-focus-visible/slot:opacity-100"
-                          >
-                            <span className="block font-bold">
-                              {weatherConditionLabels[sessionWeather.condition]}
-                            </span>
-                            <span className="mt-1 block text-white/85">
-                              {t("weatherTemperature", {
-                                temperature: weatherTemperatureFormatter.format(
-                                  sessionWeather.temperatureCelsius,
-                                ),
-                              })}
-                            </span>
-                            <span className="block text-white/85">
-                              {sessionWeather.precipitationProbability === null
-                                ? t("weatherPrecipitationUnavailable")
-                                : t("weatherPrecipitation", {
-                                    percent: sessionWeather.precipitationProbability,
-                                  })}
-                            </span>
+                          {endTime ? <span className="text-xs text-muted">{endTime}</span> : null}
+                          <span className="text-xs text-muted">
+                            {t("remaining", { count: session.spotsLeft })}
                           </span>
-                        </span>
-                      ) : null}
-                      <span className="font-display text-sm font-bold">
-                        {formatSessionTimeRange(session, durationMinutes, locale)}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs font-semibold">
-                      {t("remaining", { count: session.spotsLeft })}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          {hasVisibleWeather ? (
-            <p className="mt-3 text-right text-[11px] font-medium text-muted">
-              {t("weatherAttribution")}
-            </p>
-          ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
         </div>
       ) : null}
     </dialog>

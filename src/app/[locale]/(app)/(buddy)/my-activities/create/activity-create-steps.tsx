@@ -2,24 +2,26 @@
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  BusIcon,
   CameraIcon,
   CheckIcon,
   ChevronDownIcon,
-  CompassIcon,
   ImagePlusIcon,
   MapPinIcon,
-  MartiniIcon,
   MinusIcon,
+  MoreHorizontalIcon,
   PencilIcon,
-  PlaneIcon,
   PlusIcon,
   SearchIcon,
-  ShoppingBagIcon,
+  RunSprintIcon,
+  ServiceUserIcon,
   SparklesIcon,
+  TicketIcon,
+  ToolIcon,
   TrashIcon,
   UserMinusIcon,
   UsersIcon,
@@ -56,19 +58,17 @@ import { usePhotoSort } from "./use-photo-sort";
 type Translator = ReturnType<typeof useTranslations<"CreateActivity">>;
 
 const INCLUSION_OPTIONS = [
-  { key: "tickets", Icon: CompassIcon },
+  { key: "tickets", Icon: TicketIcon },
   { key: "meal", Icon: UtensilsIcon },
-  { key: "snacks", Icon: ShoppingBagIcon },
-  { key: "drinks", Icon: MartiniIcon },
-  { key: "transport", Icon: PlaneIcon },
-  { key: "parking", Icon: MapPinIcon },
-  { key: "equipment", Icon: CompassIcon },
+  { key: "transport", Icon: BusIcon },
+  { key: "serviceFee", Icon: ServiceUserIcon },
+  { key: "equipment", Icon: ToolIcon },
   { key: "souvenir", Icon: SparklesIcon },
 ] as const;
 
 const RESTRICTION_OPTIONS = [
   { key: "age", Icon: UsersIcon },
-  { key: "activity", Icon: CompassIcon },
+  { key: "activity", Icon: RunSprintIcon },
   { key: "accessibility", Icon: UserMinusIcon },
   { key: "allergy", Icon: UtensilsIcon },
 ] as const;
@@ -81,7 +81,7 @@ export function Field({
   label,
   children,
   hint,
-}: Readonly<{ label: string; children: ReactNode; hint?: string }>) {
+}: Readonly<{ label: string; children: ReactNode; hint?: ReactNode }>) {
   return (
     <div className="grid gap-2.5 text-sm text-ink">
       <label className="grid gap-2.5 font-semibold">
@@ -238,14 +238,9 @@ export function PhotoStep({
   const draggedPhoto = photos.find((photo) => photo.id === preview?.id);
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-4 text-sm">
-        <span className="font-semibold text-ink">
-          {t("photos.count", { count: photos.length })}
-        </span>
-        {photos.length < ACTIVITY_CREATE_LIMITS.photos.min ? (
-          <span className="text-muted">{t("photos.minimum")}</span>
-        ) : null}
-      </div>
+      {photos.length < ACTIVITY_CREATE_LIMITS.photos.min ? (
+        <p className="text-sm text-muted">{t("photos.minimum")}</p>
+      ) : null}
       <p id={helpId} className="text-sm leading-6 text-muted">
         {t("photos.reorderHint")}
       </p>
@@ -351,6 +346,85 @@ export function PhotoStep({
   );
 }
 
+function ItineraryItemActions({
+  index,
+  onEdit,
+  onRemove,
+  t,
+}: Readonly<{
+  index: number;
+  onEdit: () => void;
+  onRemove: () => void;
+  t: Translator;
+}>) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open]);
+  return (
+    <div ref={rootRef} className="relative shrink-0 self-start">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={t("itinerary.actions", { index })}
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen(!open)}
+        className="flex size-11 items-center justify-center rounded-full text-muted hover:bg-panel focus-visible:outline-2 focus-visible:outline-primary"
+      >
+        <MoreHorizontalIcon className="size-5" />
+      </button>
+      {open ? (
+        <div
+          id={menuId}
+          className="absolute top-full right-0 z-10 min-w-32 rounded-xl border border-line-soft bg-canvas-soft p-1 shadow-lg"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onEdit();
+            }}
+            className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-ink hover:bg-panel focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <PencilIcon className="size-4" />
+            {t("itinerary.edit")}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onRemove();
+            }}
+            className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm text-danger hover:bg-panel focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <TrashIcon className="size-4" />
+            {t("itinerary.remove")}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function ItineraryStep({
   items,
   onAdd,
@@ -431,15 +505,15 @@ export function ItineraryStep({
         return (
           <section
             key={item.id}
-            className="group flex items-center gap-4 rounded-2xl border border-line-soft bg-white p-3 shadow-[0_8px_30px_rgba(38,27,24,0.05)] transition hover:border-primary/45"
+            className="group flex items-center gap-4 rounded-2xl border border-line-soft bg-white p-3 transition hover:border-primary/45"
           >
-            <div className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-white lg:size-20">
+            <div className="relative size-28 shrink-0 overflow-hidden rounded-xl bg-panel lg:size-32">
               {item.photo ? (
                 <Image
                   src={item.photo.previewUrl}
                   alt=""
                   fill
-                  sizes="80px"
+                  sizes="(min-width: 1024px) 128px, 112px"
                   unoptimized
                   className="object-cover"
                 />
@@ -455,38 +529,26 @@ export function ItineraryStep({
               <span className="block text-xs font-bold tracking-[0.12em] text-primary uppercase">
                 {t("itinerary.item", { index: index + 1 })}
               </span>
-              <span className="mt-1 flex min-w-0 items-baseline gap-2">
-                <span className="truncate font-display text-base font-bold text-ink">
+              <span className="mt-1 block min-w-0">
+                <span className="line-clamp-2 font-display text-base font-bold text-ink">
                   {item.title || t("itinerary.untitled")}
                 </span>
                 {item.durationMinutes ? (
-                  <span className="shrink-0 text-xs font-semibold text-muted">
+                  <span className="mt-1 block text-xs font-medium text-muted">
                     {t("itinerary.durationSummary", { minutes: Number(item.durationMinutes) })}
                   </span>
                 ) : null}
               </span>
-              <span className="mt-1 line-clamp-2 block text-sm text-muted">
+              <span className="mt-1 hidden text-sm text-muted lg:line-clamp-2">
                 {item.description || t("itinerary.incomplete")}
               </span>
             </button>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={() => openEditor(item.id)}
-                aria-label={t("itinerary.edit", { index: index + 1 })}
-                className="flex size-10 items-center justify-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-              >
-                <PencilIcon className="size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onRemove(item.id)}
-                aria-label={t("itinerary.remove", { index: index + 1 })}
-                className="flex size-10 items-center justify-center rounded-full text-muted transition hover:bg-primary-soft hover:text-primary"
-              >
-                <TrashIcon className="size-4" />
-              </button>
-            </div>
+            <ItineraryItemActions
+              index={index + 1}
+              onEdit={() => openEditor(item.id)}
+              onRemove={() => onRemove(item.id)}
+              t={t}
+            />
           </section>
         );
       })}
@@ -510,16 +572,6 @@ export function ItineraryStep({
         >
           <div className="flex max-h-[94dvh] min-h-[72dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:min-h-[640px] sm:rounded-3xl">
             <div className="flex items-center justify-between px-5 py-4 sm:px-7">
-              <button
-                type="button"
-                onClick={() =>
-                  editorStep > 0 ? setEditorStep((current) => current - 1) : setEditingId(null)
-                }
-                aria-label={t("actions.back")}
-                className="flex size-10 items-center justify-center rounded-full text-primary-strong transition hover:bg-primary-soft"
-              >
-                <ArrowLeftIcon className="size-5" />
-              </button>
               <p className="text-sm font-bold text-muted">
                 {t("itinerary.editor.progress", {
                   current: editorStep + 1,
@@ -716,7 +768,19 @@ export function ItineraryStep({
                 </p>
               ) : null}
             </div>
-            <div className="flex items-center justify-end border-t border-line-soft px-5 py-4 sm:px-7">
+            <div className="grid grid-cols-2 items-center gap-3 border-t border-line-soft px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-7">
+              <button
+                type="button"
+                disabled={editorStep === 0}
+                onClick={() => {
+                  setEditorStep((current) => Math.max(0, current - 1));
+                  setEditorError(null);
+                }}
+                className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-line-strong px-4 text-sm font-bold text-ink hover:bg-panel focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ArrowLeftIcon className="size-4" />
+                {t("actions.back")}
+              </button>
               <button
                 key={editorStep}
                 type="button"
@@ -822,7 +886,15 @@ export function MeetingStep({
 
   return (
     <div className="grid w-full gap-4 lg:gap-7">
-      <Field label={t("fields.meetingPlace")} hint={t("hints.meetingPlace")}>
+      <Field
+        label={t("fields.meetingPlace")}
+        hint={
+          <>
+            <span className="text-[13px] lg:hidden">{t("hints.meetingPlaceMobile")}</span>
+            <span className="hidden lg:inline">{t("hints.meetingPlace")}</span>
+          </>
+        }
+      >
         <input
           className={INPUT_CLASS}
           value={draft.meetingPlace}

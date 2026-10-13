@@ -107,13 +107,17 @@ export function toSeoulStartAt(localDateTime: string): string | null {
   return startAt;
 }
 
-export function formatSeoulDateTime(value: string, locale: Locale): string | null {
+export function formatSeoulDateTime(
+  value: string,
+  locale: Locale,
+  { includeYear = true }: { includeYear?: boolean } = {},
+): string | null {
   const date = getOffsetfulDate(value);
   if (!date) return null;
 
   const formatted = new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: SERVICE_TIME_ZONE,
-    year: "numeric",
+    year: includeYear ? "numeric" : undefined,
     month: locale === "ko" ? "numeric" : "short",
     day: "numeric",
     hour: "numeric",

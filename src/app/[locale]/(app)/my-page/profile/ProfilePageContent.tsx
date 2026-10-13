@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Avatar } from "@/components/ui/Avatar";
+import { ZoomableAvatar } from "@/components/ui/ZoomableAvatar";
 import {
   CalendarIcon,
   GlobeIcon,
@@ -142,7 +142,7 @@ function ProfileView({
               </Link>
 
               <div className="flex justify-center pt-5 md:pt-3">
-                <Avatar
+                <ZoomableAvatar
                   name={profile.displayName}
                   src={profile.profileImageUrl}
                   size={120}

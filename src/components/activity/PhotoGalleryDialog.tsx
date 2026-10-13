@@ -85,7 +85,11 @@ export function PhotoGalleryDialog({
     <dialog
       ref={dialogRef}
       aria-label={alt}
-      onClose={onClose}
+      onClose={(event) => {
+        event.stopPropagation();
+        onClose();
+      }}
+      onCancel={(event) => event.stopPropagation()}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") showPrevious();
         if (event.key === "ArrowRight") showNext();

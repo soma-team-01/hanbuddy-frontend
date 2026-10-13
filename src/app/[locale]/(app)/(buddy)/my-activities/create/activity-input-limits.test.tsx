@@ -110,6 +110,60 @@ function ListHarness({
 }
 
 describe("activity input limits", () => {
+  it("uses an activity-neutral Korean placeholder for additional inclusions", () => {
+    renderWithIntl(<ListHarness kind="inclusions" initial="" />, { locale: "ko" });
+    expect(screen.getByRole("textbox", { name: "기타 포함사항" })).toHaveAttribute(
+      "placeholder",
+      "그 외 제공되는 항목을 입력해 주세요",
+    );
+  });
+  it.each([
+    ["ko", ko, "서비스 이용료"],
+    ["en", en, "Service fee"],
+  ] as const)(
+    "shows the revised inclusion presets and preserves legacy values in %s",
+    (locale, messages, feeLabel) => {
+      const options = messages.CreateActivity.inclusions.options;
+      const legacy = [options.parking, options.snacks, options.drinks];
+      renderWithIntl(<ListHarness kind="inclusions" initial={legacy.join("\n")} />, {
+        locale,
+        messages,
+      });
+      for (const label of legacy) {
+        expect(screen.queryByRole("button", { name: label })).not.toBeInTheDocument();
+        expect(screen.getByText(label)).toBeInTheDocument();
+      }
+      const fee = screen.getByRole("button", { name: feeLabel });
+      expect(fee).toHaveAttribute("aria-pressed", "false");
+      expect(document.querySelectorAll("button[aria-pressed]")).toHaveLength(6);
+      fireEvent.click(fee);
+      expect(screen.getByTestId("items").textContent).toBe([...legacy, feeLabel].join("\n"));
+      fireEvent.click(fee);
+      expect(screen.getByTestId("items").textContent).toBe(legacy.join("\n"));
+      const paths = [
+        [options.tickets, "M15 5l0 2"],
+        [options.transport, "M7 5l0 5"],
+        [
+          options.equipment,
+          "M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5",
+        ],
+        [feeLabel, "M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"],
+      ];
+      for (const [label, path] of paths) {
+        expect(
+          screen.getByRole("button", { name: label }).querySelector(`path[d="${path}"]`),
+        ).not.toBeNull();
+      }
+    },
+  );
+
+  it("uses the supplied running icon for the physical activity restriction", () => {
+    renderWithIntl(<ListHarness kind="restrictions" initial="" />);
+    const option = screen.getByRole("button", {
+      name: en.CreateActivity.restrictions.options.activity,
+    });
+    expect(option.querySelector('path[d="M14.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"]')).not.toBeNull();
+  });
   it.each(["Detailed description", "About you"])("left-aligns the %s input", (name) => {
     renderWithIntl(<Fields />);
     const description = screen.getByRole("textbox", { name });

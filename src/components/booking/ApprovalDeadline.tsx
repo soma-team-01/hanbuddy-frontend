@@ -11,15 +11,28 @@ export function useApprovalExpired(expiresAt?: string | null) {
   }, [expiresAt]);
   return !!expiresAt && Number.isFinite(Date.parse(expiresAt)) && Date.parse(expiresAt) <= now;
 }
-export function ApprovalDeadline({ expiresAt }: Readonly<{ expiresAt?: string | null }>) {
+export function ApprovalDeadline({
+  expiresAt,
+  inline = false,
+  tone = "muted",
+  compact = false,
+}: Readonly<{
+  expiresAt?: string | null;
+  inline?: boolean;
+  tone?: "muted" | "danger";
+  compact?: boolean;
+}>) {
   const t = useTranslations("Approval");
   const locale = useLocale();
   const expired = useApprovalExpired(expiresAt);
-  const date = expiresAt ? formatSeoulDateTime(expiresAt, locale) : null;
+  const date = expiresAt ? formatSeoulDateTime(expiresAt, locale, { includeYear: !compact }) : null;
   if (!date) return null;
+  const Tag = inline ? "span" : "p";
   return (
-    <p className="mt-2 text-xs leading-5 text-muted">
-      {expired ? t("expired") : t("deadline", { date })}
-    </p>
+    <Tag
+      className={`text-xs leading-5 ${inline ? "" : "mt-2"} ${tone === "danger" ? "text-danger" : "text-muted"}`}
+    >
+      {expired ? t("expired") : t(compact ? "deadlineCompact" : "deadline", { date })}
+    </Tag>
   );
 }

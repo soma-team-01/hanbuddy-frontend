@@ -454,6 +454,13 @@ describe("CreateActivityForm", () => {
     renderWithQueryClient(<CreateActivityForm />);
     await completeAllStepsUntilReview();
     const submit = screen.getByRole("button", { name: "Register experience" });
+    expect(
+      within(screen.getByRole("contentinfo")).getByRole("button", {
+        name: "Register experience",
+      }),
+    ).toBe(submit);
+    expect(submit).not.toHaveClass("hidden");
+    expect(within(screen.getByRole("banner")).queryByRole("button")).not.toBeInTheDocument();
     fireEvent.click(submit, { detail: 2 });
     expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
     expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
@@ -1125,34 +1132,18 @@ describe("CreateActivityForm", () => {
     expect(mockedCreateMyActivity).not.toHaveBeenCalled();
   });
 
-  it("saves an incomplete new draft before exiting without registering or clearing it", async () => {
+  it("does not show a persistent draft notice below the section navigation", () => {
     renderWithQueryClient(<CreateActivityForm />);
-    const save = screen.getByRole("button", { name: "Save and exit" });
-    await waitFor(() => expect(save).toBeEnabled());
-    fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
-      target: { value: "Draft introduction" },
-    });
-    fireEvent.click(save);
-    await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/en/dashboard"));
-    expect(mockedSaveActivityCreateDraft).toHaveBeenCalledWith(
-      "create",
-      expect.objectContaining({
-        draft: expect.objectContaining({ hostIntroduction: "Draft introduction" }),
-      }),
-      { required: true },
-    );
-    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
-    expect(mockedClearActivityCreateDraft).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Drafts stay in this browser tab/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save and exit" })).not.toBeInTheDocument();
   });
 
-  it("stays in the form when explicit draft saving fails", async () => {
-    mockedSaveActivityCreateDraft.mockRejectedValueOnce(new Error("Storage unavailable"));
-    renderWithQueryClient(<CreateActivityForm />);
-    const save = screen.getByRole("button", { name: "Save and exit" });
-    await waitFor(() => expect(save).toBeEnabled());
-    fireEvent.click(save);
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not save your draft");
-    expect(routerPush).not.toHaveBeenCalled();
+  it.each([false, true])("keeps only exit in the new activity header (referral=%s)", (referral) => {
+    renderWithQueryClient(<CreateActivityForm referral={referral} />);
+    const header = screen.getByRole("banner");
+    expect(within(header).getByRole("link", { name: "Exit" })).toBeInTheDocument();
+    expect(within(header).queryByRole("button")).not.toBeInTheDocument();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
   });
 
   it("saves edit changes to the server from the mobile header", async () => {

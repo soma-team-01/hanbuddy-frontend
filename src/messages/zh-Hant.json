@@ -1683,8 +1683,7 @@
       "saveExit": "儲存並離開",
       "saveShort": "儲存",
       "preview": "預覽",
-      "register": "註冊活動",
-      "draftHint": "草稿儲存在此瀏覽器分頁中。請在預覽中完成註冊。"
+      "register": "註冊活動"
     },
     "steps": {
       "category": {

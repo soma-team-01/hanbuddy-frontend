@@ -1683,8 +1683,7 @@
       "saveExit": "保存并退出",
       "saveShort": "保存",
       "preview": "预览",
-      "register": "注册活动",
-      "draftHint": "草稿保存在此浏览器标签页中。请在预览中完成注册。"
+      "register": "注册活动"
     },
     "steps": {
       "category": {

@@ -125,15 +125,17 @@ export function BookingForm({
       : 1;
   });
   // 언어 전환은 쿼리를 보존한다. 최신 선택을 URL에 동기화해 폼이 다시 마운트되어도 복원한다.
+  // 요청한 일정이 예약 불가라 선택이 비어 있으면 원래 scheduleId를 그대로 둔다. 빈 값으로 덮으면
+  // 다시 마운트될 때 손님이 고르지 않은 첫 예약 가능 날짜가 자동 선택된다.
   useEffect(() => {
     const url = new URL(window.location.href);
     if (
       url.searchParams.get("guestCount") === String(guests) &&
-      url.searchParams.get("scheduleId") === sessionId
+      (!sessionId || url.searchParams.get("scheduleId") === sessionId)
     )
       return;
     url.searchParams.set("guestCount", String(guests));
-    url.searchParams.set("scheduleId", sessionId);
+    if (sessionId) url.searchParams.set("scheduleId", sessionId);
     window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }, [guests, sessionId]);
   const quoteQuery = useQuery(activityPriceQuoteQueryOptions(activity.id, guests));

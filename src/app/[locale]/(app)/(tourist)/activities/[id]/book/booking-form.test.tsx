@@ -768,6 +768,25 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
   });
 
+  it("keeps the requested schedule in the URL so a language switch does not pick another date", async () => {
+    window.history.replaceState(null, "", "/en/activities/1/book?scheduleId=102");
+    const twoSessionActivity: Activity = {
+      ...activity,
+      sessions: [
+        ...activity.sessions,
+        { id: "102", dateLabel: "2026-07-21", timeLabel: "14:00", spotsLeft: 0 },
+      ],
+    };
+
+    await renderBooking(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
+
+    // 빈 scheduleId=로 덮으면 다시 마운트될 때 첫 예약 가능 날짜가 자동 선택된다.
+    const params = new URL(window.location.href).searchParams;
+    expect(params.get("scheduleId")).toBe("102");
+    expect(params.get("guestCount")).toBe("1");
+    window.history.replaceState(null, "", "/");
+  });
+
   it("creates an application and opens the Toss payment window", async () => {
     await renderBooking(<BookingForm activity={activity} />);
 

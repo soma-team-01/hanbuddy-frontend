@@ -12,10 +12,10 @@ import { ChatRoomTitleDialog } from "@/components/chat/ChatRoomTitleDialog";
 import { ChatPhotoPanel } from "@/components/chat/ChatPhotoPanel";
 import { useChatMessages } from "@/components/chat/use-chat-messages";
 import { useChatRoomStream } from "@/components/chat/use-chat-room-stream";
-import { Avatar } from "@/components/ui/Avatar";
+import { ZoomableAvatar } from "@/components/ui/ZoomableAvatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PhotoGalleryDialog } from "@/components/activity/PhotoGalleryDialog";
-import { ArrowLeftIcon, ImagePlusIcon, UsersIcon, XIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, ImagePlusIcon, SendIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
@@ -234,7 +234,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
   // 같은 활동을 회차별로 열면 방 이름이 전부 같아진다 — 어느 회차인지 헤더에 붙인다
   const scheduleLabel = formatChatScheduleLabel(room.activityStartAt, locale);
   // 대표 이미지가 없는 단체방은 사람 아이콘으로, 1:1은 상대 이름 이니셜로 채운다
-  let roomAvatar = <Avatar name={room.title} src={roomImageUrl} size={44} />;
+  let roomAvatar = <ZoomableAvatar name={room.title} src={roomImageUrl} size={44} />;
   if (!roomImageUrl && isGroup) {
     roomAvatar = (
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 text-primary">
@@ -245,7 +245,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-3 border-b border-line-soft px-4 py-3 md:px-6">
+      <header className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-2 border-b border-line-soft px-3 py-3 md:gap-x-3 md:px-6">
         <Link
           href="/chat"
           aria-label={t("backToList")}
@@ -256,29 +256,14 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
 
         {roomAvatar}
 
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-display text-base font-bold text-ink">{room.title}</h1>
-          {isGroup ? (
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs">
-              {room.activityScheduleCancelled ? <CancelledScheduleBadge /> : null}
-              {scheduleLabel ? (
-                <>
-                  <span className="truncate font-semibold text-primary">{scheduleLabel}</span>
-                  <span aria-hidden="true" className="shrink-0 text-line-strong">
-                    ·
-                  </span>
-                </>
-              ) : null}
-              {/* 참여자 수를 눌러도 메뉴가 열린다 — 사람 목록을 찾아 헤매지 않도록 */}
-              <button
-                type="button"
-                onClick={() => setMenuOpen((open) => !open)}
-                className="shrink-0 text-muted transition-colors hover:text-primary"
-              >
-                {t("memberCount", { count: activeMembers.length })}
-              </button>
-            </div>
-          ) : null}
+        <div className="min-w-0 flex-1 space-y-1">
+          <h1
+            title={room.title}
+            className="truncate font-display text-sm font-bold text-ink md:text-base"
+          >
+            {room.title}
+          </h1>
+          {isGroup && room.activityScheduleCancelled ? <CancelledScheduleBadge /> : null}
         </div>
 
         <ChatRoomMenu
@@ -307,6 +292,30 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
             setTitleDialogOpen(true);
           }}
         />
+        {isGroup ? (
+          <div
+            data-testid="chat-room-metadata"
+            className="flex w-full min-w-0 items-center justify-start gap-2 pl-[100px] text-xs md:gap-3 md:pl-[108px] lg:pl-14"
+          >
+            {scheduleLabel ? (
+              <span className="min-w-0 font-semibold text-primary">{scheduleLabel}</span>
+            ) : null}
+            <button
+              type="button"
+              aria-label={t("memberCount", { count: activeMembers.length })}
+              onClick={() => setMenuOpen((open) => !open)}
+              className="flex shrink-0 items-center gap-1 py-1 text-muted transition-colors hover:text-primary"
+            >
+              <UsersIcon className="size-3.5 md:hidden" />
+              <span aria-hidden="true" className="md:hidden">
+                {activeMembers.length}
+              </span>
+              <span className="hidden md:inline">
+                {t("memberCount", { count: activeMembers.length })}
+              </span>
+            </button>
+          </div>
+        ) : null}
       </header>
 
       <ChatMessageList
@@ -324,7 +333,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         onOpenImage={(images, index) => setViewer({ images, index })}
       />
 
-      <div className="border-t border-line-soft px-4 py-3 md:px-6">
+      <div className="shrink-0 border-t border-line-soft px-2 py-2 md:px-6 md:py-3">
         {stream.status !== "connected" ? (
           <div
             role={stream.status === "failed" ? "alert" : "status"}
@@ -386,7 +395,7 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
         ) : null}
         <form
           data-testid="chat-composer"
-          className="flex items-end gap-2"
+          className="flex items-end gap-1 md:gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             submitDraft();
@@ -420,7 +429,15 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
           >
             <ImagePlusIcon className="size-5" />
           </button>
-          <div data-testid="chat-message-input" className="min-w-0 flex-1">
+          <div data-testid="chat-message-input" className="relative min-w-0 flex-1">
+            {!draft ? (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-3 top-2.5 z-10 text-xs leading-6 whitespace-nowrap text-muted md:hidden"
+              >
+                {t("messagePlaceholderShort")}
+              </span>
+            ) : null}
             <textarea
               id="chat-draft"
               rows={1}
@@ -438,19 +455,24 @@ export function ChatRoomView({ chatRoomId }: Readonly<{ chatRoomId: string }>) {
                   submitDraft();
                 }
               }}
-              className="focus-border-only block max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60"
+              className={`focus-border-only block max-h-32 min-h-11 w-full resize-none rounded-2xl border border-line-strong bg-canvas-soft px-3 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-muted focus:border-primary focus:outline-none disabled:opacity-60 max-md:placeholder:text-transparent md:px-4 ${!draft ? "overflow-hidden" : "overflow-y-auto"}`}
             />
           </div>
           <button
             type="submit"
+            aria-label={sendLabel()}
+            title={sendLabel()}
             disabled={
               !chatConnected ||
               sendMutation.isPending ||
               (draft.trim().length === 0 && attachments.length === 0)
             }
-            className="h-11 shrink-0 rounded-full bg-primary px-5 font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary font-display text-sm font-bold text-on-primary transition-colors enabled:hover:bg-primary-hover disabled:opacity-40 md:w-auto md:px-5"
           >
-            {sendLabel()}
+            <SendIcon
+              className={`size-4 md:hidden ${sendMutation.isPending ? "animate-pulse" : ""}`}
+            />
+            <span className="hidden md:inline">{sendLabel()}</span>
           </button>
         </form>
       </div>

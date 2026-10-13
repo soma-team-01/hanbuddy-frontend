@@ -20,6 +20,24 @@ function IconBase({ children, ...props }: IconProps) {
   );
 }
 
+export function SaveIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+      <path d="M7 3v6h9V3M7 21v-8h10v8" />
+    </IconBase>
+  );
+}
+
+export function SendIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="m22 2-7 20-4-9-9-4 20-7Z" />
+      <path d="M22 2 11 13" />
+    </IconBase>
+  );
+}
+
 export function EyeIcon(props: IconProps) {
   return (
     <IconBase {...props}>
@@ -117,6 +135,61 @@ export function HistoryIcon(props: IconProps) {
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
       <path d="M3 3v5h5" />
       <path d="M12 7v5l4 2" />
+    </IconBase>
+  );
+}
+
+export function TicketIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M15 5l0 2" />
+      <path d="M15 11l0 2" />
+      <path d="M15 17l0 2" />
+      <path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-3a2 2 0 0 0 0 -4v-3a2 2 0 0 1 2 -2" />
+    </IconBase>
+  );
+}
+
+export function BusIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M4 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+      <path d="M16 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+      <path d="M4 17h-2v-11a1 1 0 0 1 1 -1h14a5 7 0 0 1 5 7v5h-2m-4 0h-8" />
+      <path d="M16 5l1.5 7l4.5 0" />
+      <path d="M2 10l15 0" />
+      <path d="M7 5l0 5" />
+      <path d="M12 5l0 5" />
+    </IconBase>
+  );
+}
+
+export function ToolIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5" />
+    </IconBase>
+  );
+}
+
+export function ServiceUserIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+      <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+    </IconBase>
+  );
+}
+
+export function RunSprintIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M14.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+      <path d="M7 17l5 1l.75 -1.5" />
+      <path d="M18 21v-4l-4 -3l1 -6" />
+      <path d="M10 12v-3l5 -1l3 3l3 1" />
+      <path d="M10 5h-4" />
+      <path d="M6 10h-4" />
     </IconBase>
   );
 }

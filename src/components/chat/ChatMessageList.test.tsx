@@ -38,6 +38,11 @@ function renderList(messages: ChatMessageResponse[]) {
 }
 
 describe("ChatMessageList translation", () => {
+  it("enlarges a sender profile photo without opening a message attachment", () => {
+    renderList([message({ senderProfileImageUrl: "/sender.jpg" })]);
+    fireEvent.click(screen.getByRole("button", { name: "Enlarge photo: SeoulMate" }));
+    expect(screen.getByRole("dialog", { name: "SeoulMate" })).toBeInTheDocument();
+  });
   it("uses the standard message-list spacing when translation controls stay in the composer", () => {
     renderList([message()]);
 

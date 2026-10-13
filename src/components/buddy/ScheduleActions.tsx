@@ -30,6 +30,8 @@ export function ScheduleActions({
   knownCancelled = false,
   menuPlacement = "inline",
   showCancelledBadge = true,
+  compactMobile = false,
+  showChat = true,
 }: Readonly<{
   referral?: boolean;
   scheduleId: number;
@@ -37,10 +39,14 @@ export function ScheduleActions({
   applicantCount: number;
   roomId?: number;
   knownCancelled?: boolean;
-  /** card-header requires a positioned card and space reserved beside its title. */
-  menuPlacement?: "inline" | "card-header";
+  /** Header placements require a positioned card/session and space beside its title. */
+  menuPlacement?: "inline" | "card-header" | "session-header";
   /** Hide when the page already displays the cancelled badge beside its title. */
   showCancelledBadge?: boolean;
+  /** Compact outlined chat and a touch-friendly menu on mobile. */
+  compactMobile?: boolean;
+  /** Keep schedule controls mounted while showing chat only in the participants view. */
+  showChat?: boolean;
 }>) {
   const t = useTranslations("ScheduleCancellation");
   const tChat = useTranslations("Chat");
@@ -59,6 +65,9 @@ export function ScheduleActions({
   const reasonId = useId();
   const cancelled = knownCancelled || statusQuery.data?.status === "CANCELLED";
   const hasStarted = !Number.isFinite(Date.parse(startAt)) || Date.parse(startAt) <= now;
+  const chatClass = compactMobile
+    ? `${CHAT_CLASS} max-md:min-h-9 max-md:gap-1.5 max-md:rounded-full max-md:border-orange-600 max-md:bg-transparent max-md:px-2.5 max-md:font-semibold max-md:text-orange-700 max-md:hover:border-orange-700 max-md:hover:text-orange-800`
+    : CHAT_CLASS;
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
@@ -117,8 +126,29 @@ export function ScheduleActions({
       ? "started"
       : "requestError";
 
+  const chatAction = !showChat ? null : roomId ? (
+    <Link href={`/chat/${roomId}`} className={chatClass}>
+      <UsersIcon className="size-3.5" />
+      {tChat("openGroupChat")}
+    </Link>
+  ) : !cancelled &&
+    !uncertain &&
+    !mutation.isPending &&
+    statusQuery.isSuccess &&
+    applicantCount > 0 ? (
+    <StartChatButton
+      target={{ kind: "group", activityScheduleId: scheduleId }}
+      label={tChat("createGroupChat")}
+      icon={<UsersIcon className="size-3.5" />}
+      className={chatClass}
+    />
+  ) : null;
+
   return (
-    <div data-schedule-cancelled={cancelled} className="flex shrink-0 flex-col items-end gap-1.5">
+    <div
+      data-schedule-cancelled={cancelled}
+      className={`flex shrink-0 flex-col items-end gap-1.5 ${compactMobile ? "max-md:w-full" : ""} ${menuPlacement === "session-header" && chatAction ? "mt-3" : ""}`}
+    >
       {cancelled ? (
         showCancelledBadge ? (
           <span
@@ -130,7 +160,15 @@ export function ScheduleActions({
       ) : !hasStarted ? (
         <div
           ref={menuRef}
-          className={menuPlacement === "card-header" ? "absolute top-4 right-4" : "relative"}
+          className={
+            menuPlacement === "card-header"
+              ? "absolute top-4 right-4"
+              : menuPlacement === "session-header"
+                ? "absolute top-0 right-0"
+                : compactMobile
+                  ? "relative max-md:absolute max-md:top-0 max-md:right-0"
+                  : "relative"
+          }
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               setMenuOpen(false);
@@ -144,7 +182,7 @@ export function ScheduleActions({
             aria-label={t("more")}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex size-8 items-center justify-center rounded-full text-xl leading-none text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className={`flex size-8 items-center justify-center rounded-full text-xl leading-none text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-primary ${compactMobile ? "max-md:size-11" : ""}`}
           >
             ⋯
           </button>
@@ -175,23 +213,7 @@ export function ScheduleActions({
           ) : null}
         </div>
       ) : null}
-      {roomId ? (
-        <Link href={`/chat/${roomId}`} className={CHAT_CLASS}>
-          <UsersIcon className="size-3.5" />
-          {tChat("openGroupChat")}
-        </Link>
-      ) : !cancelled &&
-        !uncertain &&
-        !mutation.isPending &&
-        statusQuery.isSuccess &&
-        applicantCount > 0 ? (
-        <StartChatButton
-          target={{ kind: "group", activityScheduleId: scheduleId }}
-          label={tChat("createGroupChat")}
-          icon={<UsersIcon className="size-3.5" />}
-          className={CHAT_CLASS}
-        />
-      ) : null}
+      {chatAction}
       {mutation.isSuccess ? (
         <p
           role="status"
@@ -230,6 +252,9 @@ export function ScheduleActions({
             mutation.mutate();
           }}
         >
+          <p className="mb-4 text-sm leading-6 font-semibold text-danger">
+            {t("cancellationFeeWarning")}
+          </p>
           <p className="border-b border-line-soft pb-4 text-sm font-semibold text-primary">
             {formatSeoulDateTime(startAt, locale)}
           </p>

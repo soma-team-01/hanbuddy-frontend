@@ -232,7 +232,7 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
     expect(screen.queryByRole("link", { name: "Book now" })).not.toBeInTheDocument();
-    expect(screen.getByText("Host: Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Jihoon Kim" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Local guide")).toBeInTheDocument();
     expect(await screen.findAllByText("123 Anguk-ro, Jongno-gu, Seoul")).toHaveLength(2);
     expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledWith("ChIJ-bukchon", "test-google-key", {
@@ -328,7 +328,7 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
   });
 
-  it("shows only the forecast icon matching each schedule start time", async () => {
+  it("shows only an icon and temperature inside the selected date button, not the time cards", async () => {
     mockedFetchGooglePlaceDetails.mockResolvedValue({
       formattedAddress: "123 Anguk-ro, Jongno-gu, Seoul",
     });
@@ -360,12 +360,17 @@ describe("ActivityDetailContent", () => {
     fireEvent.click(await screen.findByTestId("date-select-box"));
 
     const dialog = await screen.findByRole("dialog");
-    const weatherIcons = within(dialog).getAllByLabelText("Partly cloudy");
+    expect(within(dialog).queryByRole("img")).not.toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole("button", { name: /2:00 PM/ }));
+    const bar = screen.getByTestId("booking-bottom-bar");
+    const dateButton = within(bar).getByTestId("date-select-box");
+    const weatherIcons = within(dateButton).getAllByLabelText("Partly cloudy");
     expect(weatherIcons.length).toBeGreaterThan(0);
     expect(weatherIcons[0]).toHaveClass("text-sky-500");
-    expect(within(dialog).getAllByText("29°C").length).toBeGreaterThan(0);
-    expect(within(dialog).getAllByText("Chance of precipitation 20%").length).toBeGreaterThan(0);
-    expect(within(dialog).getByText("Weather data from KMA")).toBeInTheDocument();
+    expect(within(dateButton).getByText(/29°C/)).toBeInTheDocument();
+    expect(within(bar).queryByText(/Chance of precipitation/)).not.toBeInTheDocument();
+    expect(within(bar).queryByText(/Weather data from KMA/)).not.toBeInTheDocument();
+    expect(bar.querySelector("details")).toBeNull();
     expect(mockedGetActivityWeather).toHaveBeenCalledTimes(1);
     expect(mockedGetActivityWeather).toHaveBeenCalledWith("42");
   });
@@ -430,7 +435,7 @@ describe("ActivityDetailContent", () => {
     );
 
     expect(await screen.findByRole("heading", { name: "Bukchon Hidden Gems" })).toBeInTheDocument();
-    expect(screen.getByText("호스트: Jihoon Kim")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Jihoon Kim" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Local guide")).toBeInTheDocument();
     expect(screen.getByText("Comfortable shoes recommended")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "포함 사항" })).toBeInTheDocument();

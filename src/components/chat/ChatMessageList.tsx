@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChatImageGrid } from "@/components/chat/ChatImageGrid";
 import { useInfiniteScrollSentinel } from "@/components/ui/use-infinite-scroll-sentinel";
-import { Avatar } from "@/components/ui/Avatar";
+import { ZoomableAvatar } from "@/components/ui/ZoomableAvatar";
 import type { Locale } from "@/i18n/routing";
 import { formatChatDateSeparator, groupChatMessages, toChatBubbles } from "@/lib/chat/format";
 import { formatSeoulTime } from "@/lib/datetime";
@@ -179,11 +179,11 @@ export function ChatMessageList({
 
               <div className={`flex gap-2.5 ${mine ? "flex-row-reverse" : ""}`}>
                 {mine ? null : (
-                  <Avatar
+                  <ZoomableAvatar
                     name={group.senderName}
                     src={group.senderProfileImageUrl}
                     size={32}
-                    className="mt-5 shrink-0"
+                    className="mt-5 shrink-0 self-start"
                   />
                 )}
 

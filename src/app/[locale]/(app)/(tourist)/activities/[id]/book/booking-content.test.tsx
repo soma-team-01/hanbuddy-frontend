@@ -3,9 +3,13 @@ import { createTestAnalytics } from "@/test/analytics";
 import { getMyProfile } from "@/lib/api/users";
 import { getReferralNotice, submitReferralApplication } from "@/lib/api/referral";
 import { createApplication } from "@/lib/api/applications";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getActivityPriceQuote, getTouristActivity } from "@/lib/api/activities";
+import {
+  getActivityPriceQuote,
+  getActivityWeather,
+  getTouristActivity,
+} from "@/lib/api/activities";
 import { ApiClientError } from "@/lib/api/errors";
 import { activityKeys } from "@/lib/query/activities";
 import { createQueryClient } from "@/lib/query/client";
@@ -22,6 +26,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 vi.mock("@/lib/api/activities", () => ({
   getTouristActivity: vi.fn(),
   getActivityPriceQuote: vi.fn(),
+  getActivityWeather: vi.fn(),
 }));
 
 vi.mock("@/lib/api/applications", () => ({
@@ -36,26 +41,42 @@ vi.mock("@/lib/api/referral", () => ({
 
 const mockedGetTouristActivity = vi.mocked(getTouristActivity);
 beforeEach(() => {
+  vi.mocked(getActivityWeather)
+    .mockReset()
+    .mockResolvedValue({
+      status: "success",
+      weather: {
+        available: false,
+        unavailableReason: "WEATHER_SERVICE_UNAVAILABLE",
+        provider: "KMA",
+        timeZone: "Asia/Seoul",
+        issuedAt: null,
+        baseDate: "2026-07-20",
+        forecasts: [],
+      },
+    });
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-07-18T00:00:00+09:00"));
-  vi.mocked(getActivityPriceQuote).mockResolvedValue({
-    status: "success",
-    quote: {
-      activityId: 42,
-      guestCount: 1,
-      currency: "KRW",
-      originalUnitPrice: 45000,
-      quantityUnitPrice: 45000,
-      unitPrice: 45000,
-      originalAmount: 45000,
-      amount: 45000,
-      discountAmount: 0,
-      discountPercent: null,
-      appliedPriceTier: null,
-      quantityDiscountAmount: 0,
-      periodDiscountAmount: 0,
-    },
-  });
+  vi.mocked(getActivityPriceQuote)
+    .mockReset()
+    .mockResolvedValue({
+      status: "success",
+      quote: {
+        activityId: 42,
+        guestCount: 1,
+        currency: "KRW",
+        originalUnitPrice: 45000,
+        quantityUnitPrice: 45000,
+        unitPrice: 45000,
+        originalAmount: 45000,
+        amount: 45000,
+        discountAmount: 0,
+        discountPercent: null,
+        appliedPriceTier: null,
+        quantityDiscountAmount: 0,
+        periodDiscountAmount: 0,
+      },
+    });
 });
 afterEach(() => vi.useRealTimers());
 
@@ -106,6 +127,55 @@ const cnyActivityDetail: TouristActivityDetail = {
 describe("BookingContent", () => {
   beforeEach(() => {
     mockedGetTouristActivity.mockReset();
+  });
+
+  it.each(["STANDARD", "REFERRAL"])(
+    "places the selected forecast inside the %s date button",
+    async (type) => {
+      mockedGetTouristActivity.mockResolvedValue({
+        status: "success",
+        activity: {
+          ...activityDetail,
+          ...(type === "REFERRAL" ? { activityType: "REFERRAL" as const } : {}),
+        },
+      });
+      vi.mocked(getActivityWeather).mockResolvedValue({
+        status: "success",
+        weather: {
+          available: true,
+          unavailableReason: null,
+          provider: "KMA",
+          timeZone: "Asia/Seoul",
+          issuedAt: "2026-07-18T09:00:00+09:00",
+          baseDate: "2026-07-20",
+          forecasts: [
+            {
+              forecastAt: "2026-07-20T10:00:00+09:00",
+              temperatureCelsius: 0,
+              condition: "CLEAR",
+              precipitationProbability: 0,
+            },
+          ],
+        },
+      });
+      renderWithQueryClient(<BookingContent activityId="42" initialScheduleId="101" />);
+      const temperature = await screen.findByText("0°C");
+      const dateButton = temperature.closest("button");
+      expect(dateButton).not.toBeNull();
+      expect(dateButton).toHaveTextContent("10:00 AM");
+      expect(within(dateButton!).getByRole("img", { name: "Clear" })).toBeInTheDocument();
+      expect(screen.queryByText(/Weather data from KMA/)).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps the date selector usable when weather fails", async () => {
+    mockedGetTouristActivity.mockResolvedValue({ status: "success", activity: activityDetail });
+    vi.mocked(getActivityWeather).mockRejectedValue(new Error("Forecast unavailable"));
+    renderWithQueryClient(<BookingContent activityId="42" initialScheduleId="101" />);
+    const dateButton = await screen.findByTestId("date-select-box");
+    expect(dateButton).toBeEnabled();
+    fireEvent.click(dateButton);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 
   it("routes referral applications away from payment and USD estimates", async () => {

@@ -3,8 +3,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
+import { ZoomableAvatar } from "@/components/ui/ZoomableAvatar";
+import { ApprovalDeadline } from "@/components/booking/ApprovalDeadline";
 import { CalendarDaysIcon, ClockIcon, PlusIcon, UsersIcon, XIcon } from "@/components/ui/icons";
 import { ApplicationApprovalActions } from "./ApplicationApprovalActions";
+import { ApplicantTimestamps } from "./ApplicantTimestamps";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulDateWithWeekday, formatSeoulTime } from "@/lib/datetime";
@@ -24,7 +27,7 @@ export interface PendingReservation {
     | "specialRequest"
     | "status"
     | "approvalExpiresAt"
-  > & { applicantProfileImageUrl?: string | null };
+  > & { applicantProfileImageUrl?: string | null; appliedAt?: string };
 }
 
 export function PendingReservationSection({
@@ -101,7 +104,7 @@ export function PendingReservationSection({
         <ul
           className={
             expanded
-              ? "grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3"
+              ? "grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4"
               : "-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pt-1 pb-3"
           }
         >
@@ -132,6 +135,14 @@ export function PendingReservationSection({
                   {request.activityTitle}
                 </span>
                 <RequestSchedule request={request} locale={locale} />
+                <span className="mt-2 w-full text-left">
+                  <ApprovalDeadline
+                    expiresAt={request.applicant.approvalExpiresAt}
+                    inline
+                    compact
+                    tone="danger"
+                  />
+                </span>
               </button>
             </li>
           ))}
@@ -155,7 +166,7 @@ export function PendingReservationSection({
         </div>
       )}
       {selected && (
-        <RequestDialog
+        <PendingReservationDialog
           key={selected.applicant.applicationId}
           request={selected}
           locale={locale}
@@ -191,7 +202,7 @@ function RequestSchedule({
   );
 }
 
-function RequestDialog({
+export function PendingReservationDialog({
   request,
   locale,
   onClose,
@@ -218,9 +229,16 @@ function RequestDialog({
       className="motion-dialog m-0 mt-auto max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-0 bg-canvas-soft p-5 text-ink backdrop:bg-ink/40 md:m-auto md:max-w-sm md:rounded-2xl md:p-6"
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 id={id} className="min-w-0 font-display text-lg font-bold break-words">
-          {request.applicant.applicantName}
-        </h2>
+        <div className="flex min-w-0 items-center gap-3">
+          <ZoomableAvatar
+            name={request.applicant.applicantName}
+            src={request.applicant.applicantProfileImageUrl}
+            size={40}
+          />
+          <h2 id={id} className="min-w-0 font-display text-lg font-bold [overflow-wrap:anywhere]">
+            {request.applicant.applicantName}
+          </h2>
+        </div>
         <button
           type="button"
           aria-label={accessibility("closeDialog")}
@@ -238,11 +256,13 @@ function RequestDialog({
           {request.applicant.specialRequest}
         </p>
       )}
-      <div className="mt-4 border-t border-line-soft pt-2">
+      <ApplicantTimestamps applicant={request.applicant} locale={locale} />
+      <div className="mt-1.5">
         <ApplicationApprovalActions
           applicationId={request.applicant.applicationId}
           name={request.applicant.applicantName}
           expiresAt={request.applicant.approvalExpiresAt}
+          deadlineTone="danger"
           onPendingChange={setBusy}
           fullWidth
         />

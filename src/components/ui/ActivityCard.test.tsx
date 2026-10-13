@@ -29,6 +29,21 @@ const activity: Activity = {
 const VARIANTS = ["tile", "row"] as const;
 
 describe.each(VARIANTS)("ActivityCard (%s)", (variant) => {
+  it("places the muted location directly below the title and before the duration", () => {
+    renderWithIntl(
+      <ActivityCard activity={{ ...activity, durationMinutes: 90 }} variant={variant} />,
+    );
+    const title = screen.getByRole("heading", { name: activity.title });
+    const location = screen.getByText("Gwangjang Market");
+    expect(title.nextElementSibling).toBe(location);
+    expect(location).toHaveClass("text-sm", "text-muted");
+    expect(location).not.toHaveClass("uppercase", "tracking-wide");
+    expect(
+      location.compareDocumentPosition(screen.getByText("1 hour 30min")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("renders the title, meeting place and per-person price without the buddy name", () => {
     renderWithIntl(<ActivityCard activity={activity} variant={variant} />);
 
@@ -264,7 +279,7 @@ describe("ActivityCard row (GetYourGuide-style)", () => {
     expect(container.querySelector("img")?.parentElement).toHaveClass("shrink-0");
   });
 
-  it("orders the meeting place, title and duration from top to bottom", () => {
+  it("orders the title, meeting place and duration from top to bottom", () => {
     const { container } = renderWithIntl(
       <ActivityCard activity={{ ...activity, durationMinutes: 90 }} variant="row" />,
     );
@@ -272,9 +287,11 @@ describe("ActivityCard row (GetYourGuide-style)", () => {
     const location = container.querySelector('[data-slot="activity-card-location"]')!;
     const title = screen.getByRole("heading", { name: "Market walk" });
     const duration = screen.getByText("1 hour 30min");
-    expect(location).toHaveClass("uppercase");
-    expect(location.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(title.compareDocumentPosition(duration) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(location).toHaveClass("text-sm", "text-muted");
+    expect(title.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      location.compareDocumentPosition(duration) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("puts the rating at the bottom left and the price at the bottom right", () => {

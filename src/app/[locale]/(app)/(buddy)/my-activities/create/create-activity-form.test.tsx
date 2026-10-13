@@ -1,4 +1,5 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import en from "@/messages/en.json";
 import { usePathname, useRouter } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -328,14 +329,14 @@ describe("CreateActivityForm", () => {
       const footer = screen.getByRole("contentinfo");
       expect(screen.getByRole("heading", { level: 1 })).toHaveClass("text-xl", "lg:text-3xl");
       expect(footer).toHaveClass("pt-2");
-      const back = within(footer).getByRole("button", { name: "Back" });
-      expect(back).toHaveClass("lg:hidden");
-      expect(back).toBeDisabled();
+      expect(within(footer).queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
       fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
         target: { value: "I have guided friends through this market for years." },
       });
       clickNext();
       fireEvent.click(await screen.findByRole("checkbox", { name: "English" }));
+      const back = within(footer).getByRole("button", { name: "Back" });
+      expect(back).toHaveClass("lg:hidden");
       clickNext();
       fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
         target: { value: "Seoul market walk" },
@@ -346,7 +347,7 @@ describe("CreateActivityForm", () => {
       expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(
         "I have guided friends through this market for years.",
       );
-      expect(back).toBeDisabled();
+      expect(within(footer).queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
       clickNext();
       clickNext();
       expect(screen.getByRole("textbox", { name: "Experience name" })).toHaveValue(
@@ -453,6 +454,13 @@ describe("CreateActivityForm", () => {
     renderWithQueryClient(<CreateActivityForm />);
     await completeAllStepsUntilReview();
     const submit = screen.getByRole("button", { name: "Register experience" });
+    expect(
+      within(screen.getByRole("contentinfo")).getByRole("button", {
+        name: "Register experience",
+      }),
+    ).toBe(submit);
+    expect(submit).not.toHaveClass("hidden");
+    expect(within(screen.getByRole("banner")).queryByRole("button")).not.toBeInTheDocument();
     fireEvent.click(submit, { detail: 2 });
     expect(fireEvent.keyDown(submit, { key: "Enter", repeat: true })).toBe(false);
     expect(mockedUploadActivityImageSet).not.toHaveBeenCalled();
@@ -739,8 +747,8 @@ describe("CreateActivityForm", () => {
       screen.getByRole("heading", { name: "Introduce yourself" }),
     );
     expect(
-      within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }),
-    ).toBeDisabled();
+      within(screen.getByRole("contentinfo")).queryByRole("button", { name: "Back" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: "Qualifications and experience" }),
     ).not.toBeInTheDocument();
@@ -808,13 +816,12 @@ describe("CreateActivityForm", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    const editItineraryButton = screen.getByRole("button", { name: "Edit item 1" });
-    const removeItineraryButton = screen.getByRole("button", { name: "Remove item 1" });
-    const itineraryActions = editItineraryButton.parentElement;
-    expect(itineraryActions).not.toBeNull();
-    expect(itineraryActions?.querySelectorAll("svg")).toHaveLength(2);
-    expect(editItineraryButton.querySelector("svg")).toHaveClass("size-4");
-    expect(removeItineraryButton.querySelector("svg")).toHaveClass("size-4");
+    const itineraryMenu = screen.getByRole("button", { name: "Item 1 actions" });
+    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    fireEvent.click(itineraryMenu);
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    fireEvent.keyDown(itineraryMenu, { key: "Escape" });
     clickNext();
 
     const meetingPlaceInput = screen.getByRole("textbox", { name: "Meeting place name" });
@@ -926,8 +933,8 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
     expect(screen.getByText("Seoul market walk")).toBeInTheDocument();
     // 미리보기의 호스트는 버디 본인 프로필로 표시된다
-    expect(screen.getByText("Host: Seoul Buddy")).toBeInTheDocument();
-    expect(screen.queryByText("Host: Jihoon Kim")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Seoul Buddy" }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("heading", { name: "Jihoon Kim" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What's included" })).toBeInTheDocument();
     expect(screen.getByText("Equipment rental")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Before you join" })).not.toBeInTheDocument();
@@ -1098,6 +1105,72 @@ describe("CreateActivityForm", () => {
     expect(screen.getByRole("heading", { name: "Name your experience" })).toBeInTheDocument();
   });
 
+  it("lets numbered mobile steps jump ahead without losing fields or bypassing final validation", async () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    const navigation = screen.getByRole("navigation", { name: "Jump to section" });
+    expect(within(navigation).getAllByRole("button")).toHaveLength(8);
+    const jump = (name: string) =>
+      fireEvent.click(within(navigation).getByRole("button", { name }));
+    jump("2. Activity");
+    expect(within(navigation).getByRole("button", { name: "Itinerary" })).toBeVisible();
+    fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
+      target: { value: "A saved experience name" },
+    });
+    jump("4. Pricing");
+    expect(within(navigation).queryByRole("button", { name: "Itinerary" })).not.toBeInTheDocument();
+    expect(within(navigation).getByRole("button", { name: "Price" })).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    jump("2. Activity");
+    expect(screen.getByRole("textbox", { name: "Experience name" })).toHaveValue(
+      "A saved experience name",
+    );
+    jump("6. Preview");
+    expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeVisible();
+    expect(screen.getByRole("alert")).toBeVisible();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+  });
+
+  it("does not show a persistent draft notice below the section navigation", () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    expect(screen.queryByText(/Drafts stay in this browser tab/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save and exit" })).not.toBeInTheDocument();
+  });
+
+  it.each([false, true])("keeps only exit in the new activity header (referral=%s)", (referral) => {
+    renderWithQueryClient(<CreateActivityForm referral={referral} />);
+    const header = screen.getByRole("banner");
+    expect(within(header).getByRole("link", { name: "Exit" })).toBeInTheDocument();
+    expect(within(header).queryByRole("button")).not.toBeInTheDocument();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+  });
+
+  it("saves edit changes to the server from the mobile header", async () => {
+    const detail = buildEditDetail();
+    mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
+    renderEditForm(detail);
+    const save = screen.getByRole("button", { name: "Save and exit" });
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(
+      within(screen.getByRole("navigation", { name: "Jump to section" })).getByRole("button", {
+        name: "2. Activity",
+      }),
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Experience name" }), {
+      target: { value: "Updated mobile title" },
+    });
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(mockedUpdateMyActivity).toHaveBeenCalledWith(
+        "42",
+        expect.objectContaining({ title: "Updated mobile title" }),
+      ),
+    );
+    await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/en/my-activities/42"));
+    expect(mockedClearActivityCreateDraft).toHaveBeenCalledWith("edit:42");
+  });
+
   it("revokes photo object URLs when a preview is removed", async () => {
     renderWithQueryClient(<CreateActivityForm />);
 
@@ -1216,6 +1289,224 @@ describe("CreateActivityForm", () => {
     );
   }
 
+  it("restores edit draft values but opens the introduction rather than its saved preview", async () => {
+    const draft = buildDraftFromMyActivityDetail(buildEditDetail());
+    mockedLoadActivityCreateDraft.mockResolvedValue({
+      snapshot: {
+        currentStep: "restrictions",
+        furthestStepIndex: 13,
+        reviewing: true,
+        errorKey: null,
+        draft: {
+          ...draft,
+          hostIntroduction: "An unsaved introduction that must remain available after returning.",
+        },
+        fileSequence: 0,
+        scheduleSequence: 0,
+      },
+      objectUrls: new Set(),
+    });
+    renderEditForm(buildEditDetail());
+    await waitFor(() =>
+      expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(
+        "An unsaved introduction that must remain available after returning.",
+      ),
+    );
+    expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preview" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("validates required fields before entering desktop preview", () => {
+    renderWithQueryClient(<CreateActivityForm />);
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeVisible();
+    expect(mockedCreateMyActivity).not.toHaveBeenCalled();
+  });
+
+  it("opens the desktop preview tab and returns to the existing input without saving", () => {
+    renderEditForm(buildEditDetail());
+    const preview = screen.getByRole("button", { name: "Preview" });
+    fireEvent.click(preview);
+    expect(preview).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Intro" }));
+    expect(preview).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("textbox", { name: "About you" })).not.toHaveValue("");
+    expect(mockedUpdateMyActivity).not.toHaveBeenCalled();
+  });
+
+  it("marks preview ready on mobile and desktop only while every input is valid", () => {
+    renderEditForm(buildEditDetail());
+    const desktopPreview = screen.getByRole("button", { name: "Preview" });
+    const mobilePreview = screen.getByRole("button", { name: "6. Preview" });
+    expect(desktopPreview.querySelector("svg")).toBeInTheDocument();
+    expect(mobilePreview.querySelector("svg")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "About you" }), { target: { value: "" } });
+    expect(desktopPreview.querySelector("svg")).not.toBeInTheDocument();
+    expect(mobilePreview.querySelector("svg")).not.toBeInTheDocument();
+    expect(desktopPreview).toHaveTextContent("6");
+    expect(mobilePreview).toHaveTextContent("6");
+    fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
+      target: { value: "I have guided friends through this neighborhood market for years." },
+    });
+    expect(desktopPreview.querySelector("svg")).toBeInTheDocument();
+    expect(mobilePreview.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("keeps previous and next controls together in the mobile footer", () => {
+    renderEditForm(buildEditDetail());
+    const next = screen.getByRole("button", { name: "Next" });
+    const footer = next.closest("footer")!;
+    expect(footer).not.toHaveClass("hidden");
+    expect(next).toHaveClass("min-h-11", "w-28", "sm:w-32");
+    expect(within(footer).queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
+    fireEvent.click(next);
+    const back = within(footer).getByRole("button", { name: "Back" });
+    expect(back).toHaveClass("min-h-11", "w-28", "sm:w-32");
+    expect(back).toBeEnabled();
+    fireEvent.click(back);
+    expect(screen.getByRole("textbox", { name: "About you" })).toBeInTheDocument();
+  });
+
+  it("uses a compact mobile header and inline major steps with accessible action labels", () => {
+    renderEditForm(buildEditDetail());
+    const save = screen.getByRole("button", { name: "Save and exit" });
+    expect(save).toHaveTextContent(/^$/);
+    expect(save).toHaveClass("size-11");
+    expect(save).toHaveClass("text-muted");
+    expect(save.parentElement).toHaveClass("gap-0");
+    expect(save.querySelector("svg")).toHaveClass("size-4");
+    expect(save).not.toHaveClass("bg-primary");
+    expect(screen.getByRole("link", { name: "Exit" })).toHaveAttribute("title", "Exit");
+    expect(screen.getByRole("link", { name: "Exit" }).querySelector("svg")).toHaveClass("size-4");
+    const navigation = screen.getByRole("navigation", { name: "Jump to section" });
+    const intro = within(navigation).getByRole("button", { name: "1. Intro" });
+    expect(intro).toHaveClass("min-h-11");
+    expect(intro).not.toHaveClass("flex-col", "min-h-16");
+  });
+
+  it("shortens meeting place guidance only on mobile", () => {
+    renderEditForm(buildEditDetail());
+    const navigation = screen.getByRole("navigation", { name: "Jump to section" });
+    fireEvent.click(within(navigation).getByRole("button", { name: "3. Operations" }));
+    expect(screen.getByText(en.CreateActivity.steps.meeting.description)).toHaveClass(
+      "hidden",
+      "lg:block",
+    );
+    expect(screen.getByText(en.CreateActivity.hints.meetingPlace)).toHaveClass(
+      "hidden",
+      "lg:inline",
+    );
+    expect(screen.getByText("Use a short, recognizable place name.")).toHaveClass("lg:hidden");
+  });
+
+  it("keeps the edit preview save action desktop-only with mobile header save available", () => {
+    renderEditForm(buildEditDetail());
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    const footer = screen.getByRole("contentinfo");
+    expect(within(footer).getByRole("button", { name: "Save changes" })).toHaveClass(
+      "hidden",
+      "lg:flex",
+    );
+    expect(within(footer).getByRole("button", { name: "Back" })).not.toHaveClass("hidden");
+    expect(screen.getByRole("button", { name: "Save and exit" })).not.toHaveClass("hidden");
+  });
+
+  it("omits the selected photo count while keeping the photo ordering controls", () => {
+    renderEditForm(buildEditDetail());
+    const navigation = screen.getByRole("navigation", { name: "Jump to section" });
+    fireEvent.click(within(navigation).getByRole("button", { name: "2. Activity" }));
+    fireEvent.click(within(navigation).getByRole("button", { name: "Photos" }));
+    expect(screen.queryByText("3 photos selected")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Experience photo 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove experience photo 1" })).toBeInTheDocument();
+  });
+
+  it("keeps completion checks and underlines both active mobile navigation levels", () => {
+    renderEditForm(buildEditDetail());
+    const navigation = screen.getByRole("navigation", { name: "Jump to section" });
+    const group = within(navigation).getByRole("button", { name: "1. Intro" });
+    const introduction = within(navigation).getByRole("button", { name: "About you" });
+    expect(group.querySelector("svg")).toBeInTheDocument();
+    expect(group).toHaveClass("border-b-2", "border-primary", "font-bold");
+    expect(group).not.toHaveClass("bg-primary-soft");
+    expect(within(navigation).getByRole("button", { name: "2. Activity" })).toHaveClass(
+      "border-transparent",
+    );
+    expect(introduction.querySelector("svg")).toBeInTheDocument();
+    expect(introduction).toHaveClass("border-b-2", "border-primary");
+    expect(introduction).not.toHaveClass("bg-primary-soft", "border", "rounded-lg");
+    fireEvent.change(screen.getByRole("textbox", { name: "About you" }), {
+      target: { value: "Too short" },
+    });
+    expect(group.querySelector("svg")).not.toBeInTheDocument();
+    expect(introduction.querySelector("svg")).not.toBeInTheDocument();
+    expect(group).toHaveTextContent("1");
+    expect(
+      within(navigation).getByRole("button", { name: "Languages" }).querySelector("svg"),
+    ).toBeInTheDocument();
+  });
+
+  it("moves the major-section underline when switching completed sections", () => {
+    renderEditForm(buildEditDetail());
+    const navigation = screen.getByRole("navigation", { name: "Jump to section" });
+    const intro = within(navigation).getByRole("button", { name: "1. Intro" });
+    const activity = within(navigation).getByRole("button", { name: "2. Activity" });
+    expect(activity).toHaveClass("font-medium", "text-muted");
+    expect(activity.querySelector('[aria-hidden="true"]')).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+      "saturate-50",
+      "opacity-75",
+    );
+    fireEvent.click(activity);
+    expect(activity).toHaveClass("border-primary", "font-bold");
+    expect(activity).toHaveAttribute("aria-current", "step");
+    expect(intro).toHaveClass("border-transparent");
+    expect(intro.querySelector('[aria-hidden="true"]')).toHaveClass(
+      "bg-primary",
+      "saturate-50",
+      "opacity-75",
+    );
+    expect(activity.querySelector('[aria-hidden="true"]')).toHaveClass(
+      "bg-primary",
+      "text-on-primary",
+    );
+    expect(activity.querySelector('[aria-hidden="true"]')).not.toHaveClass(
+      "saturate-50",
+      "opacity-75",
+    );
+    expect(intro).not.toHaveAttribute("aria-current");
+    fireEvent.click(within(navigation).getByRole("button", { name: "6. Preview" }));
+    expect(within(navigation).getByRole("button", { name: "6. Preview" })).toHaveClass(
+      "border-primary",
+    );
+    expect(activity).toHaveClass("border-transparent");
+  });
+
+  it("uses a larger itinerary thumbnail, one actions menu, and adjacent editor navigation", () => {
+    renderEditForm(buildEditDetail());
+    const navigation = screen.getByRole("navigation", { name: "Jump to section" });
+    fireEvent.click(within(navigation).getByRole("button", { name: "2. Activity" }));
+    fireEvent.click(within(navigation).getByRole("button", { name: "Itinerary" }));
+    const menu = screen.getByRole("button", { name: "Item 1 actions" });
+    const card = menu.closest("section")!;
+    expect(card).toHaveClass("gap-4");
+    expect(card.querySelector("img")?.parentElement).toHaveClass("size-28", "lg:size-32");
+    fireEvent.click(menu);
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const dialog = screen.getByRole("dialog");
+    const back = within(dialog).getByRole("button", { name: "Back" });
+    const next = within(dialog).getByRole("button", { name: "Next" });
+    expect(back.parentElement).toBe(next.parentElement);
+    expect(back).toBeDisabled();
+    fireEvent.click(next);
+    expect(within(dialog).getByRole("textbox", { name: "Activity title" })).toBeInTheDocument();
+    fireEvent.click(back);
+    expect(screen.getByRole("dialog", { name: "Choose an activity photo" })).toBeInTheDocument();
+  });
+
   it.each([
     ["create", false],
     ["create", true],
@@ -1248,11 +1539,6 @@ describe("CreateActivityForm", () => {
           initialStatus="ACTIVE"
         />,
       );
-      if (mode === "edit") {
-        fireEvent.click(
-          within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }),
-        );
-      }
       for (let index = 0; index < 8; index++) clickNext();
       fireEvent.click(screen.getByRole("button", { name: "Date-specific settings" }));
       fireEvent.change(screen.getAllByRole("spinbutton")[0], { target: { value: "9" } });
@@ -1322,14 +1608,14 @@ describe("CreateActivityForm", () => {
     expect(mockedUpdateMyActivity.mock.calls[0][1].price).toBe(15000);
   });
 
-  it("starts edit mode in review and saves reused image keys through the update API", async () => {
+  it("starts edit mode at the introduction and saves reused image keys through the update API", async () => {
     const detail = buildEditDetail();
     mockedUpdateMyActivity.mockResolvedValue({ status: "success", activity: detail });
 
     renderEditForm(detail);
 
-    expect(screen.getByRole("heading", { name: "Preview your experience" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(detail.hostIntroduction);
 
     const save = screen.getByRole("button", { name: "Save changes" });
     fireEvent.click(save);
@@ -1405,7 +1691,7 @@ describe("CreateActivityForm", () => {
     await waitFor(() => expect(getMyActivity).toHaveBeenCalledWith("42"));
     await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled());
     expect(queryClient.getQueryState(buddyKeys.activityDetail("42"))?.status).toBe("success");
-    expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(detail.hostIntroduction);
     expect(routerPush).not.toHaveBeenCalled();
     mockedUpdateMyActivity.mockResolvedValueOnce({ status: "success", activity: detail });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
@@ -1421,8 +1707,7 @@ describe("CreateActivityForm", () => {
 
     renderEditForm(detail);
 
-    // 리뷰에서 첫 단계로 돌아가면 단계 전용 저장 버튼이 생긴다
-    fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
+    // 수정은 첫 입력 단계에서 시작하며 미리보기에 가지 않아도 저장할 수 있다.
     expect(
       screen.queryByRole("heading", { name: "Preview your experience" }),
     ).not.toBeInTheDocument();

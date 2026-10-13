@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { SessionWeatherSummary } from "@/components/activity/SessionWeatherSummary";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -24,7 +25,7 @@ import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
 import { getContentLanguage } from "@/lib/content-language";
 import { useBookableSessions } from "@/lib/use-bookable-sessions";
-import type { Activity } from "@/types/activity";
+import type { Activity, ActivityWeatherResult } from "@/types/activity";
 import { ReferralPrice } from "./ReferralPrice";
 import { ApplicationConfirmation } from "@/components/activity/ApplicationConfirmation";
 import { ApprovalNotice } from "@/components/booking/ApprovalNotice";
@@ -33,9 +34,11 @@ import { isClosedApplicationStatus, isDeclinedApplicationStatus } from "@/lib/ap
 
 export function ReferralBookingForm({
   activity,
+  weather,
   initialSessionId,
 }: {
   activity: Activity;
+  weather?: ActivityWeatherResult;
   initialSessionId?: string;
 }) {
   const t = useTranslations("Referral");
@@ -230,8 +233,11 @@ export function ReferralBookingForm({
               disabled={!sessions.length || mutation.isPending}
               className="flex min-h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 py-3 text-left text-sm font-semibold text-ink transition-colors hover:border-primary disabled:opacity-40"
             >
-              <span className={selected ? "text-ink" : "text-muted"}>
-                {selected ? `${dateLabel} ${timeLabel}` : detail("selectDatePlaceholder")}
+              <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                <span className={selected ? "text-ink" : "text-muted"}>
+                  {selected ? `${dateLabel} ${timeLabel}` : detail("selectDatePlaceholder")}
+                </span>
+                <SessionWeatherSummary session={selected ?? null} weather={weather} />
               </span>
               <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
             </button>
@@ -447,7 +453,7 @@ export function ReferralBookingForm({
                   </p>
                 ) : null}
                 {notice.data && (
-                  <label className="flex min-h-11 items-center gap-2 text-xs leading-5 font-medium">
+                  <label className="flex min-h-11 cursor-pointer items-start gap-2 py-3 text-xs leading-5 font-medium text-ink lg:text-[13px]">
                     <input
                       type="checkbox"
                       aria-describedby="referral-sharing-details"
@@ -459,7 +465,7 @@ export function ReferralBookingForm({
                         setConsentChanged(false);
                       }}
                     />
-                    {t("consent")}
+                    <span>{t("consent")}</span>
                   </label>
                 )}
                 {consentChanged ? (

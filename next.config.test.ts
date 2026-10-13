@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import nextConfig, { SECURITY_HEADERS } from "./next.config";
 
+it("keeps the development indicator from covering mobile booking controls", () => {
+  expect(nextConfig.devIndicators).toBe(false);
+});
+
 describe("nextConfig images.remotePatterns", () => {
   it("allows profile images only from the HanBuddy S3 bucket host", () => {
     expect(nextConfig.images?.remotePatterns).toContainEqual({

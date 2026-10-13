@@ -14,6 +14,7 @@
     "approve": "承認",
     "reject": "お断り",
     "deadline": "承認期限：{date}",
+    "deadlineCompact": "承認期限 {date}",
     "processing": "処理中",
     "expired": "承認期限を過ぎました。状況を確認中です。",
     "paid": "支払い完了 · バディの承認待ち",
@@ -67,6 +68,7 @@
     "payoutColumn": "1人の精算額",
     "tableNote": "期間割引前の目安 · 範囲外は基本料金",
     "basePayout": "1名あたりの予想受取額 {amount}",
+    "commissionDeducted": "手数料{rate}差し引き後",
     "enable": "人数別料金を設定",
     "hint": "1件の申込人数に応じて全員に適用する1人当たりの料金です。範囲外は基本料金、期間割引はさらに適用されます。",
     "range": "料金区分 {count}",
@@ -230,6 +232,7 @@
     }
   },
   "ScheduleCancellation": {
+    "cancellationFeeWarning": "正当な理由なくキャンセルした場合、精算時に20%のキャンセル料が差し引かれます。",
     "referralIrreversible": "キャンセル後は再開・新規申し込みを受け付けられません。申込者に必ずお知らせください。事業者が別途受け取った支払いは直接ご確認ください。",
     "referralSuccess": "日程をキャンセルしました。",
     "refundAmount": "返金額",
@@ -400,7 +403,8 @@
   "Accessibility": {
     "goBack": "戻る",
     "close": "閉じる",
-    "closeDialog": "ダイアログを閉じる"
+    "closeDialog": "ダイアログを閉じる",
+    "enlargePhoto": "{name}の写真を拡大"
   },
   "Status": {
     "declined": "お断り",
@@ -1069,6 +1073,7 @@
     "soldOut": "売り切れ"
   },
   "ActivityDetail": {
+    "timePeriods": { "morning": "午前", "afternoon": "午後" },
     "selectDateCompact": "日付選択",
     "bookCompact": "予約",
     "loading": "アクティビティを読み込み中...",
@@ -1418,6 +1423,7 @@
     "memberCount": "{count, plural, one {# メンバー} other {# メンバー}}",
     "leftMember": "左",
     "messagePlaceholder": "相手には翻訳文が表示され、翻訳できない場合は原文が表示されます。",
+    "messagePlaceholderShort": "自動翻訳に対応",
     "messageLabel": "メッセージ",
     "send": "送信",
     "sending": "送信中...",
@@ -1514,6 +1520,25 @@
     "kstNotice": "時間はすべて韓国標準時 (KST) です。"
   },
   "BuddyDashboard": {
+    "applicationViews": "申込履歴の区分",
+    "noMatchingApplications": "該当する申込履歴はありません。",
+    "recordCount": "{count, plural, other {#件}}",
+    "sessions": "開催回一覧",
+    "sessionCount": "{count, plural, other {#回}}",
+    "backToSessions": "開催回一覧に戻る",
+    "cancellationCount": "{count, plural, other {キャンセル#件}}",
+    "noSessionParticipants": "確定した参加者はいません。",
+    "noSessionCancellations": "キャンセルされた申込はありません。",
+    "refreshRecords": "履歴を更新",
+    "noSessionRecords": "この日付には予約履歴がありません。",
+    "sessionDetails": "開催回の詳細",
+    "participants": "参加者",
+    "cancellationHistory": "キャンセル",
+    "recordsLoadError": "開催回の履歴を更新できませんでした。もう一度お試しください。",
+    "retryRecords": "再試行",
+    "loadingRecords": "開催回の履歴を確認中…",
+    "cancelledRecord": "キャンセル済み",
+    "hostCancelled": "ホストが開催回をキャンセル",
     "title": "バディダッシュボード",
     "description": "今後のスケジュールやゲストの申し込みを常に把握してください。",
     "createActivity": "アクティビティの作成",
@@ -1614,6 +1639,10 @@
     "sectionCancelled": "キャンセルされた予約",
     "guestApplicantCount": "{count, plural, one {# 申請者} other {# 申請者}}",
     "appliedOn": "適用日 {date}",
+    "appliedAt": "申込日時: {date}",
+    "cancelledAt": "キャンセル日時：{date}",
+    "rejectedAt": "却下日時：{date}",
+    "expiredAt": "自動失効日時：{date}",
     "confirmedCount": "{count, plural, one {# 確認された} other {# 確認された}}",
     "pendingCount": "{count, plural, one {# 支払い保留中} other {# 支払い保留中}}",
     "guestCount": "{count, plural, one {# ゲスト} other {# ゲスト}}",
@@ -1633,6 +1662,29 @@
     "title": "HanBuddy 体験をデザインする",
     "progress": "ステップ {current, number} の {total, number}",
     "progressLabel": "アクティビティ作成の進捗状況",
+    "mobileNavigation": {
+      "steps": {
+        "host": "自己紹介",
+        "languages": "言語",
+        "name": "タイトル",
+        "description": "説明",
+        "photos": "写真",
+        "itinerary": "コース",
+        "meeting": "場所",
+        "schedule": "日程",
+        "capacity": "人数",
+        "price": "料金",
+        "quantity": "人数別料金",
+        "discount": "割引",
+        "inclusions": "含まれるもの",
+        "restrictions": "参加条件"
+      },
+      "label": "項目へ移動",
+      "saveExit": "保存して終了",
+      "saveShort": "保存",
+      "preview": "プレビュー",
+      "register": "アクティビティを登録"
+    },
     "steps": {
       "category": {
         "title": "カテゴリを選択してください",
@@ -1732,6 +1784,7 @@
       "experienceName": "何が特別なのかをゲストに伝える、短くて具体的な名前を使用します。",
       "meetingAddress": "住所を検索し、候補から選択します。",
       "meetingPlace": "アドレスとは別に、認識可能な短い名前を使用します。",
+      "meetingPlaceMobile": "わかりやすい短い場所名を入力してください。",
       "onePerLine": "1 行に 1 つの項目を入力します。",
       "restrictionsList": "ゲストが知っておくべきことを一度に 1 つ追加します。",
       "characters": "{count, number} 入力された文字",
@@ -1755,7 +1808,7 @@
       "duration": "例: 30",
       "maxGuests": "例: 8",
       "pricePerPerson": "例: 50000",
-      "inclusionsCustom": "例: チームキャップ",
+      "inclusionsCustom": "その他に提供するものを入力してください",
       "inclusions": "チケット\nウェルカムスナック\n応援キット",
       "discount": "例: 10",
       "restrictions": "例: 歩きやすい靴をお勧めします"
@@ -1775,14 +1828,15 @@
       "remove": "体験写真を削除 {index, number}"
     },
     "itinerary": {
+      "actions": "項目{index, number}のメニュー",
       "item": "項目 {index, number}",
-      "remove": "項目 {index, number} を削除",
+      "remove": "削除",
       "titleCount": "{count, number}/{max, number} キャラクター",
       "descriptionCount": "{count, number}/{max, number} 文字数・最小値 {min, number}",
       "addPhoto": "アクティビティの写真を追加する",
       "photoLabel": "アクティビティ用の写真をアップロードする {index, number}",
       "add": "項目を追加",
-      "edit": "項目 {index, number} を編集",
+      "edit": "編集",
       "untitled": "新しい項目",
       "incomplete": "詳細を追加",
       "durationSummary": "{minutes, number} 分",
@@ -1883,6 +1937,7 @@
         "drinks": "スペシャルティドリンク",
         "transport": "公共交通機関",
         "parking": "駐車場",
+        "serviceFee": "サービス利用料",
         "equipment": "器材レンタル",
         "souvenir": "特別なお土産"
       }
@@ -1961,6 +2016,7 @@
       "restrictionsRequired": "ゲストが知っておくべきことを少なくとも 1 つ選択するか、特筆すべき事項がないことを確認します。",
       "imageUploadFailed": "写真をアップロードできませんでした。もう一度試してください。",
       "submissionFailed": "あなたの体験を登録できませんでした。もう一度試してください。",
+      "draftSaveFailed": "下書きを保存できませんでした。入力内容は残っています。終了する前にもう一度お試しください。",
       "scheduleInPast": "選択した日付または開始時刻の一部がすでに過ぎています。今後のセッションのみを選択してください。",
       "maxGuestsTooMany": "収容人数は最大 100 名です。",
       "itineraryTooMany": "旅程アクティビティは最大 20 件追加できます。",

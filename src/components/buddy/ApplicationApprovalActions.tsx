@@ -20,12 +20,14 @@ export function ApplicationApprovalActions({
   name,
   onPendingChange,
   fullWidth = false,
+  deadlineTone = "muted",
 }: Readonly<{
   applicationId: number;
   expiresAt?: string | null;
   name: string;
   onPendingChange?: (pending: boolean) => void;
   fullWidth?: boolean;
+  deadlineTone?: "muted" | "danger";
 }>) {
   const t = useTranslations("Approval");
   const queryClient = useQueryClient();
@@ -75,7 +77,7 @@ export function ApplicationApprovalActions({
   else if (forbidden) errorMessage = t("forbidden");
   return (
     <div className="min-w-0 text-left">
-      <ApprovalDeadline expiresAt={expiresAt} />
+      <ApprovalDeadline expiresAt={expiresAt} tone={deadlineTone} />
       {fullWidth && !expired && (
         <p className="mt-1 text-xs leading-5 text-muted">{t("deadlineHint")}</p>
       )}

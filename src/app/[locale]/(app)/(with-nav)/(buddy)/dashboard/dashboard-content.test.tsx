@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getBuddyApplications,
+  getBuddyActivityApplications,
   getBuddyPendingApprovals,
   getBuddyScheduleDates,
   getMyActivities,
@@ -40,6 +41,7 @@ vi.mock("@/lib/api/chat", () => ({
 vi.mock("@/lib/api/buddy", () => ({
   getBuddyPendingApprovals: vi.fn(),
   getBuddyApplications: vi.fn(),
+  getBuddyActivityApplications: vi.fn(),
   getBuddyScheduleDates: vi.fn(),
   getMyActivities: vi.fn(),
 }));
@@ -86,6 +88,35 @@ const teaTastingActivities = [
 
 describe("DashboardContent", () => {
   beforeEach(() => {
+    vi.mocked(getBuddyActivityApplications)
+      .mockReset()
+      .mockImplementation(async (id) => {
+        const summary: Awaited<ReturnType<typeof getBuddyApplications>> | undefined =
+          await mockedGetBuddyApplications.mock.results.at(-1)?.value;
+        const schedule =
+          summary?.status === "success"
+            ? summary.activities
+                .flatMap((activity) => activity.schedules)
+                .find((item) => item.activityScheduleId === Number(id))
+            : undefined;
+        return {
+          status: "success",
+          applications: {
+            activityId: 42,
+            activityTitle: "Traditional Tea Tasting",
+            activityScheduleId: Number(id),
+            startAt: schedule?.startAt ?? "2099-07-20T10:00:00+09:00",
+            applicantCount: schedule?.applicantCount ?? 0,
+            statusCounts: {},
+            applicants: (schedule?.applicants ?? []).map((item) => ({
+              ...item,
+              status: item.status ?? "CONFIRMED",
+              specialRequest: item.specialRequest ?? null,
+              appliedAt: "2026-07-01T10:00:00+09:00",
+            })),
+          },
+        };
+      });
     vi.mocked(getBuddyPendingApprovals)
       .mockReset()
       .mockResolvedValue({
@@ -160,7 +191,7 @@ describe("DashboardContent", () => {
     expect(getBuddyPendingApprovals).toHaveBeenCalledWith(0);
   });
 
-  it("anchors a single-schedule menu to the title while keeping chat beside the time", async () => {
+  it("keeps session management inside the selected session detail", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
     mockedGetBuddyApplications.mockResolvedValue({
       status: "success",
@@ -174,16 +205,29 @@ describe("DashboardContent", () => {
       ],
     });
     renderWithQueryClient(<DashboardContent />);
-    const title = await screen.findByRole("heading", { name: "Traditional Tea Tasting" });
-    const card = title.closest("article")!;
-    expect(card).toHaveClass("relative");
-    expect(title.closest("a")).toHaveClass("pr-10");
+    const list = await screen.findByRole("region", { name: "Sessions" });
+    expect(screen.queryByRole("region", { name: "Session details" })).not.toBeInTheDocument();
+    expect(
+      within(list).queryByRole("button", { name: "Schedule options" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(await within(list).findByRole("button", { name: /10:00 AM.*Participants/ }));
+    const card = screen.getByRole("region", { name: "Session details" });
     const menu = within(card).getByRole("button", { name: "Schedule options" });
-    expect(menu.parentElement).toHaveClass("absolute", "top-4", "right-4");
+    expect(menu.parentElement).toHaveClass("absolute", "top-0", "right-0");
     const chat = await within(card).findByRole("button", { name: "Create group chat" });
-    const timeRow = within(card).getByText("10:00 AM").closest("a")!.parentElement!;
-    expect(timeRow).toContainElement(chat);
+    expect(card).toContainElement(chat);
     expect(menu.parentElement).not.toContainElement(chat);
+    const participants = within(card).getByRole("button", { name: /Participants/ });
+    expect(
+      participants.compareDocumentPosition(chat) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    fireEvent.click(within(card).getByRole("button", { name: /Cancellations/ }));
+    expect(
+      within(card).queryByRole("button", { name: "Create group chat" }),
+    ).not.toBeInTheDocument();
+    expect(within(card).getByRole("button", { name: "Schedule options" })).toBeInTheDocument();
+    fireEvent.click(participants);
+    expect(within(card).getByRole("button", { name: "Create group chat" })).toBeInTheDocument();
   });
 
   it("shows the week of the first activity date and its applicants", async () => {
@@ -201,19 +245,21 @@ describe("DashboardContent", () => {
 
     renderWithQueryClient(<DashboardContent />);
 
-    expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Traditional Tea Tasting" })).toHaveAttribute(
-      "loading",
-      "eager",
+    expect(
+      await screen.findByRole("button", { name: /10:00 AM.*Traditional Tea Tasting/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Traditional Tea Tasting" })).not.toBeInTheDocument();
+    fireEvent.click(
+      await screen.findByRole("button", { name: /10:00 AM.*Participants.*2 guests/ }),
     );
-    expect(screen.getAllByText("2 Applicants").length).toBeGreaterThan(0);
     expect(screen.getByText("10:00 AM")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
-    expect(screen.getByText("France")).toBeInTheDocument();
-    // 연락처는 줄에서 빠지고 프로필에서만 보여준다
-    expect(screen.queryByText(/WhatsApp/)).not.toBeInTheDocument();
-    expect(screen.getByText("2 guests")).toBeInTheDocument();
+    expect(screen.getByText(/France · 2 guests/)).toBeInTheDocument();
+    // 연락처는 프로필을 열지 않아도 회차 상세에서 바로 확인한다.
+    expect(screen.getByText("WhatsApp")).toBeVisible();
+    expect(screen.getAllByText(/2 guests/).length).toBeGreaterThan(0);
 
+    fireEvent.click(screen.getByRole("button", { name: "Back to sessions" }));
     // 선택된 날짜(7/20 월)가 속한 주: 일 19 ~ 토 25
     const dateGroup = screen.getByRole("group", { name: "Schedule dates" });
     expect(dateGroup.tagName).toBe("FIELDSET");
@@ -371,8 +417,10 @@ describe("DashboardContent", () => {
 
     renderWithQueryClient(<DashboardContent />);
 
+    fireEvent.click(await screen.findByRole("button", { name: /10:00 AM.*Participants/ }));
     await screen.findByText("Sophie Martin");
-    // 요청 사항은 접지 않고 바로 보인다 — 남긴 사람에게만 블록이 생긴다
+    // 상세 정보는 요청사항을 남긴 사람에게만 펼쳐볼 수 있다.
+    fireEvent.click(screen.getByText("Special request"));
     expect(screen.getByText("Vegan meal, please. No peanuts.")).toBeInTheDocument();
     expect(screen.getByText("Special request")).toBeInTheDocument();
     const liamRow = screen.getByText("Liam Park").closest("li")!;
@@ -391,6 +439,7 @@ describe("DashboardContent", () => {
 
     renderWithQueryClient(<DashboardContent />);
 
+    fireEvent.click(await screen.findByRole("button", { name: /10:00 AM.*Participants/ }));
     // 채팅 버튼(Message Sophie Martin)과 겹치지 않게 이름으로 시작하는 버튼을 고른다
     fireEvent.click(await screen.findByRole("button", { name: /^Sophie Martin/ }));
 
@@ -400,6 +449,7 @@ describe("DashboardContent", () => {
     expect(within(profile).getByText("WhatsApp")).toBeInTheDocument();
     expect(within(profile).getByText("+33 612345678")).toBeInTheDocument();
     expect(within(profile).getByText("2 guests")).toBeInTheDocument();
+    expect(within(profile).getByText("Applied at: Jul 1, 2026, 10:00 AM")).toBeInTheDocument();
     expect(
       within(profile).getByRole("button", { name: "Message Sophie Martin" }),
     ).toBeInTheDocument();
@@ -465,7 +515,7 @@ describe("DashboardContent", () => {
       activities: teaTastingActivities,
     });
     renderWithQueryClient(<DashboardContent />);
-    await screen.findByText("Traditional Tea Tasting");
+    await screen.findByRole("button", { name: /10:00 AM.*Traditional Tea Tasting/ });
     expect(screen.queryByRole("heading", { name: "My Activities" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Create Activity/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
@@ -488,14 +538,16 @@ describe("DashboardContent", () => {
 
     renderWithQueryClient(<DashboardContent />, { locale: "ko" });
 
-    expect(await screen.findByText("Traditional Tea Tasting")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /오전 10:00.*Traditional Tea Tasting/ }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "일정 날짜" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "이전 주" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다음 주" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "달력 열기" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "신청자" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "내 활동" })).not.toBeInTheDocument();
-    expect(screen.getAllByText("신청자 2명").length).toBeGreaterThan(0);
+    fireEvent.click(await screen.findByRole("button", { name: /오전 10:00.*참여자.*2명/ }));
     // 몇 명이 오는지 신청자 줄에서 바로 보인다
     expect(screen.getByText("2명")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "단체 채팅방 만들기" })).toBeInTheDocument();

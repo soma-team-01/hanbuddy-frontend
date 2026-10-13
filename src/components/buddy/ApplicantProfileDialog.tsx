@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
-import { Avatar } from "@/components/ui/Avatar";
+import { ZoomableAvatar } from "@/components/ui/ZoomableAvatar";
 import {
   ChatBubbleDotsIcon,
   MapPinIcon,
@@ -14,6 +14,11 @@ import {
 import type { Locale } from "@/i18n/routing";
 import { formatNationalityCode, getApplicantContactParts } from "@/lib/api/buddy-view";
 import type { BuddyApplicationApplicantSummaryResponse } from "@/types/buddy";
+import { ApplicantTimestamps, type ApplicantTimestampValues } from "./ApplicantTimestamps";
+import {
+  ApplicantCancellationDetails,
+  type ApplicantCancellationValues,
+} from "./ApplicantCancellationDetails";
 
 /** 신청자를 눌렀을 때 뜨는 프로필. 연락처·인원과 함께 바로 1:1 대화로 이어진다 */
 export function ApplicantProfileDialog({
@@ -21,7 +26,9 @@ export function ApplicantProfileDialog({
   locale,
   onClose,
 }: Readonly<{
-  applicant: BuddyApplicationApplicantSummaryResponse;
+  applicant: BuddyApplicationApplicantSummaryResponse &
+    ApplicantTimestampValues &
+    ApplicantCancellationValues;
   locale: Locale;
   onClose: () => void;
 }>) {
@@ -42,7 +49,7 @@ export function ApplicantProfileDialog({
       ref={dialogRef}
       aria-labelledby="applicant-profile-name"
       onClose={onClose}
-      className="motion-dialog m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-xs md:rounded-2xl"
+      className="motion-dialog m-0 max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-sm md:rounded-2xl"
     >
       <div className="flex justify-end">
         <button
@@ -56,7 +63,11 @@ export function ApplicantProfileDialog({
       </div>
 
       <div className="flex flex-col items-center gap-3 pb-1 text-center">
-        <Avatar name={applicant.applicantName} src={applicant.applicantProfileImageUrl} size={80} />
+        <ZoomableAvatar
+          name={applicant.applicantName}
+          src={applicant.applicantProfileImageUrl}
+          size={80}
+        />
         <div>
           <p id="applicant-profile-name" className="font-display text-lg font-bold text-ink">
             {applicant.applicantName}
@@ -101,6 +112,9 @@ export function ApplicantProfileDialog({
           <p className="mt-0.5 text-xs leading-5 whitespace-pre-line text-ink">{specialRequest}</p>
         </div>
       ) : null}
+
+      <ApplicantCancellationDetails applicant={applicant} />
+      <ApplicantTimestamps applicant={applicant} locale={locale} />
 
       <StartChatButton
         target={{ kind: "direct", targetUserId: applicant.applicantUserId }}

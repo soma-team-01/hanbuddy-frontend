@@ -58,6 +58,20 @@ describe("ScheduleActions", () => {
     vi.mocked(cancelSchedule).mockReset();
   });
 
+  it("emphasizes the unjustified cancellation fee before the reason and confirmation", async () => {
+    renderActions();
+    await openDialog();
+    const warning = screen.getByText(
+      "정당한 사유가 아닌 경우, 정산 시 취소 수수료 20%가 부과됩니다.",
+    );
+    expect(warning).toHaveClass("text-danger", "font-semibold");
+    expect(
+      warning.compareDocumentPosition(screen.getByRole("textbox")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(cancelSchedule).not.toHaveBeenCalled();
+  });
+
   it("can place the menu in the card header without moving the chat action", async () => {
     renderActions({ menuPlacement: "card-header", roomId: 8 });
     const menu = screen.getByRole("button", { name: "일정 옵션" }).parentElement;
@@ -65,6 +79,61 @@ describe("ScheduleActions", () => {
     expect(menu).not.toContainElement(screen.getByRole("link", { name: "단체 채팅방 입장" }));
     await openDialog();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("separates the mobile menu from the full-width chat row while preserving desktop actions", async () => {
+    renderActions({ compactMobile: true, roomId: 8 });
+    const trigger = screen.getByRole("button", { name: "일정 옵션" });
+    expect(trigger).toHaveClass("max-md:size-11");
+    expect(trigger.parentElement).toHaveClass("max-md:absolute", "max-md:top-0", "max-md:right-0");
+    expect(trigger.parentElement?.parentElement).toHaveClass(
+      "max-md:w-full",
+      "flex-col",
+      "items-end",
+    );
+    expect(trigger.parentElement?.parentElement).not.toHaveClass("max-md:flex-row");
+    expect(screen.getByRole("link", { name: "단체 채팅방 입장" })).toHaveClass(
+      "border",
+      "max-md:border-orange-600",
+      "max-md:min-h-9",
+      "max-md:bg-transparent",
+      "max-md:text-orange-700",
+      "max-md:rounded-full",
+      "max-md:px-2.5",
+    );
+    expect(screen.getByRole("link", { name: "단체 채팅방 입장" })).not.toHaveClass(
+      "max-md:bg-primary-soft",
+      "max-md:hover:bg-primary/10",
+      "max-md:border-0",
+    );
+    await openDialog();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("hides only chat outside the participants view while keeping schedule options", async () => {
+    renderActions({ showChat: false, roomId: 8, menuPlacement: "session-header" });
+    expect(screen.queryByRole("link", { name: "단체 채팅방 입장" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "일정 옵션" }).parentElement).toHaveClass(
+      "absolute",
+      "top-0",
+      "right-0",
+    );
+    await openDialog();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("keeps an existing room accessible with zero participants", () => {
+    renderActions({ applicantCount: 0, roomId: 8 });
+    expect(screen.getByRole("link", { name: "단체 채팅방 입장" })).toHaveAttribute(
+      "href",
+      "/ko/chat/8",
+    );
+  });
+
+  it("does not offer a new room with zero participants", async () => {
+    renderActions({ applicantCount: 0 });
+    await openDialog();
+    expect(screen.queryByRole("button", { name: "단체 채팅방 만들기" })).not.toBeInTheDocument();
   });
 
   it("requires a public reason, cancels the schedule once, and keeps existing chat open", async () => {

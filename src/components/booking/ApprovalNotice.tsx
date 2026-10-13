@@ -11,7 +11,7 @@ export function ApprovalNotice({
 }>) {
   const t = useTranslations("Approval");
   return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-2.5 px-1 py-1 text-xs leading-5 font-medium text-ink lg:text-[13px]">
+    <label className="flex min-h-11 cursor-pointer items-start gap-2 py-3 text-xs leading-5 font-medium text-ink lg:text-[13px]">
       <input
         type="checkbox"
         required

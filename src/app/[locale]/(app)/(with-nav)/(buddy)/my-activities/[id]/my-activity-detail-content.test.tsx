@@ -132,8 +132,8 @@ describe("MyActivityDetailContent", () => {
     );
     expect(screen.queryByRole("link", { name: /View applicants/ })).not.toBeInTheDocument();
     // 게스트 화면과 동일한 본문: 버디 프로필이 호스트로 노출된다
-    expect(screen.getByText("Host: Tea Buddy")).toBeInTheDocument();
-    expect(screen.queryByText("Host: Jihoon Kim")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Tea Buddy" }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("heading", { name: "Jihoon Kim" })).not.toBeInTheDocument();
     expect(
       screen.getByText("I have hosted tea ceremonies in Insadong for five years."),
     ).toBeInTheDocument();
@@ -217,15 +217,17 @@ describe("MyActivityDetailContent", () => {
   });
 
   it.each([
-    ["en", "Host: HanBuddy host"],
-    ["ko", "호스트: 한버디 호스트"],
+    ["en", "HanBuddy host"],
+    ["ko", "한버디 호스트"],
   ] as const)("localizes the fallback host name for %s", async (locale, expectedName) => {
     mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
     mockedUseMyProfile.mockReturnValue(null);
 
     renderWithQueryClient(<MyActivityDetailContent activityId="42" />, { locale });
 
-    expect(await screen.findByText(expectedName)).toBeInTheDocument();
+    expect((await screen.findAllByRole("heading", { name: expectedName })).length).toBeGreaterThan(
+      0,
+    );
   });
 
   it("maps a not-owner error to a localized message", async () => {

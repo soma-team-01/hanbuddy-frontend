@@ -170,6 +170,18 @@ it("sends both discount rules and clears the table when the end date is removed"
     "할인 종료일과 할인율을 입력하면 최종 요금이 표시돼요.",
   );
 });
+it.each([0.15, 0.2])(
+  "shows the server commission rate %s beside the base payout",
+  async (commissionRate) => {
+    vi.mocked(getActivityPricingPreview).mockResolvedValue({
+      ...result,
+      preview: { ...result.preview, commissionRate },
+    });
+    renderWithQueryClient(<ActivityBasePayout price="40000" />, { locale: "ko" });
+    expect(screen.queryByText(/수수료.*공제/)).not.toBeInTheDocument();
+    expect(await screen.findByText(`(수수료 ${commissionRate * 100}% 공제)`)).toBeVisible();
+  },
+);
 it("updates the one-line base payout with no quantity or period discount and clears stale values", async () => {
   vi.mocked(getActivityPricingPreview).mockImplementation(async (request) => ({
     ...result,
@@ -202,9 +214,11 @@ it("updates the one-line base payout with no quantity or period discount and cle
     expect.any(AbortSignal),
   );
   view.rerender(<ActivityBasePayout price="50000" />);
+  expect(screen.queryByText("(수수료 15% 공제)")).not.toBeInTheDocument();
   expect(screen.queryByText("1인 예상 정산 ₩34,000")).not.toBeInTheDocument();
   await screen.findByText("1인 예상 정산 ₩42,500");
   view.rerender(<ActivityBasePayout price="100" />);
+  expect(screen.queryByText("(수수료 15% 공제)")).not.toBeInTheDocument();
   expect(screen.getByText("1인 예상 정산 —")).toBeInTheDocument();
 });
 it("hides stale results immediately and ignores late responses after input changes", async () => {

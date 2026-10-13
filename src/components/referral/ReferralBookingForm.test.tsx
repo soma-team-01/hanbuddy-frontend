@@ -287,6 +287,12 @@ describe("referral application form", () => {
   it("keeps approval beside the action and uses a neutral numeric participant control", async () => {
     await ready();
     const bar = screen.getByTestId("bottom-action-bar");
+    for (const checkbox of within(bar).getAllByRole("checkbox")) {
+      const label = checkbox.closest("label");
+      expect(label).toHaveClass("items-start", "gap-2", "py-3", "leading-5");
+      expect(label).not.toHaveClass("px-1", "items-center");
+      expect(checkbox).toHaveClass("size-5", "shrink-0");
+    }
     expect(
       within(bar)
         .getByRole("checkbox", { name: /Buddy approval is required/i })
@@ -300,9 +306,9 @@ describe("referral application form", () => {
     expect(
       within(bar).getByRole("checkbox", { name: /share personal data/i }),
     ).toHaveAccessibleName("I agree to share personal data with the provider.");
-    expect(screen.getByRole("button", { name: "Date and time" }).querySelector("span")).toHaveClass(
-      "text-ink",
-    );
+    expect(
+      within(screen.getByRole("button", { name: "Date and time" })).getByText(/Oct 10/),
+    ).toHaveClass("text-ink");
     expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
     expect(screen.getByRole("status", { name: "1 participant" })).toHaveClass("text-xl");
     for (const count of screen.getAllByText("1 participant")) {

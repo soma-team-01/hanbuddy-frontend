@@ -14,6 +14,7 @@
     "approve": "确认",
     "reject": "拒绝",
     "deadline": "确认截止：{date}",
+    "deadlineCompact": "确认截止 {date}",
     "processing": "处理中",
     "expired": "确认期限已过，正在核实状态。",
     "paid": "支付成功 · 等待伙伴确认",
@@ -67,6 +68,7 @@
     "payoutColumn": "每人结算额",
     "tableNote": "限时折扣前预估 · 区间外适用基础价格",
     "basePayout": "预计每人结算 {amount}",
+    "commissionDeducted": "已扣除{rate}手续费",
     "enable": "设置人数价格",
     "hint": "按单次申请人数为所有参与者设置每人价格。区间外使用基础价格，限时折扣会叠加适用。",
     "range": "价格区间 {count}",
@@ -230,6 +232,7 @@
     }
   },
   "ScheduleCancellation": {
+    "cancellationFeeWarning": "如无正当理由取消，将在结算时扣除20%的取消手续费。",
     "referralIrreversible": "取消后无法重新开放或接受新申请。请务必通知申请人。商家另行收取的款项请自行确认。",
     "referralSuccess": "场次已取消。",
     "refundAmount": "退款金额",
@@ -400,7 +403,8 @@
   "Accessibility": {
     "goBack": "返回",
     "close": "关闭",
-    "closeDialog": "关闭对话框"
+    "closeDialog": "关闭对话框",
+    "enlargePhoto": "放大{name}的照片"
   },
   "Status": {
     "declined": "已拒绝",
@@ -1069,6 +1073,7 @@
     "soldOut": "已售完"
   },
   "ActivityDetail": {
+    "timePeriods": { "morning": "上午", "afternoon": "下午" },
     "selectDateCompact": "选择日期",
     "bookCompact": "预订",
     "loading": "正在加载活动...",
@@ -1418,6 +1423,7 @@
     "memberCount": "{count, plural, one {# 会员} other {# 会员}}",
     "leftMember": "左",
     "messagePlaceholder": "对方会看到译文；无法翻译时，将显示原文。",
+    "messagePlaceholderShort": "支持自动翻译",
     "messageLabel": "留言",
     "send": "发送",
     "sending": "正在发送...",
@@ -1514,6 +1520,25 @@
     "kstNotice": "所有时间均采用韩国标准时间 (KST)。"
   },
   "BuddyDashboard": {
+    "applicationViews": "申请记录分类",
+    "noMatchingApplications": "暂无此类申请记录。",
+    "recordCount": "{count, plural, other {#笔}}",
+    "sessions": "场次列表",
+    "sessionCount": "{count, plural, other {#个场次}}",
+    "backToSessions": "返回场次列表",
+    "cancellationCount": "{count, plural, other {取消#笔}}",
+    "noSessionParticipants": "此场次尚无已确认的参与者。",
+    "noSessionCancellations": "此场次没有取消的申请。",
+    "refreshRecords": "刷新记录",
+    "noSessionRecords": "此日期没有预订记录。",
+    "sessionDetails": "场次详情",
+    "participants": "参与者",
+    "cancellationHistory": "取消",
+    "recordsLoadError": "无法刷新场次记录，请重试以查看取消记录。",
+    "retryRecords": "重试",
+    "loadingRecords": "正在查看场次记录…",
+    "cancelledRecord": "已取消",
+    "hostCancelled": "向导已取消此场次",
     "title": "好友仪表板",
     "description": "随时掌握即将到来的日程安排和访客申请。",
     "createActivity": "创建活动",
@@ -1614,6 +1639,10 @@
     "sectionCancelled": "取消预订",
     "guestApplicantCount": "{count, plural, one {# 申请人} other {# 申请人}}",
     "appliedOn": "应用于 {date}",
+    "appliedAt": "申请时间：{date}",
+    "cancelledAt": "取消时间：{date}",
+    "rejectedAt": "拒绝时间：{date}",
+    "expiredAt": "自动过期时间：{date}",
     "confirmedCount": "{count, plural, one {# 已确认} other {# 已确认}}",
     "pendingCount": "{count, plural, one {# 待付款} other {# 待付款}}",
     "guestCount": "{count, plural, one {# 客人} other {# 客人}}",
@@ -1633,6 +1662,29 @@
     "title": "设计您的 HanBuddy 体验",
     "progress": "步骤 {current, number} 的 {total, number}",
     "progressLabel": "活动创建进度",
+    "mobileNavigation": {
+      "steps": {
+        "host": "自我介绍",
+        "languages": "语言",
+        "name": "标题",
+        "description": "说明",
+        "photos": "照片",
+        "itinerary": "行程",
+        "meeting": "地点",
+        "schedule": "日期",
+        "capacity": "人数",
+        "price": "价格",
+        "quantity": "团体价格",
+        "discount": "折扣",
+        "inclusions": "包含项目",
+        "restrictions": "参加条件"
+      },
+      "label": "跳转到项目",
+      "saveExit": "保存并退出",
+      "saveShort": "保存",
+      "preview": "预览",
+      "register": "注册活动"
+    },
     "steps": {
       "category": {
         "title": "选择一个类别",
@@ -1732,6 +1784,7 @@
       "experienceName": "使用简短而具体的名称，告诉客人它的特别之处。",
       "meetingAddress": "搜索地址并从建议中选择它。",
       "meetingPlace": "使用易于识别的简短名称，与地址分开。",
+      "meetingPlaceMobile": "请输入易于识别的简短地点名称。",
       "onePerLine": "每行输入一项。",
       "restrictionsList": "添加客人一次应该知道的一件事。",
       "characters": "{count, number} 输入的字符",
@@ -1755,7 +1808,7 @@
       "duration": "例如，30",
       "maxGuests": "例如，8",
       "pricePerPerson": "例如，50000",
-      "inclusionsCustom": "例如，团队上限",
+      "inclusionsCustom": "请输入其他提供的项目",
       "inclusions": "门票\n欢迎小吃\n啦啦队套装",
       "discount": "例如，10",
       "restrictions": "例如，建议穿舒适的鞋子"
@@ -1775,14 +1828,15 @@
       "remove": "删除体验照片 {index, number}"
     },
     "itinerary": {
+      "actions": "项目{index, number}菜单",
       "item": "项目 {index, number}",
-      "remove": "删除项目 {index, number}",
+      "remove": "删除",
       "titleCount": "{count, number}/{max, number} 人物",
       "descriptionCount": "{count, number}/{max, number} 字符·最少 {min, number}",
       "addPhoto": "添加活动照片",
       "photoLabel": "上传活动照片 {index, number}",
       "add": "添加项目",
-      "edit": "编辑项目 {index, number}",
+      "edit": "编辑",
       "untitled": "新项目",
       "incomplete": "添加详细信息",
       "durationSummary": "{minutes, number} 分钟",
@@ -1883,6 +1937,7 @@
         "drinks": "特色饮品",
         "transport": "公共交通",
         "parking": "停车",
+        "serviceFee": "服务费",
         "equipment": "设备租赁",
         "souvenir": "特别纪念品"
       }
@@ -1961,6 +2016,7 @@
       "restrictionsRequired": "至少选择一件事客人应该知道，或确认没有什么需要注意的。",
       "imageUploadFailed": "我们无法上传您的照片。请再试一次。",
       "submissionFailed": "我们无法登记您的经历。请再试一次。",
+      "draftSaveFailed": "草稿保存失败。输入的内容仍然保留，请在退出前重试。",
       "scheduleInPast": "某些选定的日期或开始时间已经过去。仅选择未来的会话。",
       "maxGuestsTooMany": "最多可容纳 100 位客人。",
       "itineraryTooMany": "您最多可以添加 20 项行程活动。",

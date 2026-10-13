@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
@@ -84,6 +84,18 @@ describe("ProfilePage", () => {
     expect(profileSummary).not.toHaveClass("sm:px-8", "sm:py-7");
     expect(screen.queryByRole("link", { name: "Go back" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  it("enlarges the saved profile photo without entering edit mode", async () => {
+    mockedGetMyProfile.mockResolvedValue({
+      status: "success",
+      profile: { ...profile, profileImageUrl: "/profile.jpg" },
+    });
+    renderWithQueryClient(<ProfilePage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Enlarge photo: Sarah" }));
+    expect(
+      within(screen.getByRole("dialog", { name: "Sarah" })).getByRole("img", { name: "Sarah" }),
+    ).toBeInTheDocument();
   });
 
   it.each(["KB", null] as const)(

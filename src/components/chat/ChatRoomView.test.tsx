@@ -260,6 +260,12 @@ describe("ChatRoomView", () => {
     });
     renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
     expect(await screen.findByText("Cancelled schedule")).toBeInTheDocument();
+    const metadata = screen.getByTestId("chat-room-metadata");
+    expect(metadata).toHaveClass("w-full", "justify-start", "pl-[100px]");
+    expect(metadata).not.toHaveClass("justify-between");
+    expect(metadata).toHaveTextContent("Sep 20");
+    expect(within(metadata).queryByText("Cancelled schedule")).not.toBeInTheDocument();
+    expect(within(metadata).getByRole("button", { name: /1/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Attach photos" })).toBeEnabled();
     fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Thank you" } });
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
@@ -298,12 +304,30 @@ describe("ChatRoomView", () => {
       "placeholder",
       "Recipients see a translation when available; otherwise, they see the original.",
     );
+    expect(within(composer).getByText("Auto-translation")).toHaveClass("md:hidden");
+    expect(input).toHaveClass("max-md:placeholder:text-transparent");
+    const sendButton = within(composer).getByRole("button", { name: "Send" });
+    expect(sendButton).toHaveClass("w-11", "md:w-auto");
+    expect(sendButton.querySelector("svg")).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "Hello" } });
+    expect(within(composer).queryByText("Auto-translation")).not.toBeInTheDocument();
     expect(within(composer).queryByRole("combobox")).not.toBeInTheDocument();
     const photoButton = within(composer).getByRole("button", { name: "Attach photos" });
     expect(photoButton).toHaveClass("shrink-0");
     expect(photoButton.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(
       0,
     );
+  });
+
+  it("enlarges the room photo from its header without sending a message", async () => {
+    renderWithQueryClient(<ChatRoomView chatRoomId="1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Enlarge photo: SeoulMate" }));
+    expect(
+      within(screen.getByRole("dialog", { name: "SeoulMate" })).getByRole("img", {
+        name: "SeoulMate",
+      }),
+    ).toHaveClass("object-contain");
+    expect(mockedSendChatMessage).not.toHaveBeenCalled();
   });
 
   it("sends on Enter but keeps Shift+Enter for a new line", async () => {

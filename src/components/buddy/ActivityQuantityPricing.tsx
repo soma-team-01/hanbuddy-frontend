@@ -389,11 +389,27 @@ function PricingResult({
             </button>
           </>
         ) : (
-          t("basePayout", {
-            amount: selectedRow
-              ? formatKrw(selectedRow.estimatedGuidePayoutAmountKrw, locale)
-              : "—",
-          })
+          <span className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+            <span>
+              {t("basePayout", {
+                amount: selectedRow
+                  ? formatKrw(selectedRow.estimatedGuidePayoutAmountKrw, locale)
+                  : "—",
+              })}
+            </span>
+            {selectedRow && current?.data && Number.isFinite(current.data.commissionRate) && (
+              <span className="text-xs">
+                (
+                {t("commissionDeducted", {
+                  rate: new Intl.NumberFormat(locale, {
+                    style: "percent",
+                    maximumFractionDigits: 2,
+                  }).format(current.data.commissionRate),
+                })}
+                )
+              </span>
+            )}
+          </span>
         )}
       </div>
     );

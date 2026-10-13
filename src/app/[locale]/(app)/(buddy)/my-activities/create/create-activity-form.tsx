@@ -9,11 +9,18 @@ import { buildPricingRequest, pricingTiers } from "@/lib/activity-pricing";
 import { getActivityPricingPreview } from "@/lib/api/activities";
 
 import Image from "next/image";
+import { ActivityStepNavigation } from "./activity-step-navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "@/components/ui/icons";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  LogOutIcon,
+  SaveIcon,
+} from "@/components/ui/icons";
 import { createMyActivity, getMyActivity, updateMyActivity } from "@/lib/api/buddy";
 import { createReferralActivity, updateReferralActivity } from "@/lib/api/referral";
 import { clearReferralCode, referralActivityPayload } from "@/lib/referral";
@@ -82,9 +89,9 @@ type DraftScalarField = Exclude<
   "photos" | "itinerary" | "schedules" | "discountType" | "hasNoRestrictions"
 >;
 
-type SubmissionPhase = "uploading" | "registering";
+type SubmissionPhase = "uploading" | "registering" | "draft";
 
-type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed";
+type SubmissionFallbackKey = "imageUploadFailed" | "submissionFailed" | "draftSaveFailed";
 
 function makeId(prefix: string, sequence: number) {
   return `${prefix}-${Date.now()}-${sequence}`;
@@ -186,6 +193,10 @@ function ProgressRail({
   isStepComplete,
   label,
   onNavigate,
+  previewLabel,
+  previewReady,
+  onPreview,
+  disabled,
 }: Readonly<{
   steps: readonly ActivityCreateStep[];
   groups: readonly {
@@ -200,6 +211,10 @@ function ProgressRail({
   isStepComplete: (step: ActivityCreateStep) => boolean;
   label: string;
   onNavigate: (step: ActivityCreateStep) => void;
+  previewLabel: string;
+  previewReady: boolean;
+  onPreview: () => void;
+  disabled: boolean;
 }>) {
   const getStepIndex = (step: ActivityCreateStep) => steps.indexOf(step);
   const currentIndex = getStepIndex(currentStep);
@@ -218,7 +233,7 @@ function ProgressRail({
   return (
     <aside className="hidden w-72 shrink-0 overflow-y-auto border-r border-primary/15 bg-[#fff] px-7 py-9 lg:block">
       <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase">
-        {currentIndex + 1} / {steps.length}
+        {reviewing ? previewLabel : `${currentIndex + 1} / ${steps.length}`}
       </p>
       <ol className="mt-7 space-y-3" aria-label={label}>
         {groups.map((group, index) => {
@@ -227,7 +242,7 @@ function ProgressRail({
           const isComplete = groupSteps.every(isVisitedAndComplete);
           const currentInGroup = isCurrent ? groupSteps.indexOf(currentStep) + 1 : 0;
           const groupTarget = groupSteps[0];
-          const groupDisabled = !canNavigateForwardTo(groupTarget);
+          const groupDisabled = disabled || !canNavigateForwardTo(groupTarget);
           return (
             <li key={group.key}>
               <button
@@ -269,13 +284,13 @@ function ProgressRail({
                   {group.steps.map((step) => {
                     const active = step === currentStep;
                     const complete = isVisitedAndComplete(step);
-                    const disabled = !canNavigateForwardTo(step);
+                    const stepDisabled = disabled || !canNavigateForwardTo(step);
                     return (
                       <li key={step}>
                         <button
                           type="button"
                           onClick={() => onNavigate(step)}
-                          disabled={disabled}
+                          disabled={stepDisabled}
                           aria-current={active ? "step" : undefined}
                           className={`flex w-full items-center justify-between gap-2 rounded-lg border bg-white px-3 py-2 text-left text-xs transition ${
                             active
@@ -294,6 +309,23 @@ function ProgressRail({
             </li>
           );
         })}
+        <li>
+          <button
+            type="button"
+            onClick={onPreview}
+            disabled={disabled}
+            aria-current={reviewing ? "step" : undefined}
+            className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-45 ${reviewing ? "border-primary/70 font-bold text-primary-strong" : "border-transparent font-medium text-muted hover:border-primary/30 hover:text-primary-strong"}`}
+          >
+            <span
+              aria-hidden="true"
+              className={`flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${reviewing || previewReady ? "border-primary bg-primary text-on-primary" : "border-line-strong"}`}
+            >
+              {previewReady ? <CheckIcon className="size-3" /> : groups.length + 1}
+            </span>
+            {previewLabel}
+          </button>
+        </li>
       </ol>
     </aside>
   );
@@ -371,7 +403,7 @@ export function CreateActivityForm({
     };
   }, [editableDraft, latestSchedules, isEdit]);
   const [errorKey, setErrorKey] = useState<ActivityCreateErrorKey | null>(null);
-  const [reviewing, setReviewing] = useState(isEdit);
+  const [reviewing, setReviewing] = useState(false);
   const [submissionPhase, setSubmissionPhase] = useState<SubmissionPhase | null>(null);
   const submissionInFlight = useRef(false);
   const [submissionError, setSubmissionError] = useState<{
@@ -385,7 +417,6 @@ export function CreateActivityForm({
   const [isDraftPersistenceReady, setIsDraftPersistenceReady] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const currentIndex = getStepIndex(currentStep);
-  const progressIndex = reviewing ? steps.length : currentIndex + 1;
   const isSubmitting = submissionPhase !== null;
   const submitActivityMutation = useMutation({
     mutationFn: async (request: ActivityUpsertRequest) => {
@@ -443,11 +474,11 @@ export function CreateActivityForm({
       }
 
       if (restored) {
-        setCurrentStep(restored.snapshot.currentStep);
+        setCurrentStep(isEdit ? "host" : restored.snapshot.currentStep);
         setFurthestStepIndex(restored.snapshot.furthestStepIndex);
         setDraft(restored.snapshot.draft);
         setErrorKey(restored.snapshot.errorKey);
-        setReviewing(restored.snapshot.reviewing);
+        setReviewing(isEdit ? false : restored.snapshot.reviewing);
         fileSequence.current = restored.snapshot.fileSequence;
         scheduleSequence.current = restored.snapshot.scheduleSequence;
         restored.objectUrls.forEach((url) => objectUrls.current.add(url));
@@ -458,7 +489,7 @@ export function CreateActivityForm({
     return () => {
       cancelled = true;
     };
-  }, [persistenceScope]);
+  }, [persistenceScope, isEdit]);
 
   useEffect(() => {
     if (!isDraftPersistenceReady || draftWasDiscarded.current) return;
@@ -879,6 +910,62 @@ export function CreateActivityForm({
     scrollToTop();
   }
 
+  function navigateMobileSection(value: string) {
+    if (isSubmitting) return;
+    setSubmissionError(null);
+    setErrorKey(null);
+    if (value === "review") {
+      const invalidStep = steps.find(
+        (step) => validateActivityCreateStep(step, draft, referral, isEdit) !== null,
+      );
+      if (invalidStep) {
+        setCurrentStep(invalidStep);
+        setReviewing(false);
+        setErrorKey(validateActivityCreateStep(invalidStep, draft, referral, isEdit));
+      } else setReviewing(true);
+    } else {
+      const step = steps.find((step) => step === value);
+      if (!step) return;
+      setCurrentStep(step);
+      setFurthestStepIndex((index) => Math.max(index, getStepIndex(step)));
+      setReviewing(false);
+    }
+    scrollToTop();
+  }
+
+  async function saveAndExit() {
+    if (submissionInFlight.current || !isDraftPersistenceReady) return;
+    if (isEdit) {
+      await submitActivity();
+      return;
+    }
+    submissionInFlight.current = true;
+    setSubmissionPhase("draft");
+    setSubmissionError(null);
+    try {
+      await saveActivityCreateDraft(
+        persistenceScope,
+        {
+          currentStep,
+          furthestStepIndex,
+          draft,
+          errorKey,
+          reviewing,
+          fileSequence: fileSequence.current,
+          scheduleSequence: scheduleSequence.current,
+        },
+        { required: true },
+      );
+      // Stop delayed autosaves without deleting the explicitly preserved draft.
+      draftWasDiscarded.current = true;
+      router.push("/dashboard");
+    } catch (error) {
+      setSubmissionError({ error, fallbackKey: "draftSaveFailed" });
+      submissionInFlight.current = false;
+      setSubmissionPhase(null);
+    }
+  }
+
   function getStepTitle(step: ActivityCreateStep) {
     if (step === "languages") return t("languageStep.title");
     if (referral && step === "price") return t("price.referralTitle");
@@ -1039,6 +1126,9 @@ export function CreateActivityForm({
     }
   }
 
+  const previewReady = steps.every(
+    (step) => validateActivityCreateStep(step, draft, referral, isEdit) === null,
+  );
   const title = reviewing ? t("review.title") : getStepTitle(currentStep);
   const description = reviewing
     ? t("review.description")
@@ -1057,6 +1147,7 @@ export function CreateActivityForm({
   const exitHref =
     isEdit && activityId !== undefined ? `/my-activities/${activityId}` : "/dashboard";
   let phaseLabel: string | null = null;
+  if (submissionPhase === "draft") phaseLabel = t("actions.submitSaving");
   if (submissionPhase === "uploading") phaseLabel = t("actions.submitUploading");
   if (submissionPhase === "registering") {
     phaseLabel = t(isEdit ? "actions.submitSaving" : "actions.submitRegistering");
@@ -1071,8 +1162,8 @@ export function CreateActivityForm({
 
   return (
     <div className="fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-[#fff] text-ink">
-      <header className="z-20 shrink-0 border-b border-primary/15 bg-[#fff] px-4 py-2 lg:px-8 lg:py-3.5">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
+      <header className="z-20 shrink-0 border-b border-primary/15 bg-[#fff] px-4 py-0.5 lg:px-8 lg:py-3.5">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2 lg:gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <Image
               src="/images/brand/logo-borderless.webp"
@@ -1082,29 +1173,69 @@ export function CreateActivityForm({
               className="size-7 shrink-0 object-contain lg:size-9"
               priority
             />
-            <span className="truncate font-display text-base font-extrabold tracking-[-0.04em] text-ink lg:text-lg">
+            <span className="truncate font-display text-sm font-extrabold tracking-[-0.04em] text-ink lg:text-lg">
               HanBuddy
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0 lg:gap-2">
             <Link
               href={exitHref}
-              onNavigate={clearPreservedDraft}
-              className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong bg-white px-3 text-sm font-bold text-ink transition hover:border-primary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4"
+              onNavigate={(event) => {
+                if (submissionInFlight.current) event.preventDefault();
+                else clearPreservedDraft();
+              }}
+              aria-disabled={isSubmitting}
+              aria-label={t("actions.exit")}
+              title={t("actions.exit")}
+              className="inline-flex size-11 shrink-0 items-center justify-center gap-2 rounded-full text-sm font-bold text-muted transition hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:h-10 lg:w-auto lg:border lg:border-line-strong lg:px-4 lg:text-ink lg:hover:border-primary"
             >
               <LogOutIcon className="size-4" />
-              {t("actions.exit")}
+              <span className="hidden lg:inline">{t("actions.exit")}</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => void saveAndExit()}
+              disabled={isSubmitting || !isDraftPersistenceReady}
+              aria-label={phaseLabel ?? t("mobileNavigation.saveExit")}
+              title={t("mobileNavigation.saveExit")}
+              aria-busy={isSubmitting}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:text-ink focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 lg:hidden"
+            >
+              <SaveIcon className="size-4" />
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="h-1 shrink-0 bg-line-soft lg:hidden">
-        <div
-          className="h-full bg-primary transition-[width]"
-          style={{ width: `${(progressIndex / steps.length) * 100}%` }}
-        />
-      </div>
+      <ActivityStepNavigation
+        label={t("mobileNavigation.label")}
+        groups={[
+          ...groups.map((group) => ({
+            id: group.key,
+            label: t(`groups.${group.key}`),
+            steps: group.steps.map((step) => ({
+              id: step,
+              label: t(`mobileNavigation.steps.${step}`),
+              complete:
+                (reviewing || getStepIndex(step) <= furthestStepIndex) &&
+                validateActivityCreateStep(step, draft, referral, isEdit) === null,
+            })),
+          })),
+          {
+            id: "review",
+            label: t("mobileNavigation.preview"),
+            steps: [{ id: "review", label: t("mobileNavigation.preview"), complete: previewReady }],
+          },
+        ]}
+        current={reviewing ? "review" : currentStep}
+        disabled={isSubmitting}
+        onNavigate={navigateMobileSection}
+      />
+      {!isEdit ? (
+        <p className="shrink-0 px-4 py-1 text-xs leading-5 text-muted lg:hidden">
+          {t("mobileNavigation.draftHint")}
+        </p>
+      ) : null}
 
       <div className="flex min-h-0 flex-1">
         <ProgressRail
@@ -1120,6 +1251,10 @@ export function CreateActivityForm({
           }
           label={t("progressLabel")}
           onNavigate={navigateToStep}
+          previewLabel={t("mobileNavigation.preview")}
+          previewReady={previewReady}
+          onPreview={() => navigateMobileSection("review")}
+          disabled={isSubmitting}
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <main
@@ -1141,18 +1276,22 @@ export function CreateActivityForm({
                 >
                   <ArrowLeftIcon className="size-5" />
                 </button>
-                <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase lg:hidden">
-                  {t(`groups.${currentGroup.key}`)} ·
-                  {currentGroup.steps.findIndex((step) => step === currentStep) + 1}/
-                  {currentGroup.steps.length}
-                </p>
+                {!reviewing ? (
+                  <p className="text-xs font-bold tracking-[0.16em] text-primary uppercase lg:hidden">
+                    {t(`groups.${currentGroup.key}`)} ·
+                    {currentGroup.steps.findIndex((step) => step === currentStep) + 1}/
+                    {currentGroup.steps.length}
+                  </p>
+                ) : null}
                 <h1
                   aria-live="polite"
                   className="mt-2 font-display text-xl leading-snug font-bold tracking-tight break-keep text-ink lg:text-3xl"
                 >
                   {title}
                 </h1>
-                <p className="mt-2 max-w-2xl text-[13px] leading-5 text-muted lg:mt-3 lg:text-base lg:leading-7">
+                <p
+                  className={`mt-2 max-w-2xl text-[13px] leading-5 text-muted lg:mt-3 lg:text-base lg:leading-7 ${!reviewing && currentStep === "meeting" ? "hidden lg:block" : ""}`}
+                >
                   {description}
                 </p>
                 <div className="mt-4 lg:mt-10">{renderStep()}</div>
@@ -1192,21 +1331,26 @@ export function CreateActivityForm({
 
           <footer className="z-20 shrink-0 border-t border-primary/15 bg-[#fff] px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:px-8 lg:pt-3.5 lg:pb-3.5">
             <div
-              className={`mx-auto grid grid-cols-2 items-center gap-3 lg:flex lg:justify-end lg:px-12 ${
+              className={`mx-auto flex items-center justify-between gap-3 lg:justify-end lg:px-12 ${
                 reviewing ? "max-w-7xl" : "max-w-4xl"
               }`}
             >
               <p aria-live="polite" className="sr-only">
                 {isSubmitting ? (phaseLabel ?? primaryActionLabel) : ""}
               </p>
-              <button
-                type="button"
-                onClick={goBack}
-                disabled={isSubmitting || (!reviewing && currentIndex === 0)}
-                className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-line-strong px-4 text-sm font-bold text-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
-              >
-                {t("actions.back")}
-              </button>
+              {!reviewing && currentIndex === 0 ? (
+                <span aria-hidden="true" className="w-28 shrink-0 sm:w-32 lg:hidden" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={goBack}
+                  disabled={isSubmitting || (!reviewing && currentIndex === 0)}
+                  className="flex min-h-11 w-28 shrink-0 items-center justify-center gap-2 rounded-full border border-line-strong px-4 text-sm font-bold text-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-40 sm:w-32 lg:hidden"
+                >
+                  <ArrowLeftIcon className="size-4" />
+                  {t("actions.back")}
+                </button>
+              )}
               {isEdit && !reviewing ? (
                 // 마지막 화면까지 가지 않아도 지금까지의 변경을 바로 저장한다.
                 // 저장 전에 전체 단계를 검증하므로, 비어 있는 단계가 있으면 그리로 데려간다
@@ -1214,7 +1358,7 @@ export function CreateActivityForm({
                   type="button"
                   onClick={() => void submitActivity()}
                   disabled={isSubmitting}
-                  className="order-first col-span-2 flex min-h-11 items-center justify-center rounded-full border border-primary px-6 text-sm font-bold text-primary transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60 lg:order-none"
+                  className="hidden min-h-11 items-center justify-center rounded-full border border-primary px-6 text-sm font-bold text-primary transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-60 lg:flex"
                 >
                   {stepSaveLabel}
                 </button>
@@ -1230,7 +1374,7 @@ export function CreateActivityForm({
                     event.preventDefault();
                 }}
                 disabled={isSubmitting}
-                className="flex min-h-11 min-w-28 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-white shadow-[0_8px_18px_rgba(209,63,50,0.18)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-32"
+                className={`${reviewing && isEdit ? "hidden lg:flex" : "flex"} min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary enabled:hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto lg:min-w-32 lg:px-6 ${reviewing ? "min-w-28" : "w-28 shrink-0 sm:w-32"}`}
               >
                 {primaryActionLabel}
                 {isSubmitting ? null : <ArrowRightIcon className="size-4" />}

@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
-import { Avatar } from "@/components/ui/Avatar";
+import { ZoomableAvatar } from "@/components/ui/ZoomableAvatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { MapPinIcon, MessageCircleIcon, XIcon } from "@/components/ui/icons";
 import { formatNationalityCode } from "@/lib/api/buddy-view";
@@ -73,7 +73,7 @@ export function ChatMemberDialog({
       </div>
 
       <div className="flex flex-col items-center gap-3 pb-2 text-center">
-        <Avatar name={member.userName} src={member.profileImageUrl} size={80} />
+        <ZoomableAvatar name={member.userName} src={member.profileImageUrl} size={80} />
         <div>
           <p id="chat-member-name" className="font-display text-lg font-bold text-ink">
             {member.userName}

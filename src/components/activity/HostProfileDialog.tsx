@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import { StartChatButton } from "@/components/chat/StartChatButton";
 import { ReviewCard } from "@/components/review/ReviewCard";
 import { useInfiniteScrollSentinel } from "@/components/ui/use-infinite-scroll-sentinel";
-import { Avatar } from "@/components/ui/Avatar";
+import { ZoomableAvatar } from "@/components/ui/ZoomableAvatar";
 import { MessageSquareIcon, XIcon } from "@/components/ui/icons";
 import { RatingSummary } from "@/components/ui/RatingSummary";
 import { Link } from "@/i18n/navigation";
@@ -140,7 +140,7 @@ export function HostProfileDialog({
       {/* 후기를 길게 훑어도 이름·평점과 닫기 버튼이 사라지지 않도록 헤더를 고정한다 */}
       <div className="flex items-start justify-between gap-4 border-b border-line-soft p-6 md:p-7">
         <div className="flex min-w-0 items-center gap-4">
-          <Avatar
+          <ZoomableAvatar
             name={profile?.buddyName ?? host.name}
             src={profile?.buddyProfileImageUrl ?? host.avatarUrl}
             size={64}

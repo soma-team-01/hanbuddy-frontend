@@ -219,6 +219,8 @@ export interface BuddyDateActivityApplicationsResponse {
 
 export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicationApplicantSummaryResponse {
   status: import("./application").BackendApplicationStatus;
+  /** 실제 취소·거절·자동 만료 처리 시각. 기존 서버/저장값이 없는 기록은 누락 또는 null. */
+  cancelledAt?: string | null;
   buddyApprovedAt?: string | null;
   specialRequest: string | null;
   appliedAt: string;

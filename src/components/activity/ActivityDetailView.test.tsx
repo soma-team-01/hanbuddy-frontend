@@ -7,6 +7,7 @@ import ko from "@/messages/ko.json";
 import ja from "@/messages/ja.json";
 import zhHans from "@/messages/zh-Hans.json";
 import zhHant from "@/messages/zh-Hant.json";
+import { getIntlLocale } from "@/i18n/routing";
 
 vi.mock("@/lib/api/activities", async (original) => ({
   ...(await original<typeof import("@/lib/api/activities")>()),
@@ -67,6 +68,84 @@ const activity: Activity = {
 };
 
 describe("ActivityDetailView", () => {
+  it.each([
+    ["zh-Hans", zhHans],
+    ["zh-Hant", zhHant],
+  ] as const)(
+    "uses the mapped Intl locale for the compact mobile date in %s",
+    (locale, messages) => {
+      const start = new Date("2099-10-15T08:30:00+09:00");
+      const formatter = new Intl.DateTimeFormat(getIntlLocale(locale), {
+        timeZone: "Asia/Seoul",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+      const expected = formatter.formatRange(start, new Date(start.getTime() + 5 * 60_000));
+      const OriginalDateTimeFormat = Intl.DateTimeFormat;
+      const spy = vi.spyOn(Intl, "DateTimeFormat").mockImplementation(function (locales, options) {
+        return new OriginalDateTimeFormat(locales, options);
+      });
+      try {
+        renderWithIntl(
+          <ActivityDetailView
+            activity={{
+              ...activity,
+              durationMinutes: 5,
+              sessions: [
+                {
+                  id: "future",
+                  startAt: start.toISOString(),
+                  dateKey: "2099-10-15",
+                  dateLabel: "10/15",
+                  timeLabel: "8:30",
+                  spotsLeft: 3,
+                },
+              ],
+            }}
+            preview
+          />,
+          { locale, messages },
+        );
+        fireEvent.click(screen.getByTestId("date-select-box"));
+        fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: /8:30/ }));
+        expect(
+          within(screen.getByTestId("date-select-box")).getByText(expected, { exact: true }),
+        ).toHaveClass("md:hidden");
+        const compactCalls = spy.mock.calls.filter(
+          ([, options]) => options?.month === "numeric" && options?.minute === "2-digit",
+        );
+        expect(compactCalls.length).toBeGreaterThan(0);
+        expect(compactCalls.every(([value]) => value === getIntlLocale(locale))).toBe(true);
+      } finally {
+        spy.mockRestore();
+      }
+    },
+  );
+  it.each([
+    ["en", en],
+    ["ko", ko],
+  ] as const)(
+    "keeps the title and host summary free of redundant labels in %s",
+    (locale, messages) => {
+      renderWithIntl(<ActivityDetailView activity={activity} preview />, { locale, messages });
+      const titleSection = screen.getByRole("heading", { level: 1 }).closest("section")!;
+      expect(within(titleSection).queryByText(activity.district)).not.toBeInTheDocument();
+      const infoSection = screen
+        .getByRole("heading", { level: 3, name: activity.meetingPoint.name })
+        .closest("section")!;
+      const hostCard = within(infoSection).getByRole("button", { name: activity.host.name });
+      expect(
+        within(hostCard).getByRole("heading", { level: 3, name: activity.host.name }),
+      ).toBeInTheDocument();
+      expect(hostCard).toHaveTextContent(activity.host.name);
+      expect(within(hostCard).queryByText(activity.host.bio)).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 3, name: activity.meetingPoint.name }),
+      ).toBeInTheDocument();
+    },
+  );
   it.each([
     ["en", en],
     ["ko", ko],
@@ -292,7 +371,7 @@ describe("ActivityDetailView", () => {
       expect(screen.getByTestId("booking-bar-actions").querySelectorAll("p")).toHaveLength(2);
       expect(screen.getByText(label)).not.toHaveClass("md:ml-auto", "md:text-2xl");
       expect(screen.getByTestId("date-select-box")).toHaveClass("md:flex-1");
-      expect(screen.getByTestId("date-select-box")).toHaveClass("h-11", "md:h-12");
+      expect(screen.getByTestId("date-select-box")).toHaveClass("min-h-11", "md:min-h-12");
       expect(screen.getByTestId("date-select-box")).not.toHaveClass("md:max-w-[480px]");
     },
   );
@@ -323,31 +402,24 @@ describe("ActivityDetailView", () => {
     ["ja", "自動翻訳済み", ja],
     ["zh-Hans", "已自动翻译", zhHans],
     ["zh-Hant", "已自動翻譯", zhHant],
-  ] as const)(
-    "places the translation notice before the location and title in %s",
-    (locale, label, messages) => {
-      renderWithIntl(
-        <ActivityDetailView
-          activity={{ ...activity, isTranslated: true }}
-          preview
-          bottomBar="inline"
-          unoptimizedImages
-        />,
-        { locale, messages },
-      );
-      const notice = screen.getByText(label);
-      const location = screen.getByText(activity.district, { exact: true });
-      expect(
-        notice.compareDocumentPosition(location) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      expect(
-        notice.compareDocumentPosition(screen.getByRole("heading", { level: 1 })) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      expect(notice.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
-      expect(notice.querySelector("svg rect")).not.toBeNull();
-    },
-  );
+  ] as const)("places the translation notice before the title in %s", (locale, label, messages) => {
+    renderWithIntl(
+      <ActivityDetailView
+        activity={{ ...activity, isTranslated: true }}
+        preview
+        bottomBar="inline"
+        unoptimizedImages
+      />,
+      { locale, messages },
+    );
+    const notice = screen.getByText(label);
+    expect(
+      notice.compareDocumentPosition(screen.getByRole("heading", { level: 1 })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(notice.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(notice.querySelector("svg rect")).not.toBeNull();
+  });
   it("keeps the guest host profile content visible while preview actions stay disabled", () => {
     renderWithIntl(
       <ActivityDetailView activity={activity} preview bottomBar="inline" unoptimizedImages />,
@@ -363,7 +435,7 @@ describe("ActivityDetailView", () => {
     expect(hostProfile).toHaveAttribute("data-can-contact", "false");
   });
 
-  it("keeps mobile date, price and booking action in a single compact row", () => {
+  it("keeps mobile date, weather, price and booking in a single row without truncating dates", () => {
     renderWithIntl(<ActivityDetailView activity={activity} unoptimizedImages />, { locale: "en" });
 
     const bar = screen.getByTestId("booking-bottom-bar");
@@ -375,6 +447,7 @@ describe("ActivityDetailView", () => {
     expect(screen.queryByRole("group", { name: "Guests" })).not.toBeInTheDocument();
     expect(within(bar).getByText("per person")).toBeInTheDocument();
     expect(screen.getByTestId("booking-bar-actions")).toHaveClass("contents");
+    expect(screen.getByTestId("date-select-box").querySelector(".truncate")).toBeNull();
     expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
   });
 

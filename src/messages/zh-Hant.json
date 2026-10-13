@@ -14,6 +14,7 @@
     "approve": "確認",
     "reject": "拒絕",
     "deadline": "確認截止：{date}",
+    "deadlineCompact": "確認截止 {date}",
     "processing": "處理中",
     "expired": "確認期限已過，正在核實狀態。",
     "paid": "付款成功 · 等待夥伴確認",
@@ -67,6 +68,7 @@
     "payoutColumn": "每人結算額",
     "tableNote": "限時折扣前預估 · 區間外適用基本價格",
     "basePayout": "預計每人結算 {amount}",
+    "commissionDeducted": "已扣除{rate}手續費",
     "enable": "設定人數價格",
     "hint": "按單次申請人數為所有參與者設定每人價格。區間外使用基本價格，限時折扣會疊加適用。",
     "range": "價格區間 {count}",
@@ -230,6 +232,7 @@
     }
   },
   "ScheduleCancellation": {
+    "cancellationFeeWarning": "如無正當理由取消，將在結算時扣除20%的取消手續費。",
     "referralIrreversible": "取消後無法重新開放或接受新申請。請務必通知申請人。商家另行收取的款項請自行確認。",
     "referralSuccess": "場次已取消。",
     "refundAmount": "退款金額",
@@ -400,7 +403,8 @@
   "Accessibility": {
     "goBack": "返回",
     "close": "關閉",
-    "closeDialog": "關閉對話框"
+    "closeDialog": "關閉對話框",
+    "enlargePhoto": "放大{name}的照片"
   },
   "Status": {
     "declined": "已拒絕",
@@ -1069,6 +1073,7 @@
     "soldOut": "已售完"
   },
   "ActivityDetail": {
+    "timePeriods": { "morning": "上午", "afternoon": "下午" },
     "selectDateCompact": "選擇日期",
     "bookCompact": "預訂",
     "loading": "正在加載活動...",
@@ -1418,6 +1423,7 @@
     "memberCount": "{count, plural, one {# 會員} other {# 會員}}",
     "leftMember": "左",
     "messagePlaceholder": "對方會看到譯文；無法翻譯時，將顯示原文。",
+    "messagePlaceholderShort": "支援自動翻譯",
     "messageLabel": "留言",
     "send": "傳送",
     "sending": "正在發送...",
@@ -1514,6 +1520,25 @@
     "kstNotice": "所有時間均採用韓國標準時間 (KST)。"
   },
   "BuddyDashboard": {
+    "applicationViews": "申請紀錄分類",
+    "noMatchingApplications": "暫無此類申請紀錄。",
+    "recordCount": "{count, plural, other {#筆}}",
+    "sessions": "場次列表",
+    "sessionCount": "{count, plural, other {#個場次}}",
+    "backToSessions": "返回場次列表",
+    "cancellationCount": "{count, plural, other {取消#筆}}",
+    "noSessionParticipants": "此場次尚無已確認的參與者。",
+    "noSessionCancellations": "此場次沒有取消的申請。",
+    "refreshRecords": "更新紀錄",
+    "noSessionRecords": "此日期沒有預訂紀錄。",
+    "sessionDetails": "場次詳情",
+    "participants": "參與者",
+    "cancellationHistory": "取消",
+    "recordsLoadError": "無法更新場次紀錄，請重試以查看取消紀錄。",
+    "retryRecords": "重試",
+    "loadingRecords": "正在查看場次紀錄…",
+    "cancelledRecord": "已取消",
+    "hostCancelled": "嚮導已取消此場次",
     "title": "好友儀表板",
     "description": "隨時掌握即將到來的日程安排和訪客申請。",
     "createActivity": "建立活動",
@@ -1614,6 +1639,10 @@
     "sectionCancelled": "取消預訂",
     "guestApplicantCount": "{count, plural, one {# 申請人} other {# 申請人}}",
     "appliedOn": "應用於 {date}",
+    "appliedAt": "申請時間：{date}",
+    "cancelledAt": "取消時間：{date}",
+    "rejectedAt": "拒絕時間：{date}",
+    "expiredAt": "自動到期時間：{date}",
     "confirmedCount": "{count, plural, one {# 已確認} other {# 已確認}}",
     "pendingCount": "{count, plural, one {# 待付款} other {# 待付款}}",
     "guestCount": "{count, plural, one {# 客人} other {# 客人}}",
@@ -1633,6 +1662,30 @@
     "title": "設計您的 HanBuddy 體驗",
     "progress": "步驟 {current, number} 的 {total, number}",
     "progressLabel": "活動建立進度",
+    "mobileNavigation": {
+      "steps": {
+        "host": "自我介紹",
+        "languages": "語言",
+        "name": "標題",
+        "description": "說明",
+        "photos": "照片",
+        "itinerary": "行程",
+        "meeting": "地點",
+        "schedule": "日期",
+        "capacity": "人數",
+        "price": "價格",
+        "quantity": "團體價格",
+        "discount": "折扣",
+        "inclusions": "包含項目",
+        "restrictions": "參加條件"
+      },
+      "label": "跳轉至項目",
+      "saveExit": "儲存並離開",
+      "saveShort": "儲存",
+      "preview": "預覽",
+      "register": "註冊活動",
+      "draftHint": "草稿儲存在此瀏覽器分頁中。請在預覽中完成註冊。"
+    },
     "steps": {
       "category": {
         "title": "選擇一個類別",
@@ -1732,6 +1785,7 @@
       "experienceName": "使用簡短而具體的名稱，告訴客人它的特別之處。",
       "meetingAddress": "搜尋地址並從建議中選擇它。",
       "meetingPlace": "使用易於識別的簡短名稱，與地址分開。",
+      "meetingPlaceMobile": "請輸入易於識別的簡短地點名稱。",
       "onePerLine": "每行輸入一項。",
       "restrictionsList": "增加客人一次應該知道的一件事。",
       "characters": "{count, number} 輸入的字符",
@@ -1755,7 +1809,7 @@
       "duration": "例如，30",
       "maxGuests": "例如，8",
       "pricePerPerson": "例如，50000",
-      "inclusionsCustom": "例如，團隊上限",
+      "inclusionsCustom": "請輸入其他提供的項目",
       "inclusions": "門票\n歡迎小吃\n啦啦隊套裝",
       "discount": "例如，10",
       "restrictions": "例如，建議穿著舒適的鞋子"
@@ -1775,14 +1829,15 @@
       "remove": "刪除體驗照片 {index, number}"
     },
     "itinerary": {
+      "actions": "項目{index, number}選單",
       "item": "項目 {index, number}",
-      "remove": "刪除項目 {index, number}",
+      "remove": "刪除",
       "titleCount": "{count, number}/{max, number} 人物",
       "descriptionCount": "{count, number}/{max, number} 字元·最少 {min, number}",
       "addPhoto": "新增活動照片",
       "photoLabel": "上傳活動照片 {index, number}",
       "add": "新增項目",
-      "edit": "編輯項目 {index, number}",
+      "edit": "編輯",
       "untitled": "新項目",
       "incomplete": "添加詳細信息",
       "durationSummary": "{minutes, number} 分鐘",
@@ -1883,6 +1938,7 @@
         "drinks": "特色飲品",
         "transport": "大眾運輸",
         "parking": "停車",
+        "serviceFee": "服務費",
         "equipment": "設備租賃",
         "souvenir": "特別紀念品"
       }
@@ -1961,6 +2017,7 @@
       "restrictionsRequired": "至少選擇一件事客人應該知道，或確認沒有什麼需要注意的。",
       "imageUploadFailed": "我們無法上傳您的照片。請再試一次。",
       "submissionFailed": "我們無法登記您的經驗。請再試一次。",
+      "draftSaveFailed": "草稿儲存失敗。輸入的內容仍然保留，請在離開前重試。",
       "scheduleInPast": "某些選定的日期或開始時間已經過去。僅選擇未來的會話。",
       "maxGuestsTooMany": "最多可容納 100 位客人。",
       "itineraryTooMany": "您最多可以新增 20 項行程活動。",

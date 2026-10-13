@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { SessionWeatherSummary } from "@/components/activity/SessionWeatherSummary";
 import { useBeginCheckout } from "@/components/analytics/use-begin-checkout";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -41,7 +42,7 @@ import { applicationKeys } from "@/lib/query/applications";
 import { buddyKeys } from "@/lib/query/buddy";
 import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { Activity } from "@/types/activity";
+import type { Activity, ActivityWeatherResult } from "@/types/activity";
 import { getContentLanguage } from "@/lib/content-language";
 import type {
   ApplicationConflictItemResponse,
@@ -76,6 +77,7 @@ function validateBookingSession(sessionId: string): BookingErrorKey | null {
 
 export function BookingForm({
   activity,
+  weather,
   initialSessionId,
   initialGuestCount = 1,
   payPalPricePending = false,
@@ -84,6 +86,7 @@ export function BookingForm({
   paymentProviderMode = PAYMENT_PROVIDER_MODE,
 }: Readonly<{
   activity: Activity;
+  weather?: ActivityWeatherResult;
   initialSessionId?: string;
   initialGuestCount?: number;
   payPalPricePending?: boolean;
@@ -466,10 +469,13 @@ export function BookingForm({
                 data-testid="date-select-box"
                 aria-label={t("dateTime")}
                 onClick={() => setCalendarOpen(true)}
-                className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 text-left text-sm font-semibold text-ink transition-colors hover:border-primary"
+                className="flex min-h-12 w-full items-center justify-between gap-2 rounded-xl border border-line-strong bg-canvas-soft px-4 py-3 text-left text-sm font-semibold text-ink transition-colors hover:border-primary"
               >
-                <span className={`truncate ${selectedSession ? "text-ink" : "text-muted"}`}>
-                  {sessionSummaryLabel}
+                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className={selectedSession ? "text-ink" : "text-muted"}>
+                    {sessionSummaryLabel}
+                  </span>
+                  <SessionWeatherSummary session={selectedSession} weather={weather} />
                 </span>
                 <CalendarDaysIcon className="size-5 shrink-0 text-primary" />
               </button>

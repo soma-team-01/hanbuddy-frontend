@@ -46,7 +46,15 @@ describe("GET /api/applications/buddy/schedules/[activityScheduleId]", () => {
         isSuccess: true,
         code: "200",
         message: "ok",
-        result: { activityId: 42, activityScheduleId: 10 },
+        result: {
+          activityId: 42,
+          activityScheduleId: 10,
+          applicants: [
+            { applicationId: 1, status: "CANCELLED", cancelledAt: "2026-10-13T18:30:00+09:00" },
+            { applicationId: 2, status: "REJECTED", cancelledAt: "2026-10-13T19:30:00+09:00" },
+            { applicationId: 3, status: "CONFIRMED", cancelledAt: null },
+          ],
+        },
       },
       setCookies: [],
     });
@@ -62,5 +70,10 @@ describe("GET /api/applications/buddy/schedules/[activityScheduleId]", () => {
       bearerToken: "access-token",
     });
     expect(response.status).toBe(200);
+    expect((await response.json()).result.applicants).toEqual([
+      { applicationId: 1, status: "CANCELLED", cancelledAt: "2026-10-13T18:30:00+09:00" },
+      { applicationId: 2, status: "REJECTED", cancelledAt: "2026-10-13T19:30:00+09:00" },
+      { applicationId: 3, status: "CONFIRMED", cancelledAt: null },
+    ]);
   });
 });

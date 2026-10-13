@@ -52,6 +52,12 @@ describe("Seoul date-time boundary", () => {
   );
 
   it("formats the same Seoul instant in English and Korean", () => {
+    expect(formatSeoulDateTime(SEOUL_BOUNDARY_INSTANT, "ko", { includeYear: false })).toBe(
+      "7. 19. 오전 1:30",
+    );
+    expect(formatSeoulDateTime(SEOUL_BOUNDARY_INSTANT, "en", { includeYear: false })).toBe(
+      "Jul 19, 1:30 AM",
+    );
     expect(formatSeoulDateTime(SEOUL_BOUNDARY_INSTANT, "en")).toBe("Jul 19, 2026, 1:30 AM");
     expect(formatSeoulDateTime(SEOUL_BOUNDARY_INSTANT, "ko")).toBe("2026. 7. 19. 오전 1:30");
     expect(formatSeoulDate(SEOUL_BOUNDARY_INSTANT, "en")).toBe("Jul 19, 2026");

@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTouristActivities } from "@/lib/api/activities";
 import { getBuddyProfile, getBuddyReviews } from "@/lib/api/reviews";
@@ -116,6 +116,23 @@ describe("HostProfileDialog", () => {
     expect(await screen.findByRole("button", { name: "Message Seoul Buddy" })).toBeDisabled();
     expect(screen.getByText("I know this neighborhood well.")).toBeInTheDocument();
     expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
+  });
+
+  it("opens the buddy photo above their profile and returns to that profile on close", async () => {
+    const onClose = vi.fn();
+    renderWithQueryClient(
+      <HostProfileDialog
+        host={{ id: 17, name: "Seoul Buddy", bio: "Local host", avatarUrl: "/buddy.jpg" }}
+        currentActivityId="42"
+        onClose={onClose}
+      />,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Enlarge photo: Seoul Buddy" }));
+    const dialogs = screen.getAllByRole("dialog");
+    expect(dialogs).toHaveLength(2);
+    fireEvent.click(within(dialogs[1]).getByRole("button", { name: "Close dialog" }));
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("hides chat for guests without redirecting or hiding the public profile", async () => {

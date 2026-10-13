@@ -17,8 +17,87 @@ const request: PendingReservation = {
     status: "PENDING_APPROVAL",
     approvalExpiresAt: "2099-10-19T10:00:00+09:00",
     specialRequest: "Vegetarian, please.",
+    appliedAt: "2099-10-18T10:00:00+09:00",
   },
 };
+it("enlarges the pending applicant photo only inside their approval dialog", () => {
+  renderWithQueryClient(
+    <PendingReservationSection
+      requests={[
+        {
+          ...request,
+          applicant: { ...request.applicant, applicantProfileImageUrl: "/profile.jpg" },
+        },
+      ]}
+    />,
+  );
+  expect(screen.queryByRole("button", { name: "Enlarge photo: Sophie" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Sophie/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Enlarge photo: Sophie" }));
+  const dialogs = screen.getAllByRole("dialog");
+  expect(dialogs).toHaveLength(2);
+  fireEvent.click(within(dialogs[1]).getByRole("button", { name: "Close dialog" }));
+  expect(screen.getAllByRole("dialog")).toHaveLength(1);
+});
+it.each(["preview", "list"] as const)(
+  "shows a small red deadline below the schedule in %s cards",
+  (view) => {
+    renderWithQueryClient(<PendingReservationSection view={view} requests={[request]} />, {
+      locale: "ko",
+    });
+    const card = screen.getByRole("button", { name: /Sophie/ });
+    const deadline = within(card).getByText("확정 마감 10. 19. 오전 10:00");
+    expect(deadline).toHaveClass("text-xs", "text-danger");
+    expect(deadline.parentElement).toHaveClass("w-full", "text-left");
+    expect(
+      within(card).getByText("2명").compareDocumentPosition(deadline) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(within(card).queryByText(/자동 취소/)).not.toBeInTheDocument();
+    expect(within(card).queryByText(/신청 시각/)).not.toBeInTheDocument();
+    fireEvent.click(card);
+    expect(
+      within(screen.getByRole("dialog")).getByText("신청 시각: 2099. 10. 18. 오전 10:00"),
+    ).toBeVisible();
+    expect(
+      within(screen.getByRole("dialog")).getByText("확정 마감 기한: 2099. 10. 19. 오전 10:00"),
+    ).toHaveClass("text-danger");
+    const appliedAt = within(screen.getByRole("dialog")).getByText(
+      "신청 시각: 2099. 10. 18. 오전 10:00",
+    );
+    const actions = appliedAt.parentElement?.nextElementSibling;
+    expect(actions).not.toHaveClass("border-t");
+    expect(actions).toHaveTextContent("확정 마감 기한");
+  },
+);
+it.each([null, undefined, "invalid"])(
+  "omits missing or invalid card deadlines: %s",
+  (approvalExpiresAt) => {
+    renderWithQueryClient(
+      <PendingReservationSection
+        requests={[{ ...request, applicant: { ...request.applicant, approvalExpiresAt } }]}
+      />,
+      { locale: "ko" },
+    );
+    expect(screen.getByRole("button", { name: /Sophie/ })).not.toHaveTextContent("확정 마감");
+  },
+);
+it("keeps expired requests visible with the existing status-check notice", () => {
+  renderWithQueryClient(
+    <PendingReservationSection
+      requests={[
+        {
+          ...request,
+          applicant: { ...request.applicant, approvalExpiresAt: "2000-01-01T10:00:00+09:00" },
+        },
+      ]}
+    />,
+    { locale: "ko" },
+  );
+  expect(screen.getByRole("button", { name: /Sophie/ })).toHaveTextContent(
+    "확정 마감 기한이 지났어요. 상태를 확인 중입니다.",
+  );
+});
 it("keeps pending requests across different dates in a separate compact section", () => {
   renderWithQueryClient(
     <PendingReservationSection
@@ -74,6 +153,7 @@ it("keeps full-size cards and every request in the complete list", () => {
     />,
   );
   const items = screen.getAllByRole("listitem");
+  expect(screen.getByRole("list")).toHaveClass("grid-cols-1", "md:grid-cols-2", "lg:grid-cols-4");
   expect(items).toHaveLength(6);
   for (const item of items) {
     expect(item).not.toHaveClass("hidden", "w-52");
@@ -100,6 +180,7 @@ it("opens details and approval actions only when a request is selected", () => {
   );
   fireEvent.click(screen.getByRole("button", { name: /Sophie/ }));
   const dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByText("S")).toHaveAttribute("aria-hidden", "true");
   expect(within(dialog).getByText("Vegetarian, please.")).toBeInTheDocument();
   expect(within(dialog).getByRole("button", { name: "Approve" })).toBeEnabled();
   expect(within(dialog).queryByRole("link", { name: "View activity" })).not.toBeInTheDocument();
@@ -110,6 +191,24 @@ it("opens details and approval actions only when a request is selected", () => {
   const approve = within(dialog).getByRole("button", { name: "Approve" });
   expect(reject.compareDocumentPosition(approve) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(reject.parentElement).toHaveClass("grid", "grid-cols-2");
+});
+it("shows the applicant photo beside their name in the approval dialog", () => {
+  renderWithQueryClient(
+    <PendingReservationSection
+      requests={[
+        {
+          ...request,
+          applicant: { ...request.applicant, applicantProfileImageUrl: "/images/guest.jpg" },
+        },
+      ]}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: /Sophie/ }));
+  const dialog = screen.getByRole("dialog", { name: "Sophie" });
+  expect(within(dialog).getByRole("img", { name: "Sophie" })).toHaveAttribute("width", "40");
+  expect(within(dialog).getByRole("heading", { name: "Sophie" }).parentElement).toContainElement(
+    within(dialog).getByRole("img", { name: "Sophie" }),
+  );
 });
 it("uses the server total and allows loading the remaining requests", () => {
   const more = vi.fn();

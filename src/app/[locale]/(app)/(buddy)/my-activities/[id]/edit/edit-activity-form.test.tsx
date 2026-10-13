@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { usePathname, useRouter } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMyActivity } from "@/lib/api/buddy";
@@ -101,16 +101,16 @@ describe("EditActivityForm", () => {
     expect(screen.getByText("Loading your experience…")).toBeInTheDocument();
   });
 
-  it("opens the wizard in review mode prefilled with the activity", async () => {
+  it("opens the wizard at the introduction prefilled with the activity", async () => {
     mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
 
     renderWithQueryClient(<EditActivityForm activityId="42" />);
 
-    expect(
-      await screen.findByRole("heading", { name: "Preview your experience" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Introduce yourself" })).toBeInTheDocument();
     expect(mockedGetMyActivity).toHaveBeenCalledWith("42");
-    expect(screen.getByRole("heading", { name: "Seoul market walk" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "About you" })).toHaveValue(
+      activityDetail.hostIntroduction,
+    );
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
   });
 
@@ -138,9 +138,7 @@ describe("EditActivityForm", () => {
       activity: { ...activityDetail, activityType: "REFERRAL", price },
     });
     renderWithQueryClient(<EditActivityForm activityId="42" />);
-    await screen.findByRole("heading", { name: "Preview your experience" });
-    expect(screen.getByText(price === 0 ? "Free" : "₩5,000~")).toBeInTheDocument();
-    fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
+    await screen.findByRole("heading", { name: "Introduce yourself" });
     for (let i = 0; i < 9; i++) {
       fireEvent.click(screen.getByRole("button", { name: "Next" }));
     }
@@ -176,8 +174,7 @@ describe("EditActivityForm", () => {
   it("refreshes occupancy and validation without overwriting edits or unmounting on refresh failure", async () => {
     mockedGetMyActivity.mockResolvedValue({ status: "success", activity: activityDetail });
     const { queryClient } = renderWithQueryClient(<EditActivityForm activityId="42" />);
-    await screen.findByRole("heading", { name: "Preview your experience" });
-    fireEvent.click(within(screen.getByRole("contentinfo")).getByRole("button", { name: "Back" }));
+    await screen.findByRole("heading", { name: "Introduce yourself" });
     for (let i = 0; i < 8; i++) {
       fireEvent.click(screen.getByRole("button", { name: "Next" }));
     }

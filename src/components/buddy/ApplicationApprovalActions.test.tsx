@@ -10,6 +10,17 @@ vi.mock("@/lib/api/application-approval", () => ({
 }));
 vi.mock("@/lib/query/use-auth-query-redirect", () => ({ useAuthQueryRedirect: vi.fn() }));
 beforeEach(() => vi.resetAllMocks());
+it("renders the popup deadline at the same small size as its supporting hint", () => {
+  renderWithQueryClient(
+    <ApplicationApprovalActions
+      applicationId={7}
+      name="Sophie"
+      expiresAt="2099-10-12T09:00:00+09:00"
+      fullWidth
+    />,
+  );
+  expect(screen.getByText(/Approval deadline:/)).toHaveClass("text-xs", "leading-5", "mt-2");
+});
 it("hides approval actions after ownership is denied", async () => {
   vi.mocked(approveApplication).mockRejectedValue(
     createApiClientError(403, {

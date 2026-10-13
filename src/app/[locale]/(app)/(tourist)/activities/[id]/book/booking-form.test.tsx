@@ -566,7 +566,9 @@ describe("BookingForm", () => {
         "I understand that payment alone does not confirm my booking. Buddy approval is required.",
       ),
     ).toHaveLength(1);
-    expect(screen.getByTestId("date-select-box").querySelector("span")).toHaveClass("text-ink");
+    expect(within(screen.getByTestId("date-select-box")).getByText(/Jul 20/)).toHaveClass(
+      "text-ink",
+    );
     expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
     expect(screen.getByRole("status", { name: "1 participant" })).toHaveClass("text-xl");
     for (const count of screen.getAllByText("1 participant")) {

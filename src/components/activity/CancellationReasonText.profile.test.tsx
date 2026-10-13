@@ -74,7 +74,10 @@ describe("cancellation translation profile recovery", () => {
     await act(async () => finish(profile));
     expect(await screen.findByText("Personal reasons")).toBeVisible();
     expect(screen.queryByText(props.originalText)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry translation" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show original" }));
+    expect(screen.getByText(props.originalText)).toBeVisible();
+    expect(outerClick).not.toHaveBeenCalled();
     expect(profileApi).toHaveBeenCalledTimes(2);
     expect(translationApi).toHaveBeenCalledTimes(1);
     expect(

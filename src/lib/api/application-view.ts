@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/routing";
+import { isDeclinedApplicationStatus } from "@/lib/application-approval";
 import { formatSeoulDateWithWeekday, formatSeoulTime } from "@/lib/datetime";
 import type {
   Application,
@@ -9,9 +10,12 @@ import type {
 
 const STATUS_BY_BACKEND_STATUS: Record<BackendApplicationStatus, ApplicationStatus> = {
   PENDING_PAYMENT: "pending_payment",
+  PENDING_APPROVAL: "pending_approval",
   // 새 신청으로 대체된 신청은 목록에서 걸러지지만, 방어적으로 취소와 동일하게 취급한다
   SUPERSEDED: "cancelled",
   CONFIRMED: "confirmed",
+  REJECTED: "rejected",
+  EXPIRED: "expired",
   CANCELLED: "cancelled",
   COMPLETED: "completed",
 };
@@ -32,11 +36,16 @@ export function mapApplicationResponseToApplication(
   const endTime = formatSeoulTime(response.endAt, locale);
   const timeLabel = startTime && endTime ? `${startTime} ~ ${endTime}` : startTime;
   return {
+    approvalExpiresAt: response.approvalExpiresAt ?? null,
+    buddyApprovedAt: response.buddyApprovedAt ?? null,
     activityType: response.activityType ?? "STANDARD",
     guestCount: response.guestCount,
     id: String(response.applicationId),
     activityId: response.activityId,
-    status: response.scheduleCancelled ? "cancelled" : STATUS_BY_BACKEND_STATUS[response.status],
+    status:
+      response.scheduleCancelled && !isDeclinedApplicationStatus(response.status)
+        ? "cancelled"
+        : STATUS_BY_BACKEND_STATUS[response.status],
     startAt: response.startAt,
     endAt: response.endAt,
     dateLabel:
@@ -52,6 +61,15 @@ export function mapApplicationResponseToApplication(
     holdExpiresAt: response.holdExpiresAt,
     myReview: response.myReview ?? null,
     breakdown: {
+      ...(response.appliedPriceTier !== undefined
+        ? { appliedPriceTier: response.appliedPriceTier }
+        : {}),
+      ...(response.quantityDiscountAmount !== undefined
+        ? { quantityDiscountAmount: response.quantityDiscountAmount }
+        : {}),
+      ...(response.periodDiscountAmount !== undefined
+        ? { periodDiscountAmount: response.periodDiscountAmount }
+        : {}),
       unitPrice: discountedUnitPrice,
       guests: response.guestCount,
       serviceFee: 0,

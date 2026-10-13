@@ -8,6 +8,7 @@ import type { TouristActivityDetail, TouristActivitySummary } from "@/types/acti
 import { isContentLanguage } from "@/types/content-language";
 import { withActivityDate } from "@/lib/activity-booking-window";
 import { isActivityLanguage } from "@/types/activity-language";
+import type { ActivityPriceTier } from "@/types/activity-pricing";
 
 export class PublicActivityError extends Error {
   constructor(readonly kind: "missing" | "unavailable") {
@@ -54,6 +55,31 @@ function publicDisplayPrice(value: unknown) {
   )
     unavailable();
   return select(price, ["price", "discountedPrice", "currency", "exchangeRateDate", "estimated"]);
+}
+
+function publicPriceTiers(value: unknown): ActivityPriceTier[] {
+  if (value == null) return [];
+  return array(value).map((entry) => {
+    const tier = record(entry);
+    requireFields(tier, [], ["minGuests", "unitPrice"]);
+    const minGuests = tier.minGuests as number;
+    const unitPrice = tier.unitPrice as number;
+    const maxGuests = tier.maxGuests;
+    if (
+      !Number.isSafeInteger(minGuests) ||
+      minGuests < 2 ||
+      minGuests > 100 ||
+      !Number.isSafeInteger(unitPrice) ||
+      unitPrice < 1 ||
+      (maxGuests !== null &&
+        (typeof maxGuests !== "number" ||
+          !Number.isSafeInteger(maxGuests) ||
+          maxGuests < minGuests ||
+          maxGuests > 100))
+    )
+      unavailable();
+    return { minGuests, maxGuests: maxGuests as number | null, unitPrice };
+  });
 }
 
 function summary(value: unknown): TouristActivitySummary {
@@ -140,10 +166,26 @@ function summary(value: unknown): TouristActivitySummary {
   )
     unavailable();
   if (item.displayPrice !== undefined) result.displayPrice = publicDisplayPrice(item.displayPrice);
+  result.priceTiers = publicPriceTiers(item.priceTiers);
   if (Array.isArray(item.availableLanguages)) {
     result.availableLanguages = item.availableLanguages.filter(isActivityLanguage);
   }
   return result as unknown as TouristActivitySummary;
+}
+
+// 오프셋까지 있는 시각만 쓴다. 날짜만 있거나, 해석이 안 되거나, 달력에 없는 날짜(2월 30일 등)면
+// 사이트맵에서 lastmod를 생략한다. Date.parse는 2월 30일을 3월 2일로 넘겨 받아 주므로 따로 확인한다.
+const OFFSET_DATE_TIME =
+  /^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+
+function contentUpdatedAt(value: unknown) {
+  const match = typeof value === "string" ? OFFSET_DATE_TIME.exec(value) : null;
+  if (!match || Number.isNaN(Date.parse(match[0]))) return {};
+  const [year, month, day] = match.slice(1, 4).map(Number);
+  const calendar = new Date(Date.UTC(year, month - 1, day));
+  return calendar.getUTCMonth() === month - 1 && calendar.getUTCDate() === day
+    ? { updatedAt: match[0] }
+    : {};
 }
 
 function detail(value: unknown): TouristActivityDetail {
@@ -163,6 +205,7 @@ function detail(value: unknown): TouristActivityDetail {
     ...(item.hostIntroduction !== undefined
       ? { hostIntroduction: item.hostIntroduction as string }
       : {}),
+    ...contentUpdatedAt(item.updatedAt),
     includedItems: strings(item.includedItems),
     restrictionNotes: strings(item.restrictionNotes),
     images: array(item.images).map((value) => {

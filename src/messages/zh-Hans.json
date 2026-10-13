@@ -1,4 +1,117 @@
 {
+  "Approval": {
+    "inboxPageTitle": "预订申请",
+    "deadlineHint": "未在截止时间前批准的申请将自动取消。",
+    "inboxTitle": "新的预订申请",
+    "inboxAll": "查看全部",
+    "inboxMore": "加载更多",
+    "inboxLess": "收起",
+    "inboxEmpty": "暂无待确认的申请。",
+    "inboxActivity": "查看活动",
+    "beforePayment": "我已了解：付款不代表预订确认，须经伙伴批准后才会确认。",
+    "beforeReferral": "我已了解：提交申请不代表预订确认，须经伙伴批准后才会确认。",
+    "pending": "待确认",
+    "approve": "确认",
+    "reject": "拒绝",
+    "deadline": "确认截止：{date}",
+    "processing": "处理中",
+    "expired": "确认期限已过，正在核实状态。",
+    "paid": "支付成功 · 等待伙伴确认",
+    "applied": "申请已提交 · 等待伙伴确认",
+    "waiting": "伙伴正在查看你的申请。",
+    "details": "查看详情",
+    "rejectTitle": "拒绝此申请？",
+    "rejectHint": "原因将发送给游客。",
+    "detail": "具体原因",
+    "keep": "返回",
+    "working": "处理中…",
+    "error": "未能确认处理结果，请刷新状态。",
+    "retry": "刷新状态",
+    "invalid": "请输入1至255字的原因。",
+    "changed": "申请状态已变更，请刷新。",
+    "forbidden": "你无权处理此申请。",
+    "original": "查看原文",
+    "translated": "查看译文",
+    "free": "伙伴确认前取消可全额退款",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "行程无法进行",
+      "INSUFFICIENT_PARTICIPANTS": "参与人数不足",
+      "RESOURCE_UNAVAILABLE": "无法预订场地或门票",
+      "EXTERNAL_CIRCUMSTANCES": "天气等外部原因",
+      "BUDDY_OTHER": "其他（填写）"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "由于此行程无法进行，申请已取消。",
+      "INSUFFICIENT_PARTICIPANTS": "由于参与人数不足，申请已取消。",
+      "RESOURCE_UNAVAILABLE": "由于场地或门票预订问题，申请已取消。",
+      "EXTERNAL_CIRCUMSTANCES": "由于天气等外部原因，申请已取消。",
+      "BUDDY_OTHER": "伙伴提供的取消原因"
+    }
+  },
+  "QuantityPricing": {
+    "options": {
+      "none": "不打折",
+      "enabled": "应用折扣"
+    },
+    "pricingTitle": "价格",
+    "discountedPriceColumn": "折后价格",
+    "selectEndDate": "选择日期",
+    "previewPrompt": "填写截止日期和折扣率后显示最终价格。",
+    "fromGuests": "最少人数",
+    "toGuests": "最多人数",
+    "optionalBound": "选填",
+    "appliedGuests": "适用人数：{guests}",
+    "rangeInput": "人数",
+    "addRow": "添加",
+    "priceColumn": "每人价格",
+    "payoutColumn": "每人结算额",
+    "tableNote": "限时折扣前预估 · 区间外适用基础价格",
+    "basePayout": "预计每人结算 {amount}",
+    "enable": "设置人数价格",
+    "hint": "按单次申请人数为所有参与者设置每人价格。区间外使用基础价格，限时折扣会叠加适用。",
+    "range": "价格区间 {count}",
+    "minGuests": "最少人数",
+    "maxGuests": "最多人数",
+    "unitPrice": "每人价格 (KRW)",
+    "unlimited": "无上限",
+    "removeRange": "删除价格区间 {count}",
+    "remove": "删除",
+    "add": "+ 添加价格区间",
+    "preview": "最终价格预览",
+    "invalid": "请检查价格、人数及折扣。区间不可重叠，折后价格至少为1韩元。",
+    "error": "无法获取预计结算金额。",
+    "retry": "重试",
+    "loading": "正在确认最新价格…",
+    "rate": "总扣除率 {rate}% · 含增值税及支付手续费",
+    "guests": "人数",
+    "unit": "适用单价",
+    "total": "支付总额",
+    "deduction": "总扣除额",
+    "payout": "预计结算额",
+    "guestCount": "{count, plural, other {#人}}",
+    "notice": "表中人数不代表剩余名额。结算额可能随保存或支付时的费率变化。",
+    "quoteError": "无法确认价格，请重试。",
+    "quantityDiscount": "人数优惠",
+    "periodDiscount": "限时优惠",
+    "invalidTiers": "请输入2–100人、低于或等于基础价格的单价，且区间不可重叠。",
+    "invalidAmount": "最终支付金额至少为1韩元。",
+    "base": "基础每人价格",
+    "fallback": "未设置的人数区间使用基础价格。",
+    "viewTiers": "查看人数价格",
+    "tierNotice": "单笔预订的所有参与者适用相同单价。以下为限时折扣前价格。",
+    "rangeLabel": "{min}–{max}人",
+    "openRangeLabel": "{min}人及以上",
+    "previewGuests": "预览预订人数",
+    "expand": "查看所有人数的结算表",
+    "collapse": "收起结算表",
+    "selectedTotal": "{count, plural, other {#人总价}}",
+    "perGuest": "每人 {price}",
+    "guestsLabel": "参与人数",
+    "less": "减少人数",
+    "more": "增加人数",
+    "baseApplied": "适用基础价格",
+    "tierApplied": "适用人数价格"
+  },
   "ActivityLanguages": {
     "hostedIn": "服务语言",
     "title": "活动服务语言",
@@ -26,6 +139,7 @@
     "unavailable": "暂时无法翻译，已显示原文。"
   },
   "Referral": {
+    "sharingPurpose": "服务商联系咨询及确认申请",
     "messagePlaceholder": "如有想对好友说的话，请在这里填写。",
     "summaryTitle": "申请信息",
     "sharingTitle": "向商家提供个人信息的说明",
@@ -42,7 +156,7 @@
     "title": "申请合作体验",
     "schedule": "日程（韩国时间）",
     "guests": "参加人数",
-    "consent": "我同意按上述说明向商家提供个人信息。",
+    "consent": "我同意向商家提供个人信息。",
     "recipient": "接收商家",
     "fields": "提供的信息",
     "purpose": "使用目的",
@@ -53,7 +167,7 @@
     "cancelled": "该申请已取消。",
     "reapply": "重新申请",
     "reapplyNotice": "您曾取消此场次。请确认信息并重新同意，再点击重新申请以创建新申请。",
-    "alreadyApplied": "您已申请此场次。请查看我的申请。",
+    "alreadyApplied": "您已申请此场次。",
     "sessionCancelled": "无法重新申请向导已取消的场次。",
     "completed": "该申请已结束。",
     "applications": "查看我的申请",
@@ -213,6 +327,7 @@
     "conflict": "此操作在当前状态下无法完成。",
     "serverUnavailable": "该服务暂时不可用。请稍后重试。",
     "activityDiscountInvalid": "将折扣率和结束日期一起设置。",
+    "activityPriceTiersInvalid": "请检查人数区间是否重叠，并输入不高于基础价格的单价。",
     "activityDiscountEndDate": "折扣结束日期必须是今天或以后的日期。",
     "reviewNotReviewable": "活动结束后您可以留下评论。",
     "reviewOwner": "您只能编辑您撰写的评论。",
@@ -271,12 +386,24 @@
     "viewProfile": "查看个人资料",
     "chat": "消息"
   },
+  "Footer": {
+    "navigationLabel": "页脚导航",
+    "support": "帮助与支持",
+    "hosting": "伙伴",
+    "company": "HanBuddy",
+    "contactUs": "联系我们",
+    "communitySafety": "社区与安全政策",
+    "buddyOperationTerms": "伙伴运营条款",
+    "buddyCommissionSettlement": "伙伴佣金与结算政策",
+    "exploreExperiences": "探索体验"
+  },
   "Accessibility": {
     "goBack": "返回",
     "close": "关闭",
     "closeDialog": "关闭对话框"
   },
   "Status": {
+    "declined": "已拒绝",
     "pendingPayment": "待付款",
     "confirmed": "已确认",
     "cancelled": "取消",
@@ -942,6 +1069,8 @@
     "soldOut": "已售完"
   },
   "ActivityDetail": {
+    "selectDateCompact": "选择日期",
+    "bookCompact": "预订",
     "loading": "正在加载活动...",
     "loadError": "无法加载活动详细信息。",
     "notFound": "无法找到此活动。",
@@ -1087,7 +1216,8 @@
     "statutoryWithdrawalNotice": "可在收到合同书面内容后7天内请求撤回；供应更晚时，从收到供应或供应开始之日起7天内计算。法定权利优先。",
     "refundExceptionsNotice": "一般标准适用于法定期间已过或法定限制事由获认可的情况。30分钟免费取消及未提供部分等独立退款权利优先。",
     "actualPaymentRefundNotice": "折扣订单按实际支付金额退款。",
-    "agreement": "【必选】我同意取消与退款政策。",
+    "agreement": "我同意取消与退款政策。",
+    "agreementCompact": "我同意取消与退款政策。",
     "submit": "申请并付款",
     "payNow": "立即支付",
     "payWithToss": "使用Toss Payments付款",
@@ -1426,6 +1556,7 @@
     "mockNotice": "示例数据——支出很快就会与真实数据相连接。"
   },
   "MyActivities": {
+    "referralApplications": "合作活动申请",
     "title": "我的活动",
     "description": "管理您主办的文化体验。",
     "createActivity": "创建活动",
@@ -1540,20 +1671,24 @@
         "description": "选择您一次可以舒适地接待多少位客人。"
       },
       "price": {
-        "title": "设定每人的价格",
-        "description": "输入每位客人需要支付的韩元金额。"
+        "title": "基础价格",
+        "description": "请输入每人价格。"
       },
       "inclusions": {
         "title": "告诉客人包含什么",
         "description": "准确说明价格涵盖的范围。"
       },
       "discount": {
-        "title": "添加折扣",
-        "description": "可以选择设置限时折扣和结束日期。"
+        "title": "限时折扣",
+        "description": "要设置限时折扣吗？"
       },
       "restrictions": {
         "title": "嘉宾加入前",
         "description": "选择客人在参加活动之前应了解的任何信息。"
+      },
+      "quantity": {
+        "title": "人数价格",
+        "description": "要设置人数折扣吗？"
       }
     },
     "groups": {
@@ -1728,12 +1863,13 @@
       "pastTimeHint": "今天的开始时间必须晚于当前时间 (KST)。"
     },
     "price": {
+      "tierPriceWarning": "有按人数设置的单价高于基础价，请在下一步调整。",
       "referralTitle": "请输入服务最低价格",
       "referralDescription": "请输入您提供的服务中的最低价格。",
       "referralLabel": "服务最低价格",
       "referralMinimum": "可输入0韩元及以上的金额。",
       "minimum": "每人最低价格为{amount, number}韩元。",
-      "notice": "该金额以每人韩元的价格显示给客人。"
+      "notice": "没有匹配的人数价格时，将使用此基础价格。"
     },
     "inclusions": {
       "custom": "其他包含项目",
@@ -1752,14 +1888,14 @@
       }
     },
     "discount": {
-      "policyNotice": "折扣适用于您设置的结束日期之前的每个会话。",
+      "policyNotice": "截止日前预订适用 · 可叠加人数折扣",
       "options": {
         "none": {
-          "title": "无折扣",
-          "description": "按标准价格列出体验。"
+          "title": "不打折",
+          "description": "已设置的人数价格仍然有效。"
         },
         "limited": {
-          "title": "限时折扣",
+          "title": "应用折扣",
           "description": "在有限的促销期内提供更低的价格。"
         }
       }
@@ -1820,6 +1956,8 @@
       "referralPriceInvalid": "请输入0至9,999,999,999韩元之间的整数金额。",
       "inclusionsRequired": "添加至少一项包含的物品。",
       "discountInvalid": "选择结束日期并输入 1 到 100 之间的整数折扣。",
+      "priceTiersInvalid": "人数区间不可重叠，每人价格不可高于基础价格。",
+      "pricingInvalid": "请检查价格、人数和限时折扣。折后价格至少为1韩元。",
       "restrictionsRequired": "至少选择一件事客人应该知道，或确认没有什么需要注意的。",
       "imageUploadFailed": "我们无法上传您的照片。请再试一次。",
       "submissionFailed": "我们无法登记您的经历。请再试一次。",

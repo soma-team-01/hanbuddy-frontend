@@ -27,6 +27,9 @@ import {
   XIcon,
 } from "@/components/ui/icons";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
+import { ActivityBasePayout } from "@/components/buddy/ActivityQuantityPricing";
+import { PricingChoice } from "@/components/buddy/PricingChoice";
+import { DiscountEndDateField } from "@/components/buddy/DiscountEndDateField";
 import { useMyProfile } from "@/lib/api/useMyProfile";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulWeekday, getSeoulNowParts } from "@/lib/datetime";
@@ -1476,12 +1479,19 @@ export function PriceStep({
   onChange,
   t,
   referral = false,
+  priceTiers = [],
 }: Readonly<{
   value: string;
   onChange: (value: string) => void;
   t: Translator;
   referral?: boolean;
+  priceTiers?: ActivityCreateDraft["priceTiers"];
 }>) {
+  const tierPriceConflict =
+    !referral &&
+    /^\d+$/.test(value) &&
+    Number(value) >= ACTIVITY_CREATE_LIMITS.pricePerPerson.min &&
+    priceTiers.some((tier) => Number(tier.unitPrice) > Number(value));
   return (
     <div className="mx-auto max-w-2xl py-3 text-center lg:py-12">
       <label htmlFor="price-per-person" className="sr-only">
@@ -1491,16 +1501,23 @@ export function PriceStep({
         <span className="font-display text-4xl font-extrabold text-ink sm:text-5xl">₩</span>
         <input
           id="price-per-person"
-          aria-describedby={referral ? "price-minimum" : "price-minimum price-notice"}
+          aria-describedby={
+            tierPriceConflict ? "price-minimum price-tier-warning" : "price-minimum"
+          }
+          aria-invalid={tierPriceConflict || undefined}
           autoFocus
           inputMode="numeric"
-          pattern="[0-9]*"
-          value={value}
+          pattern="[0-9,]*"
+          value={/^\d+$/.test(value) ? Number(value).toLocaleString("en-US") : value}
           onChange={(event) =>
-            onChange(referral ? event.target.value : event.target.value.replace(/\D/g, ""))
+            onChange(
+              referral
+                ? event.target.value.replace(/,/g, "")
+                : event.target.value.replace(/\D/g, "").slice(0, 8),
+            )
           }
           placeholder="0"
-          className="max-w-[8ch] min-w-0 bg-transparent text-center font-display text-4xl font-extrabold tracking-tight text-ink outline-none placeholder:text-muted/25 focus-visible:!outline-none sm:text-5xl"
+          className="max-w-[11ch] min-w-0 bg-transparent text-center font-display text-4xl font-extrabold tracking-tight text-ink outline-none placeholder:text-muted/25 focus-visible:!outline-none sm:text-5xl"
         />
       </div>
       <p id="price-minimum" className="mt-5 text-sm font-semibold text-primary">
@@ -1508,11 +1525,12 @@ export function PriceStep({
           ? t("price.referralMinimum")
           : t("price.minimum", { amount: ACTIVITY_CREATE_LIMITS.pricePerPerson.min })}
       </p>
-      {!referral && (
-        <p id="price-notice" className="mt-2 text-sm leading-6 text-muted">
-          {t("price.notice")}
+      {tierPriceConflict && (
+        <p id="price-tier-warning" role="alert" className="mt-2 text-xs text-danger">
+          {t("price.tierPriceWarning")}
         </p>
       )}
+      {!referral && <ActivityBasePayout price={value} />}
     </div>
   );
 }
@@ -1704,51 +1722,19 @@ export function DiscountStep({
   const enabled = type === "limited";
   return (
     <div className="w-full space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(["none", "limited"] as const).map((option) => {
-          const selected = type === option;
-          return (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onTypeChange(option)}
-              className={`flex min-h-20 w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition lg:min-h-28 lg:gap-4 lg:px-5 lg:py-5 ${
-                selected
-                  ? "border-primary shadow-[0_8px_24px_rgba(209,63,50,0.08)]"
-                  : "border-line-strong hover:border-primary/60"
-              }`}
-            >
-              <span
-                className={`flex size-7 shrink-0 items-center justify-center rounded-full border ${
-                  selected ? "border-primary bg-primary text-white" : "border-line-strong"
-                }`}
-              >
-                {selected ? <CheckIcon className="size-4" /> : null}
-              </span>
-              <span>
-                <span className="block font-display text-base font-bold text-ink">
-                  {t(`discount.options.${option}.title`)}
-                </span>
-                <span className="mt-1 block text-sm leading-5 text-muted">
-                  {t(`discount.options.${option}.description`)}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <PricingChoice
+        enabled={enabled}
+        disabledLabel={t("discount.options.none.title")}
+        enabledLabel={t("discount.options.limited.title")}
+        onChange={(value) => onTypeChange(value ? "limited" : "none")}
+      />
       {enabled ? (
-        <div className="grid gap-5 rounded-2xl border border-primary/20 bg-white p-5 sm:grid-cols-2">
-          <Field label={t("fields.discountEndsAt")}>
-            <input
-              type="date"
-              className={INPUT_CLASS}
-              value={endsAt}
-              min={getSeoulNowParts().date}
-              onChange={(event) => onEndsAtChange(event.target.value)}
-            />
-          </Field>
+        <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] items-end gap-3">
+          <DiscountEndDateField
+            value={endsAt}
+            minDate={getSeoulNowParts().date}
+            onChange={onEndsAtChange}
+          />
           <Field label={t("fields.discount")}>
             <div className="relative">
               <input
@@ -1768,7 +1754,9 @@ export function DiscountStep({
               </span>
             </div>
           </Field>
-          <p className="text-sm leading-6 text-muted sm:col-span-2">{t("discount.policyNotice")}</p>
+          <p className="col-span-2 text-[11px] leading-4 text-muted">
+            {t("discount.policyNotice")}
+          </p>
         </div>
       ) : null}
     </div>

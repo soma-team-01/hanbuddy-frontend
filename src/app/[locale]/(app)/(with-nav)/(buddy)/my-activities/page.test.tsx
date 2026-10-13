@@ -24,7 +24,7 @@ vi.mock("./my-activities-content", () => ({
 describe("MyActivitiesPage", () => {
   it.each([
     ["en", "My Activities", "Manage your hosted cultural experiences.", "Create Activity"],
-    ["ko", "내 활동", "내가 여는 활동을 관리하세요.", "활동 만들기"],
+    ["ko", "내 활동", "내가 여는 활동을 관리하세요.", "활동 등록"],
   ] as const)(
     "renders localized headings and actions for %s",
     async (locale, title, description, action) => {
@@ -33,7 +33,16 @@ describe("MyActivitiesPage", () => {
       });
 
       expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
-      expect(screen.getByText(description)).toBeInTheDocument();
+      expect(screen.queryByText(description)).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: /제휴 신청 내역|Referral applications/ }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: action })).toHaveClass("text-xs", "px-3");
+      expect(screen.getByRole("link", { name: title })).toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("link", { name: locale === "ko" ? "홈" : "Home" })).toHaveAttribute(
+        "href",
+        `/${locale}/dashboard`,
+      );
       expect(screen.getByRole("link", { name: action })).toHaveAttribute(
         "href",
         `/${locale}/my-activities/create`,

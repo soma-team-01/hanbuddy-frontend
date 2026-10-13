@@ -1,18 +1,24 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
 import { ActivityVisibilityControl } from "@/components/buddy/ActivityVisibilityControl";
+import { ActivityManageActions } from "@/components/buddy/ActivityManageActions";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { EyeIcon, PencilIcon } from "@/components/ui/icons";
-import { Link } from "@/i18n/navigation";
+import { EyeIcon } from "@/components/ui/icons";
+import { useRouter } from "@/i18n/navigation";
+import { deleteMyActivity } from "@/lib/api/buddy";
 import { mapMyActivityDetailToPreviewActivity } from "@/lib/api/buddy-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { useMyProfile } from "@/lib/api/useMyProfile";
-import { myActivityQueryOptions } from "@/lib/query/buddy";
+import { buddyKeys, myActivityQueryOptions } from "@/lib/query/buddy";
+import { activityKeys } from "@/lib/query/activities";
+import { unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
-import type { MyActivityStatus } from "@/types/buddy";
+import type { MyActivityStatus, MyActivitySummaryResponse } from "@/types/buddy";
 
 const STATUS_BADGE_CLASS: Record<MyActivityStatus, string> = {
   ACTIVE: "bg-success-soft text-success",
@@ -35,9 +41,34 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
   const tActivityDetail = useTranslations("ActivityDetail");
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const activityQuery = useQuery(myActivityQueryOptions(activityId));
   const profileResult = useMyProfile();
-  useAuthQueryRedirect(activityQuery.error);
+  const deleteMutation = useMutation({
+    mutationFn: async () => unwrapApiResult(await deleteMyActivity(Number(activityId)), "message"),
+    onSuccess: async () => {
+      setDeleteOpen(false);
+      queryClient.setQueryData<MyActivitySummaryResponse[]>(
+        buddyKeys.myActivities(),
+        (current = []) => current.filter((activity) => activity.activityId !== Number(activityId)),
+      );
+      router.replace("/my-activities");
+      // Mark the removed detail stale without refetching it before navigation finishes.
+      await queryClient.invalidateQueries({
+        queryKey: buddyKeys.activityDetail(activityId),
+        refetchType: "none",
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buddyKeys.myActivities() }),
+        queryClient.invalidateQueries({ queryKey: buddyKeys.applications() }),
+        queryClient.invalidateQueries({ queryKey: buddyKeys.scheduleDates() }),
+        queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
+      ]);
+    },
+  });
+  useAuthQueryRedirect(activityQuery.error ?? deleteMutation.error);
 
   if (activityQuery.isPending) {
     return <PageContainer className="py-10 text-center text-muted">{t("loading")}</PageContainer>;
@@ -76,7 +107,7 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
         <div
           role="note"
           data-testid="guest-preview-banner"
-          className="mx-auto flex w-full max-w-[840px] flex-col gap-3 rounded-2xl border border-line-soft bg-transparent p-4 sm:flex-row sm:items-center sm:justify-between md:p-5"
+          className="mx-auto flex w-full max-w-[840px] flex-col gap-3 rounded-2xl border border-line-soft bg-transparent p-4 md:p-5 lg:flex-row lg:items-center lg:justify-between"
         >
           <div className="flex min-w-0 items-start gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-line-soft text-muted">
@@ -98,25 +129,49 @@ export function MyActivityDetailContent({ activityId }: Readonly<{ activityId: s
               <p className="mt-0.5 text-xs leading-5 text-muted">{t("previewNotice")}</p>
             </div>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex shrink-0 items-center justify-between gap-2">
             {detail.status === "ACTIVE" || detail.status === "INACTIVE" ? (
               <ActivityVisibilityControl
                 activityId={detail.activityId}
                 title={detail.title}
                 status={detail.status}
+                disabled={deleteMutation.isPending}
               />
             ) : null}
-            <Link
-              href={`/my-activities/${detail.activityId}/edit`}
-              className="flex min-h-10 items-center gap-1.5 rounded-full bg-primary px-4 font-display text-xs font-bold text-on-primary transition-colors hover:bg-primary-hover"
-            >
-              <PencilIcon className="size-3.5" />
-              {t("edit")}
-            </Link>
+            <ActivityManageActions
+              activityId={detail.activityId}
+              title={detail.title}
+              disabled={deleteMutation.isPending}
+              onDelete={() => {
+                deleteMutation.reset();
+                setDeleteOpen(true);
+              }}
+            />
           </div>
         </div>
       </PageContainer>
       <ActivityDetailView activity={activity} preview bottomBar="inline" />
+      {deleteOpen ? (
+        <ConfirmDialog
+          title={tStatus("deleteTitle")}
+          description={tStatus("deleteDescription")}
+          confirmLabel={tStatus("delete")}
+          pendingLabel={tStatus("deleting")}
+          tone="danger"
+          cancelVariant="outline"
+          isPending={deleteMutation.isPending}
+          onConfirm={() => deleteMutation.mutate()}
+          onClose={() => {
+            if (!deleteMutation.isPending) setDeleteOpen(false);
+          }}
+        >
+          {deleteMutation.error ? (
+            <p role="alert" className="text-sm text-danger">
+              {getApiErrorMessage(deleteMutation.error, tStatus("deleteError"))}
+            </p>
+          ) : null}
+        </ConfirmDialog>
+      ) : null}
     </div>
   );
 }

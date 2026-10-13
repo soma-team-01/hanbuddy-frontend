@@ -44,18 +44,25 @@ describe("PayPalReturnContent", () => {
     mockedGetMyApplications.mockResolvedValue({ status: "success", applications: [] });
   });
 
-  it("captures the returned order once and moves to the common completion screen", async () => {
-    renderWithQueryClient(<PayPalReturnContent token="ORDER-123" />);
+  it.each(["CONFIRMED", "PENDING_APPROVAL"] as const)(
+    "captures %s once and moves to the common completion screen",
+    async (status) => {
+      mockedCapture.mockResolvedValue({
+        status: "success",
+        application: { applicationId: 11, status } as never,
+      });
+      renderWithQueryClient(<PayPalReturnContent token="ORDER-123" />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Confirming your payment");
-    await waitFor(() =>
-      expect(mockedCapture).toHaveBeenCalledWith("11", { orderId: "ORDER-123" }, "EN"),
-    );
-    await waitFor(() =>
-      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
-    );
-    expect(mockedClearContext).toHaveBeenCalledTimes(1);
-  });
+      expect(screen.getByRole("status")).toHaveTextContent("Confirming your payment");
+      await waitFor(() =>
+        expect(mockedCapture).toHaveBeenCalledWith("11", { orderId: "ORDER-123" }, "EN"),
+      );
+      await waitFor(() =>
+        expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+      );
+      expect(mockedClearContext).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it("does not capture when the redirect context does not match", async () => {
     mockedReadContext.mockReturnValue(null);

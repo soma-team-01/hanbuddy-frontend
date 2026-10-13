@@ -1,16 +1,15 @@
 "use client";
-import { ActivityLanguages } from "@/components/activity/ActivityLanguages";
-
-import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ActivityVisibilityControl } from "@/components/buddy/ActivityVisibilityControl";
+import { ActivityManageActions } from "@/components/buddy/ActivityManageActions";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { PencilIcon, TrashIcon } from "@/components/ui/icons";
+import { ActivityCard } from "@/components/ui/ActivityCard";
 import { Link } from "@/i18n/navigation";
 import { deleteMyActivity } from "@/lib/api/buddy";
 import { getActivityThumbnail } from "@/lib/api/buddy-view";
+import { mapActivitySummaryToActivity } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { activityKeys } from "@/lib/query/activities";
 import { buddyKeys, myActivitiesQueryOptions } from "@/lib/query/buddy";
@@ -94,73 +93,49 @@ export function MyActivitiesContent() {
       <p aria-live="polite" className="sr-only">
         {deleteActivityMutation.isPending ? t("deleting") : ""}
       </p>
-      <div
-        data-testid="activity-records"
-        className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      >
+      <div data-testid="activity-records" className="flex flex-col divide-y divide-line-soft">
         {activities.map((activity, index) => (
-          <article
-            key={activity.activityId}
-            className="flex flex-col gap-2.5 rounded-2xl border border-line-soft bg-canvas-soft p-3 shadow-[0_6px_18px_rgba(61,45,43,0.05)]"
-          >
+          <div key={activity.activityId} className="pb-3">
             <Link
               href={`/my-activities/${activity.activityId}`}
-              className="relative block aspect-[4/3] w-full overflow-hidden rounded-lg transition-opacity hover:opacity-90"
+              aria-label={activity.title}
+              className="block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <Image
-                src={getActivityThumbnail(activity.thumbnailImageUrl)}
-                alt={activity.title}
-                fill
-                loading={index === 0 ? "eager" : undefined}
-                sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
-                className="object-cover"
+              <ActivityCard
+                activity={mapActivitySummaryToActivity({
+                  ...activity,
+                  meetingPlaceId: activity.meetingPlaceId ?? "",
+                  thumbnailImageUrl: getActivityThumbnail(activity.thumbnailImageUrl),
+                })}
+                variant="row"
+                eagerImage={index === 0}
               />
             </Link>
-            <div className="flex items-center justify-between">
+            <div className="flex w-full items-center justify-between gap-2">
               {activity.status === "ACTIVE" || activity.status === "INACTIVE" ? (
                 <ActivityVisibilityControl
                   activityId={activity.activityId}
                   title={activity.title}
                   status={activity.status}
-                  compact
                   disabled={deleteActivityMutation.isPending}
                 />
               ) : (
                 <span
-                  className={`rounded-full px-2 py-0.5 font-display text-[10px] font-semibold ${
+                  className={`rounded-full px-2 py-1 font-display text-xs font-semibold ${
                     STATUS_BADGE_CLASS[activity.status]
                   }`}
                 >
                   {t(`status.${STATUS_MESSAGE_KEY[activity.status]}`)}
                 </span>
               )}
-              <span className="flex items-center gap-1">
-                <Link
-                  href={`/my-activities/${activity.activityId}/edit`}
-                  aria-label={t("editActivity", { title: activity.title })}
-                  className="flex size-7 items-center justify-center rounded-full text-muted hover:bg-primary-soft hover:text-primary-strong"
-                >
-                  <PencilIcon className="size-3.5" />
-                </Link>
-                <button
-                  type="button"
-                  aria-label={t("deleteActivity", { title: activity.title })}
-                  onClick={() => setDeleteTargetId(activity.activityId)}
-                  disabled={deleteActivityMutation.isPending}
-                  className="flex size-7 items-center justify-center rounded-full text-muted hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <TrashIcon className="size-3.5" />
-                </button>
-              </span>
+              <ActivityManageActions
+                activityId={activity.activityId}
+                title={activity.title}
+                onDelete={() => setDeleteTargetId(activity.activityId)}
+                disabled={deleteActivityMutation.isPending}
+              />
             </div>
-            <Link href={`/my-activities/${activity.activityId}`} className="hover:underline">
-              <h2 className="font-display text-base leading-6 font-semibold text-ink">
-                {activity.title}
-              </h2>
-            </Link>
-            <p className="line-clamp-2 text-sm leading-5 text-muted">{activity.description}</p>
-            <ActivityLanguages languages={activity.availableLanguages} compact />
-          </article>
+          </div>
         ))}
       </div>
       {deleteTargetId !== null && (

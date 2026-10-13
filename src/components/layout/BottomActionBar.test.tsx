@@ -3,6 +3,17 @@ import { describe, expect, it } from "vitest";
 import { BottomActionBar } from "./BottomActionBar";
 
 describe("BottomActionBar", () => {
+  it("supports compact booking spacing without changing other bars", () => {
+    render(
+      <BottomActionBar compact>
+        <button>Pay now</button>
+      </BottomActionBar>,
+    );
+    expect(screen.getByTestId("bottom-action-bar")).toHaveClass(
+      "pt-1",
+      "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+    );
+  });
   it("uses a safe mobile action surface and returns to document flow on desktop", () => {
     render(
       <BottomActionBar>

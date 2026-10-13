@@ -41,6 +41,29 @@ afterEach(() => {
 });
 
 describe("anonymous public activity documents", () => {
+  it("preserves public price tiers in the first list and detail render without private fields", async () => {
+    const priceTiers = [
+      { minGuests: 2, maxGuests: 3, unitPrice: 35000 },
+      { minGuests: 6, maxGuests: null, unitPrice: 28000 },
+    ];
+    const responseTiers = priceTiers.map((tier) => ({ ...tier, privateNote: "hidden" }));
+    respond(success([{ ...activity, priceTiers: responseTiers }]));
+    expect((await getPublicActivities("ko"))[0].priceTiers).toEqual(priceTiers);
+    respond(success({ ...activity, priceTiers: responseTiers }));
+    expect((await getPublicActivity("42", "ko")).priceTiers).toEqual(priceTiers);
+  });
+  it.each([undefined, null, []])("normalizes legacy price tiers (%j)", async (priceTiers) => {
+    respond(success({ ...activity, priceTiers }));
+    expect((await getPublicActivity("42", "ko")).priceTiers).toEqual([]);
+  });
+  it.each([
+    [{ minGuests: "2", maxGuests: null, unitPrice: 35000 }],
+    [{ minGuests: 2, maxGuests: 1, unitPrice: 35000 }],
+    [{ minGuests: 2, maxGuests: null, unitPrice: -1 }],
+  ])("rejects malformed price tiers (%j)", async (tier) => {
+    respond(success({ ...activity, priceTiers: [tier] }));
+    await expect(getPublicActivity("42", "ko")).rejects.toMatchObject({ kind: "unavailable" });
+  });
   it.each(
     [undefined, [], ["KO", "EN", "YUE"]].map((availableLanguages) => ({ availableLanguages })),
   )("preserves spoken languages in public list and detail (%j)", async ({ availableLanguages }) => {
@@ -48,6 +71,27 @@ describe("anonymous public activity documents", () => {
     expect((await getPublicActivities("ko"))[0].availableLanguages).toEqual(availableLanguages);
     respond(success({ ...activity, availableLanguages }));
     expect((await getPublicActivity("42", "ko")).availableLanguages).toEqual(availableLanguages);
+  });
+  it("keeps the backend content update time for the sitemap", async () => {
+    respond(success({ ...activity, updatedAt: "2026-10-11T23:03:38.593286+09:00" }));
+    await expect(getPublicActivity("42", "en")).resolves.toMatchObject({
+      updatedAt: "2026-10-11T23:03:38.593286+09:00",
+    });
+  });
+  it.each([
+    undefined,
+    null,
+    "",
+    "yesterday",
+    "2026-10-11",
+    "2026-02-30T12:00:00+09:00",
+    "2026-10-11T25:00:00+09:00",
+    1760191418,
+  ])("drops an unusable update time %s instead of failing the page", async (updatedAt) => {
+    respond(success({ ...activity, updatedAt }));
+    const result = await getPublicActivity("42", "en");
+    expect(result.title).toBe("Public walk");
+    expect(result).not.toHaveProperty("updatedAt");
   });
   it("only serializes supported spoken-language codes", async () => {
     respond(

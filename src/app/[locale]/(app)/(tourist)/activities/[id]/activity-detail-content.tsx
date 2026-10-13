@@ -30,7 +30,7 @@ export function ActivityDetailContent({
 }: Readonly<{
   activityId: string;
   initialActivity?: TouristActivityDetail;
-  initialReviews?: ReviewPageResponse;
+  initialReviews?: ReviewPageResponse | Promise<ReviewPageResponse | undefined>;
   preferredDate?: string;
   emailLoginEnabled?: boolean;
 }>) {

@@ -1,4 +1,117 @@
 {
+  "Approval": {
+    "inboxPageTitle": "Booking requests",
+    "deadlineHint": "Requests not approved by the deadline are automatically cancelled.",
+    "inboxTitle": "New booking requests",
+    "inboxAll": "View all",
+    "inboxMore": "Load more",
+    "inboxLess": "Show less",
+    "inboxEmpty": "No requests awaiting approval.",
+    "inboxActivity": "View activity",
+    "beforePayment": "I understand that payment alone does not confirm my booking. Buddy approval is required.",
+    "beforeReferral": "I understand that submitting a request does not confirm my booking. Buddy approval is required.",
+    "pending": "Awaiting approval",
+    "approve": "Approve",
+    "reject": "Decline",
+    "deadline": "Approval deadline: {date}",
+    "processing": "Processing",
+    "expired": "The approval deadline has passed. Checking status.",
+    "paid": "Payment complete · Awaiting buddy approval",
+    "applied": "Request sent · Awaiting buddy approval",
+    "waiting": "Your buddy is reviewing your request.",
+    "details": "View details",
+    "rejectTitle": "Decline this request?",
+    "rejectHint": "The reason will be shared with the guest.",
+    "detail": "Reason",
+    "keep": "Go back",
+    "working": "Processing…",
+    "error": "We couldn’t confirm the result. Check the latest status.",
+    "retry": "Refresh status",
+    "invalid": "Enter a reason of 1–255 characters.",
+    "changed": "This request has changed. Refresh its status.",
+    "forbidden": "You don’t have permission to process this request.",
+    "original": "Show original",
+    "translated": "Show translation",
+    "free": "Full refund before buddy approval",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "Session unavailable",
+      "INSUFFICIENT_PARTICIPANTS": "Not enough participants",
+      "RESOURCE_UNAVAILABLE": "Venue or tickets unavailable",
+      "EXTERNAL_CIRCUMSTANCES": "Weather or other external circumstances",
+      "BUDDY_OTHER": "Other reason"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "Your booking has been cancelled because this session could not proceed.",
+      "INSUFFICIENT_PARTICIPANTS": "Cancelled due to insufficient participants.",
+      "RESOURCE_UNAVAILABLE": "Cancelled due to venue or ticket availability.",
+      "EXTERNAL_CIRCUMSTANCES": "Cancelled due to weather or other external circumstances.",
+      "BUDDY_OTHER": "Cancellation reason from your buddy"
+    }
+  },
+  "QuantityPricing": {
+    "options": {
+      "none": "No discount",
+      "enabled": "Apply discount"
+    },
+    "pricingTitle": "Pricing",
+    "discountedPriceColumn": "Discounted price",
+    "selectEndDate": "Select date",
+    "previewPrompt": "Enter the end date and discount rate to see final prices.",
+    "fromGuests": "From",
+    "toGuests": "To",
+    "optionalBound": "Optional",
+    "appliedGuests": "Applies to: {guests}",
+    "rangeInput": "Guest count",
+    "addRow": "Add",
+    "priceColumn": "Price / person",
+    "payoutColumn": "Payout / person",
+    "tableNote": "Before period discounts · Base price outside these ranges",
+    "basePayout": "Estimated payout per person {amount}",
+    "enable": "Set group prices",
+    "hint": "Enter the per-person price for everyone in one application. The base price applies outside these ranges. Any period discount applies on top.",
+    "range": "Price tier {count}",
+    "minGuests": "Minimum guests",
+    "maxGuests": "Maximum guests",
+    "unitPrice": "Per person (KRW)",
+    "unlimited": "No upper limit",
+    "removeRange": "Remove price tier {count}",
+    "remove": "Remove",
+    "add": "+ Add price tier",
+    "preview": "Final price preview",
+    "invalid": "Check prices, group sizes and discounts. Ranges cannot overlap and the final price must be at least ₩1.",
+    "error": "Could not load the estimated payout.",
+    "retry": "Try again",
+    "loading": "Checking the latest price…",
+    "rate": "Total deduction {rate}% · includes VAT and payment fees",
+    "guests": "Guests",
+    "unit": "Unit price",
+    "total": "Total payment",
+    "deduction": "Total deduction",
+    "payout": "Estimated payout",
+    "guestCount": "{count, plural, one {# guest} other {# guests}}",
+    "notice": "Group sizes do not indicate seat availability. Payouts may change with the rate at saving or payment.",
+    "quoteError": "Could not confirm the price. Please try again.",
+    "quantityDiscount": "Group discount",
+    "periodDiscount": "Period discount",
+    "invalidTiers": "Use 2–100 guests, unit prices no higher than the base price, and non-overlapping ranges.",
+    "invalidAmount": "The final payment must be at least ₩1.",
+    "base": "Base price per person",
+    "fallback": "Bookings outside your tiers use the base price.",
+    "viewTiers": "View quantity rates",
+    "tierNotice": "The same rate applies to everyone in one booking. Rates below are before any period discount.",
+    "rangeLabel": "{min}–{max} guests",
+    "openRangeLabel": "{min}+ guests",
+    "previewGuests": "Preview booking size",
+    "expand": "View all guest counts and payouts",
+    "collapse": "Hide payout table",
+    "selectedTotal": "{count, plural, one {Total for # guest} other {Total for # guests}}",
+    "perGuest": "{price} per person",
+    "guestsLabel": "Guests",
+    "less": "Remove a guest",
+    "more": "Add a guest",
+    "baseApplied": "Base rate applied",
+    "tierApplied": "Quantity rate applied"
+  },
   "ActivityLanguages": {
     "hostedIn": "Hosted in",
     "title": "Activity languages",
@@ -26,6 +139,7 @@
     "unavailable": "Translation unavailable. Showing the original text."
   },
   "Referral": {
+    "sharingPurpose": "Provider contact for consultation and application confirmation",
     "messagePlaceholder": "Leave a message for your buddy, if you have one.",
     "summaryTitle": "Application details",
     "sharingTitle": "Information shared with the provider",
@@ -42,7 +156,7 @@
     "title": "Apply for a partner experience",
     "schedule": "Schedule (Korea time)",
     "guests": "Participants",
-    "consent": "I agree to share my personal information with the provider as described above.",
+    "consent": "I agree to share personal data with the provider.",
     "recipient": "Recipient",
     "fields": "Information shared",
     "purpose": "Purpose",
@@ -53,7 +167,7 @@
     "cancelled": "This application was cancelled.",
     "reapply": "Reapply",
     "reapplyNotice": "You previously cancelled this session. Review the details and agree again, then reapply to create a new application.",
-    "alreadyApplied": "You already have an application for this session. Check My Applications.",
+    "alreadyApplied": "Already applied for this session.",
     "sessionCancelled": "You cannot reapply for a session cancelled by the buddy.",
     "completed": "This application has already ended.",
     "applications": "View my applications",
@@ -213,6 +327,7 @@
     "conflict": "This action cannot be completed in the current state.",
     "serverUnavailable": "The service is temporarily unavailable. Please try again shortly.",
     "activityDiscountInvalid": "Set the discount rate and end date together.",
+    "activityPriceTiersInvalid": "Check for overlapping guest ranges and enter unit prices no higher than the base price.",
     "activityDiscountEndDate": "The discount end date must be today or a later date.",
     "reviewNotReviewable": "You can leave a review after the activity ends.",
     "reviewOwner": "You can only edit reviews you wrote.",
@@ -271,12 +386,24 @@
     "viewProfile": "View profile",
     "chat": "Messages"
   },
+  "Footer": {
+    "navigationLabel": "Footer",
+    "support": "Support",
+    "hosting": "Hosting",
+    "company": "HanBuddy",
+    "contactUs": "Contact us",
+    "communitySafety": "Community & Safety Policy",
+    "buddyOperationTerms": "Buddy Operating Terms",
+    "buddyCommissionSettlement": "Buddy Commission & Settlement Policy",
+    "exploreExperiences": "Explore experiences"
+  },
   "Accessibility": {
     "goBack": "Go back",
     "close": "Close",
     "closeDialog": "Close dialog"
   },
   "Status": {
+    "declined": "Declined",
     "pendingPayment": "Pending Payment",
     "confirmed": "Confirmed",
     "cancelled": "Cancelled",
@@ -942,6 +1069,8 @@
     "soldOut": "Sold out"
   },
   "ActivityDetail": {
+    "selectDateCompact": "Date",
+    "bookCompact": "Book",
     "loading": "Loading activity...",
     "loadError": "Could not load activity details.",
     "notFound": "This activity could not be found.",
@@ -1087,7 +1216,8 @@
     "statutoryWithdrawalNotice": "Withdrawal may be requested within 7 days of receiving the written contract details, or of receipt or commencement of supply if later. Statutory rights take priority.",
     "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. The 30-minute benefit and separate refund rights, including unprovided portions, take priority.",
     "actualPaymentRefundNotice": "Discounted bookings are refunded from the amount paid.",
-    "agreement": "[Required] I agree to the cancellation and refund policy.",
+    "agreement": "I agree to the cancellation and refund policy.",
+    "agreementCompact": "Agree to cancellation/refunds",
     "submit": "Apply & Pay",
     "payNow": "Pay now",
     "payWithToss": "Pay with Toss Payments",
@@ -1426,6 +1556,7 @@
     "mockNotice": "Sample figures — payouts will connect to real data soon."
   },
   "MyActivities": {
+    "referralApplications": "Referral applications",
     "title": "My Activities",
     "description": "Manage your hosted cultural experiences.",
     "createActivity": "Create Activity",
@@ -1540,20 +1671,24 @@
         "description": "Choose how many guests you can host comfortably at one time."
       },
       "price": {
-        "title": "Set the price per person",
-        "description": "Enter the amount each guest will pay in Korean won."
+        "title": "Base price",
+        "description": "Enter the price per person."
       },
       "inclusions": {
         "title": "Tell guests what's included",
         "description": "Be precise about what the price covers."
       },
       "discount": {
-        "title": "Add a discount",
-        "description": "Optionally set a limited-time discount with an end date."
+        "title": "Period discount",
+        "description": "Apply a period discount?"
       },
       "restrictions": {
         "title": "Before guests join",
         "description": "Select anything guests should know before taking part in the activity."
+      },
+      "quantity": {
+        "title": "Quantity rates",
+        "description": "Apply a quantity discount?"
       }
     },
     "groups": {
@@ -1728,12 +1863,13 @@
       "pastTimeHint": "Start times for today must be later than the current time (KST)."
     },
     "price": {
+      "tierPriceWarning": "A group rate exceeds the base price. Adjust it in the next step.",
       "referralTitle": "Set the minimum service price",
       "referralDescription": "Enter the lowest price among the services you offer.",
       "referralLabel": "Minimum service price",
       "referralMinimum": "You can enter an amount from ₩0.",
       "minimum": "The minimum price per person is ₩{amount, number}.",
-      "notice": "This amount is shown to guests as the price per person in Korean won."
+      "notice": "This price applies when no quantity rate matches the booking."
     },
     "inclusions": {
       "custom": "Other included items",
@@ -1752,14 +1888,14 @@
       }
     },
     "discount": {
-      "policyNotice": "The discount applies to every session until the end date you set.",
+      "policyNotice": "Book by the end date · Group discounts also apply",
       "options": {
         "none": {
           "title": "No discount",
-          "description": "List the experience at its standard price."
+          "description": "Your quantity rates still apply."
         },
         "limited": {
-          "title": "Limited-time discount",
+          "title": "Apply discount",
           "description": "Offer a lower price for a limited promotional period."
         }
       }
@@ -1820,6 +1956,8 @@
       "referralPriceInvalid": "Enter a whole amount from ₩0 to ₩9,999,999,999.",
       "inclusionsRequired": "Add at least one included item.",
       "discountInvalid": "Choose an end date and enter a whole-number discount between 1 and 100.",
+      "priceTiersInvalid": "Use non-overlapping guest ranges and per-person prices no higher than the base price.",
+      "pricingInvalid": "Check prices, guest counts and period discounts. The final price must be at least ₩1.",
       "restrictionsRequired": "Select at least one thing guests should know, or confirm there is nothing to note.",
       "imageUploadFailed": "We couldn't upload your photos. Please try again.",
       "submissionFailed": "We couldn't register your experience. Please try again.",

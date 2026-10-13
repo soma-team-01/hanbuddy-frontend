@@ -104,12 +104,19 @@ export function RefundPolicyAgreement({
       <input
         type="checkbox"
         required
+        aria-label={t("agreement")}
         aria-describedby={describedBy}
         checked={agreed}
         onChange={(event) => onAgreedChange(event.target.checked)}
         className="size-5 shrink-0 rounded accent-primary"
       />
-      <span className="text-[13px] leading-5 font-semibold text-ink">{t("agreement")}</span>
+      <span
+        aria-hidden="true"
+        className="text-xs leading-4 font-medium text-ink lg:text-[13px] lg:leading-5 lg:font-semibold"
+      >
+        <span className="lg:hidden">{t("agreementCompact")}</span>
+        <span className="hidden lg:inline">{t("agreement")}</span>
+      </span>
     </label>
   );
 }

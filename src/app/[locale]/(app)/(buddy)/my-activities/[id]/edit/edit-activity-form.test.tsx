@@ -149,7 +149,7 @@ describe("EditActivityForm", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Set your price per person")).not.toBeInTheDocument();
     expect(screen.queryByText("Add a discount")).not.toBeInTheDocument();
-    expect(screen.getByRole("textbox")).toHaveValue(String(price));
+    expect(screen.getByRole("textbox")).toHaveValue(price.toLocaleString("en-US"));
   });
 
   it("shows an error with a way back when the activity cannot be loaded", async () => {

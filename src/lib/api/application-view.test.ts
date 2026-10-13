@@ -32,6 +32,68 @@ const application = {
 } as const;
 
 describe("application view adapters", () => {
+  it.each(["REJECTED", "EXPIRED"] as const)(
+    "preserves %s even after session cancellation",
+    (status) => {
+      const result = mapApplicationResponseToApplication(
+        { ...application, status, scheduleCancelled: true },
+        "Unknown",
+      );
+      expect(result.status).toBe(status.toLowerCase());
+      expect(result.scheduleCancelled).toBe(true);
+      expect(result.refund).toBeNull();
+    },
+  );
+  it("preserves approval status and server deadlines without treating rejection as session cancellation", () => {
+    const expiresAt = "2026-10-12T09:00:00+09:00";
+    const pending = mapApplicationResponseToApplication(
+      {
+        ...application,
+        status: "PENDING_APPROVAL",
+        approvalExpiresAt: expiresAt,
+        buddyApprovedAt: null,
+      },
+      "Unknown",
+    );
+    expect(pending).toMatchObject({
+      status: "pending_approval",
+      approvalExpiresAt: expiresAt,
+      buddyApprovedAt: null,
+      scheduleCancelled: false,
+    });
+    const cancelled = mapApplicationResponseToApplication(
+      { ...application, status: "CANCELLED", cancellationReason: "BOOKING_UNAVAILABLE" },
+      "Unknown",
+    );
+    expect(cancelled.scheduleCancelled).toBe(false);
+    expect(cancelled.cancellationReason).toBe("BOOKING_UNAVAILABLE");
+  });
+  it("preserves the historical quantity/period discount snapshot and server total", () => {
+    const tier = { minGuests: 2, maxGuests: 2, unitPrice: 40000 };
+    const result = mapApplicationResponseToApplication(
+      {
+        ...application,
+        price: 99999,
+        totalPrice: 72000,
+        originalUnitPrice: 45000,
+        discountedUnitPrice: 36000,
+        originalTotalPrice: 90000,
+        discountAmount: 18000,
+        discountPercent: 10,
+        appliedPriceTier: tier,
+        quantityDiscountAmount: 10000,
+        periodDiscountAmount: 8000,
+      },
+      "Unknown",
+    );
+    expect(result.breakdown).toMatchObject({
+      finalTotalPrice: 72000,
+      unitPrice: 36000,
+      appliedPriceTier: tier,
+      quantityDiscountAmount: 10000,
+      periodDiscountAmount: 8000,
+    });
+  });
   it.each<PaymentRefundResponse["status"]>(["REQUESTED", "FAILED", "COMPLETED"])(
     "preserves an earlier personal %s refund when the buddy later cancels",
     (status) => {
@@ -111,6 +173,8 @@ describe("application view adapters", () => {
   });
   it("maps backend application fields to the existing card model", () => {
     expect(mapApplicationResponseToApplication(application, "Time unavailable.", "en")).toEqual({
+      approvalExpiresAt: null,
+      buddyApprovedAt: null,
       activityType: "STANDARD",
       guestCount: 2,
       id: "11",

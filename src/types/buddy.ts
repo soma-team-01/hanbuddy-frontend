@@ -1,5 +1,25 @@
 import type { ContentLanguage, ResolvedContentLanguage } from "./content-language";
 
+export interface BuddyPendingApprovalResponse {
+  applicationId: number;
+  activityId: number;
+  activityType: import("./referral").ActivityType;
+  activityTitle: string;
+  thumbnailImageUrl: string | null;
+  activityScheduleId: number;
+  startAt: string;
+  applicantUserId: number;
+  applicantName: string;
+  guestCount: number;
+  specialRequest: string | null;
+  status: import("./application").BackendApplicationStatus;
+  appliedAt: string;
+  approvalExpiresAt: string;
+}
+
+export type BuddyPendingApprovalPage =
+  import("./admin").AdminPageResponse<BuddyPendingApprovalResponse>;
+
 /** DELETED는 soft delete된 활동 — 목록·상세 응답에서 제외되지만 계약상 존재한다 */
 export type MyActivityStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "DELETED";
 export interface ActivityStatusUpdateRequest {
@@ -43,6 +63,7 @@ export interface ActivityPricePreviewResponse {
 
 /** 등록·수정 문자열 제한은 백엔드 ActivityTextLimits와 동기화한다. */
 export interface ActivityUpsertRequest {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[] | null;
   /** Required for creation; omit on edit to preserve legacy unset languages. */
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   /** 사용자가 작성한 원문의 주 언어 */
@@ -63,10 +84,10 @@ export interface ActivityUpsertRequest {
   maxCapacity: number;
   price: number;
   currency: string;
-  /** 1~100 (%). 할인 미사용 시 discountEndDate와 함께 생략 */
-  discountPercent?: number;
+  /** 1~100 (%). 할인 미사용 시 discountEndDate와 함께 null */
+  discountPercent?: number | null;
   /** Asia/Seoul 기준 할인 종료일 (YYYY-MM-DD). 오늘 또는 이후 날짜 */
-  discountEndDate?: string;
+  discountEndDate?: string | null;
   /** 공백이 아닌 최대 500자 */
   meetingPointName: string;
   meetingPlaceId: string;
@@ -107,6 +128,21 @@ export interface ActivityScheduleResponse {
 }
 
 export interface MyActivitySummaryResponse {
+  meetingPointName: string;
+  meetingPlaceId: string | null;
+  meetingLatitude?: number | null;
+  meetingLongitude?: number | null;
+  price: number;
+  currency: string;
+  /** Only currently active discounts are returned by the list endpoint. */
+  discountPercent?: number | null;
+  discountEndDate?: string | null;
+  discountedPrice?: number | null;
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
+  averageRating?: number | null;
+  reviewCount?: number | null;
+  /** Schedule/seat availability, independent of publication status. */
+  isSoldOut?: boolean;
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   activityType?: import("./referral").ActivityType;
   activityId: number;
@@ -120,6 +156,7 @@ export interface MyActivitySummaryResponse {
 }
 
 export interface MyActivityDetailResponse extends MyActivitySummaryResponse {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
   hostIntroduction: string;
   includedItems: string[];
   restrictionNotes: string[];
@@ -147,6 +184,9 @@ export interface BuddyScheduleDateResponse {
 }
 
 export interface BuddyApplicationApplicantSummaryResponse {
+  /** Optional only for compatibility with pre-approval servers. */
+  status?: import("./application").BackendApplicationStatus;
+  approvalExpiresAt?: string | null;
   applicationId: number;
   applicantUserId: number;
   applicantName: string;
@@ -178,7 +218,8 @@ export interface BuddyDateActivityApplicationsResponse {
 }
 
 export interface BuddyApplicationApplicantDetailResponse extends BuddyApplicationApplicantSummaryResponse {
-  status: "PENDING_PAYMENT" | "SUPERSEDED" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: import("./application").BackendApplicationStatus;
+  buddyApprovedAt?: string | null;
   specialRequest: string | null;
   appliedAt: string;
   /** 취소된 신청의 사유. 취소가 아니면 null */

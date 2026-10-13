@@ -1,4 +1,5 @@
 "use client";
+import { isPaidApplicationStatus } from "@/lib/application-approval";
 
 import { INSTANCE_LOADING_STATE, PayPalProvider, usePayPal } from "@paypal/react-paypal-js/sdk-v6";
 import type {
@@ -77,7 +78,7 @@ function PayPalCheckoutAction({
           ),
           "application",
         );
-        if (application.status !== "CONFIRMED") {
+        if (!isPaidApplicationStatus(application.status)) {
           throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
         }
         onConfirmed(application);
@@ -87,7 +88,7 @@ function PayPalCheckoutAction({
           const confirmedApplication = applications.find(
             (application) =>
               application.applicationId === payment.application.applicationId &&
-              application.status === "CONFIRMED",
+              isPaidApplicationStatus(application.status),
           );
           if (confirmedApplication) {
             onConfirmed(confirmedApplication);

@@ -2,9 +2,9 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getBuddyApplications,
+  getBuddyPendingApprovals,
   getBuddyScheduleDates,
   getMyActivities,
-  updateMyActivityStatus,
 } from "@/lib/api/buddy";
 import { ApiClientError } from "@/lib/api/errors";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
@@ -38,10 +38,10 @@ vi.mock("@/lib/api/chat", () => ({
 }));
 
 vi.mock("@/lib/api/buddy", () => ({
+  getBuddyPendingApprovals: vi.fn(),
   getBuddyApplications: vi.fn(),
   getBuddyScheduleDates: vi.fn(),
   getMyActivities: vi.fn(),
-  updateMyActivityStatus: vi.fn(),
 }));
 
 // 주간 스트립은 오늘 날짜를 기준으로 그려지므로 시각을 고정한다 (2026-07-15은 수요일)
@@ -53,7 +53,6 @@ vi.mock("@/lib/datetime", async (importOriginal) => ({
 const mockedGetBuddyApplications = vi.mocked(getBuddyApplications);
 const mockedGetBuddyScheduleDates = vi.mocked(getBuddyScheduleDates);
 const mockedGetMyActivities = vi.mocked(getMyActivities);
-const mockedUpdateMyActivityStatus = vi.mocked(updateMyActivityStatus);
 
 const teaTastingActivities = [
   {
@@ -87,11 +86,78 @@ const teaTastingActivities = [
 
 describe("DashboardContent", () => {
   beforeEach(() => {
+    vi.mocked(getBuddyPendingApprovals)
+      .mockReset()
+      .mockResolvedValue({
+        status: "success",
+        page: { content: [], totalElements: 0, totalPages: 0, page: 0, size: 20, hasNext: false },
+      });
     mockedGetBuddyApplications.mockReset();
     mockedGetBuddyScheduleDates.mockReset();
     mockedGetMyActivities.mockReset();
-    mockedUpdateMyActivityStatus.mockReset();
     mockedGetMyActivities.mockResolvedValue({ status: "success", activities: [] });
+  });
+
+  it("keeps the inbox independent of the selected date and removes pending-only calendar rows", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: [
+        {
+          ...teaTastingActivities[0],
+          schedules: [
+            {
+              ...teaTastingActivities[0].schedules[0],
+              applicants: [
+                {
+                  ...teaTastingActivities[0].schedules[0].applicants[0],
+                  status: "PENDING_APPROVAL",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    vi.mocked(getBuddyPendingApprovals).mockResolvedValue({
+      status: "success",
+      page: {
+        content: [
+          {
+            applicationId: 11,
+            activityId: 42,
+            activityType: "STANDARD",
+            activityTitle: "Traditional Tea Tasting",
+            thumbnailImageUrl: null,
+            activityScheduleId: 99,
+            startAt: "2099-07-20T10:00:00+09:00",
+            applicantUserId: 3,
+            applicantName: "Pending Sophie",
+            guestCount: 2,
+            specialRequest: null,
+            status: "PENDING_APPROVAL",
+            appliedAt: "2099-07-19T10:00:00+09:00",
+            approvalExpiresAt: "2099-07-19T22:00:00+09:00",
+          },
+        ],
+        totalElements: 1,
+        totalPages: 1,
+        page: 0,
+        size: 20,
+        hasNext: false,
+      },
+    });
+    renderWithQueryClient(<DashboardContent />);
+    const inbox = await screen.findByRole("region", { name: /New booking requests/ });
+    await within(inbox).findByText("Pending Sophie");
+    expect(screen.queryByText("Sophie Martin")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Thu 16" }));
+    await waitFor(() =>
+      expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-16", "EN"),
+    );
+    expect(within(inbox).getByText("Pending Sophie")).toBeInTheDocument();
+    expect(getBuddyPendingApprovals).toHaveBeenCalledTimes(1);
+    expect(getBuddyPendingApprovals).toHaveBeenCalledWith(0);
   });
 
   it("anchors a single-schedule menu to the title while keeping chat beside the time", async () => {
@@ -140,7 +206,7 @@ describe("DashboardContent", () => {
       "loading",
       "eager",
     );
-    expect(screen.getAllByText("1 Applicant").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2 Applicants").length).toBeGreaterThan(0);
     expect(screen.getByText("10:00 AM")).toBeInTheDocument();
     expect(screen.getByText("Sophie Martin")).toBeInTheDocument();
     expect(screen.getByText("France")).toBeInTheDocument();
@@ -392,138 +458,22 @@ describe("DashboardContent", () => {
     expect(mockedGetBuddyApplications).toHaveBeenCalledTimes(2);
   });
 
-  it("summarizes activities and lists them without deleted ones", async () => {
-    mockedGetBuddyScheduleDates.mockResolvedValue({
-      status: "success",
-      dates: [{ dateStartAt: "2026-07-20T00:00:00+09:00", hasActivity: true }],
-    });
-    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
-    mockedGetMyActivities.mockResolvedValue({
-      status: "success",
-      activities: [
-        {
-          activityId: 42,
-          title: "Traditional Tea Tasting",
-          description: "Taste traditional tea with a local host.",
-          thumbnailImageUrl: null,
-          totalDurationMinutes: 0,
-          status: "ACTIVE",
-        },
-        {
-          activityId: 43,
-          title: "Bukchon Hidden Gems",
-          description: "Walk through the quiet alleys of Bukchon.",
-          thumbnailImageUrl: null,
-          totalDurationMinutes: 0,
-          status: "DRAFT",
-        },
-        {
-          activityId: 44,
-          title: "Gone Walk",
-          description: "",
-          thumbnailImageUrl: null,
-          totalDurationMinutes: 0,
-          status: "DELETED",
-        },
-      ],
-    });
-
-    renderWithQueryClient(<DashboardContent />);
-
-    expect(await screen.findByText("Bukchon Hidden Gems")).toBeInTheDocument();
-    // 정산은 홈 화면이 아니라 상단바 아이콘에서 들어간다
-    expect(screen.queryByText("Expected this month")).not.toBeInTheDocument();
-
-    // 내 활동 — 삭제된 것은 빼고, 카드가 상세로 연결된다
-    const list = screen.getByText("Bukchon Hidden Gems").closest("ul")!;
-    expect(list).toHaveClass("grid-cols-1");
-    expect(list).not.toHaveClass("sm:grid-cols-2");
-    expect(list).toHaveClass("md:grid-cols-3", "lg:grid-cols-4");
-    // 카드마다 이미지·제목 상세 링크와 수정 링크가 있다
-    expect(within(list).getAllByRole("link")).toHaveLength(6);
-    expect(screen.queryByText("Gone Walk")).not.toBeInTheDocument();
-    expect(screen.getByText("Bukchon Hidden Gems").closest("a")).toHaveAttribute(
-      "href",
-      "/en/my-activities/43",
-    );
-    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute(
-      "href",
-      "/en/my-activities",
-    );
-    expect(screen.getByRole("link", { name: /Create Activity/ })).toHaveAttribute(
-      "href",
-      "/en/my-activities/create",
-    );
-    // 홈에서 바로 수정·삭제로 이어진다
-    expect(screen.getByRole("link", { name: "Edit Bukchon Hidden Gems" })).toHaveAttribute(
-      "href",
-      "/en/my-activities/43/edit",
-    );
-    expect(screen.getByRole("button", { name: "Delete Bukchon Hidden Gems" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
-    ).toHaveAttribute("aria-checked", "true");
-    expect(
-      screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
-    ).toHaveClass("min-h-5");
-    expect(
-      within(list).getByRole("img", { name: "Traditional Tea Tasting" }).closest("a"),
-    ).toHaveClass("aspect-video");
-    expect(screen.getByText("Taste traditional tea with a local host.")).toBeInTheDocument();
-    expect(screen.getByText("Walk through the quiet alleys of Bukchon.")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("switch", {
-        name: /Publish Bukchon Hidden Gems|Make Bukchon Hidden Gems private/,
-      }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("changes activity visibility directly from the dashboard", async () => {
+  it("keeps activity management out of the home and orders applicants before requests", async () => {
     mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
-    mockedGetBuddyApplications.mockResolvedValue({ status: "success", activities: [] });
-    mockedGetMyActivities
-      .mockResolvedValueOnce({
-        status: "success",
-        activities: [
-          {
-            activityId: 42,
-            title: "Traditional Tea Tasting",
-            description: "",
-            thumbnailImageUrl: null,
-            totalDurationMinutes: 0,
-            status: "ACTIVE",
-          },
-        ],
-      })
-      .mockResolvedValue({
-        status: "success",
-        activities: [
-          {
-            activityId: 42,
-            title: "Traditional Tea Tasting",
-            description: "",
-            thumbnailImageUrl: null,
-            totalDurationMinutes: 0,
-            status: "INACTIVE",
-          },
-        ],
-      });
-    mockedUpdateMyActivityStatus.mockResolvedValue({
+    mockedGetBuddyApplications.mockResolvedValue({
       status: "success",
-      activity: { activityId: 42, status: "INACTIVE" } as never,
+      activities: teaTastingActivities,
     });
-
     renderWithQueryClient(<DashboardContent />);
-
-    fireEvent.click(
-      await screen.findByRole("switch", { name: "Make Traditional Tea Tasting private" }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Make private" }));
-
-    await waitFor(() => expect(mockedUpdateMyActivityStatus).toHaveBeenCalledWith(42, "INACTIVE"));
+    await screen.findByText("Traditional Tea Tasting");
+    expect(screen.queryByRole("heading", { name: "My Activities" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Create Activity/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    const applicants = screen.getByRole("heading", { name: "Applicants" });
+    const requests = screen.getByRole("heading", { name: /New booking requests/ });
     expect(
-      await screen.findByRole("switch", { name: "Publish Traditional Tea Tasting" }),
-    ).toHaveAttribute("aria-checked", "false");
+      applicants.compareDocumentPosition(requests) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("localizes the dashboard in Korean", async () => {
@@ -544,8 +494,8 @@ describe("DashboardContent", () => {
     expect(screen.getByRole("button", { name: "다음 주" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "달력 열기" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "신청자" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "내 활동" })).toBeInTheDocument();
-    expect(screen.getAllByText("신청자 1명").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("heading", { name: "내 활동" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("신청자 2명").length).toBeGreaterThan(0);
     // 몇 명이 오는지 신청자 줄에서 바로 보인다
     expect(screen.getByText("2명")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "단체 채팅방 만들기" })).toBeInTheDocument();

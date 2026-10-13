@@ -205,27 +205,30 @@ describe("PayPalCheckoutDialog", () => {
     );
   });
 
-  it("captures the order ID returned by onApprove and confirms only a confirmed application", async () => {
-    const onConfirmed = vi.fn();
-    const confirmedApplication = { ...application, status: "CONFIRMED" as const };
-    mockedCapture.mockResolvedValue(apiApplicationResult(confirmedApplication));
-    renderWithIntl(
-      <PayPalCheckoutDialog payment={payment} onConfirmed={onConfirmed} onClose={vi.fn()} />,
-    );
+  it.each(["CONFIRMED", "PENDING_APPROVAL"] as const)(
+    "accepts captured %s without charging again",
+    async (status) => {
+      const onConfirmed = vi.fn();
+      const confirmedApplication = { ...application, status };
+      mockedCapture.mockResolvedValue(apiApplicationResult(confirmedApplication));
+      renderWithIntl(
+        <PayPalCheckoutDialog payment={payment} onConfirmed={onConfirmed} onClose={vi.fn()} />,
+      );
 
-    await act(async () => {
-      await (sdkState.sessionOptions?.onApprove as (data: { orderId: string }) => Promise<void>)({
-        orderId: "APPROVED-ORDER-ID",
+      await act(async () => {
+        await (sdkState.sessionOptions?.onApprove as (data: { orderId: string }) => Promise<void>)({
+          orderId: "APPROVED-ORDER-ID",
+        });
       });
-    });
 
-    expect(mockedCapture).toHaveBeenCalledWith(
-      application.applicationId,
-      { orderId: "APPROVED-ORDER-ID" },
-      "EN",
-    );
-    expect(onConfirmed).toHaveBeenCalledWith(confirmedApplication);
-  });
+      expect(mockedCapture).toHaveBeenCalledWith(
+        application.applicationId,
+        { orderId: "APPROVED-ORDER-ID" },
+        "EN",
+      );
+      expect(onConfirmed).toHaveBeenCalledWith(confirmedApplication);
+    },
+  );
 
   it("rechecks applications after a lost capture response before reporting failure", async () => {
     const onConfirmed = vi.fn();

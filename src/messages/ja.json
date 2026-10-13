@@ -1,4 +1,117 @@
 {
+  "Approval": {
+    "inboxPageTitle": "予約リクエスト",
+    "deadlineHint": "期限までに承認しない場合、申し込みは自動キャンセルされます。",
+    "inboxTitle": "新しい予約リクエスト",
+    "inboxAll": "すべて見る",
+    "inboxMore": "もっと見る",
+    "inboxLess": "折りたたむ",
+    "inboxEmpty": "承認待ちの申請はありません。",
+    "inboxActivity": "体験を見る",
+    "beforePayment": "支払いだけでは予約は確定せず、バディの承認が必要なことを確認しました。",
+    "beforeReferral": "申し込みだけでは予約は確定せず、バディの承認が必要なことを確認しました。",
+    "pending": "承認待ち",
+    "approve": "承認",
+    "reject": "お断り",
+    "deadline": "承認期限：{date}",
+    "processing": "処理中",
+    "expired": "承認期限を過ぎました。状況を確認中です。",
+    "paid": "支払い完了 · バディの承認待ち",
+    "applied": "申込完了 · バディの承認待ち",
+    "waiting": "バディが申込内容を確認しています。",
+    "details": "詳細を見る",
+    "rejectTitle": "この申込を断りますか？",
+    "rejectHint": "理由はゲストに伝えられます。",
+    "detail": "理由",
+    "keep": "戻る",
+    "working": "処理中…",
+    "error": "処理結果を確認できませんでした。状況を更新してください。",
+    "retry": "状況を更新",
+    "invalid": "理由を1～255文字で入力してください。",
+    "changed": "申込状況が変わりました。更新してください。",
+    "forbidden": "この申込を処理する権限がありません。",
+    "original": "原文を見る",
+    "translated": "翻訳を見る",
+    "free": "バディ承認前は全額返金",
+    "reasons": {
+      "BOOKING_UNAVAILABLE": "日程の実施が難しい",
+      "INSUFFICIENT_PARTICIPANTS": "参加人数が不足",
+      "RESOURCE_UNAVAILABLE": "施設・チケットの予約が難しい",
+      "EXTERNAL_CIRCUMSTANCES": "天候など外部の事情",
+      "BUDDY_OTHER": "その他（入力）"
+    },
+    "cancelled": {
+      "BOOKING_UNAVAILABLE": "この日程を実施できないため、申込がキャンセルされました。",
+      "INSUFFICIENT_PARTICIPANTS": "参加人数不足によりキャンセルされました。",
+      "RESOURCE_UNAVAILABLE": "施設・チケットの予約事情によりキャンセルされました。",
+      "EXTERNAL_CIRCUMSTANCES": "天候など外部の事情によりキャンセルされました。",
+      "BUDDY_OTHER": "バディからのキャンセル理由"
+    }
+  },
+  "QuantityPricing": {
+    "options": {
+      "none": "割引なし",
+      "enabled": "割引を適用"
+    },
+    "pricingTitle": "料金",
+    "discountedPriceColumn": "割引後の料金",
+    "selectEndDate": "日付を選択",
+    "previewPrompt": "終了日と割引率を入力すると、最終料金が表示されます。",
+    "fromGuests": "最少人数",
+    "toGuests": "最多人数",
+    "optionalBound": "任意",
+    "appliedGuests": "適用人数：{guests}",
+    "rangeInput": "人数",
+    "addRow": "追加",
+    "priceColumn": "1人の料金",
+    "payoutColumn": "1人の精算額",
+    "tableNote": "期間割引前の目安 · 範囲外は基本料金",
+    "basePayout": "1名あたりの予想受取額 {amount}",
+    "enable": "人数別料金を設定",
+    "hint": "1件の申込人数に応じて全員に適用する1人当たりの料金です。範囲外は基本料金、期間割引はさらに適用されます。",
+    "range": "料金区分 {count}",
+    "minGuests": "最少人数",
+    "maxGuests": "最大人数",
+    "unitPrice": "1人当たり (KRW)",
+    "unlimited": "上限なし",
+    "removeRange": "料金区分 {count} を削除",
+    "remove": "削除",
+    "add": "+ 料金区分を追加",
+    "preview": "最終料金プレビュー",
+    "invalid": "料金・人数・割引を確認してください。範囲は重複不可、割引後は1ウォン以上です。",
+    "error": "予想受取額を取得できませんでした。",
+    "retry": "再試行",
+    "loading": "最新料金を確認中…",
+    "rate": "総控除率 {rate}% · VAT・決済手数料込み",
+    "guests": "人数",
+    "unit": "適用単価",
+    "total": "支払総額",
+    "deduction": "総控除額",
+    "payout": "予想受取額",
+    "guestCount": "{count, plural, other {#人}}",
+    "notice": "人数は残席数とは無関係です。受取額は保存・決済時の料率により変わる場合があります。",
+    "quoteError": "料金を確認できませんでした。再試行してください。",
+    "quantityDiscount": "人数割引",
+    "periodDiscount": "期間割引",
+    "invalidTiers": "2～100人、基本料金以下の単価、重複しない範囲を入力してください。",
+    "invalidAmount": "決済金額は1ウォン以上にしてください。",
+    "base": "基本の1名料金",
+    "fallback": "設定されていない人数には基本料金が適用されます。",
+    "viewTiers": "人数別料金を見る",
+    "tierNotice": "1件の予約の全参加者に同じ単価が適用されます。以下は期間割引前の料金です。",
+    "rangeLabel": "{min}〜{max}名",
+    "openRangeLabel": "{min}名以上",
+    "previewGuests": "確認する予約人数",
+    "expand": "全人数の精算表を見る",
+    "collapse": "精算表を閉じる",
+    "selectedTotal": "{count, plural, other {#名の合計}}",
+    "perGuest": "1名 {price}",
+    "guestsLabel": "参加人数",
+    "less": "人数を減らす",
+    "more": "人数を増やす",
+    "baseApplied": "基本料金適用",
+    "tierApplied": "人数別料金適用"
+  },
   "ActivityLanguages": {
     "hostedIn": "対応言語",
     "title": "対応言語",
@@ -26,6 +139,7 @@
     "unavailable": "翻訳を取得できないため、原文を表示しています。"
   },
   "Referral": {
+    "sharingPurpose": "事業者による相談のご連絡および申請確認",
     "messagePlaceholder": "バディに伝えたいことがあればご記入ください。",
     "summaryTitle": "申込情報",
     "sharingTitle": "事業者への個人情報提供について",
@@ -42,7 +156,7 @@
     "title": "提携体験への申し込み",
     "schedule": "日程（韓国時間）",
     "guests": "参加人数",
-    "consent": "上記の内容に従い、事業者への個人情報の提供に同意します。",
+    "consent": "事業者への個人情報提供に同意します。",
     "recipient": "提供先",
     "fields": "提供する情報",
     "purpose": "利用目的",
@@ -53,7 +167,7 @@
     "cancelled": "この申し込みはキャンセル済みです。",
     "reapply": "再申し込み",
     "reapplyNotice": "以前キャンセルした日程です。内容を確認して改めて同意し、再申し込みすると新しい申し込みが作成されます。",
-    "alreadyApplied": "この日程にはすでに申し込みがあります。申し込み一覧をご確認ください。",
+    "alreadyApplied": "この日程は申し込み済みです。",
     "sessionCancelled": "バディがキャンセルした日程には再申し込みできません。",
     "completed": "この申し込みは終了しています。",
     "applications": "申し込み一覧へ",
@@ -213,6 +327,7 @@
     "conflict": "このアクションは現在の状態では完了できません。",
     "serverUnavailable": "サービスは一時的にご利用いただけません。しばらくしてからもう一度お試しください。",
     "activityDiscountInvalid": "割引率と終了日を一緒に設定します。",
+    "activityPriceTiersInvalid": "人数区分の重複を確認し、基本料金以下の単価を入力してください。",
     "activityDiscountEndDate": "割引終了日は今日またはそれ以降である必要があります。",
     "reviewNotReviewable": "アクティビティ終了後にレビューを残すことができます。",
     "reviewOwner": "編集できるのは自分が書いたレビューのみです。",
@@ -271,12 +386,24 @@
     "viewProfile": "プロフィールを見る",
     "chat": "メッセージ"
   },
+  "Footer": {
+    "navigationLabel": "フッターメニュー",
+    "support": "サポート",
+    "hosting": "バディ",
+    "company": "HanBuddy",
+    "contactUs": "お問い合わせ",
+    "communitySafety": "コミュニティ・安全ポリシー",
+    "buddyOperationTerms": "バディ運営規約",
+    "buddyCommissionSettlement": "バディ手数料・精算ポリシー",
+    "exploreExperiences": "体験を探す"
+  },
   "Accessibility": {
     "goBack": "戻る",
     "close": "閉じる",
     "closeDialog": "ダイアログを閉じる"
   },
   "Status": {
+    "declined": "お断り",
     "pendingPayment": "支払い保留中",
     "confirmed": "確認済み",
     "cancelled": "キャンセルされました",
@@ -942,6 +1069,8 @@
     "soldOut": "売り切れ"
   },
   "ActivityDetail": {
+    "selectDateCompact": "日付選択",
+    "bookCompact": "予約",
     "loading": "アクティビティを読み込み中...",
     "loadError": "アクティビティの詳細を読み込めませんでした。",
     "notFound": "このアクティビティは見つかりませんでした。",
@@ -1087,7 +1216,8 @@
     "statutoryWithdrawalNotice": "契約内容の書面受領から7日以内、供給が遅い場合は供給を受けた日または供給開始日から7日以内に撤回を請求できます。法定権利が優先します。",
     "refundExceptionsNotice": "一般基準は法定期間経過後または法定制限事由が認められる場合に適用します。30分無料キャンセルや未提供部分等の別途返金権を優先します。",
     "actualPaymentRefundNotice": "割引決済は実際の支払金額を基準に返金します。",
-    "agreement": "【必須】キャンセル・返金規定に同意します。",
+    "agreement": "キャンセル・返金規定に同意します。",
+    "agreementCompact": "キャンセル・返金規定に同意",
     "submit": "申し込みと支払い",
     "payNow": "支払う",
     "payWithToss": "Toss Paymentsで支払う",
@@ -1426,6 +1556,7 @@
     "mockNotice": "サンプル数値 — 支払いはすぐに実際のデータに関連付けられます。"
   },
   "MyActivities": {
+    "referralApplications": "紹介アクティビティの申し込み",
     "title": "私の活動",
     "description": "主催する文化体験を管理します。",
     "createActivity": "アクティビティの作成",
@@ -1540,20 +1671,24 @@
         "description": "一度に快適にホストできるゲストの数を選択してください。"
       },
       "price": {
-        "title": "1人あたりの料金を設定する",
-        "description": "各ゲストが支払う金額を韓国ウォンで入力します。"
+        "title": "基本料金",
+        "description": "1名あたりの料金を入力してください。"
       },
       "inclusions": {
         "title": "何が含まれているかをゲストに伝える",
         "description": "価格の範囲を正確に把握してください。"
       },
       "discount": {
-        "title": "割引を追加する",
-        "description": "必要に応じて、終了日のある期間限定割引を設定します。"
+        "title": "期間割引",
+        "description": "期間割引を適用しますか？"
       },
       "restrictions": {
         "title": "ゲストが参加する前に",
         "description": "アクティビティに参加する前にゲストが知っておくべきことを選択してください。"
+      },
+      "quantity": {
+        "title": "人数別料金",
+        "description": "人数割引を適用しますか？"
       }
     },
     "groups": {
@@ -1728,12 +1863,13 @@
       "pastTimeHint": "今日の開始時刻は現在時刻 (KST) より遅くする必要があります。"
     },
     "price": {
+      "tierPriceWarning": "基本料金より高い人数別料金があります。次のステップで調整してください。",
       "referralTitle": "サービスの最低料金を入力してください",
       "referralDescription": "提供するサービスの中で最も低い料金を入力してください。",
       "referralLabel": "サービスの最低料金",
       "referralMinimum": "0ウォンから入力できます。",
       "minimum": "1人あたりの最低料金は{amount, number}ウォンです。",
-      "notice": "この金額は、韓国ウォンでの 1 人あたりの料金としてゲストに表示されます。"
+      "notice": "人数別料金が適用されない場合の基本料金です。"
     },
     "inclusions": {
       "custom": "その他の同梱品",
@@ -1752,14 +1888,14 @@
       }
     },
     "discount": {
-      "policyNotice": "割引は、設定した終了日まですべてのセッションに適用されます。",
+      "policyNotice": "終了日までの予約に適用 · 人数割引と併用可",
       "options": {
         "none": {
           "title": "割引なし",
-          "description": "体験を標準価格で掲載します。"
+          "description": "人数別料金は設定どおり適用されます。"
         },
         "limited": {
-          "title": "期間限定割引",
+          "title": "割引を適用",
           "description": "プロモーション期間限定で低価格を提供します。"
         }
       }
@@ -1820,6 +1956,8 @@
       "referralPriceInvalid": "0〜9,999,999,999ウォンの整数を入力してください。",
       "inclusionsRequired": "少なくとも 1 つの付属アイテムを追加します。",
       "discountInvalid": "終了日を選択し、1 ～ 100 の整数の割引を入力します。",
+      "priceTiersInvalid": "人数区分が重複しないように設定し、単価は基本料金以下にしてください。",
+      "pricingInvalid": "料金・人数・期間割引を確認してください。割引後は1ウォン以上です。",
       "restrictionsRequired": "ゲストが知っておくべきことを少なくとも 1 つ選択するか、特筆すべき事項がないことを確認します。",
       "imageUploadFailed": "写真をアップロードできませんでした。もう一度試してください。",
       "submissionFailed": "あなたの体験を登録できませんでした。もう一度試してください。",

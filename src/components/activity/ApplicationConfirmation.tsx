@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ApprovalDeadline } from "@/components/booking/ApprovalDeadline";
 import { useLocale, useTranslations } from "next-intl";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CheckCircleIcon, UserIcon } from "@/components/ui/icons";
@@ -35,11 +36,14 @@ export function ApplicationConfirmation({
   referralServicePrice,
 }: Readonly<{ application: ApplicationResponse; referralServicePrice?: number }>) {
   const isReferral = referralServicePrice !== undefined;
+  const awaitingApproval = application.status === "PENDING_APPROVAL";
+  const approval = useTranslations("Approval");
   const referral = useTranslations("Referral");
   const explore = useTranslations("Explore");
   const locale = useLocale();
   const t = useTranslations("Payment");
   const tBooking = useTranslations("Booking");
+  const pricingT = useTranslations("QuantityPricing");
   const tErrors = useTranslations("Errors");
   const scheduleLabel =
     formatSeoulDateTime(application.startAt, locale) ?? tErrors("dateTimeUnavailable");
@@ -61,11 +65,20 @@ export function ApplicationConfirmation({
             <CheckCircleIcon className="size-8 max-md:size-6" aria-hidden />
           </span>
           <h1 className="mt-5 font-display text-2xl font-bold text-ink max-md:mt-3 max-md:text-base max-md:leading-6 max-md:tracking-tight md:text-3xl">
-            {isReferral ? referral("success") : t("complete")}
+            {awaitingApproval
+              ? approval(isReferral ? "applied" : "paid")
+              : isReferral
+                ? referral("success")
+                : t("complete")}
           </h1>
           <p className="mt-2 text-sm text-muted max-md:mt-1.5 max-md:text-xs max-md:leading-5">
-            {isReferral ? referral("notice") : t("confirmed")}
+            {awaitingApproval
+              ? approval("waiting")
+              : isReferral
+                ? referral("notice")
+                : t("confirmed")}
           </p>
+          {awaitingApproval && <ApprovalDeadline expiresAt={application.approvalExpiresAt} />}
         </section>
 
         {/* 예약 화면의 요약 패널과 같은 구성 — 배경을 채우지 않고 구분선으로만 나눈다 */}
@@ -146,7 +159,24 @@ export function ApplicationConfirmation({
                 </span>
               </div>
 
-              {hasDiscount ? (
+              {hasDiscount &&
+              ((application.quantityDiscountAmount ?? 0) > 0 ||
+                (application.periodDiscountAmount ?? 0) > 0) ? (
+                <>
+                  {(application.quantityDiscountAmount ?? 0) > 0 && (
+                    <div className="flex items-center justify-between gap-3 text-sm font-semibold text-primary max-md:text-xs">
+                      <span>{pricingT("quantityDiscount")}</span>
+                      <span>-{formatKrw(application.quantityDiscountAmount!, locale)}</span>
+                    </div>
+                  )}
+                  {(application.periodDiscountAmount ?? 0) > 0 && (
+                    <div className="flex items-center justify-between gap-3 text-sm font-semibold text-primary max-md:text-xs">
+                      <span>{pricingT("periodDiscount")}</span>
+                      <span>-{formatKrw(application.periodDiscountAmount!, locale)}</span>
+                    </div>
+                  )}
+                </>
+              ) : hasDiscount ? (
                 <div className="flex items-center justify-between text-sm font-semibold text-primary max-md:text-xs">
                   <span>
                     {application.discountPercent

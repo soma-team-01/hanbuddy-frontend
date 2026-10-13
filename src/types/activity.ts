@@ -41,6 +41,7 @@ export interface ActivityItineraryItem {
 }
 
 export interface Activity {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   activityType?: import("./referral").ActivityType;
   /** True only when the API actually returned a translated body, not for locale mismatch alone. */
@@ -113,6 +114,7 @@ export interface TouristActivitySchedule {
 }
 
 export interface TouristActivitySummary {
+  priceTiers?: import("./activity-pricing").ActivityPriceTier[];
   availableLanguages?: import("./activity-language").ActivityLanguage[];
   activityType?: import("./referral").ActivityType;
   activityId: number;
@@ -159,6 +161,8 @@ export interface TouristActivityDetail extends TouristActivitySummary {
   schedules: TouristActivitySchedule[];
   /** 활동 일정표 목록 (UI 반영은 후속 작업) */
   itineraries?: ActivityItineraryResponse[];
+  /** 콘텐츠 마지막 수정 시각 (ISO 8601, +09:00). 사이트맵 lastmod에 쓴다. 없거나 형식이 틀리면 생략 */
+  updatedAt?: string;
 }
 
 export type ActivityWeatherUnavailableReason =

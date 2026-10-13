@@ -7,6 +7,9 @@ import {
 } from "./referral";
 
 describe("referral contracts", () => {
+  it.each(["REJECTED", "EXPIRED"])("forwards the %s status filter", (status) => {
+    expect(referralQuery(new URLSearchParams({ status }), false)).toBe(`status=${status}`);
+  });
   it("keeps the starting price but strips currency, discounts, owner and type", () => {
     const input = {
       title: "Seoul visit",

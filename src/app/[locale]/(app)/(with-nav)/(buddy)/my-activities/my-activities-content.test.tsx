@@ -23,6 +23,13 @@ const mockedDeleteMyActivity = vi.mocked(deleteMyActivity);
 const mockedGetMyActivities = vi.mocked(getMyActivities);
 const mockedUpdateMyActivityStatus = vi.mocked(updateMyActivityStatus);
 
+const cardFields = {
+  meetingPointName: "Anguk Station",
+  meetingPlaceId: null,
+  price: 45000,
+  currency: "KRW",
+};
+
 describe("MyActivitiesContent", () => {
   beforeEach(() => {
     routerMock.replace.mockReset();
@@ -40,7 +47,8 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
-          totalDurationMinutes: 0,
+          ...cardFields,
+          totalDurationMinutes: 90,
           status: "ACTIVE",
         },
       ],
@@ -53,18 +61,16 @@ describe("MyActivitiesContent", () => {
       "loading",
       "eager",
     );
-    expect(screen.getByTestId("activity-records")).toHaveClass(
-      "md:grid-cols-2",
-      "lg:grid-cols-3",
-      "xl:grid-cols-4",
-    );
+    expect(screen.getByTestId("activity-records")).toHaveClass("flex-col", "divide-y");
     expect(screen.getByText("Learn Korean tea etiquette.")).toHaveClass("text-sm");
     expect(
       screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
     ).toHaveAttribute("aria-checked", "true");
     expect(
       screen.getByRole("switch", { name: "Make Traditional Tea Tasting private" }),
-    ).toHaveClass("min-h-5");
+    ).toHaveClass("min-h-9");
+    expect(screen.getByRole("article")).toHaveAttribute("data-variant", "row");
+    expect(screen.getByText("1 hour 30min")).toBeInTheDocument();
     expect(screen.getByText("Public")).toBeInTheDocument();
     const detailLinks = screen.getAllByRole("link", { name: "Traditional Tea Tasting" });
     expect(detailLinks.length).toBeGreaterThanOrEqual(1);
@@ -79,6 +85,80 @@ describe("MyActivitiesContent", () => {
     expect(screen.queryByRole("link", { name: "View applicants" })).not.toBeInTheDocument();
   });
 
+  it.each(["en", "ko"] as const)(
+    "uses guest card pricing, rating and sold-out state independently of visibility in %s",
+    async (locale) => {
+      mockedGetMyActivities.mockResolvedValue({
+        status: "success",
+        activities: [
+          {
+            activityId: 42,
+            title: "Tea Tour",
+            description: "Tea with a buddy",
+            thumbnailImageUrl: null,
+            totalDurationMinutes: 60,
+            status: "INACTIVE",
+            meetingPointName: "Anguk Station",
+            meetingPlaceId: "anguk",
+            price: 40000,
+            currency: "KRW",
+            discountedPrice: 39200,
+            discountPercent: 2,
+            averageRating: 5,
+            reviewCount: 3,
+            isSoldOut: false,
+          },
+          {
+            activityId: 43,
+            title: "Closed Tour",
+            description: "Closed",
+            thumbnailImageUrl: null,
+            totalDurationMinutes: 10,
+            status: "ACTIVE",
+            meetingPointName: "Seoul",
+            meetingPlaceId: null,
+            price: 110000,
+            currency: "KRW",
+            activityType: "REFERRAL",
+            averageRating: null,
+            reviewCount: 0,
+            isSoldOut: true,
+          },
+          {
+            activityId: 44,
+            title: "Free Tour",
+            description: "A free walking tour",
+            thumbnailImageUrl: null,
+            totalDurationMinutes: 5,
+            status: "ACTIVE",
+            meetingPointName: "Seoul",
+            meetingPlaceId: null,
+            price: 0,
+            currency: "KRW",
+            activityType: "REFERRAL",
+            isSoldOut: false,
+          },
+        ],
+      });
+      renderWithQueryClient(<MyActivitiesContent />, { locale });
+      expect(await screen.findByText("Anguk Station")).toBeInTheDocument();
+      expect(screen.getByText("₩39,200")).toBeInTheDocument();
+      expect(screen.getByText("₩40,000").tagName).toBe("S");
+      expect(screen.getByText("5.0")).toBeInTheDocument();
+      expect(screen.getByText("₩110,000~")).toBeInTheDocument();
+      expect(screen.getByText(locale === "ko" ? "무료" : "Free")).toBeInTheDocument();
+      expect(screen.getAllByText(locale === "ko" ? "예약 마감" : "Sold out")).toHaveLength(1);
+      expect(screen.getAllByRole("article").every((card) => card.dataset.variant === "row")).toBe(
+        true,
+      );
+      expect(
+        screen.getByRole("switch", {
+          name: locale === "ko" ? "Tea Tour 공개" : "Publish Tea Tour",
+        }),
+      ).toHaveAttribute("aria-checked", "false");
+    },
+  );
+
   it("labels a soft-deleted activity instead of falling back to a blank status", async () => {
     mockedGetMyActivities.mockResolvedValue({
       status: "success",
@@ -88,6 +168,7 @@ describe("MyActivitiesContent", () => {
           title: "Retired Night Walk",
           description: "No longer offered.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "DELETED",
         },
@@ -109,6 +190,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },
@@ -122,6 +204,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "INACTIVE",
         },
@@ -155,6 +238,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },
@@ -195,6 +279,7 @@ describe("MyActivitiesContent", () => {
           title: "Draft Walk",
           description: "Draft.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "DRAFT",
         },
@@ -203,6 +288,7 @@ describe("MyActivitiesContent", () => {
           title: "Deleted Walk",
           description: "Deleted.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "DELETED",
         },
@@ -229,6 +315,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },
@@ -266,6 +353,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },
@@ -296,6 +384,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },
@@ -334,6 +423,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },
@@ -342,6 +432,7 @@ describe("MyActivitiesContent", () => {
           title: "Bukchon Walking Tour",
           description: "Explore Bukchon.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },
@@ -379,6 +470,7 @@ describe("MyActivitiesContent", () => {
           title: "Traditional Tea Tasting",
           description: "Learn Korean tea etiquette.",
           thumbnailImageUrl: null,
+          ...cardFields,
           totalDurationMinutes: 0,
           status: "ACTIVE",
         },

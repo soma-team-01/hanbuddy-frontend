@@ -61,6 +61,22 @@ describe("PaymentSuccessContent", () => {
     mockedGetMyApplications.mockReset();
   });
 
+  it("shows paid but pending approval without repeating confirmation", async () => {
+    mockedConfirmApplicationPayment.mockResolvedValue({
+      status: "success",
+      application: {
+        ...confirmedApplication,
+        status: "PENDING_APPROVAL",
+        approvalExpiresAt: "2099-10-12T09:00:00+09:00",
+      },
+    });
+    renderWithQueryClient(<PaymentSuccessContent applicationId="11" {...tossParams} />);
+    expect(
+      await screen.findByRole("heading", { name: "Payment complete · Awaiting buddy approval" }),
+    ).toBeInTheDocument();
+    expect(mockedConfirmApplicationPayment).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("Your application is confirmed.")).not.toBeInTheDocument();
+  });
   it("confirms the Toss payment with the successUrl parameters and shows the result", async () => {
     mockedConfirmApplicationPayment.mockResolvedValue({
       status: "success",

@@ -89,8 +89,8 @@ export function ActivityVisibilityControl({
             : "min-h-9 gap-2 px-3 text-xs"
         } ${
           isPublic
-            ? "border-primary/35 bg-primary-soft text-primary-strong hover:border-primary"
-            : "border-line-strong bg-canvas-soft text-muted hover:border-primary hover:text-primary-strong"
+            ? "border-primary/35 bg-transparent text-primary-strong hover:border-primary"
+            : "border-line-strong bg-transparent text-muted hover:border-primary hover:text-primary-strong"
         }`}
       >
         <span>{isPublic ? t("visibilityPublic") : t("visibilityPrivate")}</span>
@@ -110,6 +110,7 @@ export function ActivityVisibilityControl({
 
       {dialogOpen ? (
         <ConfirmDialog
+          cancelVariant="outline"
           title={nextStatus === "INACTIVE" ? t("makePrivateTitle") : t("publishTitle")}
           description={
             nextStatus === "INACTIVE" ? t("makePrivateDescription") : t("publishDescription")

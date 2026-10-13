@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { JsonLd } from "@/components/seo/JsonLd";
-import type { Locale } from "@/i18n/routing";
+import { LOCALES, type Locale } from "@/i18n/routing";
 import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { getPublicActivity, PublicActivityError } from "@/lib/server/public-activities";
+import { publishedActivityLocales } from "@/lib/server/published-activities";
 import { getPublicActivityReviewSummary } from "@/lib/server/public-reviews";
 import { activityBreadcrumbs } from "@/lib/seo/activity-breadcrumbs";
 import { activityProductJsonLd, breadcrumbJsonLd } from "@/lib/seo/json-ld";
@@ -25,12 +26,22 @@ async function readActivity(id: string, locale: Locale) {
   }
 }
 
+/** 사이트맵과 같은 공개 언어로 hreflang을 만든다. 다른 언어 확인이 실패하면 5개 언어 전체로 둔다. */
+async function hreflangLocales(id: string): Promise<readonly Locale[]> {
+  try {
+    return await publishedActivityLocales(id);
+  } catch {
+    return LOCALES;
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id, locale } = await params;
   try {
-    const activity = await readActivity(id, locale);
+    const [activity, locales] = await Promise.all([readActivity(id, locale), hreflangLocales(id)]);
     return publicPageMetadata({
       locale,
+      locales,
       path: `/activities/${activity.activityId}`,
       title: activity.title,
       description: activity.description,
@@ -46,11 +57,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ActivityDetailPage({ params, searchParams }: PageProps) {
   const { id, locale } = await params;
   const query = await searchParams;
-  // 후기 미리보기도 함께 받아 첫 HTML에 넣는다(크롤러가 후기를 읽게). 실패해도 페이지는 그대로 그린다.
-  const [activity, navT, initialReviews] = await Promise.all([
+  // 후기 미리보기는 기다리지 않고 promise로 넘긴다. 본문을 먼저 보내고 후기는 같은 HTML 응답 뒤쪽에
+  // 이어 보내므로(크롤러는 끝까지 받아 읽는다) 후기 API가 느려도 본문이 붙잡히지 않는다.
+  const initialReviews = getPublicActivityReviewSummary(id, locale);
+  const [activity, navT] = await Promise.all([
     readActivity(id, locale),
     getTranslations({ locale, namespace: "Navigation" }),
-    getPublicActivityReviewSummary(id, locale),
   ]);
   const breadcrumbs = activityBreadcrumbs(
     { id: activity.activityId, title: activity.title },

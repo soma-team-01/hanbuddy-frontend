@@ -1,6 +1,6 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getTouristActivity } from "@/lib/api/activities";
+import { getTouristActivity, getActivityPriceQuote } from "@/lib/api/activities";
 import {
   createApplication,
   getApplicationConflicts,
@@ -18,6 +18,7 @@ const replace = vi.fn();
 vi.mock("@/lib/api/activities", async (original) => ({
   ...(await original<typeof import("@/lib/api/activities")>()),
   getTouristActivity: vi.fn(),
+  getActivityPriceQuote: vi.fn(),
 }));
 vi.mock("@/lib/api/users", () => ({ getMyProfile: vi.fn(() => new Promise(() => {})) }));
 
@@ -145,14 +146,108 @@ const refundPolicyDocument = {
   source: "## Refund criteria\n\nThe full cancellation and refund policy.",
 };
 
+async function renderBooking(...args: Parameters<typeof renderWithQueryClient>) {
+  const view = renderWithQueryClient(...args);
+  await waitFor(() =>
+    expect(view.queryClient.isFetching({ queryKey: ["activities", "price-quote"] })).toBe(0),
+  );
+  return view;
+}
+
 async function agreeAndSubmit(submitLabel = "Pay with Toss Payments") {
-  fireEvent.click(screen.getByRole("checkbox"));
+  acknowledgeApproval();
+  fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
+  await waitFor(() => expect(screen.getByRole("button", { name: submitLabel })).toBeEnabled());
   fireEvent.click(screen.getByRole("button", { name: submitLabel }));
 }
 
+function acknowledgeApproval() {
+  const checkbox = screen.getByRole("checkbox", {
+    name: /Buddy approval is required|버디 승인 후/i,
+  });
+  if (!(checkbox as HTMLInputElement).checked) fireEvent.click(checkbox);
+}
+
 describe("BookingForm", () => {
-  it("does not preselect a session without an authoritative start time", () => {
-    renderWithQueryClient(
+  it("uses the group's server quote and both discounts instead of price times guests", async () => {
+    const base = vi.mocked(getActivityPriceQuote).getMockImplementation()!;
+    vi.mocked(getActivityPriceQuote).mockImplementation(async (id, count, signal) =>
+      count === 2
+        ? {
+            status: "success",
+            quote: {
+              activityId: 42,
+              guestCount: 2,
+              currency: "KRW",
+              originalUnitPrice: 45000,
+              unitPrice: 36000,
+              originalAmount: 90000,
+              amount: 72000,
+              discountAmount: 18000,
+              discountPercent: 10,
+              appliedPriceTier: { minGuests: 2, maxGuests: 2, unitPrice: 40000 },
+              quantityUnitPrice: 40000,
+              quantityDiscountAmount: 10000,
+              periodDiscountAmount: 8000,
+            },
+          }
+        : base(id, count, signal),
+    );
+    await renderBooking(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
+    fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
+    expect(await screen.findByText("₩72,000")).toBeInTheDocument();
+    expect(screen.getByText("Group discount")).toBeInTheDocument();
+    expect(screen.getByText("Period discount (10%)")).toBeInTheDocument();
+    expect(screen.getByText("-₩10,000")).toBeInTheDocument();
+    expect(screen.getByText("-₩8,000")).toBeInTheDocument();
+    mockedCreateApplication.mockResolvedValue({
+      status: "success",
+      payment: { ...paymentReady, paymentAmount: 72000 },
+    });
+    await agreeAndSubmit("Pay now");
+    await waitFor(() =>
+      expect(mockedRequestTossPayment).toHaveBeenCalledWith(
+        expect.objectContaining({ paymentAmount: 72000 }),
+        "en",
+      ),
+    );
+  });
+
+  it("hides old totals and blocks checkout while a new quote is pending or failed", async () => {
+    await renderBooking(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
+    let resolve!: (value: Awaited<ReturnType<typeof getActivityPriceQuote>>) => void;
+    vi.mocked(getActivityPriceQuote).mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done;
+        }),
+    );
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
+    expect(screen.queryByText("₩45,000")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay now" })).toBeDisabled();
+    await act(async () =>
+      resolve({
+        status: "error",
+        error: new ApiClientError({
+          code: "ACTIVITY400_PRICE_TIERS",
+          status: 400,
+          details: null,
+          backendMessage: null,
+        }),
+      }),
+    );
+    await screen.findByText(
+      "Check for overlapping guest ranges and enter unit prices no higher than the base price.",
+    );
+    expect(screen.getByRole("button", { name: "Pay now" })).toBeDisabled();
+    expect(mockedCreateApplication).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Pay now" })).toBeEnabled());
+  });
+  it("does not preselect a session without an authoritative start time", async () => {
+    await renderBooking(
       <BookingForm
         activity={{ ...activity, sessions: [{ ...activity.sessions[0], startAt: undefined }] }}
         initialSessionId="101"
@@ -165,8 +260,8 @@ describe("BookingForm", () => {
     expect(mockedCreateApplication).not.toHaveBeenCalled();
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
   });
-  it("fills current selections before consent without making a booking or exposing private requests", () => {
-    renderWithQueryClient(
+  it("fills current selections before consent without making a booking or exposing private requests", async () => {
+    await renderBooking(
       <BookingForm
         activity={{
           ...activity,
@@ -208,8 +303,8 @@ describe("BookingForm", () => {
     expect(screen.getByRole("dialog")).toHaveTextContent("Participants (including me): 1");
   });
 
-  it("keeps the example inquiry available when pricing and schedules are missing", () => {
-    renderWithQueryClient(
+  it("keeps the example inquiry available when pricing and schedules are missing", async () => {
+    await renderBooking(
       <BookingForm
         activity={{ ...activity, sessions: [], referencePrice: undefined }}
         paymentProviderMode="PAYPAL"
@@ -222,15 +317,55 @@ describe("BookingForm", () => {
     expect(mockedCreateApplication).not.toHaveBeenCalled();
   });
 
-  it("does not add a PayPal inquiry to Toss-only checkout", () => {
-    renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
+  it("does not add a PayPal inquiry to Toss-only checkout", async () => {
+    await renderBooking(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
     expect(
       screen.queryByRole("button", { name: "Need another payment method?" }),
     ).not.toBeInTheDocument();
   });
 
+  it.each([
+    [2, 2],
+    [9, 4],
+    [0, 1],
+    [1.5, 1],
+    [101, 1],
+  ])(
+    "restores booking count %s within the session capacity",
+    async (initialGuestCount, expected) => {
+      await renderBooking(
+        <BookingForm
+          activity={activity}
+          initialSessionId="101"
+          initialGuestCount={initialGuestCount}
+        />,
+      );
+      expect(getActivityPriceQuote).toHaveBeenCalledWith("42", expected, expect.any(AbortSignal));
+    },
+  );
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getActivityPriceQuote)
+      .mockReset()
+      .mockImplementation(async (id, guestCount) => ({
+        status: "success",
+        quote: {
+          activityId: Number(id),
+          guestCount,
+          currency: "KRW",
+          originalUnitPrice: 45000,
+          unitPrice: 45000,
+          originalAmount: 45000 * guestCount,
+          amount: 45000 * guestCount,
+          discountAmount: 0,
+          discountPercent: null,
+          appliedPriceTier: null,
+          quantityUnitPrice: 45000,
+          quantityDiscountAmount: 0,
+          periodDiscountAmount: 0,
+        },
+      }));
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-07-18T00:00:00+09:00"));
     vi.mocked(getTouristActivity).mockResolvedValue({
@@ -267,7 +402,7 @@ describe("BookingForm", () => {
         status: "success",
         activity: { schedules: [] } as unknown as TouristActivityDetail,
       });
-      renderWithQueryClient(
+      await renderBooking(
         <BookingForm activity={activity} paymentProviderMode={paymentProvider} />,
       );
       fireEvent.change(screen.getByPlaceholderText("Let your buddy know..."), {
@@ -301,7 +436,7 @@ describe("BookingForm", () => {
           ],
         } as TouristActivityDetail,
       });
-      renderWithQueryClient(
+      await renderBooking(
         <BookingForm activity={activity} paymentProviderMode={paymentProvider} />,
       );
       const submitLabel = paymentProvider === "TOSS" ? "Pay now" : "Pay $65.00 with PayPal";
@@ -313,7 +448,9 @@ describe("BookingForm", () => {
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
       expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 20");
-      expect(screen.getByRole("checkbox")).toBeChecked();
+      expect(
+        screen.getByRole("checkbox", { name: /cancellation and refund policy/i }),
+      ).toBeChecked();
       expect(screen.getByPlaceholderText("Let your buddy know...")).toHaveValue(
         "Keep this request",
       );
@@ -322,6 +459,13 @@ describe("BookingForm", () => {
       expect(screen.queryByTestId("paypal-checkout")).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: "Decrease participants" }));
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", {
+            name: paymentProvider === "TOSS" ? "Pay now" : "Pay $32.50 with PayPal",
+          }),
+        ).toBeEnabled(),
+      );
       fireEvent.click(
         screen.getByRole("button", {
           name: paymentProvider === "TOSS" ? "Pay now" : "Pay $32.50 with PayPal",
@@ -352,7 +496,7 @@ describe("BookingForm", () => {
         schedules: [{ activityScheduleId: 101, remainingCapacity: 0, ...schedule }],
       } as TouristActivityDetail,
     });
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
     expect(await screen.findByRole("alert")).toHaveTextContent("24 hours");
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
@@ -360,8 +504,8 @@ describe("BookingForm", () => {
     expect(mockedRequestTossPayment).not.toHaveBeenCalled();
   });
 
-  it("limits participants to the selected session's remaining seats", () => {
-    renderWithQueryClient(
+  it("limits participants to the selected session's remaining seats", async () => {
+    await renderBooking(
       <BookingForm
         activity={{ ...activity, sessions: [{ ...activity.sessions[0], spotsLeft: 2 }] }}
       />,
@@ -376,14 +520,14 @@ describe("BookingForm", () => {
       vi.setSystemTime(new Date("2026-07-20T00:00:00+09:00"));
       return { status: "success", payment: paymentReady };
     });
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
     expect(mockedCreateApplication).toHaveBeenCalledTimes(1);
   });
 
-  it("hides a session that is less than 24 hours away", () => {
-    renderWithQueryClient(
+  it("hides a session that is less than 24 hours away", async () => {
+    await renderBooking(
       <BookingForm
         activity={{
           ...activity,
@@ -396,8 +540,8 @@ describe("BookingForm", () => {
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
   });
 
-  it("uses one responsive form layout with a sticky desktop summary", () => {
-    renderWithQueryClient(
+  it("uses one responsive form layout with a sticky desktop summary", async () => {
+    await renderBooking(
       <BookingForm activity={activity} refundPolicyDocument={refundPolicyDocument} />,
     );
 
@@ -412,6 +556,22 @@ describe("BookingForm", () => {
     expect(screen.getByTestId("booking-layout").parentElement).toHaveClass("py-3", "md:py-4");
     expect(screen.getByTestId("booking-panel")).toHaveClass("lg:sticky", "lg:top-24");
     expect(screen.getByTestId("bottom-action-bar")).toHaveClass("lg:static");
+    expect(
+      within(screen.getByTestId("bottom-action-bar")).getByText(
+        "I understand that payment alone does not confirm my booking. Buddy approval is required.",
+      ),
+    ).toHaveTextContent("Buddy approval is required.");
+    expect(
+      screen.getAllByText(
+        "I understand that payment alone does not confirm my booking. Buddy approval is required.",
+      ),
+    ).toHaveLength(1);
+    expect(screen.getByTestId("date-select-box").querySelector("span")).toHaveClass("text-ink");
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveClass("text-xl");
+    for (const count of screen.getAllByText("1 participant")) {
+      expect(count).toHaveClass("text-ink", "whitespace-nowrap");
+    }
     // 요약 카드: 선택한 일정과 총액이 보인다
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 20");
     expect(screen.getByText("Total (KRW)")).toBeInTheDocument();
@@ -451,20 +611,27 @@ describe("BookingForm", () => {
       name: /agree to the cancellation and refund policy/i,
     });
     expect(agreement).toBeRequired();
-    expect(within(screen.getByTestId("bottom-action-bar")).getByRole("checkbox")).toBe(agreement);
+    expect(
+      within(screen.getByTestId("bottom-action-bar")).getByRole("checkbox", {
+        name: /cancellation and refund policy/i,
+      }),
+    ).toBe(agreement);
     expect(agreement.parentElement).not.toHaveClass("border", "rounded-lg", "bg-canvas-soft");
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
     fireEvent.click(agreement);
+    expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeDisabled();
+    acknowledgeApproval();
     expect(screen.getByRole("button", { name: "Pay with Toss Payments" })).toBeEnabled();
   });
 
   it("keeps booking details when the policy popup is closed or dismissed with browser back", async () => {
-    renderWithQueryClient(
+    await renderBooking(
       <BookingForm activity={activity} refundPolicyDocument={refundPolicyDocument} />,
     );
     const request = screen.getByPlaceholderText(/Let your buddy know/i);
     fireEvent.change(request, { target: { value: "Meet me by exit 2." } });
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
 
     fireEvent.click(screen.getByRole("button", { name: "View full policy" }));
     expect(
@@ -480,7 +647,7 @@ describe("BookingForm", () => {
       ).not.toBeInTheDocument(),
     );
     expect(request).toHaveValue("Meet me by exit 2.");
-    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /cancellation and refund policy/i })).toBeChecked();
 
     fireEvent.click(screen.getByRole("button", { name: "View full policy" }));
     expect(
@@ -495,15 +662,17 @@ describe("BookingForm", () => {
       ).not.toBeInTheDocument(),
     );
     expect(request).toHaveValue("Meet me by exit 2.");
-    expect(screen.getByRole("checkbox")).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /cancellation and refund policy/i })).toBeChecked();
   });
 
-  it("uses the HanBuddy payment action in TOSS mode", () => {
-    renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
+  it("uses the HanBuddy payment action in TOSS mode", async () => {
+    await renderBooking(<BookingForm activity={activity} paymentProviderMode="TOSS" />);
 
     expect(screen.getByRole("button", { name: "Pay now" })).toHaveClass(
       "bg-primary",
       "text-on-primary",
+      "h-11",
+      "lg:h-13",
     );
     expect(
       screen.queryByRole("button", { name: "Pay with Toss Payments" }),
@@ -512,8 +681,34 @@ describe("BookingForm", () => {
     expect(screen.queryByText("PayPal charges in USD.")).not.toBeInTheDocument();
   });
 
-  it("keeps the branded PayPal action in PAYPAL mode", () => {
-    renderWithQueryClient(<BookingForm activity={activity} paymentProviderMode="PAYPAL" />);
+  it("keeps guest count in the URL for a locale remount without dropping other parameters", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/en/activities/42/book?scheduleId=101&source=detail#summary",
+    );
+    const view = await renderBooking(<BookingForm activity={activity} initialSessionId="101" />);
+    fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
+    expect(new URLSearchParams(window.location.search).get("guestCount")).toBe("2");
+    expect(new URLSearchParams(window.location.search).get("scheduleId")).toBe("101");
+    expect(new URLSearchParams(window.location.search).get("source")).toBe("detail");
+    expect(window.location.hash).toBe("#summary");
+    view.unmount();
+    await renderBooking(
+      <BookingForm
+        activity={activity}
+        initialSessionId="101"
+        initialGuestCount={Number(new URLSearchParams(window.location.search).get("guestCount"))}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Increase participants" }).previousElementSibling,
+    ).toHaveTextContent("2");
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("keeps the branded PayPal action in PAYPAL mode", async () => {
+    await renderBooking(<BookingForm activity={activity} paymentProviderMode="PAYPAL" />);
 
     expect(
       screen.queryByRole("button", { name: "Pay with Toss Payments" }),
@@ -525,8 +720,8 @@ describe("BookingForm", () => {
     expect(screen.getByText("PayPal charges in USD.")).toBeInTheDocument();
   });
 
-  it("separates the locale reference price from the PayPal USD amount", () => {
-    renderWithQueryClient(
+  it("separates the locale reference price from the PayPal USD amount", async () => {
+    await renderBooking(
       <BookingForm
         activity={{ ...activity, referencePrice: 240, referenceCurrency: "CNY" }}
         payPalUnitPriceUsd={32.5}
@@ -539,7 +734,7 @@ describe("BookingForm", () => {
     expect(screen.getByRole("button", { name: "Pay US$32.50 with PayPal" })).toBeInTheDocument();
   });
 
-  it("preselects the schedule passed from the availability calendar", () => {
+  it("preselects the schedule passed from the availability calendar", async () => {
     const twoSessionActivity: Activity = {
       ...activity,
       sessions: [
@@ -554,12 +749,12 @@ describe("BookingForm", () => {
       ],
     };
 
-    renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
+    await renderBooking(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Jul 21");
   });
 
-  it("clears an unavailable requested schedule instead of silently selecting a different date", () => {
+  it("clears an unavailable requested schedule instead of silently selecting a different date", async () => {
     const twoSessionActivity: Activity = {
       ...activity,
       sessions: [
@@ -568,13 +763,13 @@ describe("BookingForm", () => {
       ],
     };
 
-    renderWithQueryClient(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
+    await renderBooking(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
   });
 
   it("creates an application and opens the Toss payment window", async () => {
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
 
     fireEvent.change(screen.getByPlaceholderText(/Let your buddy know/i), {
       target: { value: "Vegetarian snacks, please." },
@@ -607,8 +802,9 @@ describe("BookingForm", () => {
         resolveConflicts = resolve;
       }),
     );
-    renderWithQueryClient(<BookingForm activity={activity} />);
-    fireEvent.click(screen.getByRole("checkbox"));
+    await renderBooking(<BookingForm activity={activity} />);
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     const submitButton = screen.getByRole("button", { name: /Pay with Toss Payments/ });
 
     fireEvent.click(submitButton);
@@ -622,8 +818,8 @@ describe("BookingForm", () => {
     await waitFor(() => expect(mockedCreateApplication).toHaveBeenCalledTimes(1));
   });
 
-  it("keeps provider brand treatments when both payment actions are available", () => {
-    renderWithQueryClient(<BookingForm activity={activity} />);
+  it("keeps provider brand treatments when both payment actions are available", async () => {
+    await renderBooking(<BookingForm activity={activity} />);
 
     const tossButton = screen.getByRole("button", { name: "Pay with Toss Payments" });
     expect(tossButton).toHaveClass("bg-[#3182f6]", "text-white");
@@ -646,7 +842,7 @@ describe("BookingForm", () => {
       paymentCurrency: "USD",
     };
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: payPalPayment });
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
 
     await agreeAndSubmit("Pay $32.50 with PayPal");
 
@@ -677,7 +873,7 @@ describe("BookingForm", () => {
       paymentCurrency: "USD",
     };
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: payPalPayment });
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
 
     await agreeAndSubmit("Pay $32.50 with PayPal");
     fireEvent.click(await screen.findByRole("button", { name: "Cancel PayPal checkout" }));
@@ -706,7 +902,7 @@ describe("BookingForm", () => {
       },
     });
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
 
     const dialog = await screen.findByRole("dialog", {
@@ -754,7 +950,7 @@ describe("BookingForm", () => {
       },
     });
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
 
     const dialog = await screen.findByRole("dialog", {
@@ -795,7 +991,7 @@ describe("BookingForm", () => {
         resolveApplication = resolve;
       }),
     );
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
     const dialog = await screen.findByRole("dialog", {
       name: "Another activity on the same day",
@@ -821,7 +1017,7 @@ describe("BookingForm", () => {
       }),
     });
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
 
     expect(
@@ -831,6 +1027,24 @@ describe("BookingForm", () => {
   });
 
   it("shows the active discount and opens Toss with the matching server amount", async () => {
+    vi.mocked(getActivityPriceQuote).mockResolvedValue({
+      status: "success",
+      quote: {
+        activityId: 42,
+        guestCount: 1,
+        currency: "KRW",
+        originalUnitPrice: 50000,
+        unitPrice: 40000,
+        originalAmount: 50000,
+        amount: 40000,
+        discountAmount: 10000,
+        discountPercent: 20,
+        appliedPriceTier: null,
+        quantityUnitPrice: 50000,
+        quantityDiscountAmount: 0,
+        periodDiscountAmount: 10000,
+      },
+    });
     const discountedActivity = {
       ...activity,
       price: 40000,
@@ -848,9 +1062,9 @@ describe("BookingForm", () => {
     };
     mockedCreateApplication.mockResolvedValue({ status: "success", payment: discountedPayment });
 
-    renderWithQueryClient(<BookingForm activity={discountedActivity} />);
+    await renderBooking(<BookingForm activity={discountedActivity} />);
 
-    expect(screen.getByText("Discount (20%)")).toBeInTheDocument();
+    expect(screen.getByText("Period discount (20%)")).toBeInTheDocument();
     expect(screen.getByText("-₩10,000")).toBeInTheDocument();
     await agreeAndSubmit();
 
@@ -865,7 +1079,7 @@ describe("BookingForm", () => {
       payment: { ...paymentReady, paymentAmount: 40000 },
     });
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("The payable amount changed");
@@ -873,7 +1087,7 @@ describe("BookingForm", () => {
   });
 
   it("refreshes the activity detail so the held seat is reflected", async () => {
-    const { queryClient } = renderWithQueryClient(<BookingForm activity={activity} />);
+    const { queryClient } = await renderBooking(<BookingForm activity={activity} />);
     queryClient.setQueryData(activityKeys.detail("42", "EN"), { activityId: 42 });
 
     await agreeAndSubmit();
@@ -885,10 +1099,11 @@ describe("BookingForm", () => {
   });
 
   it("starts with one participant and applies the chosen count", async () => {
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
 
     // 스테퍼와 우측 요약 모두 1명으로 시작한다
-    expect(screen.getAllByText("1 participant")).toHaveLength(2);
+    expect(screen.getByRole("status", { name: "1 participant" })).toHaveTextContent(/^1$/);
+    expect(screen.getAllByText("1 participant")).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Increase participants" }));
     await agreeAndSubmit();
@@ -913,7 +1128,7 @@ describe("BookingForm", () => {
       }),
     });
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Not enough spots are available.");
@@ -933,7 +1148,7 @@ describe("BookingForm", () => {
       message: "결제가 취소되었습니다.",
     });
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Payment was not completed.");
@@ -944,7 +1159,7 @@ describe("BookingForm", () => {
   it("surfaces an error when the Toss window fails to open", async () => {
     mockedRequestTossPayment.mockRejectedValue(new Error("INVALID_CLIENT_KEY"));
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
     await agreeAndSubmit();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -989,7 +1204,7 @@ describe("BookingForm", () => {
         })),
       } as TouristActivityDetail,
     });
-    renderWithQueryClient(<BookingForm activity={calendarActivity} />);
+    await renderBooking(<BookingForm activity={calendarActivity} />);
 
     fireEvent.click(screen.getByTestId("date-select-box"));
     const dialog = await screen.findByRole("dialog");
@@ -998,7 +1213,8 @@ describe("BookingForm", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("2:00 PM");
 
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /cancellation and refund policy/i }));
     fireEvent.click(screen.getByRole("button", { name: /Pay with Toss Payments/ }));
 
     await waitFor(() =>
@@ -1011,17 +1227,18 @@ describe("BookingForm", () => {
   });
 
   it("localizes Korean booking controls and the payment flow", async () => {
-    renderWithQueryClient(<BookingForm activity={activity} />, { locale: "ko" });
+    await renderBooking(<BookingForm activity={activity} />, { locale: "ko" });
 
     expect(screen.getByText("가격 상세")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("checkbox"));
+    acknowledgeApproval();
+    fireEvent.click(screen.getByRole("checkbox", { name: /취소 및 환불/ }));
     fireEvent.click(screen.getByRole("button", { name: /토스페이먼츠로 결제/ }));
 
     await waitFor(() => expect(mockedRequestTossPayment).toHaveBeenCalledTimes(1));
     expect(mockedRequestTossPayment).toHaveBeenCalledWith(paymentReady, "ko");
   });
 
-  it("treats a Toss user-cancel error code as a cancellation", () => {
+  it("treats a Toss user-cancel error code as a cancellation", async () => {
     expect(isTossUserCancel({ code: "PAY_PROCESS_CANCELED" })).toBe(true);
     expect(isTossUserCancel({ code: "INVALID_CARD" })).toBe(false);
     expect(isTossUserCancel(new Error("boom"))).toBe(false);
@@ -1039,7 +1256,7 @@ describe("BookingForm", () => {
       }),
     });
 
-    renderWithQueryClient(<BookingForm activity={activity} />);
+    await renderBooking(<BookingForm activity={activity} />);
 
     await agreeAndSubmit();
 

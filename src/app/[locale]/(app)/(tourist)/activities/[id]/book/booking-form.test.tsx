@@ -417,6 +417,8 @@ describe("BookingForm", () => {
         "Keep this request",
       );
       expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
+      // 마감된 일정은 URL에서도 지워 언어 전환으로 다시 마운트돼도 다시 선택되지 않는다.
+      expect(new URL(window.location.href).searchParams.has("scheduleId")).toBe(false);
     },
   );
 

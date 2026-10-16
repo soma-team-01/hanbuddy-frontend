@@ -142,12 +142,14 @@ export function CancelDialog({
       <p className="mt-2 text-sm leading-6 text-muted">{t("cancellationPrompt")}</p>
 
       <section
-        aria-label={releasesAuthorization ? authorization("heldAmount") : t("refundEstimateTitle")}
+        aria-label={
+          releasesAuthorization ? authorization("cancelPaymentTitle") : t("refundEstimateTitle")
+        }
         className="mt-5 border-y border-line-soft border-t-primary py-4"
       >
         <h3 className="flex items-center gap-2 font-display text-sm font-bold text-ink">
           <span aria-hidden className="h-4 w-1 rounded-full bg-primary" />
-          {releasesAuthorization ? authorization("heldAmount") : t("refundEstimateTitle")}
+          {releasesAuthorization ? authorization("cancelPaymentTitle") : t("refundEstimateTitle")}
         </h3>
         {isQuotePending ? (
           <p className="mt-2 text-sm text-muted">{t("quoteLoading")}</p>

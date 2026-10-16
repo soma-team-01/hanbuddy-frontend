@@ -1,6 +1,7 @@
 {
   "PayPalAuthorization": {
-    "cancelHold": "Cancelling ends your request and starts the release of the PayPal hold, not a refund. Release timing depends on PayPal and your bank.",
+    "cancelPaymentTitle": "Payment information",
+    "cancelHold": "You haven’t been charged and won’t be charged if you cancel. A pending payment on PayPal or your card may take some time to disappear.",
     "received": "Request received · Awaiting buddy approval",
     "authorized": "You’ll be charged after your buddy approves. We’ll email you the decision.",
     "processing": "We are checking the PayPal result. Check My Applications before attempting another payment.",

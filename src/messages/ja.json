@@ -1,7 +1,8 @@
 {
   "PayPalAuthorization": {
     "processingShort": "PayPalの処理結果を確認中です。",
-    "cancelHold": "キャンセルすると申込が終了し、PayPalの与信枠の解放を行います。返金ではありません。反映時期はPayPalと銀行によって異なります。",
+    "cancelPaymentTitle": "お支払いについて",
+    "cancelHold": "まだ決済は完了しておらず、キャンセルした場合は請求されません。PayPalやカードの支払い待ちの表示が消えるまで、時間がかかる場合があります。",
     "received": "申込受付完了 · バディの承認待ち",
     "authorized": "実際の決済はバディの承認後に行われ、承認結果はメールでお知らせします。",
     "processing": "PayPalの処理結果を確認中です。再度支払う前に申込一覧で状態をご確認ください。",

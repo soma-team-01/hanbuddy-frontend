@@ -73,10 +73,10 @@ describe("CancelDialog", () => {
       <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
     expect(
-      await screen.findByText(
-        /Cancelling ends your request and starts the release of the PayPal hold/,
-      ),
+      await screen.findByText(/You haven’t been charged and won’t be charged if you cancel/),
     ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Payment information" })).toBeInTheDocument();
+    expect(screen.queryByText("Authorization amount")).not.toBeInTheDocument();
     expect(screen.queryByText("Estimated refund")).not.toBeInTheDocument();
     expect(screen.queryByText("Cancellation fee")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
@@ -187,7 +187,9 @@ describe("CancelDialog", () => {
       />,
     );
     expect(await screen.findByText("24–48 hours before the activity · 50%")).toBeInTheDocument();
-    expect(screen.queryByText(/starts the release of the PayPal hold/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/You haven’t been charged and won’t be charged/),
+    ).not.toBeInTheDocument();
   });
 
   it.each([48, 24, 0])(

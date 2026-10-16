@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getBuddyActivityApplications } from "@/lib/api/buddy";
+import { getBuddyActivityApplications, getMyActivity } from "@/lib/api/buddy";
 import { getScheduleCancellation } from "@/lib/api/schedule-cancellation";
 import { buddyKeys } from "@/lib/query/buddy";
 import { scheduleCancellationKeys } from "@/lib/query/schedule-cancellation";
@@ -11,11 +11,15 @@ import type {
 } from "@/types/buddy";
 import { DashboardApplicationsList } from "./DashboardActivityCard";
 
+const { replaceRoute } = vi.hoisted(() => ({ replaceRoute: vi.fn() }));
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ replace: replaceRoute, refresh: vi.fn() }),
 }));
-vi.mock("@/lib/api/buddy", () => ({ getBuddyActivityApplications: vi.fn() }));
+vi.mock("@/lib/api/buddy", () => ({
+  getBuddyActivityApplications: vi.fn(),
+  getMyActivity: vi.fn(),
+}));
 vi.mock("@/lib/api/schedule-cancellation", () => ({ getScheduleCancellation: vi.fn() }));
 vi.mock("./ApplicationApprovalActions", () => ({
   ApplicationApprovalActions: ({ applicationId }: { applicationId: number }) => (
@@ -26,11 +30,15 @@ vi.mock("./ScheduleActions", () => ({
   ScheduleActions: ({
     scheduleId,
     applicantCount,
+    roomId,
+    knownCancelled,
   }: {
     scheduleId: number;
     applicantCount: number;
+    roomId?: number;
+    knownCancelled?: boolean;
   }) => (
-    <div data-testid="schedule-actions">
+    <div data-testid="schedule-actions" data-room-id={roomId} data-cancelled={knownCancelled}>
       {scheduleId}:{applicantCount}
     </div>
   ),
@@ -107,6 +115,156 @@ const renderList = (locale: "en" | "ko" = "en", onOpenProfile = vi.fn()) =>
   );
 
 describe("DashboardApplicationsList", () => {
+  it("restores an empty session even when it is absent from the date summary", async () => {
+    vi.mocked(getBuddyActivityApplications).mockResolvedValue({
+      status: "success",
+      applications: detail(3, []),
+    });
+    renderWithQueryClient(
+      <DashboardApplicationsList
+        activities={[]}
+        rooms={[]}
+        myActivities={[]}
+        onOpenProfile={vi.fn()}
+        initialSession={{ activityId: 42, scheduleId: 3, date: "2099-07-20" }}
+      />,
+    );
+    expect(await screen.findByRole("link", { name: "Tea tasting" })).toBeVisible();
+    expect(screen.getByTestId("schedule-actions")).toHaveTextContent("3:0");
+  });
+  it("shows a retry rather than claiming a failed restored session is empty", async () => {
+    vi.mocked(getBuddyActivityApplications).mockRejectedValue(new Error("offline"));
+    renderWithQueryClient(
+      <DashboardApplicationsList
+        activities={[]}
+        rooms={[]}
+        myActivities={[]}
+        onOpenProfile={vi.fn()}
+        initialSession={{ activityId: 42, scheduleId: 3, date: "2099-07-20" }}
+      />,
+    );
+    expect(await screen.findByRole("alert")).toBeVisible();
+    vi.mocked(getBuddyActivityApplications).mockResolvedValue({
+      status: "success",
+      applications: detail(3, []),
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("link", { name: "Tea tasting" })).toBeVisible();
+  });
+  it("switches dates, replaces the URL and restores the selected date's list after navigation", async () => {
+    const nextSchedule = {
+      scheduleId: 90,
+      startAt: "2099-08-21T10:00:00+09:00",
+      status: "OPEN",
+      bookedCount: 1,
+    };
+    vi.mocked(getMyActivity).mockResolvedValue({
+      status: "success",
+      activity: {
+        totalDurationMinutes: 60,
+        schedules: [
+          { scheduleId: 3, startAt: activity.schedules[2].startAt, status: "OPEN", bookedCount: 3 },
+          nextSchedule,
+        ],
+      },
+    } as Awaited<ReturnType<typeof getMyActivity>>);
+    vi.mocked(getBuddyActivityApplications).mockImplementation(async (id) => ({
+      status: "success",
+      applications:
+        Number(id) === 90
+          ? {
+              ...detail(3, [{ ...guest, applicantName: "Another session guest", guestCount: 1 }]),
+              activityScheduleId: 90,
+              startAt: nextSchedule.startAt,
+            }
+          : detail(Number(id), Number(id) === 3 ? [guest] : []),
+    }));
+    const { rerender } = renderWithQueryClient(
+      <DashboardApplicationsList
+        activities={[activity]}
+        rooms={[
+          { activityScheduleId: 3, chatRoomId: 10 },
+          { activityScheduleId: 90, chatRoomId: 20 },
+        ]}
+        myActivities={[]}
+        onOpenProfile={vi.fn()}
+      />,
+    );
+    const original = await screen.findByRole("button", { name: /9:00 AM/ });
+    fireEvent.click(original);
+    fireEvent.click(screen.getByRole("button", { name: /Jul 20, 2099/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Next month" }));
+    fireEvent.click(await screen.findByRole("button", { name: /August 21, 2099/ }));
+    fireEvent.click(screen.getByRole("button", { name: /10:00 AM/ }));
+    expect(await screen.findByText("Another session guest")).toBeInTheDocument();
+    expect(screen.queryByText("Active Guest")).not.toBeInTheDocument();
+    expect(screen.getByTestId("schedule-actions")).toHaveTextContent("90:1");
+    expect(screen.getByTestId("schedule-actions")).toHaveAttribute("data-room-id", "20");
+    expect(getBuddyActivityApplications).toHaveBeenCalledWith(90, "EN");
+    expect(replaceRoute).toHaveBeenCalledWith(
+      "/en/dashboard?date=2099-08-21&activityId=42&scheduleId=90",
+      { scroll: false },
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Aug 21, 2099/ })).toHaveFocus();
+    // Next remounts the dashboard with the newly selected URL context; refresh uses the same path.
+    rerender(
+      <DashboardApplicationsList
+        key="2099-08-21:90"
+        activities={[
+          {
+            ...activity,
+            schedules: [
+              {
+                activityScheduleId: 90,
+                startAt: nextSchedule.startAt,
+                applicantCount: 1,
+                applicants: [{ ...guest, guestCount: 1, applicantName: "Another session guest" }],
+              },
+            ],
+          },
+        ]}
+        rooms={[{ activityScheduleId: 90, chatRoomId: 20 }]}
+        myActivities={[]}
+        onOpenProfile={vi.fn()}
+        initialSession={{ activityId: 42, scheduleId: 90, date: "2099-08-21" }}
+      />,
+    );
+    expect(await screen.findByRole("button", { name: /Aug 21, 2099/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: /Back to sessions/ }));
+    expect(screen.getByRole("button", { name: /10:00 AM.*Tea tasting/ })).toBeVisible();
+    expect(screen.queryByRole("button", { name: /9:00 AM.*Tea tasting/ })).not.toBeInTheDocument();
+  });
+  it("opens a cancellation-only session and does not reuse the previous participants", async () => {
+    const nextSchedule = {
+      scheduleId: 90,
+      startAt: "2099-07-21T10:00:00+09:00",
+      status: "CANCELLED",
+      bookedCount: 0,
+    };
+    vi.mocked(getMyActivity).mockResolvedValue({
+      status: "success",
+      activity: { schedules: [nextSchedule], totalDurationMinutes: 60 },
+    } as Awaited<ReturnType<typeof getMyActivity>>);
+    vi.mocked(getBuddyActivityApplications).mockImplementation(async (id) => ({
+      status: "success",
+      applications:
+        Number(id) === 90
+          ? { ...detail(3, [cancelled]), activityScheduleId: 90, startAt: nextSchedule.startAt }
+          : detail(Number(id), Number(id) === 3 ? [guest] : []),
+    }));
+    renderList();
+    fireEvent.click(await screen.findByRole("button", { name: /9:00 AM/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Jul 20, 2099/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /July 21, 2099/ }));
+    fireEvent.click(screen.getByRole("button", { name: /10:00 AM/ }));
+    await waitFor(() => expect(screen.getByTestId("schedule-actions")).toHaveTextContent("90:0"));
+    expect(screen.getByTestId("schedule-actions")).toHaveAttribute("data-cancelled", "true");
+    expect(screen.queryByText("Active Guest")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Jul 21, 2099/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Cancellations 1 booking" }));
+    expect(screen.getByText("Cancelled Guest")).toBeVisible();
+  });
   it.each([
     ["CANCELLED", "취소 1건", "취소 시각"],
     ["REJECTED", "거절 1건", "거절 시각"],

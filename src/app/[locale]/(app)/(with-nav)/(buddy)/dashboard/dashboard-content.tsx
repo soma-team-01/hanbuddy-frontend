@@ -30,13 +30,17 @@ import {
   weekDateKeys,
 } from "@/lib/buddy-calendar";
 import { MonthCalendarButton } from "@/components/buddy/MonthCalendarButton";
+import type { DashboardSessionSelection } from "@/lib/buddy-session-navigation";
 
 /** 섹션 머리글 */
 function SectionHeading({ children }: Readonly<{ children: ReactNode }>) {
   return <h2 className="font-display text-lg font-bold text-ink">{children}</h2>;
 }
 
-export function DashboardContent() {
+/** Loads the active date's applications and optionally restores a URL-selected session. */
+export function DashboardContent({
+  initialSession,
+}: Readonly<{ initialSession?: DashboardSessionSelection }> = {}) {
   const locale = useLocale() as Locale;
   const language = getContentLanguage(locale);
   const t = useTranslations("BuddyDashboard");
@@ -45,7 +49,8 @@ export function DashboardContent() {
   const getApiErrorMessage = useApiErrorMessage();
 
   const todayDate = getSeoulNowParts().date;
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(initialSession?.date ?? "");
+  const [restoreInitialSession, setRestoreInitialSession] = useState(true);
   const [detailDate, setDetailDate] = useState<string | null>(null);
   // 주간 스트립이 보여주는 주. 화살표로만 움직이고 날짜 선택과는 분리되어 있다
   const [weekAnchor, setWeekAnchor] = useState("");
@@ -94,7 +99,12 @@ export function DashboardContent() {
   });
   // Session details distinguish participants/cancellations; pending requests stay in the inbox.
   const activities = applicationsQuery.data ?? [];
-  const detailOpen = detailDate === activeDate && !applicationsQuery.error && activities.length > 0;
+  const restoringSession =
+    restoreInitialSession && initialSession?.date === activeDate ? initialSession : undefined;
+  const detailOpen =
+    detailDate === activeDate &&
+    !applicationsQuery.error &&
+    (activities.length > 0 || Boolean(restoringSession));
 
   useAuthQueryRedirect(
     scheduleDatesQuery.error ??
@@ -103,7 +113,9 @@ export function DashboardContent() {
       myActivitiesQuery.error,
   );
 
+  /** Moves the date strip while preventing an earlier URL session from reopening locally. */
   function selectDate(date: string) {
+    setRestoreInitialSession(false);
     setSelectedDate(date);
     // 캘린더에서 다른 주의 날짜를 고르면 스트립도 그 주로 따라간다
     setWeekAnchor(date);
@@ -120,7 +132,7 @@ export function DashboardContent() {
     applicationsContent = (
       <p className="py-6 text-center text-sm text-muted">{t("loadingApplicants")}</p>
     );
-  } else if (activities.length === 0) {
+  } else if (activities.length === 0 && !restoringSession) {
     applicationsContent = (
       <p className="rounded-2xl border border-dashed border-line-soft px-4 py-6 text-center text-sm text-muted">
         {t("noSessionRecords")}
@@ -135,6 +147,7 @@ export function DashboardContent() {
         rooms={chatRoomsQuery.data ?? []}
         onOpenProfile={setProfileApplicant}
         onDetailChange={onDetailChange}
+        initialSession={restoringSession}
       />
     );
   }

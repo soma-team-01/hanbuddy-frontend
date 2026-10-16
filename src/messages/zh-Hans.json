@@ -1520,6 +1520,10 @@
     "kstNotice": "所有时间均采用韩国标准时间 (KST)。"
   },
   "BuddyDashboard": {
+    "selectSession": "选择场次",
+    "sessionTimes": "场次时间",
+    "sessionsLoadError": "无法加载场次。",
+    "noCalendarSessions": "暂无可查看的场次。",
     "applicationViews": "申请记录分类",
     "noMatchingApplications": "暂无此类申请记录。",
     "recordCount": "{count, plural, other {#笔}}",

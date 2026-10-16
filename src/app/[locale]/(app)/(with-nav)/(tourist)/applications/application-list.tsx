@@ -696,7 +696,6 @@ function ApplicationCard({
               agreed={refundPolicyAgreed}
               onAgreedChange={setRefundPolicyAgreed}
               describedBy={`application-${application.id}-refund-policy-notice application-${application.id}-refund-policy-summary`}
-              className="px-1 py-1"
             />
             <ApprovalNotice
               agreed={approvalAcknowledged}

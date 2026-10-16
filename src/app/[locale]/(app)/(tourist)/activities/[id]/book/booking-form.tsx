@@ -725,7 +725,6 @@ export function BookingForm({
                     agreed={refundPolicyAgreed}
                     onAgreedChange={setRefundPolicyAgreed}
                     describedBy="booking-refund-policy-notice booking-refund-policy-summary"
-                    className="px-1 py-1"
                   />
                   <ApprovalNotice
                     agreed={approvalAcknowledged}

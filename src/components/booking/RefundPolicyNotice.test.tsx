@@ -62,8 +62,9 @@ describe("RefundPolicyAgreement", () => {
 
     const checkbox = screen.getByRole("checkbox");
     expect(checkbox).toHaveClass("size-5");
-    expect(checkbox.parentElement).toHaveClass("min-h-11", "items-center");
-    expect(checkbox.nextElementSibling).toHaveClass("text-xs", "leading-4");
+    expect(checkbox.parentElement).toHaveClass("min-h-11", "items-start", "gap-2", "py-3");
+    expect(checkbox.parentElement).not.toHaveClass("px-1", "items-center", "gap-2.5");
+    expect(checkbox.nextElementSibling).toHaveClass("text-xs", "leading-5");
   });
 
   it.each(LOCALES)(

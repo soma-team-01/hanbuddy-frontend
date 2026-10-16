@@ -28,12 +28,11 @@ vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
   usePayPal: () => ({
     isHydrated: sdkState.isHydrated,
     loadingStatus: sdkState.loadingStatus,
-    sdkInstance:
-      sdkState.loadingStatus === "resolved"
-        ? { createPayPalOneTimePaymentSession: sdkState.createSession }
-        : null,
+    sdkInstance: sdkState.loadingStatus === "resolved" ? stableSdkInstance : null,
   }),
 }));
+
+const stableSdkInstance = { createPayPalOneTimePaymentSession: sdkState.createSession };
 
 vi.mock("@/lib/api/applications", () => ({
   authorizePayPalApplicationPayment: vi.fn(),
@@ -104,6 +103,98 @@ function apiApplicationsResult(applications: ApplicationResponse[]) {
 }
 
 describe("PayPalCheckoutDialog", () => {
+  it("keeps the open session across parent rerenders and uses the latest cancel callback", async () => {
+    sdkState.start.mockImplementation(() => new Promise(() => {}));
+    const originalCancel = vi.fn();
+    const latestCancel = vi.fn();
+    const { rerender, unmount } = renderWithIntl(
+      <PayPalCheckoutButton
+        payment={payment}
+        autoStart
+        onConfirmed={vi.fn()}
+        onCancel={originalCancel}
+      />,
+    );
+    await waitFor(() => expect(sdkState.start).toHaveBeenCalledTimes(1));
+    const sessionOptions = sdkState.sessionOptions!;
+    rerender(
+      <PayPalCheckoutButton
+        payment={{ ...payment }}
+        autoStart
+        onConfirmed={vi.fn()}
+        onCancel={latestCancel}
+      />,
+    );
+    expect(sdkState.destroy).not.toHaveBeenCalled();
+    expect(sdkState.createSession).toHaveBeenCalledTimes(1);
+    expect(sdkState.start).toHaveBeenCalledTimes(1);
+    act(() => (sessionOptions.onCancel as () => void)());
+    expect(originalCancel).not.toHaveBeenCalled();
+    expect(latestCancel).toHaveBeenCalledTimes(1);
+    unmount();
+    expect(sdkState.destroy).toHaveBeenCalledTimes(1);
+    act(() => (sessionOptions.onCancel as () => void)());
+    expect(latestCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the session during approval and notifies the latest parent callback once", async () => {
+    let completeCapture!: (value: ReturnType<typeof apiApplicationResult>) => void;
+    mockedCapture.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          completeCapture = resolve;
+        }),
+    );
+    const originalConfirmed = vi.fn();
+    const latestConfirmed = vi.fn();
+    const { rerender } = renderWithIntl(
+      <PayPalCheckoutButton payment={payment} onConfirmed={originalConfirmed} />,
+    );
+    const approve = sdkState.sessionOptions!.onApprove as (data: {
+      orderId: string;
+    }) => Promise<void>;
+    let approval!: Promise<void>;
+    act(() => {
+      approval = approve({ orderId: payment.providerOrderId });
+    });
+    rerender(<PayPalCheckoutButton payment={payment} onConfirmed={latestConfirmed} />);
+    expect(sdkState.destroy).not.toHaveBeenCalled();
+    const confirmed = { ...application, status: "PENDING_APPROVAL" as const };
+    await act(async () => {
+      completeCapture(apiApplicationResult(confirmed));
+      await approval;
+    });
+    expect(mockedCapture).toHaveBeenCalledTimes(1);
+    expect(originalConfirmed).not.toHaveBeenCalled();
+    expect(latestConfirmed).toHaveBeenCalledExactlyOnceWith(confirmed);
+    expect(sdkState.destroy).not.toHaveBeenCalled();
+  });
+
+  it("replaces the session and auto-starts once for a different order", async () => {
+    const { rerender } = renderWithIntl(
+      <PayPalCheckoutButton payment={payment} autoStart onConfirmed={vi.fn()} />,
+    );
+    await waitFor(() => expect(sdkState.start).toHaveBeenCalledTimes(1));
+    rerender(
+      <PayPalCheckoutButton
+        payment={{ ...payment, providerOrderId: "NEW-ORDER" }}
+        autoStart
+        onConfirmed={vi.fn()}
+      />,
+    );
+    await waitFor(() => expect(sdkState.start).toHaveBeenCalledTimes(2));
+    expect(sdkState.destroy).toHaveBeenCalledTimes(1);
+    expect(sdkState.sessionOptions).toMatchObject({ orderId: "NEW-ORDER" });
+  });
+
+  it("starts only the live session in Strict Mode", async () => {
+    renderWithIntl(<PayPalCheckoutButton payment={payment} autoStart onConfirmed={vi.fn()} />, {
+      reactStrictMode: true,
+    });
+    await waitFor(() => expect(sdkState.start).toHaveBeenCalledTimes(1));
+    expect(sdkState.createSession).toHaveBeenCalledTimes(2);
+    expect(sdkState.destroy).toHaveBeenCalledTimes(1);
+  });
   it("submits AUTHORIZE once and reports receipt only after the backend authorizes", async () => {
     const received = {
       ...application,

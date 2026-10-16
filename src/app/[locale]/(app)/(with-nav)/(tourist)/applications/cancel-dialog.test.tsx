@@ -198,10 +198,22 @@ describe("CancelDialog", () => {
       vi.useFakeTimers();
       const now = Date.parse("2099-09-07T12:00:00Z");
       vi.setSystemTime(now);
-      mockedGetCancellationQuote.mockResolvedValue({
-        status: "success",
-        quote: { ...quote, freeCancellationUntil: new Date(now + 100).toISOString() },
-      });
+      mockedGetCancellationQuote
+        .mockResolvedValueOnce({
+          status: "success",
+          quote: { ...quote, freeCancellationUntil: new Date(now + 100).toISOString() },
+        })
+        .mockResolvedValueOnce({
+          status: "success",
+          quote: {
+            ...quote,
+            policyType: "WITHIN_24_HOURS",
+            refundPercent: 0,
+            refundAmount: 0,
+            cancellationFeeAmount: 36.5,
+            quotedAt: new Date(now + 1050).toISOString(),
+          },
+        });
       let unmount: (() => void) | undefined;
       try {
         await act(async () => {
@@ -215,10 +227,15 @@ describe("CancelDialog", () => {
           ));
         });
         expect(mockedGetCancellationQuote).toHaveBeenCalledTimes(1);
+        expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent("$36.50");
+        expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$0.00");
         await act(() => vi.advanceTimersByTimeAsync(200));
         expect(mockedGetCancellationQuote).toHaveBeenCalledTimes(1);
         await act(() => vi.advanceTimersByTimeAsync(900));
         expect(mockedGetCancellationQuote).toHaveBeenCalledTimes(2);
+        expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent("$0.00");
+        expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$36.50");
+        expect(screen.getByText("Less than 24 hours before the activity · 0%")).toBeInTheDocument();
       } finally {
         unmount?.();
         vi.useRealTimers();

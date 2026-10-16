@@ -1,4 +1,24 @@
 {
+  "PayPalAuthorization": {
+    "processingShort": "正在確認PayPal處理結果。",
+    "cancelPaymentTitle": "付款說明",
+    "cancelHold": "尚未實際扣款，取消申請後不會扣款。PayPal或銀行卡上的待處理付款紀錄可能需要一段時間才會消失。",
+    "received": "申請已提交 · 等待嚮導批准",
+    "authorized": "實際付款將在嚮導批准後進行，審核結果將透過電子郵件通知。",
+    "processing": "正在核實PayPal處理結果。請先查看我的申請，不要重複付款。",
+    "captureProcessing": "嚮導已批准，正在核實付款結果。預訂尚未確認。",
+    "releaseProcessing": "申請已結束，正在核實PayPal預授權解除狀態。帳戶可能仍顯示凍結金額。",
+    "released": "未實際扣款。",
+    "declined": "付款被拒，申請已結束",
+    "declinedDescription": "PayPal拒絕了付款，申請已結束。如需參加，請重新申請。系統將重新檢查是否可預訂。",
+    "heldAmount": "預授權金額",
+    "cardDeclined": "已拒絕",
+    "cardDeclinedDescription": "申請因付款錯誤遭拒，請重新申請。",
+    "viewApplications": "查看我的申請",
+    "authorizationDescription": "透過PayPal預授權{amount}。嚮導批准後才會實際扣款。",
+    "checking": "正在核實付款結果",
+    "uncollectedAmount": "PayPal訂單金額"
+  },
   "Approval": {
     "inboxPageTitle": "預訂申請",
     "deadlineHint": "未在截止時間前核准的申請將自動取消。",
@@ -271,6 +291,8 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "paypalProcessing": "正在核實PayPal處理結果。請勿重複付款，請查看申請狀態。",
+    "paypalDeclined": "PayPal拒絕了付款，申請已結束。如需參加，請重新申請。",
     "referralAlreadyApplied": "您已有有效申請。請查看我的申請。",
     "referralReapplicationChanged": "申請紀錄已變更。請確認最新資訊並重新同意後，再次申請。",
     "bookingClosed": "活動開始前24小時停止接受預訂及付款請求，請選擇其他場次。",
@@ -801,7 +823,7 @@
         },
         "cancel": {
           "question": "需要取消怎麼辦？",
-          "answer": "開始前 48 小時以上全額退款，48 至 24 小時之間退款 50%。如果好友取消，全額退款。"
+          "answer": "夥伴批准前取消可全額退款或解除PayPal預授權。批准後：開始至少48小時前全額退款，至少24小時但不足48小時前退款50%，不足24小時不退款。夥伴取消則全額退款。法定權利及其他退款事由請查看取消與退款政策。"
         },
         "language": {
           "question": "需要會韓語或懂這項運動嗎？",
@@ -1219,7 +1241,9 @@
     "refundPolicyLink": "查看完整政策",
     "policyDocumentVersion": "版本 {version}",
     "statutoryWithdrawalNotice": "可在收到合約書面內容後7天內請求撤回；供應更晚時，從收到供應或供應開始之日起7天內計算。法定權利優先。",
-    "refundExceptionsNotice": "一般標準適用於法定期間已過或法定限制事由獲認可的情況。30分鐘免費取消及未提供部分等獨立退款權利優先。",
+    "beforeApprovalRefundNotice": "夥伴批准前取消可全額退款，PayPal預授權將解除。",
+    "afterApprovalRefundLabel": "夥伴批准後取消",
+    "refundExceptionsNotice": "一般取消標準在法定期間結束或法定限制事由獲認可時適用。未提供部分等其他退款權利優先保障。",
     "actualPaymentRefundNotice": "折扣訂單按實際支付金額退款。",
     "agreement": "我同意取消與退款政策。",
     "agreementCompact": "我同意取消與退款政策。",
@@ -1251,10 +1275,6 @@
     "continueApplication": "繼續預訂",
     "totalLabel": "總計（韓元）",
     "refundRules": {
-      "free": {
-        "label": "付款確認後30分鐘內 · 活動開始前",
-        "value": "全額退款"
-      },
       "full": {
         "label": "活動前48小時以上",
         "value": "全額退款"
@@ -1326,8 +1346,6 @@
     "cancelPendingConfirm": "是的，取消",
     "keepPendingApplication": "保留申請",
     "holdRemaining": "{time} 剩下完成付款",
-    "freeCancellationUntil": "可免費取消至 {dateTime}",
-    "freeCancellationEnded": "免費取消期已結束",
     "providerPaymentAmount": "{provider} 支付金額",
     "refundEstimateTitle": "取消退款預估",
     "quoteLoading": "正在確認最新退款金額...",
@@ -1335,7 +1353,8 @@
     "retryQuote": "重試",
     "refundPolicy": "適用標準",
     "refundPolicyTypes": {
-      "FREE_CANCELLATION_WINDOW": "付款後30分鐘內免費取消",
+      "AUTHORIZATION_RELEASE": "解除預授權",
+      "FREE_CANCELLATION_WINDOW": "歷史免費取消規則",
       "BEFORE_48_HOURS": "活動開始48小時前",
       "BETWEEN_24_AND_48_HOURS": "活動開始前24至48小時",
       "WITHIN_24_HOURS": "活動開始前不足24小時"
@@ -1520,6 +1539,10 @@
     "kstNotice": "所有時間均採用韓國標準時間 (KST)。"
   },
   "BuddyDashboard": {
+    "selectSession": "選擇場次",
+    "sessionTimes": "場次時間",
+    "sessionsLoadError": "無法載入場次。",
+    "noCalendarSessions": "暫無可查看的場次。",
     "applicationViews": "申請紀錄分類",
     "noMatchingApplications": "暫無此類申請紀錄。",
     "recordCount": "{count, plural, other {#筆}}",

@@ -9,7 +9,8 @@ export const BUDDY_REJECTION_REASONS: BuddyRejectionReason[] = [
 export function isBuddyRejection(reason: string): reason is BuddyRejectionReason {
   return BUDDY_REJECTION_REASONS.some((value) => value === reason);
 }
-export function isPaidApplicationStatus(status: BackendApplicationStatus) {
+/** Submitted booking states; PENDING_APPROVAL does not prove payment capture. */
+export function isSubmittedApplicationStatus(status: BackendApplicationStatus) {
   return status === "PENDING_APPROVAL" || status === "CONFIRMED" || status === "COMPLETED";
 }
 

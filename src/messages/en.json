@@ -1,4 +1,24 @@
 {
+  "PayPalAuthorization": {
+    "cancelPaymentTitle": "Payment information",
+    "cancelHold": "You haven’t been charged and won’t be charged if you cancel. A pending payment on PayPal or your card may take some time to disappear.",
+    "received": "Request received · Awaiting buddy approval",
+    "authorized": "You’ll be charged after your buddy approves. We’ll email you the decision.",
+    "processing": "We are checking the PayPal result. Check My Applications before attempting another payment.",
+    "processingShort": "We’re checking the PayPal result.",
+    "captureProcessing": "Your buddy has approved. Payment is being verified; your booking is not confirmed yet.",
+    "releaseProcessing": "Your request has ended. We are checking the release of the PayPal hold; it may still appear on your account.",
+    "released": "You haven’t been charged.",
+    "declined": "Payment declined",
+    "declinedDescription": "PayPal declined the payment and this request has ended. To participate, submit a new request. Availability will be checked again.",
+    "heldAmount": "Authorization amount",
+    "cardDeclined": "Declined",
+    "cardDeclinedDescription": "Your request was declined due to a payment error. Please apply again.",
+    "viewApplications": "View My Applications",
+    "authorizationDescription": "Authorize a hold of {amount} with PayPal. Payment is collected only after buddy approval.",
+    "checking": "Checking payment result",
+    "uncollectedAmount": "PayPal order amount"
+  },
   "Approval": {
     "inboxPageTitle": "Booking requests",
     "deadlineHint": "Requests not approved by the deadline are automatically cancelled.",
@@ -271,6 +291,8 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "paypalProcessing": "We are checking the PayPal result. Do not pay again; check your application status.",
+    "paypalDeclined": "PayPal declined the payment and the request has ended. Submit a new request if you wish to participate.",
     "referralAlreadyApplied": "You already have an active application. Check My Applications.",
     "referralReapplicationChanged": "Your application history has changed. Review the latest details and agree again before reapplying.",
     "bookingClosed": "Bookings and payment requests close 24 hours before the activity starts. Please choose another session.",
@@ -801,7 +823,7 @@
         },
         "cancel": {
           "question": "What if I need to cancel?",
-          "answer": "You get a full refund up to 48 hours before the start, and 50% between 48 and 24 hours. If your buddy cancels, you get a full refund."
+          "answer": "Before buddy approval, cancellations receive a full refund or release of the PayPal hold. After approval: full refund at least 48 hours before the start, 50% from 24 to less than 48 hours before, and no refund within 24 hours. If your buddy cancels, you get a full refund. See the Cancellation and Refund Policy for statutory rights and other refund grounds."
         },
         "language": {
           "question": "Do I need to speak Korean or know the sport?",
@@ -1219,7 +1241,9 @@
     "refundPolicyLink": "View full policy",
     "policyDocumentVersion": "Version {version}",
     "statutoryWithdrawalNotice": "Withdrawal may be requested within 7 days of receiving the written contract details, or of receipt or commencement of supply if later. Statutory rights take priority.",
-    "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. The 30-minute benefit and separate refund rights, including unprovided portions, take priority.",
+    "beforeApprovalRefundNotice": "Before buddy approval: full refund. PayPal holds are released.",
+    "afterApprovalRefundLabel": "After buddy approval",
+    "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. Separate refund rights, including unprovided portions, take priority.",
     "actualPaymentRefundNotice": "Discounted bookings are refunded from the amount paid.",
     "agreement": "I agree to the cancellation and refund policy.",
     "agreementCompact": "Agree to cancellation/refunds",
@@ -1251,10 +1275,6 @@
     "continueApplication": "Continue booking",
     "totalLabel": "Total (KRW)",
     "refundRules": {
-      "free": {
-        "label": "Within 30 min of payment confirmation · before activity starts",
-        "value": "Full refund"
-      },
       "full": {
         "label": "48+ hours before the activity",
         "value": "Full refund"
@@ -1326,8 +1346,6 @@
     "cancelPendingConfirm": "Yes, cancel",
     "keepPendingApplication": "Keep application",
     "holdRemaining": "{time} left to complete payment",
-    "freeCancellationUntil": "Free cancellation until {dateTime}",
-    "freeCancellationEnded": "Free cancellation period ended",
     "providerPaymentAmount": "{provider} payment",
     "refundEstimateTitle": "Cancellation refund estimate",
     "quoteLoading": "Checking the latest refund amount...",
@@ -1335,7 +1353,8 @@
     "retryQuote": "Try again",
     "refundPolicy": "Applied policy",
     "refundPolicyTypes": {
-      "FREE_CANCELLATION_WINDOW": "30-minute free cancellation",
+      "AUTHORIZATION_RELEASE": "Authorization hold release",
+      "FREE_CANCELLATION_WINDOW": "Previous free-cancellation policy",
       "BEFORE_48_HOURS": "48+ hours before the activity",
       "BETWEEN_24_AND_48_HOURS": "24–48 hours before the activity",
       "WITHIN_24_HOURS": "Less than 24 hours before the activity"
@@ -1520,6 +1539,10 @@
     "kstNotice": "All times are in Korea Standard Time (KST)."
   },
   "BuddyDashboard": {
+    "selectSession": "Select session",
+    "sessionTimes": "Session times",
+    "sessionsLoadError": "Could not load sessions.",
+    "noCalendarSessions": "There are no sessions to view.",
     "applicationViews": "Application records",
     "noMatchingApplications": "No applications in this category.",
     "recordCount": "{count, plural, one {# booking} other {# bookings}}",

@@ -127,16 +127,26 @@ export function BookingForm({
       ? Math.max(1, Math.min(initialGuestCount, capacity))
       : 1;
   });
+  /** 마감이 확인된 일정은 선택과 URL에서 함께 지워, 다시 마운트돼도 같은 일정이 선택되지 않게 한다. */
+  function clearClosedSchedule() {
+    setSessionId("");
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("scheduleId")) return;
+    url.searchParams.delete("scheduleId");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }
   // 언어 전환은 쿼리를 보존한다. 최신 선택을 URL에 동기화해 폼이 다시 마운트되어도 복원한다.
+  // 요청한 일정이 예약 불가라 선택이 비어 있으면 원래 scheduleId를 그대로 둔다. 빈 값으로 덮으면
+  // 다시 마운트될 때 손님이 고르지 않은 첫 예약 가능 날짜가 자동 선택된다.
   useEffect(() => {
     const url = new URL(window.location.href);
     if (
       url.searchParams.get("guestCount") === String(guests) &&
-      url.searchParams.get("scheduleId") === sessionId
+      (!sessionId || url.searchParams.get("scheduleId") === sessionId)
     )
       return;
     url.searchParams.set("guestCount", String(guests));
-    url.searchParams.set("scheduleId", sessionId);
+    if (sessionId) url.searchParams.set("scheduleId", sessionId);
     window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }, [guests, sessionId]);
   const quoteQuery = useQuery(activityPriceQuoteQueryOptions(activity.id, guests));
@@ -274,7 +284,7 @@ export function BookingForm({
         (item) => item.activityScheduleId === request.activityScheduleId,
       );
       if (!schedule || schedule.status !== "OPEN" || !isBookingOpen(schedule.startAt)) {
-        setSessionId("");
+        clearClosedSchedule();
         throw new ApiClientError({
           code: "APPLICATION400_BOOKING_CLOSED",
           status: 400,
@@ -305,7 +315,7 @@ export function BookingForm({
       await requestTossPayment(payment, locale as Locale);
     } catch (error) {
       if (error instanceof ApiClientError && error.code === "APPLICATION400_BOOKING_CLOSED") {
-        setSessionId("");
+        clearClosedSchedule();
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: activityKeys.all() }),
           queryClient.invalidateQueries({ queryKey: applicationKeys.mine() }),
@@ -715,7 +725,6 @@ export function BookingForm({
                     agreed={refundPolicyAgreed}
                     onAgreedChange={setRefundPolicyAgreed}
                     describedBy="booking-refund-policy-notice booking-refund-policy-summary"
-                    className="px-1 py-1"
                   />
                   <ApprovalNotice
                     agreed={approvalAcknowledged}
@@ -758,9 +767,7 @@ export function BookingForm({
                               void queryClient.invalidateQueries({
                                 queryKey: applicationKeys.mine(),
                               });
-                              router.push(
-                                `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
-                              );
+                              router.push(`/payments/success?applicationId=${applicationId}`);
                             }}
                           />
                         ) : (

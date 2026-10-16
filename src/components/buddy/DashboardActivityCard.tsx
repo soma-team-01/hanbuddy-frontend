@@ -4,8 +4,13 @@ import { useQueries, type UseQueryResult } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/i18n/routing";
+import { useRouter } from "@/i18n/navigation";
 import { getContentLanguage } from "@/lib/content-language";
 import { formatSeoulTime } from "@/lib/datetime";
+import {
+  dashboardSessionHref,
+  type DashboardSessionSelection,
+} from "@/lib/buddy-session-navigation";
 import {
   createDashboardRequestQueue,
   dashboardSessionQueryOptions,
@@ -19,6 +24,7 @@ import type {
   BuddyDateActivityApplicationsResponse,
   BuddyDateScheduleApplicationsResponse,
   MyActivitySummaryResponse,
+  ActivityScheduleResponse,
 } from "@/types/buddy";
 import { DashboardSessionDetail } from "./DashboardSessionDetail";
 import { ArrowLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
@@ -33,25 +39,31 @@ type Props = Readonly<{
   myActivities: MyActivitySummaryResponse[];
   onOpenProfile: (applicant: BuddyApplicationApplicantSummaryResponse) => void;
   onDetailChange?: (open: boolean) => void;
+  initialSession?: DashboardSessionSelection;
 }>;
 type SessionQuery = UseQueryResult<BuddyActivityApplicationsResponse, Error>;
 
+/** Includes confirmed and completed bookings in the participant tab. */
 function participants(data?: BuddyActivityApplicationsResponse) {
   return data?.applicants.filter(
     (item) => item.status === "CONFIRMED" || item.status === "COMPLETED",
   );
 }
+/** Selects actual cancellations, excluding payment holds and superseded attempts. */
 function cancellations(data?: BuddyActivityApplicationsResponse) {
   // Payment holds and superseded attempts are not guest cancellations.
   return data?.applicants.filter((item) => item.status === "CANCELLED");
 }
+/** Selects bookings awaiting buddy approval rather than payment. */
 function pendingApprovals(applicants: BuddyApplicationApplicantSummaryResponse[]) {
   return applicants.filter((item) => item.status === "PENDING_APPROVAL");
 }
+/** Sums guest seats rather than application records. */
 function guestCount(applicants: BuddyApplicationApplicantSummaryResponse[]) {
   return applicants.reduce((total, item) => total + item.guestCount, 0);
 }
 
+/** Uses full session data, falling back to the legacy date summary during loading. */
 function activeParticipants(schedule: BuddyDateScheduleApplicationsResponse, query: SessionQuery) {
   return (
     participants(query.data) ??
@@ -61,29 +73,64 @@ function activeParticipants(schedule: BuddyDateScheduleApplicationsResponse, que
   );
 }
 
+/** Restores an explicitly requested owner session even if its date summary no longer contains it. */
+function restoreSession(
+  selectedId: number | null,
+  initialSession: DashboardSessionSelection | undefined,
+  query: SessionQuery | undefined,
+) {
+  const data = query?.data;
+  if (
+    selectedId !== initialSession?.scheduleId ||
+    data?.activityId !== initialSession?.activityId ||
+    !data
+  )
+    return undefined;
+  return {
+    activity: { activityId: data.activityId, activityTitle: data.activityTitle },
+    schedule: {
+      activityScheduleId: data.activityScheduleId,
+      startAt: data.startAt,
+      applicantCount: data.applicantCount,
+      applicants: data.applicants,
+    },
+    query: query!,
+  };
+}
+
+/** Coordinates list selection, URL-restored sessions and cross-date calendar navigation. */
 export function DashboardApplicationsList({
   activities,
   rooms,
   myActivities,
   onOpenProfile,
   onDetailChange,
+  initialSession,
 }: Props) {
   const locale = useLocale() as Locale;
+  const router = useRouter();
   const t = useTranslations("BuddyDashboard");
   const statusLabel = useTranslations("Status");
   const approval = useTranslations("Approval");
   const run = useMemo(() => createDashboardRequestQueue(), []);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(initialSession?.scheduleId ?? null);
+  const [calendarSelection, setCalendarSelection] = useState<{
+    activity: Pick<BuddyDateActivityApplicationsResponse, "activityId" | "activityTitle">;
+    schedule: BuddyDateScheduleApplicationsResponse;
+    status: ActivityScheduleResponse["status"];
+  } | null>(null);
+  const [detailOpen, setDetailOpen] = useState(Boolean(initialSession));
   const backRef = useRef<HTMLButtonElement>(null);
   const rowRefs = useRef(new Map<number, HTMLButtonElement>());
   const detailId = useId();
   const ids = [
-    ...new Set(
-      activities.flatMap((activity) =>
+    ...new Set([
+      ...activities.flatMap((activity) =>
         activity.schedules.map((schedule) => schedule.activityScheduleId),
       ),
-    ),
+      ...(calendarSelection ? [calendarSelection.schedule.activityScheduleId] : []),
+      ...(selectedId !== null ? [selectedId] : []),
+    ]),
   ];
   const queries = useQueries({
     queries: ids.map((id) => dashboardSessionQueryOptions(id, getContentLanguage(locale), run)),
@@ -116,9 +163,23 @@ export function DashboardApplicationsList({
         Date.parse(a.schedule.startAt) - Date.parse(b.schedule.startAt) ||
         a.schedule.activityScheduleId - b.schedule.activityScheduleId,
     );
-  const selected = sessions.find(({ schedule }) => schedule.activityScheduleId === selectedId);
+  const restoredQuery = selectedId !== null ? records.get(selectedId) : undefined;
+  const restored = restoreSession(selectedId, initialSession, restoredQuery);
+  const selected = calendarSelection
+    ? { ...calendarSelection, query: records.get(calendarSelection.schedule.activityScheduleId)! }
+    : (sessions.find(
+        ({ schedule, activity }) =>
+          schedule.activityScheduleId === selectedId &&
+          (selectedId !== initialSession?.scheduleId ||
+            activity.activityId === initialSession.activityId),
+      ) ?? restored);
   const loading = queries.some((query) => query.isPending);
   const showingDetail = detailOpen && Boolean(selected);
+  const restoreError =
+    detailOpen &&
+    !showingDetail &&
+    selectedId === initialSession?.scheduleId &&
+    restoredQuery?.isError;
   useEffect(() => {
     onDetailChange?.(showingDetail);
     if (showingDetail) {
@@ -126,16 +187,20 @@ export function DashboardApplicationsList({
     }
   }, [showingDetail, onDetailChange]);
 
+  /** Opens a list row and clears any earlier calendar selection. */
   function openSession(id: number) {
+    setCalendarSelection(null);
     setSelectedId(id);
     setDetailOpen(true);
   }
 
+  /** Restores the current date's list and its keyboard focus. */
   function returnToList() {
     setDetailOpen(false);
+    setCalendarSelection(null);
     // Wait for the list to become visible before restoring keyboard focus.
     requestAnimationFrame(() => {
-      if (selected) rowRefs.current.get(selected.schedule.activityScheduleId)?.focus();
+      if (selectedId !== null) rowRefs.current.get(selectedId)?.focus();
     });
   }
 
@@ -146,10 +211,23 @@ export function DashboardApplicationsList({
           {t("loadingRecords")}
         </p>
       ) : null}
-      {!loading && !sessions.length ? (
+      {restoreError ? (
+        <div role="alert" className="py-4 text-sm text-danger">
+          <p>{t("recordsLoadError")}</p>
+          <button
+            type="button"
+            disabled={restoredQuery.isFetching}
+            onClick={() => void restoredQuery.refetch()}
+            className="min-h-11 underline disabled:opacity-50"
+          >
+            {t("retryRecords")}
+          </button>
+        </div>
+      ) : null}
+      {!showingDetail && !restoreError && !loading && !sessions.length ? (
         <p className="px-4 py-6 text-center text-sm text-muted">{t("noSessionRecords")}</p>
       ) : null}
-      {sessions.length > 0 ? (
+      {sessions.length > 0 || showingDetail ? (
         <div className="min-w-0">
           <section aria-label={t("sessions")} className="min-w-0" hidden={showingDetail}>
             <p className="mb-2 text-xs text-muted">
@@ -242,6 +320,25 @@ export function DashboardApplicationsList({
                   (room) => room.activityScheduleId === selected.schedule.activityScheduleId,
                 )}
                 onOpenProfile={onOpenProfile}
+                knownCancelled={calendarSelection?.status === "CANCELLED"}
+                onSelectSchedule={(schedule) => {
+                  setCalendarSelection({
+                    activity: selected.activity,
+                    schedule: {
+                      activityScheduleId: schedule.scheduleId,
+                      startAt: schedule.startAt,
+                      applicantCount: 0,
+                      applicants: [],
+                    },
+                    status: schedule.status,
+                  });
+                  const href = dashboardSessionHref(
+                    selected.activity.activityId,
+                    schedule.scheduleId,
+                    schedule.startAt,
+                  );
+                  if (href) router.replace(href, { scroll: false });
+                }}
               />
             </section>
           ) : null}

@@ -3,6 +3,7 @@ import {
   cancelMyApplication,
   cancelPendingPayment,
   capturePayPalApplicationPayment,
+  authorizePayPalApplicationPayment,
   confirmApplicationPayment,
   continueApplicationPayment,
   createApplication,
@@ -217,6 +218,35 @@ describe("application API client", () => {
     );
   });
 
+  it("authorizes using the server order and preserves the authorization response", async () => {
+    const received = {
+      ...application,
+      status: "PENDING_APPROVAL",
+      paymentStatus: "AUTHORIZED",
+      paypalAuthorization: {
+        state: "AUTHORIZED",
+        authorizedAt: null,
+        expiresAt: null,
+        releasedAt: null,
+      },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(createJsonResponse({ isSuccess: true, code: "200", result: received }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      authorizePayPalApplicationPayment(11, { orderId: "ORDER" }, "EN"),
+    ).resolves.toEqual({ status: "success", application: received });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/me/11/payment/paypal/authorize?language=EN",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "same-origin",
+        body: JSON.stringify({ orderId: "ORDER" }),
+      }),
+    );
+  });
+
   it("confirms an authorized payment through the internal API", async () => {
     const confirmed = { ...application, status: "CONFIRMED" };
     const confirmRequest = {
@@ -269,13 +299,16 @@ describe("application API client", () => {
 
   it("loads a fresh cancellation quote without a locale parameter", async () => {
     const quote = {
-      policyVersion: "2026-09-07",
-      policyType: "FREE_CANCELLATION_WINDOW",
+      policyVersion: "2026-10-16",
+      ruleVersion: "2026-10-16",
+      agreedPolicyVersion: "2026-09-08",
+      calculationScope: "GENERAL_CANCELLATION",
+      policyType: "BEFORE_48_HOURS",
       refundPercent: 100,
       refundAmount: 68.97,
       refundCurrency: "USD",
       cancellationFeeAmount: 0,
-      freeCancellationUntil: "2026-07-07T10:30:00Z",
+      freeCancellationUntil: null,
       quotedAt: "2026-07-07T10:15:00Z",
     };
     const fetchMock = vi

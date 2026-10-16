@@ -1,4 +1,24 @@
 {
+  "PayPalAuthorization": {
+    "cancelPaymentTitle": "결제 안내",
+    "cancelHold": "아직 실제 결제는 이루어지지 않았으며, 취소 시 결제되지 않습니다. PayPal이나 카드의 결제 대기 표시가 사라지기까지 시간이 걸릴 수 있습니다.",
+    "received": "신청 접수 완료 · 버디 승인 대기",
+    "authorized": "실제 결제는 버디 승인 후 진행되며, 승인 여부는 이메일로 안내됩니다.",
+    "processing": "PayPal 처리 결과를 확인 중입니다. 다시 결제하기 전에 내 신청에서 상태를 확인해 주세요.",
+    "processingShort": "PayPal 처리 결과를 확인 중입니다.",
+    "captureProcessing": "버디가 승인했으며 결제 결과를 확인 중입니다. 아직 예약이 확정된 것은 아닙니다.",
+    "releaseProcessing": "신청은 종료됐으며 PayPal 선승인 해제를 확인 중입니다. 계좌나 카드에는 금액 보류가 남아 있을 수 있습니다.",
+    "released": "실제 결제는 이루어지지 않았습니다.",
+    "declined": "결제 거절로 신청 종료",
+    "declinedDescription": "PayPal 결제가 거절되어 신청이 종료되었습니다. 다시 참여하려면 새로 신청해 주세요. 예약 가능 여부는 다시 확인합니다.",
+    "heldAmount": "선승인 금액",
+    "cardDeclined": "거절됨",
+    "cardDeclinedDescription": "결제 오류로 신청이 거절되었습니다. 다시 신청해 주세요.",
+    "viewApplications": "내 신청 보기",
+    "authorizationDescription": "PayPal로 {amount} 선승인을 진행합니다. 실제 결제는 버디 승인 후 진행됩니다.",
+    "checking": "결제 결과 확인 중",
+    "uncollectedAmount": "PayPal 주문 금액"
+  },
   "Approval": {
     "inboxPageTitle": "예약 신청",
     "deadlineHint": "기한 내 예약을 확정하지 않으면 신청이 자동 취소돼요.",
@@ -271,6 +291,8 @@
     "unavailable": "사용할 수 없음"
   },
   "ApiErrors": {
+    "paypalProcessing": "PayPal 처리 결과를 확인 중입니다. 다시 결제하지 말고 신청 상태를 확인해 주세요.",
+    "paypalDeclined": "PayPal 결제가 거절되어 신청이 종료되었습니다. 다시 참여하려면 새로 신청해 주세요.",
     "referralAlreadyApplied": "이미 유효한 신청이 있습니다. 내 신청에서 확인해 주세요.",
     "referralReapplicationChanged": "신청 이력이 변경되었습니다. 최신 내용을 확인하고 다시 동의한 뒤 재신청해 주세요.",
     "bookingClosed": "활동 시작 24시간 전까지만 신청·결제를 요청할 수 있습니다. 다른 일정을 선택해 주세요.",
@@ -801,7 +823,7 @@
         },
         "cancel": {
           "question": "취소해야 하면 어떻게 되나요?",
-          "answer": "활동 시작 48시간 전까지 취소하면 전액, 48~24시간 전에 취소하면 50%를 환불해 드려요. 버디 사정으로 취소되면 전액 환불돼요."
+          "answer": "버디 승인 전 취소는 전액 환불되며 PayPal 선승인은 해제됩니다. 승인 후에는 활동 시작 48시간 이상 전 전액, 24시간 이상 48시간 미만 50%, 24시간 미만 환불 불가입니다. 버디가 취소하면 전액 환불됩니다. 법정 권리와 별도 환불 사유는 취소 및 환불 정책을 확인해 주세요."
         },
         "language": {
           "question": "한국어를 못하거나 경기 규칙을 몰라도 괜찮나요?",
@@ -1219,7 +1241,9 @@
     "refundPolicyLink": "정책 전문 보기",
     "policyDocumentVersion": "버전 {version}",
     "statutoryWithdrawalNotice": "청약철회는 계약내용 서면 수령일부터 7일 이내, 공급이 더 늦으면 공급받거나 공급이 시작된 날부터 7일 이내에 요청할 수 있습니다. 법령상 권리가 우선합니다.",
-    "refundExceptionsNotice": "일반 취소 기준은 법정 기간 경과 또는 법령상 제한 사유가 인정될 때 적용합니다. 30분 무료 취소와 미제공 부분 등 별도 환불 권리는 우선 보장합니다.",
+    "beforeApprovalRefundNotice": "버디 승인 전 취소는 전액 환불됩니다. PayPal 선승인은 해제됩니다.",
+    "afterApprovalRefundLabel": "버디 승인 후 취소",
+    "refundExceptionsNotice": "일반 취소 기준은 법정 기간 경과 또는 법령상 제한 사유가 인정될 때 적용합니다. 미제공 부분 등 별도 환불 권리는 우선 보장합니다.",
     "actualPaymentRefundNotice": "할인 결제는 실제 결제금액을 기준으로 환불합니다.",
     "agreement": "취소 및 환불 규정에 동의합니다.",
     "agreementCompact": "취소·환불 규정에 동의합니다.",
@@ -1251,10 +1275,6 @@
     "continueApplication": "계속 신청하기",
     "totalLabel": "총액 (KRW)",
     "refundRules": {
-      "free": {
-        "label": "결제 확정 후 30분 이내 · 활동 시작 전",
-        "value": "전액 환불"
-      },
       "full": {
         "label": "활동 48시간 전까지",
         "value": "전액 환불"
@@ -1326,8 +1346,6 @@
     "cancelPendingConfirm": "네, 취소할게요",
     "keepPendingApplication": "신청 유지",
     "holdRemaining": "결제 마감까지 {time}",
-    "freeCancellationUntil": "무료 취소 가능: {dateTime}까지",
-    "freeCancellationEnded": "무료 취소 기간 종료",
     "providerPaymentAmount": "{provider} 결제 금액",
     "refundEstimateTitle": "취소 시 환불 예상 금액",
     "quoteLoading": "최신 환불 금액을 확인하는 중...",
@@ -1335,7 +1353,8 @@
     "retryQuote": "다시 시도",
     "refundPolicy": "적용 기준",
     "refundPolicyTypes": {
-      "FREE_CANCELLATION_WINDOW": "결제 후 30분 무료 취소",
+      "AUTHORIZATION_RELEASE": "선승인 보류 해제",
+      "FREE_CANCELLATION_WINDOW": "과거 무료 취소 규칙",
       "BEFORE_48_HOURS": "활동 48시간 전까지",
       "BETWEEN_24_AND_48_HOURS": "활동 24~48시간 전",
       "WITHIN_24_HOURS": "활동 24시간 전 이후"
@@ -1520,6 +1539,10 @@
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다."
   },
   "BuddyDashboard": {
+    "selectSession": "회차 선택",
+    "sessionTimes": "회차 시간",
+    "sessionsLoadError": "회차를 불러오지 못했습니다.",
+    "noCalendarSessions": "조회할 회차가 없습니다.",
     "applicationViews": "신청 내역 구분",
     "noMatchingApplications": "해당하는 신청 내역이 없어요.",
     "recordCount": "{count, plural, other {#건}}",

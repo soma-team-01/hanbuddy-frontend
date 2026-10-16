@@ -10,6 +10,26 @@ vi.mock("@/lib/api/application-approval", () => ({
 }));
 vi.mock("@/lib/query/use-auth-query-redirect", () => ({ useAuthQueryRedirect: vi.fn() }));
 beforeEach(() => vi.resetAllMocks());
+it("locks uncertain PayPal approval and refreshes without sending another command", async () => {
+  vi.mocked(approveApplication).mockRejectedValue(
+    createApiClientError(409, {
+      isSuccess: false,
+      code: "PAYMENT409_PAYPAL_PROCESSING",
+      message: "처리 중",
+    }),
+  );
+  const { queryClient } = renderWithQueryClient(
+    <ApplicationApprovalActions applicationId={7} name="Sophie" />,
+  );
+  const refresh = vi.spyOn(queryClient, "invalidateQueries");
+  fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+  await screen.findByRole("alert");
+  expect(screen.getByRole("button", { name: "Approve" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Decline" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Refresh status" }));
+  expect(refresh).toHaveBeenCalled();
+  expect(approveApplication).toHaveBeenCalledTimes(1);
+});
 it("renders the popup deadline at the same small size as its supporting hint", () => {
   renderWithQueryClient(
     <ApplicationApprovalActions

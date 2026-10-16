@@ -449,7 +449,8 @@ button:not(:disabled),
   transform: translateY(-1px) scale(1.05);
 }
 
-dialog.motion-dialog[open] {
+dialog.motion-dialog[open],
+dialog[open] > .motion-dialog {
   transform-origin: center bottom;
   animation: motion-dialog-in var(--motion-duration-base) var(--motion-ease-out) both;
 }
@@ -464,6 +465,7 @@ dialog.motion-dialog[open]::backdrop {
   .hero-media-frame,
   .hero-media-image,
   dialog.motion-dialog[open],
+  dialog[open] > .motion-dialog,
   dialog.motion-dialog[open]::backdrop {
     opacity: 1;
     transform: none;

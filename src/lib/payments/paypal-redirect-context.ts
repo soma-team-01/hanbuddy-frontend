@@ -3,6 +3,8 @@ const PAYPAL_REDIRECT_CONTEXT_KEY = "hanbuddy:paypal-redirect-context";
 interface PayPalRedirectContext {
   applicationId: string;
   orderId: string;
+  paypalIntent?: "AUTHORIZE" | "CAPTURE" | null;
+  checkoutSubmitted?: boolean;
 }
 
 export function storePayPalRedirectContext(context: PayPalRedirectContext): void {
@@ -19,7 +21,18 @@ export function readPayPalRedirectContext(orderId?: string): PayPalRedirectConte
       return null;
     }
     if (orderId && parsed.orderId !== orderId) return null;
-    return { applicationId: parsed.applicationId, orderId: parsed.orderId };
+    if (
+      parsed.paypalIntent != null &&
+      parsed.paypalIntent !== "AUTHORIZE" &&
+      parsed.paypalIntent !== "CAPTURE"
+    )
+      return null;
+    return {
+      applicationId: parsed.applicationId,
+      orderId: parsed.orderId,
+      ...(parsed.paypalIntent ? { paypalIntent: parsed.paypalIntent } : {}),
+      ...(parsed.checkoutSubmitted === true ? { checkoutSubmitted: true } : {}),
+    };
   } catch {
     return null;
   }

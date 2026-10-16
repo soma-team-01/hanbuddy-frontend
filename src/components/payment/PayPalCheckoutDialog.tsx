@@ -1,5 +1,5 @@
 "use client";
-import { isPaidApplicationStatus } from "@/lib/application-approval";
+import { isPayPalCheckoutReceived } from "@/lib/payments/paypal-authorization";
 
 import { INSTANCE_LOADING_STATE, PayPalProvider, usePayPal } from "@paypal/react-paypal-js/sdk-v6";
 import type {
@@ -11,7 +11,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Locale } from "@/i18n/routing";
-import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
+import {
+  authorizePayPalApplicationPayment,
+  capturePayPalApplicationPayment,
+  getMyApplications,
+} from "@/lib/api/applications";
+import { Link } from "@/i18n/navigation";
+import { createApiClientError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import { getPayPalEnvironment, getPayPalLocale, isPayPalPaymentReady } from "@/lib/payments/paypal";
@@ -54,6 +60,7 @@ function PayPalCheckoutAction({
   const locale = useLocale() as Locale;
   const language = getContentLanguage(locale);
   const t = useTranslations("PayPalPayment");
+  const authorization = useTranslations("PayPalAuthorization");
   const getApiErrorMessage = useApiErrorMessage();
   const { isHydrated, loadingStatus, sdkInstance } = usePayPal();
   const [captureError, setCaptureError] = useState<unknown>(null);
@@ -63,47 +70,78 @@ function PayPalCheckoutAction({
   const approvalStartedRef = useRef(false);
   const autoStartAttemptedRef = useRef(false);
   const sessionRef = useRef<OneTimePaymentSession | null>(null);
+  const approvalAttemptRef = useRef<Promise<void> | null>(null);
+  const mountedRef = useRef(true);
+  const callbacksRef = useRef({ onConfirmed, onClose });
+  const [approvalAttempted, setApprovalAttempted] = useState(false);
+  // 부모의 인라인 콜백 갱신은 열린 결제 세션을 재생성하지 않는다.
+  useEffect(() => {
+    callbacksRef.current = { onConfirmed, onClose };
+  }, [onConfirmed, onClose]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const handleApprove = useCallback(
-    async ({ orderId }: OnApproveDataOneTimePayments) => {
-      approvalStartedRef.current = true;
-      setCaptureError(null);
-      setIsCapturing(true);
-      try {
-        const application = unwrapApiResult(
-          await capturePayPalApplicationPayment(
-            payment.application.applicationId,
-            { orderId },
-            language,
-          ),
-          "application",
-        );
-        if (!isPaidApplicationStatus(application.status)) {
-          throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
-        }
-        onConfirmed(application);
-      } catch (error) {
+    ({ orderId }: OnApproveDataOneTimePayments) => {
+      if (approvalAttemptRef.current) return approvalAttemptRef.current;
+      const complete = async () => {
+        approvalStartedRef.current = true;
+        setApprovalAttempted(true);
+        setCaptureError(null);
+        setIsCapturing(true);
         try {
-          const applications = unwrapApiResult(await getMyApplications(language), "applications");
-          const confirmedApplication = applications.find(
-            (application) =>
-              application.applicationId === payment.application.applicationId &&
-              isPaidApplicationStatus(application.status),
+          if (orderId !== payment.providerOrderId) throw new Error("PayPal order mismatch");
+          const submit =
+            payment.paypalIntent === "AUTHORIZE"
+              ? authorizePayPalApplicationPayment
+              : capturePayPalApplicationPayment;
+          const application = unwrapApiResult(
+            await submit(payment.application.applicationId, { orderId }, language),
+            "application",
           );
-          if (confirmedApplication) {
-            onConfirmed(confirmedApplication);
-            return;
+          if (
+            application.applicationId !== payment.application.applicationId ||
+            !isPayPalCheckoutReceived(application)
+          ) {
+            throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
           }
-        } catch {
-          // 캡처 오류를 우선 안내한다. 신청 목록 조회 실패로 원인을 덮어쓰지 않는다.
+          if (mountedRef.current) callbacksRef.current.onConfirmed(application);
+        } catch (error) {
+          let resolvedError = error;
+          try {
+            const applications = unwrapApiResult(await getMyApplications(language), "applications");
+            const confirmedApplication = applications.find(
+              (application) => application.applicationId === payment.application.applicationId,
+            );
+            if (confirmedApplication && isPayPalCheckoutReceived(confirmedApplication)) {
+              if (mountedRef.current) callbacksRef.current.onConfirmed(confirmedApplication);
+              return;
+            }
+            if (confirmedApplication?.cancellationReason === "PAYMENT_FAILED") {
+              resolvedError = createApiClientError(409, {
+                isSuccess: false,
+                code: "PAYMENT409_PAYPAL_DECLINED",
+                message: "Payment declined",
+              });
+            }
+          } catch {
+            // 캡처 오류를 우선 안내한다. 신청 목록 조회 실패로 원인을 덮어쓰지 않는다.
+          }
+          if (mountedRef.current) setCaptureError(resolvedError);
+          throw resolvedError;
+        } finally {
+          if (mountedRef.current) setIsCapturing(false);
         }
-        setCaptureError(error);
-        throw error;
-      } finally {
-        setIsCapturing(false);
-      }
+      };
+      approvalAttemptRef.current = complete();
+      return approvalAttemptRef.current;
     },
-    [language, onConfirmed, payment.application.applicationId],
+    [language, payment.application.applicationId, payment.paypalIntent, payment.providerOrderId],
   );
 
   useEffect(() => {
@@ -114,10 +152,13 @@ function PayPalCheckoutAction({
     try {
       session = sdkInstance.createPayPalOneTimePaymentSession({
         orderId: payment.providerOrderId,
-        onApprove: handleApprove,
-        onCancel: onClose,
+        onApprove: (data) => (isDisposed ? Promise.resolve() : handleApprove(data)),
+        onCancel: () => {
+          if (!isDisposed && !approvalStartedRef.current) callbacksRef.current.onClose();
+        },
         onError: (error: OnErrorData) => {
-          if (approvalStartedRef.current) setCaptureError(error);
+          if (!isDisposed && approvalStartedRef.current && mountedRef.current)
+            setCaptureError((current: unknown) => current ?? error);
         },
       });
       sessionRef.current = session;
@@ -134,11 +175,11 @@ function PayPalCheckoutAction({
       session?.destroy();
       if (sessionRef.current === session) sessionRef.current = null;
     };
-  }, [handleApprove, onClose, payment.providerOrderId, sdkInstance]);
+  }, [handleApprove, payment.providerOrderId, sdkInstance]);
 
   const startPayPalCheckout = useCallback(async () => {
     const session = sessionRef.current;
-    if (!session || isStarting || isCapturing) return;
+    if (!session || isStarting || isCapturing || approvalAttemptRef.current) return;
 
     setCaptureError(null);
     setIsStarting(true);
@@ -150,8 +191,9 @@ function PayPalCheckoutAction({
           await session.start({ presentationMode });
           return;
         } catch (error) {
+          if (!mountedRef.current || sessionRef.current !== session) return;
           if (approvalStartedRef.current) {
-            setCaptureError(error);
+            if (mountedRef.current) setCaptureError((current: unknown) => current ?? error);
             return;
           }
 
@@ -164,7 +206,7 @@ function PayPalCheckoutAction({
 
       setPopupUnavailable(true);
     } finally {
-      setIsStarting(false);
+      if (mountedRef.current) setIsStarting(false);
     }
   }, [isCapturing, isStarting]);
 
@@ -205,18 +247,19 @@ function PayPalCheckoutAction({
           className="block w-full"
           type="pay"
           aria-label="PayPal"
-          disabled={!isHydrated || isStarting || isCapturing}
+          disabled={!isHydrated || isStarting || isCapturing || approvalAttempted}
           onClick={() => void startPayPalCheckout()}
         />
       ) : null}
 
-      {showFallback && payment.approvalUrl ? (
+      {showFallback && payment.approvalUrl && !approvalAttempted ? (
         <a
           href={payment.approvalUrl}
           onClick={() =>
             storePayPalRedirectContext({
               applicationId: String(payment.application.applicationId),
               orderId: payment.providerOrderId,
+              paypalIntent: payment.paypalIntent,
             })
           }
           className="flex h-11 items-center justify-center rounded-xl border border-line-strong font-display text-sm font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
@@ -239,8 +282,16 @@ function PayPalCheckoutAction({
           role="alert"
           className="rounded-xl border border-danger/30 px-4 py-3 text-sm text-danger"
         >
-          {getApiErrorMessage(captureError, t("captureFailed"))}
+          {getApiErrorMessage(
+            captureError,
+            approvalAttempted ? authorization("processing") : t("captureFailed"),
+          )}
         </p>
+      ) : null}
+      {approvalAttempted && captureError ? (
+        <Link href="/applications" className="min-h-11 text-sm text-primary underline">
+          {authorization("viewApplications")}
+        </Link>
       ) : null}
     </div>
   );
@@ -254,20 +305,23 @@ export function PayPalCheckoutDialog({
   const locale = useLocale() as Locale;
   const t = useTranslations("PayPalPayment");
   const paymentReady = isPayPalPaymentReady(payment);
+  const authorization = useTranslations("PayPalAuthorization");
+  let description: string | undefined;
+  if (paymentReady) {
+    const amount = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: payment.paymentCurrency,
+    }).format(payment.paymentAmount);
+    description =
+      payment.paypalIntent === "AUTHORIZE"
+        ? authorization("authorizationDescription", { amount })
+        : t("description", { amount });
+  }
 
   return (
     <ConfirmDialog
       title={t("title")}
-      description={
-        paymentReady
-          ? t("description", {
-              amount: new Intl.NumberFormat(locale, {
-                style: "currency",
-                currency: payment.paymentCurrency,
-              }).format(payment.paymentAmount),
-            })
-          : undefined
-      }
+      description={description}
       onClose={onClose}
       confirmSlot={
         <PayPalCheckoutButton payment={payment} onConfirmed={onConfirmed} onCancel={onClose} />
@@ -302,6 +356,7 @@ export function PayPalCheckoutButton({
           storePayPalRedirectContext({
             applicationId: String(payment.application.applicationId),
             orderId: payment.providerOrderId,
+            paypalIntent: payment.paypalIntent,
           })
         }
         className="flex h-12 w-full items-center justify-center rounded-xl bg-[#ffc439] font-display text-sm font-bold text-[#111] transition-opacity hover:opacity-90"
@@ -324,6 +379,7 @@ export function PayPalCheckoutButton({
       locale={getPayPalLocale(locale)}
     >
       <PayPalCheckoutAction
+        key={`${payment.application.applicationId}:${payment.providerOrderId}:${payment.paypalIntent ?? "CAPTURE"}`}
         payment={payment}
         onConfirmed={onConfirmed}
         onClose={onCancel}

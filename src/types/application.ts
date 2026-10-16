@@ -33,7 +33,7 @@ export type ApplicationCancellationReason =
   "SCHEDULE_CONFLICT" | "ILLNESS" | "FOUND_OTHER" | "OTHER";
 /** Response only: never offered in a tourist cancellation request. */
 export type ApplicationCancellationResponseReason =
-  ApplicationCancellationReason | BuddyRejectionReason | "BUDDY_CANCELLATION";
+  ApplicationCancellationReason | BuddyRejectionReason | "BUDDY_CANCELLATION" | "PAYMENT_FAILED";
 
 export type AppliedActivityStatus = "ACTIVE" | "INACTIVE" | "DELETED";
 
@@ -50,19 +50,22 @@ export interface AppliedActivityDetailResponse {
 }
 
 export type CancellationPolicyType =
+  | "AUTHORIZATION_RELEASE"
   | "PENDING_APPROVAL"
-  | "FREE_CANCELLATION_WINDOW"
+  | "FREE_CANCELLATION_WINDOW" // Historical refund snapshots only; no new 30-minute benefit.
   | "BEFORE_48_HOURS"
   | "BETWEEN_24_AND_48_HOURS"
   | "WITHIN_24_HOURS";
 
 export interface CancellationQuoteResponse {
+  calculationScope?: "GENERAL_CANCELLATION" | "AUTHORIZATION_RELEASE";
   policyVersion: string;
   policyType: CancellationPolicyType;
   refundPercent: number;
   refundAmount: number;
   refundCurrency: string;
   cancellationFeeAmount: number;
+  /** Legacy response field; new quotes return null. Do not use as a cancellation timer. */
   freeCancellationUntil: string | null;
   quotedAt: string;
 }
@@ -108,6 +111,8 @@ export interface PriceBreakdown {
 }
 
 export interface Application {
+  paymentStatus?: PaymentStatus | null;
+  paypalAuthorization?: PayPalAuthorization | null;
   approvalExpiresAt?: string | null;
   buddyApprovedAt?: string | null;
   activityType?: import("./referral").ActivityType;
@@ -160,7 +165,22 @@ export interface CancelApplicationRequest {
 }
 
 export type PaymentStatus =
-  "CREATED" | "CONFIRMED" | "REVIEW_REQUIRED" | "FAILED" | "CANCELLED" | "EXPIRED";
+  "CREATED" | "AUTHORIZED" | "CONFIRMED" | "REVIEW_REQUIRED" | "FAILED" | "CANCELLED" | "EXPIRED";
+
+export type PayPalIntent = "AUTHORIZE" | "CAPTURE";
+export interface PayPalAuthorization {
+  state:
+    | "CREATED"
+    | "REQUESTED"
+    | "AUTHORIZED"
+    | "CAPTURE_REQUESTED"
+    | "CAPTURED"
+    | "VOID_REQUESTED"
+    | "VOIDED";
+  authorizedAt: string | null;
+  expiresAt: string | null;
+  releasedAt: string | null;
+}
 
 export type PaymentProvider = "TOSS" | "PAYPAL";
 
@@ -178,6 +198,9 @@ export interface CapturePayPalPaymentRequest {
 }
 
 export interface ApplicationResponse {
+  /** Optional only for compatibility with pre-authorization deployments. */
+  paymentStatus?: PaymentStatus | null;
+  paypalAuthorization?: PayPalAuthorization | null;
   approvalExpiresAt?: string | null;
   buddyApprovedAt?: string | null;
   appliedPriceTier?: import("./activity-pricing").ActivityPriceTier | null;
@@ -225,6 +248,8 @@ export interface ApplicationResponse {
 }
 
 export interface PaymentReadyResponse {
+  /** Missing/null on legacy deployments; never invent a new order intent. */
+  paypalIntent?: PayPalIntent | null;
   application: ApplicationResponse;
   paymentId: number;
   paymentProvider: PaymentProvider;

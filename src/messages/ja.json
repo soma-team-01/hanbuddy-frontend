@@ -1,4 +1,24 @@
 {
+  "PayPalAuthorization": {
+    "processingShort": "PayPalの処理結果を確認中です。",
+    "cancelPaymentTitle": "お支払いについて",
+    "cancelHold": "まだ決済は完了しておらず、キャンセルした場合は請求されません。PayPalやカードの支払い待ちの表示が消えるまで、時間がかかる場合があります。",
+    "received": "申込受付完了 · バディの承認待ち",
+    "authorized": "実際の決済はバディの承認後に行われ、承認結果はメールでお知らせします。",
+    "processing": "PayPalの処理結果を確認中です。再度支払う前に申込一覧で状態をご確認ください。",
+    "captureProcessing": "バディが承認しました。決済結果を確認中のため、予約はまだ確定していません。",
+    "releaseProcessing": "申込は終了しました。PayPalの与信枠の解放を確認中です。口座に保留が残る場合があります。",
+    "released": "実際の請求は発生していません。",
+    "declined": "決済拒否により申込終了",
+    "declinedDescription": "PayPalの決済が拒否され、申込は終了しました。参加をご希望の場合は新規にお申し込みください。空き状況は再確認されます。",
+    "heldAmount": "与信金額",
+    "cardDeclined": "申込拒否",
+    "cardDeclinedDescription": "決済エラーにより申込が拒否されました。再度お申し込みください。",
+    "viewApplications": "申込一覧を見る",
+    "authorizationDescription": "PayPalで{amount}の与信を行います。決済はバディの承認後に行われます。",
+    "checking": "決済結果を確認中",
+    "uncollectedAmount": "PayPal注文金額"
+  },
   "Approval": {
     "inboxPageTitle": "予約リクエスト",
     "deadlineHint": "期限までに承認しない場合、申し込みは自動キャンセルされます。",
@@ -271,6 +291,8 @@
     "unavailable": "利用不可"
   },
   "ApiErrors": {
+    "paypalProcessing": "PayPalの処理結果を確認中です。再度支払わず、申込状況をご確認ください。",
+    "paypalDeclined": "PayPalの決済が拒否され、申込は終了しました。参加をご希望の場合は新規にお申し込みください。",
     "referralAlreadyApplied": "有効な申し込みがすでにあります。申し込み一覧をご確認ください。",
     "referralReapplicationChanged": "申し込み履歴が変更されました。最新の内容を確認し、改めて同意してから再申し込みしてください。",
     "bookingClosed": "予約・支払いのリクエストは開始24時間前までです。別の日時を選択してください。",
@@ -801,7 +823,7 @@
         },
         "cancel": {
           "question": "キャンセルする場合は？",
-          "answer": "開始48時間前までは全額返金、48〜24時間前は50%返金です。バディがキャンセルした場合は全額返金します。"
+          "answer": "バディ承認前は全額返金、またはPayPalの仮押さえ解除となります。承認後は開始48時間以上前なら全額、24時間以上48時間未満なら50%、24時間未満は返金なしです。バディがキャンセルした場合は全額返金します。法定の権利やその他の返金事由はキャンセル・返金ポリシーをご確認ください。"
         },
         "language": {
           "question": "韓国語が話せなくても、競技を知らなくても大丈夫ですか？",
@@ -1219,7 +1241,9 @@
     "refundPolicyLink": "ポリシー全文を見る",
     "policyDocumentVersion": "バージョン {version}",
     "statutoryWithdrawalNotice": "契約内容の書面受領から7日以内、供給が遅い場合は供給を受けた日または供給開始日から7日以内に撤回を請求できます。法定権利が優先します。",
-    "refundExceptionsNotice": "一般基準は法定期間経過後または法定制限事由が認められる場合に適用します。30分無料キャンセルや未提供部分等の別途返金権を優先します。",
+    "beforeApprovalRefundNotice": "バディ承認前のキャンセルは全額返金されます。PayPalの仮押さえは解除されます。",
+    "afterApprovalRefundLabel": "バディ承認後のキャンセル",
+    "refundExceptionsNotice": "一般基準は法定期間経過後、または法令上の制限事由が認められる場合に適用されます。未提供部分などの別途返金権を優先します。",
     "actualPaymentRefundNotice": "割引決済は実際の支払金額を基準に返金します。",
     "agreement": "キャンセル・返金規定に同意します。",
     "agreementCompact": "キャンセル・返金規定に同意",
@@ -1251,10 +1275,6 @@
     "continueApplication": "予約を続ける",
     "totalLabel": "合計(ウォン)",
     "refundRules": {
-      "free": {
-        "label": "決済確定後30分以内・活動開始前",
-        "value": "全額返金"
-      },
       "full": {
         "label": "アクティビティの 48 時間以上前",
         "value": "全額返金"
@@ -1326,8 +1346,6 @@
     "cancelPendingConfirm": "はい、キャンセルします",
     "keepPendingApplication": "アプリケーションを保持する",
     "holdRemaining": "{time} 支払い完了まで残っています",
-    "freeCancellationUntil": "{dateTime}まで無料キャンセル可能",
-    "freeCancellationEnded": "無料キャンセル期間終了",
     "providerPaymentAmount": "{provider} 決済金額",
     "refundEstimateTitle": "キャンセル時の返金見込み額",
     "quoteLoading": "最新の返金額を確認しています...",
@@ -1335,7 +1353,8 @@
     "retryQuote": "再試行",
     "refundPolicy": "適用基準",
     "refundPolicyTypes": {
-      "FREE_CANCELLATION_WINDOW": "決済後30分間の無料キャンセル",
+      "AUTHORIZATION_RELEASE": "仮押さえの解除",
+      "FREE_CANCELLATION_WINDOW": "以前の無料キャンセル規定",
       "BEFORE_48_HOURS": "アクティビティの48時間以上前",
       "BETWEEN_24_AND_48_HOURS": "アクティビティの24〜48時間前",
       "WITHIN_24_HOURS": "アクティビティの24時間前以降"
@@ -1520,6 +1539,10 @@
     "kstNotice": "時間はすべて韓国標準時 (KST) です。"
   },
   "BuddyDashboard": {
+    "selectSession": "開催日時を選択",
+    "sessionTimes": "開催時間",
+    "sessionsLoadError": "開催日時を読み込めませんでした。",
+    "noCalendarSessions": "表示できる開催日時がありません。",
     "applicationViews": "申込履歴の区分",
     "noMatchingApplications": "該当する申込履歴はありません。",
     "recordCount": "{count, plural, other {#件}}",

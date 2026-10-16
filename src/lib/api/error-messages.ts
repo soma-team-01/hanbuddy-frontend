@@ -1,6 +1,8 @@
 import { ApiClientError } from "./errors";
 
 export const BACKEND_ERROR_CODES = [
+  "PAYMENT409_PAYPAL_PROCESSING",
+  "PAYMENT409_PAYPAL_DECLINED",
   "APPLICATION400_BOOKING_CLOSED",
   "ACTIVITY_SCHEDULE400_CAPACITY",
   "ACTIVITY_SCHEDULE400_EDIT",
@@ -93,6 +95,8 @@ export const BACKEND_ERROR_CODES = [
 export type KnownBackendErrorCode = (typeof BACKEND_ERROR_CODES)[number];
 
 export const API_ERROR_MESSAGE_KEYS = [
+  "paypalProcessing",
+  "paypalDeclined",
   "bookingClosed",
   "scheduleCapacity",
   "scheduleEdit",
@@ -182,6 +186,8 @@ export const API_ERROR_MESSAGE_KEYS = [
 export type ApiErrorMessageKey = (typeof API_ERROR_MESSAGE_KEYS)[number];
 
 export const ERROR_CODE_MESSAGE_KEYS = {
+  PAYMENT409_PAYPAL_PROCESSING: "paypalProcessing",
+  PAYMENT409_PAYPAL_DECLINED: "paypalDeclined",
   AUTH400_CONTACT: "profileContactInvalid",
   USER400_CONTACT: "profileContactInvalid",
   USER400_BANK_ACCOUNT: "signupBankAccountInvalid",

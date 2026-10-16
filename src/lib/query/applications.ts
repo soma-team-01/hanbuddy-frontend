@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, type QueryState } from "@tanstack/react-query";
 import {
   getApplicationCancellationQuote,
   getAppliedActivityDetail,
@@ -7,6 +7,8 @@ import {
 import type { ContentLanguage } from "@/types/content-language";
 import type { DisplayCurrency } from "@/types/display-currency";
 import { unwrapApiResult } from "./result";
+import { isPayPalResultPending } from "@/lib/payments/paypal-authorization";
+import type { ApplicationResponse } from "@/types/application";
 
 export const applicationKeys = {
   all: () => ["applications"] as const,
@@ -33,23 +35,57 @@ export const applicationKeys = {
 
 /** 승인·예약·환불의 서버 상태를 주기적으로 다시 확인한다. */
 const APPLICATION_REFRESH_MS = 60_000;
+const PAYPAL_RESULT_READ_LIMIT = 6;
+type RecoveryReadBudget = { stage: string; firstRead: number };
+// Query identity survives option recreation, but is released with its cache entry.
+const recoveryReadBudgets = new WeakMap<object, Map<number, RecoveryReadBudget>>();
 
+/** Bound each unresolved payment stage without stopping unrelated approval/refund updates. */
+function applicationsRefetchInterval(query: {
+  state: Pick<
+    QueryState<ApplicationResponse[], Error>,
+    "data" | "dataUpdateCount" | "errorUpdateCount"
+  >;
+}) {
+  const previous = recoveryReadBudgets.get(query);
+  const pending = new Map<number, RecoveryReadBudget>();
+  const readCount = query.state.dataUpdateCount + query.state.errorUpdateCount;
+  let needsRefresh = false;
+
+  for (const application of query.state.data ?? []) {
+    if (application.refund?.status === "REQUESTED" || application.refund?.status === "FAILED") {
+      needsRefresh = true;
+    }
+    if (isPayPalResultPending(application)) {
+      const stage = `${application.paypalAuthorization?.state}:${application.paymentStatus}`;
+      const existing = previous?.get(application.applicationId);
+      const budget =
+        existing?.stage === stage && existing.firstRead <= readCount
+          ? existing
+          : { stage, firstRead: readCount };
+      pending.set(application.applicationId, budget);
+      if (readCount - budget.firstRead + 1 < PAYPAL_RESULT_READ_LIMIT) needsRefresh = true;
+    } else if (
+      application.status === "PENDING_PAYMENT" ||
+      application.status === "PENDING_APPROVAL" ||
+      application.status === "CONFIRMED"
+    ) {
+      needsRefresh = true;
+    }
+  }
+
+  // Drop completed or removed applications; a later recovery stage gets its own budget.
+  recoveryReadBudgets.set(query, pending);
+  return needsRefresh ? APPLICATION_REFRESH_MS : false;
+}
+
+/** Preserve lifecycle polling and foreground refresh while bounding unresolved PayPal reads. */
 export function myApplicationsQueryOptions(language: ContentLanguage) {
   return queryOptions({
     queryKey: applicationKeys.mine(language),
     queryFn: async () => unwrapApiResult(await getMyApplications(language), "applications"),
     // 결제 선점 만료, 버디 응답, 비동기 환불은 서버 응답으로만 확정한다.
-    refetchInterval: (query) =>
-      query.state.data?.some(
-        (application) =>
-          application.status === "PENDING_PAYMENT" ||
-          application.status === "PENDING_APPROVAL" ||
-          application.status === "CONFIRMED" ||
-          application.refund?.status === "REQUESTED" ||
-          application.refund?.status === "FAILED",
-      )
-        ? APPLICATION_REFRESH_MS
-        : false,
+    refetchInterval: applicationsRefetchInterval,
     refetchOnWindowFocus: true,
   });
 }

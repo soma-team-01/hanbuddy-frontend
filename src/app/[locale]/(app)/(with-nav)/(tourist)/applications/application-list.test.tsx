@@ -144,6 +144,102 @@ function continuePaymentAfterReview(buttonName: string) {
 }
 
 describe("ApplicationList", () => {
+  it("labels an authorized amount as not captured and never enables group chat before confirmation", () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          status: "pending_approval",
+          paymentStatus: "AUTHORIZED",
+          paypalAuthorization: {
+            state: "AUTHORIZED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        },
+      ],
+    });
+    expect(
+      screen.getByText(
+        "You’ll be charged after your buddy approves. We’ll email you the decision.",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(screen.queryByText("Paid")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /group chat/i })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      "en",
+      "Past",
+      "Declined",
+      "Your request was declined due to a payment error. Please apply again.",
+      "Book again",
+    ],
+    [
+      "ko",
+      "지난 내역",
+      "거절됨",
+      "결제 오류로 신청이 거절되었습니다. 다시 신청해 주세요.",
+      "새로 신청하기",
+    ],
+  ] as const)(
+    "shows concise declined guidance without a new-booking action in %s",
+    (locale, past, badge, description, action) => {
+      const continuePayment = vi.fn();
+      renderList(
+        {
+          onContinuePayment: continuePayment,
+          applications: [
+            {
+              ...paidApplication,
+              status: "rejected",
+              cancellationReason: "PAYMENT_FAILED",
+              paypalAuthorization: {
+                state: "VOID_REQUESTED",
+                authorizedAt: null,
+                expiresAt: null,
+                releasedAt: null,
+              },
+            },
+          ],
+        },
+        locale,
+      );
+      fireEvent.click(screen.getByRole("tab", { name: past }));
+      expect(screen.getByText(badge)).toBeInTheDocument();
+      expect(screen.getByText(description)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: action })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: action })).not.toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        locale === "en" ? /release of the PayPal hold/ : /선승인 해제/,
+      );
+      expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+      expect(continuePayment).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not offer payment continuation while a PayPal authorization result is unknown", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          paypalAuthorization: {
+            state: "REQUESTED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        },
+      ],
+    });
+    expect(
+      screen.queryByRole("button", { name: /Continue payment with PayPal/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it.each(["rejected", "expired"] as const)(
     "keeps %s in past applications without payment, cancellation or review actions",
     (status) => {
@@ -250,13 +346,13 @@ describe("ApplicationList", () => {
     mockedGetCancellationQuote.mockResolvedValue({
       status: "success",
       quote: {
-        policyVersion: "2026-09-07",
-        policyType: "FREE_CANCELLATION_WINDOW",
+        policyVersion: "2026-10-16",
+        policyType: "BEFORE_48_HOURS",
         refundPercent: 100,
         refundAmount: 90000,
         refundCurrency: "KRW",
         cancellationFeeAmount: 0,
-        freeCancellationUntil: "2099-07-20T10:30:00+09:00",
+        freeCancellationUntil: null,
         quotedAt: "2099-07-20T10:10:00+09:00",
       },
     });
@@ -508,72 +604,12 @@ describe("ApplicationList", () => {
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
   });
 
-  it("shows the active 30-minute free-cancellation window in green", async () => {
-    renderList({
-      applications: [
-        {
-          ...paidApplication,
-          startAt: "2099-07-20T11:00:00+09:00",
-          endAt: "2099-07-20T13:00:00+09:00",
-        },
-      ],
-    });
-
-    const notice = await screen.findByTestId("free-cancellation-window");
-    expect(notice).toHaveClass("text-success");
-    expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
-    expect(notice.parentElement).toHaveClass("md:mt-auto");
-  });
-
-  it("shows the activity's 48-hour cutoff when it extends free cancellation", async () => {
-    mockedGetCancellationQuote.mockResolvedValue({
-      status: "success",
-      quote: {
-        policyVersion: "2026-09-07",
-        policyType: "BEFORE_48_HOURS",
-        refundPercent: 100,
-        refundAmount: 90000,
-        refundCurrency: "KRW",
-        cancellationFeeAmount: 0,
-        freeCancellationUntil: "2099-07-07T10:30:00+09:00",
-        quotedAt: "2099-07-08T10:00:00+09:00",
-      },
-    });
-
+  it("does not display a free-cancellation timer or fetch quotes for confirmed cards", () => {
     renderList({ applications: [paidApplication] });
-
-    expect(await screen.findByTestId("free-cancellation-window")).toHaveTextContent(
-      "Free cancellation until Sat, Jul 18 · 10:00 AM",
-    );
+    expect(screen.queryByTestId("free-cancellation-window")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Free cancellation/)).not.toBeInTheDocument();
+    expect(mockedGetCancellationQuote).not.toHaveBeenCalled();
   });
-
-  it.each([
-    ["BETWEEN_24_AND_48_HOURS", 50],
-    ["WITHIN_24_HOURS", 0],
-  ] as const)(
-    "shows one ended state after free cancellation for %s",
-    async (policyType, refundPercent) => {
-      mockedGetCancellationQuote.mockResolvedValue({
-        status: "success",
-        quote: {
-          policyVersion: "2026-09-07",
-          policyType,
-          refundPercent,
-          refundAmount: refundPercent === 50 ? 45000 : 0,
-          refundCurrency: "KRW",
-          cancellationFeeAmount: refundPercent === 50 ? 45000 : 90000,
-          freeCancellationUntil: "2099-07-07T10:30:00+09:00",
-          quotedAt: "2099-07-19T10:00:00+09:00",
-        },
-      });
-
-      renderList({ applications: [paidApplication] });
-
-      const notice = await screen.findByTestId("free-cancellation-window");
-      expect(notice).toHaveClass("text-danger");
-      expect(notice).toHaveTextContent("Free cancellation period ended");
-    },
-  );
 
   it("shows the stored discount snapshot in the price breakdown", () => {
     const discountedApplication: Application = {

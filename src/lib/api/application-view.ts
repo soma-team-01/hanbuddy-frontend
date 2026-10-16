@@ -36,6 +36,8 @@ export function mapApplicationResponseToApplication(
   const endTime = formatSeoulTime(response.endAt, locale);
   const timeLabel = startTime && endTime ? `${startTime} ~ ${endTime}` : startTime;
   return {
+    paymentStatus: response.paymentStatus,
+    paypalAuthorization: response.paypalAuthorization,
     approvalExpiresAt: response.approvalExpiresAt ?? null,
     buddyApprovedAt: response.buddyApprovedAt ?? null,
     activityType: response.activityType ?? "STANDARD",

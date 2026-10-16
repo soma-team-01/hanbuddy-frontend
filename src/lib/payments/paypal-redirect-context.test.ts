@@ -25,4 +25,27 @@ describe("PayPal redirect context", () => {
     clearPayPalRedirectContext();
     expect(readPayPalRedirectContext()).toBeNull();
   });
+
+  it.each(["AUTHORIZE", "CAPTURE"] as const)(
+    "preserves %s intent and submission state",
+    (paypalIntent) => {
+      const context = {
+        applicationId: "11",
+        orderId: "ORDER-123",
+        paypalIntent,
+        checkoutSubmitted: true,
+      };
+      storePayPalRedirectContext(context);
+      expect(readPayPalRedirectContext("ORDER-123")).toEqual(context);
+    },
+  );
+
+  it("rejects unsupported stored intent", () => {
+    storePayPalRedirectContext({
+      applicationId: "11",
+      orderId: "ORDER-123",
+      paypalIntent: "OTHER" as never,
+    });
+    expect(readPayPalRedirectContext("ORDER-123")).toBeNull();
+  });
 });

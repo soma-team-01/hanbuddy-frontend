@@ -417,6 +417,8 @@ describe("BookingForm", () => {
         "Keep this request",
       );
       expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
+      // 마감된 일정은 URL에서도 지워 언어 전환으로 다시 마운트돼도 다시 선택되지 않는다.
+      expect(new URL(window.location.href).searchParams.has("scheduleId")).toBe(false);
     },
   );
 
@@ -598,7 +600,7 @@ describe("BookingForm", () => {
     expect(screen.getByRole("button", { name: "Increase participants" })).toHaveClass("size-11");
     expect(screen.getByRole("button", { name: "Decrease participants" })).toHaveClass("size-11");
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
-    expect(screen.getAllByText("Full refund")).toHaveLength(2);
+    expect(screen.getAllByText("Full refund")).toHaveLength(1);
     for (const fullRefund of screen.getAllByText("Full refund")) {
       expect(fullRefund).toHaveClass("text-ink");
     }
@@ -768,6 +770,25 @@ describe("BookingForm", () => {
     await renderBooking(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
 
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("—");
+  });
+
+  it("keeps the requested schedule in the URL so a language switch does not pick another date", async () => {
+    window.history.replaceState(null, "", "/en/activities/1/book?scheduleId=102");
+    const twoSessionActivity: Activity = {
+      ...activity,
+      sessions: [
+        ...activity.sessions,
+        { id: "102", dateLabel: "2026-07-21", timeLabel: "14:00", spotsLeft: 0 },
+      ],
+    };
+
+    await renderBooking(<BookingForm activity={twoSessionActivity} initialSessionId="102" />);
+
+    // 빈 scheduleId=로 덮으면 다시 마운트될 때 첫 예약 가능 날짜가 자동 선택된다.
+    const params = new URL(window.location.href).searchParams;
+    expect(params.get("scheduleId")).toBe("102");
+    expect(params.get("guestCount")).toBe("1");
+    window.history.replaceState(null, "", "/");
   });
 
   it("creates an application and opens the Toss payment window", async () => {

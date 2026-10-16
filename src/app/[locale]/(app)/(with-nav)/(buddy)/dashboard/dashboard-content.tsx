@@ -37,6 +37,7 @@ function SectionHeading({ children }: Readonly<{ children: ReactNode }>) {
   return <h2 className="font-display text-lg font-bold text-ink">{children}</h2>;
 }
 
+/** Loads the active date's applications and optionally restores a URL-selected session. */
 export function DashboardContent({
   initialSession,
 }: Readonly<{ initialSession?: DashboardSessionSelection }> = {}) {
@@ -112,6 +113,7 @@ export function DashboardContent({
       myActivitiesQuery.error,
   );
 
+  /** Moves the date strip while preventing an earlier URL session from reopening locally. */
   function selectDate(date: string) {
     setRestoreInitialSession(false);
     setSelectedDate(date);

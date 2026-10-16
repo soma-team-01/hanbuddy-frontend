@@ -3,10 +3,17 @@ import {
   activityDetailFromSessionHref,
   activityDetailBackHref,
   parseDashboardSession,
+  dashboardSessionHref,
 } from "./buddy-session-navigation";
 
 describe("buddy session navigation", () => {
   const selection = { activityId: 42, scheduleId: 99, date: "2026-10-15" };
+  it("serializes the selected session for URL refresh and history restoration", () => {
+    expect(dashboardSessionHref(42, 99, "2026-10-14T23:00:00Z")).toBe(
+      "/dashboard?date=2026-10-15&activityId=42&scheduleId=99",
+    );
+    expect(dashboardSessionHref(42, 99, "invalid")).toBeNull();
+  });
   it("carries the KST session date and returns to that exact application list", () => {
     expect(activityDetailFromSessionHref(42, 99, "2026-10-14T23:00:00Z")).toBe(
       "/my-activities/42?from=applications&date=2026-10-15&scheduleId=99",

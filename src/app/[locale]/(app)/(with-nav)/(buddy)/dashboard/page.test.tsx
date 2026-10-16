@@ -23,10 +23,27 @@ vi.mock("next-intl/server", async () => {
 });
 
 vi.mock("./dashboard-content", () => ({
-  DashboardContent: () => null,
+  DashboardContent: ({
+    initialSession,
+  }: {
+    initialSession?: { scheduleId: number; date: string };
+  }) =>
+    initialSession ? (
+      <output>
+        {initialSession.date}:{initialSession.scheduleId}
+      </output>
+    ) : null,
 }));
 
 describe("DashboardPage", () => {
+  it("restores the calendar-selected date and session from a refreshed URL", async () => {
+    renderWithIntl(
+      await DashboardPage({
+        searchParams: Promise.resolve({ date: "2099-08-21", activityId: "42", scheduleId: "90" }),
+      }),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("2099-08-21:90");
+  });
   it("renders a single condensed column without a page title", async () => {
     renderWithIntl(await DashboardPage({}), { locale: "en" });
 

@@ -45,6 +45,7 @@ type Applicant = BuddyApplicationApplicantSummaryResponse;
 const countGuests = (applicants: Applicant[]) =>
   applicants.reduce((total, item) => total + item.guestCount, 0);
 
+/** Displays one session's status tabs and actions, with calendar navigation to other recorded sessions. */
 export function DashboardSessionDetail({
   activityId,
   activityTitle,
@@ -311,6 +312,7 @@ export function DashboardSessionDetail({
   );
 }
 
+/** Displays an applicant's contact, status and available actions within the selected session tab. */
 function SessionApplicant({
   applicant,
   onOpenProfile,

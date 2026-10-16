@@ -3,6 +3,7 @@ import { BuddyWorkspaceTabs } from "@/components/buddy/BuddyWorkspaceTabs";
 import { DashboardContent } from "./dashboard-content";
 import { parseDashboardSession, type SessionSearchParams } from "@/lib/buddy-session-navigation";
 
+/** Validates URL session context and remounts dashboard state when navigation selects another session. */
 export default async function DashboardPage({
   searchParams,
 }: Readonly<{ searchParams?: Promise<SessionSearchParams> }>) {

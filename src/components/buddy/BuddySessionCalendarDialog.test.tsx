@@ -78,6 +78,14 @@ function setup(
 }
 
 describe("BuddySessionCalendarDialog", () => {
+  it("uses a dedicated backdrop button without dismissing clicks inside the dialog", () => {
+    const { onClose } = setup();
+    fireEvent.click(screen.getByRole("heading", { name: "Select session" }));
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("session-calendar-backdrop"));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Close dialog" })).toBeEnabled();
+  });
   it("excludes empty and payment-only dates and times but retains every application tab's records", () => {
     const statuses: BackendApplicationStatus[][] = [
       ["CONFIRMED"],

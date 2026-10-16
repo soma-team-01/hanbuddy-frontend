@@ -4,9 +4,13 @@ import { useQueries, type UseQueryResult } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/i18n/routing";
+import { useRouter } from "@/i18n/navigation";
 import { getContentLanguage } from "@/lib/content-language";
 import { formatSeoulTime } from "@/lib/datetime";
-import type { DashboardSessionSelection } from "@/lib/buddy-session-navigation";
+import {
+  dashboardSessionHref,
+  type DashboardSessionSelection,
+} from "@/lib/buddy-session-navigation";
 import {
   createDashboardRequestQueue,
   dashboardSessionQueryOptions,
@@ -39,22 +43,27 @@ type Props = Readonly<{
 }>;
 type SessionQuery = UseQueryResult<BuddyActivityApplicationsResponse, Error>;
 
+/** Includes confirmed and completed bookings in the participant tab. */
 function participants(data?: BuddyActivityApplicationsResponse) {
   return data?.applicants.filter(
     (item) => item.status === "CONFIRMED" || item.status === "COMPLETED",
   );
 }
+/** Selects actual cancellations, excluding payment holds and superseded attempts. */
 function cancellations(data?: BuddyActivityApplicationsResponse) {
   // Payment holds and superseded attempts are not guest cancellations.
   return data?.applicants.filter((item) => item.status === "CANCELLED");
 }
+/** Selects bookings awaiting buddy approval rather than payment. */
 function pendingApprovals(applicants: BuddyApplicationApplicantSummaryResponse[]) {
   return applicants.filter((item) => item.status === "PENDING_APPROVAL");
 }
+/** Sums guest seats rather than application records. */
 function guestCount(applicants: BuddyApplicationApplicantSummaryResponse[]) {
   return applicants.reduce((total, item) => total + item.guestCount, 0);
 }
 
+/** Uses full session data, falling back to the legacy date summary during loading. */
 function activeParticipants(schedule: BuddyDateScheduleApplicationsResponse, query: SessionQuery) {
   return (
     participants(query.data) ??
@@ -64,6 +73,32 @@ function activeParticipants(schedule: BuddyDateScheduleApplicationsResponse, que
   );
 }
 
+/** Restores an explicitly requested owner session even if its date summary no longer contains it. */
+function restoreSession(
+  selectedId: number | null,
+  initialSession: DashboardSessionSelection | undefined,
+  query: SessionQuery | undefined,
+) {
+  const data = query?.data;
+  if (
+    selectedId !== initialSession?.scheduleId ||
+    data?.activityId !== initialSession?.activityId ||
+    !data
+  )
+    return undefined;
+  return {
+    activity: { activityId: data.activityId, activityTitle: data.activityTitle },
+    schedule: {
+      activityScheduleId: data.activityScheduleId,
+      startAt: data.startAt,
+      applicantCount: data.applicantCount,
+      applicants: data.applicants,
+    },
+    query: query!,
+  };
+}
+
+/** Coordinates list selection, URL-restored sessions and cross-date calendar navigation. */
 export function DashboardApplicationsList({
   activities,
   rooms,
@@ -73,6 +108,7 @@ export function DashboardApplicationsList({
   initialSession,
 }: Props) {
   const locale = useLocale() as Locale;
+  const router = useRouter();
   const t = useTranslations("BuddyDashboard");
   const statusLabel = useTranslations("Status");
   const approval = useTranslations("Approval");
@@ -128,27 +164,7 @@ export function DashboardApplicationsList({
         a.schedule.activityScheduleId - b.schedule.activityScheduleId,
     );
   const restoredQuery = selectedId !== null ? records.get(selectedId) : undefined;
-  const restoredData = restoredQuery?.data;
-  // Empty sessions can be absent from the date summary. Restore those from the
-  // owner-only per-session response, without substituting a different activity.
-  const restored =
-    selectedId === initialSession?.scheduleId &&
-    restoredData &&
-    restoredData.activityId === initialSession.activityId
-      ? {
-          activity: {
-            activityId: restoredData.activityId,
-            activityTitle: restoredData.activityTitle,
-          },
-          schedule: {
-            activityScheduleId: restoredData.activityScheduleId,
-            startAt: restoredData.startAt,
-            applicantCount: restoredData.applicantCount,
-            applicants: restoredData.applicants,
-          },
-          query: restoredQuery!,
-        }
-      : undefined;
+  const restored = restoreSession(selectedId, initialSession, restoredQuery);
   const selected = calendarSelection
     ? { ...calendarSelection, query: records.get(calendarSelection.schedule.activityScheduleId)! }
     : (sessions.find(
@@ -171,12 +187,14 @@ export function DashboardApplicationsList({
     }
   }, [showingDetail, onDetailChange]);
 
+  /** Opens a list row and clears any earlier calendar selection. */
   function openSession(id: number) {
     setCalendarSelection(null);
     setSelectedId(id);
     setDetailOpen(true);
   }
 
+  /** Restores the current date's list and its keyboard focus. */
   function returnToList() {
     setDetailOpen(false);
     setCalendarSelection(null);
@@ -314,6 +332,12 @@ export function DashboardApplicationsList({
                     },
                     status: schedule.status,
                   });
+                  const href = dashboardSessionHref(
+                    selected.activity.activityId,
+                    schedule.scheduleId,
+                    schedule.startAt,
+                  );
+                  if (href) router.replace(href, { scroll: false });
                 }}
               />
             </section>

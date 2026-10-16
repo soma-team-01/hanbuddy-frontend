@@ -4,6 +4,7 @@ import type { Locale } from "@/i18n/routing";
 import { MyActivityDetailContent } from "./my-activity-detail-content";
 import { activityDetailBackHref, type SessionSearchParams } from "@/lib/buddy-session-navigation";
 
+/** Renders owner activity details with a validated return path to the originating application session. */
 export default async function MyActivityDetailPage({
   params,
   searchParams,

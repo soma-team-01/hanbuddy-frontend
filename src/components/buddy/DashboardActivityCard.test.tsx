@@ -11,9 +11,10 @@ import type {
 } from "@/types/buddy";
 import { DashboardApplicationsList } from "./DashboardActivityCard";
 
+const { replaceRoute } = vi.hoisted(() => ({ replaceRoute: vi.fn() }));
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ replace: replaceRoute, refresh: vi.fn() }),
 }));
 vi.mock("@/lib/api/buddy", () => ({
   getBuddyActivityApplications: vi.fn(),
@@ -150,7 +151,7 @@ describe("DashboardApplicationsList", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByRole("link", { name: "Tea tasting" })).toBeVisible();
   });
-  it("switches to another date with its own records, chat and actions, then returns to the original list", async () => {
+  it("switches dates, replaces the URL and restores the selected date's list after navigation", async () => {
     const nextSchedule = {
       scheduleId: 90,
       startAt: "2099-08-21T10:00:00+09:00",
@@ -178,7 +179,7 @@ describe("DashboardApplicationsList", () => {
             }
           : detail(Number(id), Number(id) === 3 ? [guest] : []),
     }));
-    renderWithQueryClient(
+    const { rerender } = renderWithQueryClient(
       <DashboardApplicationsList
         activities={[activity]}
         rooms={[
@@ -200,10 +201,39 @@ describe("DashboardApplicationsList", () => {
     expect(screen.getByTestId("schedule-actions")).toHaveTextContent("90:1");
     expect(screen.getByTestId("schedule-actions")).toHaveAttribute("data-room-id", "20");
     expect(getBuddyActivityApplications).toHaveBeenCalledWith(90, "EN");
+    expect(replaceRoute).toHaveBeenCalledWith(
+      "/en/dashboard?date=2099-08-21&activityId=42&scheduleId=90",
+      { scroll: false },
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Aug 21, 2099/ })).toHaveFocus();
+    // Next remounts the dashboard with the newly selected URL context; refresh uses the same path.
+    rerender(
+      <DashboardApplicationsList
+        key="2099-08-21:90"
+        activities={[
+          {
+            ...activity,
+            schedules: [
+              {
+                activityScheduleId: 90,
+                startAt: nextSchedule.startAt,
+                applicantCount: 1,
+                applicants: [{ ...guest, guestCount: 1, applicantName: "Another session guest" }],
+              },
+            ],
+          },
+        ]}
+        rooms={[{ activityScheduleId: 90, chatRoomId: 20 }]}
+        myActivities={[]}
+        onOpenProfile={vi.fn()}
+        initialSession={{ activityId: 42, scheduleId: 90, date: "2099-08-21" }}
+      />,
+    );
+    expect(await screen.findByRole("button", { name: /Aug 21, 2099/ })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: /Back to sessions/ }));
-    expect(screen.getByRole("button", { name: /9:00 AM/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /10:00 AM.*Tea tasting/ })).toBeVisible();
+    expect(screen.queryByRole("button", { name: /9:00 AM.*Tea tasting/ })).not.toBeInTheDocument();
   });
   it("opens a cancellation-only session and does not reuse the previous participants", async () => {
     const nextSchedule = {

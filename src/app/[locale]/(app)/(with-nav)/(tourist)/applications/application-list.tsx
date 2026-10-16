@@ -443,7 +443,7 @@ function ApplicationCard({
           <div className="flex flex-wrap items-center gap-2 max-md:col-start-2 max-md:row-start-1 max-md:gap-1.5 md:col-start-1 max-md:[&>span]:px-2 max-md:[&>span]:py-0.5">
             <StatusBadge
               status={application.status}
-              label={paymentDeclined ? authorization("declined") : undefined}
+              label={paymentDeclined ? authorization("cardDeclined") : undefined}
             />
             {dDay !== null && dDay >= 0 ? (
               <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
@@ -589,14 +589,6 @@ function ApplicationCard({
                 className="max-md:mt-0 max-md:mr-auto max-md:min-w-0 max-md:flex-1 max-md:text-left max-md:[&_[role=status]]:text-xs"
               />
             ) : null}
-            {paymentDeclined && (
-              <Link
-                href={`/activities/${application.activityId}`}
-                className={`${CARD_ACTION_CLASS} inline-flex items-center justify-center border border-primary text-primary`}
-              >
-                {authorization("bookAgain")}
-              </Link>
-            )}
             {isCancelled &&
             application.cancellationReason &&
             application.cancellationReason !== "PAYMENT_FAILED" ? (
@@ -641,7 +633,7 @@ function ApplicationCard({
       )}
       {paymentDeclined && (
         <p className="text-sm leading-6 text-muted max-md:text-xs">
-          {authorization("declinedDescription")}
+          {authorization("cardDeclinedDescription")}
         </p>
       )}
       <PayPalAuthorizationNotice application={application} />

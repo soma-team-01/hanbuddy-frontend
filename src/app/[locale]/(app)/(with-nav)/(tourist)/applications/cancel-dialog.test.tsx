@@ -21,13 +21,13 @@ vi.mock("@/lib/api/applications", () => ({
 
 const mockedGetCancellationQuote = vi.mocked(getApplicationCancellationQuote);
 const quote = {
-  policyVersion: "2026-09-07",
-  policyType: "FREE_CANCELLATION_WINDOW" as const,
+  policyVersion: "2026-10-16",
+  policyType: "BEFORE_48_HOURS" as const,
   refundPercent: 100,
   refundAmount: 36.5,
   refundCurrency: "USD",
   cancellationFeeAmount: 0,
-  freeCancellationUntil: "2099-09-07T12:30:00Z",
+  freeCancellationUntil: null,
   quotedAt: "2099-09-07T12:15:00Z",
 };
 const startAt = "2099-09-09T12:30:00Z";
@@ -40,6 +40,7 @@ function renderWithQueryClient(ui: ReactElement, options: { locale?: "en" | "ko"
 
 describe("CancelDialog", () => {
   beforeEach(() => {
+    mockedGetCancellationQuote.mockClear();
     mockedGetCancellationQuote.mockResolvedValue({ status: "success", quote });
   });
 
@@ -72,10 +73,10 @@ describe("CancelDialog", () => {
       <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
     expect(
-      await screen.findByText(
-        /Cancelling ends your request and starts the release of the PayPal hold/,
-      ),
+      await screen.findByText(/You haven’t been charged and won’t be charged if you cancel/),
     ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Payment information" })).toBeInTheDocument();
+    expect(screen.queryByText("Authorization amount")).not.toBeInTheDocument();
     expect(screen.queryByText("Estimated refund")).not.toBeInTheDocument();
     expect(screen.queryByText("Cancellation fee")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
@@ -98,7 +99,7 @@ describe("CancelDialog", () => {
       <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
     );
 
-    expect(await screen.findByText("30-minute free cancellation · 100%")).toBeInTheDocument();
+    expect(await screen.findByText("48+ hours before the activity · 100%")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Cancellation refund estimate" })).toHaveClass(
       "border-t-primary",
     );
@@ -113,6 +114,134 @@ describe("CancelDialog", () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it("uses a full refund before buddy approval regardless of the activity start", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: { ...quote, policyType: "PENDING_APPROVAL" },
+    });
+    renderWithQueryClient(
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
+    );
+    expect(await screen.findByText("Full refund before buddy approval · 100%")).toBeInTheDocument();
+    expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent("$36.50");
+  });
+
+  it.each([
+    ["BETWEEN_24_AND_48_HOURS", 50, 18.25],
+    ["WITHIN_24_HOURS", 0, 0],
+  ] as const)(
+    "uses the server's post-approval %s quote without a grace period",
+    async (policyType, refundPercent, refundAmount) => {
+      mockedGetCancellationQuote.mockResolvedValue({
+        status: "success",
+        quote: {
+          ...quote,
+          policyType,
+          refundPercent,
+          refundAmount,
+          cancellationFeeAmount: 36.5 - refundAmount,
+        },
+      });
+      renderWithQueryClient(
+        <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
+      );
+      await waitFor(() =>
+        expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent(
+          `$${refundAmount.toFixed(2)}`,
+        ),
+      );
+      expect(screen.queryByText(/30-minute/)).not.toBeInTheDocument();
+    },
+  );
+
+  it("keeps historical refund quotes readable without advertising a new grace period", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: { ...quote, policyType: "FREE_CANCELLATION_WINDOW" },
+    });
+    renderWithQueryClient(
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
+    );
+    expect(await screen.findByText("Previous free-cancellation policy · 100%")).toBeInTheDocument();
+  });
+
+  it("uses the latest refund quote if capture completed after the application card loaded", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        ...quote,
+        policyType: "BETWEEN_24_AND_48_HOURS",
+        refundPercent: 50,
+        refundAmount: 18.25,
+        cancellationFeeAmount: 18.25,
+      },
+    });
+    renderWithQueryClient(
+      <CancelDialog
+        applicationId="11"
+        startAt={startAt}
+        uncaptured
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+    expect(await screen.findByText("24–48 hours before the activity · 50%")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/You haven’t been charged and won’t be charged/),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([48, 24, 0])(
+    "refreshes at the %s-hour boundary but ignores the old 30-minute deadline",
+    async (hours) => {
+      vi.useFakeTimers();
+      const now = Date.parse("2099-09-07T12:00:00Z");
+      vi.setSystemTime(now);
+      mockedGetCancellationQuote
+        .mockResolvedValueOnce({
+          status: "success",
+          quote: { ...quote, freeCancellationUntil: new Date(now + 100).toISOString() },
+        })
+        .mockResolvedValueOnce({
+          status: "success",
+          quote: {
+            ...quote,
+            policyType: "WITHIN_24_HOURS",
+            refundPercent: 0,
+            refundAmount: 0,
+            cancellationFeeAmount: 36.5,
+            quotedAt: new Date(now + 1050).toISOString(),
+          },
+        });
+      let unmount: (() => void) | undefined;
+      try {
+        await act(async () => {
+          ({ unmount } = renderWithQueryClient(
+            <CancelDialog
+              applicationId="11"
+              startAt={new Date(now + hours * 3_600_000 + 1000).toISOString()}
+              onClose={vi.fn()}
+              onConfirm={vi.fn()}
+            />,
+          ));
+        });
+        expect(mockedGetCancellationQuote).toHaveBeenCalledTimes(1);
+        expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent("$36.50");
+        expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$0.00");
+        await act(() => vi.advanceTimersByTimeAsync(200));
+        expect(mockedGetCancellationQuote).toHaveBeenCalledTimes(1);
+        await act(() => vi.advanceTimersByTimeAsync(900));
+        expect(mockedGetCancellationQuote).toHaveBeenCalledTimes(2);
+        expect(screen.getByText("Estimated refund").parentElement).toHaveTextContent("$0.00");
+        expect(screen.getByText("Cancellation fee").parentElement).toHaveTextContent("$36.50");
+        expect(screen.getByText("Less than 24 hours before the activity · 0%")).toBeInTheDocument();
+      } finally {
+        unmount?.();
+        vi.useRealTimers();
+      }
+    },
+  );
 
   it("keeps cancellation disabled and retries when the quote fails", async () => {
     mockedGetCancellationQuote

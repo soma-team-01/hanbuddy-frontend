@@ -346,13 +346,13 @@ describe("ApplicationList", () => {
     mockedGetCancellationQuote.mockResolvedValue({
       status: "success",
       quote: {
-        policyVersion: "2026-09-07",
-        policyType: "FREE_CANCELLATION_WINDOW",
+        policyVersion: "2026-10-16",
+        policyType: "BEFORE_48_HOURS",
         refundPercent: 100,
         refundAmount: 90000,
         refundCurrency: "KRW",
         cancellationFeeAmount: 0,
-        freeCancellationUntil: "2099-07-20T10:30:00+09:00",
+        freeCancellationUntil: null,
         quotedAt: "2099-07-20T10:10:00+09:00",
       },
     });
@@ -604,72 +604,12 @@ describe("ApplicationList", () => {
     expect(screen.getByText("₩90,000")).toBeInTheDocument();
   });
 
-  it("shows the active 30-minute free-cancellation window in green", async () => {
-    renderList({
-      applications: [
-        {
-          ...paidApplication,
-          startAt: "2099-07-20T11:00:00+09:00",
-          endAt: "2099-07-20T13:00:00+09:00",
-        },
-      ],
-    });
-
-    const notice = await screen.findByTestId("free-cancellation-window");
-    expect(notice).toHaveClass("text-success");
-    expect(notice).toHaveTextContent("Free cancellation until Mon, Jul 20 · 10:30 AM");
-    expect(notice.parentElement).toHaveClass("md:mt-auto");
-  });
-
-  it("shows the activity's 48-hour cutoff when it extends free cancellation", async () => {
-    mockedGetCancellationQuote.mockResolvedValue({
-      status: "success",
-      quote: {
-        policyVersion: "2026-09-07",
-        policyType: "BEFORE_48_HOURS",
-        refundPercent: 100,
-        refundAmount: 90000,
-        refundCurrency: "KRW",
-        cancellationFeeAmount: 0,
-        freeCancellationUntil: "2099-07-07T10:30:00+09:00",
-        quotedAt: "2099-07-08T10:00:00+09:00",
-      },
-    });
-
+  it("does not display a free-cancellation timer or fetch quotes for confirmed cards", () => {
     renderList({ applications: [paidApplication] });
-
-    expect(await screen.findByTestId("free-cancellation-window")).toHaveTextContent(
-      "Free cancellation until Sat, Jul 18 · 10:00 AM",
-    );
+    expect(screen.queryByTestId("free-cancellation-window")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Free cancellation/)).not.toBeInTheDocument();
+    expect(mockedGetCancellationQuote).not.toHaveBeenCalled();
   });
-
-  it.each([
-    ["BETWEEN_24_AND_48_HOURS", 50],
-    ["WITHIN_24_HOURS", 0],
-  ] as const)(
-    "shows one ended state after free cancellation for %s",
-    async (policyType, refundPercent) => {
-      mockedGetCancellationQuote.mockResolvedValue({
-        status: "success",
-        quote: {
-          policyVersion: "2026-09-07",
-          policyType,
-          refundPercent,
-          refundAmount: refundPercent === 50 ? 45000 : 0,
-          refundCurrency: "KRW",
-          cancellationFeeAmount: refundPercent === 50 ? 45000 : 90000,
-          freeCancellationUntil: "2099-07-07T10:30:00+09:00",
-          quotedAt: "2099-07-19T10:00:00+09:00",
-        },
-      });
-
-      renderList({ applications: [paidApplication] });
-
-      const notice = await screen.findByTestId("free-cancellation-window");
-      expect(notice).toHaveClass("text-danger");
-      expect(notice).toHaveTextContent("Free cancellation period ended");
-    },
-  );
 
   it("shows the stored discount snapshot in the price breakdown", () => {
     const discountedApplication: Application = {

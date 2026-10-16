@@ -52,7 +52,7 @@ export interface AppliedActivityDetailResponse {
 export type CancellationPolicyType =
   | "AUTHORIZATION_RELEASE"
   | "PENDING_APPROVAL"
-  | "FREE_CANCELLATION_WINDOW"
+  | "FREE_CANCELLATION_WINDOW" // Historical refund snapshots only; no new 30-minute benefit.
   | "BEFORE_48_HOURS"
   | "BETWEEN_24_AND_48_HOURS"
   | "WITHIN_24_HOURS";
@@ -65,6 +65,7 @@ export interface CancellationQuoteResponse {
   refundAmount: number;
   refundCurrency: string;
   cancellationFeeAmount: number;
+  /** Legacy response field; new quotes return null. Do not use as a cancellation timer. */
   freeCancellationUntil: string | null;
   quotedAt: string;
 }

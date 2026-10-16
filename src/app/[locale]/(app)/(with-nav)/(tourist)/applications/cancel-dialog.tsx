@@ -22,21 +22,22 @@ const HOUR_MS = 60 * 60 * 1000;
 const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
 
 /** 열려 있는 취소 모달의 견적이 달라질 수 있는 가장 가까운 정책 경계를 구한다. */
-function getNextQuoteBoundary(startAt: string, freeCancellationUntil: string | null) {
+function getNextQuoteBoundary(startAt: string) {
   const now = Date.now();
   const startAtMs = Date.parse(startAt);
-  const boundaries = [
-    freeCancellationUntil ? Date.parse(freeCancellationUntil) : Number.NaN,
-    startAtMs - 48 * HOUR_MS,
-    startAtMs - 24 * HOUR_MS,
-    startAtMs,
-  ].filter((boundary) => Number.isFinite(boundary) && boundary > now);
+  const boundaries = [startAtMs - 48 * HOUR_MS, startAtMs - 24 * HOUR_MS, startAtMs].filter(
+    (boundary) => Number.isFinite(boundary) && boundary > now,
+  );
 
   return boundaries.length > 0 ? Math.min(...boundaries) : null;
 }
 
 export type CancelDialogOutcome = { ok: true } | { ok: false; error: unknown };
 
+/**
+ * 최신 서버 견적에 따라 선승인 해제 또는 환불액을 안내하고 취소 사유를 받는다.
+ * 견적 갱신 중에는 제출을 막으며 실제 취소 요청과 성공 후 닫기는 부모에 위임한다.
+ */
 export function CancelDialog({
   applicationId,
   startAt,
@@ -78,7 +79,8 @@ export function CancelDialog({
     refetch: refetchQuote,
   } = useQuery(cancellationQuoteQueryOptions(applicationId));
   useAuthQueryRedirect(quoteError);
-  const releasesAuthorization = uncaptured || quote?.policyType === "AUTHORIZATION_RELEASE";
+  // 카드 조회 이후 버디 승인/수취가 끝났을 수 있으므로 최신 서버 견적을 우선한다.
+  const releasesAuthorization = quote ? quote.policyType === "AUTHORIZATION_RELEASE" : uncaptured;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -92,7 +94,7 @@ export function CancelDialog({
 
   useEffect(() => {
     if (!quote) return;
-    const nextBoundary = getNextQuoteBoundary(startAt, quote.freeCancellationUntil);
+    const nextBoundary = getNextQuoteBoundary(startAt);
     if (nextBoundary === null) return;
     const delay = nextBoundary - Date.now() + 50;
     // 브라우저 타이머의 32-bit 한도를 넘는 비정상 응답은 즉시 만료로 오인하지 않는다.
@@ -144,12 +146,14 @@ export function CancelDialog({
       <p className="mt-2 text-sm leading-6 text-muted">{t("cancellationPrompt")}</p>
 
       <section
-        aria-label={releasesAuthorization ? authorization("heldAmount") : t("refundEstimateTitle")}
+        aria-label={
+          releasesAuthorization ? authorization("cancelPaymentTitle") : t("refundEstimateTitle")
+        }
         className="mt-5 border-y border-line-soft border-t-primary py-4"
       >
         <h3 className="flex items-center gap-2 font-display text-sm font-bold text-ink">
           <span aria-hidden className="h-4 w-1 rounded-full bg-primary" />
-          {releasesAuthorization ? authorization("heldAmount") : t("refundEstimateTitle")}
+          {releasesAuthorization ? authorization("cancelPaymentTitle") : t("refundEstimateTitle")}
         </h3>
         {isQuotePending ? (
           <p className="mt-2 text-sm text-muted">{t("quoteLoading")}</p>

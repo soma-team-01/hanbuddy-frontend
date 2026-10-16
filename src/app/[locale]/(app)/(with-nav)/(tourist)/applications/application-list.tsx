@@ -51,7 +51,6 @@ import type { PolicyDocumentData } from "@/types/policy";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CancelDialog, type CancelDialogOutcome } from "./cancel-dialog";
 import { PaymentHoldCountdown } from "./payment-hold-countdown";
-import { FreeCancellationWindow } from "./free-cancellation-window";
 import { ReferralApplicationCancelButton } from "@/components/referral/ReferralApplicationCancelButton";
 
 const TABS = ["upcoming", "past"] as const;
@@ -562,18 +561,6 @@ function ApplicationCard({
                   {t("cancel")}
                 </button>
               )
-            ) : null}
-            {!isReferral &&
-            application.status === "confirmed" &&
-            !application.scheduleCancelled &&
-            !application.refundRecoveryPending &&
-            !hasEnded ? (
-              <div className="max-md:order-first max-md:mr-auto max-md:min-w-0 max-md:flex-1 md:mt-auto max-md:[&>p]:text-[10px] max-md:[&>p]:leading-4">
-                <FreeCancellationWindow
-                  applicationId={application.id}
-                  startAt={application.startAt}
-                />
-              </div>
             ) : null}
             {!isReferral && isCompleted && !application.myReview ? (
               <ApplicationReviewActions

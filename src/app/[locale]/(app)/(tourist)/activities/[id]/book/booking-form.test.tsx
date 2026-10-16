@@ -600,7 +600,7 @@ describe("BookingForm", () => {
     expect(screen.getByRole("button", { name: "Increase participants" })).toHaveClass("size-11");
     expect(screen.getByRole("button", { name: "Decrease participants" })).toHaveClass("size-11");
     expect(screen.getByText("48+ hours before the activity")).toBeInTheDocument();
-    expect(screen.getAllByText("Full refund")).toHaveLength(2);
+    expect(screen.getAllByText("Full refund")).toHaveLength(1);
     for (const fullRefund of screen.getAllByText("Full refund")) {
       expect(fullRefund).toHaveClass("text-ink");
     }

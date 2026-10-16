@@ -5,6 +5,10 @@ import { useRef, useState } from "react";
 import type { PolicyDocumentData } from "@/types/policy";
 import { RefundPolicyDialog } from "./RefundPolicyDialog";
 
+/**
+ * 승인 전 환불·선승인 해제와 승인 후 취소 기준을 현재 언어로 요약한다.
+ * 정책 문서가 전달된 경우에만 전문 다이얼로그를 열 수 있다.
+ */
 export function RefundPolicyNotice({
   document,
   idPrefix = "refund-policy",
@@ -47,11 +51,13 @@ export function RefundPolicyNotice({
           {t("statutoryWithdrawalNotice")}
         </p>
 
+        <p className="mt-2 text-[13px] leading-5 text-ink">{t("beforeApprovalRefundNotice")}</p>
+        <p className="mt-2 text-[13px] font-semibold text-ink">{t("afterApprovalRefundLabel")}</p>
         <dl
           id={summaryId}
           className="mt-1.5 divide-y divide-line-soft overflow-hidden rounded-md border border-line-soft"
         >
-          {(["free", "full", "half", "none", "noShow"] as const).map((rule) => (
+          {(["full", "half", "none", "noShow"] as const).map((rule) => (
             <div
               key={rule}
               className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-1.5 text-[13px] leading-5"
@@ -59,7 +65,7 @@ export function RefundPolicyNotice({
               <dt className="text-muted">{t(`refundRules.${rule}.label`)}</dt>
               <dd
                 className={`text-right font-display font-bold ${
-                  rule === "free" || rule === "full" ? "text-ink" : "text-primary"
+                  rule === "full" ? "text-ink" : "text-primary"
                 }`}
               >
                 {t(`refundRules.${rule}.value`)}

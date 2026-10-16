@@ -166,6 +166,30 @@ describe("CancelDialog", () => {
     expect(await screen.findByText("Previous free-cancellation policy · 100%")).toBeInTheDocument();
   });
 
+  it("uses the latest refund quote if capture completed after the application card loaded", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        ...quote,
+        policyType: "BETWEEN_24_AND_48_HOURS",
+        refundPercent: 50,
+        refundAmount: 18.25,
+        cancellationFeeAmount: 18.25,
+      },
+    });
+    renderWithQueryClient(
+      <CancelDialog
+        applicationId="11"
+        startAt={startAt}
+        uncaptured
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+    expect(await screen.findByText("24–48 hours before the activity · 50%")).toBeInTheDocument();
+    expect(screen.queryByText(/starts the release of the PayPal hold/)).not.toBeInTheDocument();
+  });
+
   it.each([48, 24, 0])(
     "refreshes at the %s-hour boundary but ignores the old 30-minute deadline",
     async (hours) => {

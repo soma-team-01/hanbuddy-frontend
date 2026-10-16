@@ -75,7 +75,8 @@ export function CancelDialog({
     refetch: refetchQuote,
   } = useQuery(cancellationQuoteQueryOptions(applicationId));
   useAuthQueryRedirect(quoteError);
-  const releasesAuthorization = uncaptured || quote?.policyType === "AUTHORIZATION_RELEASE";
+  // 카드 조회 이후 버디 승인/수취가 끝났을 수 있으므로 최신 서버 견적을 우선한다.
+  const releasesAuthorization = quote ? quote.policyType === "AUTHORIZATION_RELEASE" : uncaptured;
 
   useEffect(() => {
     const dialog = dialogRef.current;

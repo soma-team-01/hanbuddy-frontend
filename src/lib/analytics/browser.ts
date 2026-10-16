@@ -1,3 +1,4 @@
+import { readCampaign } from "./campaign";
 import type { AnalyticsBrowserPort } from "./controller";
 import { validEventSourceUrl, validFbc, validFbp, validIdentifiers, validSessionId } from "./link";
 import type { AnalyticsPolicy } from "./policy";
@@ -13,6 +14,10 @@ export function createGoogleBrowser(
   measurementId: string | null = null,
 ): AnalyticsBrowserPort {
   const google = target as GoogleWindow;
+  // Keep only validated entry labels in memory while the visitor chooses consent.
+  // SPA navigation can remove the query before the consent request completes.
+  let campaign = readCampaign(target.location.search ?? "");
+  let started = false;
   let id = measurementId;
   let ready = false;
   let generation = 0;
@@ -26,6 +31,7 @@ export function createGoogleBrowser(
     async start(policy, page) {
       if (target.location.origin !== policy.origin) throw new Error("Analytics origin disabled");
       if (!policy.measurementId) throw new Error("Analytics unavailable");
+      started = true;
       id = policy.measurementId;
       const epoch = ++generation;
       google.dataLayer ??= [];
@@ -38,6 +44,7 @@ export function createGoogleBrowser(
       google.gtag("consent", "default", { analytics_storage: "denied", ...deniedAds });
       google.gtag("set", "ads_data_redaction", true);
       google.gtag("set", page);
+      google.gtag("set", campaign);
       google.gtag("consent", "update", { analytics_storage: "granted", ...deniedAds });
       google.gtag("js", new Date());
       google.gtag("config", id, {
@@ -118,6 +125,9 @@ export function createGoogleBrowser(
       return ids;
     },
     stop(resetIdentity = false) {
+      // Initial consent restore/accept also resets identity before any grant exists.
+      // Only discard the entry labels when resetting an actual measurement lifecycle.
+      if (resetIdentity && started) campaign = readCampaign("");
       generation++;
       ready = false;
       setEnabled(false);

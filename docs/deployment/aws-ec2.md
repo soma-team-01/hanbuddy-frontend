@@ -353,3 +353,20 @@ GitHub의 각 environment variable `GA4_ORIGIN`은 서버 컨테이너에 런타
 GA4/Meta 수집 및 동의 BFF의 origin 검사에만 적용된다. canonical URL, robots, sitemap은 기존 운영 도메인을 유지한다.
 각 provider 수집에는 해당 enable flag, 유효한 ID와 통합 사용자 동의가 필요하다.
 백엔드의 analytics origin 허용 설정도 해당 도메인을 허용해야 한다.
+
+### GA4 UTM 유입 수집
+
+GA4에 전달하는 `page_location`은 개인정보·인증 토큰 유출을 막기 위해 계속 쿼리 없는 경로를 사용한다.
+UTM은 별도로 `utm_source`, `utm_medium`, `utm_campaign`, `utm_id`, `utm_content`, `utm_term`만 읽어
+Google의 `campaign_*` 설정에 전달한다. `utm_campaign`은 `campaign_name`에 대응한다.
+값의 일반 특수문자(`/`, `:`, `@`, `&` 등)와 이모지는 그대로 허용한다. 빈 값·공백만 있는 값,
+100자를 초과한 값, 제어문자가 포함된 값과 중복 키는 제외한다.
+캠페인 이름에는 개인정보를 넣지 않는다.
+
+최초 페이지에서 검증한 값은 현재 문서의 메모리에만 유지하므로, SPA 이동 후 동의해도 첫 이벤트에 적용된다.
+동의 전에는 태그 로딩·이벤트 전송·UTM의 쿠키나 로컬 스토리지 저장을 하지 않는다.
+측정 시작 후 동의를 철회하면 보관한 캠페인 값도 비운다. 동의 전 새로고침·외부 로그인 등으로 문서가 교체되면
+이전 문서의 UTM은 보존하지 않는다. 이 변경으로 과거 누락 데이터를 복원할 수는 없다.
+
+배포 후에는 UTM 링크로 새 브라우저 세션을 열어 동의한 뒤 Google 수집 요청의 `cs`, `cm`, `cn`과
+GA4 DebugView/실시간 보고서를 확인한다. URL에 UTM이 남아 있는 것만으로 수집 성공을 판단하지 않는다.

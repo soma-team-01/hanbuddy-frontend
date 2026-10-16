@@ -214,7 +214,7 @@ function CalendarMonth({
         <button
           type="button"
           aria-label={calendar("nextMonth")}
-          disabled={month >= months[months.length - 1]}
+          disabled={month >= (months.at(-1) ?? month)}
           onClick={() => onMonth(addMonthsToMonthKey(month, 1))}
           className="flex size-11 items-center justify-center rounded-full border border-line-soft hover:text-primary disabled:opacity-30"
         >
@@ -377,7 +377,7 @@ function CalendarContent({
   const months = allSchedules
     .map((item) => monthKeyOf(item.date))
     .concat(monthKeyOf(initialDate))
-    .sort();
+    .sort((left, right) => left.localeCompare(right));
   const dates = new Set(schedules.map((item) => item.date));
   return (
     <>

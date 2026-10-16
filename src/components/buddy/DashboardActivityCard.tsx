@@ -6,6 +6,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/i18n/routing";
 import { getContentLanguage } from "@/lib/content-language";
 import { formatSeoulTime } from "@/lib/datetime";
+import type { DashboardSessionSelection } from "@/lib/buddy-session-navigation";
 import {
   createDashboardRequestQueue,
   dashboardSessionQueryOptions,
@@ -19,6 +20,7 @@ import type {
   BuddyDateActivityApplicationsResponse,
   BuddyDateScheduleApplicationsResponse,
   MyActivitySummaryResponse,
+  ActivityScheduleResponse,
 } from "@/types/buddy";
 import { DashboardSessionDetail } from "./DashboardSessionDetail";
 import { ArrowLeftIcon, ChevronRightIcon } from "@/components/ui/icons";
@@ -33,6 +35,7 @@ type Props = Readonly<{
   myActivities: MyActivitySummaryResponse[];
   onOpenProfile: (applicant: BuddyApplicationApplicantSummaryResponse) => void;
   onDetailChange?: (open: boolean) => void;
+  initialSession?: DashboardSessionSelection;
 }>;
 type SessionQuery = UseQueryResult<BuddyActivityApplicationsResponse, Error>;
 
@@ -67,23 +70,31 @@ export function DashboardApplicationsList({
   myActivities,
   onOpenProfile,
   onDetailChange,
+  initialSession,
 }: Props) {
   const locale = useLocale() as Locale;
   const t = useTranslations("BuddyDashboard");
   const statusLabel = useTranslations("Status");
   const approval = useTranslations("Approval");
   const run = useMemo(() => createDashboardRequestQueue(), []);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(initialSession?.scheduleId ?? null);
+  const [calendarSelection, setCalendarSelection] = useState<{
+    activity: Pick<BuddyDateActivityApplicationsResponse, "activityId" | "activityTitle">;
+    schedule: BuddyDateScheduleApplicationsResponse;
+    status: ActivityScheduleResponse["status"];
+  } | null>(null);
+  const [detailOpen, setDetailOpen] = useState(Boolean(initialSession));
   const backRef = useRef<HTMLButtonElement>(null);
   const rowRefs = useRef(new Map<number, HTMLButtonElement>());
   const detailId = useId();
   const ids = [
-    ...new Set(
-      activities.flatMap((activity) =>
+    ...new Set([
+      ...activities.flatMap((activity) =>
         activity.schedules.map((schedule) => schedule.activityScheduleId),
       ),
-    ),
+      ...(calendarSelection ? [calendarSelection.schedule.activityScheduleId] : []),
+      ...(selectedId !== null ? [selectedId] : []),
+    ]),
   ];
   const queries = useQueries({
     queries: ids.map((id) => dashboardSessionQueryOptions(id, getContentLanguage(locale), run)),
@@ -116,9 +127,43 @@ export function DashboardApplicationsList({
         Date.parse(a.schedule.startAt) - Date.parse(b.schedule.startAt) ||
         a.schedule.activityScheduleId - b.schedule.activityScheduleId,
     );
-  const selected = sessions.find(({ schedule }) => schedule.activityScheduleId === selectedId);
+  const restoredQuery = selectedId !== null ? records.get(selectedId) : undefined;
+  const restoredData = restoredQuery?.data;
+  // Empty sessions can be absent from the date summary. Restore those from the
+  // owner-only per-session response, without substituting a different activity.
+  const restored =
+    selectedId === initialSession?.scheduleId &&
+    restoredData &&
+    restoredData.activityId === initialSession.activityId
+      ? {
+          activity: {
+            activityId: restoredData.activityId,
+            activityTitle: restoredData.activityTitle,
+          },
+          schedule: {
+            activityScheduleId: restoredData.activityScheduleId,
+            startAt: restoredData.startAt,
+            applicantCount: restoredData.applicantCount,
+            applicants: restoredData.applicants,
+          },
+          query: restoredQuery!,
+        }
+      : undefined;
+  const selected = calendarSelection
+    ? { ...calendarSelection, query: records.get(calendarSelection.schedule.activityScheduleId)! }
+    : (sessions.find(
+        ({ schedule, activity }) =>
+          schedule.activityScheduleId === selectedId &&
+          (selectedId !== initialSession?.scheduleId ||
+            activity.activityId === initialSession.activityId),
+      ) ?? restored);
   const loading = queries.some((query) => query.isPending);
   const showingDetail = detailOpen && Boolean(selected);
+  const restoreError =
+    detailOpen &&
+    !showingDetail &&
+    selectedId === initialSession?.scheduleId &&
+    restoredQuery?.isError;
   useEffect(() => {
     onDetailChange?.(showingDetail);
     if (showingDetail) {
@@ -127,15 +172,17 @@ export function DashboardApplicationsList({
   }, [showingDetail, onDetailChange]);
 
   function openSession(id: number) {
+    setCalendarSelection(null);
     setSelectedId(id);
     setDetailOpen(true);
   }
 
   function returnToList() {
     setDetailOpen(false);
+    setCalendarSelection(null);
     // Wait for the list to become visible before restoring keyboard focus.
     requestAnimationFrame(() => {
-      if (selected) rowRefs.current.get(selected.schedule.activityScheduleId)?.focus();
+      if (selectedId !== null) rowRefs.current.get(selectedId)?.focus();
     });
   }
 
@@ -146,10 +193,23 @@ export function DashboardApplicationsList({
           {t("loadingRecords")}
         </p>
       ) : null}
-      {!loading && !sessions.length ? (
+      {restoreError ? (
+        <div role="alert" className="py-4 text-sm text-danger">
+          <p>{t("recordsLoadError")}</p>
+          <button
+            type="button"
+            disabled={restoredQuery.isFetching}
+            onClick={() => void restoredQuery.refetch()}
+            className="min-h-11 underline disabled:opacity-50"
+          >
+            {t("retryRecords")}
+          </button>
+        </div>
+      ) : null}
+      {!showingDetail && !restoreError && !loading && !sessions.length ? (
         <p className="px-4 py-6 text-center text-sm text-muted">{t("noSessionRecords")}</p>
       ) : null}
-      {sessions.length > 0 ? (
+      {sessions.length > 0 || showingDetail ? (
         <div className="min-w-0">
           <section aria-label={t("sessions")} className="min-w-0" hidden={showingDetail}>
             <p className="mb-2 text-xs text-muted">
@@ -242,6 +302,19 @@ export function DashboardApplicationsList({
                   (room) => room.activityScheduleId === selected.schedule.activityScheduleId,
                 )}
                 onOpenProfile={onOpenProfile}
+                knownCancelled={calendarSelection?.status === "CANCELLED"}
+                onSelectSchedule={(schedule) => {
+                  setCalendarSelection({
+                    activity: selected.activity,
+                    schedule: {
+                      activityScheduleId: schedule.scheduleId,
+                      startAt: schedule.startAt,
+                      applicantCount: 0,
+                      applicants: [],
+                    },
+                    status: schedule.status,
+                  });
+                }}
               />
             </section>
           ) : null}

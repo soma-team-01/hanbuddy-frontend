@@ -1520,6 +1520,10 @@
     "kstNotice": "모든 시간은 한국 표준시(KST) 기준입니다."
   },
   "BuddyDashboard": {
+    "selectSession": "회차 선택",
+    "sessionTimes": "회차 시간",
+    "sessionsLoadError": "회차를 불러오지 못했습니다.",
+    "noCalendarSessions": "조회할 회차가 없습니다.",
     "applicationViews": "신청 내역 구분",
     "noMatchingApplications": "해당하는 신청 내역이 없어요.",
     "recordCount": "{count, plural, other {#건}}",

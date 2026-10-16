@@ -27,8 +27,8 @@ vi.mock("./dashboard-content", () => ({
 }));
 
 describe("DashboardPage", () => {
-  it("renders a single condensed column without a page title", () => {
-    renderWithIntl(<DashboardPage />, { locale: "en" });
+  it("renders a single condensed column without a page title", async () => {
+    renderWithIntl(await DashboardPage({}), { locale: "en" });
 
     // 페이지 제목·사이드 패널 없이 콘텐츠 한 컬럼으로 좁혀 담는다
     expect(screen.queryByRole("heading", { name: /dashboard/i })).not.toBeInTheDocument();

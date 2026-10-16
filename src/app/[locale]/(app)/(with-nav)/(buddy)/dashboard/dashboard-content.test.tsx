@@ -87,6 +87,33 @@ const teaTastingActivities = [
 ];
 
 describe("DashboardContent", () => {
+  it("restores the application detail date and session after returning from the activity page", async () => {
+    mockedGetBuddyScheduleDates.mockResolvedValue({ status: "success", dates: [] });
+    mockedGetBuddyApplications.mockResolvedValue({
+      status: "success",
+      activities: teaTastingActivities,
+    });
+    renderWithQueryClient(
+      <DashboardContent initialSession={{ date: "2026-07-20", activityId: 42, scheduleId: 99 }} />,
+    );
+    expect(await screen.findByText("Sophie Martin")).toBeVisible();
+    expect(mockedGetBuddyApplications).toHaveBeenCalledWith("2026-07-20", "EN");
+    expect(screen.getByRole("link", { name: "Traditional Tea Tasting" })).toHaveAttribute(
+      "href",
+      "/en/my-activities/42?from=applications&date=2026-07-20&scheduleId=99",
+    );
+    expect(screen.getByRole("group", { name: /Schedule dates/ }).parentElement).toHaveClass(
+      "hidden",
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Back to sessions/ }));
+    expect(screen.getByRole("button", { name: /10:00 AM.*Traditional Tea Tasting/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Tue 21" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Mon 20" }));
+    expect(
+      await screen.findByRole("button", { name: /10:00 AM.*Traditional Tea Tasting/ }),
+    ).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Traditional Tea Tasting" })).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     vi.mocked(getBuddyActivityApplications)
       .mockReset()

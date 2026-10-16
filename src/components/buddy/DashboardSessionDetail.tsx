@@ -2,10 +2,11 @@
 
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { formatSeoulDateTime } from "@/lib/datetime";
+import { activityDetailFromSessionHref } from "@/lib/buddy-session-navigation";
 import { formatNationalityCode, getApplicantContactParts } from "@/lib/api/buddy-view";
 import { isDeclinedApplicationStatus } from "@/lib/application-approval";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -15,16 +16,23 @@ import type {
   BuddyActivityApplicationsResponse,
   BuddyApplicationApplicantSummaryResponse,
   BuddyDateScheduleApplicationsResponse,
+  ActivityScheduleResponse,
 } from "@/types/buddy";
 import type { ScheduleCancellationApplicant } from "@/types/schedule-cancellation";
 import { ScheduleActions } from "./ScheduleActions";
 import { PendingReservationDialog } from "./PendingReservationSection";
+import { BuddySessionCalendarDialog } from "./BuddySessionCalendarDialog";
 import { ApprovalDeadline } from "@/components/booking/ApprovalDeadline";
 import { ScheduleRefundStatus } from "@/components/booking/ScheduleRefundStatus";
 import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
 import { StartChatButton } from "@/components/chat/StartChatButton";
 import { Avatar } from "@/components/ui/Avatar";
-import { CalendarIcon, ChatBubbleDotsIcon, UsersIcon } from "@/components/ui/icons";
+import {
+  CalendarIcon,
+  ChatBubbleDotsIcon,
+  ChevronDownIcon,
+  UsersIcon,
+} from "@/components/ui/icons";
 
 type View = "participants" | "pending" | "history" | "declined";
 const statusTones: Record<View, string> = {
@@ -45,6 +53,8 @@ export function DashboardSessionDetail({
   referral,
   room,
   onOpenProfile,
+  onSelectSchedule,
+  knownCancelled = false,
 }: Readonly<{
   activityId: number;
   activityTitle: string;
@@ -53,6 +63,8 @@ export function DashboardSessionDetail({
   referral: boolean;
   room?: { chatRoomId: number; activityScheduleCancelled?: boolean };
   onOpenProfile: (applicant: Applicant) => void;
+  onSelectSchedule: (schedule: ActivityScheduleResponse) => void;
+  knownCancelled?: boolean;
 }>) {
   const locale = useLocale() as Locale;
   const t = useTranslations("BuddyDashboard");
@@ -63,7 +75,15 @@ export function DashboardSessionDetail({
   const cancellationQuery = useQuery(scheduleCancellationQueryOptions(schedule.activityScheduleId));
   useAuthQueryRedirect(cancellationQuery.error);
   const isCancelled =
-    room?.activityScheduleCancelled || cancellationQuery.data?.status === "CANCELLED";
+    knownCancelled ||
+    room?.activityScheduleCancelled ||
+    cancellationQuery.data?.status === "CANCELLED";
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const dateRef = useRef<HTMLButtonElement>(null);
+  // The detail is keyed by schedule. Restore focus after selecting a different session.
+  useEffect(() => {
+    dateRef.current?.focus();
+  }, []);
   const [view, setView] = useState<View>("participants");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const records = query.data?.applicants ?? schedule.applicants;
@@ -107,15 +127,30 @@ export function DashboardSessionDetail({
     <div className="relative min-w-0">
       <div className="relative flex flex-wrap items-start justify-between gap-x-4 gap-y-3 max-md:gap-y-2">
         <div className="min-w-0 flex-1 basis-44 pr-12 max-md:basis-full">
-          <Link href={`/my-activities/${activityId}`} className="hover:underline">
+          <Link
+            href={activityDetailFromSessionHref(
+              activityId,
+              schedule.activityScheduleId,
+              schedule.startAt,
+            )}
+            className="hover:underline"
+          >
             <h3 className="font-display text-lg leading-7 font-bold break-words text-ink">
               {activityTitle}
             </h3>
           </Link>
-          <p className="mt-2 flex items-start gap-2 text-sm text-muted">
-            <CalendarIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <button
+            ref={dateRef}
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={calendarOpen}
+            onClick={() => setCalendarOpen(true)}
+            className="mt-1 flex min-h-11 items-center gap-2 rounded-lg text-left text-sm text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <CalendarIcon aria-hidden="true" className="size-4 shrink-0" />
             <span>{formatSeoulDateTime(schedule.startAt, locale)}</span>
-          </p>
+            <ChevronDownIcon aria-hidden="true" className="size-4 shrink-0" />
+          </button>
           {isCancelled ? (
             <span className="mt-3 inline-flex rounded-md bg-panel px-2 py-1 text-xs font-semibold text-muted">
               {cancellation("cancelled")}
@@ -123,6 +158,19 @@ export function DashboardSessionDetail({
           ) : null}
         </div>
       </div>
+
+      {calendarOpen ? (
+        <BuddySessionCalendarDialog
+          activityId={activityId}
+          selectedScheduleId={schedule.activityScheduleId}
+          startAt={schedule.startAt}
+          onClose={() => setCalendarOpen(false)}
+          onSelect={(nextSchedule) => {
+            setCalendarOpen(false);
+            onSelectSchedule(nextSchedule);
+          }}
+        />
+      ) : null}
 
       {cancellationQuery.data?.status === "CANCELLED" ? (
         <div className="mt-5 rounded-xl border border-line-soft bg-panel/40 px-4 py-3 text-sm text-muted">

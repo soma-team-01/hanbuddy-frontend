@@ -1520,6 +1520,10 @@
     "kstNotice": "時間はすべて韓国標準時 (KST) です。"
   },
   "BuddyDashboard": {
+    "selectSession": "開催日時を選択",
+    "sessionTimes": "開催時間",
+    "sessionsLoadError": "開催日時を読み込めませんでした。",
+    "noCalendarSessions": "表示できる開催日時がありません。",
     "applicationViews": "申込履歴の区分",
     "noMatchingApplications": "該当する申込履歴はありません。",
     "recordCount": "{count, plural, other {#件}}",

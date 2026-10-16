@@ -1520,6 +1520,10 @@
     "kstNotice": "All times are in Korea Standard Time (KST)."
   },
   "BuddyDashboard": {
+    "selectSession": "Select session",
+    "sessionTimes": "Session times",
+    "sessionsLoadError": "Could not load sessions.",
+    "noCalendarSessions": "There are no sessions to view.",
     "applicationViews": "Application records",
     "noMatchingApplications": "No applications in this category.",
     "recordCount": "{count, plural, one {# booking} other {# bookings}}",

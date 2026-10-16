@@ -17,19 +17,27 @@ const headers = { "Content-Type": "application/json", "X-Analytics-Request": "1"
 const ANALYTICS_REQUEST_TIMEOUT_MS = 3000;
 const ACCOUNT_INVALIDATION_TIMEOUT_MS = 3000;
 
-async function withAnalyticsTimeout<T>(work: (signal: AbortSignal) => Promise<T>): Promise<T> {
+async function withAnalyticsTimeout<T>(
+  work: (signal: AbortSignal) => Promise<T>,
+  parentSignal?: AbortSignal,
+): Promise<T> {
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let cancel: (() => void) | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
+    cancel = () => {
       controller.abort();
       reject(new Error("Analytics unavailable"));
-    }, ANALYTICS_REQUEST_TIMEOUT_MS);
+    };
+    timer = setTimeout(cancel, ANALYTICS_REQUEST_TIMEOUT_MS);
+    parentSignal?.addEventListener("abort", cancel, { once: true });
+    if (parentSignal?.aborted) cancel();
   });
   try {
     return await Promise.race([work(controller.signal), timeout]);
   } finally {
     clearTimeout(timer);
+    if (cancel) parentSignal?.removeEventListener("abort", cancel);
   }
 }
 
@@ -126,8 +134,13 @@ export function createPaymentLinker({
       if (!original) return null;
       return {
         headers: { "X-Analytics-Request": "1" },
-        async complete(applicationId: number, context: string | null) {
-          const live = () => proof() === original && epoch() === generation;
+        async complete(
+          applicationId: number,
+          context: string | null,
+          deadlineSignal?: AbortSignal,
+        ) {
+          const live = () =>
+            !deadlineSignal?.aborted && proof() === original && epoch() === generation;
           if (
             !live() ||
             !Number.isSafeInteger(applicationId) ||
@@ -150,21 +163,23 @@ export function createPaymentLinker({
                 },
               );
               return { registered, registration: await registered.json().catch(() => null) };
-            });
+            }, deadlineSignal);
             if (!registered.ok || !live()) return;
             if (registration?.isSuccess !== true || registration.result?.registered !== true)
               return;
             const ids = await identifiers();
             if (!live() || !validIdentifiers(ids, origin)) return;
-            await withAnalyticsTimeout((signal) =>
-              request(`/api/applications/me/${applicationId}/analytics-link`, {
-                method: "PUT",
-                credentials: "same-origin",
-                cache: "no-store",
-                headers: { ...headers, "X-Analytics-Context": context },
-                body: JSON.stringify(ids),
-                signal,
-              }),
+            await withAnalyticsTimeout(
+              (signal) =>
+                request(`/api/applications/me/${applicationId}/analytics-link`, {
+                  method: "PUT",
+                  credentials: "same-origin",
+                  cache: "no-store",
+                  headers: { ...headers, "X-Analytics-Context": context },
+                  body: JSON.stringify(ids),
+                  signal,
+                }),
+              deadlineSignal,
             );
           } catch {
             /* Measurement failure never turns a successful payment preparation into an error. */

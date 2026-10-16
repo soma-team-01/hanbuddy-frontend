@@ -160,7 +160,11 @@ describe("ApplicationList", () => {
         },
       ],
     });
-    expect(screen.getByText(/PayPal has placed a hold on the amount/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "You’ll be charged after your buddy approves. We’ll email you the decision.",
+      ),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
     expect(screen.queryByText("Paid")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /group chat/i })).not.toBeInTheDocument();

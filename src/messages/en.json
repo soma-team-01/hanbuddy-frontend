@@ -2,11 +2,11 @@
   "PayPalAuthorization": {
     "cancelHold": "Cancelling ends your request and starts the release of the PayPal hold, not a refund. Release timing depends on PayPal and your bank.",
     "received": "Request received · Awaiting buddy approval",
-    "authorized": "PayPal has placed a hold on the amount. You will only be charged after your buddy approves and payment succeeds.",
+    "authorized": "You’ll be charged after your buddy approves. We’ll email you the decision.",
     "processing": "We are checking the PayPal result. Check My Applications before attempting another payment.",
     "captureProcessing": "Your buddy has approved. Payment is being verified; your booking is not confirmed yet.",
     "releaseProcessing": "Your request has ended. We are checking the release of the PayPal hold; it may still appear on your account.",
-    "released": "PayPal has released the authorization. Your bank or card provider may take time to reflect this.",
+    "released": "You haven’t been charged.",
     "declined": "Payment declined",
     "declinedDescription": "PayPal declined the payment and this request has ended. To participate, submit a new request. Availability will be checked again.",
     "heldAmount": "Authorization amount",

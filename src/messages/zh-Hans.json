@@ -2,11 +2,11 @@
   "PayPalAuthorization": {
     "cancelHold": "取消将结束申请并解除PayPal预授权，而非退款。解除时间取决于PayPal和您的银行。",
     "received": "申请已提交 · 等待向导批准",
-    "authorized": "PayPal已暂时冻结金额。向导批准且付款成功后，预订才会确认。",
+    "authorized": "实际付款将在向导批准后进行，审批结果将通过邮件通知。",
     "processing": "正在核实PayPal处理结果。请先查看我的申请，不要重复付款。",
     "captureProcessing": "向导已批准，正在核实付款结果。预订尚未确认。",
     "releaseProcessing": "申请已结束，正在核实PayPal预授权解除状态。账户可能仍显示冻结金额。",
-    "released": "PayPal预授权已解除。银行或信用卡记录可能需要一段时间才能更新。",
+    "released": "未实际扣款。",
     "declined": "付款被拒，申请已结束",
     "declinedDescription": "PayPal拒绝了付款，申请已结束。如需参加，请重新申请。系统将重新检查是否可预订。",
     "heldAmount": "预授权金额",

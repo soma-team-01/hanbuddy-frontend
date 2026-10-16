@@ -117,3 +117,125 @@ it("never reads Meta attribution for a GA-only policy and drops malformed Meta v
     });
   }
 });
+
+it("starts the healthy provider without waiting and delivers queued events once to the late provider", async () => {
+  const env = environment();
+  env.document.head.appendChild = ((script: HTMLScriptElement) => {
+    env.scripts.push(script);
+    if (script.src.includes("googletagmanager")) script.onload?.(new Event("load"));
+    return script;
+  }) as typeof document.head.appendChild;
+  const policy = { measurementId: "G-TEST", pixelId: "123456789012345", origin };
+  const browser = createMeasurementBrowser(env.target, env.document, policy);
+  let started = false;
+  const loading = browser.start(policy, page).then(() => {
+    started = true;
+  });
+  try {
+    await vi.waitFor(() => expect(started).toBe(true), { timeout: 100 });
+    browser.send("page_view", page);
+    browser.send("view_item", { ...page, items: [{ item_id: "42" }] });
+    const google = (env.target as Window & { dataLayer: IArguments[] }).dataLayer;
+    expect(google.filter((entry) => entry[0] === "event")).toHaveLength(2);
+    const meta = (env.target as Window & { fbq: { queue: unknown[][] } }).fbq.queue;
+    expect(meta.filter((entry) => entry[0] === "track")).toHaveLength(0);
+    env.scripts.find((script) => script.src.includes("facebook"))!.onload?.(new Event("load"));
+    await vi.waitFor(() => expect(meta.filter((entry) => entry[0] === "track")).toHaveLength(2));
+    expect(google.filter((entry) => entry[0] === "event")).toHaveLength(2);
+  } finally {
+    browser.stop();
+    await loading.catch(() => {});
+  }
+});
+
+it.each(["about", "faq"])("sends public %s page views to both providers", async (path) => {
+  const env = environment();
+  env.target.location.pathname = `/en/${path}`;
+  const policy = { measurementId: "G-TEST", pixelId: "123456789012345", origin };
+  const browser = createMeasurementBrowser(env.target, env.document, policy);
+  await browser.start(policy, { ...page, page_location: `${origin}/${path}` });
+  browser.send("page_view", { ...page, page_location: `${origin}/${path}` });
+  expect((env.target as Window & { fbq?: { queue: unknown[][] } }).fbq?.queue).toContainEqual([
+    "track",
+    "PageView",
+  ]);
+  browser.stop();
+});
+
+it.each(["google", "meta"])(
+  "records signup with %s ready while its peer loads and drops pending events on withdrawal",
+  async (healthy) => {
+    const { createCookieAnalytics } = await import("./cookie-controller");
+    const { createCookieConsent } = await import("./cookie-consent");
+    const env = environment();
+    env.target.location.pathname = "/en/onboarding";
+    env.document.head.appendChild = ((script: HTMLScriptElement) => {
+      env.scripts.push(script);
+      const google = script.src.includes("googletagmanager");
+      if (google === (healthy === "google")) script.onload?.(new Event("load"));
+      return script;
+    }) as typeof document.head.appendChild;
+    let cookie = "",
+      decision = "";
+    const policy = { measurementId: "G-TEST", pixelId: "123456789012345", origin };
+    const expiresAt = new Date(Date.now() + 60000).toISOString();
+    const consent = createCookieConsent({
+      policy,
+      jar: {
+        read: () => cookie,
+        write: (v) => {
+          cookie = v;
+        },
+        decision: () => decision,
+        decide: (v) => {
+          decision = v;
+        },
+      },
+      api: {
+        issue: async () => ({
+          proof: `granted.v3.${"A".repeat(43)}`,
+          expiresAt,
+        }),
+        withdraw: async () => {},
+      },
+      exclusive: async (work) => work(),
+    });
+    const browser = createMeasurementBrowser(env.target, env.document, policy);
+    const controller = createCookieAnalytics({ policy, consent, browser });
+    controller.visit("/en/onboarding");
+    await controller.accept();
+    expect(controller.trackSignup("/en/onboarding", "google")).toBe(true);
+    expect(controller.trackSignup("/en/onboarding", "google")).toBe(false);
+    const target = env.target as Window & { dataLayer: IArguments[]; fbq: { queue: unknown[][] } };
+    if (healthy === "google")
+      expect(target.dataLayer.filter((e) => e[0] === "event").map((e) => e[1])).toEqual([
+        "page_view",
+        "sign_up",
+      ]);
+    else
+      expect(target.fbq.queue.filter((e) => e[0] === "track").map((e) => e[1])).toEqual([
+        "PageView",
+        "CompleteRegistration",
+      ]);
+    // Signup navigates immediately. The healthy provider already received it; restoring
+    // the destination must not duplicate it or replay old-page events to a late Meta tag.
+    env.target.location.pathname = "/en/explore";
+    controller.visit("/en/explore");
+    await controller.restore();
+    if (healthy === "google") {
+      expect(target.dataLayer.filter((e) => e[0] === "event" && e[1] === "sign_up")).toHaveLength(
+        0,
+      );
+    } else {
+      expect(
+        target.fbq.queue.filter((e) => e[0] === "track" && e[1] === "CompleteRegistration"),
+      ).toHaveLength(0);
+    }
+    await controller.reject();
+    env.scripts.forEach((script) => script.onload?.(new Event("load")));
+    await Promise.resolve();
+    expect(target.dataLayer.some((e) => e[0] === "event")).toBe(false);
+    expect(target.fbq.queue.some((e) => e[0] === "track")).toBe(false);
+    controller.dispose();
+  },
+);

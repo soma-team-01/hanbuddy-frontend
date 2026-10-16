@@ -11,7 +11,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 it.each(["create", "continue"])(
-  "%s starts consent/linkage without delaying the successful payment return",
+  "%s waits for analytics linkage before returning payment preparation",
   async (kind) => {
     let finish!: () => void;
     const complete = vi.fn(
@@ -44,21 +44,23 @@ it.each(["create", "continue"])(
     void operation.then(() => {
       settled = true;
     });
-    await vi.waitFor(() => expect(complete).toHaveBeenCalledWith(42, "a".repeat(64)));
+    await vi.waitFor(() =>
+      expect(complete).toHaveBeenCalledWith(42, "a".repeat(64), expect.any(AbortSignal)),
+    );
     await Promise.resolve();
-    expect(settled).toBe(true);
+    expect(settled).toBe(false);
+    finish();
     const result = await operation;
     expect(result.status).toBe("success");
     expect(request.mock.calls[0][1]?.headers).toEqual(
       expect.objectContaining({ "X-Analytics-Request": "1" }),
     );
-    finish();
     await expect(complete.mock.results[0].value).resolves.toBeUndefined();
   },
 );
 
 it.each(["create", "continue"])(
-  "%s stays successful when detached analytics completion rejects",
+  "%s stays successful when analytics completion rejects",
   async (kind) => {
     const complete = vi.fn(async () => {
       throw new Error("analytics failed");
@@ -87,7 +89,7 @@ it.each(["create", "continue"])(
         : await continueApplicationPayment(42, "EN", "TOSS");
 
     expect(result.status).toBe("success");
-    expect(complete).toHaveBeenCalledWith(42, "a".repeat(64));
+    expect(complete).toHaveBeenCalledWith(42, "a".repeat(64), expect.any(AbortSignal));
   },
 );
 it("normal payment remains usable when analytics is unavailable", async () => {
@@ -179,3 +181,88 @@ it.each(["create", "continue"])(
     });
   },
 );
+
+it.each(["create", "continue"])(
+  "%s proceeds after the total analytics deadline and cancels late linkage",
+  async (kind) => {
+    vi.useFakeTimers();
+    let finishConsent!: (response: Response) => void;
+    const pendingConsent = new Promise<Response>((resolve) => {
+      finishConsent = resolve;
+    });
+    const request = vi.fn<typeof fetch>(async (path) => {
+      if (String(path).endsWith("/analytics-consent")) return pendingConsent;
+      return Response.json(
+        { isSuccess: true, result: { application: { applicationId: 42 } } },
+        { headers: { "X-Analytics-Context": "a".repeat(64) } },
+      );
+    });
+    vi.stubGlobal("fetch", request);
+    const identifiers = vi.fn(async () => ({ clientId: "123.456", sessionId: "789" }));
+    const ticket = createPaymentLinker({
+      proof: () => "granted",
+      epoch: () => 0,
+      origin: "https://hanbuddy.kr",
+      identifiers,
+      request,
+    }).capture()!;
+    vi.mocked(captureAnalyticsPayment).mockReturnValue(ticket);
+    let settled = false;
+    const operation =
+      kind === "create"
+        ? createApplication(
+            { activityScheduleId: 1, guestCount: 1, refundPolicyAgreed: true },
+            "EN",
+            "TOSS",
+          )
+        : continueApplicationPayment(42, "EN", "TOSS");
+    void operation.then(() => {
+      settled = true;
+    });
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    expect(settled).toBe(false);
+    const signal = request.mock.calls[1][1]?.signal;
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await operation).status).toBe("success");
+    expect(signal?.aborted).toBe(true);
+    finishConsent(Response.json({ isSuccess: true, result: { registered: true } }));
+    await vi.runAllTimersAsync();
+    expect(identifiers).not.toHaveBeenCalled();
+    expect(request).toHaveBeenCalledTimes(2);
+  },
+);
+
+it("does not begin a late link request when identifier lookup exceeds the total deadline", async () => {
+  vi.useFakeTimers();
+  let finishIdentifiers!: (ids: { clientId: string; sessionId: string }) => void;
+  const identifiers = vi.fn(
+    () =>
+      new Promise<{ clientId: string; sessionId: string }>((resolve) => {
+        finishIdentifiers = resolve;
+      }),
+  );
+  const request = vi.fn<typeof fetch>(async (path) =>
+    String(path).endsWith("/analytics-consent")
+      ? Response.json({ isSuccess: true, result: { registered: true } })
+      : Response.json(
+          { isSuccess: true, result: { application: { applicationId: 42 } } },
+          { headers: { "X-Analytics-Context": "a".repeat(64) } },
+        ),
+  );
+  vi.stubGlobal("fetch", request);
+  const ticket = createPaymentLinker({
+    proof: () => "granted",
+    epoch: () => 0,
+    origin: "https://hanbuddy.kr",
+    identifiers,
+    request,
+  }).capture()!;
+  vi.mocked(captureAnalyticsPayment).mockReturnValue(ticket);
+  const operation = continueApplicationPayment(42, "EN", "TOSS");
+  await vi.waitFor(() => expect(identifiers).toHaveBeenCalledOnce());
+  await vi.advanceTimersByTimeAsync(3000);
+  expect((await operation).status).toBe("success");
+  finishIdentifiers({ clientId: "123.456", sessionId: "789" });
+  await vi.runAllTimersAsync();
+  expect(request).toHaveBeenCalledTimes(2);
+});

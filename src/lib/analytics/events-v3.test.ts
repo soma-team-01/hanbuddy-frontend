@@ -98,3 +98,21 @@ it("keeps query-bearing or raw URL pathnames ineligible", () => {
   expect(safePage("/en/explore?token=secret")).toBeNull();
   expect(safePage("https://example.test/en/explore")).toBeNull();
 });
+
+it.each(["/about", "/faq"])(
+  "allows public page inquiry events on %s without raw URL fields",
+  (path) => {
+    expect(
+      fields("inquiry_click", `/en${path}`, {
+        channel: "email",
+        placement: "site_footer",
+        locale: "en",
+      }),
+    ).toMatchObject({
+      page_location: `${origin}${path}`,
+      page_referrer: "",
+      channel: "email",
+    });
+    expect(safePage(`/en${path}?token=secret`)).toBeNull();
+  },
+);

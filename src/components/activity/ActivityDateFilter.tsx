@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
@@ -34,6 +35,7 @@ export function ActivityDateFilter({
   const id = useId();
   const pathname = usePathname();
   const router = useRouter();
+  const { trackLandingCta } = useMeasurementEvents();
   const [open, setOpen] = useState(false);
   const [homeDate, setHomeDate] = useState(date);
   const root = useRef<HTMLDivElement>(null);
@@ -73,6 +75,15 @@ export function ActivityDateFilter({
   function apply(nextDate: string) {
     const search = new URLSearchParams(window.location.search);
     close();
+    if (destination === "/explore") {
+      trackLandingCta({
+        ctaId: "hero_explore",
+        sectionId: "hero",
+        position: 1,
+        destinationType: "explore",
+        locale,
+      });
+    }
     router.push(withActivityDate(destination ?? `${pathname}?${search.toString()}`, nextDate), {
       scroll: Boolean(destination),
     });

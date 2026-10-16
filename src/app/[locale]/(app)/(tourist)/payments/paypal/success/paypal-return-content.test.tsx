@@ -161,8 +161,35 @@ describe("PayPalReturnContent", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "We are checking the PayPal result. Check My Applications before attempting another payment.",
     );
+    expect(screen.getByRole("heading", { name: "Checking payment result" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Payment failed" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Check My Applications" })).toHaveAttribute(
+      "href",
+      "/en/applications",
+    );
+    expect(screen.getByRole("link", { name: "Explore More Activities" })).toHaveAttribute(
+      "href",
+      "/en/explore",
+    );
     expect(mockedGetMyApplications).toHaveBeenCalledWith("EN");
     expect(replace).not.toHaveBeenCalled();
     expect(mockedClearContext).not.toHaveBeenCalled();
+  });
+
+  it("uses the failure layout only when the server confirms payment rejection", async () => {
+    mockedCapture.mockRejectedValue(new Error("timeout"));
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [
+        { applicationId: 11, status: "REJECTED", cancellationReason: "PAYMENT_FAILED" } as never,
+      ],
+    });
+    renderWithQueryClient(<PayPalReturnContent token="ORDER-123" />);
+    expect(await screen.findByRole("heading", { name: "Payment failed" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Checking payment result" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Check My Applications" })).toBeInTheDocument();
+    expect(mockedCapture).toHaveBeenCalledTimes(1);
   });
 });

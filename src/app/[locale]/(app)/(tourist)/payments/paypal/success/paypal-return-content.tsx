@@ -3,8 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { Link, useRouter } from "@/i18n/navigation";
+import { PayPalRecoveryResult } from "@/components/payment/PaymentResultPanel";
+import { useRouter } from "@/i18n/navigation";
 import {
   authorizePayPalApplicationPayment,
   capturePayPalApplicationPayment,
@@ -110,21 +110,7 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   }
 
   if (!token || applicationId === null) {
-    return (
-      <PageContainer className="flex flex-1 items-center justify-center py-16">
-        <main className="w-full max-w-xl rounded-3xl border border-line-soft bg-canvas-soft p-8 text-center">
-          <p role="alert" className="text-sm text-muted">
-            {t("paypalReturnNotFound")}
-          </p>
-          <Link
-            href="/applications"
-            className="mt-6 inline-flex h-11 items-center rounded-xl bg-primary px-6 font-display text-sm font-bold text-on-primary"
-          >
-            {t("viewApplications")}
-          </Link>
-        </main>
-      </PageContainer>
-    );
+    return <PayPalRecoveryResult message={t("paypalReturnNotFound")} />;
   }
 
   if (captureMutation.error && applicationsQuery.isPending) {
@@ -142,21 +128,14 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
         application.cancellationReason === "PAYMENT_FAILED",
     );
     return (
-      <PageContainer className="flex flex-1 items-center justify-center py-16">
-        <main className="w-full max-w-xl rounded-3xl border border-line-soft bg-canvas-soft p-8 text-center">
-          <p role="alert" className="text-sm text-danger">
-            {declined
-              ? authorization("declinedDescription")
-              : getApiErrorMessage(captureMutation.error, authorization("processing"))}
-          </p>
-          <Link
-            href="/applications"
-            className="mt-6 inline-flex h-11 items-center rounded-xl bg-primary px-6 font-display text-sm font-bold text-on-primary"
-          >
-            {t("viewApplications")}
-          </Link>
-        </main>
-      </PageContainer>
+      <PayPalRecoveryResult
+        declined={declined}
+        message={
+          declined
+            ? authorization("declinedDescription")
+            : getApiErrorMessage(captureMutation.error, authorization("processing"))
+        }
+      />
     );
   }
 

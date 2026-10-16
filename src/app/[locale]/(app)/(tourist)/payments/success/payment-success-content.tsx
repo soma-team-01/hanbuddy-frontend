@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { ApplicationConfirmation } from "@/components/activity/ApplicationConfirmation";
+import { PayPalRecoveryResult } from "@/components/payment/PaymentResultPanel";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "@/i18n/navigation";
@@ -134,9 +135,9 @@ export function PaymentSuccessContent({
   }
   if (!isSubmittedApplicationStatus(application.status)) {
     if (application.cancellationReason === "PAYMENT_FAILED")
-      return <RecoveryState message={authorization("declinedDescription")} />;
+      return <PayPalRecoveryResult declined message={authorization("declinedDescription")} />;
     if (application.paypalAuthorization)
-      return <RecoveryState message={authorization("processing")} />;
+      return <PayPalRecoveryResult message={authorization("processing")} />;
     return <RecoveryState message={t("notPaid")} />;
   }
   if (
@@ -147,7 +148,7 @@ export function PaymentSuccessContent({
       application.paypalAuthorization.state === "CAPTURE_REQUESTED"
     )
   )
-    return <RecoveryState message={authorization("processing")} />;
+    return <PayPalRecoveryResult message={authorization("processing")} />;
 
   return <ApplicationConfirmation application={application} />;
 }

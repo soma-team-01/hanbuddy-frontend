@@ -169,3 +169,106 @@ it("returns a real client identifier without inventing an unset optional session
   await expect(browser.identifiers()).resolves.toEqual({ clientId: "123.456" });
   browser.stop();
 });
+
+it("preserves entry UTM until consent and configures GA before the first page view", async () => {
+  const queue: unknown[][] = [];
+  const location = new URL(
+    `${policy.origin}/en?utm_source=meetup&utm_medium=social&utm_campaign=autumn&code=secret`,
+  );
+  const target = { location, dataLayer: queue };
+  const browser = createGoogleBrowser(target as unknown as Window, document);
+  expect(queue).toEqual([]);
+  // Initial restore and ACCEPT invalidate unverified consent before issuing proof.
+  browser.stop(true);
+  location.href = `${policy.origin}/en/explore`;
+  const loading = browser.start(policy, page);
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await loading;
+  browser.send("page_view", page);
+  const commands = queue.map((entry) => Array.from(entry));
+  const attribution = commands.findIndex(
+    (entry) =>
+      entry[0] === "set" &&
+      typeof entry[1] === "object" &&
+      (entry[1] as Record<string, unknown>).campaign_source === "meetup",
+  );
+  expect(attribution).toBeGreaterThanOrEqual(0);
+  expect(attribution).toBeLessThan(commands.findIndex((entry) => entry[0] === "config"));
+  expect(JSON.stringify(commands)).not.toContain("secret");
+  expect(JSON.stringify(commands)).not.toContain("utm_");
+  browser.stop(true);
+  const restart = browser.start(policy, page);
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await restart;
+  const campaignCommands = queue
+    .map((entry) => Array.from(entry))
+    .filter(
+      (entry) =>
+        entry[0] === "set" &&
+        typeof entry[1] === "object" &&
+        Object.hasOwn(entry[1] as object, "campaign_source"),
+    );
+  expect(campaignCommands.at(-1)?.[1]).toMatchObject({
+    campaign_source: undefined,
+    campaign_medium: undefined,
+    campaign_name: undefined,
+  });
+});
+
+it("carries UTM through real consent restore and acceptance without pre-consent events", async () => {
+  const { createCookieConsent } = await import("./cookie-consent");
+  const { createCookieAnalytics } = await import("./cookie-controller");
+  let cookie = "",
+    decision = "";
+  const consent = createCookieConsent({
+    policy,
+    jar: {
+      read: () => cookie,
+      write: (value) => {
+        cookie = value;
+      },
+      decision: () => decision,
+      decide: (value) => {
+        decision = value;
+      },
+    },
+    api: {
+      issue: async () => ({
+        proof: `granted.v3.${"A".repeat(43)}`,
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+      }),
+      withdraw: async () => {},
+    },
+    exclusive: async (work) => work(),
+  });
+  const queue: unknown[][] = [];
+  const target = {
+    location: new URL(`${policy.origin}/en?utm_source=instagram&utm_medium=social`),
+    dataLayer: queue,
+  };
+  const browser = createGoogleBrowser(target as unknown as Window, document);
+  const controller = createCookieAnalytics({ policy, consent, browser });
+  controller.visit("/en");
+  await controller.restore();
+  expect(queue.some((entry) => entry[0] === "event")).toBe(false);
+  expect(document.querySelector("script[data-hanbuddy-analytics]")).toBeNull();
+  target.location.href = `${policy.origin}/en/explore`;
+  controller.visit("/en/explore");
+  const accepting = controller.accept();
+  await vi.waitFor(() =>
+    expect(document.querySelector("script[data-hanbuddy-analytics]")).not.toBeNull(),
+  );
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await accepting;
+  expect(queue.map((entry) => Array.from(entry))).toContainEqual([
+    "set",
+    expect.objectContaining({ campaign_source: "instagram", campaign_medium: "social" }),
+  ]);
+  expect(queue.filter((entry) => entry[0] === "event").map((entry) => entry[1])).toEqual([
+    "page_view",
+  ]);
+  await controller.reject();
+  controller.visit("/en/activities/42");
+  expect(queue.some((entry) => entry[0] === "event")).toBe(false);
+  controller.dispose();
+});

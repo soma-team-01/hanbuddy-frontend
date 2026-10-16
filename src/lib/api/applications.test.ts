@@ -3,6 +3,7 @@ import {
   cancelMyApplication,
   cancelPendingPayment,
   capturePayPalApplicationPayment,
+  authorizePayPalApplicationPayment,
   confirmApplicationPayment,
   continueApplicationPayment,
   createApplication,
@@ -214,6 +215,35 @@ describe("application API client", () => {
         body: JSON.stringify({ orderId: "5O190127TN364715T" }),
         credentials: "same-origin",
       },
+    );
+  });
+
+  it("authorizes using the server order and preserves the authorization response", async () => {
+    const received = {
+      ...application,
+      status: "PENDING_APPROVAL",
+      paymentStatus: "AUTHORIZED",
+      paypalAuthorization: {
+        state: "AUTHORIZED",
+        authorizedAt: null,
+        expiresAt: null,
+        releasedAt: null,
+      },
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(createJsonResponse({ isSuccess: true, code: "200", result: received }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      authorizePayPalApplicationPayment(11, { orderId: "ORDER" }, "EN"),
+    ).resolves.toEqual({ status: "success", application: received });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/me/11/payment/paypal/authorize?language=EN",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "same-origin",
+        body: JSON.stringify({ orderId: "ORDER" }),
+      }),
     );
   });
 

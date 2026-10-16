@@ -2,6 +2,8 @@
 import { CancellationReasonText } from "@/components/activity/CancellationReasonText";
 import { ApprovalDeadline } from "@/components/booking/ApprovalDeadline";
 import { ApprovalNotice } from "@/components/booking/ApprovalNotice";
+import { PayPalAuthorizationNotice } from "@/components/payment/PayPalAuthorizationNotice";
+import { isPayPalUncaptured, isPayPalResultPending } from "@/lib/payments/paypal-authorization";
 import { isBuddyRejection, isClosedApplicationStatus } from "@/lib/application-approval";
 
 import { useQuery } from "@tanstack/react-query";
@@ -84,6 +86,7 @@ function PriceBreakdown({
   const t = useTranslations("Applications");
   const breakdown = application.breakdown;
   const pricingT = useTranslations("QuantityPricing");
+  const authorization = useTranslations("PayPalAuthorization");
   if (!breakdown) return null;
 
   const originalUnitPrice = breakdown.originalUnitPrice ?? breakdown.unitPrice;
@@ -103,9 +106,11 @@ function PriceBreakdown({
       : application.paymentProvider === "TOSS"
         ? "Toss Payments"
         : null;
-  const paymentLabel = providerName
-    ? t("providerPaymentAmount", { provider: providerName })
-    : t("paidAmount");
+  const paymentLabel = isPayPalUncaptured(application)
+    ? authorization("uncollectedAmount")
+    : providerName
+      ? t("providerPaymentAmount", { provider: providerName })
+      : t("paidAmount");
   const isForeignCurrency = paymentCharge?.currency.toUpperCase() !== "KRW";
 
   return (
@@ -326,11 +331,15 @@ function ApplicationCard({
   const tActivityDetail = useTranslations("ActivityDetail");
   const tCancellation = useTranslations("ScheduleCancellation");
   const approval = useTranslations("Approval");
+  const authorization = useTranslations("PayPalAuthorization");
+  const paymentDeclined = application.cancellationReason === "PAYMENT_FAILED";
+  const uncaptured = isPayPalUncaptured(application);
+  const paymentResultPending = isPayPalResultPending(application);
   const isReferral = application.activityType === "REFERRAL";
   const isBuddyCancellation = application.cancellationReason === "BUDDY_CANCELLATION";
   const scheduleRefundQuery = useApplicationScheduleRefundQuery(
     application.id,
-    isBuddyCancellation && !isReferral,
+    isBuddyCancellation && !isReferral && !uncaptured,
   );
   const getApiErrorMessage = useApiErrorMessage();
   const paymentCharge =
@@ -388,6 +397,7 @@ function ApplicationCard({
       !approvalAcknowledged ||
       !refundPolicyAgreed ||
       !paymentProvider ||
+      paymentResultPending ||
       application.scheduleCancelled ||
       application.refundRecoveryPending
     )
@@ -431,7 +441,10 @@ function ApplicationCard({
         {/* 금액이 제목 줄의 높이를 늘리지 않도록 그리드로 배치한다 */}
         <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-1.5 max-md:contents md:grid-cols-[minmax(0,1fr)_auto]">
           <div className="flex flex-wrap items-center gap-2 max-md:col-start-2 max-md:row-start-1 max-md:gap-1.5 md:col-start-1 max-md:[&>span]:px-2 max-md:[&>span]:py-0.5">
-            <StatusBadge status={application.status} />
+            <StatusBadge
+              status={application.status}
+              label={paymentDeclined ? authorization("cardDeclined") : undefined}
+            />
             {dDay !== null && dDay >= 0 ? (
               <span className="rounded-full border border-primary/40 px-2 py-0.5 font-display text-xs font-bold text-primary">
                 {dDay === 0 ? t("dDayToday") : t("dDay", { count: dDay })}
@@ -486,6 +499,7 @@ function ApplicationCard({
           >
             {!isReferral &&
             application.status === "pending_payment" &&
+            !paymentResultPending &&
             !application.scheduleCancelled &&
             !application.refundRecoveryPending ? (
               // 세로로 쌓되 폭은 긴 쪽에 맞춰 나란히 떨어지게 한다
@@ -569,13 +583,15 @@ function ApplicationCard({
                 variant="compact"
               />
             ) : null}
-            {!isReferral && isBuddyCancellation ? (
+            {!isReferral && isBuddyCancellation && !uncaptured ? (
               <ApplicationScheduleRefundStatus
                 query={scheduleRefundQuery}
                 className="max-md:mt-0 max-md:mr-auto max-md:min-w-0 max-md:flex-1 max-md:text-left max-md:[&_[role=status]]:text-xs"
               />
             ) : null}
-            {isCancelled && application.cancellationReason ? (
+            {isCancelled &&
+            application.cancellationReason &&
+            application.cancellationReason !== "PAYMENT_FAILED" ? (
               <p
                 className={`mt-auto text-xs text-muted max-md:leading-5 ${
                   isBuddyCancellation
@@ -615,11 +631,17 @@ function ApplicationCard({
       {application.status === "pending_approval" && (
         <ApprovalDeadline expiresAt={application.approvalExpiresAt} />
       )}
+      {paymentDeclined && (
+        <p className="text-sm leading-6 text-muted max-md:text-xs">
+          {authorization("cardDeclinedDescription")}
+        </p>
+      )}
+      <PayPalAuthorizationNotice application={application} />
       {!isReferral && (
         <PriceBreakdown
           application={application}
           paymentCharge={paymentCharge}
-          scheduleRefund={isBuddyCancellation ? scheduleRefundQuery.data : undefined}
+          scheduleRefund={isBuddyCancellation && !uncaptured ? scheduleRefundQuery.data : undefined}
         />
       )}
       {!isReferral &&
@@ -670,6 +692,7 @@ function ApplicationCard({
       ) : null}
       {!isReferral &&
       pendingPaymentProvider &&
+      !paymentResultPending &&
       !application.scheduleCancelled &&
       !application.refundRecoveryPending ? (
         <ConfirmDialog
@@ -696,7 +719,6 @@ function ApplicationCard({
               agreed={refundPolicyAgreed}
               onAgreedChange={setRefundPolicyAgreed}
               describedBy={`application-${application.id}-refund-policy-notice application-${application.id}-refund-policy-summary`}
-              className="px-1 py-1"
             />
             <ApprovalNotice
               agreed={approvalAcknowledged}
@@ -856,6 +878,7 @@ export function ApplicationList({
         <CancelDialog
           applicationId={cancelTarget.id}
           startAt={cancelTarget.startAt}
+          uncaptured={isPayPalUncaptured(cancelTarget)}
           onClose={() => setCancelTargetId(null)}
           onConfirm={async (reason, detail) => {
             const outcome = await onCancelApplication(cancelTarget.id, reason, detail);

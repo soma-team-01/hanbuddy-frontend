@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { approveApplication, rejectApplication } from "@/lib/api/application-approval";
 import { ApiClientError } from "@/lib/api/errors";
@@ -30,17 +30,21 @@ export function ApplicationApprovalActions({
   deadlineTone?: "muted" | "danger";
 }>) {
   const t = useTranslations("Approval");
+  const authorization = useTranslations("PayPalAuthorization");
   const queryClient = useQueryClient();
   const getError = useApiErrorMessage();
   const [rejectOpen, setRejectOpen] = useState(false);
   const busy = useRef(false);
   const expired = useApprovalExpired(expiresAt);
-  const refresh = () =>
-    Promise.all(
-      ["buddy", "applications", "referral", "activities", "chat"].map((key) =>
-        queryClient.invalidateQueries({ queryKey: [key] }),
+  const refresh = useCallback(
+    () =>
+      Promise.all(
+        ["buddy", "applications", "referral", "activities", "chat"].map((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
       ),
-    );
+    [queryClient],
+  );
   const mutation = useMutation({
     mutationFn: (request: BuddyRejectionRequest | undefined) =>
       request ? rejectApplication(applicationId, request) : approveApplication(applicationId),
@@ -57,7 +61,31 @@ export function ApplicationApprovalActions({
     code === "APPLICATION409_APPROVAL_EXPIRED" ||
     code === "APPLICATION404" ||
     code === "USER404";
-  const disabled = mutation.isPending || expired || stale || forbidden;
+  const paymentTerminal = code === "PAYMENT409_PAYPAL_DECLINED";
+  const uncertain =
+    mutation.isError &&
+    (!(mutation.error instanceof ApiClientError) ||
+      mutation.error.status === null ||
+      mutation.error.status === 408 ||
+      (mutation.error.status ?? 0) >= 500 ||
+      [
+        "PAYMENT409_PAYPAL_PROCESSING",
+        "PAYMENT409_REVIEW_REQUIRED",
+        "PAYMENT409_CONFIRM_MISMATCH",
+      ].includes(code ?? ""));
+  const checking = uncertain || mutation.isSuccess;
+  const disabled =
+    mutation.isPending || expired || stale || forbidden || checking || paymentTerminal;
+  useEffect(() => {
+    if (!checking) return;
+    // Read only, bounded, foreground-only reconciliation. Never replay approval commands.
+    const timers = [2000, 5000, 10000].map((delay) =>
+      window.setTimeout(() => {
+        if (document.visibilityState === "visible") void refresh();
+      }, delay),
+    );
+    return () => timers.forEach(window.clearTimeout);
+  }, [checking, refresh]);
   async function submit(request?: BuddyRejectionRequest) {
     if (busy.current || disabled) return;
     busy.current = true;
@@ -70,7 +98,7 @@ export function ApplicationApprovalActions({
       busy.current = false;
     }
   }
-  let errorMessage = getError(mutation.error, t("error"));
+  let errorMessage = getError(mutation.error, uncertain ? authorization("processing") : t("error"));
   if (code === "APPLICATION409_APPROVAL_EXPIRED") errorMessage = t("expired");
   else if (code === "APPLICATION409_APPROVAL") errorMessage = t("changed");
   else if (code === "APPLICATION400_REJECTION") errorMessage = t("invalid");
@@ -109,7 +137,12 @@ export function ApplicationApprovalActions({
           {errorMessage}
         </p>
       )}
-      {(expired || mutation.error) && (
+      {mutation.isSuccess && (
+        <p role="status" className="mt-2 text-xs leading-5 text-muted">
+          {authorization("checking")}
+        </p>
+      )}
+      {(expired || mutation.error || mutation.isSuccess) && (
         <button
           type="button"
           disabled={mutation.isPending}

@@ -25,6 +25,18 @@ const applicant = {
 };
 
 describe("ApplicantProfileDialog", () => {
+  it("distinguishes payment decline from a buddy rejection without approval actions", () => {
+    renderWithQueryClient(
+      <ApplicantProfileDialog
+        applicant={{ ...applicant, status: "REJECTED", cancellationReason: "PAYMENT_FAILED" }}
+        locale="ko"
+        onClose={vi.fn()}
+      />,
+      { locale: "ko" },
+    );
+    expect(screen.getByText("결제 거절로 신청 종료")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "승인" })).not.toBeInTheDocument();
+  });
   it("enlarges an applicant photo while retaining their profile", () => {
     const onClose = vi.fn();
     renderWithQueryClient(

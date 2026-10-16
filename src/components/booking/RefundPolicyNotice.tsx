@@ -90,17 +90,15 @@ export function RefundPolicyAgreement({
   agreed,
   onAgreedChange,
   describedBy,
-  className = "",
 }: Readonly<{
   agreed: boolean;
   onAgreedChange: (agreed: boolean) => void;
   describedBy?: string;
-  className?: string;
 }>) {
   const t = useTranslations("Booking");
 
   return (
-    <label className={`flex min-h-11 cursor-pointer items-center gap-2.5 ${className}`}>
+    <label className="flex min-h-11 cursor-pointer items-start gap-2 py-3">
       <input
         type="checkbox"
         required
@@ -110,10 +108,7 @@ export function RefundPolicyAgreement({
         onChange={(event) => onAgreedChange(event.target.checked)}
         className="size-5 shrink-0 rounded accent-primary"
       />
-      <span
-        aria-hidden="true"
-        className="text-xs leading-4 font-medium text-ink lg:text-[13px] lg:leading-5 lg:font-semibold"
-      >
+      <span aria-hidden="true" className="text-xs leading-5 font-medium text-ink lg:text-[13px]">
         <span className="lg:hidden">{t("agreementCompact")}</span>
         <span className="hidden lg:inline">{t("agreement")}</span>
       </span>

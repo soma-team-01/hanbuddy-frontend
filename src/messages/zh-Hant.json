@@ -1,4 +1,23 @@
 {
+  "PayPalAuthorization": {
+    "processingShort": "正在確認PayPal處理結果。",
+    "cancelHold": "取消將結束申請並解除PayPal預授權，而非退款。解除時間取決於PayPal和您的銀行。",
+    "received": "申請已提交 · 等待嚮導批准",
+    "authorized": "實際付款將在嚮導批准後進行，審核結果將透過電子郵件通知。",
+    "processing": "正在核實PayPal處理結果。請先查看我的申請，不要重複付款。",
+    "captureProcessing": "嚮導已批准，正在核實付款結果。預訂尚未確認。",
+    "releaseProcessing": "申請已結束，正在核實PayPal預授權解除狀態。帳戶可能仍顯示凍結金額。",
+    "released": "未實際扣款。",
+    "declined": "付款被拒，申請已結束",
+    "declinedDescription": "PayPal拒絕了付款，申請已結束。如需參加，請重新申請。系統將重新檢查是否可預訂。",
+    "heldAmount": "預授權金額",
+    "cardDeclined": "已拒絕",
+    "cardDeclinedDescription": "申請因付款錯誤遭拒，請重新申請。",
+    "viewApplications": "查看我的申請",
+    "authorizationDescription": "透過PayPal預授權{amount}。嚮導批准後才會實際扣款。",
+    "checking": "正在核實付款結果",
+    "uncollectedAmount": "PayPal訂單金額"
+  },
   "Approval": {
     "inboxPageTitle": "預訂申請",
     "deadlineHint": "未在截止時間前核准的申請將自動取消。",
@@ -271,6 +290,8 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "paypalProcessing": "正在核實PayPal處理結果。請勿重複付款，請查看申請狀態。",
+    "paypalDeclined": "PayPal拒絕了付款，申請已結束。如需參加，請重新申請。",
     "referralAlreadyApplied": "您已有有效申請。請查看我的申請。",
     "referralReapplicationChanged": "申請紀錄已變更。請確認最新資訊並重新同意後，再次申請。",
     "bookingClosed": "活動開始前24小時停止接受預訂及付款請求，請選擇其他場次。",
@@ -1335,6 +1356,7 @@
     "retryQuote": "重試",
     "refundPolicy": "適用標準",
     "refundPolicyTypes": {
+      "AUTHORIZATION_RELEASE": "解除預授權",
       "FREE_CANCELLATION_WINDOW": "付款後30分鐘內免費取消",
       "BEFORE_48_HOURS": "活動開始48小時前",
       "BETWEEN_24_AND_48_HOURS": "活動開始前24至48小時",

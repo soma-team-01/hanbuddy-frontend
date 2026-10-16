@@ -1,4 +1,23 @@
 {
+  "PayPalAuthorization": {
+    "processingShort": "PayPalの処理結果を確認中です。",
+    "cancelHold": "キャンセルすると申込が終了し、PayPalの与信枠の解放を行います。返金ではありません。反映時期はPayPalと銀行によって異なります。",
+    "received": "申込受付完了 · バディの承認待ち",
+    "authorized": "実際の決済はバディの承認後に行われ、承認結果はメールでお知らせします。",
+    "processing": "PayPalの処理結果を確認中です。再度支払う前に申込一覧で状態をご確認ください。",
+    "captureProcessing": "バディが承認しました。決済結果を確認中のため、予約はまだ確定していません。",
+    "releaseProcessing": "申込は終了しました。PayPalの与信枠の解放を確認中です。口座に保留が残る場合があります。",
+    "released": "実際の請求は発生していません。",
+    "declined": "決済拒否により申込終了",
+    "declinedDescription": "PayPalの決済が拒否され、申込は終了しました。参加をご希望の場合は新規にお申し込みください。空き状況は再確認されます。",
+    "heldAmount": "与信金額",
+    "cardDeclined": "申込拒否",
+    "cardDeclinedDescription": "決済エラーにより申込が拒否されました。再度お申し込みください。",
+    "viewApplications": "申込一覧を見る",
+    "authorizationDescription": "PayPalで{amount}の与信を行います。決済はバディの承認後に行われます。",
+    "checking": "決済結果を確認中",
+    "uncollectedAmount": "PayPal注文金額"
+  },
   "Approval": {
     "inboxPageTitle": "予約リクエスト",
     "deadlineHint": "期限までに承認しない場合、申し込みは自動キャンセルされます。",
@@ -271,6 +290,8 @@
     "unavailable": "利用不可"
   },
   "ApiErrors": {
+    "paypalProcessing": "PayPalの処理結果を確認中です。再度支払わず、申込状況をご確認ください。",
+    "paypalDeclined": "PayPalの決済が拒否され、申込は終了しました。参加をご希望の場合は新規にお申し込みください。",
     "referralAlreadyApplied": "有効な申し込みがすでにあります。申し込み一覧をご確認ください。",
     "referralReapplicationChanged": "申し込み履歴が変更されました。最新の内容を確認し、改めて同意してから再申し込みしてください。",
     "bookingClosed": "予約・支払いのリクエストは開始24時間前までです。別の日時を選択してください。",
@@ -1335,6 +1356,7 @@
     "retryQuote": "再試行",
     "refundPolicy": "適用基準",
     "refundPolicyTypes": {
+      "AUTHORIZATION_RELEASE": "仮押さえの解除",
       "FREE_CANCELLATION_WINDOW": "決済後30分間の無料キャンセル",
       "BEFORE_48_HOURS": "アクティビティの48時間以上前",
       "BETWEEN_24_AND_48_HOURS": "アクティビティの24〜48時間前",

@@ -1,4 +1,23 @@
 {
+  "PayPalAuthorization": {
+    "cancelHold": "취소하면 신청이 종료되고 PayPal 선승인 해제를 진행합니다. 환불이 아니며 보류 해제 반영 시점은 PayPal과 은행에 따라 달라집니다.",
+    "received": "신청 접수 완료 · 버디 승인 대기",
+    "authorized": "실제 결제는 버디 승인 후 진행되며, 승인 여부는 이메일로 안내됩니다.",
+    "processing": "PayPal 처리 결과를 확인 중입니다. 다시 결제하기 전에 내 신청에서 상태를 확인해 주세요.",
+    "processingShort": "PayPal 처리 결과를 확인 중입니다.",
+    "captureProcessing": "버디가 승인했으며 결제 결과를 확인 중입니다. 아직 예약이 확정된 것은 아닙니다.",
+    "releaseProcessing": "신청은 종료됐으며 PayPal 선승인 해제를 확인 중입니다. 계좌나 카드에는 금액 보류가 남아 있을 수 있습니다.",
+    "released": "실제 결제는 이루어지지 않았습니다.",
+    "declined": "결제 거절로 신청 종료",
+    "declinedDescription": "PayPal 결제가 거절되어 신청이 종료되었습니다. 다시 참여하려면 새로 신청해 주세요. 예약 가능 여부는 다시 확인합니다.",
+    "heldAmount": "선승인 금액",
+    "cardDeclined": "거절됨",
+    "cardDeclinedDescription": "결제 오류로 신청이 거절되었습니다. 다시 신청해 주세요.",
+    "viewApplications": "내 신청 보기",
+    "authorizationDescription": "PayPal로 {amount} 선승인을 진행합니다. 실제 결제는 버디 승인 후 진행됩니다.",
+    "checking": "결제 결과 확인 중",
+    "uncollectedAmount": "PayPal 주문 금액"
+  },
   "Approval": {
     "inboxPageTitle": "예약 신청",
     "deadlineHint": "기한 내 예약을 확정하지 않으면 신청이 자동 취소돼요.",
@@ -271,6 +290,8 @@
     "unavailable": "사용할 수 없음"
   },
   "ApiErrors": {
+    "paypalProcessing": "PayPal 처리 결과를 확인 중입니다. 다시 결제하지 말고 신청 상태를 확인해 주세요.",
+    "paypalDeclined": "PayPal 결제가 거절되어 신청이 종료되었습니다. 다시 참여하려면 새로 신청해 주세요.",
     "referralAlreadyApplied": "이미 유효한 신청이 있습니다. 내 신청에서 확인해 주세요.",
     "referralReapplicationChanged": "신청 이력이 변경되었습니다. 최신 내용을 확인하고 다시 동의한 뒤 재신청해 주세요.",
     "bookingClosed": "활동 시작 24시간 전까지만 신청·결제를 요청할 수 있습니다. 다른 일정을 선택해 주세요.",
@@ -1335,6 +1356,7 @@
     "retryQuote": "다시 시도",
     "refundPolicy": "적용 기준",
     "refundPolicyTypes": {
+      "AUTHORIZATION_RELEASE": "선승인 보류 해제",
       "FREE_CANCELLATION_WINDOW": "결제 후 30분 무료 취소",
       "BEFORE_48_HOURS": "활동 48시간 전까지",
       "BETWEEN_24_AND_48_HOURS": "활동 24~48시간 전",

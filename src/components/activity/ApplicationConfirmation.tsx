@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { ApprovalDeadline } from "@/components/booking/ApprovalDeadline";
+import { PayPalAuthorizationNotice } from "@/components/payment/PayPalAuthorizationNotice";
+import { isPayPalUncaptured } from "@/lib/payments/paypal-authorization";
 import { useLocale, useTranslations } from "next-intl";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CheckCircleIcon, UserIcon } from "@/components/ui/icons";
@@ -37,6 +39,9 @@ export function ApplicationConfirmation({
 }: Readonly<{ application: ApplicationResponse; referralServicePrice?: number }>) {
   const isReferral = referralServicePrice !== undefined;
   const awaitingApproval = application.status === "PENDING_APPROVAL";
+  const authorization = useTranslations("PayPalAuthorization");
+  const uncaptured = isPayPalUncaptured(application);
+  const captureProcessing = application.paypalAuthorization?.state === "CAPTURE_REQUESTED";
   const approval = useTranslations("Approval");
   const referral = useTranslations("Referral");
   const explore = useTranslations("Explore");
@@ -65,18 +70,22 @@ export function ApplicationConfirmation({
             <CheckCircleIcon className="size-8 max-md:size-6" aria-hidden />
           </span>
           <h1 className="mt-5 font-display text-2xl font-bold text-ink max-md:mt-3 max-md:text-base max-md:leading-6 max-md:tracking-tight md:text-3xl">
-            {awaitingApproval
-              ? approval(isReferral ? "applied" : "paid")
-              : isReferral
-                ? referral("success")
-                : t("complete")}
+            {uncaptured
+              ? authorization(captureProcessing ? "checking" : "received")
+              : awaitingApproval
+                ? approval(isReferral ? "applied" : "paid")
+                : isReferral
+                  ? referral("success")
+                  : t("complete")}
           </h1>
           <p className="mt-2 text-sm text-muted max-md:mt-1.5 max-md:text-xs max-md:leading-5">
-            {awaitingApproval
-              ? approval("waiting")
-              : isReferral
-                ? referral("notice")
-                : t("confirmed")}
+            {uncaptured
+              ? authorization(captureProcessing ? "captureProcessing" : "authorized")
+              : awaitingApproval
+                ? approval("waiting")
+                : isReferral
+                  ? referral("notice")
+                  : t("confirmed")}
           </p>
           {awaitingApproval && <ApprovalDeadline expiresAt={application.approvalExpiresAt} />}
         </section>
@@ -189,7 +198,7 @@ export function ApplicationConfirmation({
 
               <div className="flex items-center justify-between border-t border-line-soft pt-4 max-md:pt-3">
                 <span className="font-display text-base font-bold text-ink max-md:text-sm">
-                  {t("paidLabel")}
+                  {uncaptured ? authorization("heldAmount") : t("paidLabel")}
                 </span>
                 <span className="font-display text-xl font-bold text-primary max-md:text-lg">
                   {formatCurrency(paidPayment.amount, paidPayment.currency, locale)}
@@ -198,6 +207,9 @@ export function ApplicationConfirmation({
             </>
           )}
         </section>
+        {application.paypalAuthorization && !awaitingApproval && (
+          <PayPalAuthorizationNotice application={application} />
+        )}
         <div data-testid="confirmation-actions" className="mt-5 lg:mt-6">
           <div className="flex w-full flex-col gap-2">
             <Link

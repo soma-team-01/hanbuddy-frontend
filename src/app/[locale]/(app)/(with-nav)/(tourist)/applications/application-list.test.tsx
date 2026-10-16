@@ -144,6 +144,102 @@ function continuePaymentAfterReview(buttonName: string) {
 }
 
 describe("ApplicationList", () => {
+  it("labels an authorized amount as not captured and never enables group chat before confirmation", () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          status: "pending_approval",
+          paymentStatus: "AUTHORIZED",
+          paypalAuthorization: {
+            state: "AUTHORIZED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        },
+      ],
+    });
+    expect(
+      screen.getByText(
+        "You’ll be charged after your buddy approves. We’ll email you the decision.",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(screen.queryByText("Paid")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /group chat/i })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [
+      "en",
+      "Past",
+      "Declined",
+      "Your request was declined due to a payment error. Please apply again.",
+      "Book again",
+    ],
+    [
+      "ko",
+      "지난 내역",
+      "거절됨",
+      "결제 오류로 신청이 거절되었습니다. 다시 신청해 주세요.",
+      "새로 신청하기",
+    ],
+  ] as const)(
+    "shows concise declined guidance without a new-booking action in %s",
+    (locale, past, badge, description, action) => {
+      const continuePayment = vi.fn();
+      renderList(
+        {
+          onContinuePayment: continuePayment,
+          applications: [
+            {
+              ...paidApplication,
+              status: "rejected",
+              cancellationReason: "PAYMENT_FAILED",
+              paypalAuthorization: {
+                state: "VOID_REQUESTED",
+                authorizedAt: null,
+                expiresAt: null,
+                releasedAt: null,
+              },
+            },
+          ],
+        },
+        locale,
+      );
+      fireEvent.click(screen.getByRole("tab", { name: past }));
+      expect(screen.getByText(badge)).toBeInTheDocument();
+      expect(screen.getByText(description)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: action })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: action })).not.toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        locale === "en" ? /release of the PayPal hold/ : /선승인 해제/,
+      );
+      expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+      expect(continuePayment).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not offer payment continuation while a PayPal authorization result is unknown", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          paypalAuthorization: {
+            state: "REQUESTED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        },
+      ],
+    });
+    expect(
+      screen.queryByRole("button", { name: /Continue payment with PayPal/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it.each(["rejected", "expired"] as const)(
     "keeps %s in past applications without payment, cancellation or review actions",
     (status) => {

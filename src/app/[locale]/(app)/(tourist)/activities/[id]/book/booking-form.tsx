@@ -725,7 +725,6 @@ export function BookingForm({
                     agreed={refundPolicyAgreed}
                     onAgreedChange={setRefundPolicyAgreed}
                     describedBy="booking-refund-policy-notice booking-refund-policy-summary"
-                    className="px-1 py-1"
                   />
                   <ApprovalNotice
                     agreed={approvalAcknowledged}
@@ -768,9 +767,7 @@ export function BookingForm({
                               void queryClient.invalidateQueries({
                                 queryKey: applicationKeys.mine(),
                               });
-                              router.push(
-                                `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
-                              );
+                              router.push(`/payments/success?applicationId=${applicationId}`);
                             }}
                           />
                         ) : (

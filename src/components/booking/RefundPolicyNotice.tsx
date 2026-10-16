@@ -5,6 +5,10 @@ import { useRef, useState } from "react";
 import type { PolicyDocumentData } from "@/types/policy";
 import { RefundPolicyDialog } from "./RefundPolicyDialog";
 
+/**
+ * 승인 전 환불·선승인 해제와 승인 후 취소 기준을 현재 언어로 요약한다.
+ * 정책 문서가 전달된 경우에만 전문 다이얼로그를 열 수 있다.
+ */
 export function RefundPolicyNotice({
   document,
   idPrefix = "refund-policy",

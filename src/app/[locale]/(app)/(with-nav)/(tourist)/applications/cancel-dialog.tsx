@@ -34,6 +34,10 @@ function getNextQuoteBoundary(startAt: string) {
 
 export type CancelDialogOutcome = { ok: true } | { ok: false; error: unknown };
 
+/**
+ * 최신 서버 견적에 따라 선승인 해제 또는 환불액을 안내하고 취소 사유를 받는다.
+ * 견적 갱신 중에는 제출을 막으며 실제 취소 요청과 성공 후 닫기는 부모에 위임한다.
+ */
 export function CancelDialog({
   applicationId,
   startAt,

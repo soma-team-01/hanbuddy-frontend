@@ -12,6 +12,8 @@ type MetaWindow = Window & { fbq?: MetaQueue; _fbq?: MetaQueue };
 const META_PAGE_PATHS = new Set([
   "/",
   "/explore",
+  "/about",
+  "/faq",
   "/onboarding",
   "/buddy/onboarding",
   "/applications",

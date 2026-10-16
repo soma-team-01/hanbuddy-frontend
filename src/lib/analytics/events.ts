@@ -65,6 +65,8 @@ export function safePage(pathname: string): SafePage | null {
   const pages: Record<string, [string, string]> = {
     "/": ["/", "HanBuddy"],
     "/explore": ["/explore", "Explore"],
+    "/about": ["/about", "About"],
+    "/faq": ["/faq", "FAQ"],
     "/login": ["/login", "Login"],
     "/onboarding": ["/onboarding", "Signup"],
     "/buddy/onboarding": ["/buddy/onboarding", "Buddy signup"],

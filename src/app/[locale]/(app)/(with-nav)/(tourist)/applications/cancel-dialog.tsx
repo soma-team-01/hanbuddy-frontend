@@ -22,15 +22,12 @@ const HOUR_MS = 60 * 60 * 1000;
 const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
 
 /** 열려 있는 취소 모달의 견적이 달라질 수 있는 가장 가까운 정책 경계를 구한다. */
-function getNextQuoteBoundary(startAt: string, freeCancellationUntil: string | null) {
+function getNextQuoteBoundary(startAt: string) {
   const now = Date.now();
   const startAtMs = Date.parse(startAt);
-  const boundaries = [
-    freeCancellationUntil ? Date.parse(freeCancellationUntil) : Number.NaN,
-    startAtMs - 48 * HOUR_MS,
-    startAtMs - 24 * HOUR_MS,
-    startAtMs,
-  ].filter((boundary) => Number.isFinite(boundary) && boundary > now);
+  const boundaries = [startAtMs - 48 * HOUR_MS, startAtMs - 24 * HOUR_MS, startAtMs].filter(
+    (boundary) => Number.isFinite(boundary) && boundary > now,
+  );
 
   return boundaries.length > 0 ? Math.min(...boundaries) : null;
 }
@@ -92,7 +89,7 @@ export function CancelDialog({
 
   useEffect(() => {
     if (!quote) return;
-    const nextBoundary = getNextQuoteBoundary(startAt, quote.freeCancellationUntil);
+    const nextBoundary = getNextQuoteBoundary(startAt);
     if (nextBoundary === null) return;
     const delay = nextBoundary - Date.now() + 50;
     // 브라우저 타이머의 32-bit 한도를 넘는 비정상 응답은 즉시 만료로 오인하지 않는다.

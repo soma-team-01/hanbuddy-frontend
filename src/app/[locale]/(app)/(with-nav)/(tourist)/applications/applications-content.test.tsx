@@ -104,13 +104,13 @@ describe("ApplicationsContent", () => {
     mockedGetCancellationQuote.mockResolvedValue({
       status: "success",
       quote: {
-        policyVersion: "2026-09-07",
+        policyVersion: "2026-10-16",
         policyType: "BEFORE_48_HOURS",
         refundPercent: 100,
         refundAmount: 90000,
         refundCurrency: "KRW",
         cancellationFeeAmount: 0,
-        freeCancellationUntil: "2026-07-07T10:30:00Z",
+        freeCancellationUntil: null,
         quotedAt: "2026-07-09T09:00:00Z",
       },
     });

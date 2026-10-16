@@ -822,7 +822,7 @@
         },
         "cancel": {
           "question": "What if I need to cancel?",
-          "answer": "You get a full refund up to 48 hours before the start, and 50% between 48 and 24 hours. If your buddy cancels, you get a full refund."
+          "answer": "Before buddy approval, cancellations receive a full refund or release of the PayPal hold. After approval: full refund at least 48 hours before the start, 50% from 24 to less than 48 hours before, and no refund within 24 hours. If your buddy cancels, you get a full refund. See the Cancellation and Refund Policy for statutory rights and other refund grounds."
         },
         "language": {
           "question": "Do I need to speak Korean or know the sport?",
@@ -1240,7 +1240,9 @@
     "refundPolicyLink": "View full policy",
     "policyDocumentVersion": "Version {version}",
     "statutoryWithdrawalNotice": "Withdrawal may be requested within 7 days of receiving the written contract details, or of receipt or commencement of supply if later. Statutory rights take priority.",
-    "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. The 30-minute benefit and separate refund rights, including unprovided portions, take priority.",
+    "beforeApprovalRefundNotice": "Before buddy approval: full refund. PayPal holds are released.",
+    "afterApprovalRefundLabel": "After buddy approval",
+    "refundExceptionsNotice": "General rules apply after the statutory period or where legal restrictions are recognized. Separate refund rights, including unprovided portions, take priority.",
     "actualPaymentRefundNotice": "Discounted bookings are refunded from the amount paid.",
     "agreement": "I agree to the cancellation and refund policy.",
     "agreementCompact": "Agree to cancellation/refunds",
@@ -1272,10 +1274,6 @@
     "continueApplication": "Continue booking",
     "totalLabel": "Total (KRW)",
     "refundRules": {
-      "free": {
-        "label": "Within 30 min of payment confirmation · before activity starts",
-        "value": "Full refund"
-      },
       "full": {
         "label": "48+ hours before the activity",
         "value": "Full refund"
@@ -1347,8 +1345,6 @@
     "cancelPendingConfirm": "Yes, cancel",
     "keepPendingApplication": "Keep application",
     "holdRemaining": "{time} left to complete payment",
-    "freeCancellationUntil": "Free cancellation until {dateTime}",
-    "freeCancellationEnded": "Free cancellation period ended",
     "providerPaymentAmount": "{provider} payment",
     "refundEstimateTitle": "Cancellation refund estimate",
     "quoteLoading": "Checking the latest refund amount...",
@@ -1357,7 +1353,7 @@
     "refundPolicy": "Applied policy",
     "refundPolicyTypes": {
       "AUTHORIZATION_RELEASE": "Authorization hold release",
-      "FREE_CANCELLATION_WINDOW": "30-minute free cancellation",
+      "FREE_CANCELLATION_WINDOW": "Previous free-cancellation policy",
       "BEFORE_48_HOURS": "48+ hours before the activity",
       "BETWEEN_24_AND_48_HOURS": "24–48 hours before the activity",
       "WITHIN_24_HOURS": "Less than 24 hours before the activity"

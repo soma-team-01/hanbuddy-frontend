@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { LOCALES } from "@/i18n/routing";
 import en from "@/messages/en.json";
@@ -10,32 +10,31 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { RefundPolicyAgreement, RefundPolicyNotice } from "./RefundPolicyNotice";
 
 const messages = { en, ja, ko, "zh-Hans": zhHans, "zh-Hant": zhHant };
-const freeCancellationConditions = {
-  en: ["Within 30 min of payment confirmation", "before activity starts"],
-  ko: ["결제 확정 후 30분 이내", "활동 시작 전"],
-  ja: ["決済確定後30分以内", "活動開始前"],
-  "zh-Hans": ["付款确认后30分钟内", "活动开始前"],
-  "zh-Hant": ["付款確認後30分鐘內", "活動開始前"],
+const approvalConditions = {
+  en: ["Before buddy approval", "After buddy approval", "PayPal", "hold"],
+  ko: ["버디 승인 전", "버디 승인 후", "PayPal", "선승인은 해제"],
+  ja: ["バディ承認前", "バディ承認後", "PayPal", "仮押さえ"],
+  "zh-Hans": ["伙伴批准前", "伙伴批准后", "PayPal", "预授权"],
+  "zh-Hant": ["夥伴批准前", "夥伴批准後", "PayPal", "預授權"],
 };
 
 const TINY_TEXT = /text-\[(9|10|11)px\]/;
 
 describe("RefundPolicyNotice", () => {
-  it.each(LOCALES)("shows free cancellation and exceptions in %s", (locale) => {
+  it.each(LOCALES)("separates pre-approval refunds from post-approval rules in %s", (locale) => {
     const { container } = renderWithIntl(<RefundPolicyNotice />, {
       locale,
       messages: messages[locale],
     });
-    expect(container.querySelectorAll("dl > div")).toHaveLength(5);
+    expect(container.querySelectorAll("dl > div")).toHaveLength(4);
     expect(container.querySelector("#refund-policy-exceptions")).toHaveTextContent(/\S/);
     const summary = container.querySelector("dl")!;
-    const freeCancellationRow = summary.querySelector("div")!;
-    const conditions = within(freeCancellationRow).getByRole("term");
-    for (const condition of freeCancellationConditions[locale]) {
-      expect(conditions).toHaveTextContent(condition);
+    for (const condition of approvalConditions[locale]) {
+      expect(container).toHaveTextContent(condition);
     }
+    expect(container.textContent).not.toMatch(/30[ -]?(?:min|分|분|分钟|分鐘)/i);
     const refundValues = summary.querySelectorAll("dd");
-    expect(refundValues[0].textContent).toBe(refundValues[1].textContent);
+    expect(refundValues[1].textContent).toContain("50%");
   });
 
   it("keeps statutory and refund copy at a readable size", () => {

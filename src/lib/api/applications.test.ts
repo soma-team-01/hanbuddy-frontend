@@ -299,13 +299,16 @@ describe("application API client", () => {
 
   it("loads a fresh cancellation quote without a locale parameter", async () => {
     const quote = {
-      policyVersion: "2026-09-07",
-      policyType: "FREE_CANCELLATION_WINDOW",
+      policyVersion: "2026-10-16",
+      ruleVersion: "2026-10-16",
+      agreedPolicyVersion: "2026-09-08",
+      calculationScope: "GENERAL_CANCELLATION",
+      policyType: "BEFORE_48_HOURS",
       refundPercent: 100,
       refundAmount: 68.97,
       refundCurrency: "USD",
       cancellationFeeAmount: 0,
-      freeCancellationUntil: "2026-07-07T10:30:00Z",
+      freeCancellationUntil: null,
       quotedAt: "2026-07-07T10:15:00Z",
     };
     const fetchMock = vi

@@ -12,7 +12,7 @@ export function PayPalAuthorizationNotice({
   return (
     <p
       role="status"
-      className="border-l-2 border-primary pl-3 text-sm leading-6 [overflow-wrap:anywhere] text-muted"
+      className="border-l-2 border-primary pl-3 text-sm leading-6 [overflow-wrap:anywhere] text-muted max-md:text-xs max-md:leading-5"
     >
       {t(message)}
     </p>

@@ -1,6 +1,10 @@
 import { screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
+import {
+  authorizePayPalApplicationPayment,
+  capturePayPalApplicationPayment,
+  getMyApplications,
+} from "@/lib/api/applications";
 import {
   clearPayPalRedirectContext,
   readPayPalRedirectContext,
@@ -16,6 +20,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
 }));
 
 vi.mock("@/lib/api/applications", () => ({
+  authorizePayPalApplicationPayment: vi.fn(),
   capturePayPalApplicationPayment: vi.fn(),
   getMyApplications: vi.fn(),
 }));
@@ -23,6 +28,7 @@ vi.mock("@/lib/api/applications", () => ({
 vi.mock("@/lib/payments/paypal-redirect-context", () => ({
   clearPayPalRedirectContext: vi.fn(),
   readPayPalRedirectContext: vi.fn(),
+  storePayPalRedirectContext: vi.fn(),
 }));
 
 const mockedCapture = vi.mocked(capturePayPalApplicationPayment);
@@ -42,6 +48,32 @@ describe("PayPalReturnContent", () => {
       } as never,
     });
     mockedGetMyApplications.mockResolvedValue({ status: "success", applications: [] });
+  });
+
+  it("only reads server status after a previously submitted return is refreshed", async () => {
+    mockedReadContext.mockReturnValue({
+      applicationId: "11",
+      orderId: "ORDER-123",
+      paypalIntent: "AUTHORIZE",
+      checkoutSubmitted: true,
+    });
+    mockedGetMyApplications.mockResolvedValue({
+      status: "success",
+      applications: [
+        {
+          applicationId: 11,
+          status: "PENDING_APPROVAL",
+          paymentStatus: "AUTHORIZED",
+          paypalAuthorization: { state: "AUTHORIZED" },
+        } as never,
+      ],
+    });
+    renderWithQueryClient(<PayPalReturnContent token="ORDER-123" />);
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+    );
+    expect(authorizePayPalApplicationPayment).not.toHaveBeenCalled();
+    expect(mockedCapture).not.toHaveBeenCalled();
   });
 
   it.each(["CONFIRMED", "PENDING_APPROVAL"] as const)(
@@ -74,6 +106,38 @@ describe("PayPalReturnContent", () => {
     expect(mockedCapture).not.toHaveBeenCalled();
   });
 
+  it("uses authorize for a saved AUTHORIZE order and waits for server receipt", async () => {
+    mockedReadContext.mockReturnValue({
+      applicationId: "11",
+      orderId: "ORDER-123",
+      paypalIntent: "AUTHORIZE",
+    });
+    vi.mocked(authorizePayPalApplicationPayment).mockResolvedValue({
+      status: "success",
+      application: {
+        applicationId: 11,
+        status: "PENDING_APPROVAL",
+        paymentStatus: "AUTHORIZED",
+        paypalAuthorization: {
+          state: "AUTHORIZED",
+          authorizedAt: null,
+          expiresAt: null,
+          releasedAt: null,
+        },
+      } as never,
+    });
+    renderWithQueryClient(<PayPalReturnContent token="ORDER-123" />);
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/en/payments/success?applicationId=11"),
+    );
+    expect(authorizePayPalApplicationPayment).toHaveBeenCalledExactlyOnceWith(
+      "11",
+      { orderId: "ORDER-123" },
+      "EN",
+    );
+    expect(mockedCapture).not.toHaveBeenCalled();
+  });
+
   it("does not complete when capture succeeds without a confirmed application", async () => {
     mockedCapture.mockResolvedValue({
       status: "success",
@@ -95,7 +159,7 @@ describe("PayPalReturnContent", () => {
     renderWithQueryClient(<PayPalReturnContent token="ORDER-123" />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "We couldn't confirm your payment. Please try again from My Applications.",
+      "We are checking the PayPal result. Check My Applications before attempting another payment.",
     );
     expect(mockedGetMyApplications).toHaveBeenCalledWith("EN");
     expect(replace).not.toHaveBeenCalled();

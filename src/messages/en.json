@@ -1,4 +1,21 @@
 {
+  "PayPalAuthorization": {
+    "cancelHold": "Cancelling ends your request and starts the release of the PayPal hold, not a refund. Release timing depends on PayPal and your bank.",
+    "received": "Request received · Awaiting buddy approval",
+    "authorized": "PayPal has placed a hold on the amount. You will only be charged after your buddy approves and payment succeeds.",
+    "processing": "We are checking the PayPal result. Check My Applications before attempting another payment.",
+    "captureProcessing": "Your buddy has approved. Payment is being verified; your booking is not confirmed yet.",
+    "releaseProcessing": "Your request has ended. We are checking the release of the PayPal hold; it may still appear on your account.",
+    "released": "PayPal has released the authorization. Your bank or card provider may take time to reflect this.",
+    "declined": "Payment declined",
+    "declinedDescription": "PayPal declined the payment and this request has ended. To participate, submit a new request. Availability will be checked again.",
+    "heldAmount": "Authorization amount",
+    "bookAgain": "Book again",
+    "viewApplications": "View My Applications",
+    "authorizationDescription": "Authorize a hold of {amount} with PayPal. Payment is collected only after buddy approval.",
+    "checking": "Checking payment result",
+    "uncollectedAmount": "PayPal order amount"
+  },
   "Approval": {
     "inboxPageTitle": "Booking requests",
     "deadlineHint": "Requests not approved by the deadline are automatically cancelled.",
@@ -271,6 +288,8 @@
     "unavailable": "Unavailable"
   },
   "ApiErrors": {
+    "paypalProcessing": "We are checking the PayPal result. Do not pay again; check your application status.",
+    "paypalDeclined": "PayPal declined the payment and the request has ended. Submit a new request if you wish to participate.",
     "referralAlreadyApplied": "You already have an active application. Check My Applications.",
     "referralReapplicationChanged": "Your application history has changed. Review the latest details and agree again before reapplying.",
     "bookingClosed": "Bookings and payment requests close 24 hours before the activity starts. Please choose another session.",
@@ -1335,6 +1354,7 @@
     "retryQuote": "Try again",
     "refundPolicy": "Applied policy",
     "refundPolicyTypes": {
+      "AUTHORIZATION_RELEASE": "Authorization hold release",
       "FREE_CANCELLATION_WINDOW": "30-minute free cancellation",
       "BEFORE_48_HOURS": "48+ hours before the activity",
       "BETWEEN_24_AND_48_HOURS": "24–48 hours before the activity",

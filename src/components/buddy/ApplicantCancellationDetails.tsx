@@ -21,6 +21,7 @@ export function ApplicantCancellationDetails({
   const approval = useTranslations("Approval");
   const statusLabel = useTranslations("Status");
   const applications = useTranslations("Applications");
+  const authorization = useTranslations("PayPalAuthorization");
   const declined = isDeclinedApplicationStatus(applicant.status ?? "");
   const cancelled = applicant.status === "CANCELLED";
   const reason = applicant.cancellationReason;
@@ -33,7 +34,11 @@ export function ApplicantCancellationDetails({
   if (!declined && !cancelled) return null;
 
   let reasonText: React.ReactNode = null;
-  if ((reason === "OTHER" || reason === "BUDDY_OTHER") && applicant.cancellationDetail?.trim()) {
+  if (reason === "PAYMENT_FAILED") reasonText = authorization("declinedDescription");
+  else if (
+    (reason === "OTHER" || reason === "BUDDY_OTHER") &&
+    applicant.cancellationDetail?.trim()
+  ) {
     reasonText = (
       <CancellationReasonText
         kind="application"
@@ -53,7 +58,9 @@ export function ApplicantCancellationDetails({
       <span
         className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${declined ? "bg-panel text-muted" : "bg-danger/10 text-danger"}`}
       >
-        {statusLabel(declined ? "declined" : "cancelled")}
+        {reason === "PAYMENT_FAILED"
+          ? authorization("declined")
+          : statusLabel(declined ? "declined" : "cancelled")}
       </span>
       {reasonText ? (
         <div className="mt-2 text-sm leading-6 [overflow-wrap:anywhere] text-muted">

@@ -1,4 +1,21 @@
 {
+  "PayPalAuthorization": {
+    "cancelHold": "取消将结束申请并解除PayPal预授权，而非退款。解除时间取决于PayPal和您的银行。",
+    "received": "申请已提交 · 等待向导批准",
+    "authorized": "PayPal已暂时冻结金额。向导批准且付款成功后，预订才会确认。",
+    "processing": "正在核实PayPal处理结果。请先查看我的申请，不要重复付款。",
+    "captureProcessing": "向导已批准，正在核实付款结果。预订尚未确认。",
+    "releaseProcessing": "申请已结束，正在核实PayPal预授权解除状态。账户可能仍显示冻结金额。",
+    "released": "PayPal预授权已解除。银行或信用卡记录可能需要一段时间才能更新。",
+    "declined": "付款被拒，申请已结束",
+    "declinedDescription": "PayPal拒绝了付款，申请已结束。如需参加，请重新申请。系统将重新检查是否可预订。",
+    "heldAmount": "预授权金额",
+    "bookAgain": "重新申请",
+    "viewApplications": "查看我的申请",
+    "authorizationDescription": "通过PayPal预授权{amount}。向导批准后才会实际扣款。",
+    "checking": "正在核实付款结果",
+    "uncollectedAmount": "PayPal订单金额"
+  },
   "Approval": {
     "inboxPageTitle": "预订申请",
     "deadlineHint": "未在截止时间前批准的申请将自动取消。",
@@ -271,6 +288,8 @@
     "unavailable": "不可用"
   },
   "ApiErrors": {
+    "paypalProcessing": "正在核实PayPal处理结果。请勿重复付款，请查看申请状态。",
+    "paypalDeclined": "PayPal拒绝了付款，申请已结束。如需参加，请重新申请。",
     "referralAlreadyApplied": "您已有有效申请。请查看我的申请。",
     "referralReapplicationChanged": "申请记录已更改。请确认最新信息并重新同意后，再次申请。",
     "bookingClosed": "活动开始前24小时停止接受预订及付款请求，请选择其他场次。",
@@ -1335,6 +1354,7 @@
     "retryQuote": "重试",
     "refundPolicy": "适用标准",
     "refundPolicyTypes": {
+      "AUTHORIZATION_RELEASE": "解除预授权",
       "FREE_CANCELLATION_WINDOW": "付款后30分钟内免费取消",
       "BEFORE_48_HOURS": "活动开始48小时前",
       "BETWEEN_24_AND_48_HOURS": "活动开始前24至48小时",

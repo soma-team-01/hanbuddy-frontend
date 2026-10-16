@@ -7,6 +7,7 @@ import {
 import type { ContentLanguage } from "@/types/content-language";
 import type { DisplayCurrency } from "@/types/display-currency";
 import { unwrapApiResult } from "./result";
+import { isPayPalResultPending } from "@/lib/payments/paypal-authorization";
 
 export const applicationKeys = {
   all: () => ["applications"] as const,
@@ -39,17 +40,25 @@ export function myApplicationsQueryOptions(language: ContentLanguage) {
     queryKey: applicationKeys.mine(language),
     queryFn: async () => unwrapApiResult(await getMyApplications(language), "applications"),
     // 결제 선점 만료, 버디 응답, 비동기 환불은 서버 응답으로만 확정한다.
-    refetchInterval: (query) =>
-      query.state.data?.some(
+    refetchInterval: (query) => {
+      // Authorization recovery belongs to the backend; only make a bounded set of reads here.
+      if (
+        query.state.data?.some((item) => item.paypalAuthorization) &&
+        query.state.dataUpdateCount + query.state.errorUpdateCount >= 6
+      )
+        return false;
+      return query.state.data?.some(
         (application) =>
           application.status === "PENDING_PAYMENT" ||
           application.status === "PENDING_APPROVAL" ||
           application.status === "CONFIRMED" ||
+          isPayPalResultPending(application) ||
           application.refund?.status === "REQUESTED" ||
           application.refund?.status === "FAILED",
       )
         ? APPLICATION_REFRESH_MS
-        : false,
+        : false;
+    },
     refetchOnWindowFocus: true,
   });
 }

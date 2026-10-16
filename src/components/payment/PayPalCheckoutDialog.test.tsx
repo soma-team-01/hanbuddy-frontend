@@ -1,6 +1,10 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { capturePayPalApplicationPayment, getMyApplications } from "@/lib/api/applications";
+import {
+  authorizePayPalApplicationPayment,
+  capturePayPalApplicationPayment,
+  getMyApplications,
+} from "@/lib/api/applications";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { ApplicationResponse, PaymentReadyResponse } from "@/types/application";
 import { PayPalCheckoutButton, PayPalCheckoutDialog } from "./PayPalCheckoutDialog";
@@ -32,6 +36,7 @@ vi.mock("@paypal/react-paypal-js/sdk-v6", () => ({
 }));
 
 vi.mock("@/lib/api/applications", () => ({
+  authorizePayPalApplicationPayment: vi.fn(),
   capturePayPalApplicationPayment: vi.fn(),
   getMyApplications: vi.fn(),
 }));
@@ -99,6 +104,40 @@ function apiApplicationsResult(applications: ApplicationResponse[]) {
 }
 
 describe("PayPalCheckoutDialog", () => {
+  it("submits AUTHORIZE once and reports receipt only after the backend authorizes", async () => {
+    const received = {
+      ...application,
+      status: "PENDING_APPROVAL",
+      paymentStatus: "AUTHORIZED",
+      paypalAuthorization: {
+        state: "AUTHORIZED",
+        authorizedAt: null,
+        expiresAt: null,
+        releasedAt: null,
+      },
+    } as ApplicationResponse;
+    vi.mocked(authorizePayPalApplicationPayment).mockResolvedValue(apiApplicationResult(received));
+    const onConfirmed = vi.fn();
+    renderWithIntl(
+      <PayPalCheckoutDialog
+        payment={{ ...payment, paypalIntent: "AUTHORIZE" }}
+        onConfirmed={onConfirmed}
+        onClose={vi.fn()}
+      />,
+    );
+    const approve = sdkState.sessionOptions!.onApprove as (data: {
+      orderId: string;
+    }) => Promise<void>;
+    await act(async () => {
+      await Promise.all([
+        approve({ orderId: payment.providerOrderId }),
+        approve({ orderId: payment.providerOrderId }),
+      ]);
+    });
+    expect(authorizePayPalApplicationPayment).toHaveBeenCalledTimes(1);
+    expect(mockedCapture).not.toHaveBeenCalled();
+    expect(onConfirmed).toHaveBeenCalledWith(received);
+  });
   beforeEach(() => {
     sdkState.loadingStatus = "resolved";
     sdkState.isHydrated = true;
@@ -116,6 +155,7 @@ describe("PayPalCheckoutDialog", () => {
     vi.stubEnv("NEXT_PUBLIC_PAYPAL_CLIENT_ID", "sandbox-client-id");
     vi.stubEnv("NEXT_PUBLIC_PAYPAL_ENVIRONMENT", "sandbox");
     mockedCapture.mockReset();
+    vi.mocked(authorizePayPalApplicationPayment).mockReset();
     mockedGetMyApplications.mockReset();
   });
 
@@ -217,13 +257,13 @@ describe("PayPalCheckoutDialog", () => {
 
       await act(async () => {
         await (sdkState.sessionOptions?.onApprove as (data: { orderId: string }) => Promise<void>)({
-          orderId: "APPROVED-ORDER-ID",
+          orderId: payment.providerOrderId,
         });
       });
 
       expect(mockedCapture).toHaveBeenCalledWith(
         application.applicationId,
-        { orderId: "APPROVED-ORDER-ID" },
+        { orderId: payment.providerOrderId },
         "EN",
       );
       expect(onConfirmed).toHaveBeenCalledWith(confirmedApplication);
@@ -271,7 +311,7 @@ describe("PayPalCheckoutDialog", () => {
     expect(captureError).toEqual(new Error("capture failed"));
     expect(screen.queryByRole("link", { name: "Continue on the PayPal website" })).toBeNull();
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "We could not verify the PayPal payment. Check My Applications before trying again.",
+      "We are checking the PayPal result. Check My Applications before attempting another payment.",
     );
   });
 

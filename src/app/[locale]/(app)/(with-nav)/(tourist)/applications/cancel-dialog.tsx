@@ -40,11 +40,13 @@ export type CancelDialogOutcome = { ok: true } | { ok: false; error: unknown };
 export function CancelDialog({
   applicationId,
   startAt,
+  uncaptured = false,
   onClose,
   onConfirm,
 }: Readonly<{
   applicationId: string;
   startAt: string;
+  uncaptured?: boolean;
   onClose: () => void;
   onConfirm: (
     reason: ApplicationCancellationReason,
@@ -53,6 +55,7 @@ export function CancelDialog({
 }>) {
   const t = useTranslations("Applications");
   const approval = useTranslations("Approval");
+  const authorization = useTranslations("PayPalAuthorization");
   const locale = useLocale();
   const tErrors = useTranslations("Errors");
   const getApiErrorMessage = useApiErrorMessage();
@@ -75,6 +78,7 @@ export function CancelDialog({
     refetch: refetchQuote,
   } = useQuery(cancellationQuoteQueryOptions(applicationId));
   useAuthQueryRedirect(quoteError);
+  const releasesAuthorization = uncaptured || quote?.policyType === "AUTHORIZATION_RELEASE";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -140,12 +144,12 @@ export function CancelDialog({
       <p className="mt-2 text-sm leading-6 text-muted">{t("cancellationPrompt")}</p>
 
       <section
-        aria-label={t("refundEstimateTitle")}
+        aria-label={releasesAuthorization ? authorization("heldAmount") : t("refundEstimateTitle")}
         className="mt-5 border-y border-line-soft border-t-primary py-4"
       >
         <h3 className="flex items-center gap-2 font-display text-sm font-bold text-ink">
           <span aria-hidden className="h-4 w-1 rounded-full bg-primary" />
-          {t("refundEstimateTitle")}
+          {releasesAuthorization ? authorization("heldAmount") : t("refundEstimateTitle")}
         </h3>
         {isQuotePending ? (
           <p className="mt-2 text-sm text-muted">{t("quoteLoading")}</p>
@@ -163,32 +167,36 @@ export function CancelDialog({
             </button>
           </div>
         ) : quote ? (
-          <div className="mt-3 flex flex-col gap-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <span className="text-muted">{t("refundPolicy")}</span>
-              <span className="text-right font-semibold text-ink">
-                {quote.policyType === "PENDING_APPROVAL"
-                  ? approval("free")
-                  : t(`refundPolicyTypes.${quote.policyType}`)}{" "}
-                · {quote.refundPercent}%
-              </span>
+          releasesAuthorization ? (
+            <p className="mt-3 text-sm leading-6 text-muted">{authorization("cancelHold")}</p>
+          ) : (
+            <div className="mt-3 flex flex-col gap-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-muted">{t("refundPolicy")}</span>
+                <span className="text-right font-semibold text-ink">
+                  {quote.policyType === "PENDING_APPROVAL"
+                    ? approval("free")
+                    : t(`refundPolicyTypes.${quote.policyType}`)}{" "}
+                  · {quote.refundPercent}%
+                </span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted">{t("estimatedRefund")}</span>
+                <span className="font-display font-bold text-primary">
+                  {formatCurrency(quote.refundAmount, quote.refundCurrency, locale)}
+                </span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted">{t("cancellationFee")}</span>
+                <span className="font-semibold text-ink">
+                  {formatCurrency(quote.cancellationFeeAmount, quote.refundCurrency, locale)}
+                </span>
+              </div>
+              <p className="border-t border-line-soft pt-2 text-xs leading-5 text-muted">
+                {t("quoteFinalNotice")}
+              </p>
             </div>
-            <div className="flex justify-between gap-4">
-              <span className="text-muted">{t("estimatedRefund")}</span>
-              <span className="font-display font-bold text-primary">
-                {formatCurrency(quote.refundAmount, quote.refundCurrency, locale)}
-              </span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="text-muted">{t("cancellationFee")}</span>
-              <span className="font-semibold text-ink">
-                {formatCurrency(quote.cancellationFeeAmount, quote.refundCurrency, locale)}
-              </span>
-            </div>
-            <p className="border-t border-line-soft pt-2 text-xs leading-5 text-muted">
-              {t("quoteFinalNotice")}
-            </p>
-          </div>
+          )
         ) : null}
       </section>
 

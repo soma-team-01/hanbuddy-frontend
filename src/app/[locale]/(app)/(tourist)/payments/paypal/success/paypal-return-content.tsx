@@ -5,13 +5,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link, useRouter } from "@/i18n/navigation";
-import { capturePayPalApplicationPayment } from "@/lib/api/applications";
-import { isPaidApplicationStatus } from "@/lib/application-approval";
+import {
+  authorizePayPalApplicationPayment,
+  capturePayPalApplicationPayment,
+} from "@/lib/api/applications";
+import { isPayPalCheckoutReceived } from "@/lib/payments/paypal-authorization";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import {
   clearPayPalRedirectContext,
   readPayPalRedirectContext,
+  storePayPalRedirectContext,
 } from "@/lib/payments/paypal-redirect-context";
 import { activityKeys } from "@/lib/query/activities";
 import { applicationKeys, myApplicationsQueryOptions } from "@/lib/query/applications";
@@ -25,6 +29,7 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const t = useTranslations("Payment");
+  const authorization = useTranslations("PayPalAuthorization");
   const getApiErrorMessage = useApiErrorMessage();
   const applicationId = useSyncExternalStore(
     subscribeToBrowserState,
@@ -39,11 +44,23 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   const startedRef = useRef(false);
   const captureMutation = useMutation({
     mutationFn: async (resolvedApplicationId: string) => {
+      const context = readPayPalRedirectContext(token);
+      // Refreshing an uncertain return page only reads status, never replays the command.
+      if (!context || context.checkoutSubmitted)
+        throw new Error("Checkout result requires verification");
+      storePayPalRedirectContext({ ...context, checkoutSubmitted: true });
+      const submit =
+        context.paypalIntent === "AUTHORIZE"
+          ? authorizePayPalApplicationPayment
+          : capturePayPalApplicationPayment;
       const application = unwrapApiResult(
-        await capturePayPalApplicationPayment(resolvedApplicationId, { orderId: token }, language),
+        await submit(resolvedApplicationId, { orderId: token }, language),
         "application",
       );
-      if (!isPaidApplicationStatus(application.status)) {
+      if (
+        String(application.applicationId) !== resolvedApplicationId ||
+        !isPayPalCheckoutReceived(application)
+      ) {
         throw new Error("PayPal 결제 승인 결과가 확정 상태가 아닙니다.");
       }
       return application;
@@ -68,6 +85,8 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   const applicationsQuery = useQuery({
     ...myApplicationsQueryOptions(language),
     enabled: captureMutation.isError && applicationId !== null,
+    refetchInterval: false,
+    retry: false,
   });
 
   useEffect(() => {
@@ -75,7 +94,7 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
     const confirmed = applicationsQuery.data.find(
       (application) =>
         String(application.applicationId) === applicationId &&
-        isPaidApplicationStatus(application.status),
+        isPayPalCheckoutReceived(application),
     );
     if (!confirmed) return;
     clearPayPalRedirectContext();
@@ -117,11 +136,18 @@ export function PayPalReturnContent({ token }: Readonly<{ token: string }>) {
   }
 
   if (captureMutation.error) {
+    const declined = applicationsQuery.data?.some(
+      (application) =>
+        String(application.applicationId) === applicationId &&
+        application.cancellationReason === "PAYMENT_FAILED",
+    );
     return (
       <PageContainer className="flex flex-1 items-center justify-center py-16">
         <main className="w-full max-w-xl rounded-3xl border border-line-soft bg-canvas-soft p-8 text-center">
           <p role="alert" className="text-sm text-danger">
-            {getApiErrorMessage(captureMutation.error, t("confirmFailed"))}
+            {declined
+              ? authorization("declinedDescription")
+              : getApiErrorMessage(captureMutation.error, authorization("processing"))}
           </p>
           <Link
             href="/applications"

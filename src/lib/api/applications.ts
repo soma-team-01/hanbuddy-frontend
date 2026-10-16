@@ -163,6 +163,24 @@ export async function capturePayPalApplicationPayment(
   );
 }
 
+/** Completes server-owned AUTHORIZE checkout; never captures from the browser SDK. */
+export async function authorizePayPalApplicationPayment(
+  applicationId: number | string,
+  request: CapturePayPalPaymentRequest,
+  language: ContentLanguage,
+): Promise<ApplicationResult> {
+  return requestApiResult<ApplicationResponse, "application">(
+    withContentLanguage(`/api/applications/me/${applicationId}/payment/paypal/authorize`, language),
+    "application",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    },
+    "PayPal 신청 접수 결과를 확인하지 못했습니다.",
+  );
+}
+
 export async function confirmApplicationPayment(
   applicationId: number | string,
   request: ConfirmPaymentRequest,

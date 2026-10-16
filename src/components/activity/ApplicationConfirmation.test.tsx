@@ -17,6 +17,28 @@ const application = {
 } as ApplicationResponse;
 
 describe("ApplicationConfirmation layout", () => {
+  it("shows receipt and a hold, never payment complete for authorized PayPal", () => {
+    renderWithIntl(
+      <ApplicationConfirmation
+        application={{
+          ...application,
+          status: "PENDING_APPROVAL",
+          paymentStatus: "AUTHORIZED",
+          paypalAuthorization: {
+            state: "AUTHORIZED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        }}
+      />,
+    );
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Request received · Awaiting buddy approval",
+    );
+    expect(screen.getByText("Authorization amount")).toBeInTheDocument();
+    expect(screen.queryByText(/Payment complete/i)).not.toBeInTheDocument();
+  });
   it.each([undefined, 0, 5000])(
     "keeps completion links inline for service price %s",
     (referralServicePrice) => {

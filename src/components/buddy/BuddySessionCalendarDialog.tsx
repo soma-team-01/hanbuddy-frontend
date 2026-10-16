@@ -7,7 +7,10 @@ import { ArrowLeftIcon, ArrowRightIcon, XIcon } from "@/components/ui/icons";
 import { useModalDialog } from "@/components/ui/use-modal-dialog";
 import { getIntlLocale, type Locale } from "@/i18n/routing";
 import { getContentLanguage } from "@/lib/content-language";
-import { isClosedApplicationStatus, isPaidApplicationStatus } from "@/lib/application-approval";
+import {
+  isClosedApplicationStatus,
+  isSubmittedApplicationStatus,
+} from "@/lib/application-approval";
 import { isUnauthenticatedError } from "@/lib/api/errors";
 import {
   createDashboardRequestQueue,
@@ -69,7 +72,7 @@ function useSessionCalendar(activityId: number, month: string, locale: Locale) {
             data.activityScheduleId === schedule.scheduleId &&
             data.applicants.some(
               (applicant) =>
-                isPaidApplicationStatus(applicant.status) ||
+                isSubmittedApplicationStatus(applicant.status) ||
                 isClosedApplicationStatus(applicant.status),
             )
           );

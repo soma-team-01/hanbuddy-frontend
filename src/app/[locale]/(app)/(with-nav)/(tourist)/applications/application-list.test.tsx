@@ -144,6 +144,76 @@ function continuePaymentAfterReview(buttonName: string) {
 }
 
 describe("ApplicationList", () => {
+  it("labels an authorized amount as not captured and never enables group chat before confirmation", () => {
+    renderList({
+      applications: [
+        {
+          ...paidApplication,
+          status: "pending_approval",
+          paymentStatus: "AUTHORIZED",
+          paypalAuthorization: {
+            state: "AUTHORIZED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        },
+      ],
+    });
+    expect(screen.getByText(/PayPal has placed a hold on the amount/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Price Breakdown/ }));
+    expect(screen.queryByText("Paid")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /group chat/i })).not.toBeInTheDocument();
+  });
+
+  it("preserves declined history with a new-booking link and independent hold release", () => {
+    const continuePayment = vi.fn();
+    renderList({
+      onContinuePayment: continuePayment,
+      applications: [
+        {
+          ...paidApplication,
+          status: "rejected",
+          cancellationReason: "PAYMENT_FAILED",
+          paypalAuthorization: {
+            state: "VOID_REQUESTED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        },
+      ],
+    });
+    fireEvent.click(screen.getByRole("tab", { name: "Past" }));
+    expect(screen.getByText("Payment declined")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Book again" })).toHaveAttribute(
+      "href",
+      "/en/activities/42",
+    );
+    expect(screen.getByText(/release of the PayPal hold/)).toBeInTheDocument();
+    expect(screen.queryByText("Refund completed")).not.toBeInTheDocument();
+    expect(continuePayment).not.toHaveBeenCalled();
+  });
+
+  it("does not offer payment continuation while a PayPal authorization result is unknown", () => {
+    renderList({
+      applications: [
+        {
+          ...applications[0],
+          paypalAuthorization: {
+            state: "REQUESTED",
+            authorizedAt: null,
+            expiresAt: null,
+            releasedAt: null,
+          },
+        },
+      ],
+    });
+    expect(
+      screen.queryByRole("button", { name: /Continue payment with PayPal/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it.each(["rejected", "expired"] as const)(
     "keeps %s in past applications without payment, cancellation or review actions",
     (status) => {

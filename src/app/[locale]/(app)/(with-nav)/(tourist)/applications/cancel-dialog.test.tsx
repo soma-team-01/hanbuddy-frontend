@@ -56,6 +56,32 @@ describe("CancelDialog", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled());
   });
 
+  it("shows authorization release instead of a zero refund for an uncaptured PayPal quote", async () => {
+    mockedGetCancellationQuote.mockResolvedValue({
+      status: "success",
+      quote: {
+        ...quote,
+        policyType: "AUTHORIZATION_RELEASE",
+        calculationScope: "AUTHORIZATION_RELEASE",
+        refundAmount: 0,
+        refundPercent: 1,
+        freeCancellationUntil: null,
+      },
+    });
+    renderWithQueryClient(
+      <CancelDialog applicationId="11" startAt={startAt} onClose={vi.fn()} onConfirm={vi.fn()} />,
+    );
+    expect(
+      await screen.findByText(
+        /Cancelling ends your request and starts the release of the PayPal hold/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Estimated refund")).not.toBeInTheDocument();
+    expect(screen.queryByText("Cancellation fee")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Schedule conflict" }));
+    expect(screen.getByRole("button", { name: "Yes, Cancel" })).toBeEnabled();
+  });
+
   it("keeps cancellation disabled while the latest quote is being fetched", () => {
     mockedGetCancellationQuote.mockReturnValue(new Promise(() => undefined));
     renderWithQueryClient(

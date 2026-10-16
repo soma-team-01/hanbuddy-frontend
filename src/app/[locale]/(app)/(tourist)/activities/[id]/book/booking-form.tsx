@@ -767,9 +767,7 @@ export function BookingForm({
                               void queryClient.invalidateQueries({
                                 queryKey: applicationKeys.mine(),
                               });
-                              router.push(
-                                `/payments/paypal/success?applicationId=${applicationId}&captured=1`,
-                              );
+                              router.push(`/payments/success?applicationId=${applicationId}`);
                             }}
                           />
                         ) : (

@@ -8,7 +8,8 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "@/i18n/navigation";
 import { confirmApplicationPayment } from "@/lib/api/applications";
-import { isPaidApplicationStatus } from "@/lib/application-approval";
+import { isSubmittedApplicationStatus } from "@/lib/application-approval";
+import { isPayPalCheckoutReceived } from "@/lib/payments/paypal-authorization";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import { activityKeys } from "@/lib/query/activities";
@@ -56,6 +57,7 @@ export function PaymentSuccessContent({
   const language = getContentLanguage(useLocale());
   const t = useTranslations("Payment");
   const getApiErrorMessage = useApiErrorMessage();
+  const authorization = useTranslations("PayPalAuthorization");
   const hasConfirmParams = paymentKey.length > 0 && orderId.length > 0 && amount !== null;
   const confirmMutation = useMutation({
     mutationFn: async () =>
@@ -130,9 +132,22 @@ export function PaymentSuccessContent({
   if (!application) {
     return <RecoveryState message={t("confirmationNotFound")} />;
   }
-  if (!isPaidApplicationStatus(application.status)) {
+  if (!isSubmittedApplicationStatus(application.status)) {
+    if (application.cancellationReason === "PAYMENT_FAILED")
+      return <RecoveryState message={authorization("declinedDescription")} />;
+    if (application.paypalAuthorization)
+      return <RecoveryState message={authorization("processing")} />;
     return <RecoveryState message={t("notPaid")} />;
   }
+  if (
+    application.paypalAuthorization &&
+    !isPayPalCheckoutReceived(application) &&
+    !(
+      application.status === "PENDING_APPROVAL" &&
+      application.paypalAuthorization.state === "CAPTURE_REQUESTED"
+    )
+  )
+    return <RecoveryState message={authorization("processing")} />;
 
   return <ApplicationConfirmation application={application} />;
 }

@@ -1,5 +1,6 @@
 {
   "PayPalAuthorization": {
+    "processingShort": "正在确认PayPal处理结果。",
     "cancelHold": "取消将结束申请并解除PayPal预授权，而非退款。解除时间取决于PayPal和您的银行。",
     "received": "申请已提交 · 等待向导批准",
     "authorized": "实际付款将在向导批准后进行，审批结果将通过邮件通知。",

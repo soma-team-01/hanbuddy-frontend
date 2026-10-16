@@ -4,6 +4,7 @@
     "received": "Request received · Awaiting buddy approval",
     "authorized": "You’ll be charged after your buddy approves. We’ll email you the decision.",
     "processing": "We are checking the PayPal result. Check My Applications before attempting another payment.",
+    "processingShort": "We’re checking the PayPal result.",
     "captureProcessing": "Your buddy has approved. Payment is being verified; your booking is not confirmed yet.",
     "releaseProcessing": "Your request has ended. We are checking the release of the PayPal hold; it may still appear on your account.",
     "released": "You haven’t been charged.",

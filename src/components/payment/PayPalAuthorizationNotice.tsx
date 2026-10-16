@@ -14,7 +14,7 @@ export function PayPalAuthorizationNotice({
       role="status"
       className="border-l-2 border-primary pl-3 text-sm leading-6 [overflow-wrap:anywhere] text-muted max-md:text-xs max-md:leading-5"
     >
-      {t(message)}
+      {t(message === "processing" ? "processingShort" : message)}
     </p>
   );
 }

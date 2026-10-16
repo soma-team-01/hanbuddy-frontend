@@ -64,10 +64,12 @@ export function ActivityDetailContent({
       )
     : null;
 
+  // 번역 개선 효과를 언어별로 나눠 보기 위해 실제로 번역본을 노출했는지 함께 보낸다
   useAnalyticsView(
     "view_item",
     Number(activityId),
     activityQuery.isSuccess && Boolean(activity) && !activityQuery.error,
+    { isTranslated: activity?.isTranslated },
   );
 
   if (activityQuery.isPending) {
@@ -114,7 +116,11 @@ export function ActivityDetailContent({
         loginRequired={isGuest}
         emailLoginEnabled={emailLoginEnabled}
         initialReviews={initialReviews}
-        onBookingClick={() => track("booking_cta_click", Number(activityId))}
+        onBookingClick={() =>
+          track("booking_cta_click", Number(activityId), {
+            isTranslated: activity.isTranslated,
+          })
+        }
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />
       <ActivityContact />

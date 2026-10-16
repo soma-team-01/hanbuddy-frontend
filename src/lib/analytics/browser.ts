@@ -79,6 +79,8 @@ export function createGoogleBrowser(
         page_location: params.page_location,
         page_referrer: "",
         page_title: params.page_title,
+        // Event-scoped exposure such as is_translated must not leak into later events.
+        ...(params.content_language ? { content_language: params.content_language } : {}),
       });
       google.gtag?.("event", name, params);
     },

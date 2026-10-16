@@ -103,11 +103,13 @@ it("emits exactly one explicit query-free page view per SPA pathname", async () 
       page_location: "https://example.test/explore",
       page_referrer: "",
       page_title: "Explore",
+      content_language: "en",
     },
     {
       page_location: "https://example.test/explore",
       page_referrer: "",
       page_title: "Explore",
+      content_language: "ko",
     },
   ]);
   expect(JSON.stringify(pageViews)).not.toMatch(/[?#]|https:\/\/example\.test\/(en|ko)\//);
@@ -170,4 +172,21 @@ it("emits a restored signup against onboarding without changing the current land
   );
 
   expect(browser.send.mock.calls.map(([name]) => name)).toEqual(["sign_up", "section_view"]);
+});
+it("sends the rendered locale and translated exposure with detail funnel events", async () => {
+  const { controller, browser } = setup();
+  controller.visit("/ja/activities/42");
+  await controller.accept();
+  controller.track("view_item", "/ja/activities/42", 42, { isTranslated: true });
+  controller.track("booking_cta_click", "/ja/activities/42", 42, { isTranslated: true });
+  controller.track("begin_checkout", "/ja/activities/42/book", 42);
+  const payload = (name: string) => browser.send.mock.calls.find((c) => c[0] === name)![1];
+  expect(payload("page_view")).toMatchObject({ content_language: "ja" });
+  expect(payload("view_item")).toMatchObject({ content_language: "ja", is_translated: "true" });
+  expect(payload("booking_cta_click")).toMatchObject({
+    content_language: "ja",
+    is_translated: "true",
+  });
+  expect(payload("begin_checkout")).toMatchObject({ content_language: "ja" });
+  expect(payload("begin_checkout")).not.toHaveProperty("is_translated");
 });

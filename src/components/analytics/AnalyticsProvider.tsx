@@ -17,7 +17,7 @@ import { getLocaleOrDefault } from "@/i18n/routing";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { AnalyticsController } from "@/lib/analytics/controller";
 import { createCookieRuntime } from "@/lib/analytics/cookie-runtime";
-import type { AnalyticsItemId, FunnelEvent } from "@/lib/analytics/events";
+import type { AnalyticsItemId, FunnelContext, FunnelEvent } from "@/lib/analytics/events";
 import type { AnalyticsPolicy } from "@/lib/analytics/policy";
 import { consentCopy } from "./consent-copy";
 
@@ -198,8 +198,8 @@ export function AnalyticsSettings() {
 export function useFunnelEvent() {
   const { controller, pathname } = useContext(Context);
   return useCallback(
-    (name: FunnelEvent, activityId: number) =>
-      controller?.track(name, pathname, activityId) ?? false,
+    (name: FunnelEvent, activityId: number, context?: FunnelContext) =>
+      controller?.track(name, pathname, activityId, context) ?? false,
     [controller, pathname],
   );
 }
@@ -208,12 +208,14 @@ export function useAnalyticsView(
   name: "view_item" | "begin_checkout",
   activityId: number,
   usable: boolean,
+  context?: FunnelContext,
 ) {
   const { revision } = useContext(Context);
   const event = useFunnelEvent();
+  const isTranslated = context?.isTranslated;
   useEffect(() => {
-    if (usable) event(name, activityId);
-  }, [event, name, activityId, usable, revision]);
+    if (usable) event(name, activityId, { isTranslated });
+  }, [event, name, activityId, usable, revision, isTranslated]);
 }
 
 export function useAnalyticsEnabled() {

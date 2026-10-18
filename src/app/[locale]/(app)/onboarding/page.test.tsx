@@ -89,6 +89,59 @@ function createRejectedApplication(): BuddyResubmission {
 }
 
 describe("OnboardingForm", () => {
+  it("submits email credentials separately from the existing profile and never tracks a Google signup", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "201",
+          message: "OK",
+          result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
+        }),
+        { status: 201 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(
+      <OnboardingForm
+        emailSignup={{ email: "alice@example.com", expiresAt: Date.now() + 600000 }}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Alice" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: " a long password " } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), {
+      target: { value: " a long password " },
+    });
+    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "line_user" });
+    fireEvent.click(screen.getByRole("checkbox", { name: /19 years or older/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /HanBuddy Terms of Service/ }));
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /Personal information collection and use/ }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/auth/email/signup");
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body).toMatchObject({
+      name: "Alice",
+      password: " a long password ",
+      profile: { userType: "TOURIST", contactIdentifier: "line_user" },
+    });
+    expect(body.profile.agreements).toHaveLength(4);
+    expect(body).not.toHaveProperty("email");
+    expect(body.profile).not.toHaveProperty("password");
+    await waitFor(() => expect(routerMocks.replace).toHaveBeenCalledWith("/en"));
+    expect(analyticsMocks.trackSignup).not.toHaveBeenCalled();
+  });
+  it("blocks expired email signup and offers re-verification", () => {
+    renderWithIntl(<OnboardingForm emailSignup={{ email: "alice@example.com", expiresAt: 1 }} />);
+    clickContinue("en");
+    expect(screen.getByRole("alert")).toHaveTextContent("expired");
+    expect(screen.getByRole("link", { name: "Verify your email again" })).toHaveAttribute(
+      "href",
+      "/en/signup",
+    );
+  });
   it.each([
     ["KR", "phone", "01012345678", "01012345678"],
     ["US", "phone", "2025550114", ""],

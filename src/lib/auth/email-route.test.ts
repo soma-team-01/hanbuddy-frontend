@@ -20,7 +20,9 @@ const request = (body: unknown, cookie = "", authorization = "") =>
     headers: { "Content-Type": "application/json", cookie, authorization },
     body: JSON.stringify(body),
   });
-beforeEach(() => post.mockReset());
+beforeEach(() => {
+  post.mockReset();
+});
 
 describe("email auth BFF", () => {
   it("forwards nested signup profile and the same signup token used for image upload", async () => {

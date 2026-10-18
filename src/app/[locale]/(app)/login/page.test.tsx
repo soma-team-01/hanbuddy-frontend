@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
@@ -57,22 +57,29 @@ async function renderLogin(locale: Locale, searchParams: { error?: string | stri
 }
 
 describe("LoginPage", () => {
-  it("keeps email login hidden when review login is not enabled", async () => {
+  it("offers regular email login independently of the review login flag", async () => {
     await renderLogin("en");
 
-    expect(screen.queryByRole("region", { name: "Log in with email" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Log in with email" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+    expect(screen.queryByText("Review account login")).not.toBeInTheDocument();
   });
 
-  it("shows email login only when review login is explicitly enabled", async () => {
+  it("preserves a separate review login when explicitly enabled", async () => {
     vi.stubEnv("REVIEW_LOGIN_ENABLED", "true");
 
     await renderLogin("en");
 
     expect(screen.getByRole("region", { name: "Log in with email" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Log in with email" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
-    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
+    const form = screen.getByText("Review account login").closest("details")!;
+    fireEvent.click(screen.getByText("Review account login"));
+    form.open = true;
+    expect(within(form).getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
+    expect(within(form).getByLabelText("Password")).toHaveAttribute(
+      "autocomplete",
+      "current-password",
+    );
     const emailLoginButton = screen.getByRole("button", { name: "Log in" });
     const googleLoginLink = screen.getByRole("link", { name: "Continue with Google" });
 

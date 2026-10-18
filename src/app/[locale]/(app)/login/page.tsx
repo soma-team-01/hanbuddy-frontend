@@ -10,6 +10,7 @@ import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getPolicyPath } from "@/lib/policy-routes";
 import { ReviewLoginForm } from "./review-login-form";
+import { EmailLoginForm } from "@/components/auth/EmailLoginForm";
 import { pageAlternates } from "@/lib/seo/metadata";
 
 interface LoginPageProps {
@@ -34,6 +35,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Auth" });
   const { error, next } = await searchParams;
+  const emailT = await getTranslations({ locale, namespace: "EmailAuth" });
   const errorValue = Array.isArray(error) ? error[0] : error;
   const errorCode = errorValue ? parseAuthErrorCode(errorValue) : null;
   const returnTo = sanitizeReturnToPath(Array.isArray(next) ? next[0] : next);
@@ -63,9 +65,19 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
               {t(`errors.${errorCode}`)}
             </p>
           ) : null}
+          <EmailLoginForm locale={locale} returnTo={returnTo} />
           {reviewLoginEnabled ? (
             <div className={errorCode ? "mt-6" : "mt-10"}>
-              <ReviewLoginForm locale={locale} returnTo={returnTo} />
+              <details className="mx-auto max-w-[520px] text-left">
+                <summary className="cursor-pointer text-sm text-muted">{emailT("review")}</summary>
+                <div className="mt-4">
+                  <ReviewLoginForm
+                    locale={locale}
+                    returnTo={returnTo}
+                    ariaLabel={emailT("review")}
+                  />
+                </div>
+              </details>
               <Link
                 href={googleStartHref}
                 prefetch={false}

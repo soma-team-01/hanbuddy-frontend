@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRightIcon, GoogleIcon, XIcon } from "@/components/ui/icons";
@@ -24,6 +25,7 @@ export function BuddyGoogleAuthDialog({
   const locale = useLocale();
   const t = useTranslations("BuddyAuth");
   const authT = useTranslations("Auth");
+  const emailT = useTranslations("EmailAuth");
   const [isOpen, setIsOpen] = useState(false);
   const titleId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -123,6 +125,14 @@ export function BuddyGoogleAuthDialog({
                   </span>
                   {t("continueWithGoogle")}
                 </a>
+                <div className="mt-5 flex flex-wrap justify-center gap-4 text-sm font-semibold text-primary underline underline-offset-4">
+                  <Link href="/ko/login" onClick={() => setIsOpen(false)}>
+                    {emailT("login")}
+                  </Link>
+                  <Link href="/ko/signup?intent=buddy" onClick={() => setIsOpen(false)}>
+                    {emailT("buddySignup")}
+                  </Link>
+                </div>
                 <p className="mt-5 text-xs leading-5 text-muted lg:whitespace-nowrap">
                   {authT("legalNoticeStart")}{" "}
                   <span className="font-semibold text-primary underline underline-offset-2">

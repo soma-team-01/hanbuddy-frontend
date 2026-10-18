@@ -17,6 +17,27 @@ import { isNoindexPath } from "@/lib/seo/indexing";
 const handleI18nRouting = createMiddleware(routing);
 
 export function proxy(request: NextRequest) {
+  if (stripLocaleFromPathname(request.nextUrl.pathname) === "/auth/reset-password") {
+    // Keep fragment credentials in a document without third-party analytics. No locale redirect.
+    const resetHeaders = new Headers(request.headers);
+    resetHeaders.set(
+      "x-reset-locale",
+      getLocaleFromPathname(request.nextUrl.pathname) ??
+        (isLocale(request.cookies.get(LOCALE_COOKIE_NAME)?.value)
+          ? request.cookies.get(LOCALE_COOKIE_NAME)!.value
+          : routing.defaultLocale),
+    );
+    const response =
+      request.nextUrl.pathname === "/auth/reset-password"
+        ? NextResponse.next({ request: { headers: resetHeaders } })
+        : NextResponse.rewrite(new URL("/auth/reset-password", request.url), {
+            request: { headers: resetHeaders },
+          });
+    response.headers.set("Referrer-Policy", "no-referrer");
+    response.headers.set("Cache-Control", "no-store");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
   const response = routeRequest(request);
   if (
     isNoindexPath(request.nextUrl.pathname) ||

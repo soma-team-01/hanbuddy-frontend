@@ -92,7 +92,10 @@ async function fetchWithTimeoutMessage(
   }
 }
 
-export async function uploadProfileImage(file: File): Promise<PresignedImageItem> {
+export async function uploadProfileImage(
+  file: File,
+  options: { temporaryToken?: boolean } = {},
+): Promise<PresignedImageItem> {
   if (!isSupportedProfileImageType(file.type)) {
     throw new Error("JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.");
   }
@@ -114,7 +117,7 @@ export async function uploadProfileImage(file: File): Promise<PresignedImageItem
     },
     PROFILE_UPLOAD_TIMEOUT_ERROR_MESSAGE,
     // 프로필 수정 중 accessToken이 만료됐으면 세션을 한 번 갱신해 다시 발급받는다
-    fetchWithAuthRetry,
+    options.temporaryToken ? fetch : fetchWithAuthRetry,
   );
   const presignedBody = (await presignedResponse.json().catch(() => undefined)) as
     PresignedResponseBody | undefined;

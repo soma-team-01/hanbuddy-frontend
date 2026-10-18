@@ -3,6 +3,8 @@
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
 import { SignupExtraFields } from "./SignupExtraFields";
+import { EmailSignupFields } from "@/components/auth/EmailSignupFields";
+import { isValidNewPassword, type EmailErrorKey } from "@/lib/auth/email";
 import {
   buildSignupExtra,
   isBankName,
@@ -13,7 +15,7 @@ import {
 } from "@/lib/auth/signup-extra";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { SignupAgreementNoticeDialog } from "@/components/auth/SignupAgreementNoticeDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -26,7 +28,7 @@ import {
 } from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, TrashIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
-import { createApiClientError } from "@/lib/api/errors";
+import { createApiClientError, isUnauthenticatedError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import {
   buildSignupAgreements,
@@ -83,6 +85,7 @@ type RequestFailureKey =
   "profileUploadFailed" | "resubmissionFailed" | "signupFailed" | "serverUnavailable";
 
 interface OnboardingFormProps {
+  emailSignup?: import("@/lib/auth/email").EmailSignupSession;
   googleProfile?: GoogleProfile;
   signupDraftAccountId?: string;
   userType?: UserType;
@@ -166,6 +169,7 @@ function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
 }
 
 export function OnboardingForm({
+  emailSignup,
   googleProfile,
   signupDraftAccountId,
   userType = "TOURIST",
@@ -174,6 +178,12 @@ export function OnboardingForm({
   returnTo = null,
 }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
+  const emailT = useTranslations("EmailAuth");
+  const locale = useLocale();
+  const [emailName, setEmailName] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [emailConfirmation, setEmailConfirmation] = useState("");
+  const [emailError, setEmailError] = useState<EmailErrorKey | null>(null);
   const buddyT = useTranslations("BuddyOnboarding");
   const resubmissionT = useTranslations("BuddyResubmission");
   const messagingT = useTranslations("Messaging");
@@ -440,7 +450,9 @@ export function OnboardingForm({
       return uploadedProfileImageRef.current.imageKey;
     }
 
-    const uploaded = await uploadProfileImage(profileImageFile);
+    const uploaded = emailSignup
+      ? await uploadProfileImage(profileImageFile, { temporaryToken: true })
+      : await uploadProfileImage(profileImageFile);
     uploadedProfileImageRef.current = { file: profileImageFile, imageKey: uploaded.imageKey };
     return uploaded.imageKey;
   }
@@ -529,7 +541,20 @@ export function OnboardingForm({
     return error === null;
   }
 
+  function validateEmailSignup() {
+    if (!emailSignup) return true;
+    let invalid: EmailErrorKey | null = null;
+    if (emailSignup.expiresAt <= Date.now()) invalid = "expired";
+    else if (!emailName.trim() || emailName.length > 100) invalid = "invalid";
+    else if (!isValidNewPassword(emailPassword)) invalid = "passwordInvalid";
+    else if (emailPassword !== emailConfirmation) invalid = "mismatch";
+    setEmailError(invalid);
+    if (invalid) setCurrentStep(1);
+    return !invalid;
+  }
+
   function handleContinue() {
+    if (!validateEmailSignup()) return;
     setErrorKey(null);
     setRequestFailure(null);
 
@@ -547,6 +572,7 @@ export function OnboardingForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submissionInFlight.current) return;
+    if (!validateEmailSignup()) return;
     setErrorKey(null);
     setRequestFailure(null);
 
@@ -578,6 +604,11 @@ export function OnboardingForm({
       try {
         profileImageKey = await resolveProfileImageKey();
       } catch (error) {
+        if (emailSignup && isUnauthenticatedError(error)) {
+          setEmailError("expired");
+          setCurrentStep(1);
+          return;
+        }
         setRequestFailure({ error, fallbackKey: "profileUploadFailed" });
         return;
       }
@@ -610,17 +641,28 @@ export function OnboardingForm({
           };
 
       const response = await fetch(
-        isResubmission ? "/api/auth/buddy/resubmission" : "/api/auth/google/signup",
+        isResubmission
+          ? "/api/auth/buddy/resubmission"
+          : emailSignup
+            ? "/api/auth/email/signup"
+            : "/api/auth/google/signup",
         {
           method: isResubmission ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(
+            emailSignup ? { name: emailName, password: emailPassword, profile: payload } : payload,
+          ),
         },
       );
       const body = (await response.json().catch(() => undefined)) as
         ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
+        if (emailSignup && (response.status === 401 || response.status === 409)) {
+          setEmailError(response.status === 401 ? "expired" : "duplicate");
+          setCurrentStep(1);
+          return;
+        }
         if (body && !body.isSuccess) {
           if (!isResubmission && body.code === "AUTH400_SIGNUP_SOURCE") {
             setSignupExtraError({ field: "source", key: "sourceInvalid" });
@@ -655,7 +697,7 @@ export function OnboardingForm({
 
       const signupResult = body.result as GoogleLoginResponse;
       const authStatus = signupResult.authStatus;
-      if (signupResult.registered === true) trackSignup("google");
+      if (signupResult.registered === true && !emailSignup) trackSignup("google");
       if (authStatus === "ACTIVE") {
         discardDraft();
         router.replace(userType === "BUDDY" ? "/dashboard" : (returnTo ?? "/"));
@@ -892,6 +934,33 @@ export function OnboardingForm({
                   </div>
 
                   <div className="mt-8 max-w-2xl space-y-6 max-md:mt-4 max-md:space-y-4">
+                    {emailSignup && (
+                      <>
+                        <EmailSignupFields
+                          session={emailSignup}
+                          name={emailName}
+                          password={emailPassword}
+                          confirmation={emailConfirmation}
+                          onName={setEmailName}
+                          onPassword={setEmailPassword}
+                          onConfirmation={setEmailConfirmation}
+                        />
+                        {emailError && (
+                          <div role="alert" className="grid gap-3 text-sm text-danger">
+                            <p>{emailT(emailError)}</p>
+                            <a
+                              href={isBuddyFlow ? "/ko/signup?intent=buddy" : `/${locale}/signup`}
+                              className="underline"
+                            >
+                              {emailT("reverify")}
+                            </a>
+                            <a href={`/${locale}/login`} className="underline">
+                              {emailT("back")}
+                            </a>
+                          </div>
+                        )}
+                      </>
+                    )}
                     <div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-4 max-md:grid-cols-[56px_minmax(0,1fr)]">
                       <div className="relative size-16 shrink-0 max-md:size-14">
                         {profilePhoto}

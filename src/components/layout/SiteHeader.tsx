@@ -124,6 +124,9 @@ function LocalizedSiteHeader({
   const effectiveAuthenticated = sessionStatus === "authenticated";
   const effectiveRole = profile ? getUserTypeNavRole(profile.userType) : role;
   const isAuthPage =
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/auth/reset-password" ||
     pathname === "/login" ||
     pathname === "/onboarding" ||
     pathname === "/buddy/onboarding" ||
@@ -132,6 +135,7 @@ function LocalizedSiteHeader({
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
   const showLanguageSwitcher =
+    pathname !== "/auth/reset-password" &&
     (effectiveRole !== null || sessionStatus === "guest") &&
     effectiveRole !== "buddy" &&
     !isBuddyArea;

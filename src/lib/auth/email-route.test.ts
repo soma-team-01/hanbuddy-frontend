@@ -25,6 +25,25 @@ beforeEach(() => {
 });
 
 describe("email auth BFF", () => {
+  it.each([
+    [409, "AUTH409"],
+    [503, "AUTH503_EMAIL"],
+  ])("preserves the signup code error %s/%s for localized feedback", async (status, code) => {
+    post.mockResolvedValue({
+      status,
+      setCookies: [],
+      payload: { isSuccess: false, code, message: "private backend detail" },
+    });
+    const res = await handleEmailAuth(
+      request({ email: "test@example.com", purpose: "SIGNUP" }),
+      "code",
+    );
+    expect(res.status).toBe(status);
+    const payload = await res.json();
+    expect(payload.code).toBe(code);
+    expect(payload.message).not.toContain("private backend detail");
+  });
+
   it("forwards nested signup profile and the same signup token used for image upload", async () => {
     const profile = {
       userType: "TOURIST",

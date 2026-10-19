@@ -20,5 +20,8 @@ describe("email password policy", () => {
     expect(emailErrorKey("AUTH429_EMAIL", 429)).toBe("rateLimit");
     expect(emailErrorKey("AUTH400_EMAIL_CODE", 400)).toBe("codeInvalid");
     expect(emailErrorKey("AUTH409", 409)).toBe("duplicate");
+    expect(emailErrorKey("AUTH503_EMAIL", 503)).toBe("emailDeliveryUnavailable");
+    expect(emailErrorKey("AUTH_PROXY_ERROR", 502)).toBe("unavailable");
+    expect(emailErrorKey("UNKNOWN_CONFLICT", 409)).toBe("unavailable");
   });
 });

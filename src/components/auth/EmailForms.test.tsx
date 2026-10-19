@@ -16,6 +16,23 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("email UI contracts", () => {
+  it.each([
+    ["AUTH409", 409, "이미 가입된 이메일입니다. 기존 계정으로 로그인해 주세요."],
+    ["AUTH503_EMAIL", 503, "인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요."],
+    ["AUTH_PROXY_ERROR", 502, "요청을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요."],
+  ])(
+    "shows the specific signup error for %s without assuming duplicate email",
+    async (code, status, message) => {
+      request.mockRejectedValue(new EmailAuthError(code, status));
+      renderWithIntl(<EmailCodeForm locale="ko" buddy={false} />, { locale: "ko" });
+      fireEvent.change(screen.getByLabelText("이메일"), { target: { value: "alice@example.com" } });
+      fireEvent.click(screen.getByRole("button", { name: "인증 코드 받기" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(message);
+      expect(screen.queryByLabelText("6자리 인증 코드")).not.toBeInTheDocument();
+      expect(request).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("preserves a leading zero code and resets code state when editing the email", async () => {
     request.mockResolvedValue({ accepted: true });
     renderWithIntl(<EmailCodeForm locale="en" buddy={false} />);

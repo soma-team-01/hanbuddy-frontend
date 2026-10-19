@@ -39,6 +39,43 @@ export type EmailAction =
 
 export type EmailErrorKey = ReturnType<typeof emailErrorKey> | "mismatch";
 
+export interface EmailCodeFailure {
+  failedAttempts: number | null;
+  maxAttempts: number;
+  resendRequired: boolean;
+}
+
+/** Only expose the documented verification metadata, never arbitrary backend error results. */
+export function readEmailCodeFailure(code: string, value: unknown): EmailCodeFailure | undefined {
+  if (
+    ![
+      "AUTH400_EMAIL_CODE",
+      "AUTH400_EMAIL_CODE_UNAVAILABLE",
+      "AUTH429_EMAIL_CODE_ATTEMPTS",
+    ].includes(code) ||
+    !value ||
+    typeof value !== "object"
+  )
+    return undefined;
+  const { failedAttempts, maxAttempts, resendRequired } = value as Partial<EmailCodeFailure>;
+  if (
+    typeof maxAttempts !== "number" ||
+    !Number.isSafeInteger(maxAttempts) ||
+    maxAttempts <= 0 ||
+    typeof resendRequired !== "boolean"
+  )
+    return undefined;
+  if (
+    failedAttempts !== null &&
+    (typeof failedAttempts !== "number" ||
+      !Number.isSafeInteger(failedAttempts) ||
+      failedAttempts < 0 ||
+      failedAttempts > maxAttempts)
+  )
+    return undefined;
+  return { failedAttempts, maxAttempts, resendRequired };
+}
+
 export function isValidNewPassword(password: string) {
   return (
     password.length >= 8 &&
@@ -51,6 +88,8 @@ export function isValidNewPassword(password: string) {
 export function emailErrorKey(code?: string, status?: number) {
   if (code === "AUTH401_EMAIL_LOGIN") return "credentials";
   if (status === 401) return "expired";
+  if (code === "AUTH429_EMAIL_CODE_ATTEMPTS") return "codeAttemptsExceeded";
+  if (code === "AUTH400_EMAIL_CODE_UNAVAILABLE") return "codeUnavailable";
   if (status === 429) return "rateLimit";
   if (code === "AUTH400_EMAIL_CODE") return "codeInvalid";
   if (code === "AUTH400_PASSWORD") return "passwordInvalid";
@@ -65,6 +104,7 @@ export class EmailAuthError extends Error {
   constructor(
     readonly code: string,
     readonly status: number,
+    readonly codeFailure?: EmailCodeFailure,
   ) {
     super("Email authentication request failed");
   }
@@ -93,6 +133,12 @@ export async function requestEmailAuth<T>(
   const payload = (await response.json().catch(() => null)) as
     ApiResponse<T> | ErrorApiResponse | null;
   if (!response.ok || !payload?.isSuccess)
-    throw new EmailAuthError(payload?.code ?? "AUTH_PROXY_ERROR", response.status);
+    throw new EmailAuthError(
+      payload?.code ?? "AUTH_PROXY_ERROR",
+      response.status,
+      action === "code/verify"
+        ? readEmailCodeFailure(payload?.code ?? "", payload?.result)
+        : undefined,
+    );
   return payload.result;
 }

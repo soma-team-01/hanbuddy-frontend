@@ -1,7 +1,49 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isValidNewPassword, emailErrorKey, requestEmailAuth } from "./email";
+import { isValidNewPassword, emailErrorKey, requestEmailAuth, readEmailCodeFailure } from "./email";
 
 afterEach(() => vi.unstubAllGlobals());
+it.each([
+  null,
+  {},
+  { failedAttempts: "1", maxAttempts: 5, resendRequired: false },
+  { failedAttempts: -1, maxAttempts: 5, resendRequired: false },
+  { failedAttempts: 6, maxAttempts: 5, resendRequired: false },
+  { failedAttempts: 1.5, maxAttempts: 5, resendRequired: false },
+  { failedAttempts: 1, maxAttempts: 0, resendRequired: false },
+  { failedAttempts: 1, maxAttempts: 5, resendRequired: "false" },
+])("ignores malformed attempt metadata: %j", (value) => {
+  expect(readEmailCodeFailure("AUTH400_EMAIL_CODE", value)).toBeUndefined();
+});
+it("does not interpret unrelated errors as verification attempts", () => {
+  expect(
+    readEmailCodeFailure("AUTH429_EMAIL", {
+      failedAttempts: 1,
+      maxAttempts: 5,
+      resendRequired: false,
+    }),
+  ).toBeUndefined();
+  expect(emailErrorKey("AUTH429_EMAIL_CODE_ATTEMPTS", 429)).toBe("codeAttemptsExceeded");
+  expect(emailErrorKey("AUTH400_EMAIL_CODE_UNAVAILABLE", 400)).toBe("codeUnavailable");
+});
+it.each([
+  ["AUTH400_EMAIL_CODE", 400, { failedAttempts: 3, maxAttempts: 5, resendRequired: false }],
+  ["AUTH429_EMAIL_CODE_ATTEMPTS", 429, { failedAttempts: 5, maxAttempts: 5, resendRequired: true }],
+  [
+    "AUTH400_EMAIL_CODE_UNAVAILABLE",
+    400,
+    { failedAttempts: null, maxAttempts: 5, resendRequired: true },
+  ],
+])("preserves verification failure metadata for %s", async (code, status, result) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(Response.json({ isSuccess: false, code, result }, { status })),
+  );
+  await expect(requestEmailAuth("code/verify", {})).rejects.toMatchObject({
+    code,
+    status,
+    codeFailure: result,
+  });
+});
 it("sends bodyless reset validation with only the temporary bearer credential", async () => {
   const fetchMock = vi.fn().mockResolvedValue(
     Response.json({

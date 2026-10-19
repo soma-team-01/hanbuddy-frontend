@@ -1,5 +1,5 @@
 "use client";
-import type { EmailErrorKey } from "@/lib/auth/email";
+import type { EmailCodeFailure, EmailErrorKey } from "@/lib/auth/email";
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -26,12 +26,20 @@ export function EmailCodeForm({
   const [codeDeadline, setCodeDeadline] = useState(0);
   const codeRemaining = Math.min(600, useRemainingSeconds(codeDeadline));
   const timerId = useId();
+  const feedbackId = useId();
   const codeTime = `${Math.floor(codeRemaining / 60)
     .toString()
     .padStart(2, "0")}:${(codeRemaining % 60).toString().padStart(2, "0")}`;
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
   const [error, setError] = useState<EmailErrorKey | null>(null);
+  const [codeFailure, setCodeFailure] = useState<{
+    key: "codeInvalid" | "codeUnavailable" | "codeAttemptsExceeded";
+    details?: EmailCodeFailure;
+  } | null>(null);
+  const resendRequired = Boolean(
+    codeFailure && (codeFailure.key !== "codeInvalid" || codeFailure.details?.resendRequired),
+  );
   const safeReturnTo = buddy ? null : sanitizeReturnToPath(returnTo);
   const loginHref = `/${buddy ? "ko" : locale}/login${safeReturnTo ? `?next=${encodeURIComponent(safeReturnTo)}` : ""}`;
   async function send() {
@@ -46,6 +54,7 @@ export function EmailCodeForm({
       await requestEmailAuth("code", { email, purpose: "SIGNUP" });
       setSentEmail(email);
       setCode("");
+      setCodeFailure(null);
       // The backend stores codes for 600 seconds. Start at request time conservatively.
       setCodeDeadline(requestedAt + 600_000);
     } catch (e) {
@@ -68,7 +77,7 @@ export function EmailCodeForm({
       await send();
       return;
     }
-    if (busy.current || Date.now() >= codeDeadline) return;
+    if (busy.current || Date.now() >= codeDeadline || resendRequired) return;
     busy.current = true;
     setPending(true);
     setError(null);
@@ -79,7 +88,10 @@ export function EmailCodeForm({
         path + (!buddy && returnTo ? `?next=${encodeURIComponent(returnTo)}` : ""),
       );
     } catch (e) {
-      setError(e instanceof EmailAuthError ? emailErrorKey(e.code, e.status) : "unavailable");
+      const key = e instanceof EmailAuthError ? emailErrorKey(e.code, e.status) : "unavailable";
+      if (key === "codeInvalid" || key === "codeUnavailable" || key === "codeAttemptsExceeded") {
+        setCodeFailure({ key, details: e instanceof EmailAuthError ? e.codeFailure : undefined });
+      } else setError(key);
     } finally {
       busy.current = false;
       setPending(false);
@@ -103,6 +115,7 @@ export function EmailCodeForm({
             setSentEmail("");
             setCode("");
             setCodeDeadline(0);
+            setCodeFailure(null);
           }}
         />
         {sentEmail && (
@@ -132,8 +145,9 @@ export function EmailCodeForm({
             minLength={6}
             maxLength={6}
             required
-            disabled={pending}
-            aria-describedby={timerId}
+            disabled={pending || resendRequired || codeRemaining === 0}
+            aria-invalid={Boolean(codeFailure) || codeRemaining === 0 || undefined}
+            aria-describedby={`${timerId}${codeFailure || codeRemaining === 0 ? ` ${feedbackId}` : ""}`}
             endAdornment={
               <span id={timerId} role="timer" aria-label={t("codeTimeRemaining")}>
                 {codeTime}
@@ -142,11 +156,28 @@ export function EmailCodeForm({
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
-          {codeRemaining === 0 && (
-            <p role="status" className="text-sm text-danger">
+          {codeRemaining === 0 ? (
+            <p id={feedbackId} role="status" className="text-sm text-danger">
               {t("codeExpired")}
             </p>
-          )}
+          ) : codeFailure ? (
+            <p id={feedbackId} role="alert" className="text-sm text-danger">
+              {t(
+                resendRequired && codeFailure.key === "codeInvalid"
+                  ? "codeUnavailable"
+                  : codeFailure.key,
+              )}
+              {codeFailure.details?.failedAttempts != null && (
+                <>
+                  {" "}
+                  {t("codeAttemptCount", {
+                    failedAttempts: codeFailure.details.failedAttempts,
+                    maxAttempts: codeFailure.details.maxAttempts,
+                  })}
+                </>
+              )}
+            </p>
+          ) : null}
         </>
       )}
       {error && (
@@ -159,7 +190,11 @@ export function EmailCodeForm({
           {t("submitLogin")}
         </Link>
       ) : sentEmail ? (
-        <button type="submit" disabled={pending || codeRemaining === 0} className={authButtonClass}>
+        <button
+          type="submit"
+          disabled={pending || codeRemaining === 0 || resendRequired}
+          className={authButtonClass}
+        >
           {pending ? t("busy") : t("verify")}
         </button>
       ) : (

@@ -16,6 +16,8 @@ import {
 import {
   isValidNewPassword,
   isPasswordResetValidation,
+  readEmailCodeFailure,
+  type EmailCodeFailure,
   type EmailAction,
   type EmailVerificationResponse,
 } from "./email";
@@ -24,9 +26,14 @@ import { sanitizeReturnToPath } from "./return-to";
 import type { GoogleLoginResponse } from "./types";
 
 const headers = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
-function failure(status: number, code = "COMMON400") {
+function failure(status: number, code = "COMMON400", result?: EmailCodeFailure) {
   return NextResponse.json(
-    { isSuccess: false, code, message: "Authentication request failed." },
+    {
+      isSuccess: false,
+      code,
+      message: "Authentication request failed.",
+      ...(result ? { result } : {}),
+    },
     { status, headers },
   );
 }
@@ -160,7 +167,13 @@ async function performEmailAuth(request: NextRequest, action: EmailAction) {
       bearerToken ? { bearerToken } : {},
     );
     if (!backend.payload.isSuccess)
-      return failure(backend.status >= 400 ? backend.status : 502, backend.payload.code);
+      return failure(
+        backend.status >= 400 ? backend.status : 502,
+        backend.payload.code,
+        action === "code/verify"
+          ? readEmailCodeFailure(backend.payload.code, backend.payload.result)
+          : undefined,
+      );
     if (action === "login" || action === "signup")
       return sessionResponse(
         request,

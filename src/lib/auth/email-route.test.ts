@@ -25,6 +25,58 @@ beforeEach(() => {
 });
 
 describe("email auth BFF", () => {
+  it.each([
+    ["AUTH400_EMAIL_CODE", { failedAttempts: "1", maxAttempts: 5, resendRequired: false }],
+    ["AUTH429_EMAIL", { failedAttempts: 1, maxAttempts: 5, resendRequired: false }],
+  ])("drops untrusted error results for %s", async (code, result) => {
+    post.mockResolvedValue({
+      status: 400,
+      setCookies: [],
+      payload: { isSuccess: false, code, message: "private", result },
+    });
+    const res = await handleEmailAuth(
+      request({ email: "alice@example.com", purpose: "SIGNUP", code: "000000" }),
+      "code/verify",
+    );
+    expect(await res.json()).not.toHaveProperty("result");
+  });
+  it.each([
+    ["AUTH400_EMAIL_CODE", 400, { failedAttempts: 3, maxAttempts: 5, resendRequired: false }],
+    [
+      "AUTH429_EMAIL_CODE_ATTEMPTS",
+      429,
+      { failedAttempts: 5, maxAttempts: 5, resendRequired: true },
+    ],
+    [
+      "AUTH400_EMAIL_CODE_UNAVAILABLE",
+      400,
+      { failedAttempts: null, maxAttempts: 5, resendRequired: true },
+    ],
+  ])("forwards only safe code failure metadata for %s", async (code, status, result) => {
+    post.mockResolvedValue({
+      status,
+      setCookies: ["secret=value"],
+      payload: {
+        isSuccess: false,
+        code,
+        message: "private",
+        result: { ...result, token: "secret" },
+      },
+    });
+    const res = await handleEmailAuth(
+      request({ email: "alice@example.com", purpose: "SIGNUP", code: "000000" }),
+      "code/verify",
+    );
+    expect(res.status).toBe(status);
+    expect(await res.json()).toEqual({
+      isSuccess: false,
+      code,
+      message: "Authentication request failed.",
+      result,
+    });
+    expect(res.headers.get("set-cookie")).toBeNull();
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+  });
   it("validates reset tokens without a body or changing any session cookies", async () => {
     post.mockResolvedValue({
       ...ok({ valid: true, expiresInSeconds: 540 }),

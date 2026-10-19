@@ -13,13 +13,15 @@ export default async function Page({
   searchParams,
 }: Readonly<{
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ intent?: string; next?: string }>;
+  searchParams: Promise<{ intent?: string | string[]; next?: string | string[] }>;
 }>) {
   const { locale } = await params;
   const query = await searchParams;
   const t = await getTranslations({ locale, namespace: "EmailAuth" });
-  const buddy = query.intent === "buddy";
-  const returnTo = sanitizeReturnToPath(query.next);
+  const intent = Array.isArray(query.intent) ? query.intent[0] : query.intent;
+  const next = Array.isArray(query.next) ? query.next[0] : query.next;
+  const buddy = intent === "buddy";
+  const returnTo = sanitizeReturnToPath(next);
   return (
     <main>
       <PageContainer className="py-10 md:py-16">

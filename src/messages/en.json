@@ -42,6 +42,7 @@
     "savePassword": "Save password",
     "passwordHint": "At least 8 characters.",
     "successTitle": "Password changed",
+    "resetLinkUnavailableTitle": "This link is no longer valid",
     "success": "Please log in with your new password.",
     "back": "Back to login",
     "missing": "This link is missing or no longer available. Open the link in your email or request a new one.",

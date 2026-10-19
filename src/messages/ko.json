@@ -42,6 +42,7 @@
     "savePassword": "비밀번호 변경",
     "passwordHint": "최소 8자 이상.",
     "successTitle": "비밀번호가 변경됐어요",
+    "resetLinkUnavailableTitle": "링크를 사용할 수 없어요",
     "success": "새 비밀번호로 로그인해 주세요.",
     "back": "로그인으로 돌아가기",
     "missing": "링크 정보가 없거나 더 이상 사용할 수 없습니다. 메일의 링크를 다시 열거나 새 링크를 요청해 주세요.",

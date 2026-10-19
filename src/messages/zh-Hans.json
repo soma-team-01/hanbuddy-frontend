@@ -42,6 +42,7 @@
     "savePassword": "修改密码",
     "passwordHint": "至少8个字符。",
     "successTitle": "密码已修改",
+    "resetLinkUnavailableTitle": "此链接已失效",
     "success": "请使用新密码登录。",
     "back": "返回登录",
     "missing": "链接信息缺失或不可用。请重新打开邮件中的链接，或请求新链接。",

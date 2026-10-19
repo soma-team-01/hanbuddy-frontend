@@ -24,6 +24,12 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
   const [confirmation, setConfirmation] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<EmailErrorKey | null>(null);
+  const invalidLink = stage === "missing" || stage === "expired";
+  const title = invalidLink
+    ? "resetLinkUnavailableTitle"
+    : stage === "success"
+      ? "successTitle"
+      : "newPassword";
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
@@ -76,7 +82,7 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
     }
   }
   return (
-    <AuthPanel title={t(stage === "success" ? "successTitle" : "newPassword")}>
+    <AuthPanel title={t(title)}>
       <div className="grid gap-5">
         {stage === "loading" && <p role="status">{t("busy")}</p>}
         {stage === "ready" && (
@@ -106,7 +112,7 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
         {stage !== "ready" && stage !== "loading" && (
           <p
             role="status"
-            className={`text-sm leading-6 text-muted ${stage === "success" ? "text-center" : ""}`}
+            className={`text-sm leading-6 text-muted ${stage === "success" || invalidLink ? "text-center" : ""}`}
           >
             {t(stage)}
           </p>
@@ -114,7 +120,14 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
         {stage !== "ready" && stage !== "loading" && (
           <>
             {stage !== "success" && (
-              <a className={authLinkClass} href={`/${locale}/forgot-password`}>
+              <a
+                className={
+                  invalidLink
+                    ? `${authButtonClass} flex items-center justify-center`
+                    : authLinkClass
+                }
+                href={`/${locale}/forgot-password`}
+              >
                 {t("requestAgain")}
               </a>
             )}
@@ -122,7 +135,7 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
               className={
                 stage === "success"
                   ? `${authButtonClass} flex items-center justify-center`
-                  : "text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+                  : "py-2 text-center text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
               }
               href={`/${locale}/login`}
             >

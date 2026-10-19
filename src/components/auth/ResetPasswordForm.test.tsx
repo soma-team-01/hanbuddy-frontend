@@ -52,6 +52,7 @@ it("explains missing links instead of sending a request", async () => {
   history.replaceState(null, "", "/auth/reset-password");
   show();
   await screen.findByText(messages.EmailAuth.missing);
+  expect(screen.getByRole("heading", { name: "This link is no longer valid" })).toBeInTheDocument();
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   expect(request).not.toHaveBeenCalled();
   expect(screen.getByRole("link", { name: messages.EmailAuth.requestAgain })).toHaveAttribute(
@@ -59,6 +60,14 @@ it("explains missing links instead of sending a request", async () => {
     "/en/forgot-password",
   );
   expect(screen.getByRole("link", { name: messages.EmailAuth.back })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: messages.EmailAuth.requestAgain })).toHaveClass(
+    "bg-primary",
+    "w-full",
+  );
+  expect(screen.getByRole("link", { name: messages.EmailAuth.back })).toHaveClass(
+    "text-primary",
+    "text-center",
+  );
 });
 it.each([
   [401, "TOKEN401_EXPIRED", "expired"],
@@ -73,6 +82,22 @@ it.each([
   });
   fireEvent.click(screen.getByRole("button", { name: "Save password" }));
   await screen.findByText(messages.EmailAuth[key]);
+  if (key === "expired") {
+    expect(
+      screen.getByRole("heading", { name: "This link is no longer valid" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: messages.EmailAuth.newPassword }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: messages.EmailAuth.requestAgain })).toHaveClass(
+      "bg-primary",
+      "w-full",
+    );
+    expect(screen.getByRole("link", { name: messages.EmailAuth.back })).toHaveClass(
+      "text-primary",
+      "text-center",
+    );
+  }
   expect(screen.queryByRole("button", { name: "Save password" })).not.toBeInTheDocument();
   expect(request).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("link", { name: messages.EmailAuth.requestAgain })).toBeInTheDocument();

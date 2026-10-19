@@ -72,7 +72,7 @@ function show() {
   return render(
     <StrictMode>
       <NextIntlClientProvider locale="en" messages={messages}>
-        <ResetPasswordForm locale="en" />
+        <ResetPasswordForm />
       </NextIntlClientProvider>
     </StrictMode>,
   );
@@ -108,6 +108,9 @@ it("explains missing links instead of sending a request", async () => {
   history.replaceState(null, "", "/auth/reset-password");
   show();
   await screen.findByText(messages.EmailAuth.missing);
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "This link is no longer available. Please request a new password reset link.",
+  );
   expect(screen.getByRole("heading", { name: "This link is no longer valid" })).toBeInTheDocument();
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   expect(request).not.toHaveBeenCalled();

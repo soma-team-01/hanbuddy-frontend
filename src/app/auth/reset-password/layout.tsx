@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { NextIntlClientProvider } from "next-intl";
+import type { AbstractIntlMessages } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { getLocaleOrDefault } from "@/i18n/routing";
+import { getLocaleOrDefault, LOCALES, type Locale } from "@/i18n/routing";
 import { koreanFontRootProps } from "@/lib/fonts/korean-font";
-import { SERVICE_TIME_ZONE } from "@/i18n/formats";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { QueryProvider } from "@/app/query-provider";
+import { ResetPasswordLocaleProvider } from "@/components/auth/ResetPasswordLocaleProvider";
 import { dmSans, plusJakartaSans } from "@/styles/fonts";
 import "../../globals.css";
 
@@ -20,7 +18,14 @@ export const metadata: Metadata = {
 export default async function ResetLayout({ children }: { children: React.ReactNode }) {
   const locale = getLocaleOrDefault((await headers()).get("x-reset-locale"));
   const koreanFont = koreanFontRootProps(locale, "font-noto-sans-kr");
-  const messages = await getMessages({ locale });
+  const messagesByLocale = Object.fromEntries(
+    await Promise.all(
+      LOCALES.map(async (language) => {
+        const messages = await getMessages({ locale: language });
+        return [language, { EmailAuth: messages.EmailAuth, Navigation: messages.Navigation }];
+      }),
+    ),
+  ) as Record<Locale, AbstractIntlMessages>;
   return (
     <html
       lang={locale}
@@ -28,12 +33,9 @@ export default async function ResetLayout({ children }: { children: React.ReactN
       style={koreanFont.style}
     >
       <body className="min-h-screen bg-canvas-soft text-ink">
-        <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
-          <QueryProvider>
-            <SiteHeader authenticated={false} mayHaveSession={false} />
-            {children}
-          </QueryProvider>
-        </NextIntlClientProvider>
+        <ResetPasswordLocaleProvider initialLocale={locale} messagesByLocale={messagesByLocale}>
+          {children}
+        </ResetPasswordLocaleProvider>
       </body>
     </html>
   );

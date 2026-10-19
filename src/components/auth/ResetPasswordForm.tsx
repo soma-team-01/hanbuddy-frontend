@@ -2,7 +2,7 @@
 import type { EmailErrorKey } from "@/lib/auth/email";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   EmailAuthError,
   emailErrorKey,
@@ -13,7 +13,8 @@ import {
 import { PasswordFields, authButtonClass, authLinkClass } from "./EmailAuthFields";
 import { AuthPanel } from "./AuthPanel";
 
-export function ResetPasswordForm({ locale }: { locale: string }) {
+export function ResetPasswordForm() {
+  const locale = useLocale();
   const t = useTranslations("EmailAuth");
   const token = useRef<string | null>(null);
   const initialized = useRef(false);

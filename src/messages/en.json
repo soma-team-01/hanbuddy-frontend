@@ -49,7 +49,7 @@
     "retryResetLink": "Try again",
     "success": "Please log in with your new password.",
     "back": "Back to login",
-    "missing": "This link is missing or no longer available. Open the link in your email or request a new one.",
+    "missing": "This link is no longer available. Please request a new password reset link.",
     "expired": "This session or link has expired or already been used. Please start again.",
     "requestAgain": "Request a new link",
     "reverify": "Verify your email again",

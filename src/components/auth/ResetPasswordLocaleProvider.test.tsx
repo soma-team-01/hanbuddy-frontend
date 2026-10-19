@@ -22,7 +22,17 @@ vi.mock("@/lib/auth/email", async (original) => ({
   requestEmailAuth: vi.fn(),
 }));
 const request = vi.mocked(requestEmailAuth);
-const messagesByLocale = { en, ko, ja, "zh-Hans": zhHans, "zh-Hant": zhHant };
+const pickMessages = (messages: typeof en) => ({
+  EmailAuth: messages.EmailAuth,
+  Navigation: messages.Navigation,
+});
+const messagesByLocale = {
+  en: pickMessages(en),
+  ko: pickMessages(ko),
+  ja: pickMessages(ja),
+  "zh-Hans": pickMessages(zhHans),
+  "zh-Hant": pickMessages(zhHant),
+};
 
 beforeEach(() => {
   vi.clearAllMocks();

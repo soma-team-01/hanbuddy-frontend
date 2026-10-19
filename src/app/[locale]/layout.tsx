@@ -94,7 +94,7 @@ export default async function LocaleLayout({
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
           <QueryProvider>
-            <AuthSessionResetListener />
+            <AuthSessionResetListener mayHaveSession={mayHaveSession} />
             <AnalyticsProvider
               policy={readAnalyticsPolicy({
                 GA4_ORIGIN: process.env.GA4_ORIGIN,

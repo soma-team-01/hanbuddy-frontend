@@ -160,12 +160,21 @@ describe("OnboardingForm", () => {
     expect(screen.getByRole("navigation", { name: "Step 1 of 4" })).toBeInTheDocument();
   });
   it("blocks expired email signup and offers re-verification", () => {
-    renderWithIntl(<OnboardingForm emailSignup={{ email: "alice@example.com", expiresAt: 1 }} />);
+    renderWithIntl(
+      <OnboardingForm
+        returnTo="/activities/42/book?scheduleId=101"
+        emailSignup={{ email: "alice@example.com", expiresAt: 1 }}
+      />,
+    );
     clickContinue("en");
     expect(screen.getByRole("alert")).toHaveTextContent("expired");
+    expect(screen.getByRole("link", { name: "Back to login" })).toHaveAttribute(
+      "href",
+      "/en/login?next=%2Factivities%2F42%2Fbook%3FscheduleId%3D101",
+    );
     expect(screen.getByRole("link", { name: "Verify your email again" })).toHaveAttribute(
       "href",
-      "/en/signup",
+      "/en/signup?next=%2Factivities%2F42%2Fbook%3FscheduleId%3D101",
     );
   });
   it("starts restored email drafts at credentials without persisting a password", () => {

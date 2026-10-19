@@ -1,4 +1,5 @@
 "use client";
+import { getEmailAuthLinks } from "@/lib/auth/email-navigation";
 
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
@@ -195,6 +196,7 @@ export function OnboardingForm({
   const hasCredentialStep = Boolean(emailSignup) && !isResubmission;
   const firstStep = hasCredentialStep ? 0 : 1;
   const isBuddyFlow = userType === "BUDDY";
+  const recoveryLinks = getEmailAuthLinks(locale, isBuddyFlow, returnTo);
   // Signup-only fields deliberately stay out of persistent onboarding drafts.
   const [signupExtra, setSignupExtra] = useState<SignupExtraDraft>({
     signupSource: "",
@@ -656,22 +658,18 @@ export function OnboardingForm({
             agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
 
-      const response = await fetch(
-        isResubmission
-          ? "/api/auth/buddy/resubmission"
-          : emailSignup
-            ? "/api/auth/email/signup"
-            : "/api/auth/google/signup",
-        {
-          method: isResubmission ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            emailSignup
-              ? { name: displayName.trim(), password: emailPassword, profile: payload }
-              : payload,
-          ),
-        },
-      );
+      let signupEndpoint = "/api/auth/google/signup";
+      if (emailSignup) signupEndpoint = "/api/auth/email/signup";
+      if (isResubmission) signupEndpoint = "/api/auth/buddy/resubmission";
+      const response = await fetch(signupEndpoint, {
+        method: isResubmission ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          emailSignup
+            ? { name: displayName.trim(), password: emailPassword, profile: payload }
+            : payload,
+        ),
+      });
       const body = (await response.json().catch(() => undefined)) as
         ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
@@ -863,6 +861,8 @@ export function OnboardingForm({
         isBuddyFlow ? buddyT("contactStep") : t("steps.contact"),
         t("steps.agreements"),
       ];
+  const signupStepColumns = hasCredentialStep ? "grid-cols-4" : "grid-cols-3";
+  const stepColumns = isResubmission ? "grid-cols-2" : signupStepColumns;
 
   return (
     <div className={`${mobileStyles.compact} flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0`}>
@@ -910,9 +910,7 @@ export function OnboardingForm({
                   total: stepLabels.length,
                 })}
               </p>
-              <ol
-                className={`${isResubmission ? "grid-cols-2" : hasCredentialStep ? "grid-cols-4" : "grid-cols-3"} grid gap-2 lg:flex lg:flex-col lg:gap-5`}
-              >
+              <ol className={`${stepColumns} grid gap-2 lg:flex lg:flex-col lg:gap-5`}>
                 {stepLabels.map((label, index) => {
                   const step = (index + (hasCredentialStep ? 0 : 1)) as OnboardingStep;
                   const isActive = currentStep === step;
@@ -975,13 +973,10 @@ export function OnboardingForm({
                         <p>{emailT(emailError)}</p>
                         {(emailError === "expired" || emailError === "duplicate") && (
                           <>
-                            <a
-                              href={isBuddyFlow ? "/ko/signup?intent=buddy" : `/${locale}/signup`}
-                              className="underline"
-                            >
+                            <a href={recoveryLinks.signup} className="underline">
                               {emailT("reverify")}
                             </a>
-                            <a href={`/${locale}/login`} className="underline">
+                            <a href={recoveryLinks.login} className="underline">
                               {emailT("back")}
                             </a>
                           </>

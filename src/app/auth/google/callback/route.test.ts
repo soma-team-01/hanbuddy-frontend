@@ -39,6 +39,19 @@ function mockOnboardingRequired() {
 }
 
 describe("GET /auth/google/callback", () => {
+  it("clears stale email signup and Google profile cookies before starting Google onboarding", async () => {
+    mockOnboardingRequired();
+    const response = await GET(
+      new NextRequest("http://localhost/auth/google/callback?code=code&state=state", {
+        headers: {
+          cookie: `${AUTH_COOKIES.oauthState}=state; ${AUTH_COOKIES.emailSignup}=stale-email; ${AUTH_COOKIES.googleProfile}=stale-profile`,
+        },
+      }),
+    );
+    expect(response.cookies.get(AUTH_COOKIES.emailSignup)?.value).toBe("");
+    expect(response.cookies.get(AUTH_COOKIES.googleProfile)?.value).toBe("");
+    expect(response.cookies.get(AUTH_COOKIES.signupToken)?.value).toBe("signup-token");
+  });
   beforeEach(() => {
     mockedPostBackend.mockReset();
     vi.stubEnv("GOOGLE_REDIRECT_URI", "http://localhost/auth/google/callback");

@@ -32,7 +32,7 @@ describe("email UI contracts", () => {
       "Continue with Google",
     ],
   ] as const)(
-    "offers Google instead of a reset receipt for Google-only accounts in %s",
+    "shows only guidance without a Google button or reset receipt for Google-only accounts in %s",
     async (locale, label, submit, message, googleLabel) => {
       request.mockRejectedValue(new EmailAuthError("AUTH409_GOOGLE_LOGIN", 409));
       renderWithIntl(<PasswordResetRequestForm />, { locale });
@@ -40,9 +40,7 @@ describe("email UI contracts", () => {
       fireEvent.click(screen.getByRole("button", { name: submit }));
       expect(await screen.findByRole("alert")).toHaveTextContent(message);
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
-      const google = screen.getByRole("link", { name: googleLabel });
-      expect(google).toHaveAttribute("href", `/api/auth/google/start?locale=${locale}`);
-      expect(google).toHaveTextContent("Google");
+      expect(screen.queryByRole("link", { name: googleLabel })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: submit })).not.toBeInTheDocument();
       expect(request).toHaveBeenCalledTimes(1);
       fireEvent.change(screen.getByLabelText(label), { target: { value: "email@example.com" } });

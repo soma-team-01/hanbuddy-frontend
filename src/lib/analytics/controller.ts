@@ -4,6 +4,7 @@ import {
   safePage,
   type AnalyticsFields,
   type AnalyticsEvent,
+  type FunnelContext,
   type FunnelEvent,
   type SafePage,
 } from "./events";
@@ -362,10 +363,10 @@ export function createAnalytics({
       }
       sendPage();
     },
-    track(name: FunnelEvent, pathname: string, activityId: number) {
+    track(name: FunnelEvent, pathname: string, activityId: number, context?: FunnelContext) {
       this.visit(pathname);
       if (!active || !allowed() || !policy || !page) return false;
-      const fields = eventFields(name, page, activityId, policy.origin);
+      const fields = eventFields(name, page, activityId, policy.origin, context);
       if (!fields) return false;
       const key = `${name}:${activityId}`;
       if (name !== "booking_cta_click" && seen.has(key)) return false;

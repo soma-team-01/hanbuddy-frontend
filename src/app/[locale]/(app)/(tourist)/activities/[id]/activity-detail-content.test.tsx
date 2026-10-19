@@ -877,3 +877,39 @@ it.each(["loading", "error"])("does not measure %s activity detail", async (kind
   if (kind === "error") await screen.findByRole("alert");
   expect(browser.send.mock.calls.map((c) => c[0])).toEqual(["page_view"]);
 });
+it.each([
+  [true, "true"],
+  [false, "false"],
+  [undefined, "false"],
+])("reports translated exposure %s with detail funnel events", async (isTranslated, expected) => {
+  const { controller, browser } = createTestAnalytics();
+  controller.visit("/en/activities/42");
+  await controller.accept();
+  mockedGetTouristActivity.mockResolvedValue({
+    status: "success",
+    activity: {
+      ...buildActivityDetail(),
+      activityId: 42,
+      ...(isTranslated === undefined ? {} : { isTranslated }),
+    },
+  });
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <ActivityDetailContent activityId="42" />
+    </AnalyticsProvider>,
+  );
+  fireEvent.click(await screen.findByTestId("date-select-box"));
+  fireEvent.click(
+    within(await screen.findByRole("dialog")).getByRole("button", { name: /2:00 PM/ }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Book now" }));
+  const payload = (name: string) => browser.send.mock.calls.find((c) => c[0] === name)?.[1];
+  expect(payload("view_item")).toMatchObject({
+    content_language: "en",
+    is_translated: expected,
+  });
+  expect(payload("booking_cta_click")).toMatchObject({
+    content_language: "en",
+    is_translated: expected,
+  });
+});

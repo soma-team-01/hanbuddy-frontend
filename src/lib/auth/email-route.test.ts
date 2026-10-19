@@ -26,6 +26,37 @@ beforeEach(() => {
 
 describe("email auth BFF", () => {
   it.each([
+    ["AUTH401_EMAIL_LOGIN", 401, { failedAttempts: 3, maxAttempts: 5, retryAfterSeconds: 0 }],
+    ["AUTH429_EMAIL_LOGIN", 429, { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: 173 }],
+  ])(
+    "forwards safe login failure metadata for %s without cookies or secrets",
+    async (code, status, result) => {
+      post.mockResolvedValue({
+        status,
+        setCookies: ["secret=value"],
+        payload: {
+          isSuccess: false,
+          code,
+          message: "private",
+          result: { ...result, accessToken: "secret" },
+        },
+      });
+      const res = await handleEmailAuth(
+        request({ email: "alice@example.com", password: "wrong-password" }),
+        "login",
+      );
+      expect(res.status).toBe(status);
+      expect(await res.json()).toEqual({
+        isSuccess: false,
+        code,
+        message: "Authentication request failed.",
+        result,
+      });
+      expect(res.headers.get("set-cookie")).toBeNull();
+      expect(res.headers.get("Cache-Control")).toBe("no-store");
+    },
+  );
+  it.each([
     ["AUTH400_EMAIL_CODE", { failedAttempts: "1", maxAttempts: 5, resendRequired: false }],
     ["AUTH429_EMAIL", { failedAttempts: 1, maxAttempts: 5, resendRequired: false }],
   ])("drops untrusted error results for %s", async (code, result) => {

@@ -45,6 +45,43 @@ export interface EmailCodeFailure {
   resendRequired: boolean;
 }
 
+export interface EmailLoginFailure {
+  failedAttempts: number;
+  maxAttempts: number;
+  retryAfterSeconds: number;
+}
+
+export function readEmailLoginFailure(code: string, value: unknown): EmailLoginFailure | undefined {
+  if (
+    !["AUTH401_EMAIL_LOGIN", "AUTH429_EMAIL_LOGIN"].includes(code) ||
+    !value ||
+    typeof value !== "object"
+  )
+    return undefined;
+  const { failedAttempts, maxAttempts, retryAfterSeconds } = value as Partial<EmailLoginFailure>;
+  if (
+    typeof maxAttempts !== "number" ||
+    !Number.isSafeInteger(maxAttempts) ||
+    maxAttempts <= 0 ||
+    typeof failedAttempts !== "number" ||
+    !Number.isSafeInteger(failedAttempts) ||
+    failedAttempts < 1 ||
+    failedAttempts > maxAttempts ||
+    typeof retryAfterSeconds !== "number" ||
+    !Number.isSafeInteger(retryAfterSeconds) ||
+    retryAfterSeconds < 0 ||
+    retryAfterSeconds > 300
+  )
+    return undefined;
+  if (
+    code === "AUTH401_EMAIL_LOGIN"
+      ? retryAfterSeconds !== 0 || failedAttempts >= maxAttempts
+      : retryAfterSeconds === 0 || failedAttempts !== maxAttempts
+  )
+    return undefined;
+  return { failedAttempts, maxAttempts, retryAfterSeconds };
+}
+
 /** Only expose the documented verification metadata, never arbitrary backend error results. */
 export function readEmailCodeFailure(code: string, value: unknown): EmailCodeFailure | undefined {
   if (
@@ -87,6 +124,7 @@ export function isValidNewPassword(password: string) {
 
 export function emailErrorKey(code?: string, status?: number) {
   if (code === "AUTH401_EMAIL_LOGIN") return "credentials";
+  if (code === "AUTH429_EMAIL_LOGIN") return "loginBlocked";
   if (status === 401) return "expired";
   if (code === "AUTH429_EMAIL_CODE_ATTEMPTS") return "codeAttemptsExceeded";
   if (code === "AUTH400_EMAIL_CODE_UNAVAILABLE") return "codeUnavailable";
@@ -101,12 +139,16 @@ export function emailErrorKey(code?: string, status?: number) {
 }
 
 export class EmailAuthError extends Error {
+  readonly codeFailure?: EmailCodeFailure;
+  readonly loginFailure?: EmailLoginFailure;
   constructor(
     readonly code: string,
     readonly status: number,
-    readonly codeFailure?: EmailCodeFailure,
+    details?: unknown,
   ) {
     super("Email authentication request failed");
+    this.codeFailure = readEmailCodeFailure(code, details);
+    this.loginFailure = readEmailLoginFailure(code, details);
   }
 }
 
@@ -138,7 +180,9 @@ export async function requestEmailAuth<T>(
       response.status,
       action === "code/verify"
         ? readEmailCodeFailure(payload?.code ?? "", payload?.result)
-        : undefined,
+        : action === "login"
+          ? readEmailLoginFailure(payload?.code ?? "", payload?.result)
+          : undefined,
     );
   return payload.result;
 }

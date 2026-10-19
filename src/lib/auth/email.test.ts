@@ -1,7 +1,55 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isValidNewPassword, emailErrorKey, requestEmailAuth, readEmailCodeFailure } from "./email";
+import {
+  isValidNewPassword,
+  emailErrorKey,
+  requestEmailAuth,
+  readEmailCodeFailure,
+  readEmailLoginFailure,
+} from "./email";
 
 afterEach(() => vi.unstubAllGlobals());
+it.each([
+  null,
+  {},
+  { failedAttempts: "5", maxAttempts: 5, retryAfterSeconds: 300 },
+  { failedAttempts: -1, maxAttempts: 5, retryAfterSeconds: 300 },
+  { failedAttempts: 6, maxAttempts: 5, retryAfterSeconds: 300 },
+  { failedAttempts: 4.5, maxAttempts: 5, retryAfterSeconds: 300 },
+  { failedAttempts: 5, maxAttempts: 0, retryAfterSeconds: 300 },
+  { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: -1 },
+  { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: 301 },
+  { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: 0.5 },
+  { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: 0 },
+  { failedAttempts: 4, maxAttempts: 5, retryAfterSeconds: 300 },
+])("ignores malformed or inconsistent login lock metadata: %j", (value) => {
+  expect(readEmailLoginFailure("AUTH429_EMAIL_LOGIN", value)).toBeUndefined();
+});
+it("does not infer an account lock from IP limits or contradictory credential failures", () => {
+  const details = { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: 300 };
+  expect(readEmailLoginFailure("AUTH429_EMAIL", details)).toBeUndefined();
+  expect(readEmailLoginFailure("AUTH401_EMAIL_LOGIN", details)).toBeUndefined();
+  expect(
+    readEmailLoginFailure("AUTH401_EMAIL_LOGIN", { ...details, retryAfterSeconds: 0 }),
+  ).toBeUndefined();
+  expect(emailErrorKey("AUTH429_EMAIL_LOGIN", 429)).toBe("loginBlocked");
+  expect(emailErrorKey("AUTH429_EMAIL", 429)).toBe("rateLimit");
+});
+it.each([
+  ["AUTH401_EMAIL_LOGIN", 401, { failedAttempts: 2, maxAttempts: 5, retryAfterSeconds: 0 }],
+  ["AUTH429_EMAIL_LOGIN", 429, { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: 120 }],
+])("preserves login metadata and never retries %s", async (code, status, result) => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValue(Response.json({ isSuccess: false, code, result }, { status }));
+  vi.stubGlobal("fetch", fetchMock);
+  await expect(requestEmailAuth("login", {})).rejects.toMatchObject({
+    code,
+    status,
+    loginFailure: result,
+    codeFailure: undefined,
+  });
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
 it.each([
   null,
   {},

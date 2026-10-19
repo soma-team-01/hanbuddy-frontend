@@ -1,12 +1,18 @@
 "use client";
-import type { EmailErrorKey } from "@/lib/auth/email";
+import type { EmailErrorKey, EmailLoginFailure } from "@/lib/auth/email";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { EmailAuthError, emailErrorKey, requestEmailAuth } from "@/lib/auth/email";
-import { AuthInput, PasswordInput, authButtonClass } from "./EmailAuthFields";
+import { AuthInput, PasswordInput, authButtonClass, useRemainingSeconds } from "./EmailAuthFields";
+
+interface LoginFeedback {
+  key: EmailErrorKey;
+  details?: EmailLoginFailure;
+  deadline?: number;
+}
 
 export function EmailLoginForm({
   locale,
@@ -20,14 +26,19 @@ export function EmailLoginForm({
   const t = useTranslations("EmailAuth");
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
-  const [error, setError] = useState<EmailErrorKey | null>(null);
+  const [feedback, setFeedback] = useState<LoginFeedback>();
+  const feedbackId = useId();
+  const seconds = useRemainingSeconds(feedback?.deadline ?? 0);
+  const remaining = Math.min(feedback?.details?.retryAfterSeconds ?? 0, seconds);
+  const visibleFeedback =
+    feedback?.deadline !== undefined && remaining === 0 ? undefined : feedback;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy.current) return;
     const data = new FormData(event.currentTarget);
     busy.current = true;
     setPending(true);
-    setError(null);
+    setFeedback(undefined);
     try {
       const query = new URLSearchParams({ locale });
       if (returnTo) query.set("next", returnTo);
@@ -46,7 +57,15 @@ export function EmailLoginForm({
         throw new Error("Invalid destination");
       window.location.assign(result.redirectTo);
     } catch (e) {
-      setError(e instanceof EmailAuthError ? emailErrorKey(e.code, e.status) : "unavailable");
+      const key = e instanceof EmailAuthError ? emailErrorKey(e.code, e.status) : "unavailable";
+      const details = e instanceof EmailAuthError ? e.loginFailure : undefined;
+      setFeedback({
+        key,
+        details,
+        ...(details && details.retryAfterSeconds > 0
+          ? { deadline: Date.now() + details.retryAfterSeconds * 1000 }
+          : {}),
+      });
     } finally {
       busy.current = false;
       setPending(false);
@@ -65,6 +84,9 @@ export function EmailLoginForm({
           autoComplete="username"
           maxLength={255}
           required
+          onChange={() => setFeedback(undefined)}
+          disabled={pending}
+          aria-describedby={visibleFeedback ? feedbackId : undefined}
         />
         <PasswordInput
           label={t("password")}
@@ -72,15 +94,34 @@ export function EmailLoginForm({
           autoComplete="current-password"
           maxLength={64}
           required
+          disabled={pending}
+          onChange={() => setFeedback(undefined)}
+          aria-describedby={visibleFeedback ? feedbackId : undefined}
         />
-        {error && (
-          <p role="alert" className="text-sm text-danger">
-            {t(error)}
-          </p>
-        )}
         <button disabled={pending} className={authButtonClass}>
           {t(pending ? "busy" : "submitLogin")}
         </button>
+        {visibleFeedback && (
+          <p
+            id={feedbackId}
+            role="alert"
+            aria-live={visibleFeedback.deadline !== undefined ? "off" : "assertive"}
+            className="text-xs leading-relaxed text-danger"
+          >
+            {visibleFeedback.deadline !== undefined
+              ? t("loginRetryAfter", { seconds: remaining })
+              : t(visibleFeedback.key)}
+            {visibleFeedback.details && (
+              <>
+                {" "}
+                {t("loginAttemptCount", {
+                  failedAttempts: visibleFeedback.details.failedAttempts,
+                  maxAttempts: visibleFeedback.details.maxAttempts,
+                })}
+              </>
+            )}
+          </p>
+        )}
       </form>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3">
         <Link

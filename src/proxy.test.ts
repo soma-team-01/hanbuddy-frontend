@@ -32,6 +32,12 @@ function getSavedLocale(response: Response) {
 
 describe("route access proxy", () => {
   it.each(["/auth/reset-password", "/ko/auth/reset-password"])(
+    "matches the password reset route %s",
+    (url) => {
+      expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(true);
+    },
+  );
+  it.each(["/auth/reset-password", "/ko/auth/reset-password"])(
     "keeps %s in an isolated document without a fragment-losing redirect",
     async (pathname) => {
       const response = await runProxy(pathname, {

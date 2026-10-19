@@ -24,6 +24,8 @@
     "email": "邮箱",
     "password": "密码",
     "confirm": "确认密码",
+    "showPassword": "显示{field}",
+    "hidePassword": "隐藏{field}",
     "name": "姓名",
     "sendCode": "发送验证码",
     "verify": "验证并继续",

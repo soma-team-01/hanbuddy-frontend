@@ -24,6 +24,8 @@
     "email": "이메일",
     "password": "비밀번호",
     "confirm": "비밀번호 확인",
+    "showPassword": "{field} 표시",
+    "hidePassword": "{field} 숨기기",
     "name": "이름",
     "sendCode": "인증 코드 받기",
     "verify": "인증 후 계속하기",

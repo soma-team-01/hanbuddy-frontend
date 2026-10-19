@@ -24,6 +24,8 @@
     "email": "Email",
     "password": "Password",
     "confirm": "Confirm password",
+    "showPassword": "Show {field}",
+    "hidePassword": "Hide {field}",
     "name": "Full name",
     "sendCode": "Send code",
     "verify": "Verify and continue",

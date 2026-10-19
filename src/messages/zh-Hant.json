@@ -24,6 +24,8 @@
     "email": "電子郵件",
     "password": "密碼",
     "confirm": "確認密碼",
+    "showPassword": "顯示{field}",
+    "hidePassword": "隱藏{field}",
     "name": "姓名",
     "sendCode": "傳送驗證碼",
     "verify": "驗證並繼續",

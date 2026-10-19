@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { fireEvent, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { PasswordFields } from "./EmailAuthFields";
 
@@ -18,6 +18,66 @@ function Fields() {
 }
 
 describe("live password feedback", () => {
+  it.each([
+    [
+      "en",
+      "Password",
+      "Confirm password",
+      "Show Password",
+      "Hide Password",
+      "Show Confirm password",
+      "Hide Confirm password",
+    ],
+    [
+      "ko",
+      "비밀번호",
+      "비밀번호 확인",
+      "비밀번호 표시",
+      "비밀번호 숨기기",
+      "비밀번호 확인 표시",
+      "비밀번호 확인 숨기기",
+    ],
+  ] as const)(
+    "toggles each password independently without submitting in %s",
+    (
+      locale,
+      passwordLabel,
+      confirmLabel,
+      showPassword,
+      hidePassword,
+      showConfirmation,
+      hideConfirmation,
+    ) => {
+      const submit = vi.fn((event) => event.preventDefault());
+      renderWithIntl(
+        <form onSubmit={submit}>
+          <Fields />
+        </form>,
+        { locale },
+      );
+      const password = screen.getByLabelText(passwordLabel);
+      const confirmation = screen.getByLabelText(confirmLabel);
+      fireEvent.change(password, { target: { value: "abcdefgh" } });
+      fireEvent.change(confirmation, { target: { value: "abcdefgh" } });
+      expect(password).toHaveAttribute("type", "password");
+      expect(confirmation).toHaveAttribute("type", "password");
+      const toggle = screen.getByRole("button", { name: showPassword });
+      expect(toggle).toHaveAttribute("aria-controls", password.id);
+      fireEvent.click(toggle);
+      expect(password).toHaveAttribute("type", "text");
+      expect(password).toHaveValue("abcdefgh");
+      expect(confirmation).toHaveAttribute("type", "password");
+      fireEvent.click(screen.getByRole("button", { name: showConfirmation }));
+      expect(confirmation).toHaveAttribute("type", "text");
+      expect(confirmation).toHaveValue("abcdefgh");
+      fireEvent.click(screen.getByRole("button", { name: hidePassword }));
+      expect(password).toHaveAttribute("type", "password");
+      expect(confirmation).toHaveAttribute("type", "text");
+      fireEvent.click(screen.getByRole("button", { name: hideConfirmation }));
+      expect(confirmation).toHaveAttribute("type", "password");
+      expect(submit).not.toHaveBeenCalled();
+    },
+  );
   it.each([
     [
       "en",

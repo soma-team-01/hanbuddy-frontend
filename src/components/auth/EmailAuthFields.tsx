@@ -3,6 +3,7 @@
 import { useEffect, useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { isValidNewPassword } from "@/lib/auth/email";
+import { EyeIcon, EyeOffIcon } from "@/components/ui/icons";
 
 export const authButtonClass =
   "min-h-12 w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong disabled:cursor-not-allowed disabled:opacity-50";
@@ -35,6 +36,36 @@ export function AuthInput({
   );
 }
 
+function NewPasswordInput({
+  label,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { label: string }) {
+  const t = useTranslations("EmailAuth");
+  const generatedId = useId();
+  const id = props.id ?? generatedId;
+  const [visible, setVisible] = useState(false);
+  return (
+    <AuthInput
+      {...props}
+      id={id}
+      label={label}
+      type={visible ? "text" : "password"}
+      endAdornment={
+        <button
+          type="button"
+          aria-label={t(visible ? "hidePassword" : "showPassword", { field: label })}
+          aria-controls={id}
+          disabled={props.disabled}
+          onClick={() => setVisible((current) => !current)}
+          className="pointer-events-auto -mr-2 flex size-11 items-center justify-center rounded-lg text-muted transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {visible ? <EyeOffIcon className="size-5" /> : <EyeIcon className="size-5" />}
+        </button>
+      }
+    />
+  );
+}
+
 export function PasswordFields({
   password,
   confirmation,
@@ -62,10 +93,9 @@ export function PasswordFields({
   return (
     <div className="grid gap-5">
       <div className="grid gap-2">
-        <AuthInput
+        <NewPasswordInput
           label={t("password")}
           name="password"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}
@@ -84,10 +114,9 @@ export function PasswordFields({
         </p>
       </div>
       <div className="grid gap-2">
-        <AuthInput
+        <NewPasswordInput
           label={t("confirm")}
           name="passwordConfirmation"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}

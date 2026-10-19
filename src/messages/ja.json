@@ -24,6 +24,8 @@
     "email": "メールアドレス",
     "password": "パスワード",
     "confirm": "パスワードの確認",
+    "showPassword": "{field}を表示",
+    "hidePassword": "{field}を非表示",
     "name": "氏名",
     "sendCode": "コードを送信",
     "verify": "認証して続ける",

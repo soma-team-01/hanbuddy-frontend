@@ -20,7 +20,7 @@
     "sendCode": "Send code",
     "verify": "Verify and continue",
     "code": "6-digit code",
-    "codeSent": "Check your inbox and spam folder. The code expires in 5 minutes.",
+    "codeSent": "Check your inbox and spam folder. The code expires in 10 minutes.",
     "resend": "Resend code",
     "wait": "Try again in {seconds}s",
     "busy": "Please wait…",

@@ -2,8 +2,10 @@
 import type { EmailErrorKey } from "@/lib/auth/email";
 
 import { useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { EmailAuthError, emailErrorKey, requestEmailAuth } from "@/lib/auth/email";
+import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { AuthInput, authButtonClass, authLinkClass, useRemainingSeconds } from "./EmailAuthFields";
 
 export function EmailCodeForm({
@@ -24,6 +26,8 @@ export function EmailCodeForm({
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
   const [error, setError] = useState<EmailErrorKey | null>(null);
+  const safeReturnTo = buddy ? null : sanitizeReturnToPath(returnTo);
+  const loginHref = `/${buddy ? "ko" : locale}/login${safeReturnTo ? `?next=${encodeURIComponent(safeReturnTo)}` : ""}`;
   async function send() {
     if (busy.current || remaining > 0) return;
     busy.current = true;
@@ -36,7 +40,14 @@ export function EmailCodeForm({
       setSentEmail(email);
       setCode("");
     } catch (e) {
-      setError(e instanceof EmailAuthError ? emailErrorKey(e.code, e.status) : "unavailable");
+      const errorKey =
+        e instanceof EmailAuthError ? emailErrorKey(e.code, e.status) : "unavailable";
+      setError(errorKey);
+      if (errorKey === "duplicate") {
+        // A resend can find an account created since the first code; stop the stale verification flow.
+        setSentEmail("");
+        setCode("");
+      }
     } finally {
       busy.current = false;
       setPending(false);
@@ -76,7 +87,10 @@ export function EmailCodeForm({
         maxLength={255}
         value={email}
         disabled={pending || Boolean(sentEmail)}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          setError(null);
+        }}
       />
       {sentEmail && (
         <>
@@ -122,15 +136,21 @@ export function EmailCodeForm({
           {t(error)}
         </p>
       )}
-      <button className={authButtonClass} disabled={pending || (!sentEmail && remaining > 0)}>
-        {pending
-          ? t("busy")
-          : sentEmail
-            ? t("verify")
-            : remaining > 0
-              ? t("wait", { seconds: remaining })
-              : t("sendCode")}
-      </button>
+      {error === "duplicate" ? (
+        <Link href={loginHref} className={`${authButtonClass} flex items-center justify-center`}>
+          {t("submitLogin")}
+        </Link>
+      ) : (
+        <button className={authButtonClass} disabled={pending || (!sentEmail && remaining > 0)}>
+          {pending
+            ? t("busy")
+            : sentEmail
+              ? t("verify")
+              : remaining > 0
+                ? t("wait", { seconds: remaining })
+                : t("sendCode")}
+        </button>
+      )}
     </form>
   );
 }

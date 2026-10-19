@@ -16,6 +16,45 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("email UI contracts", () => {
+  it("offers login with the booking destination on duplicate email and retains the resend cooldown", async () => {
+    vi.useFakeTimers();
+    request.mockRejectedValue(new EmailAuthError("AUTH409", 409));
+    const next = "/activities/8/book?scheduleId=42&guestCount=2";
+    renderWithIntl(<EmailCodeForm locale="en" buddy={false} returnTo={next} />);
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "Alice@example.com" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Send code" })));
+    expect(screen.getByRole("alert")).toHaveTextContent("already registered");
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute(
+      "href",
+      `/en/login?next=${encodeURIComponent(next)}`,
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("6-digit code")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@example.com" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Try again in/ })).toBeDisabled();
+    await act(async () => vi.advanceTimersByTime(60000));
+    request.mockResolvedValue({ accepted: true });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Send code" })));
+    expect(screen.getByLabelText("6-digit code")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("10 minutes");
+  });
+
+  it("clears a previous code entry when resend reports the email was registered meanwhile", async () => {
+    vi.useFakeTimers();
+    request.mockResolvedValue({ accepted: true });
+    renderWithIntl(<EmailCodeForm locale="ko" buddy />, { locale: "ko" });
+    fireEvent.change(screen.getByLabelText("이메일"), { target: { value: "alice@example.com" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "인증 코드 받기" })));
+    await act(async () => vi.advanceTimersByTime(60000));
+    request.mockRejectedValue(new EmailAuthError("AUTH409", 409));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "코드 다시 받기" })));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("6자리 인증 코드")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("이메일")).toBeEnabled();
+    expect(screen.getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/ko/login");
+  });
+
   it("uses a single border focus indicator for both login fields", () => {
     renderWithIntl(<EmailLoginForm locale="en" />);
     for (const label of ["Email", "Password"]) {

@@ -1,5 +1,9 @@
 {
   "EmailAuth": {
+    "orEmail": "或使用邮箱登录",
+    "newHere": "第一次使用 HanBuddy？",
+    "signupIntro": "输入邮箱，我们将向你发送验证码。",
+    "resetIntro": "输入邮箱以申请密码重置链接。",
     "login": "使用邮箱登录",
     "signup": "使用邮箱注册",
     "buddySignup": "使用邮箱申请成为向导",

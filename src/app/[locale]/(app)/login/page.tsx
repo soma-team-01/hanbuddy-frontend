@@ -11,6 +11,7 @@ import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getPolicyPath } from "@/lib/policy-routes";
 import { ReviewLoginForm } from "./review-login-form";
 import { EmailLoginForm } from "@/components/auth/EmailLoginForm";
+import { AuthPanel } from "@/components/auth/AuthPanel";
 import { pageAlternates } from "@/lib/seo/metadata";
 
 interface LoginPageProps {
@@ -46,62 +47,31 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
 
   return (
     <main className="flex w-full flex-1 flex-col overflow-hidden bg-canvas-soft">
-      <PageContainer className="relative flex flex-1 flex-col items-center justify-center py-12 md:py-20 lg:min-h-[calc(100svh-76px)]">
-        <div className="relative z-10 w-full max-w-[620px] text-center">
-          <p className="font-display text-xs font-bold tracking-[0.28em] text-primary uppercase">
-            {t("eyebrow")}
-          </p>
-          <h1 className="mt-5 font-display text-4xl leading-tight font-bold tracking-[-0.04em] text-ink md:text-5xl">
-            {t("welcome")}
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted md:text-lg">
-            {t("introduction")}
-          </p>
+      <PageContainer className="relative flex flex-1 flex-col items-center justify-center py-9 md:py-14 lg:min-h-[calc(100svh-76px)]">
+        <AuthPanel title={t("eyebrow")} description={t("introduction")}>
           {errorCode ? (
             <p
               role="alert"
-              className="mx-auto mt-8 max-w-[520px] rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-left text-sm text-danger"
+              className="mb-5 rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
             >
               {t(`errors.${errorCode}`)}
             </p>
           ) : null}
+          <Link
+            href={googleStartHref}
+            prefetch={false}
+            className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-line-strong bg-white px-4 py-3 text-sm font-semibold text-ink transition-colors hover:border-muted hover:bg-panel-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+          >
+            <GoogleIcon className="size-5 shrink-0" />
+            <span>{t("continueWithGoogle")}</span>
+          </Link>
+          <div className="my-6 flex items-center gap-4 text-xs text-muted">
+            <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
+            <span>{emailT("orEmail")}</span>
+            <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
+          </div>
           <EmailLoginForm locale={locale} returnTo={returnTo} />
-          {reviewLoginEnabled ? (
-            <div className={errorCode ? "mt-6" : "mt-10"}>
-              <details className="mx-auto max-w-[520px] text-left">
-                <summary className="cursor-pointer text-sm text-muted">{emailT("review")}</summary>
-                <div className="mt-4">
-                  <ReviewLoginForm
-                    locale={locale}
-                    returnTo={returnTo}
-                    ariaLabel={emailT("review")}
-                  />
-                </div>
-              </details>
-              <Link
-                href={googleStartHref}
-                prefetch={false}
-                className="motion-press relative mx-auto mt-5 flex h-12 w-full max-w-[520px] items-center justify-center rounded-full border border-line-strong bg-white px-16 font-display text-sm font-bold text-ink transition-colors hover:border-primary/50 hover:bg-primary-soft/40"
-              >
-                <span className="absolute left-3 flex size-8 items-center justify-center rounded-full bg-white sm:left-4">
-                  <GoogleIcon className="size-5" />
-                </span>
-                <span>{t("continueWithGoogle")}</span>
-              </Link>
-            </div>
-          ) : (
-            <Link
-              href={googleStartHref}
-              prefetch={false}
-              className={`${errorCode ? "mt-6" : "mt-10"} motion-press relative mx-auto flex h-14 w-full max-w-[520px] items-center justify-center rounded-full border border-primary bg-primary px-16 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.28)] transition-colors hover:border-primary-hover hover:bg-primary-hover`}
-            >
-              <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm sm:left-4">
-                <GoogleIcon className="size-5" />
-              </span>
-              <span>{t("continueWithGoogle")}</span>
-            </Link>
-          )}
-          <p className="mx-auto mt-5 max-w-[520px] text-xs leading-5 text-muted">
+          <p className="mt-6 border-t border-line-soft pt-5 text-center text-xs leading-5 text-muted">
             {t("legalNoticeStart")}{" "}
             <Link
               href={getPolicyPath(locale, "terms-of-service")}
@@ -118,9 +88,19 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             </Link>
             {t("legalNoticeEnd")}
           </p>
-        </div>
+          {reviewLoginEnabled && (
+            <details className="mt-5 border-t border-line-soft pt-4 text-left">
+              <summary className="cursor-pointer text-xs text-muted focus-visible:outline-2 focus-visible:outline-primary-strong">
+                {emailT("review")}
+              </summary>
+              <div className="mt-4">
+                <ReviewLoginForm locale={locale} returnTo={returnTo} ariaLabel={emailT("review")} />
+              </div>
+            </details>
+          )}
+        </AuthPanel>
 
-        <div className="mt-12 grid w-full max-w-[430px] grid-cols-2 gap-x-3 gap-y-7 px-4 lg:contents">
+        <div className="hidden lg:contents">
           <figure className="login-polaroid login-polaroid-1">
             <span className="login-polaroid-tape" aria-hidden="true" />
             <span className="login-polaroid-frame">

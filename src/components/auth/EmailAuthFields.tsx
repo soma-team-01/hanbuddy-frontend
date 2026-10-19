@@ -4,8 +4,9 @@ import { useEffect, useState, type InputHTMLAttributes } from "react";
 import { useTranslations } from "next-intl";
 
 export const authButtonClass =
-  "min-h-12 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-on-primary hover:bg-primary-hover disabled:opacity-50";
-export const authLinkClass = "text-sm font-semibold text-primary underline underline-offset-4";
+  "min-h-12 w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong disabled:cursor-not-allowed disabled:opacity-50";
+export const authLinkClass =
+  "text-sm font-semibold text-primary-strong underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
 
 export function AuthInput({
   label,
@@ -16,7 +17,7 @@ export function AuthInput({
       {label}
       <input
         {...props}
-        className="h-12 w-full min-w-0 rounded-xl border border-line-strong bg-canvas-soft px-4 text-base font-normal text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="h-12 w-full min-w-0 rounded-xl border border-line-strong bg-canvas-soft px-4 text-base font-normal text-ink transition-colors hover:border-muted focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:bg-panel"
       />
     </label>
   );

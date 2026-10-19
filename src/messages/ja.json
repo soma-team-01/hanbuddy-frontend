@@ -1,5 +1,9 @@
 {
   "EmailAuth": {
+    "orEmail": "またはメールでログイン",
+    "newHere": "HanBuddyは初めてですか？",
+    "signupIntro": "メールアドレスに認証コードをお送りします。",
+    "resetIntro": "メールアドレスを入力して、パスワード再設定リンクをリクエストしてください。",
     "login": "メールでログイン",
     "signup": "メールで登録",
     "buddySignup": "メールでバディに応募",

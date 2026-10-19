@@ -85,32 +85,33 @@ describe("LoginPage", () => {
 
     expect(emailLoginButton).toBeEnabled();
     expect(
-      emailLoginButton.compareDocumentPosition(googleLoginLink) & Node.DOCUMENT_POSITION_FOLLOWING,
+      googleLoginLink.compareDocumentPosition(emailLoginButton) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(googleLoginLink).toHaveClass("bg-white", "border-line-strong", "text-ink");
-    expect(screen.queryByText("or")).not.toBeInTheDocument();
+    expect(screen.getByText("or log in with email")).toBeInTheDocument();
   });
 
-  it("keeps Google login as the primary action when review login is disabled", async () => {
+  it("uses the same neutral Google action regardless of the review login flag", async () => {
     await renderLogin("en");
 
     expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveClass(
-      "bg-primary",
-      "text-on-primary",
+      "bg-white",
+      "rounded-xl",
+      "min-h-12",
     );
   });
 
   it.each([
     [
       "en",
-      "Experience Korea like a local.",
+      "Welcome to HanBuddy",
       "Continue with Google",
       "Privacy Policy",
       "new friends, Jul 26 ⚾",
     ],
     [
       "ko",
-      "현지인처럼 한국을 경험해 보세요.",
+      "한버디에 오신 걸 환영해요",
       "Google로 계속하기",
       "개인정보 처리방침",
       "새 친구들, 7월 26일 ⚾",
@@ -147,6 +148,26 @@ describe("LoginPage", () => {
       expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");
     },
   );
+
+  it("keeps the booking destination through both sign-in options and signup", async () => {
+    const next = "/activities/3/book?scheduleId=92";
+    renderWithIntl(
+      await LoginPage({
+        params: Promise.resolve({ locale: "en" }),
+        searchParams: Promise.resolve({ next }),
+      }),
+    );
+    expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveAttribute(
+      "href",
+      `/api/auth/google/start?locale=en&next=${encodeURIComponent(next)}`,
+    );
+    expect(screen.getByRole("link", { name: "Sign up with email" })).toHaveAttribute(
+      "href",
+      `/en/signup?next=${encodeURIComponent(next)}`,
+    );
+    expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
+  });
 
   it.each([
     ["en", "invalidState", "We couldn't verify your Google sign-in session."],

@@ -1,5 +1,9 @@
 {
   "EmailAuth": {
+    "orEmail": "또는 이메일로 로그인",
+    "newHere": "한버디가 처음이신가요?",
+    "signupIntro": "이메일을 입력하면 인증 코드를 보내드려요.",
+    "resetIntro": "이메일로 비밀번호 재설정 링크를 요청하세요.",
     "login": "이메일로 로그인",
     "signup": "이메일로 가입하기",
     "buddySignup": "이메일로 버디 신청하기",

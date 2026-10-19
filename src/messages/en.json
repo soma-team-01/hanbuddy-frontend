@@ -1,5 +1,9 @@
 {
   "EmailAuth": {
+    "orEmail": "or log in with email",
+    "newHere": "New to HanBuddy?",
+    "signupIntro": "Start with your email. We'll send you a verification code.",
+    "resetIntro": "Enter your email to request a password reset link.",
     "login": "Log in with email",
     "signup": "Sign up with email",
     "buddySignup": "Apply as a buddy with email",

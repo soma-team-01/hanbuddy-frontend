@@ -1,5 +1,9 @@
 {
   "EmailAuth": {
+    "orEmail": "或使用電子郵件登入",
+    "newHere": "第一次使用 HanBuddy？",
+    "signupIntro": "輸入電子郵件，我們將向你傳送驗證碼。",
+    "resetIntro": "輸入電子郵件以申請密碼重設連結。",
     "login": "使用電子郵件登入",
     "signup": "使用電子郵件註冊",
     "buddySignup": "使用電子郵件申請成為嚮導",

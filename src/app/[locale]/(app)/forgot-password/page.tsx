@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { AuthPanel } from "@/components/auth/AuthPanel";
 import { PasswordResetRequestForm } from "@/components/auth/PasswordResetRequestForm";
 
 export const metadata = privatePageMetadata;
@@ -17,16 +18,15 @@ export default async function Page({
   return (
     <main>
       <PageContainer className="py-10 md:py-16">
-        <section className="mx-auto grid max-w-lg gap-7 rounded-2xl border border-line-soft bg-canvas-soft p-6 md:p-8">
-          <h1 className="font-display text-2xl font-bold text-ink">{t("resetTitle")}</h1>
+        <AuthPanel title={t("resetTitle")} description={t("resetIntro")}>
           <PasswordResetRequestForm />
           <Link
             href={`/${locale}/login`}
-            className="text-sm font-semibold text-primary underline underline-offset-4"
+            className="mt-6 block text-center text-sm font-semibold text-primary-strong underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-primary-strong"
           >
             {t("back")}
           </Link>
-        </section>
+        </AuthPanel>
       </PageContainer>
     </main>
   );

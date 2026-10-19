@@ -46,7 +46,7 @@ export function EmailLoginForm({ locale, returnTo }: { locale: string; returnTo?
   }
   const signupQuery = returnTo ? `?next=${encodeURIComponent(returnTo)}` : "";
   return (
-    <section className="mx-auto mt-8 w-full max-w-[520px] text-left" aria-label={t("login")}>
+    <section className="w-full text-left" aria-label={t("login")}>
       <form onSubmit={submit} className="grid gap-4">
         <AuthInput
           label={t("email")}
@@ -64,6 +64,12 @@ export function EmailLoginForm({ locale, returnTo }: { locale: string; returnTo?
           maxLength={64}
           required
         />
+        <Link
+          className={`${authLinkClass} -mt-1 justify-self-end`}
+          href={`/${locale}/forgot-password`}
+        >
+          {t("forgot")}
+        </Link>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {t(error)}
@@ -73,12 +79,10 @@ export function EmailLoginForm({ locale, returnTo }: { locale: string; returnTo?
           {t(pending ? "busy" : "login")}
         </button>
       </form>
-      <div className="mt-4 flex flex-wrap justify-between gap-4">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm">
+        <span className="text-muted">{t("newHere")}</span>
         <Link className={authLinkClass} href={`/${locale}/signup${signupQuery}`}>
           {t("signup")}
-        </Link>
-        <Link className={authLinkClass} href={`/${locale}/forgot-password`}>
-          {t("forgot")}
         </Link>
       </div>
     </section>

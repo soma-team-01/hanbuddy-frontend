@@ -9,6 +9,7 @@ export const AUTH_COOKIES = {
   accessToken: "hanbuddy_access_token",
   refreshToken: "refresh_token",
   signupToken: "hanbuddy_signup_token",
+  emailSignup: "hanbuddy_email_signup",
   resubmissionToken: "hanbuddy_resubmission_token",
   googleProfile: "hanbuddy_google_profile",
   userId: "hanbuddy_user_id",
@@ -81,6 +82,7 @@ export function clearAuthStatusReasonCookie(response: NextResponse) {
 }
 
 export function clearSignupCookies(response: NextResponse) {
+  response.cookies.delete(AUTH_COOKIES.emailSignup);
   response.cookies.delete(AUTH_COOKIES.signupToken);
   response.cookies.delete(AUTH_COOKIES.googleProfile);
 }

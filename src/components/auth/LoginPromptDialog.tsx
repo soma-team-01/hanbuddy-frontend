@@ -3,7 +3,8 @@
 import NextLink from "next/link";
 import { useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { GoogleIcon, XIcon } from "@/components/ui/icons";
+import { XIcon } from "@/components/ui/icons";
+import { LoginMethods } from "./LoginMethods";
 import { useModalDialog } from "@/components/ui/use-modal-dialog";
 import { Link } from "@/i18n/navigation";
 import { getLocaleOrDefault } from "@/i18n/routing";
@@ -22,12 +23,13 @@ export function LoginPromptDialog({
   onClose,
 }: Readonly<{
   returnTo: string;
-  /** 심사용 이메일 로그인이 켜진 환경에서만 로그인 화면으로 가는 링크를 함께 둔다 */
+  /** 심사용 로그인 화면으로 가는 추가 링크. 일반 이메일 로그인은 항상 제공한다. */
   emailLoginEnabled?: boolean;
   onClose: () => void;
 }>) {
   const locale = getLocaleOrDefault(useLocale());
   const t = useTranslations("Auth");
+  const emailT = useTranslations("EmailAuth");
   const tAccessibility = useTranslations("Accessibility");
   const titleId = useId();
   const { dialogRef, closeRef } = useModalDialog();
@@ -63,24 +65,20 @@ export function LoginPromptDialog({
             <XIcon aria-hidden className="size-5" />
           </button>
         </div>
-        <h2 id={titleId} className="font-display text-xl font-bold text-balance">
+        <h2 id={titleId} className="mb-6 font-display text-xl font-bold text-balance">
           {t("bookingLoginPrompt")}
         </h2>
-        <a
-          href={`/api/auth/google/start?locale=${locale}&next=${next}`}
-          className="motion-press relative mt-6 flex h-14 w-full items-center justify-center rounded-full border border-primary bg-primary px-14 font-display text-sm font-bold text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.28)] transition-colors hover:border-primary-hover hover:bg-primary-hover"
-        >
-          <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm">
-            <GoogleIcon className="size-5" />
-          </span>
-          {t("continueWithGoogle")}
-        </a>
+        <LoginMethods
+          locale={locale}
+          returnTo={returnTo}
+          googleHref={`/api/auth/google/start?locale=${locale}&next=${next}`}
+        />
         {emailLoginEnabled ? (
           <Link
             href={`/login?next=${next}`}
-            className="mt-3 flex h-12 w-full items-center justify-center rounded-full border border-line-strong bg-white px-6 font-display text-sm font-bold text-ink transition-colors hover:border-primary/50 hover:bg-primary-soft/40"
+            className="mt-3 inline-flex min-h-11 items-center text-xs text-muted underline underline-offset-4"
           >
-            {t("reviewLogin.title")}
+            {emailT("review")}
           </Link>
         ) : null}
         <p className="mt-5 text-xs leading-5 text-muted">

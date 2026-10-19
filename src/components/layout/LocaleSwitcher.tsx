@@ -27,6 +27,7 @@ export function LocaleSwitcher({
   menuAlign = "end",
   menuPlacement,
   onBeforeLocaleChange,
+  onLocaleChange,
   variant = "default",
 }: Readonly<{
   className?: string;
@@ -38,6 +39,8 @@ export function LocaleSwitcher({
   /** 목록이 열리는 방향. 기본값은 footer=위, 그 외=아래 */
   menuPlacement?: "top" | "bottom";
   onBeforeLocaleChange?: () => void | boolean;
+  /** Override navigation for isolated flows whose credentials only live in memory. */
+  onLocaleChange?: (locale: Locale) => void;
   variant?: "default" | "footer";
 }>) {
   const locale = useLocale();
@@ -82,6 +85,11 @@ export function LocaleSwitcher({
     setIsOpen(false);
     if (nextLocale !== locale) {
       if (onBeforeLocaleChange?.() === false) return;
+      if (onLocaleChange) {
+        onLocaleChange(nextLocale);
+        triggerRef.current?.focus();
+        return;
+      }
       if (reloadPolicyInLocale(pathname, nextLocale)) return;
       // usePathname은 쿼리를 뺀 경로만 준다 — ?scheduleId= 같은 파라미터가 유실되지 않게 붙여 준다
       const { search, hash } = window.location;

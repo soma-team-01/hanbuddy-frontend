@@ -15,6 +15,16 @@ vi.mock("@/i18n/navigation", async (importOriginal) => ({
 }));
 
 describe("LocaleSwitcher", () => {
+  it("uses an in-place locale handler without routing or policy reload", () => {
+    const onLocaleChange = vi.fn();
+    renderWithIntl(<LocaleSwitcher onLocaleChange={onLocaleChange} />);
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "한국어" }));
+    expect(onLocaleChange).toHaveBeenCalledExactlyOnceWith("ko");
+    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(reloadPolicyMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { expanded: false })).toHaveFocus();
+  });
   beforeEach(() => {
     routerMock.replace.mockReset();
     pathnameMock.value = "/my-activities/42/applicants";

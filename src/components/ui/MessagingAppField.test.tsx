@@ -99,7 +99,12 @@ describe("MessagingAppField", () => {
     renderField({ koreanOnly: true });
     expect(screen.queryByLabelText("Country code")).not.toBeInTheDocument();
     expect(screen.queryByText("+82")).not.toBeInTheDocument();
-    expect(screen.getByPlaceholderText("010-XXXX-XXXX")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Phone number")).toBeInTheDocument();
+  });
+
+  it("uses a plain Korean phone placeholder instead of a hyphenated example", () => {
+    renderField({ koreanOnly: true, app: "phone", showAppSelector: false }, "ko");
+    expect(screen.getByLabelText("전화번호")).toHaveAttribute("placeholder", "전화번호");
   });
 
   it("preserves stored digits without forcing a mobile phone format", () => {

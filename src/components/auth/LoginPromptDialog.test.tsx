@@ -46,13 +46,13 @@ describe("LoginPromptDialog", () => {
     );
   });
 
-  it("offers email login only where it is enabled, keeping the return destination", () => {
+  it("offers the extra review login link only where enabled, keeping the return destination", () => {
     const view = renderWithIntl(<LoginPromptDialog returnTo={RETURN_TO} onClose={() => {}} />);
-    expect(screen.queryByRole("link", { name: en.Auth.reviewLogin.title })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: en.EmailAuth.review })).not.toBeInTheDocument();
     view.unmount();
 
     renderWithIntl(<LoginPromptDialog returnTo={RETURN_TO} emailLoginEnabled onClose={() => {}} />);
-    expect(screen.getByRole("link", { name: en.Auth.reviewLogin.title })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: en.EmailAuth.review })).toHaveAttribute(
       "href",
       `/en/login?next=${encodeURIComponent(RETURN_TO)}`,
     );

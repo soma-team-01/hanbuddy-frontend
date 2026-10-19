@@ -76,6 +76,20 @@ const presignedSuccessBody = {
 };
 
 describe("uploadProfileImage", () => {
+  it("does not refresh a session when an email signup token expires", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createJsonResponse({ isSuccess: false, code: "TOKEN401_EXPIRED", message: "Expired" }, 401),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const file = new File([new Uint8Array([1])], "me.png", { type: "image/png" });
+    await expect(uploadProfileImage(file, { temporaryToken: true })).rejects.toMatchObject({
+      status: 401,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/images/presigned-urls");
+  });
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();

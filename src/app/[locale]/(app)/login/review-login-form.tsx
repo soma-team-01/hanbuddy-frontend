@@ -13,7 +13,8 @@ type ReviewLoginErrorKey =
 export function ReviewLoginForm({
   locale,
   returnTo,
-}: Readonly<{ locale: Locale; returnTo?: string | null }>) {
+  ariaLabel,
+}: Readonly<{ locale: Locale; returnTo?: string | null; ariaLabel?: string }>) {
   const t = useTranslations("Auth.reviewLogin");
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -56,7 +57,10 @@ export function ReviewLoginForm({
   }
 
   return (
-    <section className="mx-auto w-full max-w-[520px] text-left" aria-label={t("title")}>
+    <section
+      className="mx-auto w-full max-w-[520px] text-left"
+      aria-label={ariaLabel ?? t("title")}
+    >
       <form className="grid gap-4" onSubmit={handleSubmit}>
         <label className="grid gap-1.5 text-sm font-semibold text-ink" htmlFor="review-login-email">
           {t("emailLabel")}

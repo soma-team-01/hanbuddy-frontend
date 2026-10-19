@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
+import type { Locale } from "@/i18n/routing";
+import { stripLocaleFromPathname } from "@/i18n/pathname";
 import { getMyProfile } from "@/lib/api/users";
 import { getUserTypeNavRole } from "@/lib/auth/routes";
 import type { MyProfile } from "@/types/user";
@@ -49,6 +51,7 @@ interface SiteHeaderProps {
   role?: SiteRole;
   authenticated?: boolean;
   mayHaveSession?: boolean;
+  onLocaleChange?: (locale: Locale) => void;
 }
 
 interface SessionResolution {
@@ -61,6 +64,7 @@ export function SiteHeader({
   role = null,
   authenticated = Boolean(role),
   mayHaveSession = authenticated,
+  onLocaleChange,
 }: Readonly<SiteHeaderProps>) {
   if (role === "admin") return <AdminSiteHeader authenticated={authenticated} />;
 
@@ -69,6 +73,7 @@ export function SiteHeader({
       role={role}
       authenticated={authenticated}
       mayHaveSession={mayHaveSession}
+      onLocaleChange={onLocaleChange}
     />
   );
 }
@@ -77,9 +82,14 @@ function LocalizedSiteHeader({
   role,
   authenticated,
   mayHaveSession,
-}: Readonly<Required<SiteHeaderProps> & { role: Exclude<SiteRole, "admin"> }>) {
+  onLocaleChange,
+}: Readonly<
+  Required<Omit<SiteHeaderProps, "onLocaleChange">> &
+    Pick<SiteHeaderProps, "onLocaleChange"> & { role: Exclude<SiteRole, "admin"> }
+>) {
   const t = useTranslations("Navigation");
-  const pathname = usePathname();
+  // Isolated reset pages switch language in place, so the URL can retain its original locale.
+  const pathname = stripLocaleFromPathname(usePathname());
   const sessionKey = `${authenticated}:${mayHaveSession}`;
   const [sessionResolution, setSessionResolution] = useState<SessionResolution | null>(null);
   const currentResolution = sessionResolution?.key === sessionKey ? sessionResolution : undefined;
@@ -124,6 +134,9 @@ function LocalizedSiteHeader({
   const effectiveAuthenticated = sessionStatus === "authenticated";
   const effectiveRole = profile ? getUserTypeNavRole(profile.userType) : role;
   const isAuthPage =
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/auth/reset-password" ||
     pathname === "/login" ||
     pathname === "/onboarding" ||
     pathname === "/buddy/onboarding" ||
@@ -132,6 +145,7 @@ function LocalizedSiteHeader({
   const isBuddyHostingPage = pathname === "/buddy";
   const isMinimalHeader = isAuthPage || isBuddyHostingPage;
   const showLanguageSwitcher =
+    (pathname !== "/auth/reset-password" || Boolean(onLocaleChange)) &&
     (effectiveRole !== null || sessionStatus === "guest") &&
     effectiveRole !== "buddy" &&
     !isBuddyArea;
@@ -191,7 +205,7 @@ function LocalizedSiteHeader({
 
         <div className={`${isMinimalHeader ? "flex" : "hidden lg:flex"} items-center gap-2`}>
           {showLanguageSwitcher && !effectiveAuthenticated ? (
-            <LocaleSwitcher labelStyle="name" />
+            <LocaleSwitcher labelStyle="name" onLocaleChange={onLocaleChange} />
           ) : null}
           {isBuddyHostingPage && !effectiveAuthenticated ? (
             <BuddyGoogleAuthDialog variant="header" />

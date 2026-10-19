@@ -1,4 +1,5 @@
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { AuthSessionResetListener } from "@/components/auth/AuthSessionResetListener";
 import { readAnalyticsPolicy } from "@/lib/analytics/policy";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
@@ -93,6 +94,7 @@ export default async function LocaleLayout({
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={SERVICE_TIME_ZONE}>
           <QueryProvider>
+            <AuthSessionResetListener mayHaveSession={mayHaveSession} />
             <AnalyticsProvider
               policy={readAnalyticsPolicy({
                 GA4_ORIGIN: process.env.GA4_ORIGIN,

@@ -45,8 +45,8 @@ describe("BuddyHostingPage", () => {
       fireEvent.click(screen.getAllByRole("button", { name: cta })[0]);
       const dialog = screen.getByRole("dialog");
       expect(dialog).toBeInTheDocument();
-      expect(dialog).toHaveClass("max-w-[800px]");
-      expect(screen.getByText(/Terms of Service|이용약관/).closest("p")).toHaveClass(
+      expect(dialog).toHaveClass("max-w-[440px]", "overflow-y-auto");
+      expect(screen.getByText(/Terms of Service|이용약관/).closest("p")).not.toHaveClass(
         "lg:whitespace-nowrap",
       );
       expect(screen.getByRole("link", { name: /Google|구글/ })).toHaveAttribute(

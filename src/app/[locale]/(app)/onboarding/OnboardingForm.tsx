@@ -1,8 +1,11 @@
 "use client";
+import { getEmailAuthLinks } from "@/lib/auth/email-navigation";
 
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
 import { SignupExtraFields } from "./SignupExtraFields";
+import { EmailSignupFields } from "@/components/auth/EmailSignupFields";
+import { isValidNewPassword, type EmailErrorKey } from "@/lib/auth/email";
 import {
   buildSignupExtra,
   isBankName,
@@ -13,7 +16,7 @@ import {
 } from "@/lib/auth/signup-extra";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { SignupAgreementNoticeDialog } from "@/components/auth/SignupAgreementNoticeDialog";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -26,7 +29,7 @@ import {
 } from "@/components/ui/MessagingAppField";
 import { ArrowRightIcon, CameraIcon, TrashIcon, XIcon } from "@/components/ui/icons";
 import { Link, useRouter } from "@/i18n/navigation";
-import { createApiClientError } from "@/lib/api/errors";
+import { createApiClientError, isUnauthenticatedError } from "@/lib/api/errors";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import {
   buildSignupAgreements,
@@ -83,6 +86,7 @@ type RequestFailureKey =
   "profileUploadFailed" | "resubmissionFailed" | "signupFailed" | "serverUnavailable";
 
 interface OnboardingFormProps {
+  emailSignup?: import("@/lib/auth/email").EmailSignupSession;
   googleProfile?: GoogleProfile;
   signupDraftAccountId?: string;
   userType?: UserType;
@@ -92,7 +96,8 @@ interface OnboardingFormProps {
   returnTo?: string | null;
 }
 
-type OnboardingStep = 1 | 2 | 3;
+// Step 0 is email credentials; the existing profile steps keep their draft identifiers.
+type OnboardingStep = 0 | 1 | 2 | 3;
 
 const MINIMUM_SIGNUP_AGE = 19;
 const MAXIMUM_SIGNUP_AGE = 120;
@@ -166,6 +171,7 @@ function getOnboardingBackHref(isResubmission: boolean, isBuddyFlow: boolean) {
 }
 
 export function OnboardingForm({
+  emailSignup,
   googleProfile,
   signupDraftAccountId,
   userType = "TOURIST",
@@ -174,6 +180,11 @@ export function OnboardingForm({
   returnTo = null,
 }: Readonly<OnboardingFormProps>) {
   const t = useTranslations("Onboarding");
+  const emailT = useTranslations("EmailAuth");
+  const locale = useLocale();
+  const [emailPassword, setEmailPassword] = useState("");
+  const [emailConfirmation, setEmailConfirmation] = useState("");
+  const [emailError, setEmailError] = useState<EmailErrorKey | null>(null);
   const buddyT = useTranslations("BuddyOnboarding");
   const resubmissionT = useTranslations("BuddyResubmission");
   const messagingT = useTranslations("Messaging");
@@ -182,7 +193,10 @@ export function OnboardingForm({
   const router = useRouter();
   const { trackSignup } = useMeasurementEvents();
   const isResubmission = Boolean(resubmission);
+  const hasCredentialStep = Boolean(emailSignup) && !isResubmission;
+  const firstStep = hasCredentialStep ? 0 : 1;
   const isBuddyFlow = userType === "BUDDY";
+  const recoveryLinks = getEmailAuthLinks(locale, isBuddyFlow, returnTo);
   // Signup-only fields deliberately stay out of persistent onboarding drafts.
   const [signupExtra, setSignupExtra] = useState<SignupExtraDraft>({
     signupSource: "",
@@ -199,7 +213,10 @@ export function OnboardingForm({
     reviewedAt: resubmission?.reviewedAt,
   });
   const [initialDraft] = useState(() => (draftScope ? getOnboardingMemoryDraft(draftScope) : null));
-  const initialStep = Math.min(initialDraft?.currentStep ?? 1, finalStep) as OnboardingStep;
+  // Passwords are never restored from drafts, so email signup always starts at credentials.
+  const initialStep = hasCredentialStep
+    ? 0
+    : (Math.min(initialDraft?.currentStep ?? 1, finalStep) as OnboardingStep);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [displayName, setDisplayName] = useState(
     initialDraft?.displayName ?? resubmission?.displayName ?? googleProfile?.name ?? "",
@@ -299,7 +316,8 @@ export function OnboardingForm({
     void loadOnboardingDraft(draftScope).then((restored) => {
       if (cancelled) return;
       if (restored) {
-        setCurrentStep(Math.min(restored.currentStep, finalStep) as OnboardingStep);
+        if (!hasCredentialStep)
+          setCurrentStep(Math.min(restored.currentStep, finalStep) as OnboardingStep);
         setDisplayName(restored.displayName);
         setBirthDate(restored.birthDate);
         restoreMessagingCountries(restored.nationality, restored.messagingCountry);
@@ -316,13 +334,20 @@ export function OnboardingForm({
     return () => {
       cancelled = true;
     };
-  }, [draftScope, finalStep, initialDraft, isBuddyFlow, restoreMessagingCountries]);
+  }, [
+    draftScope,
+    finalStep,
+    initialDraft,
+    isBuddyFlow,
+    hasCredentialStep,
+    restoreMessagingCountries,
+  ]);
 
   useEffect(() => {
     if (!draftScope || !isDraftPersistenceReady || draftPersistenceDisabledRef.current) return;
 
     saveOnboardingDraft(draftScope, {
-      currentStep,
+      currentStep: currentStep === 0 ? 1 : currentStep,
       displayName,
       birthDate,
       nationality,
@@ -440,7 +465,9 @@ export function OnboardingForm({
       return uploadedProfileImageRef.current.imageKey;
     }
 
-    const uploaded = await uploadProfileImage(profileImageFile);
+    const uploaded = emailSignup
+      ? await uploadProfileImage(profileImageFile, { temporaryToken: true })
+      : await uploadProfileImage(profileImageFile);
     uploadedProfileImageRef.current = { file: profileImageFile, imageKey: uploaded.imageKey };
     return uploaded.imageKey;
   }
@@ -529,10 +556,26 @@ export function OnboardingForm({
     return error === null;
   }
 
+  function validateEmailSignup() {
+    if (!emailSignup) return true;
+    let invalid: EmailErrorKey | null = null;
+    if (emailSignup.expiresAt <= Date.now()) invalid = "expired";
+    else if (!isValidNewPassword(emailPassword)) invalid = "passwordInvalid";
+    else if (emailPassword !== emailConfirmation) invalid = "mismatch";
+    setEmailError(invalid);
+    if (invalid) setCurrentStep(firstStep);
+    return !invalid;
+  }
+
   function handleContinue() {
+    if (!validateEmailSignup()) return;
     setErrorKey(null);
     setRequestFailure(null);
 
+    if (currentStep === 0) {
+      goToStep(1);
+      return;
+    }
     if (currentStep === 1 && validateAboutYou() && validateExtra(1)) goToStep(2);
     if (currentStep === 2 && !isResubmission) {
       // A restored legacy draft may have progressed without collecting a signup source.
@@ -547,6 +590,7 @@ export function OnboardingForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submissionInFlight.current) return;
+    if (!validateEmailSignup()) return;
     setErrorKey(null);
     setRequestFailure(null);
 
@@ -578,6 +622,11 @@ export function OnboardingForm({
       try {
         profileImageKey = await resolveProfileImageKey();
       } catch (error) {
+        if (emailSignup && isUnauthenticatedError(error)) {
+          setEmailError("expired");
+          setCurrentStep(firstStep);
+          return;
+        }
         setRequestFailure({ error, fallbackKey: "profileUploadFailed" });
         return;
       }
@@ -609,18 +658,27 @@ export function OnboardingForm({
             agreements: buildSignupAgreements(userType, agreementDecisions, agreementDocuments),
           };
 
-      const response = await fetch(
-        isResubmission ? "/api/auth/buddy/resubmission" : "/api/auth/google/signup",
-        {
-          method: isResubmission ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
+      let signupEndpoint = "/api/auth/google/signup";
+      if (emailSignup) signupEndpoint = "/api/auth/email/signup";
+      if (isResubmission) signupEndpoint = "/api/auth/buddy/resubmission";
+      const response = await fetch(signupEndpoint, {
+        method: isResubmission ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          emailSignup
+            ? { name: displayName.trim(), password: emailPassword, profile: payload }
+            : payload,
+        ),
+      });
       const body = (await response.json().catch(() => undefined)) as
         ApiResponse<GoogleLoginResponse | BuddyResubmission> | ErrorApiResponse | undefined;
 
       if (!response.ok || !body?.isSuccess) {
+        if (emailSignup && (response.status === 401 || response.status === 409)) {
+          setEmailError(response.status === 401 ? "expired" : "duplicate");
+          setCurrentStep(firstStep);
+          return;
+        }
         if (body && !body.isSuccess) {
           if (!isResubmission && body.code === "AUTH400_SIGNUP_SOURCE") {
             setSignupExtraError({ field: "source", key: "sourceInvalid" });
@@ -655,7 +713,7 @@ export function OnboardingForm({
 
       const signupResult = body.result as GoogleLoginResponse;
       const authStatus = signupResult.authStatus;
-      if (signupResult.registered === true) trackSignup("google");
+      if (signupResult.registered === true && !emailSignup) trackSignup("google");
       if (authStatus === "ACTIVE") {
         discardDraft();
         router.replace(userType === "BUDDY" ? "/dashboard" : (returnTo ?? "/"));
@@ -796,12 +854,15 @@ export function OnboardingForm({
     },
   ];
   const stepLabels = isResubmission
-    ? [t("steps.aboutYou"), buddyT("contactMethods")]
+    ? [t("steps.aboutYou"), buddyT("contactStep")]
     : [
+        ...(hasCredentialStep ? [emailT("accountStep")] : []),
         t("steps.aboutYou"),
-        isBuddyFlow ? buddyT("contactMethods") : t("steps.contact"),
+        isBuddyFlow ? buddyT("contactStep") : t("steps.contact"),
         t("steps.agreements"),
       ];
+  const signupStepColumns = hasCredentialStep ? "grid-cols-4" : "grid-cols-3";
+  const stepColumns = isResubmission ? "grid-cols-2" : signupStepColumns;
 
   return (
     <div className={`${mobileStyles.compact} flex flex-1 flex-col bg-canvas-soft pb-24 lg:pb-0`}>
@@ -837,17 +898,21 @@ export function OnboardingForm({
             className={`mx-auto mt-5 grid w-full max-w-[1280px] overflow-hidden rounded-[28px] border border-line-soft bg-canvas-soft max-md:mt-3 max-md:rounded-[20px] lg:grid-cols-[250px_minmax(0,1fr)] ${currentStep === 3 ? "" : "lg:min-h-[620px]"}`}
           >
             <nav
-              aria-label={t("steps.progress", { current: currentStep, total: stepLabels.length })}
+              aria-label={t("steps.progress", {
+                current: currentStep + (hasCredentialStep ? 1 : 0),
+                total: stepLabels.length,
+              })}
               className="border-b border-line-soft px-5 py-4 max-md:px-3 max-md:py-2.5 lg:border-r lg:border-b-0 lg:px-8 lg:py-12"
             >
               <p className="mb-4 hidden text-xs font-bold tracking-[0.18em] text-primary uppercase lg:block">
-                {t("steps.progress", { current: currentStep, total: stepLabels.length })}
+                {t("steps.progress", {
+                  current: currentStep + (hasCredentialStep ? 1 : 0),
+                  total: stepLabels.length,
+                })}
               </p>
-              <ol
-                className={`${isResubmission ? "grid-cols-2" : "grid-cols-3"} grid gap-2 lg:flex lg:flex-col lg:gap-5`}
-              >
+              <ol className={`${stepColumns} grid gap-2 lg:flex lg:flex-col lg:gap-5`}>
                 {stepLabels.map((label, index) => {
-                  const step = (index + 1) as OnboardingStep;
+                  const step = (index + (hasCredentialStep ? 0 : 1)) as OnboardingStep;
                   const isActive = currentStep === step;
                   const isComplete = currentStep > step;
                   return (
@@ -863,10 +928,10 @@ export function OnboardingForm({
                             : "border-line-strong bg-canvas-soft text-muted"
                         }`}
                       >
-                        {step}
+                        {index + 1}
                       </span>
                       <span
-                        className={`min-w-0 text-xs leading-4 font-semibold break-keep sm:text-sm sm:leading-5 ${
+                        className={`min-w-0 text-xs leading-4 font-semibold break-keep whitespace-pre-line sm:text-sm sm:leading-5 ${
                           isActive ? "text-primary-strong" : "text-muted"
                         }`}
                       >
@@ -879,6 +944,48 @@ export function OnboardingForm({
             </nav>
 
             <div className="flex min-w-0 flex-col">
+              {currentStep === 0 && emailSignup && (
+                <section className="px-5 py-8 max-md:px-4 max-md:py-4 md:px-12 md:py-10 lg:px-16 lg:py-14">
+                  <h2
+                    ref={stepHeadingRef}
+                    tabIndex={-1}
+                    className="font-display text-xl font-bold text-ink outline-none max-md:text-base"
+                  >
+                    {emailT("accountStep")}
+                  </h2>
+                  <div className="mt-8 max-w-2xl space-y-6 max-md:mt-4 max-md:space-y-4">
+                    <EmailSignupFields
+                      session={emailSignup}
+                      password={emailPassword}
+                      confirmation={emailConfirmation}
+                      onPassword={(value) => {
+                        setEmailPassword(value);
+                        if (emailError === "passwordInvalid" || emailError === "mismatch")
+                          setEmailError(null);
+                      }}
+                      onConfirmation={(value) => {
+                        setEmailConfirmation(value);
+                        if (emailError === "mismatch") setEmailError(null);
+                      }}
+                    />
+                    {emailError && (
+                      <div role="alert" className="grid gap-3 text-sm text-danger">
+                        <p>{emailT(emailError)}</p>
+                        {(emailError === "expired" || emailError === "duplicate") && (
+                          <>
+                            <a href={recoveryLinks.signup} className="underline">
+                              {emailT("reverify")}
+                            </a>
+                            <a href={recoveryLinks.login} className="underline">
+                              {emailT("back")}
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
               {currentStep === 1 ? (
                 <section className="px-5 py-8 max-md:px-4 max-md:py-4 md:px-12 md:py-10 lg:px-16 lg:py-14">
                   <div>
@@ -1140,7 +1247,7 @@ export function OnboardingForm({
                 </p>
               ) : null}
               <div className="fixed inset-x-0 bottom-0 z-30 mt-auto flex justify-end gap-2 bg-canvas-soft px-4 py-3 shadow-[0_-8px_24px_rgba(61,45,43,0.08)] lg:static lg:bg-transparent lg:px-16 lg:py-6 lg:shadow-none">
-                {currentStep > 1 ? (
+                {currentStep > firstStep ? (
                   <button
                     type="button"
                     disabled={isSubmitting}

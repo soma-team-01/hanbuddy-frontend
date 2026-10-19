@@ -316,7 +316,7 @@ describe("ActivityDetailContent", () => {
       "href",
       `/api/auth/google/start?locale=en&next=${returnTo}`,
     );
-    expect(within(prompt).getByRole("link", { name: "Log in with email" })).toHaveAttribute(
+    expect(within(prompt).getByRole("link", { name: "Review account login" })).toHaveAttribute(
       "href",
       `/en/login?next=${returnTo}`,
     );

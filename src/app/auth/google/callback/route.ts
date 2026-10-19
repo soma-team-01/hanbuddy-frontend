@@ -158,6 +158,7 @@ function createOnboardingRedirect(request: NextRequest, result: GoogleLoginRespo
   clearAuthenticatedSessionCookies(response);
   clearAuthStatusReasonCookie(response);
   clearResubmissionCookie(response);
+  clearSignupCookies(response);
   response.cookies.set(AUTH_COOKIES.signupToken, result.signupToken, SIGNUP_COOKIE_OPTIONS);
   if (result.googleProfile) {
     response.cookies.set(

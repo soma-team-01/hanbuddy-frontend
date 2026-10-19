@@ -1,5 +1,10 @@
 {
   "EmailAuth": {
+    "submitLogin": "Log in",
+    "signupLink": "Sign up",
+    "buddySignupLink": "Become a buddy",
+    "forgotLink": "Forgot password?",
+    "socialDivider": "or continue with",
     "orEmail": "or log in with email",
     "newHere": "New to HanBuddy?",
     "signupIntro": "Start with your email. We'll send you a verification code.",
@@ -942,7 +947,7 @@
     "close": "Close buddy sign in",
     "eyebrow": "Host with HanBuddy",
     "title": "Start your buddy journey",
-    "description": "Use Google to create your buddy account and turn the Korea you love into a welcoming local experience.",
+    "description": "Use your email or Google account. New here? Sign up to become a buddy.",
     "continueWithGoogle": "Continue as a buddy with Google"
   },
   "Onboarding": {

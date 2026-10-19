@@ -3,14 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { GoogleIcon } from "@/components/ui/icons";
 import type { Locale } from "@/i18n/routing";
 import { parseAuthErrorCode } from "@/lib/auth/error-codes";
 import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getPolicyPath } from "@/lib/policy-routes";
 import { ReviewLoginForm } from "./review-login-form";
-import { EmailLoginForm } from "@/components/auth/EmailLoginForm";
+import { LoginMethods } from "@/components/auth/LoginMethods";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { pageAlternates } from "@/lib/seo/metadata";
 
@@ -57,20 +56,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
               {t(`errors.${errorCode}`)}
             </p>
           ) : null}
-          <Link
-            href={googleStartHref}
-            prefetch={false}
-            className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-line-strong bg-white px-4 py-3 text-sm font-semibold text-ink transition-colors hover:border-muted hover:bg-panel-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
-          >
-            <GoogleIcon className="size-5 shrink-0" />
-            <span>{t("continueWithGoogle")}</span>
-          </Link>
-          <div className="my-6 flex items-center gap-4 text-xs text-muted">
-            <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
-            <span>{emailT("orEmail")}</span>
-            <span aria-hidden="true" className="h-px flex-1 bg-line-soft" />
-          </div>
-          <EmailLoginForm locale={locale} returnTo={returnTo} />
+          <LoginMethods locale={locale} returnTo={returnTo} googleHref={googleStartHref} />
           <p className="mt-6 border-t border-line-soft pt-5 text-center text-xs leading-5 text-muted">
             {t("legalNoticeStart")}{" "}
             <Link

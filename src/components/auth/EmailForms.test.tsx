@@ -64,7 +64,7 @@ describe("email UI contracts", () => {
     renderWithIntl(<EmailLoginForm locale="en" />);
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "alice@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: " a long password " } });
-    fireEvent.click(screen.getByRole("button", { name: "Log in with email" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     await screen.findByRole("alert");
     expect(request).toHaveBeenCalledWith(
       "login",
@@ -72,5 +72,18 @@ describe("email UI contracts", () => {
       { query: "locale=en" },
     );
     expect(screen.getByRole("alert")).toHaveTextContent("email or password is incorrect");
+  });
+  it("keeps the selected booking destination in an email login request", async () => {
+    request.mockRejectedValue(new EmailAuthError("AUTH401_EMAIL_LOGIN", 401));
+    const next = "/activities/8/book?scheduleId=42&guestCount=2";
+    renderWithIntl(<EmailLoginForm locale="en" returnTo={next} />);
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "alice@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "test password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    await screen.findByRole("alert");
+    expect(request).toHaveBeenCalledWith("login", expect.any(Object), {
+      query: new URLSearchParams({ locale: "en", next }).toString(),
+    });
+    expect(screen.getByRole("button", { name: "Log in" })).toBeEnabled();
   });
 });

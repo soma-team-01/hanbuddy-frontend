@@ -80,15 +80,17 @@ describe("LoginPage", () => {
       "autocomplete",
       "current-password",
     );
-    const emailLoginButton = screen.getByRole("button", { name: "Log in" });
+    const emailLoginButton = within(
+      screen.getByRole("region", { name: "Log in with email" }),
+    ).getByRole("button", { name: "Log in" });
     const googleLoginLink = screen.getByRole("link", { name: "Continue with Google" });
 
     expect(emailLoginButton).toBeEnabled();
     expect(
-      googleLoginLink.compareDocumentPosition(emailLoginButton) & Node.DOCUMENT_POSITION_FOLLOWING,
+      emailLoginButton.compareDocumentPosition(googleLoginLink) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(googleLoginLink).toHaveClass("bg-white", "border-line-strong", "text-ink");
-    expect(screen.getByText("or log in with email")).toBeInTheDocument();
+    expect(screen.getByText("or continue with")).toBeInTheDocument();
   });
 
   it("uses the same neutral Google action regardless of the review login flag", async () => {
@@ -161,7 +163,7 @@ describe("LoginPage", () => {
       "href",
       `/api/auth/google/start?locale=en&next=${encodeURIComponent(next)}`,
     );
-    expect(screen.getByRole("link", { name: "Sign up with email" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sign up" })).toHaveAttribute(
       "href",
       `/en/signup?next=${encodeURIComponent(next)}`,
     );

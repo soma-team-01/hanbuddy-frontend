@@ -1,5 +1,10 @@
 {
   "EmailAuth": {
+    "submitLogin": "로그인",
+    "signupLink": "회원가입",
+    "buddySignupLink": "버디 신청하기",
+    "forgotLink": "비밀번호 찾기",
+    "socialDivider": "또는 간편 로그인",
     "orEmail": "또는 이메일로 로그인",
     "newHere": "한버디가 처음이신가요?",
     "signupIntro": "이메일을 입력하면 인증 코드를 보내드려요.",
@@ -941,8 +946,8 @@
     "loginTrigger": "로그인",
     "close": "버디 로그인 창 닫기",
     "eyebrow": "버디 신청 · 로그인",
-    "title": "Google 계정으로 시작해요",
-    "description": "처음이라면 버디 프로필을 만들고, 이미 버디라면 바로 로그인돼요.",
+    "title": "한버디와 함께 시작해요",
+    "description": "이메일 또는 Google 계정으로 로그인하세요. 처음이라면 버디로 가입해 주세요.",
     "continueWithGoogle": "Google 계정으로 계속하기"
   },
   "Onboarding": {

@@ -6,9 +6,17 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { EmailAuthError, emailErrorKey, requestEmailAuth } from "@/lib/auth/email";
-import { AuthInput, authButtonClass, authLinkClass } from "./EmailAuthFields";
+import { AuthInput, authButtonClass } from "./EmailAuthFields";
 
-export function EmailLoginForm({ locale, returnTo }: { locale: string; returnTo?: string | null }) {
+export function EmailLoginForm({
+  locale,
+  returnTo,
+  buddy = false,
+}: {
+  locale: string;
+  returnTo?: string | null;
+  buddy?: boolean;
+}) {
   const t = useTranslations("EmailAuth");
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
@@ -45,6 +53,8 @@ export function EmailLoginForm({ locale, returnTo }: { locale: string; returnTo?
     }
   }
   const signupQuery = returnTo ? `?next=${encodeURIComponent(returnTo)}` : "";
+  const utilityClass =
+    "inline-flex min-h-11 items-center text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
   return (
     <section className="w-full text-left" aria-label={t("login")}>
       <form onSubmit={submit} className="grid gap-4">
@@ -64,25 +74,25 @@ export function EmailLoginForm({ locale, returnTo }: { locale: string; returnTo?
           maxLength={64}
           required
         />
-        <Link
-          className={`${authLinkClass} -mt-1 justify-self-end`}
-          href={`/${locale}/forgot-password`}
-        >
-          {t("forgot")}
-        </Link>
         {error && (
           <p role="alert" className="text-sm text-danger">
             {t(error)}
           </p>
         )}
         <button disabled={pending} className={authButtonClass}>
-          {t(pending ? "busy" : "login")}
+          {t(pending ? "busy" : "submitLogin")}
         </button>
       </form>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm">
-        <span className="text-muted">{t("newHere")}</span>
-        <Link className={authLinkClass} href={`/${locale}/signup${signupQuery}`}>
-          {t("signup")}
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 text-sm">
+        <Link
+          className={utilityClass}
+          href={buddy ? "/ko/signup?intent=buddy" : `/${locale}/signup${signupQuery}`}
+        >
+          {t(buddy ? "buddySignupLink" : "signupLink")}
+        </Link>
+        <span aria-hidden="true" className="h-3 w-px bg-line-strong" />
+        <Link className={utilityClass} href={`/${locale}/forgot-password`}>
+          {t("forgotLink")}
         </Link>
       </div>
     </section>

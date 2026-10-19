@@ -1,5 +1,10 @@
 {
   "EmailAuth": {
+    "submitLogin": "登入",
+    "signupLink": "註冊",
+    "buddySignupLink": "申請成為夥伴",
+    "forgotLink": "忘記密碼？",
+    "socialDivider": "或使用以下方式繼續",
     "orEmail": "或使用電子郵件登入",
     "newHere": "第一次使用 HanBuddy？",
     "signupIntro": "輸入電子郵件，我們將向你傳送驗證碼。",
@@ -942,7 +947,7 @@
     "close": "關閉好友登入",
     "eyebrow": "與 HanBuddy 一起主持",
     "title": "開始你的朋友之旅",
-    "description": "使用 Google 建立您的好友帳戶，將您喜愛的韓國變成溫馨的在地體驗。",
+    "description": "使用電子郵件或 Google 帳號登入。首次使用？註冊成為夥伴。",
     "continueWithGoogle": "繼續成為 Google 朋友"
   },
   "Onboarding": {

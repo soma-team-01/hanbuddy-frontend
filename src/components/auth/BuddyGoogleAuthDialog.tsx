@@ -4,7 +4,10 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRightIcon, GoogleIcon, XIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, XIcon } from "@/components/ui/icons";
+import { getLocaleOrDefault } from "@/i18n/routing";
+import { getPolicyPath } from "@/lib/policy-routes";
+import { LoginMethods } from "./LoginMethods";
 
 interface BuddyGoogleAuthDialogProps {
   variant?: "primary" | "inverse" | "header";
@@ -22,10 +25,9 @@ const TRIGGER_CLASS_NAMES = {
 export function BuddyGoogleAuthDialog({
   variant = "primary",
 }: Readonly<BuddyGoogleAuthDialogProps>) {
-  const locale = useLocale();
+  const locale = getLocaleOrDefault(useLocale());
   const t = useTranslations("BuddyAuth");
   const authT = useTranslations("Auth");
-  const emailT = useTranslations("EmailAuth");
   const [isOpen, setIsOpen] = useState(false);
   const titleId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -45,7 +47,9 @@ export function BuddyGoogleAuthDialog({
       if (event.key !== "Tab" || !dialogRef.current) return;
 
       const focusable = Array.from(
-        dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), a[href]"),
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          "button:not([disabled]), a[href], input:not([disabled])",
+        ),
       );
       const first = focusable[0];
       const last = focusable.at(-1);
@@ -93,7 +97,7 @@ export function BuddyGoogleAuthDialog({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className="relative w-full max-w-[800px] rounded-[2rem] bg-canvas-soft px-6 py-8 text-center shadow-[0_28px_90px_rgba(38,27,24,0.3)] sm:px-10 sm:py-10"
+                className="relative max-h-[90dvh] w-full max-w-[440px] overflow-y-auto rounded-3xl bg-canvas-soft px-6 pt-12 pb-6 text-center shadow-2xl sm:px-8 sm:pb-8"
               >
                 <button
                   ref={closeRef}
@@ -109,39 +113,31 @@ export function BuddyGoogleAuthDialog({
                 </p>
                 <h2
                   id={titleId}
-                  className="mt-3 font-display text-2xl font-extrabold tracking-[-0.035em] text-ink lg:whitespace-nowrap"
+                  className="mt-3 font-display text-2xl font-bold tracking-tight text-balance text-ink"
                 >
                   {t("title")}
                 </h2>
-                <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted lg:max-w-none lg:whitespace-nowrap">
-                  {t("description")}
-                </p>
-                <a
-                  href={`/api/auth/google/start?locale=${locale}&intent=buddy`}
-                  className="motion-press relative mt-8 flex h-14 w-full items-center justify-center rounded-full bg-primary px-12 font-display text-xs font-bold whitespace-nowrap text-on-primary shadow-[0_12px_28px_rgba(209,63,50,0.25)] transition-colors hover:bg-primary-hover sm:px-14 sm:text-sm"
-                >
-                  <span className="absolute left-3 flex size-9 items-center justify-center rounded-full bg-white shadow-sm">
-                    <GoogleIcon className="size-5" />
-                  </span>
-                  {t("continueWithGoogle")}
-                </a>
-                <div className="mt-5 flex flex-wrap justify-center gap-4 text-sm font-semibold text-primary underline underline-offset-4">
-                  <Link href="/ko/login" onClick={() => setIsOpen(false)}>
-                    {emailT("login")}
-                  </Link>
-                  <Link href="/ko/signup?intent=buddy" onClick={() => setIsOpen(false)}>
-                    {emailT("buddySignup")}
-                  </Link>
-                </div>
-                <p className="mt-5 text-xs leading-5 text-muted lg:whitespace-nowrap">
+                <p className="mt-3 mb-6 text-sm leading-6 text-muted">{t("description")}</p>
+                <LoginMethods
+                  locale={locale}
+                  buddy
+                  googleHref={`/api/auth/google/start?locale=${locale}&intent=buddy`}
+                />
+                <p className="mt-5 border-t border-line-soft pt-5 text-xs leading-5 text-muted">
                   {authT("legalNoticeStart")}{" "}
-                  <span className="font-semibold text-primary underline underline-offset-2">
+                  <Link
+                    href={getPolicyPath(locale, "terms-of-service")}
+                    className="font-semibold text-primary underline underline-offset-2"
+                  >
                     {authT("termsOfService")}
-                  </span>{" "}
+                  </Link>{" "}
                   {authT("legalNoticeMiddle")}{" "}
-                  <span className="font-semibold text-primary underline underline-offset-2">
+                  <Link
+                    href={getPolicyPath(locale, "privacy-policy")}
+                    className="font-semibold text-primary underline underline-offset-2"
+                  >
                     {authT("privacyPolicy")}
-                  </span>
+                  </Link>
                   {authT("legalNoticeEnd")}
                 </p>
               </section>

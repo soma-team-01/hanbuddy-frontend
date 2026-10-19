@@ -1,5 +1,10 @@
 {
   "EmailAuth": {
+    "submitLogin": "ログイン",
+    "signupLink": "新規登録",
+    "buddySignupLink": "バディに登録",
+    "forgotLink": "パスワードを忘れた方",
+    "socialDivider": "または外部アカウントで続行",
     "orEmail": "またはメールでログイン",
     "newHere": "HanBuddyは初めてですか？",
     "signupIntro": "メールアドレスに認証コードをお送りします。",
@@ -942,7 +947,7 @@
     "close": "友達のサインインを閉じる",
     "eyebrow": "HanBuddy によるホスト",
     "title": "仲間の旅を始めましょう",
-    "description": "Google を使用して友達アカウントを作成し、大好きな韓国を居心地の良い現地体験に変えましょう。",
+    "description": "メールまたは Google アカウントでログインできます。初めての方はバディとして登録してください。",
     "continueWithGoogle": "Google との友達として継続する"
   },
   "Onboarding": {

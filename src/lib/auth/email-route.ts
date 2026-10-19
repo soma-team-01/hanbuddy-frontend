@@ -13,7 +13,12 @@ import {
   setAuthenticatedSessionCookies,
   setAuthStatusReasonCookie,
 } from "./cookies";
-import { isValidNewPassword, type EmailAction, type EmailVerificationResponse } from "./email";
+import {
+  isValidNewPassword,
+  isPasswordResetValidation,
+  type EmailAction,
+  type EmailVerificationResponse,
+} from "./email";
 import { readEmailSignupSession } from "./email-session";
 import { sanitizeReturnToPath } from "./return-to";
 import type { GoogleLoginResponse } from "./types";
@@ -132,6 +137,7 @@ export async function handleEmailAuth(request: NextRequest, action: EmailAction)
 async function performEmailAuth(request: NextRequest, action: EmailAction) {
   const origin = request.headers.get("origin");
   if (origin && origin !== request.nextUrl.origin) return failure(403);
+  if (action === "password/reset/validate") return validateResetToken(request);
   const raw = await request.json().catch(() => null);
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return failure(400);
   const body = parseBody(action, raw);
@@ -191,6 +197,24 @@ async function performEmailAuth(request: NextRequest, action: EmailAction) {
       appendBackendSetCookies(response, backend.setCookies);
     }
     return response;
+  } catch {
+    return failure(502, "AUTH_PROXY_ERROR");
+  }
+}
+
+async function validateResetToken(request: NextRequest) {
+  const bearerToken = request.headers.get("authorization")?.match(/^Bearer ([^\s]{1,4096})$/)?.[1];
+  if (!bearerToken) return failure(401, "TOKEN401");
+  try {
+    const backend = await postBackend("/auth/email/password/reset/validate", undefined, {
+      bearerToken,
+    });
+    if (backend.status >= 400 || !backend.payload.isSuccess)
+      return failure(backend.status >= 400 ? backend.status : 502, backend.payload.code);
+    const result = backend.payload.result;
+    if (!isPasswordResetValidation(result)) return failure(502, "AUTH_PROXY_ERROR");
+    // Validation must never consume/reset credentials or touch authenticated-session cookies.
+    return success({ valid: true, expiresInSeconds: result.expiresInSeconds });
   } catch {
     return failure(502, "AUTH_PROXY_ERROR");
   }

@@ -1,5 +1,41 @@
-import { describe, expect, it } from "vitest";
-import { isValidNewPassword, emailErrorKey } from "./email";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { isValidNewPassword, emailErrorKey, requestEmailAuth } from "./email";
+
+afterEach(() => vi.unstubAllGlobals());
+it("sends bodyless reset validation with only the temporary bearer credential", async () => {
+  const fetchMock = vi.fn().mockResolvedValue(
+    Response.json({
+      isSuccess: true,
+      code: "OK",
+      result: { valid: true, expiresInSeconds: 540 },
+    }),
+  );
+  vi.stubGlobal("fetch", fetchMock);
+  expect(
+    await requestEmailAuth("password/reset/validate", undefined, { token: "reset-secret" }),
+  ).toEqual({ valid: true, expiresInSeconds: 540 });
+  expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+    "/api/auth/email/password/reset/validate",
+    expect.objectContaining({
+      method: "POST",
+      body: undefined,
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer reset-secret" },
+    }),
+  );
+});
+it("does not refresh or retry an expired reset validation token", async () => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValue(
+      Response.json({ isSuccess: false, code: "TOKEN401_EXPIRED" }, { status: 401 }),
+    );
+  vi.stubGlobal("fetch", fetchMock);
+  await expect(
+    requestEmailAuth("password/reset/validate", undefined, { token: "expired" }),
+  ).rejects.toMatchObject({ status: 401, code: "TOKEN401_EXPIRED" });
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
 
 describe("email password policy", () => {
   it("requires 8–64 UTF-16 units and at most 72 UTF-8 bytes without character combination rules", () => {

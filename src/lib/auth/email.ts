@@ -14,8 +14,28 @@ export interface EmailSignupSession {
   email: string;
   expiresAt: number;
 }
+export interface PasswordResetValidation {
+  valid: true;
+  expiresInSeconds: number;
+}
+export function isPasswordResetValidation(value: unknown): value is PasswordResetValidation {
+  if (!value || typeof value !== "object") return false;
+  const result = value as Partial<PasswordResetValidation>;
+  return (
+    result.valid === true &&
+    typeof result.expiresInSeconds === "number" &&
+    Number.isSafeInteger(result.expiresInSeconds) &&
+    result.expiresInSeconds > 0
+  );
+}
 export type EmailAction =
-  "code" | "code/verify" | "signup" | "login" | "password/reset-link" | "password/reset";
+  | "code"
+  | "code/verify"
+  | "signup"
+  | "login"
+  | "password/reset-link"
+  | "password/reset"
+  | "password/reset/validate";
 
 export type EmailErrorKey = ReturnType<typeof emailErrorKey> | "mismatch";
 

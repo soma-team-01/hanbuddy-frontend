@@ -25,6 +25,69 @@ beforeEach(() => {
 });
 
 describe("email auth BFF", () => {
+  it("validates reset tokens without a body or changing any session cookies", async () => {
+    post.mockResolvedValue({
+      ...ok({ valid: true, expiresInSeconds: 540 }),
+      setCookies: ["refresh_token=changed"],
+    });
+    const res = await handleEmailAuth(
+      request(undefined, `${AUTH_COOKIES.accessToken}=other`, "Bearer reset-secret"),
+      "password/reset/validate",
+    );
+    expect(post).toHaveBeenCalledExactlyOnceWith("/auth/email/password/reset/validate", undefined, {
+      bearerToken: "reset-secret",
+    });
+    expect(await res.json()).toMatchObject({ result: { valid: true, expiresInSeconds: 540 } });
+    expect(res.headers.get("set-cookie")).toBeNull();
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(res.headers.get("Referrer-Policy")).toBe("no-referrer");
+  });
+  it("does not substitute login cookies for a missing validation token", async () => {
+    const res = await handleEmailAuth(
+      request(undefined, `${AUTH_COOKIES.accessToken}=other`),
+      "password/reset/validate",
+    );
+    expect(res.status).toBe(401);
+    expect(post).not.toHaveBeenCalled();
+  });
+  it("rejects cross-origin reset validation", async () => {
+    const req = request(undefined, "", "Bearer reset-secret");
+    req.headers.set("origin", "https://other.example");
+    expect((await handleEmailAuth(req, "password/reset/validate")).status).toBe(403);
+    expect(post).not.toHaveBeenCalled();
+  });
+  it.each([
+    [401, "TOKEN401_EXPIRED"],
+    [401, "TOKEN401"],
+    [500, "COMMON500_REDIS"],
+  ])("preserves reset validation error %s/%s", async (status, code) => {
+    post.mockResolvedValue({
+      status: Number(status),
+      setCookies: [],
+      payload: { isSuccess: false, code: String(code), message: "sensitive" },
+    });
+    const res = await handleEmailAuth(
+      request(undefined, "", "Bearer reset-secret"),
+      "password/reset/validate",
+    );
+    expect(res.status).toBe(status);
+    expect(await res.json()).toMatchObject({ isSuccess: false, code });
+    expect(res.headers.get("set-cookie")).toBeNull();
+  });
+  it.each([
+    null,
+    {},
+    { valid: false, expiresInSeconds: 540 },
+    { valid: true, expiresInSeconds: 0 },
+    { valid: true, expiresInSeconds: "540" },
+  ])("rejects malformed validation results: %j", async (result) => {
+    post.mockResolvedValue(ok(result));
+    const res = await handleEmailAuth(
+      request(undefined, "", "Bearer reset-secret"),
+      "password/reset/validate",
+    );
+    expect(res.status).toBe(502);
+  });
   it("preserves Google-only reset errors instead of acknowledging a reset email", async () => {
     post.mockResolvedValue({
       status: 409,

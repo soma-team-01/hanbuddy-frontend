@@ -1,12 +1,13 @@
 "use client";
 import type { EmailErrorKey } from "@/lib/auth/email";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import {
   EmailAuthError,
   emailErrorKey,
   isValidNewPassword,
+  isPasswordResetValidation,
   requestEmailAuth,
 } from "@/lib/auth/email";
 import { PasswordFields, authButtonClass, authLinkClass } from "./EmailAuthFields";
@@ -17,8 +18,11 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
   const token = useRef<string | null>(null);
   const initialized = useRef(false);
   const busy = useRef(false);
+  const validation = useRef<{ promise: Promise<unknown>; startedAt: number } | null>(null);
+  const [validationAttempt, setValidationAttempt] = useState(0);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [stage, setStage] = useState<
-    "loading" | "ready" | "missing" | "expired" | "uncertain" | "success"
+    "loading" | "validationError" | "ready" | "missing" | "expired" | "uncertain" | "success"
   >("loading");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -29,7 +33,15 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
     ? "resetLinkUnavailableTitle"
     : stage === "success"
       ? "successTitle"
-      : "newPassword";
+      : stage === "loading" || stage === "validationError"
+        ? "checkingResetLinkTitle"
+        : "newPassword";
+  const expire = useCallback(() => {
+    token.current = null;
+    setPassword("");
+    setConfirmation("");
+    setStage("expired");
+  }, []);
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
@@ -37,12 +49,59 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
       // The isolated root never loads analytics, including before this effect runs.
       history.replaceState(history.state, "", window.location.pathname);
     }
-    const ready = Boolean(token.current);
-    queueMicrotask(() => setStage(ready ? "ready" : "missing"));
-  }, []);
+    let active = true;
+    if (!token.current) {
+      queueMicrotask(() => {
+        if (active) setStage("missing");
+      });
+    } else {
+      // Reuse the same non-consuming check across Strict Mode effect replays.
+      validation.current ??= {
+        startedAt: Date.now(),
+        promise: requestEmailAuth("password/reset/validate", undefined, { token: token.current }),
+      };
+      const { promise, startedAt } = validation.current;
+      void promise
+        .then((result) => {
+          if (!active) return;
+          if (!isPasswordResetValidation(result))
+            throw new Error("Invalid reset validation response");
+          // Use request start time so network latency never extends the server's remaining lifetime.
+          const deadline = startedAt + result.expiresInSeconds * 1000;
+          if (deadline <= Date.now()) {
+            expire();
+            return;
+          }
+          setExpiresAt(deadline);
+          setStage("ready");
+        })
+        .catch((error: unknown) => {
+          if (!active) return;
+          if (error instanceof EmailAuthError && error.status === 401) expire();
+          else setStage("validationError");
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [validationAttempt, expire]);
+  useEffect(() => {
+    if (stage !== "ready" || expiresAt === null || pending) return;
+    const timer = setTimeout(expire, Math.max(0, expiresAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [stage, expiresAt, expire, pending]);
+  function retryValidation() {
+    validation.current = null;
+    setStage("loading");
+    setValidationAttempt((attempt) => attempt + 1);
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy.current || !token.current) return;
+    if (busy.current || !token.current || stage !== "ready") return;
+    if (expiresAt === null || Date.now() >= expiresAt) {
+      expire();
+      return;
+    }
     if (!isValidNewPassword(password)) {
       setError("passwordInvalid");
       return;
@@ -84,7 +143,11 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
   return (
     <AuthPanel title={t(title)}>
       <div className="grid gap-5">
-        {stage === "loading" && <p role="status">{t("busy")}</p>}
+        {stage === "loading" && (
+          <p role="status" className="text-center text-sm text-muted">
+            {t("checkingResetLink")}
+          </p>
+        )}
         {stage === "ready" && (
           <form onSubmit={submit} className="grid gap-5">
             <PasswordFields
@@ -119,7 +182,12 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
         )}
         {stage !== "ready" && stage !== "loading" && (
           <>
-            {stage !== "success" && (
+            {stage === "validationError" && (
+              <button type="button" className={authButtonClass} onClick={retryValidation}>
+                {t("retryResetLink")}
+              </button>
+            )}
+            {stage !== "success" && stage !== "validationError" && (
               <a
                 className={
                   invalidLink

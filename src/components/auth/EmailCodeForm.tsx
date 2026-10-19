@@ -5,18 +5,103 @@ import { useId, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { EmailAuthError, emailErrorKey, requestEmailAuth } from "@/lib/auth/email";
-import { sanitizeReturnToPath } from "@/lib/auth/return-to";
+import { getEmailAuthLinks } from "@/lib/auth/email-navigation";
 import { AuthInput, authButtonClass, useRemainingSeconds } from "./EmailAuthFields";
+
+interface CodeFailure {
+  key: "codeInvalid" | "codeUnavailable" | "codeAttemptsExceeded";
+  details?: EmailCodeFailure;
+}
+
+function EmailCodeFeedback({
+  id,
+  remaining,
+  failure,
+  resendRequired,
+}: Readonly<{
+  id: string;
+  remaining: number;
+  failure: CodeFailure | null;
+  resendRequired: boolean;
+}>) {
+  const t = useTranslations("EmailAuth");
+  if (remaining === 0)
+    return (
+      <output id={id} className="text-sm text-danger">
+        {t("codeExpired")}
+      </output>
+    );
+  if (!failure) return null;
+  const key = resendRequired && failure.key === "codeInvalid" ? "codeUnavailable" : failure.key;
+  return (
+    <p id={id} role="alert" className="text-sm text-danger">
+      {t(key)}
+      {failure.details?.failedAttempts != null && (
+        <>
+          {" "}
+          {t("codeAttemptCount", {
+            failedAttempts: failure.details.failedAttempts,
+            maxAttempts: failure.details.maxAttempts,
+          })}
+        </>
+      )}
+    </p>
+  );
+}
+
+function EmailCodeAction({
+  duplicate,
+  hasCode,
+  pending,
+  remaining,
+  codeRemaining,
+  resendRequired,
+  loginHref,
+}: Readonly<{
+  duplicate: boolean;
+  hasCode: boolean;
+  pending: boolean;
+  remaining: number;
+  codeRemaining: number;
+  resendRequired: boolean;
+  loginHref: string;
+}>) {
+  const t = useTranslations("EmailAuth");
+  if (duplicate)
+    return (
+      <Link href={loginHref} className={`${authButtonClass} flex items-center justify-center`}>
+        {t("submitLogin")}
+      </Link>
+    );
+  if (hasCode)
+    return (
+      <button
+        type="submit"
+        disabled={pending || codeRemaining === 0 || resendRequired}
+        className={authButtonClass}
+      >
+        {t(pending ? "busy" : "verify")}
+      </button>
+    );
+  let label = t("sendCode");
+  if (remaining > 0) label = t("wait", { seconds: remaining });
+  if (pending) label = t("busy");
+  return (
+    <button type="submit" className={authButtonClass} disabled={pending || remaining > 0}>
+      {label}
+    </button>
+  );
+}
 
 export function EmailCodeForm({
   locale,
   buddy,
   returnTo,
-}: {
+}: Readonly<{
   locale: string;
   buddy: boolean;
   returnTo?: string | null;
-}) {
+}>) {
   const t = useTranslations("EmailAuth");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -33,15 +118,14 @@ export function EmailCodeForm({
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
   const [error, setError] = useState<EmailErrorKey | null>(null);
-  const [codeFailure, setCodeFailure] = useState<{
-    key: "codeInvalid" | "codeUnavailable" | "codeAttemptsExceeded";
-    details?: EmailCodeFailure;
-  } | null>(null);
+  const [codeFailure, setCodeFailure] = useState<CodeFailure | null>(null);
   const resendRequired = Boolean(
     codeFailure && (codeFailure.key !== "codeInvalid" || codeFailure.details?.resendRequired),
   );
-  const safeReturnTo = buddy ? null : sanitizeReturnToPath(returnTo);
-  const loginHref = `/${buddy ? "ko" : locale}/login${safeReturnTo ? `?next=${encodeURIComponent(safeReturnTo)}` : ""}`;
+  const loginHref = getEmailAuthLinks(locale, buddy, returnTo).login;
+  const codeDescription = [timerId, (codeFailure || codeRemaining === 0) && feedbackId]
+    .filter(Boolean)
+    .join(" ");
   async function send() {
     if (busy.current || remaining > 0) return;
     busy.current = true;
@@ -147,7 +231,7 @@ export function EmailCodeForm({
             required
             disabled={pending || resendRequired || codeRemaining === 0}
             aria-invalid={Boolean(codeFailure) || codeRemaining === 0 || undefined}
-            aria-describedby={`${timerId}${codeFailure || codeRemaining === 0 ? ` ${feedbackId}` : ""}`}
+            aria-describedby={codeDescription}
             endAdornment={
               <span id={timerId} role="timer" aria-label={t("codeTimeRemaining")}>
                 {codeTime}
@@ -156,28 +240,12 @@ export function EmailCodeForm({
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
-          {codeRemaining === 0 ? (
-            <p id={feedbackId} role="status" className="text-sm text-danger">
-              {t("codeExpired")}
-            </p>
-          ) : codeFailure ? (
-            <p id={feedbackId} role="alert" className="text-sm text-danger">
-              {t(
-                resendRequired && codeFailure.key === "codeInvalid"
-                  ? "codeUnavailable"
-                  : codeFailure.key,
-              )}
-              {codeFailure.details?.failedAttempts != null && (
-                <>
-                  {" "}
-                  {t("codeAttemptCount", {
-                    failedAttempts: codeFailure.details.failedAttempts,
-                    maxAttempts: codeFailure.details.maxAttempts,
-                  })}
-                </>
-              )}
-            </p>
-          ) : null}
+          <EmailCodeFeedback
+            id={feedbackId}
+            remaining={codeRemaining}
+            failure={codeFailure}
+            resendRequired={resendRequired}
+          />
         </>
       )}
       {error && (
@@ -185,23 +253,15 @@ export function EmailCodeForm({
           {t(error)}
         </p>
       )}
-      {error === "duplicate" ? (
-        <Link href={loginHref} className={`${authButtonClass} flex items-center justify-center`}>
-          {t("submitLogin")}
-        </Link>
-      ) : sentEmail ? (
-        <button
-          type="submit"
-          disabled={pending || codeRemaining === 0 || resendRequired}
-          className={authButtonClass}
-        >
-          {pending ? t("busy") : t("verify")}
-        </button>
-      ) : (
-        <button className={authButtonClass} disabled={pending || (!sentEmail && remaining > 0)}>
-          {pending ? t("busy") : remaining > 0 ? t("wait", { seconds: remaining }) : t("sendCode")}
-        </button>
-      )}
+      <EmailCodeAction
+        duplicate={error === "duplicate"}
+        hasCode={Boolean(sentEmail)}
+        pending={pending}
+        remaining={remaining}
+        codeRemaining={codeRemaining}
+        resendRequired={resendRequired}
+        loginHref={loginHref}
+      />
     </form>
   );
 }

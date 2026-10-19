@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 /** Separate document root: never mount AnalyticsProvider around fragment credentials. */
-export default async function ResetLayout({ children }: { children: React.ReactNode }) {
+export default async function ResetLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = getLocaleOrDefault((await headers()).get("x-reset-locale"));
   const koreanFont = koreanFontRootProps(locale, "font-noto-sans-kr");
   const messagesByLocale = Object.fromEntries(

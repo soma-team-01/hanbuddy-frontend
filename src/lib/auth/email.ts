@@ -152,37 +152,38 @@ export class EmailAuthError extends Error {
   }
 }
 
+/** Return only the failure metadata allowed for the requested authentication action. */
+export function readEmailFailure(action: EmailAction, code: string, result: unknown) {
+  if (action === "code/verify") return readEmailCodeFailure(code, result);
+  if (action === "login") return readEmailLoginFailure(code, result);
+  return undefined;
+}
+
 /** Temporary-token endpoints never retry via the access-token refresh client. */
 export async function requestEmailAuth<T>(
   action: EmailAction,
   body: unknown,
   options: { token?: string; query?: string } = {},
 ): Promise<T> {
-  const response = await fetch(
-    `/api/auth/email/${action}${options.query ? `?${options.query}` : ""}`,
-    {
-      method: "POST",
-      credentials: "same-origin",
-      cache: "no-store",
-      signal: AbortSignal.timeout(20_000),
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
-      },
-      body: JSON.stringify(body),
+  const query = options.query ? `?${options.query}` : "";
+  const response = await fetch(`/api/auth/email/${action}${query}`, {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
     },
-  );
+    body: JSON.stringify(body),
+  });
   const payload = (await response.json().catch(() => null)) as
     ApiResponse<T> | ErrorApiResponse | null;
   if (!response.ok || !payload?.isSuccess)
     throw new EmailAuthError(
       payload?.code ?? "AUTH_PROXY_ERROR",
       response.status,
-      action === "code/verify"
-        ? readEmailCodeFailure(payload?.code ?? "", payload?.result)
-        : action === "login"
-          ? readEmailLoginFailure(payload?.code ?? "", payload?.result)
-          : undefined,
+      readEmailFailure(action, payload?.code ?? "", payload?.result),
     );
   return payload.result;
 }

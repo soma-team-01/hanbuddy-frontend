@@ -1,4 +1,3 @@
-import { privatePageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
@@ -6,13 +5,12 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { PasswordResetRequestForm } from "@/components/auth/PasswordResetRequestForm";
 
-export const metadata = privatePageMetadata;
+export { privatePageMetadata as metadata } from "@/lib/seo/metadata";
 export default async function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ intent?: string; next?: string }>;
-}) {
+}>) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "EmailAuth" });
   return (

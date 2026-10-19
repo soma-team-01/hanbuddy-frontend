@@ -26,6 +26,31 @@ beforeEach(() => {
 
 describe("email auth BFF", () => {
   it.each([
+    "alice@@example.com",
+    "alice@example",
+    "@example.com",
+    "alice@.com",
+    "alice@example.",
+    "alice@exa mple.com",
+    `${"a".repeat(250)}@example.com`,
+  ])("rejects malformed or oversized email %s without calling the backend", async (email) => {
+    const res = await handleEmailAuth(request({ email, password: "password123" }), "login");
+    expect(res.status).toBe(400);
+    expect(post).not.toHaveBeenCalled();
+  });
+  it("preserves trimmed multi-level and plus-addressed emails", async () => {
+    post.mockResolvedValue(ok({ accepted: true }));
+    await handleEmailAuth(
+      request({ email: "  alice+test@sub.example.com  ", purpose: "SIGNUP" }),
+      "code",
+    );
+    expect(post).toHaveBeenCalledWith(
+      "/auth/email/code",
+      { email: "alice+test@sub.example.com", purpose: "SIGNUP" },
+      {},
+    );
+  });
+  it.each([
     ["AUTH401_EMAIL_LOGIN", 401, { failedAttempts: 3, maxAttempts: 5, retryAfterSeconds: 0 }],
     ["AUTH429_EMAIL_LOGIN", 429, { failedAttempts: 5, maxAttempts: 5, retryAfterSeconds: 173 }],
   ])(

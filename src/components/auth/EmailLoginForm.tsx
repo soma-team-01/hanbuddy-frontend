@@ -18,11 +18,11 @@ export function EmailLoginForm({
   locale,
   returnTo,
   buddy = false,
-}: {
+}: Readonly<{
   locale: string;
   returnTo?: string | null;
   buddy?: boolean;
-}) {
+}>) {
   const t = useTranslations("EmailAuth");
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
@@ -98,7 +98,7 @@ export function EmailLoginForm({
           onChange={() => setFeedback(undefined)}
           aria-describedby={visibleFeedback ? feedbackId : undefined}
         />
-        <button disabled={pending} className={authButtonClass}>
+        <button type="submit" disabled={pending} className={authButtonClass}>
           {t(pending ? "busy" : "submitLogin")}
         </button>
         {visibleFeedback && (

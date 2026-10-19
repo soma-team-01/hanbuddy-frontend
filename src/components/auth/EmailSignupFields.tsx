@@ -9,13 +9,13 @@ export function EmailSignupFields({
   confirmation,
   onPassword,
   onConfirmation,
-}: {
+}: Readonly<{
   session: EmailSignupSession;
   password: string;
   confirmation: string;
   onPassword: (value: string) => void;
   onConfirmation: (value: string) => void;
-}) {
+}>) {
   const t = useTranslations("EmailAuth");
   const remaining = useRemainingSeconds(session.expiresAt);
   return (

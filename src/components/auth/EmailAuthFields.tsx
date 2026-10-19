@@ -71,12 +71,12 @@ export function PasswordFields({
   confirmation,
   onPassword,
   onConfirmation,
-}: {
+}: Readonly<{
   password: string;
   confirmation: string;
   onPassword: (value: string) => void;
   onConfirmation: (value: string) => void;
-}) {
+}>) {
   const t = useTranslations("EmailAuth");
   const passwordHintId = useId();
   const confirmationHintId = useId();
@@ -84,12 +84,12 @@ export function PasswordFields({
   const passwordValid = isValidNewPassword(password);
   const hasConfirmation = confirmation.length > 0;
   const passwordsMatch = password === confirmation;
-  const passwordMessage =
-    !hasPassword || password.length < 8
-      ? "passwordHint"
-      : passwordValid
-        ? "passwordValid"
-        : "passwordInvalid";
+  let passwordMessage: "passwordHint" | "passwordValid" | "passwordInvalid" = "passwordHint";
+  if (hasPassword && password.length >= 8)
+    passwordMessage = passwordValid ? "passwordValid" : "passwordInvalid";
+  const passwordStateColor = passwordValid ? "text-success" : "text-danger";
+  const passwordColor = hasPassword ? passwordStateColor : "text-muted";
+  const confirmationMessage = passwordsMatch ? "passwordMatch" : "mismatch";
   return (
     <div className="grid gap-5">
       <div className="grid gap-2">
@@ -105,11 +105,7 @@ export function PasswordFields({
           aria-describedby={passwordHintId}
           aria-invalid={hasPassword && !passwordValid}
         />
-        <p
-          id={passwordHintId}
-          aria-live="polite"
-          className={`text-sm leading-6 ${!hasPassword ? "text-muted" : passwordValid ? "text-success" : "text-danger"}`}
-        >
+        <p id={passwordHintId} aria-live="polite" className={`text-sm leading-6 ${passwordColor}`}>
           {t(passwordMessage)}
         </p>
       </div>
@@ -131,7 +127,7 @@ export function PasswordFields({
           aria-live="polite"
           className={`text-sm leading-6 empty:hidden ${passwordsMatch ? "text-success" : "text-danger"}`}
         >
-          {hasConfirmation ? t(passwordsMatch ? "passwordMatch" : "mismatch") : ""}
+          {hasConfirmation && t(confirmationMessage)}
         </p>
       </div>
     </div>

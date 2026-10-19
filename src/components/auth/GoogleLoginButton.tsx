@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { GoogleIcon } from "@/components/ui/icons";
 
-export function GoogleLoginButton({ href }: { href: string }) {
+export function GoogleLoginButton({ href }: Readonly<{ href: string }>) {
   const t = useTranslations("Auth");
   return (
     <Link

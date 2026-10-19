@@ -14,6 +14,9 @@ export function PasswordResetRequestForm() {
   const [error, setError] = useState<EmailErrorKey | null>(null);
   const [deadline, setDeadline] = useState(0);
   const remaining = useRemainingSeconds(deadline);
+  let submitLabel = t("requestLink");
+  if (remaining > 0) submitLabel = t("wait", { seconds: remaining });
+  if (pending) submitLabel = t("busy");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy.current || remaining > 0) return;
@@ -49,10 +52,10 @@ export function PasswordResetRequestForm() {
         }}
       />
       {accepted && (
-        <div role="status" className="grid gap-1 text-sm leading-6 text-muted">
-          <p>{t("receipt")}</p>
-          <p>{t("inbox")}</p>
-        </div>
+        <output className="grid gap-1 text-sm leading-6 text-muted">
+          <span>{t("receipt")}</span>
+          <span>{t("inbox")}</span>
+        </output>
       )}
       {error && (
         <p role="alert" className="text-sm text-danger">
@@ -60,12 +63,8 @@ export function PasswordResetRequestForm() {
         </p>
       )}
       {error !== "googleLoginRequired" && (
-        <button disabled={pending || remaining > 0} className={authButtonClass}>
-          {pending
-            ? t("busy")
-            : remaining > 0
-              ? t("wait", { seconds: remaining })
-              : t("requestLink")}
+        <button type="submit" disabled={pending || remaining > 0} className={authButtonClass}>
+          {submitLabel}
         </button>
       )}
     </form>

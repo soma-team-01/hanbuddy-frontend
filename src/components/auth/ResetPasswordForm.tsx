@@ -30,13 +30,12 @@ export function ResetPasswordForm() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<EmailErrorKey | null>(null);
   const invalidLink = stage === "missing" || stage === "expired";
-  const title = invalidLink
-    ? "resetLinkUnavailableTitle"
-    : stage === "success"
-      ? "successTitle"
-      : stage === "loading" || stage === "validationError"
-        ? "checkingResetLinkTitle"
-        : "newPassword";
+  let title:
+    "resetLinkUnavailableTitle" | "successTitle" | "checkingResetLinkTitle" | "newPassword" =
+    "newPassword";
+  if (invalidLink) title = "resetLinkUnavailableTitle";
+  else if (stage === "success") title = "successTitle";
+  else if (stage === "loading" || stage === "validationError") title = "checkingResetLinkTitle";
   const expire = useCallback(() => {
     token.current = null;
     setPassword("");
@@ -145,9 +144,7 @@ export function ResetPasswordForm() {
     <AuthPanel title={t(title)}>
       <div className="grid gap-5">
         {stage === "loading" && (
-          <p role="status" className="text-center text-sm text-muted">
-            {t("checkingResetLink")}
-          </p>
+          <output className="text-center text-sm text-muted">{t("checkingResetLink")}</output>
         )}
         {stage === "ready" && (
           <form onSubmit={submit} className="grid gap-5">
@@ -168,18 +165,17 @@ export function ResetPasswordForm() {
                 {t(error)}
               </p>
             )}
-            <button disabled={pending} className={authButtonClass}>
+            <button type="submit" disabled={pending} className={authButtonClass}>
               {t(pending ? "busy" : "savePassword")}
             </button>
           </form>
         )}
         {stage !== "ready" && stage !== "loading" && (
-          <p
-            role="status"
+          <output
             className={`text-sm leading-6 text-muted ${stage === "success" || invalidLink ? "text-center" : ""}`}
           >
             {t(stage)}
-          </p>
+          </output>
         )}
         {stage !== "ready" && stage !== "loading" && (
           <>

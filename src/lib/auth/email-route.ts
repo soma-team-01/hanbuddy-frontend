@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { localizePathname } from "@/i18n/pathname";
-import { appendBackendSetCookies, postBackend } from "./backend";
+import { appendBackendSetCookies, postBackend, type BackendResponse } from "./backend";
 import {
   AUTH_COOKIES,
   SESSION_COOKIE_OPTIONS,
@@ -16,8 +16,7 @@ import {
 import {
   isValidNewPassword,
   isPasswordResetValidation,
-  readEmailCodeFailure,
-  readEmailLoginFailure,
+  readEmailFailure,
   type EmailCodeFailure,
   type EmailLoginFailure,
   type EmailAction,
@@ -50,30 +49,37 @@ function success(result: unknown, status = 200) {
   );
 }
 
+function parseSignupBody(body: Record<string, unknown>) {
+  if (
+    typeof body.name !== "string" ||
+    !body.name.trim() ||
+    body.name.length > 100 ||
+    !body.profile ||
+    typeof body.profile !== "object"
+  )
+    return null;
+  if (typeof body.password !== "string" || !isValidNewPassword(body.password)) return null;
+  return { name: body.name.trim(), password: body.password, profile: body.profile };
+}
+
+/** Validate the bounded address without overlapping regex repetitions. */
+function parseEmail(value: unknown) {
+  if (typeof value !== "string") return null;
+  const email = value.trim();
+  if (email.length > 255 || /\s/.test(email)) return null;
+  const parts = email.split("@");
+  if (parts.length !== 2 || !parts[0] || !parts[1].slice(1, -1).includes(".")) return null;
+  return email;
+}
+
 function parseBody(action: EmailAction, body: Record<string, unknown>) {
-  if (action === "signup") {
-    if (
-      typeof body.name !== "string" ||
-      !body.name.trim() ||
-      body.name.length > 100 ||
-      !body.profile ||
-      typeof body.profile !== "object"
-    )
-      return null;
-    if (typeof body.password !== "string" || !isValidNewPassword(body.password)) return null;
-    return { name: body.name.trim(), password: body.password, profile: body.profile };
-  }
+  if (action === "signup") return parseSignupBody(body);
   if (action === "password/reset")
     return typeof body.password === "string" && isValidNewPassword(body.password)
       ? { password: body.password }
       : null;
-  if (
-    typeof body.email !== "string" ||
-    body.email.trim().length > 255 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())
-  )
-    return null;
-  const email = body.email.trim();
+  const email = parseEmail(body.email);
+  if (!email) return null;
   if (action === "login")
     return typeof body.password === "string" &&
       body.password.trim().length > 0 &&
@@ -111,11 +117,10 @@ function sessionResponse(
       ? "/dashboard"
       : (sanitizeReturnToPath(request.nextUrl.searchParams.get("next")) ?? "/");
   const statusPath = result.userType === "BUDDY" ? "/buddy/auth/status" : "/auth/status";
-  const redirectTo = active
-    ? result.userType === "ADMIN"
-      ? "/admin/users"
-      : localizePathname(destination, locale)
-    : `${localizePathname(statusPath, locale)}?status=${result.authStatus}`;
+  let redirectTo = `${localizePathname(statusPath, locale)}?status=${result.authStatus}`;
+  if (active)
+    redirectTo =
+      result.userType === "ADMIN" ? "/admin/users" : localizePathname(destination, locale);
   const response = success(
     { registered: result.registered, authStatus: result.authStatus, redirectTo },
     status,
@@ -147,6 +152,23 @@ export async function handleEmailAuth(request: NextRequest, action: EmailAction)
   return response;
 }
 
+function emailCredentials(request: NextRequest, action: EmailAction) {
+  if (action === "signup") {
+    const session = readEmailSignupSession(request.cookies.get(AUTH_COOKIES.emailSignup)?.value);
+    const bearerToken = request.cookies.get(AUTH_COOKIES.signupToken)?.value;
+    if (!session || session.expiresAt <= Date.now() || !bearerToken)
+      return failure(401, "TOKEN401_EXPIRED");
+    return { bearerToken };
+  }
+  if (action === "password/reset") {
+    const bearerToken = request.headers
+      .get("authorization")
+      ?.match(/^Bearer ([^\s]{1,4096})$/)?.[1];
+    return bearerToken ? { bearerToken } : failure(401, "TOKEN401");
+  }
+  return {};
+}
+
 async function performEmailAuth(request: NextRequest, action: EmailAction) {
   const origin = request.headers.get("origin");
   if (origin && origin !== request.nextUrl.origin) return failure(403);
@@ -155,72 +177,67 @@ async function performEmailAuth(request: NextRequest, action: EmailAction) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return failure(400);
   const body = parseBody(action, raw);
   if (!body) return failure(400);
-  let bearerToken: string | undefined;
-  if (action === "signup") {
-    const session = readEmailSignupSession(request.cookies.get(AUTH_COOKIES.emailSignup)?.value);
-    bearerToken = request.cookies.get(AUTH_COOKIES.signupToken)?.value;
-    if (!session || session.expiresAt <= Date.now() || !bearerToken)
-      return failure(401, "TOKEN401_EXPIRED");
-  }
-  if (action === "password/reset") {
-    bearerToken = request.headers.get("authorization")?.match(/^Bearer ([^\s]{1,4096})$/)?.[1];
-    if (!bearerToken) return failure(401, "TOKEN401");
-  }
+  const credentials = emailCredentials(request, action);
+  if (credentials instanceof NextResponse) return credentials;
   try {
-    const backend = await postBackend(
-      `/auth/email/${action}`,
-      body,
-      bearerToken ? { bearerToken } : {},
-    );
+    const backend = await postBackend(`/auth/email/${action}`, body, credentials);
     if (!backend.payload.isSuccess)
       return failure(
         backend.status >= 400 ? backend.status : 502,
         backend.payload.code,
-        action === "code/verify"
-          ? readEmailCodeFailure(backend.payload.code, backend.payload.result)
-          : action === "login"
-            ? readEmailLoginFailure(backend.payload.code, backend.payload.result)
-            : undefined,
+        readEmailFailure(action, backend.payload.code, backend.payload.result),
       );
-    if (action === "login" || action === "signup")
-      return sessionResponse(
-        request,
-        backend.payload.result as GoogleLoginResponse,
-        backend.status,
-        backend.setCookies,
-      );
-    if (action === "code/verify") {
-      const result = backend.payload.result as EmailVerificationResponse;
-      if (
-        result?.purpose !== "SIGNUP" ||
-        typeof result.verificationToken !== "string" ||
-        !result.verificationToken ||
-        !Number.isInteger(result.expiresInSeconds) ||
-        result.expiresInSeconds <= 0
-      )
-        return failure(502, "AUTH_PROXY_ERROR");
-      const expiresAt = Date.now() + result.expiresInSeconds * 1000;
-      const response = success({ expiresAt });
-      clearSignupCookies(response);
-      const options = { ...SESSION_COOKIE_OPTIONS, maxAge: result.expiresInSeconds };
-      response.cookies.set(AUTH_COOKIES.signupToken, result.verificationToken, options);
-      response.cookies.set(
-        AUTH_COOKIES.emailSignup,
-        Buffer.from(JSON.stringify({ email: raw.email.trim(), expiresAt })).toString("base64url"),
-        options,
-      );
-      return response;
-    }
-    const response = success({ accepted: true });
-    if (action === "code") clearSignupCookies(response);
-    if (action === "password/reset") {
-      for (const name of Object.values(AUTH_COOKIES)) response.cookies.delete(name);
-      appendBackendSetCookies(response, backend.setCookies);
-    }
-    return response;
+    return emailSuccessResponse(request, action, backend, raw.email);
   } catch {
     return failure(502, "AUTH_PROXY_ERROR");
   }
+}
+
+function codeVerificationResponse(value: unknown, email: string) {
+  const result = value as EmailVerificationResponse;
+  if (
+    result?.purpose !== "SIGNUP" ||
+    typeof result.verificationToken !== "string" ||
+    !result.verificationToken ||
+    !Number.isInteger(result.expiresInSeconds) ||
+    result.expiresInSeconds <= 0
+  )
+    return failure(502, "AUTH_PROXY_ERROR");
+  const expiresAt = Date.now() + result.expiresInSeconds * 1000;
+  const response = success({ expiresAt });
+  clearSignupCookies(response);
+  const options = { ...SESSION_COOKIE_OPTIONS, maxAge: result.expiresInSeconds };
+  response.cookies.set(AUTH_COOKIES.signupToken, result.verificationToken, options);
+  response.cookies.set(
+    AUTH_COOKIES.emailSignup,
+    Buffer.from(JSON.stringify({ email: email.trim(), expiresAt })).toString("base64url"),
+    options,
+  );
+  return response;
+}
+
+function emailSuccessResponse(
+  request: NextRequest,
+  action: EmailAction,
+  backend: BackendResponse<unknown>,
+  email: unknown,
+) {
+  if (action === "login" || action === "signup")
+    return sessionResponse(
+      request,
+      backend.payload.result as GoogleLoginResponse,
+      backend.status,
+      backend.setCookies,
+    );
+  if (action === "code/verify" && typeof email === "string")
+    return codeVerificationResponse(backend.payload.result, email);
+  const response = success({ accepted: true });
+  if (action === "code") clearSignupCookies(response);
+  if (action === "password/reset") {
+    for (const name of Object.values(AUTH_COOKIES)) response.cookies.delete(name);
+    appendBackendSetCookies(response, backend.setCookies);
+  }
+  return response;
 }
 
 async function validateResetToken(request: NextRequest) {

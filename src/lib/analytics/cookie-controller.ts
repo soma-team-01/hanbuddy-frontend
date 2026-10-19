@@ -6,6 +6,7 @@ import {
   pageFields,
   safePage,
   type AnalyticsItemId,
+  type FunnelContext,
   type FunnelEvent,
   type MeasurementEvent,
   type SafePage,
@@ -73,10 +74,11 @@ export function createCookieAnalytics({
     input: number | Record<string, unknown>,
     key: string,
     repeatable = false,
+    context?: FunnelContext,
   ) {
     controller.visit(pathname);
     if (!allowed() || !page || (!repeatable && seen.has(key))) return false;
-    const fields = eventFields(name, page, input, policy.origin);
+    const fields = eventFields(name, page, input, policy.origin, context);
     if (!fields) return false;
     try {
       browser.send(name, fields);
@@ -127,13 +129,14 @@ export function createCookieAnalytics({
       }
       sendPage();
     },
-    track(name: FunnelEvent, pathname: string, activityId: number) {
+    track(name: FunnelEvent, pathname: string, activityId: number, context?: FunnelContext) {
       return emit(
         name,
         pathname,
         activityId,
         `${name}:${activityId}`,
         name === "booking_cta_click",
+        context,
       );
     },
     trackList(pathname: string, itemIds: AnalyticsItemId[], version: string) {

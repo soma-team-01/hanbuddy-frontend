@@ -125,7 +125,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
 
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
-      <JsonLd data={organizationJsonLd(locale)} />
+      <JsonLd data={organizationJsonLd(locale, t("metadataDescription"))} />
       <LandingAnalytics locale={locale} />
       {/* 모바일도 사진 위에 제목·검색·소개를 함께 배치한다. */}
       <section

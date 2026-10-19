@@ -51,6 +51,29 @@ it("loads nothing on construction and sends only explicit safe fields after star
     },
   ]);
 });
+it("keeps the shared page language current without persisting translated exposure", async () => {
+  const queue: unknown[][] = [];
+  const target = { location: { origin: policy.origin }, dataLayer: queue };
+  const browser = createGoogleBrowser(target as unknown as Window, document);
+  const loading = browser.start(policy, { ...page, content_language: "en" });
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await loading;
+  const detail = { ...page, content_language: "ko", is_translated: "false" as const };
+  browser.send("view_item", detail);
+  const sets = queue
+    .filter((entry) => entry[0] === "set" && typeof entry[1] === "object")
+    .map((entry) => entry[1] as Record<string, unknown>);
+  expect(sets.at(-1)).toEqual({
+    page_location: page.page_location,
+    page_referrer: "",
+    page_title: page.page_title,
+    content_language: "ko",
+  });
+  expect(sets.some((fields) => "is_translated" in fields)).toBe(false);
+  expect(queue.filter((entry) => entry[0] === "event").map((entry) => Array.from(entry))).toEqual([
+    ["event", "view_item", detail],
+  ]);
+});
 it("cancels a pending load and never re-enables it from its late callback", async () => {
   const queue: unknown[][] = [];
   const target = { location: { origin: policy.origin }, dataLayer: queue };

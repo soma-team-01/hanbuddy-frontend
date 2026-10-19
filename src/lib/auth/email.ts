@@ -21,7 +21,7 @@ export type EmailErrorKey = ReturnType<typeof emailErrorKey> | "mismatch";
 
 export function isValidNewPassword(password: string) {
   return (
-    password.length >= 15 &&
+    password.length >= 8 &&
     password.length <= 64 &&
     password.trim().length > 0 &&
     new TextEncoder().encode(password).length <= 72

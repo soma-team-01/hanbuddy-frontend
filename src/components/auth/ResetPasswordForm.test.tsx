@@ -26,18 +26,20 @@ function show() {
 it("removes the fragment, survives strict mode and never consumes a link on mount", async () => {
   show();
   await screen.findByLabelText("Password");
+  expect(screen.getByLabelText("Password")).toHaveAttribute("minlength", "8");
+  expect(screen.getByLabelText("Confirm password")).toHaveAttribute("minlength", "8");
   expect(location.hash).toBe("");
   expect(request).not.toHaveBeenCalled();
   request.mockRejectedValue(new EmailAuthError("AUTH400_PASSWORD", 400));
-  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "a long password" } });
+  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "abcdefgh" } });
   fireEvent.change(screen.getByLabelText("Confirm password"), {
-    target: { value: "a long password" },
+    target: { value: "abcdefgh" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Save password" }));
   await waitFor(() =>
     expect(request).toHaveBeenCalledWith(
       "password/reset",
-      { password: "a long password" },
+      { password: "abcdefgh" },
       { token: "reset-secret" },
     ),
   );

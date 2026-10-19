@@ -43,7 +43,7 @@ export function PasswordFields({
         type="password"
         autoComplete="new-password"
         required
-        minLength={15}
+        minLength={8}
         maxLength={64}
         value={password}
         onChange={(e) => onPassword(e.target.value)}
@@ -58,6 +58,7 @@ export function PasswordFields({
         type="password"
         autoComplete="new-password"
         required
+        minLength={8}
         maxLength={64}
         value={confirmation}
         onChange={(e) => onConfirmation(e.target.value)}

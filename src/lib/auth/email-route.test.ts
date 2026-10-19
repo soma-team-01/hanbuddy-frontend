@@ -25,6 +25,43 @@ beforeEach(() => {
 });
 
 describe("email auth BFF", () => {
+  it.each(["signup", "password/reset"] as const)(
+    "accepts 8 characters and rejects 7 for %s",
+    async (action) => {
+      const metadata = Buffer.from(
+        JSON.stringify({ email: "test@example.com", expiresAt: Date.now() + 600000 }),
+      ).toString("base64url");
+      const cookie = `${AUTH_COOKIES.signupToken}=signup; ${AUTH_COOKIES.emailSignup}=${metadata}`;
+      post.mockResolvedValue(
+        ok({
+          registered: true,
+          authStatus: "ACTIVE",
+          userId: 1,
+          userType: "TOURIST",
+          accessToken: "access",
+        }),
+      );
+      const body = (password: string) =>
+        action === "signup"
+          ? { name: "Alice", password, profile: { userType: "TOURIST" } }
+          : { password };
+      const invalid = await handleEmailAuth(
+        request(body("abcdefg"), cookie, "Bearer reset"),
+        action,
+      );
+      expect(invalid.status).toBe(400);
+      expect(post).not.toHaveBeenCalled();
+      const valid = await handleEmailAuth(
+        request(body("abcdefgh"), cookie, "Bearer reset"),
+        action,
+      );
+      expect(valid.status).toBe(200);
+      expect(post).toHaveBeenCalledWith(`/auth/email/${action}`, body("abcdefgh"), {
+        bearerToken: action === "signup" ? "signup" : "reset",
+      });
+    },
+  );
+
   it.each([
     [409, "AUTH409"],
     [503, "AUTH503_EMAIL"],

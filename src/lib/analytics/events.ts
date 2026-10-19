@@ -9,6 +9,10 @@ export type MeasurementEvent =
   | "inquiry_click";
 export type AnalyticsEvent = "page_view" | MeasurementEvent;
 export type AnalyticsItemId = number | string;
+/** What the visitor actually saw on an activity detail page. Unknown stays unset. */
+export interface FunnelContext {
+  isTranslated?: boolean;
+}
 
 export interface SafePage {
   key: string;
@@ -22,6 +26,10 @@ export interface AnalyticsFields {
   page_location: string;
   page_referrer: "";
   page_title: string;
+  // Rendered site locale from the URL prefix, never the browser language.
+  content_language?: string;
+  // GA4 custom dimensions are text; explicit strings avoid boolean coercion differences.
+  is_translated?: "true" | "false";
   items?: { item_id: string; index?: number }[];
   item_list_id?: string;
   item_list_name?: string;
@@ -86,7 +94,12 @@ export function safePage(pathname: string): SafePage | null {
 }
 
 export function pageFields(page: SafePage, origin: string): AnalyticsFields {
-  return { page_location: origin + page.path, page_referrer: "", page_title: page.title };
+  return {
+    page_location: origin + page.path,
+    page_referrer: "",
+    page_title: page.title,
+    content_language: page.locale,
+  };
 }
 
 const positiveId = (value: unknown): value is number =>
@@ -105,6 +118,7 @@ function funnelFields(
   page: SafePage,
   input: number | Record<string, unknown>,
   base: AnalyticsFields,
+  context: FunnelContext = {},
 ): AnalyticsFields | null {
   if (!positiveId(input)) return null;
   if (name === "begin_checkout") {
@@ -114,7 +128,13 @@ function funnelFields(
     return eligible ? { ...base, items: [{ item_id: String(input) }] } : null;
   }
   const eligible = page.path === "/activities/detail" && page.activityId === input;
-  return eligible ? { ...base, items: [{ item_id: String(input) }] } : null;
+  if (!eligible) return null;
+  const translated = context.isTranslated;
+  return {
+    ...base,
+    items: [{ item_id: String(input) }],
+    ...(typeof translated === "boolean" ? { is_translated: translated ? "true" : "false" } : {}),
+  };
 }
 
 function listFields(
@@ -234,10 +254,11 @@ export function eventFields(
   page: SafePage,
   input: number | Record<string, unknown>,
   origin: string,
+  context?: FunnelContext,
 ): AnalyticsFields | null {
   const base = pageFields(page, origin);
   if (name === "view_item" || name === "booking_cta_click" || name === "begin_checkout") {
-    return funnelFields(name, page, input, base);
+    return funnelFields(name, page, input, base, context);
   }
   if (typeof input !== "object" || input === null || Array.isArray(input)) return null;
 

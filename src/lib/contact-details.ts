@@ -6,3 +6,6 @@ export const CONTACT_DETAILS = {
   whatsappUrl: "https://wa.me/821082970110",
   kakaoUrl: "https://pf.kakao.com/_qapJX/chat",
 } as const;
+
+/** Official community group. Linked from the Organization JSON-LD so search engines tie it to this site. */
+export const MEETUP_GROUP_URL = "https://www.meetup.com/discover-korea-with-local-buddies/";

@@ -92,6 +92,8 @@ export function createGoogleBrowser(
         page_location: params.page_location,
         page_referrer: "",
         page_title: params.page_title,
+        // Event-scoped exposure such as is_translated must not leak into later events.
+        ...(params.content_language ? { content_language: params.content_language } : {}),
       });
       // Event-scoped only: a global set would leak into automatic events such as user_engagement.
       google.gtag?.("event", name, entry ? { ...params, page_referrer: entry } : params);

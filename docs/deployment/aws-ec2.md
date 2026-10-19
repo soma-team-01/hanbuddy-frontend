@@ -345,6 +345,28 @@ docker stop "${container_id}"
 trap - EXIT
 ```
 
+### GA4 화면 언어·번역 노출 측정기준
+
+번역 개선 효과를 언어별로 비교하기 위해 동의 후 GA4 이벤트에 다음 두 값을 싣는다.
+`page_location`은 계속 로케일 없는 정규화 경로이므로 화면 언어는 이 값으로만 구분한다.
+
+| 파라미터           | 값                                 | 실리는 이벤트                                | 출처                                                         |
+| ------------------ | ---------------------------------- | -------------------------------------------- | ------------------------------------------------------------ |
+| `content_language` | `en`·`ko`·`ja`·`zh-Hans`·`zh-Hant` | `page_view`와 모든 측정 이벤트               | URL 로케일 접두사 (`safePage`의 허용 목록)                   |
+| `is_translated`    | `"true"`·`"false"` 문자열          | 활동 상세의 `view_item`, `booking_cta_click` | 상세 응답 `isTranslated` (화면의 자동 번역 표시와 같은 기준) |
+
+`content_language`는 브라우저 언어가 아니라 방문자가 실제로 본 사이트 로케일이며,
+SPA에서 언어를 바꾸면 이후 이벤트와 공통 `set` 값이 새 로케일로 바뀐다.
+`is_translated`는 이벤트 범위로만 보내고 `set`에 남기지 않으므로 다른 이벤트로 번지지 않는다.
+`begin_checkout`에는 `is_translated`를 싣지 않는다. 예약 화면은 번역 여부를 받지 않으므로
+상세 단계의 값을 추측해 붙이지 않는다. Meta Pixel에는 두 값 모두 전달하지 않는다.
+
+GA4 보고서와 탐색에서 쓰려면 관리 → 데이터 표시 → 맞춤 정의 → 맞춤 측정기준 만들기에서
+범위 `이벤트`로 `content_language`(이벤트 매개변수 `content_language`)와
+`is_translated`(이벤트 매개변수 `is_translated`)를 각각 등록한다. 등록 전 수집분은 보고서에
+소급되지 않으므로 배포 전에 등록해 둔다. 배포 후에는 DebugView 또는 Google 수집 요청의
+`ep.content_language`, `ep.is_translated`를 확인한다.
+
 ### GA4_ORIGIN
 
 GitHub의 각 environment variable `GA4_ORIGIN`은 서버 컨테이너에 런타임으로 전달된다.

@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { eventFields, safePage, type FunnelEvent } from "./events";
+import { eventFields, pageFields, safePage, type FunnelEvent } from "./events";
 
 const origin = "https://example.test";
 
@@ -20,6 +20,7 @@ it("builds an Explore list payload from ordered rendered IDs without titles or p
     page_location: `${origin}/explore`,
     page_referrer: "",
     page_title: "Explore",
+    content_language: "en",
     item_list_id: "explore_activities",
     item_list_name: "Explore activities",
     items: [
@@ -116,3 +117,54 @@ it.each(["/about", "/faq"])(
     expect(safePage(`/en${path}?token=secret`)).toBeNull();
   },
 );
+
+it("labels every page and event with the rendered site locale, not the browser language", () => {
+  for (const locale of ["en", "ko", "ja", "zh-Hans", "zh-Hant"]) {
+    const page = safePage(`/${locale}/activities/42`)!;
+    expect(pageFields(page, origin)).toEqual({
+      page_location: `${origin}/activities/detail`,
+      page_referrer: "",
+      page_title: "Activity",
+      content_language: locale,
+    });
+    expect(fields("view_item", `/${locale}/activities/42`, 42)).toMatchObject({
+      content_language: locale,
+    });
+  }
+  expect(fields("begin_checkout", "/ko/activities/42/book", 42)).toMatchObject({
+    content_language: "ko",
+  });
+  expect(safePage("/de/activities/42")).toBeNull();
+});
+
+it("marks translated exposure only on activity detail funnel events", () => {
+  const detail = safePage("/en/activities/42")!;
+  for (const [isTranslated, value] of [
+    [true, "true"],
+    [false, "false"],
+  ] as const) {
+    expect(eventFields("view_item", detail, 42, origin, { isTranslated })).toEqual({
+      page_location: `${origin}/activities/detail`,
+      page_referrer: "",
+      page_title: "Activity",
+      content_language: "en",
+      items: [{ item_id: "42" }],
+      is_translated: value,
+    });
+    expect(eventFields("booking_cta_click", detail, 42, origin, { isTranslated })).toMatchObject({
+      is_translated: value,
+    });
+  }
+  // Unknown exposure stays unset instead of being guessed.
+  expect(eventFields("view_item", detail, 42, origin)).not.toHaveProperty("is_translated");
+  expect(
+    eventFields("view_item", detail, 42, origin, {
+      isTranslated: "true" as unknown as boolean,
+    }),
+  ).not.toHaveProperty("is_translated");
+  const booking = safePage("/en/activities/42/book")!;
+  expect(
+    eventFields("begin_checkout", booking, 42, origin, { isTranslated: true }),
+  ).not.toHaveProperty("is_translated");
+  expect(eventFields("view_item", detail, 7, origin, { isTranslated: true })).toBeNull();
+});

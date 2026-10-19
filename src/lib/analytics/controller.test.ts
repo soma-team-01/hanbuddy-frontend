@@ -91,6 +91,7 @@ describe("consent lifecycle and safe events", () => {
         page_location: "https://example.test/activities/detail",
         page_referrer: "",
         page_title: "Activity",
+        content_language: "en",
         items: [{ item_id: "42" }],
       },
     ]);

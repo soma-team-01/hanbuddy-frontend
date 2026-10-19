@@ -90,9 +90,10 @@ export function createGoogleBrowser(
       if (entry) referrer = "";
       google.gtag?.("set", {
         page_location: params.page_location,
-        page_referrer: entry,
+        page_referrer: "",
         page_title: params.page_title,
       });
+      // Event-scoped only: a global set would leak into automatic events such as user_engagement.
       google.gtag?.("event", name, entry ? { ...params, page_referrer: entry } : params);
     },
     async identifiers() {

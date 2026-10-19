@@ -305,8 +305,8 @@ it("sends the entry referrer origin on the first page view only, kept until cons
         Object.hasOwn(entry[1] as object, "page_referrer"),
     )
     .map((entry) => (entry[1] as Record<string, unknown>).page_referrer);
-  expect(referrers.filter(Boolean)).toEqual(["https://www.google.com/"]);
-  expect(referrers.at(-1)).toBe("");
+  // Global settings never carry the entry referrer; only the first page_view event does.
+  expect(referrers.every((value) => value === "")).toBe(true);
   expect(JSON.stringify(commands)).not.toContain("kbo");
   expect(JSON.stringify(commands)).not.toContain("a%40b.com");
 });

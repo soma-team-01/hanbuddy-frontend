@@ -87,8 +87,8 @@ export function PasswordFields({
   let validationMessage = t("passwordHint");
   if (hasPassword && password.length >= 8)
     validationMessage = t(passwordValid ? "passwordValid" : "passwordInvalid");
-  const passwordStateColor = passwordValid ? "text-success" : "text-danger";
-  const passwordColor = hasPassword ? passwordStateColor : "text-muted";
+  const validationStateColor = passwordValid ? "text-success" : "text-danger";
+  const validationColor = hasPassword ? validationStateColor : "text-muted";
   const confirmationMessage = passwordsMatch ? "passwordMatch" : "mismatch";
   return (
     <div className="grid gap-5">
@@ -105,7 +105,11 @@ export function PasswordFields({
           aria-describedby={passwordHintId}
           aria-invalid={hasPassword && !passwordValid}
         />
-        <p id={passwordHintId} aria-live="polite" className={`text-sm leading-6 ${passwordColor}`}>
+        <p
+          id={passwordHintId}
+          aria-live="polite"
+          className={`text-sm leading-6 ${validationColor}`}
+        >
           {validationMessage}
         </p>
       </div>

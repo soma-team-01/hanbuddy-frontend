@@ -1,4 +1,5 @@
 import { readCampaign } from "./campaign";
+import { readReferrer } from "./referrer";
 import type { AnalyticsBrowserPort } from "./controller";
 import { validEventSourceUrl, validFbc, validFbp, validIdentifiers, validSessionId } from "./link";
 import type { AnalyticsPolicy } from "./policy";
@@ -18,6 +19,8 @@ export function createGoogleBrowser(
   // Keep only validated entry labels in memory while the visitor chooses consent.
   // SPA navigation can remove the query before the consent request completes.
   let campaign = readCampaign(target.location.search ?? "");
+  // The entry referrer applies to the first page view only; later views stay internal.
+  let referrer = readReferrer(document.referrer ?? "", target.location.origin);
   let started = false;
   let id = measurementId;
   let ready = false;
@@ -83,12 +86,15 @@ export function createGoogleBrowser(
     },
     send(name, params) {
       if (!ready) return;
+      const entry = name === "page_view" ? referrer : "";
+      if (entry) referrer = "";
       google.gtag?.("set", {
         page_location: params.page_location,
         page_referrer: "",
         page_title: params.page_title,
       });
-      google.gtag?.("event", name, params);
+      // Event-scoped only: a global set would leak into automatic events such as user_engagement.
+      google.gtag?.("event", name, entry ? { ...params, page_referrer: entry } : params);
     },
     async identifiers() {
       if (!ready || !id) throw new Error("Analytics unavailable");
@@ -128,7 +134,10 @@ export function createGoogleBrowser(
     stop(resetIdentity = false) {
       // Initial consent restore/accept also resets identity before any grant exists.
       // Only discard the entry labels when resetting an actual measurement lifecycle.
-      if (resetIdentity && started) campaign = readCampaign("");
+      if (resetIdentity && started) {
+        campaign = readCampaign("");
+        referrer = "";
+      }
       generation++;
       ready = false;
       setEnabled(false);

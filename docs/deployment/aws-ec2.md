@@ -371,6 +371,19 @@ Google의 `campaign_*` 설정에 전달한다. `utm_campaign`은 `campaign_name`
 배포 후에는 UTM 링크로 새 브라우저 세션을 열어 동의한 뒤 Google 수집 요청의 `cs`, `cm`, `cn`과
 GA4 DebugView/실시간 보고서를 확인한다. URL에 UTM이 남아 있는 것만으로 수집 성공을 판단하지 않는다.
 
+### GA4 리퍼러 유입 수집
+
+UTM이 없는 검색·외부 링크 유입을 GA4 채널(Organic Search, Referral, Organic Social)로 구분하기 위해
+최초 문서의 `document.referrer`를 **origin만** 남겨(`https://www.google.com/`) 동의 후 첫 `page_view`의
+`page_referrer`로 전달한다. 경로·쿼리·fragment·계정 정보는 전달하지 않는다. 이후 이벤트의 `page_referrer`는 계속 빈 값이다.
+자기 사이트(`hanbuddy.kr`와 하위 도메인, 현재 origin), Google 로그인(`accounts.google.com`), PayPal(`paypal.com`과 하위 도메인)과
+http(s)가 아닌 리퍼러는 제외한다. 로그인·결제 복귀가 실제 유입 출처를 덮지 않게 하기 위함이다.
+값은 UTM과 같이 현재 문서 메모리에만 두고, 측정 시작 후 동의를 철회하면 비운다.
+검색어는 구글과 브라우저 기본 리퍼러 정책이 넘기지 않으므로 Search Console에서 확인한다.
+
+배포 후에는 구글 검색 결과 등 외부 링크로 새 세션을 열어 동의한 뒤 Google 수집 요청의 `dr`이 origin만 담는지와
+GA4 실시간 보고서의 세션 소스를 확인한다.
+
 ### 브라우저 이벤트 수집 범위와 공급자 지연
 
 GA4와 Meta는 먼저 준비된 공급자부터 전송한다. 다른 공급자가 로딩 중이면 해당 공급자용 이벤트만

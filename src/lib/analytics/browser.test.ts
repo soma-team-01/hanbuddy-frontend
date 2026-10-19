@@ -272,3 +272,81 @@ it("carries UTM through real consent restore and acceptance without pre-consent 
   expect(queue.some((entry) => entry[0] === "event")).toBe(false);
   controller.dispose();
 });
+
+it("sends the entry referrer origin on the first page view only, kept until consent", async () => {
+  const referrer = vi.spyOn(document, "referrer", "get");
+  referrer.mockReturnValue("https://www.google.com/search?q=kbo+jamsil&email=a%40b.com");
+  const queue: unknown[][] = [];
+  const location = new URL(`${policy.origin}/en`);
+  const target = { location, dataLayer: queue };
+  const browser = createGoogleBrowser(target as unknown as Window, document);
+  referrer.mockRestore();
+  // Initial restore/accept resets identity before any grant; the entry source must survive it.
+  browser.stop(true);
+  location.href = `${policy.origin}/en/explore`;
+  const loading = browser.start(policy, page);
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await loading;
+  browser.send("page_view", page);
+  browser.send("view_item", { ...page, items: [{ item_id: "42" }] });
+  browser.send("page_view", page);
+  const commands = queue.map((entry) => Array.from(entry));
+  const events = commands.filter((entry) => entry[0] === "event");
+  expect(events.map((entry) => (entry[2] as Record<string, unknown>).page_referrer)).toEqual([
+    "https://www.google.com/",
+    "",
+    "",
+  ]);
+  const referrers = commands
+    .filter(
+      (entry) =>
+        entry[0] === "set" &&
+        typeof entry[1] === "object" &&
+        Object.hasOwn(entry[1] as object, "page_referrer"),
+    )
+    .map((entry) => (entry[1] as Record<string, unknown>).page_referrer);
+  // Global settings never carry the entry referrer; only the first page_view event does.
+  expect(referrers.every((value) => value === "")).toBe(true);
+  expect(JSON.stringify(commands)).not.toContain("kbo");
+  expect(JSON.stringify(commands)).not.toContain("a%40b.com");
+});
+
+it("discards the entry referrer when consent is withdrawn after measurement started", async () => {
+  const referrer = vi.spyOn(document, "referrer", "get");
+  referrer.mockReturnValue("https://www.meetup.com/discover-korea/");
+  const queue: unknown[][] = [];
+  const target = { location: new URL(`${policy.origin}/en`), dataLayer: queue };
+  const browser = createGoogleBrowser(target as unknown as Window, document);
+  referrer.mockRestore();
+  const loading = browser.start(policy, page);
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await loading;
+  browser.stop(true);
+  const restart = browser.start(policy, page);
+  document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+  await restart;
+  browser.send("page_view", page);
+  expect(JSON.stringify(queue.map((entry) => Array.from(entry)))).not.toContain("meetup");
+});
+
+it("does not report the site itself, Google login or PayPal as the entry source", async () => {
+  for (const source of [
+    `${policy.origin}/en/explore`,
+    "https://accounts.google.com/o/oauth2/v2/auth?code=secret",
+    "https://www.paypal.com/checkoutnow?token=secret",
+  ]) {
+    const referrer = vi.spyOn(document, "referrer", "get");
+    referrer.mockReturnValue(source);
+    const queue: unknown[][] = [];
+    const target = { location: new URL(`${policy.origin}/en`), dataLayer: queue };
+    const browser = createGoogleBrowser(target as unknown as Window, document);
+    referrer.mockRestore();
+    const loading = browser.start(policy, page);
+    document.querySelector("script[data-hanbuddy-analytics]")!.dispatchEvent(new Event("load"));
+    await loading;
+    browser.send("page_view", page);
+    const event = queue.find((entry) => entry[0] === "event")!;
+    expect((Array.from(event)[2] as Record<string, unknown>).page_referrer).toBe("");
+    browser.stop(true);
+  }
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type InputHTMLAttributes } from "react";
+import { useEffect, useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 export const authButtonClass =
@@ -10,16 +10,27 @@ export const authLinkClass =
 
 export function AuthInput({
   label,
+  endAdornment,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & { label: string; endAdornment?: ReactNode }) {
+  const generatedId = useId();
+  const id = props.id ?? generatedId;
   return (
-    <label className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
-      {label}
-      <input
-        {...props}
-        className="focus-border-only h-12 w-full min-w-0 rounded-xl border border-line-strong bg-canvas-soft px-4 text-base font-normal text-ink transition-colors hover:border-muted focus:border-primary disabled:bg-panel"
-      />
-    </label>
+    <div className="grid min-w-0 gap-2 text-sm font-semibold text-ink">
+      <label htmlFor={id}>{label}</label>
+      <div className="relative min-w-0">
+        <input
+          {...props}
+          id={id}
+          className={`focus-border-only h-12 w-full min-w-0 rounded-xl border border-line-strong bg-canvas-soft px-4 text-base font-normal text-ink transition-colors hover:border-muted focus:border-primary disabled:bg-panel ${endAdornment ? "pr-20" : ""}`}
+        />
+        {endAdornment && (
+          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-normal text-muted tabular-nums">
+            {endAdornment}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 

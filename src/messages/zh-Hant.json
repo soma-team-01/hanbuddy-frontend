@@ -1,5 +1,10 @@
 {
   "EmailAuth": {
+    "resendShort": "重新傳送",
+    "verifyShort": "驗證",
+    "retrySeconds": "{seconds}秒後",
+    "codeTimeRemaining": "驗證碼剩餘時間",
+    "codeExpired": "驗證碼已過期，請重新傳送。",
     "submitLogin": "登入",
     "signupLink": "註冊",
     "buddySignupLink": "申請成為夥伴",

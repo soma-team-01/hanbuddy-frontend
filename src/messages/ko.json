@@ -1,5 +1,10 @@
 {
   "EmailAuth": {
+    "resendShort": "재발송",
+    "verifyShort": "확인하기",
+    "retrySeconds": "{seconds}초 후",
+    "codeTimeRemaining": "인증 유효 시간",
+    "codeExpired": "인증 시간이 만료됐어요. 다시 발송해 주세요.",
     "submitLogin": "로그인",
     "signupLink": "회원가입",
     "buddySignupLink": "버디 신청하기",

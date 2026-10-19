@@ -1,5 +1,10 @@
 {
   "EmailAuth": {
+    "resendShort": "Resend",
+    "verifyShort": "Verify",
+    "retrySeconds": "{seconds}s",
+    "codeTimeRemaining": "Time remaining",
+    "codeExpired": "Code expired. Please resend.",
     "submitLogin": "Log in",
     "signupLink": "Sign up",
     "buddySignupLink": "Become a buddy",

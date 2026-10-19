@@ -71,7 +71,7 @@ describe("email UI contracts", () => {
     request.mockResolvedValue({ accepted: true });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Send code" })));
     expect(screen.getByLabelText("6-digit code")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("10 minutes");
+    expect(screen.getByRole("timer")).toHaveTextContent("10:00");
   });
 
   it("clears a previous code entry when resend reports the email was registered meanwhile", async () => {
@@ -82,7 +82,7 @@ describe("email UI contracts", () => {
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "인증 코드 받기" })));
     await act(async () => vi.advanceTimersByTime(60000));
     request.mockRejectedValue(new EmailAuthError("AUTH409", 409));
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "코드 다시 받기" })));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "재발송" })));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("6자리 인증 코드")).not.toBeInTheDocument();
     expect(screen.getByLabelText("이메일")).toBeEnabled();
@@ -123,7 +123,7 @@ describe("email UI contracts", () => {
     await screen.findByLabelText("6-digit code");
     request.mockRejectedValue(new EmailAuthError("AUTH400_EMAIL_CODE", 400));
     fireEvent.change(screen.getByLabelText("6-digit code"), { target: { value: "012345" } });
-    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
     await waitFor(() =>
       expect(request).toHaveBeenLastCalledWith("code/verify", {
         email: "alice@example.com",
@@ -132,10 +132,36 @@ describe("email UI contracts", () => {
       }),
     );
     await screen.findByRole("alert");
-    fireEvent.click(screen.getByRole("button", { name: "Change email" }));
+    expect(screen.queryByRole("button", { name: "Change email" })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "new@example.com" } });
     expect(screen.queryByLabelText("6-digit code")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toBeEnabled();
     expect(request).toHaveBeenCalledTimes(2);
+  });
+  it("counts down code expiry, blocks expired verification, and resets only after a successful resend", async () => {
+    vi.useFakeTimers();
+    request.mockResolvedValue({ accepted: true });
+    renderWithIntl(<EmailCodeForm locale="en" buddy={false} />);
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "alice@example.com" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Send code" })));
+    expect(screen.getByRole("timer")).toHaveTextContent("10:00");
+    expect(screen.queryByText(/Check your inbox/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Resend/ })).toBeDisabled();
+    await act(async () => vi.advanceTimersByTime(60000));
+    expect(screen.getByRole("timer")).toHaveTextContent("09:00");
+    request.mockRejectedValueOnce(new EmailAuthError("AUTH429", 429));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Resend" })));
+    expect(screen.getByRole("timer")).toHaveTextContent("09:00");
+    await act(async () => vi.advanceTimersByTime(540000));
+    expect(screen.getByRole("timer")).toHaveTextContent("00:00");
+    expect(screen.getByRole("button", { name: "Verify" })).toBeDisabled();
+    fireEvent.submit(screen.getByLabelText("Email").closest("form")!);
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("Code expired. Please resend.")).toBeInTheDocument();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Resend" })));
+    expect(screen.getByRole("timer")).toHaveTextContent("10:00");
+    expect(screen.queryByText("Code expired. Please resend.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Verify" })).toBeEnabled();
   });
   it("keeps the same receipt for reset requests and enforces a 60 second cooldown", async () => {
     vi.useFakeTimers();

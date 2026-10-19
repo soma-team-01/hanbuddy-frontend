@@ -1,12 +1,12 @@
 "use client";
 import type { EmailErrorKey } from "@/lib/auth/email";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { EmailAuthError, emailErrorKey, requestEmailAuth } from "@/lib/auth/email";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
-import { AuthInput, authButtonClass, authLinkClass, useRemainingSeconds } from "./EmailAuthFields";
+import { AuthInput, authButtonClass, useRemainingSeconds } from "./EmailAuthFields";
 
 export function EmailCodeForm({
   locale,
@@ -23,6 +23,12 @@ export function EmailCodeForm({
   const [sentEmail, setSentEmail] = useState("");
   const [deadline, setDeadline] = useState(0);
   const remaining = useRemainingSeconds(deadline);
+  const [codeDeadline, setCodeDeadline] = useState(0);
+  const codeRemaining = Math.min(600, useRemainingSeconds(codeDeadline));
+  const timerId = useId();
+  const codeTime = `${Math.floor(codeRemaining / 60)
+    .toString()
+    .padStart(2, "0")}:${(codeRemaining % 60).toString().padStart(2, "0")}`;
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
   const [error, setError] = useState<EmailErrorKey | null>(null);
@@ -34,11 +40,14 @@ export function EmailCodeForm({
     setPending(true);
     setError(null);
     // Even a timeout can mean the mail was delivered. Never automatically resend.
-    setDeadline(Date.now() + 60_000);
+    const requestedAt = Date.now();
+    setDeadline(requestedAt + 60_000);
     try {
       await requestEmailAuth("code", { email, purpose: "SIGNUP" });
       setSentEmail(email);
       setCode("");
+      // The backend stores codes for 600 seconds. Start at request time conservatively.
+      setCodeDeadline(requestedAt + 600_000);
     } catch (e) {
       const errorKey =
         e instanceof EmailAuthError ? emailErrorKey(e.code, e.status) : "unavailable";
@@ -59,7 +68,7 @@ export function EmailCodeForm({
       await send();
       return;
     }
-    if (busy.current) return;
+    if (busy.current || Date.now() >= codeDeadline) return;
     busy.current = true;
     setPending(true);
     setError(null);
@@ -78,57 +87,75 @@ export function EmailCodeForm({
   }
   return (
     <form className="grid gap-5" onSubmit={submit}>
-      <AuthInput
-        label={t("email")}
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        maxLength={255}
-        value={email}
-        disabled={pending || Boolean(sentEmail)}
-        onChange={(e) => {
-          setEmail(e.target.value);
-          setError(null);
-        }}
-      />
-      {sentEmail && (
-        <>
-          <button
-            type="button"
-            className={`${authLinkClass} justify-self-start`}
-            disabled={pending}
-            onClick={() => {
-              setSentEmail("");
-              setCode("");
-              setError(null);
-            }}
-          >
-            {t("editEmail")}
-          </button>
-          <p role="status" className="text-sm leading-6 text-muted">
-            {t("codeSent")}
-          </p>
-          <AuthInput
-            label={t("code")}
-            name="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9]{6}"
-            minLength={6}
-            maxLength={6}
-            required
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
+      <div className={sentEmail ? "grid grid-cols-[minmax(0,1fr)_6.5rem] items-end gap-2" : ""}>
+        <AuthInput
+          label={t("email")}
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          maxLength={255}
+          value={email}
+          disabled={pending}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError(null);
+            setSentEmail("");
+            setCode("");
+            setCodeDeadline(0);
+          }}
+        />
+        {sentEmail && (
           <button
             type="button"
             disabled={pending || remaining > 0}
-            className={authLinkClass}
+            className="flex min-h-12 flex-col items-center justify-center rounded-xl border border-line-strong px-2 py-1 text-sm font-semibold text-primary-strong transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:text-muted"
             onClick={send}
           >
-            {remaining > 0 ? t("wait", { seconds: remaining }) : t("resend")}
+            {t("resendShort")}
+            {remaining > 0 && (
+              <span className="text-xs font-normal tabular-nums">
+                {t("retrySeconds", { seconds: remaining })}
+              </span>
+            )}
           </button>
+        )}
+      </div>
+      {sentEmail && (
+        <>
+          <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] items-end gap-2">
+            <AuthInput
+              label={t("code")}
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              minLength={6}
+              maxLength={6}
+              required
+              disabled={pending}
+              aria-describedby={timerId}
+              endAdornment={
+                <span id={timerId} role="timer" aria-label={t("codeTimeRemaining")}>
+                  {codeTime}
+                </span>
+              }
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={pending || codeRemaining === 0}
+              className={authButtonClass}
+            >
+              {t("verifyShort")}
+            </button>
+          </div>
+          {codeRemaining === 0 && (
+            <p role="status" className="text-sm text-danger">
+              {t("codeExpired")}
+            </p>
+          )}
         </>
       )}
       {error && (
@@ -140,17 +167,11 @@ export function EmailCodeForm({
         <Link href={loginHref} className={`${authButtonClass} flex items-center justify-center`}>
           {t("submitLogin")}
         </Link>
-      ) : (
+      ) : !sentEmail ? (
         <button className={authButtonClass} disabled={pending || (!sentEmail && remaining > 0)}>
-          {pending
-            ? t("busy")
-            : sentEmail
-              ? t("verify")
-              : remaining > 0
-                ? t("wait", { seconds: remaining })
-                : t("sendCode")}
+          {pending ? t("busy") : remaining > 0 ? t("wait", { seconds: remaining }) : t("sendCode")}
         </button>
-      )}
+      ) : null}
     </form>
   );
 }

@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { EmailAction } from "./email";
 import { postBackend } from "./backend";
 import { AUTH_COOKIES } from "./cookies";
 import { handleEmailAuth } from "./email-route";
@@ -22,9 +23,62 @@ const request = (body: unknown, cookie = "", authorization = "") =>
   });
 beforeEach(() => {
   post.mockReset();
+  vi.stubEnv("AUTH_ORIGIN", undefined);
 });
+afterEach(() => vi.unstubAllEnvs());
 
 describe("email auth BFF", () => {
+  const actions: EmailAction[] = [
+    "code",
+    "code/verify",
+    "login",
+    "signup",
+    "password/reset-link",
+    "password/reset",
+    "password/reset/validate",
+  ];
+  it.each(["https://staging.hanbuddy.kr", "https://hanbuddy.kr"])(
+    "uses the configured public origin for every email action behind a proxy: %s",
+    async (origin) => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("AUTH_ORIGIN", origin);
+      for (const action of actions) {
+        const req = new NextRequest(`http://0.0.0.0:3000/api/auth/email/${action}`, {
+          method: "POST",
+          headers: { origin, "Content-Type": "application/json" },
+          body: "{}",
+        });
+        const res = await handleEmailAuth(req, action);
+        expect(res.status).toBe(action === "password/reset/validate" ? 401 : 400);
+      }
+      expect(post).not.toHaveBeenCalled();
+      post.mockResolvedValue(ok({ accepted: true }));
+      const req = request({ email: "alice@example.com", purpose: "SIGNUP" });
+      req.headers.set("origin", origin);
+      expect((await handleEmailAuth(req, "code")).status).toBe(200);
+      expect(post).toHaveBeenCalledExactlyOnceWith(
+        "/auth/email/code",
+        { email: "alice@example.com", purpose: "SIGNUP" },
+        {},
+      );
+    },
+  );
+  it.each(actions)(
+    "rejects untrusted origins before backend calls or cookie changes for %s",
+    async (action) => {
+      vi.stubEnv("AUTH_ORIGIN", "https://hanbuddy.kr");
+      const req = request(
+        { email: "alice@example.com", purpose: "SIGNUP" },
+        `${AUTH_COOKIES.signupToken}=keep`,
+      );
+      req.headers.set("origin", "https://evil.example");
+      req.headers.set("x-forwarded-host", "evil.example");
+      const res = await handleEmailAuth(req, action);
+      expect(res.status).toBe(403);
+      expect(res.headers.get("set-cookie")).toBeNull();
+      expect(post).not.toHaveBeenCalled();
+    },
+  );
   it.each([
     "alice@@example.com",
     "alice@example",

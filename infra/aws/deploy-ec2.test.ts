@@ -129,6 +129,25 @@ function deploy(
 }
 
 describe("EC2 deployment cutover (mock commands)", () => {
+  it.each(["staging", "production"])(
+    "injects the trusted HTTPS auth origin for %s",
+    (environment) => {
+      const domain = environment === "staging" ? "staging.hanbuddy.kr" : "hanbuddy.kr";
+      const result = deploy("success", environment === "staging" ? "" : "www.hanbuddy.kr");
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.remote).toContain(
+        `frontend_domain="$(printf '%s' '${Buffer.from(domain).toString("base64")}' | base64 --decode)"`,
+      );
+      expect(result.remote).toContain('-e "AUTH_ORIGIN=https://${frontend_domain}"');
+    },
+  );
+
+  it.each(["staging", "production"])("disables review login in the %s workflow", (environment) => {
+    const workflow = readFileSync(`.github/workflows/deploy-${environment}.yml`, "utf8");
+    expect(workflow).toContain('REVIEW_LOGIN_ENABLED: "false"');
+    expect(workflow).not.toContain("REVIEW_LOGIN_ENABLED: ${{ vars.REVIEW_LOGIN_ENABLED }}");
+    expect(workflow).not.toContain("REVIEW_LOGIN_ENABLED staging variable must be true");
+  });
   it("prepares the app and Caddy before atomic DNS cutover, then checks both HTTPS hosts", () => {
     const result = deploy();
     expect(result.status, result.stderr).toBe(0);

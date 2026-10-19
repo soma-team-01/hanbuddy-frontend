@@ -106,14 +106,18 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
           {t(stage)}
         </p>
       )}
-      {stage !== "success" && (
-        <a className={authLinkClass} href={`/${locale}/forgot-password`}>
-          {t("requestAgain")}
-        </a>
+      {stage !== "ready" && stage !== "loading" && (
+        <>
+          {stage !== "success" && (
+            <a className={authLinkClass} href={`/${locale}/forgot-password`}>
+              {t("requestAgain")}
+            </a>
+          )}
+          <a className={authLinkClass} href={`/${locale}/login`}>
+            {t("back")}
+          </a>
+        </>
       )}
-      <a className={authLinkClass} href={`/${locale}/login`}>
-        {t("back")}
-      </a>
     </div>
   );
 }

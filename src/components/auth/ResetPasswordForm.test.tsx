@@ -30,6 +30,7 @@ it("removes the fragment, survives strict mode and never consumes a link on moun
   expect(screen.getByLabelText("Confirm password")).toHaveAttribute("minlength", "8");
   expect(location.hash).toBe("");
   expect(request).not.toHaveBeenCalled();
+  expect(screen.queryByRole("link")).not.toBeInTheDocument();
   request.mockRejectedValue(new EmailAuthError("AUTH400_PASSWORD", 400));
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: "abcdefgh" } });
   fireEvent.change(screen.getByLabelText("Confirm password"), {
@@ -45,6 +46,7 @@ it("removes the fragment, survives strict mode and never consumes a link on moun
   );
   await screen.findByRole("alert");
   expect(screen.getByRole("button", { name: "Save password" })).toBeEnabled();
+  expect(screen.queryByRole("link")).not.toBeInTheDocument();
 });
 it("explains missing links instead of sending a request", async () => {
   history.replaceState(null, "", "/auth/reset-password");
@@ -52,6 +54,11 @@ it("explains missing links instead of sending a request", async () => {
   await screen.findByText(messages.EmailAuth.missing);
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   expect(request).not.toHaveBeenCalled();
+  expect(screen.getByRole("link", { name: messages.EmailAuth.requestAgain })).toHaveAttribute(
+    "href",
+    "/en/forgot-password",
+  );
+  expect(screen.getByRole("link", { name: messages.EmailAuth.back })).toBeInTheDocument();
 });
 it.each([
   [401, "TOKEN401_EXPIRED", "expired"],
@@ -68,4 +75,24 @@ it.each([
   await screen.findByText(messages.EmailAuth[key]);
   expect(screen.queryByRole("button", { name: "Save password" })).not.toBeInTheDocument();
   expect(request).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("link", { name: messages.EmailAuth.requestAgain })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: messages.EmailAuth.back })).toBeInTheDocument();
+});
+it("only offers login after saving the new password", async () => {
+  request.mockResolvedValue({});
+  show();
+  await screen.findByLabelText("Password");
+  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "abcdefgh" } });
+  fireEvent.change(screen.getByLabelText("Confirm password"), {
+    target: { value: "abcdefgh" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save password" }));
+  await screen.findByText(messages.EmailAuth.success);
+  expect(
+    screen.queryByRole("link", { name: messages.EmailAuth.requestAgain }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: messages.EmailAuth.back })).toHaveAttribute(
+    "href",
+    "/en/login",
+  );
 });

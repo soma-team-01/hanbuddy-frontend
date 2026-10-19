@@ -1041,6 +1041,7 @@
     "description": "Tell us the basic information needed for buddy signup guidance. You can add hosting details after signup.",
     "profilePhotoOptional": "Choose a clear face photo so guests can recognize you when you meet.",
     "contactMethods": "Contact & payout details",
+    "contactStep": "Contact & payout details",
     "contactDescription": "Enter the number where our team can reach you about your buddy signup.",
     "completing": "Creating buddy account...",
     "completeRegistration": "Sign up as a buddy"
@@ -1493,7 +1494,7 @@
     "phoneNumber": "Phone Number",
     "countryCode": "Country code",
     "phonePlaceholder": "Phone number",
-    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "koreanPhonePlaceholder": "Phone number",
     "phoneInputLabel": "Phone number",
     "appIdPlaceholder": "{app} ID",
     "kakaotalk": "KakaoTalk",

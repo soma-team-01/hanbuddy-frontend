@@ -1041,6 +1041,7 @@
     "description": "請填寫好友註冊指引所需的基本資訊。註冊後可繼續補充活動營運資訊。",
     "profilePhotoOptional": "選擇一張清晰的臉部照片，以便客人在見面時能夠認出您。",
     "contactMethods": "聯絡方式與收款資訊",
+    "contactStep": "聯絡方式與收款資訊",
     "contactDescription": "請輸入工作人員可用於提供好友註冊說明的電話號碼。",
     "completing": "正在建立好友帳戶...",
     "completeRegistration": "註冊成為好友"
@@ -1493,7 +1494,7 @@
     "phoneNumber": "電話號碼",
     "countryCode": "國家或地區代碼",
     "phonePlaceholder": "電話號碼",
-    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "koreanPhonePlaceholder": "電話號碼",
     "phoneInputLabel": "電話號碼",
     "appIdPlaceholder": "{app} ID",
     "kakaotalk": "KakaoTalk",

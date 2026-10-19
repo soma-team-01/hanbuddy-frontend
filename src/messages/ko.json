@@ -1041,6 +1041,7 @@
     "description": "한버디 팀이 연락드릴 때 필요한 기본 정보예요. 활동 내용은 가입한 뒤에 등록하면 돼요.",
     "profilePhotoOptional": "만날 때 게스트가 알아볼 수 있도록 얼굴이 선명한 사진을 선택해 주세요.",
     "contactMethods": "연락처와 정산 정보",
+    "contactStep": "연락처와\n정산 정보",
     "contactDescription": "가입 안내를 위해 담당자가 연락드릴 번호를 입력해 주세요.",
     "completing": "버디 계정을 만드는 중...",
     "completeRegistration": "버디로 가입하기"
@@ -1493,7 +1494,7 @@
     "phoneNumber": "전화번호",
     "countryCode": "국가번호",
     "phonePlaceholder": "전화번호",
-    "koreanPhonePlaceholder": "010-XXXX-XXXX",
+    "koreanPhonePlaceholder": "전화번호",
     "phoneInputLabel": "전화번호",
     "appIdPlaceholder": "{app} ID",
     "kakaotalk": "카카오톡",

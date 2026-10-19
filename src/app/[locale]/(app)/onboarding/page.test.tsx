@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
@@ -205,6 +205,9 @@ describe("OnboardingForm", () => {
       { locale: "ko" },
     );
     expect(screen.getByRole("navigation").querySelectorAll("li")).toHaveLength(4);
+    const contactStep = within(screen.getByRole("navigation")).getByText("연락처와 정산 정보");
+    expect(contactStep.textContent).toBe("연락처와\n정산 정보");
+    expect(contactStep).toHaveClass("whitespace-pre-line");
     expect(screen.getByRole("heading", { name: "계정 정보" })).toBeInTheDocument();
     expect(screen.getByLabelText("이메일")).toBeDisabled();
     expect(screen.getByLabelText("이메일")).toHaveValue("buddy@example.com");

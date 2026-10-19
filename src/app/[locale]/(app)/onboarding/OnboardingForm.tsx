@@ -856,11 +856,11 @@ export function OnboardingForm({
     },
   ];
   const stepLabels = isResubmission
-    ? [t("steps.aboutYou"), buddyT("contactMethods")]
+    ? [t("steps.aboutYou"), buddyT("contactStep")]
     : [
         ...(hasCredentialStep ? [emailT("accountStep")] : []),
         t("steps.aboutYou"),
-        isBuddyFlow ? buddyT("contactMethods") : t("steps.contact"),
+        isBuddyFlow ? buddyT("contactStep") : t("steps.contact"),
         t("steps.agreements"),
       ];
 
@@ -933,7 +933,7 @@ export function OnboardingForm({
                         {index + 1}
                       </span>
                       <span
-                        className={`min-w-0 text-xs leading-4 font-semibold break-keep sm:text-sm sm:leading-5 ${
+                        className={`min-w-0 text-xs leading-4 font-semibold break-keep whitespace-pre-line sm:text-sm sm:leading-5 ${
                           isActive ? "text-primary-strong" : "text-muted"
                         }`}
                       >

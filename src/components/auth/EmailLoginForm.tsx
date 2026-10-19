@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { invalidateAnalyticsAccount } from "@/lib/analytics/cookie-runtime";
 import { EmailAuthError, emailErrorKey, requestEmailAuth } from "@/lib/auth/email";
-import { AuthInput, authButtonClass } from "./EmailAuthFields";
+import { AuthInput, PasswordInput, authButtonClass } from "./EmailAuthFields";
 
 export function EmailLoginForm({
   locale,
@@ -66,10 +66,9 @@ export function EmailLoginForm({
           maxLength={255}
           required
         />
-        <AuthInput
+        <PasswordInput
           label={t("password")}
           name="password"
-          type="password"
           autoComplete="current-password"
           maxLength={64}
           required

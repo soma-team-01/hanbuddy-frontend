@@ -17,6 +17,26 @@ afterEach(() => vi.useRealTimers());
 
 describe("email UI contracts", () => {
   it.each([
+    ["en", false, "Password", "Show Password", "Hide Password"],
+    ["ko", true, "비밀번호", "비밀번호 표시", "비밀번호 숨기기"],
+  ] as const)(
+    "toggles login password visibility in %s without submitting",
+    (locale, buddy, label, show, hide) => {
+      renderWithIntl(<EmailLoginForm locale={locale} buddy={buddy} />, { locale });
+      const password = screen.getByLabelText(label);
+      fireEvent.change(password, { target: { value: " a long password " } });
+      expect(password).toHaveAttribute("type", "password");
+      expect(password).toHaveAttribute("autocomplete", "current-password");
+      fireEvent.click(screen.getByRole("button", { name: show }));
+      expect(password).toHaveAttribute("type", "text");
+      expect(password).toHaveValue(" a long password ");
+      fireEvent.click(screen.getByRole("button", { name: hide }));
+      expect(password).toHaveAttribute("type", "password");
+      expect(password).toHaveValue(" a long password ");
+      expect(request).not.toHaveBeenCalled();
+    },
+  );
+  it.each([
     [
       "ko",
       "이메일",
@@ -201,6 +221,7 @@ describe("email UI contracts", () => {
     renderWithIntl(<EmailLoginForm locale="en" />);
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "alice@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: " a long password " } });
+    fireEvent.click(screen.getByRole("button", { name: "Show Password" }));
     fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     await screen.findByRole("alert");
     expect(request).toHaveBeenCalledWith(
@@ -209,6 +230,9 @@ describe("email UI contracts", () => {
       { query: "locale=en" },
     );
     expect(screen.getByRole("alert")).toHaveTextContent("email or password is incorrect");
+    fireEvent.click(screen.getByRole("button", { name: "Hide Password" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("email or password is incorrect");
+    expect(request).toHaveBeenCalledTimes(1);
   });
   it("keeps the selected booking destination in an email login request", async () => {
     request.mockRejectedValue(new EmailAuthError("AUTH401_EMAIL_LOGIN", 401));

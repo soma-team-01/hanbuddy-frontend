@@ -36,7 +36,7 @@ export function AuthInput({
   );
 }
 
-function NewPasswordInput({
+export function PasswordInput({
   label,
   ...props
 }: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { label: string }) {
@@ -93,7 +93,7 @@ export function PasswordFields({
   return (
     <div className="grid gap-5">
       <div className="grid gap-2">
-        <NewPasswordInput
+        <PasswordInput
           label={t("password")}
           name="password"
           autoComplete="new-password"
@@ -114,7 +114,7 @@ export function PasswordFields({
         </p>
       </div>
       <div className="grid gap-2">
-        <NewPasswordInput
+        <PasswordInput
           label={t("confirm")}
           name="passwordConfirmation"
           autoComplete="new-password"

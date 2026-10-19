@@ -82,8 +82,14 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
           <PasswordFields
             password={password}
             confirmation={confirmation}
-            onPassword={setPassword}
-            onConfirmation={setConfirmation}
+            onPassword={(value) => {
+              setPassword(value);
+              if (error === "passwordInvalid" || error === "mismatch") setError(null);
+            }}
+            onConfirmation={(value) => {
+              setConfirmation(value);
+              if (error === "mismatch") setError(null);
+            }}
           />
           {error && (
             <p role="alert" className="text-sm text-danger">

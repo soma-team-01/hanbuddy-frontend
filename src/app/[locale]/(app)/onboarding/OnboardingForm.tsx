@@ -960,8 +960,15 @@ export function OnboardingForm({
                       session={emailSignup}
                       password={emailPassword}
                       confirmation={emailConfirmation}
-                      onPassword={setEmailPassword}
-                      onConfirmation={setEmailConfirmation}
+                      onPassword={(value) => {
+                        setEmailPassword(value);
+                        if (emailError === "passwordInvalid" || emailError === "mismatch")
+                          setEmailError(null);
+                      }}
+                      onConfirmation={(value) => {
+                        setEmailConfirmation(value);
+                        if (emailError === "mismatch") setEmailError(null);
+                      }}
                     />
                     {emailError && (
                       <div role="alert" className="grid gap-3 text-sm text-danger">

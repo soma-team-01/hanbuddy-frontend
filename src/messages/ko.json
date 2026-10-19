@@ -1,5 +1,7 @@
 {
   "EmailAuth": {
+    "passwordValid": "사용 가능한 비밀번호입니다.",
+    "passwordMatch": "비밀번호가 일치합니다.",
     "accountStep": "계정 정보",
     "resendShort": "재발송",
     "verifyShort": "확인하기",

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { isValidNewPassword } from "@/lib/auth/email";
 
 export const authButtonClass =
   "min-h-12 w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong disabled:cursor-not-allowed disabled:opacity-50";
@@ -46,34 +47,64 @@ export function PasswordFields({
   onConfirmation: (value: string) => void;
 }) {
   const t = useTranslations("EmailAuth");
+  const passwordHintId = useId();
+  const confirmationHintId = useId();
+  const hasPassword = password.length > 0;
+  const passwordValid = isValidNewPassword(password);
+  const hasConfirmation = confirmation.length > 0;
+  const passwordsMatch = password === confirmation;
+  const passwordMessage =
+    !hasPassword || password.length < 8
+      ? "passwordHint"
+      : passwordValid
+        ? "passwordValid"
+        : "passwordInvalid";
   return (
-    <div className="grid gap-4">
-      <AuthInput
-        label={t("password")}
-        name="password"
-        type="password"
-        autoComplete="new-password"
-        required
-        minLength={8}
-        maxLength={64}
-        value={password}
-        onChange={(e) => onPassword(e.target.value)}
-        aria-describedby="email-password-hint"
-      />
-      <p id="email-password-hint" className="text-sm leading-6 text-muted">
-        {t("passwordHint")}
-      </p>
-      <AuthInput
-        label={t("confirm")}
-        name="passwordConfirmation"
-        type="password"
-        autoComplete="new-password"
-        required
-        minLength={8}
-        maxLength={64}
-        value={confirmation}
-        onChange={(e) => onConfirmation(e.target.value)}
-      />
+    <div className="grid gap-5">
+      <div className="grid gap-2">
+        <AuthInput
+          label={t("password")}
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={8}
+          maxLength={64}
+          value={password}
+          onChange={(e) => onPassword(e.target.value)}
+          aria-describedby={passwordHintId}
+          aria-invalid={hasPassword && !passwordValid}
+        />
+        <p
+          id={passwordHintId}
+          aria-live="polite"
+          className={`text-sm leading-6 ${!hasPassword ? "text-muted" : passwordValid ? "text-success" : "text-danger"}`}
+        >
+          {t(passwordMessage)}
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <AuthInput
+          label={t("confirm")}
+          name="passwordConfirmation"
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={8}
+          maxLength={64}
+          value={confirmation}
+          onChange={(e) => onConfirmation(e.target.value)}
+          aria-describedby={confirmationHintId}
+          aria-invalid={hasConfirmation && !passwordsMatch}
+        />
+        <p
+          id={confirmationHintId}
+          aria-live="polite"
+          className={`text-sm leading-6 empty:hidden ${passwordsMatch ? "text-success" : "text-danger"}`}
+        >
+          {hasConfirmation ? t(passwordsMatch ? "passwordMatch" : "mismatch") : ""}
+        </p>
+      </div>
     </div>
   );
 }

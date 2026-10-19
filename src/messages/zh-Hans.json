@@ -1,5 +1,7 @@
 {
   "EmailAuth": {
+    "passwordValid": "此密码可以使用。",
+    "passwordMatch": "两次输入的密码一致。",
     "accountStep": "账号信息",
     "resendShort": "重新发送",
     "verifyShort": "验证",

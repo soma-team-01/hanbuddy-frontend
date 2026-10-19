@@ -1,5 +1,7 @@
 {
   "EmailAuth": {
+    "passwordValid": "使用できるパスワードです。",
+    "passwordMatch": "パスワードが一致しています。",
     "accountStep": "アカウント",
     "resendShort": "再送信",
     "verifyShort": "確認",

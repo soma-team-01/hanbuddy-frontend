@@ -151,6 +151,7 @@ describe("OnboardingForm", () => {
     expect(screen.getByRole("navigation", { name: "Step 1 of 4" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("8–64");
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "abcdefgh" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "abcdefgh" } });
     clickContinue("en");
     expect(screen.getByRole("navigation", { name: "Step 2 of 4" })).toBeInTheDocument();

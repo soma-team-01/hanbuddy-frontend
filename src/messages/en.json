@@ -1,5 +1,7 @@
 {
   "EmailAuth": {
+    "passwordValid": "This password is valid.",
+    "passwordMatch": "Passwords match.",
     "accountStep": "Account",
     "resendShort": "Resend",
     "verifyShort": "Verify",

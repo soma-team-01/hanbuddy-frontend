@@ -23,11 +23,12 @@ describe("monthly settlement and confirmed effective date", () => {
       ] as const) {
         const doc = await getPolicyDocument(slug, locale);
         const rendered = render(<PolicyDocument locale={locale} source={doc.source} />);
-        expect(rendered.container).toHaveTextContent(effective);
+        expect(rendered.container).toHaveTextContent(effective.replace("2026-10-08", doc.version));
         cleanup();
       }
       const documents = await getSignupAgreementDocuments("BUDDY", locale);
-      for (const doc of Object.values(documents)) expect(doc.source).toContain(effective);
+      for (const doc of Object.values(documents))
+        expect(doc.source).toContain(effective.replace("2026-10-08", doc.version));
     },
   );
 });

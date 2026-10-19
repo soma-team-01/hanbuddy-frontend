@@ -2,7 +2,7 @@
 
 Version: 2026-10-06
 
-For this revision of the Terms of Service, Buddy Operating Terms and Buddy Commission and Settlement Policy, the effective date is 2026-10-06 Korea Standard Time (KST). The document version identifies the revised wording and is distinct from the effective date.
+This document's effective date is 2026-10-06 Korea Standard Time (KST). Related terms and policies take effect on the dates specified in their respective documents.
 
 ## Article 1. Purpose
 

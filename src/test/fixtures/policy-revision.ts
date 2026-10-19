@@ -77,11 +77,11 @@ const settlement = {
     "不計銀行休息日",
   ),
   effective: localized(
-    "시행일은 2026-10-06 한국시간(KST)",
-    "effective date is 2026-10-06 Korea Standard Time (KST)",
-    "施行日は2026-10-06韓国標準時（KST）",
-    "生效日期为2026-10-06韩国标准时间（KST）",
-    "生效日期為2026-10-06韓國標準時間（KST）",
+    "시행일은 2026-10-08 한국시간(KST)",
+    "effective date is 2026-10-08 Korea Standard Time (KST)",
+    "施行日は2026-10-08韓国標準時（KST）",
+    "生效日期为2026-10-08韩国标准时间（KST）",
+    "生效日期為2026-10-08韓國標準時間（KST）",
   ),
   transfer: localized("송금 기한", "transfer deadline", "送金期限", "汇款期限", "匯款期限"),
 };

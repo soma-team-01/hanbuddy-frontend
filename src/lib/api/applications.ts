@@ -42,14 +42,26 @@ const DEFAULT_APPLIED_ACTIVITY_ERROR_MESSAGE = "신청한 활동 상세를 불�
 
 type AnalyticsPaymentTicket = NonNullable<ReturnType<typeof captureAnalyticsPayment>>;
 
-function startAnalyticsCompletion(
+async function waitForAnalyticsCompletion(
   ticket: AnalyticsPaymentTicket,
   applicationId: number,
   context: string | null,
 ) {
-  void ticket.complete(applicationId, context).catch(() => {
-    /* Optional analytics must not reject a successful payment preparation. */
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<void>((resolve) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      resolve();
+    }, 3000);
   });
+  try {
+    await Promise.race([ticket.complete(applicationId, context, controller.signal), deadline]);
+  } catch {
+    // Optional analytics must never reject successful payment preparation.
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function getAppliedActivityDetail(
@@ -115,7 +127,7 @@ export async function createApplication(
     },
   );
   if (result.status === "success" && ticket)
-    startAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
+    await waitForAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
   return result;
 }
 
@@ -142,7 +154,7 @@ export async function continueApplicationPayment(
     },
   );
   if (result.status === "success" && ticket)
-    startAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
+    await waitForAnalyticsCompletion(ticket, result.payment.application.applicationId, context);
   return result;
 }
 

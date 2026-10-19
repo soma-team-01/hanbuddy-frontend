@@ -1,6 +1,9 @@
+import { readCampaign } from "./campaign";
+import { readReferrer } from "./referrer";
 import type { AnalyticsBrowserPort } from "./controller";
 import { validEventSourceUrl, validFbc, validFbp, validIdentifiers, validSessionId } from "./link";
 import type { AnalyticsPolicy } from "./policy";
+import type { AnalyticsEvent, AnalyticsFields } from "./events";
 import { createMetaBrowser } from "./meta-browser";
 
 type GoogleWindow = Window & { dataLayer?: IArguments[]; gtag?: (...args: unknown[]) => void };
@@ -13,6 +16,12 @@ export function createGoogleBrowser(
   measurementId: string | null = null,
 ): AnalyticsBrowserPort {
   const google = target as GoogleWindow;
+  // Keep only validated entry labels in memory while the visitor chooses consent.
+  // SPA navigation can remove the query before the consent request completes.
+  let campaign = readCampaign(target.location.search ?? "");
+  // The entry referrer applies to the first page view only; later views stay internal.
+  let referrer = readReferrer(document.referrer ?? "", target.location.origin);
+  let started = false;
   let id = measurementId;
   let ready = false;
   let generation = 0;
@@ -26,6 +35,7 @@ export function createGoogleBrowser(
     async start(policy, page) {
       if (target.location.origin !== policy.origin) throw new Error("Analytics origin disabled");
       if (!policy.measurementId) throw new Error("Analytics unavailable");
+      started = true;
       id = policy.measurementId;
       const epoch = ++generation;
       google.dataLayer ??= [];
@@ -38,6 +48,7 @@ export function createGoogleBrowser(
       google.gtag("consent", "default", { analytics_storage: "denied", ...deniedAds });
       google.gtag("set", "ads_data_redaction", true);
       google.gtag("set", page);
+      google.gtag("set", campaign);
       google.gtag("consent", "update", { analytics_storage: "granted", ...deniedAds });
       google.gtag("js", new Date());
       google.gtag("config", id, {
@@ -75,6 +86,8 @@ export function createGoogleBrowser(
     },
     send(name, params) {
       if (!ready) return;
+      const entry = name === "page_view" ? referrer : "";
+      if (entry) referrer = "";
       google.gtag?.("set", {
         page_location: params.page_location,
         page_referrer: "",
@@ -82,7 +95,8 @@ export function createGoogleBrowser(
         // Event-scoped exposure such as is_translated must not leak into later events.
         ...(params.content_language ? { content_language: params.content_language } : {}),
       });
-      google.gtag?.("event", name, params);
+      // Event-scoped only: a global set would leak into automatic events such as user_engagement.
+      google.gtag?.("event", name, entry ? { ...params, page_referrer: entry } : params);
     },
     async identifiers() {
       if (!ready || !id) throw new Error("Analytics unavailable");
@@ -120,6 +134,12 @@ export function createGoogleBrowser(
       return ids;
     },
     stop(resetIdentity = false) {
+      // Initial consent restore/accept also resets identity before any grant exists.
+      // Only discard the entry labels when resetting an actual measurement lifecycle.
+      if (resetIdentity && started) {
+        campaign = readCampaign("");
+        referrer = "";
+      }
       generation++;
       ready = false;
       setEnabled(false);
@@ -161,6 +181,11 @@ export function createMeasurementBrowser(
     : null;
   const meta = policy.pixelId ? createMetaBrowser(target, document, policy.pixelId) : null;
   let active: AnalyticsBrowserPort[] = [];
+  let generation = 0;
+  const pending = new Map<
+    AnalyticsBrowserPort,
+    { name: AnalyticsEvent; fields: AnalyticsFields }[]
+  >();
   let pageLocation = "";
   const readCookie = (name: string) =>
     document.cookie
@@ -170,27 +195,44 @@ export function createMeasurementBrowser(
       ?.slice(name.length + 1);
   return {
     async start(nextPolicy, page) {
+      const epoch = ++generation;
       active = [];
+      pending.clear();
       pageLocation = page.page_location;
       const configured = [google, meta].filter(
         (provider): provider is AnalyticsBrowserPort => provider !== null,
       );
-      const results = await Promise.allSettled(
+      // A ready provider must not wait for a blocked or slow third-party script.
+      // Keep a bounded, in-memory queue for each provider still loading (10s timeout).
+      await Promise.any(
         configured.map(async (provider) => {
-          await provider.start(nextPolicy, page);
-          active.push(provider);
+          const queue: { name: AnalyticsEvent; fields: AnalyticsFields }[] = [];
+          pending.set(provider, queue);
+          try {
+            await provider.start(nextPolicy, page);
+            if (epoch !== generation) throw new Error("Analytics stopped");
+            active.push(provider);
+            pending.delete(provider);
+            for (const event of queue) provider.send(event.name, event.fields);
+          } catch (error) {
+            // An old load failure must never stop a newer consent lifecycle.
+            if (epoch === generation) {
+              pending.delete(provider);
+              provider.stop(false);
+            }
+            throw error;
+          }
         }),
       );
-      results.forEach((result, index) => {
-        if (result.status === "rejected") configured[index].stop(false);
-      });
-      if (!active.length) throw new Error("Analytics unavailable");
     },
     send(name, fields) {
       if (validEventSourceUrl(fields.page_location, policy.origin)) {
         pageLocation = fields.page_location;
       }
       active.forEach((provider) => provider.send(name, fields));
+      for (const queue of pending.values()) {
+        if (queue.length < 100) queue.push({ name, fields: structuredClone(fields) });
+      }
     },
     async identifiers() {
       if (!google || !active.includes(google)) throw new Error("Analytics unavailable");
@@ -207,6 +249,8 @@ export function createMeasurementBrowser(
         : ids;
     },
     stop(resetIdentity = false) {
+      generation++;
+      pending.clear();
       google?.stop(resetIdentity);
       meta?.stop(resetIdentity);
       active = [];

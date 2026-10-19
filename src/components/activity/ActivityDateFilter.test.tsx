@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { ActivityDateFilter } from "./ActivityDateFilter";
 
+const { trackLandingCta } = vi.hoisted(() => ({ trackLandingCta: vi.fn() }));
+vi.mock("@/components/analytics/AnalyticsProvider", () => ({
+  useMeasurementEvents: () => ({ trackLandingCta }),
+}));
 const push = vi.fn();
 vi.mock("@/i18n/navigation", () => ({
   usePathname: () => "/explore",
@@ -12,6 +16,7 @@ vi.mock("@/i18n/navigation", () => ({
 describe("public activity date filter", () => {
   beforeEach(() => {
     push.mockClear();
+    trackLandingCta.mockClear();
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-09-30T12:00:00+09:00"));
     window.history.replaceState(null, "", "/en/explore?source=home");
@@ -28,6 +33,7 @@ describe("public activity date filter", () => {
     expect(push).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     expect(push).toHaveBeenCalledWith("/explore?source=home&date=2026-10-10", { scroll: false });
+    expect(trackLandingCta).not.toHaveBeenCalled();
   });
   it("uses a single-line placeholder without a visible field heading", () => {
     renderWithIntl(<ActivityDateFilter />, { locale: "ko" });
@@ -44,6 +50,13 @@ describe("public activity date filter", () => {
     fireEvent.click(screen.getByRole("button", { name: "Saturday, October 10, 2026" }));
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     expect(push).toHaveBeenCalledWith("/explore?date=2026-10-10", { scroll: true });
+    expect(trackLandingCta).toHaveBeenCalledExactlyOnceWith({
+      ctaId: "hero_explore",
+      sectionId: "hero",
+      position: 1,
+      destinationType: "explore",
+      locale: "en",
+    });
   });
   it("keeps home clear and search local until a selected day is explicitly applied", () => {
     window.history.replaceState(null, "", "/en");

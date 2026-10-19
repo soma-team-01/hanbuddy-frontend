@@ -109,7 +109,7 @@ export function EmailCodeForm({
           <button
             type="button"
             disabled={pending || remaining > 0}
-            className="flex min-h-12 flex-col items-center justify-center rounded-xl border border-line-strong px-2 py-1 text-sm font-semibold text-primary-strong transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:text-muted"
+            className="flex min-h-12 flex-col items-center justify-center rounded-xl border border-primary px-2 py-1 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft disabled:cursor-not-allowed disabled:opacity-50"
             onClick={send}
           >
             {t("resendShort")}
@@ -123,34 +123,25 @@ export function EmailCodeForm({
       </div>
       {sentEmail && (
         <>
-          <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] items-end gap-2">
-            <AuthInput
-              label={t("code")}
-              name="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              minLength={6}
-              maxLength={6}
-              required
-              disabled={pending}
-              aria-describedby={timerId}
-              endAdornment={
-                <span id={timerId} role="timer" aria-label={t("codeTimeRemaining")}>
-                  {codeTime}
-                </span>
-              }
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-            <button
-              type="submit"
-              disabled={pending || codeRemaining === 0}
-              className={authButtonClass}
-            >
-              {t("verifyShort")}
-            </button>
-          </div>
+          <AuthInput
+            label={t("code")}
+            name="code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            minLength={6}
+            maxLength={6}
+            required
+            disabled={pending}
+            aria-describedby={timerId}
+            endAdornment={
+              <span id={timerId} role="timer" aria-label={t("codeTimeRemaining")}>
+                {codeTime}
+              </span>
+            }
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
           {codeRemaining === 0 && (
             <p role="status" className="text-sm text-danger">
               {t("codeExpired")}
@@ -167,11 +158,15 @@ export function EmailCodeForm({
         <Link href={loginHref} className={`${authButtonClass} flex items-center justify-center`}>
           {t("submitLogin")}
         </Link>
-      ) : !sentEmail ? (
+      ) : sentEmail ? (
+        <button type="submit" disabled={pending || codeRemaining === 0} className={authButtonClass}>
+          {pending ? t("busy") : t("verify")}
+        </button>
+      ) : (
         <button className={authButtonClass} disabled={pending || (!sentEmail && remaining > 0)}>
           {pending ? t("busy") : remaining > 0 ? t("wait", { seconds: remaining }) : t("sendCode")}
         </button>
-      ) : null}
+      )}
     </form>
   );
 }

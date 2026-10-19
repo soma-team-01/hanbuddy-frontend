@@ -123,7 +123,10 @@ describe("email UI contracts", () => {
     await screen.findByLabelText("6-digit code");
     request.mockRejectedValue(new EmailAuthError("AUTH400_EMAIL_CODE", 400));
     fireEvent.change(screen.getByLabelText("6-digit code"), { target: { value: "012345" } });
-    fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+    const verify = screen.getByRole("button", { name: "Verify and continue" });
+    expect(verify).toHaveClass("w-full");
+    expect(verify.parentElement).toBe(screen.getByLabelText("Email").closest("form"));
+    fireEvent.click(verify);
     await waitFor(() =>
       expect(request).toHaveBeenLastCalledWith("code/verify", {
         email: "alice@example.com",
@@ -147,6 +150,10 @@ describe("email UI contracts", () => {
     expect(screen.getByRole("timer")).toHaveTextContent("10:00");
     expect(screen.queryByText(/Check your inbox/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Resend/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Resend/ })).toHaveClass(
+      "border-primary",
+      "text-primary",
+    );
     await act(async () => vi.advanceTimersByTime(60000));
     expect(screen.getByRole("timer")).toHaveTextContent("09:00");
     request.mockRejectedValueOnce(new EmailAuthError("AUTH429", 429));
@@ -154,14 +161,14 @@ describe("email UI contracts", () => {
     expect(screen.getByRole("timer")).toHaveTextContent("09:00");
     await act(async () => vi.advanceTimersByTime(540000));
     expect(screen.getByRole("timer")).toHaveTextContent("00:00");
-    expect(screen.getByRole("button", { name: "Verify" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Verify and continue" })).toBeDisabled();
     fireEvent.submit(screen.getByLabelText("Email").closest("form")!);
     expect(request).toHaveBeenCalledTimes(2);
     expect(screen.getByText("Code expired. Please resend.")).toBeInTheDocument();
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Resend" })));
     expect(screen.getByRole("timer")).toHaveTextContent("10:00");
     expect(screen.queryByText("Code expired. Please resend.")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Verify" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Verify and continue" })).toBeEnabled();
   });
   it("keeps the same receipt for reset requests and enforces a 60 second cooldown", async () => {
     vi.useFakeTimers();

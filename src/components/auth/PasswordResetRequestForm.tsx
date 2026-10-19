@@ -2,12 +2,14 @@
 import type { EmailErrorKey } from "@/lib/auth/email";
 
 import { useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { EmailAuthError, emailErrorKey, requestEmailAuth } from "@/lib/auth/email";
 import { AuthInput, authButtonClass, useRemainingSeconds } from "./EmailAuthFields";
+import { GoogleLoginButton } from "./GoogleLoginButton";
 
 export function PasswordResetRequestForm() {
   const t = useTranslations("EmailAuth");
+  const locale = useLocale();
   const busy = useRef(false);
   const [pending, setPending] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -42,6 +44,11 @@ export function PasswordResetRequestForm() {
         autoComplete="email"
         maxLength={255}
         required
+        disabled={pending}
+        onChange={() => {
+          setError(null);
+          setAccepted(false);
+        }}
       />
       {accepted && (
         <div role="status" className="rounded-xl bg-primary-soft p-4 text-sm leading-6">
@@ -54,9 +61,17 @@ export function PasswordResetRequestForm() {
           {t(error)}
         </p>
       )}
-      <button disabled={pending || remaining > 0} className={authButtonClass}>
-        {pending ? t("busy") : remaining > 0 ? t("wait", { seconds: remaining }) : t("requestLink")}
-      </button>
+      {error === "googleLoginRequired" ? (
+        <GoogleLoginButton href={`/api/auth/google/start?locale=${encodeURIComponent(locale)}`} />
+      ) : (
+        <button disabled={pending || remaining > 0} className={authButtonClass}>
+          {pending
+            ? t("busy")
+            : remaining > 0
+              ? t("wait", { seconds: remaining })
+              : t("requestLink")}
+        </button>
+      )}
     </form>
   );
 }

@@ -25,6 +25,28 @@ beforeEach(() => {
 });
 
 describe("email auth BFF", () => {
+  it("preserves Google-only reset errors instead of acknowledging a reset email", async () => {
+    post.mockResolvedValue({
+      status: 409,
+      setCookies: [],
+      payload: {
+        isSuccess: false,
+        code: "AUTH409_GOOGLE_LOGIN",
+        message: "private backend detail",
+      },
+    });
+    const res = await handleEmailAuth(
+      request({ email: "google@example.com" }),
+      "password/reset-link",
+    );
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({
+      isSuccess: false,
+      code: "AUTH409_GOOGLE_LOGIN",
+      message: "Authentication request failed.",
+    });
+  });
+
   it.each(["signup", "password/reset"] as const)(
     "accepts 8 characters and rejects 7 for %s",
     async (action) => {

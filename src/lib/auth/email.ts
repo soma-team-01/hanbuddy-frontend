@@ -35,6 +35,7 @@ export function emailErrorKey(code?: string, status?: number) {
   if (code === "AUTH400_EMAIL_CODE") return "codeInvalid";
   if (code === "AUTH400_PASSWORD") return "passwordInvalid";
   if (code === "AUTH409") return "duplicate";
+  if (code === "AUTH409_GOOGLE_LOGIN") return "googleLoginRequired";
   if (code === "AUTH503_EMAIL") return "emailDeliveryUnavailable";
   if (status === 400) return "invalid";
   return "unavailable";

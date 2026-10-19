@@ -45,6 +45,7 @@
     "codeInvalid": "验证码错误或已过期。错误5次后请重新发送。",
     "passwordInvalid": "请输入8至64个字符，UTF-8不超过72字节，不能仅为空格。",
     "duplicate": "此邮箱已注册，请使用现有账号登录。",
+    "googleLoginRequired": "此账号通过Google注册，请使用Google登录。",
     "emailDeliveryUnavailable": "无法发送验证邮件，请稍后重试。",
     "invalid": "请检查输入信息。",
     "unavailable": "无法完成请求，请稍后重试。",

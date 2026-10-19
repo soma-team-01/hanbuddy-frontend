@@ -16,6 +16,42 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("email UI contracts", () => {
+  it.each([
+    [
+      "ko",
+      "이메일",
+      "재설정 링크 받기",
+      "Google로 가입한 계정입니다. Google 로그인을 이용해 주세요.",
+      "Google로 계속하기",
+    ],
+    [
+      "en",
+      "Email",
+      "Send reset link",
+      "This account was created with Google. Please log in with Google.",
+      "Continue with Google",
+    ],
+  ] as const)(
+    "offers Google instead of a reset receipt for Google-only accounts in %s",
+    async (locale, label, submit, message, googleLabel) => {
+      request.mockRejectedValue(new EmailAuthError("AUTH409_GOOGLE_LOGIN", 409));
+      renderWithIntl(<PasswordResetRequestForm />, { locale });
+      fireEvent.change(screen.getByLabelText(label), { target: { value: "google@example.com" } });
+      fireEvent.click(screen.getByRole("button", { name: submit }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(message);
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      const google = screen.getByRole("link", { name: googleLabel });
+      expect(google).toHaveAttribute("href", `/api/auth/google/start?locale=${locale}`);
+      expect(google).toHaveTextContent("Google");
+      expect(screen.queryByRole("button", { name: submit })).not.toBeInTheDocument();
+      expect(request).toHaveBeenCalledTimes(1);
+      fireEvent.change(screen.getByLabelText(label), { target: { value: "email@example.com" } });
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: googleLabel })).not.toBeInTheDocument();
+      expect(screen.getByRole("button")).toBeDisabled();
+    },
+  );
+
   it("offers login with the booking destination on duplicate email and retains the resend cooldown", async () => {
     vi.useFakeTimers();
     request.mockRejectedValue(new EmailAuthError("AUTH409", 409));

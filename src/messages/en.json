@@ -45,6 +45,7 @@
     "codeInvalid": "The code is incorrect or expired. After 5 incorrect attempts, request a new code.",
     "passwordInvalid": "Use 8–64 characters and no more than 72 UTF-8 bytes, not only spaces.",
     "duplicate": "This email is already registered. Please log in to your existing account.",
+    "googleLoginRequired": "This account was created with Google. Please log in with Google.",
     "emailDeliveryUnavailable": "We couldn't send the verification email. Please try again later.",
     "invalid": "Please check the information you entered.",
     "unavailable": "We couldn't complete the request. Please try again later.",

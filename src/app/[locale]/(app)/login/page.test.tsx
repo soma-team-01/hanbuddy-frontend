@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Locale } from "@/i18n/routing";
@@ -25,13 +25,15 @@ vi.mock("next/link", () => ({
     prefetch,
     children,
     className,
+    "aria-label": ariaLabel,
   }: {
     href: string;
     prefetch?: boolean;
     children: ReactNode;
     className?: string;
+    "aria-label"?: string;
   }) => (
-    <a href={href} data-prefetch={String(prefetch)} className={className}>
+    <a href={href} data-prefetch={String(prefetch)} className={className} aria-label={ariaLabel}>
       {children}
     </a>
   ),
@@ -57,23 +59,48 @@ async function renderLogin(locale: Locale, searchParams: { error?: string | stri
 }
 
 describe("LoginPage", () => {
-  it("keeps email login hidden when review login is not enabled", async () => {
+  it("restores the brand headline with a quiet eyebrow and compact auxiliary actions", async () => {
+    await renderLogin("en");
+    expect(screen.getByText("Welcome to HanBuddy")).toHaveClass("uppercase", "text-primary");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Experience Korea like a local.",
+    );
+    expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveTextContent(
+      /^Google$/,
+    );
+    expect(screen.getByRole("link", { name: "Sign up" })).toHaveClass("text-xs", "min-h-11");
+    expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveClass(
+      "text-xs",
+      "min-h-11",
+    );
+  });
+  it("offers regular email login independently of the review login flag", async () => {
+    vi.stubEnv("REVIEW_LOGIN_ENABLED", "false");
     await renderLogin("en");
 
-    expect(screen.queryByRole("region", { name: "Log in with email" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Log in with email" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+    expect(screen.queryByText("Review account login")).not.toBeInTheDocument();
   });
 
-  it("shows email login only when review login is explicitly enabled", async () => {
+  it("preserves a separate review login when explicitly enabled", async () => {
     vi.stubEnv("REVIEW_LOGIN_ENABLED", "true");
 
     await renderLogin("en");
 
     expect(screen.getByRole("region", { name: "Log in with email" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Log in with email" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
-    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
-    const emailLoginButton = screen.getByRole("button", { name: "Log in" });
+    const form = screen.getByText("Review account login").closest("details")!;
+    fireEvent.click(screen.getByText("Review account login"));
+    form.open = true;
+    expect(within(form).getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
+    expect(within(form).getByLabelText("Password")).toHaveAttribute(
+      "autocomplete",
+      "current-password",
+    );
+    const emailLoginButton = within(
+      screen.getByRole("region", { name: "Log in with email" }),
+    ).getByRole("button", { name: "Log in" });
     const googleLoginLink = screen.getByRole("link", { name: "Continue with Google" });
 
     expect(emailLoginButton).toBeEnabled();
@@ -81,15 +108,16 @@ describe("LoginPage", () => {
       emailLoginButton.compareDocumentPosition(googleLoginLink) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(googleLoginLink).toHaveClass("bg-white", "border-line-strong", "text-ink");
-    expect(screen.queryByText("or")).not.toBeInTheDocument();
+    expect(screen.getByText("or continue with")).toBeInTheDocument();
   });
 
-  it("keeps Google login as the primary action when review login is disabled", async () => {
+  it("uses the same neutral Google action regardless of the review login flag", async () => {
     await renderLogin("en");
 
     expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveClass(
-      "bg-primary",
-      "text-on-primary",
+      "bg-white",
+      "rounded-xl",
+      "min-h-12",
     );
   });
 
@@ -140,6 +168,26 @@ describe("LoginPage", () => {
       expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");
     },
   );
+
+  it("keeps the booking destination through both sign-in options and signup", async () => {
+    const next = "/activities/3/book?scheduleId=92";
+    renderWithIntl(
+      await LoginPage({
+        params: Promise.resolve({ locale: "en" }),
+        searchParams: Promise.resolve({ next }),
+      }),
+    );
+    expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveAttribute(
+      "href",
+      `/api/auth/google/start?locale=en&next=${encodeURIComponent(next)}`,
+    );
+    expect(screen.getByRole("link", { name: "Sign up" })).toHaveAttribute(
+      "href",
+      `/en/signup?next=${encodeURIComponent(next)}`,
+    );
+    expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
+  });
 
   it.each([
     ["en", "invalidState", "We couldn't verify your Google sign-in session."],

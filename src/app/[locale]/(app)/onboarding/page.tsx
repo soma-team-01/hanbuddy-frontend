@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
+import { readEmailSignupSession } from "@/lib/auth/email-session";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getSignupAgreementDocuments } from "@/lib/server/policy-content";
 import { getSignupDraftAccountId } from "@/lib/server/signup-draft-account";
@@ -44,6 +45,7 @@ export default async function ProfileSetupPage({
 
   return (
     <OnboardingForm
+      emailSignup={readEmailSignupSession(cookieStore.get(AUTH_COOKIES.emailSignup)?.value)}
       userType="TOURIST"
       googleProfile={googleProfile}
       signupDraftAccountId={signupDraftAccountId}

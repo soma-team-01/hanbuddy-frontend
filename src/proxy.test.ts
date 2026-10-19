@@ -31,6 +31,28 @@ function getSavedLocale(response: Response) {
 }
 
 describe("route access proxy", () => {
+  it.each(["/auth/reset-password", "/ko/auth/reset-password"])(
+    "matches the password reset route %s",
+    (url) => {
+      expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(true);
+    },
+  );
+  it.each(["/auth/reset-password", "/ko/auth/reset-password"])(
+    "keeps %s in an isolated document without a fragment-losing redirect",
+    async (pathname) => {
+      const response = await runProxy(pathname, {
+        [AUTH_COOKIES.accessToken]: "other-user",
+        [AUTH_COOKIES.userType]: "BUDDY",
+      });
+      expect(response.headers.get("location")).toBeNull();
+      expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      if (pathname.startsWith("/ko"))
+        expect(response.headers.get("x-middleware-rewrite")).toBe(
+          "http://localhost/auth/reset-password",
+        );
+    },
+  );
   it.each(["/dashboard", "/my-activities/create", "/my-page/edit"])(
     "redirects unauthenticated access to %s before rendering",
     async (pathname) => {

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
 import type { Locale } from "@/i18n/routing";
@@ -89,6 +89,147 @@ function createRejectedApplication(): BuddyResubmission {
 }
 
 describe("OnboardingForm", () => {
+  it("submits email credentials separately from the existing profile and never tracks a Google signup", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          isSuccess: true,
+          code: "201",
+          message: "OK",
+          result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
+        }),
+        { status: 201 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithIntl(
+      <OnboardingForm
+        emailSignup={{ email: "alice@example.com", expiresAt: Date.now() + 600000 }}
+      />,
+    );
+    expect(screen.getByRole("navigation", { name: "Step 1 of 4" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveValue("alice@example.com");
+    expect(screen.getByLabelText("Email")).toBeDisabled();
+    expect(screen.queryByLabelText("Full name")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Complete signup within/)).not.toBeInTheDocument();
+    expect(screen.getByText("At least 8 characters.")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: " a long password " } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), {
+      target: { value: " a long password " },
+    });
+    clickContinue("en");
+    expect(screen.getByRole("navigation", { name: "Step 2 of 4" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    advanceToAgreements("en", { birthDate: "1998-04-12", contact: "line_user" });
+    fireEvent.click(screen.getByRole("checkbox", { name: /19 years or older/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /HanBuddy Terms of Service/ }));
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /Personal information collection and use/ }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/auth/email/signup");
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body).toMatchObject({
+      name: "Traveler",
+      password: " a long password ",
+      profile: { userType: "TOURIST", contactIdentifier: "line_user" },
+    });
+    expect(body.profile.agreements).toHaveLength(4);
+    expect(body).not.toHaveProperty("email");
+    expect(body.profile).not.toHaveProperty("password");
+    await waitFor(() => expect(routerMocks.replace).toHaveBeenCalledWith("/en"));
+    expect(analyticsMocks.trackSignup).not.toHaveBeenCalled();
+  });
+  it("keeps email credentials in memory between steps and validates them before advancing", () => {
+    renderWithIntl(
+      <OnboardingForm
+        emailSignup={{ email: "alice@example.com", expiresAt: Date.now() + 3600000 }}
+      />,
+    );
+    clickContinue("en");
+    expect(screen.getByRole("navigation", { name: "Step 1 of 4" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("8–64");
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "abcdefgh" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "abcdefgh" } });
+    clickContinue("en");
+    expect(screen.getByRole("navigation", { name: "Step 2 of 4" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.getByLabelText("Password")).toHaveValue("abcdefgh");
+    expect(screen.getByRole("navigation", { name: "Step 1 of 4" })).toBeInTheDocument();
+  });
+  it("blocks expired email signup and offers re-verification", () => {
+    renderWithIntl(
+      <OnboardingForm
+        returnTo="/activities/42/book?scheduleId=101"
+        emailSignup={{ email: "alice@example.com", expiresAt: 1 }}
+      />,
+    );
+    clickContinue("en");
+    expect(screen.getByRole("alert")).toHaveTextContent("expired");
+    expect(screen.getByRole("link", { name: "Back to login" })).toHaveAttribute(
+      "href",
+      "/en/login?next=%2Factivities%2F42%2Fbook%3FscheduleId%3D101",
+    );
+    expect(screen.getByRole("link", { name: "Verify your email again" })).toHaveAttribute(
+      "href",
+      "/en/signup?next=%2Factivities%2F42%2Fbook%3FscheduleId%3D101",
+    );
+  });
+  it("starts restored email drafts at credentials without persisting a password", () => {
+    saveOnboardingDraft("signup:TOURIST:email-account", {
+      currentStep: 3,
+      displayName: "Saved nickname",
+      nationality: "US",
+      birthDate: "1998-04-12",
+      messagingCountry: "US",
+      messagingApp: "line",
+      messagingContact: "line-id",
+      agreementDecisions: {},
+      profileImageFile: null,
+      existingProfileImageKey: null,
+      existingProfileImageUrl: null,
+    });
+    renderWithIntl(
+      <OnboardingForm
+        signupDraftAccountId="email-account"
+        emailSignup={{ email: "alice@example.com", expiresAt: Date.now() + 3600000 }}
+      />,
+    );
+    expect(screen.getByRole("navigation", { name: "Step 1 of 4" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toHaveValue("");
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "abcdefgh" } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "abcdefgh" } });
+    clickContinue("en");
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Saved nickname");
+    expect(JSON.stringify(window.sessionStorage)).not.toContain("abcdefgh");
+  });
+  it("separates account details for Korean email buddy signup", () => {
+    renderWithIntl(
+      <OnboardingForm
+        userType="BUDDY"
+        emailSignup={{ email: "buddy@example.com", expiresAt: Date.now() + 3600000 }}
+      />,
+      { locale: "ko" },
+    );
+    expect(screen.getByRole("navigation").querySelectorAll("li")).toHaveLength(4);
+    const contactStep = within(screen.getByRole("navigation")).getByText("연락처와 정산 정보");
+    expect(contactStep.textContent).toBe("연락처와\n정산 정보");
+    expect(contactStep).toHaveClass("whitespace-pre-line");
+    expect(screen.getByRole("heading", { name: "계정 정보" })).toBeInTheDocument();
+    expect(screen.getByLabelText("이메일")).toBeDisabled();
+    expect(screen.getByLabelText("이메일")).toHaveValue("buddy@example.com");
+    expect(screen.queryByRole("textbox", { name: "이름" })).not.toBeInTheDocument();
+    expect(screen.getByText("최소 8자 이상.")).toBeInTheDocument();
+  });
+  it("keeps Google signup on the existing three profile steps", () => {
+    renderWithIntl(
+      <OnboardingForm googleProfile={{ name: "Google User", email: "google@example.com" }} />,
+    );
+    expect(screen.getByRole("navigation", { name: "Step 1 of 3" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  });
   it.each([
     ["KR", "phone", "01012345678", "01012345678"],
     ["US", "phone", "2025550114", ""],

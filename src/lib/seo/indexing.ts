@@ -4,6 +4,8 @@ const PRIVATE_ROUTES = [
   "/referral",
   "/admin",
   "/login",
+  "/signup",
+  "/forgot-password",
   "/onboarding",
   "/home",
   "/my-page",

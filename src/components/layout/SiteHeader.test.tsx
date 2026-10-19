@@ -288,8 +288,8 @@ describe("SiteHeader", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "로그인" }));
-    expect(screen.getByRole("dialog", { name: "Google 계정으로 시작해요" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Google 계정으로 계속하기" })).toHaveAttribute(
+    expect(screen.getByRole("dialog", { name: "한버디와 함께 시작해요" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Google로 계속하기" })).toHaveAttribute(
       "href",
       "/api/auth/google/start?locale=ko&intent=buddy",
     );

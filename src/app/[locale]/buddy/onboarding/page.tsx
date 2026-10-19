@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { OnboardingForm } from "@/app/[locale]/(app)/onboarding/OnboardingForm";
 import type { Locale } from "@/i18n/routing";
 import { AUTH_COOKIES, decodeGoogleProfile } from "@/lib/auth/cookies";
+import { readEmailSignupSession } from "@/lib/auth/email-session";
 import { getSignupAgreementDocuments } from "@/lib/server/policy-content";
 import { getSignupDraftAccountId } from "@/lib/server/signup-draft-account";
 import { pageAlternates } from "@/lib/seo/metadata";
@@ -36,6 +37,7 @@ export default async function BuddyOnboardingPage({ params }: Readonly<BuddyOnbo
 
   return (
     <OnboardingForm
+      emailSignup={readEmailSignupSession(cookieStore.get(AUTH_COOKIES.emailSignup)?.value)}
       userType="BUDDY"
       googleProfile={googleProfile}
       signupDraftAccountId={signupDraftAccountId}

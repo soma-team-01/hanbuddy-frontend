@@ -47,6 +47,14 @@ export function EyeIcon(props: IconProps) {
   );
 }
 
+export function EyeOffIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A11 11 0 0 1 22 12a12 12 0 0 1-3.2 4.2M6.5 6.5A12 12 0 0 0 2 12a11 11 0 0 0 15.5 5.5" />
+    </IconBase>
+  );
+}
+
 /** Overlapping language tiles: Latin A and the character 文. */
 export function TranslationIcon(props: IconProps) {
   return (

@@ -176,7 +176,12 @@ describe("email UI contracts", () => {
     renderWithIntl(<PasswordResetRequestForm />);
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "unknown@example.com" } });
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Send reset link" })));
-    expect(screen.getByRole("status")).toHaveTextContent("If an eligible account exists");
+    expect(screen.getByRole("status")).toHaveTextContent("We'll send you a password reset link.");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Please check your inbox and spam folder.",
+    );
+    expect(screen.getByRole("status")).not.toHaveClass("bg-primary-soft");
+    expect(screen.getByRole("status")).not.toHaveTextContent("60 seconds");
     expect(screen.getByRole("button", { name: /Try again in/ })).toBeDisabled();
     await act(async () => vi.advanceTimersByTime(60000));
     expect(screen.getByRole("button", { name: "Send reset link" })).toBeEnabled();

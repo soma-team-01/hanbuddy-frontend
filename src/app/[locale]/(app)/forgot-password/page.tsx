@@ -22,7 +22,7 @@ export default async function Page({
           <PasswordResetRequestForm />
           <Link
             href={`/${locale}/login`}
-            className="mt-6 block text-center text-sm font-semibold text-primary-strong underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-primary-strong"
+            className="mt-6 block text-center text-sm font-semibold text-primary underline-offset-4 hover:text-primary-hover hover:underline focus-visible:outline-2 focus-visible:outline-primary-strong"
           >
             {t("back")}
           </Link>

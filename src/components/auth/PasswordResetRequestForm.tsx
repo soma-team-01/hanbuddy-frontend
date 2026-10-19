@@ -49,9 +49,9 @@ export function PasswordResetRequestForm() {
         }}
       />
       {accepted && (
-        <div role="status" className="rounded-xl bg-primary-soft p-4 text-sm leading-6">
+        <div role="status" className="grid gap-1 text-sm leading-6 text-muted">
           <p>{t("receipt")}</p>
-          <p className="mt-3 text-muted">{t("inbox")}</p>
+          <p>{t("inbox")}</p>
         </div>
       )}
       {error && (

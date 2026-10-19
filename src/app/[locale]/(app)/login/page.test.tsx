@@ -75,6 +75,7 @@ describe("LoginPage", () => {
     );
   });
   it("offers regular email login independently of the review login flag", async () => {
+    vi.stubEnv("REVIEW_LOGIN_ENABLED", "false");
     await renderLogin("en");
 
     expect(screen.getByRole("region", { name: "Log in with email" })).toBeInTheDocument();

@@ -156,7 +156,7 @@ Repository variables:
 | `FRONTEND_DOMAIN`        | `staging.hanbuddy.kr`                              |
 | `ROUTE53_HOSTED_ZONE_ID` | `hanbuddy.kr` hosted zone ID                       |
 | `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                          |
-| `REVIEW_LOGIN_ENABLED`   | 심사용 이메일 로그인을 노출하므로 `true`           |
+| `REVIEW_LOGIN_ENABLED`   | 워크플로에서 `false` 고정. GitHub 변수 설정 불필요 |
 | `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                         |
 | `GOOGLE_REDIRECT_URI`    | `https://staging.hanbuddy.kr/auth/google/callback` |
 | `PAYMENT_PROVIDER`       | `TOSS`                                             |
@@ -176,21 +176,21 @@ Environment secret:
 
 `production` environment는 `main` branch만 허용하고 다음 variable을 추가한다.
 
-| Name                     | 값                                               |
-| ------------------------ | ------------------------------------------------ |
-| `EC2_INSTANCE_ID`        | production EC2 stack output `InstanceId`         |
-| `FRONTEND_DOMAIN`        | `hanbuddy.kr` (production workflow에서 검증)     |
-| `ROUTE53_HOSTED_ZONE_ID` | `hanbuddy.kr` hosted zone ID                     |
-| `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                        |
-| `REVIEW_LOGIN_ENABLED`   | 운영에서는 이메일 로그인을 숨기므로 `false`      |
-| `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                       |
-| `GOOGLE_REDIRECT_URI`    | 운영 frontend domain의 Google OAuth callback URL |
-| `PAYMENT_PROVIDER`       | `PAYPAL`                                         |
-| `PAYPAL_CLIENT_ID`       | PayPal Live 공개 Client ID (`PAYPAL`/`BOTH` 시)  |
-| `GA_ENABLED`             | GA runtime 활성화 시에만 literal `true`          |
-| `GA_MEASUREMENT_ID`      | 검증된 GA web stream ID                          |
-| `META_PIXEL_ENABLED`     | Meta Pixel 활성화 시에만 literal `true`          |
-| `META_PIXEL_ID`          | 검증된 Meta Pixel ID                             |
+| Name                     | 값                                                   |
+| ------------------------ | ---------------------------------------------------- |
+| `EC2_INSTANCE_ID`        | production EC2 stack output `InstanceId`             |
+| `FRONTEND_DOMAIN`        | `hanbuddy.kr` (production workflow에서 검증)         |
+| `ROUTE53_HOSTED_ZONE_ID` | `hanbuddy.kr` hosted zone ID                         |
+| `HANBUDDY_API_BASE_URL`  | `https://api.hanbuddy.kr`                            |
+| `REVIEW_LOGIN_ENABLED`   | 워크플로에서 `false` 고정. 일반 이메일 로그인과 무관 |
+| `GOOGLE_CLIENT_ID`       | Google OAuth web client ID                           |
+| `GOOGLE_REDIRECT_URI`    | 운영 frontend domain의 Google OAuth callback URL     |
+| `PAYMENT_PROVIDER`       | `PAYPAL`                                             |
+| `PAYPAL_CLIENT_ID`       | PayPal Live 공개 Client ID (`PAYPAL`/`BOTH` 시)      |
+| `GA_ENABLED`             | GA runtime 활성화 시에만 literal `true`              |
+| `GA_MEASUREMENT_ID`      | 검증된 GA web stream ID                              |
+| `META_PIXEL_ENABLED`     | Meta Pixel 활성화 시에만 literal `true`              |
+| `META_PIXEL_ID`          | 검증된 Meta Pixel ID                                 |
 
 Production environment secret:
 
@@ -208,7 +208,15 @@ secret에 두고, 호출받는 job의 `environment: production`도 유지한다.
 운영 배포에서 수행한다. 이전 실패 실행의 재실행은 이전 커밋의 workflow를 사용하므로 수정 검증을
 대신할 수 없다.
 
-`REVIEW_LOGIN_ENABLED`는 `true` 또는 `false`만 허용하는 서버 런타임 변수다. `true`이면 일반 로그인 화면에 이메일·비밀번호 입력 영역이 추가되고 same-origin `/api/auth/review/login` BFF가 활성화된다. `false`이거나 로컬에서 설정하지 않으면 기존 Google 로그인만 노출되며 BFF 직접 호출도 거부한다. 값 변경 후 해당 환경을 다시 배포해야 하며, 심사 계정 이메일과 비밀번호 해시는 백엔드 Parameter Store에서만 관리한다.
+`REVIEW_LOGIN_ENABLED`는 기존 심사용 로그인 UI와 `/api/auth/review/login` BFF만 제어하는 서버 런타임 변수다. 일반 이메일 로그인·회원가입·비밀번호 재설정 및 Google 로그인은 이 변수와 무관하게 제공한다. 스테이징·운영 워크플로 모두 `false`를 명시적으로 전달하므로 기존 GitHub Environment 변수에 `true`가 남아 있어도 사용하지 않는다. `false`이면 심사용 UI는 숨기고 전용 BFF 직접 호출은 404로 거부한다. 로컬에서만 명시적으로 `true`를 설정해 심사용 경로를 점검할 수 있다. 변경은 수정된 워크플로로 재배포한 뒤 적용되며, 백엔드 심사 계정 설정과 별개다.
+
+### 이메일 인증 요청 출처 검증
+
+EC2 배포 스크립트는 검증된 `FRONTEND_DOMAIN`에서 `AUTH_ORIGIN=https://<FRONTEND_DOMAIN>`을 만들어 컨테이너 런타임에 자동 전달한다. 별도 GitHub 변수는 필요 없다. 스테이징은 `https://staging.hanbuddy.kr`, 운영은 `https://hanbuddy.kr`을 사용한다. 운영의 `www` 호스트는 기존 canonical 리다이렉트를 유지한다.
+
+이메일 인증 BFF 전체(`/api/auth/email/*`)는 브라우저 `Origin`을 이 값과 비교한다. 프록시 뒤의 `http://0.0.0.0:3000` 같은 내부 주소나 요청의 `Host`/`X-Forwarded-*` 헤더를 허용 주소로 사용하지 않는다. 설정은 경로·끝 슬래시·쿼리·사용자 정보 없는 단일 HTTPS origin이어야 하며, production 실행에서 설정이 없거나 잘못되면 요청을 거부한다. 로컬 `npm run dev`에서는 값을 비워 두면 기존 요청 주소로 비교한다. 로컬 production 빌드로 인증 흐름을 테스트하려면 HTTPS 프록시와 해당 `AUTH_ORIGIN`을 설정해야 한다.
+
+배포 후에는 각 환경의 실제 도메인에서 코드 발송·확인, 이메일 로그인·가입, 비밀번호 재설정 링크 요청·검증·저장을 확인한다. 출처 검사는 유지하고, 외부 origin 요청은 계속 403이어야 한다. 메일 발송 없이 점검할 때는 빈 JSON으로 `/api/auth/email/code`에 POST하여 정상 origin은 입력 오류 400, 외부 origin은 403인지 확인할 수 있다. Origin 없는 비브라우저 클라이언트는 기존처럼 지원하지만 `Sec-Fetch-Site: cross-site` 요청은 거부한다.
 
 `GA_ENABLED`, `GA_MEASUREMENT_ID`, `META_PIXEL_ENABLED`, `META_PIXEL_ID`는 image build arg나
 `NEXT_PUBLIC_*`가 아니라 컨테이너 실행 시점의 서버 환경변수다. deploy action은 네 값을 JSON 문자열로 인코딩하고 EC2 배포

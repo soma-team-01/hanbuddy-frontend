@@ -26,7 +26,7 @@ jobs:
       ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'hanbuddy-frontend' }}
       EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
       HANBUDDY_API_BASE_URL: ${{ vars.HANBUDDY_API_BASE_URL }}
-      REVIEW_LOGIN_ENABLED: ${{ vars.REVIEW_LOGIN_ENABLED }}
+      REVIEW_LOGIN_ENABLED: "false"
       GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
       GOOGLE_REDIRECT_URI: ${{ vars.GOOGLE_REDIRECT_URI }}
       FRONTEND_DOMAIN: ${{ vars.FRONTEND_DOMAIN }}

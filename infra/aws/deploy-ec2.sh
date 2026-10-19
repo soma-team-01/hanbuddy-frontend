@@ -206,6 +206,7 @@ start_frontend() {
     --log-opt max-size=10m \
     --log-opt max-file=3 \
     -e "HANBUDDY_API_BASE_URL=\${api_base_url}" \
+    -e "AUTH_ORIGIN=https://\${frontend_domain}" \
     -e "REVIEW_LOGIN_ENABLED=\${review_login_enabled}" \
     -e "GOOGLE_CLIENT_ID=\${google_client_id}" \
     -e "GOOGLE_REDIRECT_URI=\${google_redirect_uri}" \

@@ -24,6 +24,7 @@ import {
 } from "./email";
 import { readEmailSignupSession } from "./email-session";
 import { sanitizeReturnToPath } from "./return-to";
+import { isTrustedAuthOrigin } from "./request-origin";
 import type { GoogleLoginResponse } from "./types";
 
 const headers = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
@@ -170,8 +171,7 @@ function emailCredentials(request: NextRequest, action: EmailAction) {
 }
 
 async function performEmailAuth(request: NextRequest, action: EmailAction) {
-  const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) return failure(403);
+  if (!isTrustedAuthOrigin(request)) return failure(403);
   if (action === "password/reset/validate") return validateResetToken(request);
   const raw = await request.json().catch(() => null);
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return failure(400);

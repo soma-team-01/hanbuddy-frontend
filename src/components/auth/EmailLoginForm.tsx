@@ -54,7 +54,7 @@ export function EmailLoginForm({
   }
   const signupQuery = returnTo ? `?next=${encodeURIComponent(returnTo)}` : "";
   const utilityClass =
-    "inline-flex min-h-11 items-center text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
+    "inline-flex min-h-11 items-center text-xs font-normal text-muted underline-offset-4 hover:text-ink hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong";
   return (
     <section className="w-full text-left" aria-label={t("login")}>
       <form onSubmit={submit} className="grid gap-4">
@@ -83,7 +83,7 @@ export function EmailLoginForm({
           {t(pending ? "busy" : "submitLogin")}
         </button>
       </form>
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 text-sm">
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3">
         <Link
           className={utilityClass}
           href={buddy ? "/ko/signup?intent=buddy" : `/${locale}/signup${signupQuery}`}

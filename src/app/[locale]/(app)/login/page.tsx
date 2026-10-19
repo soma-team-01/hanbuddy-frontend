@@ -47,7 +47,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
   return (
     <main className="flex w-full flex-1 flex-col overflow-hidden bg-canvas-soft">
       <PageContainer className="relative flex flex-1 flex-col items-center justify-center py-9 md:py-14 lg:min-h-[calc(100svh-76px)]">
-        <AuthPanel title={t("eyebrow")} description={t("introduction")}>
+        <AuthPanel eyebrow={t("eyebrow")} title={t("welcome")} description={t("introduction")}>
           {errorCode ? (
             <p
               role="alert"
@@ -57,7 +57,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             </p>
           ) : null}
           <LoginMethods locale={locale} returnTo={returnTo} googleHref={googleStartHref} />
-          <p className="mt-6 border-t border-line-soft pt-5 text-center text-xs leading-5 text-muted">
+          <p className="mt-5 text-center text-xs leading-5 text-muted">
             {t("legalNoticeStart")}{" "}
             <Link
               href={getPolicyPath(locale, "terms-of-service")}
@@ -75,7 +75,7 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             {t("legalNoticeEnd")}
           </p>
           {reviewLoginEnabled && (
-            <details className="mt-5 border-t border-line-soft pt-4 text-left">
+            <details className="mt-5 text-left">
               <summary className="cursor-pointer text-xs text-muted focus-visible:outline-2 focus-visible:outline-primary-strong">
                 {emailT("review")}
               </summary>

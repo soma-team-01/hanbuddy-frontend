@@ -25,13 +25,15 @@ vi.mock("next/link", () => ({
     prefetch,
     children,
     className,
+    "aria-label": ariaLabel,
   }: {
     href: string;
     prefetch?: boolean;
     children: ReactNode;
     className?: string;
+    "aria-label"?: string;
   }) => (
-    <a href={href} data-prefetch={String(prefetch)} className={className}>
+    <a href={href} data-prefetch={String(prefetch)} className={className} aria-label={ariaLabel}>
       {children}
     </a>
   ),
@@ -57,6 +59,21 @@ async function renderLogin(locale: Locale, searchParams: { error?: string | stri
 }
 
 describe("LoginPage", () => {
+  it("restores the brand headline with a quiet eyebrow and compact auxiliary actions", async () => {
+    await renderLogin("en");
+    expect(screen.getByText("Welcome to HanBuddy")).toHaveClass("uppercase", "text-primary");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Experience Korea like a local.",
+    );
+    expect(screen.getByRole("link", { name: "Continue with Google" })).toHaveTextContent(
+      /^Google$/,
+    );
+    expect(screen.getByRole("link", { name: "Sign up" })).toHaveClass("text-xs", "min-h-11");
+    expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveClass(
+      "text-xs",
+      "min-h-11",
+    );
+  });
   it("offers regular email login independently of the review login flag", async () => {
     await renderLogin("en");
 
@@ -106,14 +123,14 @@ describe("LoginPage", () => {
   it.each([
     [
       "en",
-      "Welcome to HanBuddy",
+      "Experience Korea like a local.",
       "Continue with Google",
       "Privacy Policy",
       "new friends, Jul 26 ⚾",
     ],
     [
       "ko",
-      "한버디에 오신 걸 환영해요",
+      "현지인처럼 한국을 경험해 보세요.",
       "Google로 계속하기",
       "개인정보 처리방침",
       "새 친구들, 7월 26일 ⚾",

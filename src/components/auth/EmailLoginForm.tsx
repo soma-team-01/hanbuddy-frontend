@@ -88,7 +88,7 @@ export function EmailLoginForm({
           className={utilityClass}
           href={buddy ? "/ko/signup?intent=buddy" : `/${locale}/signup${signupQuery}`}
         >
-          {t(buddy ? "buddySignupLink" : "signupLink")}
+          {t("signupLink")}
         </Link>
         <span aria-hidden="true" className="h-3 w-px bg-line-strong" />
         <Link className={utilityClass} href={`/${locale}/forgot-password`}>

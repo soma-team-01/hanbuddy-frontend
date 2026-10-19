@@ -9,7 +9,7 @@ function expectEmailFirst(dialog: HTMLElement) {
   const email = ui.getByLabelText("Email");
   const password = ui.getByLabelText("Password");
   const submit = ui.getByRole("button", { name: "Log in" });
-  const signup = ui.getByRole("link", { name: /Sign up|Become a buddy/ });
+  const signup = ui.getByRole("link", { name: "Sign up" });
   const forgot = ui.getByRole("link", { name: "Forgot password?" });
   const google = ui.getByRole("link", { name: "Continue with Google" });
   const ordered = [email, password, submit, signup, forgot, google];
@@ -24,6 +24,17 @@ function expectEmailFirst(dialog: HTMLElement) {
 }
 
 describe("shared email-first login layout", () => {
+  it("labels buddy signup as 회원가입 in Korean without changing the buddy destination", () => {
+    renderWithIntl(<BuddyGoogleAuthDialog variant="header" />, { locale: "ko" });
+    fireEvent.click(screen.getByRole("button", { name: "로그인" }));
+    const ui = within(screen.getByRole("dialog"));
+    expect(ui.getByRole("link", { name: "회원가입" })).toHaveAttribute(
+      "href",
+      "/ko/signup?intent=buddy",
+    );
+    expect(ui.queryByRole("link", { name: "버디 신청하기" })).not.toBeInTheDocument();
+  });
+
   it("offers email in booking dialogs without a review feature flag and preserves signup destination", () => {
     const next = "/activities/8/book?scheduleId=42&guestCount=2";
     renderWithIntl(<LoginPromptDialog returnTo={next} onClose={() => {}} />);
@@ -40,7 +51,7 @@ describe("shared email-first login layout", () => {
     fireEvent.click(trigger);
     const dialog = screen.getByRole("dialog");
     const ui = expectEmailFirst(dialog);
-    expect(ui.getByRole("link", { name: "Become a buddy" })).toHaveAttribute(
+    expect(ui.getByRole("link", { name: "Sign up" })).toHaveAttribute(
       "href",
       "/ko/signup?intent=buddy",
     );

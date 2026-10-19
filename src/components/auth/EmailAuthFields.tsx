@@ -84,11 +84,11 @@ export function PasswordFields({
   const passwordValid = isValidNewPassword(password);
   const hasConfirmation = confirmation.length > 0;
   const passwordsMatch = password === confirmation;
+  const showValidation = password.length >= 8;
   let validationMessage = t("passwordHint");
-  if (hasPassword && password.length >= 8)
-    validationMessage = t(passwordValid ? "passwordValid" : "passwordInvalid");
+  if (showValidation) validationMessage = t(passwordValid ? "passwordValid" : "passwordInvalid");
   const validationStateColor = passwordValid ? "text-success" : "text-danger";
-  const validationColor = hasPassword ? validationStateColor : "text-muted";
+  const validationColor = showValidation ? validationStateColor : "text-muted";
   const confirmationMessage = passwordsMatch ? "passwordMatch" : "mismatch";
   return (
     <div className="grid gap-5">

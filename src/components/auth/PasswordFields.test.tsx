@@ -106,9 +106,12 @@ describe("live password feedback", () => {
       expect(screen.getByText(hint)).toHaveClass("text-muted");
       expect(password).not.toHaveAttribute("aria-invalid", "true");
       expect(screen.queryByText(mismatch)).not.toBeInTheDocument();
-      fireEvent.change(password, { target: { value: "abcdefg" } });
-      expect(password).toHaveAttribute("aria-invalid", "true");
-      expect(screen.getByText(hint)).toHaveClass("text-danger");
+      for (let length = 1; length < 8; length++) {
+        fireEvent.change(password, { target: { value: "a".repeat(length) } });
+        expect(password).toHaveAttribute("aria-invalid", "true");
+        expect(screen.getByText(hint)).toHaveClass("text-muted");
+        expect(screen.getByText(hint)).not.toHaveClass("text-danger", "text-success");
+      }
       fireEvent.change(password, { target: { value: "abcdefgh" } });
       expect(screen.getByText(valid)).toHaveClass("text-success");
       expect(password).toHaveAccessibleDescription(valid);
@@ -122,6 +125,12 @@ describe("live password feedback", () => {
       expect(screen.getByText(mismatch)).toBeInTheDocument();
       fireEvent.change(confirmation, { target: { value: "" } });
       expect(screen.queryByText(mismatch)).not.toBeInTheDocument();
+      fireEvent.change(password, { target: { value: "abcdefg" } });
+      expect(screen.getByText(hint)).toHaveClass("text-muted");
+      expect(screen.queryByText(valid)).not.toBeInTheDocument();
+      fireEvent.change(password, { target: { value: "" } });
+      expect(screen.getByText(hint)).toHaveClass("text-muted");
+      expect(password).not.toHaveAttribute("aria-invalid", "true");
     },
   );
   it.each([" ".repeat(8), "a".repeat(65), "가".repeat(25)])(
@@ -130,6 +139,8 @@ describe("live password feedback", () => {
       renderWithIntl(<Fields />);
       fireEvent.change(screen.getByLabelText("Password"), { target: { value } });
       expect(screen.getByLabelText("Password")).toHaveAttribute("aria-invalid", "true");
+      const descriptionId = screen.getByLabelText("Password").getAttribute("aria-describedby")!;
+      expect(document.getElementById(descriptionId)).toHaveClass("text-danger");
       expect(screen.queryByText("This password is valid.")).not.toBeInTheDocument();
     },
   );

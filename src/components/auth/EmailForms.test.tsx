@@ -16,6 +16,15 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("email UI contracts", () => {
+  it("uses a single border focus indicator for both login fields", () => {
+    renderWithIntl(<EmailLoginForm locale="en" />);
+    for (const label of ["Email", "Password"]) {
+      const input = screen.getByLabelText(label);
+      expect(input).toHaveClass("focus-border-only", "focus:border-primary");
+      expect(input).not.toHaveClass("focus-visible:outline-2", "focus-visible:outline-offset-2");
+    }
+  });
+
   it.each([
     ["AUTH409", 409, "이미 가입된 이메일입니다. 기존 계정으로 로그인해 주세요."],
     ["AUTH503_EMAIL", 503, "인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요."],

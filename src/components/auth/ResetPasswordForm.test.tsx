@@ -88,6 +88,16 @@ it("only offers login after saving the new password", async () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Save password" }));
   await screen.findByText(messages.EmailAuth.success);
+  expect(screen.getByRole("heading", { name: "Password changed" })).toBeInTheDocument();
+  expect(
+    screen.queryByRole("heading", { name: messages.EmailAuth.newPassword }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: messages.EmailAuth.back })).toHaveClass(
+    "bg-primary",
+    "text-on-primary",
+    "w-full",
+  );
   expect(
     screen.queryByRole("link", { name: messages.EmailAuth.requestAgain }),
   ).not.toBeInTheDocument();

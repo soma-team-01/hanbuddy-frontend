@@ -10,6 +10,7 @@ import {
   requestEmailAuth,
 } from "@/lib/auth/email";
 import { PasswordFields, authButtonClass, authLinkClass } from "./EmailAuthFields";
+import { AuthPanel } from "./AuthPanel";
 
 export function ResetPasswordForm({ locale }: { locale: string }) {
   const t = useTranslations("EmailAuth");
@@ -75,49 +76,61 @@ export function ResetPasswordForm({ locale }: { locale: string }) {
     }
   }
   return (
-    <div className="grid gap-5">
-      {stage === "loading" && <p role="status">{t("busy")}</p>}
-      {stage === "ready" && (
-        <form onSubmit={submit} className="grid gap-5">
-          <PasswordFields
-            password={password}
-            confirmation={confirmation}
-            onPassword={(value) => {
-              setPassword(value);
-              if (error === "passwordInvalid" || error === "mismatch") setError(null);
-            }}
-            onConfirmation={(value) => {
-              setConfirmation(value);
-              if (error === "mismatch") setError(null);
-            }}
-          />
-          {error && (
-            <p role="alert" className="text-sm text-danger">
-              {t(error)}
-            </p>
-          )}
-          <button disabled={pending} className={authButtonClass}>
-            {t(pending ? "busy" : "savePassword")}
-          </button>
-        </form>
-      )}
-      {stage !== "ready" && stage !== "loading" && (
-        <p role="status" className="text-sm leading-6 text-muted">
-          {t(stage)}
-        </p>
-      )}
-      {stage !== "ready" && stage !== "loading" && (
-        <>
-          {stage !== "success" && (
-            <a className={authLinkClass} href={`/${locale}/forgot-password`}>
-              {t("requestAgain")}
+    <AuthPanel title={t(stage === "success" ? "successTitle" : "newPassword")}>
+      <div className="grid gap-5">
+        {stage === "loading" && <p role="status">{t("busy")}</p>}
+        {stage === "ready" && (
+          <form onSubmit={submit} className="grid gap-5">
+            <PasswordFields
+              password={password}
+              confirmation={confirmation}
+              onPassword={(value) => {
+                setPassword(value);
+                if (error === "passwordInvalid" || error === "mismatch") setError(null);
+              }}
+              onConfirmation={(value) => {
+                setConfirmation(value);
+                if (error === "mismatch") setError(null);
+              }}
+            />
+            {error && (
+              <p role="alert" className="text-sm text-danger">
+                {t(error)}
+              </p>
+            )}
+            <button disabled={pending} className={authButtonClass}>
+              {t(pending ? "busy" : "savePassword")}
+            </button>
+          </form>
+        )}
+        {stage !== "ready" && stage !== "loading" && (
+          <p
+            role="status"
+            className={`text-sm leading-6 text-muted ${stage === "success" ? "text-center" : ""}`}
+          >
+            {t(stage)}
+          </p>
+        )}
+        {stage !== "ready" && stage !== "loading" && (
+          <>
+            {stage !== "success" && (
+              <a className={authLinkClass} href={`/${locale}/forgot-password`}>
+                {t("requestAgain")}
+              </a>
+            )}
+            <a
+              className={
+                stage === "success"
+                  ? `${authButtonClass} flex items-center justify-center`
+                  : "text-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-strong"
+              }
+              href={`/${locale}/login`}
+            >
+              {t("back")}
             </a>
-          )}
-          <a className={authLinkClass} href={`/${locale}/login`}>
-            {t("back")}
-          </a>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </AuthPanel>
   );
 }

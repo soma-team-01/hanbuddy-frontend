@@ -1,5 +1,6 @@
 {
   "EmailAuth": {
+    "accountStep": "帳號資訊",
     "resendShort": "重新傳送",
     "verifyShort": "驗證",
     "retrySeconds": "{seconds}秒後",
@@ -35,7 +36,7 @@
     "inbox": "請檢查電子郵件地址、收件匣和垃圾郵件。60秒後可重新請求。",
     "newPassword": "設定新密碼",
     "savePassword": "修改密碼",
-    "passwordHint": "8至64個字元，UTF-8最多72位元組，不強制包含大寫字母或特殊字元。",
+    "passwordHint": "至少8個字元。",
     "success": "密碼已修改，請重新登入。",
     "back": "返回登入",
     "missing": "連結資訊缺失或無法使用。請重新開啟郵件中的連結，或請求新連結。",

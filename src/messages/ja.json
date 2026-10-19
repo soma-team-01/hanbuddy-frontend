@@ -1,5 +1,6 @@
 {
   "EmailAuth": {
+    "accountStep": "アカウント",
     "resendShort": "再送信",
     "verifyShort": "確認",
     "retrySeconds": "{seconds}秒後",
@@ -35,7 +36,7 @@
     "inbox": "受信箱、迷惑メール、メールアドレスをご確認ください。60秒後に再送信できます。",
     "newPassword": "新しいパスワード",
     "savePassword": "パスワードを変更",
-    "passwordHint": "8〜64文字、UTF-8で最大72バイト。大文字や記号は必須ではありません。",
+    "passwordHint": "8文字以上。",
     "success": "パスワードが変更されました。再度ログインしてください。",
     "back": "ログインに戻る",
     "missing": "リンク情報がありません。メールのリンクを開き直すか、新しいリンクをリクエストしてください。",

@@ -1,5 +1,6 @@
 {
   "EmailAuth": {
+    "accountStep": "Account",
     "resendShort": "Resend",
     "verifyShort": "Verify",
     "retrySeconds": "{seconds}s",
@@ -35,7 +36,7 @@
     "inbox": "Check your inbox, spam folder and email address. You can request another link after 60 seconds.",
     "newPassword": "Choose a new password",
     "savePassword": "Save password",
-    "passwordHint": "8–64 characters, up to 72 UTF-8 bytes. Uppercase letters and special characters are optional.",
+    "passwordHint": "At least 8 characters.",
     "success": "Password changed. Please log in again.",
     "back": "Back to login",
     "missing": "This link is missing or no longer available. Open the link in your email or request a new one.",

@@ -1,5 +1,6 @@
 {
   "EmailAuth": {
+    "accountStep": "账号信息",
     "resendShort": "重新发送",
     "verifyShort": "验证",
     "retrySeconds": "{seconds}秒后",
@@ -35,7 +36,7 @@
     "inbox": "请检查邮箱地址、收件箱和垃圾邮件。60秒后可重新请求。",
     "newPassword": "设置新密码",
     "savePassword": "修改密码",
-    "passwordHint": "8至64个字符，UTF-8最多72字节，不强制包含大写字母或特殊字符。",
+    "passwordHint": "至少8个字符。",
     "success": "密码已修改，请重新登录。",
     "back": "返回登录",
     "missing": "链接信息缺失或不可用。请重新打开邮件中的链接，或请求新链接。",

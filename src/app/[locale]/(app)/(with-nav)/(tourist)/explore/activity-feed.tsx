@@ -6,7 +6,7 @@ import { useEffect, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityCard } from "@/components/ui/ActivityCard";
 import { Link } from "@/i18n/navigation";
-import { mapTouristActivitySummaryToActivity } from "@/lib/api/activity-view";
+import { mapTouristActivitySummaryToActivity, orderSoldOutLast } from "@/lib/api/activity-view";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getContentLanguage } from "@/lib/content-language";
 import { getDefaultDisplayCurrency } from "@/lib/display-currency";
@@ -30,7 +30,7 @@ export function ActivityFeed({
   });
 
   const activities = useMemo(
-    () => (activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity),
+    () => orderSoldOutLast(activitiesQuery.data ?? []).map(mapTouristActivitySummaryToActivity),
     [activitiesQuery.data],
   );
   const itemIds = useMemo(() => activities.map((activity) => activity.id), [activities]);

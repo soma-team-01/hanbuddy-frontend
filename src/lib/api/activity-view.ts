@@ -9,6 +9,11 @@ import type {
   TouristActivitySummary,
 } from "@/types/activity";
 
+/** 예약 가능한 활동을 먼저 보여주고 매진 활동은 뒤로 보낸다. 같은 그룹 안에서는 받은 순서를 유지한다. */
+export function orderSoldOutLast<T extends { isSoldOut?: boolean }>(items: readonly T[]): T[] {
+  return [...items.filter((item) => !item.isSoldOut), ...items.filter((item) => item.isSoldOut)];
+}
+
 export function mapTouristActivitySummaryToActivity(summary: TouristActivitySummary): Activity {
   return mapActivitySummaryToActivity(summary);
 }

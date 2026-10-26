@@ -64,7 +64,7 @@ feature/*- PR과 CI 검증용 브랜치 (별도 Preview 배포 없음)
   - `develop -> main`: **Merge commit** (long-lived 브랜치 간 이력 보존, squash 시 발생하는 히스토리 drift 방지).
 - **GitHub Ruleset (적용됨, enforcement=active)**: `main`·`develop` 모두 **브랜치 삭제 금지 · force push 금지 · PR 필수 · code_quality(errors)**. bypass actors 없음 -> 관리자 포함 **직접 push 불가, 반드시 PR 경유**. 병합 방식은 위 방향별로 ruleset에 강제됨(main=merge만, develop=squash만).
 - **필수 승인 수는 현재 0**(혼자 작업 중이라 self-merge 가능). **팀원 합류 시 1로 올릴 것.**
-- **CI (`.github/workflows/ci.yml`)**: PR마다 `format:check → lint → typecheck → test → build` 5단계 실행. **PR 올리기 전 로컬에서 같은 5단계를 전부 통과시킬 것** - lint·typecheck·build만 돌리면 `format:check`(Prettier)와 `test`를 놓친다. 특히 스크립트로 자동 생성한 파일은 커밋 전 `npx prettier --write`를 거칠 것.
+- **CI (`.github/workflows/ci.yml`)**: PR마다 `format:check → lint → typecheck → test → build` 5단계 실행. **PR 올리기 전 로컬에서 같은 5단계를 전부 통과시킬 것** - lint·typecheck·build만 돌리면 `format:check`(Prettier)와 `test`를 놓친다. 특히 스크립트로 자동 생성한 파일은 커밋 전 `npx prettier --write`를 거칠 것. 같은 PR에 새 커밋이 올라오면 진행 중인 이전 CI 실행은 자동 취소된다.
   ```bash
   npm run format:check && npm run lint && npm run typecheck && npm test && npm run build
   ```
@@ -78,6 +78,16 @@ feature/*- PR과 CI 검증용 브랜치 (별도 Preview 배포 없음)
 - Feature 브랜치와 PR에는 개별 Preview 환경이 생성되지 않는다. PR에서는 CI와 로컬 반응형 검증 결과를 확인한다.
 - Production과 Staging은 별도 EC2, EBS, IAM instance role, security group과 GitHub environment 설정을 사용한다.
 - 세부 구성과 운영 절차는 `docs/deployment/aws-ec2.md`를 따른다.
+
+## Test Writing Rules
+
+- CI는 GitHub Actions 무료 사용량(조직 전체 월 2,000분)을 쓰며, 프론트 CI 1회는 약 11분이고 그중 `npm test`가 약 8분이다. 테스트는 늘어날수록 모든 PR의 비용이 되므로 아래 기준을 지킨다.
+- 테스트 우선 개발은 유지하되, 남기는 테스트는 깨지면 실제 문제가 되는 동작만 검증한다: 사용자 행동, API 계약, 권한·결제·환불 흐름, 재발 방지가 필요한 버그.
+- 구현 세부(내부 state, CSS 클래스명, 마크업 구조)나 다른 테스트가 이미 보장하는 내용을 반복 검증하지 않는다.
+- 입력값만 다른 같은 동작은 테스트를 여러 개로 늘리지 말고 `it.each`로 묶는다.
+- 새 테스트는 가능하면 관련된 기존 테스트 파일에 추가한다. Vitest는 파일마다 jsdom 환경을 새로 띄우며, 이 준비 시간이 실제 테스트 실행 시간보다 크다.
+- 기능을 바꿀 때 더 이상 유효하지 않은 테스트는 고치거나 지운다. 새 테스트만 덧붙이지 않는다.
+- PR에 커밋을 잘게 나눠 여러 번 push하지 말고, 로컬에서 CI 5단계를 통과시킨 뒤 모아서 push한다.
 
 ## Commit Rules
 

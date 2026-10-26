@@ -79,6 +79,23 @@ describe("RecommendedExperiences", () => {
     expect(mockedGetTouristActivities).toHaveBeenCalledWith("EN", "USD");
   });
 
+  it("fills the four slots with bookable activities before sold-out ones", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        { ...createActivity(1), isSoldOut: true },
+        ...[2, 3, 4, 5].map((id) => ({ ...createActivity(id), isSoldOut: false })),
+      ],
+    });
+
+    renderWithQueryClient(<RecommendedExperiences />);
+
+    expect(await screen.findByText("HanBuddy activity 2")).toBeInTheDocument();
+    expect(screen.getAllByRole("article")).toHaveLength(4);
+    expect(screen.getByText("HanBuddy activity 5")).toBeInTheDocument();
+    expect(screen.queryByText("HanBuddy activity 1")).not.toBeInTheDocument();
+  });
+
   it("scrolls cards horizontally with snapping up to tablet and uses a grid from lg up", async () => {
     mockedGetTouristActivities.mockResolvedValue({
       status: "success",

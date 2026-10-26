@@ -54,6 +54,31 @@ describe("ActivityFeed", () => {
     analytics.trackSelection.mockReset();
   });
 
+  it("moves sold-out activities to the end and keeps the order within each group", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [
+        { ...touristActivity, activityId: 1, title: "Sold out first", isSoldOut: true },
+        { ...touristActivity, activityId: 2, title: "Open second", isSoldOut: false },
+        { ...touristActivity, activityId: 3, title: "Sold out third", isSoldOut: true },
+        { ...touristActivity, activityId: 4, title: "Open fourth" },
+      ],
+    });
+
+    renderWithQueryClient(<ActivityFeed />);
+
+    await screen.findByText("Open second");
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
+      "/en/activities/2",
+      "/en/activities/4",
+      "/en/activities/1",
+      "/en/activities/3",
+    ]);
+    await waitFor(() =>
+      expect(analytics.trackList).toHaveBeenCalledWith(["2", "4", "1", "3"], "2.4.1.3"),
+    );
+  });
+
   it("renders a loading state while activities are pending", async () => {
     let resolveActivities!: (value: Awaited<ReturnType<typeof getTouristActivities>>) => void;
     mockedGetTouristActivities.mockReturnValue(

@@ -207,13 +207,12 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
     const phoneContact = messagingApp === "phone" || messagingApp === "whatsapp";
     const contactCountryCode = resolveContactCountryCode(messagingApp, messagingCountry);
     const touristContact = phoneContact
-      ? stripTrunkZero(contactCountryCode, contactIdentifier)
+      ? stripTrunkZero(contactCountryCode, contactIdentifier.replace(/[ -]/g, ""))
       : contactIdentifier;
     if (
       !isBuddy &&
       (phoneContact
-        ? !/^\d{6,15}$/.test(touristContact.replace(/[ -]/g, "")) ||
-          !/^\+\d{1,4}$/.test(contactCountryCode)
+        ? !/^\d{6,15}$/.test(touristContact) || !/^\+\d{1,4}$/.test(contactCountryCode)
         : !/^[A-Za-z0-9@._+\-]{2,100}$/.test(contactIdentifier))
     ) {
       setErrorKey("validation.contactInvalid");

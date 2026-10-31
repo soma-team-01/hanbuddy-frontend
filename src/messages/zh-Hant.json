@@ -1496,7 +1496,7 @@
   "Messaging": {
     "phoneNumber": "電話號碼",
     "countryCode": "國家或地區代碼",
-    "phonePlaceholder": "號碼開頭不加0",
+    "phonePlaceholder": "電話號碼",
     "koreanPhonePlaceholder": "電話號碼",
     "phoneInputLabel": "電話號碼",
     "appIdPlaceholder": "{app} ID",

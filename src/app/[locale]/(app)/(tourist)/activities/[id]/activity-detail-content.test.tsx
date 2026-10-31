@@ -808,6 +808,7 @@ describe("ActivityDetailContent", () => {
 });
 
 it("opens the calendar from Book now and measures it apart from booking clicks", async () => {
+  mockedGetGoogleMapsApiKey.mockReturnValue("");
   const { controller, browser } = createTestAnalytics();
   controller.visit("/en/activities/42");
   await controller.accept();

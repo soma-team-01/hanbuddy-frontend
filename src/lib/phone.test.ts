@@ -17,6 +17,7 @@ describe("international phone number entry", () => {
     ["+225", "0701234567"],
     ["+241", "07123456"],
     ["+242", "061234567"],
+    ["+229", "0195992000"],
   ])("keeps the leading zero that belongs to a %s number", (dialCode, input) => {
     expect(stripTrunkZero(dialCode, input)).toBe(input);
   });

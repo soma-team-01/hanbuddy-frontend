@@ -273,7 +273,7 @@ describe("EditProfilePage", () => {
       screen.getByRole("button", { name: "Save" }),
     );
     expect(screen.getByLabelText("Date of birth")).toHaveValue("1998-04-12");
-    expect(screen.getByPlaceholderText("Number, no leading 0")).toHaveValue("555-0198");
+    expect(screen.getByPlaceholderText("Phone number")).toHaveValue("555-0198");
   });
 
   it("maps the user-not-found load error in Korean", async () => {
@@ -501,21 +501,42 @@ describe("EditProfilePage", () => {
     expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
   });
 
-  it("saves a tourist phone number without the domestic leading zero", async () => {
+  it.each(["07700900123", "0-7700-900123", "07700 900123"])(
+    "saves the tourist phone number %s without separators or the domestic leading zero",
+    async (contactIdentifier) => {
+      const tourist = createMockProfile({
+        userType: "TOURIST",
+        contactMethod: "PHONE",
+        contactCountryCode: "+44",
+        contactIdentifier,
+      });
+      mockedGetMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+      mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+      renderWithQueryClient(<EditProfilePage />);
+      await screen.findByLabelText("Phone number");
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      await waitFor(() =>
+        expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+          expect.objectContaining({ contactCountryCode: "+44", contactIdentifier: "7700900123" }),
+        ),
+      );
+    },
+  );
+
+  it("keeps a tourist messenger ID unchanged when saving", async () => {
     const tourist = createMockProfile({
       userType: "TOURIST",
-      contactMethod: "PHONE",
-      contactCountryCode: "+44",
-      contactIdentifier: "07700900123",
+      contactMethod: "KAKAOTALK",
+      contactCountryCode: "",
+      contactIdentifier: "0-kakao-id",
     });
     mockedGetMyProfile.mockResolvedValue({ status: "success", profile: tourist });
     mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: tourist });
     renderWithQueryClient(<EditProfilePage />);
-    await screen.findByLabelText("Phone number");
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Save" }));
     await waitFor(() =>
       expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
-        expect.objectContaining({ contactCountryCode: "+44", contactIdentifier: "7700900123" }),
+        expect.objectContaining({ contactIdentifier: "0-kakao-id" }),
       ),
     );
   });
@@ -580,7 +601,7 @@ describe("EditProfilePage", () => {
         birthDate: "1998-04-12",
         contactMethod: "WHATSAPP",
         contactCountryCode: "+1",
-        contactIdentifier: "555-0198",
+        contactIdentifier: "5550198",
       });
     });
     expect(uploadProfileImage).not.toHaveBeenCalled();

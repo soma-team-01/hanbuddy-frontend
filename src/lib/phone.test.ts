@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { getBuddyPhoneInput, isKoreanPhoneNumber } from "./phone";
+import { getBuddyPhoneInput, isKoreanPhoneNumber, stripTrunkZero } from "./phone";
+
+describe("international phone number entry", () => {
+  it.each([
+    ["+82", "01012345678", "1012345678"],
+    ["+44", "07700900123", "7700900123"],
+    ["+49", "015112345678", "15112345678"],
+    ["+1", "2025550114", "2025550114"],
+    ["+82", "1012345678", "1012345678"],
+  ])("removes the domestic leading zero for %s %s", (dialCode, input, expected) => {
+    expect(stripTrunkZero(dialCode, input)).toBe(expected);
+  });
+
+  it.each([
+    ["+39", "0612345678"],
+    ["+225", "0701234567"],
+    ["+241", "07123456"],
+    ["+242", "061234567"],
+  ])("keeps the leading zero that belongs to a %s number", (dialCode, input) => {
+    expect(stripTrunkZero(dialCode, input)).toBe(input);
+  });
+});
 
 describe("buddy domestic phone policy", () => {
   it.each([

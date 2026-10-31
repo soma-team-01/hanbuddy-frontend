@@ -228,9 +228,9 @@ describe("ActivityDetailContent", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("per person")).toBeInTheDocument();
     expect(screen.getByText("(≈ $32.50)")).toBeInTheDocument();
-    // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전 비활성)
+    // 하단 바: 가격 | 날짜 선택 박스(placeholder) | Book now(선택 전에는 달력을 여는 버튼)
     expect(screen.getByTestId("date-select-box")).toHaveTextContent("Select a date");
-    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Book now" })).toBeEnabled();
     expect(screen.queryByRole("link", { name: "Book now" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("heading", { name: "Jihoon Kim" }).length).toBeGreaterThan(0);
     expect(screen.getByText("Local guide")).toBeInTheDocument();
@@ -444,7 +444,7 @@ describe("ActivityDetailContent", () => {
     expect(screen.getByText("₩45,000")).toBeInTheDocument();
     expect(screen.getByText("1인당")).toBeInTheDocument();
 
-    expect(screen.getByRole("button", { name: "지금 예약하기" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "지금 예약하기" })).toBeEnabled();
     const dateBox = screen.getByTestId("date-select-box");
     expect(dateBox).toHaveTextContent("날짜를 선택하세요");
 
@@ -805,6 +805,30 @@ describe("ActivityDetailContent", () => {
     expect(screen.queryByText("Anguk Station, Seoul")).not.toBeInTheDocument();
     expect(mockedFetchGooglePlaceDetails).toHaveBeenCalledTimes(1);
   });
+});
+
+it("opens the calendar from Book now and measures it apart from booking clicks", async () => {
+  const { controller, browser } = createTestAnalytics();
+  controller.visit("/en/activities/42");
+  await controller.accept();
+  mockedGetTouristActivity.mockResolvedValue({
+    status: "success",
+    activity: { ...buildActivityDetail(), activityId: 42 },
+  });
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <SessionRoleProvider role={null}>
+        <ActivityDetailContent activityId="42" />
+      </SessionRoleProvider>
+    </AnalyticsProvider>,
+  );
+
+  fireEvent.click(await screen.findByRole("button", { name: "Book now" }));
+
+  expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  const sent = browser.send.mock.calls.map((call) => call[0]);
+  expect(sent.filter((name) => name === "booking_date_prompt")).toHaveLength(1);
+  expect(sent).not.toContain("booking_cta_click");
 });
 
 it("measures valid detail once and tracks active reservation selection", async () => {

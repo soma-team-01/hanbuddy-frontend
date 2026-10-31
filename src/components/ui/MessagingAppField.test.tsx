@@ -92,7 +92,7 @@ describe("MessagingAppField", () => {
   it("renders the country selector and generic phone input by default", () => {
     renderField();
     expect(screen.getByLabelText("Country code")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Phone number")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Number, no leading 0")).toBeInTheDocument();
   });
 
   it("hides both the country selector and country code when koreanOnly", () => {
@@ -179,7 +179,7 @@ describe("MessagingAppField", () => {
       "true",
     );
     expect(screen.getByLabelText("국가번호")).toBeInTheDocument();
-    expect(screen.getByLabelText("전화번호")).toHaveAttribute("placeholder", "전화번호");
+    expect(screen.getByLabelText("전화번호")).toHaveAttribute("placeholder", "맨 앞 0 없이 입력");
   });
 
   it.each([

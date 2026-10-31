@@ -70,6 +70,7 @@ export function ActivityDetailView({
   activity,
   weather,
   onBookingClick,
+  onDatePrompt,
   preview = false,
   bottomBar = "fixed",
   showBookingBar = true,
@@ -81,6 +82,8 @@ export function ActivityDetailView({
 }: Readonly<{
   activity: Activity;
   onBookingClick?: () => void;
+  /** 날짜를 고르기 전에 예약 버튼을 눌렀을 때. 이때는 예약 대신 달력을 연다 */
+  onDatePrompt?: () => void;
   weather?: ActivityWeatherResult;
   preview?: boolean;
   /** inline이면 하단 바를 고정하지 않고 본문 아래 카드로 렌더링한다 (위저드 검토 화면용) */
@@ -330,12 +333,25 @@ export function ActivityDetailView({
             </div>
           </div>
         )}
-        {preview || !bookingPath ? (
+        {preview || dateBoxDisabled ? (
           <button
             type="button"
             aria-label={bookingLabel}
             disabled
             className={`${bookNowClassName} cursor-not-allowed opacity-60`}
+          >
+            {bookingButtonContent}
+          </button>
+        ) : !bookingPath ? (
+          <button
+            type="button"
+            aria-label={bookingLabel}
+            aria-haspopup="dialog"
+            onClick={() => {
+              onDatePrompt?.();
+              setCalendarOpen(true);
+            }}
+            className={bookNowClassName}
           >
             {bookingButtonContent}
           </button>

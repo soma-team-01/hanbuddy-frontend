@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePathname } from "next/navigation";
 import { getMyChatRooms } from "@/lib/api/chat";
+import { SessionRoleProvider } from "@/lib/auth/session-role-context";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
 import type { ChatRoomSummaryResponse } from "@/types/chat";
 import { ChatRoomList } from "./ChatRoomList";
@@ -91,6 +92,30 @@ describe("ChatRoomList", () => {
     renderWithQueryClient(<ChatRoomList />);
 
     expect(await screen.findByText("No conversations yet")).toBeInTheDocument();
+  });
+
+  it("does not mention guests to a tourist with no conversations", async () => {
+    mockedGetMyChatRooms.mockResolvedValue({ status: "success", rooms: [] });
+
+    renderWithQueryClient(
+      <SessionRoleProvider role="tourist">
+        <ChatRoomList />
+      </SessionRoleProvider>,
+    );
+
+    expect(await screen.findByText("Message a buddy from an activity page.")).toBeInTheDocument();
+  });
+
+  it("points a buddy with no conversations to their guests", async () => {
+    mockedGetMyChatRooms.mockResolvedValue({ status: "success", rooms: [] });
+
+    renderWithQueryClient(
+      <SessionRoleProvider role="buddy">
+        <ChatRoomList />
+      </SessionRoleProvider>,
+    );
+
+    expect(await screen.findByText("Start a group chat with your guests.")).toBeInTheDocument();
   });
 
   it("tells apart group rooms of the same activity by their schedule time", async () => {

@@ -34,6 +34,11 @@ describe("locale messages", () => {
     );
   });
 
+  it.each(localeMessages)("explains the password rule without byte limits in %s", (_, messages) => {
+    expect(messages.EmailAuth.passwordInvalid).toMatch(/64/);
+    expect(messages.EmailAuth.passwordInvalid).not.toMatch(/UTF-8|72/);
+  });
+
   it("uses shared wording for activity steps and product offerings", () => {
     expect(ko.CreateActivity.steps.itinerary).toEqual({
       title: "활동 코스를 소개해 주세요",

@@ -1,4 +1,5 @@
-export type FunnelEvent = "view_item" | "booking_cta_click" | "begin_checkout";
+export type FunnelEvent =
+  "view_item" | "booking_date_prompt" | "booking_cta_click" | "begin_checkout";
 export type MeasurementEvent =
   | FunnelEvent
   | "view_item_list"
@@ -257,7 +258,12 @@ export function eventFields(
   context?: FunnelContext,
 ): AnalyticsFields | null {
   const base = pageFields(page, origin);
-  if (name === "view_item" || name === "booking_cta_click" || name === "begin_checkout") {
+  if (
+    name === "view_item" ||
+    name === "booking_date_prompt" ||
+    name === "booking_cta_click" ||
+    name === "begin_checkout"
+  ) {
     return funnelFields(name, page, input, base, context);
   }
   if (typeof input !== "object" || input === null || Array.isArray(input)) return null;

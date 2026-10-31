@@ -434,6 +434,55 @@ describe("ActivityDetailView", () => {
     expect(hostProfile).toHaveAttribute("data-show-hosted-activities", "true");
     expect(hostProfile).toHaveAttribute("data-can-contact", "false");
   });
+  describe("Book now before a date is chosen", () => {
+    const openSession = {
+      id: "future",
+      startAt: "2099-10-15T08:30:00+09:00",
+      dateKey: "2099-10-15",
+      dateLabel: "10/15",
+      timeLabel: "8:30",
+      spotsLeft: 3,
+    };
+
+    it("opens the calendar and reports the prompt instead of a booking click", () => {
+      const onBookingClick = vi.fn();
+      const onDatePrompt = vi.fn();
+      renderWithIntl(
+        <ActivityDetailView
+          activity={{ ...activity, sessions: [openSession] }}
+          onBookingClick={onBookingClick}
+          onDatePrompt={onDatePrompt}
+          unoptimizedImages
+        />,
+      );
+
+      const bookNow = screen.getByRole("button", { name: "Book now" });
+      expect(bookNow).toBeEnabled();
+      fireEvent.click(bookNow);
+
+      expect(screen.getByRole("dialog", { name: "Availability" })).toBeInTheDocument();
+      expect(onDatePrompt).toHaveBeenCalledTimes(1);
+      expect(onBookingClick).not.toHaveBeenCalled();
+    });
+
+    it("stays disabled when no date can be booked", () => {
+      renderWithIntl(<ActivityDetailView activity={activity} unoptimizedImages />);
+
+      expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+    });
+
+    it("stays disabled in preview", () => {
+      renderWithIntl(
+        <ActivityDetailView
+          activity={{ ...activity, sessions: [openSession] }}
+          preview
+          unoptimizedImages
+        />,
+      );
+
+      expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+    });
+  });
 
   it("keeps mobile date, weather, price and booking in a single row without truncating dates", () => {
     renderWithIntl(<ActivityDetailView activity={activity} unoptimizedImages />, { locale: "en" });

@@ -3,6 +3,15 @@ export function toDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+/** 앞자리 0까지가 번호의 일부라 국가번호를 붙여도 0을 유지하는 국가 */
+const DIAL_CODES_KEEPING_LEADING_ZERO = new Set(["+39", "+225", "+241", "+242", "+378", "+379"]);
+
+/** 국내 표기의 앞자리 0을 뺀다. 국가번호와 합쳤을 때 실제로 연결되는 번호로 저장하기 위함이다. */
+export function stripTrunkZero(dialCode: string, value: string): string {
+  if (DIAL_CODES_KEEPING_LEADING_ZERO.has(dialCode)) return value;
+  return value.replace(/^0(?=\d)/, "");
+}
+
 /** 국가번호가 다른 연락처나 메신저 ID를 국내 전화번호로 재해석하지 않는다. */
 export function getBuddyPhoneInput(
   method: string,

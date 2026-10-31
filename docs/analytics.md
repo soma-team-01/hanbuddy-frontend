@@ -32,18 +32,19 @@ The app owns SPA page views. GA is configured with `send_page_view: false`, and 
 
 After a fresh v3 grant, the standard Meta Pixel library is explicitly allowed to perform its normal browser-side collection of the current live page URL and referrer, including possible query components. This is a provider-collected exception, not permission for app code to add raw URL/referrer fields. HanBuddy does not emit Meta events on login, OAuth callback, payment success/failure/callback, or any route outside the fixed Meta page allowlist. Meta's allowlist is landing, Explore, onboarding, applications, activity detail, and activity booking; the existing safe-page controller keeps OAuth and payment callback routes ineligible for all app page events.
 
-| App event           | Trigger                                                                                                           | GA4                 | Meta                   |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------- |
-| `page_view`         | One committed eligible pathname after verified consent                                                            | `page_view`         | `PageView`             |
-| `view_item`         | Successfully rendered activity detail, including direct entry                                                     | `view_item`         | `ViewContent`          |
-| `booking_cta_click` | Actual activity-detail booking CTA activation                                                                     | `booking_cta_click` | —                      |
-| `begin_checkout`    | Existing usable booking/payment-continuation trigger                                                              | `begin_checkout`    | `InitiateCheckout`     |
-| `view_item_list`    | Successfully rendered nonempty Explore results, once per page/list version                                        | `view_item_list`    | —                      |
-| `select_item`       | Actual Explore card mouse, touch, or keyboard activation                                                          | `select_item`       | —                      |
-| `sign_up`           | Server-confirmed new Google account, once after bounded account restoration; never OAuth start/login/resubmission | `sign_up`           | `CompleteRegistration` |
-| `section_view`      | Landing section meets the continuous one-second visibility rule                                                   | `section_view`      | —                      |
-| `landing_cta_click` | Actual activation of an allowlisted landing CTA                                                                   | `landing_cta_click` | —                      |
-| `inquiry_click`     | Actual activation of an allowlisted inquiry channel                                                               | `inquiry_click`     | `Contact`              |
+| App event             | Trigger                                                                                                           | GA4                   | Meta                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------- |
+| `page_view`           | One committed eligible pathname after verified consent                                                            | `page_view`           | `PageView`             |
+| `view_item`           | Successfully rendered activity detail, including direct entry                                                     | `view_item`           | `ViewContent`          |
+| `booking_date_prompt` | Booking CTA tapped before choosing a date (opens the calendar, once per page visit)                               | `booking_date_prompt` | —                      |
+| `booking_cta_click`   | Actual activity-detail booking CTA activation                                                                     | `booking_cta_click`   | —                      |
+| `begin_checkout`      | Existing usable booking/payment-continuation trigger                                                              | `begin_checkout`      | `InitiateCheckout`     |
+| `view_item_list`      | Successfully rendered nonempty Explore results, once per page/list version                                        | `view_item_list`      | —                      |
+| `select_item`         | Actual Explore card mouse, touch, or keyboard activation                                                          | `select_item`         | —                      |
+| `sign_up`             | Server-confirmed new Google account, once after bounded account restoration; never OAuth start/login/resubmission | `sign_up`             | `CompleteRegistration` |
+| `section_view`        | Landing section meets the continuous one-second visibility rule                                                   | `section_view`        | —                      |
+| `landing_cta_click`   | Actual activation of an allowlisted landing CTA                                                                   | `landing_cta_click`   | —                      |
+| `inquiry_click`       | Actual activation of an allowlisted inquiry channel                                                               | `inquiry_click`       | `Contact`              |
 
 Explore uses `explore_activities` / `Explore activities` and includes only ordered rendered opaque/numeric IDs and one-based indexes. It does not send titles, prices, or free text.
 
@@ -57,7 +58,7 @@ The current landing section inventory is:
 
 A normal section must be at least 50% visible for one continuous second. A section taller than the viewport must occupy at least 50% of the viewport for the same duration. Async section replacement, resize, rescroll, and rerender do not duplicate a section within the same page visit.
 
-Landing CTA IDs are `hero_explore` in `hero` and `booking_start` in `booking_steps`; only `explore` and `login` destination categories are sent. Activity-detail booking stays exclusively `booking_cta_click`. Inquiry payloads contain only allowlisted channel, placement, and locale categories; they are never reported as lead generation.
+Landing CTA IDs are `hero_explore` in `hero` and `booking_start` in `booking_steps`; only `explore` and `login` destination categories are sent. Activity-detail booking stays exclusively `booking_cta_click`, which requires a chosen date; a tap before that is `booking_date_prompt` and never counts as a booking click. Inquiry payloads contain only allowlisted channel, placement, and locale categories; they are never reported as lead generation.
 
 ## Checkout consent registration and attribution
 

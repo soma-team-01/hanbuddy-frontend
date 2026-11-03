@@ -47,7 +47,7 @@ import {
   uploadProfileImage,
 } from "@/lib/images/presigned";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
-import { getBuddyPhoneInput, isKoreanPhoneNumber } from "@/lib/phone";
+import { getBuddyPhoneInput, isKoreanPhoneNumber, stripTrunkZero } from "@/lib/phone";
 import type messages from "@/messages/en.json";
 import type {
   ApiResponse,
@@ -511,7 +511,11 @@ export function OnboardingForm({
     const isValidMessengerId = MESSENGER_CONTACT_PATTERN.test(contactIdentifier);
     const isValidContact = requiresContactCountryCode
       ? COUNTRY_CALLING_CODE_PATTERN.test(contactCountryCode ?? "") &&
-        PHONE_CONTACT_PATTERN.test(normalizedPhoneNumber)
+        PHONE_CONTACT_PATTERN.test(
+          isBuddyFlow
+            ? normalizedPhoneNumber
+            : stripTrunkZero(contactCountryCode ?? "", normalizedPhoneNumber),
+        )
       : isValidMessengerId;
 
     if (!isBuddyFlow && (messagingApp === "line" || messagingApp === "wechat")) {
@@ -609,11 +613,15 @@ export function OnboardingForm({
     }
     if (!isResubmission && !validateAgreements()) return;
 
-    const contactIdentifier = messagingContact.trim();
+    const trimmedContact = messagingContact.trim();
     const requiresContactCountryCode = messagingApp === "whatsapp" || messagingApp === "phone";
     const contactCountryCode = requiresContactCountryCode
       ? findCountry(isBuddyFlow ? "KR" : messagingCountry)?.dialCode
       : "";
+    const contactIdentifier =
+      requiresContactCountryCode && !isBuddyFlow
+        ? stripTrunkZero(contactCountryCode ?? "", trimmedContact)
+        : trimmedContact;
 
     submissionInFlight.current = true;
     setIsSubmitting(true);

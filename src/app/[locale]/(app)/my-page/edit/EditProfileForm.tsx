@@ -33,7 +33,7 @@ import { UnauthenticatedQueryError, unwrapApiResult } from "@/lib/query/result";
 import { useAuthQueryRedirect } from "@/lib/query/use-auth-query-redirect";
 import { userKeys } from "@/lib/query/users";
 import { useMessagingCountrySync } from "@/lib/useMessagingCountrySync";
-import { getBuddyPhoneInput, isKoreanPhoneNumber } from "@/lib/phone";
+import { getBuddyPhoneInput, isKoreanPhoneNumber, stripTrunkZero } from "@/lib/phone";
 import type messages from "@/messages/en.json";
 import type { MyProfile } from "@/types/user";
 import { isBankName, validateSignupBank, type SignupExtraError } from "@/lib/auth/signup-extra";
@@ -205,11 +205,14 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
       return;
     }
     const phoneContact = messagingApp === "phone" || messagingApp === "whatsapp";
+    const contactCountryCode = resolveContactCountryCode(messagingApp, messagingCountry);
+    const touristContact = phoneContact
+      ? stripTrunkZero(contactCountryCode, contactIdentifier.replace(/[ -]/g, ""))
+      : contactIdentifier;
     if (
       !isBuddy &&
       (phoneContact
-        ? !/^\d{6,15}$/.test(contactIdentifier.replace(/[ -]/g, "")) ||
-          !/^\+\d{1,4}$/.test(resolveContactCountryCode(messagingApp, messagingCountry))
+        ? !/^\d{6,15}$/.test(touristContact) || !/^\+\d{1,4}$/.test(contactCountryCode)
         : !/^[A-Za-z0-9@._+\-]{2,100}$/.test(contactIdentifier))
     ) {
       setErrorKey("validation.contactInvalid");
@@ -254,10 +257,8 @@ export function EditProfileForm({ profile }: Readonly<EditProfileFormProps>) {
         nationalityCode: nationality,
         birthDate,
         contactMethod: CONTACT_METHOD_BY_APP[messagingApp],
-        contactCountryCode: isBuddy
-          ? "+82"
-          : resolveContactCountryCode(messagingApp, messagingCountry),
-        contactIdentifier: isBuddy ? contactIdentifier.replace(/[ -]/g, "") : contactIdentifier,
+        contactCountryCode: isBuddy ? "+82" : contactCountryCode,
+        contactIdentifier: isBuddy ? contactIdentifier.replace(/[ -]/g, "") : touristContact,
         ...(bankChanged && isBankName(bankName)
           ? { bankName, bankAccountNumber: bankAccountNumber.trim() }
           : {}),

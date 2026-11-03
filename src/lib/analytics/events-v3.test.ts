@@ -154,7 +154,12 @@ it("marks translated exposure only on activity detail funnel events", () => {
     expect(eventFields("booking_cta_click", detail, 42, origin, { isTranslated })).toMatchObject({
       is_translated: value,
     });
+    expect(eventFields("booking_date_prompt", detail, 42, origin, { isTranslated })).toMatchObject({
+      items: [{ item_id: "42" }],
+      is_translated: value,
+    });
   }
+  expect(eventFields("booking_date_prompt", safePage("/en/explore")!, 42, origin)).toBeNull();
   // Unknown exposure stays unset instead of being guessed.
   expect(eventFields("view_item", detail, 42, origin)).not.toHaveProperty("is_translated");
   expect(

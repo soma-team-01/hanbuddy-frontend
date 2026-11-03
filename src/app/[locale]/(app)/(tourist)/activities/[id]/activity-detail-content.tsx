@@ -121,6 +121,11 @@ export function ActivityDetailContent({
             isTranslated: activity.isTranslated,
           })
         }
+        onDatePrompt={() =>
+          track("booking_date_prompt", Number(activityId), {
+            isTranslated: activity.isTranslated,
+          })
+        }
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />
       <ActivityContact />

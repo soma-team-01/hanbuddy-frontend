@@ -1,5 +1,5 @@
 ---
-title: "How Can a Foreigner Watch a KBO Game in Seoul With a Local? Answers to Common Questions"
+title: "How to Watch a KBO Game in Seoul With a Local"
 description: "Short answers on going to a KBO baseball game in Seoul with a Korean local: options, tickets, the 2027 stadium move, cheering culture, food and what to expect."
 publishedAt: "2026-11-04"
 updatedAt: "2026-11-04"

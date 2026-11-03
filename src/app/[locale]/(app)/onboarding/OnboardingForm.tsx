@@ -752,6 +752,7 @@ export function OnboardingForm({
     <div className="flex size-16 items-center justify-center rounded-2xl border border-line-soft bg-canvas-soft ring-4 ring-primary-soft max-md:size-14">
       <Image
         src="/images/brand/logo-borderless.webp"
+        unoptimized
         alt={t("defaultProfilePhoto")}
         width={40}
         height={40}

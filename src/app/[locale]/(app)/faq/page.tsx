@@ -3,7 +3,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, faqPageJsonLd, type BreadcrumbItem } from "@/lib/seo/json-ld";
 import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
-import Image from "next/image";
+import { StaticImage } from "@/components/ui/StaticImage";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import type { Locale } from "@/i18n/routing";
@@ -118,7 +118,7 @@ export default async function FaqPage({ params }: FaqPageProps) {
                     index === 1 ? "translate-y-2 lg:translate-y-3" : ""
                   }`}
                 >
-                  <Image
+                  <StaticImage
                     src={photo.src}
                     alt={t(photo.altKey)}
                     fill
@@ -168,7 +168,7 @@ export default async function FaqPage({ params }: FaqPageProps) {
                         </h2>
                       </div>
                       <div className="relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-2xl bg-panel sm:w-40 lg:w-48">
-                        <Image
+                        <StaticImage
                           src={photo.src}
                           alt={t(photo.altKey)}
                           fill

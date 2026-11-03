@@ -6,8 +6,11 @@ import {
   getPublicActivity,
   PublicActivityError,
 } from "@/lib/server/public-activities";
+import { listTips } from "@/lib/server/tips-content";
+import type { Tip } from "@/lib/tips/tip";
 import type { TouristActivityDetail, TouristActivitySummary } from "@/types/activity";
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/server/tips-content", () => ({ listTips: vi.fn() }));
 vi.mock("@/lib/server/public-activities", async (original) => ({
   ...(await original<typeof import("@/lib/server/public-activities")>()),
   getPublicActivities: vi.fn(),
@@ -16,6 +19,7 @@ vi.mock("@/lib/server/public-activities", async (original) => ({
 beforeEach(() => {
   vi.mocked(getPublicActivities).mockReset();
   vi.mocked(getPublicActivity).mockReset();
+  vi.mocked(listTips).mockReset().mockResolvedValue([]);
 });
 describe("public sitemap and crawl policy", () => {
   it("lists unique public canonical URLs and skips missing/deleted detail candidates", async () => {
@@ -117,6 +121,40 @@ describe("public sitemap and crawl policy", () => {
     expect(byUrl.get("https://hanbuddy.kr/ko/activities/6")?.alternates?.languages).toEqual(
       byUrl.get("https://hanbuddy.kr/en/activities/6")?.alternates?.languages,
     );
+  });
+
+  it("lists tips for English only, with the newest update as the index lastmod", async () => {
+    vi.mocked(getPublicActivities).mockResolvedValue([]);
+    vi.mocked(listTips).mockResolvedValue([
+      { slug: "kbo-tickets", publishedAt: "2026-11-04", updatedAt: "2026-11-09" },
+      { slug: "subway-basics", publishedAt: "2026-11-01", updatedAt: "2026-11-01" },
+    ] as Tip[]);
+    const entries = await sitemap();
+    const byUrl = new Map(entries.map((entry) => [entry.url, entry]));
+    const tipUrls = entries.map(({ url }) => url).filter((url) => url.includes("/tips"));
+
+    expect(tipUrls.sort()).toEqual([
+      "https://hanbuddy.kr/en/tips",
+      "https://hanbuddy.kr/en/tips/kbo-tickets",
+      "https://hanbuddy.kr/en/tips/subway-basics",
+    ]);
+    expect(byUrl.get("https://hanbuddy.kr/en/tips")?.lastModified).toBe("2026-11-09");
+    expect(byUrl.get("https://hanbuddy.kr/en/tips/subway-basics")).toEqual({
+      url: "https://hanbuddy.kr/en/tips/subway-basics",
+      lastModified: "2026-11-01",
+      alternates: {
+        languages: {
+          en: "https://hanbuddy.kr/en/tips/subway-basics",
+          "x-default": "https://hanbuddy.kr/en/tips/subway-basics",
+        },
+      },
+    });
+  });
+
+  it("leaves the empty tips index out of the sitemap", async () => {
+    vi.mocked(getPublicActivities).mockResolvedValue([]);
+
+    expect((await sitemap()).some(({ url }) => url.includes("/tips"))).toBe(false);
   });
 
   it("fails instead of publishing an empty success sitemap during an API outage", async () => {

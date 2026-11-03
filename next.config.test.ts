@@ -26,9 +26,9 @@ describe("nextConfig images.remotePatterns", () => {
 });
 
 describe("nextConfig output file tracing", () => {
-  it("includes policy documents for policy and onboarding routes", () => {
+  it("includes policy and tips documents read from the file system at runtime", () => {
     expect(nextConfig.outputFileTracingIncludes).toEqual({
-      "/*": ["content/policies/*.md"],
+      "/*": ["content/policies/*.md", "content/tips/*.md"],
     });
   });
 });

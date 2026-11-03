@@ -195,6 +195,34 @@ describe("route access proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/ko/buddy");
   });
 
+  // 정보 글(Tips)은 영어 전용이라 다른 언어 주소와 한국어 버디 계정도 /en/tips로 간다
+  it.each([
+    ["/ko/tips", {}, "/en/tips"],
+    ["/ja/tips/kbo-tickets", {}, "/en/tips/kbo-tickets"],
+    ["/tips", { NEXT_LOCALE: "ko" }, "/en/tips"],
+    [
+      "/en/tips",
+      { [AUTH_COOKIES.accessToken]: "access-token", [AUTH_COOKIES.userType]: "BUDDY" },
+      null,
+    ],
+  ] as const)("serves the English-only tips page for %s", async (pathname, cookies, target) => {
+    const response = await runProxy(pathname, { ...cookies });
+
+    if (target) {
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(`http://localhost${target}`);
+    } else {
+      expect(response.headers.get("location")).toBeNull();
+    }
+  });
+
+  it("does not overwrite the saved language when a Korean visitor reads a tip", async () => {
+    const response = await runProxy("/en/tips/kbo-tickets", { NEXT_LOCALE: "ko" });
+
+    expect(response.headers.get("location")).toBeNull();
+    expect(getSavedLocale(response)).toBeNull();
+  });
+
   it("allows an unauthenticated Korean request to browse Explore", async () => {
     const response = await runProxy(
       "/explore",

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { TouristActivityDetail } from "@/types/activity";
 import {
   activityProductJsonLd,
+  articleJsonLd,
   breadcrumbJsonLd,
   faqPageJsonLd,
   organizationJsonLd,
@@ -138,6 +139,29 @@ describe("faqPageJsonLd and breadcrumbJsonLd", () => {
       { "@type": "ListItem", position: 1, name: "Home", item: "https://hanbuddy.kr/zh-Hant" },
       { "@type": "ListItem", position: 2, name: "FAQ", item: "https://hanbuddy.kr/zh-Hant/faq" },
     ]);
+  });
+});
+
+describe("articleJsonLd", () => {
+  it("publishes the article under the HanBuddy organization node with both dates", () => {
+    expect(
+      articleJsonLd("en", {
+        path: "/tips/kbo-tickets",
+        title: "Buying KBO Tickets",
+        description: "A short walkthrough.",
+        publishedAt: "2026-11-04",
+        updatedAt: "2026-11-06",
+      }),
+    ).toMatchObject({
+      "@type": "Article",
+      headline: "Buying KBO Tickets",
+      description: "A short walkthrough.",
+      datePublished: "2026-11-04",
+      dateModified: "2026-11-06",
+      mainEntityOfPage: { "@id": "https://hanbuddy.kr/en/tips/kbo-tickets" },
+      author: { "@id": "https://hanbuddy.kr/#organization", name: "HanBuddy" },
+      publisher: { "@id": "https://hanbuddy.kr/#organization", name: "HanBuddy" },
+    });
   });
 });
 

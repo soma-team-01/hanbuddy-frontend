@@ -4,6 +4,8 @@ import { languageAlternates } from "@/lib/seo/metadata";
 import { PAGE_LAST_MODIFIED, PUBLIC_POLICY_LAST_MODIFIED } from "@/lib/seo/last-modified";
 import { APP_ORIGIN } from "@/lib/site";
 import { publishedActivitiesIn } from "@/lib/server/published-activities";
+import { listTips } from "@/lib/server/tips-content";
+import { tipPath, tipsIndexPath, TIPS_LOCALE } from "@/lib/tips/tip";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       localizedEntries(`/policies/${slug}`, lastModified),
     ),
   ];
+
+  // 정보 글은 영어로만 열린다. 글이 없으면 목록도 색인 대상이 아니므로 사이트맵에서 뺀다.
+  // 글 파일이 계약을 어기면 불완전한 사이트맵을 내보내지 않고 오류로 끝낸다.
+  const tips = await listTips();
+  if (tips.length > 0) {
+    const latestUpdate = tips.map(({ updatedAt }) => updatedAt).reduce((a, b) => (a > b ? a : b));
+    entries.push(
+      ...localizedEntries(tipsIndexPath(), latestUpdate, [TIPS_LOCALE]),
+      ...tips.flatMap((tip) => localizedEntries(tipPath(tip.slug), tip.updatedAt, [TIPS_LOCALE])),
+    );
+  }
 
   // 활동은 언어마다 공개 여부를 확인하고, 실제로 열리는 언어끼리만 대체 주소로 묶는다.
   // lastmod는 그 언어 응답의 updatedAt(콘텐츠 수정 시각)을 쓰고, 없으면 생략한다.

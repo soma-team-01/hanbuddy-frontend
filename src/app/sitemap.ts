@@ -48,7 +48,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 글 파일이 계약을 어기면 불완전한 사이트맵을 내보내지 않고 오류로 끝낸다.
   const tips = await listTips();
   if (tips.length > 0) {
-    const latestUpdate = tips.map(({ updatedAt }) => updatedAt).reduce((a, b) => (a > b ? a : b));
+    const latestUpdate = tips
+      .map(({ updatedAt }) => updatedAt)
+      .reduce((a, b) => (a > b ? a : b), tips[0].updatedAt);
     entries.push(
       ...localizedEntries(tipsIndexPath(), latestUpdate, [TIPS_LOCALE]),
       ...tips.flatMap((tip) => localizedEntries(tipPath(tip.slug), tip.updatedAt, [TIPS_LOCALE])),

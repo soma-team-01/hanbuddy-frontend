@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import NextLink from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -164,11 +165,15 @@ function LocalizedSiteHeader({
     const { href, labelKey } = destination;
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
+    // 언어가 정해진 목적지(Tips)는 next/link로 /en/tips에 바로 보낸다. next-intl Link에 locale을 주면
+    // 클릭할 때 언어 쿠키가 그 언어로 바뀌어, 이후 언어 없는 주소가 영어로 열린다.
+    const LinkComponent = "locale" in destination ? NextLink : Link;
+    const target = "locale" in destination ? `/${destination.locale}${href}` : href;
+
     return (
-      <Link
+      <LinkComponent
         key={href}
-        href={href}
-        locale={"locale" in destination ? destination.locale : undefined}
+        href={target}
         aria-current={isActive ? "page" : undefined}
         className={`border-b-2 px-1 py-3 text-sm font-semibold transition-colors ${
           isActive
@@ -177,7 +182,7 @@ function LocalizedSiteHeader({
         }`}
       >
         {t(labelKey)}
-      </Link>
+      </LinkComponent>
     );
   });
 

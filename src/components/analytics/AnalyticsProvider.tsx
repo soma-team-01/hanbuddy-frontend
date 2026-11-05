@@ -14,12 +14,12 @@ import {
 import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { getLocaleOrDefault } from "@/i18n/routing";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { AnalyticsController } from "@/lib/analytics/controller";
 import { createCookieRuntime } from "@/lib/analytics/cookie-runtime";
 import type { AnalyticsItemId, FunnelContext, FunnelEvent } from "@/lib/analytics/events";
 import type { AnalyticsPolicy } from "@/lib/analytics/policy";
 import { consentCopy } from "./consent-copy";
+import { ConsentBanner } from "./ConsentBanner";
 
 type Controller = AnalyticsController & { isWithdrawalPending?: () => boolean };
 type MeasurementMethods = {
@@ -135,7 +135,8 @@ function ConsentControl() {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const trigger = useRef<HTMLElement | null>(null);
-  const copy = consentCopy[getLocaleOrDefault(useLocale())];
+  const locale = getLocaleOrDefault(useLocale());
+  const copy = consentCopy[locale];
   useEffect(() => {
     const show = (event: Event) => {
       trigger.current = (event as CustomEvent<HTMLElement>).detail;
@@ -153,17 +154,18 @@ function ConsentControl() {
     trigger.current?.focus();
   };
   return (
-    <ConfirmDialog
+    <ConsentBanner
+      locale={locale}
       title={copy.title}
-      description={copy.body}
-      cancelLabel={copy.reject}
-      confirmLabel={copy.accept}
-      backdropBlur={false}
-      onClose={() => {
+      body={copy.body}
+      acceptLabel={copy.accept}
+      rejectLabel={copy.reject}
+      focusOnOpen={open}
+      onReject={() => {
         void controller.reject();
         close();
       }}
-      onConfirm={() => {
+      onAccept={() => {
         void controller.accept();
         close();
       }}

@@ -11,6 +11,9 @@ import { createCookieAnalytics } from "@/lib/analytics/cookie-controller";
 import { createCookieConsent } from "@/lib/analytics/cookie-consent";
 import * as runtime from "@/lib/analytics/cookie-runtime";
 import { renderWithQueryClient } from "@/test/render-with-query-client";
+import ja from "@/messages/ja.json";
+import zhHans from "@/messages/zh-Hans.json";
+import zhHant from "@/messages/zh-Hant.json";
 
 let pathname = "/en/activities/42";
 vi.mock("next/navigation", () => ({ usePathname: () => pathname }));
@@ -90,7 +93,7 @@ it("keeps navigation usable with no operational policy and no consent collection
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Cookie settings" })).not.toBeInTheDocument();
 });
-it("leaves the page behind the consent dialog unblurred", () => {
+it("shows consent without blocking the page or taking focus", () => {
   pathname = "/en";
   const { controller } = makeController();
   renderWithQueryClient(
@@ -98,14 +101,55 @@ it("leaves the page behind the consent dialog unblurred", () => {
       <Detail />
     </AnalyticsProvider>,
   );
-  const dialog = screen.getByRole("dialog");
-  expect(dialog).toHaveClass("backdrop:bg-ink/45");
-  expect(dialog).not.toHaveClass("backdrop:backdrop-blur-[3px]");
+  const banner = screen.getByRole("region", { name: "Cookies on HanBuddy" });
+  expect(banner).toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(document.activeElement).toBe(document.body);
+  const book = screen.getByRole("button", { name: "Book" });
+  book.focus();
+  expect(book).toHaveFocus();
+});
+it.each([
+  ["en", "Privacy Policy", "/en/policies/privacy-policy"],
+  ["ko", "개인정보 처리방침", "/ko/policies/privacy-policy"],
+  ["ja", "プライバシーポリシー", "/ja/policies/privacy-policy"],
+  ["zh-Hans", "隐私政策", "/zh-Hans/policies/privacy-policy"],
+  ["zh-Hant", "隱私權政策", "/zh-Hant/policies/privacy-policy"],
+] as const)("links the %s consent copy to the privacy policy", (locale, label, href) => {
+  pathname = `/${locale}`;
+  const { controller } = makeController();
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <Detail />
+    </AnalyticsProvider>,
+    { locale, messages: { ja, "zh-Hans": zhHans, "zh-Hant": zhHant }[locale as string] },
+  );
+  expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", href);
+});
+it("moves focus into consent opened from cookie settings and returns it on close", async () => {
+  pathname = "/en";
+  const { controller } = makeController();
+  renderWithQueryClient(
+    <AnalyticsProvider policy={null} controller={controller}>
+      <AnalyticsSettings />
+    </AnalyticsProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Allow" }));
+  await waitFor(() => expect(controller.getSnapshot()).toBe("granted"));
+  expect(screen.queryByRole("region", { name: "Cookies on HanBuddy" })).not.toBeInTheDocument();
+
+  const settings = screen.getByRole("button", { name: "Cookie settings" });
+  settings.focus();
+  fireEvent.click(settings);
+  expect(screen.getByRole("heading", { name: "Cookies on HanBuddy" })).toHaveFocus();
+  fireEvent.click(screen.getByRole("button", { name: "No thanks" }));
+  expect(screen.queryByRole("region", { name: "Cookies on HanBuddy" })).not.toBeInTheDocument();
+  expect(settings).toHaveFocus();
 });
 it.each([
   [
     "en",
-    "Analytics & advertising",
+    "Cookies on HanBuddy",
     "Allow analytics and advertising tools to measure site use and campaign results. We don’t send form answers or contact details. You can change this anytime in Cookie settings.",
     "Allow",
     "No thanks",
@@ -113,7 +157,7 @@ it.each([
   ],
   [
     "ko",
-    "분석 및 광고",
+    "한버디 쿠키 안내",
     "서비스 이용과 캠페인 성과 측정을 위해 분석·광고 도구를 사용합니다. 폼 답변과 연락처는 전송하지 않으며, 쿠키 설정에서 언제든 변경할 수 있습니다.",
     "허용",
     "거절",

@@ -91,8 +91,8 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
       links: [
         { label: navT("about"), href: `/${locale}/about` },
         { label: footerT("exploreExperiences"), href: `/${locale}/explore` },
-        // 정보 글은 영어로만 열리므로 모든 언어에서 /en/tips로 바로 연결한다.
-        { label: footerT("tips"), href: TIPS_PATH },
+        // 정보 글은 영어로만 있어 영어 화면에만 둔다. 다른 언어 화면에서 누르면 영어 사이트로 넘어가기 때문이다.
+        ...(locale === TIPS_LOCALE ? [{ label: footerT("tips"), href: TIPS_PATH }] : []),
         { label: authT("termsOfService"), href: getPolicyPath(locale, "terms-of-service") },
         { label: authT("privacyPolicy"), href: getPolicyPath(locale, "privacy-policy") },
       ],

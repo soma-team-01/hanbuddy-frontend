@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { TouristActivityDetail } from "@/types/activity";
 import type { ReviewPageResponse } from "@/types/review";
 import { useAnalyticsView, useFunnelEvent } from "@/components/analytics/AnalyticsProvider";
@@ -27,12 +28,15 @@ export function ActivityDetailContent({
   initialReviews,
   preferredDate,
   emailLoginEnabled = false,
+  relatedTips,
 }: Readonly<{
   activityId: string;
   initialActivity?: TouristActivityDetail;
   initialReviews?: ReviewPageResponse | Promise<ReviewPageResponse | undefined>;
   preferredDate?: string;
   emailLoginEnabled?: boolean;
+  /** 서버에서 그린 관련 정보 글 목록(영어 페이지에만 있음) */
+  relatedTips?: ReactNode;
 }>) {
   const track = useFunnelEvent();
   // 서버 쿠키 기준 로그인 여부. 비로그인이면 예약 화면 대신 로그인 팝업을 띄운다
@@ -128,6 +132,7 @@ export function ActivityDetailContent({
         }
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />
+      {relatedTips}
       <ActivityContact />
     </div>
   );

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { RelatedTips } from "@/components/tips/RelatedTips";
+import { listRelatedTips } from "@/lib/server/tips-content";
+import { TIPS_LOCALE } from "@/lib/tips/tip";
 import { LOCALES, type Locale } from "@/i18n/routing";
 import { isReviewLoginEnabled } from "@/lib/auth/review-login";
 import { getPublicActivity, PublicActivityError } from "@/lib/server/public-activities";
@@ -60,9 +63,11 @@ export default async function ActivityDetailPage({ params, searchParams }: PageP
   // 후기 미리보기는 기다리지 않고 promise로 넘긴다. 본문을 먼저 보내고 후기는 같은 HTML 응답 뒤쪽에
   // 이어 보내므로(크롤러는 끝까지 받아 읽는다) 후기 API가 느려도 본문이 붙잡히지 않는다.
   const initialReviews = getPublicActivityReviewSummary(id, locale);
-  const [activity, navT] = await Promise.all([
+  const [activity, navT, relatedTips] = await Promise.all([
     readActivity(id, locale),
     getTranslations({ locale, namespace: "Navigation" }),
+    // 정보 글은 영어로만 있어 영어 활동 페이지에만 관련 글을 붙인다.
+    locale === TIPS_LOCALE ? listRelatedTips(Number(id)) : Promise.resolve([]),
   ]);
   const breadcrumbs = activityBreadcrumbs(
     { id: activity.activityId, title: activity.title },
@@ -79,6 +84,7 @@ export default async function ActivityDetailPage({ params, searchParams }: PageP
         initialReviews={initialReviews}
         preferredDate={typeof query?.date === "string" ? query.date : undefined}
         emailLoginEnabled={isReviewLoginEnabled()}
+        relatedTips={<RelatedTips tips={relatedTips} />}
       />
     </>
   );

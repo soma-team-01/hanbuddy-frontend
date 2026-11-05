@@ -10,6 +10,7 @@ export const TIPS_COPY = {
   updated: "Updated",
   allTips: "All tips",
   relatedHeading: "Related experiences",
+  relatedTipsHeading: "Tips for this experience",
   relatedFallback: "View experience",
   exploreExperiences: "Explore experiences",
 } as const;

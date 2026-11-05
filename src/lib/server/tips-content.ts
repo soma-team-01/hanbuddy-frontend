@@ -48,3 +48,20 @@ export async function getTip(
     throw error;
   }
 }
+
+/**
+ * 활동 상세에 붙일 관련 정보 글. relatedActivityIds에 그 활동이 든 글을 최신순으로 최대 limit개 돌려준다.
+ * 예약 페이지가 글 파일 하나 때문에 깨지면 안 되므로, 글을 읽다 실패하면 빈 목록으로 넘긴다(검증은 빌드·테스트가 한다).
+ */
+export async function listRelatedTips(
+  activityId: number,
+  limit = 3,
+  directory: string = TIPS_DIRECTORY,
+): Promise<Tip[]> {
+  try {
+    const tips = await listTips(directory);
+    return tips.filter((tip) => tip.relatedActivityIds.includes(activityId)).slice(0, limit);
+  } catch {
+    return [];
+  }
+}

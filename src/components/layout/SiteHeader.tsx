@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import NextLink from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -22,8 +21,12 @@ import { PageContainer } from "./PageContainer";
 
 export type SiteRole = "tourist" | "buddy" | "admin" | null;
 
-// 정보 글은 영어로만 열리므로 모든 언어에서 /en/tips로 바로 연결한다(푸터 링크와 같은 방식).
-const TIPS_DESTINATION = { href: tipsIndexPath(), labelKey: "tips", locale: TIPS_LOCALE } as const;
+// 정보 글은 영어로만 있어 Tips 탭은 영어 화면에만 둔다. 다른 언어 화면에서 누르면 영어 사이트로 넘어가기 때문이다.
+const TIPS_DESTINATION = {
+  href: tipsIndexPath(),
+  labelKey: "tips",
+  onlyLocale: TIPS_LOCALE,
+} as const;
 
 const DESTINATIONS = {
   tourist: [
@@ -95,6 +98,7 @@ function LocalizedSiteHeader({
     Pick<SiteHeaderProps, "onLocaleChange"> & { role: Exclude<SiteRole, "admin"> }
 >) {
   const t = useTranslations("Navigation");
+  const locale = useLocale();
   // Isolated reset pages switch language in place, so the URL can retain its original locale.
   const pathname = stripLocaleFromPathname(usePathname());
   const sessionKey = `${authenticated}:${mayHaveSession}`;
@@ -161,19 +165,16 @@ function LocalizedSiteHeader({
   const accountTitle = profile?.displayName || profile?.name || t("account");
   const accountUserType = profile?.userType ?? (effectiveRole === "buddy" ? "BUDDY" : "TOURIST");
 
-  const navigationLinks = destinations.map((destination) => {
-    const { href, labelKey } = destination;
+  const visibleDestinations = destinations.filter(
+    (destination) => !("onlyLocale" in destination) || destination.onlyLocale === locale,
+  );
+  const navigationLinks = visibleDestinations.map(({ href, labelKey }) => {
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
-    // 언어가 정해진 목적지(Tips)는 next/link로 /en/tips에 바로 보낸다. next-intl Link에 locale을 주면
-    // 클릭할 때 언어 쿠키가 그 언어로 바뀌어, 이후 언어 없는 주소가 영어로 열린다.
-    const LinkComponent = "locale" in destination ? NextLink : Link;
-    const target = "locale" in destination ? `/${destination.locale}${href}` : href;
-
     return (
-      <LinkComponent
+      <Link
         key={href}
-        href={target}
+        href={href}
         aria-current={isActive ? "page" : undefined}
         className={`border-b-2 px-1 py-3 text-sm font-semibold transition-colors ${
           isActive
@@ -182,7 +183,7 @@ function LocalizedSiteHeader({
         }`}
       >
         {t(labelKey)}
-      </LinkComponent>
+      </Link>
     );
   });
 

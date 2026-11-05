@@ -172,7 +172,6 @@ describe("SiteFooter", () => {
           [
             ["소개", "/ko/about"],
             ["체험 둘러보기", "/ko/explore"],
-            ["여행 팁 (영문)", "/en/tips"],
             ["이용약관", "/ko/policies/terms-of-service"],
             ["개인정보 처리방침", "/ko/policies/privacy-policy"],
           ],

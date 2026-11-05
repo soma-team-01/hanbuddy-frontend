@@ -5,7 +5,7 @@ import type { ImageLoaderProps } from "next/image";
 // 로컬 사진은 최적화 경로를 거치지 않고 미리 만든 너비별 webp를 바로 쓴다.
 // 사진을 추가하면 `node scripts/generate-static-image-variants.mjs`로 너비별 파일을 만든다.
 export const STATIC_IMAGE_DIRS = ["images/landing", "images/buddy"] as const;
-export const STATIC_IMAGE_WIDTHS = [640, 828, 1200] as const;
+export const STATIC_IMAGE_WIDTHS = [256, 640, 828, 1200] as const;
 
 export function variantPath(src: string, width: number): string {
   const slash = src.lastIndexOf("/");

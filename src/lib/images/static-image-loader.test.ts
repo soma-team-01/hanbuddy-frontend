@@ -13,6 +13,7 @@ describe("staticImageLoader", () => {
   // 운영에서 /_next/image의 로컬 사진 요청이 특정 너비에서 응답 없이 멈춘 적이 있어(2026-10-22, 11-04),
   // 로컬 사진은 미리 만든 너비별 파일을 바로 쓴다.
   it.each([
+    [224, "/images/landing/w256/a.webp"],
     [390, "/images/landing/w640/a.webp"],
     [640, "/images/landing/w640/a.webp"],
     [750, "/images/landing/w828/a.webp"],

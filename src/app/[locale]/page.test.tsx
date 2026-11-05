@@ -202,32 +202,36 @@ describe("LandingPage", () => {
     expect(heroRegion.innerHTML).not.toContain("2%EC%B0%A8-4");
   });
 
-  it("places every hero photo on a blurred backdrop at the same 4:3 size on desktop", async () => {
+  it("splits the desktop hero into copy on the left and the photo on the right half", async () => {
     await renderLanding("en");
 
     const heroRegion = screen.getByRole("region", { name: "Real HanBuddy moments in Seoul" });
     const frames = heroRegion.querySelectorAll(".hero-media-frame");
-    const backdrops = heroRegion.querySelectorAll(".hero-media-backdrop");
 
-    // 풀블리드 cover는 셀피 얼굴이 화면을 채우고 사진마다 크기가 달라져 4장 모두 contain으로 통일했다
-    expect(backdrops).toHaveLength(5);
+    // 4:3 사진을 와이드 화면 전체에 깔면 글자가 얼굴을 가리고 양옆이 흐린 배경으로 남아,
+    // PC(lg 이상)는 흰 바탕의 왼쪽 글자와 오른쪽 절반 사진으로 나눈다
+    expect(heroRegion).toHaveClass("lg:bg-canvas", "lg:text-ink");
+    expect(heroRegion.querySelector(".hero-media")).toHaveClass("lg:left-1/2", "lg:w-auto");
     frames.forEach((frame) => {
-      expect(frame.querySelector(".hero-media-backdrop")).not.toHaveClass("hidden");
-      expect(frame.querySelector(".hero-media-image")).toHaveClass(
-        "hero-media-contain",
-        "md:object-contain",
+      // 흐린 배경은 모바일·태블릿에서만 쓰고, PC 사진 칸은 cover로 꽉 채운다
+      expect(frame.querySelector(".hero-media-backdrop")).toHaveClass("lg:hidden");
+      expect(frame.querySelector(".hero-media-image")).toHaveClass("lg:object-cover");
+      expect(frame.querySelector(".hero-media-image")).toHaveAttribute(
+        "sizes",
+        "(min-width: 1024px) 50vw, 100vw",
       );
     });
-    // 초점은 CSS 변수로 넘겨 md 이상의 contain 프레임에서는 스타일시트가 정중앙으로 되돌린다
-    expect(frames[1]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
-      "--hero-media-position: 32% 50%",
+    // 정사각형에 가까운 사진 칸에서 얼굴이 잘리지 않도록 사진마다 초점을 CSS 변수로 넘긴다
+    expect(frames[4]?.querySelector(".hero-media-image")?.getAttribute("style")).toContain(
+      "--hero-media-position:",
     );
-    expect(frames[1]?.querySelector(".hero-media-image")).not.toHaveStyle({
-      objectPosition: "32% 50%",
-    });
-    // PC 히어로는 화면 전체가 아니라 72vh(560~760px)로 낮춰 원본 사진이 위아래를 꽉 채운다
-    expect(heroRegion).toHaveClass("md:min-h-[clamp(560px,72svh,760px)]");
-    expect(heroRegion).not.toHaveClass("md:min-h-[calc(100svh-76px)]");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass("lg:text-ink");
+    expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass(
+      "lg:w-1/2",
+      "lg:text-left",
+    );
+    expect(heroRegion).toHaveClass("lg:min-h-[clamp(560px,72svh,760px)]");
+    expect(heroRegion).not.toHaveClass("md:min-h-[clamp(560px,72svh,760px)]");
   });
 
   it("keeps the mobile copy, search and highlights together over the hero photo", async () => {
@@ -238,8 +242,8 @@ describe("LandingPage", () => {
     expect(heroRegion.querySelector(".hero-media-image")?.parentElement).toHaveClass(
       "top-0",
       "aspect-[4/3]",
-      "md:inset-0",
-      "md:h-auto",
+      "lg:inset-0",
+      "lg:h-auto",
     );
     expect(screen.getByRole("heading", { level: 1 }).closest("div")).toHaveClass("min-w-0");
     expect(screen.queryByTestId("hero-highlights-mobile")).not.toBeInTheDocument();

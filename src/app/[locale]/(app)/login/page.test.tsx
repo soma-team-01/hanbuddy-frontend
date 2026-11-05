@@ -122,23 +122,11 @@ describe("LoginPage", () => {
   });
 
   it.each([
-    [
-      "en",
-      "Experience Korea like a local.",
-      "Continue with Google",
-      "Privacy Policy",
-      "new friends, Jul 26 ⚾",
-    ],
-    [
-      "ko",
-      "현지인처럼 한국을 경험해 보세요.",
-      "Google로 계속하기",
-      "개인정보 처리방침",
-      "새 친구들, 7월 26일 ⚾",
-    ],
+    ["en", "Experience Korea like a local.", "Continue with Google", "Privacy Policy"],
+    ["ko", "현지인처럼 한국을 경험해 보세요.", "Google로 계속하기", "개인정보 처리방침"],
   ] as const)(
     "renders localized authentication content for %s",
-    async (locale, heading, action, policy, visualCaption) => {
+    async (locale, heading, action, policy) => {
       await renderLogin(locale);
 
       expect(screen.getByRole("main")).toHaveClass("w-full");
@@ -152,17 +140,6 @@ describe("LoginPage", () => {
           name: locale === "ko" ? "이용약관" : "Terms of Service",
         }),
       ).toHaveAttribute("href", `/${locale}/policies/terms-of-service`);
-      expect(screen.getByText(visualCaption)).toBeInTheDocument();
-      const figures = screen.getAllByRole("figure");
-      expect(figures).toHaveLength(4);
-      // 9월 회차 사진이 한강 사진 자리를 대신한다
-      const figureSources = figures.map((figure) =>
-        figure.querySelector("img")?.getAttribute("src"),
-      );
-      expect(figureSources[1]).toContain("kbo-0913-bear-ears");
-      expect(figureSources[2]).toContain("kbo-0912-mascot-crew");
-      expect(figureSources[3]).toContain("kbo-0905-dome-seats");
-      expect(figureSources.join(" ")).not.toContain("hanriver");
       const googleLoginLink = screen.getByRole("link", { name: action });
       expect(googleLoginLink).toHaveAttribute("href", `/api/auth/google/start?locale=${locale}`);
       expect(googleLoginLink).toHaveAttribute("data-prefetch", "false");

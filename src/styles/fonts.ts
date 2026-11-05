@@ -13,11 +13,3 @@ export const dmSans = localFont({
   weight: "400 700",
   display: "swap",
 });
-
-export const caveat = localFont({
-  src: "./fonts/caveat.woff2",
-  variable: "--font-caveat",
-  weight: "400 700",
-  display: "swap",
-  preload: false,
-});

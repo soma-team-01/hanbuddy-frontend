@@ -75,8 +75,8 @@ describe("locale layout viewport", () => {
 });
 
 describe("locale layout fonts", () => {
-  it("loads bundled display, interface, and handwriting fonts", () => {
-    for (const variable of ["--font-plus-jakarta-sans", "--font-dm-sans", "--font-caveat"]) {
+  it("loads bundled display and interface fonts", () => {
+    for (const variable of ["--font-plus-jakarta-sans", "--font-dm-sans"]) {
       expect(localFontMock).toHaveBeenCalledWith(
         expect.objectContaining({
           src: expect.stringMatching(/\.woff2$/),

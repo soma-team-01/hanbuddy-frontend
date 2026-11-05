@@ -501,6 +501,46 @@ describe("EditProfilePage", () => {
     expect(mockedUpdateMyProfile).not.toHaveBeenCalled();
   });
 
+  it.each(["07700900123", "0-7700-900123", "07700 900123"])(
+    "saves the tourist phone number %s without separators or the domestic leading zero",
+    async (contactIdentifier) => {
+      const tourist = createMockProfile({
+        userType: "TOURIST",
+        contactMethod: "PHONE",
+        contactCountryCode: "+44",
+        contactIdentifier,
+      });
+      mockedGetMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+      mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+      renderWithQueryClient(<EditProfilePage />);
+      await screen.findByLabelText("Phone number");
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      await waitFor(() =>
+        expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+          expect.objectContaining({ contactCountryCode: "+44", contactIdentifier: "7700900123" }),
+        ),
+      );
+    },
+  );
+
+  it("keeps a tourist messenger ID unchanged when saving", async () => {
+    const tourist = createMockProfile({
+      userType: "TOURIST",
+      contactMethod: "KAKAOTALK",
+      contactCountryCode: "",
+      contactIdentifier: "0-kakao-id",
+    });
+    mockedGetMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+    mockedUpdateMyProfile.mockResolvedValue({ status: "success", profile: tourist });
+    renderWithQueryClient(<EditProfilePage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(mockedUpdateMyProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ contactIdentifier: "0-kakao-id" }),
+      ),
+    );
+  });
+
   it.each(["BUDDY"] as const)(
     "does not reinterpret a legacy %s LINE ID as a new contact",
     async (userType) => {
@@ -561,7 +601,7 @@ describe("EditProfilePage", () => {
         birthDate: "1998-04-12",
         contactMethod: "WHATSAPP",
         contactCountryCode: "+1",
-        contactIdentifier: "555-0198",
+        contactIdentifier: "5550198",
       });
     });
     expect(uploadProfileImage).not.toHaveBeenCalled();

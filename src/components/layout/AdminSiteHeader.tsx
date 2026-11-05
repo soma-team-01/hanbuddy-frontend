@@ -42,6 +42,7 @@ export function AdminSiteHeader({ authenticated }: Readonly<{ authenticated: boo
     >
       <Image
         src="/images/brand/logo-borderless.webp"
+        unoptimized
         alt=""
         width={36}
         height={36}

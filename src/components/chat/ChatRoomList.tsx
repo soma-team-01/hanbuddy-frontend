@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { UsersIcon } from "@/components/ui/icons";
 import { Link, usePathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { useSessionRole } from "@/lib/auth/session-role-context";
 import { formatChatScheduleLabel, formatChatTimestamp } from "@/lib/chat/format";
 import { getContentLanguage } from "@/lib/content-language";
 import { myChatRoomsCacheQueryOptions } from "@/lib/query/chat";
@@ -17,6 +18,7 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
   const locale = useLocale() as Locale;
   const language = getContentLanguage(locale);
   const pathname = usePathname() ?? "";
+  const role = useSessionRole();
   const roomsQuery = useQuery(myChatRoomsCacheQueryOptions(language));
   const rooms = roomsQuery.data ?? [];
 
@@ -36,7 +38,9 @@ export function ChatRoomList({ activeRoomId }: Readonly<{ activeRoomId?: string 
     return (
       <div className="p-6 text-center">
         <p className="font-display text-sm font-bold text-ink">{t("empty")}</p>
-        <p className="mt-1 text-sm leading-6 text-muted">{t("emptyDescription")}</p>
+        <p className="mt-1 text-sm leading-6 text-muted">
+          {t(role === "buddy" ? "emptyDescriptionBuddy" : "emptyDescription")}
+        </p>
       </div>
     );
   }

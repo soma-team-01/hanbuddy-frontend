@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { StaticImage } from "@/components/ui/StaticImage";
 import type { CSSProperties } from "react";
 
 export type HeroMediaFit = "cover" | "contain";
@@ -39,7 +39,7 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
         return (
           <div key={image.src} className="hero-media-frame absolute inset-0" style={style}>
             {isContain ? (
-              <Image
+              <StaticImage
                 src={image.src}
                 alt=""
                 fill
@@ -49,7 +49,7 @@ export function LandingHeroMedia({ images }: LandingHeroMediaProps) {
               />
             ) : null}
             <div className="absolute inset-x-0 top-0 aspect-[4/3] md:inset-0 md:aspect-auto md:h-auto">
-              <Image
+              <StaticImage
                 src={image.src}
                 alt={image.alt}
                 fill

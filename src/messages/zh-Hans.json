@@ -65,7 +65,7 @@
     "codeAttemptCount": "（{failedAttempts}/{maxAttempts}次）",
     "codeUnavailable": "验证码已过期或无法使用。请重新获取验证码。",
     "codeAttemptsExceeded": "验证次数已达上限。请重新获取验证码。",
-    "passwordInvalid": "请输入8至64个字符，UTF-8不超过72字节，不能仅为空格。",
+    "passwordInvalid": "请输入8至64个字符，不能仅为空格。如仍无法使用，请改用更短的密码。",
     "duplicate": "此邮箱已注册，请使用现有账号登录。",
     "googleLoginRequired": "此账号通过Google注册，请使用Google登录。",
     "emailDeliveryUnavailable": "无法发送验证邮件，请稍后重试。",
@@ -470,6 +470,7 @@
     "explore": "探索",
     "about": "关于我们",
     "faq": "常见问题",
+    "tips": "旅行贴士（英文）",
     "applications": "我的预订",
     "dashboard": "仪表板",
     "buddyWorkspace": "好友管理",
@@ -496,7 +497,8 @@
     "communitySafety": "社区与安全政策",
     "buddyOperationTerms": "伙伴运营条款",
     "buddyCommissionSettlement": "伙伴佣金与结算政策",
-    "exploreExperiences": "探索体验"
+    "exploreExperiences": "探索体验",
+    "tips": "旅行贴士（英文）"
   },
   "Accessibility": {
     "goBack": "返回",
@@ -1510,7 +1512,8 @@
     "loading": "正在加载对话...",
     "loadError": "无法加载您的对话。",
     "empty": "还没有对话",
-    "emptyDescription": "从活动页面向好友发送消息，或与您的客人发起群聊。",
+    "emptyDescription": "从活动页面向好友发送消息。",
+    "emptyDescriptionBuddy": "与您的客人发起群聊。",
     "noMessagesYet": "还没有消息",
     "selectConversation": "选择一个对话",
     "selectConversationDescription": "选择左侧的对话开始阅读。",

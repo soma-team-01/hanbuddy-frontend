@@ -13,6 +13,7 @@ import {
 import type { Locale } from "@/i18n/routing";
 import type { SiteNavRole } from "@/lib/auth/routes";
 import { getPolicyPath } from "@/lib/policy-routes";
+import { tipsIndexPath, TIPS_LOCALE } from "@/lib/tips/tip";
 import { CONTACT_DETAILS } from "@/lib/contact-details";
 import { TrackedInquiryLink } from "@/components/analytics/TrackedInquiryLink";
 
@@ -34,6 +35,7 @@ const FOOTER_LINK_CLASS =
 
 // 버디 소개 페이지는 한국어로만 열리므로 모든 언어에서 리다이렉트 없이 바로 연결한다.
 const BUDDY_HOSTING_PATH = "/ko/buddy";
+const TIPS_PATH = `/${TIPS_LOCALE}${tipsIndexPath()}`;
 
 type FooterColumnLink =
   | { readonly label: string; readonly href: string }
@@ -89,6 +91,8 @@ export async function SiteFooter({ locale, role = null }: SiteFooterProps) {
       links: [
         { label: navT("about"), href: `/${locale}/about` },
         { label: footerT("exploreExperiences"), href: `/${locale}/explore` },
+        // 정보 글은 영어로만 열리므로 모든 언어에서 /en/tips로 바로 연결한다.
+        { label: footerT("tips"), href: TIPS_PATH },
         { label: authT("termsOfService"), href: getPolicyPath(locale, "terms-of-service") },
         { label: authT("privacyPolicy"), href: getPolicyPath(locale, "privacy-policy") },
       ],

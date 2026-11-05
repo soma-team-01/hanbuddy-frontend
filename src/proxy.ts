@@ -6,15 +6,33 @@ import {
   localizePathname,
   stripLocaleFromPathname,
 } from "@/i18n/pathname";
-import { isLocale, LOCALE_COOKIE_NAME, routing } from "@/i18n/routing";
+import { isLocale, LOCALE_COOKIE_NAME, routing, type Locale } from "@/i18n/routing";
 import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { sanitizeReturnToPath } from "@/lib/auth/return-to";
 import { getRouteAccessRedirect, parseUserType } from "@/lib/auth/routes";
 import { resolveLegacyLandingPath } from "@/lib/legacy-landing";
 
 import { isNoindexPath } from "@/lib/seo/indexing";
+import { TIPS_LOCALE } from "@/lib/tips/tip";
 
 const handleI18nRouting = createMiddleware(routing);
+
+function entryLocale({
+  isTipsEntry,
+  isKoreanOnly,
+  pathnameLocale,
+  savedLocale,
+}: {
+  isTipsEntry: boolean;
+  isKoreanOnly: boolean;
+  pathnameLocale: Locale | null;
+  savedLocale: string | undefined;
+}): Locale {
+  if (isTipsEntry) return TIPS_LOCALE;
+  if (isKoreanOnly) return "ko";
+  if (pathnameLocale) return pathnameLocale;
+  return isLocale(savedLocale) ? savedLocale : routing.defaultLocale;
+}
 
 export function proxy(request: NextRequest) {
   if (stripLocaleFromPathname(request.nextUrl.pathname) === "/auth/reset-password") {
@@ -61,13 +79,17 @@ function routeRequest(request: NextRequest) {
   const accessToken = request.cookies.get(AUTH_COOKIES.accessToken)?.value;
   const isBuddy = userType === "BUDDY";
   const isBuddyEntry = isBuddyEntryPath(pathnameWithoutLocale);
+  const isTipsEntry = isTipsEntryPath(pathnameWithoutLocale);
   const savedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
   // 언어 쿠키는 브라우저 전체가 공유하므로, 주소에 적힌 언어를 먼저 따라야 탭마다 언어가 유지된다.
   // 저장된 언어는 언어 없이 들어온 주소(/explore 등)에만 쓴다.
-  const locale =
-    isBuddy || isBuddyEntry
-      ? "ko"
-      : (pathnameLocale ?? (isLocale(savedLocale) ? savedLocale : routing.defaultLocale));
+  // 정보 글(Tips)은 영어로만 열리므로, 다른 언어 주소와 한국어 버디 계정도 /en/tips로 보낸다.
+  const locale = entryLocale({
+    isTipsEntry,
+    isKoreanOnly: isBuddy || isBuddyEntry,
+    pathnameLocale,
+    savedLocale,
+  });
   // 옛 정적 랜딩 링크(/apply?event=…, /events/…)는 로그인 여부와 무관하게 회차 상세나 홈으로 보낸다
   const legacyTarget = resolveLegacyLandingPath(
     pathnameWithoutLocale,
@@ -105,8 +127,8 @@ function routeRequest(request: NextRequest) {
 
   if (pathnameLocale) {
     const response = handleI18nRouting(request);
-    // 한국어 전용 버디 화면을 둘러본 것만으로 관광객이 고른 언어를 ko로 덮어쓰지 않는다
-    return isBuddyEntry && !isBuddy ? withoutLocaleCookie(response) : response;
+    // 한국어·영어 전용 화면(버디 소개, 정보 글)을 둘러본 것만으로 관광객이 고른 언어를 덮어쓰지 않는다
+    return (isBuddyEntry && !isBuddy) || isTipsEntry ? withoutLocaleCookie(response) : response;
   }
 
   const redirectUrl = new URL(localizePathname(pathname, locale), request.url);
@@ -116,6 +138,10 @@ function routeRequest(request: NextRequest) {
 
 function isBuddyEntryPath(pathname: string) {
   return pathname === "/buddy" || pathname.startsWith("/buddy/");
+}
+
+function isTipsEntryPath(pathname: string) {
+  return pathname === "/tips" || pathname.startsWith("/tips/");
 }
 
 function withoutLocaleCookie(response: NextResponse) {

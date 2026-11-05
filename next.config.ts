@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
   // Resolve public activity existence before committing a document status for any UA.
   htmlLimitedBots: /.*/,
   outputFileTracingIncludes: {
-    "/*": ["content/policies/*.md"],
+    "/*": ["content/policies/*.md", "content/tips/*.md"],
   },
   // 홈 디렉터리의 무관한 package-lock.json이 워크스페이스 루트로 잡히지 않도록 고정한다
   turbopack: {

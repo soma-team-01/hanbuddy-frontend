@@ -65,7 +65,7 @@
     "codeAttemptCount": "({failedAttempts}/{maxAttempts})",
     "codeUnavailable": "This code has expired or is no longer available. Please request a new code.",
     "codeAttemptsExceeded": "You've reached the attempt limit. Please request a new code.",
-    "passwordInvalid": "Use 8–64 characters and no more than 72 UTF-8 bytes, not only spaces.",
+    "passwordInvalid": "Use 8–64 characters, not only spaces. If it still isn’t accepted, try a shorter one.",
     "duplicate": "This email is already registered. Please log in to your existing account.",
     "googleLoginRequired": "This account was created with Google. Please log in with Google.",
     "emailDeliveryUnavailable": "We couldn't send the verification email. Please try again later.",
@@ -470,6 +470,7 @@
     "explore": "Explore",
     "about": "About",
     "faq": "FAQ",
+    "tips": "Tips",
     "applications": "My Applications",
     "dashboard": "Dashboard",
     "buddyWorkspace": "Buddy workspace",
@@ -496,7 +497,8 @@
     "communitySafety": "Community & Safety Policy",
     "buddyOperationTerms": "Buddy Operating Terms",
     "buddyCommissionSettlement": "Buddy Commission & Settlement Policy",
-    "exploreExperiences": "Explore experiences"
+    "exploreExperiences": "Explore experiences",
+    "tips": "Tips"
   },
   "Accessibility": {
     "goBack": "Go back",
@@ -1510,7 +1512,8 @@
     "loading": "Loading conversations...",
     "loadError": "Could not load your conversations.",
     "empty": "No conversations yet",
-    "emptyDescription": "Message a buddy from an activity page, or start a group chat with your guests.",
+    "emptyDescription": "Message a buddy from an activity page.",
+    "emptyDescriptionBuddy": "Start a group chat with your guests.",
     "noMessagesYet": "No messages yet",
     "selectConversation": "Pick a conversation",
     "selectConversationDescription": "Choose a conversation on the left to start reading.",

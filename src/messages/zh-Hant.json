@@ -65,7 +65,7 @@
     "codeAttemptCount": "（{failedAttempts}/{maxAttempts}次）",
     "codeUnavailable": "驗證碼已過期或無法使用。請重新取得驗證碼。",
     "codeAttemptsExceeded": "驗證次數已達上限。請重新取得驗證碼。",
-    "passwordInvalid": "請輸入8至64個字元，UTF-8不超過72位元組，不能僅為空格。",
+    "passwordInvalid": "請輸入8至64個字元，不能僅為空格。如仍無法使用，請改用更短的密碼。",
     "duplicate": "此電子郵件已註冊，請使用現有帳號登入。",
     "googleLoginRequired": "此帳號透過Google註冊，請使用Google登入。",
     "emailDeliveryUnavailable": "無法傳送驗證郵件，請稍後再試。",
@@ -470,6 +470,7 @@
     "explore": "探索",
     "about": "關於我們",
     "faq": "常見問題",
+    "tips": "旅行小提示（英文）",
     "applications": "我的預訂",
     "dashboard": "儀表板",
     "buddyWorkspace": "好友管理",
@@ -496,7 +497,8 @@
     "communitySafety": "社區與安全政策",
     "buddyOperationTerms": "夥伴運營條款",
     "buddyCommissionSettlement": "夥伴傭金與結算政策",
-    "exploreExperiences": "探索體驗"
+    "exploreExperiences": "探索體驗",
+    "tips": "旅行小提示（英文）"
   },
   "Accessibility": {
     "goBack": "返回",
@@ -1510,7 +1512,8 @@
     "loading": "正在加載對話...",
     "loadError": "無法載入您的對話。",
     "empty": "還沒有對話",
-    "emptyDescription": "從活動頁面向好友發送訊息，或與您的客人發起群組聊天。",
+    "emptyDescription": "從活動頁面向好友發送訊息。",
+    "emptyDescriptionBuddy": "與您的客人發起群組聊天。",
     "noMessagesYet": "還沒有消息",
     "selectConversation": "選擇一個對話",
     "selectConversationDescription": "選擇左側的對話開始閱讀。",

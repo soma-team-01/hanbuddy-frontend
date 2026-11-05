@@ -13,3 +13,6 @@ package-lock.json
 
 # 락/기타
 *.tsbuildinfo
+
+# 자동화 파이프라인이 쓰는 정보 글(형식은 content/tips/README.md 계약을 따른다)
+content/tips/

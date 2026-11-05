@@ -137,6 +137,25 @@ describe("SiteHeader", () => {
       "/en/about",
     );
     expect(within(dialog).getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/en/faq");
+    expect(within(dialog).getByRole("link", { name: "Tips" })).toHaveAttribute("href", "/en/tips");
+  });
+
+  it("puts Tips right after FAQ in the primary navigation", () => {
+    mockedUsePathname.mockReturnValue("/");
+    renderWithQueryClient(<SiteHeader />);
+
+    const primaryNavigation = screen.getByRole("navigation", { name: "Primary navigation" });
+    const labels = within(primaryNavigation)
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+    expect(labels.slice(labels.indexOf("FAQ"), labels.indexOf("FAQ") + 2)).toEqual(["FAQ", "Tips"]);
+  });
+
+  it("marks Tips as the current page on a Tips article", () => {
+    mockedUsePathname.mockReturnValue("/tips/some-article");
+    renderWithQueryClient(<SiteHeader />);
+
+    expect(screen.getByRole("link", { name: "Tips" })).toHaveAttribute("aria-current", "page");
   });
 
   it("does not offer role switching to authenticated accounts", () => {
@@ -386,6 +405,11 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "둘러보기" })).toHaveAttribute("href", "/ko/explore");
     expect(screen.getByRole("link", { name: "소개" })).toHaveAttribute("href", "/ko/about");
     expect(screen.getByRole("link", { name: "자주 묻는 질문" })).toHaveAttribute("href", "/ko/faq");
+    // 정보 글은 영어로만 있어 한국어 화면에서도 /en/tips로 바로 연결한다.
+    expect(screen.getByRole("link", { name: "여행 팁 (영문)" })).toHaveAttribute(
+      "href",
+      "/en/tips",
+    );
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(
       "href",
       "/ko/applications",

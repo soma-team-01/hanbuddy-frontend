@@ -683,6 +683,36 @@ describe("OnboardingForm", () => {
     },
   );
 
+  it.each(["WhatsApp", "Phone Number"])(
+    "submits a %s number without the domestic leading zero",
+    async (label) => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            isSuccess: true,
+            code: "200",
+            message: "OK",
+            result: { registered: true, authStatus: "ACTIVE", userType: "TOURIST" },
+          }),
+          { status: 200 },
+        ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      renderWithIntl(<OnboardingForm />);
+      fillAboutYou("en", { birthDate: "1998-04-12" });
+      clickContinue("en");
+      fireEvent.click(screen.getByRole("button", { name: label }));
+      fireEvent.change(screen.getByLabelText("Phone number"), {
+        target: { value: "01012345678" },
+      });
+      clickContinue("en");
+      fireEvent.click(screen.getByRole("checkbox", { name: "Agree to all" }));
+      fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).contactIdentifier).toBe("1012345678");
+    },
+  );
+
   it.each(["KakaoTalk", "Instagram"])("rejects an overlong %s ID before signup", (app) => {
     renderWithIntl(<OnboardingForm />);
     fillAboutYou("en", { birthDate: "1998-04-12" });

@@ -5,7 +5,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
-import { caveat, dmSans, plusJakartaSans } from "@/styles/fonts";
+import { dmSans, plusJakartaSans } from "@/styles/fonts";
 import { notFound } from "next/navigation";
 import { QueryProvider } from "../query-provider";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -88,7 +88,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${plusJakartaSans.variable} ${dmSans.variable} ${koreanFont.className} ${caveat.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${dmSans.variable} ${koreanFont.className} h-full antialiased`}
       style={koreanFont.style}
     >
       <body className="flex min-h-full flex-col">

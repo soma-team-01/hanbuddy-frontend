@@ -105,15 +105,16 @@ describe("landing hero media styles", () => {
     );
   });
 
-  it("feathers contained hero photos into the blurred backdrop from md up", () => {
-    const block = stylesheet.match(
-      /@media \(min-width: 768px\)\s*\{\s*\.hero-media-contain\s*\{([^}]*)\}/,
+  it("keeps the whole photo centered below lg and uses each photo's focal point on desktop", () => {
+    const below = stylesheet.match(
+      /@media \(width < 1024px\)\s*\{\s*\.hero-media-image\s*\{([^}]*)\}/,
     )?.[1];
 
-    expect(block).toContain("object-position: center");
-    expect(block).toMatch(/mask-image:\s*linear-gradient\(90deg/);
-    // 위아래는 사진이 히어로를 꽉 채우므로 세로 페이드는 두지 않는다
-    expect(block).not.toContain("180deg");
+    // 모바일·태블릿은 축소한 원본 전체를 가운데에 두고 아래만 흐리게 넘긴다
+    expect(below).toContain("object-position: center");
+    expect(below).toMatch(/mask-image:\s*linear-gradient\(to bottom/);
+    // PC 사진 칸은 좌우 흐린 배경 없이 꽉 채우므로 contain 마스크를 두지 않는다
+    expect(stylesheet).not.toContain(".hero-media-contain");
     expect(stylesheet).toMatch(
       /\.hero-media-image\s*\{[^}]*object-position: var\(--hero-media-position, center\)/,
     );

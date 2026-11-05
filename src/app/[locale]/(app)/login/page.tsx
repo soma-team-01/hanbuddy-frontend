@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { StaticImage } from "@/components/ui/StaticImage";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -85,64 +84,6 @@ export default async function LoginPage({ params, searchParams }: LoginPageProps
             </details>
           )}
         </AuthPanel>
-
-        <div className="hidden lg:contents">
-          <figure className="login-polaroid login-polaroid-1">
-            <span className="login-polaroid-tape" aria-hidden="true" />
-            <span className="login-polaroid-frame">
-              <StaticImage
-                src="/images/landing/kbo-0726-group.webp"
-                alt={t("visualAlt")}
-                fill
-                sizes="(min-width: 1440px) 232px, (min-width: 1024px) 176px, 45vw"
-                className="object-cover object-[60%_40%]"
-              />
-            </span>
-            <figcaption>{t("visualCaption")}</figcaption>
-          </figure>
-
-          <figure className="login-polaroid login-polaroid-2">
-            <span className="login-polaroid-tape" aria-hidden="true" />
-            <span className="login-polaroid-frame">
-              <StaticImage
-                src="/images/landing/kbo-0913-bear-ears.webp"
-                alt={t("visualRightAlt")}
-                fill
-                sizes="(min-width: 1440px) 232px, (min-width: 1024px) 176px, 45vw"
-                className="object-cover object-[50%_32%]"
-              />
-            </span>
-            <figcaption>{t("visualRightCaption")}</figcaption>
-          </figure>
-
-          <figure className="login-polaroid login-polaroid-3">
-            <span className="login-polaroid-tape" aria-hidden="true" />
-            <span className="login-polaroid-frame">
-              <StaticImage
-                src="/images/landing/kbo-0912-mascot-crew.webp"
-                alt={t("visualBottomLeftAlt")}
-                fill
-                sizes="(min-width: 1440px) 232px, (min-width: 1024px) 176px, 45vw"
-                className="object-cover object-[50%_68%]"
-              />
-            </span>
-            <figcaption>{t("visualBottomLeftCaption")}</figcaption>
-          </figure>
-
-          <figure className="login-polaroid login-polaroid-4">
-            <span className="login-polaroid-tape" aria-hidden="true" />
-            <span className="login-polaroid-frame">
-              <StaticImage
-                src="/images/landing/kbo-0905-dome-seats.webp"
-                alt={t("visualBottomRightAlt")}
-                fill
-                sizes="(min-width: 1440px) 232px, (min-width: 1024px) 176px, 45vw"
-                className="object-cover object-[55%_50%]"
-              />
-            </span>
-            <figcaption>{t("visualBottomRightCaption")}</figcaption>
-          </figure>
-        </div>
       </PageContainer>
     </main>
   );

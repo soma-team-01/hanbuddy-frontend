@@ -107,34 +107,36 @@ function RecommendedResults({
       className="border-t border-line-soft bg-canvas-soft py-10 md:py-16"
     >
       <PageContainer>
-        <RecommendedHeading />
-        <div className="mt-4 flex justify-end">
+        {/* 모바일은 제목 → 카드 → 전체 보기 버튼 순서, lg 이상은 제목 줄 오른쪽에 버튼을 두고 카드가 2행 전체를 쓴다 */}
+        <div className="grid lg:grid-cols-[1fr_auto] lg:items-end lg:gap-x-8">
+          <RecommendedHeading />
+
+          {/* Airbnb 체험처럼 태블릿까지는 다음 카드가 살짝 보이는 스냅 가로 스와이프, lg 이상은 4열 그리드 */}
+          <div
+            data-testid="recommended-track"
+            className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-3 overflow-x-auto px-4 pb-2 md:-mx-6 md:scroll-px-6 md:gap-4 md:px-6 lg:col-span-2 lg:row-start-2 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0"
+          >
+            {activities.map((activity, index) => (
+              <Link
+                key={activity.id}
+                href={withActivityDate(`/activities/${activity.id}`, date)}
+                className="motion-reveal motion-press block w-[44vw] max-w-[220px] shrink-0 snap-start rounded-2xl md:w-[30vw] md:max-w-[260px] lg:w-auto lg:max-w-none"
+                style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
+              >
+                <ActivityCard activity={activity} variant="tile" eagerImage={index === 0} />
+              </Link>
+            ))}
+          </div>
+
           <Link
             href={withActivityDate("/explore", date)}
-            className="inline-flex min-h-11 items-center self-start font-display text-sm font-bold text-primary transition-colors hover:text-primary-hover"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-full border border-line-strong bg-canvas px-6 font-display text-sm font-bold text-ink transition-colors hover:border-primary hover:text-primary lg:col-start-2 lg:row-start-1 lg:mt-0 lg:min-h-11 lg:w-auto lg:justify-end lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:text-primary lg:hover:text-primary-hover"
           >
             {t("recommended.viewAll")}
             <span aria-hidden className="ml-2 text-base">
               →
             </span>
           </Link>
-        </div>
-
-        {/* Airbnb 체험처럼 태블릿까지는 다음 카드가 살짝 보이는 스냅 가로 스와이프, lg 이상은 4열 그리드 */}
-        <div
-          data-testid="recommended-track"
-          className="recommended-track -mx-4 mt-8 flex snap-x snap-mandatory scroll-px-4 scrollbar-none gap-3 overflow-x-auto px-4 pb-2 md:-mx-6 md:scroll-px-6 md:gap-4 md:px-6 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0"
-        >
-          {activities.map((activity, index) => (
-            <Link
-              key={activity.id}
-              href={withActivityDate(`/activities/${activity.id}`, date)}
-              className="motion-reveal motion-press block w-[44vw] max-w-[220px] shrink-0 snap-start rounded-2xl md:w-[30vw] md:max-w-[260px] lg:w-auto lg:max-w-none"
-              style={{ animationDelay: `${Math.min(index, 5) * 45}ms` }}
-            >
-              <ActivityCard activity={activity} variant="tile" eagerImage={index === 0} />
-            </Link>
-          ))}
         </div>
       </PageContainer>
     </section>
@@ -196,21 +198,19 @@ function RecommendedHeading() {
   const t = useTranslations("Landing");
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="max-w-2xl">
-        <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
-          {t("recommended.eyebrow")}
-        </p>
-        <h2
-          id="recommended-title"
-          className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
-        >
-          {t("recommended.title")}
-        </h2>
-        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
-          {t("recommended.description")}
-        </p>
-      </div>
+    <div className="max-w-2xl">
+      <p className="font-display text-xs font-bold tracking-[0.25em] text-primary uppercase">
+        {t("recommended.eyebrow")}
+      </p>
+      <h2
+        id="recommended-title"
+        className="mt-4 font-display text-2xl leading-tight font-extrabold tracking-[-0.04em] text-ink sm:text-3xl"
+      >
+        {t("recommended.title")}
+      </h2>
+      <p className="mt-3 text-sm leading-6 text-muted sm:text-base">
+        {t("recommended.description")}
+      </p>
     </div>
   );
 }

@@ -405,11 +405,8 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "둘러보기" })).toHaveAttribute("href", "/ko/explore");
     expect(screen.getByRole("link", { name: "소개" })).toHaveAttribute("href", "/ko/about");
     expect(screen.getByRole("link", { name: "자주 묻는 질문" })).toHaveAttribute("href", "/ko/faq");
-    // 정보 글은 영어로만 있어 한국어 화면에서도 /en/tips로 바로 연결한다.
-    expect(screen.getByRole("link", { name: "여행 팁 (영문)" })).toHaveAttribute(
-      "href",
-      "/en/tips",
-    );
+    // 정보 글은 영어로만 있어 영어 밖 화면에는 Tips 탭을 두지 않는다.
+    expect(screen.queryByRole("link", { name: "여행 팁 (영문)" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "내 신청" })).toHaveAttribute(
       "href",
       "/ko/applications",

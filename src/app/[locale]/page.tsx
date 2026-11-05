@@ -20,41 +20,36 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
-  // 순서: 9/12 관중석 → 8/15 K리그 → 9/12 야간 단체컷 → 9/13 가이드 동행 단체컷 → 7/26 잠실
-  // (유현님 확정 2026-09-29: 앉아서 찍은 9/12 관중석이 1번, 9/12는 두 장, 9/13은 가이드님 단체컷 한 장).
+  // 순서: 9/12 야간 단체컷 → 8/15 K리그 → 9/28 국가대표전 → 9/12 관중석 → 9/18 잠실 그라운드
+  // (유현님 확정 2026-11-06: 첫 장은 카메라를 보고 웃는 단체컷, 종목·회차가 고루 섞이게, 9/12는 두 장).
+  // 모바일은 4:3 칸에 원본 전체를 넣으므로 히어로 사진은 가로 4:3 파일만 쓴다(세로 원본은 4:3로 잘라 추가).
   // 장수를 바꾸면 globals.css의 hero-media-cycle 키프레임 비율도 같이 바꿔야 한다(5장 기준).
-  // PC(md 이상)는 모두 4:3 원본을 흐린 배경 위에 같은 크기로 놓는다(contain). 풀블리드 cover는
-  // 셀피의 얼굴이 화면을 가득 채워 부담스럽고, 사진마다 박스 크기가 달라지는 문제가 있었다.
-  // position은 모바일 배경 사진에서 사람이 보이도록 잡는 초점이다.
+  // PC(lg 이상)는 오른쪽 절반 칸을 사진으로 꽉 채운다. 칸이 정사각형에 가까워 4:3 사진의 좌우가 잘리므로
+  // position은 그 칸에서 얼굴이 남도록 잡은 초점이다. 모바일·태블릿은 원본 전체를 보여준다.
   {
-    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
-    altKey: "visuals.jamsilAlt",
-    fit: "contain",
-    position: "50% 40%",
+    src: "/images/landing/kbo-0912-group-night.webp",
+    altKey: "visuals.jamsilGroupAlt",
+    position: "50% 50%",
   },
   {
     src: "/images/landing/kleague-0815-crew.webp",
     altKey: "visuals.kleagueAlt",
-    fit: "contain",
-    position: "32% 50%",
+    position: "60% 50%",
   },
   {
-    src: "/images/landing/kbo-0912-group-night.webp",
-    altKey: "visuals.jamsilGroupAlt",
-    fit: "contain",
+    src: "/images/landing/football-0928-seats-guide.webp",
+    altKey: "visuals.nationalTeamAlt",
+    position: "40% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
+    altKey: "visuals.jamsilAlt",
+    position: "70% 50%",
+  },
+  {
+    src: "/images/landing/kbo-0918-outfield-four.webp",
+    altKey: "visuals.jamsilFieldAlt",
     position: "50% 50%",
-  },
-  {
-    src: "/images/landing/kbo-0913-group-guide.webp",
-    altKey: "visuals.jamsilSundayGuideAlt",
-    fit: "contain",
-    position: "45% 50%",
-  },
-  {
-    src: "/images/landing/kbo-0726-group.webp",
-    altKey: "visuals.kbo0726Alt",
-    fit: "contain",
-    position: "85% 50%",
   },
 ] as const;
 
@@ -127,60 +122,50 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
     <main className="flex w-full flex-1 flex-col bg-canvas text-ink">
       <JsonLd data={organizationJsonLd(locale, t("metadataDescription"))} />
       <LandingAnalytics locale={locale} />
-      {/* 모바일도 사진 위에 제목·검색·소개를 함께 배치한다. */}
+      {/* 모바일·태블릿은 사진 위에 제목·검색·소개를 함께 얹고, PC(lg 이상)는 왼쪽 글자와 오른쪽 사진으로 나눈다. */}
       <section
         data-landing-section="hero"
         data-landing-position="1"
         aria-label={t("visuals.ariaLabel")}
-        className="relative isolate z-20 bg-ink text-on-primary md:min-h-[clamp(560px,72svh,760px)]"
+        className="relative isolate z-20 bg-ink text-on-primary lg:min-h-[clamp(560px,72svh,760px)] lg:bg-canvas lg:text-ink"
       >
         <LandingHeroMedia
           images={HERO_MEDIA.map((image) => ({
             src: image.src,
             alt: t(image.altKey),
-            fit: image.fit,
             position: image.position,
           }))}
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(38,27,24,0.08)_0%,rgba(38,27,24,0.18)_20%,rgba(38,27,24,0.72)_48%,rgba(38,27,24,0.85)_100%)] md:hidden"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(38,27,24,0.08)_0%,rgba(38,27,24,0.18)_20%,rgba(38,27,24,0.72)_48%,rgba(38,27,24,0.85)_100%)] lg:hidden"
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(38,27,24,0.88)_0%,rgba(38,27,24,0.68)_38%,rgba(38,27,24,0.22)_78%,rgba(38,27,24,0.4)_100%)] md:block"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-ink/65 via-transparent to-ink/20 md:block"
-        />
-
-        <PageContainer className="relative z-10 flex min-h-[500px] items-end pt-36 pb-7 md:min-h-[clamp(560px,72svh,760px)] md:py-14 lg:py-16">
-          <div className="landing-reveal landing-reveal-delay-1 mx-auto w-full max-w-3xl min-w-0 text-center">
-            <p className="mb-3 font-display text-xs font-bold tracking-[0.28em] text-primary-soft uppercase md:mb-6">
+        <PageContainer className="relative z-10 flex min-h-[500px] items-end pt-36 pb-7 lg:min-h-[clamp(560px,72svh,760px)] lg:items-center lg:py-16">
+          <div className="landing-reveal landing-reveal-delay-1 mx-auto w-full max-w-3xl min-w-0 text-center lg:mx-0 lg:w-1/2 lg:max-w-none lg:pr-14 lg:text-left">
+            <p className="mb-3 font-display text-xs font-bold tracking-[0.28em] text-primary-soft uppercase md:mb-6 lg:text-primary">
               {t("eyebrow")}
             </p>
-            <h1 className="max-w-3xl font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.06em] text-on-primary md:text-5xl md:leading-[1.04] lg:text-[clamp(3.25rem,5vw,5.25rem)]">
+            <h1 className="max-w-3xl font-display text-[1.75rem] leading-[1.1] font-extrabold tracking-[-0.06em] text-on-primary md:text-5xl md:leading-[1.04] lg:text-[clamp(3.25rem,4.6vw,4.125rem)] lg:text-ink">
               {t("headline")}
             </h1>
             {/* 보조 문구는 슬로건의 둘째 줄처럼 붙이고, 설명 문단과는 간격과 굵기로 떼어 놓는다. */}
-            <p className="mx-auto mt-3 max-w-2xl font-display text-sm font-bold text-on-primary md:mt-4 md:text-2xl md:leading-snug md:font-semibold md:tracking-[-0.02em]">
+            <p className="mx-auto mt-3 max-w-2xl font-display text-sm font-bold text-on-primary md:mt-4 md:text-2xl md:leading-snug md:font-semibold md:tracking-[-0.02em] lg:mx-0 lg:text-ink">
               {t("tagline")}
             </p>
-            <p className="mx-auto mt-6 hidden max-w-xl text-base leading-7 text-white/75 md:block">
+            <p className="mx-auto mt-6 hidden max-w-xl text-base leading-7 text-white/75 md:block lg:mx-0 lg:text-muted">
               {t("description")}
             </p>
-            <div className="relative z-20 mt-5 flex justify-center text-left md:mt-7">
+            <div className="relative z-20 mt-5 flex justify-center text-left md:mt-7 lg:justify-start">
               <ActivityDateFilter key={date ?? ""} date={date} destination="/explore" />
             </div>
 
-            <div className="mt-7 grid max-w-3xl grid-cols-3 gap-3 border-t border-white/25 pt-4 md:mt-12 md:gap-4 md:pt-6">
+            <div className="mt-7 grid max-w-3xl grid-cols-3 gap-3 border-t border-white/25 pt-4 md:mt-12 md:gap-4 md:pt-6 lg:mt-10 lg:border-line-soft">
               {HERO_HIGHLIGHTS.map((highlight) => (
                 <div key={highlight}>
-                  <p className="font-display text-xs font-bold text-on-primary md:text-sm">
+                  <p className="font-display text-xs font-bold text-on-primary md:text-sm lg:text-ink">
                     {t(`highlights.${highlight}.title`)}
                   </p>
-                  <p className="mt-1 text-xs leading-5 text-white/80 md:text-sm">
+                  <p className="mt-1 text-xs leading-5 text-white/80 md:text-sm lg:text-muted">
                     {t(`highlights.${highlight}.description`)}
                   </p>
                 </div>

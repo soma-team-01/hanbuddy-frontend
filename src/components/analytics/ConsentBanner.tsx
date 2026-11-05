@@ -39,7 +39,7 @@ export function ConsentBanner({
   return (
     <section
       aria-labelledby="consent-banner-title"
-      className="fixed inset-x-0 bottom-0 z-40 rounded-t-3xl border-t border-line-soft bg-canvas-soft px-5 pt-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] text-ink shadow-[0_-12px_40px_rgba(38,27,24,0.16)] md:inset-x-auto md:right-6 md:bottom-6 md:w-[400px] md:rounded-2xl md:border md:p-6 md:shadow-[0_12px_40px_rgba(38,27,24,0.18)]"
+      className="fixed inset-x-0 bottom-0 z-40 max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain rounded-t-3xl border-t border-line-soft bg-canvas-soft px-5 pt-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] text-ink shadow-[0_-12px_40px_rgba(38,27,24,0.16)] md:inset-x-auto md:right-6 md:bottom-6 md:max-h-[calc(100dvh-3rem)] md:w-[400px] md:rounded-2xl md:border md:p-6 md:shadow-[0_12px_40px_rgba(38,27,24,0.18)]"
     >
       <h2
         id="consent-banner-title"

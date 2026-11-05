@@ -12,11 +12,11 @@ A foreigner can watch a KBO game in Seoul with a local by going with a Korean fr
 
 ### What are my options for going with a local?
 
-| Option | Best for | What to check |
-|---|---|---|
-| A Korean friend or colleague | People who already know someone who supports a team | Who books the tickets |
-| A marketplace host (e.g. Airbnb Experiences) | Travelers who want a guided night with reviews on the same platform | Venue for 2027, meal included or not, age limit |
-| A local-buddy platform (e.g. HanBuddy) | Solo travelers and foreign residents who want a small group with a Korean buddy | Dates, what is included, cancellation terms |
+| Option                                       | Best for                                                                        | What to check                                   |
+| -------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
+| A Korean friend or colleague                 | People who already know someone who supports a team                             | Who books the tickets                           |
+| A marketplace host (e.g. Airbnb Experiences) | Travelers who want a guided night with reviews on the same platform             | Venue for 2027, meal included or not, age limit |
+| A local-buddy platform (e.g. HanBuddy)       | Solo travelers and foreign residents who want a small group with a Korean buddy | Dates, what is included, cancellation terms     |
 
 ### What do marketplace experiences look like?
 
@@ -59,7 +59,7 @@ Usually not. Both Airbnb listings above provide tickets, and HanBuddy includes t
 
 ### How does cheering work at a KBO game?
 
-The home crowd follows a cheer captain and a small cheerleading squad, and each batter has a personal fight song sung as the batter steps up ([Wikipedia: Baseball cheering culture in South Korea](https://en.wikipedia.org/wiki/Baseball_cheering_culture_in_South_Korea)). Koreans call these songs *eungwon-ga*. Each club has one captain and four or five cheerleaders (same source).
+The home crowd follows a cheer captain and a small cheerleading squad, and each batter has a personal fight song sung as the batter steps up ([Wikipedia: Baseball cheering culture in South Korea](https://en.wikipedia.org/wiki/Baseball_cheering_culture_in_South_Korea)). Koreans call these songs _eungwon-ga_. Each club has one captain and four or five cheerleaders (same source).
 
 ### What are thundersticks?
 
@@ -77,7 +77,7 @@ No. A local next to you can teach the short parts as each player comes up. HanBu
 
 ### What should I eat?
 
-The classic is *chimaek*, fried chicken and beer (Wikipedia, above). If you have dietary restrictions and book with HanBuddy, write them under Special Requests and your buddy plans the food around them.
+The classic is _chimaek_, fried chicken and beer (Wikipedia, above). If you have dietary restrictions and book with HanBuddy, write them under Special Requests and your buddy plans the food around them.
 
 ### How long does a game last?
 

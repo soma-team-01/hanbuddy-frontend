@@ -181,13 +181,13 @@ describe("LandingPage", () => {
     const heroImages = heroRegion.querySelectorAll(".hero-media-image");
 
     const heroSources = [...heroImages].map((image) => image.getAttribute("src") ?? "");
-    // 9/12 관중석 → 8/15 K리그 → 9/12 야간 단체컷 → 9/13 가이드 단체컷 → 7/26 잠실
+    // 9/12 야간 단체컷 → 8/15 K리그 → 9/28 국가대표전 → 9/12 관중석 → 9/18 잠실 그라운드
     expect(heroSources).toHaveLength(5);
-    expect(heroSources[0]).toContain("kbo-0912-jamsil-crowd");
+    expect(heroSources[0]).toContain("kbo-0912-group-night");
     expect(heroSources[1]).toContain("kleague-0815-crew");
-    expect(heroSources[2]).toContain("kbo-0912-group-night");
-    expect(heroSources[3]).toContain("kbo-0913-group-guide");
-    expect(heroSources[4]).toContain("kbo-0726-group.webp");
+    expect(heroSources[2]).toContain("football-0928-seats-guide");
+    expect(heroSources[3]).toContain("kbo-0912-jamsil-crowd");
+    expect(heroSources[4]).toContain("kbo-0918-outfield-four");
     // 9/12 사진은 두 장까지만 쓴다
     expect(heroSources.filter((source) => source.includes("kbo-0912"))).toHaveLength(2);
     // 한 장당 5초, 장수에 맞춘 전체 주기를 CSS 변수로 넘긴다

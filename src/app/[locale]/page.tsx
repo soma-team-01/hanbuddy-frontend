@@ -20,15 +20,16 @@ import { AUTH_COOKIES } from "@/lib/auth/cookies";
 import { parseUserType } from "@/lib/auth/routes";
 
 const HERO_MEDIA = [
-  // 순서: 9/12 관중석 → 8/15 K리그 → 9/12 야간 단체컷 → 9/13 가이드 동행 단체컷 → 7/26 잠실
-  // (유현님 확정 2026-09-29: 앉아서 찍은 9/12 관중석이 1번, 9/12는 두 장, 9/13은 가이드님 단체컷 한 장).
+  // 순서: 9/12 야간 단체컷 → 8/15 K리그 → 9/28 국가대표전 → 9/12 관중석 → 9/18 잠실 그라운드
+  // (유현님 확정 2026-11-06: 첫 장은 카메라를 보고 웃는 단체컷, 종목·회차가 고루 섞이게, 9/12는 두 장).
+  // 모바일은 4:3 칸에 원본 전체를 넣으므로 히어로 사진은 가로 4:3 파일만 쓴다(세로 원본은 4:3로 잘라 추가).
   // 장수를 바꾸면 globals.css의 hero-media-cycle 키프레임 비율도 같이 바꿔야 한다(5장 기준).
   // PC(lg 이상)는 오른쪽 절반 칸을 사진으로 꽉 채운다. 칸이 정사각형에 가까워 4:3 사진의 좌우가 잘리므로
   // position은 그 칸에서 얼굴이 남도록 잡은 초점이다. 모바일·태블릿은 원본 전체를 보여준다.
   {
-    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
-    altKey: "visuals.jamsilAlt",
-    position: "70% 50%",
+    src: "/images/landing/kbo-0912-group-night.webp",
+    altKey: "visuals.jamsilGroupAlt",
+    position: "50% 50%",
   },
   {
     src: "/images/landing/kleague-0815-crew.webp",
@@ -36,19 +37,19 @@ const HERO_MEDIA = [
     position: "60% 50%",
   },
   {
-    src: "/images/landing/kbo-0912-group-night.webp",
-    altKey: "visuals.jamsilGroupAlt",
-    position: "50% 50%",
+    src: "/images/landing/football-0928-seats-guide.webp",
+    altKey: "visuals.nationalTeamAlt",
+    position: "40% 50%",
   },
   {
-    src: "/images/landing/kbo-0913-group-guide.webp",
-    altKey: "visuals.jamsilSundayGuideAlt",
-    position: "50% 50%",
+    src: "/images/landing/kbo-0912-jamsil-crowd.webp",
+    altKey: "visuals.jamsilAlt",
+    position: "70% 50%",
   },
   {
-    src: "/images/landing/kbo-0726-group.webp",
-    altKey: "visuals.kbo0726Alt",
-    position: "65% 50%",
+    src: "/images/landing/kbo-0918-outfield-four.webp",
+    altKey: "visuals.jamsilFieldAlt",
+    position: "50% 50%",
   },
 ] as const;
 

@@ -111,8 +111,29 @@ describe("RecommendedExperiences", () => {
     // Airbnb처럼 모바일 한 화면에 두 장 남짓이 보이도록 좁은 타일을 쓴다
     expect(card).toHaveClass("snap-start", "shrink-0", "w-[44vw]", "md:w-[30vw]", "lg:w-auto");
     expect(card.querySelector("article")).toHaveAttribute("data-variant", "tile");
-    // 44px 터치 타깃
-    expect(screen.getByRole("link", { name: /View all experiences/ })).toHaveClass("min-h-11");
+    // 모바일은 48px 전체 폭 버튼, PC는 44px 글자 링크
+    expect(screen.getByRole("link", { name: /View all experiences/ })).toHaveClass(
+      "min-h-12",
+      "lg:min-h-11",
+    );
+  });
+
+  it("renders a single view all link after the cards", async () => {
+    mockedGetTouristActivities.mockResolvedValue({
+      status: "success",
+      activities: [1, 2, 3, 4].map(createActivity),
+    });
+
+    renderWithQueryClient(<RecommendedExperiences />);
+    await screen.findByText("HanBuddy activity 1");
+
+    // 버튼은 하나만 두고 CSS 그리드로 자리를 바꾼다(숨긴 복제 링크를 두지 않는다)
+    const viewAllLinks = screen.getAllByRole("link", { name: /View all experiences/ });
+    expect(viewAllLinks).toHaveLength(1);
+    const viewAll = viewAllLinks[0]!;
+    const track = screen.getByTestId("recommended-track");
+    // 코드 순서는 카드 뒤라 모바일 화면 순서와 키보드 이동 순서가 같다
+    expect(track.compareDocumentPosition(viewAll) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("keeps the recommendation section visible when no activities are available", async () => {

@@ -470,6 +470,7 @@
     "explore": "体験を探す",
     "about": "HanBuddyについて",
     "faq": "よくある質問",
+    "tips": "旅行のヒント (英語)",
     "applications": "予約一覧",
     "dashboard": "ダッシュボード",
     "buddyWorkspace": "バディ管理",
@@ -496,7 +497,8 @@
     "communitySafety": "コミュニティ・安全ポリシー",
     "buddyOperationTerms": "バディ運営規約",
     "buddyCommissionSettlement": "バディ手数料・精算ポリシー",
-    "exploreExperiences": "体験を探す"
+    "exploreExperiences": "体験を探す",
+    "tips": "旅行のヒント (英語)"
   },
   "Accessibility": {
     "goBack": "戻る",

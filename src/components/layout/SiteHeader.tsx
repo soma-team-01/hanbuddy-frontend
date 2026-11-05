@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import NextLink from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -8,6 +9,7 @@ import type { Locale } from "@/i18n/routing";
 import { stripLocaleFromPathname } from "@/i18n/pathname";
 import { getMyProfile } from "@/lib/api/users";
 import { getUserTypeNavRole } from "@/lib/auth/routes";
+import { tipsIndexPath, TIPS_LOCALE } from "@/lib/tips/tip";
 import type { MyProfile } from "@/types/user";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
 import { ChatNavIcon } from "@/components/chat/ChatNavIcon";
@@ -20,6 +22,9 @@ import { PageContainer } from "./PageContainer";
 
 export type SiteRole = "tourist" | "buddy" | "admin" | null;
 
+// 정보 글은 영어로만 열리므로 모든 언어에서 /en/tips로 바로 연결한다(푸터 링크와 같은 방식).
+const TIPS_DESTINATION = { href: tipsIndexPath(), labelKey: "tips", locale: TIPS_LOCALE } as const;
+
 const DESTINATIONS = {
   tourist: [
     { href: "/", labelKey: "home" },
@@ -27,6 +32,7 @@ const DESTINATIONS = {
     { href: "/applications", labelKey: "applications" },
     { href: "/about", labelKey: "about" },
     { href: "/faq", labelKey: "faq" },
+    TIPS_DESTINATION,
   ],
   buddy: [
     { href: "/home", labelKey: "home" },
@@ -38,6 +44,7 @@ const DESTINATIONS = {
     { href: "/explore", labelKey: "explore" },
     { href: "/about", labelKey: "about" },
     { href: "/faq", labelKey: "faq" },
+    TIPS_DESTINATION,
   ],
 } as const;
 
@@ -154,13 +161,19 @@ function LocalizedSiteHeader({
   const accountTitle = profile?.displayName || profile?.name || t("account");
   const accountUserType = profile?.userType ?? (effectiveRole === "buddy" ? "BUDDY" : "TOURIST");
 
-  const navigationLinks = destinations.map(({ href, labelKey }) => {
+  const navigationLinks = destinations.map((destination) => {
+    const { href, labelKey } = destination;
     const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
+    // 언어가 정해진 목적지(Tips)는 next/link로 /en/tips에 바로 보낸다. next-intl Link에 locale을 주면
+    // 클릭할 때 언어 쿠키가 그 언어로 바뀌어, 이후 언어 없는 주소가 영어로 열린다.
+    const LinkComponent = "locale" in destination ? NextLink : Link;
+    const target = "locale" in destination ? `/${destination.locale}${href}` : href;
+
     return (
-      <Link
+      <LinkComponent
         key={href}
-        href={href}
+        href={target}
         aria-current={isActive ? "page" : undefined}
         className={`border-b-2 px-1 py-3 text-sm font-semibold transition-colors ${
           isActive
@@ -169,7 +182,7 @@ function LocalizedSiteHeader({
         }`}
       >
         {t(labelKey)}
-      </Link>
+      </LinkComponent>
     );
   });
 

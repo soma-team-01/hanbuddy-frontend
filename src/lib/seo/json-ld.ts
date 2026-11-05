@@ -70,6 +70,41 @@ export function breadcrumbJsonLd(locale: Locale, items: readonly BreadcrumbItem[
   };
 }
 
+export interface ArticleJsonLdInput {
+  readonly path: string;
+  readonly title: string;
+  readonly description: string;
+  /** YYYY-MM-DD */
+  readonly publishedAt: string;
+  /** YYYY-MM-DD */
+  readonly updatedAt: string;
+}
+
+/** 정보 글: 작성·발행 주체는 메인의 Organization과 같은 노드(@id)를 가리킨다. */
+export function articleJsonLd(locale: Locale, article: ArticleJsonLdInput): JsonLdNode {
+  const url = `${APP_ORIGIN}/${locale}${article.path}`;
+  const organization = {
+    "@type": "Organization",
+    "@id": ORGANIZATION_ID,
+    name: BRAND_NAME,
+    url: `${APP_ORIGIN}/${locale}`,
+  };
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${url}#article`,
+    headline: article.title,
+    description: article.description,
+    url,
+    inLanguage: locale,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    datePublished: article.publishedAt,
+    dateModified: article.updatedAt,
+    author: organization,
+    publisher: organization,
+  };
+}
+
 export interface FaqEntry {
   readonly question: string;
   readonly answer: string;

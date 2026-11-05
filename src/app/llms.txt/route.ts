@@ -1,6 +1,8 @@
 import en from "@/messages/en.json";
 import { CONTACT_DETAILS, MEETUP_GROUP_URL } from "@/lib/contact-details";
 import { getPublicActivities } from "@/lib/server/public-activities";
+import { listTips } from "@/lib/server/tips-content";
+import { tipUrl, type Tip } from "@/lib/tips/tip";
 import { APP_ORIGIN } from "@/lib/site";
 import type { TouristActivitySummary } from "@/types/activity";
 
@@ -18,9 +20,15 @@ function activityLine(activity: TouristActivitySummary): string {
   return `- [${activity.title}](${APP_ORIGIN}/en/activities/${activity.activityId}): ${details}`;
 }
 
+function tipLine(tip: Tip): string {
+  return `- [${tip.title}](${tipUrl(tip.slug)}): ${tip.description.replace(/\s+/g, " ")}`;
+}
+
 export async function GET() {
   // 활동 목록을 못 받으면 활동 절만 빼고 나머지 안내는 그대로 낸다. 이 응답은 캐시하지 않는다.
   const activities = await getPublicActivities("en").catch(() => null);
+  // 정보 글 파일이 계약을 어기면 조용히 빼지 않고 오류로 낸다(CI의 콘텐츠 검증이 먼저 막는다).
+  const tips = await listTips();
 
   const lines = [
     "# HanBuddy",
@@ -37,6 +45,7 @@ export async function GET() {
     `- [FAQ](${APP_ORIGIN}/en/faq): Payment, meeting points, cancellation and what buddies do.`,
     "",
     ...(activities?.length ? ["## Experiences", "", ...activities.map(activityLine), ""] : []),
+    ...(tips.length ? ["## Tips", "", ...tips.map(tipLine), ""] : []),
     "## Other languages",
     "",
     `- [한국어](${APP_ORIGIN}/ko)`,

@@ -1133,6 +1133,7 @@ export function CreateActivityForm({
           <div className="flex min-w-0 items-center gap-3">
             <Image
               src="/images/brand/logo-borderless.webp"
+              unoptimized
               alt=""
               width={36}
               height={36}

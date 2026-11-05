@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { StaticImage } from "@/components/ui/StaticImage";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import styles from "./about.module.css";
 
@@ -94,7 +94,7 @@ export function SeptemberAlbum({ label, photos }: SeptemberAlbumProps) {
                 isActive ? "opacity-100" : "opacity-0"
               }`}
             >
-              <Image
+              <StaticImage
                 src={photo.src}
                 alt={photo.alt}
                 fill
@@ -133,7 +133,7 @@ export function SeptemberAlbum({ label, photos }: SeptemberAlbumProps) {
                     : "opacity-70 hover:opacity-100"
                 }`}
               >
-                <Image
+                <StaticImage
                   src={photo.src}
                   alt=""
                   fill

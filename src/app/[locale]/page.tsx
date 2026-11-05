@@ -3,7 +3,7 @@ import { organizationJsonLd } from "@/lib/seo/json-ld";
 import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import Image from "next/image";
+import { StaticImage } from "@/components/ui/StaticImage";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { RecommendedExperiences } from "@/components/landing/RecommendedExperiences";
@@ -334,7 +334,7 @@ export default async function LandingPage({ params, searchParams }: LandingPageP
               </h2>
               {/* 밝은 낮 사진 1장을 작게. 얼굴이 크게 나오지 않도록 4:3 썸네일로 둔다. */}
               <div className="relative aspect-[4/3] w-[76px] shrink-0 -rotate-3 overflow-hidden rounded-xl bg-panel ring-2 ring-on-primary-strong/90 md:w-32 lg:w-40">
-                <Image
+                <StaticImage
                   src="/images/landing/kbo-0726-group.webp"
                   alt={aboutT("timeline.items.july.imageAlt")}
                   fill

@@ -4,7 +4,7 @@ import { breadcrumbJsonLd, type BreadcrumbItem } from "@/lib/seo/json-ld";
 import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Image from "next/image";
+import { StaticImage } from "@/components/ui/StaticImage";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "@/i18n/navigation";
@@ -138,7 +138,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
         className="relative isolate overflow-hidden bg-ink text-on-primary"
       >
         <div aria-hidden className="absolute inset-0 -z-10 hidden lg:block">
-          <Image
+          <StaticImage
             src={`${PHOTO}/football-0928-stadium-wide.webp`}
             alt=""
             fill
@@ -156,7 +156,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
         <div className="mx-auto grid max-w-[1200px] lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:items-center lg:gap-x-16 lg:px-8 lg:pt-20 lg:pb-14">
           <div className="relative h-[min(50svh,26rem)] min-h-[19rem] md:h-[min(54svh,32rem)] lg:col-start-2 lg:row-start-1 lg:aspect-[3/4] lg:h-auto lg:min-h-0 lg:overflow-hidden lg:rounded-[2rem] lg:shadow-[0_30px_80px_rgba(0,0,0,0.45)] lg:ring-1 lg:ring-white/15">
-            <Image
+            <StaticImage
               src={`${PHOTO}/football-0928-night-group.webp`}
               alt={t("hero.photoAlt")}
               fill
@@ -261,7 +261,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                 <DateLabel>{t("timeline.items.june.date")}</DateLabel>
                 {/* 세로 사진이라 위쪽의 다른 관중은 잘라내고 팀원 넷이 보이는 아래쪽을 쓴다. */}
                 <div className={`${RUN_PHOTO} lg:mt-4`}>
-                  <Image
+                  <StaticImage
                     src={`${PHOTO}/1차-1.webp`}
                     alt={t("timeline.items.june.imageAlt")}
                     fill
@@ -318,7 +318,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
                       } ${styles.reveal}`}
                     >
                       <div className={RUN_PHOTO}>
-                        <Image
+                        <StaticImage
                           src={run.src}
                           alt={t(`timeline.items.${run.key}.imageAlt`)}
                           fill
@@ -490,7 +490,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
         <PageContainer>
           <div className="overflow-hidden rounded-[2rem] bg-primary-soft lg:grid lg:grid-cols-2">
             <div className="relative aspect-[4/3] lg:order-2 lg:aspect-auto lg:min-h-[24rem]">
-              <Image
+              <StaticImage
                 src={`${PHOTO}/kbo-0913-group-guide.webp`}
                 alt={t("host.photoAlt")}
                 fill

@@ -1,6 +1,6 @@
 import { pageAlternates, sharePreview } from "@/lib/seo/metadata";
 import type { Metadata } from "next";
-import Image from "next/image";
+import { StaticImage } from "@/components/ui/StaticImage";
 import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { BuddyGoogleAuthDialog } from "@/components/auth/BuddyGoogleAuthDialog";
@@ -74,7 +74,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
   return (
     <main className="flex w-full flex-1 flex-col bg-canvas-soft text-ink">
       <section className="relative isolate min-h-[calc(100svh-60px)] overflow-hidden bg-ink text-white lg:min-h-[calc(100svh-76px)]">
-        <Image
+        <StaticImage
           src="/images/buddy/hosting-hero.jpg"
           alt={t("hero.imageAlt")}
           fill
@@ -116,7 +116,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
           </div>
 
           <div className="relative hidden min-h-[calc(100svh-76px)] lg:block">
-            <Image
+            <StaticImage
               src="/images/buddy/hosting-hero.jpg"
               alt=""
               fill
@@ -191,7 +191,7 @@ export default async function BuddyHostingPage({ params }: BuddyHostingPageProps
             {EXPERIENCE_IDEAS.map(({ key, image, imageClassName }) => (
               <article key={key} className="group overflow-hidden rounded-[1.75rem] bg-canvas">
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image
+                  <StaticImage
                     src={image}
                     alt={t(`ideas.items.${key}.imageAlt`)}
                     fill

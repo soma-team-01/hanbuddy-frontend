@@ -15,8 +15,6 @@ interface ConfirmDialogBaseProps {
   variant?: "default" | "cancellation";
   isPending?: boolean;
   confirmDisabled?: boolean;
-  /** false면 뒤 화면을 흐리지 않고 딤만 적용한다 (예: 첫 접속 시 자동으로 뜨는 쿠키 동의) */
-  backdropBlur?: boolean;
   onClose: () => void;
   children?: React.ReactNode;
 }
@@ -51,7 +49,6 @@ export function ConfirmDialog({
   variant = "default",
   isPending = false,
   confirmDisabled = false,
-  backdropBlur = true,
   onConfirm,
   onClose,
   confirmSlot,
@@ -75,9 +72,7 @@ export function ConfirmDialog({
       onCancel={(event) => {
         if (isPending) event.preventDefault();
       }}
-      className={`motion-dialog m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 ${
-        backdropBlur ? "backdrop:backdrop-blur-[3px]" : ""
-      } max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:p-8 ${variant === "cancellation" ? "max-h-[calc(100dvh-1rem)] overflow-y-auto md:rounded-3xl" : "md:rounded-2xl"}`}
+      className={`motion-dialog m-0 w-full max-w-none rounded-t-3xl border-0 bg-canvas-soft p-6 text-ink shadow-2xl backdrop:bg-ink/45 backdrop:backdrop-blur-[3px] max-md:mt-auto md:m-auto md:w-[calc(100%-3rem)] md:max-w-lg md:p-8 ${variant === "cancellation" ? "max-h-[calc(100dvh-1rem)] overflow-y-auto md:rounded-3xl" : "md:rounded-2xl"}`}
     >
       <div className="flex items-start justify-between gap-4">
         <h2 id="confirm-dialog-title" className="font-display text-xl font-bold text-ink">

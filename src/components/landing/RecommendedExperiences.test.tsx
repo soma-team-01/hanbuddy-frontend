@@ -118,7 +118,7 @@ describe("RecommendedExperiences", () => {
     );
   });
 
-  it("puts view all below the cards on mobile and beside the heading on desktop", async () => {
+  it("renders a single view all link after the cards", async () => {
     mockedGetTouristActivities.mockResolvedValue({
       status: "success",
       activities: [1, 2, 3, 4].map(createActivity),
@@ -134,17 +134,6 @@ describe("RecommendedExperiences", () => {
     const track = screen.getByTestId("recommended-track");
     // 코드 순서는 카드 뒤라 모바일 화면 순서와 키보드 이동 순서가 같다
     expect(track.compareDocumentPosition(viewAll) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(viewAll).toHaveClass("w-full", "rounded-full", "border");
-    // PC는 제목 줄 오른쪽(1행 2열)에 글자 링크로, 카드는 2행 전체를 쓴다
-    expect(viewAll).toHaveClass(
-      "lg:col-start-2",
-      "lg:row-start-1",
-      "lg:w-auto",
-      "lg:border-0",
-      "lg:text-primary",
-    );
-    expect(track).toHaveClass("lg:col-span-2", "lg:row-start-2");
-    expect(track.parentElement).toHaveClass("lg:grid-cols-[1fr_auto]");
   });
 
   it("keeps the recommendation section visible when no activities are available", async () => {

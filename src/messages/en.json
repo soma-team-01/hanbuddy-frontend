@@ -929,7 +929,7 @@
         },
         "rain": {
           "question": "What happens if it rains?",
-          "answer": "Dome baseball games and football matches go ahead in the rain. At open-air baseball stadiums, heavy rain can call the game off. If that happens, you are refunded under the Cancellation and Refund Policy, minus costs already spent for you, such as food."
+          "answer": "Dome baseball games and football matches go ahead in the rain. At open-air baseball stadiums, heavy rain can call the game off. If that happens before we meet, your buddy cancels the date and you get a full refund. If the game is stopped after we have met, you are refunded for the part that wasn't provided, so food you have already had is not refunded."
         },
         "late": {
           "question": "What if I'm running late?",

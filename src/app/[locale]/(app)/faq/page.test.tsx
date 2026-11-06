@@ -103,7 +103,7 @@ describe("FaqPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/at least 2 to 3 guests/)).toBeInTheDocument();
     expect(screen.getByText(/aged 19 and over/)).toBeInTheDocument();
-    expect(screen.getByText(/minus costs already spent for you/)).toBeInTheDocument();
+    expect(screen.getByText(/refunded for the part that wasn't provided/)).toBeInTheDocument();
   });
 
   it("gives every question a stable anchor and lists them for jumping", async () => {

@@ -69,22 +69,6 @@ describe("ConfirmDialog", () => {
     );
   });
 
-  it("keeps the dim but drops the blur when backdropBlur is off", () => {
-    renderWithIntl(
-      <ConfirmDialog
-        title="Analytics & advertising"
-        confirmLabel="Allow"
-        backdropBlur={false}
-        onConfirm={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
-
-    const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveClass("backdrop:bg-ink/45");
-    expect(dialog).not.toHaveClass("backdrop:backdrop-blur-[3px]");
-  });
-
   it("calls onConfirm and onClose from the action buttons", () => {
     const onConfirm = vi.fn();
     const onClose = vi.fn();

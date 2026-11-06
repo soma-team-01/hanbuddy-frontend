@@ -136,7 +136,8 @@ export default async function FaqPage({ params }: FaqPageProps) {
           <TopicChips topics={topics} label={t("faq.eyebrow")} />
 
           <PageContainer className="pt-10 pb-16 md:pt-12 md:pb-20 lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-16 lg:pt-16">
-            <aside className="hidden lg:sticky lg:top-[117px] lg:block lg:self-start">
+            {/* 질문이 늘어 목차가 화면보다 길어지면 목차 안에서 스크롤한다. 여백 1칸은 포커스 테두리가 잘리지 않게 둔다. */}
+            <aside className="hidden lg:sticky lg:top-[117px] lg:-m-1 lg:block lg:max-h-[calc(100dvh-141px)] lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:p-1">
               <TopicRail topics={topics} label={t("faq.eyebrow")} />
             </aside>
 

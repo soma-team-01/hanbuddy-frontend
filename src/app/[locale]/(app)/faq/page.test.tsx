@@ -33,7 +33,7 @@ describe("FaqPage", () => {
     expect(screen.getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
   });
 
-  it("groups the ten questions by topic and folds each answer under its question", async () => {
+  it("groups the nineteen questions by topic and folds each answer under its question", async () => {
     await renderFaq("en");
 
     const faq = screen.getByRole("region", { name: "Questions guests ask before booking" });
@@ -49,12 +49,21 @@ describe("FaqPage", () => {
       "Who are the buddies?",
       "Can I come alone?",
       "Do I need to speak Korean or know the sport?",
+      "Can Koreans join too?",
+      "Is there an age limit?",
       "How do I pay?",
       "What is included in the price?",
+      "Why does it cost more than a match ticket?",
+      "Can I book for my friends too?",
       "How late can I book?",
+      "What if not enough people sign up?",
       "What if I need to cancel?",
+      "What happens if it rains?",
       "I have dietary restrictions. Is that a problem?",
       "Where do we meet?",
+      "What if I'm running late?",
+      "How do I get my ticket, and where do we sit?",
+      "Will you take photos?",
     ]);
     for (const question of questions) {
       // 답은 접혀 있어도 HTML에 들어 있어 검색엔진이 읽는다.
@@ -92,6 +101,9 @@ describe("FaqPage", () => {
     expect(
       screen.getByText("Bookings close 24 hours before the experience starts."),
     ).toBeInTheDocument();
+    expect(screen.getByText(/at least 2 to 3 guests/)).toBeInTheDocument();
+    expect(screen.getByText(/aged 19 and over/)).toBeInTheDocument();
+    expect(screen.getByText(/refunded for the part that wasn't provided/)).toBeInTheDocument();
   });
 
   it("gives every question a stable anchor and lists them for jumping", async () => {
@@ -113,7 +125,7 @@ describe("FaqPage", () => {
           link.getAttribute("href")?.startsWith("#faq-") &&
           !link.getAttribute("href")?.startsWith("#faq-group-"),
       );
-    expect(questionLinks).toHaveLength(10);
+    expect(questionLinks).toHaveLength(19);
     expect(within(rail).getByRole("link", { name: "How do I pay?" })).toHaveAttribute(
       "href",
       "#faq-pay",
@@ -152,7 +164,7 @@ describe("FaqPage", () => {
       };
 
       const items = [...document.querySelectorAll("details")];
-      expect(faq.mainEntity).toHaveLength(10);
+      expect(faq.mainEntity).toHaveLength(19);
       expect(faq.mainEntity.map((entry) => entry.name)).toEqual(
         screen.getAllByRole("heading", { level: 3 }).map((question) => question.textContent),
       );

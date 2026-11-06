@@ -108,14 +108,28 @@ export function TopicChips({ topics, label }: { topics: readonly NavTopic[]; lab
 /** 데스크톱: 왼쪽에 붙어 있는 묶음·질문 목차. 지금 묶음은 빨간 선과 진한 글자로 표시한다. */
 export function TopicRail({ topics, label }: { topics: readonly NavTopic[]; label: string }) {
   const [active, setActive] = useActiveTopic(topics.map((topic) => topic.id));
+  const navRef = useRef<HTMLElement>(null);
+
+  // 목차가 화면보다 길어 감싼 상자 안에서 스크롤될 때, 지금 묶음을 상자 맨 위로 당겨 온다(페이지 스크롤은 건드리지 않는다).
+  useEffect(() => {
+    const box = navRef.current?.parentElement;
+    if (!box || !active || box.scrollHeight <= box.clientHeight) return;
+    const item = box.querySelector<HTMLElement>(`[data-topic="${active}"]`);
+    if (!item || typeof box.scrollTo !== "function") return;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const top = item.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+    box.scrollTo({ top: Math.max(top - 4, 0), behavior: reduce ? "auto" : "smooth" });
+  }, [active]);
 
   return (
-    <nav aria-label={label}>
+    <nav ref={navRef} aria-label={label}>
       <ol className="space-y-6">
         {topics.map((topic) => {
           const isActive = topic.id === active;
           return (
-            <li key={topic.id}>
+            <li key={topic.id} data-topic={topic.id}>
               <a
                 href={`#${topic.id}`}
                 aria-current={isActive ? "location" : undefined}

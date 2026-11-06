@@ -906,6 +906,42 @@
         "language": {
           "question": "Do I need to speak Korean or know the sport?",
           "answer": "No. Your buddy explains the rules and teaches you the cheering songs as you go."
+        },
+        "koreans": {
+          "question": "Can Koreans join too?",
+          "answer": "Yes. Most guests are travelers and foreign residents, but Koreans are welcome too."
+        },
+        "age": {
+          "question": "Is there an age limit?",
+          "answer": "Game nights are for guests aged 19 and over. Other experiences show any age limit on their page."
+        },
+        "price": {
+          "question": "Why does it cost more than a match ticket?",
+          "answer": "Because the price covers more than the ticket. Your buddy books the seats, meets you before the game, sits with you for the whole match, explains what is happening and teaches you the chants. Stadium food is included too, and a game night takes about 3 to 4 hours."
+        },
+        "friends": {
+          "question": "Can I book for my friends too?",
+          "answer": "Yes. Choose the number of guests when you book, and one booking covers your whole group. The price is per person, and everyone sits together."
+        },
+        "minimum": {
+          "question": "What if not enough people sign up?",
+          "answer": "Each date needs at least 2 to 3 guests, depending on the experience. Your buddy decides whether it goes ahead and tells you by the day before at the latest. If it is cancelled, you get a full refund or your PayPal hold is released."
+        },
+        "rain": {
+          "question": "What happens if it rains?",
+          "answer": "Dome baseball games and football matches go ahead in the rain. At open-air baseball stadiums, heavy rain can call the game off. If that happens, you are refunded under the Cancellation and Refund Policy, minus costs already spent for you, such as food."
+        },
+        "late": {
+          "question": "What if I'm running late?",
+          "answer": "Please try to arrive on time. If you are running late or can't find the meeting point, message your buddy before the meeting time and tell them roughly when you will arrive."
+        },
+        "tickets": {
+          "question": "How do I get my ticket, and where do we sit?",
+          "answer": "Your buddy books the seats and brings the tickets, so you don't need to buy one. We sit together, usually close to the cheering section, but we can't promise a specific section."
+        },
+        "photos": {
+          "question": "Will you take photos?",
+          "answer": "Yes. Your buddy takes photos during the experience and shares them with you afterwards. In the short survey after the experience we ask whether we may use them, and we only use photos of guests who say yes."
         }
       }
     },

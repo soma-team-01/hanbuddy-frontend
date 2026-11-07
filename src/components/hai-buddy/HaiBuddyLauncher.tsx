@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ChatBubbleDotsIcon } from "@/components/ui/icons";
@@ -18,6 +26,20 @@ const AvailabilityContext = createContext<{
 }>({
   available: false,
 });
+
+const noopSubscribe = () => () => {};
+
+/**
+ * 하이드레이션 중에는 false, 끝나면 true. 최근 대화 조회가 페이지 일부의 하이드레이션보다 먼저 끝나도
+ * 서버 HTML(런처 없음, 기존 연락 버튼 있음)과 어긋나지 않게 그 뒤에만 HAI Buddy를 켠다.
+ */
+function useHydrated() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
 
 /**
  * 로그인한 관광객·관리자에게만 켠다. 최근 대화 조회가 성공해야 런처를 보인다(서버에서 꺼져 있으면 404).
@@ -38,7 +60,8 @@ export function HaiBuddyProvider({
 
 /** 활동 상세의 기존 연락 버튼처럼 같은 자리를 쓰는 요소가 HAI Buddy가 떠 있는지 알 때 쓴다. */
 export function useHaiBuddyAvailable() {
-  return useContext(AvailabilityContext).available;
+  const hydrated = useHydrated();
+  return useContext(AvailabilityContext).available && hydrated;
 }
 
 function readOpen() {
@@ -60,7 +83,9 @@ function writeOpen(open: boolean) {
 
 export function HaiBuddyLauncher() {
   const t = useTranslations("HaiBuddy");
-  const { available, conversation } = useContext(AvailabilityContext);
+  const hydrated = useHydrated();
+  const { available: ready, conversation } = useContext(AvailabilityContext);
+  const available = ready && hydrated;
   // 런처는 최근 대화 조회가 끝난 뒤(브라우저에서만) 그려지므로 저장된 열림 상태로 바로 시작해도 하이드레이션과 어긋나지 않는다.
   const [open, setOpen] = useState(readOpen);
   const launcherRef = useRef<HTMLButtonElement>(null);

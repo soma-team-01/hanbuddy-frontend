@@ -13,7 +13,8 @@ export const haiBuddyKeys = {
 export function haiBuddyLatestQueryOptions(language: ContentLanguage) {
   return queryOptions({
     queryKey: haiBuddyKeys.latest(language),
-    queryFn: async () => unwrapApiResult(await getLatestHaiBuddyConversation(language), "conversation"),
+    queryFn: async () =>
+      unwrapApiResult(await getLatestHaiBuddyConversation(language), "conversation"),
     retry: false,
     staleTime: Infinity,
     refetchOnWindowFocus: false,

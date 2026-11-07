@@ -28,9 +28,10 @@ export function InquiryTemplate({
 }>) {
   const locale = getLocaleOrDefault(useLocale());
   const { trackInquiry } = useMeasurementEvents();
-  const [copyState, setCopyState] = useState<{ message: string; result: "copied" | "failed" } | null>(
-    null,
-  );
+  const [copyState, setCopyState] = useState<{
+    message: string;
+    result: "copied" | "failed";
+  } | null>(null);
 
   /** Copies the localized inquiry template and exposes clipboard failures to the user. */
   async function copyTemplate() {

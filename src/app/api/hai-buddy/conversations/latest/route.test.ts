@@ -16,13 +16,20 @@ describe("GET /api/hai-buddy/conversations/latest", () => {
     mockedGetBackend.mockReset();
     mockedGetBackend.mockResolvedValue({
       status: 200,
-      payload: { isSuccess: true, code: "200", message: "ok", result: { conversationId: null, messages: [] } },
+      payload: {
+        isSuccess: true,
+        code: "200",
+        message: "ok",
+        result: { conversationId: null, messages: [] },
+      },
       setCookies: [],
     });
   });
 
   it("returns 401 when signed out", async () => {
-    const response = await GET(new NextRequest("http://localhost/api/hai-buddy/conversations/latest"));
+    const response = await GET(
+      new NextRequest("http://localhost/api/hai-buddy/conversations/latest"),
+    );
 
     expect(response.status).toBe(401);
     expect(mockedGetBackend).not.toHaveBeenCalled();

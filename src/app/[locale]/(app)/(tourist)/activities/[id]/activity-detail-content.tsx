@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { ActivityDetailView } from "@/components/activity/ActivityDetailView";
 import { ActivityContact } from "@/components/activity/ActivityContact";
+import { useHaiBuddyAvailable } from "@/components/hai-buddy/HaiBuddyLauncher";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -54,6 +55,7 @@ export function ActivityDetailContent({
   const t = useTranslations("ActivityDetail");
   const tNavigation = useTranslations("Navigation");
   const tErrors = useTranslations("Errors");
+  const haiBuddyAvailable = useHaiBuddyAvailable();
   const getApiErrorMessage = useApiErrorMessage();
   // 탐색·내 신청 등 어디서 들어왔는지에 따라 이전 화면으로 돌아간다
   const goBack = useHistoryBack("/explore");
@@ -133,7 +135,8 @@ export function ActivityDetailContent({
         weather={weatherQuery.data?.available ? weatherQuery.data : undefined}
       />
       {relatedTips}
-      <ActivityContact />
+      {/* HAI Buddy가 같은 자리에 뜨고 연락 채널도 그 안에서 안내하므로 둘 중 하나만 보인다. */}
+      {!haiBuddyAvailable && <ActivityContact />}
     </div>
   );
 }

@@ -20,13 +20,7 @@ export type HaiBuddyHandoff = "NONE" | "CONTACT";
 export type HaiBuddyRole = "USER" | "ASSISTANT";
 export type HaiBuddyFeedbackRating = "UP" | "DOWN";
 export type HaiBuddyKnowledgeSource =
-  | "FAQ"
-  | "POLICY"
-  | "TIPS"
-  | "STADIUM"
-  | "CASE"
-  | "REVIEW"
-  | "LEARNED";
+  "FAQ" | "POLICY" | "TIPS" | "STADIUM" | "CASE" | "REVIEW" | "LEARNED";
 
 export interface HaiBuddyContext {
   page: HaiBuddyPage;

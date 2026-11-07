@@ -20,11 +20,21 @@ describe("InquiryTemplate", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it.each([
-    ["copies the message and shows the success status", vi.fn().mockResolvedValue(undefined), labels.copied],
-    ["shows the failure status when the clipboard refuses", vi.fn().mockRejectedValue(new Error("no")), labels.copyFailed],
+    [
+      "copies the message and shows the success status",
+      vi.fn().mockResolvedValue(undefined),
+      labels.copied,
+    ],
+    [
+      "shows the failure status when the clipboard refuses",
+      vi.fn().mockRejectedValue(new Error("no")),
+      labels.copyFailed,
+    ],
   ])("%s", async (_name, writeText, status) => {
     vi.stubGlobal("navigator", { clipboard: { writeText } });
-    renderWithIntl(<InquiryTemplate message={"Hi!\nQuestion"} labels={labels} placement="hai_buddy" />);
+    renderWithIntl(
+      <InquiryTemplate message={"Hi!\nQuestion"} labels={labels} placement="hai_buddy" />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: labels.copy }));
 
@@ -33,7 +43,9 @@ describe("InquiryTemplate", () => {
   });
 
   it("prefills WhatsApp with the same message and tracks the placement", () => {
-    renderWithIntl(<InquiryTemplate message={"Hi!\nQuestion"} labels={labels} placement="hai_buddy" />);
+    renderWithIntl(
+      <InquiryTemplate message={"Hi!\nQuestion"} labels={labels} placement="hai_buddy" />,
+    );
     const whatsapp = screen.getByRole("link", { name: "WhatsApp" });
 
     expect(new URL(whatsapp.getAttribute("href")!).searchParams.get("text")).toBe("Hi!\nQuestion");

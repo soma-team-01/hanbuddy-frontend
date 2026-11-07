@@ -6,7 +6,10 @@ import type { HaiBuddyMessageRequest, HaiBuddyReply } from "@/types/hai-buddy";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const parsed = await readJsonBody<HaiBuddyMessageRequest>(request, "질문 형식이 올바르지 않습니다.");
+  const parsed = await readJsonBody<HaiBuddyMessageRequest>(
+    request,
+    "질문 형식이 올바르지 않습니다.",
+  );
   if (!parsed.ok) return parsed.response;
 
   return proxyAuthenticatedPost<HaiBuddyMessageRequest, HaiBuddyReply>(

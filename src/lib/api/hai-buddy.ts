@@ -13,7 +13,11 @@ export type HaiBuddyConversationResult = ApiResult<HaiBuddyConversation, "conver
 export type HaiBuddyFeedbackResult = ApiResult<null, "feedback">;
 
 function jsonRequest(body: unknown): RequestInit {
-  return { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  return {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
 }
 
 export function sendHaiBuddyMessage(input: HaiBuddyMessageRequest): Promise<HaiBuddyReplyResult> {

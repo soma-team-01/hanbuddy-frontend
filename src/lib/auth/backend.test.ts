@@ -305,4 +305,3 @@ describe("cookie header helpers", () => {
     await expect(backendResponse).resolves.toMatchObject({ status: 504 });
   });
 });
-

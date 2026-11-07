@@ -82,6 +82,8 @@ export default async function LocaleLayout({
   } else if (authenticated && userType === "TOURIST") {
     role = "tourist";
   }
+  // HAI Buddy는 질문마다 AI 비용이 들어 로그인한 관광객(시연·점검용 관리자 포함)에게만 띄운다.
+  const haiBuddyEnabled = authenticated && (userType === "TOURIST" || userType === "ADMIN");
 
   const koreanFont = koreanFontRootProps(locale, "font-noto-sans-kr");
 
@@ -106,6 +108,7 @@ export default async function LocaleLayout({
             >
               <RouteShell
                 sessionRole={role}
+                haiBuddyEnabled={haiBuddyEnabled}
                 header={
                   <SiteHeader
                     role={role}

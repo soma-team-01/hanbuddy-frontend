@@ -12,6 +12,7 @@ import { getMyProfile } from "@/lib/api/users";
 import { getTouristActivity } from "@/lib/api/activities";
 import type { HaiBuddyReply } from "@/types/hai-buddy";
 import type { TouristActivitySummary } from "@/types/activity";
+import { ActivityContact } from "@/components/activity/ActivityContact";
 import { HaiBuddyLauncher, HaiBuddyProvider } from "./HaiBuddyLauncher";
 
 const t = en.HaiBuddy;
@@ -64,6 +65,7 @@ function reply(overrides: Partial<HaiBuddyReply> = {}): HaiBuddyReply {
     handoff: "NONE",
     handoffSummary: "",
     citations: [{ citationId: "k11", source: "FAQ", title: "How do I pay?", url: "/en/faq#pay" }],
+    generalGuidance: false,
     ...overrides,
   };
 }
@@ -254,6 +256,7 @@ describe("HAI Buddy panel", () => {
             handoff: "NONE",
             handoffSummary: null,
             citations: [],
+            generalGuidance: false,
             createdAt: "2026-11-08T01:00:00Z",
           },
           {
@@ -264,6 +267,7 @@ describe("HAI Buddy panel", () => {
             handoff: "NONE",
             handoffSummary: null,
             citations: [],
+            generalGuidance: false,
             createdAt: "2026-11-08T01:00:05Z",
           },
         ],
@@ -337,5 +341,38 @@ describe("HAI Buddy panel", () => {
     expect(await within(panel).findByRole("button", { name: t.newChat })).toBeDisabled();
     await act(async () => resolve({ status: "success", reply: reply() }));
     expect(within(panel).getByRole("button", { name: t.newChat })).toBeEnabled();
+  });
+
+  it("keeps the human contact button and shows a separate Ask AI button", async () => {
+    renderWithQueryClient(
+      <HaiBuddyProvider enabled>
+        <ActivityContact />
+        <HaiBuddyLauncher />
+      </HaiBuddyProvider>,
+    );
+
+    expect(await screen.findByRole("button", { name: t.launcher })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: en.ActivityContact.trigger })).toBeInTheDocument();
+  });
+
+  it("labels the panel and every answer as AI, and marks general travel tips", async () => {
+    vi.mocked(sendHaiBuddyMessage).mockResolvedValue({
+      status: "success",
+      reply: reply({ reply: "Take subway Line 2.", citations: [], generalGuidance: true }),
+    });
+    const panel = await openPanel();
+    await ask("How do I get to Jamsil?");
+
+    expect(within(panel).getByText(t.aiBadge)).toBeInTheDocument();
+    expect(await within(panel).findByText(t.aiAnswer)).toBeInTheDocument();
+    expect(within(panel).getByText(t.generalGuidance)).toBeInTheDocument();
+  });
+
+  it("makes the page give up space for the panel while it is open", async () => {
+    const panel = await openPanel();
+    expect(document.documentElement).toHaveAttribute("data-hai-buddy-open");
+
+    fireEvent.click(within(panel).getByRole("button", { name: t.close }));
+    expect(document.documentElement).not.toHaveAttribute("data-hai-buddy-open");
   });
 });

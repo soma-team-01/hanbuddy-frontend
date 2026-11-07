@@ -2174,9 +2174,9 @@
     "reselectDay": "日期已失效，請重新選擇日。"
   },
   "HaiBuddy": {
-    "launcher": "問問 HAI Buddy",
+    "launcher": "問問 AI",
     "title": "HAI Buddy",
-    "subtitle": "HanBuddy 助手",
+    "subtitle": "AI 助手 · 回答由 AI 產生",
     "newChat": "新對話",
     "close": "關閉 HAI Buddy",
     "greeting": "你好！我是 HAI Buddy。關於這個頁面或 HanBuddy 的任何問題都可以問我。",
@@ -2219,7 +2219,7 @@
       "LEARNED": "HanBuddy 團隊"
     },
     "nextDate": "下一場：{date}",
-    "contactTitle": "直接聯絡我們的團隊",
+    "contactTitle": "直接聯絡我們的團隊（真人）",
     "contactHint": "複製這則訊息，透過下面任一管道傳送。",
     "copy": "複製訊息",
     "copied": "已複製，請貼到聊天中。",
@@ -2230,6 +2230,9 @@
     "contactQuestion": "問題：{question}",
     "helpful": "有幫助",
     "notHelpful": "沒幫助",
-    "feedbackThanks": "謝謝你的回饋"
+    "feedbackThanks": "謝謝你的回饋",
+    "aiBadge": "AI",
+    "aiAnswer": "AI 回答",
+    "generalGuidance": "這是 AI 提供的一般旅遊資訊，未經 HanBuddy 確認，可能會有變動。"
   }
 }

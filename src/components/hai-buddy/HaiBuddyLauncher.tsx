@@ -11,7 +11,6 @@ import {
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { ChatBubbleDotsIcon } from "@/components/ui/icons";
 import { getLocaleOrDefault } from "@/i18n/routing";
 import { getContentLanguage } from "@/lib/content-language";
 import { haiBuddyLatestQueryOptions } from "@/lib/query/hai-buddy";
@@ -112,18 +111,28 @@ export function HaiBuddyLauncher() {
         <button
           ref={launcherRef}
           type="button"
-          aria-label={t("launcher")}
           title={t("launcher")}
           onClick={() => {
             writeOpen(true);
             setOpen(true);
           }}
-          className="fixed right-4 bottom-[calc(var(--fixed-bar-height,0px)+1.5rem)] z-30 flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:right-6"
+          // 사람에게 묻는 문의하기(원형 말풍선)와 헷갈리지 않도록 글자가 있는 어두운 알약 모양으로, 그 위에 쌓아 둔다.
+          className="fixed right-4 bottom-[calc(var(--fixed-bar-height,0px)+1.5rem+var(--contact-fab-space,0px))] z-30 flex h-12 items-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white shadow-lg ring-2 ring-primary/40 transition-colors hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:right-6"
         >
-          <ChatBubbleDotsIcon aria-hidden className="size-7" />
+          <SparkleIcon />
+          <span>{t("launcher")}</span>
         </button>
       )}
       {open && <HaiBuddyPanel initial={conversation} onClose={close} />}
     </>
+  );
+}
+
+function SparkleIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="size-5 text-[#FFC94D]" fill="currentColor">
+      <path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z" />
+      <path d="M19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z" />
+    </svg>
   );
 }

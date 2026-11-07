@@ -2174,9 +2174,9 @@
     "reselectDay": "日が無効になりました。もう一度選択してください。"
   },
   "HaiBuddy": {
-    "launcher": "HAI Buddyに聞く",
+    "launcher": "AIに聞く",
     "title": "HAI Buddy",
-    "subtitle": "HanBuddyアシスタント",
+    "subtitle": "AIアシスタント · 回答はAIが作成します",
     "newChat": "新しい会話",
     "close": "HAI Buddyを閉じる",
     "greeting": "こんにちは！HAI Buddyです。このページやHanBuddyについて何でも聞いてください。",
@@ -2219,7 +2219,7 @@
       "LEARNED": "HanBuddyチーム"
     },
     "nextDate": "次回: {date}",
-    "contactTitle": "チームに直接問い合わせる",
+    "contactTitle": "チーム（担当者）に直接問い合わせる",
     "contactHint": "このメッセージをコピーして、下のいずれかのチャンネルで送ってください。",
     "copy": "メッセージをコピー",
     "copied": "コピーしました。チャットに貼り付けてください。",
@@ -2230,6 +2230,9 @@
     "contactQuestion": "質問: {question}",
     "helpful": "役に立った",
     "notHelpful": "役に立たなかった",
-    "feedbackThanks": "フィードバックありがとうございます"
+    "feedbackThanks": "フィードバックありがとうございます",
+    "aiBadge": "AI",
+    "aiAnswer": "AIの回答",
+    "generalGuidance": "AIによる一般的な旅行情報です。HanBuddyが確認した情報ではなく、変わる場合があります。"
   }
 }

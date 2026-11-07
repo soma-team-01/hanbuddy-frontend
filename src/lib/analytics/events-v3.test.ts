@@ -95,6 +95,16 @@ it("allows only fixed signup, landing section, CTA and inquiry categories", () =
   ).toBeNull();
 });
 
+it("accepts HAI Buddy contact-card inquiries as their own placement", () => {
+  expect(
+    fields("inquiry_click", "/en/explore", {
+      channel: "whatsapp",
+      placement: "hai_buddy",
+      locale: "en",
+    }),
+  ).toMatchObject({ channel: "whatsapp", placement: "hai_buddy", locale: "en" });
+});
+
 it("keeps query-bearing or raw URL pathnames ineligible", () => {
   expect(safePage("/en/explore?token=secret")).toBeNull();
   expect(safePage("https://example.test/en/explore")).toBeNull();

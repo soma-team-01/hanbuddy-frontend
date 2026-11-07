@@ -291,4 +291,40 @@ describe("HAI Buddy panel", () => {
     expect(screen.queryByRole("complementary", { name: t.title })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: t.launcher })).toHaveFocus();
   });
+
+  it("keeps the conversation after closing and reopening the panel", async () => {
+    const panel = await openPanel();
+    await ask("How do I pay?");
+    expect(
+      await within(panel).findByText("You can pay with PayPal when you book."),
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(panel).getByRole("button", { name: t.close }));
+    fireEvent.click(screen.getByRole("button", { name: t.launcher }));
+    const reopened = screen.getByRole("complementary", { name: t.title });
+
+    expect(within(reopened).getByText("How do I pay?")).toBeInTheDocument();
+    expect(
+      within(reopened).getByText("You can pay with PayPal when you book."),
+    ).toBeInTheDocument();
+    await ask("And refunds?");
+    await waitFor(() =>
+      expect(sendHaiBuddyMessage).toHaveBeenLastCalledWith(
+        expect.objectContaining({ conversationId: 50 }),
+      ),
+    );
+  });
+
+  it("starts a new chat that stays empty after reopening", async () => {
+    const panel = await openPanel();
+    await ask("Tell me about refunds");
+    await within(panel).findByText("You can pay with PayPal when you book.");
+
+    fireEvent.click(within(panel).getByRole("button", { name: t.newChat }));
+    fireEvent.click(within(panel).getByRole("button", { name: t.close }));
+    fireEvent.click(screen.getByRole("button", { name: t.launcher }));
+
+    const reopened = screen.getByRole("complementary", { name: t.title });
+    expect(within(reopened).queryByText("Tell me about refunds")).not.toBeInTheDocument();
+  });
 });

@@ -42,10 +42,16 @@ export function HaiBuddyPanel({
   const titleId = useId();
   const queryClient = useQueryClient();
   const context = useHaiBuddyContext();
-  const [conversationId, setConversationId] = useState<number | null>(
-    initial?.conversationId ?? null,
+  // 캐시 변경 알림은 다음 틱에 퍼지므로, 닫자마자 다시 열어도 마지막 대화가 보이도록 열 때 캐시를 직접 읽는다.
+  const [restored] = useState(
+    () =>
+      queryClient.getQueryData<HaiBuddyConversation>(haiBuddyKeys.latest(context.language)) ??
+      initial,
   );
-  const [messages, setMessages] = useState<HaiBuddyMessage[]>(initial?.messages ?? []);
+  const [conversationId, setConversationId] = useState<number | null>(
+    restored?.conversationId ?? null,
+  );
+  const [messages, setMessages] = useState<HaiBuddyMessage[]>(restored?.messages ?? []);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<{ kind: PendingError; question: string } | null>(null);
   const [contextOffFor, setContextOffFor] = useState<string | null>(null);
@@ -67,6 +73,14 @@ export function HaiBuddyPanel({
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // 패널을 닫았다 열거나 페이지를 옮겨도 화면에 보이던 대화가 그대로 복원되도록 캐시를 맞춘다.
+  useEffect(() => {
+    queryClient.setQueryData<HaiBuddyConversation>(haiBuddyKeys.latest(context.language), {
+      conversationId,
+      messages,
+    });
+  }, [queryClient, context.language, conversationId, messages]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView?.({ block: "end" });
@@ -153,11 +167,6 @@ export function HaiBuddyPanel({
         createdAt: new Date().toISOString(),
       },
     ]);
-    // 다른 페이지에서 패널을 다시 열 때 방금 대화가 복원되도록 캐시를 맞춘다.
-    queryClient.setQueryData(haiBuddyKeys.latest(context.language), {
-      conversationId: reply.conversationId,
-      messages: [],
-    });
   }
 
   function onSubmit(event: FormEvent) {

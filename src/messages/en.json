@@ -2180,7 +2180,7 @@
     "newChat": "New chat",
     "close": "Close HAI Buddy",
     "greeting": "Hi! I'm HAI Buddy. Ask me about this page or anything about HanBuddy.",
-    "privacyNote": "Please don't share personal details such as phone or account numbers.",
+    "privacyNote": "Answers are written by AI (Google Gemini) and may be wrong. Your questions are kept for 90 days. Please don't share personal details such as phone or account numbers.",
     "placeholder": "Ask anything…",
     "send": "Send",
     "thinking": "HAI Buddy is thinking…",

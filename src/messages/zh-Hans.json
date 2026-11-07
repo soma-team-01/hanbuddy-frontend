@@ -2180,7 +2180,7 @@
     "newChat": "新对话",
     "close": "关闭 HAI Buddy",
     "greeting": "你好！我是 HAI Buddy。关于这个页面或 HanBuddy 的任何问题都可以问我。",
-    "privacyNote": "请不要填写电话号码、账号等个人信息。",
+    "privacyNote": "回答由 AI（Google Gemini）生成，可能有误。你的问题会保存 90 天。请不要填写电话号码、账号等个人信息。",
     "placeholder": "有什么想问的…",
     "send": "发送",
     "thinking": "HAI Buddy 正在思考…",

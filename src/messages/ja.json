@@ -2180,7 +2180,7 @@
     "newChat": "新しい会話",
     "close": "HAI Buddyを閉じる",
     "greeting": "こんにちは！HAI Buddyです。このページやHanBuddyについて何でも聞いてください。",
-    "privacyNote": "電話番号や口座番号などの個人情報は書かないでください。",
+    "privacyNote": "回答はAI（Google Gemini）が作成するため、誤りがある場合があります。質問は90日間保存されます。電話番号や口座番号などの個人情報は書かないでください。",
     "placeholder": "何でも聞いてください…",
     "send": "送信",
     "thinking": "HAI Buddyが考えています…",

@@ -2174,9 +2174,9 @@
     "reselectDay": "日期已失效，请重新选择日。"
   },
   "HaiBuddy": {
-    "launcher": "问问 HAI Buddy",
+    "launcher": "问问 AI",
     "title": "HAI Buddy",
-    "subtitle": "HanBuddy 助手",
+    "subtitle": "AI 助手 · 回答由 AI 生成",
     "newChat": "新对话",
     "close": "关闭 HAI Buddy",
     "greeting": "你好！我是 HAI Buddy。关于这个页面或 HanBuddy 的任何问题都可以问我。",
@@ -2219,7 +2219,7 @@
       "LEARNED": "HanBuddy 团队"
     },
     "nextDate": "下一场：{date}",
-    "contactTitle": "直接联系我们的团队",
+    "contactTitle": "直接联系我们的团队（真人）",
     "contactHint": "复制这条消息，通过下面任一渠道发送。",
     "copy": "复制消息",
     "copied": "已复制，请粘贴到聊天中。",
@@ -2230,6 +2230,9 @@
     "contactQuestion": "问题：{question}",
     "helpful": "有帮助",
     "notHelpful": "没帮助",
-    "feedbackThanks": "感谢你的反馈"
+    "feedbackThanks": "感谢你的反馈",
+    "aiBadge": "AI",
+    "aiAnswer": "AI 回答",
+    "generalGuidance": "这是 AI 提供的一般旅行信息，未经 HanBuddy 核实，可能会有变化。"
   }
 }

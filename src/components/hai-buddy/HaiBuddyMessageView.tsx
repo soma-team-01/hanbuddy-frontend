@@ -30,7 +30,8 @@ export function HaiBuddyMessageView({
   }
   return (
     <div className="flex max-w-full flex-col gap-3">
-      <div className="max-w-[92%] rounded-2xl rounded-bl-md bg-canvas px-4 py-2.5 text-sm leading-6 text-ink [&_ol]:list-decimal [&_ol]:pl-5 [&_p+p]:mt-2 [&_ul]:list-disc [&_ul]:pl-5">
+      <AiLabel generalGuidance={message.generalGuidance} />
+      <div className="-mt-2 max-w-[92%] rounded-2xl rounded-bl-md bg-canvas px-4 py-2.5 text-sm leading-6 text-ink [&_ol]:list-decimal [&_ol]:pl-5 [&_p+p]:mt-2 [&_ul]:list-disc [&_ul]:pl-5">
         <ReactMarkdown components={MARKDOWN_COMPONENTS}>{message.content}</ReactMarkdown>
       </div>
       {message.citations.length > 0 && <Citations citations={message.citations} />}
@@ -41,6 +42,24 @@ export function HaiBuddyMessageView({
         <ContactCard message={contactMessage(message.handoffSummary)} />
       )}
       {message.messageId > 0 && <Feedback messageId={message.messageId} />}
+    </div>
+  );
+}
+
+/** 사람이 아니라 AI가 쓴 답이라는 표시. 일반 상식으로 답했으면 한버디가 확인한 정보가 아님을 함께 알린다. */
+function AiLabel({ generalGuidance }: Readonly<{ generalGuidance: boolean }>) {
+  const t = useTranslations("HaiBuddy");
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="flex items-center gap-1 text-xs font-semibold text-muted">
+        <span aria-hidden>✨</span>
+        <span>{t("aiAnswer")}</span>
+      </span>
+      {generalGuidance && (
+        <span className="w-fit rounded-md bg-[#FFF4D6] px-2 py-1 text-xs leading-5 text-ink">
+          {t("generalGuidance")}
+        </span>
+      )}
     </div>
   );
 }

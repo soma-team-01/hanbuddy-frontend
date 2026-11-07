@@ -324,3 +324,19 @@ dialog.motion-dialog[open]::backdrop {
 body[data-fixed-bar="true"] footer {
   padding-bottom: calc(var(--fixed-bar-height, 0px) + 1rem);
 }
+
+/* HAI Buddy 패널(데스크톱 400px)이 열려 있는 동안 페이지가 그만큼 폭을 내줘서 가려지는 곳이 없게 한다(Aside 방식).
+ * 화면에 고정된 바·버튼도 같이 왼쪽으로 민다. 패널 자신(data-hai-buddy-panel)은 제외한다 */
+@media (width >= 1024px) {
+  html[data-hai-buddy-open] body {
+    padding-right: var(--hai-buddy-panel-width, 400px);
+  }
+
+  html[data-hai-buddy-open] .fixed.inset-x-0:not([data-hai-buddy-panel]) {
+    right: var(--hai-buddy-panel-width, 400px);
+  }
+
+  html[data-hai-buddy-open] [data-hai-buddy-shift] {
+    right: calc(var(--hai-buddy-panel-width, 400px) + 1.5rem);
+  }
+}

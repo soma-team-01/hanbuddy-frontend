@@ -86,18 +86,11 @@ export function HaiBuddyPanel({
     endRef.current?.scrollIntoView?.({ block: "end" });
   }, [messages, send.isPending]);
 
-  // 휴대폰·태블릿에서는 패널이 화면을 덮으므로 뒤 페이지가 같이 스크롤되지 않게 막는다.
+  // 데스크톱은 페이지가 패널 폭만큼 줄어들고(globals.css), 휴대폰·태블릿은 아래 절반만 덮어 위쪽 페이지를 계속 쓸 수 있다.
   useEffect(() => {
-    if (
-      typeof window.matchMedia !== "function" ||
-      !window.matchMedia("(max-width: 1023px)").matches
-    )
-      return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
+    const root = document.documentElement;
+    root.setAttribute("data-hai-buddy-open", "");
+    return () => root.removeAttribute("data-hai-buddy-open");
   }, []);
 
   const contextLabel = useMemo(() => {
@@ -164,6 +157,7 @@ export function HaiBuddyPanel({
         handoff: reply.handoff,
         handoffSummary: reply.handoffSummary,
         citations: reply.citations,
+        generalGuidance: reply.generalGuidance,
         createdAt: new Date().toISOString(),
       },
     ]);
@@ -192,12 +186,22 @@ export function HaiBuddyPanel({
     <aside
       aria-labelledby={titleId}
       onKeyDown={onKeyDown}
-      className="fixed inset-0 z-40 flex flex-col bg-canvas-soft text-ink shadow-2xl lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[400px] lg:border-l lg:border-line-soft"
+      data-hai-buddy-panel
+      className="fixed inset-x-0 bottom-0 z-40 flex h-[50dvh] flex-col rounded-t-3xl border-t border-line-soft bg-canvas-soft text-ink shadow-[0_-12px_40px_rgba(38,27,24,0.18)] lg:top-0 lg:right-0 lg:left-auto lg:h-auto lg:w-[400px] lg:rounded-none lg:border-t-0 lg:border-l lg:shadow-none"
     >
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line-soft px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-line-soft px-4 pt-3 pb-3 lg:pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="min-w-0">
-          <h2 id={titleId} className="font-display text-lg leading-7 font-bold">
+          <h2
+            id={titleId}
+            className="flex items-center gap-2 font-display text-lg leading-7 font-bold"
+          >
             {t("title")}
+            <span
+              aria-hidden
+              className="rounded-full bg-ink px-2 py-0.5 font-sans text-[11px] leading-4 font-bold tracking-wide text-white"
+            >
+              {t("aiBadge")}
+            </span>
           </h2>
           <p className="text-xs text-muted">{t("subtitle")}</p>
         </div>
@@ -342,6 +346,7 @@ function localMessage(role: "USER", content: string): HaiBuddyMessage {
     handoff: "NONE",
     handoffSummary: null,
     citations: [],
+    generalGuidance: false,
     createdAt: new Date().toISOString(),
   };
 }

@@ -56,6 +56,7 @@ export interface HaiBuddyReply {
   handoff: HaiBuddyHandoff;
   handoffSummary: string | null;
   citations: HaiBuddyCitation[];
+  generalGuidance: boolean;
 }
 
 export interface HaiBuddyMessage {
@@ -66,6 +67,7 @@ export interface HaiBuddyMessage {
   handoff: HaiBuddyHandoff;
   handoffSummary: string | null;
   citations: HaiBuddyCitation[];
+  generalGuidance: boolean;
   createdAt: string;
 }
 

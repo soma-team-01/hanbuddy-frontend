@@ -48,7 +48,9 @@ describe("HAI Buddy hydration", () => {
     });
 
     expect(recoverable).not.toHaveBeenCalled();
-    expect(container.querySelector(`button[aria-label="${en.HaiBuddy.launcher}"]`)).not.toBeNull();
+    expect(
+      [...container.querySelectorAll("button")].some((b) => b.textContent === en.HaiBuddy.launcher),
+    ).toBe(true);
     expect(container.textContent).not.toContain("Contact us");
   });
 });

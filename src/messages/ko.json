@@ -2174,9 +2174,9 @@
     "reselectDay": "선택한 일자가 유효하지 않아요. 일을 다시 선택해 주세요."
   },
   "HaiBuddy": {
-    "launcher": "HAI Buddy에게 묻기",
+    "launcher": "AI에게 묻기",
     "title": "HAI Buddy",
-    "subtitle": "HanBuddy 도우미",
+    "subtitle": "AI 도우미 · 답변은 AI가 작성해요",
     "newChat": "새 대화",
     "close": "HAI Buddy 닫기",
     "greeting": "안녕하세요! HAI Buddy예요. 이 페이지나 HanBuddy에 대해 무엇이든 물어보세요.",
@@ -2219,7 +2219,7 @@
       "LEARNED": "HanBuddy 팀"
     },
     "nextDate": "다음 일정: {date}",
-    "contactTitle": "팀에 직접 물어보기",
+    "contactTitle": "팀(사람)에게 직접 문의하기",
     "contactHint": "아래 문구를 복사해 원하는 채널로 보내 주세요.",
     "copy": "문구 복사",
     "copied": "복사했어요. 대화창에 붙여 넣어 주세요.",
@@ -2230,6 +2230,9 @@
     "contactQuestion": "질문: {question}",
     "helpful": "도움이 됐어요",
     "notHelpful": "도움이 안 됐어요",
-    "feedbackThanks": "의견 고마워요"
+    "feedbackThanks": "의견 고마워요",
+    "aiBadge": "AI",
+    "aiAnswer": "AI 답변",
+    "generalGuidance": "AI의 일반 여행 안내예요. HanBuddy가 확인한 정보는 아니며 바뀔 수 있어요."
   }
 }

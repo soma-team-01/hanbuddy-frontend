@@ -75,9 +75,10 @@ export async function proxyAuthenticatedGet<TResult>(
   request: NextRequest,
   backendPath: string,
   unavailableMessage: string,
+  options: { timeoutMs?: number } = {},
 ) {
   return proxyAuthenticated<TResult>(request, unavailableMessage, (accessToken) =>
-    getBackend<TResult>(backendPath, { bearerToken: accessToken }),
+    getBackend<TResult>(backendPath, { bearerToken: accessToken, ...options }),
   );
 }
 
@@ -112,10 +113,12 @@ export async function proxyAuthenticatedPost<TBody, TResult>(
   backendPath: string,
   body: TBody,
   unavailableMessage: string,
+  options: { timeoutMs?: number } = {},
 ) {
   return proxyAuthenticated<TResult>(request, unavailableMessage, (accessToken) =>
     postBackend<TBody, TResult>(backendPath, body, {
       bearerToken: accessToken,
+      ...options,
     }),
   );
 }

@@ -9,6 +9,8 @@ interface BackendRequestOptions {
   origin?: string;
   analyticsRequest?: true;
   redirect?: RequestRedirect;
+  /** 기본 10초보다 오래 걸리는 백엔드 작업(예: HAI Buddy 에이전트)만 늘린다. */
+  timeoutMs?: number;
 }
 
 export interface BackendResponse<T> {
@@ -78,7 +80,10 @@ async function requestBackend<TBody, TResult>(
   if (options.analyticsRequest) headers.set("X-Analytics-Request", "1");
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), BACKEND_REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    options.timeoutMs ?? BACKEND_REQUEST_TIMEOUT_MS,
+  );
   let response: Response;
   try {
     response = await fetch(`${getBackendApiBaseUrl()}${path}`, {

@@ -13,6 +13,15 @@ export function ActivityContact() {
   const [showTeaser, setShowTeaser] = useState(true);
   const teaserId = useId();
 
+  // 같은 오른쪽 아래에 뜨는 AI 버튼(HAI Buddy)이 이 버튼 위로 비켜 서도록 자리를 알린다.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--contact-fab-space", "4.5rem");
+    return () => {
+      root.style.removeProperty("--contact-fab-space");
+    };
+  }, []);
+
   useEffect(() => {
     if (!showTeaser) return;
     const timeout = window.setTimeout(() => setShowTeaser(false), 3000);
@@ -21,7 +30,10 @@ export function ActivityContact() {
 
   return (
     <>
-      <div className="pointer-events-none fixed right-4 bottom-[calc(var(--fixed-bar-height,0px)+1.5rem)] z-20 md:right-6">
+      <div
+        data-hai-buddy-shift
+        className="pointer-events-none fixed right-4 bottom-[calc(var(--fixed-bar-height,0px)+1.5rem)] z-20 md:right-6"
+      >
         {showTeaser && (
           <p
             id={teaserId}

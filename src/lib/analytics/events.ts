@@ -63,7 +63,12 @@ const CTA_CONTRACTS = {
   booking_start: { sectionId: "booking_steps", position: 3, destinations: ["explore", "login"] },
 } as const;
 const INQUIRY_CHANNELS = ["email", "whatsapp", "facebook", "kakao", "instagram"] as const;
-const INQUIRY_PLACEMENTS = ["landing_contact", "site_footer", "payment_inquiry"] as const;
+const INQUIRY_PLACEMENTS = [
+  "landing_contact",
+  "site_footer",
+  "payment_inquiry",
+  "hai_buddy",
+] as const;
 
 /** Never copy pathname segments, titles, query strings or referrers into provider fields. */
 export function safePage(pathname: string): SafePage | null {

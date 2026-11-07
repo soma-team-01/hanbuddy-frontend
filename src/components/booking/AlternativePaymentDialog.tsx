@@ -1,13 +1,11 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { XIcon } from "@/components/ui/icons";
 import { useModalDialog } from "@/components/ui/use-modal-dialog";
-import { ContactChannelLinks } from "@/components/contact/ContactChannelLinks";
-import { getLocaleOrDefault } from "@/i18n/routing";
-import { useMeasurementEvents } from "@/components/analytics/AnalyticsProvider";
+import { InquiryTemplate } from "@/components/contact/InquiryTemplate";
 import { myProfileQueryOptions } from "@/lib/query/users";
 import { getSeoulDateTimeParts } from "@/lib/datetime";
 
@@ -39,16 +37,10 @@ export function AlternativePaymentDialog({
 }>) {
   const t = useTranslations("AlternativePayment");
   const tAccessibility = useTranslations("Accessibility");
-  const locale = getLocaleOrDefault(useLocale());
-  const { trackInquiry } = useMeasurementEvents();
   const titleId = useId();
   const descriptionId = useId();
   const { dialogRef, closeRef } = useModalDialog();
   const profile = useQuery({ ...myProfileQueryOptions(), retry: false, refetchOnMount: "always" });
-  const [copyState, setCopyState] = useState<{
-    message: string;
-    result: "copied" | "failed";
-  } | null>(null);
   const schedule = getInquirySchedule(booking);
   const email = profile.data?.email;
   const message = t("message", {
@@ -59,16 +51,6 @@ export function AlternativePaymentDialog({
     participants: booking?.participants ?? t("missingValue"),
     method: t("preferredMethod"),
   });
-
-  /** Copies the localized inquiry template and exposes clipboard failures to the user. */
-  async function copyTemplate() {
-    try {
-      await navigator.clipboard.writeText(message);
-      setCopyState({ message, result: "copied" });
-    } catch {
-      setCopyState({ message, result: "failed" });
-    }
-  }
 
   return (
     <dialog
@@ -108,33 +90,17 @@ export function AlternativePaymentDialog({
           <p id={descriptionId} className="text-sm leading-6 text-muted">
             {t("description")}
           </p>
-          <div className="mt-5 rounded-xl border border-line-soft p-4">
-            <h3 className="text-sm font-semibold">{t("exampleTitle")}</h3>
-            <p className="mt-1 mb-3 text-xs leading-5 text-muted">{t("exampleHint")}</p>
-            <p
-              data-testid="payment-inquiry-message"
-              className="text-sm leading-6 break-words whitespace-pre-line select-text"
-            >
-              {message}
-            </p>
-            <button
-              type="button"
-              onClick={() => void copyTemplate()}
-              className="mt-3 min-h-11 w-full rounded-lg border border-primary px-3 text-sm font-semibold text-primary-strong transition-colors hover:border-primary-hover hover:text-primary-hover"
-            >
-              {t("copy")}
-            </button>
-            {copyState?.message === message && (
-              <p role="status" className="mt-2 text-xs leading-5 text-muted">
-                {t(copyState.result === "copied" ? "copied" : "copyFailed")}
-              </p>
-            )}
-          </div>
-          <ContactChannelLinks
+          <InquiryTemplate
             message={message}
-            onChannelClick={(channel) =>
-              trackInquiry({ channel, placement: "payment_inquiry", locale })
-            }
+            placement="payment_inquiry"
+            messageTestId="payment-inquiry-message"
+            labels={{
+              title: t("exampleTitle"),
+              hint: t("exampleHint"),
+              copy: t("copy"),
+              copied: t("copied"),
+              copyFailed: t("copyFailed"),
+            }}
           />
           <p className="mt-4 text-center text-xs leading-5 text-muted">{t("notConfirmed")}</p>
         </div>

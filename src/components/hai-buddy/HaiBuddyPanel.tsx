@@ -203,7 +203,7 @@ export function HaiBuddyPanel({
               {t("aiBadge")}
             </span>
           </h2>
-          <p className="text-xs text-muted">{t("subtitle")}</p>
+          <p className="hidden text-xs text-muted lg:block">{t("subtitle")}</p>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -211,7 +211,7 @@ export function HaiBuddyPanel({
             onClick={startNewChat}
             // 답을 기다리는 중에 새 대화를 열면 늦게 온 답이 새 대화에 섞인다.
             disabled={send.isPending}
-            className="min-h-10 rounded-full px-3 text-sm font-medium text-primary-strong hover:bg-canvas"
+            className="min-h-10 rounded-full px-3 text-sm font-medium whitespace-nowrap text-primary-strong hover:bg-canvas"
           >
             {t("newChat")}
           </button>

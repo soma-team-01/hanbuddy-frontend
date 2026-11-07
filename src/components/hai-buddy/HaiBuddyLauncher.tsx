@@ -116,8 +116,8 @@ export function HaiBuddyLauncher() {
             writeOpen(true);
             setOpen(true);
           }}
-          // 사람에게 묻는 문의하기(원형 말풍선)와 헷갈리지 않도록 글자가 있는 어두운 알약 모양으로, 그 위에 쌓아 둔다.
-          className="fixed right-4 bottom-[calc(var(--fixed-bar-height,0px)+1.5rem+var(--contact-fab-space,0px))] z-30 flex h-12 items-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white shadow-lg ring-2 ring-primary/40 transition-colors hover:bg-ink/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:right-6"
+          // 사람에게 묻는 문의하기(빨간 원형 말풍선)와 헷갈리지 않도록 "AI" 글자가 있는 흰 알약 모양으로, 그 위에 쌓아 둔다.
+          className="fixed right-4 bottom-[calc(var(--fixed-bar-height,0px)+1.5rem+var(--contact-fab-space,0px))] z-30 flex h-12 items-center gap-2 rounded-full border border-primary/40 bg-canvas-soft px-4 text-sm font-semibold text-primary-strong shadow-lg transition-colors hover:border-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:right-6"
         >
           <SparkleIcon />
           <span>{t("launcher")}</span>
@@ -130,7 +130,7 @@ export function HaiBuddyLauncher() {
 
 function SparkleIcon() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" className="size-5 text-[#FFC94D]" fill="currentColor">
+    <svg aria-hidden viewBox="0 0 24 24" className="size-5 text-primary" fill="currentColor">
       <path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z" />
       <path d="M19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z" />
     </svg>

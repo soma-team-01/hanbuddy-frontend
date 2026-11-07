@@ -198,7 +198,7 @@ export function HaiBuddyPanel({
             {t("title")}
             <span
               aria-hidden
-              className="rounded-full bg-ink px-2 py-0.5 font-sans text-[11px] leading-4 font-bold tracking-wide text-white"
+              className="rounded-full bg-primary-soft px-2 py-0.5 font-sans text-[11px] leading-4 font-bold tracking-wide text-primary-strong"
             >
               {t("aiBadge")}
             </span>

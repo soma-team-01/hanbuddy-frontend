@@ -277,4 +277,32 @@ describe("cookie header helpers", () => {
     expect(response.headers.get("set-cookie")).toContain("refresh_token=abc");
     expect(response.headers.get("set-cookie")).toContain("session=def");
   });
+
+  it("waits for a longer timeout when the caller asks for one", async () => {
+    vi.useFakeTimers();
+    process.env.HANBUDDY_API_BASE_URL = "https://api.hanbuddy.test/api/v1";
+    const aborted = vi.fn();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string, init?: RequestInit) => {
+        const signal = init?.signal;
+        return new Promise<Response>((_resolve, reject) => {
+          signal?.addEventListener("abort", () => {
+            aborted();
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+          });
+        });
+      }),
+    );
+
+    const backendResponse = postBackend<undefined, string>("/hai-buddy/messages", undefined, {
+      timeoutMs: 45_000,
+    });
+    await vi.advanceTimersByTimeAsync(BACKEND_REQUEST_TIMEOUT_MS);
+    expect(aborted).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(45_000 - BACKEND_REQUEST_TIMEOUT_MS);
+
+    await expect(backendResponse).resolves.toMatchObject({ status: 504 });
+  });
 });
+

@@ -513,6 +513,11 @@
     "cancelled": "取消",
     "completed": "已完成"
   },
+  "NotFound": {
+    "title": "找不到页面",
+    "description": "您访问的页面不存在或已被移动。",
+    "home": "返回首页"
+  },
   "Landing": {
     "metadataTitle": "HanBuddy | 像当地人一样体验韩国",
     "metadataDescription": "HanBuddy 连接在韩国生活或旅行的外国人与韩国本地好友。预订由当地人发起并全程同行的首尔小团体验。",
@@ -1202,7 +1207,10 @@
     "soldOut": "已售完"
   },
   "ActivityDetail": {
-    "timePeriods": { "morning": "上午", "afternoon": "下午" },
+    "timePeriods": {
+      "morning": "上午",
+      "afternoon": "下午"
+    },
     "selectDateCompact": "选择日期",
     "bookCompact": "预订",
     "loading": "正在加载活动...",

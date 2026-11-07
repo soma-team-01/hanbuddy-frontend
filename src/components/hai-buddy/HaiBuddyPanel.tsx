@@ -205,6 +205,8 @@ export function HaiBuddyPanel({
           <button
             type="button"
             onClick={startNewChat}
+            // 답을 기다리는 중에 새 대화를 열면 늦게 온 답이 새 대화에 섞인다.
+            disabled={send.isPending}
             className="min-h-10 rounded-full px-3 text-sm font-medium text-primary-strong hover:bg-canvas"
           >
             {t("newChat")}

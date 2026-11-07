@@ -327,4 +327,15 @@ describe("HAI Buddy panel", () => {
     const reopened = screen.getByRole("complementary", { name: t.title });
     expect(within(reopened).queryByText("Tell me about refunds")).not.toBeInTheDocument();
   });
+
+  it("disables New chat while an answer is on its way", async () => {
+    let resolve: (value: Awaited<ReturnType<typeof sendHaiBuddyMessage>>) => void = () => {};
+    vi.mocked(sendHaiBuddyMessage).mockReturnValue(new Promise((r) => (resolve = r)));
+    const panel = await openPanel();
+    await ask("Slow question");
+
+    expect(await within(panel).findByRole("button", { name: t.newChat })).toBeDisabled();
+    await act(async () => resolve({ status: "success", reply: reply() }));
+    expect(within(panel).getByRole("button", { name: t.newChat })).toBeEnabled();
+  });
 });

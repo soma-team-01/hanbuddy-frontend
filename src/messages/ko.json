@@ -359,6 +359,12 @@
       "EXCLUDED": "기존 취소·환불 정책 유지"
     }
   },
+  "NotFound": {
+    "title": "페이지를 찾을 수 없어요",
+    "description": "주소가 잘못되었거나 페이지가 이동했을 수 있어요.",
+    "home": "홈으로 가기",
+    "explore": "액티비티 둘러보기"
+  },
   "Common": {
     "cancel": "취소",
     "close": "닫기",

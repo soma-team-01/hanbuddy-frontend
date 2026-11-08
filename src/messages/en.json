@@ -359,6 +359,12 @@
       "EXCLUDED": "Original cancellation and refund policy applies"
     }
   },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "This page doesn't exist or may have moved.",
+    "home": "Go to home",
+    "explore": "Explore activities"
+  },
   "Common": {
     "cancel": "Cancel",
     "close": "Close",

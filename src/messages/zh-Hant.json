@@ -359,6 +359,12 @@
       "EXCLUDED": "保留原取消及退款政策"
     }
   },
+  "NotFound": {
+    "title": "找不到頁面",
+    "description": "此頁面不存在，或已被移動。",
+    "home": "返回首頁",
+    "explore": "瀏覽活動"
+  },
   "Common": {
     "cancel": "取消",
     "close": "關閉",

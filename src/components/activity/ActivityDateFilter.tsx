@@ -189,7 +189,7 @@ function DateCalendar({
   function moveMonth(delta: number) {
     const next = addMonthsToMonthKey(month, delta);
     setMonth(next);
-    setFocused(`${next}-01`);
+    setFocused(`${next}-01` < today ? today : `${next}-01`);
   }
 
   return createPortal(
@@ -208,7 +208,7 @@ function DateCalendar({
           <button
             type="button"
             aria-label={t("previousMonth")}
-            disabled={month <= "1000-01"}
+            disabled={month <= today.slice(0, 7)}
             onClick={() => moveMonth(-1)}
             className="flex size-8 items-center justify-center rounded-full hover:bg-panel disabled:opacity-30"
           >
@@ -248,6 +248,7 @@ function DateCalendar({
               key={day}
               type="button"
               data-date={day}
+              disabled={day < today}
               tabIndex={day === focused ? 0 : -1}
               aria-label={new Intl.DateTimeFormat(getIntlLocale(locale), {
                 dateStyle: "full",
@@ -269,11 +270,11 @@ function DateCalendar({
                 if (!(event.key in shift)) return;
                 event.preventDefault();
                 const next = addDaysToDateKey(day, shift[event.key]);
-                if (!isActivitySearchDate(next)) return;
+                if (!isActivitySearchDate(next) || next < today) return;
                 setMonth(next.slice(0, 7));
                 setFocused(next);
               }}
-              className={`mx-auto flex size-8 items-center justify-center rounded-full text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary ${day === selected ? "bg-primary font-bold text-on-primary" : "text-ink hover:bg-primary-soft"} ${day === today ? "font-bold ring-1 ring-line-strong ring-inset" : ""}`}
+              className={`mx-auto flex size-8 items-center justify-center rounded-full text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary ${day === selected ? "bg-primary font-bold text-on-primary" : "text-ink hover:bg-primary-soft disabled:text-muted/40 disabled:hover:bg-transparent"} ${day === today ? "font-bold ring-1 ring-line-strong ring-inset" : ""}`}
             >
               {Number(day.slice(-2))}
             </button>

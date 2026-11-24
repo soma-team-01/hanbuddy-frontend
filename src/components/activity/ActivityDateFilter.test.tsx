@@ -130,4 +130,11 @@ describe("public activity date filter", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
+  it("does not let past days be selected", () => {
+    renderWithIntl(<ActivityDateFilter />);
+    fireEvent.click(screen.getByRole("button", { name: /Participation date/ }));
+    expect(screen.getByRole("button", { name: "Tuesday, September 29, 2026" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Wednesday, September 30, 2026" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Previous month" })).toBeDisabled();
+  });
 });

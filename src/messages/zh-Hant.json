@@ -513,6 +513,11 @@
     "cancelled": "取消",
     "completed": "已完成"
   },
+  "NotFound": {
+    "title": "找不到頁面",
+    "description": "您造訪的頁面不存在或已被移動。",
+    "home": "回到首頁"
+  },
   "Landing": {
     "metadataTitle": "HanBuddy | 像當地人一樣體驗韓國",
     "metadataDescription": "HanBuddy 連結在韓國生活或旅行的外國人與韓國本地好友。預訂由當地人發起並全程同行的首爾小團體驗。",
@@ -1202,7 +1207,10 @@
     "soldOut": "已售完"
   },
   "ActivityDetail": {
-    "timePeriods": { "morning": "上午", "afternoon": "下午" },
+    "timePeriods": {
+      "morning": "上午",
+      "afternoon": "下午"
+    },
     "selectDateCompact": "選擇日期",
     "bookCompact": "預訂",
     "loading": "正在加載活動...",

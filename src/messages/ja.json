@@ -513,6 +513,11 @@
     "cancelled": "キャンセルされました",
     "completed": "完了"
   },
+  "NotFound": {
+    "title": "ページが見つかりません",
+    "description": "お探しのページは存在しないか、移動した可能性があります。",
+    "home": "ホームへ戻る"
+  },
   "Landing": {
     "metadataTitle": "HanBuddy | 韓国をローカルのように体験しよう",
     "metadataDescription": "HanBuddyは、韓国に住む外国人や旅行者と韓国のローカルバディをつなぎます。地元の人が主催し一緒に参加する、ソウルの少人数体験を予約しましょう。",
@@ -1202,7 +1207,10 @@
     "soldOut": "売り切れ"
   },
   "ActivityDetail": {
-    "timePeriods": { "morning": "午前", "afternoon": "午後" },
+    "timePeriods": {
+      "morning": "午前",
+      "afternoon": "午後"
+    },
     "selectDateCompact": "日付選択",
     "bookCompact": "予約",
     "loading": "アクティビティを読み込み中...",

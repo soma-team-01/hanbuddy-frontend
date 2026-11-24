@@ -513,6 +513,11 @@
     "cancelled": "Cancelled",
     "completed": "Completed"
   },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has moved.",
+    "home": "Go to home"
+  },
   "Landing": {
     "metadataTitle": "HanBuddy | Experience Korea like a local!",
     "metadataDescription": "HanBuddy connects travelers and foreign residents in Korea with local buddies. Book small-group experiences in Seoul, hosted by locals who go with you.",
@@ -1202,7 +1207,10 @@
     "soldOut": "Sold out"
   },
   "ActivityDetail": {
-    "timePeriods": { "morning": "Morning", "afternoon": "Afternoon" },
+    "timePeriods": {
+      "morning": "Morning",
+      "afternoon": "Afternoon"
+    },
     "selectDateCompact": "Date",
     "bookCompact": "Book",
     "loading": "Loading activity...",

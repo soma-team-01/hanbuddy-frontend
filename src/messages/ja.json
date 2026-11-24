@@ -980,9 +980,9 @@
         "serverUnavailable": "ログインできませんでした。もう一度お試しください。"
       }
     },
-    "legalNoticeStart": "続行すると、HanBuddy の内容に同意したことになります。",
-    "legalNoticeMiddle": "そして",
-    "legalNoticeEnd": ".",
+    "legalNoticeStart": "続行すると、HanBuddy の",
+    "legalNoticeMiddle": "および",
+    "legalNoticeEnd": "に同意したことになります。",
     "privacyPolicy": "プライバシーポリシー",
     "termsOfService": "利用規約",
     "cancellationRefundPolicy": "キャンセル・返金ポリシー",

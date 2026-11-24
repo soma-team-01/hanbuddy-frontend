@@ -379,4 +379,10 @@ describe("locale messages", () => {
       expect(messages["ActivityDetail.remaining"]).toContain("plural");
     }
   });
+
+  it("keeps the ja legal notice as one sentence around the policy links", () => {
+    const auth = ja.Auth;
+    expect(auth.legalNoticeStart.endsWith("。")).toBe(false);
+    expect(auth.legalNoticeEnd).toContain("同意");
+  });
 });
